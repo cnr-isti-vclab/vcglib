@@ -124,7 +124,6 @@ class Controller {
     for(unsigned int i = 0; i < caches.size()-1; i++)
       caches[i]->check_queue.unlock();
 
-
 /*    provider.heap_lock.unlock();
     for(unsigned int i = 0; i < caches.size(); i++)
       caches[i]->heap_lock.unlock(); */
@@ -138,12 +137,21 @@ class Controller {
     provider.heap.clear();
     resume();
   }
-
-  bool isWaiting() {
+  bool isChanged() {
+    bool c = false;
     for(int i = (int)caches.size() -1; i >= 0; i--) {
-      if(!caches[i]->input->check_queue.isWaiting()) return false;
+      c |= caches[i]->isChanged();
     }
-    return true;
+    return c;
+  }
+  bool isWaiting() {
+    bool waiting = true;
+    for(int i = (int)caches.size() -1; i >= 0; i--) {
+      //waiting &= caches[i]->isWaiting();
+      waiting &= caches[i]->input->check_queue.isWaiting();
+    }
+    qDebug() << "Waiting? " << waiting;
+    return waiting;
   }
 };
 

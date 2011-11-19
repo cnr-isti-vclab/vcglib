@@ -27,12 +27,15 @@
 
 #include <QDebug>
 
+//#define USE_SEMAPHORES
+#ifdef USE_SEMAPHORES
 
-/*
 //a door needs to be open for the thread to continue,
 //if it is open the thread enter and closes the door
 //this mess is to avoid [if(!open.available()) open.release(1)]
+
 #include <QSemaphore>
+
 class QDoor {
  private:
   QSemaphore _open;
@@ -53,11 +56,24 @@ class QDoor {
       _close.release(1); //and close door behind
     else
       _open.release(1); //and leave door opened
+
   }
   bool isOpen() { return _open.available() == 1; }
+  void lock() {
+    //door might be open or closed, but we might happen just in the middle
+    //of someone opening, closing or entering it.
+    while(!_open.tryAcquire(1) && !_close.tryAcquire(1)) {}
+    //no resources left
+  }
+  void unlock() {
+    //unlock will not open the door, but allow someone to open it.
+    _close.release(1);
+  }
 };
 
-*/
+
+#else
+
 #include <QMutex>
 #include <QWaitCondition>
 
@@ -112,5 +128,6 @@ class QDoor {
   bool waiting;
 };
 
+#endif //ifdef USE_SEMAPHORES
 
-#endif
+#endif //CACHE_DOOR_H

@@ -24,7 +24,7 @@ class Cache: public Provider<Token> {
  public:
   bool final;              //true if this is the last cache (the one we use the data from)
   bool quit;               //graceful exit
-  bool waiting;
+  bool changed;
   ///data is fetched from here
   Provider<Token> *input;  
 
@@ -36,7 +36,7 @@ class Cache: public Provider<Token> {
 
  public:
   Cache(quint64 _capacity = INT_MAX):
-    final(false), quit(false), waiting(false), input(NULL), s_max(_capacity), s_curr(0) {}
+    final(false), quit(false), changed(false), input(NULL), s_max(_capacity), s_curr(0) {}
   virtual ~Cache() {}
 
   void setInputCache(Provider<Token> *p) { input = p; }
@@ -44,7 +44,12 @@ class Cache: public Provider<Token> {
   quint64 size() { return s_curr; }
   void setCapacity(quint64 c) { s_max = c; }
   ///return true if the cache is waiting for priority to change
-  bool isWaiting() { return input->check_queue.isWaiting(); }
+  bool isChanged() {
+    bool r = changed;
+    changed = false;
+    return r;
+    //return input->check_queue.isWaiting();
+  }
 
   ///empty the cache. Make sure no resource is locked before calling this. Require pause or stop before.
   void flush() {
@@ -105,9 +110,11 @@ class Cache: public Provider<Token> {
   ///return the space used in the cache by the loaded resource
   virtual int size(Token *token) = 0;
   ///returns amount of space used in cache -1 for failed transfer
-  virtual int get(Token *token) = 0;   
+  virtual int get(Token *token) = 0;
   ///return amount removed
-  virtual int drop(Token *token) = 0;  
+  virtual int drop(Token *token) = 0;
+  ///
+  virtual Token *ready() { return NULL; }
 
   ///called in as first thing in run()
   virtual void begin() {}
@@ -127,8 +134,10 @@ class Cache: public Provider<Token> {
 
       if(this->quit) break;
 
-      if(unload() || load())
+      if(unload() || load()) {
+        changed = true;                   //some modification happened
         input->check_queue.open();        //we signal ourselves to check again
+      }
     }
     flush();
     this->quit = false;                   //in case someone wants to restart;
