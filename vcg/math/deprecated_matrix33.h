@@ -244,11 +244,12 @@ public:
 	/// Modificatore prodotto per matrice
 	void operator *=( const Matrix33< S> & t )
 	{
+                Matrix33<S> r;
 		int i,j;
 		for(i=0;i<3;++i)
 			for(j=0;j<3;++j)
-					(*this)[i][j] = (*this)[i][0]*t[0][j] + (*this)[i][1]*t[1][j] + (*this)[i][2]*t[2][j];
-
+                                        r[i][j] = (*this)[i][0]*t[0][j] + (*this)[i][1]*t[1][j] + (*this)[i][2]*t[2][j];
+                for(i=0;i<9;++i) this->a[i] = r.a[i];
 	}
 
 	/// Dot product with a diagonal matrix
@@ -267,11 +268,13 @@ public:
 		/// Dot product modifier with a diagonal matrix
 	void operator *=( const Matrix33Diag< S> & t )
 	{
+            Matrix33<S> r;
 		int i,j;
 		for(i=0;i<3;++i)
 			for(j=0;j<3;++j)
-					(*this)[i][j] = (*this)[i][j]*t[j];
-	}
+                                        r[i][j] = (*this)[i][j]*t[j];
+                for(i=0;i<9;++i) this->a[i] = r.a[i];
+        }
 
 	/// Modificatore prodotto per costante
 	Matrix33 & operator *= ( const S t )
