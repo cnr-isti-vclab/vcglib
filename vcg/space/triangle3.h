@@ -106,18 +106,19 @@ Point3Type NormalizedNormal( Point3Type const &p0, Point3Type const & p1,  Point
 
 // The function to computing barycentric coords of a point inside a triangle.
 // it requires the knowledge of what is the direction that is more orthogonal to the face plane. 
-// Usually this info can be stored in a bit of the face flags (see updateFlags::FaceProjection(MeshType &m) )
-// and accessing the field with
-//        if(fp->Flags() & FaceType::NORMX )   axis = 0;
-//        else if(fp->Flags() & FaceType::NORMY )   axis = 1;
-//        else axis =2;
-//        InterpolationParameters(*fp,axis,Point,L);
+//  ScalarType nx = math::Abs((*fi).cN()[0]);
+//  ScalarType ny = math::Abs((*fi).cN()[1]);
+//  ScalarType nz = math::Abs((*fi).cN()[2]);
+//  if(nx>ny && nx>nz) { axis = 0; }
+//  else if(ny>nz)     { axis = 1 }
+//  else               { axis = 2 }
+//  InterpolationParameters(*fp,axis,Point,L);
+//
 // This normal direction is used to project the triangle in 2D and solve the problem in 2D where it is simpler and often well defined.
 
 template<class TriangleType, class ScalarType>
 bool InterpolationParameters(const TriangleType t, const int Axis, const Point3<ScalarType> & P,  Point3<ScalarType> & L)
 {
-  Point2<ScalarType> test;
 	typedef Point2<ScalarType> P2;
 	if(Axis==0) return InterpolationParameters2( P2(t.P(0)[1],t.P(0)[2]), P2(t.P(1)[1],t.P(1)[2]), P2(t.P(2)[1],t.P(2)[2]), P2(P[1],P[2]), L);
 	if(Axis==1) return InterpolationParameters2( P2(t.P(0)[0],t.P(0)[2]), P2(t.P(1)[0],t.P(1)[2]), P2(t.P(2)[0],t.P(2)[2]), P2(P[0],P[2]), L);
