@@ -58,6 +58,7 @@ namespace vcg {
 		class FaceTmark:public Tmark<MESH_TYPE,typename MESH_TYPE::FaceType>
 		{
 		public:
+			FaceTmark(){}
 			FaceTmark(MESH_TYPE *m) {this->SetMesh(m);}
 		};
 
@@ -279,8 +280,7 @@ namespace vcg {
 			OBJPTRCONTAINER & _objectPtrs) 
 		{
 			typedef FaceTmark<MESH> MarkerFace;
-			MarkerFace mf;
-			mf.SetMesh(&mesh);
+			MarkerFace mf(&mesh);
 			return(gr.GetInBox/*<MarkerFace,OBJPTRCONTAINER>*/(mf,_bbox,_objectPtrs));
 		}
 
