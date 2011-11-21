@@ -709,6 +709,11 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				  pi.status = PlyInfo::E_SHORTFILE;
 				  return pi.status;
 			  }
+			  if( ea.v1<0 || ea.v2<0 || ea.v1>=m.en || ea.v2>=m.en)
+			  {
+				  pi.status = PlyInfo::E_BAD_VERT_INDEX;
+				  return pi.status;
+			  }
 			  (*ei).V(0) = index[ ea.v1 ];
 			  (*ei).V(1) = index[ ea.v2 ];
 			  ++ei;
