@@ -1,4 +1,5 @@
 #include <QImage>
+#include <QSvgGenerator>
 #include <QPainter>
 
 #include "PolyToQImage.h"
@@ -6,7 +7,22 @@
 using namespace vcg;
 using namespace std;
 
-int dumpPolySet(const char * imageName, vector< vector<Point2f> > &polyVec, int width, int height)
+void rectSetToPolySet(vector< Box2f > &rectVec, vector< vector<Point2f> > &polyVec)
+{
+  polyVec.clear();
+  for(size_t i=0;i<rectVec.size();++i)
+  {
+    Box2f &b=rectVec[i];
+      polyVec.resize(polyVec.size()+1);
+      polyVec.back().push_back(b.min);
+      polyVec.back().push_back(Point2f(b.max[0],b.min[1]));
+      polyVec.back().push_back(b.max);
+      polyVec.back().push_back(Point2f(b.min[0],b.max[1]));
+
+  }
+}
+
+void dumpPolySet(const char * imageName, vector< vector<Point2f> > &polyVec, int width, int height)
 {
   Box2f bb;
   for(size_t i=0;i<polyVec.size();++i)
@@ -18,22 +34,34 @@ int dumpPolySet(const char * imageName, vector< vector<Point2f> > &polyVec, int 
   sim.tra = Point2f(width/2.0f,height/2.0f)-bb.Center()*sim.sca;
   vector<Similarity2f> trVec(polyVec.size(),sim);
 
-  return dumpPolySet(imageName,polyVec,trVec,width,height);
+  dumpPolySet(imageName,polyVec,trVec,width,height);
 }
 
-int dumpPolySet(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, int width, int height)
+void dumpPolySet(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, int width, int height)
 {
   assert(polyVecVec.size() == trVec.size());
 
   QImage img(width,height,QImage::Format_RGB32);
   img.fill(qRgb(128,128,128));
-  QPainter painter(&img);           // paint in picture
+
+  QSvgGenerator svg;
+  svg.setFileName(imageName);
+  QPainter painter;
+
+  if(QString(imageName).endsWith("svg",Qt::CaseInsensitive))
+        painter.begin(&svg);
+  else  painter.begin(&img);
+
   for(size_t i=0;i<polyVecVec.size();++i)
   {
+    painter.resetTransform();
+    painter.translate(trVec[i].tra[0],trVec[i].tra[1]);
+    painter.rotate(math::ToDeg(trVec[i].rotRad));
+    painter.scale(trVec[i].sca,trVec[i].sca);
     QVector<QPointF> ppQ;
     for(int j=0;j<polyVecVec[i][0].size();++j)
     {
-      Point2f pp=trVec[i]*polyVecVec[i][0][j];
+      Point2f pp=polyVecVec[i][0][j];
       ppQ.push_back(QPointF(pp[0],pp[1]));
     }
 
@@ -42,18 +70,15 @@ int dumpPolySet(const char * imageName, vector< vector< vector<Point2f> > > &pol
     painter.drawPolygon(&*ppQ.begin(),ppQ.size(),Qt::OddEvenFill);
   }
   painter.end();
-  img = img.mirrored(false,true);
-  img.save(imageName);
 
-  int emptyCnt=0;
-  for(int i=0;i<width;++i)
-    for(int j=0;j<height;++j)
-      if(img.pixel(i,j) == qRgb(128,128,128)) emptyCnt++;
-
-  return emptyCnt;
+ if(!QString(imageName).endsWith("svg",Qt::CaseInsensitive))
+ {
+   img = img.mirrored(false,true);
+   img.save(imageName);
+ }
 }
 
-int dumpPolySet(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, int width, int height)
+void dumpPolySet(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, int width, int height)
 {
   vector< vector< vector<Point2f> > > polyVecVec(polyVec.size());
   for(size_t i=0;i<polyVec.size();++i)
