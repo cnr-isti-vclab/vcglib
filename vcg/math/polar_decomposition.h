@@ -20,20 +20,14 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-
-
-****************************************************************************/
 #ifndef POLAR_DECOMPOSITION_VCG
 #define POLAR_DECOMPOSITION_VCG
 
 
 #include <vcg/math/matrix33.h>
 #include <vcg/math/matrix44.h>
-#include <vcg/math/lin_algebra.h>
+#include <eigenlib/Eigen/Dense>
+#include <eigenlib/Eigen/SVD>
 
 namespace vcg{
 
@@ -44,38 +38,32 @@ namespace vcg{
 template <class S>
 void RotationalPartByPolarDecomposition( const vcg::Matrix33<S> & m, vcg::Matrix33<S> &r ){
 
-	vcg::Matrix33<S> tmp,s;
+	Eigen::Matrix<S,3,3> tmp,s;
 
-	r.SetZero();
-	s.SetZero();
+	r.setZero();
+	s.setZero();
 
 	tmp = m*m.transpose();
 
-	Matrix33<S> res;
-	Point3<S> e;
+	Eigen::Matrix<S,3,3> res;
+	Eigen::Matrix<S,3,3> e;
 
 	bool ss = SingularValueDecomposition<vcg::Matrix33<S> >(tmp,&e[0],res);
+
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd(A);
+    sol=svd.solve(b);
 
 	e[0]=math::Sqrt(e[0]);
 	e[1]=math::Sqrt(e[1]);
 	e[2]=math::Sqrt(e[2]);
-	#ifdef VCG_USE_EIGEN
 	tmp = tmp*e.asDiagonal()*res.transpose();
-	#else
-	tmp = tmp*Matrix33Diag<S>(e)*res.transpose();
-	#endif
 
 	bool s1 = SingularValueDecomposition<vcg::Matrix33<S> >(tmp,&e[0],res.transpose());
 	e[0]=1/e[0];
 	e[1]=1/e[1];
 	e[2]=1/e[2];
 
-	#ifdef VCG_USE_EIGEN
 	tmp = res*e.asDiagonal()*tmp.transpose();
-	#else
-	tmp = res*Matrix33Diag<S>(e)*tmp.transpose();
-	#endif
-
 	r = m*tmp;
 }
 
