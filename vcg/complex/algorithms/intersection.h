@@ -30,6 +30,7 @@
 #include<vcg/complex/allocate.h>
 #include<vcg/complex/algorithms/subset.h>
 #include<vcg/complex/algorithms/closest.h>
+#include<vcg/complex/algorithms/update/quality.h>
 #include<vcg/complex/complex.h>
 
 #ifndef __VCGLIB_INTERSECTION_TRI_MESH
