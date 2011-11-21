@@ -273,7 +273,7 @@ namespace vcg{
 				else
 				{
 					assert(InInterval->size()>0);
-					for(int i=0;i<InInterval->size();i++)
+					for(size_t i=0;i<InInterval->size();i++)
 						(*InInterval)[i]->Q() =  TD[(*InInterval)[i]].d;
 				}
 
