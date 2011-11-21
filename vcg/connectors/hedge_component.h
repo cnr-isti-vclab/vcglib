@@ -111,7 +111,7 @@ public:
   static bool HasMarkOcc()   { return false; }
   inline void InitIMark()    {  }
   inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
-  inline const int & IMark() const {return 0;}
+  inline int IMark() const {return 0;}
 	template < class LeftV>
 	void ImportData(const LeftV  & left ) { T::ImportData( left); }
 	static void Name(std::vector<std::string> & name){T::Name(name);}
