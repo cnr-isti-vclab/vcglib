@@ -144,7 +144,7 @@ class  NearestToCenter
 				orig=&v;
 			}
 		}
-    inline void AddFaceVertex(MeshType &m, FaceType &f, int i)    {		assert(0);}
+	inline void AddFaceVertex(MeshType &/*m*/, FaceType &/*f*/, int /*i*/)    {		assert(0);}
     NearestToCenter(): valid(false){}
 		
    CoordType bestPos;
