@@ -58,7 +58,6 @@ namespace vcg {
 		class FaceTmark:public Tmark<MESH_TYPE,typename MESH_TYPE::FaceType>
 		{
 		public:
-			FaceTmark() {}
 			FaceTmark(MESH_TYPE *m) {this->SetMesh(m);}
 		};
 
