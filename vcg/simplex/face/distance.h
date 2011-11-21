@@ -301,9 +301,8 @@ namespace vcg {
 		
 		/// BASIC VERSION of the Point-face distance that does not require the EdgePlane Additional data.
 		/// Given a face and a point, returns the closest point of the face to p.
-		/// it assumes that the face has Normalized Normal and on the flags stored the preferred orientation.
+		/// it assumes that the face has Normalized Normal.
 		// UpdateNormals::PerFaceNormalized(m)
-		// UpdateFlags<>::FaceProjection(m);
 		
 		template <class FaceType>
 			bool PointDistanceBase(
@@ -342,7 +341,7 @@ namespace vcg {
         const ScalarType EPS = ScalarType( 0.000001);
 				ScalarType b,b0,b1,b2;
 				// Calcolo distanza punto piano
-				ScalarType d = Distance( fPlane, q );
+				ScalarType d = DistancePlanePoint( fPlane, q );
 				if( d>dist || d<-dist )			// Risultato peggiore: niente di fatto
 					return false;
 				
@@ -368,16 +367,25 @@ namespace vcg {
 				f.Edge(0)*=d; f.Edge(1)*=d;f.Edge(2)*=d;
 				 
 				So we must apply the same scaling according to the plane orientation, eg in the case of NORMX
-				
-				scaleFactor= 1/fPlane.Direction()[0];
-				fEdge[0]*=d; fEdge[1]*=d;fEdge[2]*=d;
+				  scaleFactor= 1/fPlane.Direction()[0];
+				  fEdge[0]*=d; fEdge[1]*=d;fEdge[2]*=d;
 				*/
-				
+
+				int bestAxis;
+				if(fabs(f.cN()[0])>fabs(f.cN()[1]))
+				{
+				  if(fabs(f.cN()[0])>fabs(f.cN()[2])) bestAxis = 0;
+				  else bestAxis = 2;
+				} else {
+				  if(fabs(f.cN()[1])>fabs(f.cN()[2])) bestAxis=1; /* 1 > 0 ? 2 */
+				  else bestAxis=2; /* 2 > 1 ? 2 */
+				}
+
 				ScalarType scaleFactor;
 
-				switch( f.Flags() & (FaceType::NORMX|FaceType::NORMY|FaceType::NORMZ) )
+				switch( bestAxis )
 				{
-					case FaceType::NORMX:
+					case 0:  /************* X AXIS **************/
 						scaleFactor= 1/fPlane.Direction()[0];
 						fEdge[0]*=scaleFactor; fEdge[1]*=scaleFactor; fEdge[2]*=scaleFactor;
 						
@@ -421,7 +429,7 @@ namespace vcg {
 							}
 							break;
 						
-					case FaceType::NORMY:
+					case 1:  /************* Y AXIS **************/
 						scaleFactor= 1/fPlane.Direction()[1];
 						fEdge[0]*=scaleFactor; fEdge[1]*=scaleFactor; fEdge[2]*=scaleFactor;
 						
@@ -458,7 +466,7 @@ namespace vcg {
 							}
 							break;
 						
-					case FaceType::NORMZ:
+					case 2:  /************* Z AXIS **************/
 						scaleFactor= 1/fPlane.Direction()[2];
 						fEdge[0]*=scaleFactor; fEdge[1]*=scaleFactor; fEdge[2]*=scaleFactor;
 						
