@@ -269,6 +269,8 @@ namespace vcg {
 
   /// intersection between plane and triangle 
   // not optimal: uses plane-segment intersection (and the fact the two or none edges can be intersected)
+  // its use is rather dangerous because it can return inconsistent stuff on degenerate cases.
+  // added assert to underline this danger.
   template<typename TRIANGLETYPE> 
     inline bool IntersectionPlaneTriangle( const Plane3<typename TRIANGLETYPE::ScalarType> & pl, 
 			      const  TRIANGLETYPE & tr, 
@@ -280,15 +282,18 @@ namespace vcg {
           return true;
         else
         {
-          IntersectionPlaneSegment(pl,Segment3<T>(tr.P(1),tr.P(2)),sg.P1());
-          return true;
+          if(IntersectionPlaneSegment(pl,Segment3<T>(tr.P(1),tr.P(2)),sg.P1()))
+            return true;
+          else assert(0);
+              return true;
         }
       }
       else
       {
         if(IntersectionPlaneSegment(pl,Segment3<T>(tr.P(1),tr.P(2)),sg.P0()))
         {
-          IntersectionPlaneSegment(pl,Segment3<T>(tr.P(0),tr.P(2)),sg.P1());
+          if(IntersectionPlaneSegment(pl,Segment3<T>(tr.P(0),tr.P(2)),sg.P1()))return true;
+          assert(0);
           return true;
         }
       }
