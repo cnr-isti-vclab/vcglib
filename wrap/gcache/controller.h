@@ -150,7 +150,6 @@ class Controller {
       //waiting &= caches[i]->isWaiting();
       waiting &= caches[i]->input->check_queue.isWaiting();
     }
-    qDebug() << "Waiting? " << waiting;
     return waiting;
   }
 };
