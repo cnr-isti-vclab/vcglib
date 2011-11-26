@@ -8,7 +8,7 @@
 *                                                                           *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -42,6 +42,7 @@ class QDoor {
   QSemaphore _close;
  public:
   QDoor(): _open(0), _close(1) {} //this means closed
+
   void open() {
     if(_close.tryAcquire(1)) //check it is not open
       _open.release(1); //open
@@ -53,21 +54,23 @@ class QDoor {
   void enter(bool close = false) {
     _open.acquire(1);
     if(close)
-      _close.release(1); //and close door behind
+      _close.release(1); //close door behind
     else
-      _open.release(1); //and leave door opened
-
+      _open.release(1);  //leave door opened
   }
   bool isOpen() { return _open.available() == 1; }
+
   void lock() {
     //door might be open or closed, but we might happen just in the middle
     //of someone opening, closing or entering it.
     while(!_open.tryAcquire(1) && !_close.tryAcquire(1)) {}
-    //no resources left
+    //no resources left, door is locked
   }
-  void unlock() {
-    //unlock will not open the door, but allow someone to open it.
-    _close.release(1);
+  void unlock(bool open = false) {
+    if(open)
+      _open.release(1)
+    else
+      _close.release(1);
   }
 };
 
@@ -96,15 +99,15 @@ class QDoor {
   }
 
   ///attempt to enter the door. if the door is closed the thread will wait until the door is opened.
-  /** if close is true, the door will be closed after the thread is awakened, this allows to 
+  /** if close is true, the door will be closed after the thread is awakened, this allows to
      have only one thread entering the door each time open() is called */
   void enter(bool close = false) {
     m.lock();
     waiting = true;
     while (!doorOpen)
       c.wait(&(m));
-    
-    if(close) 
+
+    if(close)
       doorOpen = false;
     waiting = false;
     m.unlock();
@@ -118,7 +121,8 @@ class QDoor {
   void lock() { //prevend door opening and entering
     m.lock();
   }
-  void unlock() { //reverse effect of lock
+  void unlock(bool open = false) { //reverse effect of lock
+    doorOpen = open;
     m.unlock();
   }
  private:

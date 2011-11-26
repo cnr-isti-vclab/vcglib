@@ -10,10 +10,12 @@
 template <class Token>
 class Controller {
  public:
-  ///should be private
-  std::vector<Token *> tokens;   //tokens waiting to be added
-  bool quit;                     //gracefully terminate.
+  ///tokens waiting to be added, should be private
+  std::vector<Token *> tokens;
+  /// threads still running, but no door is open in caches,
+  ///transfers might still be going on!
   bool paused;
+  ///all cache threads are stopped
   bool stopped;
 
  public:
@@ -22,11 +24,11 @@ class Controller {
   ///should be protected
   std::vector<Cache<Token> *> caches;
 
-  Controller(): quit(false), paused(false), stopped(true) {}
+  Controller(): paused(false), stopped(true) {}
   ~Controller() { finish(); }
 
   ///called before the cache is started to add a cache in the chain
-  /** The order in which the caches are added is from the lowest to the highest. */      
+  /** The order in which the caches are added is from the lowest to the highest. */
   void addCache(Cache<Token> *cache) {
     if(caches.size() == 0)
       cache->setInputCache(&provider);
@@ -35,6 +37,7 @@ class Controller {
     assert(cache->input);
     caches.push_back(cache);
   }
+
   ///insert the token in the cache if not already present (actual insertion is done on updatePriorities)
   bool addToken(Token *token) {
     if(token->count.testAndSetOrdered(Token::OUTSIDE, Token::CACHE)) {
@@ -110,8 +113,9 @@ class Controller {
   void pause() {
     if(paused) return;
     provider.check_queue.lock();
-    for(unsigned int i = 0; i < caches.size()-1; i++)
+    for(unsigned int i = 0; i < caches.size()-1; i++) {
       caches[i]->check_queue.lock();
+    }
 /*    provider.heap_lock.lock();
     for(unsigned int i = 0; i < caches.size(); i++)
       caches[i]->heap_lock.lock(); */
@@ -131,11 +135,13 @@ class Controller {
   }
   ///empty all caches AND REMOVES ALL TOKENS!
   void flush() {
-    pause();
+    bool running = !stopped;
+    stop();
     for(int i = (int)caches.size()-1; i >= 0; i--)
       caches[i]->flush();
     provider.heap.clear();
-    resume();
+    if(running)
+      start();
   }
   bool isChanged() {
     bool c = false;

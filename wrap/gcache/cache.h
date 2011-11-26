@@ -4,6 +4,7 @@
 #include <iostream>
 #include <limits.h>
 #include <vector>
+#include <list>
 
 #include <QThread>
 #include "provider.h"
@@ -21,20 +22,24 @@ using namespace std;
 template <typename Token>
 class Cache: public Provider<Token> {
 
- public:
-  bool final;              //true if this is the last cache (the one we use the data from)
-  bool quit;               //graceful exit
-  bool changed;
+public:
+  ///true if this is the last cache (the one we use the data from)
+  bool final;
+  //if true the cache will exit at the first opportunity
+  bool quit;
+  ///keeps track of changes (if 1 then something was loaded or dropped
+  QAtomicInt changed;
+
   ///data is fetched from here
-  Provider<Token> *input;  
+  Provider<Token> *input;
 
- protected:
+protected:
   ///max space available
-  quint64 s_max;               
+  quint64 s_max;
   ///current space used
-  quint64 s_curr;              
+  quint64 s_curr;
 
- public:
+public:
   Cache(quint64 _capacity = INT_MAX):
     final(false), quit(false), changed(false), input(NULL), s_max(_capacity), s_curr(0) {}
   virtual ~Cache() {}
@@ -43,15 +48,15 @@ class Cache: public Provider<Token> {
   quint64 capacity() { return s_max; }
   quint64 size() { return s_curr; }
   void setCapacity(quint64 c) { s_max = c; }
+
   ///return true if the cache is waiting for priority to change
   bool isChanged() {
-    bool r = changed;
-    changed = false;
+    bool r = changed.testAndSetOrdered(1, 0); //if changed is 1, r is true
     return r;
-    //return input->check_queue.isWaiting();
   }
 
-  ///empty the cache. Make sure no resource is locked before calling this. Require pause or stop before.
+  ///empty the cache. Make sure no resource is locked before calling this.
+  /// Require pause or stop before. Ensure there no locked item
   void flush() {
     std::vector<Token *> tokens;
     {
@@ -78,7 +83,8 @@ class Cache: public Provider<Token> {
     }
   }
 
-  ///ensure there no locked item 
+  ///empty the cache. Make sure no resource is locked before calling this.
+  /// Require pause or stop before. Ensure there no locked item
   template <class FUNCTOR> void flush(FUNCTOR functor) {
     std::vector<Token *> tokens;
     {
@@ -106,15 +112,15 @@ class Cache: public Provider<Token> {
     }
   }
 
- protected:
+protected:
   ///return the space used in the cache by the loaded resource
   virtual int size(Token *token) = 0;
   ///returns amount of space used in cache -1 for failed transfer
   virtual int get(Token *token) = 0;
   ///return amount removed
   virtual int drop(Token *token) = 0;
-  ///
-  virtual Token *ready() { return NULL; }
+
+
 
   ///called in as first thing in run()
   virtual void begin() {}
@@ -135,7 +141,7 @@ class Cache: public Provider<Token> {
       if(this->quit) break;
 
       if(unload() || load()) {
-        changed = true;                   //some modification happened
+        changed.testAndSetOrdered(0, 1);  //if not changed, set as changed
         input->check_queue.open();        //we signal ourselves to check again
       }
     }
@@ -146,7 +152,9 @@ class Cache: public Provider<Token> {
 
 
 
-  ///should be protected
+  /** Checks wether we need to make room in the cache because of:
+     size() - sizeof(lowest priority item) > capacity()
+  **/
   bool unload() {
     Token *remove = NULL;
     //make room int the cache checking that:
@@ -181,18 +189,18 @@ class Cache: public Provider<Token> {
     }
 
     if(remove) {
-      int size = drop(remove);
-      assert(size >= 0);
-      s_curr -= size;
-
       {
         QMutexLocker input_locker(&(input->heap_lock));
+        int size = drop(remove);
+        assert(size >= 0);
+        s_curr -= size;
         input->heap.push(remove);
       }
       return true;
     }
     return false;
   }
+
   ///should be protected
   bool load() {
     Token *insert = NULL;
@@ -215,7 +223,7 @@ class Cache: public Provider<Token> {
       if(input->heap.size()) {                           //we need something in input to tranfer.
         Token &first = input->heap.max();
         if(first.count > Token::REMOVE &&
-           (!last || last->priority < first.priority)) { //if !last we already decided we want a transfer., otherwise check for a swap
+            (!last || last->priority < first.priority)) { //if !last we already decided we want a transfer., otherwise check for a swap
           insert = input->heap.popMax();                 //remove item from heap, while we transfer it.
         }
       }

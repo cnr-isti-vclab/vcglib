@@ -14,7 +14,7 @@
       2) set maximum number of tokens in the provider
 */
 
-/** Base class for Cache and last cache in the GCache system. 
+/** Base class for Cache and last cache in the GCache system.
     You should never interact with this class.
 */
 
@@ -22,17 +22,17 @@ template <typename Token>
 class Provider: public QThread {
  public:
   ///holds the resources in this cache but not in the cache above
-  PtrDHeap<Token> heap;  
+  PtrDHeap<Token> heap;
   ///tokens above this number will be scheduled for deletion
   int max_tokens;
   ///signals we need to rebuild heap.
-  bool heap_dirty;         
-  ///lock this before manipulating heap.   
-  QMutex heap_lock;    
-  ///used to sincronize priorities update        
-  QMutex priority_lock;        
+  bool heap_dirty;
+  ///lock this before manipulating heap.
+  QMutex heap_lock;
+  ///used to sincronize priorities update
+  QMutex priority_lock;
   ///signals (to next cache!) priorities have changed or something is available
-  QDoor check_queue;           
+  QDoor check_queue;
 
   Provider(): max_tokens(-1), heap_dirty(false) {}
   virtual ~Provider() {}
@@ -84,4 +84,4 @@ class Provider: public QThread {
 };
 
 
-#endif 
+#endif
