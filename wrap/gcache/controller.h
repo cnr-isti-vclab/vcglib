@@ -25,7 +25,7 @@ class Controller {
   std::vector<Cache<Token> *> caches;
 
   Controller(): paused(false), stopped(true) {}
-  ~Controller() { finish(); }
+  ~Controller() { if(!stopped) finish(); }
 
   ///called before the cache is started to add a cache in the chain
   /** The order in which the caches are added is from the lowest to the highest. */
@@ -81,7 +81,7 @@ class Controller {
 
   ///start the various cache threads.
   void start() {
-    if(!stopped) return;
+    assert(stopped);
     assert(!paused);
     assert(caches.size() > 1);
     caches.back()->final = true;
@@ -89,11 +89,25 @@ class Controller {
       caches[i]->start();
     stopped = false;
   }
-  ///stops the ache threads
+
+  ///stops the cache threads
   void stop() {
-    if(stopped) return;
-    if(paused) resume();
-    //stop threads
+    assert(!paused);
+    assert(!stopped);
+
+    //signal al caches to quit
+    for(int i = 0; i < caches.size(); i++)
+      caches[i]->quit = true;
+    //abort current gets
+    for(int i = 0; i < caches.size(); i++)
+      caches[i]->abort();
+    //make sure all caches actually run a cycle.
+    for(unsigned int i = 0; i < caches.size(); i++)
+      caches[i]->input->check_queue.open();
+
+    for(int i = 0; i < caches.size(); i++)
+      caches[i]->wait();
+/*    //stop threads
     for(int i = caches.size()-1; i >= 0; i--) {
       caches[i]->quit = true;                      //hmmmmmmmmmmmmmm not very clean.
       if(i == 0)
@@ -101,48 +115,57 @@ class Controller {
       else
         caches[i-1]->check_queue.open();           //cache i listens on queue i-1
       caches[i]->wait();
-    }
+    } */
     stopped = true;
   }
 
   void finish() {
-    flush();
     stop();
+    flush();
   }
 
   void pause() {
-    if(paused) return;
-    provider.check_queue.lock();
-    for(unsigned int i = 0; i < caches.size()-1; i++) {
-      caches[i]->check_queue.lock();
-    }
-/*    provider.heap_lock.lock();
-    for(unsigned int i = 0; i < caches.size(); i++)
-      caches[i]->heap_lock.lock(); */
+    assert(!stopped);
+    assert(!paused);
+
+    //lock all doors.
+    for(unsigned int i = 1; i < caches.size(); i++)
+      caches[i]->input->check_queue.lock();
+
+    //abort all pending calls
+    for(unsigned int i = 1; i < caches.size(); i++)
+      caches[i]->abort();
+
+    //make sure no cache is running (must be done after abort! otherwise we have to wait for the get)
+    for(unsigned int i = 0; i < caches.size()-1; i++)
+      caches[i]->input->check_queue.room.lock();
+
     paused = true;
   }
 
   void resume() {
-    if(!paused) return;
-    provider.check_queue.unlock();
-    for(unsigned int i = 0; i < caches.size()-1; i++)
-      caches[i]->check_queue.unlock();
+    assert(!stopped);
+    assert(paused);
 
-/*    provider.heap_lock.unlock();
-    for(unsigned int i = 0; i < caches.size(); i++)
-      caches[i]->heap_lock.unlock(); */
+    //unlock and open all doors
+    for(unsigned int i = 1; i < caches.size(); i++) {
+      caches[i]->input->check_queue.unlock();
+      caches[i]->input->check_queue.open();
+    }
+
+    //allow all cache to enter again.
+    for(unsigned int i = 0; i < caches.size()-1; i++)
+      caches[i]->input->check_queue.room.unlock();
+
     paused = false;
   }
   ///empty all caches AND REMOVES ALL TOKENS!
   void flush() {
-    bool running = !stopped;
-    stop();
     for(int i = (int)caches.size()-1; i >= 0; i--)
       caches[i]->flush();
     provider.heap.clear();
-    if(running)
-      start();
   }
+
   bool isChanged() {
     bool c = false;
     for(int i = (int)caches.size() -1; i >= 0; i--) {
@@ -150,6 +173,7 @@ class Controller {
     }
     return c;
   }
+
   bool isWaiting() {
     bool waiting = true;
     for(int i = (int)caches.size() -1; i >= 0; i--) {

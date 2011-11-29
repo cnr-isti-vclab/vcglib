@@ -19,6 +19,8 @@ using namespace std;
 /** Cache virtual base class. You are required to implement the pure virtual functions get, drop and size.
 */
 
+template <typename Token> class Transfer;
+
 template <typename Token>
 class Cache: public Provider<Token> {
 
@@ -29,9 +31,14 @@ public:
   bool quit;
   ///keeps track of changes (if 1 then something was loaded or dropped
   QAtomicInt changed;
+  ///callback for changed
+  void (*callback)(void *data);
 
   ///data is fetched from here
   Provider<Token> *input;
+
+  ///threads running over cache...
+  std::vector<Transfer<Token> *> transfers;
 
 protected:
   ///max space available
@@ -58,15 +65,16 @@ public:
   ///empty the cache. Make sure no resource is locked before calling this.
   /// Require pause or stop before. Ensure there no locked item
   void flush() {
-    std::vector<Token *> tokens;
+    //std::vector<Token *> tokens;
     {
       for(int i = 0; i < this->heap.size(); i++) {
         Token *token = &(this->heap[i]);
-        tokens.push_back(token);
+        //tokens.push_back(token);
         s_curr -= drop(token);
         assert(!(token->count >= Token::LOCKED));
         if(final)
           token->count.testAndSetOrdered(Token::READY, Token::CACHE);
+        input->heap.push(token);
       }
       this->heap.clear();
     }
@@ -76,11 +84,11 @@ public:
     }
     //assert(s_curr == 0);
 
-    {
+/*    {
       for(unsigned int i = 0; i < tokens.size(); i++) {
         input->heap.push(tokens[i]);
       }
-    }
+    }*/
   }
 
   ///empty the cache. Make sure no resource is locked before calling this.
@@ -112,6 +120,7 @@ public:
     }
   }
 
+  virtual void abort() {}
 protected:
   ///return the space used in the cache by the loaded resource
   virtual int size(Token *token) = 0;
@@ -119,6 +128,8 @@ protected:
   virtual int get(Token *token) = 0;
   ///return amount removed
   virtual int drop(Token *token) = 0;
+  ///make sure the get function do not access token after abort is returned.
+
 
 
 
@@ -136,16 +147,15 @@ protected:
        2) make room until eliminating an element would leave space. */
     begin();
     while(!this->quit) {
-      input->check_queue.enter(true);     //wait for cache below to load something or priorities to change
-
+      input->check_queue.enter();     //wait for cache below to load something or priorities to change
       if(this->quit) break;
 
       if(unload() || load()) {
         changed.testAndSetOrdered(0, 1);  //if not changed, set as changed
         input->check_queue.open();        //we signal ourselves to check again
       }
+      input->check_queue.leave();
     }
-    flush();
     this->quit = false;                   //in case someone wants to restart;
     end();
   }
@@ -254,5 +264,20 @@ protected:
     return false;
   }
 };
+
+
+template<typename Token>
+class Transfer: public QThread {
+ public:
+  Transfer(Cache<Token> *_cache): cache(_cache) {}
+ private:
+  Cache<Token> *cache;
+
+  void run() {
+    cache->loop();
+    //end();
+  }
+};
+
 
 #endif // GCACHE_H
