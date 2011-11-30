@@ -357,7 +357,54 @@ void SwapEdge(FaceType &f, const int z)
 }
 
 /*!
-* Check if the z-th edge of the face f can be flipped.
+* Perform a Geometric Check about the normals of a edge flip.
+* return trues if after the flip the normals does not change more than the given threshold angle;
+* it assumes that the flip is topologically correct.
+*
+*	\param f	the face
+*	\param z	the edge index
+*   \param angleRad the threshold angle
+*
+*  oldD1 ___________ newD1
+*       |\          |
+*       |  \        |
+*       |    \      |
+*       |  f  z\    |
+*       |        \  |
+*       |__________\|
+* newD0               oldD0
+*/
+
+template <class FaceType>
+static bool CheckFlipEdgeNormal(FaceType &f, const int z, const float angleRad)
+{
+  typedef typename FaceType::VertexType VertexType;
+  typedef typename VertexType::CoordType CoordType;
+  typedef typename VertexType::ScalarType ScalarType;
+
+  VertexType *OldDiag0 = f.V0(z);
+  VertexType *OldDiag1 = f.V1(z);
+
+  VertexType *NewDiag0 = f.V2(z);
+  VertexType *NewDiag1 = f.FFp(z)->V2(f.FFi(z));
+
+  assert((NewDiag1 != NewDiag0) && (NewDiag1 != OldDiag0) && (NewDiag1 != OldDiag1));
+
+  CoordType oldN0 = NormalizedNormal( NewDiag0->cP(),OldDiag0->cP(),OldDiag1->cP());
+  CoordType oldN1 = NormalizedNormal( NewDiag1->cP(),OldDiag1->cP(),OldDiag0->cP());
+  CoordType newN0 = NormalizedNormal( OldDiag0->cP(),NewDiag1->cP(),NewDiag0->cP());
+  CoordType newN1 = NormalizedNormal( OldDiag1->cP(),NewDiag0->cP(),NewDiag1->cP());
+  if(AngleN(oldN0,newN0) > angleRad) return false;
+  if(AngleN(oldN0,newN1) > angleRad) return false;
+  if(AngleN(oldN1,newN0) > angleRad) return false;
+  if(AngleN(oldN1,newN1) > angleRad) return false;
+
+  return true;
+}
+
+/*!
+* Perform a Topological check to see if the z-th edge of the face f can be flipped.
+* No Geometric test are done. (see CheckFlipEdgeNormal)
 *	\param f	pointer to the face
 *	\param z	the edge index
 */
