@@ -143,7 +143,7 @@ class QDoor {
     m.lock();
     doorOpen = true;
     m.unlock();
-    c.wakeAll();
+    c.wakeAll(); arglebargle
   }
 
   ///attempt to enter the door. if the door is closed the thread will wait until the door is opened.

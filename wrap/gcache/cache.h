@@ -82,13 +82,6 @@ public:
       qDebug() << "Cache size after flush is not ZERO!";
       s_curr = 0;
     }
-    //assert(s_curr == 0);
-
-/*    {
-      for(unsigned int i = 0; i < tokens.size(); i++) {
-        input->heap.push(tokens[i]);
-      }
-    }*/
   }
 
   ///empty the cache. Make sure no resource is locked before calling this.

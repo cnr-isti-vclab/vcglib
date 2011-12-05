@@ -81,7 +81,7 @@ class Controller {
 
   ///start the various cache threads.
   void start() {
-    assert(stopped);
+    if(!stopped) return;
     assert(!paused);
     assert(caches.size() > 1);
     caches.back()->final = true;
@@ -92,30 +92,24 @@ class Controller {
 
   ///stops the cache threads
   void stop() {
+    if(stopped) return;
     assert(!paused);
-    assert(!stopped);
 
     //signal al caches to quit
-    for(int i = 0; i < caches.size(); i++)
+    for(unsigned int i = 0; i < caches.size(); i++)
       caches[i]->quit = true;
+
     //abort current gets
-    for(int i = 0; i < caches.size(); i++)
+    for(unsigned int i = 0; i < caches.size(); i++)
       caches[i]->abort();
+
     //make sure all caches actually run a cycle.
     for(unsigned int i = 0; i < caches.size(); i++)
       caches[i]->input->check_queue.open();
 
-    for(int i = 0; i < caches.size(); i++)
+    for(unsigned int i = 0; i < caches.size(); i++)
       caches[i]->wait();
-/*    //stop threads
-    for(int i = caches.size()-1; i >= 0; i--) {
-      caches[i]->quit = true;                      //hmmmmmmmmmmmmmm not very clean.
-      if(i == 0)
-        provider.check_queue.open();
-      else
-        caches[i-1]->check_queue.open();           //cache i listens on queue i-1
-      caches[i]->wait();
-    } */
+
     stopped = true;
   }
 
@@ -129,11 +123,11 @@ class Controller {
     assert(!paused);
 
     //lock all doors.
-    for(unsigned int i = 1; i < caches.size(); i++)
+    for(unsigned int i = 0; i < caches.size(); i++)
       caches[i]->input->check_queue.lock();
 
     //abort all pending calls
-    for(unsigned int i = 1; i < caches.size(); i++)
+    for(unsigned int i = 0; i < caches.size(); i++)
       caches[i]->abort();
 
     //make sure no cache is running (must be done after abort! otherwise we have to wait for the get)
@@ -148,7 +142,7 @@ class Controller {
     assert(paused);
 
     //unlock and open all doors
-    for(unsigned int i = 1; i < caches.size(); i++) {
+    for(unsigned int i = 0; i < caches.size(); i++) {
       caches[i]->input->check_queue.unlock();
       caches[i]->input->check_queue.open();
     }
@@ -177,7 +171,6 @@ class Controller {
   bool isWaiting() {
     bool waiting = true;
     for(int i = (int)caches.size() -1; i >= 0; i--) {
-      //waiting &= caches[i]->isWaiting();
       waiting &= caches[i]->input->check_queue.isWaiting();
     }
     return waiting;
