@@ -1,6 +1,7 @@
 #ifndef GCACHE_CACHE_H
 #define GCACHE_CACHE_H
 
+#include <stdint.h>
 #include <iostream>
 #include <limits.h>
 #include <vector>
@@ -42,19 +43,19 @@ public:
 
 protected:
   ///max space available
-  quint64 s_max;
+  uint64_t s_max;
   ///current space used
-  quint64 s_curr;
+  uint64_t s_curr;
 
 public:
-  Cache(quint64 _capacity = INT_MAX):
+  Cache(uint64_t _capacity = INT_MAX):
     final(false), quit(false), changed(false), input(NULL), s_max(_capacity), s_curr(0) {}
   virtual ~Cache() {}
 
   void setInputCache(Provider<Token> *p) { input = p; }
-  quint64 capacity() { return s_max; }
-  quint64 size() { return s_curr; }
-  void setCapacity(quint64 c) { s_max = c; }
+  uint64_t capacity() { return s_max; }
+  uint64_t size() { return s_curr; }
+  void setCapacity(uint64_t c) { s_max = c; }
 
   ///return true if the cache is waiting for priority to change
   bool isChanged() {
