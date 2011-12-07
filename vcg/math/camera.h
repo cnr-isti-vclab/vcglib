@@ -172,11 +172,19 @@ public:
 
 	int cameraType;					/// Type of camera: PERSPECTIVE,ORTHO,ISOMETRIC,CAVALIERI
 
-	void SetOrtho(S dist)
+	void SetOrtho( S l,S r, S b, S t,  vcg::Point2<int> viewport)
 	{ 
 		cameraType = ORTHO;
-		ViewportPx = ( ((ViewportPx[0] * PixelSizeMm[0]) * (ViewportPx[1] * PixelSizeMm[1])) / FocalMm ) * dist;
+		ViewportPx = viewport;
+
+		PixelSizeMm[0] = (r-l) / (S)ViewportPx[0];
+		PixelSizeMm[1] = (t-b) / (S)ViewportPx[1];
+
+		CenterPx[0] = -l/(r-l) * (S)ViewportPx[0];
+		CenterPx[1] = -b/(t-b) * (S)ViewportPx[1];
+		
 	};
+
 
 	bool IsOrtho() const
 	{ 
