@@ -224,7 +224,7 @@ bool GetOpt::parse(QString &error) {
           return false;
         }
         arg = args[i];
-        if(i == args.size() || arg[0] == '-') {
+        if(i == args.size()) {
           error = "Missing argument after option '" + arg + "'";
           return false;
         }

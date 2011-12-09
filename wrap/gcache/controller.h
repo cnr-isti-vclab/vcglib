@@ -160,10 +160,10 @@ class Controller {
     provider.heap.clear();
   }
 
-  bool isChanged() {
+  bool newData() {
     bool c = false;
     for(int i = (int)caches.size() -1; i >= 0; i--) {
-      c |= caches[i]->isChanged();
+      c |= caches[i]->newData();
     }
     return c;
   }

@@ -31,8 +31,8 @@ public:
   //if true the cache will exit at the first opportunity
   bool quit;
   ///keeps track of changes (if 1 then something was loaded or dropped
-  QAtomicInt changed;
-  ///callback for changed
+  QAtomicInt new_data;
+  ///callback for new_data
   void (*callback)(void *data);
 
   ///data is fetched from here
@@ -49,7 +49,7 @@ protected:
 
 public:
   Cache(uint64_t _capacity = INT_MAX):
-    final(false), quit(false), changed(false), input(NULL), s_max(_capacity), s_curr(0) {}
+    final(false), quit(false), new_data(false), input(NULL), s_max(_capacity), s_curr(0) {}
   virtual ~Cache() {}
 
   void setInputCache(Provider<Token> *p) { input = p; }
@@ -58,8 +58,8 @@ public:
   void setCapacity(uint64_t c) { s_max = c; }
 
   ///return true if the cache is waiting for priority to change
-  bool isChanged() {
-    bool r = changed.testAndSetOrdered(1, 0); //if changed is 1, r is true
+  bool newData() {
+    bool r = new_data.testAndSetOrdered(1, 0); //if changed is 1, r is true
     return r;
   }
 
@@ -145,7 +145,7 @@ protected:
       if(this->quit) break;
 
       if(unload() || load()) {
-        changed.testAndSetOrdered(0, 1);  //if not changed, set as changed
+        new_data.testAndSetOrdered(0, 1);  //if not changed, set as changed
         input->check_queue.open();        //we signal ourselves to check again
       }
       input->check_queue.leave();
