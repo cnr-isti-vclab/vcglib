@@ -53,13 +53,13 @@ namespace vcg {
 		/** \addtogroup trimesh */
 		
 		template<class MeshType>
-		size_t Index(MeshType &m, typename MeshType::VertexType &v) {return &v-&*m.vert.begin();}
+		size_t Index(MeshType &m, const typename MeshType::VertexType &v) {return &v-&*m.vert.begin();}
 		template<class MeshType>
-		size_t Index(MeshType &m, typename MeshType::FaceType &f) {return &f-&*m.face.begin();}
+		size_t Index(MeshType &m, const typename MeshType::FaceType &f) {return &f-&*m.face.begin();}
 		template<class MeshType>
-		size_t Index(MeshType &m, typename MeshType::EdgeType &e) {return &e-&*m.edge.begin();}
+		size_t Index(MeshType &m, const typename MeshType::EdgeType &e) {return &e-&*m.edge.begin();}
 		template<class MeshType>
-		size_t Index(MeshType &m, typename MeshType::HEdgeType &h) {return &h-&*m.hedge.begin();}
+		size_t Index(MeshType &m, const typename MeshType::HEdgeType &h) {return &h-&*m.hedge.begin();}
 
 		template<class MeshType>
 		size_t Index(MeshType &m, const typename MeshType::VertexType *vp) {return vp-&*m.vert.begin();}
