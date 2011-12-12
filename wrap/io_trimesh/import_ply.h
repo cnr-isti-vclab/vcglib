@@ -311,6 +311,7 @@ static const char *ErrorMsg(int error)
 	  ply_error_msg[PlyInfo::E_SHORTFILE      ]="Unespected eof";
 	  ply_error_msg[PlyInfo::E_NO_3VERTINFACE ]="Face with more than 3 vertices";
 	  ply_error_msg[PlyInfo::E_BAD_VERT_INDEX ]="Bad vertex index in face";
+	  ply_error_msg[PlyInfo::E_BAD_VERT_INDEX_EDGE ]="Bad vertex index in edge";
 	  ply_error_msg[PlyInfo::E_NO_6TCOORD     ]="Face with no 6 texture coordinates";
 	  ply_error_msg[PlyInfo::E_DIFFER_COLORS  ]="Number of color differ from vertices";
   }
@@ -709,9 +710,9 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				  pi.status = PlyInfo::E_SHORTFILE;
 				  return pi.status;
 			  }
-			  if( ea.v1<0 || ea.v2<0 || ea.v1>=m.en || ea.v2>=m.en)
+			  if( ea.v1<0 || ea.v2<0 || ea.v1>=m.vn || ea.v2>=m.vn)
 			  {
-				  pi.status = PlyInfo::E_BAD_VERT_INDEX;
+				  pi.status = PlyInfo::E_BAD_VERT_INDEX_EDGE;
 				  return pi.status;
 			  }
 			  (*ei).V(0) = index[ ea.v1 ];
