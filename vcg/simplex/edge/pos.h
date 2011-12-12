@@ -215,6 +215,83 @@ public:
 	}
 
 };
+
+
+
+/** Class VEIterator.
+    This class is used as an iterator over the VE adjacency.
+  It allow to easily traverse all the edges around a given vertex v;
+  The edges are traversed in no particular order. No Manifoldness requirement.
+
+  typical example:
+
+    VertexPointer v;
+    vcg::edge::VEIterator<EdgeType> vei(v);
+    for (;!vei.End();++vei)
+            vei.E()->ClearV();
+
+        // Alternative
+
+	vcg::edge::VEIterator<EdgeType> vei(f, 1);
+		while (!vei.End()){
+			vei.E()->ClearV();
+			++vei;
+		}
+
+
+	See also the JumpingPos in jumping_pos.h for an iterator that loops
+	around the faces of a vertex using FF topology and without requiring the VF topology.
+
+ */
+
+template <typename EdgeType>
+class VEIterator
+{
+public:
+
+	/// The vertex type
+	typedef typename EdgeType::VertexType VertexType;
+	/// The Base face type
+	typedef  EdgeType  VFIEdgeType;
+	/// The vector type
+	typedef typename VertexType::CoordType CoordType;
+	/// The scalar type
+	typedef typename VertexType::ScalarType ScalarType;
+
+	/// Pointer to the face of the half-edge
+	EdgeType *e;
+	/// Index of the vertex
+	int z;
+
+	/// Default constructor
+	VEIterator(){}
+	/// Constructor which associates the half-edge elementet with a face and its vertex
+	VEIterator(EdgeType * _e,  const int &  _z){e = _e; z = _z;}
+
+	/// Constructor which takes a pointer to vertex
+	VEIterator(VertexType * _v){e = _v->VEp(); z = _v->VEi();}
+
+	VFIEdgeType * &E() { return e;}
+	int	&					  I() { return z;}
+
+  // Access to the vertex. Having a VEIterator vfi, it corresponds to
+  // vfi.V() = vfi.I()->V(vfi.I())
+  inline VertexType *V() const { return e->V(z);}
+
+  inline VertexType * const & V0() const { return e->V0(z);}
+  inline VertexType * const & V1() const { return e->V1(z);}
+
+  bool End() const {return e==0;}
+  VFIEdgeType *operator++() {
+    EdgeType* t = e;
+        e = e->VEp(z);
+        z = t->VEi(z);
+    return e;
+  }
+
+};
+
+
 	}	 // end namespace
 }	 // end namespace
 #endif
