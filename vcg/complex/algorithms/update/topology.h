@@ -496,7 +496,7 @@ static void EdgeEdge(MeshType &m)
 
 static void VertexEdge(MeshType &m)
 {
-  if(!m.HasVETopology()) return;
+  if(!HasVEAdjacency(m)) return;
 
   VertexIterator vi;
   EdgeIterator ei;
@@ -507,7 +507,7 @@ static void VertexEdge(MeshType &m)
     (*vi).VEi() = 0;
   }
 
-  for(ei=m.edges.begin();ei!=m.edges.end();++ei)
+  for(ei=m.edge.begin();ei!=m.edge.end();++ei)
   if( ! (*ei).IsD() )
   {
     for(int j=0;j<2;++j)
