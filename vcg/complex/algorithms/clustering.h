@@ -358,7 +358,7 @@ class Clustering
   void SelectPointSet(MeshType &m)
   {
 		typename STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
-                UpdateSelection<MeshType>::ClearVertex(m);
+                UpdateSelection<MeshType>::VertexClear(m);
 		for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
       VertexType *ptr=(*gi).second.Ptr();

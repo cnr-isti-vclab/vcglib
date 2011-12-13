@@ -133,8 +133,8 @@ static void SelectRegion(MeshType &m, VertexPointer vp)
 {
   PerVertexPointerHandle sources =  tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   assert(tri::Allocator<MeshType>::IsValidHandle(m,sources));
-  tri::UpdateSelection<MeshType>::ClearFace(m);
-  tri::UpdateSelection<MeshType>::ClearVertex(m);
+  tri::UpdateSelection<MeshType>::FaceClear(m);
+  tri::UpdateSelection<MeshType>::VertexClear(m);
 
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
   {

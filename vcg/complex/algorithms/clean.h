@@ -785,7 +785,7 @@ private:
         assert(tri::HasEEAdjacency(m));
         tri::UpdateTopology<MeshType>::EdgeEdge(m);
 
-        if(SelectFlag) UpdateSelection<MeshType>::ClearVertex(m);
+        if(SelectFlag) UpdateSelection<MeshType>::VertexClear(m);
 
         int nonManifoldCnt=0;
         SimpleTempData<typename MeshType::VertContainer, int > TD(m.vert,0);
@@ -828,8 +828,8 @@ private:
         UpdateFlags<MeshType>::FaceClear(m,nmfBit[0]+nmfBit[1]+nmfBit[2]);
 
         if(SelectFlag){
-          UpdateSelection<MeshType>::ClearVertex(m);
-          UpdateSelection<MeshType>::ClearFace(m);
+          UpdateSelection<MeshType>::VertexClear(m);
+          UpdateSelection<MeshType>::FaceClear(m);
         }
         assert(tri::HasFFAdjacency(m));
 
@@ -872,7 +872,7 @@ private:
       static int CountNonManifoldVertexFF( MeshType & m, bool selectVert = true )
 			{
         assert(tri::HasFFAdjacency(m));
-        if(selectVert) UpdateSelection<MeshType>::ClearVertex(m);
+        if(selectVert) UpdateSelection<MeshType>::VertexClear(m);
 
 				int nonManifoldCnt=0;
 				SimpleTempData<typename MeshType::VertContainer, int > TD(m.vert,0);
