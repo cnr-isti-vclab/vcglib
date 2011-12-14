@@ -259,7 +259,9 @@ protected:
   }
 };
 
+/* TODO use the following class to allow multiple cache transfers at the same time  */
 
+/*
 template<typename Token>
 class Transfer: public QThread {
  public:
@@ -273,5 +275,6 @@ class Transfer: public QThread {
   }
 };
 
+*/
 
 #endif // GCACHE_H
