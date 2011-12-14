@@ -1,7 +1,7 @@
 #ifndef GCACHE_TOKEN_H
 #define GCACHE_TOKEN_H
 
-#include <QAtomicInt>
+#include <wrap/system/multithreading/atomic_int.h>
 
 /* QAtomic int count keep trak of token status:
    >0: locked (possibly multiple times)
@@ -34,7 +34,7 @@ class Token {
   ///swap space used in updatePriorities [do not use, should be private]
   Priority tmp_priority;     
   ///reference count of locked items [do not use, should be private]
-  QAtomicInt count;          
+  mt::atomicInt count;
 
  public:
   Token(): count(OUTSIDE) {}

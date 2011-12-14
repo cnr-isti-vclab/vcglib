@@ -7,6 +7,7 @@
 #include <vector>
 #include <list>
 #include <wrap/system/multithreading/mt.h>
+#include <wrap/system/multithreading/atomic_int.h>
 
 #include "provider.h"
 
@@ -31,7 +32,7 @@ public:
   //if true the cache will exit at the first opportunity
   bool quit;
   ///keeps track of changes (if 1 then something was loaded or dropped
-  QAtomicInt new_data;
+  mt::atomicInt new_data;
   ///callback for new_data
   void (*callback)(void *data);
 
@@ -80,7 +81,7 @@ public:
       this->heap.clear();
     }
     if(!s_curr == 0) {
-      qDebug() << "Cache size after flush is not ZERO!";
+      std::cerr << "Cache size after flush is not ZERO!\n";
       s_curr = 0;
     }
   }

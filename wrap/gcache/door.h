@@ -26,12 +26,11 @@
 #define CACHE_DOOR_H
 
 #include <wrap/system/multithreading/mt.h>
+#include <wrap/system/multithreading/atomic_int.h>
 
 #ifdef QT_CORE_LIB
 #include <QWaitCondition>
 #endif
-
-#include <QAtomicInt>
 
 #define METHOD_2
 

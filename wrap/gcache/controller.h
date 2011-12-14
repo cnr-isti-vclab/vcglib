@@ -1,7 +1,6 @@
 #ifndef GCACHE_CONTROLLER_H
 #define GCACHE_CONTROLLER_H
 
-#include <QDebug>
 #include "cache.h"
 
 /** Allows to insert tokens, update priorities and generally control the cache.
