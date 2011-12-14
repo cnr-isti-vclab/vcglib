@@ -229,17 +229,32 @@ static size_t VertexInvert(MeshType &m)
 } 
 
 /// \brief Select all the vertices that are touched by at least a single selected faces
-static size_t VertexFromFaceLoose(MeshType &m)
+static size_t VertexFromFaceLoose(MeshType &m, bool preserveSelection=false)
 {
   size_t selCnt=0;
-    VertexClear(m);
-  FaceIterator fi;
-	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
-		if( !(*fi).IsD() && (*fi).IsS())	
+
+  if(!preserveSelection) VertexClear(m);
+  for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+    if( !(*fi).IsD() && (*fi).IsS())
     {
       if( !(*fi).V(0)->IsS()) { (*fi).V(0)->SetS(); ++selCnt; }
       if( !(*fi).V(1)->IsS()) { (*fi).V(1)->SetS(); ++selCnt; }
       if( !(*fi).V(2)->IsS()) { (*fi).V(2)->SetS(); ++selCnt; }
+    }
+  return selCnt;
+}
+
+/// \brief Select all the vertices that are touched by at least a single selected edge
+static size_t VertexFromEdgeLoose(MeshType &m, bool preserveSelection=false)
+{
+  size_t selCnt=0;
+
+  if(!preserveSelection) VertexClear(m);
+  for(EdgeIterator ei = m.edge.begin(); ei != m.edge.end(); ++ei)
+    if( !(*ei).IsD() && (*ei).IsS())
+    {
+      if( !(*ei).V(0)->IsS()) { (*ei).V(0)->SetS(); ++selCnt; }
+      if( !(*ei).V(1)->IsS()) { (*ei).V(1)->SetS(); ++selCnt; }
     }
   return selCnt;
 }
@@ -250,16 +265,16 @@ static size_t VertexFromFaceLoose(MeshType &m)
 */
 static size_t VertexFromFaceStrict(MeshType &m)
 {
-	VertexFromFaceLoose(m);
+  VertexFromFaceLoose(m);
   FaceIterator fi;
-	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
-		if( !(*fi).IsD() && !(*fi).IsS())	
+  for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+    if( !(*fi).IsD() && !(*fi).IsS())
     {
-     (*fi).V(0)->ClearS(); 
-     (*fi).V(1)->ClearS(); 
-     (*fi).V(2)->ClearS(); 
+      (*fi).V(0)->ClearS();
+      (*fi).V(1)->ClearS();
+      (*fi).V(2)->ClearS();
     }
-  return CountVertex(m);
+  return VertexCount(m);
 }
 
 /// \brief Select ONLY the faces with ALL the vertices selected 
