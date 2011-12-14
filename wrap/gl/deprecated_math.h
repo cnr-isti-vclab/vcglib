@@ -20,42 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: not supported by cvs2svn $
-Revision 1.10  2006/02/13 13:05:05  cignoni
-Removed glew inclusion
-
-Revision 1.9  2004/09/30 00:48:07  ponchio
-<gl/glew.h> -> <GL/glew.h>
-
-Revision 1.8  2004/09/28 14:04:36  ganovelli
-glGet added
-
-Revision 1.7  2004/07/13 15:55:57  cignoni
-Added test on presence of glTranspose extension (for old hw support)
-
-Revision 1.6  2004/05/26 15:12:39  cignoni
-Removed inclusion of gl extension stuff
-
-Revision 1.5  2004/05/12 20:54:55  ponchio
-*** empty log message ***
-
-Revision 1.4  2004/05/12 13:07:47  ponchio
-Added #include <glew.h>
-
-Revision 1.3  2004/05/04 23:36:23  cignoni
-remove include of gl and added glextgension exploiting,
-
-Revision 1.2  2004/04/07 10:47:03  cignoni
-inlined functions for avoid multiple linking errors
-
-Revision 1.1  2004/03/31 15:27:17  ponchio
-*** empty log message ***
-
-
-****************************************************************************/
 
 #ifndef VCG_GL_MATH_H
 #define VCG_GL_MATH_H
@@ -88,6 +53,14 @@ inline void glMultMatrixE(const Matrix44d &matrix) {
 inline void glMultMatrix(const Matrix44d &matrix) {
     glMultMatrixd((const GLdouble *)(matrix.transpose().V()));
 }
+
+inline void glLoadMatrix(const Matrix44d &matrix) {
+    glLoadMatrixd((const GLdouble *)(matrix.transpose().V()));
+}
+inline void glLoadMatrix(const Matrix44f &matrix) {
+    glLoadMatrixf((const GLfloat *)(matrix.transpose().V()));
+}
+
 
 inline void glMultMatrixDirect(const Matrix44f &matrix) {
    glMultMatrixf((const GLfloat *)(matrix.V()));
