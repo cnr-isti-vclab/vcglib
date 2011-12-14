@@ -3,6 +3,7 @@
 
 #include "base.h"
 
+#include <iostream>
 #include <semaphore.h>
 
 namespace mt
@@ -10,61 +11,84 @@ namespace mt
 
 class semaphore
 {
-	MT_PREVENT_COPY(semaphore)
+  MT_PREVENT_COPY(semaphore)
 
-	public:
+  public:
 
-		typedef semaphore this_type;
-		typedef void      base_type;
+  typedef semaphore this_type;
+  typedef void      base_type;
 
-		semaphore(void)
-		{
-			sem_init(&(this->s), 0, 0);
-		}
+  semaphore(void)
+  {
+    sem_init(&(this->s), 0, 0);
+  }
 
-		semaphore(int value)
-		{
-			sem_init(&(this->s), 0, value);
-		}
+  semaphore(int value)
+  {
+    sem_init(&(this->s), 0, value);
+  }
 
-		~semaphore(void)
-		{
-			sem_destroy(&(this->s));
-		}
+  ~semaphore(void)
+  {
+    sem_destroy(&(this->s));
+  }
 
-		void post(void)
-		{
-			sem_post(&(this->s));
-		}
+  void post(void)
+  {
+    sem_post(&(this->s));
+  }
 
-                /*
-		void post(int n)
-		{
-			sem_post_multiple(&(this->s), n);
-		}
-                */
+  /*
+  void post(int n)
+  {
+    sem_post_multiple(&(this->s), n);
+  }
+  */
 
-		void wait(void)
-		{
-			sem_wait(&(this->s));
-		}
+  void wait(void)
+  {
+    sem_wait(&(this->s));
+  }
 
-		bool trywait(void)
-		{
-			return (sem_trywait(&(this->s)) == 0);
-		}
+  bool trywait(void)
+  {
+    return (sem_trywait(&(this->s)) == 0);
+  }
 
-		//jnoguera 11-Nov-2011
-		int available()
-		{
-			int value;
-			sem_getvalue( &(this->s), &value );
-			return value;
-		}
+  //methods added for conforming to the QT implementation
+  //jnoguera 14-12-2011
 
-	private:
+  void release(int n=1)
+  {
+    if(n != 1)
+      std::cout << "Error, mt::semaphore.release() not supported\n";
+    sem_post(&(this->s));
+  }
 
-		sem_t s;
+  void acquire(int n=1)
+  {
+    if(n != 1)
+      std::cout << "Error, mt::semaphore.tryAcquire() not supported\n";
+    sem_wait(&(this->s));
+  }
+
+  bool tryAcquire(int n=1)
+  {
+  if(n != 1)
+    std::cout << "Error, mt::semaphore.tryAcquire() not supported\n";
+  return (sem_trywait(&(this->s)) == 0);
+  }
+
+  int available()
+  {
+    int value;
+    sem_getvalue( &(this->s), &value );
+    return value;
+  }
+
+private:
+
+sem_t s;
 };
 
 }

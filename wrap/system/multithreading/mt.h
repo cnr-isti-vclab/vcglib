@@ -3,9 +3,22 @@
 
 
 #ifdef QT_CORE_LIB
-#include <QSemaphore>
 
-tyepdef QSemaphore mt::Semaphore;
+#include <QThread.h>
+#include <QMutex.h>
+#include <QSemaphore.h>
+
+namespace mt{
+  typedef QThread thread;
+  typedef QMutex mutex;
+  typedef QMutexLocker mutexlocker;
+  typedef QSemaphore semaphore;
+
+//cache.h, token.h
+//QAtomicInt
+
+}//namespace
+
 
 #else
 
@@ -18,6 +31,9 @@ tyepdef QSemaphore mt::Semaphore;
 #include "scoped_read_lock.h"
 #include "scoped_write_lock.h"
 
+namespace mt{
+  typedef scoped_mutex_lock mutexlocker;
+}
 #endif
 
 #endif // MT_MT_H

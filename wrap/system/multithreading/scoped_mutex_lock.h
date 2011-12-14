@@ -8,26 +8,34 @@ namespace mt
 
 class scoped_mutex_lock
 {
-	MT_PREVENT_COPY(scoped_mutex_lock)
+    MT_PREVENT_COPY(scoped_mutex_lock)
 
-	public:
+    public:
 
-		typedef scoped_mutex_lock this_type;
-		typedef void              base_type;
+            typedef scoped_mutex_lock this_type;
+            typedef void              base_type;
 
-		scoped_mutex_lock(mutex & m) : mtx(m)
-		{
-			this->mtx.lock();
-		}
+            scoped_mutex_lock(mutex & m) : mtx(m)
+            {
+                    this->mtx.lock();
+            }
 
-		~scoped_mutex_lock(void)
-		{
-			this->mtx.unlock();
-		}
+            ~scoped_mutex_lock(void)
+            {
+                    this->mtx.unlock();
+            }
 
-	protected:
+            //jnoguera 14-12-2011
+            //method added to mime QMutexLocker
+            scoped_mutex_lock(mutex * m) : mtx( *m )
+            {
+                    this->mtx.lock();
+            }
 
-		mutex & mtx;
+
+    protected:
+
+            mutex & mtx;
 };
 
 }
@@ -49,26 +57,26 @@ namespace mt
 
 class scoped_mutex_lock
 {
-	MT_PREVENT_COPY(scoped_mutex_lock)
+    MT_PREVENT_COPY(scoped_mutex_lock)
 
-	public:
+    public:
 
-		typedef scoped_mutex_lock this_type;
-		typedef void              base_type;
+            typedef scoped_mutex_lock this_type;
+            typedef void              base_type;
 
-		scoped_mutex_lock(mutex & m) : mtx(m)
-		{
-			this->mtx.lock();
-		}
+            scoped_mutex_lock(mutex & m) : mtx(m)
+            {
+                    this->mtx.lock();
+            }
 
-		~scoped_mutex_lock(void)
-		{
-			this->mtx.unlock();
-		}
+            ~scoped_mutex_lock(void)
+            {
+                    this->mtx.unlock();
+            }
 
-	protected:
+    protected:
 
-		mutex & mtx;
+            mutex & mtx;
 };
 
 }
