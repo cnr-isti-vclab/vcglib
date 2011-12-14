@@ -1,11 +1,8 @@
-#ifndef _ATOMIC_INT_APPLE_H
+#ifndef _ATOMIC_INT_GENERIC_H
 
-#define _ATOMIC_INT_APPLE_H
+#define _ATOMIC_INT_GENERIC_H
 
-#include <libkern/OSAtomic.h>
-
-
-//http://developer.apple.com/library/mac/#documentation/Darwin/Reference/KernelIOKitFramework/OSAtomic_h/index.html
+#include "mt.h"
 
 namespace mt{
 
@@ -26,23 +23,12 @@ public:
 	/**
 	Reads the current value of this QAtomicInt and then adds valueToAdd
 	to the current value, returning the original value.
-
-	Unfortunately, MacOSX does not provide with fetch-and-add functions,
-	only add-and-fetch. Therefore, we have to simulate them.
-
-	Implementation based on SDL:
-	//http://lists.libsdl.org/pipermail/commits-libsdl.org/2011-January/003568.html
 	*/
 	inline int fetchAndAddAcquire( int valueToAdd )
 	{
-		 //T *originalValue = currentValue;
-		 //currentValue += valueToAdd;
-		 //return originalValue;
-
-		int originalValue;
-		do { 
-			originalValue = value;
-		} while (!OSAtomicCompareAndSwap32Barrier(originalValue, originalValue+valueToAdd, &value));
+		mutexlocker lock(m);
+		int originalValue = value;
+		value += valueToAdd;
 		return originalValue;
 	}
 
@@ -51,7 +37,9 @@ public:
 	Returns true if the new value is non-zero, false otherwise.*/
 	inline bool ref()
 	{
-		return OSAtomicIncrement32Barrier(&value) != 0;
+		mutexlocker lock(m);
+		value++;
+		return value == 0;
 	}
 
 	/*
@@ -59,18 +47,19 @@ public:
 	Returns true if the new value is non-zero, false otherwise.*/
 	inline bool deref()
 	{
-		return OSAtomicDecrement32Barrier(&value) != 0;
+		mutexlocker lock(m);
+		value--;
+		return value == 0;
 	}
 
 	inline bool testAndSetOrdered(int expectedValue, int newValue)
 	{
-		//if (currentValue == expectedValue) {
-		//	 currentValue = newValue;
-		//	 return true;
-		// }
-		//return false;
-
-        return OSAtomicCompareAndSwap32Barrier(expectedValue, newValue, &value);
+		mutexlocker lock(m);
+		if (value == expectedValue) {
+			 value = newValue;
+			 return true;
+		 }
+		return false;
 	}
 
     // Non-atomic API
@@ -112,6 +101,7 @@ public:
 
 private:
 	volatile int value;
+	mutex m;
 
 };
 
