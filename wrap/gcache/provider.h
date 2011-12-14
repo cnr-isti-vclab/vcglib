@@ -1,8 +1,7 @@
 #ifndef GCACHE_PROVIDER_H
 #define GCACHE_PROVIDER_H
 
-
-#include <QMutex>
+#include <wrap/system/multithreading/mt.h>
 #include "dheap.h"
 #include "door.h"
 
@@ -19,7 +18,7 @@
 */
 
 template <typename Token>
-class Provider: public QThread {
+class Provider: public mt::thread {
  public:
   ///holds the resources in this cache but not in the cache above
   PtrDHeap<Token> heap;
@@ -28,9 +27,9 @@ class Provider: public QThread {
   ///signals we need to rebuild heap.
   bool heap_dirty;
   ///lock this before manipulating heap.
-  QMutex heap_lock;
+  mt::mutex heap_lock;
   ///used to sincronize priorities update
-  QMutex priority_lock;
+  mt::mutex priority_lock;
   ///signals (to next cache!) priorities have changed or something is available
   QDoor check_queue;
 
@@ -39,7 +38,7 @@ class Provider: public QThread {
 
   /// [should be protected, do not use]
   void pushPriorities() {
-    QMutexLocker locker(&priority_lock);
+    mt::mutexlocker locker(&priority_lock);
     for(int i = 0; i < heap.size(); i++)
       heap[i].pushPriority();
     heap_dirty = true;
@@ -50,7 +49,7 @@ class Provider: public QThread {
     if(!this->heap_dirty) return;
 
     {
-      QMutexLocker locker(&priority_lock);
+      mt::mutexlocker locker(&priority_lock);
       for(int i = 0; i < this->heap.size(); i++)
         this->heap[i].pullPriority();
       this->heap_dirty = false;
@@ -70,7 +69,7 @@ class Provider: public QThread {
   ///ensure no locked item are to be removed [should be protected, do not use]
   template <class FUNCTOR> void flush(FUNCTOR functor) {
     int count = 0;
-    QMutexLocker locker(&(this->heap_lock));
+    mt::mutexlocker locker(&(this->heap_lock));
     for(int k = 0; k < this->heap.size(); k++) {
       Token *token = &this->heap[k];
       if(functor(token)) { //drop it

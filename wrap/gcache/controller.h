@@ -60,7 +60,7 @@ class Controller {
 
   ///if more tokens than m present in the provider, lowest priority ones will be removed
   void setMaxTokens(int m) {
-    QMutexLocker l(&provider.heap_lock);
+    mt::mutexlocker l(&provider.heap_lock);
     provider.max_tokens = m;
   }
 
@@ -68,7 +68,7 @@ class Controller {
   void updatePriorities() {
 
     if(tokens.size()) {
-      QMutexLocker l(&provider.heap_lock);
+      mt::mutexlocker l(&provider.heap_lock);
       for(unsigned int i = 0; i < tokens.size(); i++)
         provider.heap.push(tokens[i]);
       tokens.clear();

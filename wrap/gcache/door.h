@@ -25,12 +25,13 @@
 #ifndef CACHE_DOOR_H
 #define CACHE_DOOR_H
 
-#include <QDebug>
-#include <QMutex>
-#include <QSemaphore>
-#include <QAtomicInt>
-#include <QWaitCondition>
+#include <wrap/system/multithreading/mt.h>
 
+#ifdef QT_CORE_LIB
+#include <QWaitCondition>
+#endif
+
+#include <QAtomicInt>
 
 #define METHOD_2
 
@@ -38,8 +39,8 @@
 
 class QDoor {
  private:
-  QSemaphore door;
-  QMutex room;     //lock when entering. unlock when exiting
+  mt::semaphore door;
+  mt::mutex room;     //lock when entering. unlock when exiting
   QAtomicInt key; //keep tracks of door status
 
  public:
@@ -77,11 +78,11 @@ class QDoor {
 
 class QDoor {
  private:
-  QSemaphore _open;
-  QSemaphore _close;
+  mt::semaphore _open;
+  mt::semaphore _close;
 
  public:
-  QMutex room;
+  mt::mutex room;
   QDoor(): _open(0), _close(1) {} //this means closed
 
   void open() {
@@ -175,7 +176,7 @@ class QDoor {
     m.unlock();
   }
  private:
-  QMutex m;
+  mt::mutex m;
   QWaitCondition c;
   bool doorOpen;
   bool waiting;

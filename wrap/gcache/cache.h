@@ -6,8 +6,8 @@
 #include <limits.h>
 #include <vector>
 #include <list>
+#include <wrap/system/multithreading/mt.h>
 
-#include <QThread>
 #include "provider.h"
 
 using namespace std;
@@ -91,7 +91,7 @@ public:
     std::vector<Token *> tokens;
     {
       int count = 0;
-      QMutexLocker locker(&(this->heap_lock));
+      mt::mutexlocker locker(&(this->heap_lock));
       for(int k = 0; k < this->heap.size(); k++) {
         Token *token = &this->heap[k];
         if(functor(token)) { //drop it
@@ -107,7 +107,7 @@ public:
       this->heap_dirty = true;
     }
     {
-      QMutexLocker locker(&(input->heap_lock));
+      mt::mutexlocker locker(&(input->heap_lock));
       for(unsigned int i = 0; i < tokens.size(); i++) {
         input->heap.push(tokens[i]);
       }
@@ -165,7 +165,7 @@ protected:
     //1 we need to make room (capacity < current)
     if(size() > capacity()) {
 
-      QMutexLocker locker(&(this->heap_lock));
+      mt::mutexlocker locker(&(this->heap_lock));
 
       //2 we have some element not in the upper caches (heap.size()  > 0
       if(this->heap.size()) {
@@ -194,7 +194,7 @@ protected:
 
     if(remove) {
       {
-        QMutexLocker input_locker(&(input->heap_lock));
+        mt::mutexlocker input_locker(&(input->heap_lock));
         int size = drop(remove);
         assert(size >= 0);
         s_curr -= size;
@@ -214,7 +214,7 @@ protected:
        empty heap is bad: we cannot drop anything to make room, and cache above has nothing to get.
        this should not happen if we set correct cache sizes, but if it happens.... */
     {
-      QMutexLocker locker(&(this->heap_lock));
+      mt::mutexlocker locker(&(this->heap_lock));
       this->rebuild();
       if(size() > capacity() && this->heap.size() > 0) {
         last = &(this->heap.min()); //no room, set last so we might check for a swap.
@@ -222,7 +222,7 @@ protected:
     }
 
     {
-      QMutexLocker input_locker(&(input->heap_lock));
+      mt::mutexlocker input_locker(&(input->heap_lock));
       input->rebuild();                                  //if dirty rebuild
       if(input->heap.size()) {                           //we need something in input to tranfer.
         Token &first = input->heap.max();
@@ -240,7 +240,7 @@ protected:
       if(size >= 0) {                                   //success
         s_curr += size;
         {
-          QMutexLocker locker(&(this->heap_lock));
+          mt::mutexlocker locker(&(this->heap_lock));
           if(final)
             insert->count.ref();                       //now lock is 0 and can be locked
 
@@ -250,7 +250,7 @@ protected:
         return true;
 
       } else {                                         //failed transfer put it back, we will keep trying to transfer it...
-        QMutexLocker input_locker(&(input->heap_lock));
+        mt::mutexlocker input_locker(&(input->heap_lock));
         input->heap.push(insert);
         return false;
       }
@@ -263,7 +263,7 @@ protected:
 
 /*
 template<typename Token>
-class Transfer: public QThread {
+class Transfer: public mt::thread {
  public:
   Transfer(Cache<Token> *_cache): cache(_cache) {}
  private:
