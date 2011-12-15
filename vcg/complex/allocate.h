@@ -938,28 +938,25 @@ public:
 	template <class ATTR_TYPE> 
 	static
 		typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
-   GetPerVertexAttribute( MeshType & m, const std::string & name){
-		assert(!name.empty());
-		PointerToAttribute h1; h1._name = name;
-		typename std::set<PointerToAttribute > :: iterator i;
+	GetPerVertexAttribute( MeshType & m, const std::string & name){
+	  assert(!name.empty());
+	  PointerToAttribute h1; h1._name = name;
+	  typename std::set<PointerToAttribute > :: iterator i;
 
-		i =m.vert_attr.find(h1);
-		if(i!=m.vert_attr.end())
-                                if((*i)._sizeof == sizeof(ATTR_TYPE) ){
-						if(	(*i)._padding != 0 ){
-								PointerToAttribute attr = (*i);						// copy the PointerToAttribute
-								m.vert_attr.erase(i);						// remove it from the set
-								FixPaddedPerVertexAttribute<ATTR_TYPE>(m,attr);
-								std::pair<AttrIterator,bool> new_i = m.vert_attr.insert(attr);	// insert the modified PointerToAttribute
-								assert(new_i.second);
-								i = new_i.first;
-								}
-
-					return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+	  i =m.vert_attr.find(h1);
+	  if(i!=m.vert_attr.end())
+		if((*i)._sizeof == sizeof(ATTR_TYPE) ){
+		  if(	(*i)._padding != 0 ){
+			PointerToAttribute attr = (*i);						// copy the PointerToAttribute
+			m.vert_attr.erase(i);						// remove it from the set
+			FixPaddedPerVertexAttribute<ATTR_TYPE>(m,attr);
+			std::pair<AttrIterator,bool> new_i = m.vert_attr.insert(attr);	// insert the modified PointerToAttribute
+			assert(new_i.second);
+			i = new_i.first;
+		  }
+		  return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
 		}
-
-		return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL,0);
-		
+		return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL,0);		
 	}
 
 	template <class ATTR_TYPE>
@@ -1027,9 +1024,9 @@ public:
 			assert(i ==m.edge_attr.end() );// an attribute with this name exists
 		}
 		h._sizeof = sizeof(ATTR_TYPE);
-                h._padding = 0;
-                h._typename = typeid(ATTR_TYPE).name();
-		h._handle = (void*) new SimpleTempData<EdgeContainer,ATTR_TYPE>(m.edge);
+		h._padding = 0;
+//		h._typename = typeid(ATTR_TYPE).name();
+        h._handle =  new SimpleTempData<EdgeContainer,ATTR_TYPE>(m.edge);
  		m.attrn++;
 		h.n_attr = m.attrn;
 		std::pair < AttrIterator , bool> res =  m.edge_attr.insert(h);
@@ -1046,18 +1043,28 @@ public:
 	template <class ATTR_TYPE> 
 	static
 		typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
-	 GetPerEdgeAttribute( const MeshType & m, const std::string & name){
-		assert(!name.empty());
-		PointerToAttribute h1; h1._name = name;
-		typename std::set<PointerToAttribute > ::const_iterator i;
+	GetPerEdgeAttribute( MeshType & m, const std::string & name){
+	  assert(!name.empty());
+	  PointerToAttribute h1; h1._name = name;
+	  typename std::set<PointerToAttribute > ::const_iterator i;
 
-		i =m.edge_attr.find(h1);
+	  i =m.edge_attr.find(h1);
+	  if(i!=m.edge_attr.end())
+		if((*i)._sizeof == sizeof(ATTR_TYPE) ){
+		  if(	(*i)._padding != 0 ){
+			PointerToAttribute attr = (*i);						// copy the PointerToAttribute
+			m.edge_attr.erase(i);						// remove it from the set
+			FixPaddedPerEdgeAttribute<ATTR_TYPE>(m,attr);
+			std::pair<AttrIterator,bool> new_i = m.edge_attr.insert(attr);	// insert the modified PointerToAttribute
+			assert(new_i.second);
+			i = new_i.first;
+		  }
+		  return typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+		}
+//		if((*i)._typename == typeid(ATTR_TYPE).name() )
+//		  return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL,0);
 
-		if(i!=m.edge_attr.end())
-				if((*i)._typename == typeid(ATTR_TYPE).name() )
-						return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL,0);
-
-		return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(NULL,0);
+	  return typename MeshType:: template PerEdgeAttributeHandle<ATTR_TYPE>(NULL,0);
 	}
 
 	template <class ATTR_TYPE>
@@ -1276,7 +1283,7 @@ public:
 	}
 
 	static
-		void	DeletePerMeshAttribute( MeshType & m,  std::string name){
+		void	 DeletePerMeshAttribute( MeshType & m,  std::string name){
 		AttrIterator i;
 		PointerToAttribute h1; h1._name = name;
 		i = m.mesh_attr.find(h1);
@@ -1286,8 +1293,8 @@ public:
 	}
 
 	template <class ATTR_TYPE>
-	static 
-		void FixPaddedPerVertexAttribute ( MeshType & m,PointerToAttribute & pa){
+	static
+		void FixPaddedPerVertexAttribute (MeshType & m, PointerToAttribute & pa){
 
 			// create the container of the right type
 			SimpleTempData<VertContainer,ATTR_TYPE>* _handle =  new SimpleTempData<VertContainer,ATTR_TYPE>(m.vert);
@@ -1297,11 +1304,11 @@ public:
 			for(unsigned int i  = 0; i < m.vert.size(); ++i){
 				ATTR_TYPE * dest = &(*_handle)[i];
 				char * ptr = (char*)( ((SimpleTempDataBase *)pa._handle)->DataBegin());
-				memcpy((void*)dest ,  
+				memcpy((void*)dest ,
 				(void*) &(ptr[i *  pa._sizeof ]) ,sizeof(ATTR_TYPE));
 			}
 
-			// remove the padded container 
+			// remove the padded container
 			delete ((SimpleTempDataBase*) pa._handle);
 
 			// update the pointer to data
@@ -1310,10 +1317,38 @@ public:
 			// update the pointer to data
 			pa._handle = _handle;
 
-			// zero the padding 
+			// zero the padding
 			pa._padding = 0;
 	}
-	
+	template <class ATTR_TYPE>
+	static
+		void FixPaddedPerEdgeAttribute (MeshType & m, PointerToAttribute & pa){
+
+			// create the container of the right type
+			SimpleTempData<EdgeContainer,ATTR_TYPE>* _handle =  new SimpleTempData<EdgeContainer,ATTR_TYPE>(m.edge);
+
+			// copy the padded container in the new one
+			_handle->Resize(m.edge.size());
+			for(unsigned int i  = 0; i < m.edge.size(); ++i){
+				ATTR_TYPE * dest = &(*_handle)[i];
+				char * ptr = (char*)( ((SimpleTempDataBase *)pa._handle)->DataBegin());
+				memcpy((void*)dest ,
+				(void*) &(ptr[i *  pa._sizeof ]) ,sizeof(ATTR_TYPE));
+			}
+
+			// remove the padded container
+			delete ((SimpleTempDataBase*) pa._handle);
+
+			// update the pointer to data
+			pa._sizeof = sizeof(ATTR_TYPE);
+
+			// update the pointer to data
+			pa._handle = _handle;
+
+			// zero the padding
+			pa._padding = 0;
+	}
+
 	template <class ATTR_TYPE>
 	static 
 		void FixPaddedPerFaceAttribute ( MeshType & m,PointerToAttribute & pa){
