@@ -26,12 +26,13 @@
 
 #include <vcg/complex/allocate.h>
 #include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/update/selection.h>
 #include <set>
 
 namespace vcg {
 namespace tri {
 
-template<class MeshLeft, class MeshRight> 
+template<class MeshLeft, class ConstMeshRight>
 class Append
 {
 public:
@@ -48,24 +49,24 @@ public:
  typedef typename MeshLeft::FaceIterator		FaceIteratorLeft;
 
 
- typedef typename MeshRight::ScalarType			ScalarRight;
- typedef typename MeshRight::CoordType			CoordRight;
- typedef typename MeshRight::VertexType			VertexRight;
- typedef typename MeshRight::EdgeType				EdgeRight;
- typedef typename MeshRight::HEdgeType			HEdgeRight;
- typedef typename MeshRight::FaceType				FaceRight;
- typedef typename MeshRight::VertexPointer  VertexPointerRight;
- typedef typename MeshRight::VertexIterator VertexIteratorRight;
- typedef typename MeshRight::EdgeIterator   EdgeIteratorRight;
- typedef typename MeshRight::HEdgeIterator  HEdgeIteratorRight;
- typedef typename MeshRight::FaceIterator   FaceIteratorRight;
- typedef typename MeshRight::FacePointer    FacePointerRight;
+ typedef typename ConstMeshRight::ScalarType			ScalarRight;
+ typedef typename ConstMeshRight::CoordType			CoordRight;
+ typedef typename ConstMeshRight::VertexType			VertexRight;
+ typedef typename ConstMeshRight::EdgeType				EdgeRight;
+ typedef typename ConstMeshRight::HEdgeType			HEdgeRight;
+ typedef typename ConstMeshRight::FaceType				FaceRight;
+ typedef typename ConstMeshRight::VertexPointer  VertexPointerRight;
+ typedef typename ConstMeshRight::VertexIterator VertexIteratorRight;
+ typedef typename ConstMeshRight::EdgeIterator   EdgeIteratorRight;
+ typedef typename ConstMeshRight::HEdgeIterator  HEdgeIteratorRight;
+ typedef typename ConstMeshRight::FaceIterator   FaceIteratorRight;
+ typedef typename ConstMeshRight::FacePointer    FacePointerRight;
 
  struct Remap{
 		std::vector<int> vert,face,edge, hedge;
  };
 
- static void ImportVertexAdj(MeshLeft &ml, MeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap, bool sel ){
+ static void ImportVertexAdj(MeshLeft &ml, ConstMeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap, bool sel ){
 		 // Vertex to Edge Adj
 		 if(vcg::tri::HasVEAdjacency(ml) && vcg::tri::HasVEAdjacency(mr)){
 				 size_t i = Index(mr,vr.cVEp());
@@ -91,7 +92,7 @@ public:
 		 }
  }
 
- static void ImportEdgeAdj(MeshLeft &ml, MeshRight &mr, EdgeLeft &el, const EdgeRight &er, Remap &remap, bool sel )
+ static void ImportEdgeAdj(MeshLeft &ml, ConstMeshRight &mr, EdgeLeft &el, const EdgeRight &er, Remap &remap, bool sel )
  {
 
    // Edge to Vertex  Adj
@@ -124,7 +125,7 @@ public:
  }
 
 
- static void ImportFaceAdj(MeshLeft &ml, MeshRight &mr, FaceLeft &fl, const FaceRight &fr, Remap &remap, bool sel )
+ static void ImportFaceAdj(MeshLeft &ml, ConstMeshRight &mr, FaceLeft &fl, const FaceRight &fr, Remap &remap, bool sel )
  {
    // Face to Vertex  Adj
    if(vcg::tri::HasFVAdjacency(ml) && vcg::tri::HasFVAdjacency(mr)){
@@ -159,7 +160,7 @@ public:
    }
  }
 
- static void ImportHEdgeAdj(MeshLeft &ml, MeshRight &mr, HEdgeLeft &hl, const HEdgeRight &hr, Remap &remap, bool /*sel*/ ){
+ static void ImportHEdgeAdj(MeshLeft &ml, ConstMeshRight &mr, HEdgeLeft &hl, const HEdgeRight &hr, Remap &remap, bool /*sel*/ ){
    // HEdge to Vertex  Adj
    if(vcg::tri::HasHVAdjacency(ml) && vcg::tri::HasHVAdjacency(mr))
      hl.HVp() = &ml.vert[remap.vert[Index(mr,hr.cHVp())]];
@@ -194,7 +195,17 @@ public:
 // Append::Mesh(ml, mr) is equivalent to ml += mr. 
 // Note MeshRigth could be costant...
 
-static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
+static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false){
+
+  // Note that if the the selection of the vertexes is not consistent with the face selection
+  // the append could build faces referencing non existent vertices
+  // so it is mandatory that the selection of the vertices reflects the loose selection
+  // from edges and faces (e.g. if a face is selected all its vertices must be selected).
+  if(selected)
+  {
+    tri::UpdateSelection<ConstMeshRight>::VertexFromEdgeLoose(mr,true);
+    tri::UpdateSelection<ConstMeshRight>::VertexFromFaceLoose(mr,true);
+  }
 
 		// phase 1. allocate on ml vert,edge,face, hedge to accomodat those of mr
 		// and build the remapping for all
@@ -228,7 +239,7 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
 				}
 
 		// face
-		vcg::tri::Allocator<MeshRight>::CompactFaceVector(mr);
+		vcg::tri::Allocator<ConstMeshRight>::CompactFaceVector(mr);
 		remap.face.resize(mr.face.size(),-1);
 		FaceIteratorRight fi;
 		for(fi=mr.face.begin();fi!=mr.face.end();++fi)
@@ -356,14 +367,14 @@ static void Mesh(MeshLeft& ml, MeshRight& mr, const bool selected = false){
                 //        }
 }
 
-static void MeshCopy(MeshLeft& ml, MeshRight& mr, bool selected=false)
+static void MeshCopy(MeshLeft& ml, ConstMeshRight& mr, bool selected=false)
 {
   ml.Clear();
   Mesh(ml,mr,selected);
   ml.bbox=mr.bbox;
 }
 
-static void Selected(MeshLeft& ml, MeshRight& mr)
+static void Selected(MeshLeft& ml, ConstMeshRight& mr)
 {
   Mesh(ml,mr,true);
 }
@@ -374,7 +385,7 @@ static void Selected(MeshLeft& ml, MeshRight& mr)
 
 
 
-} // End Namespace TriMesh
+} // End Namespace tri
 } // End Namespace vcg
 
 
