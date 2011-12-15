@@ -4,6 +4,8 @@
 
 #include "mt.h"
 
+#include <iostream>
+
 namespace mt{
 
 class atomicInt
@@ -11,48 +13,50 @@ class atomicInt
 public:
   atomicInt()
   {
-    value = 0;
+    _q_value = 0;
+	std::cout << "atomicInt init a 0\n";
   }
 
   atomicInt( int value )
   {
-      value = value;
+      _q_value = value;
+          std::cout << "atomicInt init a " << _q_value << std::endl;
   }
 
 // atomic API
 
 /**
-Reads the current value of this QAtomicInt and then adds valueToAdd
-to the current value, returning the original value.
+Reads the current _q_value of this QAtomicInt and then adds valueToAdd
+to the current _q_value, returning the original _q_value.
 */
   inline int fetchAndAddAcquire( int valueToAdd )
   {
     mutexlocker lock(&m);
-    int originalValue = value;
-    value += valueToAdd;
+    int originalValue = _q_value;
+    _q_value += valueToAdd;
     return originalValue;
   }
 
 /**
-Atomically increments the value of this atomicInt.
-Returns true if the new value is non-zero, false otherwise.*/
+Atomically increments the _q_value of this atomicInt.
+Returns true if the new _q_value is non-zero, false otherwise.*/
   inline bool ref()
   {
     mutexlocker lock(&m);
-    return ++value != 0;
+    return ++_q_value != 0;
   }
 
 /*
-Atomically decrements the value of this QAtomicInt.
-Returns true if the new value is non-zero, false otherwise.*/
+Atomically decrements the _q_value of this QAtomicInt.
+Returns true if the new _q_value is non-zero, false otherwise.*/
   inline bool deref()
   {
     mutexlocker lock(&m);
-    return --value != 0;
+    return --_q_value != 0;
   }
 
 /*
-If the current value of this QAtomicInt is the expectedValue,
+If the current _q_value of this QAtomicInt is the expectedValue,
 the test-and-set functions assign the newValue to this QAtomicInt
 and return true. If the values are not the same, this function
 does nothing and returns false.
@@ -60,8 +64,8 @@ does nothing and returns false.
   inline bool testAndSetOrdered(int expectedValue, int newValue)
   {
     mutexlocker lock(&m);
-    if (value == expectedValue) {
-      value = newValue;
+    if (_q_value == expectedValue) {
+      _q_value = newValue;
       return true;
     }
     return false;
@@ -70,42 +74,42 @@ does nothing and returns false.
 // Non-atomic API
   inline bool operator==(int value) const
   {
-    return value == value;
+    return _q_value == value;
   }
 
   inline bool operator!=(int value) const
   {
-    return value != value;
+    return _q_value != value;
   }
 
   inline bool operator!() const
   {
-    return value == 0;
+    return _q_value == 0;
   }
 
   inline operator int() const
   {
-    return value;
+    return _q_value;
   }
 
   inline atomicInt &operator=(int value)
   {
-    value = value;
+    _q_value = value;
     return *this;
   }
 
   inline bool operator>(int value) const
   {
-    return value > value;
+    return _q_value > value;
   }
 
   inline bool operator<(int value) const
   {
-    return value < value;
+    return _q_value < value;
   }
 
 private:
-  volatile int value;
+  volatile int _q_value;
   mutex m;
 };
 
