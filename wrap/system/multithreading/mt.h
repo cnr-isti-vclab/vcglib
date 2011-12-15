@@ -4,9 +4,9 @@
 
 #ifdef QT_CORE_LIB
 
-#include <QThread.h>
-#include <QMutex.h>
-#include <QSemaphore.h>
+#include <QThread>
+#include <QMutex>
+#include <QSemaphore>
 
 namespace mt{
   typedef QThread thread;
