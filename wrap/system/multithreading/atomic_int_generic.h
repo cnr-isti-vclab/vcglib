@@ -14,13 +14,11 @@ public:
   atomicInt()
   {
     _q_value = 0;
-	std::cout << "atomicInt init a 0\n";
   }
 
   atomicInt( int value )
   {
       _q_value = value;
-          std::cout << "atomicInt init a " << _q_value << std::endl;
   }
 
 // atomic API
