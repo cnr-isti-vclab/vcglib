@@ -11,6 +11,10 @@ namespace mt{
 
 class atomicInt
 {
+    
+private:
+    volatile int _q_value;
+    
 public:
   atomicInt()
   {
@@ -76,7 +80,7 @@ does nothing and returns false.
     //	 return true;
     // }
     //return false;
-    return OSAtomicCompareAndSwap32Barrier(expectedValue, newValue, &_q_value));
+    return OSAtomicCompareAndSwap32Barrier(expectedValue, newValue, &_q_value);
   }
 
 // Non-atomic API
@@ -117,8 +121,6 @@ does nothing and returns false.
     return _q_value < value;
   }
 
-private:
-  volatile int _q_value;
 
 };
 
