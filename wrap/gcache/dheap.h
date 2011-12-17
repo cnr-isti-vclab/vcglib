@@ -47,7 +47,7 @@ class DHeap: public std::vector<T> {
 public:
 
   void push(const T& elt) {
-    push_back(elt);
+    this->push_back(elt);
     bubbleUp(this->size()-1);
   }
 
