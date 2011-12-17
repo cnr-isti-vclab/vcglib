@@ -4,8 +4,6 @@
 
 #include "mt.h"
 
-#include <iostream>
-
 namespace mt{
 
 class atomicInt
