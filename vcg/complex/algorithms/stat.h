@@ -48,6 +48,7 @@ Initial Commit
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/allocate.h>
+#include <vcg/complex/algorithms/update/flag.h>
 
 
 namespace vcg {
@@ -64,6 +65,7 @@ class Stat
 	typedef typename MeshType::FaceType       FaceType;
 	typedef typename MeshType::FacePointer    FacePointer;
 	typedef typename MeshType::FaceIterator   FaceIterator;
+  typedef typename MeshType::EdgeIterator   EdgeIterator;
 	typedef typename MeshType::FaceContainer  FaceContainer;
 	typedef typename vcg::Box3<ScalarType>  Box3Type;
 	
@@ -202,14 +204,33 @@ class Stat
 					}
       }
 
-			static int ComputeEdgeHistogram( MeshType & m, Histogramf &h)    // V1.0
+      static void ComputeEdgeHistogram( MeshType & m, Histogramf &h)
       {
-        ScalarType Diag = m.bbox.Diag();
+        assert(m.edge.size()>0);
         h.Clear();
-        h.SetRange( 0, Diag, 10000);
-        FaceIterator fi;VertexIterator vi;
-        for(vi = m.vert.begin(); vi != m.vert.end(); ++vi) (*vi).ClearV();
-        for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+        h.SetRange( 0, m.bbox.Diag(), 10000);
+        for(EdgeIterator ei = m.edge.begin(); ei != m.edge.end(); ++ei)
+        {
+          if(!(*ei).IsD())
+          {
+            h.Add(Distance<float>((*ei).V(0)->P(),(*ei).V(1)->P()));
+          }
+        }
+      }
+
+      static ScalarType ComputeEdgeAverage(MeshType & m)
+      {
+        Histogramf h;
+        ComputeEdgeHistogram(m,h);
+        return h.Avg();
+      }
+
+      static int ComputeFaceEdgeHistogram( MeshType & m, Histogramf &h)
+      {
+        h.Clear();
+        h.SetRange( 0, m.bbox.Diag(), 10000);
+        tri::UpdateFlags<MeshType>::VertexClearV(m);
+        for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
         {
           if(!(*fi).IsD())
           {
@@ -233,8 +254,6 @@ class Stat
             }
           }
         }
-
-        for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)(*vi).ClearV();
       return 0;
 	  }
 }; // end class
