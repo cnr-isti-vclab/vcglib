@@ -684,7 +684,6 @@ static void FaceSubdivision(MetroMesh & m, VertexSampler &ps,int sampleNum, bool
 	std::vector<FacePointer> faceVec;
 	FillAndShuffleFacePointerVector(m,faceVec);
 	vcg::tri::UpdateNormals<MetroMesh>::PerFaceNormalized(m);
-    vcg::tri::UpdateFlags<MetroMesh>::FaceProjection(m);
 	double  floatSampleNum = 0.0;
 	int faceSampleNum;
     // Subdivision sampling.
@@ -777,7 +776,6 @@ static void FaceSubdivisionOld(MetroMesh & m, VertexSampler &ps,int sampleNum, b
     std::vector<FacePointer> faceVec;
     FillAndShuffleFacePointerVector(m,faceVec);
     tri::UpdateNormals<MetroMesh>::PerFaceNormalized(m);
-    tri::UpdateFlags<MetroMesh>::FaceProjection(m);
     double  floatSampleNum = 0.0;
     int faceSampleNum;
     // Subdivision sampling.
