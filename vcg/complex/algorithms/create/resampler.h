@@ -171,10 +171,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			bool retIP;
 
 			// To compute the interpolated normal we use the more robust function that require to know what is the most orhogonal direction of the face.
-			if((*f).Flags() & Old_Mesh::FaceType::NORMX)	retIP=InterpolationParameters(*f,0,closestPt, pip);
-			else if((*f).Flags() & Old_Mesh::FaceType::NORMY)	retIP=InterpolationParameters(*f,1,closestPt, pip);
-			else if((*f).Flags() & Old_Mesh::FaceType::NORMZ)	retIP=InterpolationParameters(*f,2,closestPt, pip);
-			else assert(0);
+			retIP=InterpolationParameters(*f,(*f).cN(),closestPt, pip);
 			assert(retIP); // this should happen only if the starting mesh has degenerate faces.
 
 			const float InterpolationEpsilon = 0.00001f;
@@ -332,7 +329,6 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			// the following two steps are required to be sure that the point-face distance without precomputed data works well.
 			tri::UpdateNormals<Old_Mesh>::PerFaceNormalized(old_mesh);
 			tri::UpdateNormals<Old_Mesh>::PerVertexAngleWeighted(old_mesh);
-			tri::UpdateFlags<Old_Mesh>::FaceProjection(old_mesh);
 			int _size=(int)old_mesh.fn*100;
 
 			_g.Set(_oldM->face.begin(),_oldM->face.end(),_size);
