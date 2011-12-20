@@ -28,19 +28,18 @@ class Provider: public mt::thread {
   bool heap_dirty;
   ///lock this before manipulating heap.
   mt::mutex heap_lock;
-  ///used to sincronize priorities update
-  mt::mutex priority_lock;
   ///signals (to next cache!) priorities have changed or something is available
   QDoor check_queue;
 
   Provider(): max_tokens(-1), heap_dirty(false) {}
   virtual ~Provider() {}
 
-  /// [should be protected, do not use]
+  /// [should be protected, do not use] called in controller thread!
   void pushPriorities() {
-    mt::mutexlocker locker(&priority_lock);
+    mt::mutexlocker locker(&heap_lock);
     for(int i = 0; i < heap.size(); i++)
       heap[i].pushPriority();
+
     heap_dirty = true;
     check_queue.open();
   }
@@ -48,13 +47,8 @@ class Provider: public mt::thread {
   void rebuild() {
     if(!this->heap_dirty) return;
 
-    {
-      mt::mutexlocker locker(&priority_lock);
-      for(int i = 0; i < this->heap.size(); i++)
-        this->heap[i].pullPriority();
-      this->heap_dirty = false;
-    }
     this->heap.rebuild();
+    this->heap_dirty = false;
 
     //remove OUTSIDE tokens from bottom of heap
     if(max_tokens != -1) {

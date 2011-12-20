@@ -169,6 +169,7 @@ protected:
       mt::mutexlocker locker(&(this->heap_lock));
 
       //2 we have some element not in the upper caches (heap.size()  > 0
+      assert(this->heap.size());
       if(this->heap.size()) {
         Token &last = this->heap.min();
         int itemsize = size(&last);
@@ -228,7 +229,7 @@ protected:
       if(input->heap.size()) {                           //we need something in input to tranfer.
         Token &first = input->heap.max();
         if(first.count > Token::REMOVE &&
-            (!last || last->priority < first.priority)) { //if !last we already decided we want a transfer., otherwise check for a swap
+            (!last || first.priority > last->priority)) { //if !last we already decided we want a transfer., otherwise check for a swap
           insert = input->heap.popMax();                 //remove item from heap, while we transfer it.
         }
       }

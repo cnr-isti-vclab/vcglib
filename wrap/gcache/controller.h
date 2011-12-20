@@ -64,6 +64,7 @@ class Controller {
   }
 
   ///ensure that added tokens are processed and existing ones have their priority updated.
+  ///potential bug! update is done on the heaps, if something is in transit...
   void updatePriorities() {
 
     if(tokens.size()) {
