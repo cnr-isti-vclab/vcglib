@@ -611,8 +611,8 @@ public:
     CircleStep = 64;
     HideStill = false;
     DrawTrack = false;
-    LineWidthStill = 0.5f;
-    LineWidthMoving = 1.5f;
+    LineWidthStill = 0.9f;
+    LineWidthMoving = 1.8f;
     color = Color4b::LightBlue;
   }
   /// The circles resolution.
@@ -663,7 +663,7 @@ void DrawPlaneHandle ()
 /*!
   @brief Draw a circle with 2 squares, used by DrawSphereIcon().
 */
-void DrawCircle ()
+void DrawCircle (bool planehandle=true)
 {
   int nside = DH.CircleStep;
   const double pi2 = 3.14159265 * 2.0;
@@ -673,7 +673,8 @@ void DrawCircle ()
     glVertex3d (cos (i * pi2 / nside), sin (i * pi2 / nside), 0.0);
   }
   glEnd ();
-  DrawPlaneHandle ();
+  if(planehandle)
+    DrawPlaneHandle();
 }
 
 /*!
@@ -682,9 +683,9 @@ void DrawCircle ()
   @param tb the manipulator.
   @param active boolean to be set to true if the icon is active.
 */
-void DrawSphereIcon (Trackball * tb,bool active)
+void DrawSphereIcon (Trackball * tb, bool active, bool planeshandle=false)
 {  
-  glPushAttrib (GL_TRANSFORM_BIT |GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
+  glPushAttrib(GL_TRANSFORM_BIT |GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix ();
 
@@ -692,26 +693,36 @@ void DrawSphereIcon (Trackball * tb,bool active)
   glTranslate(center);
   glScale (tb->radius/tb->track.sca);
   
-  float amb[4] = { .3f, .3f, .3f, 1.0f };
+  float amb[4] = { .35f, .35f, .35f, 1.0f };
   float col[4] = { .5f, .5f, .8f, 1.0f };
   glEnable (GL_LINE_SMOOTH);
   if (active)
     glLineWidth (DH.LineWidthMoving);
   else
     glLineWidth (DH.LineWidthStill);
+
+  glDisable(GL_COLOR_MATERIAL); // has to be disabled, it is used by wrapper to draw meshes, and prevent direct material setting, used here
+
   glEnable (GL_LIGHTING);
   glEnable (GL_LIGHT0);
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glColor (DH.color);
   glMaterialfv (GL_FRONT_AND_BACK, GL_EMISSION, amb);
+  
+  col[0] = .40f; col[1] = .40f; col[2] = .85f;
   glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, col);
-	
-	DrawCircle ();
-	glRotatef (90, 1, 0, 0);
-	DrawCircle ();
-	glRotatef (90, 0, 1, 0);
-	DrawCircle ();
+	DrawCircle(planeshandle);
+
+  glRotatef (90, 1, 0, 0);
+  col[0] = .40f; col[1] = .85f; col[2] = .40f;
+  glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, col);
+  DrawCircle(planeshandle);
+
+  glRotatef (90, 0, 1, 0);
+  col[0] = .85f; col[1] = .40f; col[2] = .40f;
+  glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, col);
+	DrawCircle(planeshandle);
 	
 	glPopMatrix ();
 	glPopAttrib ();
