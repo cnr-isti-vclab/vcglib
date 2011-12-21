@@ -105,6 +105,32 @@ class PointNormalDistanceFunctor {
 		}
 	};
 
+template <class VERTEXYPE>
+class PointScaledDistanceFunctor {
+	public:
+		typedef typename VERTEXYPE::ScalarType ScalarType;
+		typedef Point3<ScalarType> QueryType;
+		static inline const Point3<ScalarType> &  Pos(const QueryType & qt)  {return qt;}
+
+		static Point3<ScalarType> & Cen(){static Point3<ScalarType> cen(0,0,0); return cen;}
+
+		 
+		inline bool operator () (const VERTEXYPE & p, const QueryType & qp, ScalarType & minDist, Point3<ScalarType> & q) {
+
+			Point3<ScalarType> ed = (qp-p.P());
+			Point3<ScalarType> dir = (p.P()-Cen()).Normalize();
+			Point3<ScalarType> odir =  (dir^((ed)^dir)).Normalize();
+			ScalarType d = fabs(ed * dir) + fabs(ed  *odir);
+			
+			if(d < minDist){
+				minDist = d;
+				q = p.P();
+				return true;
+			}
+			return false;
+		}
+	};
+
 template <class VertexType>
 class ApproximateGeodesicDistanceFunctor {
   public:
