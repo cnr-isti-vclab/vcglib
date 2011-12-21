@@ -1160,7 +1160,7 @@ static void QuadTriangulate(std::vector<VertexPointer> &q)
 
   // QualityRadii is inradius/circumradius; bad when close to zero.
   // swap diagonal if the worst triangle improve.
-  bool qualityImprove = std::min(QualityRadii(P0,P1,P2),QualityRadii(P0,P2,P3)) < std::min(QualityRadii(P1,P2,P3),QualityRadii(P1,P3,P0));
+  bool qualityImprove = std::min<ScalarType>(QualityRadii(P0,P1,P2),QualityRadii(P0,P2,P3)) < std::min<ScalarType>(QualityRadii(P1,P2,P3),QualityRadii(P1,P3,P0));
   bool swapCauseFlip = (Angle1Rad > M_PI/2.0) && (Angle0Rad <M_PI/2.0);
 
   if ( qualityImprove && ! swapCauseFlip)
