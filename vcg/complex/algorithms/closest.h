@@ -181,6 +181,23 @@ namespace vcg {
 		}
 
 		template <class MESH, class GRID>
+			typename MESH::VertexType * GetClosestVertexScale( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p, 
+			const typename MESH::CoordType & center, const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist )
+		{
+			typedef typename GRID::ScalarType ScalarType;
+			typedef Point3<ScalarType> Point3x;
+			typedef VertTmark<MESH> MarkerVert;
+			MarkerVert mv;
+			mv.SetMesh(&mesh);
+			typedef vcg::vertex::PointScaledDistanceFunctor<typename MESH::VertexType> VDistFunct;
+			VDistFunct fn;
+			fn.Cen() = center;
+			_minDist=_maxDist;
+			Point3x _closestPt;
+			return (gr.template GetClosest<VDistFunct,MarkerVert>(fn,mv,_p,_maxDist,_minDist,_closestPt));
+		}
+
+		template <class MESH, class GRID>
 			typename MESH::VertexType * GetClosestVertexNormal( MESH & mesh,GRID & gr,const typename MESH::VertexType & _p, 
 			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist )
 		{
