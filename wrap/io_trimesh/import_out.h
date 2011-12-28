@@ -25,6 +25,8 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <vcg/complex/allocate.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <wrap/Exif/include/Exif/jhead.h>
@@ -35,13 +37,13 @@ namespace tri {
 namespace io {
 
 	struct Correspondence{
-		Correspondence(unsigned int id_img_,unsigned int key_,float x_,float y_):id_img(id_img_),key(key_),x(x_),y(y_){};
+                Correspondence(unsigned int id_img_,unsigned int key_,float x_,float y_):id_img(id_img_),key(key_),x(x_),y(y_){}
 		unsigned int id_img,key;
 		float x;
 		float y;
 	};
 
-	typedef std::vector<Correspondence> CorrVec;
+        typedef std::vector<Correspondence> CorrVec;
 
 /** 
 This class encapsulate a filter for opening bundler file
@@ -82,7 +84,7 @@ static bool ReadHeader(FILE *fp,unsigned int &num_cams, unsigned int &num_points
 }
 
 static bool ReadHeader(const char * filename,unsigned int &num_cams, unsigned int &num_points){
-	FILE *fp = fopen(s.c_str(), "r");
+        FILE *fp = fopen(filename, "r");
 	if(!fp) return false;
 	ReadHeader(fp);
 	fclose(fp);
@@ -129,22 +131,22 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
         shots[i].Extrinsics.SetRot(mat);
 
         shots[i].Intrinsics.FocalMm    = f;
-		shot.Intrinsics.k[0] = 0.0;//k1; To be uncommented when distortion is taken into account reliably
-		shot.Intrinsics.k[1] = 0.0;//k2;
-		AddIntrinsics(shots[i],image_filenames[i].c_str());
+        shots[i].Intrinsics.k[0] = 0.0;//k1; To be uncommented when distortion is taken into account reliably
+        shots[i].Intrinsics.k[1] = 0.0;//k2;
+        AddIntrinsics(shots[i],image_filenames[i].c_str());
     }
 
 	// load all correspondences
-	OpenMeshType::template PerVertexAttributeHandle<CorrVec> ch = vcg::tri::Allocator<OpenMeshType>::GetPerVertexAttribute<CorrVec>(m,"correspondences");
+        typename OpenMeshType::template PerVertexAttributeHandle<CorrVec> ch = vcg::tri::Allocator<OpenMeshType>::template GetPerVertexAttribute<CorrVec>(m,"correspondences");
 	if(!vcg::tri::Allocator<OpenMeshType>::IsValidHandle(m,ch))
-		ch = vcg::tri::Allocator<OpenMeshType>::AddPerVertexAttribute<CorrVec>(m,"correspondences");
+                ch = vcg::tri::Allocator<OpenMeshType>::template AddPerVertexAttribute<CorrVec>(m,"correspondences");
 
-	OpenMeshType::VertexIterator vi = vcg::tri::Allocator<OpenMeshType>::AddVertices(m,num_points);
+        typename OpenMeshType::VertexIterator vi = vcg::tri::Allocator<OpenMeshType>::AddVertices(m,num_points);
 	for(int i = 0; i < num_points;++i,++vi){
 		float x,y,z; 
 		unsigned int r,g,b,i_cam, key_sift,n_corr;
 		fscanf(fp,"%f %f %f ",&x,&y,&z);
-		(*vi).P() = vcg::Point3<OpenMeshType::ScalarType>(x,y,z);
+                (*vi).P() = vcg::Point3<typename OpenMeshType::ScalarType>(x,y,z);
 		fscanf(fp,"%d %d %d ",&r,&g,&b);
 		(*vi).C() = vcg::Color4b(r,g,b,255);
 
@@ -161,11 +163,11 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
     return (shots.size() == 0);
 }
 
-static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  shots, const char * filename_out,const char * filename_list, CallBackPos *cb=0){
-	QStringList image_files;
+static int Open( OpenMeshType &m, std::vector<Shot<typename OpenMeshType::ScalarType> >  shots, const char * filename_out,const char * filename_list, CallBackPos *cb=0){
 	ReadHeader(filename_out);
-	ReadImagesFilenames(QString(filename_list),list,num_cams);
-	return Open( m, shots,filename, image_files,  cb);
+        std::vector<std::string> image_filenames;
+        ReadImagesFilenames(filename_list,image_filenames);
+        return Open( m, shots,filename_out, image_filenames,  cb);
 
 }
 
