@@ -28,7 +28,7 @@
 #include <wrap/system/multithreading/mt.h>
 #include <wrap/system/multithreading/atomic_int.h>
 
-#ifdef QT_CORE_LIB
+#ifdef NEXUS_USE_QT
 #include <QWaitCondition>
 #endif
 
