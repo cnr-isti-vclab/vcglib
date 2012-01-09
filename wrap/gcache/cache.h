@@ -169,7 +169,6 @@ protected:
       mt::mutexlocker locker(&(this->heap_lock));
 
       //2 we have some element not in the upper caches (heap.size()  > 0
-      assert(this->heap.size());
       if(this->heap.size()) {
         Token &last = this->heap.min();
         int itemsize = size(&last);
