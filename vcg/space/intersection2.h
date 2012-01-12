@@ -253,6 +253,46 @@ namespace vcg {
 		}
 		return false;
 	}
+		
+	template <class ScalarType>
+	bool PointInsidePolygon(vcg::Point2<ScalarType> p,
+							const std::vector<vcg::Segment2<ScalarType> > &polygon)
+	{
+		int n=polygon.size();
+		vcg::Box2<ScalarType> BB;
+		for (int i=0;i<n;i++)
+		{
+			BB.Add(polygon[i].P0());
+			BB.Add(polygon[i].P1());
+		}
+		if (!BB.IsIn(p))return false;
+		ScalarType size=BB.Diag();
+		///take 4 directions
+		int inside_test=0;
+		for (int dir=0;dir<4;dir++)
+		{
+			int intersection=0;
+			vcg::Ray2<ScalarType> r;
+			vcg::Point2<ScalarType> direct=vcg::Point2<ScalarType>(0,0);
+			switch (dir) 
+			{
+				case 0 : direct.X()=1;break;
+				case 1 : direct.Y()=1;break;
+				case 2 : direct.X()=-1; break;
+				default :direct.Y()=-1;
+			}			
+			r.SetOrigin(p);
+			r.SetDirection(direct);
+			for (int i=0;i<n;i++) 
+			{
+				Point2<ScalarType> p_inters;
+				if (vcg::RaySegmentIntersection(r,polygon[i],p_inters))intersection++;
+			}
+			if ((intersection%2)==1)
+				inside_test++;
+		}
+		return(inside_test>2);
+	}
 
 	//intersection between a circle and a line
 	template<class ScalarType>
