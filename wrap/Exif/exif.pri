@@ -1,5 +1,5 @@
 #Please define the EXIF_DIR variable which locates the glUtils directory in your system.
-#eg. EXIF_DIR = ../sandbox/brivio/Exif
+#eg. EXIF_DIR = ../vcglib/wrap/Exif
 
 !contains(DEFINES, EXIF_DIR){
   DEFINES += EXIF_DIR
