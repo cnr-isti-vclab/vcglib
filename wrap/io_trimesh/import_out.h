@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -36,16 +36,16 @@ namespace vcg {
 namespace tri {
 namespace io {
 
-	struct Correspondence{
+  struct Correspondence{
                 Correspondence(unsigned int id_img_,unsigned int key_,float x_,float y_):id_img(id_img_),key(key_),x(x_),y(y_){}
-		unsigned int id_img,key;
-		float x;
-		float y;
-	};
+    unsigned int id_img,key;
+    float x;
+    float y;
+  };
 
         typedef std::vector<Correspondence> CorrVec;
 
-/** 
+/**
 This class encapsulate a filter for opening bundler file
 */
 template <class OpenMeshType>
@@ -61,30 +61,27 @@ typedef typename OpenMeshType::VertexIterator VertexIterator;
 typedef typename OpenMeshType::FaceIterator FaceIterator;
 typedef typename OpenMeshType::EdgeIterator EdgeIterator;
 
-static char *readline(FILE *fp, int max=100){
+static void readline(FILE *fp, char *line, int max=100){
     int i=0;
-    char c, *str = new char[max];
+    char c;
     fscanf(fp, "%c", &c);
-    while( (c!=10) && (c!=13) && (i<max) ){
-        str[i++] = c;
+    while( (c!=10) && (c!=13) && (i<max-1) ){
+        line[i++] = c;
         fscanf(fp, "%c", &c);
     }
-    str[i] = '\0'; //end of string
-    return str;
+    line[i] = '\0'; //end of string
 }
 
-;
-
 static bool ReadHeader(FILE *fp,unsigned int &num_cams, unsigned int &num_points){
-    char *line;
-    line = readline(fp); if( (!line) || (0!=strcmp("# Bundle file v0.3", line)) ) return false;
-    line = readline(fp); if(!line) return false;
+    char line[100];
+    readline(fp, line); if( (line[0]=='\0') || (0!=strcmp("# Bundle file v0.3", line)) ) return false;
+    readline(fp, line); if(line[0]=='\0') return false;
     sscanf(line, "%d %d", &num_cams, &num_points);
-	return true;
+    return true;
 }
 
 static bool ReadHeader(const char * filename,unsigned int &num_cams, unsigned int &num_points){
-        FILE *fp = fopen(filename, "r");
+	FILE *fp = fopen(filename, "r");
 	if(!fp) return false;
 	ReadHeader(fp);
 	fclose(fp);
@@ -92,33 +89,33 @@ static bool ReadHeader(const char * filename,unsigned int &num_cams, unsigned in
 }
 
 
-static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots, 
-							std::vector<std::string > & image_filenames, 
+static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
+							std::vector<std::string > & image_filenames,
 				const char * filename,const char * filename_images, CallBackPos *cb=0)
 {
 	unsigned int   num_cams,num_points;
- 
+
 	FILE *fp = fopen(filename,"r");
 	if(!fp) return false;
 	ReadHeader(fp, num_cams,  num_points);
-	char *line;
+	char line[100];
 
-	ReadImagesFilenames(filename_images,image_filenames);
+	ReadImagesFilenames(filename_images, image_filenames);
 
 	shots.resize(num_cams);
 	for(int i = 0; i < num_cams;++i)
 	{
-        float f, k1, k2;
+				float f, k1, k2;
 		float R[16]={0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1};
-        vcg::Point3f t;
- 
-        line = readline(fp); if(!line) return false; sscanf(line, "%f %f %f", &f, &k1, &k2);
+				vcg::Point3f t;
 
-        line = readline(fp); if(!line) return false; sscanf(line, "%f %f %f", &(R[0]), &(R[1]), &(R[2]));  R[3] = 0;
-        line = readline(fp); if(!line) return false; sscanf(line, "%f %f %f", &(R[4]), &(R[5]), &(R[6]));  R[7] = 0;
-        line = readline(fp); if(!line) return false; sscanf(line, "%f %f %f", &(R[8]), &(R[9]), &(R[10])); R[11] = 0;
+				readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &f, &k1, &k2);
 
-        line = readline(fp); if(!line) return false; sscanf(line, "%f %f %f", &(t[0]), &(t[1]), &(t[2]));
+        readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &(R[0]), &(R[1]), &(R[2]));  R[3] = 0;
+        readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &(R[4]), &(R[5]), &(R[6]));  R[7] = 0;
+        readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &(R[8]), &(R[9]), &(R[10])); R[11] = 0;
+
+        readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &(t[0]), &(t[1]), &(t[2]));
 
         vcg::Matrix44f mat = vcg::Matrix44<vcg::Shotf::ScalarType>::Construct<float>(R);
 
@@ -136,17 +133,17 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
         AddIntrinsics(shots[i],image_filenames[i].c_str());
     }
 
-	// load all correspondences
+  // load all correspondences
         typename OpenMeshType::template PerVertexAttributeHandle<CorrVec> ch = vcg::tri::Allocator<OpenMeshType>::template GetPerVertexAttribute<CorrVec>(m,"correspondences");
-	if(!vcg::tri::Allocator<OpenMeshType>::IsValidHandle(m,ch))
+  if(!vcg::tri::Allocator<OpenMeshType>::IsValidHandle(m,ch))
                 ch = vcg::tri::Allocator<OpenMeshType>::template AddPerVertexAttribute<CorrVec>(m,"correspondences");
 
-        typename OpenMeshType::VertexIterator vi = vcg::tri::Allocator<OpenMeshType>::AddVertices(m,num_points);
+				typename OpenMeshType::VertexIterator vi = vcg::tri::Allocator<OpenMeshType>::AddVertices(m,num_points);
 	for(int i = 0; i < num_points;++i,++vi){
-		float x,y,z; 
+		float x,y,z;
 		unsigned int r,g,b,i_cam, key_sift,n_corr;
 		fscanf(fp,"%f %f %f ",&x,&y,&z);
-                (*vi).P() = vcg::Point3<typename OpenMeshType::ScalarType>(x,y,z);
+								(*vi).P() = vcg::Point3<typename OpenMeshType::ScalarType>(x,y,z);
 		fscanf(fp,"%d %d %d ",&r,&g,&b);
 		(*vi).C() = vcg::Color4b(r,g,b,255);
 
@@ -158,13 +155,13 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
 		}
 	}
 	vcg::tri::UpdateBounding<OpenMeshType>::Box(m);
-    fclose(fp);
+		fclose(fp);
 
-    return (shots.size() == 0);
+		return (shots.size() == 0);
 }
 
 static int Open( OpenMeshType &m, std::vector<Shot<typename OpenMeshType::ScalarType> >  shots, const char * filename_out,const char * filename_list, CallBackPos *cb=0){
-	ReadHeader(filename_out);
+  ReadHeader(filename_out);
         std::vector<std::string> image_filenames;
         ReadImagesFilenames(filename_list,image_filenames);
         return Open( m, shots,filename_out, image_filenames,  cb);
@@ -173,21 +170,21 @@ static int Open( OpenMeshType &m, std::vector<Shot<typename OpenMeshType::Scalar
 
 static bool ReadImagesFilenames(const char *  filename,std::vector<std::string> &image_filenames)
 {
-	char  line[1000],name[1000];
-
-	FILE * fi = fopen(filename,"r");
-	if (!fi) return false;
-    else
-    { 
-		while(!feof(fi)){
-			fgets (line , 1000, fi);
-			sscanf(line,"%s",&name[0]); 
+	FILE * fp = fopen(filename,"r");
+	if (!fp) return false;
+	else
+	{
+		char line[1000], name[1000];
+		while(!feof(fp)){
+			readline(fp, line, 1000);
+			if(line[0] == '\0') continue; //ignore empty lines (in theory, might happen only at end of file)
+			sscanf(line, "%s", name);
 			std::string n(name);
 			image_filenames.push_back(n);
 		}
 	}
-	fclose(fi);
-    return true;
+	fclose(fp);
+		return true;
 }
 
 static bool  AddIntrinsics(vcg::Shotf &shot, const char * image_file)
