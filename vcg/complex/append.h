@@ -68,24 +68,24 @@ public:
 
  static void ImportVertexAdj(MeshLeft &ml, ConstMeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap, bool sel ){
 		 // Vertex to Edge Adj
-		 if(vcg::tri::HasVEAdjacency(ml) && vcg::tri::HasVEAdjacency(mr)){
+		 if(vcg::tri::HasVEAdjacency(ml) && vcg::tri::HasVEAdjacency(mr) && vr.cVEp() != 0){
 				 size_t i = Index(mr,vr.cVEp());
-         vl.VEp() = (i>ml.edge.size())? 0 : &ml.edge[remap.edge[i]];
+				 vl.VEp() = (i>ml.edge.size())? 0 : &ml.edge[remap.edge[i]];
 				 vl.VEi() = vr.VEi();
 		 }
 
 		 if(!sel){
 			 // Vertex to Face Adj
 			 if(vcg::tri::HasPerVertexVFAdjacency(ml) && vcg::tri::HasPerVertexVFAdjacency(mr) &&
-					vcg::tri::HasPerFaceVFAdjacency(ml) && vcg::tri::HasPerFaceVFAdjacency(mr)
+					vcg::tri::HasPerFaceVFAdjacency(ml) && vcg::tri::HasPerFaceVFAdjacency(mr) && vr.cVFp() != 0
 					){
 					size_t i = Index(mr,vr.cVFp());
-			vl.VFp() = (i>ml.face.size())? 0 :&ml.face[remap.face[i]];
+					vl.VFp() = (i>ml.face.size())? 0 :&ml.face[remap.face[i]];
 					vl.VFi() = vr.VFi();
 			 }
 
 			 // Vertex to HEdge Adj
-			 if(vcg::tri::HasVHAdjacency(ml) && vcg::tri::HasVHAdjacency(mr)){
+			 if(vcg::tri::HasVHAdjacency(ml) && vcg::tri::HasVHAdjacency(mr) && vr.cVHp() != 0){
 					vl.VHp() = &ml.hedge[remap.hedge[Index(mr,vr.cVHp())]];
 					vl.VHi() = vr.VHi();
 			 }
