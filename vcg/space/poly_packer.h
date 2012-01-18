@@ -161,7 +161,7 @@ static bool PackAsObjectOrientedRect(const std::vector< std::vector<Point2x> > &
   {
     trVec[i].rotRad=rotVec[i];
   }
-  return true;
+  return ret;
 }
 
 }; // end class
