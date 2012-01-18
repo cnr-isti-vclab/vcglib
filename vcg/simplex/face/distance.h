@@ -341,7 +341,7 @@ namespace vcg {
         const ScalarType EPS = ScalarType( 0.000001);
 				ScalarType b,b0,b1,b2;
 				// Calcolo distanza punto piano
-				ScalarType d = DistancePlanePoint( fPlane, q );
+				ScalarType d = SignedDistancePlanePoint( fPlane, q );
 				if( d>dist || d<-dist )			// Risultato peggiore: niente di fatto
 					return false;
 				

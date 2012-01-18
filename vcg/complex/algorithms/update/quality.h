@@ -234,7 +234,7 @@ static void VertexFromPlane(MeshType &m, const Plane3<ScalarType> &pl)
 {
   VertexIterator vi;
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-    (*vi).Q() =DistancePlanePoint(pl,(*vi).cP());
+    (*vi).Q() =SignedDistancePlanePoint(pl,(*vi).cP());
 }
 
 static void VertexFromGaussianCurvature(MeshType &m)

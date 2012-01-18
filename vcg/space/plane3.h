@@ -141,15 +141,15 @@ typedef Plane3<float>  Plane3f;
 typedef Plane3<double> Plane3d;
 
 ///Distance plane - point and vv. (Move these function to somewhere else)
-template<class T> T DistancePlanePoint(const Plane3<T,true> & plane, const Point3<T> & point)
+template<class T> T SignedDistancePlanePoint(const Plane3<T,true> & plane, const Point3<T> & point)
 {
 	return plane.Direction().dot(point) - plane.Offset();
 }
 
 
-template<class T> T DistancePointPlane(const Point3<T> & point, const Plane3<T,true> & plane)
+template<class T> T SignedDistancePointPlane(const Point3<T> & point, const Plane3<T,true> & plane)
 {
-	return DistancePlanePoint(plane, point);
+	return SignedDistancePlanePoint(plane, point);
 }
 
 } // end namespace
