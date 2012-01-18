@@ -133,7 +133,7 @@ Point3f HitViewPlane (Trackball * tb, const Point3f & p)
   Plane3f vp = GetViewPlane (tb->camera, tb->center);
   Line3fN ln = tb->camera.ViewLineFromWindow (Point3f (p[0], p[1], 0));
   Point3f PonVP;
-  IntersectionLinePlane < float >(vp, ln, PonVP);
+  IntersectionPlaneLine < float >(vp, ln, PonVP);
   return PonVP;
 }
 
@@ -242,7 +242,7 @@ Point3f HitSphere (Trackball * tb, const Point3f & p)
           hitSphere1(0,0,0), 
           hitSphere2(0,0,0), 
           hitHyper(0,0,0);
-  IntersectionLinePlane < float >(vp, ln, hitPlane);
+  IntersectionPlaneLine < float >(vp, ln, hitPlane);
   
   Sphere3f sphere (center, tb->radius);//trackball sphere
   bool resSp = IntersectionLineSphere < float >(sphere, ln, hitSphere1, hitSphere2);
