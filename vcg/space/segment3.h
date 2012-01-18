@@ -89,6 +89,10 @@ public:
   inline const PointType &P1() const { return _p1; } 
   inline PointType &P0() { return _p0; } 
   inline PointType &P1() { return _p1; } 
+
+  inline PointType &operator[] (const int i) {return i==0?_p0:_p1;}
+  inline const PointType &operator[] (const int i) const {return i==0?_p0:_p1;}
+
 		/// The empty constructor
 	Segment3() {};
 		/// The (a,b) constructor
@@ -108,8 +112,10 @@ public:
 	{ return _p0 + (_p1 - _p0) * t; }
 	  /// return the middle point
 	inline PointType MidPoint( ) const
-	{ return ( _p0 +  _p1) / ScalarType(2.0) ; }
-	  /// return the bounding box
+  { return ( _p0 + _p1) / ScalarType(2.0) ; }
+  inline PointType Direction( ) const
+  { return ( _p1 - _p0) ; }
+    /// return the bounding box
 	inline Box3<ScalarType> BBox( ) const
 	{ Box3<ScalarType> t; 
 	  if (_p0[0]<_p1[0]) { t.min[0]=_p0[0];t.max[0]=_p1[0];} else { t.min[0]=_p1[0];t.max[0]=_p0[0];}
