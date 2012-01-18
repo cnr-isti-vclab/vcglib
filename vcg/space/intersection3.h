@@ -217,10 +217,9 @@ namespace vcg {
 		return penetration_detected;
 	}; //end of IntersectionSphereTriangle
 
-
   /// intersection between line and plane
   template<class T>
-    inline bool IntersectionLinePlane( const Plane3<T> & pl, const Line3<T> & li, Point3<T> & po){
+    inline bool IntersectionPlaneLine( const Plane3<T> & pl, const Line3<T> & li, Point3<T> & po){
     const T epsilon = T(1e-8);
 
     T k = pl.Direction().dot(li.Direction());						// Compute 'k' factor
@@ -230,7 +229,13 @@ namespace vcg {
     po = li.Origin() + li.Direction()*r;
     return true;
   }
-	
+    /// intersection between line and plane
+    template<class T>
+    inline bool IntersectionLinePlane(const Line3<T> & li, const Plane3<T> & pl, Point3<T> & po){
+
+      return IntersectionPlaneLine(pl,li,po);
+    }
+
    /// intersection between segment and plane
   template<class T>
     inline bool IntersectionPlaneSegment( const Plane3<T> & pl, const Segment3<T> & s, Point3<T> & p0){
