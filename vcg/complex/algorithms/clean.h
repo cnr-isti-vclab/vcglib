@@ -1194,12 +1194,15 @@ private:
 					Semiregular = false;
 				}
 			}
-
-			static void IsOrientedMesh(MeshType &m, bool &Oriented, bool &Orientable)
+//      static void IsOrientedMesh(MeshType &m, bool &Oriented, bool &Orientable)
+      static void OrientCoherentlyMesh(MeshType &m, bool &Oriented, bool &Orientable)
 			{
         assert(&Oriented != &Orientable);
 				// This algorithms requires FF topology
 				assert(m.HasFFTopology());
+				// This algorithms require FF topology initialized
+				assert(m.face.back().FFp(0));
+
 
 				Orientable = true;
 				Oriented = true;
