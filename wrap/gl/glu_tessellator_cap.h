@@ -2,6 +2,8 @@
 #define GLU_TESSELLATOR_CAP_H
 #include "glu_tesselator.h"
 #include <vcg/simplex/edge/pos.h>
+#include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 
 namespace vcg {
 namespace tri {
@@ -10,7 +12,7 @@ namespace tri {
 // This function take a mesh with one or more boundary stored as edges, and fill another mesh with a triangulation of that boundaries.
 // it assumes that boundary are planar and exploits glutessellator for the triangulaiton
 template <class MeshType>
-void CapEdgeMesh(MeshType &em, MeshType &cm)
+void CapEdgeMesh(MeshType &em, MeshType &cm, bool revertFlag=false)
 {
   typedef typename MeshType::EdgeType EdgeType;
   std::vector< std::vector<Point3f> > outlines;
@@ -32,7 +34,7 @@ void CapEdgeMesh(MeshType &em, MeshType &cm)
         nv++;
       }
       while(curE != startE);
-
+      if(revertFlag) std::reverse(outline.begin(),outline.end());
       outlines.push_back(outline);
       outline.clear();
     }
@@ -51,7 +53,8 @@ void CapEdgeMesh(MeshType &em, MeshType &cm)
   glu_tesselator::tesselate(outlines, indices);
   std::vector<Point3f> points;
   glu_tesselator::unroll(outlines, points);
-  typename MeshType::FaceIterator fi=tri::Allocator<MeshType>::AddFaces(cm,nv-2);
+  //typename MeshType::FaceIterator fi=tri::Allocator<MeshType>::AddFaces(cm,nv-2);
+  typename MeshType::FaceIterator fi=tri::Allocator<MeshType>::AddFaces(cm,indices.size()/3);
   for (size_t i=0; i<indices.size(); i+=3,++fi)
   {
     (*&fi)->V(0)=&cm.vert[ indices[i+0] ];
