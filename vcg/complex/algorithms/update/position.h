@@ -80,6 +80,21 @@ static void Translate(ComputeMeshType &m, const Point3<ScalarType> &t)
           if(!(*vi).IsD()) (*vi).P()+=t;
 }
 
+static void Scale(ComputeMeshType &m, const ScalarType s)
+{
+  Scale(m,Point3<ScalarType>(s,s,s));
+}
+
+static void Scale(ComputeMeshType &m, const Point3<ScalarType> &s)
+{
+  VertexIterator vi;
+  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+          if(!(*vi).IsD()) {
+            (*vi).P()[0]*=s[0];
+            (*vi).P()[1]*=s[1];
+            (*vi).P()[2]*=s[2];
+          }
+}
 
 }; // end class
 
