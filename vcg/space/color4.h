@@ -225,27 +225,27 @@ inline void SetGrayShade(float f)
 /** Given an integer returns a well ordering of colors
 // so that every color differs as much as possible form the previous one
 // params:
-//		n is the maximum expected value (max of the range)
-//		v is the requested position
+//		range is the maximum expected value (max of the range)
+//		value is the requested position (it must be <range);
 */
-inline static Color4 Scatter(int n, int a,float Sat=.3f,float Val=.9f)
+inline static Color4 Scatter(int range, int value,float Sat=.3f,float Val=.9f)
 {
-  int b, k, m=n;
-  int r =n;
+  int b, k, m=range;
+  int r =range;
 
-    for (b=0, k=1; k<n; k<<=1)
-			if (a<<1>=m) {
+	for (b=0, k=1; k<range; k<<=1)
+			if (value<<1>=m) {
 				if (b==0) r = k;
 				b += k;
-				a -= (m+1)>>1;
+				value -= (m+1)>>1;
 				m >>= 1;
 			}
 	else m = (m+1)>>1;
-	if (r>n-b) r = n-b;
+	if (r>range-b) r = range-b;
 
 	//TRACE("Scatter range 0..%i, in %i out %i\n",n,a,b);
 	Color4 rc;
-	rc.SetHSVColor(float(b)/float(n),Sat,Val);
+	rc.SetHSVColor(float(b)/float(range),Sat,Val);
 	return rc;
 }
 
