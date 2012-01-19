@@ -91,12 +91,12 @@ static bool ReadHeader(const char * filename,unsigned int &num_cams, unsigned in
 
 static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
 							std::vector<std::string > & image_filenames,
-				const char * filename,const char * filename_images, CallBackPos *cb=0)
+                                const char * filename,const char * filename_images, const char * filename_images_path = "",CallBackPos *cb=0)
 {
 	unsigned int   num_cams,num_points;
 
 	FILE *fp = fopen(filename,"r");
-	if(!fp) return false;
+        if(!fp) return false;
 	ReadHeader(fp, num_cams,  num_points);
 	char line[100];
 
@@ -130,7 +130,7 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
         shots[i].Intrinsics.FocalMm    = f;
         shots[i].Intrinsics.k[0] = 0.0;//k1; To be uncommented when distortion is taken into account reliably
         shots[i].Intrinsics.k[1] = 0.0;//k2;
-        AddIntrinsics(shots[i],image_filenames[i].c_str());
+        AddIntrinsics(shots[i], std::string(filename_images_path).append(image_filenames[i]).c_str());
     }
 
   // load all correspondences
@@ -160,13 +160,6 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
 		return (shots.size() == 0);
 }
 
-static int Open( OpenMeshType &m, std::vector<Shot<typename OpenMeshType::ScalarType> >  shots, const char * filename_out,const char * filename_list, CallBackPos *cb=0){
-  ReadHeader(filename_out);
-        std::vector<std::string> image_filenames;
-        ReadImagesFilenames(filename_list,image_filenames);
-        return Open( m, shots,filename_out, image_filenames,  cb);
-
-}
 
 static bool ReadImagesFilenames(const char *  filename,std::vector<std::string> &image_filenames)
 {
