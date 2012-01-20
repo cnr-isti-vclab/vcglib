@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <vcg/simplex/edge/pos.h>
 
 namespace vcg {
 namespace edge {
