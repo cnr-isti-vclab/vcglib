@@ -600,7 +600,7 @@ private:
 			static bool IsBitQuadOnly(const MeshType &m) 
       {
         typedef typename MeshType::FaceType F;
-        if (!m.HasPerFaceFlags()) return false;
+        if (!HasPerFaceFlags(m)) return false;
 				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
           unsigned int tmp = fi->Flags()&(F::FAUX0|F::FAUX1|F::FAUX2);
           if ( tmp != F::FAUX0 && tmp != F::FAUX1 && tmp != F::FAUX2) return false;
@@ -614,7 +614,7 @@ private:
 			 */
       static bool IsBitTriOnly(const MeshType &m) 
 			{
-        if (!m.HasPerFaceFlags()) return true;
+		if (!HasPerFaceFlags(m)) return true;
 				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) {
           if (
             !fi->IsD()  &&  fi->IsAnyF()  
@@ -633,7 +633,7 @@ private:
 			static bool IsBitTriQuadOnly(const MeshType &m) 
       {
         typedef typename MeshType::FaceType F;
-        if (!m.HasPerFaceFlags()) return false;
+        if (!HasPerFaceFlags(m)) return false;
 				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
           unsigned int tmp = fi->Flags()&(F::FAUX0|F::FAUX1|F::FAUX2);
           if ( tmp!=F::FAUX0 && tmp!=F::FAUX1 && tmp!=F::FAUX2 && tmp!=0 ) return false;
@@ -646,7 +646,7 @@ private:
 			 */
 			static int CountBitQuads(const MeshType &m) 
       {
-        if (!m.HasPerFaceFlags()) return 0;
+        if (!HasPerFaceFlags(m)) return 0;
         typedef typename MeshType::FaceType F;
         int count=0;
 				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
@@ -661,7 +661,7 @@ private:
 			 */
 			static int CountBitTris(const MeshType &m) 
       {
-        if (!m.HasPerFaceFlags()) return m.fn;
+        if (!HasPerFaceFlags(m)) return m.fn;
         int count=0;
 				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
           if (!(fi->IsAnyF())) count++;
@@ -674,7 +674,7 @@ private:
 			 */
 			static int CountBitPolygons(const MeshType &m) 
 			{
-        if (!m.HasPerFaceFlags()) return m.fn;
+		if (!HasPerFaceFlags(m)) return m.fn;
         typedef typename MeshType::FaceType F;
         int count = 0;
 				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD())  {
@@ -707,7 +707,7 @@ private:
 
 				
         // Second Loop, count (twice) faux edges and mark all vertices touched by non faux edges (e.g vertexes on the boundary of a polygon) 
-				if (!m.HasPerFaceFlags()) return m.fn;
+                if (!HasPerFaceFlags(m)) return m.fn;
         typedef typename MeshType::FaceType F;
         int countE = 0;
 				for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) 
@@ -742,8 +742,8 @@ private:
 			 */
       static bool HasConsistentPerFaceFauxFlag(const MeshType &m)
       {
-        assert(m.HasPerFaceFlags());
-        assert(m.HasFFTopology()); // todo: remove this constraint
+        assert(HasPerFaceFlags(m));
+        assert(HasFFAdjacency(m)); // todo: remove this constraint
         
         for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
           if(!(*fi).IsD()) 
@@ -759,7 +759,7 @@ private:
       
       static bool HasConsistentEdges(const MeshType &m)
       {
-        assert(m.HasPerFaceFlags());
+        assert(HasPerFaceFlags(m));
         
         for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
           if(!(*fi).IsD()) 
@@ -1199,7 +1199,7 @@ private:
 			{
         assert(&Oriented != &Orientable);
 				// This algorithms requires FF topology
-				assert(m.HasFFTopology());
+				assert(HasFFAdjacency(m));
 				// This algorithms require FF topology initialized
 				assert(m.face.back().FFp(0));
 
@@ -1342,8 +1342,8 @@ private:
       // - choose the edge that brings to the face f1 containing the vertex opposite to that edge.
       static int RemoveFaceFoldByFlip(MeshType &m, float normalThresholdDeg=175, bool repeat=true)
       {
-            assert(m.HasFFTopology());
-            assert(m.HasPerVertexMark());
+            assert(HasFFAdjacency(m));
+            assert(HasPerVertexMark(m));
             //Counters for logging and convergence
             int count, total = 0;
 
@@ -1392,8 +1392,8 @@ private:
 
 	static int RemoveTVertexByFlip(MeshType &m, float threshold=40, bool repeat=true)
 	{
-        assert(m.HasFFTopology());
-        assert(m.HasPerVertexMark());
+		assert(HasFFAdjacency(m));
+		assert(HasPerVertexMark(m));
         //Counters for logging and convergence
         int count, total = 0;
 
