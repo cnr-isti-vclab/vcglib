@@ -83,7 +83,7 @@ static void PerVertexClear(ComputeMeshType &m, bool ClearAllVertNormal=false)
 
 static void PerFace(ComputeMeshType &m)
 {
-	if( !m.HasPerFaceNormal()) return;
+	if( !HasPerFaceNormal(m)) return;
 	FaceIterator f;
 	for(f=m.face.begin();f!=m.face.end();++f)
             if( !(*f).IsD() )	face::ComputeNormal(*f);
@@ -95,7 +95,7 @@ static void PerFace(ComputeMeshType &m)
 */
 static void PerVertexFromCurrentFaceNormal(ComputeMeshType &m)
 {
- if( !m.HasPerVertexNormal()) return;
+ if( !HasPerVertexNormal(m)) return;
  
  VertexIterator vi;
  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -220,7 +220,7 @@ static void PerVertex(ComputeMeshType &m)
 
 static void PerVertexPerFace(ComputeMeshType &m)
 {
- if( !m.HasPerVertexNormal() || !m.HasPerFaceNormal()) return;
+ if( !HasPerVertexNormal(m) || !HasPerFaceNormal(m)) return;
  
  PerFace(m);
  PerVertexClear(m);
@@ -283,7 +283,7 @@ static void PerVertexNormalizedPerFaceNormalized(ComputeMeshType &m)
 
 static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 {
-	if( !m.HasPerFaceNormal()) return;
+	if( !HasPerFaceNormal(m)) return;
 
 	FaceIterator f;
 	bool cn = true;
@@ -317,7 +317,7 @@ static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 
 static void PerFaceNormalized(ComputeMeshType &m)
 {
-	if( !m.HasPerFaceNormal()) return;
+	if( !HasPerFaceNormal(m)) return;
 	FaceIterator f;
 		for(f=m.face.begin();f!=m.face.end();++f)
       if( !(*f).IsD() )	face::ComputeNormalizedNormal(*f);
@@ -325,7 +325,7 @@ static void PerFaceNormalized(ComputeMeshType &m)
 
 static void PerBitQuadFaceNormalized(ComputeMeshType &m)
 {
-	if( !m.HasPerFaceNormal()) return;
+	if( !HasPerFaceNormal(m)) return;
 	PerFace(m);
 
 	FaceIterator f;
@@ -343,7 +343,7 @@ static void PerBitQuadFaceNormalized(ComputeMeshType &m)
 /// \brief Calculates the vertex normal.
 static void PerVertexNormalized(ComputeMeshType &m)
 {
-  if( !m.HasPerVertexNormal()) return;
+  if( !HasPerVertexNormal(m)) return;
   PerVertex(m);
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
    if( !(*vi).IsD() && (*vi).IsRW() )
@@ -356,7 +356,7 @@ static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat,
 
 	Matrix33<ScalarType> mat33(mat,3);
 	
-	if( !m.HasPerVertexNormal()) return;
+	if( !HasPerVertexNormal(m)) return;
 
 	if(remove_scaling){
 		scale = pow(mat33.Determinant(),(ScalarType)(1.0/3.0));
@@ -376,7 +376,7 @@ static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, b
 
 	Matrix33<ScalarType> mat33(mat,3);
 
-	if( !m.HasPerFaceNormal()) return;
+	if( !HasPerFaceNormal(m)) return;
 
 	if(remove_scaling){
 		scale = pow(mat33.Determinant(),ScalarType(1.0/3.0));

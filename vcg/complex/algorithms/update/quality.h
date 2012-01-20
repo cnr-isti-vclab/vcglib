@@ -108,8 +108,8 @@ The geodesic distance is approximated by allowing to walk only along edges of th
 static void VertexGeodesicFromBorder(MeshType &m)	// R1
 {
 	//Requirements
-	assert(m.HasVFTopology());
-	assert(m.HasPerVertexQuality());
+  assert(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m));
+  assert(HasPerVertexQuality(m));
 
   std::vector< VQualityHeap > heap;
 	VertexIterator v;

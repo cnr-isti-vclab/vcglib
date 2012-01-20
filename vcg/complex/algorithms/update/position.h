@@ -64,10 +64,10 @@ static void Matrix(ComputeMeshType &m, const Matrix44<ScalarType> &M, bool updat
 	        if(!(*vi).IsD()) (*vi).P()=M*(*vi).cP();
 
 	if(update_also_normals){
-		if(m.HasPerVertexNormal()){
+		if(HasPerVertexNormal(m)){
 			UpdateNormals<ComputeMeshType>::PerVertexMatrix(m,M);
 		}
-		if(m.HasPerFaceNormal()){
+		if(HasPerFaceNormal(m)){
 			UpdateNormals<ComputeMeshType>::PerFaceMatrix(m,M);
 		}
 	}
