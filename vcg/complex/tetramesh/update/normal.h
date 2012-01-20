@@ -129,7 +129,7 @@ static void PerVertex(VertexType *v)
 static void PerVertex(TetraMeshType &m)
 {
  
- if( !m.HasPerVertexNormal()) return;
+ if( !HasPerVertexNormal(m)) return;
  _ClearNormal(m);
  TriMeshTemp tri_mesh=TriMeshTemp();
  TriConverter <TetraMeshType,TriMeshTemp>tric=TriConverter<TetraMeshType,TriMeshTemp>();
@@ -140,7 +140,7 @@ static void PerVertex(TetraMeshType &m)
 private:
 static void _ClearNormal(TetraMeshType &m)
 {
- if( !m.HasPerVertexNormal()) return;
+ if( !HasPerVertexNormal(m)) return;
  VertexIterator vi;
  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
    if( !(*vi).IsD() && (*vi).IsRW() )
@@ -151,7 +151,7 @@ static void _ClearNormal(TetraMeshType &m)
 ///// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
 //static void PerVertexPerFace(ComputeTetraMeshType &m)
 //{
-// if( !m.HasPerVertexNormal() || !m.HasPerFaceNormal()) return;
+// if( !HasPerVertexNormal(m) || !HasPerFaceNormal(m)) return;
 // 
 // 
 //}
