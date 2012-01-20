@@ -189,7 +189,7 @@ The function allows to retrieve for each vertex the list of faces sharing this v
 
 static void VertexFace(MeshType &m)
 {
-  if(!m.HasVFTopology()) return;		
+  assert(tri::HasPerVertexVFAdjacency(m) && tri::HasPerFaceVFAdjacency(m) );
 
 	VertexIterator vi;
 	FaceIterator fi;
@@ -344,7 +344,7 @@ static void TestVertexFace(MeshType &m)
 {
 	SimpleTempData<typename MeshType::VertContainer, int > numVertex(m.vert,0);
 
-	if(!m.HasVFTopology()) return;		
+  assert(tri::HasVEAdjacency(m));
 	
 	FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
@@ -387,7 +387,7 @@ static void TestVertexFace(MeshType &m)
 /// \brief Test correctness of FFtopology (only for 2Manifold Meshes!)
 static void TestFaceFace(MeshType &m)
 {
-	if(!m.HasFFTopology()) return;		
+  assert(HasFFAdjacency(m));
 
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
 	{
@@ -447,7 +447,7 @@ inline bool operator !=  ( const PVertexEdge & pe ) const { return ( v!=pe.v ); 
 
 static void EdgeEdge(MeshType &m)
 {
-  if(!HasEEAdjacency(m)) return;
+  assert(HasEEAdjacency(m));
 
   std::vector<PVertexEdge> v;
   if( m.en == 0 ) return;
@@ -496,7 +496,7 @@ static void EdgeEdge(MeshType &m)
 
 static void VertexEdge(MeshType &m)
 {
-  if(!HasVEAdjacency(m)) return;
+  assert(HasVEAdjacency(m));
 
   VertexIterator vi;
   EdgeIterator ei;
