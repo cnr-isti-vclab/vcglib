@@ -377,7 +377,7 @@ static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, in
     nv.P()[2] = linebuffer[2];
 
     // store the normal
-    if(m.HasPerVertexNormal())
+    if(HasPerVertexNormal(m))
     {
      nv.N()[0] = linebuffer[3];
      nv.N()[1] = linebuffer[4];
@@ -385,7 +385,7 @@ static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, in
     }
 
     // store the color
-    if(m.HasPerVertexColor())
+    if(HasPerVertexColor(m))
     {
      nv.C()[0] = linebuffer[6];
      nv.C()[1] = linebuffer[7];

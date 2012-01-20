@@ -126,8 +126,8 @@ static void ClampMask(MeshType &m, int &mask)
 {
   if( (mask & IOM_FACECOLOR)    && !HasPerFaceColor(m) )      mask = mask & (~IOM_FACECOLOR);
   if( (mask & IOM_WEDGTEXCOORD) && !HasPerWedgeTexCoord(m) )  mask = mask & (~IOM_WEDGTEXCOORD);
-  if( (mask & IOM_WEDGNORMAL)   && !m.HasPerWedgeNormal() )   mask = mask & (~IOM_WEDGNORMAL);
-  if( (mask & IOM_VERTCOLOR)    && !m.HasPerVertexColor() )   mask = mask & (~IOM_VERTCOLOR);
+  if( (mask & IOM_WEDGNORMAL)   && !HasPerWedgeNormal(m) )   mask = mask & (~IOM_WEDGNORMAL);
+  if( (mask & IOM_VERTCOLOR)    && !HasPerVertexColor(m) )   mask = mask & (~IOM_VERTCOLOR);
 }
 
 }; // end class

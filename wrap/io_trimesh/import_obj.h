@@ -294,7 +294,7 @@ public:
 
 				// assigning vertex color
 				// ----------------------
-					if (((oi.mask & vcg::tri::io::Mask::IOM_VERTCOLOR) != 0) && (m.HasPerVertexColor()))
+					if (((oi.mask & vcg::tri::io::Mask::IOM_VERTCOLOR) != 0) && (HasPerVertexColor(m)))
 					{
 						if(numTokens>=7)
 						{
@@ -544,7 +544,7 @@ public:
 	  {
 		m.face[i].V(j) = &(m.vert[indexedFaces[i].v[j]]);
 
-		if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) != 0) && (m.HasPerWedgeTexCoord()))
+		if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) != 0) && (HasPerWedgeTexCoord(m)))
 		{
 		  ObjTexCoord t = texCoords[indexedFaces[i].t[j]];
 		  m.face[i].WT(j).u() = t.u;
@@ -568,12 +568,12 @@ public:
 								 else m.face[i].ClearF(j);
 	  }
 
-	  if (((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && (m.HasPerFaceColor()))
+	  if (((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && (HasPerFaceColor(m)))
 	  {
 		m.face[i].C() = indexedFaces[i].c;
 	  }
 
-	  if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) != 0) && (m.HasPerWedgeNormal()))
+	  if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) != 0) && (HasPerWedgeNormal(m)))
 	  {
 		// face normal is computed as an average of wedge normals
 		m.face[i].N().Import(m.face[i].WN(0)+m.face[i].WN(1)+m.face[i].WN(2));
@@ -581,7 +581,7 @@ public:
 	  else
 	  {
 		// computing face normal from position of face vertices
-		if (m.HasPerFaceNormal())
+		if (HasPerFaceNormal(m))
 		{
 		  face::ComputeNormalizedNormal(m.face[i]);
 		}

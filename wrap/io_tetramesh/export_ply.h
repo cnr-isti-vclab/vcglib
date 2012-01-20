@@ -173,7 +173,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 		);
 	}
 	
-	if( m.HasPerVertexColor()  && (pi.mask & ply::PLYMask::PM_VERTCOLOR) )
+	if( HasPerVertexColor(m)  && (pi.mask & ply::PLYMask::PM_VERTCOLOR) )
 	{
 		fprintf(fpout,
 			"property uchar red\n"
@@ -333,7 +333,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 				if( pi.mask & ply::PLYMask::PM_VERTFLAGS )
 					fwrite(&(vp->UberFlags()),sizeof(int),1,fpout);
 
-				if( m.HasPerVertexColor() && (pi.mask & ply::PLYMask::PM_VERTCOLOR) )
+				if( HasPerVertexColor(m) && (pi.mask & ply::PLYMask::PM_VERTCOLOR) )
 					fwrite(&( vp->C() ),sizeof(char),4,fpout);
 
 				if( m.HasPerVertexQuality() && (pi.mask & ply::PLYMask::PM_VERTQUALITY) )
@@ -362,7 +362,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 				if( pi.mask & ply::PLYMask::PM_VERTFLAGS )
 					fprintf(fpout,"%d ",vp->UberFlags());
 
-				if( m.HasPerVertexColor() && (pi.mask & ply::PLYMask::PM_VERTCOLOR) )
+				if( HasPerVertexColor(m) && (pi.mask & ply::PLYMask::PM_VERTCOLOR) )
 					fprintf(fpout,"%d %d %d %d ",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
 
 				if( m.HasPerVertexQuality() && (pi.mask & ply::PLYMask::PM_VERTQUALITY) )

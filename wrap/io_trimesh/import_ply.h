@@ -651,7 +651,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				(*vi).P()[1] = va.p[1];
 				(*vi).P()[2] = va.p[2];
 
-				if( m.HasPerVertexFlags() &&  (pi.mask & Mask::IOM_VERTFLAGS) )
+				if( HasPerVertexFlags(m) &&  (pi.mask & Mask::IOM_VERTFLAGS) )
 					(*vi).UberFlags() = va.flags;
 
 				if( pi.mask & Mask::IOM_VERTQUALITY )
@@ -746,9 +746,9 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
           }
 				}
 				
-				if(m.HasPolyInfo()) (*fi).Alloc(3);
+				if(HasPolyInfo(m)) (*fi).Alloc(3);
 
-				if(m.HasPerFaceFlags() &&( pi.mask & Mask::IOM_FACEFLAGS) )
+				if(HasPerFaceFlags(m) &&( pi.mask & Mask::IOM_FACEFLAGS) )
 				{
 					(*fi).UberFlags() = fa.flags;
 				}
