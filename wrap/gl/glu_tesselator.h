@@ -22,7 +22,7 @@
 ****************************************************************************/
 #ifndef __VCGLIB_GLU_TESSELATOR_H
 #define __VCGLIB_GLU_TESSELATOR_H
-
+#include <vcg/space/point2.h>
 #include <vector>
 
 #ifndef GL_VERSION_1_1
