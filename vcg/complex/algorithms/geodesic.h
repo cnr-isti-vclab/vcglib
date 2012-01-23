@@ -177,7 +177,7 @@ namespace vcg{
 				VertexPointer pw;
 
 				//Requirements
-				assert(m.HasVFTopology());
+				assert(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m));
 				assert(!seedVec.empty());
 
 				TempDataType TD(m.vert,unreached);
