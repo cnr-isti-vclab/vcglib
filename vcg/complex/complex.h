@@ -535,6 +535,9 @@ bool HasPerWedgeColor (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) 
 
 
 template < class  CType0, class CType1, class CType2 , class CType3>
+bool HasPolyInfo (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasPolyInfo();}
+
+template < class  CType0, class CType1, class CType2 , class CType3>
 bool HasPerFaceFlags (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasFlags();}
 
 template < class  CType0, class CType1, class CType2 , class CType3>
