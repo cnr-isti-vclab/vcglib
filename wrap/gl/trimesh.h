@@ -898,7 +898,7 @@ the new (and old) vertexes are put in a std::vector that is swapped with the ori
 template<class MESH_TYPE>
 void Crease(MESH_TYPE &m, typename MESH_TYPE::scalar_type angleRad)
 {
-	assert(m.HasFFTopology());
+	assert(HasFFTopology(m));
 	typename MESH_TYPE::scalar_type cosangle=Cos(angleRad);
 
 	std::vector<GLW::VertToSplit<MESH_TYPE> > SPL;
