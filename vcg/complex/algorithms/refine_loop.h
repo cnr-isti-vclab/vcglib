@@ -347,16 +347,17 @@ struct LS3Projection {
 template<class MESH_TYPE, class METHOD_TYPE=Centroid<MESH_TYPE>, class WEIGHT_TYPE=LoopWeight<typename MESH_TYPE::ScalarType> >
 struct OddPointLoopGeneric : public std::unary_function<face::Pos<typename MESH_TYPE::FaceType> , typename MESH_TYPE::VertexType>
 {
-	typedef METHOD_TYPE Projection;
+  typedef METHOD_TYPE Projection;
 	typedef WEIGHT_TYPE Weight;
 	typedef typename MESH_TYPE::template PerVertexAttributeHandle<int> ValenceAttr;
 	
+	MESH_TYPE &m;
 	Projection proj;
 	Weight weight;
 	ValenceAttr *valence;
 	
-	inline OddPointLoopGeneric(Projection proj = Projection(), Weight weight = Weight()) :
-		proj(proj), weight(weight), valence(0) {}
+	inline OddPointLoopGeneric(MESH_TYPE &_m, Projection proj = Projection(), Weight weight = Weight()) :
+		m(_m), proj(proj), weight(weight), valence(0) {}
 	
 	void operator()(typename MESH_TYPE::VertexType &nv, face::Pos<typename MESH_TYPE::FaceType>  ep)	{
 		proj.reset();
@@ -367,7 +368,7 @@ struct OddPointLoopGeneric : public std::unary_function<face::Pos<typename MESH_
 		he.FlipV();
 		r = he.v;
 
-		if( MESH_TYPE::HasPerVertexColor())
+		if( tri::HasPerVertexColor(m))
 			nv.C().lerp(ep.f->V(ep.z)->C(),ep.f->V1(ep.z)->C(),.5f);
 
 		if (he.IsBorder()) {
@@ -521,6 +522,7 @@ struct EvenPointLoopGeneric : public std::unary_function<face::Pos<typename MESH
 template<class MESH_TYPE>
 struct OddPointLoop : OddPointLoopGeneric<MESH_TYPE, Centroid<MESH_TYPE> >
 {
+  OddPointLoop(MESH_TYPE &_m):OddPointLoopGeneric<MESH_TYPE, Centroid<MESH_TYPE> >(_m){}
 };
 
 template<class MESH_TYPE>
@@ -575,7 +577,7 @@ bool RefineOddEvenE(MESH_TYPE &m, ODD_VERT odd, EVEN_VERT even, PREDICATE edgePr
 				//if (RefineSelected && !(*fi).V(i)->IsS() )
 				//	break;
 				face::Pos<typename MESH_TYPE::FaceType>aux (&(*fi),i);
-				if( MESH_TYPE::HasPerVertexColor() ) {
+				if( tri::HasPerVertexColor(m) ) {
 					(*fi).V(i)->C().lerp((*fi).V0(i)->C() , (*fi).V1(i)->C(),0.5f);
 				}
 
