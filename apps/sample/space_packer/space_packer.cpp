@@ -101,18 +101,16 @@ int main( int /*argc*/, char **/*argv*/ )
   vector<Box2f> rectVec;
   buildRandRectSet(1000, rectVec);
   vector<Similarity2f> trVec;
-  Point2f finalSize;
   vector< vector<Point2f> > polySet;
-
+  Point2f finalSize;
   buildRandPolySet(100,polySet);
-
+  PolyDumperParam pp;
   PolyPacker<float>::PackAsEqualSquares(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
-  int emptyCntEq=dumpPolySet("testpolyEq.png",polySet,trVec);
+  dumpPolySet("testpolyEq.png",polySet,trVec,pp);
   PolyPacker<float>::PackAsAxisAlignedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
-  int emptyCntAA=dumpPolySet("testpolyAA.png",polySet,trVec);
+  dumpPolySet("testpolyAA.png",polySet,trVec,pp);
   PolyPacker<float>::PackAsObjectOrientedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
-  int emptyCntOO=dumpPolySet("testpolyOO.png",polySet,trVec);
-  printf("ec= %i %i %i\n",emptyCntEq,emptyCntAA,emptyCntOO);
+  dumpPolySet("testpolyOO.png",polySet,trVec,pp);
 
   return 0;
 }
