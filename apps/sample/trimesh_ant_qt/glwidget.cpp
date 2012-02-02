@@ -42,42 +42,26 @@
 #include <QtOpenGL>
 #include <math.h>
 
-
 #include "glwidget.h"
 #include <wrap/qt/trackball.h>
+#include <wrap/qt/anttweakbarMapper.h>
 
-enum DrawMode{SMOOTH=0,POINTS,WIRE,FLATWIRE,HIDDEN,FLAT};
+enum DrawMode{SMOOTH=vcg::GLW::DMSmooth, POINTS=vcg::GLW::DMPoints , WIRE, FLATWIRE,HIDDEN,FLAT};
 
 TwBar *bar;
 char * filename;/// filename of the mesh to load
 CMesh mesh;     /// the active mesh instance
 vcg::GlTrimesh<CMesh> glWrap;    /// the active mesh opengl wrapper
 vcg::Trackball track;     /// the active manipulator
-DrawMode drawmode;     /// the current drawmode
-void initMesh(QString message);     /// mesh data structure initializer
-
-void TW_CALL CopyCDStringToClient(char **destPtr, const char *src)
-{
-    size_t srcLen = (src!=NULL) ? strlen(src) : 0;
-    size_t destLen = (*destPtr!=NULL) ? strlen(*destPtr) : 0;
-
-    // Alloc or realloc dest memory block if needed
-    if( *destPtr==NULL )
-        *destPtr = (char *)malloc(srcLen+1);
-    else if( srcLen>destLen )
-        *destPtr = (char *)realloc(*destPtr, srcLen+1);
-
-    // Copy src
-    if( srcLen>0 )
-        strncpy(*destPtr, src, srcLen);
-    (*destPtr)[srcLen] = '\0'; // null-terminated string
-}
+GLW::DrawMode drawmode=GLW::DMFlatWire;     /// the current drawmode
 
 void  TW_CALL loadTetrahedron(void *){
 	vcg::tri::Tetrahedron(mesh);
+	vcg::tri::UpdateBounding<CMesh>::Box(mesh);
+	vcg::tri::UpdateNormals<CMesh>::PerVertexNormalizedPerFace(mesh);
+	vcg::tri::UpdateNormals<CMesh>::PerFaceNormalized(mesh);
 	glWrap.m = &mesh;
   	glWrap.Update();
-
 }
 
 void TW_CALL loadMesh(void *)
@@ -89,7 +73,6 @@ void TW_CALL loadMesh(void *)
     vcg::tri::UpdateBounding<CMesh>::Box(mesh);
     vcg::tri::UpdateNormals<CMesh>::PerVertexNormalizedPerFace(mesh);
     vcg::tri::UpdateNormals<CMesh>::PerFaceNormalized(mesh);
-    // Initialize the opengl wrapper
     glWrap.m = &mesh;
     glWrap.Update();
   }
@@ -108,16 +91,11 @@ GLWidget::GLWidget(QWidget *parent)
      TwAddButton(bar,"Use tetrahedron",loadTetrahedron,0,	" label='Make Tetrahedron' group=SetMesh help=`use tetrahedron.` ");
 
      // ShapeEV associates Shape enum values with labels that will be displayed instead of enum values
-     TwEnumVal drawmodes[6] = { {SMOOTH, "Smooth"}, {POINTS, "Per Points"}, {WIRE, "Wire"}, {FLATWIRE, "FlatWire"},{HIDDEN, "Hidden"},{FLAT, "Flat"}};
+     TwEnumVal drawmodes[6] = { {GLW::DMSmooth, "Smooth"}, {GLW::DMPoints, "Per Points"}, {GLW::DMWire, "Wire"}, {GLW::DMFlatWire, "FlatWire"},{GLW::DMHidden, "Hidden"},{GLW::DMFlat, "Flat"}};
      // Create a type for the enum shapeEV
      TwType drawMode = TwDefineEnum("DrawMode", drawmodes, 6);
      // add 'g_CurrentShape' to 'bar': this is a variable of type ShapeType. Its key shortcuts are [<] and [>].
      TwAddVarRW(bar, "Draw Mode", drawMode, &drawmode, " keyIncr='<' keyDecr='>' help='Change draw mode.' ");
-}
-GLWidget::~GLWidget() { }
-QSize GLWidget::sizeHint() const
-{
-    return QSize(800, 600);
 }
 
 void GLWidget::initializeGL ()
@@ -157,17 +135,7 @@ void GLWidget::paintGL ()
       float d=1.0f/mesh.bbox.Diag();
       vcg::glScale(d);
       glTranslate(-mesh.bbox.Center());
-      // the trimesh drawing calls
-      switch(drawmode)
-      {
-      case SMOOTH:    glWrap.Draw<vcg::GLW::DMSmooth,   vcg::GLW::CMNone,vcg::GLW::TMNone> ();  break;
-      case POINTS:    glWrap.Draw<vcg::GLW::DMPoints,   vcg::GLW::CMNone,vcg::GLW::TMNone> (); break;
-      case WIRE:      glWrap.Draw<vcg::GLW::DMWire,     vcg::GLW::CMNone,vcg::GLW::TMNone> ();  break;
-      case FLATWIRE:  glWrap.Draw<vcg::GLW::DMFlatWire, vcg::GLW::CMNone,vcg::GLW::TMNone> (); break;
-      case HIDDEN:    glWrap.Draw<vcg::GLW::DMHidden,   vcg::GLW::CMNone,vcg::GLW::TMNone> ();  break;
-      case FLAT:      glWrap.Draw<vcg::GLW::DMFlat,     vcg::GLW::CMNone,vcg::GLW::TMNone> (); break;
-      default:        break;
-      }
+      glWrap.Draw(GLW::DrawMode(drawmode),GLW::CMNone,GLW::TMNone);
     }
     glPopMatrix();
     track.DrawPostApply();
@@ -183,44 +151,6 @@ void GLWidget::keyReleaseEvent (QKeyEvent * e)
   updateGL ();
 }
 
-int TwKeyPressedQt(QKeyEvent *e)
-{
-  int kmod = 0;
-  if(e->modifiers() & Qt::ShiftModifier )  kmod |= TW_KMOD_SHIFT;
-  if(e->modifiers() & Qt::ControlModifier )  kmod |= TW_KMOD_CTRL;
-  if(e->modifiers() & Qt::AltModifier )  kmod |= TW_KMOD_ALT;
-  int key = e->key();
-  int k = 0;
-
-  if( key>0 && key<0x7e ) k=key; // plain ascii codes
-
-  if( key>=Qt::Key_F1 && key<=Qt::Key_F12  )
-      k = TW_KEY_F1 + (key-Qt::Key_F1 );
-  else
-  {
-      switch( key )
-      {
-      case Qt::Key_Left:      k = TW_KEY_LEFT;  break;
-      case Qt::Key_Up:        k = TW_KEY_UP; break;
-      case Qt::Key_Right:     k = TW_KEY_RIGHT;  break;
-      case Qt::Key_Down:      k = TW_KEY_DOWN;   break;
-      case Qt::Key_PageUp:    k = TW_KEY_PAGE_UP;  break;
-      case Qt::Key_PageDown:  k = TW_KEY_PAGE_DOWN; break;
-      case Qt::Key_Home:      k = TW_KEY_HOME; break;
-      case Qt::Key_End:       k = TW_KEY_END; break;
-      case Qt::Key_Insert:    k = TW_KEY_INSERT; break;
-      case Qt::Key_Backspace:    k = TW_KEY_BACKSPACE; break;
-      case Qt::Key_Delete:    k = TW_KEY_DELETE; break;
-      case Qt::Key_Return:    k = TW_KEY_RETURN; break;
-      case Qt::Key_Enter:    k = TW_KEY_RETURN; break;
-      case Qt::Key_Escape:    k = TW_KEY_ESCAPE; break;
-      case Qt::Key_Tab:    k = TW_KEY_TAB; break;
-      }
-  }
-
-  return TwKeyPressed(k, kmod);
-}
-
 
 void GLWidget::keyPressEvent (QKeyEvent * e)
 {
@@ -229,25 +159,18 @@ void GLWidget::keyPressEvent (QKeyEvent * e)
   if (e->key () == Qt::Key_Shift)  track.ButtonDown (QT2VCG (Qt::NoButton, Qt::ShiftModifier));
   if (e->key () == Qt::Key_Alt)  track.ButtonDown (QT2VCG (Qt::NoButton, Qt::AltModifier));
 
-  TwKeyPressedQt(e);
+  TwKeyPressQt(e);
   updateGL ();
-}
-
-TwMouseButtonID Qt2TwMouseButtonId(QMouseEvent *e)
-{
-  if(e->button() && Qt::LeftButton) return TW_MOUSE_LEFT;
-  if(e->button() && Qt::MidButton) return TW_MOUSE_MIDDLE;
-  if(e->button() && Qt::RightButton) return TW_MOUSE_RIGHT;
-  assert(0);
 }
 
 void GLWidget::mousePressEvent (QMouseEvent * e)
 {
+  if(!TwMousePressQt(e))
+  {
   e->accept ();
   setFocus ();
   track.MouseDown (e->x (), height () - e->y (), QT2VCG (e->button (), e->modifiers ()));
-  TwMouseMotion(e->x (), e->y ());
-  TwMouseButton(TW_MOUSE_PRESSED, Qt2TwMouseButtonId(e));
+  }
   updateGL ();
 }
 
@@ -263,7 +186,7 @@ void GLWidget::mouseMoveEvent (QMouseEvent * e)
 void GLWidget::mouseReleaseEvent (QMouseEvent * e)
 {
   track.MouseUp (e->x (), height () - e->y (), QT2VCG (e->button (), e->modifiers ()));
-  TwMouseButton(TW_MOUSE_RELEASED, Qt2TwMouseButtonId(e));
+  TwMouseReleaseQt(e);
   updateGL ();
 }
 

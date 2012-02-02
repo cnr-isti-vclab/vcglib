@@ -75,9 +75,12 @@ class GLWidget : public QGLWidget
 
 public:
     GLWidget(QWidget *parent = 0);
-    ~GLWidget();
 
-    QSize sizeHint() const;
+    ~GLWidget() {};
+
+    QSize sizeHint() const {
+      return QSize(800, 600);
+  };
 
 protected:
     void initializeGL();

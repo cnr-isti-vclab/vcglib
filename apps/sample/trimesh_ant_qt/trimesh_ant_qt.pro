@@ -19,6 +19,7 @@ INCLUDEPATH += $$ANTDIR/include
 SOURCES += $$VCGLIBDIR/wrap/ply/plylib.cpp
 SOURCES += $$VCGLIBDIR/wrap/gui/trackball.cpp
 SOURCES += $$VCGLIBDIR/wrap/gui/trackmode.cpp
+SOURCES += $$VCGLIBDIR/wrap/qt/anttweakbarMapper.cpp
 
 
 # Awful problem with windows..
