@@ -29,8 +29,9 @@ public:
 };
 
   void dumpPolySet(const char * imageName, std::vector< std::vector< std::vector<vcg::Point2f> > > &polyVecVec, std::vector<vcg::Similarity2f> &trVec, std::vector<std::string> &labelVec, PolyDumperParam &pp);
-  void dumpPolySet(const char * imageName, std::vector< std::vector<vcg::Point2f> > &polyVec, std::vector<vcg::Similarity2f> &trVec, PolyDumperParam &pp);
-  void dumpPolySet(const char * imageName, std::vector< std::vector<vcg::Point2f> > &polyVec, PolyDumperParam &pp);
+  void dumpPolySet(const char * imageName, std::vector< std::vector< std::vector<vcg::Point2f> > > &polyVecVec, std::vector<vcg::Similarity2f> &trVec, PolyDumperParam &pp);
+  void dumpPolySet(const char * imageName,              std::vector< std::vector<vcg::Point2f> >   &polyVec,   std::vector<vcg::Similarity2f> &trVec, PolyDumperParam &pp);
+  void dumpPolySet(const char * imageName,              std::vector< std::vector<vcg::Point2f> >   &polyVec,   PolyDumperParam &pp);
   void rectSetToPolySet(std::vector< vcg::Box2f > &rectVec, std::vector< std::vector<vcg::Point2f> > &polyVec);
 
 #endif // POLYTOQIMAGE_H

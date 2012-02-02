@@ -45,11 +45,14 @@ void dumpPolySet(const char * imageName, vector< vector<Point2f> > &polyVec, vec
     polyVecVec[i].resize(1);
     polyVecVec[i][0]=polyVec[i];
   }
-  vector<string> labelVec(polyVec.size());
-  dumpPolySet(imageName,polyVecVec,trVec,labelVec,pp);
+  dumpPolySet(imageName,polyVecVec,trVec,pp);
 }
 
-
+void dumpPolySet(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, PolyDumperParam &pp)
+{
+  vector<string> labelVec(polyVecVec.size());
+  dumpPolySet(imageName,polyVecVec,trVec,labelVec,pp);
+}
 
 void dumpPolySet(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, vector<string> &labelVec, PolyDumperParam &pp)
 {
