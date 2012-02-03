@@ -27,6 +27,7 @@
 #include <vcg/space/rect_packer.h>
 #include <vcg/space/poly_packer.h>
 #include <wrap/qt/PolyToQImage.h>
+#include <time.h>
 
 using namespace vcg;
 using namespace std;
@@ -44,7 +45,7 @@ void buildRandRectSet(int rectNum, vector<Box2f> &rectVec)
   {
     Box2f bb;
     float ratio=ratioMin+(ratioMax-ratioMin)*rnd.generate01();
-    float size= sizeMin+(sizeMax-sizeMin)*pow(rnd.generate01(),exp);
+    float size= sizeMin+(sizeMax-sizeMin)*pow((float)rnd.generate01(),exp);
     bb.min=Point2f(-size*ratio,-size);
     bb.max=Point2f( size*ratio, size);
     rectVec.push_back(bb);
@@ -59,8 +60,8 @@ void buildRandRectSetOld(int rectNum, vector<Box2f> &rectVec)
   for(int i=0;i<rectNum;++i)
   {
     Box2f bb;
-    bb.min=Point2f(-pow(rnd.generate01(),exp),-pow(rnd.generate01(),exp));
-    bb.max=Point2f( pow(rnd.generate01(),exp), pow(rnd.generate01(),exp));
+    bb.min=Point2f(-pow((float)rnd.generate01(),exp),-pow((float)rnd.generate01(),exp));
+    bb.max=Point2f( pow((float)rnd.generate01(),exp), pow((float)rnd.generate01(),exp));
     rectVec.push_back(bb);
   }
 }
