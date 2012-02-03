@@ -12,3 +12,10 @@ HEADERS += ../../../vcg/space/rect_packer.h \
 
 # Mac specific Config required to avoid to make application bundles
 CONFIG -= app_bundle
+
+# Awful problem with windows..
+win32{
+  DEFINES += NOMINMAX
+}
+
+QT           += opengl svg
