@@ -438,7 +438,7 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 template <class T> class VEAdj: public T {
 public:
-  VEAdj(){_ep=0;}
+  VEAdj(){_ep=0;_zp=-1;}
   typename T::EdgePointer &VEp() {return _ep; }
 	typename T::EdgePointer const cVEp() const {return _ep; }
   int &VEi() {return _zp; }
@@ -457,7 +457,7 @@ private:
 
 template <class T> class VFAdj: public T {
 public:
-  VFAdj(){_fp=0;}
+  VFAdj(){_fp=0;_zp=-1;}
   typename T::FacePointer &VFp() {return _fp; }
 	typename T::FacePointer const cVFp() const  {return _fp; }
   int &VFi() {return _zp; }
@@ -476,7 +476,7 @@ private:
 
 template <class T> class VHAdj: public T {
 public:
-	VHAdj(){_hp=0;}
+	VHAdj(){_hp=0;_zp=-1;}
 	typename T::HEdgePointer &VHp() {return _hp; }
 	typename T::HEdgePointer cVHp() {return _hp; }
 	int &VHi() {return _zp; }
@@ -495,7 +495,7 @@ private:
 
 template <class T> class VTAdj: public T {
 public:
-	VTAdj() { _tp = 0; }
+	VTAdj() { _tp = 0; _zp=-1;}
 	typename T::TetraPointer &VTp() { return _tp; }
 	typename T::TetraPointer cVTp() { return _tp; }
 	int &VTi() {return _zp; }

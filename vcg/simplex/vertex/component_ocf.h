@@ -234,7 +234,8 @@ bool IsVFAdjacencyEnabled() const {return VFAdjacencyEnabled;}
 void EnableVFAdjacency() {
 	assert(VALUE_TYPE::HasVFAdjacencyOcf());
 	VFAdjacencyEnabled=true;
-	AV.resize((*this).size());
+	VFAdjType zero; zero._fp=0; zero._zp=-1;
+	AV.resize((*this).size(),zero);
 }
 
 void DisableVFAdjacency() {
