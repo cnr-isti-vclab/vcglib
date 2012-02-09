@@ -136,6 +136,24 @@ public:
 		}
 	}
 	
+	/** Function to add a sphere (a point + radius) to a bbox
+	    @param p The point 3D
+		@param radius the radius of the sphere centered on p
+	*/
+void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
+{
+	if(IsNull()) Set(p);
+	else
+	{
+	  min.X() = std::min(min.X(),p.X()-radius);
+	  min.Y() = std::min(min.Y(),p.Y()-radius);
+	  min.Z() = std::min(min.Z(),p.Z()-radius);
+
+	  max.X() = std::max(max.X(),p.X()+radius);
+	  max.Y() = std::max(max.Y(),p.Y()+radius);
+	  max.Z() = std::max(max.Z(),p.Z()+radius);
+	}
+}
 	// Aggiunge ad un box un altro box trasformato secondo la matrice m
 	void Add( const Matrix44<BoxScalarType> &m, const Box3<BoxScalarType> & b )
 	{
