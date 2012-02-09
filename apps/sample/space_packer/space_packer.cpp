@@ -32,7 +32,7 @@
 using namespace vcg;
 using namespace std;
 
-void buildRandRectSet(int rectNum, vector<Box2f> &rectVec)
+static void buildRandRectSet(int rectNum, vector<Box2f> &rectVec)
 {
   math::MarsenneTwisterRNG rnd;
   float exp=3.0f;
@@ -96,8 +96,9 @@ void buildRandPolySet(int polyNum, vector< vector<Point2f> > &polyVec)
   }
 }
 
-int main( int /*argc*/, char **/*argv*/ )
+int main( int argc, char **argv )
 {
+  QApplication pippo(argc,argv);
 
   vector<Box2f> rectVec;
   buildRandRectSet(1000, rectVec);
@@ -106,12 +107,22 @@ int main( int /*argc*/, char **/*argv*/ )
   Point2f finalSize;
   buildRandPolySet(100,polySet);
   PolyDumperParam pp;
-  PolyPacker<float>::PackAsEqualSquares(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
+ /* PolyPacker<float>::PackAsEqualSquares(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
   dumpPolySet("testpolyEq.png",polySet,trVec,pp);
   PolyPacker<float>::PackAsAxisAlignedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
   dumpPolySet("testpolyAA.png",polySet,trVec,pp);
   PolyPacker<float>::PackAsObjectOrientedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
-  dumpPolySet("testpolyOO.png",polySet,trVec,pp);
+  dumpPolySet("testpolyOO.png",polySet,trVec,pp);*/
+
+  //PolyPacker<float>::PackAsAxisAlignedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
+  PolyPacker<float>::PackAsObjectOrientedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
+  //dumpPolySetPNG("testpolyEq.png",polySet,trVec,pp);
+  PolyDumper::dumpPolySetSVG("testpolyEq.svg",polySet,trVec,pp);
+
+  /*PolyPacker<float>::PackAsAxisAlignedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
+  dumpPolySetSVG("testpolyAA.svg",polySet,trVec,pp);
+  PolyPacker<float>::PackAsObjectOrientedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
+  dumpPolySetSVG("testpolyOO.svg",polySet,trVec,pp);*/
 
   return 0;
 }
