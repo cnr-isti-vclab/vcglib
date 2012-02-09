@@ -269,7 +269,10 @@ public:
 	VEIterator(EdgeType * _e,  const int &  _z){e = _e; z = _z;}
 
 	/// Constructor which takes a pointer to vertex
-	VEIterator(VertexType * _v){e = _v->VEp(); z = _v->VEi();}
+	VEIterator(VertexType * _v){
+	  e = _v->VEp(); z = _v->VEi();
+	  assert(z>=0 && "VE adjacency not initialized");
+	}
 
 	VFIEdgeType * &E() { return e;}
 	int	&					  I() { return z;}
