@@ -106,7 +106,7 @@ static  bool PackAsEqualSquares(const std::vector< std::vector<Point2x> > &polyV
     bbMax.Add(bbVec.back());
   }
 
-  float unitScale = 1.0/max(bbMax.DimX(),bbMax.DimY());
+  float unitScale = 1.0/std::max(bbMax.DimX(), bbMax.DimY());
   float polyScale = unitScale * pixelPerPoly;
 
   int baseX =0;

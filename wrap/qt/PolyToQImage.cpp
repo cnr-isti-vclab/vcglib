@@ -74,8 +74,8 @@ void PolyDumper::DrawPolygonMask(const vector< vector<Point2f> > &polyVec,
 	qp.setWidthF(0);
 	///find the BB
 	vcg::Box2f bbox;
-	for(int i=0;i<polyVec.size();++i)
-		for(int j=0;j<polyVec[i].size();++j)
+	for(size_t i=0;i<polyVec.size();++i)
+		for(size_t j=0;j<polyVec[i].size();++j)
 		{
 			Point2f pp=polyVec[i][j];
 			pp.Rotate(trans.rotRad);
@@ -98,10 +98,10 @@ void PolyDumper::DrawPolygonMask(const vector< vector<Point2f> > &polyVec,
 
 		///DRAW THE POLYGON
 		QPainterPath QPP;
-		for(int i=0;i<polyVec.size();++i)
+		for(size_t i=0;i<polyVec.size();++i)
 		{
 			QVector<QPointF> ppQ;
-			for(int j=0;j<polyVec[i].size();++j)
+			for(size_t j=0;j<polyVec[i].size();++j)
 			{
 				Point2f pp=polyVec[i][j];
 				//pp.Rotate(trans.rotRad);
@@ -255,10 +255,10 @@ void  PolyDumper::dumpPolySetPNG(const char * imageName,
 		painter.scale(trVec[i].sca,trVec[i].sca);
 		QPainterPath QPP;
 
-		for(int jj=0;jj<polyVecVec[i].size();++jj)
+		for(size_t jj=0;jj<polyVecVec[i].size();++jj)
 		{
 			QVector<QPointF> ppQ;
-			for(int j=0;j<polyVecVec[i][jj].size();++j)
+			for(size_t j=0;j<polyVecVec[i][jj].size();++j)
 			{
 				Point2f pp=polyVecVec[i][jj][j];
 				ppQ.push_back(QPointF(pp[0],pp[1]));
@@ -334,10 +334,10 @@ void PolyDumper::dumpPolySetSVG(const char * imageName,
 		painter.scale(trVec[i].sca,trVec[i].sca);
 		QPainterPath QPP;
 
-		for(int jj=0;jj<polyVecVec[i].size();++jj)
+		for(size_t jj=0;jj<polyVecVec[i].size();++jj)
 		{
 			QVector<QPointF> ppQ;
-			for(int j=0;j<polyVecVec[i][jj].size();++j)
+			for(size_t j=0;j<polyVecVec[i][jj].size();++j)
 			{
 				Point2f pp=polyVecVec[i][jj][j];
 				ppQ.push_back(QPointF(pp[0],pp[1]));
