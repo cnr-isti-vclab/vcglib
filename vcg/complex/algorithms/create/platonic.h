@@ -721,9 +721,11 @@ void FaceGrid(MeshType & in, const std::vector<int> &grid, int w, int h)
     }
 }
 
+
 template <class MeshType>
 void Disk(MeshType & m, int slices)
 {
+  m.Clear();
   typename MeshType::VertexIterator vi = vcg::tri::Allocator<MeshType>::AddVertices(m,slices+1);
   (*vi).P() = typename MeshType::CoordType(0,0,0);
   ++vi;
@@ -747,6 +749,20 @@ void Disk(MeshType & m, int slices)
     (*fi).V(1) = &m.vert[ a ];
     (*fi).V(2) = &m.vert[ b ];
   }
+}
+
+template <class MeshType>
+void OrientedDisk(MeshType &m, int slices, Point3f center, Point3f norm, float radius)
+{
+  Disk(m,slices);
+  tri::UpdatePosition<MeshType>::Scale(m,radius);
+  float angleRad = Angle(Point3f(0,0,1),norm);
+  Point3f axis = Point3f(0,0,1)^norm;
+
+  Matrix44f rotM;
+  rotM.SetRotateRad(angleRad,axis);
+  tri::UpdatePosition<MeshType>::Matrix(m,rotM);
+  tri::UpdatePosition<MeshType>::Translate(m,center);
 }
 
 template <class MeshType>
