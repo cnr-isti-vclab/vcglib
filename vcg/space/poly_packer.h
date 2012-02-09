@@ -22,6 +22,7 @@
 ****************************************************************************/
 #ifndef __VCG_POLY_PACKER_H__
 #define __VCG_POLY_PACKER_H__
+
 #include <limits>
 #include <stdio.h>
 #include <assert.h>
@@ -31,6 +32,8 @@
 #include <vcg/space/rect_packer.h>
 #include <vcg/space/point2.h>
 #include <vcg/math/similarity2.h>
+
+
 
 namespace vcg
 {
@@ -57,7 +60,7 @@ public:
   {
     const int stepNum=16;
     float bestAngle;
-    float bestArea = std::numeric_limits<float>::max();
+	float bestArea = std::numeric_limits<float>::max();
     Box2f bestBB;
 
     for(int i=0;i<stepNum;++i)
@@ -87,9 +90,9 @@ static  bool PackAsEqualSquares(const std::vector< std::vector<Point2x> > &polyV
                   std::vector<Similarity2x> &trVec,
                   Point2x &coveredContainer)
 {
-  int minSide = int( std::min(containerSizeX[0],containerSizeX[1]));
+  int minSide = int(min(containerSizeX[0],containerSizeX[1]));
   const vcg::Point2i containerSize(minSide,minSide);
-  int polyPerLine = ceil(sqrt(polyVec.size()));
+  int polyPerLine = ceil(sqrt((double)polyVec.size()));
   int pixelPerPoly = minSide / (polyPerLine);
   if(pixelPerPoly < 1) return false;
 
@@ -103,7 +106,7 @@ static  bool PackAsEqualSquares(const std::vector< std::vector<Point2x> > &polyV
     bbMax.Add(bbVec.back());
   }
 
-  float unitScale = 1.0/std::max(bbMax.DimX(),bbMax.DimY());
+  float unitScale = 1.0/max(bbMax.DimX(),bbMax.DimY());
   float polyScale = unitScale * pixelPerPoly;
 
   int baseX =0;
