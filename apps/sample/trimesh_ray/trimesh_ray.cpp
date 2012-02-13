@@ -92,7 +92,6 @@ int main(int argc,char ** argv)
   tri::UpdateNormals<MyMesh>::PerFaceNormalized(m);
   tri::UpdateNormals<MyMesh>::PerVertexAngleWeighted(m);
   tri::UpdateNormals<MyMesh>::NormalizeVertex(m);
-  tri::UpdateFlags<MyMesh>::FaceProjection(m);
 	// Create a static grid (for fast indexing) and fill it
 	TriMeshGrid static_grid;
 	static_grid.Set(m.face.begin(), m.face.end());
