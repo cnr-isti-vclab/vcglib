@@ -340,7 +340,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			extractor.Initialize();
       for (int j=0; j<=this->siz.Y(); j++)
 			{
-				cb((100*j)/this->siz.Y(),"Marching ");
+                if (cb) cb((100*j)/this->siz.Y(),"Marching ");
 				ProcessSlice<EXTRACTOR_TYPE>(extractor);//find cells where there is the isosurface and examine it
         NextSlice();
 			}
