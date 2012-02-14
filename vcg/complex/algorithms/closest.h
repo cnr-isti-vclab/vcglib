@@ -348,13 +348,14 @@ namespace vcg {
 			typename GRID::CoordType dir=_ray.Direction();
 			dir.Normalize();
 			typename GRID::CoordType int_point=_ray.Origin()+_ray1.Direction()*_t;
-			typename GRID::ScalarType alfa,beta,gamma;
 			if (f!=NULL)
 			{
-				InterpolationParameters<FaceType,ScalarType>(*f,f->N(),int_point, alfa, beta, gamma);
-				_normf =  (f->V(0)->cN())*alfa+
-									(f->V(1)->cN())*beta+
-									(f->V(2)->cN())*gamma ;
+                Point3<typename GRID::ScalarType> bary;
+                InterpolationParameters<FaceType,ScalarType>(*f,f->N(),int_point, bary);
+
+                _normf =  (f->V(0)->cN())*bary.X()+
+                                    (f->V(1)->cN())*bary.Y()+
+                                    (f->V(2)->cN())*bary.Z() ;
 			}
 			return f;
 		}
