@@ -19,6 +19,10 @@ void TW_CALL CopyCDStringToClient(char **destPtr, const char *src)
     (*destPtr)[srcLen] = '\0'; // null-terminated string
 }
 
+void TW_CALL CopyStdStringToClient(std::string& destClientString, const std::string& srcLibraryString)
+{
+    destClientString = srcLibraryString;
+}
 
 TwMouseButtonID Qt2TwMouseButtonId(QMouseEvent *e)
 {
