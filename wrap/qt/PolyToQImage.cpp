@@ -285,7 +285,7 @@ void  PolyDumper::dumpPolySetPNG(const char * imageName,
 		painter.resetTransform();
 		painter.translate(trVec[i].tra[0],trVec[i].tra[1]);
 
-		painter.drawText(bc[0]-radius,bc[1]-radius,radius*2,radius*2,Qt::AlignHCenter|Qt::AlignCenter,QString("ii"));
+		painter.drawText(bc[0]-radius,bc[1]-radius,radius*2,radius*2,Qt::AlignHCenter|Qt::AlignCenter,QString(labelVec[i].c_str()));
 	}
 	painter.end();
 	img.save(imageName);
@@ -302,8 +302,11 @@ void PolyDumper::dumpPolySetSVG(const char * imageName,
 {
 	assert(polyVecVec.size() == trVec.size());
 
+
 	///SET THE FONT
-	int fontSize=ceil(std::max(pp.width,pp.height)/100.0);
+	int fontSize;
+	if(pp.fontSize==0) fontSize=ceil(std::max(pp.width,pp.height)/100.0);
+	else fontSize=pp.fontSize;
 	QFont qf("courier",fontSize);
 	QSvgGenerator svg;
 	svg.setFileName(imageName);
@@ -311,7 +314,7 @@ void PolyDumper::dumpPolySetSVG(const char * imageName,
 	///SET THE DRAWING SIZE
 	svg.setSize(QSize(pp.width,pp.height));
 	svg.setViewBox(QRect(0, 0, pp.width,pp.height));
-	svg.setResolution(pp.dpi);//
+	svg.setResolution(int(pp.dpi));//
 
 	///SETUP OF DRAWING PROCEDURE
 	QPainter painter;
@@ -364,7 +367,7 @@ void PolyDumper::dumpPolySetSVG(const char * imageName,
 		painter.setFont(qf);
 		painter.resetTransform();
 		painter.translate(trVec[i].tra[0],trVec[i].tra[1]);
-		painter.drawText(bc[0]-radius,bc[1]-radius,radius*2,radius*2,Qt::AlignHCenter|Qt::AlignCenter,QString("ii"));
+		painter.drawText(bc[0]-radius,bc[1]-radius,radius*2,radius*2,Qt::AlignHCenter|Qt::AlignCenter,QString(labelVec[i].c_str()));
 	}
 	painter.end();
 }

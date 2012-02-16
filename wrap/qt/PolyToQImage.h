@@ -13,28 +13,41 @@
 class PolyDumperParam
 {
 public:
-	///the backgrround color
+	/// the backgrround color
 	vcg::Color4b backgroundColor;
-	///true if the polygons must be filled with color
+	/// true if the polygons must be filled with color
 	bool fill;
-	///true if the filling color is random
+	/// true if the filling color is random
 	bool randomColor;
-	///the filling color of polygons, used only if randomColor==false
+	/// the filling color of polygons, used only if randomColor==false
 	vcg::Color4b FillColor;
-	
-	///dimension of the image (in PNG are pixels, while in SV is the workspace in points)
+	/// The size of the font. If zero (default) it is automatically chosen.
+	int fontSize;
+	/// dimension of the image (in PNG are pixels, while in SVG is the workspace in points)
 	int width;
 	int height;
-	///DPi resolution, used only for SVG
+
+	/// DPI resolution, used only for SVG
 	int dpi;
-	
-	///default contructor
+
+	///Handy function for setting the size of the drawing
+	void SetSVGDimInMm(float widthMM,float heightMM,float _dpi=72)
+	{
+	  dpi=_dpi;
+	  float widthInch = float(widthMM / 25.4f);
+	  float heightInch = float(heightMM / 25.4f);
+	  width = widthInch * _dpi;
+	  height = heightInch * _dpi;
+	}
+
+	///default constructor
 	PolyDumperParam()
 	{
 		backgroundColor = vcg::Color4b::Gray;
 		width=1024;
 		height=1024;
 		dpi=72;
+		fontSize=0;
 		fill=false;
 		randomColor=true;
 		FillColor=vcg::Color4b(0,0,0,255);
