@@ -40,7 +40,7 @@ public:
   VERTEX_TYPE *&V(int i) { return v[i]; }
   VERTEX_TYPE *cV(int i) const { return v[i]; }
 private:
-  VERTEX_TYPE *v[2];
+  VERTEX_TYPE *v[2]; // remember that v[0] will be deleted and v[1] will survive (eventually with a new position)
 };
 
 
@@ -229,6 +229,9 @@ public:
     return true;
   }
 
+  // Main function; the one that actually make the collapse
+  // remember that v[0] will be deleted and v[1] will survive (eventually with a new position)
+  // hint to do a 'collapse onto a vertex simply pass p as the position of the surviving vertex
   static int Do(TriMeshType &m, VertexPair & c, const Point3<ScalarType> &p)
 	{
     EdgeSet es;
