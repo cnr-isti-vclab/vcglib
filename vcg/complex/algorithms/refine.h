@@ -792,7 +792,7 @@ class QualityEdgePredicate
     {
     ScalarType q0=ep.f->V0(ep.z)->Q()-thr;
     ScalarType q1=ep.f->V1(ep.z)->Q()-thr;
-    if(q0>q1) swap(q0,q1);
+    if(q0>q1) std::swap(q0,q1);
     if ( q0*q1 > 0) return false;
     // now a small check to be sure that we do not make too thin crossing.
     double pp= q0/(q0-q1);
