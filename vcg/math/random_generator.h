@@ -199,6 +199,11 @@ public:
 		initialize(5489u);
 	}
 
+	MarsenneTwisterRNG(unsigned int seed)
+	{
+		initialize(seed);
+	}
+
 	virtual ~MarsenneTwisterRNG()
 	{}
 
