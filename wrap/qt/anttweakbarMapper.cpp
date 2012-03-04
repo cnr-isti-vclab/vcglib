@@ -77,6 +77,7 @@ int TwKeyPressQt(QKeyEvent *e)
       case Qt::Key_Enter:     k = TW_KEY_RETURN; break;
       case Qt::Key_Escape:    k = TW_KEY_ESCAPE; break;
       case Qt::Key_Tab:       k = TW_KEY_TAB; break;
+      case Qt::Key_Space:     k = TW_KEY_SPACE; break;
       }
   }
 
