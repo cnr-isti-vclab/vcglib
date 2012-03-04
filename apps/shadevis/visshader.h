@@ -379,7 +379,7 @@ template <class MESH_TYPE> class VertexVisShader : public VisShader<MESH_TYPE>
 	VertexVisShader(MESH_TYPE &me):VisShader<MESH_TYPE>(me)
 	{
      // la mesh DEVE avere colore per vertice
-			if(! m.HasPerVertexColor()) assert(0);
+			if(! HasPerVertexColor(m)) assert(0);
 	}
 
 	void Init()  {		VV.resize(m.vert.size()); }
