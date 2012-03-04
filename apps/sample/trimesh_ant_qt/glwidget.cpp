@@ -44,6 +44,7 @@
 
 #include "glwidget.h"
 #include <wrap/qt/trackball.h>
+#include <wrap/gl/picking.h>
 #include <wrap/qt/anttweakbarMapper.h>
 
 enum DrawMode{SMOOTH=vcg::GLW::DMSmooth, POINTS=vcg::GLW::DMPoints , WIRE, FLATWIRE,HIDDEN,FLAT};
@@ -82,20 +83,21 @@ GLWidget::GLWidget(QWidget *parent)
     : QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
 {
   filename=0;
-     setWindowTitle(tr("Hello GL"));
-     bar = TwNewBar("TweakBar");
-     TwCopyCDStringToClientFunc (CopyCDStringToClient);
+  hasToPick=false;
+  setWindowTitle(tr("Hello GL"));
+  bar = TwNewBar("TweakBar");
+  TwCopyCDStringToClientFunc (CopyCDStringToClient);
 
-     TwAddVarRW(bar,"Input",TW_TYPE_CDSTRING, &filename," label='Filepath' group=SetMesh help=` Name of the file to load` ");
-     TwAddButton(bar,"Load from file",loadMesh,0,	" label='Load Mesh' group=SetMesh help=`load the mesh` ");
-     TwAddButton(bar,"Use tetrahedron",loadTetrahedron,0,	" label='Make Tetrahedron' group=SetMesh help=`use tetrahedron.` ");
+  TwAddVarRW(bar,"Input",TW_TYPE_CDSTRING, &filename," label='Filepath' group=SetMesh help=` Name of the file to load` ");
+  TwAddButton(bar,"Load from file",loadMesh,0,	" label='Load Mesh' group=SetMesh help=`load the mesh` ");
+  TwAddButton(bar,"Use tetrahedron",loadTetrahedron,0,	" label='Make Tetrahedron' group=SetMesh help=`use tetrahedron.` ");
 
-     // ShapeEV associates Shape enum values with labels that will be displayed instead of enum values
-     TwEnumVal drawmodes[6] = { {GLW::DMSmooth, "Smooth"}, {GLW::DMPoints, "Per Points"}, {GLW::DMWire, "Wire"}, {GLW::DMFlatWire, "FlatWire"},{GLW::DMHidden, "Hidden"},{GLW::DMFlat, "Flat"}};
-     // Create a type for the enum shapeEV
-     TwType drawMode = TwDefineEnum("DrawMode", drawmodes, 6);
-     // add 'g_CurrentShape' to 'bar': this is a variable of type ShapeType. Its key shortcuts are [<] and [>].
-     TwAddVarRW(bar, "Draw Mode", drawMode, &drawmode, " keyIncr='<' keyDecr='>' help='Change draw mode.' ");
+  // ShapeEV associates Shape enum values with labels that will be displayed instead of enum values
+  TwEnumVal drawmodes[6] = { {GLW::DMSmooth, "Smooth"}, {GLW::DMPoints, "Per Points"}, {GLW::DMWire, "Wire"}, {GLW::DMFlatWire, "FlatWire"},{GLW::DMHidden, "Hidden"},{GLW::DMFlat, "Flat"}};
+  // Create a type for the enum shapeEV
+  TwType drawMode = TwDefineEnum("DrawMode", drawmodes, 6);
+  // add 'g_CurrentShape' to 'bar': this is a variable of type ShapeType. Its key shortcuts are [<] and [>].
+  TwAddVarRW(bar, "Draw Mode", drawMode, &drawmode, " keyIncr='<' keyDecr='>' help='Change draw mode.' ");
 }
 
 void GLWidget::initializeGL ()
@@ -124,21 +126,33 @@ void GLWidget::paintGL ()
     gluPerspective(40, GLWidget::width()/(float)GLWidget::height(), 0.1, 100);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0,0,5,   0,0,0,   0,1,0);
+    gluLookAt(0,0,3.5f,   0,0,0,   0,1,0);
     track.center=vcg::Point3f(0, 0, 0);
     track.radius= 1;
     track.GetView();
+    glPushMatrix();
     track.Apply(false);
     glPushMatrix();
     if(mesh.vert.size()>0)
     {
-      float d=1.0f/mesh.bbox.Diag();
-      vcg::glScale(d);
+      vcg::glScale(2.0f/mesh.bbox.Diag());
       glTranslate(-mesh.bbox.Center());
       glWrap.Draw(GLW::DrawMode(drawmode),GLW::CMNone,GLW::TMNone);
     }
     glPopMatrix();
     track.DrawPostApply();
+    glPopMatrix();
+    if(hasToPick)
+    {
+      hasToPick=false;
+      Point3f pp;
+      if(Pick<Point3f>(pointToPick[0],pointToPick[1],pp))
+      {
+        track.Translate(-pp);
+        track.Scale(1.25f);
+        QCursor::setPos(mapToGlobal(QPoint(width()/2+2,height()/2+2)));
+      }
+    }
     TwDraw();
 }
 
@@ -182,6 +196,14 @@ void GLWidget::mouseMoveEvent (QMouseEvent * e)
   }
   TwMouseMotion(e->x (), e->y ());
 }
+
+void GLWidget::mouseDoubleClickEvent (QMouseEvent * e)
+{
+  hasToPick=true;
+  pointToPick=Point2i(e->x(),height()-e->y());
+  updateGL ();
+}
+
 
 void GLWidget::mouseReleaseEvent (QMouseEvent * e)
 {

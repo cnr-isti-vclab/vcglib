@@ -75,7 +75,8 @@ class GLWidget : public QGLWidget
 
 public:
     GLWidget(QWidget *parent = 0);
-
+     bool hasToPick;
+     Point2i pointToPick;
     ~GLWidget() {};
 
     QSize sizeHint() const {
@@ -89,6 +90,7 @@ protected:
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
+    void mouseDoubleClickEvent ( QMouseEvent * event );
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
     void wheelEvent(QWheelEvent *event);

@@ -32,6 +32,6 @@ mac{
 # Mac specific Config required to avoid to make application bundles
   CONFIG -= app_bundle
   LIBS +=$$ANTDIR/lib/libAntTweakBar.dylib
-  QMAKE_POST_LINK ="cp -P ../../../../code/lib/AntTweakBar1.14/lib/libAntTweakBar.dylib . ; install_name_tool -change ../lib/libAntTweakBar.dylib ./libAntTweakBar.dylib trimesh_ant_qt"
+  QMAKE_POST_LINK ="cp -P ../../../../code/lib/AntTweakBar1.14/lib/libAntTweakBar.dylib . ; install_name_tool -change ../lib/libAntTweakBar.dylib ./libAntTweakBar.dylib $$TARGET"
 }
 
