@@ -685,9 +685,10 @@ void DrawCircle (bool planehandle=true)
 */
 void DrawSphereIcon (Trackball * tb, bool active, bool planeshandle=false)
 {  
-  glPushAttrib(GL_TRANSFORM_BIT |GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
+  glPushAttrib(GL_TRANSFORM_BIT | GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix ();
+  glDepthMask(GL_FALSE);
 
   Point3f center = tb->center + tb->track.InverseMatrix()*Point3f(0, 0, 0);
   glTranslate(center);
@@ -700,7 +701,6 @@ void DrawSphereIcon (Trackball * tb, bool active, bool planeshandle=false)
     glLineWidth (DH.LineWidthMoving);
   else
     glLineWidth (DH.LineWidthStill);
-
   glDisable(GL_COLOR_MATERIAL); // has to be disabled, it is used by wrapper to draw meshes, and prevent direct material setting, used here
 
   glEnable (GL_LIGHTING);

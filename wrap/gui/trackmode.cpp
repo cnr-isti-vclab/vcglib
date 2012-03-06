@@ -20,94 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.28  2008/02/24 18:05:08  ponchio
-Should work as before. I didn't test cylinder and other exotic modes.
-
-Revision 1.27  2008/02/24 14:37:00  ponchio
-Restored trackball functionality. Not very much tested, and code will need some
-cleanup.
-
-Revision 1.26  2008/02/15 20:56:41  benedetti
-removed some variable initialization related warning, added snap to CylinderMode
-
-Revision 1.25  2007/10/24 10:39:07  ponchio
-#include <gl/glew.h> -> #include <GL/glew.h>
-
-(it is case sensitive under linux...)
-
-Revision 1.24  2007/07/09 22:47:18  benedetti
-Removed using namespace std and modified accordingly.
-
-Revision 1.23  2007/06/13 17:15:09  benedetti
-Added one-level undo system and sticky trackmodes.
-
-Revision 1.22  2007/05/28 08:10:47  fiorin
-Removed type cast warnings
-
-Revision 1.21  2007/05/16 08:44:05  ganovelli
-added inclusion of glew.h
-
-Revision 1.20  2007/05/15 14:58:57  benedetti
-Main restructuring. added many new modes
-
-Revision 1.19  2006/08/30 07:01:54  cignoni
-Reverted to version 1.17. Version 1.18 was wrongly done starting from a outdated version.
-
-Revision 1.17  2006/07/26 13:54:45  cignoni
-Reversed the direction of wheel scaling and added middle mouse panning
-
-Revision 1.16  2006/02/13 13:10:27  cignoni
-Added Zmode for moving objects along the perpendicular to the viewplane
-
-Revision 1.15  2006/01/12 15:40:05  cignoni
-Corrected small bugs on rotating after scaling+translating
-changed void PlaneMode::Apply and void SphereMode::Apply
-
-Revision 1.14  2005/07/15 16:39:30  callieri
-in SphereMode::Hit added a check on the sphere intersection, if no intersection, calculating distance could generate a NAN exception
-
-Revision 1.13  2005/06/29 15:22:26  callieri
-changed the name of some intersection functions to avoid ambiguity
-
-Revision 1.12  2005/02/11 11:44:07  tommyfranken
-Trackball translation corrected
-
-Revision 1.11  2005/02/02 16:46:41  pietroni
-some warning corrected
-
-Revision 1.10  2005/01/14 15:44:03  ganovelli
-PlaneMode completed
-
-Revision 1.9  2004/09/09 22:59:21  cignoni
-Removed many small warnings
-
-Revision 1.8  2004/07/18 06:54:08  cignoni
-Added Scaling
-
-Revision 1.7  2004/07/11 22:06:56  cignoni
-Added scaling by wheel
-
-Revision 1.6  2004/06/09 14:01:13  cignoni
-Heavily restructured. To be completed only rotation works...
-
-Revision 1.5  2004/05/14 03:15:09  ponchio
-Redesigned partial version.
-
-Revision 1.4  2004/05/07 12:46:08  cignoni
-Restructured and adapted in a better way to opengl
-
-Revision 1.3  2004/04/07 10:54:11  cignoni
-Commented out unused parameter names and other minor warning related issues
-
-Revision 1.2  2004/03/25 14:55:25  ponchio
-Adding copyright.
-
-
-****************************************************************************/
 
 #include <GL/glew.h>
 #include <vcg/space/distance3.h>
@@ -117,32 +29,6 @@ Adding copyright.
 
 using namespace vcg;
 using namespace vcg::trackutils;
-
-// the old implementation is not used anymore, some of the old support functions, 
-// like HitViewPlane, GetViewPlane, HitHyper and SphereMode::Hit were made
-// class-independent and moved to trackutils.h
-/*
-void TrackMode::Apply(Trackball *trackball, float WheelNotch) {
-}
-void ScaleMode::Apply(Trackball *tb, Point3f new_point) {
-}
-Plane3f TrackMode::GetViewPlane(const View<float> &camera, const Point3f &center) {
-}
-Point3f TrackMode::HitViewPlane(Trackball *tb, const Point3f &p) {
-}
-void SphereMode::Apply(Trackball *tb, Point3f new_point) {
-}
-bool SphereMode::HitHyper(Point3f center,  float radius, Point3f viewpoint, Plane3f vp, Point3f hitplane, Point3f &hit) 
-{
-}
-Point3f SphereMode::Hit(Trackball *tb, const Point3f &p) {
-}
-void PlaneMode::Apply(Trackball *tb, Point3f new_point) {
-
-}
-void ZMode::Apply(Trackball *tb, Point3f new_point) {
-}
-*/
 
 // Track mode implementation, dummy.
 void TrackMode::Apply (Trackball * , float ){}
