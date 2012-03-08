@@ -35,7 +35,7 @@
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/update/bounding.h>
-
+#include <vcg/complex/algorithms/parametrization/distorsion.h>
 
 namespace vcg {
 	namespace tri{
@@ -110,8 +110,7 @@ class PoissonSolver
 		
 	}
 	
-	void FindFarestVert(VertexType* &v0,
-											VertexType* &v1)
+	/*void FindFarestVert(VertexType* &v0,VertexType* &v1)
 	{
 		UpdateBounding<MeshType>::Box(mesh);
 		ScalarType d0=mesh.bbox.Diag();
@@ -139,8 +138,39 @@ class PoissonSolver
 		}
 		assert(v0!=NULL);
 		assert(v1!=NULL);
-	}
+	}*/
 	
+	void FindFarestVert(VertexType* &v0,VertexType* &v1)
+	{
+		UpdateBounding<MeshType>::Box(mesh);
+
+		vcg::tri::UpdateTopology<MeshType>::FaceFace(mesh);
+		vcg::tri::UpdateFlags<MeshType>::FaceBorderFromFF(mesh);
+		vcg::tri::UpdateFlags<MeshType>::VertexBorderFromFace(mesh);
+
+		ScalarType dmax=0;
+		v0=NULL;
+		v1=NULL;
+		for (unsigned int i=0;i<mesh.vert.size();i++)
+			for (unsigned int j=(i+1);j<mesh.vert.size();j++)
+			{
+				VertexType *vt0=&mesh.vert[i];
+				VertexType *vt1=&mesh.vert[j];
+				if (vt0->IsD())continue;
+				if (vt1->IsD())continue;
+				if (!vt0->IsB())continue;
+				if (!vt1->IsB())continue;
+				ScalarType d_test=(vt0->P()-vt1->P()).Norm();
+				if (d_test>dmax)
+				{
+					v0=vt0;
+					v1=vt1;
+				}
+			}
+		assert(v0!=NULL);
+		assert(v1!=NULL);
+	}
+
 	///set the value of b of the system Ax=b
 	void SetValB(int Xindex,
 						  ScalarType val)
@@ -558,8 +588,8 @@ public:
 		vcg::tri::UpdateTopology<MeshType>::FaceFace(mesh);
 		int NNmanifoldE=vcg::tri::Clean<MeshType>::CountNonManifoldEdgeFF(mesh);
 		if (NNmanifoldE!=0)return false;
-		int NNmanifoldV=vcg::tri::Clean<MeshType>::CountNonManifoldVertexFF(mesh);
-		if (NNmanifoldV!=0)return false;
+		/*int NNmanifoldV=vcg::tri::Clean<MeshType>::CountNonManifoldVertexFF(mesh);
+		if (NNmanifoldV!=0)return false;*/
 		int G=vcg::tri::Clean<MeshType>::MeshGenus(mesh);
 		int numholes=vcg::tri::Clean<MeshType>::CountHoles(mesh);
 		if (numholes==0) return false;
@@ -596,6 +626,43 @@ public:
 		to_fix.resize(dist);
 	}
 	
+	/*///fix default vertices no need if already border on other vertices are fixed
+	///you need at least 2 fixed for solving without field , 
+	///while only 1 if you conforms to a given cross field
+	void FixDefaultVertices()
+	{
+		///in this case there are already vertices fixed, so no need to fix by default
+		assert(to_fix.size()==0);
+		///then fix only one vertex
+		if (use_direction_field)
+		{
+			for (size_t i=0;i<mesh.vert.size();i++)
+				if (!mesh.vert[i].IsD())
+				{
+					mesh.vert[i].T().P()=vcg::Point2<ScalarType>(0,0);
+					to_fix.push_back(&mesh.vert[i]);
+					return;
+				}
+		}
+		///then fix 2 vertices
+		else
+		{
+			VertexType *v0;
+			VertexType *v1;
+			FindFarestVert(v0,v1);
+			if (v0==v1)
+			{
+				vcg::tri::io::ExporterPLY<MeshType>::Save(mesh,"./parametrized.ply");
+				assert(0);
+			}
+			v0->T().P()=vcg::Point2<ScalarType>(0,0);
+			v1->T().P()=vcg::Point2<ScalarType>(1,0);
+			to_fix.push_back(v0);
+			to_fix.push_back(v1);
+			return;
+		}
+	}*/
+	
 	///fix default vertices no need if already border on other vertices are fixed
 	///you need at least 2 fixed for solving without field , 
 	///while only 1 if you conforms to a given cross field
@@ -620,7 +687,11 @@ public:
 			VertexType *v0;
 			VertexType *v1;
 			FindFarestVert(v0,v1);
-			assert(v0!=v1);
+			if (v0==v1)
+			{
+				vcg::tri::io::ExporterPLY<MeshType>::Save(mesh,"./parametrized.ply");
+				assert(0);
+			}
 			v0->T().P()=vcg::Point2<ScalarType>(0,0);
 			v1->T().P()=vcg::Point2<ScalarType>(1,0);
 			to_fix.push_back(v0);
@@ -628,7 +699,6 @@ public:
 			return;
 		}
 	}
-
 	///intialize parameters and setup fixed vertices vector
 	void Init(bool _use_direction_field=false,
 			  bool _correct_fixed=true,
@@ -652,7 +722,8 @@ public:
 
 	///solve the system, it return false if the matrix is singular
 	bool SolvePoisson(bool _write_messages=false,
-					  ScalarType fieldScale=1.0)
+					  ScalarType fieldScale=1.0,
+					  bool solve_global_fold=true)
 	{
 		int t0,t1,t2,t3;
 
@@ -723,12 +794,24 @@ public:
 			t3=clock();
 			printf("\n time:%d \n",t3-t2);
 		}
+
+		///then check if majority of faces are folded
+		if (!solve_global_fold)return true;
+		if (vcg::tri::Distorsion<MeshType>::GloballyUnFolded(mesh))
+		{
+			vcg::tri::UV_Utils<MeshType>::GloballyMirrorX(mesh);
+			assert(!vcg::tri::Distorsion<MeshType>::GloballyUnFolded(mesh));
+		}
 		return true;
 	}
 
 	PoissonSolver(MeshType &_mesh):mesh(_mesh)
-	{}
-
+	{
+		assert(mesh.vert.size()>3);
+		assert(mesh.face.size()>1);
+	}
+	
+	
 	}; // end class
 	} //End Namespace Tri
 } // End Namespace vcg
