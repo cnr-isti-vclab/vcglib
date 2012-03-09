@@ -208,6 +208,8 @@ public:
       static std::vector<typename TriMeshType::VertexPointer> _WV; return _WV;
     }; 
 
+	inline TriEdgeCollapseQuadric(){}
+
     inline TriEdgeCollapseQuadric(const VertexPair &p, int i, BaseParameterClass *pp)
 		{
 				this->localMark = i;
