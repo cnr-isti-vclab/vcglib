@@ -430,10 +430,10 @@ public:
 	/// Default constructor
 	VFIterator(){}
 	/// Constructor which associates the half-edge elementet with a face and its vertex
-	VFIterator(FaceType * _f,  const int &  _z){f = _f; z = _z;}
+	VFIterator(FaceType * _f,  const int &  _z){f = _f; z = _z;  assert(z>=0 && "VFAdj must be initialized");}
 
 	/// Constructor which takes a pointer to vertex 
-	VFIterator(VertexType * _v){f = _v->VFp(); z = _v->VFi();}
+	VFIterator(VertexType * _v){f = _v->VFp(); z = _v->VFi(); assert(z>=0 && "VFAdj must be initialized");}
 
 	VFIFaceType *&	F() { return f;}
 	int	&					  I() { return z;}
