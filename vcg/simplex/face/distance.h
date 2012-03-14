@@ -319,22 +319,26 @@ namespace vcg {
             assert((f.cN().SquaredNorm() ==0) || (f.cN().SquaredNorm() > 0.9999 && f.cN().SquaredNorm()<1.0001)); // if you get this assert you have forgot to make a UpdateNormals::PerFaceNormalized(m)
         #endif
 
-        if(f.cN()==Point3<ScalarType>(0,0,0)) // to correctly manage the case of degenerate triangles we consider them as segments.
-        {
-            Box3<ScalarType> bb;
-            f.GetBBox(bb);
-            Segment3<ScalarType> degenTri(bb.min,bb.max);
-            //Point3<ScalarType> closest= ClosestPoint( degenTri, q );
-						//ScalarType d = Distance(closest, q);
-						Point3<ScalarType> closest;
-            ScalarType d;
-						vcg::SegmentPointDistance<ScalarType>(degenTri,q,closest,d);
-            if( d>dist || d<-dist )			// Risultato peggiore: niente di fatto
-                      return false;
-            dist=d;
-            p=closest;
-            return true;
-        }
+                if(f.cN()==Point3<ScalarType>(0,0,0)) // to correctly manage the case of degenerate triangles we consider them as segments.
+                {
+                  Box3<ScalarType> bb;
+                  f.GetBBox(bb);
+                  Segment3<ScalarType> degenTri(bb.min,bb.max);
+                  Point3<ScalarType> closest;
+                  ScalarType d;
+                  if(bb.Diag()>0)
+                    vcg::SegmentPointDistance<ScalarType>(degenTri,q,closest,d);
+                  else // very degenerate triangle (just a point)
+                  {
+                    closest = bb.min;
+                    d=Distance(q,closest);
+                  }
+                  if( d>dist) return false;
+                  dist=d;
+                  p=closest;
+                  assert(!math::IsNAN(dist));
+                  return true;
+                }
 
 				Plane3<ScalarType> fPlane;
 				fPlane.Init(f.cP(0),f.cN());
