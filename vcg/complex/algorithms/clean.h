@@ -335,6 +335,7 @@ private:
 			static int RemoveUnreferencedVertex( MeshType& m, bool DeleteVertexFlag=true)   // V1.0
 			{
 				FaceIterator fi;
+				EdgeIterator ei;
 				VertexIterator vi;
 				int referredBit = VertexType::NewBitFlag();
 
@@ -349,14 +350,20 @@ private:
 						for(j=0;j<3;++j)
 							(*fi).V(j)->SetUserBit(referredBit);
 
+				for(ei=m.edge.begin();ei!=m.edge.end();++ei)
+					if( !(*ei).IsD() ){
+					  (*ei).V(0)->SetUserBit(referredBit);
+					  (*ei).V(1)->SetUserBit(referredBit);
+					}
+
 				for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 					if( (!(*vi).IsD()) && (!(*vi).IsUserBit(referredBit)))
 					{
 						if(DeleteVertexFlag) Allocator<MeshType>::DeleteVertex(m,*vi);
-            ++deleted;
+						++deleted;
 					}
-					VertexType::DeleteBitFlag(referredBit);
-					return deleted;
+				VertexType::DeleteBitFlag(referredBit);
+				return deleted;
 			}
 
       /**
