@@ -224,35 +224,16 @@ void LineLineDistance(const vcg::Line3<ScalarType> &mLine0,
 template <class ScalarType> 
 void SegmentPointSquaredDistance( Segment3<ScalarType> s, 
 																							 const Point3<ScalarType> & p,
-																							 Point3< ScalarType > &clos,
+																							 Point3< ScalarType > &closest,
 																							 ScalarType &sqr_dist) 
 {
-	///create a line
-	vcg::Line3<ScalarType> l;
-	l.Set(s.P0(),s.P1()-s.P0());
-	l.Normalize();
-
-	///take the closest point on a Line
-	vcg::LinePointSquaredDistance(l,p,clos,sqr_dist);
-
-	///quick test with a BB
-	vcg::Box3<ScalarType> b;
-	b.Add(s.P0());
-	b.Add(s.P1());
-	///if the point is in the BB since it is ALSO along the line 
-	///means that it is also along the SEGMENT
-	if (b.IsIn(clos))
-		return;
-	else
-	{
-		///check the extremes
-		ScalarType d0=(s.P0()-p).SquaredNorm();
-		ScalarType d1=(s.P1()-p).SquaredNorm();
-		if (d0<d1)
-			clos= (s.P0());
-		else
-			clos= (s.P1());
-	}
+      Point3<ScalarType> e = s.P1()-s.P0();
+      ScalarType  t = ((p-s.P0())*e)/e.SquaredNorm();
+      if(t<0)      t = 0;
+      else if(t>1) t = 1;
+      closest = s.P0()+e*t;
+      sqr_dist = SquaredDistance(p,closest);
+      assert(!math::IsNAN(sqr_dist));
 }
 
 /*
