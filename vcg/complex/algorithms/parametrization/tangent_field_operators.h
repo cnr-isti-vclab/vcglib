@@ -42,42 +42,7 @@ namespace vcg {
 		private:
 			static ScalarType Sign(ScalarType a){return (ScalarType)((a>0)?+1:-1);}
 
-			static void NormalizePerVertImportanceVal(MeshType &mesh)
-			{
-				vcg::Distribution<ScalarType> Distr;
-				for (int i=0;i<mesh.vert.size();i++)
-				{
-					VertexType *v=&mesh.vert[i];
-					if (v->IsD())continue;
-					Distr.Add(fabs(v->K2()));
-					Distr.Add(fabs(v->K1()));
-					/*if (fabs(v->K1())>MaxK)
-						MaxK=fabs(fabs(v->K1()));
-					if (fabs(v->K2())>MaxK)
-						MaxK=fabs(fabs(v->K2()));*/
-				}
-				ScalarType perc=Distr.Percentile(.99);
-				for (int i=0;i<mesh.vert.size();i++)
-				{
-					VertexType *v=&mesh.vert[i];
-					if (v->IsD())continue;
-					ScalarType val;
-					val=fabs(v->K1());
-					if (val>perc)
-						val=perc;
-					else
-						val/=perc;
 
-					v->K1()=val;
-					val=(v->K2());
-					if (val>perc)
-						val=perc;
-					else
-						val/=perc;
-					v->K2()=val;
-				}
-			}
-		
 			//static void NormalizePerVertImportanceVal(MeshType &mesh)
 			//{
 			//	//vcg::Distribution<ScalarType> Distr;
@@ -118,6 +83,42 @@ namespace vcg {
 			//}
 
 		public:
+			static void NormalizePerVertImportanceVal(MeshType &mesh)
+			{
+				vcg::Distribution<ScalarType> Distr;
+				for (int i=0;i<mesh.vert.size();i++)
+				{
+					VertexType *v=&mesh.vert[i];
+					if (v->IsD())continue;
+					Distr.Add(fabs(v->K2()));
+					Distr.Add(fabs(v->K1()));
+					/*if (fabs(v->K1())>MaxK)
+					MaxK=fabs(fabs(v->K1()));
+					if (fabs(v->K2())>MaxK)
+					MaxK=fabs(fabs(v->K2()));*/
+				}
+				ScalarType perc=Distr.Percentile(.99);
+				for (int i=0;i<mesh.vert.size();i++)
+				{
+					VertexType *v=&mesh.vert[i];
+					if (v->IsD())continue;
+					ScalarType val;
+					val=fabs(v->K1());
+					if (val>perc)
+						val=perc;
+					else
+						val/=perc;
+
+					v->K1()=val;
+					val=(v->K2());
+					if (val>perc)
+						val=perc;
+					else
+						val/=perc;
+					v->K2()=val;
+				}
+			}
+
 			static void AddCrossAttributesIfNeeded(MeshType &mesh,
 				PerFaceAttributeHandle &_FHDir0,
 				PerFaceAttributeHandle &_FHDir1)
@@ -216,6 +217,7 @@ namespace vcg {
 						v->N()=-v->N();
 				}
 			}
+
 
 			///fird a tranformation matrix to transform 
 			///the 3D space to 2D tangent space specified 
@@ -341,6 +343,37 @@ namespace vcg {
 				Fh1[f]=dir1;
 			}
 
+			///set the face cross vector from vertex one
+			static void SetFaceCrossVectorFromVert(MeshType &mesh,FaceType &f)
+			{
+				CoordType t0=f.V(0)->PD1();
+				CoordType t1=f.V(1)->PD1();
+				CoordType t2=f.V(2)->PD1();
+				CoordType N0=f.V(0)->N();
+				CoordType N1=f.V(0)->N();
+				CoordType N2=f.V(0)->N();
+				CoordType NF=f.N();
+				CoordType bary=CoordType(0.33333,0.33333,0.33333);
+				CoordType tF0,tF1;
+				tF0=InterpolateCrossField(t0,t1,t2,N0,N1,N2,NF,bary);
+				tF1=NF^tF0;
+				tF0.Normalize();
+				tF1.Normalize();
+				SetCrossVector(mesh,f,tF0,tF1);
+			}
+
+			static void SetFaceCrossVectorFromVert(MeshType &mesh)
+			{
+				PerFaceAttributeHandle _FHR0,_FHR1;
+				AddCrossAttributesIfNeeded(mesh,_FHR0,_FHR1);
+				for (int i=0;i<mesh.face.size();i++)
+				{
+					FaceType *f=&mesh.face[i];
+					if (f->IsD())continue;
+					SetFaceCrossVectorFromVert(mesh,*f);
+				}
+			}
+
 			///rotate a given vector from a face to another
 			///vector is expressend in 3d coordinates
 			static CoordType Rotate(const FaceType &f0,const FaceType &f1,const CoordType &dir3D)
@@ -365,13 +398,13 @@ namespace vcg {
 
 			///interpolate cross field with barycentric coordinates
 			static CoordType InterpolateCrossField(const CoordType &t0,
-													const CoordType &t1,
-													const CoordType &t2,
-													const CoordType &n0,
-													const CoordType &n1,
-													const CoordType &n2,
-													const CoordType &target_n,
-													const CoordType &bary)
+				const CoordType &t1,
+				const CoordType &t2,
+				const CoordType &n0,
+				const CoordType &n1,
+				const CoordType &n2,
+				const CoordType &target_n,
+				const CoordType &bary)
 			{
 				vcg::Matrix33<ScalarType> R0=vcg::RotationMatrix(n0,target_n);
 				vcg::Matrix33<ScalarType> R1=vcg::RotationMatrix(n1,target_n);
@@ -423,11 +456,11 @@ namespace vcg {
 
 			///interpolate cross field with scalar weight
 			static typename FaceType::CoordType InterpolateCrossFieldLine(const typename FaceType::CoordType &t0,
-																const typename FaceType::CoordType &t1,
-																const typename FaceType::CoordType &n0,
-																const typename FaceType::CoordType &n1,
-																const typename FaceType::CoordType &target_n,
-																const typename FaceType::ScalarType &weight)
+				const typename FaceType::CoordType &t1,
+				const typename FaceType::CoordType &n0,
+				const typename FaceType::CoordType &n1,
+				const typename FaceType::CoordType &target_n,
+				const typename FaceType::ScalarType &weight)
 			{
 				vcg::Matrix33<ScalarType> R0=vcg::RotationMatrix(n0,target_n);
 				vcg::Matrix33<ScalarType> R1=vcg::RotationMatrix(n1,target_n);
@@ -445,13 +478,25 @@ namespace vcg {
 
 
 			///return the difference of two cross field, values between [0,0.5]
-			template <class FaceType>
-			typename FaceType::ScalarType DifferenceCrossField(const typename FaceType::CoordType &t0,
+			static typename FaceType::ScalarType DifferenceCrossField(const typename FaceType::CoordType &t0,
 				const typename FaceType::CoordType &t1,
 				const typename FaceType::CoordType &n)
 			{
 				CoordType trans0=t0;
 				CoordType trans1=K_PI(t1,t0,n);
+				ScalarType diff = 1-fabs(trans0*trans1);
+				return diff;
+			}
+			
+			///return the difference of two cross field, values between [0,0.5]
+			static typename FaceType::ScalarType DifferenceCrossField(const typename vcg::Point2<ScalarType> &t0,
+																const typename vcg::Point2<ScalarType> &t1)
+			{
+				CoordType t03D=CoordType(t0.X(),t0.Y(),0);
+				CoordType t13D=CoordType(t1.X(),t1.Y(),0);
+				CoordType trans0=t03D;
+				CoordType n=CoordType(0,0,1);
+				CoordType trans1=K_PI(t13D,t03D,n);
 				ScalarType diff = 1-fabs(trans0*trans1);
 				return diff;
 			}
@@ -603,6 +648,7 @@ namespace vcg {
 
 				std::vector<FaceType*> faces;
 				SortedFaces(mesh,v,faces);
+				missmatch=0;
 				for (int i=0;i<faces.size();i++)
 				{
 					FaceType *curr_f=faces[i];
@@ -614,6 +660,19 @@ namespace vcg {
 				}
 				missmatch=missmatch%4;
 				return(missmatch!=0);
+			}
+
+			static void SelectSingular(MeshType &mesh)
+			{
+				for (int i=0;i<mesh.vert.size();i++)
+				{
+					if (mesh.vert[i].IsD())continue;
+					int missmatch;
+					if (IsSingular(mesh,mesh.vert[i],missmatch))
+						mesh.vert[i].SetS();
+					else
+						mesh.vert[i].ClearS();
+				}
 			}
 
 			static bool LoadFIELD(MeshType *mesh,
@@ -682,33 +741,30 @@ namespace vcg {
 				return true;
 			}
 
-			/*void GetWeights(TriMeshType *mesh,
-			const std::vector<FaceType*> &faces,
-			std::vector<ScalarType> &weights)
+			///transform curvature to UV space
+			static vcg::Point2<ScalarType> CrosstoUV(MeshType &mesh,
+												FaceType &f)
 			{
-			weights.clear();
-			MeshType::PerFaceAttributeHandle<ScalarType> Fh0 FHRVal=
-			vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<ScalarType>(mesh,std::string("CrossVal"));
+				typedef typename FaceType::ScalarType ScalarType;
+				typedef typename FaceType::CoordType CoordType;
 
-			for (int i=0;i<faces.size();i++)
-			weights.push_back(FHRVal[faces[i]]);
-			}
+				CoordType Curv=CrossVector(mesh,f,0);
+				Curv.Normalize();
 
-			void GetTangDir(TriMeshType *mesh,
-			const std::vector<FaceType*> &faces,
-			std::vector<CoordType> &dir0,
-			std::vector<CoordType> &dir1)
-			{
-			dir0.clear();
-			dir1.clear();
-			MeshType::PerFaceAttributeHandle<CoordType> FHDir0=vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<CoordType>(test_mesh,std::string("CrossDir0"));
-			MeshType::PerFaceAttributeHandle<CoordType> FHDir1=vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<CoordType>(test_mesh,std::string("CrossDir1"));
-			for (int i=0;i<faces.size();i++)
-			{
-			dir0.push_back(FHDir0[faces[i]]);
-			dir1.push_back(FHDir1[faces[i]]);
+				CoordType bary3d=(f.P(0)+f.P(1)+f.P(2))/3.0;
+				vcg::Point2<ScalarType> Uv0=f.V(0)->T().P();
+				vcg::Point2<ScalarType> Uv1=f.V(1)->T().P();
+				vcg::Point2<ScalarType> Uv2=f.V(2)->T().P();
+				vcg::Point2<ScalarType> baryUV=(Uv0+Uv1+Uv2)/3.0;
+				CoordType direct3d=bary3d+Curv;
+				CoordType baryCoordsUV;
+				vcg::InterpolationParameters<FaceType,ScalarType>(f,direct3d,baryCoordsUV);
+				vcg::Point2<ScalarType> curvUV=baryCoordsUV.X()*Uv0+
+												baryCoordsUV.Y()*Uv1+
+												baryCoordsUV.Z()*Uv2-baryUV;
+				curvUV.Normalize();
+				return curvUV;
 			}
-			}*/
 
 		};///end class
 	} //End Namespace Tri
