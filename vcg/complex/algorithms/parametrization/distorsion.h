@@ -35,7 +35,7 @@ namespace vcg {
 			typedef typename MeshType::CoordType CoordType;
 			typedef typename MeshType::ScalarType ScalarType;
 
-			static ScalarType Area3D(FaceType *f)
+			static ScalarType Area3D(const FaceType *f)
 			{
 				CoordType vp0=f->P(0);
 				CoordType vp1=f->P(1);
@@ -69,7 +69,7 @@ namespace vcg {
 				return (UVlenght);
 			}
 
-			static ScalarType Angle3D(FaceType *f,int e)
+			static ScalarType Angle3D(const FaceType *f,int e)
 			{
 				assert((e>=0)&&(e<3));
 				CoordType p0=f->P((e+2)%3);
@@ -84,7 +84,7 @@ namespace vcg {
 				return angle;
 			}
 
-			static ScalarType AngleUV(FaceType *f,int e)
+			static ScalarType AngleUV(const FaceType *f,int e)
 			{
 				vcg::Point2<ScalarType> uv0=f->V((e+2)%3)->T().P();
 				vcg::Point2<ScalarType> uv1=f->V(e)->T().P();
@@ -101,12 +101,22 @@ namespace vcg {
 
 			///return the variance of angle, normalized
 			///in absolute value
-			static ScalarType AngleDistorsion(FaceType *f,int e)
+			static ScalarType AngleDistorsion(const FaceType *f,int e)
 			{
 				ScalarType Angle_3D=Angle3D(f,e);
 				ScalarType Angle_UV=AngleUV(f,e);
-				ScalarType diff=fabs(Angle_3D-Angle_UV)/Angle_3D;
+				ScalarType diff=fabs(Angle_3D-Angle_UV);///Angle_3D;
 				return diff;
+			}
+			
+			///return the variance of angle, normalized
+			///in absolute value
+			static ScalarType AngleDistorsion(const FaceType *f)
+			{
+				ScalarType angleDist=0;
+				for (int i=0;i<3;i++)
+					angleDist+=AngleDistorsion(f,i);
+				return angleDist;
 			}
 
 			///return the global scaling factor from 3D to UV
@@ -180,6 +190,18 @@ namespace vcg {
 			{
 				int num=Folded(m);
 				return (num>(m.fn)/2);
+			}
+
+			static ScalarType AngleDistorsion(const MeshType &m)
+			{
+				ScalarType UDdist=0;
+				for (int i=0;i<m.face.size();i++)
+				{
+					if (m.face[i].IsD())continue;
+					const FaceType *f=&(m.face[i]);
+					UDdist+=AngleDistorsion(f)*Area3D(f);
+				}
+				return UDdist;
 			}
 		};
 	}
