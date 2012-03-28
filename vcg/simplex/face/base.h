@@ -71,13 +71,14 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 */ 
 template <class UserTypes>
 class FaceBase: public   face::EmptyPolyInfo<
-						 face::EmptyVertexRef<
+			face::EmptyVertexRef<
                          face::EmptyAdj<
                          face::EmptyColorMarkQuality<
                          face::EmptyNormal<
-                         face::EmptyBitFlags<
+			face::EmptyCurvatureDir<
+			face::EmptyBitFlags<
                          face::EmptyWedgeTexCoord<
-												 FaceTypeHolder <UserTypes> > > > > > > > {
+												 FaceTypeHolder <UserTypes> > > > > > > > >{
 
 };
 

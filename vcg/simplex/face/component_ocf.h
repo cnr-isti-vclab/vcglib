@@ -55,6 +55,7 @@ public:
 	QualityEnabled=false;
 	MarkEnabled=false;
   NormalEnabled=false;
+  CurvatureDirEnabled = false;
   WedgeTexEnabled=false;
   VFAdjacencyEnabled=false;
   FFAdjacencyEnabled=false;
@@ -134,6 +135,7 @@ public:
 	if (ColorEnabled)       CV.push_back(vcg::Color4b(vcg::Color4b::White));
 	if (MarkEnabled)        MV.push_back(0);
     if (NormalEnabled)      NV.push_back(typename VALUE_TYPE::NormalType());
+	if (CurvatureDirEnabled)    CDV.push_back(typename VALUE_TYPE::CurvatureDirType());
 	if (VFAdjacencyEnabled) AV.push_back(AdjTypePack());
     if (FFAdjacencyEnabled) AF.push_back(AdjTypePack());
 	if (WedgeTexEnabled)    WTV.push_back(WedgeTexTypePack());
@@ -154,6 +156,7 @@ public:
 	if (ColorEnabled)       CV.resize(_size);
 	if (MarkEnabled)        MV.resize(_size);
 	if (NormalEnabled)      NV.resize(_size);
+	if (CurvatureDirEnabled)CDV.resize(_size);
 	if (VFAdjacencyEnabled) AV.resize(_size);
     if (FFAdjacencyEnabled) AF.resize(_size);
     if (WedgeTexEnabled)    WTV.resize(_size,WedgeTexTypePack());
@@ -168,8 +171,9 @@ public:
 	if (ColorEnabled)       CV.reserve(_size);
 	if (MarkEnabled)        MV.reserve(_size);
 	if (NormalEnabled)      NV.reserve(_size);
+	if (CurvatureDirEnabled)CDV.reserve(_size);
 	if (VFAdjacencyEnabled) AV.reserve(_size);
-    if (FFAdjacencyEnabled) AF.reserve(_size);
+	if (FFAdjacencyEnabled) AF.reserve(_size);
 	if (WedgeTexEnabled)    WTV.reserve(_size);
 	if (WedgeColorEnabled)  WCV.reserve(_size);
 	if (WedgeNormalEnabled) WNV.reserve(_size);
@@ -198,6 +202,7 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 	if (ColorEnabled)       assert( CV.size() == newFaceIndex.size() );
 	if (MarkEnabled)        assert( MV.size() == newFaceIndex.size() );
 	if (NormalEnabled)      assert( NV.size() == newFaceIndex.size() );
+	if (CurvatureDirEnabled)assert(CDV.size() == newFaceIndex.size() );
 	if (VFAdjacencyEnabled) assert( AV.size() == newFaceIndex.size() );
 	if (FFAdjacencyEnabled) assert( AF.size() == newFaceIndex.size() );
 	if (WedgeTexEnabled)    assert(WTV.size() == newFaceIndex.size() );
@@ -213,6 +218,7 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 					if (ColorEnabled)        CV[newFaceIndex[i]] =  CV[i]; 
 					if (MarkEnabled)         MV[newFaceIndex[i]] =  MV[i];
 					if (NormalEnabled)       NV[newFaceIndex[i]] =  NV[i];
+					if (CurvatureDirEnabled) CDV[newFaceIndex[i]] =  CDV[i];
 					if (VFAdjacencyEnabled)  AV[newFaceIndex[i]] =  AV[i];
 					if (FFAdjacencyEnabled)  AF[newFaceIndex[i]] =  AF[i];
 					if (WedgeTexEnabled)    WTV[newFaceIndex[i]] = WTV[i];
@@ -225,6 +231,7 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 	if (ColorEnabled)        CV.resize(BaseType::size());
 	if (MarkEnabled)         MV.resize(BaseType::size());
 	if (NormalEnabled)       NV.resize(BaseType::size());
+	if (CurvatureDirEnabled) CDV.resize(BaseType::size());
 	if (VFAdjacencyEnabled)  AV.resize(BaseType::size());
 	if (FFAdjacencyEnabled)  AF.resize(BaseType::size());
 	if (WedgeTexEnabled)    WTV.resize(BaseType::size());
@@ -286,7 +293,21 @@ void DisableNormal() {
   NormalEnabled=false;
   NV.clear();
 }
-  
+
+bool IsCurvatureDirEnabled() const {return CurvatureDirEnabled;}
+void EnableCurvatureDir() {
+  assert(VALUE_TYPE::HasCurvatureDirOcf());
+  CurvatureDirEnabled=true;
+  CDV.resize((*this).size());
+}
+
+void DisableCurvatureDir() {
+  assert(VALUE_TYPE::HasCurvatureDirOcf());
+  CurvatureDirEnabled=false;
+  CDV.clear();
+}
+
+
 bool IsVFAdjacencyEnabled() const {return VFAdjacencyEnabled;}
 void EnableVFAdjacency() {
   assert(VALUE_TYPE::HasVFAdjacencyOcf());
@@ -358,6 +379,7 @@ public:
   std::vector<typename VALUE_TYPE::ColorType> CV;
   std::vector<int> MV;
   std::vector<typename VALUE_TYPE::NormalType> NV;
+  std::vector<typename VALUE_TYPE::CurvatureDirType> CDV;
   std::vector<struct AdjTypePack> AV;
   std::vector<struct AdjTypePack> AF;
   std::vector<class WedgeTexTypePack> WTV;
@@ -368,6 +390,7 @@ public:
   bool ColorEnabled;
   bool MarkEnabled;
   bool NormalEnabled;
+  bool CurvatureDirEnabled;
   bool WedgeTexEnabled;
   bool VFAdjacencyEnabled;
   bool FFAdjacencyEnabled;
@@ -481,7 +504,89 @@ public:
 template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {};
 template <class T> class Normal3fOcf: public NormalOcf<vcg::Point3f, T> {};
 template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {};
-		
+
+
+/*------------------------- CurvatureDir -----------------------------------------*/
+
+template <class S>
+struct CurvatureDirOcfBaseType{
+        typedef Point3<S> VecType;
+        typedef  S   ScalarType;
+        CurvatureDirOcfBaseType () {}
+        Point3<S>max_dir,min_dir; // max and min curvature direction
+        S k1,k2;// max and min curvature values
+};
+
+template <class A, class T> class CurvatureDirOcf: public T {
+public:
+    typedef A CurvatureDirType;
+    typedef typename CurvatureDirType::VecType VecType;
+    typedef typename CurvatureDirType::ScalarType ScalarType;
+
+  static bool HasCurvatureDir()   { return true; }
+  static bool HaCurvatureDirOcf()   { return true; }
+
+  VecType &PD1(){
+                  assert((*this).Base().CurvatureDirEnabled);
+                  return (*this).Base().CDV[(*this).Index()].max_dir;
+                }
+
+  VecType &PD2(){
+                  assert((*this).Base().CurvatureDirEnabled);
+                  return (*this).Base().CDV[(*this).Index()].min_dir;
+                }
+
+  const VecType &cPD1() const {
+                  assert((*this).Base().CurvatureDirEnabled);
+                  return (*this).Base().CDV[(*this).Index()].max_dir;
+                }
+
+  const VecType &cPD2() const {
+                  assert((*this).Base().CurvatureDirEnabled);
+                  return (*this).Base().CDV[(*this).Index()].min_dir;
+                }
+
+  ScalarType &K1(){
+                  // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
+                  assert((*this).Base().NormalEnabled);
+                  return (*this).Base().CDV[(*this).Index()].k1;
+                  }
+  ScalarType &K2(){
+                  // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
+                  assert((*this).Base().NormalEnabled);
+                  return (*this).Base().CDV[(*this).Index()].k2;
+                  }
+  const ScalarType &cK1() const {
+                  // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
+                  assert((*this).Base().NormalEnabled);
+                  return (*this).Base().CDV[(*this).Index()].k1;
+                  }
+  const ScalarType &cK2() const {
+                  // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
+                  assert((*this).Base().NormalEnabled);
+                  return (*this).Base().CDV[(*this).Index()].k2;
+                  }
+
+
+        template <class LeftF>
+        void ImportData(const LeftF & leftF){
+                if((*this).Base().CurvatureDirEnabled && leftF.Base().CurvatureDirEnabled)
+                        PD1() = leftF.cPD1();
+                        PD2() = leftF.cPD2();
+                        K1() = leftF.cK1();
+                        K2() = leftF.cK2();
+                T::ImportData(leftF);
+        }
+
+};
+
+template <class T> class CurvatureDirfOcf: public CurvatureDirOcf<CurvatureDirOcfBaseType<float>, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirfOcf"));T::Name(name);}
+};
+template <class T> class CurvatureDirdOcf: public CurvatureDirOcf<CurvatureDirOcfBaseType<double>, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirdOcf"));T::Name(name);}
+};
+
 ///*-------------------------- QUALITY ----------------------------------*/ 
 
 template <class A, class T> class QualityOcf: public T {
@@ -653,6 +758,7 @@ public:
 
   static bool HasFaceColorOcf()   { return false; }
   static bool HasFaceNormalOcf()   { return false; }
+  static bool HasFaceCurvatureDirOcf()   { return false; }
   static bool HasFaceMarkOcf()   { return false; }
   static bool HasWedgeTexCoordOcf()   { return false; }
   static bool HasFFAdjacencyOcf()   { return false; }
@@ -700,13 +806,19 @@ public:
       else return FaceType::HasWedgeTexCoord();
     }
 
-		template < class VertContainerType, class FaceType, class Container1, class Container2  >
-			bool HasPerFaceColor (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
-    {
-      if(FaceType::HasFaceColorOcf()) return m.face.IsColorEnabled();
-      else return FaceType::HasFaceColor();
-    }
-		
+    template < class VertContainerType, class FaceType, class Container1, class Container2  >
+	    bool HasPerFaceColor (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
+	{
+	  if(FaceType::HasFaceColorOcf()) return m.face.IsColorEnabled();
+	  else return FaceType::HasFaceColor();
+	}
+    template < class VertContainerType, class FaceType, class Container1, class Container2  >
+	    bool HasPerFaceCurvatureDir (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
+	{
+	  if(FaceType::HasFaceCurvatureDirOcf()) return m.face.IsCurvatureDirEnabled();
+	  else return FaceType::HasFaceCurvatureDir();
+	}
+
 		template < class VertContainerType, class FaceType, class Container1, class Container2  >
 		bool HasPerFaceQuality (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
     {

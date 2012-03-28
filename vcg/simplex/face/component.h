@@ -38,7 +38,7 @@ All the Components that can be added to a vertex should be defined in the namesp
 
 */
 
-/*-------------------------- VERTEX ----------------------------------------*/ 
+/*-------------------------- VertexRef ----------------------------------------*/
 template <class T> class EmptyVertexRef: public T {
 public:
  // typedef typename T::VertexType VertexType;
@@ -130,7 +130,7 @@ public:
 
 
 
-/*-------------------------- NORMAL ----------------------------------------*/ 
+/*-------------------------- Normal ----------------------------------------*/
 
 template <class T> class EmptyNormal: public T {
 public:
@@ -297,7 +297,7 @@ template <class TT> class WedgeTexCoord2d: public WedgeTexCoord<TexCoord2<double
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeTexCoord2d"));TT::Name(name);}
 };
 
-/*------------------------- FLAGS -----------------------------------------*/ 
+/*------------------------- BitFlags -----------------------------------------*/
 template <class T> class EmptyBitFlags: public T {
 public:
 	/// Return the vector of Flags(), senza effettuare controlli sui bit
@@ -331,7 +331,7 @@ private:
   int  _flags;    
 };
 
-/*-------------------------- COLOR ----------------------------------*/ 
+/*-------------------------- Color Mark Quality  ----------------------------------*/
 
 template <class T> class EmptyColorMarkQuality: public T {
 public:
@@ -495,6 +495,76 @@ public:
     
  private:
 	int _imark;
+};
+
+/*-------------------------- Curvature Direction ----------------------------------*/
+
+  template <class S>
+  struct CurvatureDirBaseType{
+          typedef Point3<S> VecType;
+          typedef  S   ScalarType;
+          CurvatureDirBaseType () {}
+          Point3<S>max_dir,min_dir; // max and min curvature direction
+          S k1,k2;// max and min curvature values
+  };
+
+template <class TT> class EmptyCurvatureDir: public TT {
+public:
+  typedef CurvatureDirBaseType<float> CurvatureDirType;
+
+        Point3f &PD1(){static Point3f dummy(0,0,0); return dummy;}
+        Point3f &PD2(){static Point3f dummy(0,0,0); return dummy;}
+        const Point3f &cPD1() const {static Point3f dummy(0,0,0); return dummy;}
+        const Point3f &cPD2()const {static Point3f dummy(0,0,0); return dummy;}
+
+        float &K1(){ static float dummy(0);assert(0);return dummy;}
+        float &K2(){ static float dummy(0);assert(0);return dummy;}
+        const float &cK1()const { static float dummy(0);assert(0);return dummy;}
+        const float &cK2()const { static float dummy(0);assert(0);return dummy;}
+
+  static bool HasCurvatureDir()   { return false; }
+        template < class LeftV>
+                void ImportData(const LeftV  & left ) { TT::ImportData( left); }
+        static void Name(std::vector<std::string> & name){TT::Name(name);}
+};
+
+template <class A, class TT> class CurvatureDir: public TT {
+public:
+  typedef A CurvatureDirType;
+        typedef typename CurvatureDirType::VecType VecType;
+        typedef typename CurvatureDirType::ScalarType ScalarType;
+
+        VecType &PD1(){ return _curv.max_dir;}
+        VecType &PD2(){ return _curv.min_dir;}
+        const VecType &cPD1() const {return _curv.max_dir;}
+        const VecType &cPD2() const {return _curv.min_dir;}
+
+        ScalarType &K1(){ return _curv.k1;}
+        ScalarType &K2(){ return _curv.k2;}
+        const ScalarType &cK1() const {return _curv.k1;}
+        const ScalarType &cK2()const  {return _curv.k2;}
+        template < class LeftV>
+        void ImportData(const LeftV  & left ) {
+          if(LeftV::HasCurvatureDir()) {
+                PD1() = left.cPD1(); PD2() = left.cPD2();
+                K1()  = left.cK1();  K2()  = left.cK2();
+          }
+          TT::ImportData( left);
+        }
+
+        static bool HasCurvatureDir()   { return true; }
+        static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDir"));TT::Name(name);}
+
+private:
+  CurvatureDirType _curv;
+};
+
+
+template <class T> class CurvatureDirf: public CurvatureDir<CurvatureDirBaseType<float>, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirf"));T::Name(name);}
+};
+template <class T> class CurvatureDird: public CurvatureDir<CurvatureDirBaseType<double>, T> {
+public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDird"));T::Name(name);}
 };
 
 
