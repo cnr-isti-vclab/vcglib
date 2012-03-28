@@ -36,41 +36,16 @@ All the Components that can be added to a vertex should be defined in the namesp
 
 */
 
-			/*-------------------------- Curvature   ----------------------------------*/
+  /*------------------------- Base Classes  -----------------------------------------*/
 
-			template <class S>
-			struct CurvatureDirBaseType{
-				typedef Point3<S> VecType;
-				typedef  S   ScalarType;
-				CurvatureDirBaseType () {}
-				Point3<S>max_dir,min_dir; // max and min curvature direction
-				S k1,k2;// max and min curvature values
-			};
-
-			template <class A, class TT> class Curvature: public TT {
-			public:
-				typedef Point2<A> CurvatureType;
-				typedef typename CurvatureType::ScalarType ScalarType;
-				ScalarType  &Kh(){ return _hk[0];}
-				ScalarType  &Kg(){ return _hk[1];}
-				const ScalarType &cKh() const { return  _hk[0];}
-				const ScalarType &cKg() const { return  _hk[1];}
-
-				static bool HasCurvature()   { return true; }
-				static bool IsCurvatureEnabled(typename TT::VertexType *)   { return true; }
-				static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvature"));TT::Name(name);}
-
-			private:
-				Point2<A> _hk;
-			};
-
-
-			template <class T> class Curvaturef: public Curvature< float, T> {
-			public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvaturef"));T::Name(name);}
-			};
-			template <class T> class Curvatured: public Curvature<double , T> {
-			public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvatured"));T::Name(name);}
-			};
+  template <class S>
+  struct CurvatureDirBaseType{
+          typedef Point3<S> VecType;
+          typedef  S   ScalarType;
+          CurvatureDirBaseType () {}
+          Point3<S>max_dir,min_dir; // max and min curvature direction
+          S k1,k2;// max and min curvature values
+  };
 
 /*------------------------- EMPTY CORE COMPONENTS -----------------------------------------*/
 
@@ -350,6 +325,34 @@ template <class TT> class Qualityd: public Quality<double, TT> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));TT::Name(name);}
 };
 
+  /*-------------------------- Curvature   ----------------------------------*/
+
+
+
+  template <class A, class TT> class Curvature: public TT {
+  public:
+          typedef Point2<A> CurvatureType;
+          typedef typename CurvatureType::ScalarType ScalarType;
+          ScalarType  &Kh(){ return _hk[0];}
+          ScalarType  &Kg(){ return _hk[1];}
+          const ScalarType &cKh() const { return  _hk[0];}
+          const ScalarType &cKg() const { return  _hk[1];}
+
+          static bool HasCurvature()   { return true; }
+          static bool IsCurvatureEnabled(typename TT::VertexType *)   { return true; }
+          static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvature"));TT::Name(name);}
+
+  private:
+          Point2<A> _hk;
+  };
+
+
+  template <class T> class Curvaturef: public Curvature< float, T> {
+  public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvaturef"));T::Name(name);}
+  };
+  template <class T> class Curvatured: public Curvature<double , T> {
+  public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvatured"));T::Name(name);}
+  };
 
 /*-------------------------- Curvature Direction ----------------------------------*/
 
@@ -507,6 +510,8 @@ private:
 	typename T::TetraPointer _tp ;
 	int _zp ;
 };
+
+
 
   } // end namespace vert
 }// end namespace vcg
