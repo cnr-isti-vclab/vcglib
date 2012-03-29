@@ -604,6 +604,51 @@ void VFStarVF( typename FaceType::VertexType* vp, std::vector<FaceType *> &faceV
 		++vfi;
 	}
 }
+
+/*!
+* Compute the ordered set of faces adjacent to a given vertex using VF adjacency.and FF adiacency 
+*	\param vp	pointer to the vertex whose star has to be computed.
+*	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
+*
+*/
+template <class FaceType>
+static void VFOrderedStarVF_FF(typename FaceType::VertexType &vp,
+								std::vector<FaceType*> &faceVec)
+{
+
+	///check that is not on border..
+	assert (!vp.IsB());
+
+	///get first face sharing the edge
+	FaceType *f_init=vp.VFp();
+	int edge_init=vp.VFi(); 
+
+	///and initialize the pos
+	vcg::face::Pos<FaceType> VFI(f_init,edge_init);
+	bool complete_turn=false;
+	do  
+	{
+		FaceType *curr_f=VFI.F();
+		faceVec.push_back(curr_f);
+
+		int curr_edge=VFI.E();
+
+		///assert that is not a border edge
+		assert(curr_f->FFp(curr_edge)!=curr_f);
+
+		///continue moving 
+		VFI.FlipF();
+		VFI.FlipE();
+
+		FaceType *next_f=VFI.F();
+
+		///test if I've finiseh with the face exploration
+		complete_turn=(next_f==f_init);
+		/// or if I've just crossed a mismatch
+	}while (!complete_turn);
+}
+
+
 /*!
 * Check if two faces share and edge through the FF topology.
 *	\param f0,f1 the two face to be checked
