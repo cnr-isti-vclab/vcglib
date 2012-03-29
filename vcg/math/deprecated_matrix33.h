@@ -627,6 +627,30 @@ private:
 	S a[9];
 };
 
+///return the tranformation matrix to transform 
+///to the frame specified by the three vectors
+template <class S>
+vcg::Matrix33<S> TransformationMatrix(const vcg::Point3<S> dirX,
+										const vcg::Point3<S> dirY,
+										const vcg::Point3<S> dirZ)
+{
+	vcg::Matrix33<S> Trans;
+
+	///it must have right orientation cause of normal
+	Trans[0][0]=dirX[0];
+	Trans[0][1]=dirX[1];
+	Trans[0][2]=dirX[2];
+	Trans[1][0]=dirY[0];
+	Trans[1][1]=dirY[1];
+	Trans[1][2]=dirY[2];
+	Trans[2][0]=dirZ[0];
+	Trans[2][1]=dirZ[1];
+	Trans[2][2]=dirZ[2];
+
+	/////then find the inverse 
+	return (Trans);
+}
+
 template <class S>
 void 	 Invert(Matrix33<S> &m)
 	{
