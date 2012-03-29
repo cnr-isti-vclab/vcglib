@@ -14,12 +14,9 @@ class GLField
 		CoordType center=(f.P0(0)+f.P0(1)+f.P0(2))/3;
 		CoordType normal=f.cN();
 		CoordType dir[4];
-		vcg::tri::CrossField<MeshType>::CrossVector(mesh,f,dir);
-		/*ScalarType ImportVal=ImportanceField(f);
-		glLineWidth(20.f*ImportVal);*/
+		vcg::tri::CrossField<MeshType>::CrossVector(f,dir);
 		glLineWidth(1);
 		vcg::Color4b c;
-		/*c.ColorRamp(0,1,float (ImportVal) );*/
 		vcg::glColor(vcg::Color4b(0,0,0,255));
 
 		glBegin(GL_LINES);
@@ -32,62 +29,6 @@ class GLField
 	}
 
 
-	//void GLDrawField(const VertexType &v,
-	//	ScalarType &size)
-	//{
-	//	//if ((rand()%5)!=0)return;
-	//	CoordType center=v.cP();
-	//	CoordType normal=v.cN();
-	//	CoordType dir[4];
-	//	CoordType dir0=v.cPD1();
-	//	ScalarType w0=v.cK1();
-	//	ScalarType w1=v.cK2();
-	//	vcg::tri::CrossField<MeshType>::CrossVector(dir0,normal,dir);
-	//	ScalarType ImportVal=ImportanceField(v);
-	//	//glLineWidth(10.f*ImportVal);
-	//	vcg::Color4b c;
-	//	//c.ColorRamp(0,1,float (ImportVal) );
-	//	//vcg::glColor(c);
-	//	//vcg::glColor(vcg::Color4b(100,100,100,255));
-	//	if (rand()%2==0) std::swap(w0, w1);
-	//	float s;
-	//	if (w0>w1)
-	//	{
-	//		vcg::glColor(vcg::Color4b(50,50,50,255));
-	//		glLineWidth(2.0);
-	//		s=2;
-	//	}
-	//	else
-	//	{
-	//		vcg::glColor(vcg::Color4b(150,150,150,255));
-	//		glLineWidth(1);
-	//		s=1;
-	//	}
-	//	glBegin(GL_LINES);
-	//	glVertex(center);
-	//	glVertex(center+dir[0]*size*s);
-	//	glVertex(center);
-	//	glVertex(center+dir[2]*size*s);
-	//	glEnd();
-	//	if (w0<=w1)
-	//	{
-	//		vcg::glColor(vcg::Color4b(50,50,50,255));
-	//		glLineWidth(2.0);
-	//		s=2;
-	//	}
-	//	else
-	//	{
-	//		vcg::glColor(vcg::Color4b(150,150,150,255));
-	//		glLineWidth(1);
-	//		s=1;
-	//	}
-	//	glBegin(GL_LINES);
-	//	glVertex(center);
-	//	glVertex(center+dir[1]*size*s);
-	//	glVertex(center);
-	//	glVertex(center+dir[3]*size*s);
-	//	glEnd();
-	//}
 public:
 
 	///singular vertices should be selected
@@ -105,7 +46,7 @@ public:
 			if (mymesh.vert[i].IsD())continue;
 			if (!mymesh.vert[i].IsS())continue;
 			int mmatch;
-			bool IsSing=vcg::tri::CrossField<MeshType>::IsSingular(mymesh,mymesh.vert[i],mmatch);
+			bool IsSing=vcg::tri::CrossField<MeshType>::IsSingular(mymesh.vert[i],mmatch);
 			if (!IsSing)continue;
 			assert(IsSing);
 			assert(mmatch!=0);
@@ -135,7 +76,6 @@ public:
 			if (mymesh.face[i].IsD())continue;
 			GLDrawField(mymesh,mymesh.face[i],size);
 		}
-
 		glPopAttrib();
 	}
 };
