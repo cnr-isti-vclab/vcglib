@@ -544,6 +544,7 @@ namespace vcg {
 		*/
 		static void DeleteFace(MeshType &m, FaceType &f)
 		{
+  		    assert(&f >= &m.face.front() && &f <= &m.face.back());
 			assert(!f.IsD());
 			f.SetD();
 			--m.fn;
@@ -554,6 +555,7 @@ namespace vcg {
 		*/
 		static void DeleteVertex(MeshType &m, VertexType &v)
 		{
+		    assert(&v >= &m.vert.front() && &v <= &m.vert.back());
 			assert(!v.IsD());
 			v.SetD();
 			--m.vn;
@@ -562,11 +564,12 @@ namespace vcg {
 		/** Function to delete an edge from the mesh.
 			NOTE: THIS FUNCTION ALSO UPDATE en
 		*/
-                static void DeleteEdge(MeshType &m, EdgeType &e)
+		static void DeleteEdge(MeshType &m, EdgeType &e)
 		{
-			assert(!e.IsD());
-			e.SetD();
-                        --m.en;
+		  assert(&e >= &m.edge.front() && &e <= &m.edge.back());
+		  assert(!e.IsD());
+		  e.SetD();
+		  --m.en;
 		}
 
 		/** Function to delete a hedge from the mesh.
