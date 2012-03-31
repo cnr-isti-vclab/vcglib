@@ -783,61 +783,53 @@ public:
 
   namespace tri
   {
-
-
-	template < class VertContainerType, class FaceType, class Container1, class Container2  >
-		bool HasPerFaceVFAdjacency (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2 > & m)
-	{
-	  if(FaceType::HasVFAdjacencyOcf()) return m.face.IsVFAdjacencyEnabled();
-	  else return FaceType::FaceType::HasVFAdjacency();
-	}
-
-	template < class VertContainerType, class FaceType, class Container1, class Container2 >
-		bool HasFFAdjacency (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
-	{
-	  if(FaceType::HasFFAdjacencyOcf()) return m.face.IsFFAdjacencyEnabled();
-	  else return FaceType::FaceType::HasFFAdjacency();
-	}
-
-	template < class VertContainerType, class FaceType, class Container1, class Container2  >
-			bool HasPerWedgeTexCoord (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
-    {
-      if(FaceType::HasWedgeTexCoordOcf()) return m.face.IsWedgeTexEnabled();
-      else return FaceType::HasWedgeTexCoord();
-    }
-
-    template < class VertContainerType, class FaceType, class Container1, class Container2  >
-	    bool HasPerFaceColor (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
-	{
-	  if(FaceType::HasFaceColorOcf()) return m.face.IsColorEnabled();
-	  else return FaceType::HasFaceColor();
-	}
-    template < class VertContainerType, class FaceType, class Container1, class Container2  >
-	    bool HasPerFaceCurvatureDir (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
-	{
-	  if(FaceType::HasFaceCurvatureDirOcf()) return m.face.IsCurvatureDirEnabled();
-	  else return FaceType::HasFaceCurvatureDir();
-	}
-
-		template < class VertContainerType, class FaceType, class Container1, class Container2  >
-		bool HasPerFaceQuality (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
-    {
-      if(FaceType::HasFaceQualityOcf()) return m.face.IsQualityEnabled();
-      else return FaceType::HasFaceQuality();
-    }
-		
-		template < class VertContainerType, class FaceType, class Container1, class Container2  >
-			bool HasPerFaceMark (const TriMesh < VertContainerType , face::vector_ocf< FaceType >, Container1, Container2  > & m)
-    {
-      if(FaceType::HasFaceMarkOcf()) return m.face.IsMarkEnabled();
-      else return FaceType::HasFaceMark();
-    }
-
-		template < class FaceType >
-			void ReorderFace( std::vector<size_t>  &newFaceIndex, face::vector_ocf< FaceType > &faceVec)
-		{
-			faceVec.ReorderFace(newFaceIndex);
-		}
+  template < class FaceType >
+  bool FaceVectorHasPerFaceVFAdjacency(const face::vector_ocf<FaceType> &fv)
+  {
+    if(FaceType::HasVFAdjacencyOcf()) return fv.IsVFAdjacencyEnabled();
+    else return FaceType::HasVFAdjacency();
+  }
+  template < class FaceType >
+  bool FaceVectorHasFFAdjacency(const face::vector_ocf<FaceType> &fv)
+  {
+    if(FaceType::HasFFAdjacencyOcf()) return fv.IsFFAdjacencyEnabled();
+    else return FaceType::HasFFAdjacency();
+  }
+  template < class FaceType >
+  bool FaceVectorHasPerWedgeTexCoord(const face::vector_ocf<FaceType> &fv)
+  {
+    if(FaceType::HasWedgeTexCoordOcf()) return fv.IsWedgeTexEnabled();
+    else return FaceType::HasWedgeTexCoord();
+  }
+  template < class FaceType >
+  bool FaceVectorHasPerFaceColor(const face::vector_ocf<FaceType> &fv)
+  {
+    if(FaceType::HasFaceColorOcf()) return fv.IsColorEnabled();
+    else return FaceType::HasFaceColor();
+  }
+  template < class FaceType >
+  bool FaceVectorHasPerFaceQuality(const face::vector_ocf<FaceType> &fv)
+  {
+    if(FaceType::HasFaceQualityOcf()) return fv.IsQualityEnabled();
+    else return FaceType::HasFaceQuality();
+  }
+  template < class FaceType >
+  bool FaceVectorHasPerFaceMark(const face::vector_ocf<FaceType> &fv)
+  {
+    if(FaceType::HasFaceMarkOcf()) return fv.IsMarkEnabled();
+    else return FaceType::HasFaceMark();
+  }
+  template < class FaceType >
+  bool FaceVectorHasPerFaceCurvatureDir(const face::vector_ocf<FaceType> &fv)
+  {
+    if(FaceType::HasCurvatureDirOcf()) return fv.IsCurvatureDirEnabled();
+    else return FaceType::HasCurvatureDir();
+  }
+  template < class FaceType >
+  void ReorderFace( std::vector<size_t>  &newFaceIndex, face::vector_ocf< FaceType > &faceVec)
+  {
+    faceVec.ReorderFace(newFaceIndex);
+  }
 
   }
 }// end namespace vcg

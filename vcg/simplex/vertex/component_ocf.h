@@ -642,64 +642,48 @@ public:
 
 namespace tri
 {
-
-	template < class, class,class, class> class TriMesh;
-
-	template < class VertexType, class ContainerType0, class Container1, class Container2  >
-		bool HasPerVertexVFAdjacency (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0, Container1, Container2 > & m)
-	{
-		if(VertexType::HasVFAdjacencyOcf()) return m.vert.IsVFAdjacencyEnabled();
-		else return VertexType::HasVFAdjacency();
-	}
-
-	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2 >
-	bool HasPerVertexRadius (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2 > & m)
-	{
-		if(VertexType::HasRadiusOcf()) return m.vert.IsRadiusEnabled();
-		else return VertexType::HasRadius();
-	}
-	
-	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2>
-		bool HasPerVertexQuality (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2> & m)
-	{
-		if(VertexType::HasQualityOcf()) return m.vert.IsQualityEnabled();
-		else return VertexType::HasQuality();
-	}
-	
-	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2 >
-		bool HasPerVertexTexCoord (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2> & m)
-	{
-		if(VertexType::HasTexCoordOcf()) return m.vert.IsTexCoordEnabled();
-		else return VertexType::HasTexCoord();
-	}
-
-	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2 >
-		bool HasPerVertexNormal (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2> & m)
-	{
-		if(VertexType::HasNormalOcf()) return m.vert.IsNormalEnabled();
-		else return VertexType::HasNormal();
-	}
-
-	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2>
-		bool HasPerVertexColor (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2> & m)
-	{
-		if(VertexType::HasColorOcf()) return m.vert.IsColorEnabled();
-		else return VertexType::HasColor();
-	}
-
-	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2 >
-		bool HasPerVertexCurvature (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2 > & m)
-	{
-		if(VertexType::HasCurvatureOcf()) return m.vert.IsCurvatureEnabled();
-		else return VertexType::HasCurvature();
-	}
-
-	template < class VertexType, class ContainerType0, class ContainerType1 ,class ContainerType2>
-		bool HasPerVertexCurvatureDir (const TriMesh < vertex::vector_ocf< VertexType > , ContainerType0,   ContainerType1,  ContainerType2 > & m)
-	{
-		if(VertexType::HasCurvatureDirOcf()) return m.vert.IsCurvatureDirEnabled();
-		else return VertexType::HasCurvatureDir();
-	}
+template < class VertexType >
+bool VertexVectorHasPerVertexVFAdjacency(const vertex::vector_ocf<VertexType> &fv)
+{
+  if(VertexType::HasVFAdjacencyOcf()) return fv.IsVFAdjacencyEnabled();
+  else return VertexType::HasVFAdjacency();
+}
+template < class VertexType >
+bool VertexVectorHasPerVertexRadius(const vertex::vector_ocf<VertexType> &fv)
+{
+	if(VertexType::HasRadiusOcf()) return fv.IsRadiusEnabled();
+	else return VertexType::HasRadius();
+}
+template < class VertexType >
+bool VertexVectorHasPerVertexQuality(const vertex::vector_ocf<VertexType> &fv)
+{
+	if(VertexType::HasQualityOcf()) return fv.IsQualityEnabled();
+	else return VertexType::HasQuality();
+}
+template < class VertexType >
+bool VertexVectorHasPerVertexNormal(const vertex::vector_ocf<VertexType> &fv)
+{
+	if(VertexType::HasNormalOcf()) return fv.IsNormalEnabled();
+	else return VertexType::HasNormal();
+}
+template < class VertexType >
+bool VertexVectorHasPerVertexColor(const vertex::vector_ocf<VertexType> &fv)
+{
+	if(VertexType::HasColorOcf()) return fv.IsColorEnabled();
+	else return VertexType::HasColor();
+}
+template < class VertexType >
+bool VertexVectorHasPerVertexCurvature(const vertex::vector_ocf<VertexType> &fv)
+{
+	if(VertexType::HasCurvatureOcf()) return fv.IsCurvatureEnabled();
+	else return VertexType::HasCurvature();
+}
+template < class VertexType >
+bool VertexVectorHasPerVertexCurvatureDir(const vertex::vector_ocf<VertexType> &fv)
+{
+	if(VertexType::HasCurvatureDirOcf()) return fv.IsCurvatureDirEnabled();
+	else return VertexType::HasCurvatureDir();
+}
 
 }
 }// end namespace vcg

@@ -372,31 +372,6 @@ void Clear()
   C()=Color4b::Gray;
 }
 
-/// Reflection functions that speak about vertex and face properties.
-static bool HasPerVertexNormal()  { return VertexType::HasNormal() ; }
-static bool HasPerVertexColor()   { return VertexType::HasColor()  ; }
-static bool HasPerVertexMark()    { return VertexType::HasMark()   ; }
-static bool HasPerVertexQuality() { return VertexType::HasQuality(); }
-static bool HasPerVertexTexCoord(){ return VertexType::HasTexCoord(); }
-static bool HasPerVertexRadius()  { return VertexType::HasRadius(); }
-static bool HasPerVertexFlags()   { return VertexType::HasFlags(); }
-
-static bool HasPolyInfo()					{ return FaceType::HasPolyInfo() ; }
-static bool HasPerFaceColor()     { return FaceType::HasFaceColor() ; }
-static bool HasPerFaceNormal()    { return FaceType::HasFaceNormal()  ; }
-static bool HasPerFaceMark()      { return FaceType::HasFaceMark()   ; }
-static bool HasPerFaceQuality()   { return FaceType::HasFaceQuality(); }
-static bool HasPerFaceFlags()			{ return FaceType::HasFlags(); }
-
-static bool HasPerWedgeColor()     { return FaceType::HasWedgeColor()  ; }
-static bool HasPerWedgeNormal()    { return FaceType::HasWedgeNormal()  ; }
-static bool HasPerWedgeMark()      { return FaceType::HasWedgeMark()   ; }
-static bool HasPerWedgeQuality()   { return FaceType::HasWedgeQuality(); }
-static bool HasPerWedgeTexCoord()  { return FaceType::HasWedgeTexCoord(); }
-
-static bool HasFFTopology()       { return FaceType::HasFFAdjacency();  }
-static bool HasVFTopology()       { return ((FaceType::HasVFAdjacency())&&(VertexType::HasVFAdjacency())); }
-static bool HasTopology()         { return HasFFTopology() || HasVFTopology(); }
 
 int & SimplexNumber(){ return fn;}
 int & VertexNumber(){ return vn;}
@@ -486,80 +461,71 @@ template <class MeshType> inline void Mark(MeshType & m, typename MeshType::Face
 template <class MeshType> inline void UnMarkAll(MeshType & m) { ++m.imark; }
 
 
-
-template < class CType0, class CType1 , class CType2, class CType3>
-bool HasPerVertexVFAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasVFAdjacency();}
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerFaceVFAdjacency   (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasVFAdjacency();}
-
 template < class CType0, class CType1 , class CType2, class CType3>
 bool HasPerVertexVEAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasVEAdjacency();}
 template < class  CType0, class CType1, class CType2 , class CType3>
 bool HasPerEdgeVEAdjacency   (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::EdgeContainer::value_type::HasVEAdjacency();}
 
-template < class CType0, class CType1 , class CType2, class CType3>
-bool HasPerVertexQuality (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasQuality();}
+template < class VertexType> bool VertexVectorHasPerFaceVFAdjacency     (const std::vector<VertexType> &) {  return VertexType::HasVFAdjacency(); }
+template < class FaceType  > bool   FaceVectorHasPerFaceVFAdjacency     (const std::vector<FaceType  > &) {  return FaceType::HasVFAdjacency(); }
 
-template < class CType0, class CType1 , class CType2, class CType3>
-bool HasPerVertexMark (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasMark();}
+template < class TriMeshType> bool   HasPerFaceVFAdjacency     (const TriMeshType &m) { return tri::FaceVectorHasPerFaceVFAdjacency  (m.vert); }
+template < class TriMeshType> bool HasPerVertexVFAdjacency     (const TriMeshType &m) { return tri::VertexVectorHasPerFaceVFAdjacency(m.vert); }
 
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerVertexCurvature (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasCurvature();}
 
-template < class CType0, class CType1 , class CType2, class CType3>
-bool HasPerVertexCurvatureDir (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasCurvatureDir();}
+template < class VertexType> bool VertexVectorHasPerVertexQuality     (const std::vector<VertexType> &) {  return VertexType::HasQuality     (); }
+template < class VertexType> bool VertexVectorHasPerVertexNormal      (const std::vector<VertexType> &) {  return VertexType::HasNormal      (); }
+template < class VertexType> bool VertexVectorHasPerVertexColor       (const std::vector<VertexType> &) {  return VertexType::HasColor       (); }
+template < class VertexType> bool VertexVectorHasPerVertexMark        (const std::vector<VertexType> &) {  return VertexType::HasMark        (); }
+template < class VertexType> bool VertexVectorHasPerVertexFlags       (const std::vector<VertexType> &) {  return VertexType::HasFlags       (); }
+template < class VertexType> bool VertexVectorHasPerVertexRadius      (const std::vector<VertexType> &) {  return VertexType::HasRadius      (); }
+template < class VertexType> bool VertexVectorHasPerVertexCurvature   (const std::vector<VertexType> &) {  return VertexType::HasCurvature   (); }
+template < class VertexType> bool VertexVectorHasPerVertexCurvatureDir(const std::vector<VertexType> &) {  return VertexType::HasCurvatureDir(); }
+template < class VertexType> bool VertexVectorHasPerVertexTexCoord    (const std::vector<VertexType> &) {  return VertexType::HasTexCoord    (); }
 
-template < class CType0, class CType1 , class CType2, class CType3>
-bool HasPerVertexColor (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasColor();}
+template < class TriMeshType> bool HasPerVertexQuality     (const TriMeshType &m) { return tri::VertexVectorHasPerVertexQuality     (m.vert); }
+template < class TriMeshType> bool HasPerVertexNormal      (const TriMeshType &m) { return tri::VertexVectorHasPerVertexNormal      (m.vert); }
+template < class TriMeshType> bool HasPerVertexColor       (const TriMeshType &m) { return tri::VertexVectorHasPerVertexColor       (m.vert); }
+template < class TriMeshType> bool HasPerVertexMark        (const TriMeshType &m) { return tri::VertexVectorHasPerVertexMark        (m.vert); }
+template < class TriMeshType> bool HasPerVertexFlags       (const TriMeshType &m) { return tri::VertexVectorHasPerVertexFlags       (m.vert); }
+template < class TriMeshType> bool HasPerVertexRadius      (const TriMeshType &m) { return tri::VertexVectorHasPerVertexRadius      (m.vert); }
+template < class TriMeshType> bool HasPerVertexCurvature   (const TriMeshType &m) { return tri::VertexVectorHasPerVertexCurvature   (m.vert); }
+template < class TriMeshType> bool HasPerVertexCurvatureDir(const TriMeshType &m) { return tri::VertexVectorHasPerVertexCurvatureDir(m.vert); }
+template < class TriMeshType> bool HasPerVertexTexCoord    (const TriMeshType &m) { return tri::VertexVectorHasPerVertexTexCoord    (m.vert); }
 
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerVertexTexCoord (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasTexCoord();}
 
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerVertexFlags (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasFlags();}
+template < class FaceType>    bool FaceVectorHasPerWedgeColor   (const std::vector<FaceType> &) {  return FaceType::HasWedgeColor   (); }
+template < class FaceType>    bool FaceVectorHasPerWedgeNormal  (const std::vector<FaceType> &) {  return FaceType::HasWedgeNormal  (); }
+template < class FaceType>    bool FaceVectorHasPerWedgeTexCoord(const std::vector<FaceType> &) {  return FaceType::HasWedgeTexCoord(); }
 
-template < class CType0, class CType1, class CType2, class CType3 >
-bool HasPerVertexNormal (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasNormal();}
-
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerVertexRadius (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasRadius();}
-
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerWedgeTexCoord (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasWedgeTexCoord();}
-
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerWedgeNormal (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasWedgeNormal();}
-
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerWedgeColor (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasWedgeColor();}
-
+template < class TriMeshType> bool HasPerWedgeColor   (const TriMeshType &m) { return tri::FaceVectorHasPerWedgeColor   (m.face); }
+template < class TriMeshType> bool HasPerWedgeNormal  (const TriMeshType &m) { return tri::FaceVectorHasPerWedgeNormal  (m.face); }
+template < class TriMeshType> bool HasPerWedgeTexCoord(const TriMeshType &m) { return tri::FaceVectorHasPerWedgeTexCoord(m.face); }
 
 template < class  CType0, class CType1, class CType2 , class CType3>
 bool HasPolyInfo (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasPolyInfo();}
 
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerFaceFlags (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasFlags();}
+template < class FaceType>    bool FaceVectorHasPerFaceFlags  (const std::vector<FaceType> &) {  return FaceType::HasFlags      (); }
+template < class FaceType>    bool FaceVectorHasPerFaceNormal (const std::vector<FaceType> &) {  return FaceType::HasFaceNormal (); }
+template < class FaceType>    bool FaceVectorHasPerFaceColor  (const std::vector<FaceType> &) {  return FaceType::HasFaceColor  (); }
+template < class FaceType>    bool FaceVectorHasPerFaceMark   (const std::vector<FaceType> &) {  return FaceType::HasFaceMark   (); }
+template < class FaceType>    bool FaceVectorHasPerFaceQuality(const std::vector<FaceType> &) {  return FaceType::HasFaceQuality(); }
+template < class FaceType>    bool FaceVectorHasFFAdjacency   (const std::vector<FaceType> &) {  return FaceType::HasFFAdjacency(); }
+template < class FaceType>    bool FaceVectorHasFEAdjacency   (const std::vector<FaceType> &) {  return FaceType::HasFEAdjacency(); }
+template < class FaceType>    bool FaceVectorHasFVAdjacency   (const std::vector<FaceType> &) {  return FaceType::HasFVAdjacency(); }
+template < class FaceType>    bool FaceVectorHasPerFaceCurvatureDir   (const std::vector<FaceType> &) {  return FaceType::HasCurvatureDir(); }
 
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerFaceNormal (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasFaceNormal();}
+template < class TriMeshType> bool HasPerFaceFlags       (const TriMeshType &m) { return tri::FaceVectorHasPerFaceFlags       (m.face); }
+template < class TriMeshType> bool HasPerFaceNormal      (const TriMeshType &m) { return tri::FaceVectorHasPerFaceNormal      (m.face); }
+template < class TriMeshType> bool HasPerFaceColor       (const TriMeshType &m) { return tri::FaceVectorHasPerFaceColor       (m.face); }
+template < class TriMeshType> bool HasPerFaceMark        (const TriMeshType &m) { return tri::FaceVectorHasPerFaceMark        (m.face); }
+template < class TriMeshType> bool HasPerFaceQuality     (const TriMeshType &m) { return tri::FaceVectorHasPerFaceQuality     (m.face); }
+template < class TriMeshType> bool HasPerFaceCurvatureDir(const TriMeshType &m) { return tri::FaceVectorHasPerFaceCurvatureDir(m.face); }
+template < class TriMeshType> bool HasFFAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFFAdjacency   (m.face); }
+template < class TriMeshType> bool HasFEAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFEAdjacency   (m.face); }
+template < class TriMeshType> bool HasFVAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFVAdjacency   (m.face); }
 
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerFaceColor (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasFaceColor();}
 
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerFaceMark (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasMark();}
-
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerFaceQuality (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasFaceQuality();}
-
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasFFAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasFFAdjacency();}
-
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasFEAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasFEAdjacency();}
-
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasFVAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasFVAdjacency();}
 
 template < class  CType0, class CType1, class CType2 , class CType3>
 bool HasVEAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasVEAdjacency();}
