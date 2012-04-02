@@ -124,7 +124,7 @@ public:
 	*/
 		static void PrincipalDirections(MeshType &m) {
 
-			assert(m.HasVFTopology());
+                    assert(tri::HasPerFaceVFAdjacency(m) && tri::HasPerVertexVFAdjacency(m));
 
 			vcg::tri::UpdateNormals<MeshType>::PerVertexNormalized(m);
 
