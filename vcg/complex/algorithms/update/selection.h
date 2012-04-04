@@ -187,6 +187,15 @@ static size_t FaceCount(MeshType &m)
   return selCnt;
 }
 
+static size_t EdgeCount(MeshType &m)
+{
+  size_t selCnt=0;
+  EdgeIterator ei;
+  for(ei=m.edge.begin();ei!=m.edge.end();++ei)
+    if(!(*ei).IsD() && (*ei).IsS()) ++selCnt;
+  return selCnt;
+}
+
 static size_t VertexCount(MeshType &m)
 {
   size_t selCnt=0;
