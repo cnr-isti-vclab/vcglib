@@ -50,7 +50,7 @@ template <class UserTypes>
 
 
  // prot
-        int VN()  const { return 3;}
+        inline int VN()  const { return 3;}
         inline int Prev(const int & i) const { return (i+(3-1))%3;}
         inline int Next(const int & i) const { return (i+1)%3;}
 	inline void Alloc(const int & ){}
@@ -70,16 +70,8 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 
 */ 
 template <class UserTypes>
-class FaceBase: public   face::EmptyPolyInfo<
-			face::EmptyVertexRef<
-                         face::EmptyAdj<
-                         face::EmptyColorMarkQuality<
-                         face::EmptyNormal<
-			face::EmptyCurvatureDir<
-			face::EmptyBitFlags<
-                         face::EmptyWedgeTexCoord<
-												 FaceTypeHolder <UserTypes> > > > > > > > >{
-
+class FaceBase: public
+			face::EmptyCore< FaceTypeHolder <UserTypes> > {
 };
 
 

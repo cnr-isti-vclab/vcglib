@@ -38,28 +38,6 @@ All the Components that can be added to a vertex should be defined in the namesp
 */
 
 /*-------------------------- PolInfo -------------------------------------------*/
-template <class T> class EmptyPolyInfo: public T {
-protected:
-  inline void SetVN(const int & /*n*/) {assert(0);}
-public:
-	typedef typename T::HEdgeType HEdgeType;
-	typedef typename T::HEdgePointer HEdgePointer;
-
-	/* Note: the destructor will not be called in general because there are no virtual destructors.
-		Instead, the job of deallocating the memory will be done bu the edge allocator.
-		This destructor is only done for those who istance a face alone (outside a mesh)
-	*/
-		static bool HasPolyInfo()   { return false; }
-		inline void Alloc(const int & ns){T::Alloc(ns);};// it should be useless
-		inline void Dealloc(){T::Dealloc();};// it should be useless
-
-		// EmptyPFHAdj
-		HEdgePointer       &FHp( )       { static typename T::HEdgePointer fp=0;  assert(0); return fp; }
-		HEdgePointer const cFHp( ) const { static typename T::HEdgePointer const fp=0; return fp; }
-		static bool HasFHAdjacency()   {   return false; }
-};
-
-
 
 
 template <class T> class PolyInfo: public T {
