@@ -66,42 +66,30 @@ public:
 		std::vector<int> vert,face,edge, hedge;
  };
 
- static void ImportVertexAdj(MeshLeft &ml, ConstMeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap, bool sel ){
-		 // Vertex to Edge Adj
-		 if(vcg::tri::HasVEAdjacency(ml) && vcg::tri::HasVEAdjacency(mr) && vr.cVEp() != 0){
-				 size_t i = Index(mr,vr.cVEp());
-				 vl.VEp() = (i>ml.edge.size())? 0 : &ml.edge[remap.edge[i]];
-				 vl.VEi() = vr.VEi();
-		 }
-
-		 if(!sel){
-			 // Vertex to Face Adj
-			 if(vcg::tri::HasPerVertexVFAdjacency(ml) && vcg::tri::HasPerVertexVFAdjacency(mr) &&
-					vcg::tri::HasPerFaceVFAdjacency(ml) && vcg::tri::HasPerFaceVFAdjacency(mr) && vr.cVFp() != 0
-					){
-					size_t i = Index(mr,vr.cVFp());
-					vl.VFp() = (i>ml.face.size())? 0 :&ml.face[remap.face[i]];
-					vl.VFi() = vr.VFi();
-			 }
-
-			 // Vertex to HEdge Adj
-			 if(vcg::tri::HasVHAdjacency(ml) && vcg::tri::HasVHAdjacency(mr) && vr.cVHp() != 0){
-					vl.VHp() = &ml.hedge[remap.hedge[Index(mr,vr.cVHp())]];
-					vl.VHi() = vr.VHi();
-			 }
-		 }
- }
-
- static void ImportEdgeAdj(MeshLeft &ml, ConstMeshRight &mr, EdgeLeft &el, const EdgeRight &er, Remap &remap, bool sel )
- {
-
-   // Edge to Vertex  Adj
-   if(vcg::tri::HasEVAdjacency(ml) && vcg::tri::HasEVAdjacency(mr)){
-     el.V(0) = &ml.vert[remap.vert[Index(mr,er.cV(0))]];
-     el.V(1) = &ml.vert[remap.vert[Index(mr,er.cV(1))]];
+ static void ImportVertexAdj(MeshLeft &ml, ConstMeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap ){
+   // Vertex to Edge Adj
+   if(vcg::tri::HasVEAdjacency(ml) && vcg::tri::HasVEAdjacency(mr) && vr.cVEp() != 0){
+     size_t i = Index(mr,vr.cVEp());
+     vl.VEp() = (i>ml.edge.size())? 0 : &ml.edge[remap.edge[i]];
+     vl.VEi() = vr.VEi();
    }
 
-   if(!sel){
+   // Vertex to Face Adj
+   if(vcg::tri::HasPerVertexVFAdjacency(ml) && vcg::tri::HasPerVertexVFAdjacency(mr) && vr.cVFp() != 0 ){
+     size_t i = Index(mr,vr.cVFp());
+     vl.VFp() = (i>ml.face.size())? 0 :&ml.face[remap.face[i]];
+     vl.VFi() = vr.VFi();
+   }
+
+   // Vertex to HEdge Adj
+   if(vcg::tri::HasVHAdjacency(ml) && vcg::tri::HasVHAdjacency(mr) && vr.cVHp() != 0){
+     vl.VHp() = &ml.hedge[remap.hedge[Index(mr,vr.cVHp())]];
+     vl.VHi() = vr.VHi();
+   }
+ }
+
+ static void ImportEdgeAdj(MeshLeft &ml, ConstMeshRight &mr, EdgeLeft &el, const EdgeRight &er, Remap &remap)
+ {
      // Edge to Edge  Adj
      if(vcg::tri::HasEEAdjacency(ml) && vcg::tri::HasEEAdjacency(mr))
        for(unsigned int vi = 0; vi < 2; ++vi)
@@ -121,20 +109,11 @@ public:
      // Edge to HEdge   Adj
      if(vcg::tri::HasEHAdjacency(ml) && vcg::tri::HasEHAdjacency(mr))
        el.EHp() = &ml.hedge[remap.hedge[Index(mr,er.cEHp())]];
-   }
  }
 
 
- static void ImportFaceAdj(MeshLeft &ml, ConstMeshRight &mr, FaceLeft &fl, const FaceRight &fr, Remap &remap, bool sel )
+ static void ImportFaceAdj(MeshLeft &ml, ConstMeshRight &mr, FaceLeft &fl, const FaceRight &fr, Remap &remap )
  {
-   // Face to Vertex  Adj
-   if(vcg::tri::HasFVAdjacency(ml) && vcg::tri::HasFVAdjacency(mr)){
-     assert(fl.VN() == fr.VN());
-     for( int i = 0; i < fl.VN(); ++i )
-       fl.V(i) = &ml.vert[remap.vert[Index(mr,fr.V(i))]];
-   }
-
-   if(!sel){
      // Face to Edge  Adj
      if(vcg::tri::HasFEAdjacency(ml) && vcg::tri::HasFEAdjacency(mr)){
        assert(fl.VN() == fr.VN());
@@ -157,7 +136,6 @@ public:
      // Face to HEedge  Adj
      if(vcg::tri::HasFHAdjacency(ml) && vcg::tri::HasFHAdjacency(mr))
        fl.FHp() = &ml.hedge[remap.hedge[Index(mr,fr.cFHp())]];
-   }
  }
 
  static void ImportHEdgeAdj(MeshLeft &ml, ConstMeshRight &mr, HEdgeLeft &hl, const HEdgeRight &hr, Remap &remap, bool /*sel*/ ){
@@ -195,111 +173,131 @@ public:
 // Append::Mesh(ml, mr) is equivalent to ml += mr. 
 // Note MeshRigth could be costant...
 
-static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false){
-
+static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, const bool adjFlag = false)
+{
   // Note that if the the selection of the vertexes is not consistent with the face selection
   // the append could build faces referencing non existent vertices
   // so it is mandatory that the selection of the vertices reflects the loose selection
   // from edges and faces (e.g. if a face is selected all its vertices must be selected).
   if(selected)
   {
+    assert(adjFlag == false); // It is rather meaningless to partially copy adj relations.
     tri::UpdateSelection<ConstMeshRight>::VertexFromEdgeLoose(mr,true);
     tri::UpdateSelection<ConstMeshRight>::VertexFromFaceLoose(mr,true);
   }
 
-		// phase 1. allocate on ml vert,edge,face, hedge to accomodat those of mr
-		// and build the remapping for all
+  // phase 1. allocate on ml vert,edge,face, hedge to accomodat those of mr
+  // and build the remapping for all
 
-		Remap remap;
+  Remap remap;
 
-		// vertex
-		remap.vert.resize(mr.vert.size(),-1);
-		VertexIteratorRight vi;
-		for(vi=mr.vert.begin();vi!=mr.vert.end();++vi)
-				if(!(*vi).IsD() && (!selected || (*vi).IsS())){
-						int ind=Index(mr,*vi);
-						assert(remap.vert[ind]==-1);
-						VertexIteratorLeft vp;
-						vp=Allocator<MeshLeft>::AddVertices(ml,1);
-						(*vp).ImportData(*(vi));
-						remap.vert[ind]=Index(ml,*vp);
-					}
+  // vertex
+  remap.vert.resize(mr.vert.size(),-1);
+  VertexIteratorRight vi;
+  VertexIteratorLeft vp;
+  int svn = UpdateSelection<ConstMeshRight>::VertexCount(mr);
+  if(selected) vp=Allocator<MeshLeft>::AddVertices(ml,svn);
+          else vp=Allocator<MeshLeft>::AddVertices(ml,mr.vn);
 
-		// edge
-		remap.edge.resize(mr.edge.size(),-1);
-		EdgeIteratorRight ei;
-		for(ei=mr.edge.begin(); ei!=mr.edge.end();++ei)
-				if(!(*ei).IsD() && (!selected || (*ei).IsS())){
-						int ind=Index(mr,*ei);
-						assert(remap.edge[ind]==-1);
-						EdgeIteratorLeft ep;
-						ep=Allocator<MeshLeft>::AddEdges(ml,1);
-						(*ep).ImportData(*(ei));
-						remap.edge[ind]=Index(ml,*ep);
-				}
+  for(vi=mr.vert.begin();vi!=mr.vert.end();++vi)
+    if(!(*vi).IsD() && (!selected || (*vi).IsS())){
+      int ind=Index(mr,*vi);
+      remap.vert[ind]=Index(ml,*vp);
+      ++vp;
+    }
 
-		// face
-		vcg::tri::Allocator<ConstMeshRight>::CompactFaceVector(mr);
-		remap.face.resize(mr.face.size(),-1);
-		FaceIteratorRight fi;
-		for(fi=mr.face.begin();fi!=mr.face.end();++fi)
-				if(!(*fi).IsD() && (!selected || (*fi).IsS())){
-						int ind=Index(mr,*fi);
-						assert(remap.face[ind]==-1);
-						FaceIteratorLeft fp;
-						fp=Allocator<MeshLeft>::AddFaces(ml,1);
-						(*fp).ImportData(*(fi));
-						remap.face[ind]=Index(ml,*fp);
-				}
+  // edge
+  remap.edge.resize(mr.edge.size(),-1);
+  EdgeIteratorRight ei;
+  EdgeIteratorLeft ep;
+  int sen = UpdateSelection<ConstMeshRight>::EdgeCount(mr);
+  if(selected) ep=Allocator<MeshLeft>::AddEdges(ml,sen);
+          else ep=Allocator<MeshLeft>::AddEdges(ml,mr.en);
 
-		// hedge
-		remap.hedge.resize(mr.hedge.size(),-1);
-		HEdgeIteratorRight hi;
-		for(hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
-				if(!(*hi).IsD() && (!selected || (*hi).IsS())){
-						int ind=Index(mr,*hi);
-						assert(remap.hedge[ind]==-1); 
-						HEdgeIteratorLeft hp;
-						hp=Allocator<MeshLeft>::AddHEdges(ml,1);
-						(*hp).ImportData(*(hi));
-						remap.hedge[ind]=Index(ml,*hp);
-				}
+  for(ei=mr.edge.begin(); ei!=mr.edge.end();++ei)
+    if(!(*ei).IsD() && (!selected || (*ei).IsS())){
+      int ind=Index(mr,*ei);
+      remap.edge[ind]=Index(ml,*ep);
+      ++ep;
+    }
 
-		// phase 2.
-		// copy data from ml to its corresponding elements in ml and adjacencies
+  // face
+  remap.face.resize(mr.face.size(),-1);
+  FaceIteratorRight fi;
+  FaceIteratorLeft fp;
+  int sfn = UpdateSelection<ConstMeshRight>::FaceCount(mr);
+  if(selected) fp=Allocator<MeshLeft>::AddFaces(ml,sfn);
+          else fp=Allocator<MeshLeft>::AddFaces(ml,mr.fn);
 
-		// vertex
-		for(vi=mr.vert.begin();vi!=mr.vert.end();++vi)
-				if( !(*vi).IsD() && (!selected || (*vi).IsS())){
-				 ml.vert[remap.vert[Index(mr,*vi)]].ImportData(*vi);
-				 ImportVertexAdj(ml,mr,ml.vert[remap.vert[Index(mr,*vi)]],*vi,remap,selected);
-		}
+  for(fi=mr.face.begin();fi!=mr.face.end();++fi)
+    if(!(*fi).IsD() && (!selected || (*fi).IsS())){
+      int ind=Index(mr,*fi);
+      remap.face[ind]=Index(ml,*fp);
+      ++fp;
+    }
 
-		// edge
-		for(ei=mr.edge.begin();ei!=mr.edge.end();++ei)
-				if(!(*ei).IsD() && (!selected || (*ei).IsS())){
-				 ml.edge[remap.edge[Index(mr,*ei)]].ImportData(*ei);
-				 ImportEdgeAdj(ml,mr,ml.edge[remap.edge[Index(mr,*ei)]],*ei,remap,selected);
-		}
+  // hedge
+  remap.hedge.resize(mr.hedge.size(),-1);
+  HEdgeIteratorRight hi;
+  for(hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
+    if(!(*hi).IsD() && (!selected || (*hi).IsS())){
+      int ind=Index(mr,*hi);
+      assert(remap.hedge[ind]==-1);
+      HEdgeIteratorLeft hp;
+      hp=Allocator<MeshLeft>::AddHEdges(ml,1);
+      (*hp).ImportData(*(hi));
+      remap.hedge[ind]=Index(ml,*hp);
+    }
 
-		// face
-		bool wedgetexcoord = vcg::tri::HasPerWedgeTexCoord(mr); 
-		for(fi=mr.face.begin();fi!=mr.face.end();++fi)
-				if(!(*fi).IsD() && (!selected || (*fi).IsS())){
-				 if(wedgetexcoord)
-					 for(int i = 0; i < (*fi).VN(); ++i)
-						 (*fi).WT(i).n() += ml.textures.size();
-				 ml.face[remap.face[Index(mr,*fi)]].ImportData(*fi);
-				 ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,*fi)]],*fi,remap,selected);
+  // phase 2.
+  // copy data from ml to its corresponding elements in ml and adjacencies
 
-		}
+  // vertex
+  for(vi=mr.vert.begin();vi!=mr.vert.end();++vi)
+    if( !(*vi).IsD() && (!selected || (*vi).IsS())){
+      ml.vert[remap.vert[Index(mr,*vi)]].ImportData(*vi);
+      if(adjFlag) ImportVertexAdj(ml,mr,ml.vert[remap.vert[Index(mr,*vi)]],*vi,remap);
+    }
 
-		// hedge
-		for(hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
-				if(!(*hi).IsD() && (!selected || (*hi).IsS())){
-				 ml.hedge[remap.hedge[Index(mr,*hi)]].ImportData(*hi);
-				 ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,*hi)]],*hi,remap,selected);
-		}
+  // edge
+  for(ei=mr.edge.begin();ei!=mr.edge.end();++ei)
+    if(!(*ei).IsD() && (!selected || (*ei).IsS())){
+      ml.edge[remap.edge[Index(mr,*ei)]].ImportData(*ei);
+      // Edge to Vertex  Adj
+      EdgeLeft &el = ml.edge[remap.edge[Index(mr,*ei)]];
+      if(vcg::tri::HasEVAdjacency(ml) && vcg::tri::HasEVAdjacency(mr)){
+        el.V(0) = &ml.vert[remap.vert[Index(mr,ei->cV(0))]];
+        el.V(1) = &ml.vert[remap.vert[Index(mr,ei->cV(1))]];
+      }
+      if(adjFlag) ImportEdgeAdj(ml,mr,el,*ei,remap);
+    }
+
+  // face
+  const int textureOffset =  ml.textures.size();
+  bool WTFlag = vcg::tri::HasPerWedgeTexCoord(mr) && (textureOffset>0);
+  for(fi=mr.face.begin();fi!=mr.face.end();++fi)
+    if(!(*fi).IsD() && (!selected || (*fi).IsS()))
+    {
+      FaceLeft &fl = ml.face[remap.face[Index(mr,*fi)]];
+      if(WTFlag)
+        for(int i = 0; i < 3; ++i)
+          fl.WT(i).n() +=textureOffset;
+      if(vcg::tri::HasFVAdjacency(ml) && vcg::tri::HasFVAdjacency(mr)){
+        fl.V(0) = &ml.vert[remap.vert[Index(mr,fi->cV(0))]];
+        fl.V(1) = &ml.vert[remap.vert[Index(mr,fi->cV(1))]];
+        fl.V(2) = &ml.vert[remap.vert[Index(mr,fi->cV(2))]];
+      }
+      ml.face[remap.face[Index(mr,*fi)]].ImportData(*fi);
+      if(adjFlag)  ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,*fi)]],*fi,remap);
+
+    }
+
+  // hedge
+  for(hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
+    if(!(*hi).IsD() && (!selected || (*hi).IsS())){
+      ml.hedge[remap.hedge[Index(mr,*hi)]].ImportData(*hi);
+      ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,*hi)]],*hi,remap,selected);
+    }
 
 		// phase 3.
 		// take care of other per mesh data: textures,   attributes
