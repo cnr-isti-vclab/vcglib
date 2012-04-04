@@ -365,8 +365,9 @@ void Clear()
 //	textures.clear();
 //	normalmaps.clear();
 	vn = 0;
-  en = 0;
+	en = 0;
 	fn = 0;
+	hn = 0;
   imark = 0;
   attrn = 0;
   C()=Color4b::Gray;
