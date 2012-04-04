@@ -96,7 +96,7 @@ public:
   const RadiusType &cR() const { static const ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
   static bool HasRadius()     { return false; }
   static bool HasRadiusOcf()     { return false; }
-	static bool IsRadiusEnabled(const typename TT::VertexType *)  { return false; }
+  static bool IsRadiusEnabled(const typename TT::VertexType *)  { return false; }
 
   typedef vcg::TexCoord2<float,1> TexCoordType;
   TexCoordType &T() { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
@@ -106,23 +106,23 @@ public:
 
   typename TT::TetraPointer &VTp() { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
 	const typename TT::TetraPointer cVTp()const  { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
-  int &VTi() { static int z = 0; return z; };
+  int &VTi() { static int z = 0; return z; }
   static bool HasVTAdjacency() { return false; }
 
   typename TT::FacePointer &VFp() { static typename TT::FacePointer fp=0;  assert(0); return fp; }
-	const typename TT::FacePointer cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
-  int &VFi(){static int z=0; return z;};
-  int cVFi() const {static int z=0; return z;};
+  const typename TT::FacePointer cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
+  int &VFi(){static int z=0; return z;}
+  int cVFi() const {static int z=0; return z;}
   static bool HasVFAdjacency()   {   return false; }
 
   typename TT::EdgePointer &VEp() { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
 	const typename TT::EdgePointer cVEp() const { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
-  int &VEi(){static int z=0; return z;};
+  int &VEi(){static int z=0; return z;}
   static bool HasVEAdjacency()   {   return false; }
 
 	typename TT::HEdgePointer &VHp() { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
 	const typename TT::HEdgePointer cVHp() const  { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
-	int &VHi(){static int z=0; return z;};
+	int &VHi(){static int z=0; return z;}
 	static bool HasVHAdjacency()   {   return false; }
 
 
@@ -145,10 +145,10 @@ public:
   const ScalarType &cK2()const  {static ScalarType v = 0.0;assert(0);return v;}
 
   static bool HasCurvature()			{ return false; }
-	static bool IsCurvatureEnabled(const typename TT::VertexType *)   { return false; }
-  static bool HasCurvatureDir()			{ return false; }
-	static bool IsCurvatureDirEnabled(const typename TT::VertexType *)   { return false; }
+  static bool HasCurvatureOcf()			{ return false; }
+  static bool HasCurvatureDirOcf()			{ return false; }
 
+  static bool IsCurvatureDirEnabled(const typename TT::VertexType *)  { return false; }
 
   template < class LeftV>
   void ImportData(const LeftV  & /*left*/ ) {
