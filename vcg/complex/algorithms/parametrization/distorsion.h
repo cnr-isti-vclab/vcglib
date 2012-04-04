@@ -37,14 +37,14 @@ namespace vcg {
 
 			static ScalarType Area3D(const FaceType *f)
 			{
-				CoordType vp0=f->P(0);
-				CoordType vp1=f->P(1);
-				CoordType vp2=f->P(2);
-				ScalarType Area3D=((vp2-vp0)^(vp1-vp0)).Norm()/2.0;
-				return Area3D;
+//				CoordType vp0=f->P(0);
+//				CoordType vp1=f->P(1);
+//				CoordType vp2=f->P(2);
+//				ScalarType Area3D=((vp2-vp0)^(vp1-vp0)).Norm()/2.0;
+				return DoubleArea(*f)*(0.5);
 			}
 
-			static ScalarType UVArea(const FaceType *f)
+			static ScalarType AreaUV(const FaceType *f)
 			{
 				vcg::Point2<ScalarType> uv0=f->V(0)->T().P();
 				vcg::Point2<ScalarType> uv1=f->V(1)->T().P();
@@ -132,7 +132,7 @@ namespace vcg {
 				{
 					SumArea3D+=Area3D(&m.face[i]);
 					SumArea2D+=AreaUV(&m.face[i]);
-					for (j=0;j<3;j++)
+					for (int j=0;j<3;j++)
 					{
 						SumEdge3D+=EdgeLenght3D(&m.face[i],j);
 						SumEdge2D+=EdgeLenghtUV(&m.face[i],j);
@@ -157,19 +157,19 @@ namespace vcg {
 			///return the variance of area, normalized
 			///in absolute value, the scalar AreaScaleVal may be calculated
 			///by using the ScalingFactor function
-			static ScalarType AreaDistorsion(FaceType *f,
-				ScalarType AreaScaleVal)
-			{
-				ScalarType areaUV=AreaUV(f)*AreaScaleVal;
-				ScalarType area3D=EdgeLenght3D(f,e);
-				ScalarType diff=fabs(edge3D-edgeUV)/edge3D;
-				return diff;
-			}
+//			static ScalarType AreaDistorsion(FaceType *f,
+//											 ScalarType AreaScaleVal)
+//			{
+//			  ScalarType areaUV=AreaUV(f)*AreaScaleVal;
+//			  ScalarType area3D=EdgeLenght3D(f,e);
+//			  ScalarType diff=fabs(edge3D-edgeUV)/edge3D;
+//			  return diff;
+//			}
 
 			///return the number of folded faces
 			static bool Folded(const FaceType *f)
 			{
-				ScalarType areaUV=UVArea(f);
+				ScalarType areaUV=AreaUV(f);
 				/*if (areaUV<0)
 					printf("area %5.5f \n",areaUV);*/
 				return (areaUV<0);
