@@ -29,10 +29,12 @@
 #include <vcg/complex/algorithms/update/bounding.h>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
-#include <jhead.h>
 
-extern "C" {void ProcessFile(const char * FileName);}
-ImageInfo_t ImageInfo;
+extern "C"
+{
+#include <jhead.h>
+void ProcessFile(const char * FileName);
+}
 
 namespace vcg {
 namespace tri {
