@@ -145,10 +145,12 @@ public:
   const ScalarType &cK2()const  {static ScalarType v = 0.0;assert(0);return v;}
 
   static bool HasCurvature()			{ return false; }
+  static bool HasCurvatureDir()			{ return false; }
   static bool HasCurvatureOcf()			{ return false; }
   static bool HasCurvatureDirOcf()			{ return false; }
 
   static bool IsCurvatureDirEnabled(const typename TT::VertexType *)  { return false; }
+  static bool IsCurvatureEnabled(const typename TT::VertexType *)  { return false; }
 
   template < class LeftV>
   void ImportData(const LeftV  & /*left*/ ) {
