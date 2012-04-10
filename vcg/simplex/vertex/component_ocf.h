@@ -687,6 +687,12 @@ bool VertexVectorHasPerVertexCurvatureDir(const vertex::vector_ocf<VertexType> &
 	else return VertexType::HasCurvatureDir();
 }
 
+template < class VertexType >
+bool VertexVectorHasPerVertexTexCoord(const vertex::vector_ocf<VertexType> &fv)
+{
+	if(VertexType::HasTexCoordOcf()) return fv.IsTexCoordEnabled();
+	else return VertexType::HasTexCoord();
+}
 }
 }// end namespace vcg
 #endif
