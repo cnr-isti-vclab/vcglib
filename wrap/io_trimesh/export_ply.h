@@ -572,7 +572,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
           if(HasPerFaceFlags(m)&&( pi.mask & Mask::IOM_FACEFLAGS) )
 						fwrite(&(fp->Flags()),sizeof(int),1,fpout);
 
-          if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTCOORD) )
+          if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) )
 					{
 						fwrite(&b6,sizeof(char),1,fpout);
 						float t[6];
