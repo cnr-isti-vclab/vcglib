@@ -402,6 +402,7 @@ template <class A, class T> class ColorOcf: public T {
 public:
 	typedef A ColorType;
 	ColorType &C() { assert((*this).Base().ColorEnabled); return (*this).Base().CV[(*this).Index()]; }
+	const ColorType &C() const { return this->cC(); }
 	const ColorType &cC() const { assert((*this).Base().ColorEnabled); return (*this).Base().CV[(*this).Index()]; }
 	template <class LeftV>
 	void ImportData(const LeftV & leftV)
@@ -445,6 +446,7 @@ template <class A, class TT> class TexCoordOcf: public TT {
 public:
   typedef A TexCoordType;
   TexCoordType &T() {  assert((*this).Base().TexCoordEnabled); return (*this).Base().TV[(*this).Index()]; }
+  const TexCoordType &T() const { return this->cT(); }
   const TexCoordType &cT() const {  assert((*this).Base().TexCoordEnabled); return (*this).Base().TV[(*this).Index()]; }
 	template < class LeftV>
 	void ImportData(const LeftV & leftV)
