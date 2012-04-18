@@ -1,6 +1,6 @@
-VCGLIBDIR = ../../..
-GLEWDIR = ../../../../code/lib/glew/
-ANTDIR = ../../../../code/lib/AntTweakBar1.14/
+VCGLIBDIR = ../../../../vcglib
+GLEWDIR   = ../../../../code/lib/glew/
+ANTDIR    = ../../../../code/lib/AntTweakBar1.14/
 
 HEADERS       = glwidget.h
 SOURCES       = glwidget.cpp \
