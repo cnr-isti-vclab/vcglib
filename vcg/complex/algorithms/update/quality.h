@@ -230,6 +230,15 @@ static void FaceArea(MeshType &m)
 		(*fi).Q()=vcg::DoubleArea(*fi)/2;
 }
 
+static void FaceFromVertex( MeshType &m)
+{
+	FaceIterator fi;
+	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+	{
+		(*fi).Q() = ((*fi).V(0)->Q()+(*fi).V(1)->Q()+(*fi).V(2)->Q())/3.0f;
+	}
+}
+
 static void VertexFromPlane(MeshType &m, const Plane3<ScalarType> &pl)
 {
   VertexIterator vi;
