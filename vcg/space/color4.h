@@ -166,8 +166,7 @@ public:
   inline void lerp(const Color4 &c0, const Color4 &c1, const float x);
 	inline void lerp(const Color4 &c0, const Color4 &c1, const Color4 &c2, const Point3f &ip);
   /// given a float and a range set the corresponding color in the well known red->green->blue color ramp. To reverse the direction of the ramp just swap minf and maxf.
-	inline void ColorRamp(const float &minf,const float  &maxf ,float v );
-
+    inline void SetColorRamp(const float &minf,const float  &maxf ,float v );
 	inline void SetRGB( unsigned char r, unsigned char g, unsigned char b )
 	{
 		(*this)[0] = r;
@@ -249,6 +248,12 @@ inline static Color4 Scatter(int range, int value,float Sat=.3f,float Val=.9f)
 	return rc;
 }
 
+inline static Color4 ColorRamp(const float &minf,const float  &maxf ,float v )
+{
+  Color4 rc;
+  rc.SetColorRamp(minf,maxf,v);
+  return rc;
+}
 };
 template <class T>
 inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const float x)
@@ -273,11 +278,10 @@ inline void Color4<T>::lerp(const Color4<T> &c0, const Color4<T> &c1, const Colo
 	(*this)[3]=(T)(c0[3]*ip[0] + c1[3]*ip[1]+ c2[3]*ip[2]);
 }
 
-
 template <class T>
-inline void Color4<T>::ColorRamp(const float &minf,const float  &maxf ,float v )
+inline void Color4<T>::SetColorRamp(const float &minf,const float  &maxf ,float v )
 {
-  if(minf>maxf) { ColorRamp(maxf,minf,maxf+(minf-v)); return; }
+  if(minf>maxf) { SetColorRamp(maxf,minf,maxf+(minf-v)); return; }
 	if(v <  minf ) { *this=Color4<T>(Color4<T>::Red); return; }
   //the case v > maxf is handled automatically at the end of the function
 
