@@ -316,7 +316,7 @@ static void FaceQualityRamp(UpdateMeshType &m, float minq, float maxq,bool selec
 	typename UpdateMeshType::FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
     if(!selected || (*fi).IsS())
-      (*fi).C().ColorRamp(minq,maxq,(*fi).Q());
+      (*fi).C().SetColorRamp(minq,maxq,(*fi).Q());
 }
 
 static void VertexQualityRamp(UpdateMeshType &m, float minq, float maxq)
@@ -325,7 +325,7 @@ static void VertexQualityRamp(UpdateMeshType &m, float minq, float maxq)
 
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if(!(*vi).IsD())
-			(*vi).C().ColorRamp(minq,maxq,(*vi).Q());
+			(*vi).C().SetColorRamp(minq,maxq,(*vi).Q());
 }
 
 static void VertexQualityRamp(UpdateMeshType &m)
