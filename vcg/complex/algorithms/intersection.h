@@ -148,22 +148,30 @@ bool IntersectionPlaneMeshQuality(TriMeshType & m,
 									EdgeMeshType & em)
 {
   std::vector<Point3f> ptVec;
+  std::vector<Point3f> nmVec;
   tri::UpdateQuality<TriMeshType>::VertexFromPlane(m,pl);
   for(size_t i=0;i<m.face.size();i++)
     if(!m.face[i].IsD())
     {
       ptVec.clear();
+      nmVec.clear();
       for(int j=0;j<3;++j)
       {
        if((m.face[i].V0(j)->Q() * m.face[i].V1(j)->Q())<0)
        {
          const Point3f &p0 = m.face[i].V0(j)->cP();
          const Point3f &p1 = m.face[i].V1(j)->cP();
+         const Point3f &n0 = m.face[i].V0(j)->cN();
+         const Point3f &n1 = m.face[i].V1(j)->cN();
+         float q0 = m.face[i].V0(j)->Q();
+         float q1 = m.face[i].V1(j)->Q();
 //         printf("Intersection ( %3.2f %3.2f %3.2f )-( %3.2f %3.2f %3.2f )\n",p0[0],p0[1],p0[2],p1[0],p1[1],p1[2]);
          Point3f pp;
          Segment3f seg(p0,p1);
          IntersectionPlaneSegment(pl,seg,pp);
          ptVec.push_back(pp);
+         Point3f nn =(n0*fabs(q1) + n1*fabs(q0))/fabs(q0-q1);
+         nmVec.push_back(nn);
        }
        if(m.face[i].V(j)->Q()==0)  ptVec.push_back(m.face[i].V(j)->cP());
       }
@@ -173,9 +181,11 @@ bool IntersectionPlaneMeshQuality(TriMeshType & m,
         vcg::tri::Allocator<EdgeMeshType>::AddEdges(em,1);
         vi = vcg::tri::Allocator<EdgeMeshType>::AddVertices(em,2);
         (*vi).P() = ptVec[0];
+        (*vi).N() = nmVec[0];
         em.edge.back().V(0) = &(*vi);
         vi++;
         (*vi).P() = ptVec[1];
+        (*vi).N() = nmVec[1];
         em.edge.back().V(1) = &(*vi);
       }
     }
