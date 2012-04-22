@@ -467,10 +467,12 @@ static void EdgeEdge(MeshType &m)
   int ne = 0;											// Numero di edge reali
 
   typename std::vector<PVertexEdge>::iterator pe,ps;
-  for(ps = v.begin(),pe=v.begin();pe<=v.end();++pe)	// Scansione vettore ausiliario
+  // for(ps = v.begin(),pe=v.begin();pe<=v.end();++pe)	// Scansione vettore ausiliario
+  ps = v.begin();pe=v.begin();
+  do
   {
 //    printf("v %i -> e %i\n",tri::Index(m,(*ps).v),tri::Index(m,(*ps).e));
-    if( pe==v.end() || *pe != *ps )					// Trovo blocco di edge uguali
+    if( pe==v.end() || !(*pe == *ps) )					// Trovo blocco di edge uguali
     {
       typename std::vector<PVertexEdge>::iterator q,q_next;
       for (q=ps;q<pe-1;++q)						// Scansione edge associati
@@ -491,7 +493,9 @@ static void EdgeEdge(MeshType &m)
       ps = pe;
       ++ne;										// Aggiorno il numero di edge
     }
-  }
+    if(pe==v.end()) break;
+    ++pe;
+   } while(true);
 }
 
 static void VertexEdge(MeshType &m)
