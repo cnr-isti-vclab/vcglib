@@ -33,7 +33,8 @@
 extern "C"
 {
 #include <jhead.h>
-void ProcessFile(const char * FileName);
+int ReadJpegSections (FILE * infile, ReadMode_t ReadMode);
+void ResetJpgfile(void);
 }
 
 namespace vcg {
@@ -134,7 +135,8 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
         shots[i].Intrinsics.FocalMm    = f;
         shots[i].Intrinsics.k[0] = 0.0;//k1; To be uncommented when distortion is taken into account reliably
         shots[i].Intrinsics.k[1] = 0.0;//k2;
-        AddIntrinsics(shots[i], std::string(filename_images_path).append(image_filenames[i]).c_str());
+        shots[i].Intrinsics.PixelSizeMm = vcg::Point2f(1,1);
+		AddIntrinsics(shots[i], std::string(filename_images_path).append(image_filenames[i]).c_str());
     }
 
   // load all correspondences
@@ -186,12 +188,19 @@ static bool ReadImagesFilenames(const char *  filename,std::vector<std::string> 
 
 static bool  AddIntrinsics(vcg::Shotf &shot, const char * image_file)
 {
-  ::ProcessFile(image_file);
-  shot.Intrinsics.ViewportPx = vcg::Point2i(ImageInfo.Width, ImageInfo.Height);
-  shot.Intrinsics.CenterPx   = vcg::Point2f(float(ImageInfo.Width/2.0), float(ImageInfo.Height/2.0));
+	::ResetJpgfile();
+	QFile img(image_file);
+	img.open(QIODevice::ReadWrite);
+	int FileDescriptor = img.handle();
+	FILE* pFile = fdopen(FileDescriptor, "rb");
+	if (!pFile) return false;
+	int ret = ::ReadJpegSections (pFile, READ_METADATA);
+	img.close();
 
-  shot.Intrinsics.PixelSizeMm = vcg::Point2f(1,1);
-  return true;
+	shot.Intrinsics.ViewportPx = vcg::Point2i(ImageInfo.Width, ImageInfo.Height);
+	shot.Intrinsics.CenterPx   = vcg::Point2f(float(ImageInfo.Width/2.0), float(ImageInfo.Height/2.0));
+
+	return true;
 }
 }; // end class
 
