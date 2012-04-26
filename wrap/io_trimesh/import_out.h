@@ -189,13 +189,9 @@ static bool ReadImagesFilenames(const char *  filename,std::vector<std::string> 
 static bool  AddIntrinsics(vcg::Shotf &shot, const char * image_file)
 {
 	::ResetJpgfile();
-	QFile img(image_file);
-	img.open(QIODevice::ReadWrite);
-	int FileDescriptor = img.handle();
-	FILE* pFile = fdopen(FileDescriptor, "rb");
-	if (!pFile) return false;
+	FILE * pFile = fopen(image_file, "rb");
 	int ret = ::ReadJpegSections (pFile, READ_METADATA);
-	img.close();
+	fclose(pFile);
 
 	shot.Intrinsics.ViewportPx = vcg::Point2i(ImageInfo.Width, ImageInfo.Height);
 	shot.Intrinsics.CenterPx   = vcg::Point2f(float(ImageInfo.Width/2.0), float(ImageInfo.Height/2.0));
