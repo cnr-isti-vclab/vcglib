@@ -56,6 +56,30 @@ inline bool IsEdgeBorder(EdgeType const & e,  const int j )
   return true;
 }
 
+template <class EdgeType>
+void VVStarVE(typename EdgeType::VertexType* vp, std::vector<typename EdgeType::VertexType *> &starVec)
+{
+  typedef typename EdgeType::VertexType* VertexPointer;
+  starVec.clear();
+  edge::VEIterator<EdgeType> vei(vp);
+  while(!vei.End())
+      {
+        starVec.push_back(vei.V1());
+        ++vei;
+      }
+}
+
+template <class EdgeType>
+void VEStarVE(typename EdgeType::VertexType* vp, std::vector<EdgeType *> &starVec)
+{
+  starVec.clear();
+  edge::VEIterator<EdgeType> vei(vp);
+  while(!vei.End())
+      {
+        starVec.push_back(vei.E());
+        ++vei;
+      }
+}
 
 } // end namespace edge
 } // end namespace vcg

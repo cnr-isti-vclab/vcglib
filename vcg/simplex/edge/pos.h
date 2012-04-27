@@ -35,10 +35,15 @@ created
 
 #ifndef __VCG_EDGE_POS
 #define __VCG_EDGE_POS
-#include <vcg/simplex/edge/topology.h>
 
 namespace vcg {
 namespace edge {
+
+// Needed Prototypes (pos is include before topology)
+template <class EDGETYPE>
+bool IsEdgeBorder(EDGETYPE const & e,  const int j );
+template <class EDGETYPE>
+bool IsEdgeManifold(EDGETYPE const & e,  const int j );
 
 /*
  Vertex_Edge: run over the fan of a vertex (no order is specified)
