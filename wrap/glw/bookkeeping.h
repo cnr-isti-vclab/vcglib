@@ -197,7 +197,7 @@ class SharedObjectBinding
 
 		GLint unit(void) const
 		{
-			return this->m_target;
+			return this->m_unit;
 		}
 
 		void ref(void)
