@@ -111,7 +111,7 @@ class Renderbuffer : public Renderable, public SafeRenderbuffer
 			glGetIntegerv(GL_RENDERBUFFER_BINDING, &boundName);
 
 			glGenRenderbuffers(1, &(this->m_name));
-			this->setBinding(GL_RENDERBUFFER_BINDING, 0);
+			this->setBinding(GL_RENDERBUFFER, 0);
 			this->bind();
 			this->allocate(args.format, args.width, args.height);
 
