@@ -165,6 +165,7 @@ public:
 	
 	ScalarType Percentile(ScalarType perc)
 	{
+	  assert(!vec.empty());
 	  assert(perc>=0 && perc<=1);
 		DirtyCheck();
 		int index = vec.size() *perc -1;
