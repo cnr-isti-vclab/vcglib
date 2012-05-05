@@ -437,10 +437,10 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
   if(pf.AddToRead(EdgeDesc(0) )!= -1 && pf.AddToRead(EdgeDesc(1)) != -1 )
                   pi.mask |= Mask::IOM_EDGEINDEX;
 
-  if(VertexType::HasFlags() && pf.AddToRead(VertDesc(3))!=-1 ) 
+  if(vcg::tri::HasPerVertexFlags(m) && pf.AddToRead(VertDesc(3))!=-1 )
             pi.mask |= Mask::IOM_VERTFLAGS;
 
-	 if( VertexType::HasNormal() )
+	 if( vcg::tri::HasPerVertexNormal(m) )
 	 {
      if(		pf.AddToRead(VertDesc(12))!=-1  && pf.AddToRead(VertDesc(13))!=-1  && pf.AddToRead(VertDesc(14))!=-1 )
 			 pi.mask |= Mask::IOM_VERTNORMAL;
@@ -450,14 +450,14 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 	 }
 	 
-  if( VertexType::HasQuality() )
+  if( vcg::tri::HasPerVertexQuality(m) )
 	{
 		if( pf.AddToRead(VertDesc(4))!=-1 ||
 		    pf.AddToRead(VertDesc(11))!=-1 )
 			pi.mask |= Mask::IOM_VERTQUALITY;
 	}
 
-	if( VertexType::HasColor() )
+	if(vcg::tri::HasPerVertexColor(m) )
 	{
 		if( pf.AddToRead(VertDesc(5))!=-1 )
 		{
@@ -500,13 +500,13 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	if( pf.AddToRead(FaceDesc(1))!=-1 )
 		pi.mask |= Mask::IOM_FACEFLAGS;
 
-  if( FaceType::HasFaceQuality())
+  if( vcg::tri::HasPerFaceQuality(m) )
 	{
 		if( pf.AddToRead(FaceDesc(2))!=-1 )
 			pi.mask |= Mask::IOM_FACEQUALITY;
 	}
 
-	if( FaceType::HasFaceColor() )
+	if( vcg::tri::HasPerFaceColor(m)  )
 	{
 		if( pf.AddToRead(FaceDesc(6))!=-1 )
 		{
@@ -517,7 +517,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	}
 
 
-	if( FaceType::HasWedgeTexCoord() )
+	if( vcg::tri::HasPerWedgeTexCoord(m) )
 	{
 		if( pf.AddToRead(FaceDesc(3))!=-1 )
 		{
@@ -529,7 +529,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		}
 	}
 
-  if( FaceType::HasWedgeColor() || FaceType::HasFaceColor() || VertexType::HasColor())
+  if( vcg::tri::HasPerFaceColor(m) || vcg::tri::HasPerVertexColor(m) || vcg::tri::HasPerWedgeColor(m) )
 	{
 		if( pf.AddToRead(FaceDesc(4))!=-1 )
 		{
