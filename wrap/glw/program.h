@@ -297,8 +297,8 @@ class Program : public Object, public SafeProgram
 
 		Program(Context * ctx)
 			: SafeObject (ctx)
-			, SafeType   (ctx)
 			, BaseType   (ctx)
+			, SafeType   (ctx)
 		{
 			;
 		}
@@ -499,6 +499,6 @@ class Program : public Object, public SafeProgram
 typedef detail::SafeHandle   <Program> ProgramHandle;
 typedef detail::UnsafeHandle <Program> BoundProgram;
 
-};
+} // end namespace glw
 
 #endif // GLW_PROGRAM_H

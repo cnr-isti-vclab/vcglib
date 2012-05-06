@@ -176,7 +176,7 @@ class SharedObjectBinding
 
 		const ObjectType * object(void) const
 		{
-			GLW_ASSERT(!this->isNull())
+			GLW_ASSERT(!this->isNull());
 			const ObjectType * obj = this->m_shared->object();
 			obj->setBinding(this->m_target, this->m_unit);
 			return obj;

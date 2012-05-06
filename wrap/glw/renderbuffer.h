@@ -92,8 +92,8 @@ class Renderbuffer : public Renderable, public SafeRenderbuffer
 		Renderbuffer(Context * ctx)
 			: SafeObject     (ctx)
 			, SafeRenderable (ctx)
-			, SafeType       (ctx)
 			, BaseType       (ctx)
+			, SafeType       (ctx)
 		{
 			;
 		}
@@ -153,6 +153,6 @@ class Renderbuffer : public Renderable, public SafeRenderbuffer
 typedef detail::SafeHandle   <Renderbuffer> RenderbufferHandle;
 typedef detail::UnsafeHandle <Renderbuffer> BoundRenderbuffer;
 
-};
+} // end namespace glw
 
 #endif // GLW_RENDERBUFFER_H

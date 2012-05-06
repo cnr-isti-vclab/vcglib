@@ -77,8 +77,8 @@ class Shader : public Object, public virtual SafeShader
 
 		Shader(Context * ctx)
 			: SafeObject (ctx)
-			, BaseType   (ctx)
 			, SafeType   (ctx)
+			, BaseType   (ctx)
 		{
 			;
 		}
@@ -169,6 +169,6 @@ class Shader : public Object, public virtual SafeShader
 typedef detail::SafeHandle   <Shader> ShaderHandle;
 typedef detail::UnsafeHandle <Shader> BoundShader;
 
-};
+} // end namespace glw
 
 #endif // GLW_SHADER_H

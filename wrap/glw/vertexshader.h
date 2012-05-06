@@ -62,8 +62,8 @@ class VertexShader : public Shader, public SafeVertexShader
 		VertexShader(Context * ctx)
 			: SafeObject (ctx)
 			, SafeShader (ctx)
-			, SafeType   (ctx)
 			, BaseType   (ctx)
+			, SafeType   (ctx)
 		{
 			;
 		}
@@ -82,6 +82,6 @@ class VertexShader : public Shader, public SafeVertexShader
 typedef detail::SafeHandle   <VertexShader> VertexShaderHandle;
 typedef detail::UnsafeHandle <VertexShader> BoundVertexShader;
 
-};
+} // end namespace glw
 
 #endif // GLW_VERTEXSHADER_H

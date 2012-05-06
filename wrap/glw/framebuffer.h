@@ -189,8 +189,8 @@ class Framebuffer : public Object, public SafeFramebuffer
 
 		Framebuffer(Context * ctx)
 			: SafeObject  (ctx)
-			, SafeType    (ctx)
 			, BaseType    (ctx)
+			, SafeType    (ctx)
 		{
 			;
 		}
@@ -311,6 +311,6 @@ class Framebuffer : public Object, public SafeFramebuffer
 typedef detail::SafeHandle   <Framebuffer> FramebufferHandle;
 typedef detail::UnsafeHandle <Framebuffer> BoundFramebuffer;
 
-};
+}  // end namespace glw
 
 #endif // GLW_FRAMEBUFFER_H

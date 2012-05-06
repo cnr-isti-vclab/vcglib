@@ -144,8 +144,8 @@ class Buffer : public Object, public SafeBuffer
 
 		Buffer(Context * ctx)
 			: SafeObject  (ctx)
-			, SafeType    (ctx)
 			, BaseType    (ctx)
+			, SafeType    (ctx)
 			, m_mapAccess (GL_NONE)
 			, m_mapPtr    (0)
 		{
@@ -205,6 +205,6 @@ class Buffer : public Object, public SafeBuffer
 typedef detail::SafeHandle   <Buffer> BufferHandle;
 typedef detail::UnsafeHandle <Buffer> BoundBuffer;
 
-};
+} // end namespace glw
 
 #endif // GLW_BUFFER_H

@@ -213,15 +213,15 @@ inline Texture2DHandle createTexture2D(Context & ctx, GLenum format, GLsizei wid
 inline FramebufferHandle createFramebuffer
 (
 	Context & ctx,
-	RenderTarget & depthTarget ,
-	RenderTarget & colorTarget0 = RenderTarget(), 
-	RenderTarget & colorTarget1 = RenderTarget(), 
-	RenderTarget & colorTarget2 = RenderTarget(), 
-	RenderTarget & colorTarget3 = RenderTarget(), 
-	RenderTarget & colorTarget4 = RenderTarget(), 
-	RenderTarget & colorTarget5 = RenderTarget(), 
-	RenderTarget & colorTarget6 = RenderTarget(), 
-	RenderTarget & colorTarget7 = RenderTarget()
+	const RenderTarget & depthTarget ,
+	const RenderTarget & colorTarget0 = RenderTarget(),
+	const RenderTarget & colorTarget1 = RenderTarget(),
+	const RenderTarget & colorTarget2 = RenderTarget(),
+	const RenderTarget & colorTarget3 = RenderTarget(),
+	const RenderTarget & colorTarget4 = RenderTarget(),
+	const RenderTarget & colorTarget5 = RenderTarget(),
+	const RenderTarget & colorTarget6 = RenderTarget(),
+	const RenderTarget & colorTarget7 = RenderTarget()
 )
 {
 	FramebufferArguments args;
@@ -283,6 +283,6 @@ inline ProgramHandle loadProgram(Context & ctx, const std::string & srcPrefix, c
 	return loadProgram(ctx, srcPrefix, vertexFile, "", fragmentFile.c_str(), args);
 }
 
-};
+} // end namespace glw
 
 #endif // GLW_UTILITY_H

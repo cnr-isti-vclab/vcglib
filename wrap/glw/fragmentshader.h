@@ -62,8 +62,8 @@ class FragmentShader : public Shader, public SafeFragmentShader
 		FragmentShader(Context * ctx)
 			: SafeObject (ctx)
 			, SafeShader (ctx)
-			, SafeType   (ctx)
 			, BaseType   (ctx)
+			, SafeType   (ctx)
 		{
 			;
 		}
@@ -82,6 +82,6 @@ class FragmentShader : public Shader, public SafeFragmentShader
 typedef detail::SafeHandle   <FragmentShader> FragmentShaderHandle;
 typedef detail::UnsafeHandle <FragmentShader> BoundFragmentShader;
 
-};
+}  // end namespace glw
 
 #endif // GLW_FRAGMENTSHADER_H

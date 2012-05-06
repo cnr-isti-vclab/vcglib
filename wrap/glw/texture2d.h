@@ -129,8 +129,8 @@ class Texture2D : public Texture, public SafeTexture2D
 			: SafeObject     (ctx)
 			, SafeRenderable (ctx)
 			, SafeTexture    (ctx)
-			, SafeType       (ctx)
 			, BaseType       (ctx)
+			, SafeType       (ctx)
 		{
 			;
 		}
@@ -170,6 +170,6 @@ class Texture2D : public Texture, public SafeTexture2D
 typedef detail::SafeHandle   <Texture2D> Texture2DHandle;
 typedef detail::UnsafeHandle <Texture2D> BoundTexture2D;
 
-};
+} // end namespace glw
 
 #endif // GLW_TEXTURE2D_H

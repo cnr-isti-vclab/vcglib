@@ -62,8 +62,8 @@ class GeometryShader : public Shader, public SafeGeometryShader
 		GeometryShader(Context * ctx)
 			: SafeObject (ctx)
 			, SafeShader (ctx)
-			, SafeType   (ctx)
 			, BaseType   (ctx)
+			, SafeType   (ctx)
 		{
 			;
 		}
@@ -82,6 +82,6 @@ class GeometryShader : public Shader, public SafeGeometryShader
 typedef detail::SafeHandle   <GeometryShader> GeometryShaderHandle;
 typedef detail::UnsafeHandle <GeometryShader> BoundGeometryShader;
 
-};
+}  // end namespace glw
 
 #endif // GLW_GEOMETRYSHADER_H
