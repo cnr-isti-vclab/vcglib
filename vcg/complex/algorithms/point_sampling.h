@@ -1077,7 +1077,7 @@ static VertexPointer getPrecomputedMontecarloSample(Point3i &cell, MontecarloSHT
 }
 
 // check the radius constrain
-static bool checkPoissonDisk(MetroMesh & vmesh, SampleSHT & sht, const Point3<ScalarType> & p, ScalarType radius) 
+static bool checkPoissonDisk(SampleSHT & sht, const Point3<ScalarType> & p, ScalarType radius)
 {
 	// get the samples closest to the given one
 	std::vector<VertexType*> closests;
@@ -1085,7 +1085,7 @@ static bool checkPoissonDisk(MetroMesh & vmesh, SampleSHT & sht, const Point3<Sc
   static MarkerVert mv;
 
 	Box3f bb(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
-	int nsamples = GridGetInBox(sht, mv, bb, closests);
+	GridGetInBox(sht, mv, bb, closests);
 
   ScalarType r2 = radius*radius;
 	for(int i=0; i<closests.size(); ++i)
@@ -1328,7 +1328,7 @@ static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 			// vr spans between 3.0*r and r / 4.0 according to vertex quality
 			ScalarType sampleRadius = diskRadius;
 			if(pp.adaptiveRadiusFlag)  sampleRadius = sp->Q();
-            if (checkPoissonDisk(*ps.m, checkSHT, sp->cP(), sampleRadius))
+			if (checkPoissonDisk(checkSHT, sp->cP(), sampleRadius))
             {
                ps.AddVert(*sp);
                montecarloSHT.RemoveCell(sp);
