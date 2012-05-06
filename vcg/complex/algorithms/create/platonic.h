@@ -588,24 +588,26 @@ void Build( MeshType & in, const V & v, const F & f)
 // Once generated the vertex positions it uses the FaceGrid function to generate the faces;
 
 template <class MeshType>
-void Grid(MeshType & in, int w, int h, float wl, float hl, float *data)
+void Grid(MeshType & in, int w, int h, float wl, float hl, float *data=0)
 {
- typedef typename MeshType::CoordType CoordType;
- typedef typename MeshType::VertexPointer  VertexPointer;
- typedef typename MeshType::VertexIterator VertexIterator;
- typedef typename MeshType::FaceIterator   FaceIterator;
+  typedef typename MeshType::CoordType CoordType;
+  typedef typename MeshType::VertexPointer  VertexPointer;
+  typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::FaceIterator   FaceIterator;
 
   in.Clear();
-	Allocator<MeshType>::AddVertices(in,w*h);
-
+  Allocator<MeshType>::AddVertices(in,w*h);
 
   float wld=wl/float(w-1);
   float hld=hl/float(h-1);
-
+  float zVal=0;
   for(int i=0;i<h;++i)
     for(int j=0;j<w;++j)
-      in.vert[i*w+j].P()=CoordType ( j*wld, i*hld, data[i*w+j]);
- FaceGrid(in,w,h);
+    {
+      if(data) zVal=data[i*w+j];
+      in.vert[i*w+j].P()=CoordType ( j*wld, i*hld, zVal) ;
+    }
+  FaceGrid(in,w,h);
 }
 
 
@@ -876,7 +878,7 @@ void OrientedRect(MeshType &square, float width, float height, Point3f c, Point3
   square.Clear();
   Matrix44f rotM;
   tri::Grid(square,2,2,width,height,zeros);
-  tri::UpdatePosition<MeshType>::Translate(square,Point3f(-5.0f,-5.0f,0.0f));
+  tri::UpdatePosition<MeshType>::Translate(square,Point3f(-width/2.0f,-height/2.0f,0.0f));
   if(angleDeg!=0){
     tri::UpdatePosition<MeshType>::Translate(square,preRotTra);
     rotM.SetRotateDeg(angleDeg,dir);
