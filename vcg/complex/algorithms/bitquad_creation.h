@@ -290,7 +290,7 @@ static void MakeBitTriOnly(MeshType &m){
  * Updates: per wedge attributes, if any
  * Other connectivity structures, and per edge and per wedge flags are ignored
  */
-static bool MakeBitTriQuadConventional(MeshType &m){
+static bool MakeBitTriQuadConventional(MeshType &/*m*/){
   assert(0); // todo
   return false;
 }
