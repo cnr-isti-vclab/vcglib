@@ -149,9 +149,9 @@ public:
 		return e==0 || v==0 ;
 	}
 
-	//Cambia Faccia lungo z
-	// e' uguale a FlipF solo che funziona anche per non manifold.
-	/// Change face via z
+
+	// It advance along the edge chain.
+	// Meaningful only for 1-manifold edge chain.
 	void NextE()
 	{
 		FlipV();
