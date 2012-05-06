@@ -71,7 +71,7 @@ public:
 // This is precisely what curvature flow does.
 // Curvature flow smoothes the surface by moving along the surface
 // normal n with a speed equal to the mean curvature
-void VertexCoordLaplacianCurvatureFlow(MeshType &m, int step, ScalarType delta)
+void VertexCoordLaplacianCurvatureFlow(MeshType &/*m*/, int /*step*/, ScalarType /*delta*/)
 {
 
 }
@@ -955,30 +955,30 @@ static void FaceNormalLaplacianVF(MeshType &m)
 
 static void FaceNormalLaplacianFF(MeshType &m, int step=1, bool SmoothSelected=false )
 {
-	PDFaceInfo lpzf;
-	lpzf.m=CoordType(0,0,0);
-	SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face,lpzf);
-	assert(tri::HasFFAdjacency(m));
+  PDFaceInfo lpzf;
+  lpzf.m=CoordType(0,0,0);
+  SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face,lpzf);
+  assert(tri::HasFFAdjacency(m));
 
   FaceIterator fi;
-	tri::UpdateNormals<MeshType>::AreaNormalizeFace(m);
-  for(int i=0;i<step;++i)
-		{
-				for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-				{
-							CoordType normalSum=(*fi).N();
+  tri::UpdateNormals<MeshType>::AreaNormalizeFace(m);
+  for(int iStep=0;iStep<step;++iStep)
+  {
+    for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+    {
+      CoordType normalSum=(*fi).N();
 
-							for(i=0;i<3;++i)
-										normalSum+=(*fi).FFp(i)->N();
+      for(int i=0;i<3;++i)
+        normalSum+=(*fi).FFp(i)->N();
 
-							TDF[*fi].m=normalSum;
-				}
-				for(fi=m.face.begin();fi!=m.face.end();++fi)
-						if(!SmoothSelected || (*fi).IsS())
-								(*fi).N()=TDF[*fi].m;
+      TDF[*fi].m=normalSum;
+    }
+    for(fi=m.face.begin();fi!=m.face.end();++fi)
+      if(!SmoothSelected || (*fi).IsS())
+        (*fi).N()=TDF[*fi].m;
 
-				tri::UpdateNormals<MeshType>::NormalizeFace(m);
-		}
+    tri::UpdateNormals<MeshType>::NormalizeFace(m);
+  }
 }
 
 
