@@ -2,6 +2,7 @@
 #define GLW_SHADER_H
 
 #include <string>
+#include <iostream>
 
 #include "./object.h"
 
@@ -108,6 +109,21 @@ class Shader : public Object
 			this->m_source   = source;
 			this->m_log      = ThisType::getInfoLog(this->m_name);
 			this->m_compiled = (compileStatus != GL_FALSE);
+
+#if GLW_PRINT_LOG_TO_STDERR
+			std::cerr << "---------------------------" << std::endl;
+			std::cerr << "[";
+			switch (this->shaderType())
+			{
+				case GL_VERTEX_SHADER   : std::cerr << "Vertex ";   break;
+				case GL_GEOMETRY_SHADER : std::cerr << "Geometry "; break;
+				case GL_FRAGMENT_SHADER : std::cerr << "Fragment "; break;
+				default: break;
+			}
+			std::cerr << "Shader Compile Log]: " << ((this->m_compiled) ? ("OK") : ("FAILED")) << std::endl;
+			std::cerr << this->m_log << std::endl;
+			std::cerr << "---------------------------" << std::endl;
+#endif
 		}
 
 	private:

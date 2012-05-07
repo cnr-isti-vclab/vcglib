@@ -11,7 +11,7 @@
 
 #include "./context.h"
 
-#define GLW_STRINGFY(S)              #S
+#define GLW_STRINGIFY(S)             #S
 #define GLW_OFFSET_OF(TYPE, MEMBER)  ((const void *)(offsetof(TYPE, MEMBER)))
 
 namespace glw

@@ -357,6 +357,13 @@ class Program : public Object
 			this->m_log    = ThisType::getInfoLog(this->m_name);
 			this->m_linked = (linkStatus != GL_FALSE);
 
+#if GLW_PRINT_LOG_TO_STDERR
+			std::cerr << "---------------------------" << std::endl;
+			std::cerr << "[Program Link Log]: " << ((this->m_linked) ? ("OK") : ("FAILED")) << std::endl;
+			std::cerr << this->m_log << std::endl;
+			std::cerr << "---------------------------" << std::endl;
+#endif
+
 			if (this->m_linked)
 			{
 				this->postLink();

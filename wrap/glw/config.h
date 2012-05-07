@@ -9,4 +9,8 @@
 #	define GLW_IMPLEMENT_CUSTOM_UNIFORMS
 #endif
 
+#ifndef GLW_PRINT_LOG_TO_STDERR
+#	define GLW_PRINT_LOG_TO_STDERR 1
+#endif
+
 #endif // GLW_CONFIG_H
