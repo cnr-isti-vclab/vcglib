@@ -18,8 +18,9 @@ class ShaderArguments : public ObjectArguments
 		std::string source;
 
 		ShaderArguments(void)
+			: BaseType()
 		{
-			this->clear();
+			;
 		}
 
 		void clear(void)
@@ -29,12 +30,19 @@ class ShaderArguments : public ObjectArguments
 		}
 };
 
-class SafeShader : public virtual SafeObject
+class Shader : public Object
 {
+	friend class Context;
+
 	public:
 
-		typedef SafeObject BaseType;
-		typedef SafeShader ThisType;
+		typedef Object BaseType;
+		typedef Shader ThisType;
+
+		virtual ~Shader(void)
+		{
+			this->destroy();
+		}
 
 		const std::string & source(void) const
 		{
@@ -57,35 +65,11 @@ class SafeShader : public virtual SafeObject
 		std::string  m_log;
 		bool         m_compiled;
 
-		SafeShader(Context * ctx)
+		Shader(Context * ctx)
 			: BaseType   (ctx)
 			, m_compiled (false)
 		{
 			;
-		}
-};
-
-class Shader : public Object, public virtual SafeShader
-{
-	public:
-
-		typedef Object     BaseType;
-		typedef SafeShader SafeType;
-		typedef Shader     ThisType;
-
-	protected:
-
-		Shader(Context * ctx)
-			: SafeObject (ctx)
-			, SafeType   (ctx)
-			, BaseType   (ctx)
-		{
-			;
-		}
-
-		virtual ~Shader(void)
-		{
-			this->destroy();
 		}
 
 		virtual GLenum shaderType(void) const = 0;
@@ -93,41 +77,27 @@ class Shader : public Object, public virtual SafeShader
 		bool create(const ShaderArguments & args)
 		{
 			this->destroy();
-
 			const GLenum shType = this->shaderType();
-
 			this->m_name = glCreateShader(shType);
-			this->setBinding(shType, 0);
-			this->bind();
 			this->compile(args.source);
-
 			return this->m_compiled;
 		}
 
-		virtual void doDestroy(Context * ctx, GLuint name)
+		virtual void doDestroy(void)
 		{
-			(void)ctx;
-			if (name == 0) return;
+			glDeleteShader(this->m_name);
 			this->m_source.clear();
 			this->m_log.clear();
 			this->m_compiled = false;
-			glDeleteShader(name);
 		}
 
-		virtual void doBind(void)
+		virtual bool doIsValid(void) const
 		{
-			;
-		}
-
-		virtual void doUnbind(void)
-		{
-			;
+			return this->m_compiled;
 		}
 
 		void compile(const std::string & source)
 		{
-			GLW_ASSERT(this->isValid());
-
 			const char * src = source.c_str();
 			glShaderSource(this->m_name, 1, &src, 0);
 			glCompileShader(this->m_name);
@@ -166,9 +136,144 @@ class Shader : public Object, public virtual SafeShader
 		}
 };
 
-typedef detail::SafeHandle   <Shader> ShaderHandle;
-typedef detail::UnsafeHandle <Shader> BoundShader;
+namespace detail { template <> struct BaseOf <Shader> { typedef Object Type; }; };
+typedef   detail::ObjectSharedPointerTraits  <Shader> ::Type ShaderPtr;
 
-} // end namespace glw
+class SafeShader : public SafeObject
+{
+	friend class Context;
+	friend class BoundShader;
+
+	public:
+
+		typedef SafeObject BaseType;
+		typedef SafeShader ThisType;
+
+		SafeShader(void)
+			: BaseType()
+		{
+			;
+		}
+
+		const std::string & source(void) const
+		{
+			return this->object()->source();
+		}
+
+		const std::string & log(void) const
+		{
+			return this->object()->log();
+		}
+
+		bool isCompiled(void) const
+		{
+			return this->object()->isCompiled();
+		}
+
+	protected:
+
+		SafeShader(const ShaderPtr & shader)
+			: BaseType(shader)
+		{
+			;
+		}
+
+		const ShaderPtr & object(void) const
+		{
+			return static_cast<const ShaderPtr &>(BaseType::object());
+		}
+
+		ShaderPtr & object(void)
+		{
+			return static_cast<ShaderPtr &>(BaseType::object());
+		}
+};
+
+namespace detail { template <> struct BaseOf     <SafeShader> { typedef SafeObject Type; }; };
+namespace detail { template <> struct ObjectBase <SafeShader> { typedef Shader     Type; }; };
+namespace detail { template <> struct ObjectSafe <Shader    > { typedef SafeShader Type; }; };
+typedef   detail::ObjectSharedPointerTraits      <SafeShader> ::Type ShaderHandle;
+
+class ShaderBindingParams : public ObjectBindingParams
+{
+	public:
+
+		typedef ObjectBindingParams BaseType;
+		typedef ShaderBindingParams ThisType;
+
+		ShaderBindingParams(void)
+			: BaseType()
+		{
+			;
+		}
+
+		ShaderBindingParams(GLenum aTarget, GLenum aUnit)
+			: BaseType(aTarget, aUnit)
+		{
+			;
+		}
+};
+
+class BoundShader : public BoundObject
+{
+	friend class Context;
+
+	public:
+
+		typedef BoundObject BaseType;
+		typedef BoundShader ThisType;
+
+		BoundShader(void)
+			: BaseType()
+		{
+			;
+		}
+
+		const ShaderHandle & handle(void) const
+		{
+			return static_cast<const ShaderHandle &>(BaseType::handle());
+		}
+
+		ShaderHandle & handle(void)
+		{
+			return static_cast<ShaderHandle &>(BaseType::handle());
+		}
+
+	protected:
+
+		BoundShader(const ShaderHandle & handle, const ShaderBindingParams & params)
+			: BaseType(handle, params)
+		{
+			;
+		}
+
+		const ShaderPtr & object(void) const
+		{
+			return this->handle()->object();
+		}
+
+		ShaderPtr & object(void)
+		{
+			return this->handle()->object();
+		}
+
+		virtual void bind(void)
+		{
+			;
+		}
+
+		virtual void unbind(void)
+		{
+			;
+		}
+};
+
+namespace detail { template <> struct ParamsOf    <BoundShader> { typedef ShaderBindingParams Type; }; };
+namespace detail { template <> struct BaseOf      <BoundShader> { typedef BoundObject Type; }; };
+namespace detail { template <> struct ObjectBase  <BoundShader> { typedef Shader      Type; }; };
+namespace detail { template <> struct ObjectBound <Shader     > { typedef BoundShader Type; }; };
+typedef   detail::ObjectSharedPointerTraits       <BoundShader> ::Type  BoundShaderHandle;
+
+};
 
 #endif // GLW_SHADER_H

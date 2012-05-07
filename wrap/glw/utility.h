@@ -283,6 +283,6 @@ inline ProgramHandle loadProgram(Context & ctx, const std::string & srcPrefix, c
 	return loadProgram(ctx, srcPrefix, vertexFile, "", fragmentFile.c_str(), args);
 }
 
-} // end namespace glw
+};
 
 #endif // GLW_UTILITY_H

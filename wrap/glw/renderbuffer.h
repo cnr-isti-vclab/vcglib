@@ -17,8 +17,18 @@ class RenderbufferArguments : public RenderableArguments
 		GLsizei height;
 
 		RenderbufferArguments(void)
+			: BaseType ()
+			, width    (0)
+			, height   (0)
 		{
-			this->clear();
+		}
+
+		RenderbufferArguments(GLenum aFormat, GLsizei aWidth, GLsizei aHeight)
+			: BaseType (aFormat)
+			, width    (aWidth)
+			, height   (aHeight)
+		{
+			;
 		}
 
 		void clear(void)
@@ -29,48 +39,19 @@ class RenderbufferArguments : public RenderableArguments
 		}
 };
 
-class SafeRenderbuffer : public virtual SafeRenderable
-{
-	public:
-
-		typedef SafeRenderable   BaseType;
-		typedef SafeRenderbuffer ThisType;
-
-		GLsizei width(void) const
-		{
-			return this->m_width;
-		}
-
-		GLsizei height(void) const
-		{
-			return this->m_height;
-		}
-
-	protected:
-
-		GLsizei m_width;
-		GLsizei m_height;
-
-		SafeRenderbuffer(Context * ctx)
-			: SafeObject (ctx)
-			, BaseType   (ctx)
-			, m_width    (0)
-			, m_height   (0)
-		{
-			;
-		}
-};
-
-class Renderbuffer : public Renderable, public SafeRenderbuffer
+class Renderbuffer : public Renderable
 {
 	friend class Context;
-	friend class detail::SharedObjectBinding<Renderbuffer>;
 
 	public:
 
-		typedef Renderable       BaseType;
-		typedef SafeRenderbuffer SafeType;
-		typedef Renderbuffer     ThisType;
+		typedef Renderable   BaseType;
+		typedef Renderbuffer ThisType;
+
+		virtual ~Renderbuffer(void)
+		{
+			this->destroy();
+		}
 
 		virtual Type type(void) const
 		{
@@ -87,72 +68,180 @@ class Renderbuffer : public Renderable, public SafeRenderbuffer
 			return false;
 		}
 
-	protected:
-
-		Renderbuffer(Context * ctx)
-			: SafeObject     (ctx)
-			, SafeRenderable (ctx)
-			, BaseType       (ctx)
-			, SafeType       (ctx)
+		void setStorage(GLenum target, GLint unit, GLenum format, GLsizei width, GLsizei height)
 		{
-			;
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			glRenderbufferStorage(target, format, width, height);
+			this->m_format = format;
+			this->m_width  = width;
+			this->m_height = height;
 		}
 
-		virtual ~Renderbuffer(void)
+	protected:
+
+		GLsizei m_width;
+		GLsizei m_height;
+
+		Renderbuffer(Context * ctx)
+			: BaseType (ctx)
+			, m_width  (0)
+			, m_height (0)
 		{
-			this->destroy();
+			;
 		}
 
 		bool create(const RenderbufferArguments & args)
 		{
 			this->destroy();
-
 			GLint boundName = 0;
 			glGetIntegerv(GL_RENDERBUFFER_BINDING, &boundName);
-
 			glGenRenderbuffers(1, &(this->m_name));
-			this->setBinding(GL_RENDERBUFFER, 0);
-			this->bind();
-			this->allocate(args.format, args.width, args.height);
-
+			glBindRenderbuffer(GL_RENDERBUFFER, this->m_name);
+			glRenderbufferStorage(GL_RENDERBUFFER, args.format, args.width, args.height);
 			glBindRenderbuffer(GL_RENDERBUFFER, boundName);
-
+			this->m_format = args.format;
+			this->m_width  = args.width;
+			this->m_height = args.height;
 			return true;
 		}
 
-		virtual void doDestroy(Context * ctx, GLuint name)
+		virtual void doDestroy(void)
 		{
-			(void)ctx;
-			if (name == 0) return;
+			glDeleteRenderbuffers(1, &(this->m_name));
 			this->m_format = GL_NONE;
 			this->m_width  = 0;
 			this->m_height = 0;
-			glDeleteRenderbuffers(1, &name);
 		}
 
-		virtual void doBind(void)
+		virtual bool doIsValid(void) const
 		{
-			glBindRenderbuffer(this->m_target, this->m_name);
-		}
-
-		virtual void doUnbind(void)
-		{
-			glBindRenderbuffer(this->m_target, 0);
-		}
-
-		void allocate(GLenum format, GLsizei width, GLsizei height)
-		{
-			GLW_ASSERT(this->isValid());
-			glRenderbufferStorage(this->m_target, format, width, height);
-			this->m_format = format;
-			this->m_width  = width;
-			this->m_height = height;
+			return ((this->m_format != GL_NONE) && (this->m_width > 0) && (this->m_height > 0));
 		}
 };
 
-typedef detail::SafeHandle   <Renderbuffer> RenderbufferHandle;
-typedef detail::UnsafeHandle <Renderbuffer> BoundRenderbuffer;
+namespace detail { template <> struct BaseOf <Renderbuffer> { typedef Renderable Type; }; };
+typedef   detail::ObjectSharedPointerTraits  <Renderbuffer> ::Type RenderbufferPtr;
 
-} // end namespace glw
+class SafeRenderbuffer : public SafeRenderable
+{
+	friend class Context;
+	friend class BoundRenderbuffer;
+
+	public:
+
+		typedef SafeRenderable   BaseType;
+		typedef SafeRenderbuffer ThisType;
+
+		SafeRenderbuffer(void)
+			: BaseType()
+		{
+			;
+		}
+
+	protected:
+
+		SafeRenderbuffer(const RenderbufferPtr & renderbuffer)
+			: BaseType(renderbuffer)
+		{
+			;
+		}
+
+		const RenderbufferPtr & object(void) const
+		{
+			return static_cast<const RenderbufferPtr &>(BaseType::object());
+		}
+
+		RenderbufferPtr & object(void)
+		{
+			return static_cast<RenderbufferPtr &>(BaseType::object());
+		}
+};
+
+namespace detail { template <> struct BaseOf     <SafeRenderbuffer> { typedef SafeRenderable   Type; }; };
+namespace detail { template <> struct ObjectBase <SafeRenderbuffer> { typedef Renderbuffer     Type; }; };
+namespace detail { template <> struct ObjectSafe <Renderbuffer    > { typedef SafeRenderbuffer Type; }; };
+typedef   detail::ObjectSharedPointerTraits      <SafeRenderbuffer> ::Type RenderbufferHandle;
+
+class RenderbufferBindingParams : public RenderableBindingParams
+{
+	public:
+
+		typedef RenderableBindingParams   BaseType;
+		typedef RenderbufferBindingParams ThisType;
+
+		RenderbufferBindingParams(void)
+			: BaseType(GL_RENDERBUFFER, 0)
+		{
+			;
+		}
+};
+
+class BoundRenderbuffer : public BoundRenderable
+{
+	friend class Context;
+
+	public:
+
+		typedef BoundRenderable   BaseType;
+		typedef BoundRenderbuffer ThisType;
+
+		BoundRenderbuffer(void)
+			: BaseType()
+		{
+			;
+		}
+
+		const RenderbufferHandle & handle(void) const
+		{
+			return static_cast<const RenderbufferHandle &>(BaseType::handle());
+		}
+
+		RenderbufferHandle & handle(void)
+		{
+			return static_cast<RenderbufferHandle &>(BaseType::handle());
+		}
+
+		void setStorage(GLenum format, GLsizei width, GLsizei height)
+		{
+			this->object()->setStorage(this->m_target, this->m_unit, format, width, height);
+		}
+
+	protected:
+
+		BoundRenderbuffer(const RenderbufferHandle & handle, const RenderbufferBindingParams & params)
+			: BaseType(handle, params)
+		{
+			;
+		}
+
+		const RenderbufferPtr & object(void) const
+		{
+			return this->handle()->object();
+		}
+
+		RenderbufferPtr & object(void)
+		{
+			return this->handle()->object();
+		}
+
+		virtual void bind(void)
+		{
+			glBindRenderbuffer(this->m_target, this->object()->name());
+		}
+
+		virtual void unbind(void)
+		{
+			glBindRenderbuffer(this->m_target, 0);
+		}
+};
+
+namespace detail { template <> struct ParamsOf    <BoundRenderbuffer> { typedef RenderbufferBindingParams Type; }; };
+namespace detail { template <> struct BaseOf      <BoundRenderbuffer> { typedef BoundObject Type; }; };
+namespace detail { template <> struct ObjectBase  <BoundRenderbuffer> { typedef Renderbuffer      Type; }; };
+namespace detail { template <> struct ObjectBound <Renderbuffer     > { typedef BoundRenderbuffer Type; }; };
+typedef   detail::ObjectSharedPointerTraits       <BoundRenderbuffer> ::Type  BoundRenderbufferHandle;
+
+};
 
 #endif // GLW_RENDERBUFFER_H

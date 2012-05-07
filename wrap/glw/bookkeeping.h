@@ -6,29 +6,85 @@
 namespace glw
 {
 
-class Context;
-
 namespace detail
 {
 
-template <typename TObject>
-class SharedObjectBase
-{
-	friend class Context;
+                                  struct NoBase                    {                                                                         };
+template <typename T>             struct DefaultDeleter            { void operator () (T * t) { delete t; }                                  };
 
+template <typename T>             struct BaseOf                    { typedef NoBase Type;                                                    };
+
+template <typename T, typename B> struct RootOfType                { typedef typename RootOfType<B,  typename BaseOf<B>::Type>::Type  Type;  };
+template <typename T>             struct RootOfType<T, NoBase>     { typedef T                                                        Type;  };
+template <typename T>             struct RootOf                    { typedef typename RootOfType<T, typename BaseOf<T>::Type>::Type   Type;  };
+
+template <typename T, typename B> struct DeleterOfType             { typedef typename DeleterOfType<B, typename BaseOf<B>::Type>::Type Type; };
+template <typename T>             struct DeleterOfType<T, NoBase>  { typedef DefaultDeleter<T>                                         Type; };
+template <typename T>             struct DeleterOf                 { typedef typename DeleterOfType<T, typename BaseOf<T>::Type>::Type Type; };
+
+template <typename TObject, typename TDeleter, typename TBaseObject>
+class RefCountedObject : public RefCountedObject<TBaseObject, TDeleter, typename BaseOf<TBaseObject>::Type>
+{
 	public:
 
-		typedef void                      BaseType;
-		typedef SharedObjectBase<TObject> ThisType;
-		typedef TObject                   ObjectType;
+		typedef RefCountedObject<TBaseObject, TDeleter, typename BaseOf<TBaseObject>::Type> BaseType;
+		typedef RefCountedObject<TObject, TDeleter, TBaseObject>                            ThisType;
+		typedef TObject                                                                     ObjectType;
+		typedef TDeleter                                                                    DeleterType;
+		typedef TBaseObject                                                                 BaseObjectType;
+
+		RefCountedObject(ObjectType * object, const DeleterType & deleter)
+			: BaseType(object, deleter)
+		{
+			;
+		}
+
+		const ObjectType * object(void) const
+		{
+			return static_cast<const ObjectType *>(BaseType::object());
+		}
+
+		ObjectType * object(void)
+		{
+			return static_cast<ObjectType *>(BaseType::object());
+		}
+};
+
+template <typename TObject, typename TDeleter>
+class RefCountedObject<TObject, TDeleter, NoBase>
+{
+	public:
+
+		typedef void                                        BaseType;
+		typedef RefCountedObject<TObject, TDeleter, NoBase> ThisType;
+		typedef TObject                                     ObjectType;
+		typedef TDeleter                                    DeleterType;
+		typedef NoBase                                      BaseObjectType;
+
+		RefCountedObject(ObjectType * object, const DeleterType & deleter)
+			: m_object   (object)
+			, m_refCount (0)
+			, m_deleter  (deleter)
+		{
+			GLW_ASSERT(this->m_object  != 0);
+		}
+
+		~RefCountedObject(void)
+		{
+			this->destroyObject();
+		}
 
 		bool isNull(void) const
 		{
 			return (this->m_object == 0);
 		}
 
-		void setNull(void)
+		void setNull(bool deleteObject)
 		{
+			if (deleteObject)
+			{
+				this->destroyObject();
+			}
 			this->m_object = 0;
 		}
 
@@ -42,6 +98,16 @@ class SharedObjectBase
 			return this->m_object;
 		}
 
+		const DeleterType & deleter(void) const
+		{
+			return this->m_deleter;
+		}
+
+		DeleterType & deleter(void)
+		{
+			return this->m_deleter;
+		}
+
 		void ref(void)
 		{
 			this->m_refCount++;
@@ -53,399 +119,85 @@ class SharedObjectBase
 			this->m_refCount--;
 			if (this->m_refCount == 0)
 			{
-				if (this->m_object != 0)
-				{
-					this->signalDestruction();
-				}
 				delete this;
 			}
 		}
 
-	protected:
+		int refCount(void) const
+		{
+			return this->m_refCount;
+		}
 
-		Context *    m_context;
+	private:
+
 		ObjectType * m_object;
 		int          m_refCount;
+		DeleterType  m_deleter;
 
-		SharedObjectBase(Context * Context, ObjectType * Object)
-			: m_context  (Context)
-			, m_object   (Object)
-			, m_refCount (0)
-		{
-			GLW_ASSERT(this->m_context != 0);
-			GLW_ASSERT(this->m_object  != 0);
-		}
-
-	private:
-
-		SharedObjectBase(const ThisType & other);
+		RefCountedObject(const ThisType & other);
 		ThisType & operator = (const ThisType & other);
 
-		inline void signalDestruction(void);
-};
-
-template <typename TObject>
-class SharedObject;
-
-template <typename TObject, typename TObjectBase>
-class SharedObjectTraits
-{
-	public:
-
-		typedef void                                     BaseType;
-		typedef SharedObjectTraits<TObject, TObjectBase> ThisType;
-		typedef TObject                                  ObjectType;
-		typedef TObjectBase                              ObjectBaseType;
-		typedef SharedObject<ObjectBaseType>             SharedObjectBaseType;
-};
-
-template <typename TObject>
-class SharedObjectTraits<TObject, void>
-{
-	public:
-
-		typedef void                                     BaseType;
-		typedef SharedObjectTraits<TObject, void>        ThisType;
-		typedef TObject                                  ObjectType;
-		typedef void                                     ObjectBaseType;
-		typedef SharedObjectBase<ObjectType>             SharedObjectBaseType;
-};
-
-template <typename TObject>
-class SharedObject : public SharedObjectTraits<TObject, typename TObject::BaseType>::SharedObjectBaseType
-{
-	friend class Context;
-
-	public:
-
-		typedef typename SharedObjectTraits<TObject, typename TObject::BaseType>::SharedObjectBaseType BaseType;
-		typedef SharedObject<TObject>                                                                  ThisType;
-		typedef TObject                                                                                ObjectType;
-
-		const ObjectType * object(void) const
+		void destroyObject(void)
 		{
-			return static_cast<const ObjectType *>(BaseType::object());
-		}
-
-		ObjectType * object(void)
-		{
-			return static_cast<ObjectType *>(BaseType::object());
-		}
-
-	protected:
-
-		SharedObject(Context * Context, ObjectType * Object)
-			: BaseType(Context, Object)
-		{
-			;
-		}
-
-	private:
-
-		SharedObject(const ThisType & other);
-		ThisType & operator = (const ThisType & other);
-};
-
-template <typename TObject>
-class SharedObjectBinding
-{
-	friend class Context;
-
-	public:
-
-		typedef void                          BaseType;
-		typedef SharedObjectBinding<TObject>  ThisType;
-		typedef TObject                       ObjectType;
-		typedef ObjectType                    UnsafeType;
-
-		~SharedObjectBinding(void)
-		{
-			this->detach();
-		}
-
-		bool isNull(void) const
-		{
-			if (this->m_shared == 0) return true;
-			return this->m_shared->isNull();
-		}
-
-		void setNull(void)
-		{
-			this->m_shared = 0;
-		}
-
-		const ObjectType * object(void) const
-		{
-			GLW_ASSERT(!this->isNull());
-			const ObjectType * obj = this->m_shared->object();
-			obj->setBinding(this->m_target, this->m_unit);
-			return obj;
-		}
-
-		ObjectType * object(void)
-		{
-			GLW_ASSERT(!this->isNull());
-			ObjectType * obj = this->m_shared->object();
-			obj->setBinding(this->m_target, this->m_unit);
-			return obj;
-		}
-
-		GLenum target(void) const
-		{
-			return this->m_target;
-		}
-
-		GLint unit(void) const
-		{
-			return this->m_unit;
-		}
-
-		void ref(void)
-		{
-			this->m_refCount++;
-		}
-
-		void unref(void)
-		{
-			GLW_ASSERT(this->m_refCount > 0);
-			this->m_refCount--;
-			if (this->m_refCount == 0)
-			{
-				delete this;
-			}
-		}
-
-	protected:
-
-		typedef SharedObject<ObjectType> SharedObjectType;
-
-		SharedObjectBinding(SharedObjectType * shared, GLenum target, GLint unit)
-			: m_shared   (0)
-			, m_refCount (0)
-			, m_target   (target)
-			, m_unit     (unit)
-		{
-			this->attach(shared);
-		}
-
-	private:
-
-		SharedObjectType * m_shared;
-		int                m_refCount;
-		GLenum             m_target;
-		GLint              m_unit;
-
-		SharedObjectBinding(const ThisType & other);
-		ThisType & operator = (const ThisType & other);
-
-		void attach(SharedObjectType * shared)
-		{
-			this->detach();
-			this->m_shared = shared;
-			if (this->m_shared != 0)
-			{
-				this->m_shared->ref();
-			}
-		}
-
-		void detach(void)
-		{
-			if (this->m_shared == 0) return;
-			this->m_shared->unref();
-			this->m_shared = 0;
+			if (this->m_object == 0) return;
+			this->m_deleter(this->m_object);
+			this->m_object = 0;
 		}
 };
 
-template <typename TObject>
-class SafeHandleBase
-{
-	friend class Context;
+template <typename T> struct RefCountedObjectTraits { typedef RefCountedObject<T, typename DeleterOf<T>::Type, typename BaseOf<T>::Type> Type; };
 
-	public:
-
-		typedef void                          BaseType;
-		typedef SafeHandleBase<TObject>       ThisType;
-		typedef TObject                       ObjectType;
-		typedef typename ObjectType::SafeType SafeType;
-
-		SafeHandleBase(void)
-			: m_shared(0)
-		{
-			;
-		}
-
-		SafeHandleBase(const ThisType & other)
-			: m_shared(0)
-		{
-			this->attach(other.shared());
-		}
-
-		~SafeHandleBase(void)
-		{
-			this->detach();
-		}
-
-		bool isNull(void) const
-		{
-			if (this->m_shared == 0) return true;
-			return this->m_shared->isNull();
-		}
-
-		void setNull(void)
-		{
-			this->detach();
-		}
-
-		const SafeType * operator -> (void) const
-		{
-			GLW_ASSERT(!this->isNull());
-			return this->m_shared->object();
-		}
-
-		SafeType * operator -> (void)
-		{
-			GLW_ASSERT(!this->isNull());
-			return this->m_shared->object();
-		}
-
-		ThisType & operator = (const ThisType & other)
-		{
-			this->attach(other.shared());
-			return (*this);
-		}
-
-	protected:
-
-		typedef SharedObject<ObjectType> SharedObjectType;
-
-		SafeHandleBase(SharedObjectType * shared)
-			: m_shared(0)
-		{
-			this->attach(shared);
-		}
-
-		const ObjectType * object(void) const
-		{
-			if (this->m_shared == 0) return 0;
-			return this->m_shared->object();
-		}
-
-		ObjectType * object(void)
-		{
-			if (this->m_shared == 0) return 0;
-			return this->m_shared->object();
-		}
-
-		SharedObjectType * shared(void) const
-		{
-			return this->m_shared;
-		}
-
-	private:
-
-		SharedObjectType * m_shared;
-
-		void attach(SharedObjectType * shared)
-		{
-			this->detach();
-			this->m_shared = shared;
-			if (this->m_shared != 0)
-			{
-				this->m_shared->ref();
-			}
-		}
-
-		void detach(void)
-		{
-			if (this->m_shared == 0) return;
-			this->m_shared->unref();
-			this->m_shared = 0;
-		}
-};
-
-template <typename TObject>
-class SafeHandle;
-
-template <typename TObject, typename TObjectBase>
-class SafeHandleTraits
+template <typename TObject, typename TDeleter, typename TBaseObject>
+class ObjectSharedPointer : public ObjectSharedPointer<TBaseObject, TDeleter, typename BaseOf<TBaseObject>::Type>
 {
 	public:
 
-		typedef void                                   BaseType;
-		typedef SafeHandleTraits<TObject, TObjectBase> ThisType;
-		typedef TObject                                ObjectType;
-		typedef TObjectBase                            ObjectBaseType;
-		typedef SafeHandle<ObjectBaseType>             SafeHandleBaseType;
-};
+		typedef ObjectSharedPointer<TBaseObject, TDeleter, typename BaseOf<TBaseObject>::Type>  BaseType;
+		typedef ObjectSharedPointer<TObject, TDeleter, TBaseObject>                             ThisType;
+		typedef TObject                                                                         ObjectType;
+		typedef TDeleter                                                                        DeleterType;
+		typedef TBaseObject                                                                     BaseObjectType;
+		typedef RefCountedObject<ObjectType, DeleterType, BaseObjectType>                       RefCountedObjectType;
 
-template <typename TObject>
-class SafeHandleTraits<TObject, void>
-{
-	public:
-
-		typedef void                                   BaseType;
-		typedef SafeHandleTraits<TObject, void>        ThisType;
-		typedef TObject                                ObjectType;
-		typedef void                                   ObjectBaseType;
-		typedef SafeHandleBase<ObjectType>             SafeHandleBaseType;
-};
-
-template <typename TObject>
-class SafeHandle : public SafeHandleTraits<TObject, typename TObject::BaseType>::SafeHandleBaseType
-{
-	friend class Context;
-
-	public:
-
-		typedef typename SafeHandleTraits<TObject, typename TObject::BaseType>::SafeHandleBaseType BaseType;
-		typedef SafeHandle<TObject>                                                                ThisType;
-		typedef TObject                                                                            ObjectType;
-		typedef typename ObjectType::SafeType                                                      SafeType;
-
-		SafeHandle(void)
+		ObjectSharedPointer(void)
 			: BaseType()
 		{
 			;
 		}
 
-		SafeHandle(const ThisType & other)
+		ObjectSharedPointer(const ThisType & other)
 			: BaseType(other)
 		{
 			;
 		}
 
-		const SafeType * operator -> (void) const
-		{
-			return dynamic_cast<const SafeType *>(BaseType:: operator ->());
-		}
-
-		SafeType * operator -> (void)
-		{
-			return dynamic_cast<SafeType *>(BaseType:: operator ->());
-		}
-
-		/*
-		ThisType & operator = (const ThisType & other)
-		{
-			this->attach(other.shared());
-			return (*this);
-		}
-		*/
-
-		operator bool (void) const
-		{
-			return !this->isNull();
-		}
-
-	protected:
-
-		typedef SharedObject<ObjectType> SharedObjectType;
-
-		SafeHandle(SharedObjectType * shared)
-			: BaseType(shared)
+		ObjectSharedPointer(RefCountedObjectType * refObject)
+			: BaseType(refObject)
 		{
 			;
 		}
+
+		const ObjectType & operator * (void) const
+		{
+			return (*(this->object()));
+		}
+
+		ObjectType & operator * (void)
+		{
+			return (*(this->object()));
+		}
+
+		const ObjectType * operator -> (void) const
+		{
+			return this->object();
+		}
+
+		ObjectType * operator -> (void)
+		{
+			return this->object();
+		}
+
+	protected:
 
 		const ObjectType * object(void) const
 		{
@@ -457,45 +209,51 @@ class SafeHandle : public SafeHandleTraits<TObject, typename TObject::BaseType>:
 			return static_cast<ObjectType *>(BaseType::object());
 		}
 
-		SharedObjectType * shared(void) const
+		RefCountedObjectType * refObject(void) const
 		{
-			return static_cast<SharedObjectType *>(BaseType::shared());
+			return static_cast<RefCountedObjectType *>(BaseType::refObject());
 		}
 };
 
-template <typename TObject>
-class UnsafeHandle
+template <typename TObject, typename TDeleter>
+class ObjectSharedPointer<TObject, TDeleter, NoBase>
 {
-	friend class Context;
-
 	public:
 
-		typedef void                  BaseType;
-		typedef UnsafeHandle<TObject> ThisType;
-		typedef TObject               ObjectType;
-		typedef ObjectType            UnsafeType;
+		typedef void                                              BaseType;
+		typedef ObjectSharedPointer<TObject, TDeleter, NoBase>    ThisType;
+		typedef TObject                                           ObjectType;
+		typedef TDeleter                                          DeleterType;
+		typedef NoBase                                            BaseObjectType;
+		typedef RefCountedObject<ObjectType, DeleterType, NoBase> RefCountedObjectType;
 
-		UnsafeHandle(void)
-			: m_shared(0)
+		ObjectSharedPointer(void)
+			: m_refObject(0)
 		{
 			;
 		}
 
-		UnsafeHandle(const ThisType & other)
-			: m_shared(0)
+		ObjectSharedPointer(const ThisType & other)
+			: m_refObject(0)
 		{
-			this->attach(other.shared());
+			this->attach(other.refObject());
 		}
 
-		~UnsafeHandle(void)
+		ObjectSharedPointer(RefCountedObjectType * refObject)
+			: m_refObject(0)
+		{
+			this->attach(refObject);
+		}
+
+		~ObjectSharedPointer(void)
 		{
 			this->detach();
 		}
 
 		bool isNull(void) const
 		{
-			if (this->m_shared == 0) return true;
-			return this->m_shared->isNull();
+			if (this->m_refObject == 0) return true;
+			return this->m_refObject->isNull();
 		}
 
 		void setNull(void)
@@ -503,77 +261,79 @@ class UnsafeHandle
 			this->detach();
 		}
 
-		const UnsafeType * operator -> (void) const
+		const ObjectType & operator * (void) const
 		{
-			GLW_ASSERT(!this->isNull());
-			return this->m_shared->object();
+			return (*(this->object()));
 		}
 
-		UnsafeType * operator -> (void)
+		ObjectType & operator * (void)
 		{
-			GLW_ASSERT(!this->isNull());
-			return this->m_shared->object();
+			return (*(this->object()));
 		}
 
-		ThisType & operator = (const ThisType & other)
+		const ObjectType * operator -> (void) const
 		{
-			this->attach(other.shared());
-			return (*this);
+			return this->object();
+		}
+
+		ObjectType * operator -> (void)
+		{
+			return this->object();
 		}
 
 		operator bool (void) const
 		{
-			return !this->isNull();
+			return (!this->isNull());
+		}
+
+		ThisType & operator = (const ThisType & other)
+		{
+			this->attach(other.refObject());
+			return (*this);
 		}
 
 	protected:
 
-		typedef SharedObjectBinding<ObjectType> SharedObjectBindingType;
-
-		UnsafeHandle(SharedObjectBindingType * shared)
-			: m_shared(0)
+		const ObjectType * object(void) const
 		{
-			this->attach(shared);
+			GLW_ASSERT(!this->isNull());
+			return this->m_refObject->object();
 		}
 
-		const ObjectType * Object(void) const
+		ObjectType * object(void)
 		{
-			if (this->m_shared == 0) return true;
-			return this->m_shared->object();
+			GLW_ASSERT(!this->isNull());
+			return this->m_refObject->object();
 		}
 
-		ObjectType * Object(void)
+		RefCountedObjectType * refObject(void) const
 		{
-			if (this->m_shared == 0) return true;
-			return this->m_shared->object();
+			return this->m_refObject;
 		}
 
 	private:
 
-		SharedObjectBindingType * m_shared;
+		RefCountedObjectType * m_refObject;
 
-		void attach(SharedObjectBindingType * shared)
+		void attach(RefCountedObjectType * reObject)
 		{
 			this->detach();
-			this->m_shared = shared;
-			if (this->m_shared != 0)
+			this->m_refObject = reObject;
+			if (this->m_refObject != 0)
 			{
-				this->m_shared->ref();
+				this->m_refObject->ref();
 			}
 		}
 
 		void detach(void)
 		{
-			if (this->m_shared == 0) return;
-			this->m_shared->unref();
-			this->m_shared = 0;
-		}
-
-		SharedObjectBindingType * shared(void) const
-		{
-			return this->m_shared;
+			if (this->m_refObject == 0) return;
+			this->m_refObject->unref();
+			this->m_refObject = 0;
 		}
 };
+
+template <typename T> struct ObjectSharedPointerTraits { typedef ObjectSharedPointer<T, typename DeleterOf<typename RootOf<T>::Type>::Type, typename BaseOf<T>::Type> Type; };
 
 };
 

@@ -182,8 +182,9 @@ class ProgramArguments : public ObjectArguments
 		FragmentOutputBinding      fragmentOutputs;
 
 		ProgramArguments(void)
+			: BaseType()
 		{
-			this->clear();
+			;
 		}
 
 		void clear(void)
@@ -198,12 +199,24 @@ class ProgramArguments : public ObjectArguments
 		}
 };
 
-class SafeProgram : public virtual SafeObject
+class Program : public Object
 {
+	friend class Context;
+
 	public:
 
-		typedef SafeObject  BaseType;
-		typedef SafeProgram ThisType;
+		typedef Object  BaseType;
+		typedef Program ThisType;
+
+		virtual ~Program(void)
+		{
+			this->destroy();
+		}
+
+		virtual Type type(void) const
+		{
+			return ProgramType;
+		}
 
 		const ProgramArguments & arguments(void) const
 		{
@@ -218,36 +231,6 @@ class SafeProgram : public virtual SafeObject
 		bool isLinked(void) const
 		{
 			return this->m_linked;
-		}
-
-	protected:
-
-		ProgramArguments m_arguments;
-		std::string      m_log;
-		bool             m_linked;
-
-		SafeProgram(Context * ctx)
-			: BaseType (ctx)
-			, m_linked (false)
-		{
-			;
-		}
-};
-
-class Program : public Object, public SafeProgram
-{
-	friend class Context;
-	friend class detail::SharedObjectBinding<Program>;
-
-	public:
-
-		typedef Object      BaseType;
-		typedef SafeProgram SafeType;
-		typedef Program     ThisType;
-
-		virtual Type type(void) const
-		{
-			return ProgramType;
 		}
 
 		GLint getUniformLocation(const std::string & name) const
@@ -296,16 +279,10 @@ class Program : public Object, public SafeProgram
 	protected:
 
 		Program(Context * ctx)
-			: SafeObject (ctx)
-			, BaseType   (ctx)
-			, SafeType   (ctx)
+			: BaseType (ctx)
+			, m_linked (false)
 		{
 			;
-		}
-
-		virtual ~Program(void)
-		{
-			this->destroy();
 		}
 
 		bool create(const ProgramArguments & args)
@@ -385,31 +362,22 @@ class Program : public Object, public SafeProgram
 				this->postLink();
 			}
 
-			this->setBinding(GL_CURRENT_PROGRAM, 0);
-			this->bind();
-			// TODO
-			// ... nothing to do ...
-
 			glUseProgram(boundName);
 
 			return this->m_linked;
 		}
 
-		virtual void doDestroy(Context * ctx, GLuint name)
+		virtual void doDestroy()
 		{
-			(void)ctx;
-			if (name == 0) return;
-			glDeleteProgram(name);
+			glDeleteProgram(this->m_name);
+			this->m_arguments.clear();
+			this->m_log.clear();
+			this->m_linked = false;
 		}
 
-		virtual void doBind(void)
+		virtual bool doIsValid(void) const
 		{
-			glUseProgram(this->m_name);
-		}
-
-		virtual void doUnbind(void)
-		{
-			glUseProgram(0);
+			return this->m_linked;
 		}
 
 	private:
@@ -440,7 +408,10 @@ class Program : public Object, public SafeProgram
 		typedef UniformMap::iterator               UniformMapIterator;
 		typedef UniformMap::value_type             UniformMapValue;
 
-		UniformMap m_uniforms;
+		ProgramArguments m_arguments;
+		UniformMap       m_uniforms;
+		std::string      m_log;
+		bool             m_linked;
 
 		static std::string getInfoLog(GLuint Program)
 		{
@@ -496,9 +467,167 @@ class Program : public Object, public SafeProgram
 		}
 };
 
-typedef detail::SafeHandle   <Program> ProgramHandle;
-typedef detail::UnsafeHandle <Program> BoundProgram;
+namespace detail { template <> struct BaseOf <Program> { typedef Object Type; }; };
+typedef   detail::ObjectSharedPointerTraits  <Program> ::Type ProgramPtr;
 
-} // end namespace glw
+class SafeProgram : public SafeObject
+{
+	friend class Context;
+	friend class BoundProgram;
+
+	public:
+
+		typedef SafeObject  BaseType;
+		typedef SafeProgram ThisType;
+
+		const ProgramArguments & arguments(void) const
+		{
+			return this->object()->arguments();
+		}
+
+		const std::string & log(void) const
+		{
+			return this->object()->log();
+		}
+
+		bool isLinked(void) const
+		{
+			return this->object()->isLinked();
+		}
+
+	protected:
+
+		SafeProgram(const ProgramPtr & program)
+			: BaseType(program)
+		{
+			;
+		}
+
+		const ProgramPtr & object(void) const
+		{
+			return static_cast<const ProgramPtr &>(BaseType::object());
+		}
+
+		ProgramPtr & object(void)
+		{
+			return static_cast<ProgramPtr &>(BaseType::object());
+		}
+};
+
+namespace detail { template <> struct BaseOf     <SafeProgram> { typedef SafeObject Type; }; };
+namespace detail { template <> struct ObjectBase <SafeProgram> { typedef Program     Type; }; };
+namespace detail { template <> struct ObjectSafe <Program    > { typedef SafeProgram Type; }; };
+typedef   detail::ObjectSharedPointerTraits      <SafeProgram> ::Type ProgramHandle;
+
+class ProgramBindingParams : public ObjectBindingParams
+{
+	public:
+
+		typedef ObjectBindingParams BaseType;
+		typedef ProgramBindingParams ThisType;
+
+		ProgramBindingParams(void)
+			: BaseType(GL_CURRENT_PROGRAM, 0)
+		{
+			;
+		}
+};
+
+class BoundProgram : public BoundObject
+{
+	friend class Context;
+
+	public:
+
+		typedef BoundObject BaseType;
+		typedef BoundProgram ThisType;
+
+		BoundProgram(void)
+			: BaseType()
+		{
+			;
+		}
+
+		const ProgramHandle & handle(void) const
+		{
+			return static_cast<const ProgramHandle &>(BaseType::handle());
+		}
+
+		ProgramHandle & handle(void)
+		{
+			return static_cast<ProgramHandle &>(BaseType::handle());
+		}
+
+#define _GLW_FORWARD_SCALAR_UNIFORM_(TYPE) \
+	void setUniform    (const std::string & name, TYPE x                                                       ) { this->object()->setUniform(name, x         ); } \
+	void setUniform    (const std::string & name, TYPE x, TYPE y                                               ) { this->object()->setUniform(name, x, y      ); } \
+	void setUniform    (const std::string & name, TYPE x, TYPE y, TYPE z                                       ) { this->object()->setUniform(name, x, y, z   ); } \
+	void setUniform    (const std::string & name, TYPE x, TYPE y, TYPE z, TYPE w                               ) { this->object()->setUniform(name, x, y, z, w); }
+
+#define _GLW_FORWARD_VECTOR_UNIFORM_(TYPE) \
+	void setUniform1   (const std::string & name, const TYPE * v,                                 int count = 1) { this->object()->setUniform1(name, v, count); } \
+	void setUniform2   (const std::string & name, const TYPE * v,                                 int count = 1) { this->object()->setUniform2(name, v, count); } \
+	void setUniform3   (const std::string & name, const TYPE * v,                                 int count = 1) { this->object()->setUniform3(name, v, count); } \
+	void setUniform4   (const std::string & name, const TYPE * v,                                 int count = 1) { this->object()->setUniform4(name, v, count); }
+
+#define _GLW_FORWARD_MATRIX_UNIFORM_(TYPE) \
+	void setUniform2x2 (const std::string & name, const TYPE * m,                 bool transpose, int count = 1) { this->object()->setUniform2x2(name, m, transpose, count); } \
+	void setUniform2x3 (const std::string & name, const TYPE * m,                 bool transpose, int count = 1) { this->object()->setUniform2x3(name, m, transpose, count); } \
+	void setUniform2x4 (const std::string & name, const TYPE * m,                 bool transpose, int count = 1) { this->object()->setUniform2x4(name, m, transpose, count); } \
+	void setUniform3x2 (const std::string & name, const TYPE * m,                 bool transpose, int count = 1) { this->object()->setUniform3x2(name, m, transpose, count); } \
+	void setUniform3x3 (const std::string & name, const TYPE * m,                 bool transpose, int count = 1) { this->object()->setUniform3x3(name, m, transpose, count); } \
+	void setUniform3x4 (const std::string & name, const TYPE * m,                 bool transpose, int count = 1) { this->object()->setUniform3x4(name, m, transpose, count); } \
+	void setUniform4x2 (const std::string & name, const TYPE * m,                 bool transpose, int count = 1) { this->object()->setUniform4x2(name, m, transpose, count); } \
+	void setUniform4x3 (const std::string & name, const TYPE * m,                 bool transpose, int count = 1) { this->object()->setUniform4x3(name, m, transpose, count); } \
+	void setUniform4x4 (const std::string & name, const TYPE * m,                 bool transpose, int count = 1) { this->object()->setUniform4x4(name, m, transpose, count); }
+
+		_GLW_FORWARD_SCALAR_UNIFORM_(int)
+		_GLW_FORWARD_SCALAR_UNIFORM_(unsigned int)
+		_GLW_FORWARD_SCALAR_UNIFORM_(float)
+		_GLW_FORWARD_VECTOR_UNIFORM_(int)
+		_GLW_FORWARD_VECTOR_UNIFORM_(unsigned int)
+		_GLW_FORWARD_VECTOR_UNIFORM_(float)
+		_GLW_FORWARD_MATRIX_UNIFORM_(float)
+
+#undef _GLW_FORWARD_SCALAR_UNIFORM_
+#undef _GLW_FORWARD_VECTOR_UNIFORM_
+#undef _GLW_FORWARD_MATRIX_UNIFORM_
+
+	protected:
+
+		BoundProgram(const ProgramHandle & handle, const ProgramBindingParams & params)
+			: BaseType(handle, params)
+		{
+			;
+		}
+
+		const ProgramPtr & object(void) const
+		{
+			return this->handle()->object();
+		}
+
+		ProgramPtr & object(void)
+		{
+			return this->handle()->object();
+		}
+
+		virtual void bind(void)
+		{
+			glUseProgram(this->object()->name());
+		}
+
+		virtual void unbind(void)
+		{
+			glUseProgram(0);
+		}
+};
+
+namespace detail { template <> struct ParamsOf    <BoundProgram> { typedef ProgramBindingParams Type; }; };
+namespace detail { template <> struct BaseOf      <BoundProgram> { typedef BoundObject Type; }; };
+namespace detail { template <> struct ObjectBase  <BoundProgram> { typedef Program      Type; }; };
+namespace detail { template <> struct ObjectBound <Program     > { typedef BoundProgram Type; }; };
+typedef   detail::ObjectSharedPointerTraits       <BoundProgram> ::Type  BoundProgramHandle;
+
+};
 
 #endif // GLW_PROGRAM_H

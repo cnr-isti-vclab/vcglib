@@ -14,8 +14,9 @@ class VertexShaderArguments : public ShaderArguments
 		typedef VertexShaderArguments ThisType;
 
 		VertexShaderArguments(void)
+			: BaseType()
 		{
-			this->clear();
+			;
 		}
 
 		void clear(void)
@@ -24,33 +25,14 @@ class VertexShaderArguments : public ShaderArguments
 		}
 };
 
-class SafeVertexShader : public virtual SafeShader
-{
-	public:
-
-		typedef SafeShader       BaseType;
-		typedef SafeVertexShader ThisType;
-
-	protected:
-
-		SafeVertexShader(Context * ctx)
-			: SafeObject (ctx)
-			, BaseType   (ctx)
-		{
-			;
-		}
-};
-
-class VertexShader : public Shader, public SafeVertexShader
+class VertexShader : public Shader
 {
 	friend class Context;
-	friend class detail::SharedObjectBinding<VertexShader>;
 
 	public:
 
-		typedef Shader           BaseType;
-		typedef SafeVertexShader SafeType;
-		typedef VertexShader     ThisType;
+		typedef Shader       BaseType;
+		typedef VertexShader ThisType;
 
 		virtual Type type(void) const
 		{
@@ -60,10 +42,7 @@ class VertexShader : public Shader, public SafeVertexShader
 	protected:
 
 		VertexShader(Context * ctx)
-			: SafeObject (ctx)
-			, SafeShader (ctx)
-			, BaseType   (ctx)
-			, SafeType   (ctx)
+			: BaseType(ctx)
 		{
 			;
 		}
@@ -79,9 +58,101 @@ class VertexShader : public Shader, public SafeVertexShader
 		}
 };
 
-typedef detail::SafeHandle   <VertexShader> VertexShaderHandle;
-typedef detail::UnsafeHandle <VertexShader> BoundVertexShader;
+namespace detail { template <> struct BaseOf <VertexShader> { typedef Shader Type; }; };
+typedef   detail::ObjectSharedPointerTraits  <VertexShader> ::Type VertexShaderPtr;
 
-} // end namespace glw
+class SafeVertexShader : public SafeShader
+{
+	friend class Context;
+	friend class BoundVertexShader;
+
+	public:
+
+		typedef SafeShader       BaseType;
+		typedef SafeVertexShader ThisType;
+
+	protected:
+
+		SafeVertexShader(const VertexShaderPtr & vertexShader)
+			: BaseType(vertexShader)
+		{
+			;
+		}
+
+		const VertexShaderPtr & object(void) const
+		{
+			return static_cast<const VertexShaderPtr &>(BaseType::object());
+		}
+
+		VertexShaderPtr & object(void)
+		{
+			return static_cast<VertexShaderPtr &>(BaseType::object());
+		}
+};
+
+namespace detail { template <> struct BaseOf     <SafeVertexShader> { typedef SafeShader Type; }; };
+namespace detail { template <> struct ObjectBase <SafeVertexShader> { typedef VertexShader     Type; }; };
+namespace detail { template <> struct ObjectSafe <VertexShader    > { typedef SafeVertexShader Type; }; };
+typedef   detail::ObjectSharedPointerTraits      <SafeVertexShader> ::Type VertexShaderHandle;
+
+class VertexShaderBindingParams : public ShaderBindingParams
+{
+	public:
+
+		typedef ShaderBindingParams       BaseType;
+		typedef VertexShaderBindingParams ThisType;
+
+		VertexShaderBindingParams(void)
+			: BaseType(GL_VERTEX_SHADER, 0)
+		{
+			;
+		}
+};
+
+class BoundVertexShader : public BoundShader
+{
+	friend class Context;
+
+	public:
+
+		typedef BoundShader       BaseType;
+		typedef BoundVertexShader ThisType;
+
+		const VertexShaderHandle & handle(void) const
+		{
+			return static_cast<const VertexShaderHandle &>(BaseType::handle());
+		}
+
+		VertexShaderHandle & handle(void)
+		{
+			return static_cast<VertexShaderHandle &>(BaseType::handle());
+		}
+
+	protected:
+
+		BoundVertexShader(const VertexShaderHandle & handle, const ShaderBindingParams & params)
+			: BaseType(handle, params)
+		{
+			;
+		}
+
+		const VertexShaderPtr & object(void) const
+		{
+			return this->handle()->object();
+		}
+
+		VertexShaderPtr & object(void)
+		{
+			return this->handle()->object();
+		}
+};
+
+namespace detail { template <> struct ParamsOf    <BoundVertexShader> { typedef VertexShaderBindingParams Type; }; };
+namespace detail { template <> struct BaseOf      <BoundVertexShader> { typedef BoundShader Type; }; };
+namespace detail { template <> struct ObjectBase  <BoundVertexShader> { typedef VertexShader      Type; }; };
+namespace detail { template <> struct ObjectBound <VertexShader     > { typedef BoundVertexShader Type; }; };
+typedef   detail::ObjectSharedPointerTraits       <BoundVertexShader> ::Type  BoundVertexShaderHandle;
+
+};
 
 #endif // GLW_VERTEXSHADER_H

@@ -1,8 +1,11 @@
 #ifndef GLW_FRAMEBUFFER_H
 #define GLW_FRAMEBUFFER_H
 
-#include "./object.h"
+#include "./texture2D.h"
+#include "./renderbuffer.h"
+
 #include <vector>
+#include <map>
 
 namespace glw
 {
@@ -134,12 +137,12 @@ class FramebufferArguments : public ObjectArguments
 		RenderTargetMapping  colorTargets;
 		RenderTarget         depthTarget;
 		RenderTarget         stencilTarget;
-		RenderTarget         depthStencilTarget;
 		RenderTargetBinding  targetInputs;
 
 		FramebufferArguments(void)
+			: BaseType()
 		{
-			this->clear();
+			;
 		}
 
 		void clear(void)
@@ -148,56 +151,100 @@ class FramebufferArguments : public ObjectArguments
 			this->colorTargets       .clear();
 			this->depthTarget        .clear();
 			this->stencilTarget      .clear();
-			this->depthStencilTarget .clear();
 			this->targetInputs       .clear();
 		}
 };
 
-class SafeFramebuffer : public virtual SafeObject
-{
-	public:
-
-		typedef SafeObject      BaseType;
-		typedef SafeFramebuffer ThisType;
-
-	protected:
-
-		SafeFramebuffer(Context * ctx)
-			: BaseType(ctx)
-		{
-			;
-		}
-};
-
-class Framebuffer : public Object, public SafeFramebuffer
+class Framebuffer : public Object
 {
 	friend class Context;
-	friend class detail::SharedObjectBinding<Framebuffer>;
 
 	public:
 
-		typedef Object          BaseType;
-		typedef SafeFramebuffer SafeType;
-		typedef Framebuffer     ThisType;
+		typedef Object      BaseType;
+		typedef Framebuffer ThisType;
+
+		virtual ~Framebuffer(void)
+		{
+			this->destroy();
+		}
 
 		virtual Type type(void) const
 		{
 			return FramebufferType;
 		}
 
+		const FramebufferArguments & arguments(void) const
+		{
+			return this->m_config;
+		}
+
+		bool setColorTarget(GLenum target, GLint unit, GLint index, const RenderTarget & renderTarget)
+		{
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			this->m_config.colorTargets[index].clear();
+			const bool r = this->attachTarget(target, GL_COLOR_ATTACHMENT0 + index, renderTarget);
+			if (!r) return false;
+			this->m_config.colorTargets[index] = renderTarget;
+			return true;
+		}
+
+		bool removeColorTarget(GLenum target, GLint unit, GLint index)
+		{
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			glFramebufferRenderbuffer(target, GL_COLOR_ATTACHMENT0 + index, GL_RENDERBUFFER, 0);
+			this->m_config.colorTargets[index].clear();
+			return true;
+		}
+
+		bool setDepthTarget(GLenum target, GLint unit, const RenderTarget & renderTarget)
+		{
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			this->m_config.depthTarget.clear();
+			const bool r = this->attachTarget(target, GL_DEPTH_ATTACHMENT, renderTarget);
+			if (!r) return false;
+			this->m_config.depthTarget = renderTarget;
+			return true;
+		}
+
+		bool removeDepthTarget(GLenum target, GLint unit)
+		{
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			glFramebufferRenderbuffer(target, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
+			this->m_config.depthTarget.clear();
+			return true;
+		}
+
+		bool setStencilTarget(GLenum target, GLint unit, const RenderTarget & renderTarget)
+		{
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			this->m_config.stencilTarget.clear();
+			const bool r = this->attachTarget(target, GL_STENCIL_ATTACHMENT, renderTarget);
+			if (!r) return false;
+			this->m_config.stencilTarget = renderTarget;
+			return true;
+		}
+
+		bool removeStencilTarget(GLenum target, GLint unit)
+		{
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			glFramebufferRenderbuffer(target, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, 0);
+			this->m_config.stencilTarget.clear();
+			return true;
+		}
+
 	protected:
 
 		Framebuffer(Context * ctx)
-			: SafeObject  (ctx)
-			, BaseType    (ctx)
-			, SafeType    (ctx)
+			: BaseType(ctx)
 		{
 			;
-		}
-
-		virtual ~Framebuffer(void)
-		{
-			this->destroy();
 		}
 
 		bool create(const FramebufferArguments & args)
@@ -213,9 +260,9 @@ class Framebuffer : public Object, public SafeFramebuffer
 			glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &boundNameRead);
 
 			glGenFramebuffers(1, &(this->m_name));
-			this->setBinding(GL_FRAMEBUFFER, 0);
-			this->bind();
-			this->configure();
+			glBindFramebuffer(GL_FRAMEBUFFER, this->m_name);
+			this->configure(GL_FRAMEBUFFER);
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, boundNameDraw);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, boundNameRead);
@@ -223,45 +270,30 @@ class Framebuffer : public Object, public SafeFramebuffer
 			return true;
 		}
 
-		virtual void doDestroy(Context * ctx, GLuint name)
+		virtual void doDestroy(void)
 		{
-			(void)ctx;
-			if (name == 0) return;
-			glDeleteFramebuffers(1, &name);
+			glDeleteFramebuffers(1, &(this->m_name));
 			this->m_config.clear();
 		}
 
-		virtual void doBind(void)
+		virtual bool doIsValid(void) const
 		{
-			glBindFramebuffer(this->m_target, this->m_name);
-		}
-
-		virtual void doUnbind(void)
-		{
-			glBindFramebuffer(this->m_target, 0);
+			return true;
 		}
 
 	private:
 
 		FramebufferArguments m_config;
 
-		void configure(void)
+		void configure(GLenum target)
 		{
 			for (RenderTargetMapping::Iterator it=this->m_config.colorTargets.bindings.begin(); it!=this->m_config.colorTargets.bindings.end(); ++it)
 			{
-				this->attachTarget(GL_COLOR_ATTACHMENT0 + it->first, it->second);
+				this->attachTarget(target, GL_COLOR_ATTACHMENT0 + it->first, it->second);
 			}
 
-			if (this->m_config.depthStencilTarget.target)
-			{
-				this->attachTarget(GL_DEPTH_ATTACHMENT,   this->m_config.depthStencilTarget);
-				this->attachTarget(GL_STENCIL_ATTACHMENT, this->m_config.depthStencilTarget);
-			}
-			else
-			{
-				this->attachTarget(GL_DEPTH_ATTACHMENT,   this->m_config.depthTarget  );
-				this->attachTarget(GL_STENCIL_ATTACHMENT, this->m_config.stencilTarget);
-			}
+			this->attachTarget(target, GL_DEPTH_ATTACHMENT,   this->m_config.depthTarget  );
+			this->attachTarget(target, GL_STENCIL_ATTACHMENT, this->m_config.stencilTarget);
 
 			if (this->m_config.colorTargets.bindings.empty())
 			{
@@ -287,30 +319,318 @@ class Framebuffer : public Object, public SafeFramebuffer
 			}
 		}
 
-		bool attachTarget(GLenum attachment, RenderTarget & target)
+		bool attachTarget(GLenum target, GLenum attachment, const RenderTarget & renderTarget)
 		{
-			RenderableHandle & handle = target.target;
+			const RenderableHandle & handle = renderTarget.target;
 
 			if (!handle)
 			{
-				glFramebufferRenderbuffer(this->m_target, attachment, GL_RENDERBUFFER, 0);
+				glFramebufferRenderbuffer(target, attachment, GL_RENDERBUFFER, 0);
 				return false;
 			}
 
 			switch (handle->type())
 			{
-				case RenderbufferType : glFramebufferRenderbuffer (this->m_target, attachment, GL_RENDERBUFFER, handle->name()              ); break;
-				case Texture2DType    : glFramebufferTexture2D    (this->m_target, attachment, GL_TEXTURE_2D,   handle->name(), target.level); break;
-				default               : GLW_ASSERT(0);                                                                                         break;
+				case RenderbufferType : glFramebufferRenderbuffer (target, attachment, GL_RENDERBUFFER, handle->name()                    ); break;
+				case Texture2DType    : glFramebufferTexture2D    (target, attachment, GL_TEXTURE_2D,   handle->name(), renderTarget.level); break;
+				default               : GLW_ASSERT(0);                                                                                       break;
 			}
 
 			return true;
 		}
 };
 
-typedef detail::SafeHandle   <Framebuffer> FramebufferHandle;
-typedef detail::UnsafeHandle <Framebuffer> BoundFramebuffer;
+namespace detail { template <> struct BaseOf <Framebuffer> { typedef Object Type; }; };
+typedef   detail::ObjectSharedPointerTraits  <Framebuffer> ::Type FramebufferPtr;
 
-}  // end namespace glw
+class SafeFramebuffer : public SafeObject
+{
+	friend class Context;
+	friend class BoundFramebuffer;
+
+	public:
+
+		typedef SafeObject  BaseType;
+		typedef SafeFramebuffer ThisType;
+
+		const FramebufferArguments & arguments(void) const
+		{
+			return this->object()->arguments();
+		}
+
+	protected:
+
+		SafeFramebuffer(const FramebufferPtr & program)
+			: BaseType(program)
+		{
+			;
+		}
+
+		const FramebufferPtr & object(void) const
+		{
+			return static_cast<const FramebufferPtr &>(BaseType::object());
+		}
+
+		FramebufferPtr & object(void)
+		{
+			return static_cast<FramebufferPtr &>(BaseType::object());
+		}
+};
+
+namespace detail { template <> struct BaseOf     <SafeFramebuffer> { typedef SafeObject Type; }; };
+namespace detail { template <> struct ObjectBase <SafeFramebuffer> { typedef Framebuffer     Type; }; };
+namespace detail { template <> struct ObjectSafe <Framebuffer    > { typedef SafeFramebuffer Type; }; };
+typedef   detail::ObjectSharedPointerTraits      <SafeFramebuffer> ::Type FramebufferHandle;
+
+class FramebufferBindingParams : public ObjectBindingParams
+{
+	public:
+
+		typedef ObjectBindingParams      BaseType;
+		typedef FramebufferBindingParams ThisType;
+
+		FramebufferBindingParams(void)
+			: BaseType()
+		{
+			;
+		}
+
+		FramebufferBindingParams(GLenum target)
+			: BaseType(target, 0)
+		{
+			;
+		}
+};
+
+class BoundFramebuffer : public BoundObject
+{
+	friend class Context;
+
+	public:
+
+		typedef BoundObject BaseType;
+		typedef BoundFramebuffer ThisType;
+
+		BoundFramebuffer(void)
+			: BaseType()
+		{
+			;
+		}
+
+		const FramebufferHandle & handle(void) const
+		{
+			return static_cast<const FramebufferHandle &>(BaseType::handle());
+		}
+
+		FramebufferHandle & handle(void)
+		{
+			return static_cast<FramebufferHandle &>(BaseType::handle());
+		}
+
+		GLenum getStatus(void) const
+		{
+			return glCheckFramebufferStatus(this->m_target);
+		}
+
+		bool isComplete(void) const
+		{
+			return (this->getStatus() == GL_FRAMEBUFFER_COMPLETE);
+		}
+
+		bool setColorTarget(GLint index, const RenderTarget & renderTarget)
+		{
+			return this->object()->setColorTarget(this->m_target, this->m_unit, index, renderTarget);
+		}
+
+		bool removeColorTarget(GLint index)
+		{
+			return this->object()->removeColorTarget(this->m_target, this->m_unit, index);
+		}
+
+		bool setDepthTarget(const RenderTarget & renderTarget)
+		{
+			return this->object()->setDepthTarget(this->m_target, this->m_unit, renderTarget);
+		}
+
+		bool removeDepthTarget(void)
+		{
+			return this->object()->removeDepthTarget(this->m_target, this->m_unit);
+		}
+
+		bool setStencilTarget(const RenderTarget & renderTarget)
+		{
+			return this->object()->setStencilTarget(this->m_target, this->m_unit, renderTarget);
+		}
+
+		bool removeStencilTarget(void)
+		{
+			return this->object()->removeStencilTarget(this->m_target, this->m_unit);
+		}
+
+	protected:
+
+		BoundFramebuffer(const FramebufferHandle & handle, const FramebufferBindingParams & params)
+			: BaseType(handle, params)
+		{
+			;
+		}
+
+		const FramebufferPtr & object(void) const
+		{
+			return this->handle()->object();
+		}
+
+		FramebufferPtr & object(void)
+		{
+			return this->handle()->object();
+		}
+
+		virtual void bind(void)
+		{
+			glBindFramebuffer(this->m_target, this->object()->name());
+		}
+
+		virtual void unbind(void)
+		{
+			glBindFramebuffer(this->m_target, 0);
+		}
+};
+
+namespace detail { template <> struct ParamsOf    <BoundFramebuffer> { typedef FramebufferBindingParams Type; }; };
+namespace detail { template <> struct BaseOf      <BoundFramebuffer> { typedef BoundObject Type; }; };
+namespace detail { template <> struct ObjectBase  <BoundFramebuffer> { typedef Framebuffer      Type; }; };
+namespace detail { template <> struct ObjectBound <Framebuffer     > { typedef BoundFramebuffer Type; }; };
+typedef   detail::ObjectSharedPointerTraits       <BoundFramebuffer> ::Type  BoundFramebufferHandle;
+
+class ReadFramebufferBindingParams : public FramebufferBindingParams
+{
+	public:
+
+		typedef FramebufferBindingParams     BaseType;
+		typedef ReadFramebufferBindingParams ThisType;
+
+		ReadFramebufferBindingParams(void)
+			: BaseType(GL_READ_FRAMEBUFFER)
+		{
+			;
+		}
+};
+
+class BoundReadFramebuffer : public BoundFramebuffer
+{
+	friend class Context;
+
+	public:
+
+		typedef BoundFramebuffer     BaseType;
+		typedef BoundReadFramebuffer ThisType;
+
+		BoundReadFramebuffer(void)
+			: BaseType()
+		{
+			;
+		}
+
+	protected:
+
+		BoundReadFramebuffer(const FramebufferHandle & handle, const ReadFramebufferBindingParams & params)
+			: BaseType(handle, params)
+		{
+			;
+		}
+};
+
+namespace detail { template <> struct ParamsOf   <BoundReadFramebuffer> { typedef ReadFramebufferBindingParams Type; }; };
+namespace detail { template <> struct BaseOf     <BoundReadFramebuffer> { typedef BoundFramebuffer Type; }; };
+namespace detail { template <> struct ObjectBase <BoundReadFramebuffer> { typedef Framebuffer      Type; }; };
+typedef   detail::ObjectSharedPointerTraits      <BoundReadFramebuffer> ::Type BoundReadFramebufferHandle;
+
+class DrawFramebufferBindingParams : public FramebufferBindingParams
+{
+	public:
+
+		typedef FramebufferBindingParams     BaseType;
+		typedef DrawFramebufferBindingParams ThisType;
+
+		DrawFramebufferBindingParams(void)
+			: BaseType(GL_DRAW_FRAMEBUFFER)
+		{
+			;
+		}
+};
+
+class BoundDrawFramebuffer : public BoundFramebuffer
+{
+	friend class Context;
+
+	public:
+
+		typedef BoundFramebuffer     BaseType;
+		typedef BoundDrawFramebuffer ThisType;
+
+		BoundDrawFramebuffer(void)
+			: BaseType()
+		{
+			;
+		}
+
+	protected:
+
+		BoundDrawFramebuffer(const FramebufferHandle & handle, const DrawFramebufferBindingParams & params)
+			: BaseType(handle, params)
+		{
+			;
+		}
+};
+
+namespace detail { template <> struct ParamsOf   <BoundDrawFramebuffer> { typedef DrawFramebufferBindingParams Type; }; };
+namespace detail { template <> struct BaseOf     <BoundDrawFramebuffer> { typedef BoundFramebuffer Type; }; };
+namespace detail { template <> struct ObjectBase <BoundDrawFramebuffer> { typedef Framebuffer      Type; }; };
+typedef   detail::ObjectSharedPointerTraits      <BoundDrawFramebuffer> ::Type BoundDrawFramebufferHandle;
+
+class ReadDrawFramebufferBindingParams : public FramebufferBindingParams
+{
+	public:
+
+		typedef FramebufferBindingParams     BaseType;
+		typedef ReadDrawFramebufferBindingParams ThisType;
+
+		ReadDrawFramebufferBindingParams(void)
+			: BaseType(GL_FRAMEBUFFER)
+		{
+			;
+		}
+};
+
+class BoundReadDrawFramebuffer : public BoundFramebuffer
+{
+	friend class Context;
+
+	public:
+
+		typedef BoundFramebuffer     BaseType;
+		typedef BoundReadDrawFramebuffer ThisType;
+
+		BoundReadDrawFramebuffer(void)
+			: BaseType()
+		{
+			;
+		}
+
+	protected:
+
+		BoundReadDrawFramebuffer(const FramebufferHandle & handle, const ReadDrawFramebufferBindingParams & params)
+			: BaseType(handle, params)
+		{
+			;
+		}
+};
+
+namespace detail { template <> struct ParamsOf   <BoundReadDrawFramebuffer> { typedef ReadDrawFramebufferBindingParams Type; }; };
+namespace detail { template <> struct BaseOf     <BoundReadDrawFramebuffer> { typedef BoundFramebuffer Type; }; };
+namespace detail { template <> struct ObjectBase <BoundReadDrawFramebuffer> { typedef Framebuffer      Type; }; };
+typedef   detail::ObjectSharedPointerTraits      <BoundReadDrawFramebuffer> ::Type BoundReadDrawFramebufferHandle;
+
+};
 
 #endif // GLW_FRAMEBUFFER_H

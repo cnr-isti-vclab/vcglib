@@ -3,6 +3,7 @@
 
 #include "./bookkeeping.h"
 #include "./noncopyable.h"
+#include "./objectdeleter.h"
 #include "./type.h"
 #include "./glheaders.h"
 
@@ -20,7 +21,7 @@ class ObjectArguments
 
 		ObjectArguments(void)
 		{
-			this->clear();
+			;
 		}
 
 		void clear(void)
@@ -29,26 +30,31 @@ class ObjectArguments
 		}
 };
 
-class SafeObject
+class Object : public detail::NonCopyable
 {
-	friend class Object;
+	friend class Context;
 
 	public:
 
-		typedef void       BaseType;
-		typedef SafeObject ThisType;
+		typedef detail::NonCopyable BaseType;
+		typedef Object              ThisType;
+
+		virtual ~Object(void)
+		{
+			this->destroy();
+		}
 
 		bool isValid(void) const
 		{
-			return (this->m_name != 0);
+			return ((this->m_name != 0) && this->doIsValid());
 		}
 
-		Context * context(void)
+		const Context * context(void) const
 		{
 			return this->m_context;
 		}
 
-		const Context * context(void) const
+		Context * context(void)
 		{
 			return this->m_context;
 		}
@@ -62,12 +68,48 @@ class SafeObject
 
 	protected:
 
-		Context * m_context;
 		GLuint    m_name;
+		Context * m_context;
 
-		SafeObject(Context * ctx)
-			: m_context (ctx)
-			, m_name    (0)
+		Object(Context * ctx)
+			: m_name    (0)
+			, m_context (ctx)
+		{
+			;
+		}
+
+		void destroy(void)
+		{
+			if (this->m_name == 0) return;
+			this->doDestroy();
+			this->m_name    = 0;
+			this->m_context = 0;
+		}
+
+		virtual void doDestroy(void)       = 0;
+		virtual bool doIsValid(void) const = 0;
+};
+
+namespace detail { template <typename T> struct ObjectBase  { typedef NoBase        Type; }; };
+namespace detail { template <typename T> struct ObjectSafe  { typedef NoBase        Type; }; };
+namespace detail { template <typename T> struct ObjectBound { typedef NoBase        Type; }; };
+
+namespace detail { template <> struct BaseOf    <Object> { typedef NoBase        Type; }; };
+namespace detail { template <> struct DeleterOf <Object> { typedef ObjectDeleter Type; }; };
+typedef  detail::ObjectSharedPointerTraits      <Object> ::Type ObjectPtr;
+
+class SafeObject : public detail::NonCopyable
+{
+	friend class Context;
+	friend class BoundObject;
+
+	public:
+
+		typedef detail::NonCopyable BaseType;
+		typedef SafeObject          ThisType;
+
+		SafeObject(void)
+			: m_object(0)
 		{
 			;
 		}
@@ -76,67 +118,178 @@ class SafeObject
 		{
 			;
 		}
+
+		bool isNull(void) const
+		{
+			return this->m_object.isNull();
+		}
+
+		bool isValid(void) const
+		{
+			return this->m_object->isValid();
+		}
+
+		const Context * context(void) const
+		{
+			if (this->isNull()) return 0;
+			return this->m_object->context();
+		}
+
+		Context * context(void)
+		{
+			if (this->isNull()) return 0;
+			return this->m_object->context();
+		}
+
+		GLuint name(void) const
+		{
+			if (this->isNull()) return 0;
+			return this->m_object->name();
+		}
+
+		Type type(void) const
+		{
+			if (this->isNull()) return NoType;
+			return this->m_object->type();
+		}
+
+	protected:
+
+		SafeObject(const ObjectPtr & object)
+			: m_object(object)
+		{
+			;
+		}
+
+		const ObjectPtr & object(void) const
+		{
+			return this->m_object;
+		}
+
+		ObjectPtr & object(void)
+		{
+			return this->m_object;
+		}
+
+	private:
+
+		ObjectPtr m_object;
 };
 
-class Object : public detail::NonCopyable, public virtual SafeObject
+namespace detail { template <> struct BaseOf     <SafeObject> { typedef NoBase                     Type; }; };
+namespace detail { template <> struct DeleterOf  <SafeObject> { typedef DefaultDeleter<SafeObject> Type; }; };
+namespace detail { template <> struct ObjectBase <SafeObject> { typedef Object                     Type; }; };
+namespace detail { template <> struct ObjectSafe <Object    > { typedef SafeObject                 Type; }; };
+typedef  detail::ObjectSharedPointerTraits       <SafeObject> ::Type  ObjectHandle;
+
+class ObjectBindingParams
+{
+	public:
+
+		typedef void                BaseType;
+		typedef ObjectBindingParams ThisType;
+
+		GLenum target;
+		GLint  unit;
+
+		ObjectBindingParams(void)
+			: target (GL_NONE)
+			, unit   (0)
+		{
+			;
+		}
+
+		ObjectBindingParams(GLenum aTarget, GLenum aUnit)
+			: target (aTarget)
+			, unit   (aUnit)
+		{
+			;
+		}
+};
+
+class BoundObject : public detail::NonCopyable
 {
 	friend class Context;
 
 	public:
 
-		typedef void       BaseType;
-		typedef SafeObject SafeType;
-		typedef Object     ThisType;
+		typedef detail::NonCopyable   BaseType;
+		typedef BoundObject           ThisType;
 
-	protected:
-
-		GLenum m_target;
-		GLint  m_unit;
-
-		Object(Context * ctx)
-			: SafeType (ctx)
-			, m_target   (GL_NONE)
-			, m_unit     (0)
+		BoundObject(void)
+			: m_handle (0)
+			, m_target (GL_NONE)
+			, m_unit   (0)
 		{
 			;
 		}
 
-		void destroy(void)
+		virtual ~BoundObject(void)
 		{
-			if (!this->isValid()) return;
-
-			this->doDestroy(this->m_context, this->m_name);
-
-			this->m_context = 0;
-			this->m_name    = 0;
+			;
 		}
 
-		void setBinding(GLenum target, GLint unit) const
+		bool isNull(void) const
 		{
-			ThisType * that = const_cast<ThisType *>(this);
-			that->m_target = target;
-			that->m_unit   = unit;
+			return this->m_handle.isNull();
 		}
 
-		void bind(void)
+		const ObjectHandle & handle(void) const
 		{
-			GLW_ASSERT(this->isValid());
-			this->doBind();
+			return this->m_handle;
 		}
 
-		void unbind(void)
+		ObjectHandle & handle(void)
 		{
-			GLW_ASSERT(this->isValid());
-			this->doUnbind();
+			return this->m_handle;
 		}
 
-		virtual void doDestroy (Context * ctx, GLuint name) = 0;
-		virtual void doBind    (void)                       = 0;
-		virtual void doUnbind  (void)                       = 0;
+		GLenum target(void) const
+		{
+			return this->m_target;
+		}
+
+		GLint unit(void) const
+		{
+			return this->m_unit;
+		}
+
+	protected:
+
+		ObjectHandle m_handle;
+		GLenum       m_target;
+		GLint        m_unit;
+
+		BoundObject(const ObjectHandle & handle, const ObjectBindingParams & params)
+			: m_handle (handle)
+			, m_target (params.target)
+			, m_unit   (params.unit)
+		{
+			;
+		}
+
+		const ObjectPtr & object(void) const
+		{
+			return this->handle()->object();
+		}
+
+		ObjectPtr & object(void)
+		{
+			return this->handle()->object();
+		}
+
+		virtual void bind   (void) = 0;
+		virtual void unbind (void) = 0;
 };
 
-typedef detail::SafeHandle   <Object> ObjectHandle;
-typedef detail::UnsafeHandle <Object> BoundObject;
+namespace detail { template <typename T> struct ParamsOf { typedef NoBase Type; }; };
+
+namespace detail { template <> struct ParamsOf    <BoundObject> { typedef ObjectBindingParams         Type; }; };
+namespace detail { template <> struct BaseOf      <BoundObject> { typedef NoBase                      Type; }; };
+namespace detail { template <> struct DeleterOf   <BoundObject> { typedef DefaultDeleter<BoundObject> Type; }; };
+namespace detail { template <> struct ObjectBase  <BoundObject> { typedef Object                      Type; }; };
+namespace detail { template <> struct ObjectBound <Object     > { typedef BoundObject                 Type; }; };
+typedef   detail::ObjectSharedPointerTraits       <BoundObject> ::Type  BoundObjectHandle;
 
 };
 
