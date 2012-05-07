@@ -9,17 +9,17 @@ namespace glw
 namespace detail
 {
 
-                                  struct NoBase                    {                                                                         };
+                                  struct NoType                    {                                                                         };
 template <typename T>             struct DefaultDeleter            { void operator () (T * t) { delete t; }                                  };
 
-template <typename T>             struct BaseOf                    { typedef NoBase Type;                                                    };
+template <typename T>             struct BaseOf                    { typedef NoType Type;                                                    };
 
 template <typename T, typename B> struct RootOfType                { typedef typename RootOfType<B,  typename BaseOf<B>::Type>::Type  Type;  };
-template <typename T>             struct RootOfType<T, NoBase>     { typedef T                                                        Type;  };
+template <typename T>             struct RootOfType<T, NoType>     { typedef T                                                        Type;  };
 template <typename T>             struct RootOf                    { typedef typename RootOfType<T, typename BaseOf<T>::Type>::Type   Type;  };
 
 template <typename T, typename B> struct DeleterOfType             { typedef typename DeleterOfType<B, typename BaseOf<B>::Type>::Type Type; };
-template <typename T>             struct DeleterOfType<T, NoBase>  { typedef DefaultDeleter<T>                                         Type; };
+template <typename T>             struct DeleterOfType<T, NoType>  { typedef DefaultDeleter<T>                                         Type; };
 template <typename T>             struct DeleterOf                 { typedef typename DeleterOfType<T, typename BaseOf<T>::Type>::Type Type; };
 
 template <typename TObject, typename TDeleter, typename TBaseObject>
@@ -51,15 +51,15 @@ class RefCountedObject : public RefCountedObject<TBaseObject, TDeleter, typename
 };
 
 template <typename TObject, typename TDeleter>
-class RefCountedObject<TObject, TDeleter, NoBase>
+class RefCountedObject<TObject, TDeleter, NoType>
 {
 	public:
 
 		typedef void                                        BaseType;
-		typedef RefCountedObject<TObject, TDeleter, NoBase> ThisType;
+		typedef RefCountedObject<TObject, TDeleter, NoType> ThisType;
 		typedef TObject                                     ObjectType;
 		typedef TDeleter                                    DeleterType;
-		typedef NoBase                                      BaseObjectType;
+		typedef NoType                                      BaseObjectType;
 
 		RefCountedObject(ObjectType * object, const DeleterType & deleter)
 			: m_object   (object)
@@ -216,16 +216,16 @@ class ObjectSharedPointer : public ObjectSharedPointer<TBaseObject, TDeleter, ty
 };
 
 template <typename TObject, typename TDeleter>
-class ObjectSharedPointer<TObject, TDeleter, NoBase>
+class ObjectSharedPointer<TObject, TDeleter, NoType>
 {
 	public:
 
 		typedef void                                              BaseType;
-		typedef ObjectSharedPointer<TObject, TDeleter, NoBase>    ThisType;
+		typedef ObjectSharedPointer<TObject, TDeleter, NoType>    ThisType;
 		typedef TObject                                           ObjectType;
 		typedef TDeleter                                          DeleterType;
-		typedef NoBase                                            BaseObjectType;
-		typedef RefCountedObject<ObjectType, DeleterType, NoBase> RefCountedObjectType;
+		typedef NoType                                            BaseObjectType;
+		typedef RefCountedObject<ObjectType, DeleterType, NoType> RefCountedObjectType;
 
 		ObjectSharedPointer(void)
 			: m_refObject(0)

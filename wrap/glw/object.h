@@ -90,11 +90,11 @@ class Object : public detail::NonCopyable
 		virtual bool doIsValid(void) const = 0;
 };
 
-namespace detail { template <typename T> struct ObjectBase  { typedef NoBase        Type; }; };
-namespace detail { template <typename T> struct ObjectSafe  { typedef NoBase        Type; }; };
-namespace detail { template <typename T> struct ObjectBound { typedef NoBase        Type; }; };
+namespace detail { template <typename T> struct ObjectBase  { typedef NoType        Type; }; };
+namespace detail { template <typename T> struct ObjectSafe  { typedef NoType        Type; }; };
+namespace detail { template <typename T> struct ObjectBound { typedef NoType        Type; }; };
 
-namespace detail { template <> struct BaseOf    <Object> { typedef NoBase        Type; }; };
+namespace detail { template <> struct BaseOf    <Object> { typedef NoType        Type; }; };
 namespace detail { template <> struct DeleterOf <Object> { typedef ObjectDeleter Type; }; };
 typedef  detail::ObjectSharedPointerTraits      <Object> ::Type ObjectPtr;
 
@@ -149,7 +149,7 @@ class SafeObject : public detail::NonCopyable
 
 		Type type(void) const
 		{
-			if (this->isNull()) return NoType;
+			if (this->isNull()) return InvalidType;
 			return this->m_object->type();
 		}
 
@@ -176,7 +176,7 @@ class SafeObject : public detail::NonCopyable
 		ObjectPtr m_object;
 };
 
-namespace detail { template <> struct BaseOf     <SafeObject> { typedef NoBase                     Type; }; };
+namespace detail { template <> struct BaseOf     <SafeObject> { typedef NoType                     Type; }; };
 namespace detail { template <> struct DeleterOf  <SafeObject> { typedef DefaultDeleter<SafeObject> Type; }; };
 namespace detail { template <> struct ObjectBase <SafeObject> { typedef Object                     Type; }; };
 namespace detail { template <> struct ObjectSafe <Object    > { typedef SafeObject                 Type; }; };
@@ -282,10 +282,10 @@ class BoundObject : public detail::NonCopyable
 		virtual void unbind (void) = 0;
 };
 
-namespace detail { template <typename T> struct ParamsOf { typedef NoBase Type; }; };
+namespace detail { template <typename T> struct ParamsOf { typedef NoType Type; }; };
 
 namespace detail { template <> struct ParamsOf    <BoundObject> { typedef ObjectBindingParams         Type; }; };
-namespace detail { template <> struct BaseOf      <BoundObject> { typedef NoBase                      Type; }; };
+namespace detail { template <> struct BaseOf      <BoundObject> { typedef NoType                      Type; }; };
 namespace detail { template <> struct DeleterOf   <BoundObject> { typedef DefaultDeleter<BoundObject> Type; }; };
 namespace detail { template <> struct ObjectBase  <BoundObject> { typedef Object                      Type; }; };
 namespace detail { template <> struct ObjectBound <Object     > { typedef BoundObject                 Type; }; };

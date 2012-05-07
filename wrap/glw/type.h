@@ -8,7 +8,7 @@ namespace glw
 
 enum Type
 {
-	NoType = 0,
+	InvalidType = 0,
 	BufferType,
 	RenderbufferType,
 	VertexShaderType,

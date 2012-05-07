@@ -29,8 +29,10 @@ class Context : public detail::NonCopyable
 		typedef Context             ThisType;
 
 		Context(void)
-			: m_acquired     (false)
-			, m_textureUnits (0)
+			: m_acquired           (false)
+			, m_maxUniformBuffers  (0)
+			, m_maxFeedbackBuffers (0)
+			, m_maxTextureUnits    (0)
 		{
 			;
 		}
@@ -387,7 +389,9 @@ class Context : public detail::NonCopyable
 		typedef RefCountedBindingPtrMap::value_type                    RefCountedBindingPtrMapValue;
 
 		bool                    m_acquired;
-		int                     m_textureUnits;
+		int                     m_maxUniformBuffers;
+		int                     m_maxFeedbackBuffers;
+		int                     m_maxTextureUnits;
 		RefCountedPtrPtrMap     m_objects;
 		RefCountedBindingPtrMap m_bindings;
 
@@ -418,8 +422,6 @@ class Context : public detail::NonCopyable
 			this->initializeTarget<BoundIndexBuffer,         IndexBufferBindingParams         >(IndexBufferBindingParams         ()       );
 			this->initializeTarget<BoundPixelPackBuffer,     PixelPackBufferBindingParams     >(PixelPackBufferBindingParams     ()       );
 			this->initializeTarget<BoundPixelUnpackBuffer,   PixelUnpackBufferBindingParams   >(PixelUnpackBufferBindingParams   ()       );
-			this->initializeTarget<BoundUniformBuffer,       UniformBufferBindingParams       >(UniformBufferBindingParams       (0, 0, 0));
-			this->initializeTarget<BoundFeedbackBuffer,      FeedbackBufferBindingParams      >(FeedbackBufferBindingParams      (0, 0, 0));
 			this->initializeTarget<BoundRenderbuffer,        RenderbufferBindingParams        >(RenderbufferBindingParams        ()       );
 			this->initializeTarget<BoundVertexShader,        VertexShaderBindingParams        >(VertexShaderBindingParams        ()       );
 			this->initializeTarget<BoundGeometryShader,      GeometryShaderBindingParams      >(GeometryShaderBindingParams      ()       );
@@ -430,14 +432,33 @@ class Context : public detail::NonCopyable
 			this->initializeTarget<BoundReadDrawFramebuffer, ReadDrawFramebufferBindingParams >(ReadDrawFramebufferBindingParams ()       );
 
 			{
-				GLint texUnits = 0;
-				glGetIntegerv(GL_MAX_TEXTURE_UNITS, &texUnits);
-				this->m_textureUnits = int(texUnits);
+				GLint uniformBuffers = 0;
+				glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &uniformBuffers);
+				this->m_maxUniformBuffers = int(uniformBuffers);
+				for (int i=0; i<this->m_maxUniformBuffers; ++i)
+				{
+					this->initializeTarget<BoundUniformBuffer, UniformBufferBindingParams>(UniformBufferBindingParams(GLuint(i), 0, 0));
+				}
 			}
 
-			for (int i=0; i<this->m_textureUnits; ++i)
 			{
-				this->initializeTarget<BoundTexture2D>(Texture2DBindingParams(GLint(i)));
+				GLint feedbackBuffers = 0;
+				glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS, &feedbackBuffers);
+				this->m_maxFeedbackBuffers = int(feedbackBuffers);
+				for (int i=0; i<this->m_maxFeedbackBuffers; ++i)
+				{
+					this->initializeTarget<BoundFeedbackBuffer, FeedbackBufferBindingParams>(FeedbackBufferBindingParams(GLuint(i), 0, 0));
+				}
+			}
+
+			{
+				GLint texUnits = 0;
+				glGetIntegerv(GL_MAX_TEXTURE_UNITS, &texUnits);
+				this->m_maxTextureUnits = int(texUnits);
+				for (int i=0; i<this->m_maxTextureUnits; ++i)
+				{
+					this->initializeTarget<BoundTexture2D>(Texture2DBindingParams(GLint(i)));
+				}
 			}
 		}
 
@@ -447,8 +468,6 @@ class Context : public detail::NonCopyable
 			this->terminateTarget<BoundIndexBuffer,         IndexBufferBindingParams         >(IndexBufferBindingParams         ()       );
 			this->terminateTarget<BoundPixelPackBuffer,     PixelPackBufferBindingParams     >(PixelPackBufferBindingParams     ()       );
 			this->terminateTarget<BoundPixelUnpackBuffer,   PixelUnpackBufferBindingParams   >(PixelUnpackBufferBindingParams   ()       );
-			this->terminateTarget<BoundUniformBuffer,       UniformBufferBindingParams       >(UniformBufferBindingParams       (0, 0, 0));
-			this->terminateTarget<BoundFeedbackBuffer,      FeedbackBufferBindingParams      >(FeedbackBufferBindingParams      (0, 0, 0));
 			this->terminateTarget<BoundRenderbuffer,        RenderbufferBindingParams        >(RenderbufferBindingParams        ()       );
 			this->terminateTarget<BoundVertexShader,        VertexShaderBindingParams        >(VertexShaderBindingParams        ()       );
 			this->terminateTarget<BoundGeometryShader,      GeometryShaderBindingParams      >(GeometryShaderBindingParams      ()       );
@@ -458,12 +477,29 @@ class Context : public detail::NonCopyable
 			this->terminateTarget<BoundDrawFramebuffer,     DrawFramebufferBindingParams     >(DrawFramebufferBindingParams     ()       );
 			this->terminateTarget<BoundReadDrawFramebuffer, ReadDrawFramebufferBindingParams >(ReadDrawFramebufferBindingParams ()       );
 
-			for (int i=0; i<this->m_textureUnits; ++i)
 			{
-				this->terminateTarget<BoundTexture2D>(Texture2DBindingParams(GLint(i)));
+				for (int i=0; i<this->m_maxUniformBuffers; ++i)
+				{
+					this->terminateTarget<BoundUniformBuffer, UniformBufferBindingParams>(UniformBufferBindingParams(GLuint(i), 0, 0));
+				}
+				this->m_maxUniformBuffers = 0;
 			}
 
-			this->m_textureUnits = 0;
+			{
+				for (int i=0; i<this->m_maxFeedbackBuffers; ++i)
+				{
+					this->terminateTarget<BoundFeedbackBuffer, FeedbackBufferBindingParams>(FeedbackBufferBindingParams(GLuint(i), 0, 0));
+				}
+				this->m_maxFeedbackBuffers = 0;
+			}
+
+			{
+				for (int i=0; i<this->m_maxTextureUnits; ++i)
+				{
+					this->terminateTarget<BoundTexture2D>(Texture2DBindingParams(GLint(i)));
+				}
+				this->m_maxTextureUnits = 0;
+			}
 		}
 
 		template <typename TObject>
