@@ -61,6 +61,16 @@ class Texture2D : public Texture
 			return false;
 		}
 
+		GLsizei width(void) const
+		{
+			return this->m_width;
+		}
+
+		GLsizei height(void) const
+		{
+			return this->m_height;
+		}
+
 		void setImage(GLenum target, GLint unit, GLint level, GLsizei width, GLsizei height, GLenum dataFormat, GLenum dataType, const void * data)
 		{
 			(void)unit;
@@ -154,6 +164,16 @@ class SafeTexture2D : public SafeTexture
 			;
 		}
 
+		GLsizei width(void) const
+		{
+			return this->object()->width();
+		}
+
+		GLsizei height(void) const
+		{
+			return this->object()->height();
+		}
+
 	protected:
 
 		SafeTexture2D(const Texture2DPtr & texture2D)
@@ -221,6 +241,11 @@ class BoundTexture2D : public BoundTexture
 		Texture2DHandle & handle(void)
 		{
 			return static_cast<Texture2DHandle &>(BaseType::handle());
+		}
+
+		void setSampleMode(const TextureSampleMode & sampler)
+		{
+			this->object()->setSampleMode(this->m_target, this->m_unit, sampler);
 		}
 
 	protected:

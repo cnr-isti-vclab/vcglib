@@ -1,7 +1,7 @@
 #ifndef GLW_FRAMEBUFFER_H
 #define GLW_FRAMEBUFFER_H
 
-#include "./texture2D.h"
+#include "./texture2d.h"
 #include "./renderbuffer.h"
 
 #include <vector>

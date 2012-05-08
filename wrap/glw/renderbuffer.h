@@ -68,6 +68,16 @@ class Renderbuffer : public Renderable
 			return false;
 		}
 
+		GLsizei width(void) const
+		{
+			return this->m_width;
+		}
+
+		GLsizei height(void) const
+		{
+			return this->m_height;
+		}
+
 		void setStorage(GLenum target, GLint unit, GLenum format, GLsizei width, GLsizei height)
 		{
 			(void)unit;
@@ -137,6 +147,16 @@ class SafeRenderbuffer : public SafeRenderable
 			: BaseType()
 		{
 			;
+		}
+
+		GLsizei width(void) const
+		{
+			return this->object()->width();
+		}
+
+		GLsizei height(void) const
+		{
+			return this->object()->height();
 		}
 
 	protected:
