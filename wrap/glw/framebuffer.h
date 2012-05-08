@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <map>
+#include <set>
 
 namespace glw
 {
@@ -42,6 +43,11 @@ class RenderTarget
 			this->level = 0;
 			this->layer = -1;
 			this->face  = GL_NONE;
+		}
+
+		bool isNull(void) const
+		{
+			return this->target.isNull();
 		}
 };
 
@@ -239,6 +245,49 @@ class Framebuffer : public Object
 			return true;
 		}
 
+		bool readColorPixels(GLenum target, GLint unit, GLint index, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data)
+		{
+			(void)target;
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			if (this->m_config.colorTargets.bindings.count(index) <= 0)
+			{
+				GLW_ASSERT(0);
+				return false;
+			}
+			glReadBuffer(GL_COLOR_ATTACHMENT0 + index);
+			glReadPixels(x, y, width, height, format, type, data);
+			return true;
+		}
+
+		bool readDepthPixels(GLenum target, GLint unit, GLint x, GLint y, GLsizei width, GLsizei height, GLenum type, GLvoid * data)
+		{
+			(void)target;
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			if (this->m_config.depthTarget.isNull())
+			{
+				GLW_ASSERT(0);
+				return false;
+			}
+			glReadPixels(x, y, width, height, GL_DEPTH_COMPONENT, type, data);
+			return true;
+		}
+
+		bool readStencilPixels(GLenum target, GLint unit, GLint x, GLint y, GLsizei width, GLsizei height, GLenum type, GLvoid * data)
+		{
+			(void)target;
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			if (this->m_config.stencilTarget.isNull())
+			{
+				GLW_ASSERT(0);
+				return false;
+			}
+			glReadPixels(x, y, width, height, GL_STENCIL_INDEX, type, data);
+			return true;
+		}
+
 	protected:
 
 		Framebuffer(Context * ctx)
@@ -251,8 +300,6 @@ class Framebuffer : public Object
 		{
 			this->destroy();
 
-			this->m_config = args;
-
 			GLint boundNameDraw = 0;
 			glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &boundNameDraw);
 
@@ -261,7 +308,7 @@ class Framebuffer : public Object
 
 			glGenFramebuffers(1, &(this->m_name));
 			glBindFramebuffer(GL_FRAMEBUFFER, this->m_name);
-			this->configure(GL_FRAMEBUFFER);
+			this->configure(GL_FRAMEBUFFER, args);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, boundNameDraw);
@@ -285,15 +332,22 @@ class Framebuffer : public Object
 
 		FramebufferArguments m_config;
 
-		void configure(GLenum target)
+		void configure(GLenum target, const FramebufferArguments & args)
 		{
-			for (RenderTargetMapping::Iterator it=this->m_config.colorTargets.bindings.begin(); it!=this->m_config.colorTargets.bindings.end(); ++it)
+			this->m_config.clear();
+
+			for (RenderTargetMapping::ConstIterator it=args.colorTargets.bindings.begin(); it!=args.colorTargets.bindings.end(); ++it)
 			{
-				this->attachTarget(target, GL_COLOR_ATTACHMENT0 + it->first, it->second);
+				const bool colorAttached = this->attachTarget(target, GL_COLOR_ATTACHMENT0 + it->first, it->second);
+				if (!colorAttached) continue;
+				this->m_config.colorTargets[it->first] = it->second;
 			}
 
-			this->attachTarget(target, GL_DEPTH_ATTACHMENT,   this->m_config.depthTarget  );
-			this->attachTarget(target, GL_STENCIL_ATTACHMENT, this->m_config.stencilTarget);
+			const bool depthAttached = this->attachTarget(target, GL_DEPTH_ATTACHMENT, args.depthTarget);
+			if (depthAttached) this->m_config.depthTarget = args.depthTarget;
+
+			const bool stencilAttached = this->attachTarget(target, GL_STENCIL_ATTACHMENT, args.stencilTarget);
+			if (stencilAttached) this->m_config.stencilTarget = args.stencilTarget;
 
 			if (this->m_config.colorTargets.bindings.empty())
 			{
@@ -303,8 +357,8 @@ class Framebuffer : public Object
 			else
 			{
 				std::vector<GLenum> drawBuffers;
-				drawBuffers.reserve(this->m_config.targetInputs.bindings.size());
-				for (RenderTargetBinding::Iterator it=this->m_config.targetInputs.bindings.begin(); it!=this->m_config.targetInputs.bindings.end(); ++it)
+				drawBuffers.reserve(args.targetInputs.bindings.size());
+				for (RenderTargetBinding::ConstIterator it=args.targetInputs.bindings.begin(); it!=args.targetInputs.bindings.end(); ++it)
 				{
 					const GLuint fragOutput      = it->second;
 					const GLuint attachmentIndex = GL_COLOR_ATTACHMENT0 + it->first;
@@ -313,6 +367,7 @@ class Framebuffer : public Object
 						drawBuffers.resize(size_t(fragOutput + 1), GL_NONE);
 					}
 					drawBuffers[fragOutput] = attachmentIndex;
+					this->m_config.targetInputs[it->first] = fragOutput;
 				}
 				glDrawBuffers(GLsizei(drawBuffers.size()), &(drawBuffers[0]));
 				glReadBuffer(drawBuffers[0]);
@@ -531,6 +586,21 @@ class BoundReadFramebuffer : public BoundFramebuffer
 			;
 		}
 
+		bool readColorPixels(GLint index, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data)
+		{
+			return this->object()->readColorPixels(this->m_target, this->m_unit, index, x, y, width, height, format, type, data);
+		}
+
+		bool readDepthPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type, GLvoid * data)
+		{
+			return this->object()->readDepthPixels(this->m_target, this->m_unit, x, y, width, height, type, data);
+		}
+
+		bool readStencilPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type, GLvoid * data)
+		{
+			return this->object()->readStencilPixels(this->m_target, this->m_unit, x, y, width, height, type, data);
+		}
+
 	protected:
 
 		BoundReadFramebuffer(const FramebufferHandle & handle, const ReadFramebufferBindingParams & params)
@@ -615,6 +685,21 @@ class BoundReadDrawFramebuffer : public BoundFramebuffer
 			: BaseType()
 		{
 			;
+		}
+
+		bool readColorPixels(GLint index, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data)
+		{
+			return this->object()->readColorPixels(this->m_target, this->m_unit, index, x, y, width, height, format, type, data);
+		}
+
+		bool readDepthPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type, GLvoid * data)
+		{
+			return this->object()->readDepthPixels(this->m_target, this->m_unit, x, y, width, height, type, data);
+		}
+
+		bool readStencilPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type, GLvoid * data)
+		{
+			return this->object()->readStencilPixels(this->m_target, this->m_unit, x, y, width, height, type, data);
 		}
 
 	protected:
