@@ -13,4 +13,8 @@
 #	define GLW_PRINT_LOG_TO_STDERR 1
 #endif
 
+#ifndef GLW_ASSERT_UNIFORM_LOCATION
+#	define GLW_ASSERT_UNIFORM_LOCATION 0
+#endif
+
 #endif // GLW_CONFIG_H

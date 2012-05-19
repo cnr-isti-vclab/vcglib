@@ -235,7 +235,9 @@ class Program : public Object
 
 		GLint getUniformLocation(const std::string & name) const
 		{
+#if GLW_ASSERT_UNIFORM_LOCATION
 			GLW_ASSERT(this->m_uniforms.count(name) > 0);
+#endif
 			return this->m_uniforms.find(name)->second.location;
 		}
 
