@@ -37,6 +37,15 @@ class RenderTarget
 			;
 		}
 
+		RenderTarget(RenderableHandle & rTarget)
+			: target (rTarget)
+			, level  (0)
+			, layer  (0)
+			, face   (GL_NONE)
+		{
+			;
+		}
+
 		void clear(void)
 		{
 			this->target.setNull();

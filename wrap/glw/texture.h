@@ -42,6 +42,16 @@ class TextureSampleMode
 			this->wrapT     = GLW_DONT_CARE;
 			this->wrapR     = GLW_DONT_CARE;
 		}
+
+		static TextureSampleMode dontCare(void)
+		{
+			return ThisType();
+		}
+
+		static TextureSampleMode texelFetch(void)
+		{
+			return ThisType(GL_NEAREST, GL_NEAREST, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+		}
 };
 
 inline TextureSampleMode textureSampleMode(GLenum minFilter = GLW_DONT_CARE, GLenum magFilter = GLW_DONT_CARE, GLenum wrapS = GLW_DONT_CARE, GLenum wrapT = GLW_DONT_CARE, GLenum wrapR = GLW_DONT_CARE)

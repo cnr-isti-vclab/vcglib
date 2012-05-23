@@ -210,10 +210,11 @@ inline Texture2DHandle createTexture2D(Context & ctx, GLenum format, GLsizei wid
 	return ctx.createTexture2D(args);
 }
 
-inline FramebufferHandle createFramebuffer
+inline FramebufferHandle createFramebufferWithDepthStencil
 (
 	Context & ctx,
-	const RenderTarget & depthTarget ,
+	const RenderTarget & depthTarget,
+	const RenderTarget & stencilTarget,
 	const RenderTarget & colorTarget0 = RenderTarget(),
 	const RenderTarget & colorTarget1 = RenderTarget(),
 	const RenderTarget & colorTarget2 = RenderTarget(),
@@ -226,7 +227,8 @@ inline FramebufferHandle createFramebuffer
 {
 	FramebufferArguments args;
 
-	args.depthTarget = depthTarget;
+	args.depthTarget   = depthTarget;
+	args.stencilTarget = stencilTarget;
 
 	if (colorTarget0.target) { args.colorTargets[0] = colorTarget0; args.targetInputs[0] = 0; }
 	if (colorTarget1.target) { args.colorTargets[1] = colorTarget1; args.targetInputs[1] = 1; }
@@ -238,6 +240,24 @@ inline FramebufferHandle createFramebuffer
 	if (colorTarget7.target) { args.colorTargets[7] = colorTarget7; args.targetInputs[7] = 7; }
 
 	return ctx.createFramebuffer(args);
+}
+
+inline FramebufferHandle createFramebuffer
+(
+	Context & ctx,
+	const RenderTarget & depthTarget,
+	const RenderTarget & colorTarget0 = RenderTarget(),
+	const RenderTarget & colorTarget1 = RenderTarget(),
+	const RenderTarget & colorTarget2 = RenderTarget(),
+	const RenderTarget & colorTarget3 = RenderTarget(),
+	const RenderTarget & colorTarget4 = RenderTarget(),
+	const RenderTarget & colorTarget5 = RenderTarget(),
+	const RenderTarget & colorTarget6 = RenderTarget(),
+	const RenderTarget & colorTarget7 = RenderTarget()
+)
+{
+	RenderTarget nullTarget;
+	return createFramebufferWithDepthStencil(ctx, depthTarget, nullTarget, colorTarget0, colorTarget1, colorTarget2, colorTarget3, colorTarget4, colorTarget5, colorTarget6, colorTarget7);
 }
 
 inline ProgramHandle createProgram(Context & ctx, const std::string & srcPrefix, const std::string & vertexSrc, const std::string & geometrySrc, const std::string & fragmentSrc, const ProgramArguments & args = ProgramArguments())
