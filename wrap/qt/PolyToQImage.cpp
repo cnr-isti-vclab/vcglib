@@ -86,15 +86,16 @@ void PolyDumper::DrawPolygonMask(const vector< vector<Point2f> > &polyVec,
 
 		///SET THE TRANSFORMATION TO CENTER WRT BBOX
 		painter.resetTransform();
-		painter.translate(-pos.V(0)+resolution/2,-pos.V(1)+resolution/2);
+		painter.translate(resolution/2,resolution/2);
 		painter.rotate(math::ToDeg(trans.rotRad));
 		painter.scale(scaleFact,scaleFact);
+		painter.translate(-pos.V(0),-pos.V(1));
 
 		///SET TO RETURN BACK
 		ret.rotRad=0;
 		ret.sca=scaleFact;
-		ret.tra[0]=-pos.V(0)+resolution/2;
-		ret.tra[1]=-pos.V(1)+resolution/2;
+		ret.tra[0]=-pos.V(0)*scaleFact + resolution/2;
+		ret.tra[1]=-pos.V(1)*scaleFact + resolution/2;
 
 		///DRAW THE POLYGON
 		QPainterPath QPP;
@@ -171,9 +172,9 @@ vcg::Point2f PolyDumper::GetIncenter(const vector< vector<Point2f> > &polyVec,
 
 	///THEN FIND THE CENTROID
 	float Maxradius=-1;
-	vcg::Point2i incenter=vcg::Point2i(0,0);
 	int sizeY=img.size().height();
 	int sizeX=img.size().width();
+	vcg::Point2i incenter=vcg::Point2i(sizeX/2,sizeY/2);
 	///THEN GO OVER ALL VERTICES
 	for (int x=0;x<sizeX;x++)
 		for (int y=0;y<sizeY;y++)
@@ -193,18 +194,18 @@ vcg::Point2f PolyDumper::GetIncenter(const vector< vector<Point2f> > &polyVec,
 
 		vcg::Point2f incenterf;
 		incenterf.Import(incenter);
-		///FIRST TRASNFORMATION
-		//QPainter painter;
-		//painter.begin(&img);
-		////painter.fillRect(incenter.V(0)-Maxradius,incenter.V(1)-Maxradius,Maxradius*2,Maxradius*2,Qt::red);
-		//painter.fillRect(incenter.V(0)-1,incenter.V(1)-1,2,2,Qt::red);
-		////painter.drawPoint(incenter.V(0),incenter.V(1));
-		//painter.end();
-		/*static int num=0;
-		num++;
-		char path[100];
-		sprintf(path,"mask%d.png",num);
-		img.save(path);*/
+//		/FIRST TRASNFORMATION
+//		QPainter painter;
+//		painter.begin(&img);
+//		//painter.fillRect(incenter.V(0)-Maxradius,incenter.V(1)-Maxradius,Maxradius*2,Maxradius*2,Qt::red);
+////		painter.fillRect(incenter.V(0)-1,incenter.V(1)-1,2,2,Qt::red);
+//		//painter.drawPoint(incenter.V(0),incenter.V(1));
+//		painter.end();
+//		static int num=0;
+//		num++;
+//		char path[100];
+//		sprintf(path,"mask%d.png",num);
+//		img.save(path);
 
 
 		incenterf.X()-=tra0.tra[0];
@@ -269,7 +270,7 @@ void  PolyDumper::dumpPolySetPNG(const char * imageName,
 		///FIND THE BARYCENTER
 		int radius;
 		Point2f bc;
-		bc=GetIncenter(polyVecVec[i],trVec[i],radius);
+		bc=GetIncenter(polyVecVec[i],trVec[i],radius,100);
 
 		if (pp.randomColor)
 			bb.setColor(vcg::ColorConverter::ToQColor(Color4b::Scatter(polyVecVec.size(),i)));
@@ -291,13 +292,16 @@ void  PolyDumper::dumpPolySetPNG(const char * imageName,
 	img.save(imageName);
 }
 
+
 ///write a polygon on a SVG file, format of the polygon is vector of vector of contours...nested contours are holes
 ///takes the name of the image in input, the set of polygons, the set of per polygons transformation, 
 ///the label to be written and the global parameter for drawing style
 void PolyDumper::dumpPolySetSVG(const char * imageName, 
 									   vector< vector< vector<Point2f> > > &polyVecVec, 
 									   vector<Similarity2f> &trVec, 
-									   vector<string> &labelVec, 
+									   vector< vector< string> > &labelVecVec,
+									   vector<vector<Point2f> > &labelPosVecVec,
+									   vector<vector<float> >&labelRadVecVec,
 									   PolyDumperParam &pp)
 {
 	assert(polyVecVec.size() == trVec.size());
@@ -305,7 +309,7 @@ void PolyDumper::dumpPolySetSVG(const char * imageName,
 
 	///SET THE FONT
 	int fontSize;
-	if(pp.fontSize==0) fontSize=ceil(std::max(pp.width,pp.height)/100.0);
+	if(pp.fontSize==0) fontSize=ceil(std::max(pp.width,pp.height)/200.0);
 	else fontSize=pp.fontSize;
 	QFont qf("courier",fontSize);
 	QSvgGenerator svg;
@@ -349,9 +353,6 @@ void PolyDumper::dumpPolySetSVG(const char * imageName,
 			QPP.addPolygon(QPolygonF(ppQ));
 		}
 		///FIND THE INCENTER
-		int radius;
-		Point2f bc;
-		bc=GetIncenter(polyVecVec[i],trVec[i],radius);
 
 		if (pp.randomColor)
 			bb.setColor(vcg::ColorConverter::ToQColor(Color4b::Scatter(polyVecVec.size(),i)));
@@ -365,9 +366,43 @@ void PolyDumper::dumpPolySetSVG(const char * imageName,
 
 		///DRAW THE TEXT
 		painter.setFont(qf);
-		painter.resetTransform();
-		painter.translate(trVec[i].tra[0],trVec[i].tra[1]);
-		painter.drawText(bc[0]-radius,bc[1]-radius,radius*2,radius*2,Qt::AlignHCenter|Qt::AlignCenter,QString(labelVec[i].c_str()));
+		float radius;
+		int radiusInt;
+		Point2f bc;
+		// if we do not have labelPos use the old method of empty disk.
+		if(labelPosVecVec.empty()) bc=GetIncenter(polyVecVec[i],trVec[i],radiusInt);
+		radius = radiusInt;
+		for(size_t labelInd=0;labelInd<labelVecVec[i].size();++labelInd)
+		{
+		  if(!labelPosVecVec.empty())
+		  {
+			bc= labelPosVecVec[i][labelInd];
+			bc.Rotate(trVec[i].rotRad);
+			bc *= trVec[i].sca;
+			radius=labelRadVecVec[i][labelInd];
+			radius *= trVec[i].sca;
+		  }
+		  painter.resetTransform();
+		  painter.translate(trVec[i].tra[0],trVec[i].tra[1]);
+		  painter.drawText(bc[0]-radius,bc[1]-radius,radius*2,radius*2,Qt::AlignHCenter|Qt::AlignCenter,QString(labelVecVec[i][labelInd].c_str()));
+		}
 	}
 	painter.end();
 }
+
+void PolyDumper::dumpPolySetSVG(const char * imageName,
+									   vector< vector< vector<Point2f> > > &polyVecVec,
+									   vector<Similarity2f> &trVec,
+									   vector< string > &labelVec,
+									   PolyDumperParam &pp)
+{
+  vector< vector< string> > labelVecVec(labelVec.size());
+  vector< vector<Point2f> > labelPosVec;
+  vector< vector<float> >labelRadVec;
+  for(size_t i=0;i<labelVec.size();++i)
+  {
+    labelVecVec[i].push_back(labelVec[i]);
+  }
+  dumpPolySetSVG(imageName,polyVecVec,trVec,labelVecVec,labelPosVec,labelRadVec,pp);
+}
+

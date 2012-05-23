@@ -78,16 +78,24 @@ public:
 	///takes the name of the image in input, the set of polygons, the set of per polygons transformation, 
 	///the label to be written and the global parameter for drawing style
 	static void dumpPolySetPNG(const char * imageName, std::vector< std::vector< std::vector<vcg::Point2f> > > &polyVecVec,
-							std::vector<vcg::Similarity2f> &trVec, std::vector<std::string> &labelVec, PolyDumperParam &pp);
+							std::vector<vcg::Similarity2f> &trVec, std::vector<std::vector<std::string> > &labelVecVec, PolyDumperParam &pp);
 	//write a polygon on a SVG file, format of the polygon is vector of vector of contours...nested contours are holes
 	///takes the name of the image in input, the set of polygons, the set of per polygons transformation, 
 	///the label to be written and the global parameter for drawing style
 	static void dumpPolySetSVG(const char * imageName, std::vector< std::vector< std::vector<vcg::Point2f> > > &polyVecVec,
+							std::vector<vcg::Similarity2f> &trVec, std::vector< std::vector<std::string> > &labelVecVec,
+							   std::vector<std::vector< vcg::Point2f> > &labelPosVec, std::vector<std::vector<float> > &labelRadVec, PolyDumperParam &pp);
+
+	static void dumpPolySetPNG(const char * imageName, std::vector< std::vector< std::vector<vcg::Point2f> > > &polyVecVec,
 							std::vector<vcg::Similarity2f> &trVec, std::vector<std::string> &labelVec, PolyDumperParam &pp);
+	static void dumpPolySetSVG(const char * imageName, std::vector< std::vector< std::vector<vcg::Point2f> > > &polyVecVec,
+							   std::vector<vcg::Similarity2f> &trVec, std::vector<std::string> &labelVec, PolyDumperParam &pp);
+
 	static void dumpPolySetPNG(const char * imageName, std::vector< std::vector< std::vector<vcg::Point2f> > > &polyVecVec,
 							std::vector<vcg::Similarity2f> &trVec, PolyDumperParam &pp);
 	static void dumpPolySetSVG(const char * imageName, std::vector< std::vector< std::vector<vcg::Point2f> > > &polyVecVec, 
 							std::vector<vcg::Similarity2f> &trVec, PolyDumperParam &pp);
+
 	static void dumpPolySetPNG(const char * imageName, std::vector<  std::vector<vcg::Point2f> > &polyVecVec, 
 							std::vector<vcg::Similarity2f> &trVec, PolyDumperParam &pp);
 	static void dumpPolySetSVG(const char * imageName, std::vector<  std::vector<vcg::Point2f> > &polyVecVec, 
