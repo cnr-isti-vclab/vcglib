@@ -29,6 +29,19 @@
 #error "Please include OpenGL before including this file"
 #endif
 
+
+// The inclusion of glu should be always safe (if someone has already included gl stuff).
+#ifndef GLU_VERSIONS
+#ifdef __APPLE__
+#include <OpenGL/glu.h>
+#else
+#ifdef _WIN32
+  #include <windows.h>
+#endif
+#include <GL/glu.h>
+#endif
+#endif
+
 #ifndef CALLBACK
 #ifdef _WIN32
 #define CALLBACK __stdcall

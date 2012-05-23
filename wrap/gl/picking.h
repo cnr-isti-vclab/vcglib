@@ -50,6 +50,18 @@ Revision 1.1  2005/12/03 09:36:28  ganovelli
 #define WRAP_GL_PICKING_H
 
 #include <algorithm>
+
+#ifndef GLU_VERSIONS
+#ifdef __APPLE__
+#include <OpenGL/glu.h>
+#else
+#ifdef _WIN32
+  #include <windows.h>
+#endif
+#include <GL/glu.h>
+#endif
+#endif
+
 namespace vcg
 {
 
