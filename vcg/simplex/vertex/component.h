@@ -111,8 +111,8 @@ public:
 
   typename TT::FacePointer &VFp() { static typename TT::FacePointer fp=0;  assert(0); return fp; }
   const typename TT::FacePointer cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
-  int &VFi(){static int z=0; return z;}
-  int cVFi() const {static int z=0; return z;}
+  int &VFi(){static int z=0; assert(0); return z;}
+  int cVFi() const {static int z=0; assert(0); return z;}
   static bool HasVFAdjacency()   {   return false; }
 
   typename TT::EdgePointer &VEp() { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
@@ -466,6 +466,7 @@ public:
   typename T::FacePointer &VFp() {return _fp; }
 	typename T::FacePointer const cVFp() const  {return _fp; }
   int &VFi() {return _zp; }
+  int const &cVFi() const {return _zp; }
 	template < class LeftV>
 	void ImportData(const LeftV  & left ) { T::ImportData( left); }
   static bool HasVFAdjacency()   {   return true; }
