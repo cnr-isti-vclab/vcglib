@@ -227,13 +227,23 @@ void SegmentPointSquaredDistance( Segment3<ScalarType> s,
 																							 Point3< ScalarType > &closest,
 																							 ScalarType &sqr_dist) 
 {
-      Point3<ScalarType> e = s.P1()-s.P0();
-      ScalarType  t = ((p-s.P0())*e)/e.SquaredNorm();
-      if(t<0)      t = 0;
-      else if(t>1) t = 1;
-      closest = s.P0()+e*t;
-      sqr_dist = SquaredDistance(p,closest);
-      assert(!math::IsNAN(sqr_dist));
+	Point3<ScalarType> e = s.P1()-s.P0();
+	ScalarType EPS=0.00000001;
+	if (e.Norm()<EPS)
+	{
+		Point3<ScalarType> AvP=(s.P0()+s.P1())/2.0;
+		closest=AvP;
+		sqr_dist=(AvP-p).Norm();
+	}
+	else
+	{
+		ScalarType  t = ((p-s.P0())*e)/e.SquaredNorm();
+		if(t<0)      t = 0;
+		else if(t>1) t = 1;
+		closest = s.P0()+e*t;
+		sqr_dist = SquaredDistance(p,closest);
+		assert(!math::IsNAN(sqr_dist));
+	}
 }
 
 /*
