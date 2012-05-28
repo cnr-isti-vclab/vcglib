@@ -111,15 +111,17 @@ namespace vcg {
 					
           
           if (mask &io::Mask::IOM_BITPOLYGONAL) {
-            
+            assert(tri::HasFFAdjacency(m));
             std::vector<VertexPointer> polygon;
-            for(fi=m.face.begin();fi!=m.face.end();++fi) if (!fi->IsD()) fi->ClearV();
+            tri::UpdateFlags<SaveMeshType>::FaceClearV(m);
             for(fi=m.face.begin();fi!=m.face.end();++fi) if (!fi->IsD()) if (!fi->IsV()) {
-						  assert(tri::HasFFAdjacency(m)); 
               vcg::tri::PolygonSupport<SaveMeshType,SaveMeshType>::ExtractPolygon(&*fi,polygon);
-              fprintf(fpout,"%d ", int(polygon.size()) );
-              for (size_t i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->UberFlags() );
-              fprintf(fpout,"\n");
+              if(!polygon.empty())
+              {
+                fprintf(fpout,"%d ", int(polygon.size()) );
+                for (size_t i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->UberFlags() );
+                fprintf(fpout,"\n");
+              }
             }
           }
           else {
