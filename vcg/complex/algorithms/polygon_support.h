@@ -141,36 +141,42 @@ namespace vcg
 
 		}
 	} 
-	
-	static void ExtractPolygon(typename TriMeshType::FacePointer tfi, std::vector<typename TriMeshType::VertexPointer> &vs){
-      vs.clear();
-			// find a non tagged edge
-			int se = -1;
-			for(int i=0; i<3; i++) if (!( tfi->IsF(i))) { se = i; break;}
-			
-			assert(se!=-1); // else, all faux edges!
-			
-			// initialize a pos on the first non faux edge
-			typename TriMeshType::VertexPointer v0 = tfi->V(se);
-			
-			vcg::face::JumpingPos<typename TriMeshType::FaceType> p;
-			
-			p.F() = tfi;
-			p.E() = se;
-			p.V() = p.F()->V(p.F()->Next(se));
-			p.FlipE();
 
-			vs.push_back(p.F()->V(se));
-	
-	    int guard = 0;
-			do{
-				while(p.F()->IsF(p.E())) {  p.FlipF(); p.FlipE(); p.F()->SetV(); if (guard++>10) break;} 
-				if (guard++>10) break;
-				vs.push_back(p.F()->V(p.E()));
-				p.FlipV();
-				p.FlipE();
-			} while( p.V() != v0 );
-  }
+		// Given a facepointer, it build a vector with all the vertex pointer
+		// around the polygonal face determined by the current FAUX-EDGE markings
+		// It assumes that the mesh is 2Manifold and has FF adjacency already computed
+		// NOTE: All the faces touched are marked as visited. (so for example you can avoid to get twice the same polygon)
+		static void ExtractPolygon(typename TriMeshType::FacePointer tfp, std::vector<typename TriMeshType::VertexPointer> &vs)
+		{
+		  vs.clear();
+		  // find a non tagged edge
+		  int se = -1;
+		  for(int i=0; i<3; i++) if (!( tfp->IsF(i))) { se = i; break;}
+
+		  // all faux edges return an empty vertex vector!
+		  if(se==-1) return;
+
+		  // initialize a pos on the first non faux edge
+		  typename TriMeshType::VertexPointer v0 = tfp->V(se);
+
+		  vcg::face::Pos<typename TriMeshType::FaceType> p(tfp,se,v0);
+		  vcg::face::Pos<typename TriMeshType::FaceType> start(p);
+
+          do
+          {
+            assert(!p.F()->IsF(p.E()));
+            vs.push_back(p.F()->V(p.E()));
+            p.FlipE();
+
+            while( p.F()->IsF(p.E()) )
+            {
+              p.F()->SetV();
+              p.FlipF();
+              p.FlipE();
+            }
+            p.FlipV();
+          } while(p!=start);
+        }
 
 }; // end of struct
 }} // end namespace vcg::tri
