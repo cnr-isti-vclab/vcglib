@@ -1,4 +1,4 @@
-
+QT += opengl svg
 TARGET = space_packer
 DEPENDPATH += . ../../..
 INCLUDEPATH += . ../../..
