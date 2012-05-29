@@ -17,6 +17,8 @@
     You should never interact with this class.
 */
 
+namespace vcg {
+
 template <typename Token>
 class Provider: public mt::thread {
  public:
@@ -76,5 +78,5 @@ class Provider: public mt::thread {
   }
 };
 
-
+} //namespace
 #endif

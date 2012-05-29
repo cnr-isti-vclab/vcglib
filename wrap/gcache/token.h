@@ -15,6 +15,7 @@
     The Priority template argument can simply be a floating point number
     or something more complex, (frame and error in pixel); the only
     requirement is the existence of a < comparison operator */
+namespace vcg {
 
 template <typename Priority>
 class Token {
@@ -83,4 +84,5 @@ class Token {
   }
 };
 
+} //namespace
 #endif // GCACHE_H

@@ -5,6 +5,7 @@
 
 /** Allows to insert tokens, update priorities and generally control the cache.
 */
+namespace vcg {
 
 template <class Token>
 class Controller {
@@ -66,7 +67,6 @@ class Controller {
   ///ensure that added tokens are processed and existing ones have their priority updated.
   ///potential bug! update is done on the heaps, if something is in transit...
   void updatePriorities() {
-
     if(tokens.size()) {
       mt::mutexlocker l(&provider.heap_lock);
       for(unsigned int i = 0; i < tokens.size(); i++)
@@ -140,6 +140,7 @@ class Controller {
   void resume() {
     assert(!stopped);
     assert(paused);
+    cout << "Resume" << endl;
 
     //unlock and open all doors
     for(unsigned int i = 0; i < caches.size(); i++) {
@@ -177,5 +178,5 @@ class Controller {
   }
 };
 
-
+} //namespace
 #endif // CONTROLLER_H
