@@ -78,6 +78,13 @@ class Texture2D : public Texture
 			glTexImage2D(target, level, this->m_format, width, height, 0, dataFormat, dataType, data);
 		}
 
+		void getImage(GLenum target, GLint unit, GLint level, GLenum dataFormat, GLenum dataType, const void * data)
+		{
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			glGetTexImage(target, level, this->m_format, dataFormat, dataType, data);
+		}
+
 		void setSubImage(GLenum target, GLint unit, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum dataFormat, GLenum dataType, const void * data)
 		{
 			(void)unit;
@@ -246,6 +253,26 @@ class BoundTexture2D : public BoundTexture
 		void setSampleMode(const TextureSampleMode & sampler)
 		{
 			this->object()->setSampleMode(this->m_target, this->m_unit, sampler);
+		}
+
+		void setImage(GLint level, GLsizei width, GLsizei height, GLenum dataFormat, GLenum dataType, const void * data)
+		{
+			this->object()->setImage(this->m_target, this->m_unit, level, width, height, dataFormat, dataType, data);
+		}
+
+		void getImage(GLint level, GLenum dataFormat, GLenum dataType, const void * data)
+		{
+			this->object()->getImage(this->m_target, this->m_unit, level, dataFormat, dataType, data);
+		}
+
+		void setSubImage(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum dataFormat, GLenum dataType, const void * data)
+		{
+			this->object()->setSubImage(this->m_target, this->m_unit, level, xoffset, yoffset, width, height, dataFormat, dataType, data);
+		}
+
+		void generateMipmap(void)
+		{
+			this->object()->generateMipmap(this->m_target, this->m_unit);
 		}
 
 	protected:
