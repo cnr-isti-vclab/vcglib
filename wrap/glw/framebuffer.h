@@ -222,6 +222,7 @@ class Framebuffer : public Object
 				glFramebufferRenderbuffer(target, GL_COLOR_ATTACHMENT0 + it->first, GL_RENDERBUFFER, 0);
 			}
 			this->m_config.colorTargets.clear();
+			return true;
 		}
 
 		bool setDepthTarget(GLenum target, GLint unit, const RenderTarget & renderTarget)
