@@ -228,6 +228,11 @@ class Program : public Object
 			return this->m_log;
 		}
 
+		const std::string & fullLog(void) const
+		{
+			return this->m_fullLog;
+		}
+
 		bool isLinked(void) const
 		{
 			return this->m_linked;
@@ -297,6 +302,7 @@ class Program : public Object
 			glGetIntegerv(GL_CURRENT_PROGRAM, &boundName);
 
 			this->m_name = glCreateProgram();
+			this->m_fullLog = "";
 
 			// shaders
 			{
@@ -304,6 +310,7 @@ class Program : public Object
 				{
 					const ShaderHandle & shader = this->m_arguments.shaders[i];
 					if (!shader) continue;
+					this->m_fullLog += shader->log();
 					if (!shader->isCompiled()) continue;
 					glAttachShader(this->m_name, shader->name());
 				}
@@ -356,8 +363,9 @@ class Program : public Object
 			GLint linkStatus = 0;
 			glGetProgramiv(this->m_name, GL_LINK_STATUS, &linkStatus);
 
-			this->m_log    = ThisType::getInfoLog(this->m_name);
-			this->m_linked = (linkStatus != GL_FALSE);
+			this->m_log      = ThisType::getInfoLog(this->m_name);
+			this->m_fullLog += this->m_log;
+			this->m_linked   = (linkStatus != GL_FALSE);
 
 #if GLW_PRINT_LOG_TO_STDERR
 			std::cerr << "---------------------------" << std::endl;
@@ -381,6 +389,7 @@ class Program : public Object
 			glDeleteProgram(this->m_name);
 			this->m_arguments.clear();
 			this->m_log.clear();
+			this->m_fullLog.clear();
 			this->m_linked = false;
 		}
 
@@ -420,6 +429,7 @@ class Program : public Object
 		ProgramArguments m_arguments;
 		UniformMap       m_uniforms;
 		std::string      m_log;
+		std::string      m_fullLog;
 		bool             m_linked;
 
 		static std::string getInfoLog(GLuint Program)
@@ -497,6 +507,11 @@ class SafeProgram : public SafeObject
 		const std::string & log(void) const
 		{
 			return this->object()->log();
+		}
+
+		const std::string & fullLog(void) const
+		{
+			return this->object()->fullLog();
 		}
 
 		bool isLinked(void) const

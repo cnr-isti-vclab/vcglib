@@ -214,6 +214,16 @@ class Framebuffer : public Object
 			return true;
 		}
 
+		bool removeAllColorTargets(GLenum target, GLint unit)
+		{
+			(void)unit;
+			for (RenderTargetMapping::ConstIterator it=this->m_config.colorTargets.bindings.begin(); it!=this->m_config.colorTargets.bindings.end(); ++it)
+			{
+				glFramebufferRenderbuffer(target, GL_COLOR_ATTACHMENT0 + it->first, GL_RENDERBUFFER, 0);
+			}
+			this->m_config.colorTargets.clear();
+		}
+
 		bool setDepthTarget(GLenum target, GLint unit, const RenderTarget & renderTarget)
 		{
 			(void)unit;
@@ -251,6 +261,23 @@ class Framebuffer : public Object
 			GLW_ASSERT(this->isValid());
 			glFramebufferRenderbuffer(target, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, 0);
 			this->m_config.stencilTarget.clear();
+			return true;
+		}
+
+		bool removeAllTargets(GLenum target, GLint unit)
+		{
+			this->removeAllColorTargets (target, unit);
+			this->removeDepthTarget     (target, unit);
+			this->removeStencilTarget   (target, unit);
+			return true;
+		}
+
+		bool setTargetInputs(GLenum target, GLint unit, const RenderTargetBinding & targetInputs)
+		{
+			(void)target;
+			(void)unit;
+			GLW_ASSERT(this->isValid());
+			this->configureTargetInputs(targetInputs);
 			return true;
 		}
 
@@ -358,29 +385,7 @@ class Framebuffer : public Object
 			const bool stencilAttached = this->attachTarget(target, GL_STENCIL_ATTACHMENT, args.stencilTarget);
 			if (stencilAttached) this->m_config.stencilTarget = args.stencilTarget;
 
-			if (this->m_config.colorTargets.bindings.empty())
-			{
-				glDrawBuffer(GL_NONE);
-				glReadBuffer(GL_NONE);
-			}
-			else
-			{
-				std::vector<GLenum> drawBuffers;
-				drawBuffers.reserve(args.targetInputs.bindings.size());
-				for (RenderTargetBinding::ConstIterator it=args.targetInputs.bindings.begin(); it!=args.targetInputs.bindings.end(); ++it)
-				{
-					const GLuint fragOutput      = it->second;
-					const GLuint attachmentIndex = GL_COLOR_ATTACHMENT0 + it->first;
-					if (drawBuffers.size() <= size_t(fragOutput))
-					{
-						drawBuffers.resize(size_t(fragOutput + 1), GL_NONE);
-					}
-					drawBuffers[fragOutput] = attachmentIndex;
-					this->m_config.targetInputs[it->first] = fragOutput;
-				}
-				glDrawBuffers(GLsizei(drawBuffers.size()), &(drawBuffers[0]));
-				glReadBuffer(drawBuffers[0]);
-			}
+			this->configureTargetInputs(args.targetInputs);
 		}
 
 		bool attachTarget(GLenum target, GLenum attachment, const RenderTarget & renderTarget)
@@ -401,6 +406,32 @@ class Framebuffer : public Object
 			}
 
 			return true;
+		}
+
+		void configureTargetInputs(const RenderTargetBinding & targetInputs)
+		{
+			if (this->m_config.colorTargets.bindings.empty() && targetInputs.bindings.empty())
+			{
+				glDrawBuffer(GL_NONE);
+				glReadBuffer(GL_NONE);
+				return;
+			}
+
+			std::vector<GLenum> drawBuffers;
+			drawBuffers.reserve(targetInputs.bindings.size());
+			for (RenderTargetBinding::ConstIterator it=targetInputs.bindings.begin(); it!=targetInputs.bindings.end(); ++it)
+			{
+				const GLuint fragOutput      = it->second;
+				const GLuint attachmentIndex = GL_COLOR_ATTACHMENT0 + it->first;
+				if (drawBuffers.size() <= size_t(fragOutput))
+				{
+					drawBuffers.resize(size_t(fragOutput + 1), GL_NONE);
+				}
+				drawBuffers[fragOutput] = attachmentIndex;
+				this->m_config.targetInputs[it->first] = fragOutput;
+			}
+			glDrawBuffers(GLsizei(drawBuffers.size()), &(drawBuffers[0]));
+			glReadBuffer(drawBuffers[0]);
 		}
 };
 
@@ -511,6 +542,11 @@ class BoundFramebuffer : public BoundObject
 			return this->object()->removeColorTarget(this->m_target, this->m_unit, index);
 		}
 
+		bool removeAllColorTargets(void)
+		{
+			return this->object()->removeAllColorTargets(this->m_target, this->m_unit);
+		}
+
 		bool setDepthTarget(const RenderTarget & renderTarget)
 		{
 			return this->object()->setDepthTarget(this->m_target, this->m_unit, renderTarget);
@@ -529,6 +565,16 @@ class BoundFramebuffer : public BoundObject
 		bool removeStencilTarget(void)
 		{
 			return this->object()->removeStencilTarget(this->m_target, this->m_unit);
+		}
+
+		bool removeAllTargets(void)
+		{
+			return this->object()->removeAllTargets(this->m_target, this->m_unit);
+		}
+
+		bool setTargetInputs(const RenderTargetBinding & targetInputs)
+		{
+			return this->object()->setTargetInputs(this->m_target, this->m_unit, targetInputs);
 		}
 
 	protected:
