@@ -78,11 +78,11 @@ class Texture2D : public Texture
 			glTexImage2D(target, level, this->m_format, width, height, 0, dataFormat, dataType, data);
 		}
 
-		void getImage(GLenum target, GLint unit, GLint level, GLenum dataFormat, GLenum dataType, const void * data)
+		void getImage(GLenum target, GLint unit, GLint level, GLenum dataFormat, GLenum dataType, void * data)
 		{
 			(void)unit;
 			GLW_ASSERT(this->isValid());
-			glGetTexImage(target, level, this->m_format, dataFormat, dataType, data);
+			glGetTexImage(target, level, dataFormat, dataType, data);
 		}
 
 		void setSubImage(GLenum target, GLint unit, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum dataFormat, GLenum dataType, const void * data)
@@ -260,7 +260,7 @@ class BoundTexture2D : public BoundTexture
 			this->object()->setImage(this->m_target, this->m_unit, level, width, height, dataFormat, dataType, data);
 		}
 
-		void getImage(GLint level, GLenum dataFormat, GLenum dataType, const void * data)
+		void getImage(GLint level, GLenum dataFormat, GLenum dataType, void * data)
 		{
 			this->object()->getImage(this->m_target, this->m_unit, level, dataFormat, dataType, data);
 		}
