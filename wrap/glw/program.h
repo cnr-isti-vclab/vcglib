@@ -243,7 +243,9 @@ class Program : public Object
 #if GLW_ASSERT_UNIFORM_LOCATION
 			GLW_ASSERT(this->m_uniforms.count(name) > 0);
 #endif
-			return this->m_uniforms.find(name)->second.location;
+			UniformMapConstIterator it = this->m_uniforms.find(name);
+			if (it == this->m_uniforms.end()) return -1;
+			return it->second.location;
 		}
 
 #define _GLW_IMPLEMENT_SCALAR_UNIFORM_(TYPE, FUNCION_SUFFIX) \
