@@ -283,11 +283,11 @@ private:
 																					tri::Index(m,(*fi).V(2)),  
 																																										&*fi));
 						}
-        assert (size_t(m.fn) == fvec.size());
+				assert (size_t(m.fn) == fvec.size());
 				//for(int i=0;i<fvec.size();++i) qDebug("fvec[%i] = (%i %i %i)(%i)",i,fvec[i].v[0],fvec[i].v[1],fvec[i].v[2],tri::Index(m,fvec[i].fp));
 				std::sort(fvec.begin(),fvec.end());
 				int total=0;
-        for(size_t i=0;i<fvec.size()-1;++i)
+				for(int i=0;i<int(fvec.size())-1;++i)
 				{
 					if(fvec[i]==fvec[i+1])
 					{ 
@@ -317,7 +317,7 @@ private:
 			  //for(int i=0;i<fvec.size();++i) qDebug("fvec[%i] = (%i %i %i)(%i)",i,fvec[i].v[0],fvec[i].v[1],fvec[i].v[2],tri::Index(m,fvec[i].fp));
 			  std::sort(eVec.begin(),eVec.end());
 			  int total=0;
-			  for(size_t i=0;i<eVec.size()-1;++i)
+			  for(int i=0;i<int(eVec.size())-1;++i)
 			  {
 				if(eVec[i]==eVec[i+1])
 				{
