@@ -854,12 +854,6 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
       }
 		}else if( !strcmp( pf.ElemName(i),"tristrips") )//////////////////// LETTURA TRISTRIP DI STANFORD
 		{ 
-			// Warning the parsing of tristrips could not work if OCF types are used
-			FaceType tf;  
-			if( HasPerFaceQuality(m) )  tf.Q()=(typename OpenMeshType::FaceType::QualityType)1.0;
-			if( FaceType::HasWedgeColor() )   tf.WC(0)=tf.WC(1)=tf.WC(2)=Color4b(Color4b::White);
-			if( HasPerFaceColor(m) )    tf.C()=Color4b(Color4b::White);			
-
 			int j;
 			pf.SetCurElement(i);
 			int numvert_tmp = (int)m.vert.size();
@@ -873,26 +867,26 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					return pi.status;
 				}
 				int remainder=0;
-				//int startface=m.face.size();
 				for(k=0;k<tsa.size-2;++k)
 				{
 					if(pi.cb && (k%1000)==0) pi.cb(50+k*50/tsa.size,"Tristrip Face Loading");				
-          if(tsa.v[k]<0 || tsa.v[k]>=numvert_tmp )	{
+					if(tsa.v[k]<0 || tsa.v[k]>=numvert_tmp )	{
 						pi.status = PlyInfo::E_BAD_VERT_INDEX;
 						return pi.status;
 					}
-				  if(tsa.v[k+2]==-1)
+					if(tsa.v[k+2]==-1)
 					{
 						k+=2;
 						if(k%2) remainder=0;
 							 else remainder=1;
 						continue;
 					}
+					Allocator<OpenMeshType>::AddFaces(m,1);
+					FaceType &tf =m.face.back();
 					tf.V(0) = index[ tsa.v[k+0] ];
 					tf.V(1) = index[ tsa.v[k+1] ];
 					tf.V(2) = index[ tsa.v[k+2] ];
-					if((k+remainder)%2) math::Swap (tf.V(0), tf.V(1) );
-					m.face.push_back( tf );
+					if((k+remainder)%2) std::swap (tf.V(0), tf.V(1) );
 				}
 			}
 		}
