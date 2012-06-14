@@ -1,0 +1,7 @@
+Current Eigen Version 3.05 (10.02.2012)
+To update the lib:
+- download Eigen
+- unzip it somewhere
+- copy the two folders 'Eigen' and 'unsupported' here 
+- update this file
+- commit
