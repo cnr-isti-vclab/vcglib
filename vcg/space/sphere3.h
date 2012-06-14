@@ -185,16 +185,16 @@ template <class T> void Sphere3<T>::Intersect(const Sphere3<T> &s) {
 }
 
  template <class T> int Sphere3<T>::CreateFromBox(int n,  const Point3<T> *points) {
-   Point3f max(-1e100, -1e100, -1e100);
-   Point3f min(1e100, 1e100, 1e100);
+   Point3f hi(-1e100, -1e100, -1e100);
+   Point3f low(1e100, 1e100, 1e100);
    for(int i = 0; i < n; i++) {
      for(int k = 0; k < 3; k++) {
-       if(max[k] < points[i][k]) max[k] = points[i][k];
-       if(min[k] > points[i][k]) min[k] = points[i][k];
+       if(hi[k] < points[i][k]) hi[k] = points[i][k];
+       if(low[k] > points[i][k]) low[k] = points[i][k];
      }
    }
-   Center() = (min + max)/2;
-   Radius() = (min - max).Norm()/2;
+   Center() = (low + hi)/2;
+   Radius() = (low - hi).Norm()/2;
    return 0;
  }
  template <class T> int Sphere3<T>::CreateTight(int n, const Point3<T> *points, 
