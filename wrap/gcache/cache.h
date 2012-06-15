@@ -207,7 +207,6 @@ protected:
                 s_curr -= size;
                 input->heap.push(remove);
             }
-            cout << "Removing something (what?)\n";
             return true;
         }
         return false;
