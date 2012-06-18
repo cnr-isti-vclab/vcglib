@@ -453,7 +453,7 @@ class Context : public detail::NonCopyable
 
 			{
 				GLint texUnits = 0;
-				glGetIntegerv(GL_MAX_TEXTURE_UNITS, &texUnits);
+				glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texUnits);
 				this->m_maxTextureUnits = int(texUnits);
 				for (int i=0; i<this->m_maxTextureUnits; ++i)
 				{
