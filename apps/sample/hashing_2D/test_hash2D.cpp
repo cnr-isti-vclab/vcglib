@@ -46,8 +46,8 @@ public:
 
 	void GetBBox(vcg::Box2<ScalarType> &BB2)
 	{
-		BB2.SetNull();
-		BB2.Add(P0());
+		//BB2.SetNull();
+		BB2.Set(P0());
 		BB2.Add(P1());
 	}
 
@@ -187,7 +187,7 @@ void GetCloseSegments(MySegmentType *S,
 	result.clear();
 	vcg::Box2<MyScalarType> bbox;
 	S->GetBBox(bbox);
-	bbox.Offset(radius*1.02);
+	bbox.Offset(radius);//*1.02);
 
 	///then get into the grid
 	std::vector<MySegmentType*> inbox;
