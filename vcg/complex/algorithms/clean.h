@@ -328,6 +328,12 @@ private:
 			  }
 			  return total;
 			}
+			static int CountUnreferencedVertex( MeshType& m)
+			{
+			  return RemoveUnreferencedVertex(m,false);
+			}
+
+
 			/** This function removes that are not referenced by any face. The function updates the vn counter.
 			@param m The mesh
 			@return The number of removed vertices
