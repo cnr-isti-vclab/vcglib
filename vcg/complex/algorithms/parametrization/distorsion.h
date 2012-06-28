@@ -178,7 +178,7 @@ namespace vcg {
 			static int Folded(const MeshType &m)
 			{
 				int folded=0;
-				for (int i=0;i<m.face.size();i++)
+				for (size_t i=0;i<m.face.size();i++)
 				{
 					if (m.face[i].IsD())continue;
 					if(Folded(&m.face[i]))folded++;
