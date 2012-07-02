@@ -83,6 +83,7 @@ public:
   static bool HasColorOcf()   { return false; }
 	static bool IsColorEnabled(const typename TT::VertexType *) { return false; }
 
+  typedef int  MarkType;
   inline void InitIMark()    {  }
   inline const int & cIMark() const { assert(0); static int tmp=-1; return tmp;}
   inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}

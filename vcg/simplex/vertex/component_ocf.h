@@ -358,8 +358,9 @@ public:
 
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   {   return true; }
-	static bool IsVFAdjacencyEnabled(const typename T::VertexType *vp)   {return vp->Base().VFAdjacencyEnabled;}
+    static bool IsVFAdjacencyEnabled(const typename T::VertexType *vp)   {return vp->Base().VFAdjacencyEnabled;}
 
+   static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdjOcf"));T::Name(name);}
 private:
 };
 
@@ -389,12 +390,12 @@ public:
 	void ImportData(const LeftV & leftV){
 			if((*this).Base().NormalEnabled && leftV.Base().NormalEnabled ) // copy the data only if they are enabled in both vertices
 				N().Import(leftV.cN());
-			T::ImportData(leftV);}
+            T::ImportData(leftV);}
 };
 
-template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {};
-template <class T> class Normal3fOcf: public NormalOcf<vcg::Point3f, T> {};
-template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {};
+template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3sOcf"));T::Name(name);}};
+template <class T> class Normal3fOcf: public NormalOcf<vcg::Point3f, T> {public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3fOcf"));T::Name(name);}};
+template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3dOcf"));T::Name(name);}};
 
 ///*-------------------------- COLOR ----------------------------------*/
 
@@ -413,10 +414,12 @@ public:
 		}
 
 	static bool HasColor()   { return true; }
-	static bool HasColorOcf()   { assert(!T::HasColorOcf()); return true; }
+    static bool HasColorOcf()   { assert(!T::HasColorOcf()); return true; }
 };
 
-template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
+template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {
+    static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4bOcf"));T::Name(name);}
+};
 
 ///*-------------------------- QUALITY  ----------------------------------*/
 
@@ -434,10 +437,12 @@ public:
 			T::ImportData(leftV);
 		}
 	static bool HasQuality()   { return true; }
-	static bool HasQualityOcf()   { assert(!T::HasQualityOcf()); return true; }
+    static bool HasQualityOcf()   { assert(!T::HasQualityOcf()); return true; }
 };
 
-template <class T> class QualityfOcf: public QualityOcf<float, T> {};
+template <class T> class QualityfOcf: public QualityOcf<float, T> {
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("QualityfOcf"));T::Name(name);}
+};
 
 
 ///*-------------------------- TEXTURE  ----------------------------------*/
@@ -457,10 +462,12 @@ public:
 			TT::ImportData(leftV);
 		}
 	static bool HasTexCoord()   { return true; }
-	static bool HasTexCoordOcf()   { assert(!TT::HasTexCoordOcf()); return true; }
+    static bool HasTexCoordOcf()   { assert(!TT::HasTexCoordOcf()); return true; }
 };
 
-template <class T> class TexCoordfOcf: public TexCoordOcf<TexCoord2<float,1>, T> {};
+template <class T> class TexCoordfOcf: public TexCoordOcf<TexCoord2<float,1>, T> {
+    static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoordfOcf"));T::Name(name);}
+};
 
 ///*-------------------------- MARK  ----------------------------------*/
 
@@ -487,7 +494,9 @@ public:
 	}
 	static bool HasMark()   { return true; }
 	static bool HasMarkOcf()   { return true; }
-	inline void InitIMark()    { IMark() = 0; }
+    inline void InitIMark()    { IMark() = 0; }
+    static void Name(std::vector<std::string> & name){name.push_back(std::string("IMark"));T::Name(name);}
+
 };
 
 
@@ -518,13 +527,13 @@ public:
 	static bool IsCurvatureEnabled(const typename TT::VertexType *v)   { return v->Base().CurvatureEnabled; }
 
 	static bool HasCurvatureOcf()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureOcf"));TT::Name(name);}
+
 
 private:
 };
 
-template <class T> class CurvaturefOcf: public CurvatureOcf<float, T> {};
-template <class T> class CurvaturedOcf: public CurvatureOcf<double, T> {};
+template <class T> class CurvaturefOcf: public CurvatureOcf<float, T> {static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvaturefOcf"));T::Name(name);} };
+template <class T> class CurvaturedOcf: public CurvatureOcf<double, T> {static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvaturedOcf"));T::Name(name);} };
 
 
 ///*-------------------------- CURVATURE DIR ----------------------------------*/

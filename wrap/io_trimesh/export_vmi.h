@@ -130,10 +130,10 @@ namespace io {
                     if(!only_header) WriteOut(&vert.NV[0],sizeof(typename VertexType::NormalType),vert.size(),f);
 				}else WriteString(f,"NOT_HAS_VERTEX_NORMAL_OCF");
 
- //               if( VertexType::HasMarkOcf() && vert.IsMarkEnabled()){
-//					WriteString(f,"HAS_VERTEX_MARK_OCF");
- //                   if(!only_header) WriteOut(&vert.MV[0],sizeof(typename VertexType::MarkType),vert.size(),f);
-    //			}else WriteString(f,"NOT_HAS_VERTEX_MARK_OCF");
+                if( VertexType::HasMarkOcf() && vert.IsMarkEnabled()){
+                    WriteString(f,"HAS_VERTEX_MARK_OCF");
+                    if(!only_header) WriteOut(&vert.MV[0],sizeof(typename VertexType::MarkType),vert.size(),f);
+                }else WriteString(f,"NOT_HAS_VERTEX_MARK_OCF");
 
 				if( VertexType::HasTexCoordOcf() && vert.IsTexCoordEnabled()){
 					WriteString(f,"HAS_VERTEX_TEXCOORD_OCF");
@@ -259,8 +259,9 @@ namespace io {
             Out_mode() = 2;
             F() = fopen(filename,"wb");
             if(F()==NULL)	return 1; // 1 is the error code for cant'open, see the ErrorMsg function
-            return Serialize(m);
+            int res = Serialize(m);
             fclose(F());
+            return res;
         }
         static int DumpToMem(const SaveMeshType &m,char * ptr){
             Out_mode() = 1;
@@ -311,7 +312,7 @@ namespace io {
 			WriteString(F(),"end_header");
 			/* end header */
 
-			if(vertSize!=0){
+            if(vertSize!=0){
                                 void * offsetV =  (void*) &m.vert[0];
 				/* write the address of the first vertex */
                                 WriteOut(&offsetV,sizeof(void *),1,F());
@@ -322,6 +323,7 @@ namespace io {
 				/* write the address of the first face */
                                 WriteOut(&offsetF,sizeof( void *),1,F());
 			}
+
 			/* save the object mesh */
             WriteOut(&m.shot,sizeof(Shot<typename SaveMeshType::ScalarType>),1,F());
             WriteOut(&m.vn,sizeof(int),1,F());
@@ -338,6 +340,7 @@ namespace io {
                 written = WriteOut((void*)&m.vert[0],sizeof(typename SaveMeshType::VertexType),m.vert.size(),F());
 				SaveVertexOcf<SaveMeshType,VertContainer>(F(),m.vert,false);
 			}
+
 
 			if(faceSize!=0){
 				/* save the faces */
