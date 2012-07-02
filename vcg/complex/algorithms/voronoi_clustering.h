@@ -97,15 +97,18 @@ static void SeedToVertexConversion(MeshType &m,std::vector<CoordType> &seedPVec,
 }
 
 typedef typename MeshType::template PerVertexAttributeHandle<VertexPointer> PerVertexPointerHandle;
+typedef typename MeshType::template PerFaceAttributeHandle<VertexPointer> PerFacePointerHandle;
 
 static void ComputePerVertexSources(MeshType &m, std::vector<VertexType *> &seedVec)
 {
   tri::Geo<MeshType> g;
   VertexPointer farthest;
   tri::Allocator<MeshType>::DeletePerVertexAttribute(m,"sources"); // delete any conflicting handle regardless of the type...
-  PerVertexPointerHandle sources =  tri::Allocator<MeshType>:: template AddPerVertexAttribute<VertexPointer> (m,"sources");
-  assert(tri::Allocator<MeshType>::IsValidHandle(m,sources));
-  g.FarthestVertex(m,seedVec,farthest,std::numeric_limits<ScalarType>::max(),&sources);
+  PerVertexPointerHandle vertexSources =  tri::Allocator<MeshType>:: template AddPerVertexAttribute<VertexPointer> (m,"sources");
+  tri::Allocator<MeshType>::DeletePerFaceAttribute(m,"sources"); // delete any conflicting handle regardless of the type...
+  PerFacePointerHandle faceSources =  tri::Allocator<MeshType>:: template AddPerFaceAttribute<VertexPointer> (m,"sources");
+  assert(tri::Allocator<MeshType>::IsValidHandle(m,vertexSources));
+  g.FarthestVertex(m,seedVec,farthest,std::numeric_limits<ScalarType>::max(),&vertexSources);
 }
 
 static void VoronoiColoring(MeshType &m, std::vector<VertexType *> &seedVec, bool frontierFlag=true)
@@ -127,24 +130,102 @@ static void VoronoiColoring(MeshType &m, std::vector<VertexType *> &seedVec, boo
 		tri::UpdateColor<MeshType>::VertexQualityRamp(m);
 }
 
-// Given a seed, it selects all the faces such with at least one vertex sourced by the passed VertexPointer.
-// Faces are selected more than once.
-static void SelectRegion(MeshType &m, VertexPointer vp)
+
+static void FaceAssociateRegion(MeshType &m)
+{
+  PerFacePointerHandle   faceSources =  tri::Allocator<MeshType>:: template GetPerFaceAttribute<VertexPointer> (m,"sources");
+  PerVertexPointerHandle vertexSources =  tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+  {
+    faceSources[fi]=0;
+    std::vector<VertexPointer> vp(3);
+    for(int i=0;i<3;++i) vp[i]=vertexSources[fi->V(i)];
+
+    for(int i=0;i<3;++i) // First try to assoiciate to the most reached vertex
+    {
+      if(vp[0]==vp[1] && vp[0]==vp[2]) faceSources[fi] = vp[0];
+      else
+      {
+        if(vp[0]==vp[1] && vp[0]->Q()< vp[2]->Q()) faceSources[fi] = vp[0];
+        if(vp[0]==vp[2] && vp[0]->Q()< vp[1]->Q()) faceSources[fi] = vp[0];
+        if(vp[1]==vp[2] && vp[1]->Q()< vp[0]->Q()) faceSources[fi] = vp[1];
+      }
+    }
+  }
+  tri::UpdateTopology<MeshType>::FaceFace(m);
+  int unassCnt=0;
+  do
+  {
+    unassCnt=0;
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+    {
+      if(faceSources[fi]==0)
+      {
+        std::vector<VertexPointer> vp(3);
+        for(int i=0;i<3;++i)
+          vp[i]=faceSources[fi->FFp(i)];
+
+        int cnt[3]={0,0,0};
+        if(vp[0]!=0 && (vp[0]==vp[1] || vp[0]==vp[2]))
+          faceSources[fi] = vp[0];
+        else if(vp[1]!=0 && (vp[1]==vp[2]))
+          faceSources[fi] = vp[1];
+        else
+          faceSources[fi] = std::max(vp[0],std::max(vp[1],vp[2]));
+        if(faceSources[fi]==0) unassCnt++;
+      }
+    }
+  }
+  while(unassCnt>0);
+}
+
+static int FaceSelectAssociateRegion(MeshType &m, VertexPointer vp)
+{
+  PerFacePointerHandle sources =  tri::Allocator<MeshType>:: template GetPerFaceAttribute<VertexPointer> (m,"sources");
+  assert(tri::Allocator<MeshType>::IsValidHandle(m,sources));
+  tri::UpdateSelection<MeshType>::FaceClear(m);
+  tri::UpdateSelection<MeshType>::VertexClear(m);
+  int selCnt=0;
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+  {
+    if(sources[fi]==vp)
+    {
+      fi->SetS();
+      ++selCnt;
+    }
+  }
+  return selCnt;
+}
+
+// Given a seed, it selects all the faces that have at least one vertex sourced by the given VertexPointer.
+// vp can be null (it search for unreached faces...)
+// returns the number of selected faces;
+static int FaceSelectRegion(MeshType &m, VertexPointer vp)
 {
   PerVertexPointerHandle sources =  tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   assert(tri::Allocator<MeshType>::IsValidHandle(m,sources));
   tri::UpdateSelection<MeshType>::FaceClear(m);
   tri::UpdateSelection<MeshType>::VertexClear(m);
-
+  int selCnt=0;
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
   {
-    if(	sources[(*fi).V(0)] == vp ||
-        sources[(*fi).V(1)] == vp ||
-        sources[(*fi).V(2)] == vp)
-      fi->SetS();
-  }
-  tri::UpdateSelection<MeshType>::VertexFromFaceLoose(m);
+    int minInd = 0; float minVal=std::numeric_limits<float>::max();
+    for(int i=0;i<3;++i)
+    {
+      if((*fi).V(i)->Q()<minVal)
+      {
+        minInd=i;
+        minVal=(*fi).V(i)->Q();
+      }
+    }
 
+    if(	sources[(*fi).V(minInd)] == vp)
+    {
+      fi->SetS();
+      selCnt++;
+    }
+  }
+  return selCnt;
 }
 
 // find the vertexes of frontier faces
