@@ -35,7 +35,7 @@
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/parametrization/distorsion.h>
+#include <vcg/complex/algorithms/parametrization/distortion.h>
 
 namespace vcg {
 	namespace tri{
@@ -144,9 +144,9 @@ class PoissonSolver
 	{
 		UpdateBounding<MeshType>::Box(mesh);
 
-		vcg::tri::UpdateTopology<MeshType>::FaceFace(mesh);
-		vcg::tri::UpdateFlags<MeshType>::FaceBorderFromFF(mesh);
-		vcg::tri::UpdateFlags<MeshType>::VertexBorderFromFace(mesh);
+		tri::UpdateTopology<MeshType>::FaceFace(mesh);
+		tri::UpdateFlags<MeshType>::FaceBorderFromFF(mesh);
+		tri::UpdateFlags<MeshType>::VertexBorderFromFace(mesh);
 
 		ScalarType dmax=0;
 		v0=NULL;
@@ -337,9 +337,9 @@ class PoissonSolver
 		neg_t[2] = fNorm ^ (p[1] - p[0]);
    
 		CoordType K1,K2;
-		/*MyMesh::PerFaceCoordHandle<ScalarType> Fh = vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<float>  (m,std::string("Irradiance"));
-		bool CrossDir0 = vcg::tri::HasPerVertexAttribute(mesh,"CrossDir0");
-				bool CrossDir1 = vcg::tri::HasPerVertexAttribute(mesh,"CrossDir1");
+		/*MyMesh::PerFaceCoordHandle<ScalarType> Fh = tri::Allocator<MyMesh>::AddPerVertexAttribute<float>  (m,std::string("Irradiance"));
+		bool CrossDir0 = tri::HasPerVertexAttribute(mesh,"CrossDir0");
+				bool CrossDir1 = tri::HasPerVertexAttribute(mesh,"CrossDir1");
 				assert(CrossDir0);
 				assert(CrossDir1);*/
 		
@@ -529,19 +529,19 @@ class PoissonSolver
 	{
 		///clear Visited Flag
 		if (correct_fixed)
-			vcg::tri::UpdateFlags<MeshType>::VertexClearV(mesh);
+			tri::UpdateFlags<MeshType>::VertexClearV(mesh);
 		//set fixed to V
 		for (size_t i=0;i<to_fix.size();i++)
 			to_fix[i]->SetV();
 
-		vcg::Box2<ScalarType> bbox;
+		Box2<ScalarType> bbox;
 		if (normalize)
 		{
 			for (size_t i=0;i<n_vert_vars;i++)
 			{
 				ScalarType U=x[i*2];
 				ScalarType V=x[(i*2)+1];
-				bbox.Add(vcg::Point2<ScalarType>(U,V));
+				bbox.Add(Point2<ScalarType>(U,V));
 			}
 		}
 
@@ -552,9 +552,9 @@ class PoissonSolver
 			//take U and V
 			ScalarType U=x[i*2];
 			ScalarType V=x[(i*2)+1];
-			vcg::Point2<ScalarType> p;
+			Point2<ScalarType> p;
 			if (!v->IsV())
-				p=vcg::Point2<ScalarType>(U,V);
+				p=Point2<ScalarType>(U,V);
 			else
 				p=v->T().P();
 			//p/=fieldScale;
@@ -574,7 +574,7 @@ class PoissonSolver
 			for (int j=0;j<3;j++)
 			{
 				VertexType* v=f->V(j);
-				vcg::Point2<ScalarType> p=v->T().P();
+				Point2<ScalarType> p=v->T().P();
 				f->WT(j).P()=p;
 			}
 		}
@@ -585,13 +585,13 @@ public:
 	///return true if is possible to 
 	bool IsFeaseable()
 	{
-		vcg::tri::UpdateTopology<MeshType>::FaceFace(mesh);
-		int NNmanifoldE=vcg::tri::Clean<MeshType>::CountNonManifoldEdgeFF(mesh);
+		tri::UpdateTopology<MeshType>::FaceFace(mesh);
+		int NNmanifoldE=tri::Clean<MeshType>::CountNonManifoldEdgeFF(mesh);
 		if (NNmanifoldE!=0)return false;
-		/*int NNmanifoldV=vcg::tri::Clean<MeshType>::CountNonManifoldVertexFF(mesh);
+		/*int NNmanifoldV=tri::Clean<MeshType>::CountNonManifoldVertexFF(mesh);
 		if (NNmanifoldV!=0)return false;*/
-		int G=vcg::tri::Clean<MeshType>::MeshGenus(mesh);
-		int numholes=vcg::tri::Clean<MeshType>::CountHoles(mesh);
+		int G=tri::Clean<MeshType>::MeshGenus(mesh);
+		int numholes=tri::Clean<MeshType>::CountHoles(mesh);
 		if (numholes==0) return false;
 		return (G==0);
 	}
@@ -639,7 +639,7 @@ public:
 			for (size_t i=0;i<mesh.vert.size();i++)
 				if (!mesh.vert[i].IsD())
 				{
-					mesh.vert[i].T().P()=vcg::Point2<ScalarType>(0,0);
+					mesh.vert[i].T().P()=Point2<ScalarType>(0,0);
 					to_fix.push_back(&mesh.vert[i]);
 					return;
 				}
@@ -652,11 +652,11 @@ public:
 			FindFarestVert(v0,v1);
 			if (v0==v1)
 			{
-				vcg::tri::io::ExporterPLY<MeshType>::Save(mesh,"./parametrized.ply");
+				tri::io::ExporterPLY<MeshType>::Save(mesh,"./parametrized.ply");
 				assert(0);
 			}
-			v0->T().P()=vcg::Point2<ScalarType>(0,0);
-			v1->T().P()=vcg::Point2<ScalarType>(1,0);
+			v0->T().P()=Point2<ScalarType>(0,0);
+			v1->T().P()=Point2<ScalarType>(1,0);
 			to_fix.push_back(v0);
 			to_fix.push_back(v1);
 			return;
@@ -676,7 +676,7 @@ public:
 			for (size_t i=0;i<mesh.vert.size();i++)
 				if (!mesh.vert[i].IsD())
 				{
-					mesh.vert[i].T().P()=vcg::Point2<ScalarType>(0,0);
+					mesh.vert[i].T().P()=Point2<ScalarType>(0,0);
 					to_fix.push_back(&mesh.vert[i]);
 					return;
 				}
@@ -689,11 +689,11 @@ public:
 			FindFarestVert(v0,v1);
 			if (v0==v1)
 			{
-				vcg::tri::io::ExporterPLY<MeshType>::Save(mesh,"./parametrized.ply");
+//				tri::io::ExporterPLY<MeshType>::Save(mesh,"./parametrized.ply");
 				assert(0);
 			}
-			v0->T().P()=vcg::Point2<ScalarType>(0,0);
-			v1->T().P()=vcg::Point2<ScalarType>(1,0);
+			v0->T().P()=Point2<ScalarType>(0,0);
+			v1->T().P()=Point2<ScalarType>(1,0);
 			to_fix.push_back(v0);
 			to_fix.push_back(v1);
 			return;
@@ -708,12 +708,12 @@ public:
 		//query if an attribute is present or not
 		if (use_direction_field)
 		{
-			bool CrossDir0 = vcg::tri::HasPerFaceAttribute(mesh,"CrossDir0");
-			bool CrossDir1 = vcg::tri::HasPerFaceAttribute(mesh,"CrossDir1");
+			bool CrossDir0 = tri::HasPerFaceAttribute(mesh,"CrossDir0");
+			bool CrossDir1 = tri::HasPerFaceAttribute(mesh,"CrossDir1");
 			assert(CrossDir0);
 			assert(CrossDir1);
-			Fh0= vcg::tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir0"));
-			Fh1= vcg::tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir1"));
+			Fh0= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir0"));
+			Fh1= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir1"));
 		}	
 		correct_fixed=_correct_fixed;
 		fieldScale=_fieldScale;
@@ -756,8 +756,8 @@ public:
 		
 		if (use_direction_field)
 		{
-			bool CrossDir0 = vcg::tri::HasPerFaceAttribute(mesh,"CrossDir0");
-			bool CrossDir1 = vcg::tri::HasPerFaceAttribute(mesh,"CrossDir1");
+			bool CrossDir0 = tri::HasPerFaceAttribute(mesh,"CrossDir0");
+			bool CrossDir1 = tri::HasPerFaceAttribute(mesh,"CrossDir1");
 			assert(CrossDir0);
 			assert(CrossDir1);
 		}
@@ -797,10 +797,10 @@ public:
 
 		///then check if majority of faces are folded
 		if (!solve_global_fold)return true;
-		if (vcg::tri::Distorsion<MeshType>::GloballyUnFolded(mesh))
+		if (tri::Distortion<MeshType>::GloballyUnFolded(mesh))
 		{
-			vcg::tri::UV_Utils<MeshType>::GloballyMirrorX(mesh);
-			assert(!vcg::tri::Distorsion<MeshType>::GloballyUnFolded(mesh));
+			tri::UV_Utils<MeshType>::GloballyMirrorX(mesh);
+			assert(!tri::Distortion<MeshType>::GloballyUnFolded(mesh));
 		}
 		return true;
 	}
