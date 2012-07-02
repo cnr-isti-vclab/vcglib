@@ -140,7 +140,7 @@ class PoissonSolver
 		assert(v1!=NULL);
 	}*/
 	
-	void FindFarestVert(VertexType* &v0,VertexType* &v1)
+	void FindFarthestVert(VertexType* &v0,VertexType* &v1)
 	{
 		UpdateBounding<MeshType>::Box(mesh);
 
@@ -163,6 +163,7 @@ class PoissonSolver
 				ScalarType d_test=(vt0->P()-vt1->P()).Norm();
 				if (d_test>dmax)
 				{
+					dmax=d_test;
 					v0=vt0;
 					v1=vt1;
 				}
@@ -686,7 +687,7 @@ public:
 		{
 			VertexType *v0;
 			VertexType *v1;
-			FindFarestVert(v0,v1);
+			FindFarthestVert(v0,v1);
 			if (v0==v1)
 			{
 //				tri::io::ExporterPLY<MeshType>::Save(mesh,"./parametrized.ply");
