@@ -222,22 +222,21 @@ void LineLineDistance(const vcg::Line3<ScalarType> &mLine0,
 * @param[in] sqr_dist The squared distance
 */
 template <class ScalarType> 
-void SegmentPointSquaredDistance( Segment3<ScalarType> s, 
+void SegmentPointSquaredDistance( const Segment3<ScalarType> &s,
 																							 const Point3<ScalarType> & p,
 																							 Point3< ScalarType > &closest,
 																							 ScalarType &sqr_dist) 
 {
 	Point3<ScalarType> e = s.P1()-s.P0();
-	ScalarType EPS=0.00000001;
-	if (e.Norm()<EPS)
+	ScalarType eSquaredNorm = e.SquaredNorm();
+	if (eSquaredNorm < std::numeric_limits<ScalarType>::min())
 	{
-		Point3<ScalarType> AvP=(s.P0()+s.P1())/2.0;
-		closest=AvP;
-		sqr_dist=(AvP-p).Norm();
+		closest=s.MidPoint();
+		sqr_dist=SquaredDistance(closest,p);
 	}
 	else
 	{
-		ScalarType  t = ((p-s.P0())*e)/e.SquaredNorm();
+		ScalarType  t = ((p-s.P0())*e)/eSquaredNorm;
 		if(t<0)      t = 0;
 		else if(t>1) t = 1;
 		closest = s.P0()+e*t;
