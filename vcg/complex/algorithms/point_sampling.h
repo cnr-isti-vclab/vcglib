@@ -35,6 +35,7 @@ sampling strategies (montecarlo, stratified etc).
 #ifndef __VCGLIB_POINT_SAMPLING
 #define __VCGLIB_POINT_SAMPLING
 
+
 #include <vcg/math/random_generator.h>
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/spatial_hashing.h>
@@ -147,12 +148,6 @@ static unsigned int RandomInt(unsigned int i)
 static double RandomDouble01()
 {
 	return SamplingRandomGenerator().generate01();
-}
-
-// Returns a random number in the [0,1] real interval using the improved Marsenne-Twister.
-static double RandomDouble01closed()
-{
-	return SamplingRandomGenerator().generate01closed();
 }
 
 #define FAK_LEN 1024
@@ -445,9 +440,7 @@ static void EdgeUniform(MetroMesh & m, VertexSampler &ps,int sampleNum, bool sam
 		for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
 					edgeSum+=Distance((*ei).v[0]->P(),(*ei).v[1]->P());
 					
-		//qDebug("Edges %i  edge sum %f",Edges.size(),edgeSum);			
 		float sampleLen = edgeSum/sampleNum;
-		//qDebug("EdgesSamples %i  Sampling Len %f",sampleNum,sampleLen);			
 		float rest=0;
 		for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
 				{
@@ -488,7 +481,6 @@ static void StratifiedMontecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 {
 	ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
 	ScalarType samplePerAreaUnit = sampleNum/area;
-	//qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
 	// Montecarlo sampling.
 	double  floatSampleNum = 0.0;
 	
@@ -593,7 +585,6 @@ static void WeightedMontecarlo(MetroMesh & m, VertexSampler &ps, int sampleNum)
 						weightedArea += WeightedArea(*fi);
 	
 	ScalarType samplePerAreaUnit = sampleNum/weightedArea;
-	//qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
 	// Montecarlo sampling.
 	double  floatSampleNum = 0.0;
 	for(fi=m.face.begin(); fi != m.face.end(); fi++)
@@ -680,7 +671,6 @@ static void FaceSubdivision(MetroMesh & m, VertexSampler &ps,int sampleNum, bool
 	
 	ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
 	ScalarType samplePerAreaUnit = sampleNum/area;
-	//qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
 	std::vector<FacePointer> faceVec;
 	FillAndShuffleFacePointerVector(m,faceVec);
 	vcg::tri::UpdateNormals<MetroMesh>::PerFaceNormalized(m);
@@ -772,7 +762,6 @@ static void FaceSubdivisionOld(MetroMesh & m, VertexSampler &ps,int sampleNum, b
 
     ScalarType area = Stat<MetroMesh>::ComputeMeshArea(m);
     ScalarType samplePerAreaUnit = sampleNum/area;
-    //qDebug("samplePerAreaUnit %f",samplePerAreaUnit);
     std::vector<FacePointer> faceVec;
     FillAndShuffleFacePointerVector(m,faceVec);
     tri::UpdateNormals<MetroMesh>::PerFaceNormalized(m);
@@ -1097,23 +1086,39 @@ static bool checkPoissonDisk(SampleSHT & sht, const Point3<ScalarType> & p, Scal
 
 struct PoissonDiskParam
 {
-	PoissonDiskParam()
-	{
-		adaptiveRadiusFlag = false;
-		radiusVariance =1;
-		MAXLEVELS = 5;
-		invertQuality = false;
+  PoissonDiskParam()
+  {
+    adaptiveRadiusFlag = false;
+    radiusVariance =1;
+    MAXLEVELS = 5;
+    invertQuality = false;
     preGenFlag = false;
     preGenMesh = NULL;
     geodesicDistanceFlag = false;
+    pds=NULL;
   }
+
+  struct Stat
+  {
+    int montecarloTime;
+    int gridTime;
+    int pruneTime;
+    int totalTime;
+    Point3i gridSize;
+    int gridCellNum;
+    int sampleNum;
+    int montecarloSampleNum;
+  };
+
   bool geodesicDistanceFlag;
-	bool adaptiveRadiusFlag;
-	float radiusVariance;
-	bool invertQuality;
-  bool preGenFlag;   // when generating a poisson distribution, you can initialize the set pof omputed points with ALL the vertices of another mesh. Usefull for building progressive refinements.
+  bool adaptiveRadiusFlag;
+  float radiusVariance;
+  bool invertQuality;
+  bool preGenFlag;   // when generating a poisson distribution, you can initialize the set of computed points with ALL the vertices of another mesh. Useful for building progressive refinements.
   MetroMesh *preGenMesh;
   int MAXLEVELS;
+
+  Stat *pds;
 };
 
 static ScalarType ComputePoissonDiskRadius(MetroMesh &origMesh, int sampleNum)
@@ -1153,7 +1158,8 @@ static void ComputePoissonSampleRadii(MetroMesh &sampleMesh, ScalarType diskRadi
 }
 
 // Trivial approach that puts all the samples in a UG and removes all the ones that surely do not fit the
-static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh, ScalarType diskRadius, const struct PoissonDiskParam pp=PoissonDiskParam())
+static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh,
+                               ScalarType diskRadius, const struct PoissonDiskParam pp=PoissonDiskParam())
 {
     // spatial index of montecarlo samples - used to choose a new sample to insert
     MontecarloSHT montecarloSHT;
@@ -1161,6 +1167,7 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
     // radius is the radius of empty disk centered over the samples (e.g. twice of the empty space disk)
     // This radius implies that when we pick a sample in a cell all that cell will not be touched again.
     ScalarType cellsize = 2.0f* diskRadius / sqrt(3.0);
+    int t0 = clock();
 
     // inflating
     origMesh.bbox.Offset(cellsize);
@@ -1169,10 +1176,7 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
     int sizeY = std::max(1.0f,origMesh.bbox.DimY() / cellsize);
     int sizeZ = std::max(1.0f,origMesh.bbox.DimZ() / cellsize);
     Point3i gridsize(sizeX, sizeY, sizeZ);
-#ifdef QT_VERSION
-    qDebug("PDS: radius %f Grid:(%i %i %i) ",diskRadius,sizeX,sizeY,sizeZ);
-    QTime tt; tt.start();
-#endif
+    if(pp.pds) pp.pds->gridSize = gridsize;
 
     // if we are doing variable density sampling we have to prepare the random samples quality with the correct expected radii.
     if(pp.adaptiveRadiusFlag)
@@ -1188,11 +1192,12 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
 
     unsigned int (*p_myrandom)(unsigned int) = RandomInt;
     std::random_shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
-
-#ifdef QT_VERSION
-    qDebug("PDS: Completed creation of activeCells, %i cells (%i msec)", (int)montecarloSHT.AllocatedCells.size(), tt.restart());
-#endif
-int removedCnt=0;
+    int t1 = clock();
+    if(pp.pds) {
+      pp.pds->gridCellNum = (int)montecarloSHT.AllocatedCells.size();
+      pp.pds->montecarloSampleNum = montecarloMesh.vn;
+}
+    int removedCnt=0;
     if(pp.preGenFlag)
     {
       // Initial pass for pruning the Hashed grid with the an eventual pre initialized set of samples
@@ -1202,10 +1207,7 @@ int removedCnt=0;
         removedCnt += montecarloSHT.RemoveInSphere(vi->cP(),diskRadius);
       }
       montecarloSHT.UpdateAllocatedCells();
-#ifdef QT_VERSION
-        qDebug("Removed %i samples in %i",removedCnt,tt.restart());
-#endif
-      }
+    }
     vertex::ApproximateGeodesicDistanceFunctor<VertexType> GDF;
     while(!montecarloSHT.AllocatedCells.empty())
     {
@@ -1220,11 +1222,13 @@ int removedCnt=0;
             if(pp.geodesicDistanceFlag) removedCnt += montecarloSHT.RemoveInSphereNormal(sp->cP(),sp->cN(),GDF,sampleRadius);
                             else        removedCnt += montecarloSHT.RemoveInSphere(sp->cP(),sampleRadius);
         }
-
-#ifdef QT_VERSION
-        qDebug("Removed %i samples in %i",removedCnt,tt.restart());
-#endif
         montecarloSHT.UpdateAllocatedCells();
+    }
+    int t2 = clock();
+    if(pp.pds)
+    {
+      pp.pds->gridTime = t1-t1;
+      pp.pds->pruneTime = t2-t1;
     }
 }
 
@@ -1240,7 +1244,7 @@ int removedCnt=0;
  */
 static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh, ScalarType diskRadius, const struct PoissonDiskParam pp=PoissonDiskParam())
 {
-
+  int t0=clock();
 	// spatial index of montecarlo samples - used to choose a new sample to insert
     MontecarloSHT montecarloSHTVec[5];
 
@@ -1258,10 +1262,6 @@ static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
   int sizeY = std::max(1.0f,origMesh.bbox.DimY() / cellsize);
   int sizeZ = std::max(1.0f,origMesh.bbox.DimZ() / cellsize);
 	Point3i gridsize(sizeX, sizeY, sizeZ);
-#ifdef QT_VERSION
-	qDebug("PDS: radius %f Grid:(%i %i %i) ",diskRadius,sizeX,sizeY,sizeZ);
-	QTime tt; tt.start();
-#endif
 
     // spatial hash table of the generated samples - used to check the radius constrain
     SampleSHT checkSHT;
@@ -1306,9 +1306,6 @@ static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 		// shuffle active cells
 		unsigned int (*p_myrandom)(unsigned int) = RandomInt;
 		std::random_shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
-#ifdef QT_VERSION
-    qDebug("PDS: Init of Hashing grid %i cells and %i samples (%i msec)", montecarloSHT.AllocatedCells.size(), montecarloSHT.hash_table.size(), tt.restart());
-#endif
 
 		// generate a sample inside C by choosing one of the contained pre-generated samples
 		//////////////////////////////////////////////////////////////////////////////////////////
@@ -1347,9 +1344,6 @@ static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
         gridsize *= 2;
 
         //
-#ifdef QT_VERSION
-        qDebug("PDS: Pruning %i added %i and removed %i samples (%i msec)",level,addedCnt, removedCnt,tt.restart());
-#endif
 		level++;
     } while(level < 5);
 }
@@ -1455,7 +1449,7 @@ static void SubdivideAndSample(MetroMesh & m, std::vector<Point3f> &pvec, const 
 
 
 
-// Yet another simpler wrapper for the Generation of a poisson disk distribution over a mesh.
+// Yet another simpler wrapper for the generation of a poisson disk distribution over a mesh.
 //
 template <class MeshType>
 void PoissonSampling(MeshType &m, // the mesh that has to be sampled
@@ -1464,9 +1458,15 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
                      float &radius) // the Poisson Disk Radius (used if sampleNum==0, setted if sampleNum!=0)
 {
   typedef tri::TrivialSampler<MeshType> BaseSampler;
+  typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam pp;
+  typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam::Stat stat;
+  pp.pds = &stat;
+  int t0=clock();
+
   if(sampleNum>0) radius = tri::SurfaceSampling<MeshType,BaseSampler>::ComputePoissonDiskRadius(m,sampleNum);
   if(radius>0 && sampleNum==0) sampleNum = tri::SurfaceSampling<MeshType,BaseSampler>::ComputePoissonSampleNum(m,radius);
 
+  pp.pds->sampleNum = sampleNum;
   poissonSamples.clear();
   std::vector<Point3f> MontecarloSamples;
   MeshType MontecarloMesh;
@@ -1480,10 +1480,12 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
   tri::Allocator<MeshType>::AddVertices(MontecarloMesh,MontecarloSamples.size());
   for(size_t i=0;i<MontecarloSamples.size();++i)
     MontecarloMesh.vert[i].P()=MontecarloSamples[i];
+  int t1=clock();
+  pp.pds->montecarloTime = t1-t0;
 
-  typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam pp;
-
-    tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(m, pdSampler, m, radius,pp);
+  tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(m, pdSampler, m, radius,pp);
+  int t2=clock();
+  pp.pds->totalTime = t2-t0;
 }
 
 
