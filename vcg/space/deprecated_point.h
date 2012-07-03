@@ -497,14 +497,10 @@ public:
 		return (_v[1]!=p._v[1])?(_v[1]> p._v[1]) : (_v[0]>=p._v[0]); }
 
 	inline Point2 & Normalize() {
-		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	_v[0]*=n;	_v[1]*=n;} return *this;};
-
-	template <class PT>  Point2 & Normalize(const PT &p){
-		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n; }
-		return *this;};
+		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	_v[0]*=n;	_v[1]*=n;} return *this;}
 
 	inline Point2 & HomoNormalize(){
-		if (_v[2]!=0.0) {	_v[0] /= W(); W()=1.0; } return *this;};
+		if (_v[2]!=0.0) {	_v[0] /= W(); W()=1.0; } return *this;}
 
 	inline S NormInfinity() const {
 		return math::Max( math::Abs(_v[0]), math::Abs(_v[1]) ); }
@@ -646,15 +642,11 @@ public:
 		if(n!=0.0) {
 			n=S(1.0)/n;
 		_v[0]*=n;	_v[1]*=n;	_v[2]*=n; }
-		return *this;};
-
-	template <class PT>  PointType & Normalize(const PT &p){
-		S n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n;	V(2)*=n;  }
-		return *this;};
+		return *this;}
 
 	inline PointType & HomoNormalize(){
 		if (_v[2]!=0.0) {	_v[0] /= W();	_v[1] /= W(); W()=1.0; }
-		return *this;};
+		return *this;}
 
 	inline S NormInfinity() const {
 		return math::Max( math::Max( math::Abs(_v[0]), math::Abs(_v[1]) ),
