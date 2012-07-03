@@ -89,11 +89,14 @@ public:
 
    struct Stat
    {
-     void clear() { totalTime=unwrapTime=voronoiTime=samplingTime=0;}
+     void clear() { iterNum=totalTime=unwrapTime=voronoiTime=samplingTime=0;}
      int totalTime;
      int unwrapTime;
      int voronoiTime;
      int samplingTime;
+
+     int regionNum;
+     int iterNum;
    };
 
    int sampleNum;
@@ -169,6 +172,7 @@ public:
       }
       int tp1=clock();
       pp.vas.unwrapTime +=tp1-tp0;
+      ++pp.vas.iterNum;
     }
 
     VoroMesh *rm = new VoroMesh();
@@ -199,6 +203,7 @@ public:
   Point2f finalSize;
   PolyPacker<float>::PackAsObjectOrientedRect(uvBorders,Point2f(1024.0f,1024.0f),trVec,finalSize);
   // loop again over all the patches
+  pp.vas.regionNum=meshRegionVec.size();
   for(size_t i=0; i<meshRegionVec.size();++i)
   {
     VoroMesh *rm = meshRegionVec[i];
