@@ -466,7 +466,7 @@ public:
 };
 
 template <class T> class TexCoordfOcf: public TexCoordOcf<TexCoord2<float,1>, T> {
-    static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoordfOcf"));T::Name(name);}
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoordfOcf"));T::Name(name);}
 };
 
 ///*-------------------------- MARK  ----------------------------------*/
@@ -532,8 +532,8 @@ public:
 private:
 };
 
-template <class T> class CurvaturefOcf: public CurvatureOcf<float, T> {static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvaturefOcf"));T::Name(name);} };
-template <class T> class CurvaturedOcf: public CurvatureOcf<double, T> {static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvaturedOcf"));T::Name(name);} };
+template <class T> class CurvaturefOcf: public CurvatureOcf<float, T> {public: static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvaturefOcf"));T::Name(name);} };
+template <class T> class CurvaturedOcf: public CurvatureOcf<double, T> {public: static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvaturedOcf"));T::Name(name);} };
 
 
 ///*-------------------------- CURVATURE DIR ----------------------------------*/
