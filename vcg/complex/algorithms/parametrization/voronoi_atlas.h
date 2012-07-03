@@ -4,6 +4,7 @@
 #include<vcg/complex/algorithms/parametrization/uv_utils.h>
 #include<vcg/complex/algorithms/parametrization/distortion.h>
 #include<vcg/space/poly_packer.h>
+#include<vcg/complex/append.h>
 #include<vcg/complex/algorithms/update/texture.h>
 #include<vcg/complex/algorithms/point_sampling.h>
 #include<vcg/complex/algorithms/voronoi_clustering.h>
@@ -27,8 +28,6 @@ public:
   class VoroFace    : public Face<  VoroUsedTypes, face::VertexRef, face::BitFlags, face::FFAdj ,face::VFAdj , face::WedgeTexCoord2f> {};
   class VoroEdge    : public Edge< VoroUsedTypes>{};
   class VoroMesh    : public tri::TriMesh< std::vector<VoroVertex>, std::vector<VoroFace> , std::vector<VoroEdge>  > {};
-
-
 
   typedef typename VoroMesh::FaceIterator FaceIterator;
   typedef typename VoroMesh::VertexType VertexType;
@@ -80,12 +79,36 @@ public:
 
 
 public:
+ struct VoronoiAtlasParam
+ {
+   VoronoiAtlasParam()
+   {
+     sampleNum=10;
+     overlap=false;
+   }
+
+   struct Stat
+   {
+     void clear() { totalTime=unwrapTime=voronoiTime=samplingTime=0;}
+     int totalTime;
+     int unwrapTime;
+     int voronoiTime;
+     int samplingTime;
+   };
+
+   int sampleNum;
+   bool overlap;
+   Stat vas;
+ };
+
  // Main parametrization function:
  // it takes a startMesh, copy it and
 
 
-  static void Build( MeshType &startMesh, MeshType &paraMesh, int sampleNum, bool overlap)
+  static void Build( MeshType &startMesh, MeshType &paraMesh, VoronoiAtlasParam &pp)
   {
+    pp.vas.clear();
+   int t0=clock();
   VoroMesh m;  // the mesh used for the processing is a copy of the passed one.
   tri::Append<VoroMesh, MeshType>::Mesh(m, startMesh);
   tri::Clean<VoroMesh>::RemoveUnreferencedVertex(m);
@@ -95,11 +118,16 @@ public:
   tri::UpdateBounding<VoroMesh>::Box(m);
   std::vector<VoroMesh *> meshRegionVec;
   std::vector< std::vector<Point2f> > uvBorders;
+
+  // Main processing loop
   do
   {
+    int st0=clock();
     std::vector<Point3f> PoissonSamples;
     float diskRadius=0;
-    tri::PoissonSampling(m,PoissonSamples,sampleNum,diskRadius);
+    tri::PoissonSampling(m,PoissonSamples,pp.sampleNum,diskRadius);
+    int st1=clock();
+    pp.vas.samplingTime+= st1-st0;
     printf("Sampling created a new mesh of %lu points\n",PoissonSamples.size());
     std::vector<VertexType *> seedVec;
     tri::VoronoiProcessing<VoroMesh>::SeedToVertexConversion(m,PoissonSamples,seedVec);
@@ -107,23 +135,20 @@ public:
     tri::VoronoiProcessing<VoroMesh>::ComputePerVertexSources(m,seedVec);
     tri::VoronoiProcessing<VoroMesh>::FaceAssociateRegion(m);
     tri::VoronoiProcessing<VoroMesh>::VoronoiColoring(m,seedVec,true);
-    tri::io::ExporterPLY<VoroMesh>::Save(m,"dd.ply",tri::io::Mask::IOM_VERTCOLOR);
-
     std::vector<VoroMesh *> badRegionVec;
-
+    int st2=clock();
+    pp.vas.voronoiTime+=st2-st1;
     for(size_t i=0; i<seedVec.size();++i)
     {
       VoroMesh *rm = new VoroMesh();
       int selCnt = tri::VoronoiProcessing<VoroMesh>::FaceSelectAssociateRegion(m,seedVec[i]);
       assert(selCnt>0);
-      if(overlap){
+      if(pp.overlap){
       tri::UpdateSelection<VoroMesh>::VertexFromFaceLoose(m);
       tri::UpdateSelection<VoroMesh>::FaceFromVertexLoose(m);
       }
       tri::Append<VoroMesh,VoroMesh>::Mesh(*rm, m, true);
-      char buf[100]; sprintf(buf,"reg%02i.ply",i);
-      tri::io::ExporterPLY<VoroMesh>::Save(*rm,buf,tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );
-
+      int tp0=clock();
       tri::PoissonSolver<VoroMesh> PS(*rm);
       if(PS.IsFeaseable())
       {
@@ -142,6 +167,8 @@ public:
         qDebug("ACH - mesh %i is NOT homeomorphic to a disk\n",i);
         badRegionVec.push_back(rm);
       }
+      int tp1=clock();
+      pp.vas.unwrapTime +=tp1-tp0;
     }
 
     VoroMesh *rm = new VoroMesh();
@@ -154,24 +181,19 @@ public:
       badRegionVec.push_back(rm);
     }
     m.Clear();
-    sampleNum = 10;
+    pp.sampleNum = 10;
     if(!badRegionVec.empty())
     {
       for(size_t i=0;i<badRegionVec.size();++i)
         if(badRegionVec[i]->fn>10)
           tri::Append<VoroMesh,VoroMesh>::Mesh(m, *badRegionVec[i], false);
 
-//      tri::io::ExporterPLY<VoroMesh>::Save(m,"buf.ply",tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );
-
       tri::Clean<VoroMesh>::RemoveDuplicateFace(m);
       tri::Clean<VoroMesh>::RemoveUnreferencedVertex(m);
-      tri::UpdateNormals<VoroMesh>::PerVertexPerFace(m);
       tri::Allocator<VoroMesh>::CompactVertexVector(m);
       tri::Allocator<VoroMesh>::CompactFaceVector(m);
-      qDebug("Still %i faces (from %i regions) to process\n",m.fn,badRegionVec.size());
     }
   } while (m.fn>0);
-//  tri::io::ExporterPLY<VoroMesh>::Save(m,"vorocolor.ply",tri::io::Mask::IOM_VERTCOLOR);
 
   std::vector<Similarity2f> trVec;
   Point2f finalSize;
@@ -190,13 +212,12 @@ public:
         fi->WT(j).V()=newpp[1]/1024.0f;
       }
     }
-
-    char buf[32]; sprintf(buf,"region_aa_%03i.ply",i);
-//    tri::io::ExporterPLY<VoroMesh>::Save(*rm,buf,tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );
     tri::Append<MeshType,VoroMesh>::Mesh(paraMesh, *rm, false);
   }
+  int t2=clock();
+  pp.vas.totalTime=t2-t0;
 }
-};
+}; //end
 
 
 } // end namespace vcg
