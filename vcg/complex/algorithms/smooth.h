@@ -208,8 +208,9 @@ public:
 //
 // This function simply accumulate over a TempData all the positions of the ajacent vertices
 //
-static void AccumulateLaplacianInfo(MeshType &m, SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > &TD)
+static void AccumulateLaplacianInfo(MeshType &m, SimpleTempData<typename MeshType::VertContainer,LaplacianInfo > &TD, bool cotangentFlag=false)
 {
+  float weight =1.0f;
 			FaceIterator fi;
 			for(fi=m.face.begin();fi!=m.face.end();++fi)
 			{
@@ -217,10 +218,15 @@ static void AccumulateLaplacianInfo(MeshType &m, SimpleTempData<typename MeshTyp
 					for(int j=0;j<3;++j)
 						if(!(*fi).IsB(j))
 						{
-							TD[(*fi).V(j)].sum+=(*fi).V1(j)->P();
-							TD[(*fi).V1(j)].sum+=(*fi).V(j)->P();
-							++TD[(*fi).V(j)].cnt;
-							++TD[(*fi).V1(j)].cnt;
+						  if(cotangentFlag) {
+							float angle = Angle(fi->P1(j)-fi->P2(j),fi->P0(j)-fi->P2(j));
+							weight = tan(M_PI_2 - angle);
+						  }
+
+							TD[(*fi).V0(j)].sum+=(*fi).P1(j)*weight;
+							TD[(*fi).V1(j)].sum+=(*fi).P0(j)*weight;
+							TD[(*fi).V0(j)].cnt+=weight;
+							TD[(*fi).V1(j)].cnt+=weight;
 						}
 			}
 			// si azzaera i dati per i vertici di bordo
@@ -252,7 +258,7 @@ static void AccumulateLaplacianInfo(MeshType &m, SimpleTempData<typename MeshTyp
 			}
 }
 
-static void VertexCoordLaplacian(MeshType &m, int step, bool SmoothSelected=false, vcg::CallBackPos * cb=0)
+static void VertexCoordLaplacian(MeshType &m, int step, bool SmoothSelected=false, bool cotangentWeight=false, vcg::CallBackPos * cb=0)
 {
   VertexIterator vi;
 	LaplacianInfo lpz(CoordType(0,0,0),0);
@@ -261,7 +267,7 @@ static void VertexCoordLaplacian(MeshType &m, int step, bool SmoothSelected=fals
 		{
 			if(cb)cb(100*i/step, "Classic Laplacian Smoothing");
 			TD.Init(lpz);
-			AccumulateLaplacianInfo(m,TD);
+			AccumulateLaplacianInfo(m,TD,cotangentWeight);
 			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
 				if(!(*vi).IsD() && TD[*vi].cnt>0 )
 				{
