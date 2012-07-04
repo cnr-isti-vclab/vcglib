@@ -35,6 +35,7 @@
 #include <vcg/simplex/face/topology.h>
 #include<vcg/complex/allocate.h>
 #include<vcg/complex/algorithms/update/topology.h>
+#include<vcg/complex/algorithms/update/flag.h>
 #include<wrap/callback.h>
 #include <vcg/complex/complex.h>
 #include <vcg/space/triangle3.h>
@@ -313,7 +314,8 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 	typedef typename MESH_TYPE::FacePointer FacePointer;
 	typedef typename MESH_TYPE::FaceType FaceType;	
 	typedef typename MESH_TYPE::FaceType::TexCoordType TexCoordType;
-	
+	assert(tri::HasFFAdjacency(m));
+	tri::UpdateFlags<MESH_TYPE>::FaceBorderFromFF(m);
 	typedef face::Pos<FaceType>  PosType;
 
 	int j,NewVertNum=0,NewFaceNum=0;
