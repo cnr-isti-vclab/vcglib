@@ -1,10 +1,11 @@
-#include <vcg/complex/append.h>
 
 // stuff to define the mesh
 #include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/vertex/component_ocf.h>
 #include <vcg/simplex/face/base.h>
 #include <vcg/simplex/edge/base.h>
 #include <vcg/complex/complex.h>
+#include <vcg/complex/append.h>
 // io
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
@@ -86,55 +87,41 @@ void Usage()
 	exit(-1);
 }
 
+template <class MeshType>
+bool UnitTest_Append(const char *filename1, const char *filename2)
+{
+  MeshType mr;
+  MeshType ml;
+
+  int startOpen=clock();
+  int err=vcg::tri::io::Importer<MeshType>::Open(mr,filename1);
+  if(err)
+  {
+      std::cerr << "Unable to open mesh " << filename1 << " : " << vcg::tri::io::Importer<MyMesh>::ErrorMsg(err) << std::endl;
+      exit(-1);
+  }
+  int endOpen = clock();
+  std::cout << "mesh loaded in " << float(endOpen-startOpen)/CLOCKS_PER_SEC << " msecs. Verts: " << mr.vn << " Faces: " << mr.fn << "\n";
+
+  int startCopy = clock();
+  vcg::tri::Append<MeshType,MeshType>::Mesh(ml,mr,false,true);
+  int endCopy = clock();
+  std::cout << "mesh copied in " << float(endCopy-startCopy)/CLOCKS_PER_SEC << " msecs." << std::endl;
+
+  assert(ml.vn==mr.vn);
+  assert(ml.en==mr.en);
+  assert(ml.fn==mr.fn);
+
+  int startSave = clock();
+  vcg::tri::io::ExporterPLY<MeshType>::Save(ml,filename2);
+  int endSave = clock();
+  std::cout << "mesh saved in " << float(endSave-startSave)/CLOCKS_PER_SEC << " msecs." << std::endl;
+  return true;
+}
+
 int main(int argc ,char**argv)
 {
-	MyMesh mesh;
-	if(argc<3) 
-		Usage();
-
-	timeb start;
-	timeb end;
-	ftime(&start);
-	int err=vcg::tri::io::Importer<MyMesh>::Open(mesh,argv[1]);
-	if(err)
-	{
-		std::cerr << "Unable to open mesh " << argv[1] << " : " << vcg::tri::io::Importer<MyMesh>::ErrorMsg(err) << std::endl;
-		exit(-1);
-	}
-	ftime(&end);
-	int loadtime = (end.time * 1000 + end.millitm) - (start.time * 1000 + start.millitm);
-	std::cout << "mesh loaded in " << loadtime << " msecs. Verts: " << mesh.vn << " Faces: " << mesh.fn << "\n";
-
-	std::string tmp(argv[2]);
-	if (tmp == "-n")
-	{
-		MyMesh mm;
-		ftime(&start);
-		vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(mm,mesh);
-		ftime(&end);
-		int cptime = (end.time * 1000 + end.millitm) - (start.time * 1000 + start.millitm);
-		std::cout << "mesh copied in " << cptime << " msecs." << std::endl;
-
-		if (argc == 4)
-			vcg::tri::io::ExporterPLY<MyMesh>::Save(mm,argv[3]);
-		return 0;
-	}
-
-	//if (tmp == "-o")
-	//{
-	//	OcfMesh ocfm;
-	//	ftime(&start);
-	//	vcg::tri::Append<OcfMesh,MyMesh>::MeshCopy(ocfm,mesh);
-	//	ftime(&end);
-	//	cptime = (end.time * 1000 + end.millitm) - (start.time * 1000 + start.millitm);
-	//	std::cout << "mesh copied in " << cptime << " msecs." << std::endl;
-
-	//	if (argc == 4)
-	//		vcg::tri::io::ExporterPLY<OcfMesh>::Save(ocfm,argv[3]);
-
-	//	return 0;
-	//}
-
-	Usage();
+	UnitTest_Append<MyMesh>(argv[1],"out.ply");
+	UnitTest_Append<OcfMesh>(argv[1],"out.ply");
 	return 0;
 }
