@@ -25,6 +25,7 @@
 #ifndef __VCGLIB__SMOOTH
 #define __VCGLIB__SMOOTH
 
+#include <cmath>
 #include <wrap/callback.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/ray3.h>
