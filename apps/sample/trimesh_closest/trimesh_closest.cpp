@@ -66,8 +66,14 @@ void Usage()
 	exit(-1);
 }
 
-template <class MeshType, bool useEdge>
-bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc)
+// Testing of closest point on a mesh functionalities
+// Two main options
+// - using or not precomputed edges and planes
+// - using the simple wrapper or the basic functions of the grid.
+// - using the fn as size of the grid or the edge lenght as cell side
+
+template <class MeshType, bool useEdge,bool useWrap, bool useFaceNumForGrid>
+bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc, std::vector<int> resultVec)
 {
   MeshType mr;
   typedef typename MeshType::ScalarType ScalarType;
@@ -87,7 +93,7 @@ bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc)
       exit(-1);
   }
   int endOpen = clock();
-  printf("Mesh loaded      in %6.3f - ",float(endOpen-startOpen)/CLOCKS_PER_SEC);
+  printf("Loading %6.3f - ",float(endOpen-startOpen)/CLOCKS_PER_SEC);
 
   int startSampling = clock();
 
@@ -108,41 +114,73 @@ bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc)
   }
   int endSampling = clock();
 
-  printf("Mesh Sampled     in %6.3f - ",float(endSampling-startSampling)/CLOCKS_PER_SEC);
+  printf("Sampling  %6.3f - ",float(endSampling-startSampling)/CLOCKS_PER_SEC);
 
   int startGridInit = clock();
   TriMeshGrid TRGrid;
-  TRGrid.Set(mr.face.begin(),mr.face.end());
+  if(useFaceNumForGrid)
+  {
+    TRGrid.Set(mr.face.begin(),mr.face.end(),mr.fn*2);
+  }
+  else
+  {
+    float avgEdge = tri::Stat<MeshType>::ComputeFaceEdgeAverage(mr);
+    TRGrid.SetWithRadius(mr.face.begin(),mr.face.end(),avgEdge*2);
+  }
 
   if(useEdge)
      tri::UpdateEdges<MeshType>::Set(mr);
 
   int endGridInit = clock();
-  printf("Grid Init        in %6.3f\n",float(endGridInit-startGridInit)/CLOCKS_PER_SEC);
+  printf("Grid Init %6.3f - ",float(endGridInit-startGridInit)/CLOCKS_PER_SEC);
 
   const ScalarType maxDist=std::max(dispAbs*10.0f,mr.bbox.Diag()/1000.f);
   CoordType closest;
   ScalarType dist;
-  std::vector<FaceType *> resultVec(MontecarloSamples.size());
   int startGridQuery = clock();
   double avgDist=0;
-  if(useEdge)
+  resultVec.resize(MontecarloSamples.size());
+  if(useEdge && useWrap)
     for(size_t i=0;i<MontecarloSamples.size();++i)
     {
-      resultVec[i]=tri::GetClosestFaceRT(mr,TRGrid,MontecarloSamples[i], maxDist,dist,closest);
+      resultVec[i]=tri::Index(mr,tri::GetClosestFaceRT(mr,TRGrid,MontecarloSamples[i], maxDist,dist,closest));
       if(resultVec[i]) avgDist += double(dist);
     }
-  else
+  if(!useEdge && useWrap)
     for(size_t i=0;i<MontecarloSamples.size();++i)
     {
-      resultVec[i]=tri::GetClosestFaceBase(mr,TRGrid,MontecarloSamples[i], maxDist,dist,closest);
+      resultVec[i]=tri::Index(mr,tri::GetClosestFaceBase(mr,TRGrid,MontecarloSamples[i], maxDist,dist,closest));
       if(resultVec[i]) avgDist += double(dist);
     }
+  if(useEdge && !useWrap)
+  {
+    typedef tri::FaceTmark<MeshType> MarkerFace;
+    MarkerFace mf;
+    mf.SetMesh(&mr);
+    face::PointDistanceFunctor<ScalarType> PDistFunct;
+    for(size_t i=0;i<MontecarloSamples.size();++i)
+    {
+      resultVec[i]=tri::Index(mr,TRGrid.GetClosest(PDistFunct,mf,MontecarloSamples[i],maxDist,dist,closest));
+      if(resultVec[i]) avgDist += double(dist);
+    }
+  }
+  if(!useEdge && !useWrap)
+  {
+    typedef tri::FaceTmark<MeshType> MarkerFace;
+    MarkerFace mf;
+    mf.SetMesh(&mr);
+    face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
+    for(size_t i=0;i<MontecarloSamples.size();++i)
+    {
+      resultVec[i]=tri::Index(mr,TRGrid.GetClosest(PDistFunct,mf,MontecarloSamples[i],maxDist,dist,closest));
+      if(resultVec[i]) avgDist += double(dist);
+    }
+  }
 
   int endGridQuery = clock();
-  printf("Grid Size %4i %4i %4i ",TRGrid.siz[0],TRGrid.siz[1],TRGrid.siz[2]);
+  printf("Grid Size %3i %3i %3i - ",TRGrid.siz[0],TRGrid.siz[1],TRGrid.siz[2]);
   printf("Avg dist %6.9lf - ",avgDist / float(MontecarloSamples.size()));
-  printf("Grid Query Sampled in %6.3f sec\n\n", float(endGridQuery-startGridQuery)/CLOCKS_PER_SEC);
+  printf("Grid Query %6.3f \n", float(endGridQuery-startGridQuery)/CLOCKS_PER_SEC);
   return true;
 }
 
@@ -151,11 +189,28 @@ int main(int argc ,char**argv)
   if(argc<3) Usage();
   float dispPerc = atof(argv[3]);
   int sampleNum = atoi(argv[2]);
-  UnitTest_Closest<RTMesh,true>   (argv[1],sampleNum,dispPerc);
-  UnitTest_Closest<RTMesh,true>   (argv[1],sampleNum,dispPerc);
-  UnitTest_Closest<RTMesh,false>  (argv[1],sampleNum,dispPerc);
-  UnitTest_Closest<RTMesh,false>  (argv[1],sampleNum,dispPerc);
-  UnitTest_Closest<BaseMesh,false>(argv[1],sampleNum,dispPerc);
-  UnitTest_Closest<BaseMesh,false>(argv[1],sampleNum,dispPerc);
+  std::vector<int> resultVecRT11;
+  std::vector<int> resultVecRT01;
+  std::vector<int> resultVecRT00;
+  std::vector<int> resultVecRT10;
+  std::vector<int> resultVecBS01;
+  std::vector<int> resultVecBS00;
+  UnitTest_Closest<RTMesh,true,true,true>     (argv[1],sampleNum,dispPerc,resultVecRT11);
+  UnitTest_Closest<RTMesh,true,true,false>    (argv[1],sampleNum,dispPerc,resultVecRT11);
+  UnitTest_Closest<RTMesh,false,true,true>    (argv[1],sampleNum,dispPerc,resultVecRT01);
+  UnitTest_Closest<RTMesh,true,false,true>    (argv[1],sampleNum,dispPerc,resultVecRT00);
+  UnitTest_Closest<RTMesh,false,false,true>   (argv[1],sampleNum,dispPerc,resultVecRT10);
+  UnitTest_Closest<BaseMesh,false,true,true>  (argv[1],sampleNum,dispPerc,resultVecBS01);
+  UnitTest_Closest<BaseMesh,false,false,true> (argv[1],sampleNum,dispPerc,resultVecBS01);
+  UnitTest_Closest<BaseMesh,false,false,false>(argv[1],sampleNum,dispPerc,resultVecBS01);
+
+  for(size_t i=0;i<resultVecRT11.size();++i)
+  {
+    if(resultVecRT11[i]!=resultVecRT01[i]) printf("%i is diff",i);
+    if(resultVecRT11[i]!=resultVecRT00[i]) printf("%i is diff",i);
+    if(resultVecRT11[i]!=resultVecRT10[i]) printf("%i is diff",i);
+    if(resultVecRT11[i]!=resultVecBS00[i]) printf("%i is diff",i);
+    if(resultVecRT11[i]!=resultVecBS01[i]) printf("%i is diff",i);
+  }
   return 0;
 }

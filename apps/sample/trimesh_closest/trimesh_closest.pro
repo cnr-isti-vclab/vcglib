@@ -7,6 +7,6 @@ TEMPLATE = app
 HEADERS += 
 SOURCES += trimesh_closest.cpp ../../../wrap/ply/plylib.cpp
 
-#DEFINES += N_DEBUG
+release {DEFINES += NDEBUG}
 # Mac specific Config required to avoid to make application bundles
 CONFIG -= app_bundle
