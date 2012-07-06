@@ -1,0 +1,161 @@
+
+// stuff to define the mesh
+#include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/vertex/component_ocf.h>
+#include <vcg/simplex/face/base.h>
+#include <vcg/simplex/face/component_rt.h>
+#include <vcg/simplex/edge/base.h>
+#include <vcg/complex/complex.h>
+#include <vcg/complex/append.h>
+#include <vcg/complex/algorithms/point_sampling.h>
+#include <vcg/complex/algorithms/update/edges.h>
+
+
+// io
+#include <wrap/io_trimesh/import.h>
+#include <wrap/io_trimesh/export_ply.h>
+
+#include <cstdlib>
+
+#include <sys/timeb.h>
+#include <iostream>
+#include <string>
+
+
+class BaseVertex;
+class BaseEdge;
+class BaseFace;
+
+struct BaseUsedTypes: public vcg::UsedTypes<vcg::Use<BaseVertex>::AsVertexType,vcg::Use<BaseEdge>::AsEdgeType,vcg::Use<BaseFace>::AsFaceType>{};
+
+class BaseVertex  : public vcg::Vertex< BaseUsedTypes,
+	vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags  > {};
+
+class BaseEdge : public vcg::Edge< BaseUsedTypes> {};
+
+class BaseFace    : public vcg::Face< BaseUsedTypes,
+	vcg::face::Normal3f, vcg::face::VertexRef, vcg::face::BitFlags, vcg::face::Mark, vcg::face::EdgePlaneEmpty > {};
+
+class BaseMesh    : public vcg::tri::TriMesh<std::vector<BaseVertex>, std::vector<BaseFace> > {};
+
+
+
+
+class RTVertex;
+class RTEdge;
+class RTFace;
+
+struct RTUsedTypes: public vcg::UsedTypes<vcg::Use<RTVertex>::AsVertexType,vcg::Use<RTEdge>::AsEdgeType,vcg::Use<RTFace>::AsFaceType>{};
+
+class RTVertex  : public vcg::Vertex< RTUsedTypes,
+	vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags  > {};
+
+class RTEdge : public vcg::Edge< RTUsedTypes> {};
+
+class RTFace    : public vcg::Face< RTUsedTypes,
+	vcg::face::Normal3f, vcg::face::VertexRef, vcg::face::EdgePlane, vcg::face::Mark, vcg::face::BitFlags > {};
+
+class RTMesh    : public vcg::tri::TriMesh<std::vector<RTVertex>, std::vector<RTFace> > {};
+
+
+using namespace vcg;
+
+void Usage()
+{
+	printf( "\nUsage:  trimesh_closest mesh.ply samplenum sampledistance(as fraction of bboxdiag)");
+	exit(-1);
+}
+
+template <class MeshType, bool useEdge>
+bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc)
+{
+  MeshType mr;
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef typename MeshType::CoordType CoordType;
+  typedef typename MeshType::FaceType FaceType;
+  typedef GridStaticPtr<FaceType, ScalarType> TriMeshGrid;
+
+  int startOpen=clock();
+  int err=vcg::tri::io::Importer<MeshType>::Open(mr,filename1);
+  tri::UpdateBounding<MeshType>::Box(mr);
+//  tri::UpdateNormals<MeshType>::PerFaceNormalized(mr);
+  tri::UpdateNormals<MeshType>::PerFace(mr);
+  float dispAbs = mr.bbox.Diag()*dispPerc;
+  if(err)
+  {
+      std::cerr << "Unable to open mesh " << filename1 << " : " << vcg::tri::io::Importer<MeshType>::ErrorMsg(err) << std::endl;
+      exit(-1);
+  }
+  int endOpen = clock();
+  printf("Mesh loaded      in %6.3f - ",float(endOpen-startOpen)/CLOCKS_PER_SEC);
+
+  int startSampling = clock();
+
+  std::vector<Point3f> MontecarloSamples;
+  // First step build the sampling
+  typedef tri::TrivialSampler<MeshType> BaseSampler;
+  BaseSampler mcSampler(MontecarloSamples);
+  tri::SurfaceSampling<MeshType,BaseSampler>::SamplingRandomGenerator().initialize(123);
+  tri::SurfaceSampling<MeshType,BaseSampler>::Montecarlo(mr, mcSampler, sampleNum);
+  math::MarsenneTwisterRNG rnd;
+  rnd.initialize(123);
+  for(size_t i=0;i<MontecarloSamples.size();++i)
+  {
+    Point3f pp(rnd.generate01(),rnd.generate01(),rnd.generate01());
+    pp = (pp+Point3f(-0.5f,-0.5f,-0.5f))*2.0f;
+    pp*=rnd.generate01()*dispAbs;
+    MontecarloSamples[i]+=pp;
+  }
+  int endSampling = clock();
+
+  printf("Mesh Sampled     in %6.3f - ",float(endSampling-startSampling)/CLOCKS_PER_SEC);
+
+  int startGridInit = clock();
+  TriMeshGrid TRGrid;
+  TRGrid.Set(mr.face.begin(),mr.face.end());
+
+  if(useEdge)
+     tri::UpdateEdges<MeshType>::Set(mr);
+
+  int endGridInit = clock();
+  printf("Grid Init        in %6.3f\n",float(endGridInit-startGridInit)/CLOCKS_PER_SEC);
+
+  const ScalarType maxDist=std::max(dispAbs*10.0f,mr.bbox.Diag()/1000.f);
+  CoordType closest;
+  ScalarType dist;
+  std::vector<FaceType *> resultVec(MontecarloSamples.size());
+  int startGridQuery = clock();
+  double avgDist=0;
+  if(useEdge)
+    for(size_t i=0;i<MontecarloSamples.size();++i)
+    {
+      resultVec[i]=tri::GetClosestFaceRT(mr,TRGrid,MontecarloSamples[i], maxDist,dist,closest);
+      if(resultVec[i]) avgDist += double(dist);
+    }
+  else
+    for(size_t i=0;i<MontecarloSamples.size();++i)
+    {
+      resultVec[i]=tri::GetClosestFaceBase(mr,TRGrid,MontecarloSamples[i], maxDist,dist,closest);
+      if(resultVec[i]) avgDist += double(dist);
+    }
+
+  int endGridQuery = clock();
+  printf("Grid Size %4i %4i %4i ",TRGrid.siz[0],TRGrid.siz[1],TRGrid.siz[2]);
+  printf("Avg dist %6.9lf - ",avgDist / float(MontecarloSamples.size()));
+  printf("Grid Query Sampled in %6.3f sec\n\n", float(endGridQuery-startGridQuery)/CLOCKS_PER_SEC);
+  return true;
+}
+
+int main(int argc ,char**argv)
+{
+  if(argc<3) Usage();
+  float dispPerc = atof(argv[3]);
+  int sampleNum = atoi(argv[2]);
+  UnitTest_Closest<RTMesh,true>   (argv[1],sampleNum,dispPerc);
+  UnitTest_Closest<RTMesh,true>   (argv[1],sampleNum,dispPerc);
+  UnitTest_Closest<RTMesh,false>  (argv[1],sampleNum,dispPerc);
+  UnitTest_Closest<RTMesh,false>  (argv[1],sampleNum,dispPerc);
+  UnitTest_Closest<BaseMesh,false>(argv[1],sampleNum,dispPerc);
+  UnitTest_Closest<BaseMesh,false>(argv[1],sampleNum,dispPerc);
+  return 0;
+}
