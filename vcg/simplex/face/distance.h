@@ -20,42 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.10  2006/01/22 10:06:23  cignoni
-Corrected use of Area with the unambiguous DoubleArea
-
-Revision 1.9  2005/09/28 19:35:06  m_di_benedetto
-Added class PointDistanceFunctor.
-
-Revision 1.8  2005/09/14 12:58:44  pietroni
-changed min calls to Min<ScalarType> of math.h of vcglib
-
-Revision 1.7  2005/09/14 09:58:32  pietroni
-removed vcg::math::Min<ScalarType> definition generate warnings
-
-Revision 1.6  2005/09/14 09:03:54  pietroni
-added definition of vcg::math::Min<ScalarType> function
-
-Revision 1.5  2005/02/02 16:44:34  pietroni
-1 warning corrected added casting in const ScalarType EPSILON = ScalarType( 0.000001);
-
-Revision 1.4  2005/01/28 12:00:33  cignoni
-small gcc compiling issues for namespaces
-
-Revision 1.3  2005/01/24 15:35:25  cignoni
-Removed a 'using namespace'
-
-Revision 1.2  2005/01/21 17:11:03  pietroni
-changed Dist Function to PointDistance... the function is on vcg::face::PointDistance this file will contain all distance functions between a face and othe entities
-
-Revision 1.1  2004/05/12 18:50:25  ganovelli
-created
-
-
-****************************************************************************/
 
 #ifndef __VCGLIB_FACE_DISTANCE
 #define __VCGLIB_FACE_DISTANCE
@@ -68,54 +32,36 @@ created
 namespace vcg {
 	namespace face{
 /*
-   Point face distance
-   trova il punto <p> sulla faccia piu' vicino a <q>, con possibilit� di 
-   rejection veloce su se la distanza trovata � maggiore di <rejdist>
+  Basic Wrapper for getting point-triangular face distance
+  distance is unsigned;
 
- Commenti del 12/11/02
- Funziona solo se la faccia e di quelle di tipo E (con edge e piano per faccia gia' calcolati)
- algoritmo:
-	1) si calcola la proiezione <p> di q sul piano della faccia
-	2) se la distanza punto piano e' > rejdist ritorna
-	3) si lavora sul piano migliore e si cerca di capire se il punto sta dentro il triangolo:
-	   a) prodotto vettore tra edge triangolo (v[i+1]-v[i]) e (p-v[i])
-		 b) se il risultato e' negativo (gira in senso orario) allora il punto
-		    sta fuori da quella parte e si fa la distanza punto segmento.
-     c) se il risultato sempre positivo allora sta dentro il triangolo
-	4) e si restituisce la distanza punto /piano gia` calcolata 
+  return true if the closest point <q> on <f> is nearer than the passed <dist>;
+  return false otherwiswe (and q is not valid)
 
-	Note sulla robustezza:
-	il calcolo del prodotto vettore e` la cosa piu` delicata:
-	possibili fallimenti quando a^b ~= 0
-	1) doveva essere <= 0 e viene positivo (q era fuori o sulla linea dell'edge)
-	   allora capita che si faccia la distanza punto piano anziche` la distanza punto seg
-  2) doveva essere > 0 e viene <=0 (q era dentro il triangolo)
+  This wrapper requires that your face has
+  - Per Face Flags well initialized
+  - Per Face EdgePlane component initialized.
+  Initialization must be done with:
 
-*/
-	template <class FaceType>
-	bool PointDistance(	const FaceType &f, 
-							const vcg::Point3<typename FaceType::ScalarType> & q, 
-							typename FaceType::ScalarType & dist, 
-							vcg::Point3<typename FaceType::ScalarType> & p )
-	{
-		typedef typename FaceType::ScalarType ScalarType;
-		
-                const ScalarType EPS = ScalarType( 0.000001);
+      tri::UpdateEdges<MeshType>::Set(yourMesh);
+ */
+    template <class FaceType>
+    bool PointDistanceEP(	const FaceType &f,
+                        const vcg::Point3<typename FaceType::ScalarType> & q,
+                        typename FaceType::ScalarType & dist,
+                        vcg::Point3<typename FaceType::ScalarType> & p )
+    {
+      typedef typename FaceType::ScalarType ScalarType;
+      const ScalarType EPS = ScalarType( 0.000001);
 
-                //const ScalarType EPSILON = 0.00000001;
 		ScalarType b,b0,b1,b2;
-			// Calcolo distanza punto piano
-		ScalarType d = SignedDistancePlanePoint( f.cPlane(), q );
-		if( d>dist || d<-dist )			// Risultato peggiore: niente di fatto
-			return false;
 
-			// Calcolo del punto sul piano
-		// NOTA: aggiunto un '-d' in fondo Paolo C.
+		ScalarType d = SignedDistancePlanePoint( f.cPlane(), q );
+		if( d>dist || d<-dist ) return false;
+
 		Point3<ScalarType> t = f.cPlane().Direction();
-		t[0] *= -d;
-		t[1] *= -d;
-		t[2] *= -d;
-		p = q; p += t;
+		p = q - t*d; // p is the projection of q on the face plane
+		// Now Choose the best plane and test to see if p is inside the triangle
 		    
 		switch( f.Flags() & (FaceType::NORMX|FaceType::NORMY|FaceType::NORMZ) )
 		{
@@ -141,24 +87,18 @@ namespace vcg {
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
-			// sono tutti e tre > 0 quindi dovrebbe essere dentro;
-			// per sicurezza se il piu' piccolo dei tre e' < epsilon (scalato rispetto all'area della faccia
-			// per renderlo dimension independent.) allora si usa ancora la distanza punto 
-			// segmento che e' piu robusta della punto piano, e si fa dalla parte a cui siamo piu' 
-			// vicini (come prodotto vettore)
-			// Nota: si potrebbe rendere un pochino piu' veloce sostituendo Area()
-			// con il prodotto vettore dei due edge in 2d lungo il piano migliore.
-      if( (b=std::min(b0,std::min(b1,b2)) ) < EPS*DoubleArea(f))
-      {
-				ScalarType bt;
-				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
-				else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
-        else {          assert(b==b2);
-                        bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
-                      }
-                                //printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPS*Area(),bt);
-				if(dist>bt) { dist = bt; return true; }
-				else return false;
+			// if all these tests failed the projection p should be inside.
+			// Some further tests for more robustness...
+			if( (b=std::min(b0,std::min(b1,b2)) ) < EPS*DoubleArea(f))
+			{
+			  ScalarType bt;
+			  if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
+			  else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+			  else {          assert(b==b2);
+				bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+			  }
+			  if(dist>bt) { dist = bt; return true; }
+			  else return false;
 			}
 			break;
 
@@ -184,16 +124,15 @@ namespace vcg {
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
-                        if( (b=math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
-      {
-				ScalarType bt;
-				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
-				else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
-        else { assert(b==b2);
-                        bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
-        }
-				//printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPSILON*Area(),bt);
-				if(dist>bt) { dist = bt; return true; }
+			if( (b=math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
+			{
+			  ScalarType bt;
+			  if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
+			  else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+			  else { assert(b==b2);
+				bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+			  }
+			  if(dist>bt) { dist = bt; return true; }
 				else return false;
 			}
 			break;
@@ -220,30 +159,28 @@ namespace vcg {
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
-                        if( (b=math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
-      {
-				ScalarType bt;
-				if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
-				else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
-        else { assert(b==b2);
-                        bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
-        }
-				//printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPSILON*Area(),bt);
-				
-				if(dist>bt) { dist = bt; return true; }
+			if( (b=math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
+			{
+			  ScalarType bt;
+			  if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
+			  else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+			  else { assert(b==b2);
+				bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+			  }
+
+			  if(dist>bt) { dist = bt; return true; }
 				else return false;
 			}
 			break;
 
-		}
+		} // end switch
 
 		dist = ScalarType(fabs(d));
-		//dist = Distance(p,q);
 		return true;
 	}
 
 	template <class S>
-	class PointDistanceFunctor {
+	class PointDistanceEPFunctor {
 	public:
 		typedef S ScalarType;
 		typedef Point3<ScalarType> QueryType;
@@ -254,7 +191,7 @@ namespace vcg {
 			const Point3<typename FACETYPE::ScalarType> fp = Point3<typename FACETYPE::ScalarType>::Construct(p);
 			Point3<typename FACETYPE::ScalarType> fq;
 			typename FACETYPE::ScalarType md = (typename FACETYPE::ScalarType)(minDist);
-			const bool ret = PointDistance(f, fp, md, fq);
+			const bool ret = PointDistanceEP(f, fp, md, fq);
 			minDist = (SCALARTYPE)(md);
 			q = Point3<SCALARTYPE>::Construct(fq);
 			return (ret);
@@ -301,8 +238,6 @@ namespace vcg {
 		
 		/// BASIC VERSION of the Point-face distance that does not require the EdgePlane Additional data.
 		/// Given a face and a point, returns the closest point of the face to p.
-		/// it assumes that the face has Normalized Normal.
-		// UpdateNormals::PerFaceNormalized(m)
 		
 		template <class FaceType>
 			bool PointDistanceBase(
@@ -312,12 +247,6 @@ namespace vcg {
 													vcg::Point3<typename FaceType::ScalarType> & p )      
 		{
 				typedef typename FaceType::ScalarType ScalarType;
-				// remember that the macro NDEBUG is defined when you want to optimize a lot. 
-				#ifndef NDEBUG
-				static int staticCnt=0; // small piece of code that sometime check that face normals are really normalized
-				if((staticCnt++%100)==0) 
-            assert((f.cN().SquaredNorm() ==0) || (f.cN().SquaredNorm() > 0.9999 && f.cN().SquaredNorm()<1.0001)); // if you get this assert you have forgot to make a UpdateNormals::PerFaceNormalized(m)
-        #endif
 
                 if(f.cN()==Point3<ScalarType>(0,0,0)) // to correctly manage the case of degenerate triangles we consider them as segments.
                 {
@@ -340,22 +269,17 @@ namespace vcg {
                   return true;
                 }
 
-				Plane3<ScalarType> fPlane;
+				Plane3<ScalarType,true> fPlane;
 				fPlane.Init(f.cP(0),f.cN());
-        const ScalarType EPS = ScalarType( 0.000001);
+				const ScalarType EPS = ScalarType( 0.000001);
 				ScalarType b,b0,b1,b2;
 				// Calcolo distanza punto piano
 				ScalarType d = SignedDistancePlanePoint( fPlane, q );
 				if( d>dist || d<-dist )			// Risultato peggiore: niente di fatto
 					return false;
 				
-				// Calcolo del punto sul piano
-				// NOTA: aggiunto un '-d' in fondo Paolo C.
-				Point3<ScalarType> t = fPlane.Direction();
-				t[0] *= -d;
-				t[1] *= -d;
-				t[2] *= -d;
-				p = q; p += t;
+				// Projection of query point onto the triangle plane
+				p = q - fPlane.Direction()*d;
 
 				Point3<ScalarType> fEdge[3];				
 				fEdge[0] = f.cP(1); fEdge[0] -= f.cP(0);
@@ -421,7 +345,7 @@ namespace vcg {
 							// vicini (come prodotto vettore)
 							// Nota: si potrebbe rendere un pochino piu' veloce sostituendo Area()
 							// con il prodotto vettore dei due edge in 2d lungo il piano migliore.
-              if( (b=vcg::math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
+						if( (b=vcg::math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
 							{
 								ScalarType bt;
 								if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);

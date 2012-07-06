@@ -397,7 +397,7 @@ void IntersectionBallMesh( IndexingType * grid,	 TriMeshType & m, const vcg::Sph
 
 	if(tol == 0) tol = M_PI * ball.Radius() * ball.Radius() / 100000;
 
-	vcg::tri::GetInSphereFace(m,*grid, ball.Center(), ball.Radius(),closestsF,distances,witnesses);
+	vcg::tri::GetInSphereFaceBase(m,*grid, ball.Center(), ball.Radius(),closestsF,distances,witnesses);
 	for(cfi =closestsF.begin(); cfi != closestsF.end(); ++cfi)
 	if(!(**cfi).IsD() && IntersectionSphereTriangle<ScalarType>(ball  ,(**cfi), witness , &info))
 		closests.push_back(&(**cfi));
