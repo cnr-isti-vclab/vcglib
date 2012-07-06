@@ -69,7 +69,7 @@ class Stat
 	typedef typename MeshType::FaceContainer  FaceContainer;
 	typedef typename vcg::Box3<ScalarType>  Box3Type;
 	
-	static std::pair<float,float> ComputePerVertexQualityMinMax( MeshType & m, float &minV, float &maxV)
+	static void ComputePerVertexQualityMinMax( MeshType & m, float &minV, float &maxV)
 	{
 	  std::pair<float,float> pp=ComputePerVertexQualityMinMax(m);
 	  minV=pp.first; maxV=pp.second;
@@ -88,7 +88,7 @@ class Stat
 		return minmax;
 	}
 
-	static std::pair<float,float> ComputePerFaceQualityMinMax( MeshType & m, float &minV, float &maxV)
+	static void ComputePerFaceQualityMinMax( MeshType & m, float &minV, float &maxV)
 	{
 	  std::pair<float,float> pp=ComputePerFaceQualityMinMax(m);
 	  minV=pp.first; maxV=pp.second;
