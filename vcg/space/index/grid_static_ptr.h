@@ -260,7 +260,7 @@ namespace vcg {
 			_bbox.min-=vcg::Point3<FLT>(infl,infl,infl);
 			_bbox.max+=vcg::Point3<FLT>(infl,infl,infl);
 			
-			Set(_oBegin,_oEnd,_bbox);
+			Set(_oBegin,_oEnd,_bbox,_size);
 		}			
     
 			
@@ -301,16 +301,17 @@ namespace vcg {
 		// Note that the bbox must be already 'inflated' so to be sure that no object will fall on the border of the grid.
 		
 			template <class OBJITER>
-		inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox)
-		{
-      int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
-			Point3<FLT> _dim = _bbox.max - _bbox.min;
-			Point3i _siz;
-			BestDim( _size, _dim, _siz );
-			
-	    Set(_oBegin,_oEnd,_bbox,_siz);
-		}			
-			
+			inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox, int _size=0)
+			{
+			  if(_size==0)
+				_size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
+			  Point3<FLT> _dim = _bbox.max - _bbox.min;
+			  Point3i _siz;
+			  BestDim( _size, _dim, _siz );
+
+			  Set(_oBegin,_oEnd,_bbox,_siz);
+			}
+
 			
 		template <class OBJITER>
     inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox, Point3i _siz)
