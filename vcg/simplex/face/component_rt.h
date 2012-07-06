@@ -74,6 +74,21 @@ private:
 EdgePlaneType _ep;
 };
 
+
+template <class T> class EdgePlaneEmpty: public T {
+public:
+    typedef EdgePlaneInfo<typename T::VertexType::CoordType> EdgePlaneType;
+
+  typename T::VertexType::CoordType &Edge(const int ) { assert(0);  static typename T::VertexType::CoordType dum; return dum;}
+  typename T::VertexType::CoordType &cEdge(const int ) const { assert(0);  static typename T::VertexType::CoordType dum; return dum;}
+
+  typename vcg::Plane3<typename T::VertexType::CoordType::ScalarType> &Plane() {assert(0);  static typename vcg::Plane3<typename T::VertexType::CoordType::ScalarType> dum; return dum;}
+  typename vcg::Plane3<typename T::VertexType::CoordType::ScalarType> &cPlane() const {assert(0);  static typename vcg::Plane3<typename T::VertexType::CoordType::ScalarType> dum; return dum;}
+  static bool HasEdgePlane()   {   return false; }
+
+  static void Name(std::vector<std::string> & name){name.push_back(std::string(""));T::Name(name);}
+};
+
   } // end namespace face
 }// end namespace vcg
 #endif
