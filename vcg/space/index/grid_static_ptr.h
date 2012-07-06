@@ -246,16 +246,15 @@ namespace vcg {
 		{
 			Box3<FLT> _bbox;
 			Box3<FLT> b;
-			OBJITER i;
-			for(i = _oBegin; i!= _oEnd; ++i)
+			for(OBJITER i = _oBegin; i!= _oEnd; ++i)
 			{
 				(*i).GetBBox(b);
 				_bbox.Add(b);				
 			}
-			///inflate the bb calculated
 			if(_size ==0) 
 					_size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
-					
+
+			///inflate the bb calculated
 			ScalarType infl=_bbox.Diag()/_size;
 			_bbox.min-=vcg::Point3<FLT>(infl,infl,infl);
 			_bbox.max+=vcg::Point3<FLT>(infl,infl,infl);
@@ -270,28 +269,28 @@ namespace vcg {
 			// Note that the bbox must be already 'inflated' so to be sure that no object will fall on the border of the grid.
 			
 			template <class OBJITER>
-				inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox, FLT radius)
+				inline void SetWithRadius(const OBJITER & _oBegin, const OBJITER & _oEnd, FLT _cellRadius)
 			{
-					Point3i _siz;
-					Point3<FLT> _dim = _bbox.max - _bbox.min;
-					_dim/=radius;
-					assert(_dim[0]>0 && _dim[1]>0 && _dim[2]>0 );
-					_siz[0] = (int)ceil(_dim[0]);
-					_siz[1] = (int)ceil(_dim[1]);
-					_siz[2] = (int)ceil(_dim[2]);
+				  Box3<FLT> _bbox;
+				  Box3<FLT> b;
+				  for(OBJITER i = _oBegin; i!= _oEnd; ++i)
+				  {
+					  (*i).GetBBox(b);
+					  _bbox.Add(b);
+				  }
 
-					Point3<FLT> offset=Point3<FLT>::Construct(_siz);
-					offset*=radius;
-					offset -= (_bbox.max - _bbox.min);
-					offset /=2;
-					
-					assert( offset[0]>=0 && offset[1]>=0 && offset[2]>=0 );
-					
-					Box3x bb = _bbox;
-					bb.min -= offset;
-					bb.max += offset;
-					
-					Set(_oBegin,_oEnd, bb,_siz);
+				  _bbox.min-=vcg::Point3<FLT>(_cellRadius,_cellRadius,_cellRadius);
+				  _bbox.max+=vcg::Point3<FLT>(_cellRadius,_cellRadius,_cellRadius);
+
+				  Point3i _siz;
+				  Point3<FLT> _dim = _bbox.max - _bbox.min;
+				  _dim/=_cellRadius;
+				  assert(_dim[0]>0 && _dim[1]>0 && _dim[2]>0 );
+				  _siz[0] = (int)ceil(_dim[0]);
+				  _siz[1] = (int)ceil(_dim[1]);
+				  _siz[2] = (int)ceil(_dim[2]);
+
+				  Set(_oBegin,_oEnd, _bbox,_siz);
 			}			
 			
 			
@@ -312,6 +311,8 @@ namespace vcg {
 			  Set(_oBegin,_oEnd,_bbox,_siz);
 			}
 
+
+		// This is the REAL LOW LEVEL function
 			
 		template <class OBJITER>
     inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box3x &_bbox, Point3i _siz)
