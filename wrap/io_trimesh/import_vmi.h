@@ -636,6 +636,8 @@ namespace io {
             case 0: return Read_mem(dst, size,count, f );  break;
             case 1: return fread(dst, size,count, f ); break;
              }
+            assert(0);
+            return 0;
         }
 
 
