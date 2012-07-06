@@ -235,37 +235,30 @@ class Stat
         return h.Avg();
       }
 
-      static int ComputeFaceEdgeHistogram( MeshType & m, Histogramf &h)
+      static void ComputeFaceEdgeDistribution( MeshType & m, Distribution<float> &h)
       {
         h.Clear();
-        h.SetRange( 0, m.bbox.Diag(), 10000);
-        tri::UpdateFlags<MeshType>::VertexClearV(m);
+        tri::UpdateFlags<MeshType>::FaceBorderFromNone(m);
         for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
         {
           if(!(*fi).IsD())
           {
-            if( !(*fi).V(0)->IsV() && !(*fi).V(1)->IsV()  )
+            for(int i=0;i<3;++i)
             {
-              h.Add(Distance<float>((*fi).V(0)->P(),(*fi).V(1)->P()));
-              (*fi).V(0)->SetV();
-              (*fi).V(1)->SetV();
-            }
-            if( !(*fi).V(1)->IsV() && !(*fi).V(2)->IsV())
-            {
-              h.Add(Distance<float>((*fi).V(1)->P(),(*fi).V(2)->P()));
-              (*fi).V(2)->SetV();
-              (*fi).V(1)->SetV();
-            }
-            if( !(*fi).V(2)->IsV() && !(*fi).V(0)->IsV())
-            {
-              h.Add(Distance<float>((*fi).V(2)->P(),(*fi).V(0)->P()));
-              (*fi).V(0)->SetV();
-              (*fi).V(2)->SetV();
+              h.Add(Distance<float>(fi->P0(i),fi->P1(i)));
+              if(fi->IsB(i)) // to be uniform border edges must be added twice...
+                h.Add(Distance<float>(fi->P0(i),fi->P1(i)));
             }
           }
         }
-      return 0;
 	  }
+	  static ScalarType ComputeFaceEdgeAverage(MeshType & m)
+	  {
+		Distribution<float> h;
+		ComputeFaceEdgeDistribution(m,h);
+		return h.Avg();
+	  }
+
 }; // end class
 	
 	} //End Namespace tri
