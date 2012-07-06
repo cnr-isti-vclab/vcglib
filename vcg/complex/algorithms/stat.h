@@ -251,12 +251,18 @@ class Stat
             }
           }
         }
-	  }
+      }
+
 	  static ScalarType ComputeFaceEdgeAverage(MeshType & m)
 	  {
-		Distribution<float> h;
-		ComputeFaceEdgeDistribution(m,h);
-		return h.Avg();
+		double sum=0;
+		for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+		  if(!(*fi).IsD())
+		  {
+			for(int i=0;i<3;++i)
+			  sum+=double(Distance<float>(fi->P0(i),fi->P1(i)));
+		  }
+		return sum/(m.fn*3.0);
 	  }
 
 }; // end class
