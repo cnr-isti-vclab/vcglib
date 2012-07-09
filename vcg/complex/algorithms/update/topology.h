@@ -344,7 +344,7 @@ static void TestVertexFace(MeshType &m)
 {
 	SimpleTempData<typename MeshType::VertContainer, int > numVertex(m.vert,0);
 
-  assert(tri::HasVEAdjacency(m));
+  assert(tri::HasPerVertexVFAdjacency(m));
 	
 	FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
