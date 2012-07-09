@@ -511,7 +511,7 @@ void Shot<S, RotationType>::ApplySimilarity( Matrix44<S>   M)
 
   vcg::Matrix44<S> M2 = M;
 
-  M2 = M2 * scalefactor;				// remove the rotation
+  M2 = M2 * scalefactor;				// remove the scaling
   M2[3][3] = 1.0;						 
   M2[0][3] = M2[1][3] = M2[2][3] = 0;	// remove the translation
 
