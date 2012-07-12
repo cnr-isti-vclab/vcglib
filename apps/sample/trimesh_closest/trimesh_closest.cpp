@@ -143,7 +143,7 @@ bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc, std:
   if(useEdge && useWrap)
     for(size_t i=0;i<MontecarloSamples.size();++i)
     {
-      resultVec[i]=tri::Index(mr,tri::GetClosestFaceRT(mr,TRGrid,MontecarloSamples[i], maxDist,dist,closest));
+      resultVec[i]=tri::Index(mr,tri::GetClosestFaceEP(mr,TRGrid,MontecarloSamples[i], maxDist,dist,closest));
       if(resultVec[i]) avgDist += double(dist);
     }
   if(!useEdge && useWrap)
@@ -157,7 +157,7 @@ bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc, std:
     typedef tri::FaceTmark<MeshType> MarkerFace;
     MarkerFace mf;
     mf.SetMesh(&mr);
-    face::PointDistanceFunctor<ScalarType> PDistFunct;
+    face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
     for(size_t i=0;i<MontecarloSamples.size();++i)
     {
       resultVec[i]=tri::Index(mr,TRGrid.GetClosest(PDistFunct,mf,MontecarloSamples[i],maxDist,dist,closest));
@@ -195,14 +195,19 @@ int main(int argc ,char**argv)
   std::vector<int> resultVecRT10;
   std::vector<int> resultVecBS01;
   std::vector<int> resultVecBS00;
-  UnitTest_Closest<RTMesh,true,true,true>     (argv[1],sampleNum,dispPerc,resultVecRT11);
-  UnitTest_Closest<RTMesh,true,true,false>    (argv[1],sampleNum,dispPerc,resultVecRT11);
-  UnitTest_Closest<RTMesh,false,true,true>    (argv[1],sampleNum,dispPerc,resultVecRT01);
-  UnitTest_Closest<RTMesh,true,false,true>    (argv[1],sampleNum,dispPerc,resultVecRT00);
-  UnitTest_Closest<RTMesh,false,false,true>   (argv[1],sampleNum,dispPerc,resultVecRT10);
-  UnitTest_Closest<BaseMesh,false,true,true>  (argv[1],sampleNum,dispPerc,resultVecBS01);
-  UnitTest_Closest<BaseMesh,false,false,true> (argv[1],sampleNum,dispPerc,resultVecBS01);
-  UnitTest_Closest<BaseMesh,false,false,false>(argv[1],sampleNum,dispPerc,resultVecBS01);
+  UnitTest_Closest<RTMesh, true,  true,  true>     (argv[1],sampleNum,dispPerc,resultVecRT11);
+  UnitTest_Closest<RTMesh, true,  true,  false>    (argv[1],sampleNum,dispPerc,resultVecRT11);
+  UnitTest_Closest<RTMesh, true,  false, true>    (argv[1],sampleNum,dispPerc,resultVecRT01);
+  UnitTest_Closest<RTMesh, true,  false, false>    (argv[1],sampleNum,dispPerc,resultVecRT00);
+  UnitTest_Closest<RTMesh, false, true,  true>   (argv[1],sampleNum,dispPerc,resultVecRT10);
+  UnitTest_Closest<RTMesh, false, true,  false>   (argv[1],sampleNum,dispPerc,resultVecRT10);
+  UnitTest_Closest<RTMesh, false, false, true>   (argv[1],sampleNum,dispPerc,resultVecRT10);
+  UnitTest_Closest<RTMesh, false, false, false>   (argv[1],sampleNum,dispPerc,resultVecRT10);
+
+  UnitTest_Closest<BaseMesh,false, true,  true>  (argv[1],sampleNum,dispPerc,resultVecBS01);
+  UnitTest_Closest<BaseMesh,false, true,  false> (argv[1],sampleNum,dispPerc,resultVecBS01);
+  UnitTest_Closest<BaseMesh,false, false, true>(argv[1],sampleNum,dispPerc,resultVecBS01);
+  UnitTest_Closest<BaseMesh,false, false, false>(argv[1],sampleNum,dispPerc,resultVecBS01);
 
   for(size_t i=0;i<resultVecRT11.size();++i)
   {
