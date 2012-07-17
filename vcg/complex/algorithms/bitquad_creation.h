@@ -45,7 +45,9 @@ void MakeDominant(MeshType &m, int level)
 void MakeBitTriOnly(MeshType &m)
    - inverse process: returns to tri-only mesh
 
-   
+int SplitNonFlatQuads(MeshType &m, ScalarType toleranceDeg=0){
+   - as above, but splits only non flat quads
+
 (more info in comments before each method)
 
 */
@@ -55,7 +57,7 @@ void MakeBitTriOnly(MeshType &m)
 namespace vcg{namespace tri{
 
 template <class _MeshType,
-					class Interpolator = GeometricInterpolator<typename _MeshType::VertexType> > 
+          class Interpolator = GeometricInterpolator<typename _MeshType::VertexType> >
 class BitQuadCreation{
   
 public:
@@ -71,7 +73,6 @@ typedef typename MeshType::VertexIterator VertexIterator;
 
 typedef BitQuad<MeshType> BQ; // static class to make basic quad operations
 
-  
 // helper function:
 // given a triangle, merge it with its best neightboord to form a quad
 template <bool override>
@@ -272,6 +273,27 @@ static bool MakeTriEvenByDelete(MeshType& m)
   }
   assert(0); // no border face found? then how could the number of tri be Odd?
   return true;
+}
+
+
+/*
+  Splits any quad that makes an angle steeper than given degrees
+*/
+static int SplitNonFlatQuads(MeshType &m, ScalarType deg=0){
+  int res=0;
+  float th = math::Cos(math::ToRad(deg));
+  for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
+    if (fi->IsAnyF()) {
+      int faux = BQ::FauxIndex(&*fi);
+      FaceType *fb = fi->FFp(faux);
+      if (fb->N()*fi->N()<th) {
+        fi->ClearF(faux);
+        fb->ClearF(fi->FFi(faux));
+        res++;
+      }
+    }
+  }
+  return res;
 }
 
 
@@ -768,9 +790,6 @@ static bool MakePureByFlip(MeshType &m, int maxdist=10000)
       level = 2: even more so (marginally)
 */
 static void MakeDominant(MeshType &m, int level){
-  
-  assert(MeshType::HasPerFaceQuality());
-  assert(MeshType::HasPerFaceFlags());
   
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) {
     fi->ClearAllF();
