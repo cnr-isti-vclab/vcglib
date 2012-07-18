@@ -245,7 +245,7 @@ static void FaceBorderFromVF(MeshType &m)
 					        vfi.f->Flags() |= BORDERFLAG[(vfi.z+2)%3];
           }
 			}	
-		VertexType::DeleteBitFlag(VertexType::LastBitFlag());
+		VertexType::DeleteBitFlag(visitedBit);
 }
 
  
