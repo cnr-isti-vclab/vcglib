@@ -36,12 +36,16 @@ namespace tri {
     /**
 				A class to build a Zonohedron.
 
-				A zonohedron is a solid with a closed surface composed only of parallelograms.
-				Given a set of input vectors (the sides of the parallelograms), it is defined
-				by the convex hull of all the points which can be co
+				Given a set of input vectors, a zonohedron is defined
+				as the convex hull of all the points which can be costructed by summing
+				together any subset of input vectors.
+				The surface closing this solid is composed only of flat parallelograms,
+				(which have the input vectors as sides).
+				It is always point-symmetric.
 
-				Creates a pure-quad mesh (triangular bit-quad),
-				(faces with 4 vertices are split into quads).
+				Mesh created by this class are pure-quad meshes (triangular bit-quad),
+				(when coplanar vectors are fed, then planar groups of quads can be seen as
+				forming planar faces with more than 4 vertices).
 
 				USAGE:
 					1) Instantiate a Zonohedron.
