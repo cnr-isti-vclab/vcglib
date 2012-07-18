@@ -29,69 +29,89 @@
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/space/planar_polygon_tessellation.h>
 
-namespace vcg
-{
-	namespace tri{
-		/// \ingroup trimesh 
+namespace vcg {
+namespace tri {
+	/// \ingroup trimesh
 
-		/// \headerfile polygon_support.h vcg/complex/algorithms/polygon_support.h
+	/// \headerfile polygon_support.h vcg/complex/algorithms/polygon_support.h
 
-		/// \brief This class is used convert between polygonal meshes and triangular meshes
+	/// \brief This class is used convert between polygonal meshes and triangular meshes
 
-		/**
-		This class contains two members that allow to build a triangular mesh from a polygonal mesh
-		and viceversa. In a trimesh, the generic polygons with n sides are codified represented by tagging the internal edge of the face 
-		with the SetF.
-		*/
+	/**
+	This class contains two members that allow to build a triangular mesh from a polygonal mesh
+	and viceversa. In a trimesh, the generic polygons with n sides are codified represented by tagging the internal edge of the face
+	with the SetF.
+	*/
 
-		template <class TriMeshType,class PolyMeshType >
-		struct PolygonSupport{
-			
-		/**
-		Import a  trianglemesh from a polygon mesh
-		**/
-		static void ImportFromPolyMesh(TriMeshType & tm,  PolyMeshType & pm){
-			std::vector<typename PolyMeshType::CoordType> points;
-			std::vector<int> faces;
+	template <class TriMeshType,class PolyMeshType >
+	struct PolygonSupport{
 
-			// the vertices are the same, simply import them
-			typename PolyMeshType::VertexIterator vi;
-			typename TriMeshType::FaceIterator tfi,tfib ;
-			typename TriMeshType ::VertexIterator tvi = Allocator<TriMeshType>::AddVertices(tm,pm.vert.size());
-			int cnt = 0;
-			for(tvi = tm.vert.begin(),vi = pm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt)
-				if(!(*vi).IsD()) (*tvi).ImportData(*vi); else vcg::tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
-
-			typename PolyMeshType::FaceIterator fi;
-			for(fi = pm.face.begin(); fi != pm.face.end(); ++fi)
-			if(!((*fi).IsD())){
-			points.clear();
-				for(int i  = 0; i < (*fi).VN(); ++i) {
-					typename	PolyMeshType::VertexType * v = (*fi).V(i);
-					points.push_back(v->P());
+	/**
+	Given a tri mesh (with per-face normals and FF connectivity),
+	merges flat faces into larger polygons.
+	**/
+	static void MergeFlatFaces(TriMeshType & tm, double tolerance = 0.1E-4){
+		typedef typename TriMeshType::CoordType::ScalarType Scalar;
+		typedef typename TriMeshType::FaceIterator FaceIterator;
+		typedef typename TriMeshType::FaceType FaceType;
+		Scalar minDist = 1 - Scalar(tolerance);
+		for (FaceIterator fi=tm.face.begin(); fi!=tm.face.end(); fi++) {
+			FaceType *fa = &*fi;
+			for (int w=0; w<3; w++) {
+				FaceType *fb = fa->FFp(w);
+				if ( (fb>fa) && (fa->N()*fb->N() > minDist) ) {
+					fa->SetF( w );
+					fb->SetF( fa->FFi(w) ); // reciprocate
 				}
-				faces.clear();
-				TessellatePlanarPolygon3(points,faces);
-				tfib = tfi  = Allocator<TriMeshType>::AddFaces(tm,faces.size()/3);
-				for(int i = 0; tfi !=  tm.face.end();++tfi){
-					(*tfi).V(0) = &tm.vert[ (*fi).V( faces[i]  ) - &(*pm.vert.begin())];
-					(*tfi).V(1) = &tm.vert[ (*fi).V( faces[i+1]) - &(*pm.vert.begin())];
-					(*tfi).V(2) = &tm.vert[ (*fi).V( faces[i+2]) - &(*pm.vert.begin())];
-					// set the F flags
-					if( (faces[i]+1)%points.size() != faces[i+1]) (*tfi).SetF(0);
-					if( (faces[i+1]+1)%points.size() != faces[i+2]) (*tfi).SetF(1);
-					if( (faces[i+2]+1)%points.size() != faces[i]) (*tfi).SetF(2);
-					i+=3;
-				}
-
 			}
 		}
-		 
+	}
 
-		/**
-		Import a polygon mesh from a triangle mesh
-		**/
-		static void ImportFromTriMesh( PolyMeshType & pm,  TriMeshType & tm){
+	/**
+	Import a  trianglemesh from a polygon mesh
+	**/
+	static void ImportFromPolyMesh(TriMeshType & tm,  PolyMeshType & pm){
+		std::vector<typename PolyMeshType::CoordType> points;
+		std::vector<int> faces;
+
+		// the vertices are the same, simply import them
+		typename PolyMeshType::VertexIterator vi;
+		typename TriMeshType::FaceIterator tfi,tfib ;
+		typename TriMeshType ::VertexIterator tvi = Allocator<TriMeshType>::AddVertices(tm,pm.vert.size());
+		int cnt = 0;
+		for(tvi = tm.vert.begin(),vi = pm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt)
+			if(!(*vi).IsD()) (*tvi).ImportData(*vi); else vcg::tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
+
+		typename PolyMeshType::FaceIterator fi;
+		for(fi = pm.face.begin(); fi != pm.face.end(); ++fi)
+		if(!((*fi).IsD())){
+		points.clear();
+			for(int i  = 0; i < (*fi).VN(); ++i) {
+				typename	PolyMeshType::VertexType * v = (*fi).V(i);
+				points.push_back(v->P());
+			}
+			faces.clear();
+			TessellatePlanarPolygon3(points,faces);
+			tfib = tfi  = Allocator<TriMeshType>::AddFaces(tm,faces.size()/3);
+			for(int i = 0; tfi !=  tm.face.end();++tfi){
+				(*tfi).V(0) = &tm.vert[ (*fi).V( faces[i]  ) - &(*pm.vert.begin())];
+				(*tfi).V(1) = &tm.vert[ (*fi).V( faces[i+1]) - &(*pm.vert.begin())];
+				(*tfi).V(2) = &tm.vert[ (*fi).V( faces[i+2]) - &(*pm.vert.begin())];
+				// set the F flags
+				if( (faces[i]+1)%points.size() != faces[i+1]) (*tfi).SetF(0);
+				if( (faces[i+1]+1)%points.size() != faces[i+2]) (*tfi).SetF(1);
+				if( (faces[i+2]+1)%points.size() != faces[i]) (*tfi).SetF(2);
+				i+=3;
+			}
+
+		}
+	}
+
+
+	/**
+	Import a polygon mesh from a triangle mesh
+	**/
+	static void ImportFromTriMesh( PolyMeshType & pm,  TriMeshType & tm){
 
 		// the vertices are the same, simply import them
 		int cnt = 0;
@@ -140,43 +160,43 @@ namespace vcg
 			// TODO
 
 		}
-	} 
+	}
 
-		// Given a facepointer, it build a vector with all the vertex pointer
-		// around the polygonal face determined by the current FAUX-EDGE markings
-		// It assumes that the mesh is 2Manifold and has FF adjacency already computed
-		// NOTE: All the faces touched are marked as visited. (so for example you can avoid to get twice the same polygon)
-		static void ExtractPolygon(typename TriMeshType::FacePointer tfp, std::vector<typename TriMeshType::VertexPointer> &vs)
+	// Given a facepointer, it build a vector with all the vertex pointer
+	// around the polygonal face determined by the current FAUX-EDGE markings
+	// It assumes that the mesh is 2Manifold and has FF adjacency already computed
+	// NOTE: All the faces touched are marked as visited. (so for example you can avoid to get twice the same polygon)
+	static void ExtractPolygon(typename TriMeshType::FacePointer tfp, std::vector<typename TriMeshType::VertexPointer> &vs)
+	{
+		vs.clear();
+		// find a non tagged edge
+		int se = -1;
+		for(int i=0; i<3; i++) if (!( tfp->IsF(i))) { se = i; break;}
+
+		// all faux edges return an empty vertex vector!
+		if(se==-1) return;
+
+		// initialize a pos on the first non faux edge
+		typename TriMeshType::VertexPointer v0 = tfp->V(se);
+
+		vcg::face::Pos<typename TriMeshType::FaceType> p(tfp,se,v0);
+		vcg::face::Pos<typename TriMeshType::FaceType> start(p);
+
+		do
 		{
-		  vs.clear();
-		  // find a non tagged edge
-		  int se = -1;
-		  for(int i=0; i<3; i++) if (!( tfp->IsF(i))) { se = i; break;}
+			assert(!p.F()->IsF(p.E()));
+			vs.push_back(p.F()->V(p.E()));
+			p.FlipE();
 
-		  // all faux edges return an empty vertex vector!
-		  if(se==-1) return;
-
-		  // initialize a pos on the first non faux edge
-		  typename TriMeshType::VertexPointer v0 = tfp->V(se);
-
-		  vcg::face::Pos<typename TriMeshType::FaceType> p(tfp,se,v0);
-		  vcg::face::Pos<typename TriMeshType::FaceType> start(p);
-
-          do
-          {
-            assert(!p.F()->IsF(p.E()));
-            vs.push_back(p.F()->V(p.E()));
-            p.FlipE();
-
-            while( p.F()->IsF(p.E()) )
-            {
-              p.F()->SetV();
-              p.FlipF();
-              p.FlipE();
-            }
-            p.FlipV();
-          } while(p!=start);
-        }
+			while( p.F()->IsF(p.E()) )
+			{
+				p.F()->SetV();
+				p.FlipF();
+				p.FlipE();
+			}
+			p.FlipV();
+		} while(p!=start);
+	}
 
 }; // end of struct
 }} // end namespace vcg::tri
