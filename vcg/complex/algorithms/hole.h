@@ -581,10 +581,10 @@ template<class EAR>
 	}
 
 	template<class EAR>
-	static int EarCuttingFill(MESH &m, int sizeHole,bool Selected = false, CallBackPos *cb=0)
+	static int EarCuttingFill(MESH &m, int sizeHole, const int UBIT, bool Selected = false, CallBackPos *cb=0)
 		{
 			std::vector< Info > vinfo;
-			int UBIT = GetInfo(m, Selected,vinfo);
+//			int UBIT = GetInfo(m, Selected,vinfo);
 
 			typename std::vector<Info >::iterator ith;
 			//Info app;
@@ -616,10 +616,10 @@ template<class EAR>
 // it returns the number of created holes.
 
 template<class EAR>
-	static int EarCuttingIntersectionFill(MESH &m, int sizeHole, bool Selected = false, CallBackPos *cb=0)
+	static int EarCuttingIntersectionFill(MESH &m, int sizeHole, const int UBIT, CallBackPos *cb=0)
 		{
 			std::vector<Info > vinfo;
-			int UBIT = GetInfo(m, Selected,vinfo);
+//			int UBIT = GetInfo(m, Selected,vinfo);
 			std::vector<FaceType > vf;
 			PosType sp;
 			PosType ap;
@@ -674,12 +674,9 @@ template<class EAR>
 
 
 
-	static int GetInfo(MESH &m,bool Selected ,std::vector<Info >& VHI)
+	static void GetInfo(MESH &m, const int UBIT, bool Selected ,std::vector<Info >& VHI)
 		{
-			FaceIterator fi;
-			int UBIT = FaceType::LastBitFlag();
-
-			for(fi = m.face.begin(); fi!=m.face.end(); ++fi)
+			for(FaceIterator fi = m.face.begin(); fi!=m.face.end(); ++fi)
 			{
 				if(!(*fi).IsD())
 				{
@@ -693,7 +690,7 @@ template<class EAR>
 					{
 							for(int j =0; j<3 ; ++j)
 							{
-                if( face::IsBorder(*fi,j) && !(*fi).IsUserBit(UBIT) )
+							  if( face::IsBorder(*fi,j) && !(*fi).IsUserBit(UBIT) )
 								{//Trovato una faccia di bordo non ancora visitata.
 									(*fi).SetUserBit(UBIT);
 							    PosType sp(&*fi, j, (*fi).V(j));
@@ -703,7 +700,7 @@ template<class EAR>
 									Box3Type hbox;
 									hbox.Add(sp.v->cP());
                   //printf("Looping %i : (face %i edge %i) \n", VHI.size(),sp.f-&*m.face.begin(),sp.z);
-                  sp.f->SetUserBit(UBIT);
+                                    sp.f->SetUserBit(UBIT);
 									do
 									{
 										sp.f->SetUserBit(UBIT);
@@ -721,7 +718,6 @@ template<class EAR>
 					}//S & !S
 				}//!IsD()
 			}//for principale!!!
-			return UBIT;
 		}
 
 		//Minimum Weight Algorithm
@@ -919,7 +915,7 @@ template<class EAR>
 			triangulate(m,f,k,j,vi,vv);
 		}
 
-  static void MinimumWeightFill(MESH &m, int holeSize, bool Selected)
+  static void MinimumWeightFill(MESH &m, const int UBIT, int holeSize, bool Selected)
 		{
 			FaceIterator fi;
 			std::vector<PosType > vvi;
@@ -927,7 +923,7 @@ template<class EAR>
 
 			std::vector<Info > vinfo;
 			typename std::vector<Info >::iterator VIT;
-      GetInfo(m, Selected,vinfo);
+			GetInfo(m, UBIT, Selected,vinfo);
 
 			for(VIT = vinfo.begin(); VIT != vinfo.end();++VIT)
 			{
