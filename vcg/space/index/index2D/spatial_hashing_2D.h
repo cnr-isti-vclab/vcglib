@@ -284,7 +284,7 @@ namespace vcg{
 
 		void Remove( ObjType* s)
 		{
-			Box3<ScalarType> b;
+			Box2<ScalarType> b;
 			s->GetBBox(b);
 			vcg::Box2i bb;
 			BoxToIBox(b,bb);
@@ -292,7 +292,7 @@ namespace vcg{
 			for (int i=bb.min.X();i<=bb.max.X();i++)
 				for (int j=bb.min.Y();j<=bb.max.Y();j++)
 					//for (int k=bb.min.Z();k<=bb.max.Z();k++)
-						RemoveObject(s,vcg::Point3i(i,j));//,k));
+						RemoveObject(s,vcg::Point2i(i,j));//,k));
 		}
 
 		/// set an empty spatial hash table
