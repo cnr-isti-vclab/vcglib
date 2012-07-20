@@ -48,6 +48,12 @@ void MakeBitTriOnly(MeshType &m)
 int SplitNonFlatQuads(MeshType &m, ScalarType toleranceDeg=0){
    - as above, but splits only non flat quads
 
+TESTING METHODS:
+
+bool IsTriOnly(const MeshType &m);  // only triangles
+bool IsQuadOnly(const MeshType &m); // only quads
+bool IsTriQuadOnly(const MeshType &m); // only quads or triangles
+
 (more info in comments before each method)
 
 */
@@ -70,6 +76,7 @@ typedef typename MeshType::FaceType* FaceTypeP;
 typedef typename MeshType::VertexType VertexType;
 typedef typename MeshType::FaceIterator FaceIterator;
 typedef typename MeshType::VertexIterator VertexIterator;
+typedef typename MeshType::ConstFaceIterator ConstFaceIterator;
 
 typedef BitQuad<MeshType> BQ; // static class to make basic quad operations
 
@@ -318,9 +325,9 @@ static bool MakeBitTriQuadConventional(MeshType &/*m*/){
 }
 
 /* returns true if mesh is a "conventional" quad mesh.
-   I.e. if it is all quads, with third edge faux fora all triangles*/
-static bool IsBitTriQuadConventional(MeshType &m){
-  for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
+   I.e. if it is all quads, with third edge faux for all triangles*/
+static bool IsBitTriQuadConventional(const MeshType &m){
+  for (ConstFaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     if (fi->IsAnyF())
     if ( (fi->Flags() & FaceType::FAUX012 ) != FaceType::FAUX2 ) {
       return false;
@@ -328,6 +335,40 @@ static bool IsBitTriQuadConventional(MeshType &m){
   }
   return true;
 }
+
+/* returns true if mesh is a pure tri-mesh. (no faux edges) */
+static bool IsTriOnly(const MeshType &m){
+  for (ConstFaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
+    if (fi->IsAnyF()) return false;
+  }
+  return true;
+}
+
+/* returns true if mesh is a pure quad-mesh.  */
+static bool IsQuadOnly(const MeshType &m){
+  for (ConstFaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
+		int count = 0;
+		if (fi->IsF(0)) count++;
+		if (fi->IsF(1)) count++;
+		if (fi->IsF(2)) count++;
+		if (count!=1) return false;
+  }
+  return true;
+}
+
+/* returns true if mesh has only tris and quads (no penta etc) */
+static bool IsTriQuadOnly(const MeshType &m){
+  for (ConstFaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
+		int count = 0;
+		if (fi->IsF(0)) count++;
+		if (fi->IsF(1)) count++;
+		if (fi->IsF(2)) count++;
+		if (count>1) return false;
+  }
+  return true;
+}
+
+
 static void CopyTopology(FaceType *fnew, FaceType * fold)
 {
     fnew->FFp(0)=fold->FFp(0); fnew->FFi(0)=fold->FFi(0);
