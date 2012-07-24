@@ -132,8 +132,17 @@ private:
 		return -v;
 	}
 
+	static Vec3 altVec(int i) {
+		return Vec3(1, i, i*i);
+	}
+
+	static Scalar tripleProduct( const Vec3 &a, const Vec3 &b, const Vec3 & c){
+		return ( a ^ b ) * c;
+	}
+
 	// returns signof:  (i x j) * k
 	bool signOf_IxJoK(VecIndex i, VecIndex j, VecIndex k){
+		const float EPSILON_SQUARED = 1e-12;
 		bool invert = false;
 		// sort i,j,k
 		if (i<j) { std::swap(i,j); invert = !invert; }
@@ -144,15 +153,23 @@ private:
 		//Scalar res = Vec3::dot( Vec3::cross( vec[i] , vec[j] ) , vec[k] );
 		Scalar res =  cross( i , j ) * vec[k] ;
 
-		if (res==0) {
+		if (res*res<=EPSILON_SQUARED) {
 			// three coplanar vectors!
-			res =  uniqueVerse( cross(i,j) ) * cross(j,k) ;
-			/*if (res==0) {
-				printf("COLINEAR\n");
-				// three colinear vectors!
-				res = Vec3::dot( uniqueVerse(vec[i]) , vec[j])*
-				      Vec3::dot( uniqueVerse(vec[i]) , vec[k]);
-			}*/
+			// use derivative...
+			//res =  uniqueVerse( cross(i,j) ) * cross(j,k) ;
+			res =  tripleProduct( altVec(i), vec[j], vec[k]) +
+			       tripleProduct( vec[i], altVec(j), vec[k]) +
+			       tripleProduct( vec[i], vec[j], altVec(k)) ;
+			if (res*res<=EPSILON_SQUARED) {
+				// zero derivative (happens, if three colinear vectors, or...)
+				res =  tripleProduct( vec[i], altVec(j), altVec(k)) +
+				       tripleProduct( altVec(i), vec[j], altVec(k)) +
+				       tripleProduct( altVec(i), altVec(j), vec[k]) ;
+			}
+			if (res*res<=EPSILON_SQUARED) {
+				// zero second derivative (happens if three zero-vectors, i.e. never? or...)
+				res = tripleProduct( altVec(i), altVec(j), altVec(k) );
+			}
 		}
 
 		return ( (res>=0) != invert ); // XOR
