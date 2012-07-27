@@ -238,7 +238,7 @@ void FFDetach(FaceType & f, const int e)
 		@param z2 The edge of the face f2 
 */
 template <class FaceType>
-void Attach(FaceType * &f, int z1, FaceType *&f2, int z2)
+void FFAttach(FaceType * &f, int z1, FaceType *&f2, int z2)
 {
 	//typedef FEdgePosB< FACE_TYPE > ETYPE;
 	Pos< FaceType > EPB(f2,z2);
@@ -261,6 +261,35 @@ void Attach(FaceType * &f, int z1, FaceType *&f2, int z2)
 	TEPB.f->FFi(TEPB.z) = z1prec;
 }
 
+/** This function attach the face (via the edge z1) to another face (via the edge z2).
+		It is not possible to use it also in non-two manifold situation.
+		The function cannot be applicated if the adjacencies among faces aren't define.
+		@param z1 Index of the edge
+		@param f2 Pointer to the face
+		@param z2 The edge of the face f2
+*/
+template <class FaceType>
+void FFAttachManifold(FaceType * &f1, int z1, FaceType *&f2, int z2)
+{
+  assert(IsBorder<FaceType>(*f1,z1));
+  assert(IsBorder<FaceType>(*f2,z2));
+  assert(f1->V0(z1) == f2->V0(z2) || f1->V0(z1) == f2->V1(z2));
+  assert(f1->V1(z1) == f2->V0(z2) || f1->V1(z1) == f2->V1(z2));
+  f1->FFp(z1) = f2;
+  f1->FFi(z1) = z2;
+  f2->FFp(z2) = f1;
+  f2->FFi(z2) = z1;
+}
+
+// This one should be called only on uniitialized faces.
+template <class FaceType>
+void FFSetBorder(FaceType * &f1, int z1)
+{
+  assert(f1->FFp(z1)==0 || IsBorder(*f1,z1));
+
+  f1->FFp(z1)=f1;
+  f1->FFi(z1)=z1;
+}
 
 template <class FaceType>
 void AssertAdj(FaceType & f)
@@ -273,15 +302,6 @@ void AssertAdj(FaceType & f)
 	assert(f.FFp(1)->FFi(f.FFi(1))==1);
 	assert(f.FFp(2)->FFi(f.FFi(2))==2); 
 }
-// Funzione di supporto usata da swap?
-//template <class FaceType>
-//inline void Nexts(  *&f, int &z )
-//{
-//    int t;
-//    t = z;
-//    z = (*f).Z(z);
-//    f = (*f).F(t);
-//}
 
 /**
  * Check if the given face is oriented as the one adjacent to the specified edge.
@@ -695,15 +715,33 @@ int CountSharedVertex(FaceType *f0,FaceType *f1)
 * ;
 */
 template <class FaceType>
-bool SharedVertex(FaceType *f0,FaceType *f1, int &i, int &j)
+bool FindSharedVertex(FaceType *f0,FaceType *f1, int &i, int &j)
 {
   for (i=0;i<3;i++)
       for (j=0;j<3;j++)
           if (f0->V(i)==f1->V(j)) return true;
 
+  i=-1;j=-1;
   return false;
 }
 
+/*!
+* find the first shared edge between two faces.
+*	\param f0,f1 the two face to be checked
+* \param i,j the indexes of the shared edge in the two faces. Meaningful only if there is a shared edge
+*
+*/
+template <class FaceType>
+bool FindSharedEdge(FaceType *f0,FaceType *f1, int &i, int &j)
+{
+  for (i=0;i<3;i++)
+      for (j=0;j<3;j++)
+        if( ( f0->V0(i)==f1->V0(j) || f0->V0(i)==f1->V1(j) ) &&
+            ( f0->V1(i)==f1->V0(j) || f0->V1(i)==f1->V1(j) ) )
+            return true;
+  i=-1;j=-1;
+  return false;
+}
 
 /*@}*/
 }	 // end namespace
