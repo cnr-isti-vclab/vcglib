@@ -407,7 +407,7 @@ namespace vcg {
 				for(it = this->AdjacencyRing().begin();it!= this->AdjacencyRing().end();++it)
 				{
 					if(!(*it)->IsD())
-						if(	tri::Clean<MESH>::TestIntersection(&(*f),*it))
+						if(	tri::Clean<MESH>::TestFaceFaceIntersection(&(*f),*it))
 						{
 							this->e0.f->FFp(this->e0.z)= this->e0.f;
 							this->e0.f->FFi(this->e0.z)=a1;	
