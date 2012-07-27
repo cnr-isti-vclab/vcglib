@@ -469,18 +469,24 @@ private:
 			
 
       /// Removal of faces that were incident on a non manifold edge.
-      static int SplitNonManifoldVertex(MeshType& m)
-      {
-        FaceIterator fi;
-        typedef std::pair<FacePointer,int> FaceInt;
 
+      // Given a mesh with FF adjacency
+      // it search for non manifold vertices and duplicate them.
+      // Duplicated vertices are moved apart according to the move threshold param.
+      // that is a percentage of the average vector from the non manifold vertex to the barycenter of the incident faces.
+
+      static int SplitNonManifoldVertex(MeshType& m, float moveThreshold)
+      {
+        assert(HasFFAdjacency(m));
+        typedef std::pair<FacePointer,int> FaceInt; // a face and the index of the vertex that we have to change
+        //
         std::vector<std::pair<VertexPointer, std::vector<FaceInt> > >ToSplitVec;
 
         SelectionStack<MeshType> ss(m);
         ss.push();
         CountNonManifoldVertexFF(m,true);
         UpdateFlags<MeshType>::VertexClearV(m);
-        for (fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
+        for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
         {
           for(int i=0;i<3;i++)
             if((*fi).V(i)->IsS() && !(*fi).V(i)->IsV())
@@ -513,11 +519,16 @@ private:
           VertexPointer np=ToSplitVec[i].first;
           pu.Update(np);
           firstVp->ImportData(*np);
+          // loop on the face to be changed, and also compute the movement vector;
+          Point3f delta(0,0,0);
           for(size_t j=0;j<ToSplitVec[i].second.size();++j)
           {
             FaceInt ff=ToSplitVec[i].second[j];
             ff.first->V(ff.second)=&*firstVp;
+            delta+=Barycenter(*(ff.first))-np->cP();
           }
+          delta /= ToSplitVec[i].second.size();
+          firstVp->P() = firstVp->P() + delta * moveThreshold;
           firstVp++;
         }
 
@@ -1512,7 +1523,7 @@ private:
           for(fib=inBox.begin();fib!=inBox.end();++fib)
           {
             if(!(*fib)->IsUserBit(referredBit) && (*fib != &*fi) )
-              if(TestIntersection(&*fi,*fib)){
+              if(TestFaceFaceIntersection(&*fi,*fib)){
                 ret.push_back(*fib);
                 if(!Intersected) {
                   ret.push_back(&*fi);
@@ -1598,21 +1609,23 @@ private:
 
 
   /**
-        This function test if two face intersect.
-        We assume that the two faces are different.
+        This function test if two triangular faces of a mesh intersect.
+        It assumes that the faces (as storage) are different (e.g different address)
+        If the two faces are different but coincident (same set of vertexes) return true.
         if the faces share an edge no test is done.
         if the faces share only a vertex, the opposite edge is tested against the face
   */
-  static	bool TestIntersection(FaceType *f0,FaceType *f1)
+  static	bool TestFaceFaceIntersection(FaceType *f0,FaceType *f1)
 	{
     assert(f0!=f1);
     int sv = face::CountSharedVertex(f0,f1);
+    if(sv==3) return true;
     if(sv==0) return (vcg::IntersectionTriangleTriangle<FaceType>((*f0),(*f1)));
     //  if the faces share only a vertex, the opposite edge is tested against the face
     if(sv==1)
     {
       int i0,i1; ScalarType a,b;
-      face::SharedVertex(f0,f1,i0,i1);
+      face::FindSharedVertex(f0,f1,i0,i1);
       if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f0).V1(i0)->P(),(*f0).V2(i0)->P()), *f1, a, b) )  return true;
       if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f1).V1(i1)->P(),(*f1).V2(i1)->P()), *f0, a, b) )  return true;
      }
