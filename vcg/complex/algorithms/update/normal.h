@@ -167,7 +167,7 @@ static void PerVertexAngleWeighted(ComputeMeshType &m)
  The weight for each wedge is the cross product of the two edge over the product of the square of the two edge lengths. 
  According to the original paper it is perfect only for spherical surface, but it should perform well...
  */
-static void PerVertexWeighted(ComputeMeshType &m)
+static void PerVertexNelsonMaxWeighted(ComputeMeshType &m)
 {
  assert(HasPerVertexNormal(m));
 
