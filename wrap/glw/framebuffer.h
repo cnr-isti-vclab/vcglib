@@ -41,7 +41,7 @@ class RenderTarget
 			: target (rTarget)
 			, level  (0)
 			, layer  (0)
-			, face   (GL_NONE)
+			, face   (GL_TEXTURE_CUBE_MAP_POSITIVE_X)
 		{
 			;
 		}
@@ -51,7 +51,7 @@ class RenderTarget
 			this->target.setNull();
 			this->level = 0;
 			this->layer = -1;
-			this->face  = GL_NONE;
+			this->face  = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 		}
 
 		bool isNull(void) const
@@ -65,6 +65,11 @@ typedef std::vector<RenderTarget> RenderTargetVector;
 inline RenderTarget texture2DTarget(Texture2DHandle & handle, GLint level = 0)
 {
 	return RenderTarget(handle, level, 0, GL_NONE);
+}
+
+inline RenderTarget textureCubeTarget(TextureCubeHandle & handle, GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X, GLint level = 0)
+{
+	return RenderTarget(handle, level, 0, face);
 }
 
 inline RenderTarget renderbufferTarget(RenderbufferHandle & handle)
@@ -163,10 +168,10 @@ class FramebufferArguments : public ObjectArguments
 		void clear(void)
 		{
 			BaseType::clear();
-			this->colorTargets       .clear();
-			this->depthTarget        .clear();
-			this->stencilTarget      .clear();
-			this->targetInputs       .clear();
+			this->colorTargets  .clear();
+			this->depthTarget   .clear();
+			this->stencilTarget .clear();
+			this->targetInputs  .clear();
 		}
 };
 
@@ -401,9 +406,10 @@ class Framebuffer : public Object
 
 			switch (handle->type())
 			{
-				case RenderbufferType : glFramebufferRenderbuffer (target, attachment, GL_RENDERBUFFER, handle->name()                    ); break;
-				case Texture2DType    : glFramebufferTexture2D    (target, attachment, GL_TEXTURE_2D,   handle->name(), renderTarget.level); break;
-				default               : GLW_ASSERT(0);                                                                                       break;
+				case RenderbufferType : glFramebufferRenderbuffer (target, attachment, GL_RENDERBUFFER,   handle->name()                    ); break;
+				case Texture2DType    : glFramebufferTexture2D    (target, attachment, GL_TEXTURE_2D,     handle->name(), renderTarget.level); break;
+				case TextureCubeType  : glFramebufferTexture2D    (target, attachment, renderTarget.face, handle->name(), renderTarget.level); break;
+				default               : GLW_ASSERT(0);                                                                                         break;
 			}
 
 			return true;

@@ -10,6 +10,7 @@
 #include "./program.h"
 #include "./renderbuffer.h"
 #include "./texture2d.h"
+#include "./texturecube.h"
 #include "./framebuffer.h"
 
 #include <string>
@@ -249,6 +250,24 @@ class Context : public detail::NonCopyable
 			this->bindTexture2D(nullHandle, unit);
 		}
 
+		TextureCubeHandle createTextureCube(const TextureCubeArguments & args)
+		{
+			TextureCubeHandle handle = this->createHandle<TextureCube>();
+			handle->object()->create(args);
+			return handle;
+		}
+
+		BoundTextureCubeHandle bindTextureCube(TextureCubeHandle & handle, GLint unit)
+		{
+			return this->bind<BoundTextureCube>(handle, TextureCubeBindingParams(unit));
+		}
+
+		void unbindTextureCube(GLint unit)
+		{
+			TextureCubeHandle nullHandle;
+			this->bindTextureCube(nullHandle, unit);
+		}
+
 		FramebufferHandle createFramebuffer(const FramebufferArguments & args)
 		{
 			FramebufferHandle handle = this->createHandle<Framebuffer>();
@@ -457,7 +476,8 @@ class Context : public detail::NonCopyable
 				this->m_maxTextureUnits = int(texUnits);
 				for (int i=0; i<this->m_maxTextureUnits; ++i)
 				{
-					this->initializeTarget<BoundTexture2D>(Texture2DBindingParams(GLint(i)));
+					this->initializeTarget<BoundTexture2D  >(Texture2DBindingParams   (GLint(i)));
+					this->initializeTarget<BoundTextureCube>(TextureCubeBindingParams (GLint(i)));
 				}
 			}
 		}
@@ -496,7 +516,8 @@ class Context : public detail::NonCopyable
 			{
 				for (int i=0; i<this->m_maxTextureUnits; ++i)
 				{
-					this->terminateTarget<BoundTexture2D>(Texture2DBindingParams(GLint(i)));
+					this->terminateTarget<BoundTexture2D  >(Texture2DBindingParams   (GLint(i)));
+					this->terminateTarget<BoundTextureCube>(TextureCubeBindingParams (GLint(i)));
 				}
 				this->m_maxTextureUnits = 0;
 			}

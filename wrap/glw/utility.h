@@ -210,6 +210,18 @@ inline Texture2DHandle createTexture2D(Context & ctx, GLenum format, GLsizei wid
 	return ctx.createTexture2D(args);
 }
 
+inline TextureCubeHandle createTextureCube(Context & ctx, GLenum format, GLsizei size, GLenum dataFormat, GLenum dataType, const void * data = 0, const TextureSampleMode & sampler = TextureSampleMode())
+{
+	TextureCubeArguments args;
+	args.format     = format;
+	args.size       = size;
+	args.dataFormat = dataFormat;
+	args.dataType   = dataType;
+	args.data       = data;
+	args.sampler    = sampler;
+	return ctx.createTextureCube(args);
+}
+
 inline FramebufferHandle createFramebufferWithDepthStencil
 (
 	Context & ctx,

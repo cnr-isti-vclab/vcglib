@@ -16,6 +16,7 @@ enum Type
 	FragmentShaderType,
 	ProgramType,
 	Texture2DType,
+	TextureCubeType,
 	FramebufferType
 };
 
