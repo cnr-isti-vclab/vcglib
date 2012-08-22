@@ -418,7 +418,7 @@ public:
 };
 
 template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {
-    static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4bOcf"));T::Name(name);}
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4bOcf"));T::Name(name);}
 };
 
 ///*-------------------------- QUALITY  ----------------------------------*/
