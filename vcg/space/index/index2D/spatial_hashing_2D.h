@@ -350,8 +350,8 @@ namespace vcg{
 
 			voxel[0] = dim[0]/siz[0];
 			voxel[1] = dim[1]/siz[1];
-            cell_size=voxel.Norm();
-			//voxel[2] = dim[2]/siz[2];
+      cell_size=voxel.Norm();
+		
 			hash_table.clear();
 		}
 
