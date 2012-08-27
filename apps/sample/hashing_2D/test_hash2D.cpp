@@ -33,32 +33,54 @@ class MySegmentType:public vcg::Segment2<MyScalarType>
 {
 public:
 	int mark;
-	bool deleted;
+    bool deleted;
 	bool IsD(){return deleted;}
+    typedef vcg::Point2<ScalarType> CoordType;
 
 	MySegmentType(const vcg::Point2<MyScalarType> &_P0,
 				  const vcg::Point2<MyScalarType> &_P1)
 	{
 		P0()=_P0;
 		P1()=_P1;
-		mark=0;
-	}
+        mark=0;
+    }
 
 	void GetBBox(vcg::Box2<ScalarType> &BB2)
 	{
 		//BB2.SetNull();
 		BB2.Set(P0());
-		BB2.Add(P1());
+        BB2.Add(P1());
 	}
+
+    void GetSubBBox(const ScalarType &step_size,
+                   std::vector<vcg::Box2<ScalarType> > &RasterBox)
+    {
+        //RasterBox.clear();
+        ScalarType lenght=(P1()-P0()).Norm();
+        CoordType dir=(P1()-P0());
+        dir.Normalize();
+        int steps= (int)ceil(lenght/(ScalarType)step_size);
+        RasterBox.resize(steps);
+
+        CoordType currP0=P0();
+        CoordType currP1;
+        for (int i=0;i<steps-1;i++)
+        {
+            currP1=currP0+dir*step_size;
+            RasterBox[i]=(vcg::Box2<ScalarType>(currP0,currP1));
+            currP0=currP1;
+        }
+        RasterBox[steps-1]=(vcg::Box2<ScalarType>(currP0,P1()));
+    }
 
 	MySegmentType(){}
 
-	MySegmentType(const MySegmentType &s1)
+    MySegmentType(const MySegmentType &s1):vcg::Segment2<MyScalarType>(s1)
 	{
 		P0()=s1.P0();
 		P1()=s1.P1();
 		mark=s1.mark;
-		deleted=s1.deleted;
+        deleted=s1.deleted;
 	}
 };
 
@@ -134,7 +156,7 @@ MyScalarType TestBox(int num_test=100000,
 {
 	//GetInBox(OBJMARKER & _marker,const Box2x _bbox,OBJPTRCONTAINER & _objectPtrs)
 	MyMark.UnMarkAll();
-	int t0=clock();
+    //int t0=clock();
 	int num=0;
 	for (int i=0;i<num_test;i++)
 	{
@@ -146,80 +168,103 @@ MyScalarType TestBox(int num_test=100000,
 		std::vector<MySegmentType*> result;
 		num+=Hash2D.GetInBox<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,result);
 	}
-	int t1=clock();
+    //int t1=clock();
 	MyScalarType numd=(double)num/(double)num_test;
 	return numd;
 }
 
-//void TestCorrectNess(int num_sample=1000,
-//					int num_test=1000,
-//					MyScalarType SpaceSize=100,
-//					MyScalarType radius=0.02)
-//{
-//
-//}
-
-void GetIntersectingSegments(MySegmentType *S,
-							std::vector<MySegmentType*> &result)
+MyScalarType GetIntersectingSegments(MySegmentType *S,
+                            std::vector<MySegmentType*> &result,
+                            bool subdivide=false)
 {
 	///get the bbox
 	result.clear();
-	vcg::Box2<MyScalarType> bbox;
-	S->GetBBox(bbox);
-	///then get into the grid
-	std::vector<MySegmentType*> inbox;
-	int num=Hash2D.GetInBox<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,inbox);
+    ///then get into the grid
+    std::vector<MySegmentType*> inbox;
+    int num=0;
+    if (!subdivide)
+    {
+        vcg::Box2<MyScalarType> bbox;
+        S->GetBBox(bbox);
+        num=Hash2D.GetInBox<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,inbox);
+    }
+    else
+    {
+        std::vector<vcg::Box2<MyScalarType> > bbox;
+        MyScalarType size_cell=Hash2D.cell_size;
+
+        S->GetSubBBox(size_cell,bbox);
+        num=Hash2D.GetInBoxes<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,inbox);
+    }
 	///then test intersection
 	for (int j=0;j<num;j++)
 	{
 		if (inbox[j]==S)continue;
-		vcg::Point2<MyScalarType> p_inters;
-		if (vcg::SegmentSegmentIntersection<MyScalarType>(*S,*inbox[j],p_inters))
+        vcg::Point2<MyScalarType> p_inters;
+        if (vcg::SegmentSegmentIntersection<MyScalarType>(*S,*inbox[j],p_inters))
 			result.push_back(inbox[j]);
 	}
+    return (((MyScalarType)num-result.size())/(MyScalarType)num);
 }
 
-void GetCloseSegments(MySegmentType *S,
+MyScalarType GetCloseSegments(MySegmentType *S,
 					const MyScalarType &radius,
-					std::vector<MySegmentType*> &result)
+                    std::vector<MySegmentType*> &result,
+                    bool use_sub=false)
 {
 	///get the bbox
 	result.clear();
-	vcg::Box2<MyScalarType> bbox;
-	S->GetBBox(bbox);
-	bbox.Offset(radius);//*1.02);
-
-	///then get into the grid
-	std::vector<MySegmentType*> inbox;
-	int num=Hash2D.GetInBox<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,inbox);
+    std::vector<MySegmentType*> inbox;
+    int num=0;
+    if (!use_sub)
+    {
+        vcg::Box2<MyScalarType> bbox;
+        S->GetBBox(bbox);
+        bbox.Offset(radius);//*1.02);
+        ///then get into the grid
+        num=Hash2D.GetInBox<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,inbox);
+    }
+    else
+    {
+        std::vector<vcg::Box2<MyScalarType> > bbox;
+        MyScalarType size_cell=Hash2D.cell_size;
+        S->GetSubBBox(size_cell,bbox);
+        for (int i=0;i<bbox.size();i++)
+            bbox[i].Offset(radius);//*1.02);
+        ///then get into the grid
+        num=Hash2D.GetInBoxes<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,inbox);
+    }
 	///then test intersection
 	for (int j=0;j<num;j++)
-	{
+    {
 		if (inbox[j]==S)continue;
 		vcg::Point2<MyScalarType> p_clos;
-		MyScalarType dist=vcg::Segment2DSegment2DDistance<MyScalarType>(*S,*inbox[j],p_clos);
-		if (dist<radius) result.push_back(inbox[j]);
+        MyScalarType dist=vcg::Segment2DSegment2DDistance<MyScalarType>(*S,*inbox[j],p_clos);
+        if (dist<radius)
+            result.push_back(inbox[j]);
 	}
+    return (((MyScalarType)num-result.size())/(MyScalarType)num);
 }
 
-MyScalarType TestIntersection(int num_test=1000000)
+MyScalarType TestIntersection(unsigned int num_test=1000000,bool use_sub=false)
 {
-	int num_inters=0;
-	for (int i=0;i<num_test;i++)
+    MyScalarType false_pos=0;
+    for (unsigned int i=0;i<num_test;i++)
 	{
 		assert(i<Allocated.size());
 		std::vector<MySegmentType*> result;
-		GetIntersectingSegments(&Allocated[i],result);
-		num_inters+=result.size();
+        MyScalarType false_pos_t=GetIntersectingSegments(&Allocated[i],result,use_sub);
+        false_pos+=false_pos_t;
 	}
-	return ((MyScalarType)num_inters/(MyScalarType)num_test);
+    return (false_pos/(MyScalarType)num_test);
 }
 
-MyScalarType TestClosest(int num_test=1000000,
-						MyScalarType radius=0.1)
+MyScalarType TestClosest(unsigned int num_test=1000000,
+                        MyScalarType radius=0.1,
+                        bool use_sub=false)
 {
-	int num_found=0;
-	for (int i=0;i<num_test;i++)
+    MyScalarType false_pos=0;
+    for (unsigned int i=0;i<num_test;i++)
 	{
 		assert(i<Allocated.size());
 
@@ -230,14 +275,13 @@ MyScalarType TestClosest(int num_test=1000000,
 		
 		///get the segments closer than a radius
 		std::vector<MySegmentType*> closer;
-		GetCloseSegments(S,absRadius,closer);
-		
-		num_found+=closer.size();
+        MyScalarType false_pos_t=GetCloseSegments(S,absRadius,closer,use_sub);
+        false_pos+=false_pos_t;
 	}
-	return ((MyScalarType)num_found/(MyScalarType)num_test);
+    return (false_pos/(MyScalarType)num_test);
 }
 
-int TestCorrectIntersect(int num_test=1000)
+int TestCorrectIntersect(int num_test=1000,bool use_sub=false)
 {
 	int num=0;
 	for (int i=0;i<num_test;i++)
@@ -253,7 +297,7 @@ int TestCorrectIntersect(int num_test=1000)
 				result0.push_back(S1);
 			/*num+=result0.size();*/
 		}
-		GetIntersectingSegments(&Allocated[i],result1);
+        GetIntersectingSegments(&Allocated[i],result1,use_sub);
 		///then see if equal number
 		if (result1.size()==result0.size())num++;
 	}
@@ -261,7 +305,8 @@ int TestCorrectIntersect(int num_test=1000)
 }
 
 int TestCorrectClosest(int num_test=1000,
-						MyScalarType radius=0.1)
+                        MyScalarType radius=0.1,
+                       bool use_sub=false)
 {
 	int num=0;
 	for (int i=0;i<num_test;i++)
@@ -279,7 +324,7 @@ int TestCorrectClosest(int num_test=1000,
 				result0.push_back(S1);
 			/*num+=result0.size();*/
 		}
-		GetCloseSegments(S0,absRadius,result1);
+        GetCloseSegments(S0,absRadius,result1,use_sub);
 		///then see if equal number
 		if (result1.size()==result0.size())num++;
 	}
@@ -289,14 +334,17 @@ int TestCorrectClosest(int num_test=1000,
 
 int main( int argc, char **argv )
 {
-  int num_sample=100000;
+  bool use_sub=true;
+  (void) argc;
+  (void) argv;
+  int num_sample=20000;
   int t0=clock();
-  InitRandom(100000);
+  InitRandom(num_sample,100,0.3);
   int t1=clock();
 
   ///Initialization performance
   printf("** Time elapsed for initialization of %d sample is %d\n \n",num_sample,t1-t0);
-  Hash2D.Set(Allocated.begin(),Allocated.end());
+  Hash2D.Set(Allocated.begin(),Allocated.end(),use_sub);
 
   ///Box Query performance
   t0=clock();
@@ -307,27 +355,27 @@ int main( int argc, char **argv )
 
   ///Intersecting segment performance
   t0=clock();
-  MyScalarType avg_int=TestIntersection(num_sample);
+  MyScalarType perc_int=TestIntersection(num_sample,use_sub);
   t1=clock();
-  printf("** Time elapsed for %d INTERSECTION queries is %d\n, average found %5.5f \n \n",num_sample,t1-t0,avg_int);
+  printf("** Time elapsed for %d INTERSECTION queries is %d\n, false positive perc found %5.5f \n \n",num_sample,t1-t0,perc_int);
 	
   ///closest test
   t0=clock();
-  MyScalarType avg_clos=TestClosest(num_sample);
+  MyScalarType perc_clos=TestClosest(num_sample,0.1,use_sub);
   t1=clock();
-  printf("** Time elapsed for %d CLOSEST queries is %d\n, average found %5.5f \n \n",num_sample,t1-t0,avg_clos);
+  printf("** Time elapsed for %d CLOSEST queries is %d\n, false positive perc found %5.5f \n \n",num_sample,t1-t0,perc_clos);
 	
  ///reinitialize structure
   MyMark.mark=0;
   Hash2D.Clear();
   int n_test=1000;
   InitRandom(n_test,100,0.1);
-  Hash2D.Set(Allocated.begin(),Allocated.end());
+  Hash2D.Set(Allocated.begin(),Allocated.end(),use_sub);
 
-  int tested_int=TestCorrectIntersect(n_test);
+  int tested_int=TestCorrectIntersect(n_test,use_sub);
   printf("** Correct Intersect on %d test are %d \n",n_test,tested_int);
 	
-  int tested_clos=TestCorrectClosest(n_test);
+  int tested_clos=TestCorrectClosest(n_test,0.1,use_sub);
   printf("** Correct Closest on %d test are %d \n",n_test,tested_clos);
 
   return 0;
