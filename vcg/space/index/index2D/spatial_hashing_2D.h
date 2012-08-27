@@ -109,6 +109,9 @@ namespace vcg{
 		// becouse hashed multimaps does not expose a direct list of all the different keys. 
 		std::vector<Point2i> AllocatedCells;
 
+        ///the size of the diagonal of each cell
+        ScalarType cell_size;
+
 		// Class to abstract a HashIterator (that stores also the key, 
 		// while the interface of the generic spatial indexing need only simple object (face) pointers.
 
@@ -177,22 +180,57 @@ namespace vcg{
 			return false;
 		}
 
+        void AddBox(ObjType* s,
+                    const Box2<ScalarType> &b)
+        {
+            vcg::Box2i bb;
+            this->BoxToIBox(b,bb);
+            //then insert all the cell of bb
+            for (int i=bb.min.X();i<=bb.max.X();i++)
+                for (int j=bb.min.Y();j<=bb.max.Y();j++)
+                    InsertObject(s,vcg::Point2i(i,j));
+        }
+
+        void AddBoxes(ObjType* s,
+                    const std::vector<Box2<ScalarType> > &boxes)
+        {
+            std::vector<vcg::Point2i> Indexes;
+            for (unsigned int i=0;i<boxes.size();i++)
+            {
+                vcg::Box2i bb;
+                this->BoxToIBox(boxes[i],bb);
+                //then insert all the cell of bb
+                for (int i=bb.min.X();i<=bb.max.X();i++)
+                    for (int j=bb.min.Y();j<=bb.max.Y();j++)
+                        Indexes.push_back(vcg::Point2i(i,j));
+            }
+            std::sort(Indexes.begin(),Indexes.end());
+            std::vector<vcg::Point2i>::iterator it=std::unique(Indexes.begin(),Indexes.end());
+            Indexes.resize( it - Indexes.begin() );
+
+            for (int i=0;i<Indexes.size();i++)
+                InsertObject(s,Indexes[i]);
+        }
+
 	public:
 
-		vcg::Box2i Add( ObjType* s)
+        void Add( ObjType* s,bool subdivideBox=false)
 		{
-			Box2<ScalarType> b;
-			s->GetBBox(b);
-			vcg::Box2i bb;
-			this->BoxToIBox(b,bb);
-			//then insert all the cell of bb
-			for (int i=bb.min.X();i<=bb.max.X();i++)
-				for (int j=bb.min.Y();j<=bb.max.Y();j++)
-					InsertObject(s,vcg::Point2i(i,j));
-					//for (int k=bb.min.Z();k<=bb.max.Z();k++)
-						//InsertObject(s,vcg::Point3i(i,j,k));
 
-			return bb;
+            if (!subdivideBox)
+            {
+                Box2<ScalarType> b;
+                s->GetBBox(b);
+                AddBox(s,b);
+            }
+            else
+            {
+                std::vector<Box2<ScalarType> > Boxes;
+                s->GetSubBBox(cell_size,Boxes);
+                //for (unsigned int i=0;i<Boxes.size();i++)
+                //    AddBox(s,Boxes[i]);
+                AddBoxes(s,Boxes);
+            }
 		}
 
 		///Remove all the objects contained in the cell containing s
@@ -312,13 +350,14 @@ namespace vcg{
 
 			voxel[0] = dim[0]/siz[0];
 			voxel[1] = dim[1]/siz[1];
+            cell_size=voxel.Norm();
 			//voxel[2] = dim[2]/siz[2];
 			hash_table.clear();
 		}
 
 		/// Insert a mesh in the grid.
-		template <class OBJITER>
-		void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box2x &_bbox=Box2x() )
+        /*template <class OBJITER>
+        void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box2x &_bbox=Box2x() )
 		{
 			OBJITER i;
 			Box2x b;
@@ -349,8 +388,46 @@ namespace vcg{
 
 			for(i = _oBegin; i!= _oEnd; ++i)
 				Add(&(*i));
-		}
+        }*/
 
+
+        /// Insert a mesh in the grid.
+        template <class OBJITER>
+        void Set(const OBJITER & _oBegin, const OBJITER & _oEnd,
+                 bool subdivideBox=false,const Box2x &_bbox=Box2x() )
+        {
+            OBJITER i;
+            Box2x b;
+            Box2x &bbox = this->bbox;
+            CoordType &dim = this->dim;
+            Point2i &siz = this->siz;
+            CoordType &voxel = this->voxel;
+
+            int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
+            if(!_bbox.IsNull()) this->bbox=_bbox;
+            else
+            {
+                for(i = _oBegin; i!= _oEnd; ++i)
+                {
+                    (*i).GetBBox(b);
+                    this->bbox.Add(b);
+                }
+                ///inflate the bb calculated
+                bbox.Offset(bbox.Diag()/100.0) ;
+            }
+
+            dim  = bbox.max - bbox.min;
+            BestDim2D( _size, dim, siz );
+            // find voxel size
+            voxel[0] = dim[0]/siz[0];
+            voxel[1] = dim[1]/siz[1];
+            cell_size=voxel.Norm();
+
+            for(i = _oBegin; i!= _oEnd; ++i)
+            {
+                Add(&(*i),subdivideBox);
+            }
+        }
 
 		///return the simplexes of the cell that contain p
 		void GridReal( const Point2<ScalarType> & p, CellIterator & first, CellIterator & last )
@@ -418,10 +495,20 @@ namespace vcg{
 							const Box2x _bbox,
 							OBJPTRCONTAINER & _objectPtrs)
 		{
+            _objectPtrs.clear();
 			return(vcg::GridGetInBox2D<SpatialHashType,OBJMARKER,OBJPTRCONTAINER>
 				(*this,_marker,_bbox,_objectPtrs));
 		}
 
+        template <class OBJMARKER, class OBJPTRCONTAINER>
+        unsigned int GetInBoxes(OBJMARKER & _marker,
+                            const std::vector<Box2x> &_bbox,
+                            OBJPTRCONTAINER  &_objectPtrs)
+        {
+            _objectPtrs.clear();
+            return(vcg::GridGetInBoxes2D<SpatialHashType,OBJMARKER,OBJPTRCONTAINER>
+                  (*this,_marker,_bbox,_objectPtrs));
+        }
 	}; // end class
 
 	
