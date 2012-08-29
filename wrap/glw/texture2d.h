@@ -75,6 +75,11 @@ class Texture2D : public Texture
 		{
 			(void)unit;
 			GLW_ASSERT(this->isValid());
+			if (level == 0)
+			{
+				this->m_width  = width;
+				this->m_height = height;
+			}
 			glTexImage2D(target, level, this->m_format, width, height, 0, dataFormat, dataType, data);
 		}
 
