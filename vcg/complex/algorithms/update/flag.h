@@ -178,6 +178,7 @@ static void VertexClearB(MeshType &m) { VertexClear(m,VertexType::BORDER);}
 static void EdgeClearV(MeshType &m) { EdgeClear(m,EdgeType::VISITED);}
 static void FaceClearV(MeshType &m) { FaceClear(m,FaceType::VISITED);}
 static void FaceClearB(MeshType &m) { FaceClear(m,FaceType::BORDER012);}
+static void FaceClearS(MeshType &m) {FaceClear(m,FaceType::SELECTED);}
 static void FaceClearF(MeshType &m) { FaceClear(m,FaceType::FAUX012);}
 
 static void VertexSetV(MeshType &m) { VertexSet(m,VertexType::VISITED);}
