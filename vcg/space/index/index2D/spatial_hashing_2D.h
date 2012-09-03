@@ -409,7 +409,7 @@ namespace vcg{
             {
                 for(i = _oBegin; i!= _oEnd; ++i)
                 {
-                    (*i).GetBBox(b);
+                    (*i)->GetBBox(b);
                     this->bbox.Add(b);
                 }
                 ///inflate the bb calculated
@@ -426,6 +426,44 @@ namespace vcg{
             for(i = _oBegin; i!= _oEnd; ++i)
             {
                 Add(&(*i),subdivideBox);
+            }
+        }
+
+				/// Insert a mesh in the grid.
+        template <class OBJITER>
+        void SetByPointers(const OBJITER & _oBegin, const OBJITER & _oEnd,
+                           bool subdivideBox=false,const Box2x &_bbox=Box2x() )
+        {
+            OBJITER i;
+            Box2x b;
+            Box2x &bbox = this->bbox;
+            CoordType &dim = this->dim;
+            Point2i &siz = this->siz;
+            CoordType &voxel = this->voxel;
+
+            int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
+            if(!_bbox.IsNull()) this->bbox=_bbox;
+            else
+            {
+                for(i = _oBegin; i!= _oEnd; ++i)
+                {
+                    (*i)->GetBBox(b);
+                    this->bbox.Add(b);
+                }
+                ///inflate the bb calculated
+                bbox.Offset(bbox.Diag()/100.0) ;
+            }
+
+            dim  = bbox.max - bbox.min;
+            BestDim2D( _size, dim, siz );
+            // find voxel size
+            voxel[0] = dim[0]/siz[0];
+            voxel[1] = dim[1]/siz[1];
+            cell_size=voxel.Norm();
+
+            for(i = _oBegin; i!= _oEnd; ++i)
+            {
+                Add(*i,subdivideBox);
             }
         }
 
