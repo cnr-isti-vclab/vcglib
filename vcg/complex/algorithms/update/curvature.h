@@ -68,7 +68,7 @@ the vertex
 #include <vcg/complex/algorithms/intersection.h>
 #include <vcg/complex/algorithms/inertia.h>
 #include <vcg/math/matrix33.h>
-
+#include <wrap/callback.h>
 
 namespace vcg {
 namespace tri {
