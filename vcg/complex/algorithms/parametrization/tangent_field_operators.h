@@ -23,6 +23,7 @@
 #include <vcg/math/matrix33.h>
 #include <vcg/math/histogram.h>
 #include <vcg/complex/algorithms/update/curvature.h>
+#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/simplex/face/topology.h>
 
 #ifndef VCG_TANGENT_FIELD_OPERATORS
@@ -44,9 +45,9 @@ namespace vcg {
 
 		public:
 
-			static CoordType FollowDirection(const FaceType &f0,
-				const typename FaceType &f1,
-				const typename CoordType &dir0)
+            static CoordType FollowDirection(const FaceType &f0,
+                                            const  FaceType &f1,
+                                            const  CoordType &dir0)
 			{
 				///first it rotate dir to match with f1
 				CoordType dirR=vcg::tri::CrossField<MeshType>::Rotate(f0,f1,dir0);
@@ -56,7 +57,7 @@ namespace vcg {
 				return ret;
 			}
 
-			static void SetVertCrossFromCurvature(MeshType &mesh)
+            static void SetVertCrossFromCurvature(MeshType &mesh)
 			{
 				vcg::tri::UpdateTopology<MeshType>::FaceFace(mesh);
 				vcg::tri::UpdateTopology<MeshType>::VertexFace(mesh);
@@ -134,7 +135,7 @@ namespace vcg {
 
 			///find an angle with respect to dirX on the plane perpendiculr to DirZ
 			///dirX and dirZ should be perpendicular
-			static ScalarType TangentVectToAngle(const CoordType dirX,
+            static ScalarType TangentVectToAngle(const CoordType dirX,
 				const CoordType dirZ,
 				const CoordType &vect3D)
 			{
@@ -236,7 +237,7 @@ namespace vcg {
 			{
 				assert((index>=0)&&(index<4));
 				CoordType axis[4];
-				CrossVector(f,axis);
+                CrossVector(v,axis);
 				return axis[index];
 			}
 
@@ -371,15 +372,12 @@ namespace vcg {
 			}
 
 			///interpolate cross field with barycentric coordinates using normalized weights
-			static typename typename CoordType InterpolateCrossField(const std::vector<CoordType> &TangVect,
+            static  CoordType InterpolateCrossField(const std::vector<CoordType> &TangVect,
 				const std::vector<ScalarType> &Weight,
 				const std::vector<CoordType> &Norms,
-				const typename CoordType &BaseNorm,
-				const typename CoordType &BaseDir)
+                const CoordType &BaseNorm,
+                const CoordType &BaseDir)
 			{
-				typedef typename FaceType::CoordType CoordType;
-				typedef typename FaceType::ScalarType ScalarType;
-
 				CoordType sum = CoordType(0,0,0);
 				for (int i=0;i<TangVect.size();i++)
 				{
@@ -522,7 +520,9 @@ namespace vcg {
 				for (int i=0;i<mesh.vert.size();i++)
 				{
 					if (mesh.vert[i].IsD())continue;
-					int missmatch;
+                    if (mesh.vert[i].IsB())continue;
+
+					int missmatch;                   
 					if (IsSingular(mesh.vert[i],missmatch))
 						mesh.vert[i].SetS();
 					else
@@ -575,7 +575,7 @@ namespace vcg {
 						vcg::Point3<ScalarType> u,v;
 						int a,b;
 						if (fscanf(f,
-							"%d %d %lf %lf %lf %lf %lf %lf",
+                            "%d %d %f %f %f %f %f %f",
 							&a,&b,
 							&(v.X()),&(v.Y()),&(v.Z()),
 							&(u.X()),&(u.Y()),&(u.Z())
@@ -600,6 +600,64 @@ namespace vcg {
 				return true;
 			}
 
+            static void MakeDirectionFaceCoherent(MeshType &mesh)
+            {
+                vcg::tri::UpdateFlags<MeshType>::FaceClearS(mesh);
+
+                std::deque<FaceType*> d;
+                //std::vector<bool> done(mesh.face.size(), false);
+                //for (int i=0; i<(int)mesh.face.size(); i++)
+                //    mesh.face[i].ClearS();
+
+                for (int i=0; i<(int)mesh.face.size(); i++)
+                {
+                    if (mesh.face[i].IsD())continue;
+                    if (mesh.face[i].IsS())continue;
+                    mesh.face[i].SetS();
+                    d.push_back(&mesh.face[i]);
+                    break;
+                }
+
+                while (!d.empty())
+                {
+                     while (!d.empty())
+                     {
+                       FaceType* f0 = d.at(0);
+                       d.pop_front();
+
+                        for (int k=0; k<3; k++)
+                        {
+                           FaceType* f1 = f0->FFp(k);
+                           if (f1->IsS())continue;
+                           if (f1->IsD())continue;
+                           if (f1==f0)continue;
+                           CoordType dir0=f0->PD1();
+                           CoordType dir1=f1->PD1();
+                           CoordType dir0Rot=Rotate(*f0,*f1,dir0);
+                           dir0Rot.Normalize();
+                           CoordType targD=K_PI(dir1,dir0Rot,f1->N());
+                           f1->PD1()=targD;
+                           f1->PD2()=targD^f1->N();
+                           f1->PD2().Normalize();
+                           f1->SetS();
+                           d.push_back(f1);
+
+                       }
+                     }
+
+                     // d is empty: now put first non done element in it
+                     for (int i=0; i<(int)mesh.face.size(); i++)
+                     {
+                         if (mesh.face[i].IsD())continue;
+                         if (mesh.face[i].IsS())continue;
+                         mesh.face[i].SetS();
+                         assert(0);
+                         d.push_back(&mesh.face[i]);
+                         break;
+                     }
+                }
+            }
+
 			///transform curvature to UV space
 			static vcg::Point2<ScalarType> CrossToUV(FaceType &f)
 			{
@@ -622,7 +680,7 @@ namespace vcg {
 					baryCoordsUV.Z()*Uv2-baryUV;
 				curvUV.Normalize();
 				return curvUV;
-			}
+            }
 
 		};///end class
 	} //End Namespace Tri
