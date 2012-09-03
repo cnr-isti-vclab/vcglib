@@ -626,13 +626,34 @@ void VFStarVF( typename FaceType::VertexType* vp, std::vector<FaceType *> &faceV
 }
 
 /*!
+* Compute the set of faces adjacent to a given vertex using VF adjacency.
+*	\param vp	pointer to the vertex whose star has to be computed.
+*	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
+*   \param indexes a std::vector of integer of the vertex as it is seen from the faces
+*/
+template <class FaceType>
+void VFStarVF( typename FaceType::VertexType* vp,
+               std::vector<FaceType *> &faceVec,
+               std::vector<int> &indexes)
+{
+    typedef typename FaceType::VertexType* VertexPointer;
+    faceVec.clear();
+    face::VFIterator<FaceType> vfi(vp);
+    while(!vfi.End())
+    {
+        faceVec.push_back(vfi.F());
+        indexes.push_back(vfi.I());
+        ++vfi;
+    }
+}
+/*!
 * Compute the ordered set of faces adjacent to a given vertex using VF adjacency.and FF adiacency 
 *	\param vp	pointer to the vertex whose star has to be computed.
 *	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
 *
 */
 template <class FaceType>
-static void VFOrderedStarVF_FF(typename FaceType::VertexType &vp,
+static void VFOrderedStarVF_FF(const typename FaceType::VertexType &vp,
 								std::vector<FaceType*> &faceVec)
 {
 
@@ -640,8 +661,8 @@ static void VFOrderedStarVF_FF(typename FaceType::VertexType &vp,
 	assert (!vp.IsB());
 
 	///get first face sharing the edge
-	FaceType *f_init=vp.VFp();
-	int edge_init=vp.VFi(); 
+    FaceType *f_init=vp.cVFp();
+    int edge_init=vp.cVFi();
 
 	///and initialize the pos
 	vcg::face::Pos<FaceType> VFI(f_init,edge_init);
