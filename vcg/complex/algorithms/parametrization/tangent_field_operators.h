@@ -456,13 +456,13 @@ namespace vcg {
 				ScalarType angle_diff=VectToAngle(dir0Rot,N0,dir1Rot);
 
 				ScalarType step=M_PI/2.0;
-				int i=(int)floor((angle_diff/step)+0.5);
-				int k=0;
-				if (i>=0)
+                int i=(int)floor((angle_diff/step)+0.5);
+                int k=0;
+                if (i>=0)
 					k=i%4;
 				else
-					k=(-(3*i))%4;
-				return k;
+                    k=(-(3*i))%4;
+                return k;
 			}
 
 			///compute the mismatch between 2 faces
@@ -501,7 +501,7 @@ namespace vcg {
 				vcg::face::VFOrderedStarVF_FF(v,faces);
 
 				missmatch=0;
-				for (int i=0;i<faces.size();i++)
+                for (unsigned int i=0;i<faces.size();i++)
 				{
 					FaceType *curr_f=faces[i];
 					FaceType *next_f=faces[(i+1)%faces.size()];
@@ -517,7 +517,7 @@ namespace vcg {
 			///select singular vertices
 			static void SelectSingular(MeshType &mesh)
 			{
-				for (int i=0;i<mesh.vert.size();i++)
+                for (unsigned int i=0;i<mesh.vert.size();i++)
 				{
 					if (mesh.vert[i].IsD())continue;
                     if (mesh.vert[i].IsB())continue;
@@ -572,10 +572,10 @@ namespace vcg {
 					// skip strange string line
 					while (fscanf(f,"%c",&c)!=EOF) if (c=='\n') break;
 					for (int i=0; i<nnv; i++){
-						vcg::Point3<ScalarType> u,v;
-						int a,b;
+                        vcg::Point3<float> u,v;
+                        float a,b;
 						if (fscanf(f,
-                            "%d %d %f %f %f %f %f %f",
+                            "%f %f %f %f %f %f %f %f",
 							&a,&b,
 							&(v.X()),&(v.Y()),&(v.Z()),
 							&(u.X()),&(u.Y()),&(u.Z())
@@ -583,16 +583,32 @@ namespace vcg {
 								//if (errorMsg) sprintf(errorMsg,"Format error reading vertex n. %d",i);
 								return false;
 						}
-						//node[i]->TF().Import(u);
+
+                        vcg::Point3<float> N;
+                        N.Import<double>(mesh->face[i].N());
+                        v=u^N;
+                        u.Normalize();
+                        v.Normalize();
+
 						if (per_vertex)
 						{
-							mesh->vert[i].PD1()=u;
-							mesh->vert[i].PD2()=v;
+                            mesh->vert[i].PD1().X()=(ScalarType) u.X();
+                            mesh->vert[i].PD1().Y()=(ScalarType) u.Y();
+                            mesh->vert[i].PD1().Z()=(ScalarType) u.Z();
+                            mesh->vert[i].PD2().X()=(ScalarType) v.X();
+                            mesh->vert[i].PD2().Y()=(ScalarType) v.Y();
+                            mesh->vert[i].PD2().Z()=(ScalarType) v.Z();
 						}
 						else
 						{
-							mesh->face[i].PD1()=u;
-							mesh->face[i].PD2()=v;
+                            mesh->face[i].PD1().X()=(ScalarType) u.X();
+                            mesh->face[i].PD1().Y()=(ScalarType) u.Y();
+                            mesh->face[i].PD1().Z()=(ScalarType) u.Z();
+                            mesh->face[i].PD2().X()=(ScalarType) v.X();
+                            mesh->face[i].PD2().Y()=(ScalarType) v.Y();
+                            mesh->face[i].PD2().Z()=(ScalarType) v.Z();
+                            mesh->face[i].PD1().Normalize();
+                            mesh->face[i].PD2().Normalize();
 						}
 					}
 				}
@@ -638,6 +654,7 @@ namespace vcg {
                            CoordType targD=K_PI(dir1,dir0Rot,f1->N());
                            f1->PD1()=targD;
                            f1->PD2()=targD^f1->N();
+                           //f1->PD2()=f1->N()^targD;
                            f1->PD2().Normalize();
                            f1->SetS();
                            d.push_back(f1);
@@ -656,6 +673,7 @@ namespace vcg {
                          break;
                      }
                 }
+                vcg::tri::UpdateFlags<MeshType>::FaceClearS(mesh);
             }
 
 			///transform curvature to UV space
