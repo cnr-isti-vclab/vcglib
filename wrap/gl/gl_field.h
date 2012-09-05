@@ -12,14 +12,20 @@ class GLField
 							ScalarType &size)
 	{
 
-        glLineWidth(3);
+        glLineWidth(2);
         vcg::glColor(vcg::Color4b(0,0,255,255));
         glBegin(GL_LINES);
             glVertex(center);
             glVertex(center+dir[0]*size);
         glEnd();
 
-        glLineWidth(1);
+        glLineWidth(2);
+        vcg::glColor(vcg::Color4b(0,255,0,255));
+        glBegin(GL_LINES);
+            glVertex(center);
+            glVertex(center+dir[1]*size);
+        glEnd();
+        /*glLineWidth(1);
         vcg::glColor(vcg::Color4b(0,0,0,255));
 
 		glBegin(GL_LINES);
@@ -28,13 +34,12 @@ class GLField
             glVertex(center);
             glVertex(center+dir[i]*size);
 		}
-		glEnd();
+        glEnd();*/
 	}
 
 
 	///draw the cross field of a given face
-	static void GLDrawFaceField(const MeshType &mesh,
-							const FaceType &f,
+    static void GLDrawFaceField(const FaceType &f,
 							ScalarType &size)
 	{
 		CoordType center=(f.P0(0)+f.P0(1)+f.P0(2))/3;
@@ -82,13 +87,13 @@ public:
         ScalarType size=10;
 		glPointSize(size);
 		glBegin(GL_POINTS);
-		for (int i=0;i<mesh.vert.size();i++)
+        for (unsigned int i=0;i<mesh.vert.size();i++)
 		{
 			if (mesh.vert[i].IsD())continue;
 			if (!mesh.vert[i].IsS())continue;
 			int mmatch;
 			bool IsSing=vcg::tri::CrossField<MeshType>::IsSingular(mesh.vert[i],mmatch);
-			if (!IsSing)continue;
+            //if (!IsSing)continue;
 			assert(IsSing);
 			assert(mmatch!=0);
 			/*vcg::glColor(vcg::Color4b(255,0,0,255));*/
@@ -111,11 +116,11 @@ public:
 		glEnable(GL_COLOR_MATERIAL);
 		glDisable(GL_LIGHTING);
         ScalarType size=mesh.bbox.Diag()/400.0;
-        for (int i=0;i<mesh.face.size();i++)
+        for (unsigned int i=0;i<mesh.face.size();i++)
 		{
 			if (mesh.face[i].IsD())continue;
 			//if (!mesh.face[i].leading)continue;
-			GLDrawFaceField(mesh,mesh.face[i],size);
+            GLDrawFaceField(mesh.face[i],size);
 		}
 		glPopAttrib();
 	}
@@ -142,7 +147,7 @@ public:
         glDisable(GL_LIGHTING);
         vcg::glColor(vcg::Color4b(255,0,0,255));
         glDepthRange(0,0.999);
-        for (int i=0;i<mesh.face.size();i++)
+        for (unsigned int i=0;i<mesh.face.size();i++)
         {
             if (mesh.face[i].IsD())continue;
             GLDrawFaceSeams(mesh.face[i]);
