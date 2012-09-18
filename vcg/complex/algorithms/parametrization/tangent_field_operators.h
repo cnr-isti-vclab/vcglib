@@ -25,6 +25,7 @@
 #include <vcg/complex/algorithms/update/curvature.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/simplex/face/topology.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 
 #ifndef VCG_TANGENT_FIELD_OPERATORS
 #define VCG_TANGENT_FIELD_OPERATORS
@@ -271,7 +272,7 @@ namespace vcg {
 
 			static void SetFaceCrossVectorFromVert(MeshType &mesh)
 			{
-				for (int i=0;i<mesh.face.size();i++)
+                for (unsigned int i=0;i<mesh.face.size();i++)
 				{
 					FaceType *f=&mesh.face[i];
 					if (f->IsD())continue;
@@ -286,7 +287,7 @@ namespace vcg {
 				vcg::face::VFStarVF(&v,faceVec);
 				std::vector<CoordType> TangVect;
 				std::vector<CoordType> Norms;
-				for (int i=0;i<faceVec.size();i++)
+                for (unsigned int i=0;i<faceVec.size();i++)
 				{
 					TangVect.push_back(faceVec[i]->PD1());
 					Norms.push_back(faceVec[i]->N());
@@ -309,7 +310,7 @@ namespace vcg {
 
 			static void SetVertCrossVectorFromFace(MeshType &mesh)
 			{
-				for (int i=0;i<mesh.vert.size();i++)
+                for (unsigned int i=0;i<mesh.vert.size();i++)
 				{
 					VertexType *v=&mesh.vert[i];
 					if (v->IsD())continue;
@@ -442,7 +443,7 @@ namespace vcg {
 
 			///compute the mismatch between 2 directions 
 			///each one si perpendicular to its own normal
-			static int MissMatch(const CoordType &dir0,
+            static int MissMatchByCross(const CoordType &dir0,
 				const CoordType &dir1,
 				const CoordType &N0,
 				const CoordType &N1)
@@ -466,7 +467,7 @@ namespace vcg {
 			}
 
 			///compute the mismatch between 2 faces
-			static int MissMatch(const FaceType &f0,
+            static int MissMatchByCross(const FaceType &f0,
 				const FaceType &f1)
 			{
 				CoordType dir0=CrossVector(f0,0);
@@ -490,7 +491,7 @@ namespace vcg {
 
 			///return true if a given vertex is singular,
 			///return also the missmatch
-			static bool IsSingular(const VertexType &v,int &missmatch)
+            static bool IsSingularByCross(const VertexType &v,int &missmatch)
 			{
 				typedef typename VertexType::FaceType FaceType;
 				///check that is on border..
@@ -507,7 +508,7 @@ namespace vcg {
 					FaceType *next_f=faces[(i+1)%faces.size()];
 
 					///find the current missmatch
-					missmatch+=MissMatch(*curr_f,*next_f);
+                    missmatch+=MissMatchByCross(*curr_f,*next_f);
 
 				}
 				missmatch=missmatch%4;
@@ -515,7 +516,7 @@ namespace vcg {
 			}
 
 			///select singular vertices
-			static void SelectSingular(MeshType &mesh)
+            static void SelectSingularByCross(MeshType &mesh)
 			{
                 for (unsigned int i=0;i<mesh.vert.size();i++)
 				{
@@ -523,16 +524,108 @@ namespace vcg {
                     if (mesh.vert[i].IsB())continue;
 
 					int missmatch;                   
-					if (IsSingular(mesh.vert[i],missmatch))
+                    if (IsSingularByCross(mesh.vert[i],missmatch))
 						mesh.vert[i].SetS();
 					else
 						mesh.vert[i].ClearS();
+
+                    mesh.vert[i].missmatch=missmatch;
 				}
 			}
 
+            /*static void GradientToCross(const FaceType &f,
+                                        const vcg::Point2<ScalarType> &UV0,
+                                        const vcg::Point2<ScalarType> &UV1,
+                                        const vcg::Point2<ScalarType> &UV2,
+                                        CoordType &dirU,
+                                        CoordType &dirV)
+            {
+                ///compute non normalized normal
+                CoordType p1 =f.P(1) - f.P(0);
+                CoordType p2 =f.P(2) - f.P(0);
+                CoordType n  =  p1 ^ p2;
+
+                CoordType _v1 =  p2 ^ n;
+                CoordType _v2 =  p1 ^ n;
+
+                ScalarType d1 =  _v1 * p1 ;
+                ScalarType d2 =  _v2 * p2 ;
+
+
+
+               for( int d=0 ; d<3 ; d++ )
+                   dirU.V(d) = - UV0.X()*_v1.V(d) - UV0.X()*_v2.V(d) + UV1.X()*_v1.V(d) + UV2.X()*_v2.V(d);
+
+               for( int d=0 ; d<3 ; d++ )
+                   dirV.V(d) = - UV0.Y()*_v1.V(d) - UV0.Y()*_v2.V(d) + UV1.Y()*_v1.V(d) + UV2.Y()*_v2.V(d);
+            }*/
+
+            static void GradientToCross(const FaceType &f,
+                                        const vcg::Point2<ScalarType> &UV0,
+                                        const vcg::Point2<ScalarType> &UV1,
+                                        const vcg::Point2<ScalarType> &UV2,
+                            CoordType &dirU,
+                            CoordType &dirV)
+            {
+                ///compute non normalized normal
+                CoordType n  =  f.cN();
+
+                CoordType p0 =f.cP(1) - f.cP(0);
+                CoordType p1 =f.cP(2) - f.cP(1);
+                CoordType p2 =f.cP(0) - f.cP(2);
+
+                CoordType t[3];
+                t[0] =  -(p0 ^ n);
+                t[1] =  -(p1 ^ n);
+                t[2] =  -(p2 ^ n);
+
+                dirU = t[1]*UV0.X() + t[2]*UV1.X() + t[0]*UV2.X();
+                dirV = t[1]*UV0.Y() + t[2]*UV1.Y() + t[0]*UV2.Y();
+            }
+
+            static bool LoadGrad(MeshType *mesh,
+                                 const char *path)
+            {
+                FILE *f = fopen(path,"rt");
+                if (!f)
+                {
+                    return false;
+                }
+                int numF;
+                fscanf(f,"%d\n",&numF);
+                assert(numF==mesh->fn);
+                char skipstr[200];
+                //int readed0;
+                for (int i=0;i<9;i++)
+                    fscanf(f,"%s",&skipstr[0]);
+
+                for (int i=0;i<mesh->fn;i++)
+                {
+                    int i0=-1;
+                    int i1=-1;
+                    int i2=-1;
+                    double u0,v0,u1,v1,u2,v2;
+                    int readed1=fscanf(f,"%d %d %d %lf %lf %lf %lf %lf %lf",&i0,&i1,&i2,&u0,&v0,&u1,&v1,&u2,&v2);
+                    assert(readed1==9);
+                    vcg::Point2<ScalarType> UV[3];
+                    UV[0]= vcg::Point2<ScalarType>(u0,v0);
+                    UV[1]= vcg::Point2<ScalarType>(u1,v1);
+                    UV[2]= vcg::Point2<ScalarType>(u2,v2);
+                    CoordType dir1;
+                    CoordType dir2;
+                    GradientToCross(mesh->face[i],UV[0],UV[1],UV[2],dir1,dir2);
+                    dir1.Normalize();
+                    dir2.Normalize();
+                    mesh->face[i].PD1()=dir1;
+                    mesh->face[i].PD2()=dir2;
+                }
+                fclose(f);
+                return true;
+            }
+
 			///load a field on the mesh, it could be a vfield file (per vertex)
 			///or an ffield file (per face)
-			static bool LoadFIELD(MeshType *mesh,
+            static bool LoadFFIELD(MeshType *mesh,
 				const char *path,
 				bool per_vertex=false)
 			{
@@ -545,7 +638,7 @@ namespace vcg {
 				{
 					char word[512]; word[0]=0;
 					fscanf(f,"%s",word);
-					char c=0;
+                    char c=0;
 					if (word[0]=='#') {
 						// skip comment line
 						while (fscanf(f,"%c",&c)!=EOF) if (c=='\n') break;
@@ -584,9 +677,10 @@ namespace vcg {
 								return false;
 						}
 
-                        vcg::Point3<float> N;
-                        N.Import<double>(mesh->face[i].N());
-                        v=u^N;
+                        //vcg::Point3<float> N;
+                        //N.Import<double>(mesh->face[i].N());
+                        //u=vcg::Point3<float>(1,0,0);
+                        //v=N^u;
                         u.Normalize();
                         v.Normalize();
 
@@ -615,6 +709,26 @@ namespace vcg {
 				fclose(f);
 				return true;
 			}
+
+            ///load a field on the mesh, it could be a vfield file (per vertex)
+            ///or an ffield file (per face)
+            static void Save4ROSY(MeshType &mesh,
+                                const char *path,
+                                bool per_vertex=false)
+            {
+                FILE *f = fopen(path,"wt");
+                fprintf(f,"%d\n",mesh.vn);
+                fprintf(f,"4\n");
+                for (int i=0;i<mesh.vert.size();i++)
+                {
+                    float dirX=(float)mesh.vert[i].PD1().X();
+                    float dirY=(float)mesh.vert[i].PD1().Y();
+                    float dirZ=(float)mesh.vert[i].PD1().Z();
+                    fprintf(f,"%f %f %f \n",dirX,dirY,dirZ);
+
+                }
+                fclose(f);
+            }
 
             static void MakeDirectionFaceCoherent(MeshType &mesh)
             {
@@ -653,7 +767,7 @@ namespace vcg {
                            dir0Rot.Normalize();
                            CoordType targD=K_PI(dir1,dir0Rot,f1->N());
                            f1->PD1()=targD;
-                           f1->PD2()=targD^f1->N();
+                           f1->PD2()=f1->N()^targD;
                            //f1->PD2()=f1->N()^targD;
                            f1->PD2().Normalize();
                            f1->SetS();
