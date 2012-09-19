@@ -432,7 +432,7 @@ namespace vcg{
 				/// Insert a mesh in the grid.
         template <class OBJITER>
         void SetByPointers(const OBJITER & _oBegin, const OBJITER & _oEnd,
-                           bool subdivideBox=false,const Box2x &_bbox=Box2x() )
+                           Point2i & cellsize=Point2i(-1,-1), bool subdivideBox=false,const Box2x &_bbox=Box2x() )
         {
             OBJITER i;
             Box2x b;
@@ -454,11 +454,21 @@ namespace vcg{
                 bbox.Offset(bbox.Diag()/100.0) ;
             }
 
-            dim  = bbox.max - bbox.min;
-            BestDim2D( _size, dim, siz );
-            // find voxel size
-            voxel[0] = dim[0]/siz[0];
-            voxel[1] = dim[1]/siz[1];
+            if (cellsize[0] < 0 && cellsize[1] < 0)
+						{
+							// cell size estimation
+							dim  = bbox.max - bbox.min;							
+							BestDim2D( _size, dim, siz );
+							voxel[0] = dim[0]/siz[0];
+							voxel[1] = dim[1]/siz[1];
+						}
+						else
+						{
+							// cell size assignment
+							voxel[0] = cellsize[0];
+							voxel[1] = cellsize[1];
+						}
+
             cell_size=voxel.Norm();
 
             for(i = _oBegin; i!= _oEnd; ++i)
