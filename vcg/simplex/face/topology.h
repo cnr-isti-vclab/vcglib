@@ -691,6 +691,50 @@ static void VFOrderedStarVF_FF(const typename FaceType::VertexType &vp,
 
 
 /*!
+* Compute the ordered set of faces adjacent to a given vertex using VF adjacency.and FF adiacency
+*	\param vp	pointer to the vertex whose star has to be computed.
+*	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
+*
+*/
+template <class FaceType>
+static void VFOrderedStarVF_FF(const typename FaceType::VertexType &vp,
+                                std::vector<FaceType*> &faceVec,
+                               std::vector<int> &edgeVec)
+{
+
+    ///check that is not on border..
+    assert (!vp.IsB());
+
+    ///get first face sharing the edge
+    FaceType *f_init=vp.cVFp();
+    int edge_init=vp.cVFi();
+
+    ///and initialize the pos
+    vcg::face::Pos<FaceType> VFI(f_init,edge_init);
+    bool complete_turn=false;
+    do
+    {
+        FaceType *curr_f=VFI.F();
+        faceVec.push_back(curr_f);
+
+        int curr_edge=VFI.E();
+        edgeVec.push_back(curr_edge);
+        ///assert that is not a border edge
+        assert(curr_f->FFp(curr_edge)!=curr_f);
+
+        ///continue moving
+        VFI.FlipF();
+        VFI.FlipE();
+
+        FaceType *next_f=VFI.F();
+
+        ///test if I've finiseh with the face exploration
+        complete_turn=(next_f==f_init);
+        /// or if I've just crossed a mismatch
+    }while (!complete_turn);
+}
+
+/*!
 * Check if two faces share and edge through the FF topology.
 *	\param f0,f1 the two face to be checked
 * \param i0,i1 the index of the shared edge;
@@ -762,6 +806,44 @@ bool FindSharedEdge(FaceType *f0,FaceType *f1, int &i, int &j)
             return true;
   i=-1;j=-1;
   return false;
+}
+
+/*!
+* find the faces that shares the two vertices
+* \param v0,v1 the two vertices
+* \param f0,f1 the two faces , counterclokwise order
+*
+*/
+template <class FaceType>
+bool FindSharedFaces(typename FaceType::VertexType *v0,
+                     typename FaceType::VertexType *v1,
+                     FaceType *&f0,
+                     FaceType *&f1,
+                     int &e0,
+                     int &e1)
+{
+    std::vector<FaceType*> faces0;
+    std::vector<FaceType*> faces1;
+
+    VFOrderedStarVF_FF(*v0,faces0);
+    VFOrderedStarVF_FF(v1,faces1);
+    ///then find the intersection
+    std::sort(faces0.begin(),faces0.end());
+    std::sort(faces1.begin(),faces1.end());
+    std::vector<FaceType*> Intersection;
+    std::set_intersection(faces0.begin(),faces0.end(),faces1.begin(),faces1.end(),std::back_inserter(Intersection));
+    if (Intersection.size()<2)return false; ///no pair of faces share the 2 vertices
+    assert(Intersection.size()==2);//otherwhise non manifoldess
+    f0=Intersection[0];
+    f1=Intersection[1];
+    FindSharedEdge(f0,f1,e0,e1);
+    ///and finally check if the order is right
+    if (f0->V(e0)!=v0)
+    {
+        std::swap(f0,f1);
+        std::swap(e0,e1);
+    }
+    return true;
 }
 
 /*@}*/
