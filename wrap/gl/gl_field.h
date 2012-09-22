@@ -1,3 +1,5 @@
+#include <vcg/complex/algorithms/parametrization/tangent_field_operators.h>
+
 namespace vcg{
 template <class MeshType>
 class GLField
@@ -90,11 +92,11 @@ public:
         for (unsigned int i=0;i<mesh.vert.size();i++)
 		{
 			if (mesh.vert[i].IsD())continue;
-			if (!mesh.vert[i].IsS())continue;
-			int mmatch;
-			bool IsSing=vcg::tri::CrossField<MeshType>::IsSingular(mesh.vert[i],mmatch);
+            if (!mesh.vert[i].IsSingular())continue;
+            int mmatch=mesh.vert[i].missmatch;
+            //bool IsSing=vcg::tri::CrossField<MeshType>::IsSingular(mesh.vert[i],mmatch);
             //if (!IsSing)continue;
-			assert(IsSing);
+            //assert(IsSing);
 			assert(mmatch!=0);
 			/*vcg::glColor(vcg::Color4b(255,0,0,255));*/
 			if (mmatch==1)vcg::glColor(vcg::Color4b(0,0,255,255));
