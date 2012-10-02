@@ -27,9 +27,10 @@
 
 namespace vcg {
 	namespace tri{
-        template <class MeshType, bool PerWedgeFlag=true>
+		template <class MeshType, bool PerWedgeFlag>
 		class Distortion
 		{
+		public:
 			typedef typename MeshType::FaceType FaceType;
 			typedef typename MeshType::VertexType VertexType;
 			typedef typename MeshType::CoordType CoordType;
@@ -149,7 +150,7 @@ namespace vcg {
 
 
 		public:
-            typedef enum DistType{AreaDist,EdgeDist,AngleDist};
+			enum DistType{AreaDist,EdgeDist,AngleDist};
 
 			///return the absolute difference between angle in 3D space and texture space
 			///Actually the difference in cos space
