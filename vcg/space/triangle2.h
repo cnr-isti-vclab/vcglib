@@ -133,6 +133,13 @@ void PointDistance(const CoordType & q,
 	}
 }
 
+///retutn true if the face is contuerclockwise oriented
+bool IsCCW()
+{
+    ScalarType Area=(P(1)-P(0))^(P(2)-P(0));
+    return (Area>0);
+}
+
 }; //end Class
 
 
