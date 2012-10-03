@@ -380,7 +380,7 @@ namespace vcg {
                 const CoordType &BaseDir)
 			{
 				CoordType sum = CoordType(0,0,0);
-				for (int i=0;i<TangVect.size();i++)
+                for (unsigned int i=0;i<TangVect.size();i++)
 				{
 					CoordType N1=Norms[i];
 					///find the rotation matrix that maps between normals
@@ -710,22 +710,46 @@ namespace vcg {
 				return true;
 			}
 
-            ///load a field on the mesh, it could be a vfield file (per vertex)
-            ///or an ffield file (per face)
+            ///Save a 4 rosy format file as used by
+            ///Interactive Visualization of Rotational Symmetry Fields on Surfaces
+            ///Jonathan Palacios and Eugene Zhang
             static void Save4ROSY(MeshType &mesh,
-                                const char *path,
-                                bool per_vertex=false)
+                                const char *path)
             {
                 FILE *f = fopen(path,"wt");
                 fprintf(f,"%d\n",mesh.vn);
                 fprintf(f,"4\n");
-                for (int i=0;i<mesh.vert.size();i++)
+                for (unsigned int i=0;i<mesh.vert.size();i++)
                 {
                     float dirX=(float)mesh.vert[i].PD1().X();
                     float dirY=(float)mesh.vert[i].PD1().Y();
                     float dirZ=(float)mesh.vert[i].PD1().Z();
                     fprintf(f,"%f %f %f \n",dirX,dirY,dirZ);
 
+                }
+                fclose(f);
+            }
+
+            ///Load a 4 rosy format file as used by
+            ///Interactive Visualization of Rotational Symmetry Fields on Surfaces
+            ///Jonathan Palacios and Eugene Zhang
+            static void Load4ROSY(MeshType &mesh,
+                                const char *path)
+            {
+                 FILE *f = fopen(path,"rt");
+                int num,symm;
+                fscanf(f,"%d",&num);
+                assert(num==mesh.vn);
+                fscanf(f,"%d\n",&symm);
+                assert(symm==4);
+                for (unsigned int i=0;i<num;i++)
+                {
+                    float dirX,dirY,dirZ;
+                    fscanf(f,"%f %f %f \n",&dirX,&dirY,&dirZ);
+                    mesh.vert[i].PD1()=CoordType(dirX,dirY,dirZ);
+                    mesh.vert[i].PD2()=mesh.vert[i].PD1()^mesh.vert[i].N();
+                    mesh.vert[i].PD1().Normalize();
+                    mesh.vert[i].PD2().Normalize();
                 }
                 fclose(f);
             }
