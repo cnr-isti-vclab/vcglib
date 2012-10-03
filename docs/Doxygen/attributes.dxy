@@ -1,0 +1,91 @@
+/** \page attributes
+User-defined attributes
+=======================
+VCG Lib also provides a simple mechanism to associate user-defined 'attributes' to the simplicies and to the mesh.
+
+Note that both 'attributes' and 'components' are basically accessory data that are bound to a simplex.
+
+Conceptually the difference is that with the term component VCGLib indicates those values that are considered to 'define' the simplex (its position, its normal its connectivity information), while the user defined attribute is an accessory data which make sense to some specific algorithm, like "the number of time a vertex has been moved" or "a pointer to a string containing a description of the vertex".
+
+Practically the difference is that every optional component has its non optional counterpart and is accessed through a member function of the simplex, so that when you write your algorithm you use v.N() to access the normal both it is has been declared as optional or not, while the attributes are accessed by a handle which is returned at the creation of the attribute.
+
+The following code snippet shows an example:
+\code
+/* apps/sample/trimesh_attribute/trimesh_attribute.cpp */
+
+#include<vcg/simplex/vertex/base.h>
+#include<vcg/simplex/vertex/component.h>
+#include<vcg/simplex/face/base.h>
+#include<vcg/simplex/face/component.h>
+#include<vcg/complex/trimesh/base.h>
+#include<vcg/complex/trimesh/allocate.h>
+
+class MyFace;
+class MyVertex;
+class MyEdge;   // dummy prototype never used
+class MyVertex  : public vcg::VertexSimp2< MyVertex, MyEdge, MyFace, vcg::vertex::Coord3f,vcg::vertex::Normal3f>{};
+class MyFace    : public vcg::FaceSimp2< MyVertex, MyEdge, MyFace, vcg::face::VertexRef, vcg::face::Normal3f> {};
+
+class MyMesh : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> > {};   
+ 
+float Irradiance(MyMesh::VertexType v){ 
+	// .....
+	return 1.0;
+}
+
+int main()
+{
+  MyMesh m;
+  //...here m is filled
+  
+  // add a per-vertex attribute with type float named "Irradiance"
+  MyMesh::PerVertexAttributeHandle<float> ih = vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<float>  (m,std::string("Irradiance"));
+
+  // add a per-vertex attribute with type float named "Radiosity"   
+  vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<float> (m,std::string("Radiosity"));
+ 
+  // add a per-vertex attribute with type bool and no name specified
+  MyMesh::PerVertexAttributeHandle<bool> blocked_h = vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<bool> (m); 
+  
+  MyMesh::VertexIterator vi; int i = 0;
+  for(vi   = m.vert.begin(); vi != m.vert.end(); ++vi,++i){
+   ih[vi]  = Irradiance(*vi);  // [] operator takes a iterator
+   ih[*vi] = Irradiance(*vi);  // or a MyMesh::VertexType object
+   ih[&*vi]= Irradiance(*vi);  // or a pointer to it
+   ih[i]   = Irradiance(*vi);  // or an integer index
+  }
+    
+  // Once created with AddPerVertexAttribute, an handle to the attribute can be obtained as follows
+  MyMesh::PerVertexAttributeHandle<float> rh = vcg::tri::Allocator<MyMesh>::GetPerVertexAttribute<float>(m,"Radiosity");  
+
+  // you can query if an attribute is present or not
+  bool hasRadiosity = vcg::tri::HasPerVertexAttribute(m,"Radiosity");  
+
+  // you can delete an attibute by name
+  vcg::tri::Allocator<MyMesh>::DeletePerVertexAttribute<float>(m,"Radiosity");
+
+  // you can delete an attibute by handle
+  vcg::tri::Allocator<MyMesh>::DeletePerVertexAttribute<bool>(m,blocked_h);
+}
+\endcode
+The same can be done for the faces, just replace the occurences of PerVertex with PerFace. Note that if you call add an attribute without specifying a name and you lose the handle, you will not be able to get your handle back.
+
+Note:
+
+Do not get mix up the scope of the handle with the memory allocation of the attribute. If you do not delete an attribute explicitly, it will be allocated until the mesh itself is destroyed, even if you do not have handles to it.
+
+C++ type of a mesh and reflection
+---------------------------------
+
+VCG Lib provides a set of functions to implement reflection, i.e. to investigate the type of a mesh at runtime. These functions follow the format Has[attribute](mesh) and return a boolean stating if that particular attribute is present or not.
+\code
+template<class ComputeMeshType>
+static void UpdateNormals<ComputeMeshType>::PerVertex(ComputeMeshType &m)
+{
+if( !HasPerVertexNormal(m)) return;
+...
+}
+\endcode
+You may wonder why those functions are not statically typed and why they needs the mesh object, i.e. why can't you just write ComputeMeshType::HasPerVertexNormal()? The reason is that VCG Lib reflection takes into account optional components, therefore HasPerVertexNormal(m) will return true if the type of the vertex contains the attribute as permanent (e.g. vcg::vertex::Normal3f) OR if it contains the attribute as optional (e.g. vcg::vertex::Normal3fOcf) AND it is enabled, i.e. the relative Enable function has been called.
+
+*/

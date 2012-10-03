@@ -1,0 +1,77 @@
+/** \page allocation 
+Creating elements
+=================
+To create a simple single triangle mesh or to add elements to an existing mesh you should use the AddVertices and AddFaces functions, elements are added at the end of the mesh. These functions returns a pointer to the first allocated element.
+
+Adding element to a vector can cause reallocation, and therefore invalidation of any pointer that points to the mesh elements. These fucntion manage safely re-allocation and updating of pointers for all the pointers stored internally in the mesh (e.g. if you add some vertices and that causes a reallocation of the vertex vector, the pointers from faces to vertices will be automatically updated by the Allocator functions.
+
+\code
+ #include <vcg/complex/trimesh/allocate.h>
+ //...define MyMesh
+ MyMesh m;
+ m.Clear();
+ Allocator<MyMesh>::AddVertices(m,3);
+ Allocator<MyMesh>::AddFaces(m,1);
+  
+ MyMesh::VertexPointer ivp[3];
+ VertexIterator vi=m.vert.begin();
+ ivp[0]=&*vi;(*vi).P()=CoordType ( 1.0, 1.0, 1.0); ++vi;
+ ivp[1]=&*vi;(*vi).P()=CoordType (-1.0, 1.0,-1.0); ++vi;
+ ivp[2]=&*vi;(*vi).P()=CoordType (-1.0,-1.0, 1.0); ++vi;
+
+ FaceIterator fi=m.face.begin();
+ (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; 
+\endcode
+look to platonic.h for more examples.
+
+If you keep interally some pointers to the mesh elements adding elements can invalidate them. In that case you should pass to the code>Allocator</code> functions a PointerUpdater to be used to update your private pointers.
+\code
+ MyMesh m;
+ ...
+ ...
+ MyMesh::VertexPointer vp = &m.vert[0]; // a potentially dangerous pointer 
+ PointerUpdater<VertexPointer> pu;
+ // now the vp pointer could be no more valid due to eventual re-allocation of the m.vert vector.
+ Allocator<MyMesh>::AddVertices(m,3,pu);
+ // check if an update of the pointer is needed and do it.
+ if(pu.NeedUpdate()) pu.Update(vp);
+\endcode
+Destroying Elements
+-------------------
+
+Lazy deletion strategy.
+
+Note that the two basic deletion strategies are very low level functions. They simply mark as deleted the corresponding entries without affecting the rest of the structures. So for example if you delete a vertex with these structures without checking that all the faces incident on it have been removed you create a non consistent situation...
+
+Similarly, but less dangerously, when you delete a face its vertices are left around so at the end you can have unreferenced floating vertices.
+\code
+Allocator<MyMesh>::DeleteVertex(m,v);
+Allocator<MyMesh>::DeleteFace(m,v);
+\endcode
+If your algorithm performs deletion the size of a container could be different from the number of valid element of your meshes (e.g.:
+
+\code
+m.vert.size() != m.vn 
+m.face.size() != m.fn 
+\endcode
+Therefore when you scan the containers of vertices and faces you could encounter deleted elements so you should take care with a simple !IsD() check:
+\code
+MyMesh::FaceIterator vi;
+for(fi = m.face.begin(); vi!=m.face.end(); ++fi ) 
+   if(!(*fi).IsD()) //    <---- Check added
+     {
+      MyMesh::CoordType b = vcg::Barycenter(*fi); 
+     }
+\endcode
+In some situations, particularly when you have to loop many many times over the element of the mesh without deleting/creating anything, it can be practical and convenient to get rid of deleted elements by explicitly calling the two garbage collecting functions:
+\code
+Allocator<MyMesh>::CompactVertexVector(m);
+Allocator<MyMesh>::CompactFaceVector(m);
+\endcode
+After calling these function it is safe to not check the IsD() state of every element and always holds that:
+\code
+m.vert.size() == m.vn 
+m.face.size() == m.fn
+\endcode
+Note that if there are no deleted elements in your mesh, the compactor functions returns immediately.
+*/

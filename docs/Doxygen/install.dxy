@@ -1,0 +1,31 @@
+/** \page install 
+
+Installation and folder structure
+================
+
+VCG Lib uses a SVN repository. To get the right subset of the svn trunk in the devel folder you should issue the following svn command:
+
+    svn co https://vcg.svn.sourceforge.net/svnroot/vcg/trunk/vcglib vcglib
+
+
+Windows users with tortoisesvn (http://www.tortoisesvn.net) installed should
+
+1. create a folder named vcglib.
+2. right-click in the newly created vcglib folder and choose SVN Checkout
+3. put in the first parameter: https://vcg.svn.sourceforge.net/svnroot/vcg/trunk/vcglib
+4. press ok and wait, it should start to check out the last revision of the whole tree.
+
+Folder Structure
+================
+VCG Lib is mostly made of header files (and its core part it's only header files).
+Just download the tarball from here and uncompress it in a folder, e.g. named vcg, inside you compiler "include" directory.
+Afterwards, you have to just include the file you need.
+
+Inside vcg folder you will find 4 sub-folders:
+
+- `vcg`: this is the core of the library, where all the algorithms and data structures are defined. This part is pure, quite heavily templated, C++ code with STL support for common data structures and algorithms. You will not find a single include from here to anything else than standard libraries. Note that core part is made of header files (.h files) only.
+- `wrap`: here you will find the wrapping of VCG concepts towards specific needs/contexts/libraries. For example you will find all the code to import/export meshes from the hard disk in many formats, or the routines for rendering triangle meshes with OpenGL, supports for common GUI tools like a trackball, and so on..
+- `apps`: this folder contains the command line applications developed with the VCG Lib. Many (much more) examples can be found in MeshLab. The apps/simple directory contains a sub-collection of very basic apps. A good starting point for beginners!
+- `docs`: documentation lives here (including this tutorial)
+
+*/
