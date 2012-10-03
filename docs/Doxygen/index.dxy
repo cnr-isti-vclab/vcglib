@@ -24,6 +24,8 @@ used all over the code).
 - \subpage adjacency "Adjacency and Topology"
 - \subpage allocation "Creating and destroying elements"
 - \subpage attributes "Adding user defined attributes to mesh elements"
+- \subpage fileformat "Loading and saving meshes"
+
 
 
 Point3 as an example of the style
