@@ -20,14 +20,9 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+#include <vcg/complex/complex.h>
 #ifndef __VCG_VERTEX_PLUS_COMPONENT
 #define __VCG_VERTEX_PLUS_COMPONENT
-#include <vector>
-#include <string>
-#include <vcg/space/point3.h>
-#include <vcg/space/texcoord2.h>
-#include <vcg/space/color4.h>
-
 namespace vcg {
   namespace vertex {
 /*

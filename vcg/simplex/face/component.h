@@ -20,14 +20,10 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-
+#include <vcg/complex/complex.h>
 #ifndef __VCG_FACE_PLUS_COMPONENT
 #define __VCG_FACE_PLUS_COMPONENT
 
-#include <vector>
-#include <vcg/space/triangle3.h>
-#include <vcg/space/texcoord2.h>
-#include <vcg/space/color4.h>
 
 namespace vcg {
 				

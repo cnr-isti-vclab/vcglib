@@ -20,17 +20,11 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+#include <vcg/complex/complex.h>
 
 #ifndef __VCG_EDGE_PLUS
 #define __VCG_EDGE_PLUS
 
-//#include <vcg/space/point3.h>
-//#include <vcg/space/texcoord2.h>
-//#include <vcg/space/color4.h>
-#include <vcg/complex/all_types.h>
-//#include <vcg/complex/used_types.h>
-#include <vcg/simplex/edge/component.h>
-#include <vcg/container/derivation_chain.h>
 
 namespace vcg {
 

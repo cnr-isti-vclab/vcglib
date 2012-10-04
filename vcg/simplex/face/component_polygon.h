@@ -24,11 +24,6 @@
 #ifndef __VCG_POLYGON_COMPONENT
 #define __VCG_POLYGON_COMPONENT
 
-//#include <vector>
-//#include <vcg/space/triangle3.h>
-//#include <vcg/space/texcoord2.h>
-//#include <vcg/space/color4.h>
-
 namespace vcg {
   namespace face {
 /*

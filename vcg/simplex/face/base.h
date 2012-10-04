@@ -20,17 +20,10 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+#include <vcg/complex/complex.h>
 
 #ifndef __VCG_FACE_PLUS
 #define __VCG_FACE_PLUS
-
-#include <vcg/space/point3.h>
-#include <vcg/space/texcoord2.h>
-#include <vcg/space/color4.h>
-#include <vcg/complex/all_types.h>
-#include <vcg/simplex/face/component.h>
-#include <vcg/simplex/face/component_polygon.h>
-#include <vcg/container/derivation_chain.h>
 
 namespace vcg {
 

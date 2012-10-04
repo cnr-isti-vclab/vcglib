@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004                                                \/)\/    *
+* Copyright(C) 2004-2012                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -21,29 +21,19 @@
 *                                                                           *
 ****************************************************************************/
 
-#if defined(_MSC_VER)
-#pragma warning( disable : 4804 )
-#endif
+#ifndef __VCG_MESH
+#define __VCG_MESH
+
 #include <assert.h>
 #include <string>
 #include <vector>
 #include <set>
-#include <vcg/space/box3.h>
-#include <vcg/space/color4.h>
-#include <vcg/math/shot.h>
+#include <exception>
 
+#include <vcg/complex/exception.h>
 #include <vcg/container/simple_temporary_data.h>
-#include <vcg/simplex/vertex/base.h>
-#include <vcg/simplex/edge/base.h>
-#include <vcg/simplex/face/base.h>
-#include <vcg/connectors/hedge.h>
 #include <vcg/complex/used_types.h>
-#include <vcg/container/derivation_chain.h>
 #include <vcg/complex/allocate.h>
-
-
-#ifndef __VCG_MESH
-#define __VCG_MESH
 
 namespace vcg {
 namespace tri {
@@ -197,22 +187,34 @@ class TriMesh
 
 	typedef Box3<ScalarType> BoxType;
 
-	/// Set of vertices 
+	/// Container of vertices, usually a vector.
 	VertContainer vert;
-	/// Actual number of vertices
+	/// Current number of vertices; this member is for internal use only. You should always use the VN() member
 	int vn;
-	/// Set of faces
-	FaceContainer face;
-	/// Actual number of faces
-	int fn;
-	/// Set of edges
+	/// Current number of vertices
+	inline int VN() const { return vn; }
+
+	/// Container of edges, usually a vector.
 	EdgeContainer edge;
-	/// Actual number of edges
+	/// Current number of edges; this member is for internal use only. You should always use the EN() member
 	int en;
-	/// Set of hedges
-	HEdgeContainer hedge;
-	/// Actual number of hedges
+	/// Current number of edges
+	inline int EN() const { return en; }
+
+	/// Container of faces, usually a vector.
+	FaceContainer face;
+	/// Current number of faces; this member is for internal use only. You should always use the FN() member
+	int fn;
+	/// Current number of faces
+	inline int FN() const { return fn; }
+
+	/// Container of half edges, usually a vector.
+	HEdgeContainer hedge;	
+	/// Current number of hedges
 	int hn;
+	/// Current number of hedges; this member is for internal use only. You should always use the HN() member
+	inline int HN() const { return hn; }
+
 	/// Bounding box of the mesh
 	Box3<ScalarType> bbox;
 	
@@ -361,7 +363,7 @@ void Clear()
 {
 	vert.clear();
 	face.clear();
-  edge.clear();
+	edge.clear();
 //	textures.clear();
 //	normalmaps.clear();
 	vn = 0;
@@ -379,38 +381,6 @@ int & VertexNumber(){ return vn;}
 
 /// The incremental mark
 int imark;
-
-/// Calcolo del volume di una mesh chiusa
-ScalarType Volume()
-{
-  FaceIterator fi;
-  int j,k;
-  ScalarType V = 0;
-  CoordType T,N,B;
- 
-  for(fi = face.begin(); fi!=face.end(); ++fi)
-  {
-	  for(j = 0; j < 3; ++j)
-	  {
-	    /*calcolo tangente, normale e binormale (6 volte)*/
-	    k = (j+1)%3;
-	    T = (*fi).P(k) - (*fi).P(j);
-	    T.Normalize();
-	    B = ( (*fi).P( k     ) - (*fi).P(j) ) ^
-	        ( (*fi).P((k+1)%3) - (*fi).P(j) ) ;
-	    B.Normalize();
-			N = T ^ B;
-     
-	    CoordType pj = (*fi).P(j);
-	    CoordType pk = (*fi).P(k);
-   
-
-	    V +=  (pk*  T )*(pk*N)*(pk*B);
-	    V +=  (pj*(-T))*(pj*N)*(pj*B);
-     }
-  }
-	return V/6.0;
-}
 
 private:
 	// TriMesh cannot be copied. Use Append (see vcg/complex/append.h)

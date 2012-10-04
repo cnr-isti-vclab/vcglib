@@ -1,13 +1,23 @@
 #ifndef VCG_USED_TYPES_H
 #define VCG_USED_TYPES_H
 
-#include <string>
 #include <vcg/space/point3.h>
-#include <vcg/container/derivation_chain.h>
+#include <vcg/space/box3.h>
+#include <vcg/space/color4.h>
+#include <vcg/math/shot.h>
+#include <vcg/space/texcoord2.h>
+#include <vcg/space/triangle3.h>
 
+#include <vcg/container/derivation_chain.h>
+#include <vcg/complex/all_types.h>
+#include <vcg/simplex/vertex/component.h>
 #include <vcg/simplex/vertex/base.h>
+#include <vcg/simplex/face/component.h>
+#include <vcg/simplex/face/component_polygon.h>
 #include <vcg/simplex/face/base.h>
+#include <vcg/simplex/edge/component.h>
 #include <vcg/simplex/edge/base.h>
+#include <vcg/connectors/hedge_component.h>
 #include <vcg/connectors/hedge.h>
 
 namespace vcg{

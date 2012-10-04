@@ -20,61 +20,9 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.12  2008/03/17 11:39:14  ganovelli
-added curvature and curvatruredir (compiled .net 2005 and gcc)
-
-Revision 1.11  2008/02/04 21:26:49  ganovelli
-added ImportData which imports all local attributes into vertexplus and faceplus.
-A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
-(i.e. FFAdj, VFAdj, VertexRef) which are set to NULL.
-Added some function for const attributes
-
-Revision 1.10  2007/03/12 15:37:21  tarini
-Texture coord name change!  "TCoord" and "Texture" are BAD. "TexCoord" is GOOD.
-
-Revision 1.9  2007/02/12 19:00:56  ganovelli
-added Name(std:vector<std::string>& n) that fills n with the names of the attribute of the vertex type
-
-Revision 1.8  2006/09/28 17:34:11  cignoni
-Added Missing GetBBox function
-
-Revision 1.7  2006/02/27 17:42:43  ponchio
-Added some documentation.
-
-Revision 1.6  2005/12/05 15:58:10  cignoni
-Removed spurious definition of flags in Aritymax that was overriding the correct definition in EmplyBitFlags and BitFlags classes
-
-Revision 1.5  2005/12/02 00:44:41  cignoni
-Reformatted and compacted flags code.
-
-Revision 1.4  2005/11/16 22:59:35  cignoni
-Standardized name of flags. It is plural becouse each simplex has many flag.
-
-Revision 1.3  2005/11/12 18:36:51  cignoni
-Added 'Visited' flag functions
-
-Revision 1.2  lags2004/04/03 13:33:55  cignoni
-Missing include
-
-Revision 1.1  2004/03/29 08:36:26  cignoni
-First working version!
-
-
-****************************************************************************/
+#include <vcg/complex/complex.h>
 #ifndef __VCG_VERTEX_PLUS
 #define __VCG_VERTEX_PLUS
-
-//#include <vcg/space/point3.h>
-#include <vcg/space/texcoord2.h>
-#include <vcg/space/color4.h>
-#include <vcg/complex/all_types.h>
-#include <vcg/simplex/vertex/component.h>
-//#include <vcg/complex/used_types.h>
-#include <vcg/container/derivation_chain.h>
 
 namespace vcg {
 

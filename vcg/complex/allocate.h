@@ -25,12 +25,8 @@
 #define __VCGLIB_TRIALLOCATOR
 
 #include <typeinfo>
-#include <vector>
 #include <map>
-#include <string>
 #include <set>
-#include <assert.h>
-#include <vcg/container/simple_temporary_data.h>
 
 namespace vcg {
 
@@ -66,9 +62,9 @@ namespace vcg {
 		template<class MeshType>
 		size_t Index(MeshType &m, const typename MeshType::FaceType * fp) {return fp-&*m.face.begin();}
 		template<class MeshType>
-    size_t Index(MeshType &m, const typename MeshType::EdgeType*  e) {return e-&*m.edge.begin();}
+		size_t Index(MeshType &m, const typename MeshType::EdgeType*  e) {return e-&*m.edge.begin();}
 		template<class MeshType>
-    size_t Index(MeshType &m, const typename MeshType::HEdgeType*  h) {return h-&*m.hedge.begin();}
+		size_t Index(MeshType &m, const typename MeshType::HEdgeType*  h) {return h-&*m.hedge.begin();}
 		
 		template <class MeshType, class ATTR_CONT>
 		void ReorderAttribute(ATTR_CONT &c,std::vector<size_t> & newVertIndex, MeshType & /* m */){
@@ -78,7 +74,7 @@ namespace vcg {
 		}
 
 		template <class MeshType, class ATTR_CONT>
-    void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
+		void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
 			typename std::set<typename MeshType::PointerToAttribute>::iterator ai;	
 				for(ai =c.begin(); ai != c.end(); ++ai)
 					((typename MeshType::PointerToAttribute)(*ai)).Resize(sz);
