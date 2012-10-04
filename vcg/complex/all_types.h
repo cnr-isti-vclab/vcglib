@@ -11,6 +11,6 @@ struct AllTypes{
 };
 
 
-};
+}
 
 #endif // USED_TYPES_H
