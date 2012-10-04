@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004                                                \/)\/    *
+* Copyright(C) 2004-2012                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -20,87 +20,11 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
 
-$Log: not supported by cvs2svn $
-Revision 1.24  2007/05/04 16:50:23  ganovelli
-added plus types version (#ifdef _PLUS_TYPES_ to use it ).
-
-Revision 1.23  2006/10/25 12:40:19  fiorin
-Added possibility to use Octree as search structure:
-
-Revision 1.22  2006/04/20 08:30:24  cignoni
-small GCC compiling issues
-
-Revision 1.21  2006/01/22 10:05:43  cignoni
-Corrected use of Area with the unambiguous DoubleArea
-
-Revision 1.20  2005/11/12 06:44:29  cignoni
-Changed GetClosest -> GetClosestFace
-
-Revision 1.19  2005/10/02 23:11:50  cignoni
-Changed the core for distance computation.
-Current version uses the lib flexible search structures.
-Now the comparison can be done exploiting a static uniform grid,
-a hashed grid or a hierarchy of AA box.
-
-Revision 1.18  2005/09/16 11:55:18  cignoni
-Partial adding of AABB trees, still not working...
-
-Revision 1.17  2005/08/26 10:42:47  cignoni
-Added scalar type specification in the typedef of MetroMeshGrid
-
-Revision 1.16  2005/04/04 10:47:26  cignoni
-Release 4.05
-Added saving of Error Histogram
-
-Revision 1.15  2005/01/26 22:45:34  cignoni
-Release 4.04
-final updates for gcc compiling issues
-
-Revision 1.14  2005/01/24 15:37:14  cignoni
-updated from MinDistPoint to Closest (and removed some warnings)
-
-Revision 1.13  2004/09/20 16:17:46  ponchio
-Floating except fixed (happened on meshes with less than 100 faces :P)
-
-Revision 1.12  2004/09/09 22:59:15  cignoni
-Removed many small warnings
-
-Revision 1.11  2004/08/25 15:28:15  ponchio
-Comma at end of enum.
-
-Revision 1.10  2004/08/25 15:15:22  ganovelli
-minor changes to comply gcc compiler (typename's and stuff)
-
-Revision 1.9  2004/07/18 10:13:34  cignoni
-NewUserBit -> NewBitFlag
-
-Revision 1.8  2004/06/24 09:08:31  cignoni
-Official Release of Metro 4.00
-
-Revision 1.7  2004/05/14 13:49:07  ganovelli
-created
-
-Revision 1.6  2004/05/14 00:38:01  ganovelli
-a bit of cleaning:
-SamplingFlags struct added
-optional treatment for unreferred vertices.
-Note: unref vertices are tested against unref vertices without
-using the grid...it is n^2 with n number of unreferred vertices. To make it
-with the grid in the proper way :
-derive face and vertex from a simplexClass,
-instantiate GridStaticPtr on the simplexClass template.
-
-
-
-****************************************************************************/
 #ifndef __VCGLIB__SAMPLING
 #define __VCGLIB__SAMPLING
 
 #include <time.h>
-//#include "min_dist_point.h"
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/box3.h>
 #include <vcg/math/histogram.h>
@@ -308,13 +232,13 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p )
 
     // compute distance between p_i and the mesh S2
     if(Flags & SamplingFlags::USE_AABB_TREE)
-      f=tri::GetClosestFace<MetroMesh,MetroMeshAABB>(S2, tS2, p, dist_upper_bound, dist, normf, bestq, ip);
+      f=tri::GetClosestFaceEP<MetroMesh,MetroMeshAABB>(S2, tS2, p, dist_upper_bound, dist, normf, bestq, ip);
     if(Flags & SamplingFlags::USE_HASH_GRID)
-      f=tri::GetClosestFace<MetroMesh,MetroMeshHash>(S2, hS2, p, dist_upper_bound, dist, normf, bestq, ip);
+      f=tri::GetClosestFaceEP<MetroMesh,MetroMeshHash>(S2, hS2, p, dist_upper_bound, dist, normf, bestq, ip);
     if(Flags & SamplingFlags::USE_STATIC_GRID)
-      f=tri::GetClosestFace<MetroMesh,MetroMeshGrid>(S2, gS2, p, dist_upper_bound, dist, normf, bestq, ip);
-		if (Flags & SamplingFlags::USE_OCTREE)
-			f=tri::GetClosestFace<MetroMesh,MetroMeshOctree>(S2, oS2, p, dist_upper_bound, dist, normf, bestq, ip);
+      f=tri::GetClosestFaceEP<MetroMesh,MetroMeshGrid>(S2, gS2, p, dist_upper_bound, dist, normf, bestq, ip);
+    if (Flags & SamplingFlags::USE_OCTREE)
+      f=tri::GetClosestFaceEP<MetroMesh,MetroMeshOctree>(S2, oS2, p, dist_upper_bound, dist, normf, bestq, ip);
 
     // update distance measures
     if(dist == dist_upper_bound)
@@ -423,7 +347,7 @@ void Sampling<MetroMesh>::EdgeSampling()
 
         // print progress information
         if(!(++cnt % print_every_n_elements))
-            printf("Sampling edge %d%%\r", (100 * cnt/Edges.size()));
+            printf("Sampling edge %lu%%\r", (100 * cnt/Edges.size()));
     }
     printf("                     \r");
 }
@@ -465,7 +389,6 @@ template <class MetroMesh>
 void Sampling<MetroMesh>::MontecarloFaceSampling()
 {
     // Montecarlo sampling.
-    int     cnt = 0;
     double  n_samples_decimal = 0.0;
     FaceIterator fi;
 

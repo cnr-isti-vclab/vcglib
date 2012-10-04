@@ -98,18 +98,42 @@ GPL  added
 
 // standard libraries
 #include <time.h>
-#include <vector>
-using namespace std;
-// project definitions.
-#include "defs.h"
-#include "sampling.h"
-#include "mesh_type.h"
-#include <vcg/complex/algorithms/update/edges.h>
-#include <vcg/complex/algorithms/update/bounding.h>
+
+
 #include <vcg/math/histogram.h>
-#include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/complex.h>
+#include <vcg/simplex/face/component_ep.h>
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export.h>
+#include <vcg/complex/algorithms/update/component_ep.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include "sampling.h"
+
+using namespace std;
+// project definitions.
+// error messages
+
+#define MSG_ERR_MESH_LOAD               "error loading the input meshes.\n"
+#define MSG_ERR_INVALID_OPTION          "unable to parse option '%s'\n"
+#define MSG_ERR_FILE_OPEN               "unable to open the output file.'n"
+#define MSG_ERR_UNKNOWN_FORMAT          "unknown file format '%s'.\n"
+
+// global constants
+#define NO_SAMPLES_PER_FACE             10
+#define N_SAMPLES_EDGE_TO_FACE_RATIO    0.1
+#define BBOX_FACTOR                     0.1
+#define INFLATE_PERCENTAGE			    0.02
+#define MIN_SIZE					    125		/* 125 = 5^3 */
+#define N_HIST_BINS                     256
+#define PRINT_EVERY_N_ELEMENTS          1000
+
+
+class CFace;
+class CVertex;
+struct UsedTypes:public vcg::UsedTypes< vcg::Use<CFace>::AsFaceType, vcg::Use<CVertex>::AsVertexType>{};
+class CVertex   : public vcg::Vertex<UsedTypes,vcg::vertex::Coord3d,vcg::vertex::Qualityf,vcg::vertex::Normal3d,vcg::vertex::Color4b,vcg::vertex::BitFlags> {};
+class CFace     : public vcg::Face< UsedTypes,vcg::face::VertexRef, vcg::face::Normal3d, vcg::face::EdgePlane,vcg::face::Color4b,vcg::face::Mark,vcg::face::BitFlags> {};
+class CMesh     : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};
 
 
 // -----------------------------------------------------------------------------------------------
@@ -257,8 +281,8 @@ int main(int argc, char**argv)
     }
 
     // compute face information
-		tri::UpdateEdges<CMesh>::Set(S1);
-		tri::UpdateEdges<CMesh>::Set(S2);
+        tri::UpdateComponentEP<CMesh>::Set(S1);
+        tri::UpdateComponentEP<CMesh>::Set(S2);
 
 	// set bounding boxes for S1 and S2
 		tri::UpdateBounding<CMesh>::Box(S1);
@@ -300,16 +324,16 @@ int main(int argc, char**argv)
         ForwardSampling.SetSamplesPerAreaUnit(n_samples_per_area_unit);
         n_samples_target = ForwardSampling.GetNSamplesTarget();
     }
-    printf("target # samples      : %u\ntarget # samples/area : %f\n", n_samples_target, n_samples_per_area_unit);
+    printf("target # samples      : %lu\ntarget # samples/area : %f\n", n_samples_target, n_samples_per_area_unit);
     ForwardSampling.Hausdorff();
     dist1_max  = ForwardSampling.GetDistMax();
     printf("\ndistances:\n  max  : %f (%f  wrt bounding box diagonal)\n", (float)dist1_max, (float)dist1_max/bbox.Diag());
     printf("  mean : %f\n", ForwardSampling.GetDistMean());
     printf("  RMS  : %f\n", ForwardSampling.GetDistRMS());
-    printf("# vertex samples %9d\n", ForwardSampling.GetNVertexSamples());
-    printf("# edge samples   %9d\n", ForwardSampling.GetNEdgeSamples());
-    printf("# area samples   %9d\n", ForwardSampling.GetNAreaSamples());
-    printf("# total samples  %9d\n", ForwardSampling.GetNSamples());
+    printf("# vertex samples %9lu\n", ForwardSampling.GetNVertexSamples());
+    printf("# edge samples   %9lu\n", ForwardSampling.GetNEdgeSamples());
+    printf("# area samples   %9lu\n", ForwardSampling.GetNAreaSamples());
+    printf("# total samples  %9lu\n", ForwardSampling.GetNSamples());
     printf("# samples per area unit: %f\n\n", ForwardSampling.GetNSamplesPerAreaUnit());
 
     // Backward distance.
@@ -325,16 +349,16 @@ int main(int argc, char**argv)
         BackwardSampling.SetSamplesPerAreaUnit(n_samples_per_area_unit);
         n_samples_target = BackwardSampling.GetNSamplesTarget();
     }
-    printf("target # samples      : %u\ntarget # samples/area : %f\n", n_samples_target, n_samples_per_area_unit);
+    printf("target # samples      : %lu\ntarget # samples/area : %f\n", n_samples_target, n_samples_per_area_unit);
     BackwardSampling.Hausdorff();
     dist2_max  = BackwardSampling.GetDistMax();
     printf("\ndistances:\n  max  : %f (%f  wrt bounding box diagonal)\n", (float)dist2_max, (float)dist2_max/bbox.Diag());
     printf("  mean : %f\n", BackwardSampling.GetDistMean());
     printf("  RMS  : %f\n", BackwardSampling.GetDistRMS());
-    printf("# vertex samples %9d\n", BackwardSampling.GetNVertexSamples());
-    printf("# edge samples   %9d\n", BackwardSampling.GetNEdgeSamples());
-    printf("# area samples   %9d\n", BackwardSampling.GetNAreaSamples());
-    printf("# total samples  %9d\n", BackwardSampling.GetNSamples());
+    printf("# vertex samples %9lu\n", BackwardSampling.GetNVertexSamples());
+    printf("# edge samples   %9lu\n", BackwardSampling.GetNEdgeSamples());
+    printf("# area samples   %9lu\n", BackwardSampling.GetNAreaSamples());
+    printf("# total samples  %9lu\n", BackwardSampling.GetNSamples());
     printf("# samples per area unit: %f\n\n", BackwardSampling.GetNSamplesPerAreaUnit());
 
     // compute time info.
