@@ -26,7 +26,7 @@
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/update/edges.h>
+#include <vcg/complex/algorithms/update/component_ep.h>
 #include <vcg/complex/algorithms/create/marching_cubes.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/algorithms/closest.h>
