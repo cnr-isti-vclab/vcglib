@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004-2009                                           \/)\/    *
+* Copyright(C) 2004-2012                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -20,21 +20,10 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-
-#include<vcg/simplex/vertex/base.h>
-#include<vcg/simplex/vertex/component.h>
-
-#include <vcg/complex/used_types.h>
-
-#include<vcg/simplex/face/base.h>
-#include<vcg/simplex/face/component.h>
-
-#include<vcg/simplex/face/topology.h>
 #include<vcg/complex/complex.h>
 
 // input output
-#include<wrap/io_trimesh/import.h>
-#include<wrap/io_trimesh/export.h>
+#include<wrap/io_trimesh/import_off.h>
 
 // topology computation
 #include<vcg/complex/algorithms/update/topology.h>
@@ -61,13 +50,13 @@ int main( int argc, char **argv )
 {
   if(argc<2)
   {
-    printf("Usage trimesh_base <meshfilename.ply>\n");
+    printf("Usage trimesh_base <meshfilename.obj>\n");
     return -1;
   }
 
   MyMesh m;
 
-  if(tri::io::ImporterPLY<MyMesh>::Open(m,argv[1])!=0)
+  if(tri::io::ImporterOFF<MyMesh>::Open(m,argv[1])!=0)
   {
     printf("Error reading file  %s\n",argv[1]);
     exit(0);
@@ -76,8 +65,8 @@ int main( int argc, char **argv )
   tri::UpdateTopology<MyMesh>::FaceFace(m);
   tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
   tri::UpdateNormals<MyMesh>::PerVertexNormalized(m);
-  printf("Input mesh  vn:%i fn:%i\n",m.vn,m.fn);
-  printf( "Mesh has %i vert and %i faces\n", m.vn, m.fn );
+  printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
+  printf( "Mesh has %i vert and %i faces\n", m.VN(), m.FN() );
 
   return 0;
 }
