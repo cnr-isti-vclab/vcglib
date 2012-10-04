@@ -20,23 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.4  2006/05/16 21:36:54  cignoni
-Removed unused box function and rewrote initial comment.
-
-Revision 1.3  2006/05/15 13:12:36  pietroni
-Updating of edge values id divided into 2 functions ( the first one update only a face...) added also resetting of edges flags.. (see first line of Set function)
-
-Revision 1.2  2004/05/12 18:52:35  ganovelli
-removed call to ComputeRT and put its body here
-
-Revision 1.1  2004/05/12 10:39:45  ganovelli
-created
-
-****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_EDGES
 #define __VCG_TRI_UPDATE_EDGES
 
@@ -51,7 +34,7 @@ namespace tri {
 
 	/// \brief This class is used to compute or update the precomputed data used to efficiently compute point-face distances.
 	template <class ComputeMeshType>
-	class UpdateEdges
+	class UpdateComponentEP
 	{
 
 	public:
@@ -62,9 +45,9 @@ namespace tri {
 		typedef typename MeshType::FaceType       FaceType;
 		typedef typename MeshType::FacePointer    FacePointer;
 		typedef typename MeshType::FaceIterator   FaceIterator;
-    typedef typename MeshType::FaceType::CoordType::ScalarType     ScalarType;
+	  typedef typename MeshType::FaceType::CoordType::ScalarType     ScalarType;
 
-		static void Set(FaceType &f)
+		static void ComputeEdgePlane(FaceType &f)
 		{
 			f.Flags() = f.Flags() & (~(FaceType::NORMX|FaceType::NORMY|FaceType::NORMZ));
 		
@@ -93,11 +76,10 @@ namespace tri {
 
 		static void Set(ComputeMeshType &m)
 		{
-			FaceIterator f;
-
-			for(f = m.face.begin(); f!=m.face.end(); ++f)
+		   if(!FaceType::HasEdgePlane()) throw vcg::MissingComponentException();
+			for(FaceIterator f = m.face.begin(); f!=m.face.end(); ++f)
 				if(!(*f).IsD())
-					Set(*f);
+					ComputeEdgePlane(*f);
 		}
 
 	}; // end class
