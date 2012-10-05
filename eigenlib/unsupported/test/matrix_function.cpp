@@ -3,24 +3,9 @@
 //
 // Copyright (C) 2010 Jitse Niesen <jitse@maths.leeds.ac.uk>
 //
-// Eigen is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 3 of the License, or (at your option) any later version.
-//
-// Alternatively, you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of
-// the License, or (at your option) any later version.
-//
-// Eigen is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License or the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License and a copy of the GNU General Public License along with
-// Eigen. If not, see <http://www.gnu.org/licenses/>.
+// This Source Code Form is subject to the terms of the Mozilla
+// Public License v. 2.0. If a copy of the MPL was not distributed
+// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "main.h"
 #include <unsupported/Eigen/MatrixFunctions>
@@ -121,6 +106,26 @@ void testMatrixExponential(const MatrixType& A)
 }
 
 template<typename MatrixType>
+void testMatrixLogarithm(const MatrixType& A)
+{
+  typedef typename internal::traits<MatrixType>::Scalar Scalar;
+  typedef typename NumTraits<Scalar>::Real RealScalar;
+  typedef std::complex<RealScalar> ComplexScalar;
+
+  MatrixType scaledA;
+  RealScalar maxImagPartOfSpectrum = A.eigenvalues().imag().cwiseAbs().maxCoeff();
+  if (maxImagPartOfSpectrum >= 0.9 * M_PI)
+    scaledA = A * 0.9 * M_PI / maxImagPartOfSpectrum;
+  else
+    scaledA = A;
+
+  // identity X.exp().log() = X only holds if Im(lambda) < pi for all eigenvalues of X
+  MatrixType expA = scaledA.exp();
+  MatrixType logExpA = expA.log();
+  VERIFY_IS_APPROX(logExpA, scaledA);
+}
+
+template<typename MatrixType>
 void testHyperbolicFunctions(const MatrixType& A)
 {
   // Need to use absolute error because of possible cancellation when
@@ -157,6 +162,7 @@ template<typename MatrixType>
 void testMatrix(const MatrixType& A)
 {
   testMatrixExponential(A);
+  testMatrixLogarithm(A);
   testHyperbolicFunctions(A);
   testGonioFunctions(A);
 }

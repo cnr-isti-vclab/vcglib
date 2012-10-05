@@ -3,24 +3,9 @@
 //
 // Copyright (C) 2009 Gael Guennebaud <g.gael@free.fr>
 //
-// Eigen is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 3 of the License, or (at your option) any later version.
-//
-// Alternatively, you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of
-// the License, or (at your option) any later version.
-//
-// Eigen is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License or the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License and a copy of the GNU General Public License along with
-// Eigen. If not, see <http://www.gnu.org/licenses/>.
+// This Source Code Form is subject to the terms of the Mozilla
+// Public License v. 2.0. If a copy of the MPL was not distributed
+// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "main.h"
 #include <unsupported/Eigen/AutoDiff>
@@ -28,11 +13,19 @@
 template<typename Scalar>
 EIGEN_DONT_INLINE Scalar foo(const Scalar& x, const Scalar& y)
 {
+  using namespace std;
 //   return x+std::sin(y);
   EIGEN_ASM_COMMENT("mybegin");
-  return static_cast<Scalar>(x*2 - std::pow(x,2) + 2*std::sqrt(y*y) - 4 * std::sin(x) + 2 * std::cos(y) - std::exp(-0.5*x*x));
+  return static_cast<Scalar>(x*2 - pow(x,2) + 2*sqrt(y*y) - 4 * sin(x) + 2 * cos(y) - exp(-0.5*x*x));
   //return x+2*y*x;//x*2 -std::pow(x,2);//(2*y/x);// - y*2;
   EIGEN_ASM_COMMENT("myend");
+}
+
+template<typename Vector>
+EIGEN_DONT_INLINE typename Vector::Scalar foo(const Vector& p)
+{
+  typedef typename Vector::Scalar Scalar;
+  return (p-Vector(Scalar(-1),Scalar(1.))).norm() + (p.array() * p.array()).sum() + p.dot(p);
 }
 
 template<typename _Scalar, int NX=Dynamic, int NY=Dynamic>
@@ -140,9 +133,23 @@ void test_autodiff_scalar()
   typedef AutoDiffScalar<Vector2f> AD;
   AD ax(1,Vector2f::UnitX());
   AD ay(2,Vector2f::UnitY());
-  foo<AD>(ax,ay);
-  std::cerr << foo<AD>(ax,ay).value() << " <> "
-            << foo<AD>(ax,ay).derivatives().transpose() << "\n\n";
+  AD res = foo<AD>(ax,ay);
+  std::cerr << res.value() << " <> "
+            << res.derivatives().transpose() << "\n\n";
+}
+
+void test_autodiff_vector()
+{
+  std::cerr << foo<Vector2f>(Vector2f(1,2)) << "\n";
+  typedef AutoDiffScalar<Vector2f> AD;
+  typedef Matrix<AD,2,1> VectorAD;
+  VectorAD p(AD(1),AD(-1));
+  p.x().derivatives() = Vector2f::UnitX();
+  p.y().derivatives() = Vector2f::UnitY();
+  
+  AD res = foo<VectorAD>(p);
+  std::cerr << res.value() << " <> "
+            << res.derivatives().transpose() << "\n\n";
 }
 
 void test_autodiff_jacobian()
@@ -159,6 +166,7 @@ void test_autodiff_jacobian()
 void test_autodiff()
 {
     test_autodiff_scalar();
-    test_autodiff_jacobian();
+    test_autodiff_vector();
+//     test_autodiff_jacobian();
 }
 

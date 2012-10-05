@@ -3,27 +3,14 @@
 //
 // Copyright (C) 2009-2010 Gael Guennebaud <gael.guennebaud@inria.fr>
 //
-// Eigen is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 3 of the License, or (at your option) any later version.
-//
-// Alternatively, you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of
-// the License, or (at your option) any later version.
-//
-// Eigen is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License or the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License and a copy of the GNU General Public License along with
-// Eigen. If not, see <http://www.gnu.org/licenses/>.
+// This Source Code Form is subject to the terms of the Mozilla
+// Public License v. 2.0. If a copy of the MPL was not distributed
+// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef EIGEN_REPLICATE_H
 #define EIGEN_REPLICATE_H
+
+namespace Eigen { 
 
 /**
   * \class Replicate
@@ -48,7 +35,10 @@ struct traits<Replicate<MatrixType,RowFactor,ColFactor> >
   typedef typename MatrixType::Scalar Scalar;
   typedef typename traits<MatrixType>::StorageKind StorageKind;
   typedef typename traits<MatrixType>::XprKind XprKind;
-  typedef typename nested<MatrixType>::type MatrixTypeNested;
+  enum {
+    Factor = (RowFactor==Dynamic || ColFactor==Dynamic) ? Dynamic : RowFactor*ColFactor
+  };
+  typedef typename nested<MatrixType,Factor>::type MatrixTypeNested;
   typedef typename remove_reference<MatrixTypeNested>::type _MatrixTypeNested;
   enum {
     RowsAtCompileTime = RowFactor==Dynamic || int(MatrixType::RowsAtCompileTime)==Dynamic
@@ -72,6 +62,8 @@ struct traits<Replicate<MatrixType,RowFactor,ColFactor> >
 template<typename MatrixType,int RowFactor,int ColFactor> class Replicate
   : public internal::dense_xpr_base< Replicate<MatrixType,RowFactor,ColFactor> >::type
 {
+    typedef typename internal::traits<Replicate>::MatrixTypeNested MatrixTypeNested;
+    typedef typename internal::traits<Replicate>::_MatrixTypeNested _MatrixTypeNested;
   public:
 
     typedef typename internal::dense_xpr_base<Replicate>::type Base;
@@ -87,7 +79,7 @@ template<typename MatrixType,int RowFactor,int ColFactor> class Replicate
     }
 
     template<typename OriginalMatrixType>
-    inline Replicate(const OriginalMatrixType& matrix, int rowFactor, int colFactor)
+    inline Replicate(const OriginalMatrixType& matrix, Index rowFactor, Index colFactor)
       : m_matrix(matrix), m_rowFactor(rowFactor), m_colFactor(colFactor)
     {
       EIGEN_STATIC_ASSERT((internal::is_same<typename internal::remove_const<MatrixType>::type,OriginalMatrixType>::value),
@@ -122,9 +114,13 @@ template<typename MatrixType,int RowFactor,int ColFactor> class Replicate
       return m_matrix.template packet<LoadMode>(actual_row, actual_col);
     }
 
+    const _MatrixTypeNested& nestedExpression() const
+    { 
+      return m_matrix; 
+    }
 
   protected:
-    const typename MatrixType::Nested m_matrix;
+    MatrixTypeNested m_matrix;
     const internal::variable_if_dynamic<Index, RowFactor> m_rowFactor;
     const internal::variable_if_dynamic<Index, ColFactor> m_colFactor;
 };
@@ -175,5 +171,7 @@ VectorwiseOp<ExpressionType,Direction>::replicate(Index factor) const
   return typename VectorwiseOp<ExpressionType,Direction>::ReplicateReturnType
           (_expression(),Direction==Vertical?factor:1,Direction==Horizontal?factor:1);
 }
+
+} // end namespace Eigen
 
 #endif // EIGEN_REPLICATE_H

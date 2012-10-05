@@ -3,27 +3,14 @@
 //
 // Copyright (C) 2008 Gael Guennebaud <gael.guennebaud@inria.fr>
 //
-// Eigen is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 3 of the License, or (at your option) any later version.
-//
-// Alternatively, you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of
-// the License, or (at your option) any later version.
-//
-// Eigen is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License or the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License and a copy of the GNU General Public License along with
-// Eigen. If not, see <http://www.gnu.org/licenses/>.
+// This Source Code Form is subject to the terms of the Mozilla
+// Public License v. 2.0. If a copy of the MPL was not distributed
+// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef EIGEN_RANDOMSETTER_H
 #define EIGEN_RANDOMSETTER_H
+
+namespace Eigen { 
 
 /** Represents a std::map
   *
@@ -180,9 +167,7 @@ class RandomSetter
     enum {
       SwapStorage = 1 - MapTraits<ScalarWrapper>::IsSorted,
       TargetRowMajor = (SparseMatrixType::Flags & RowMajorBit) ? 1 : 0,
-      SetterRowMajor = SwapStorage ? 1-TargetRowMajor : TargetRowMajor,
-      IsUpper = SparseMatrixType::Flags & Upper,
-      IsLower = SparseMatrixType::Flags & Lower
+      SetterRowMajor = SwapStorage ? 1-TargetRowMajor : TargetRowMajor
     };
 
   public:
@@ -227,6 +212,7 @@ class RandomSetter
       if (!SwapStorage) // also means the map is sorted
       {
         mp_target->setZero();
+        mp_target->makeCompressed();
         mp_target->reserve(nonZeros());
         Index prevOuter = -1;
         for (Index k=0; k<m_outerPackets; ++k)
@@ -267,11 +253,12 @@ class RandomSetter
         for (Index j=0; j<mp_target->outerSize(); ++j)
         {
           Index tmp = positions[j];
-          mp_target->_outerIndexPtr()[j] = count;
+          mp_target->outerIndexPtr()[j] = count;
           positions[j] = count;
           count += tmp;
         }
-        mp_target->_outerIndexPtr()[mp_target->outerSize()] = count;
+        mp_target->makeCompressed();
+        mp_target->outerIndexPtr()[mp_target->outerSize()] = count;
         mp_target->resizeNonZeros(count);
         // pass 2
         for (Index k=0; k<m_outerPackets; ++k)
@@ -286,16 +273,16 @@ class RandomSetter
             // Note that we have to deal with at most 2^OuterPacketBits unsorted coefficients,
             // moreover those 2^OuterPacketBits coeffs are likely to be sparse, an so only a
             // small fraction of them have to be sorted, whence the following simple procedure:
-            Index posStart = mp_target->_outerIndexPtr()[outer];
+            Index posStart = mp_target->outerIndexPtr()[outer];
             Index i = (positions[outer]++) - 1;
-            while ( (i >= posStart) && (mp_target->_innerIndexPtr()[i] > inner) )
+            while ( (i >= posStart) && (mp_target->innerIndexPtr()[i] > inner) )
             {
-              mp_target->_valuePtr()[i+1] = mp_target->_valuePtr()[i];
-              mp_target->_innerIndexPtr()[i+1] = mp_target->_innerIndexPtr()[i];
+              mp_target->valuePtr()[i+1] = mp_target->valuePtr()[i];
+              mp_target->innerIndexPtr()[i+1] = mp_target->innerIndexPtr()[i];
               --i;
             }
-            mp_target->_innerIndexPtr()[i+1] = inner;
-            mp_target->_valuePtr()[i+1] = it->second.value;
+            mp_target->innerIndexPtr()[i+1] = inner;
+            mp_target->valuePtr()[i+1] = it->second.value;
           }
         }
       }
@@ -305,8 +292,6 @@ class RandomSetter
     /** \returns a reference to the coefficient at given coordinates \a row, \a col */
     Scalar& operator() (Index row, Index col)
     {
-      eigen_assert(((!IsUpper) || (row<=col)) && "Invalid access to an upper triangular matrix");
-      eigen_assert(((!IsLower) || (col<=row)) && "Invalid access to an upper triangular matrix");
       const Index outer = SetterRowMajor ? row : col;
       const Index inner = SetterRowMajor ? col : row;
       const Index outerMajor = outer >> OuterPacketBits; // index of the packet/map
@@ -336,5 +321,7 @@ class RandomSetter
     Index m_outerPackets;
     unsigned char m_keyBitsOffset;
 };
+
+} // end namespace Eigen
 
 #endif // EIGEN_RANDOMSETTER_H

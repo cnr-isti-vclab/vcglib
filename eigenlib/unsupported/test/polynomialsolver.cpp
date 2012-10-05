@@ -3,33 +3,14 @@
 //
 // Copyright (C) 2010 Manuel Yguel <manuel.yguel@gmail.com>
 //
-// Eigen is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 3 of the License, or (at your option) any later version.
-//
-// Alternatively, you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of
-// the License, or (at your option) any later version.
-//
-// Eigen is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License or the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License and a copy of the GNU General Public License along with
-// Eigen. If not, see <http://www.gnu.org/licenses/>.
+// This Source Code Form is subject to the terms of the Mozilla
+// Public License v. 2.0. If a copy of the MPL was not distributed
+// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "main.h"
 #include <unsupported/Eigen/Polynomials>
 #include <iostream>
 #include <algorithm>
-
-#ifdef HAS_GSL
-#include "gsl_helper.h"
-#endif
 
 using namespace std;
 
@@ -72,32 +53,6 @@ bool aux_evalSolver( const POLYNOMIAL& pols, SOLVER& psolve )
     cerr << "Abs value of the polynomial at the roots: " << evr.transpose() << endl;
     cerr << endl;
   }
-
-  #ifdef HAS_GSL
-  if (internal::is_same< Scalar, double>::value)
-  {
-    typedef GslTraits<Scalar> Gsl;
-    RootsType gslRoots(deg);
-    Gsl::eigen_poly_solve( pols, gslRoots );
-    EvalRootsType gslEvr( deg );
-    for( int i=0; i<gslRoots.size(); ++i )
-    {
-      gslEvr[i] = std::abs( poly_eval( pols, gslRoots[i] ) );
-    }
-    bool gslEvalToZero = gslEvr.isZero( test_precision<Scalar>() );
-    if( !evalToZero )
-    {
-      if( !gslEvalToZero ){
-        cerr << "GSL also failed" << endl; }
-      else{
-        cerr << "GSL did NOT failed" << endl; }
-      cerr << "GSL roots found: " << gslRoots.transpose() << endl;
-      cerr << "Abs value of the polynomial at the GSL roots: " << gslEvr.transpose() << endl;
-      cerr << endl;
-    }
-  }
-  #endif //< HAS_GSL
-
 
   std::vector<Scalar> rootModuli( roots.size() );
   Map< EvalRootsType > aux( &rootModuli[0], roots.size() );

@@ -4,27 +4,14 @@
 // Copyright (C) 2009 Rohit Garg <rpg.314@gmail.com>
 // Copyright (C) 2009 Benoit Jacob <jacob.benoit.1@gmail.com>
 //
-// Eigen is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 3 of the License, or (at your option) any later version.
-//
-// Alternatively, you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of
-// the License, or (at your option) any later version.
-//
-// Eigen is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License or the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License and a copy of the GNU General Public License along with
-// Eigen. If not, see <http://www.gnu.org/licenses/>.
+// This Source Code Form is subject to the terms of the Mozilla
+// Public License v. 2.0. If a copy of the MPL was not distributed
+// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef EIGEN_MOREVECTORIZATION_MATHFUNCTIONS_H
 #define EIGEN_MOREVECTORIZATION_MATHFUNCTIONS_H
+
+namespace Eigen { 
 
 namespace internal {
 
@@ -99,8 +86,10 @@ template<> EIGEN_DONT_INLINE Packet4f pasin(Packet4f x)
   return _mm_xor_ps(z, sign_bit);
 }
 
+#endif // EIGEN_VECTORIZE_SSE
+
 } // end namespace internal
 
-#endif
+} // end namespace Eigen
 
 #endif // EIGEN_MOREVECTORIZATION_MATHFUNCTIONS_H
