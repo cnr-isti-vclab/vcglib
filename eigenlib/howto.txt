@@ -1,7 +1,9 @@
-Current Eigen Version 3.05 (10.02.2012)
+Current Eigen Version 3.1.1 (05.Oct.2012)
 To update the lib:
 - download Eigen
 - unzip it somewhere
+- delete (in the filesystem) the content of the folder eigenlib/Eigen and eigenlib/unsupported
 - copy the two folders 'Eigen' and 'unsupported' here 
+- check the svn status, svn-add the new files and svn-remove the missing ones.
 - update this file
-- commit
+- commit everything
