@@ -26,8 +26,6 @@
 
 #define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
 #include <eigenlib/Eigen/Sparse>
-#include <eigenlib/Eigen/src/Sparse/SparseMatrix.h>
-#include <eigenlib/Eigen/src/Sparse/DynamicSparseMatrix.h>
 #include <eigenlib/unsupported/Eigen/SparseExtra>
 
 #include <time.h>
@@ -797,11 +795,12 @@ public:
 		}
 
 		///then check if majority of faces are folded
-		if (!solve_global_fold)return true;
-		if (tri::Distortion<MeshType>::GloballyUnFolded(mesh))
+		if (!solve_global_fold) return true;
+		if (tri::Distortion<MeshType,false>::GloballyUnFolded(mesh))
 		{
 			tri::UV_Utils<MeshType>::GloballyMirrorX(mesh);
-			assert(!tri::Distortion<MeshType>::GloballyUnFolded(mesh));
+			bool isUnfolded = tri::Distortion<MeshType,false>::GloballyUnFolded(mesh);
+			assert( ! isUnfolded);
 		}
 		return true;
 	}
