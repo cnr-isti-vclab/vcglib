@@ -644,9 +644,7 @@ void DrawPoints()
   if(GetHintParami(HNPPointSmooth)>0) glEnable(GL_POINT_SMOOTH);
   else glDisable(GL_POINT_SMOOTH);
   glPointSize(GetHintParamf(HNPPointSize));
-  if (glPointParameterfv)
-  {
-    if(GetHintParami(HNPPointDistanceAttenuation)>0)
+  if(GetHintParami(HNPPointDistanceAttenuation)>0)
     {
       float camDist = (float)CameraDistance();
       float quadratic[] = { 0.0f, 0.0f, 1.0f/(camDist*camDist) , 0.0f };
@@ -660,7 +658,6 @@ void DrawPoints()
       glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
       glPointSize(GetHintParamf(HNPPointSize));
     }
-  }
 
 	if(m->vn!=(int)m->vert.size())
 		{
