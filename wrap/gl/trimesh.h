@@ -146,8 +146,8 @@ public:
 		if(curr_hints&HNUseVBO)
 		{
 			for(int i=0;i<3;++i)
-				if(glIsBuffer(array_buffers[i]))
-					glDeleteBuffersARB(1, (GLuint *)(array_buffers+i));
+                if(glIsBuffer(GLuint(array_buffers[i])))
+                    glDeleteBuffersARB(1, (GLuint *)(array_buffers+i));
 		}
 	}
 
