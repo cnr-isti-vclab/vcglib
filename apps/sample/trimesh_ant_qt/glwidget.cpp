@@ -38,10 +38,6 @@
 **
 ****************************************************************************/
 
-#include <QtGui>
-#include <QtOpenGL>
-#include <math.h>
-
 #include "glwidget.h"
 #include <wrap/qt/trackball.h>
 #include <wrap/gl/picking.h>

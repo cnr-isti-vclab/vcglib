@@ -35,3 +35,6 @@ mac{
   QMAKE_POST_LINK ="cp -P ../../../../code/lib/AntTweakBar1.14/lib/libAntTweakBar.dylib . ; install_name_tool -change ../lib/libAntTweakBar.dylib ./libAntTweakBar.dylib $$TARGET"
 }
 
+unix{
+  LIBS +=$$ANTDIR/lib/libAntTweakBar.so -lGLU
+}

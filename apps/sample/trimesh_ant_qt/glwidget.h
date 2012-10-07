@@ -41,7 +41,10 @@
 #ifndef GLWIDGET_H
 #define GLWIDGET_H
 
+#include <GL/glew.h>
 #include <QGLWidget>
+#include <QKeyEvent>
+
 /// vcg imports
 #include <vcg/simplex/vertex/base.h>
 #include <vcg/simplex/face/base.h>
@@ -54,6 +57,7 @@
 #include <wrap/io_trimesh/import.h>
 #include <wrap/gl/trimesh.h>
 #include <wrap/gui/trackball.h>
+
 
 /// declaring edge and face type
 #include <AntTweakBar.h>
