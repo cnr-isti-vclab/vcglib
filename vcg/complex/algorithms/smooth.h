@@ -948,7 +948,7 @@ static void FaceNormalLaplacianVF(MeshType &m)
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		(*fi).N()=TDF[*fi].m;
 
-	tri::UpdateNormals<MeshType>::NormalizeFace(m);
+	tri::UpdateNormals<MeshType>::NormalizePerFace(m);
 
 	TDF.Stop();
 }
@@ -984,7 +984,7 @@ static void FaceNormalLaplacianFF(MeshType &m, int step=1, bool SmoothSelected=f
       if(!SmoothSelected || (*fi).IsS())
         (*fi).N()=TDF[*fi].m;
 
-    tri::UpdateNormals<MeshType>::NormalizeFace(m);
+    tri::UpdateNormals<MeshType>::NormalizePerFace(m);
   }
 }
 
