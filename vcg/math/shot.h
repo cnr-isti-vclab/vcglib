@@ -195,7 +195,7 @@ public:
 
 	/* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters
 	 * given the CCD width (in mm). This method should be moved in vcg::Camera().
-	 * Equivalent focal lenght is obtained by setting the ccd width to 35 mm.
+	 * Equivalent focal length is obtained by setting the ccd width to 35 mm.
    */
   void ConvertFocalToMM(S ccdwidth);
 
@@ -438,7 +438,7 @@ S Shot<S,RotationType>::Depth(const vcg::Point3<S> & p)const
 
 /* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters
  * given the CCD width (in mm). This method should be moved in vcg::Camera().
- * Equivalent focal lenght is obtained by setting the ccd width to 35 mm.
+ * Equivalent focal length is obtained by setting the ccd width to 35 mm.
  */
 template <class S, class RotationType>
 void Shot<S, RotationType>::ConvertFocalToMM(S ccdwidth)
