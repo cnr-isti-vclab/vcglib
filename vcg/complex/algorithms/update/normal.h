@@ -24,9 +24,7 @@
 #ifndef __VCG_TRI_UPDATE_NORMALS
 #define __VCG_TRI_UPDATE_NORMALS
 
-#include <vcg/simplex/face/component.h>
 #include <vcg/complex/algorithms/update/flag.h>
-#include <vcg/complex/exception.h>
 
 namespace vcg {
 namespace tri {
@@ -35,9 +33,12 @@ namespace tri {
 
 /// \headerfile normal.h vcg/complex/algorithms/update/normal.h
 
-/// \brief Management, updating and computation of per-vertex and per-face normals.
+/// \brief Management, updating and computation of per-vertex, per-face, and per-wedge normals.
 /**
-This class is used to compute or update the normals that can be stored in the vertex or face component of a mesh.
+This class is used to compute or to update the normals that can be stored in the various component of a mesh.
+A number of different algorithms for computing per vertex normals are present.
+
+It must be included \b after complex.h
 */
 
 template <class ComputeMeshType>
@@ -55,6 +56,7 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
+/// \brief Set to zero all the PerVertex normals
 /**
  Set to zero all the PerVertex normals. Used by all the face averaging algorithms.
  by default it does not clear the normals of unreferenced vertices because they could be still useful
@@ -160,7 +162,6 @@ static void PerFace(ComputeMeshType &m)
             if( !(*f).IsD() )	face::ComputeNormal(*f);
 }
 
-
 /// \brief Calculates the vertex normal by averaging the current per-face normals.
 /**
     The normal of a vertex v is the average of the un-normalized normals of the faces incident on v.
@@ -202,8 +203,6 @@ static void PerFaceFromCurrentVertexNormal(ComputeMeshType &m)
         fi->N() = n;
     }
 }
-
-
 
 /// \brief Normalize the length of the vertex normals.
 static void NormalizePerVertex(ComputeMeshType &m)
@@ -249,7 +248,6 @@ static void PerFaceNormalized(ComputeMeshType &m)
   NormalizePerFace(m);
 }
 
-
 /// \brief Equivalent to PerVertex() and PerFace().
 static void PerVertexPerFace(ComputeMeshType &m)
 {
@@ -271,7 +269,6 @@ static void PerVertexNormalizedPerFaceNormalized(ComputeMeshType &m)
 	NormalizePerFace(m);
 }
 
-
 /// \brief
 static void PerBitQuadFaceNormalized(ComputeMeshType &m)
 {
@@ -286,7 +283,6 @@ static void PerBitQuadFaceNormalized(ComputeMeshType &m)
       }
   }
 }
-
 
 /// \brief Multiply the vertex normals by the matrix passed. By default, the scale component is removed.
 static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true)
@@ -403,6 +399,5 @@ static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 
 }	// End namespace
 }	// End namespace
-
 
 #endif
