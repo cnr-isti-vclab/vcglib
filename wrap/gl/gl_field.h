@@ -1,3 +1,6 @@
+#ifndef GL_FIELD
+#define GL_FIELD
+
 #include <vcg/complex/algorithms/parametrization/tangent_field_operators.h>
 
 namespace vcg{
@@ -159,3 +162,5 @@ public:
 };
 
 }
+
+#endif
