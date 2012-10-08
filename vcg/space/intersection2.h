@@ -130,11 +130,11 @@ namespace vcg {
 		if(!RayLineIntersection<SCALAR_TYPE>(line2,r,p_inters))
 			return false;
 		///then test if intersection point is nearest 
-		///to both extremes then lenght of the segment 
+		///to both extremes then length of the segment 
 		SCALAR_TYPE d0=(seg.P1()-p_inters).Norm();
 		SCALAR_TYPE d1=(seg.P0()-p_inters).Norm();
-		SCALAR_TYPE lenght=(seg.P0()-seg.P1()).Norm();
-		return ((d0<lenght)&&(d1<lenght));
+		SCALAR_TYPE length=(seg.P0()-seg.P1()).Norm();
+		return ((d0<length)&&(d1<length));
 	}
 
 	/// interseciton between point and triangle
@@ -152,11 +152,11 @@ namespace vcg {
 		if(!LineLineIntersection(line,line2,p_inters))
 			return false;
 		///then test if intersection point is nearest 
-		///to both extremes then lenght of the segment 
+		///to both extremes then length of the segment 
 		SCALAR_TYPE d0=(seg.P1()-p_inters).Norm();
 		SCALAR_TYPE d1=(seg.P0()-p_inters).Norm();
-		SCALAR_TYPE lenght=(seg.P0()-seg.P1()).Norm();
-		return ((d0<lenght)&&(d1<lenght));
+		SCALAR_TYPE length=(seg.P0()-seg.P1()).Norm();
+		return ((d0<length)&&(d1<length));
 	}
 
 	/// interseciton between point and triangle

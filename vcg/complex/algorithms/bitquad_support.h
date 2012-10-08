@@ -204,7 +204,7 @@ static void FlipDiag(FaceType &f){
 
 
 // given a vertex (i.e. a face and a wedge), 
-// this function tells us how the totale edge lenght around a vertex would change
+// this function tells us how the totale edge length around a vertex would change
 // if that vertex is rotated
 static ScalarType EdgeLenghtVariationIfVertexRotated(const FaceType &f, int w0)
 {
@@ -239,7 +239,7 @@ static ScalarType EdgeLenghtVariationIfVertexRotated(const FaceType &f, int w0)
 }
 
 // given a vertex (i.e. a face and a wedge), 
-// this function tells us how the totale edge lenght around a vertex would change
+// this function tells us how the totale edge length around a vertex would change
 // if that vertex is rotated
 static ScalarType QuadQualityVariationIfVertexRotated(const FaceType &f, int w0)
 {

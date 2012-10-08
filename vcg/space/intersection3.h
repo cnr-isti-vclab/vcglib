@@ -590,13 +590,13 @@ bool IntersectionSegmentTriangle( const vcg::Segment3<ScalarType> & seg,
 	//first set both directions of ray
   vcg::Line3<ScalarType> line;
 	vcg::Point3<ScalarType> dir;
-	ScalarType lenght=seg.Length();
+	ScalarType length=seg.Length();
 	dir=(seg.P1()-seg.P0());
 	dir.Normalize();
   line.Set(seg.P0(),dir);
 	ScalarType orig_dist;
   if(IntersectionLineTriangle<ScalarType>(line,vert0,vert1,vert2,orig_dist,a,b))
-    return (orig_dist<=lenght);
+    return (orig_dist<=length);
   return false;
 }
 /**

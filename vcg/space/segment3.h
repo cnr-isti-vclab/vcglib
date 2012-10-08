@@ -127,7 +127,7 @@ public:
 		/// returns segment length
 	ScalarType Length() const
 	{ return (_p0 - _p1).Norm(); }
-		/// return segment squared lenght
+		/// return segment squared length
 	ScalarType SquaredLength() const
 	{ return (_p0 - _p1).SquaredNorm(); }
 	  /// flips: a-b becomes b-a
