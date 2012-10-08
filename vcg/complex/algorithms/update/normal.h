@@ -24,7 +24,9 @@
 #ifndef __VCG_TRI_UPDATE_NORMALS
 #define __VCG_TRI_UPDATE_NORMALS
 
+#include <vcg/simplex/face/component.h>
 #include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/exception.h>
 
 namespace vcg {
 namespace tri {
