@@ -60,8 +60,8 @@ namespace vcg {
             static ScalarType EdgeLenght3D(const FaceType *f,int e)
 			{
 				assert((e>=0)&&(e<3));
-				ScalarType lenght=(f->P0(e)-f->P1(e)).Norm();
-				return (lenght);
+				ScalarType length=(f->P0(e)-f->P1(e)).Norm();
+				return (length);
 			}
 
             static ScalarType EdgeLenghtUV(const FaceType *f,int e)
@@ -75,8 +75,8 @@ namespace vcg {
                   uv0=f->cV0(e)->T().P();
                   uv1=f->cV1(e)->T().P();
 				}
-				ScalarType UVlenght=Distance(uv0,uv1);
-				return UVlenght;
+				ScalarType UVlength=Distance(uv0,uv1);
+				return UVlength;
 			}
 
 			static ScalarType AngleCos3D(const FaceType *f,int e)
@@ -203,7 +203,7 @@ namespace vcg {
 				EdgeScale=SumEdge3D/SumEdge2D;
 			}
 
-			///return the variance of edge lenght, normalized in absolute value,
+			///return the variance of edge length, normalized in absolute value,
 			// the needed scaling factor EdgeScaleVal may be calculated
 			///by using the ScalingFactor function
             static ScalarType EdgeDistortion(const FaceType *f,int e,
