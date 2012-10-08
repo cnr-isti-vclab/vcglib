@@ -91,14 +91,14 @@ namespace vcg{
               */
             static bool check_feasible(HEdgePointer hp, CoordType &V1, CoordType &V2, TriMeshType &tm, GRID &grid)
             {
-                float lenght = Distance( V1, V2 );
+                float length = Distance( V1, V2 );
 
                 Fitmap_attr M_Fit = tri::Allocator<TriMeshType>::template GetPerVertexAttribute<float>(tm,"M-Fitmap");
 
                 CoordType P = (V1+V2)/2;
                 float fitmap = compute_fitmap(hp, P, tm, grid, M_Fit);
 
-                return lenght <= fitmap/Mfit_coeff();
+                return length <= fitmap/Mfit_coeff();
             }
 
             /*! Computes the weight of a diagonal using S-Fitmap

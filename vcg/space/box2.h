@@ -216,7 +216,7 @@ public:
 		*/
 	inline bool IsEmpty() const { return min==max; }
 	
-    /// Computes lenght of diagonal
+    /// Computes length of diagonal
 	ScalarType Diag() const
 	{
 		return Distance(min,max);

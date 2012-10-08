@@ -106,7 +106,7 @@ public:
 	ScalarType Length() const
 	{ return (_p0 - _p1).Norm(); }
 
-	/// return segment squared lenght
+	/// return segment squared length
 	ScalarType SquaredLength()
 	{ return (_p0 - _p1).SquaredNorm(); }
 	  /// flips: a-b becomes b-a
@@ -150,10 +150,10 @@ Point2<ScalarType> ClosestPoint( Segment2<ScalarType> s, const Point2<ScalarType
 	l.Set(s.P0(),s.P1()-s.P0());
 	ScalarType t = l.Projection(p);
 	Point2<ScalarType> clos = l.P(t);
-	ScalarType lenght = s.Length();
+	ScalarType length = s.Length();
 	if (t <= 0)
 		return s.P0();
-	else if (t >= lenght)
+	else if (t >= length)
 		return s.P1();
 	else
 		return clos;
