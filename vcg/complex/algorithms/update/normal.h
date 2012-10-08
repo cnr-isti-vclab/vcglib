@@ -75,58 +75,27 @@ static void PerVertexClear(ComputeMeshType &m, bool ClearAllVertNormal=false)
          (*vi).N() = NormalType((ScalarType)0,(ScalarType)0,(ScalarType)0);
 }
 
-/// \brief Calculates the face normal (if stored in the current face type)
-
-static void PerFace(ComputeMeshType &m)
-{
-  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
-  for(FaceIterator f=m.face.begin();f!=m.face.end();++f)
-            if( !(*f).IsD() )	face::ComputeNormal(*f);
-}
-
-/// \brief Calculates the vertex normal. Exploiting or current face normals.
+///  \brief Calculates the vertex normal as the classic area weighted average. It does not need or exploit current face normals.
 /**
-	The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
-*/
-static void PerVertexFromCurrentFaceNormal(ComputeMeshType &m)
+ The normal of a vertex v is the classical area-weigthed average of the normals of the faces incident on v.
+ */
+ static void PerVertex(ComputeMeshType &m)
 {
-  if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException();
+ PerVertexClear(m);
+ FaceIterator f;
+ for(f=m.face.begin();f!=m.face.end();++f)
+   if( !(*f).IsD() && (*f).IsR() )
+   {
+    //typename FaceType::NormalType t = (*f).Normal();
+    typename FaceType::NormalType t = vcg::Normal(*f);
 
- VertexIterator vi;
- for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-   if( !(*vi).IsD() && (*vi).IsRW() )
-     (*vi).N()=CoordType(0,0,0);
-
- FaceIterator fi;
- for(fi=m.face.begin();fi!=m.face.end();++fi)
-   if( !(*fi).IsD())
-   { 
     for(int j=0; j<3; ++j)
-			if( !(*fi).V(j)->IsD())  
-					(*fi).V(j)->N() += (*fi).cN();
+     if( !(*f).V(j)->IsD() && (*f).V(j)->IsRW() )
+      (*f).V(j)->N() += t;
    }
 }
-/// \brief Calculates the vertex normal. Exploiting or current face normals.
-/**
-	The normal of a face f is the average of the normals of the vertices of f.
-*/
-static void PerFaceFromCurrentVertexNormal(ComputeMeshType &m)
-{
-  if(!HasPerVertexNormal(m) || !HasPerFaceNormal(m)) throw vcg::MissingComponentException();
-  for (FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi)
-   if( !(*fi).IsD())
-	 	{
-		NormalType n;
-		n.SetZero();
-		for(int j=0; j<3; ++j)
-			n += fi->V(j)->cN();
-		n.Normalize();
-		fi->N() = n;
-	}
-}
 
-
-///  \brief Calculates the vertex normal. Without exploiting or touching face normals.
+///  \brief Calculates the vertex normal as an angle weighted average. It does not need or exploit current face normals.
 /**
  The normal of a vertex v computed as a weighted sum f the incident face normals. 
  The weight is simlply the angle of the involved wedge.  Described in:
@@ -135,8 +104,7 @@ G. Thurmer, C. A. Wuthrich
 "Computing vertex normals from polygonal facets"
 Journal of Graphics Tools, 1998
  */
- 
-static void PerVertexAngleWeighted(ComputeMeshType &m)
+ static void PerVertexAngleWeighted(ComputeMeshType &m)
 {
   PerVertexClear(m);
   FaceIterator f;
@@ -154,7 +122,7 @@ static void PerVertexAngleWeighted(ComputeMeshType &m)
    }
 }
 
-///  \brief Calculates the vertex normal. Without exploiting or touching face normals.
+///  \brief Calculates the vertex normal using the Max et al. weighting scheme. It does not need or exploit current face normals.
 /**
  The normal of a vertex v is computed according to the formula described by Nelson Max in 
  Max, N., "Weights for Computing Vertex Normals from Facet Normals", Journal of Graphics Tools, 4(2) (1999)
@@ -180,59 +148,63 @@ static void PerVertexNelsonMaxWeighted(ComputeMeshType &m)
    }
 }
 
-///  \brief Calculates the vertex normal. Without exploiting or touching face normals.
-/**
- The normal of a vertex v is the classical area weigthed average of the normals of the faces incident on v.
- */
- 
-static void PerVertex(ComputeMeshType &m)
+/// \brief Calculates the face normal
+///
+/// Not normalized. Use PerFaceNormalized() or call NormalizePerVertex() if you need unit length per face normals.
+static void PerFace(ComputeMeshType &m)
 {
- PerVertexClear(m);
- FaceIterator f;
- for(f=m.face.begin();f!=m.face.end();++f)
-   if( !(*f).IsD() && (*f).IsR() )
+  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
+  for(FaceIterator f=m.face.begin();f!=m.face.end();++f)
+            if( !(*f).IsD() )	face::ComputeNormal(*f);
+}
+
+
+/// \brief Calculates the vertex normal by averaging the current per-face normals.
+/**
+    The normal of a vertex v is the average of the un-normalized normals of the faces incident on v.
+*/
+static void PerVertexFromCurrentFaceNormal(ComputeMeshType &m)
+{
+  if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException();
+
+ VertexIterator vi;
+ for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+   if( !(*vi).IsD() && (*vi).IsRW() )
+     (*vi).N()=CoordType(0,0,0);
+
+ FaceIterator fi;
+ for(fi=m.face.begin();fi!=m.face.end();++fi)
+   if( !(*fi).IsD())
    {
-    //typename FaceType::NormalType t = (*f).Normal();
-    typename FaceType::NormalType t = vcg::Normal(*f);
- 
     for(int j=0; j<3; ++j)
-     if( !(*f).V(j)->IsD() && (*f).V(j)->IsRW() )  
-      (*f).V(j)->N() += t;
+            if( !(*fi).V(j)->IsD())
+                    (*fi).V(j)->N() += (*fi).cN();
    }
 }
 
-
-/// \brief Calculates both vertex and face normals.
+/// \brief Calculates the face normal by averaging the current per-vertex normals.
 /**
- The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
+    The normal of a face f is the average of the normals of the vertices of f.
 */
-
-static void PerVertexPerFace(ComputeMeshType &m)
+static void PerFaceFromCurrentVertexNormal(ComputeMeshType &m)
 {
- PerFace(m);
- PerVertexClear(m);
- for(FaceIterator f=m.face.begin();f!=m.face.end();++f)
-   if( !(*f).IsD() && (*f).IsR() )
-   {
-     for(int j=0; j<3; ++j)
-     if( !(*f).V(j)->IsD() && (*f).V(j)->IsRW() )  
-      (*f).V(j)->N() += (*f).cN();
-   }
+  if(!HasPerVertexNormal(m) || !HasPerFaceNormal(m)) throw vcg::MissingComponentException();
+  for (FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi)
+   if( !(*fi).IsD())
+        {
+        NormalType n;
+        n.SetZero();
+        for(int j=0; j<3; ++j)
+            n += fi->V(j)->cN();
+        n.Normalize();
+        fi->N() = n;
+    }
 }
 
-/// \brief Calculates both vertex and face normals.
-/**
- The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
-*/
 
-static void PerVertexNormalizedPerFace(ComputeMeshType &m)
-{
-	PerVertexPerFace(m);
-	NormalizeVertex(m);
-}
 
-/// \brief Normalize the lenght of the face normals.
-static void NormalizeVertex(ComputeMeshType &m)
+/// \brief Normalize the length of the vertex normals.
+static void NormalizePerVertex(ComputeMeshType &m)
 {
   if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException();
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -240,15 +212,16 @@ static void NormalizeVertex(ComputeMeshType &m)
 			(*vi).N().Normalize();
 }
 
-/// \brief Normalize the lenght of the face normals.
-static void NormalizeFace(ComputeMeshType &m)
+/// \brief Normalize the length of the face normals.
+static void NormalizePerFace(ComputeMeshType &m)
 {
   if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
       if( !(*fi).IsD() )	(*fi).N().Normalize();
 }
 
-static void AreaNormalizeFace(ComputeMeshType &m)
+/// \brief Set the length of the face normals to their area (without recomputing their directions).
+static void NormalizePerFaceByArea(ComputeMeshType &m)
 {
   if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
   FaceIterator fi;
@@ -260,53 +233,44 @@ static void AreaNormalizeFace(ComputeMeshType &m)
 			}
 }
 
+/// \brief Equivalent to PerVertex() and NormalizePerVertex()
+static void PerVertexNormalized(ComputeMeshType &m)
+{
+  PerVertex(m);
+  NormalizePerVertex(m);
+}
+
+/// \brief Equivalent to PerFace() and NormalizePerVertex()
+static void PerFaceNormalized(ComputeMeshType &m)
+{
+  PerFace(m);
+  NormalizePerFace(m);
+}
+
+
+/// \brief Equivalent to PerVertex() and PerFace().
+static void PerVertexPerFace(ComputeMeshType &m)
+{
+ PerFace(m);
+ PerVertex(m);
+}
+
+/// \brief Equivalent to PerVertexNormalized() and PerFace().
+static void PerVertexNormalizedPerFace(ComputeMeshType &m)
+{
+	PerVertexPerFace(m);
+	NormalizePerVertex(m);
+}
+
+/// \brief Equivalent to PerVertexNormalizedPerFace() and NormalizePerFace().
 static void PerVertexNormalizedPerFaceNormalized(ComputeMeshType &m)
 {
 	PerVertexNormalizedPerFace(m);
-	NormalizeFace(m);
-}
-
-static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
-{
-	if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
-	FaceIterator f;
-	bool cn = true;
-
-	if(normalize)
-	{
-		for(f=m.m.face.begin();f!=m.m.face.end();++f)
-		if( !(*f).IsD() && (*f).IsRW() )
-		{
-			for(int j=0; j<3; ++j)
-				if( !(*f).V(j)->IsR()) 	cn = false;
-      if( cn ) face::ComputeNormalizedNormal(*f);
-			cn = true;
-		}
-	}
-	else
-	{
-		for(f=m.m.face.begin();f!=m.m.face.end();++f)
-			if( !(*f).IsD() && (*f).IsRW() )
-			{
-				for(int j=0; j<3; ++j)
-					if( !(*f).V(j)->IsR()) 	cn = false;
-
-				if( cn )
-					(*f).ComputeNormal();
-				cn = true;
-			}
-	}
+	NormalizePerFace(m);
 }
 
 
-static void PerFaceNormalized(ComputeMeshType &m)
-{
-  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
-  FaceIterator f;
-  for(f=m.face.begin();f!=m.face.end();++f)
-    if( !(*f).IsD() )	face::ComputeNormalizedNormal(*f);
-}
-
+/// \brief
 static void PerBitQuadFaceNormalized(ComputeMeshType &m)
 {
 	PerFace(m);
@@ -321,15 +285,6 @@ static void PerBitQuadFaceNormalized(ComputeMeshType &m)
   }
 }
 
-
-/// \brief Calculates the vertex normal.
-static void PerVertexNormalized(ComputeMeshType &m)
-{
-  PerVertex(m);
-  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-   if( !(*vi).IsD() && (*vi).IsRW() )
-     (*vi).N().Normalize();
-}
 
 /// \brief Multiply the vertex normals by the matrix passed. By default, the scale component is removed.
 static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true)
@@ -373,6 +328,74 @@ static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, b
    if( !(*fi).IsD() && (*fi).IsRW() )
      (*fi).N() = mat33* (*fi).N();
 }
+
+/// \brief Compute per wedge normals taking into account the angle between adjacent faces.
+///
+/// The PerWedge normals are averaged on common vertexes only if the angle between two faces is \b larger than \p angleRad.
+/// It requires FFAdjacency.
+static void PerWedgeCrease(ComputeMeshType &m, ScalarType angleRad)
+{
+  if(!HasPerWedgeNormal(m) ) throw vcg::MissingComponentException();
+  if(!HasFFAdjacency(m)) throw vcg::MissingComponentException();
+
+  ScalarType cosangle=Cos(angleRad);
+
+  // Clear the per wedge normals
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+  {
+    (*fi).WN(0)=NormalType(0,0,0);
+    (*fi).WN(1)=NormalType(0,0,0);
+    (*fi).WN(2)=NormalType(0,0,0);
+  }
+
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)		 if(!(*fi).IsD())
+  {
+    NormalType nn= vcg::Normal(*fi);
+    for(int i=0;i<3;++i)
+    {
+      const NormalType &na=vcg::Normal(*(*fi).FFp(i));
+      if(nn*na > cosangle )
+      {
+        fi->WN((i+0)%3) +=na;
+        fi->WN((i+1)%3) +=na;
+      }
+    }
+  }
+}
+
+
+static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
+{
+	if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
+	FaceIterator f;
+	bool cn = true;
+
+	if(normalize)
+	{
+		for(f=m.m.face.begin();f!=m.m.face.end();++f)
+		if( !(*f).IsD() && (*f).IsRW() )
+		{
+			for(int j=0; j<3; ++j)
+				if( !(*f).V(j)->IsR()) 	cn = false;
+	  if( cn ) face::ComputeNormalizedNormal(*f);
+			cn = true;
+		}
+	}
+	else
+	{
+		for(f=m.m.face.begin();f!=m.m.face.end();++f)
+			if( !(*f).IsD() && (*f).IsRW() )
+			{
+				for(int j=0; j<3; ++j)
+					if( !(*f).V(j)->IsR()) 	cn = false;
+
+				if( cn )
+					(*f).ComputeNormal();
+				cn = true;
+			}
+	}
+}
+
 
 }; // end class
 
