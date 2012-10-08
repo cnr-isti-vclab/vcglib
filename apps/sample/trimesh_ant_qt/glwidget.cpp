@@ -98,6 +98,7 @@ GLWidget::GLWidget(QWidget *parent)
 
 void GLWidget::initializeGL ()
 {
+  glewInit();
   glClearColor(0, 0, 0, 0);
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
