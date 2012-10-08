@@ -66,7 +66,7 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 	tri::Allocator<MESH_TYPE>::CompactVertexVector(m);
 	tri::Allocator<MESH_TYPE>::CompactFaceVector(m);
 	
-	tri::UpdateNormals<MESH_TYPE>::NormalizeFace(m);
+	tri::UpdateNormals<MESH_TYPE>::NormalizePerFace(m);
 	
   assert(tri::HasFFAdjacency(m));
   typename MESH_TYPE::ScalarType cosangle=math::Cos(angleRad);

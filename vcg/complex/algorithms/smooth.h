@@ -968,7 +968,7 @@ static void FaceNormalLaplacianFF(MeshType &m, int step=1, bool SmoothSelected=f
   assert(tri::HasFFAdjacency(m));
 
   FaceIterator fi;
-  tri::UpdateNormals<MeshType>::AreaNormalizeFace(m);
+  tri::UpdateNormals<MeshType>::NormalizePerFaceByArea(m);
   for(int iStep=0;iStep<step;++iStep)
   {
     for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
