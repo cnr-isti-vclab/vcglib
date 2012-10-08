@@ -1317,7 +1317,7 @@ private:
         if(m.vert.empty()) return false;
 
         tri::UpdateNormals<MeshType>::PerVertexAngleWeighted(m);
-        tri::UpdateNormals<MeshType>::NormalizeVertex(m);
+        tri::UpdateNormals<MeshType>::NormalizePerVertex(m);
 
         std::vector< VertexPointer > minVertVec;
         std::vector< VertexPointer > maxVertVec;
