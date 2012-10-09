@@ -1,8 +1,30 @@
-#include <stdio.h>
-#include <time.h>
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004-2012                                           \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+#include<vcg/complex/complex.h>
 
-#include "mesh_definition.h"
-#include<vcg/complex/allocate.h>
+#include<vcg/simplex/vertex/component_ocf.h>
+#include<vcg/simplex/face/component_ocf.h>
+
 #include<vcg/complex/algorithms/create/platonic.h>
 #include<vcg/complex/algorithms/update/topology.h>
 #include<vcg/complex/algorithms/update/flag.h>
@@ -10,19 +32,36 @@
 #include<vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/refine.h>
 
+class CFace;
+class CFaceOcf;
+
+class CVertex;
+class CVertexOcf;
+
+struct MyUsedTypes:		 public	vcg::UsedTypes<vcg::Use<CVertex>::AsVertexType,vcg::Use<CFace>::AsFaceType>{};
+struct MyUsedTypesOcf: public vcg::UsedTypes<vcg::Use<CVertexOcf>::AsVertexType,vcg::Use<CFaceOcf>::AsFaceType>{};
+
+// Optional stuff has two suffixes:
+// OCF Optional Component Fast
+// OCC Optional Component Compact
+
+class CVertex     : public vcg::Vertex<	MyUsedTypes,  vcg::vertex::Coord3f, vcg::vertex::BitFlags,vcg::vertex::Normal3f >{};
+class CVertexOcf  : public vcg::Vertex< MyUsedTypesOcf,vcg::vertex::InfoOcf,vcg::vertex::Coord3f,vcg::vertex::QualityfOcf, vcg::vertex::BitFlags,vcg::vertex::Normal3f,vcg::vertex::RadiusfOcf >{};
+class CFace       : public vcg::Face< MyUsedTypes,    vcg::face::FFAdj,    vcg::face::VertexRef, vcg::face::BitFlags, vcg::face::Normal3f > {};
+class CFaceOcf    : public vcg::Face< MyUsedTypesOcf, vcg::face::InfoOcf, vcg::face::FFAdjOcf, vcg::face::VertexRef, vcg::face::BitFlags, vcg::face::Normal3fOcf > {};
+
+class CMesh       : public vcg::tri::TriMesh<     std::vector<CVertex   >,           std::vector<CFace   > > {};
+class CMeshOcf    : public vcg::tri::TriMesh<     vcg::vertex::vector_ocf<CVertexOcf>, vcg::face::vector_ocf<CFaceOcf> > {};
+
+
 using namespace vcg;
 using namespace std;
 
 int main(int , char **)
 {
-
-
-
 	CMesh cm;
 	CMeshOcf cmof;
  
-
-
   tri::Tetrahedron(cm);
   tri::Tetrahedron(cmof);
  

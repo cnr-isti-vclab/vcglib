@@ -1,20 +1,35 @@
-// standard headers
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004-2012                                           \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
 #include <stdio.h>
 
-// stl headers
-#include <vector>
-
-// vcg headers
-
-#include<vcg/simplex/face/distance.h>
 #include<vcg/complex/complex.h>
+#include<vcg/simplex/face/distance.h>
 #include<vcg/simplex/face/component_ep.h>
 #include <vcg/complex/algorithms/create/platonic.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/component_ep.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/space/intersection3.h>
-
 #include <vcg/space/index/aabb_binary_tree/aabb_binary_tree.h>
 
 typedef float AScalarType;

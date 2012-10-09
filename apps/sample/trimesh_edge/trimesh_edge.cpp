@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004-2009                                           \/)\/    *
+* Copyright(C) 2004-2012                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -20,17 +20,19 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#include <QtOpenGL/qgl.h>
 
-#include<vcg/simplex/vertex/base.h>
-#include<vcg/simplex/vertex/component.h>
+// This sample require gl.
+#ifndef GLU_VERSIONS
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
+#ifdef _WIN32
+  #include <windows.h>
+#endif
+#include <GL/gl.h>
+#endif
+#endif
 
-#include <vcg/complex/used_types.h>
-
-#include<vcg/simplex/face/base.h>
-#include<vcg/simplex/face/component.h>
-
-#include<vcg/simplex/face/topology.h>
 #include<vcg/complex/complex.h>
 #include<vcg/complex/append.h>
 
@@ -41,12 +43,11 @@
 // topology computation
 #include<vcg/complex/algorithms/update/topology.h>
 #include<vcg/complex/algorithms/update/bounding.h>
+#include<vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/position.h>
 #include <vcg/complex/algorithms/update/quality.h>
 #include <vcg/complex/algorithms/stat.h>
 
-// normals
-#include<vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/intersection.h>
 #include <vcg/complex/algorithms/refine.h>
 #include <wrap/gl/glu_tessellator_cap.h>

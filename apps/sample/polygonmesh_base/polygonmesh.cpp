@@ -1,52 +1,37 @@
 /****************************************************************************
- * VCGLib                                                            o o     *
- * Visual and Computer Graphics Library                            o     o   *
- *                                                                _   O  _   *
- * Copyright(C) 2004                                                \/)\/    *
- * Visual Computing Lab                                            /\/|      *
- * ISTI - Italian National Research Council                           |      *
- *                                                                    \      *
- * All rights reserved.                                                      *
- *                                                                           *
- * This program is free software; you can redistribute it and/or modify      *   
- * it under the terms of the GNU General Public License as published by      *
- * the Free Software Foundation; either version 2 of the License, or         *
- * (at your option) any later version.                                       *
- *                                                                           *
- * This program is distributed in the hope that it will be useful,           *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of            *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
- * GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
- * for more details.                                                         *
- *                                                                           *
- ****************************************************************************/
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004-2012                                           \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
 
-#include <vector>
-
-/*include the base definition for the vertex */
-#include <vcg/simplex/vertex/base.h>
-
-/*include the base definition for the face */
-#include <vcg/simplex/face/base.h>
-
-/*include the base definition for the edge */
-#include <vcg/connectors/hedge.h>
-
-/*include the base definition for the trimesh*/
 #include <vcg/complex/complex.h>
 
 /*include the algorithms for updating: */
-#include <vcg/complex/algorithms/update/topology.h>	/* topology */
-#include <vcg/complex/algorithms/update/bounding.h>	/* bounding box */
-#include <vcg/complex/algorithms/update/normal.h>		/* normal */
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/update/normal.h>
 
 /*include the algorithms for mesh fixing  */
 #include <vcg/complex/algorithms/clean.h>
 
-/*include the importer from disk*/
 #include <wrap/io_trimesh/import.h>
-
-/*include the exporter to disk (in ply)*/
 #include <wrap/io_trimesh/export_ply.h>
 
 /* include the support for polygon meshes (function to convert from/to trimesh)*/
