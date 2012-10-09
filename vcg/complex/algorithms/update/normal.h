@@ -42,7 +42,7 @@ It must be included \b after complex.h
 */
 
 template <class ComputeMeshType>
-class UpdateNormals
+class UpdateNormal
 {
 public:
 typedef ComputeMeshType MeshType; 	
