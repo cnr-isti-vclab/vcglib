@@ -479,10 +479,8 @@ namespace vcg
          ----e0_HEPp-> X ----- e0 ------>
         */
             static void AddHEdge(MeshType &m, HEdgeType * e0, HEdgeType * e1){
-                HEdgeType *iii =e0->HNp();
                 assert(e1!=e0->HNp());
                 assert(e0!=e1->HNp());
-                HEdgePointer tmp;
                 bool hasP =  MeshType::HEdgeType::HasHPrevAdjacency();
                 assert(e0->HOp() != e1); // the hedge already exists
                 assert(e0!=e1->HNp());
@@ -653,7 +651,7 @@ namespace vcg
                         fp ->Alloc(vpts.size());
                     }
                     //int idbg1  =fp->VN();
-                    for(unsigned int i  = 0; i < vpts.size();++i) fp ->V(i) = vpts[i];// set the pointer from face to vertex
+                    for(size_t i  = 0; i < vpts.size();++i) fp ->V(i) = vpts[i];// set the pointer from face to vertex
 
                     hV[(*ei)] = true;
                 }

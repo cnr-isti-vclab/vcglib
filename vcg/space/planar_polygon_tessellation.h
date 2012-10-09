@@ -51,8 +51,8 @@ namespace vcg {
 	}
 
 	template <class S>
-	bool Intersect(int cur , int v2, std::vector<int> & next, std::vector<Point2<S> > & points2){
-		for(int i  = 0; i < points2.size();++i)
+	bool Intersect(size_t cur , int v2, std::vector<int> & next, std::vector<Point2<S> > & points2){
+		for(size_t i  = 0; i < points2.size();++i)
 			if( (next[i]!=-1) && (i!=cur))
 				if( Cross(points2[cur], points2[v2],points2[i],points2[next[i]]))
 					return true;
@@ -67,12 +67,12 @@ namespace vcg {
 		// tessellate
 		//  first very inefficient implementation
 		std::vector<int> next,prev;
-		for(int i = 0; i < points2.size(); ++i) next.push_back((i+1)%points2.size());
-		for(int i = 0; i < points2.size(); ++i) prev.push_back((i+points2.size()-1)%points2.size());
+		for(size_t i = 0; i < points2.size(); ++i) next.push_back((i+1)%points2.size());
+		for(size_t i = 0; i < points2.size(); ++i) prev.push_back((i+points2.size()-1)%points2.size());
 		int v1,v2;
 		// check orientation
 		S orient = 0.0;
-		for(int i = 0 ; i < points2.size(); ++i){
+		for(size_t i = 0 ; i < points2.size(); ++i){
 			v1 =  next[i];
 			v2 =  next[v1];
 			orient+= (points2[v1] - points2[0]) ^ (points2[v2] - points2[0]);
@@ -119,7 +119,7 @@ namespace vcg {
 		int i12[2];
 		S bestsn = -1.0;
 		Point3x bestn,u,v;
-		for(int i  =0; i < points.size();++i){
+		for(size_t i  =0; i < points.size();++i){
 			for(int j = 0; j < 2; ++j){ i12[j] = i; while(i12[j]==i) i12[j] = rg.generate(points.size()-1);}
 			n = (points[i12[0]]-points[i])^(points[i12[1]]-points[i]);
 			S sn = n.SquaredNorm();
@@ -129,7 +129,7 @@ namespace vcg {
 		GetUV(n,u,v);
 		// project the coordinates
 		std::vector<Point2<S> > points2;
-		for(int i = 0; i < points.size(); ++i){
+		for(size_t i = 0; i < points.size(); ++i){
 			Point3x & p = points[i];
 			points2.push_back(Point2<S>(p*u,p*v));
 		}

@@ -93,14 +93,14 @@ namespace tri {
 			faces.clear();
 			TessellatePlanarPolygon3(points,faces);
 			tfib = tfi  = Allocator<TriMeshType>::AddFaces(tm,faces.size()/3);
-			for(int i = 0; tfi !=  tm.face.end();++tfi){
+			for(size_t i = 0; tfi !=  tm.face.end();++tfi){
 				(*tfi).V(0) = &tm.vert[ (*fi).V( faces[i]  ) - &(*pm.vert.begin())];
 				(*tfi).V(1) = &tm.vert[ (*fi).V( faces[i+1]) - &(*pm.vert.begin())];
 				(*tfi).V(2) = &tm.vert[ (*fi).V( faces[i+2]) - &(*pm.vert.begin())];
 				// set the F flags
-				if( (faces[i]+1)%points.size() != faces[i+1]) (*tfi).SetF(0);
-				if( (faces[i+1]+1)%points.size() != faces[i+2]) (*tfi).SetF(1);
-				if( (faces[i+2]+1)%points.size() != faces[i]) (*tfi).SetF(2);
+				if( (faces[i  ]+1)%points.size() != size_t(faces[i+1])) (*tfi).SetF(0);
+				if( (faces[i+1]+1)%points.size() != size_t(faces[i+2])) (*tfi).SetF(1);
+				if( (faces[i+2]+1)%points.size() != size_t(faces[i  ])) (*tfi).SetF(2);
 				i+=3;
 			}
 
@@ -153,7 +153,7 @@ namespace tri {
 			//now vs  contains all the vertices of the polygon (still in the trimesh)
 			typename PolyMeshType::FaceIterator pfi =  vcg::tri::Allocator<PolyMeshType>::AddFaces(pm,1);
 			(*pfi).Alloc(vs.size());
-			for( int i  = 0 ; i < vs.size(); ++i)
+			for(size_t i  = 0 ; i < vs.size(); ++i)
 				(*pfi).V(i) = ( typename PolyMeshType::VertexType*)  & pm.vert[vs[i]-&(*tm.vert.begin())];
 			// here handle the other compoenents of the face (how the conponents of the n triangle faces goes in the 
 			// the property of the polygon (e.g. the normal, the color, the quality and so on)
