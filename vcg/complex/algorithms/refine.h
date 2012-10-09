@@ -26,21 +26,17 @@
 
 #include <functional>
 #include <map>
-#include <vector>
 #include <vcg/space/sphere3.h>
 #include <vcg/space/plane3.h>
-#include <vcg/space/texcoord2.h>
-#include <vcg/space/color4.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
-#include<vcg/complex/allocate.h>
-#include<vcg/complex/algorithms/update/topology.h>
-#include<vcg/complex/algorithms/update/flag.h>
-#include<wrap/callback.h>
-#include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/space/triangle3.h>
+#include <wrap/callback.h>
 
 namespace vcg{
+namespace tri{
 	
 /* A very short intro about the generic refinement framework,
 	the main fuction is the 
@@ -526,8 +522,8 @@ Siggraph 2000 Course Notes
 /*
 
     vul-------vu--------vur
-		  \      /  \      /
-			 \    /    \    /
+      \      /  \      /
+       \    /    \    /
         \  /  fu  \  /
          vl--------vr
         /  \  fd  /  \
@@ -933,9 +929,7 @@ void TriSplit(typename TRIMESH_TYPE::FacePointer f,
 }
 
 
+} // namespace tri
 } // namespace vcg
-
-
-
 
 #endif
