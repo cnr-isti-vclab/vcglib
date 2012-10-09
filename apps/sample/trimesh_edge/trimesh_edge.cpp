@@ -138,11 +138,11 @@ bool SplitMesh(MyMesh &m,             /// The mesh that has to be splitted. It i
 {
   tri::Append<MyMesh,MyMesh>::Mesh(A,m);
   tri::UpdateQuality<MyMesh>::VertexFromPlane(A, plane);
-  QualityMidPointFunctor<MyMesh> slicingfunc(0.0f);
-  QualityEdgePredicate<MyMesh> slicingpred(0.0f);
+  tri::QualityMidPointFunctor<MyMesh> slicingfunc(0.0f);
+  tri::QualityEdgePredicate<MyMesh> slicingpred(0.0f);
   tri::UpdateTopology<MyMesh>::FaceFace(A);
   // The Actual Slicing
-  RefineE<MyMesh, QualityMidPointFunctor<MyMesh>, QualityEdgePredicate<MyMesh> > (A, slicingfunc, slicingpred, false);
+  tri::RefineE<MyMesh, tri::QualityMidPointFunctor<MyMesh>, tri::QualityEdgePredicate<MyMesh> > (A, slicingfunc, slicingpred, false);
 
   tri::Append<MyMesh,MyMesh>::Mesh(B,A);
 
@@ -212,7 +212,7 @@ int main( int argc, char **argv )
   printf("Slice  mesh has %i vert and %i faces\n", slice.vn, slice.fn );
 
   MyMesh A,B;
-  bool ret=SplitMesh(m,A,B,slicingPlane);
+  SplitMesh(m,A,B,slicingPlane);
   tri::UpdatePosition<MyMesh>::Translate(A, slicingPlane.Direction()*m.bbox.Diag()/80.0);
   tri::UpdatePosition<MyMesh>::Translate(B,-slicingPlane.Direction()*m.bbox.Diag()/80.0);
   tri::Append<MyMesh,MyMesh>::Mesh(sliced,A);

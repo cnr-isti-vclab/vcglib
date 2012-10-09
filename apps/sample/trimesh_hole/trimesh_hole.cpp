@@ -1,10 +1,4 @@
-#include <vector>
-#include <iostream>
-
 #include<vcg/space/triangle3.h>
-#include<vcg/simplex/vertex/base.h>
-#include<vcg/simplex/face/base.h>
-#include<vcg/simplex/face/topology.h>
 #include<vcg/complex/complex.h>
 #include<vcg/complex/algorithms/hole.h>
 #include<vcg/complex/algorithms/local_optimization.h>
@@ -22,23 +16,17 @@
 // half edge iterators
 #include<vcg/simplex/face/pos.h>
 
-
-
 // input output
 #include <wrap/io_trimesh/import_ply.h>
 #include <wrap/io_trimesh/export_ply.h>
 
-
-
 using namespace vcg;
 using namespace std;
 
-
 class MyFace;
 class MyVertex;
-
 struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
-																				Use<MyFace>			::AsFaceType>{};
+	Use<MyFace>			::AsFaceType>{};
 
 class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::BitFlags, vertex::Normal3f, vertex::Mark, vertex::Color4b >{};
 class MyFace    : public Face  < MyUsedTypes, face::VertexRef,face::FFAdj, face::Mark, face::BitFlags, face::Normal3f> {};
@@ -110,7 +98,7 @@ int main(int argc,char ** argv){
 
 	//update the face-face topology 
 	tri::UpdateTopology<MyMesh>::FaceFace(m);
-	tri::UpdateNormals<MyMesh>::PerVertexPerFace(m);
+	tri::UpdateNormal<MyMesh>::PerVertexPerFace(m);
 	tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
   assert(tri::Clean<MyMesh>::IsFFAdjacencyConsistent(m));
 	
@@ -257,7 +245,7 @@ int main(int argc,char ** argv){
 
 	tri::io::ExporterPLY<MyMesh>::Save(m,"PreSmooth.ply",false);
 
-	int UBIT = MyMesh::VertexType::LastBitFlag();
+	int UBIT = MyMesh::VertexType::NewBitFlag();
 	f =  m.face.begin();
 	f += indice;
 	for(; f != m.face.end();++f)

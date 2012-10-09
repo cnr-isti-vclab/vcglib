@@ -64,7 +64,7 @@ int main( int argc, char **argv )
 
   tri::UpdateTopology<MyMesh>::FaceFace(m);
   tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
-  tri::UpdateNormals<MyMesh>::PerVertexNormalized(m);
+  tri::UpdateNormal<MyMesh>::PerVertexNormalized(m);
   printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
   printf( "Mesh has %i vert and %i faces\n", m.VN(), m.FN() );
 

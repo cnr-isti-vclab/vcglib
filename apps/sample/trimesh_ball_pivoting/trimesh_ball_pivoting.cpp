@@ -85,7 +85,7 @@ int  main(int argc, char **argv)
 			exit(0);
 		}
   vcg::tri::UpdateBounding<MyMesh>::Box(m);
-  vcg::tri::UpdateNormals<MyMesh>::PerFace(m);
+  vcg::tri::UpdateNormal<MyMesh>::PerFace(m);
   printf("Input mesh  vn:%i fn:%i\n",m.vn,m.fn);
 
   int t0=clock();

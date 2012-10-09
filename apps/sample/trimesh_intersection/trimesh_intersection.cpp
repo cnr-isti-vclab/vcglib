@@ -1,34 +1,18 @@
-#include <vector>
 
-using namespace std;
-
-// VCG headers for triangular mesh processing
-#include<vcg/simplex/edge/base.h>
-#include<vcg/simplex/edge/component.h>
-#include<vcg/simplex/vertex/base.h>
-#include<vcg/simplex/face/base.h>
 #include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/edges.h>
 #include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/intersection.h>
 #include <vcg/space/index/grid_static_ptr.h>
-//#include <vcg/simplex/edge/with/ae.h>
-//#include <vcg/complex/edgemesh/base.h>
-//#include <vcg/complex/edgemesh/allocate.h>
-//#include <vcg/complex/edgemesh/update/bounding.h>
 
 // VCG File Format Importer/Exporter
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_edgemesh/export_svg.h>
 #include <wrap/io_edgemesh/export_dxf.h>
 
-// VCG Vertex
-
-// VCG Faces
-
+using namespace std;
 using namespace vcg;
 
 class MyFace;

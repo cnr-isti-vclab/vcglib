@@ -31,28 +31,26 @@ int main(int , char **)
   /// Calculates both vertex and face normals.
   /// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
   /// normals are not normalized
-cmof.face.EnableFFAdjacency();
+  cmof.face.EnableFFAdjacency();
 
-  vcg::tri::UpdateTopology<CMesh   >::FaceFace(cm);
-  vcg::tri::UpdateTopology<CMeshOcf>::FaceFace(cmof);
-	
-  vcg::tri::UpdateFlags<CMesh   >::FaceBorderFromFF(cm);
-	vcg::tri::UpdateFlags<CMeshOcf>::FaceBorderFromFF(cmof);
+  tri::UpdateTopology<CMesh   >::FaceFace(cm);
+  tri::UpdateTopology<CMeshOcf>::FaceFace(cmof);
 
-	vcg::tri::UpdateNormals<CMesh   >::PerVertexNormalized(cm);
-	vcg::tri::UpdateNormals<CMeshOcf>::PerVertexNormalized(cmof);
+  tri::UpdateFlags<CMesh   >::FaceBorderFromFF(cm);
+  tri::UpdateFlags<CMeshOcf>::FaceBorderFromFF(cmof);
 
+  tri::UpdateNormal<CMesh   >::PerVertexNormalized(cm);
+  tri::UpdateNormal<CMeshOcf>::PerVertexNormalized(cmof);
 
   printf("Normal of face 0 is %f %f %f\n\n",cm.face[0].N()[0],cm.face[0].N()[1],cm.face[0].N()[2]);
   int t0=0,t1=0;
   while(t1-t0<200)
   {
     t0=clock();
-    Refine(cm,MidPointButterfly<CMesh>(),0); 
+    tri::Refine(cm,tri::MidPointButterfly<CMesh>(cm),0);
     t1=clock();
-    Refine(cmof,MidPointButterfly<CMeshOcf>(),0); 
+    tri::Refine(cmof,tri::MidPointButterfly<CMeshOcf>(cmof),0);
   }
-
 
 	cmof.vert.EnableRadius();
 	cmof.vert.EnableQuality();
@@ -69,7 +67,6 @@ cmof.face.EnableFFAdjacency();
         {
           float q =vi->Q();
           float r =vi->R();
-//          int ii = vcg::tri::Index(cmof, *vi);
           assert(q==r);
         }
       }

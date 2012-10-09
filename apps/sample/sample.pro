@@ -1,6 +1,3 @@
-######################################################################
-# Hand made pro. 
-######################################################################
 
 TEMPLATE      = subdirs
 SUBDIRS       = trimesh_base  \
@@ -10,6 +7,7 @@ SUBDIRS       = trimesh_base  \
                 trimesh_clustering \
                 trimesh_isosurface \
                 trimesh_join \
+                trimesh_edge \
                 trimesh_optional \
                 trimesh_intersection \
                 trimesh_ball_pivoting \
@@ -18,6 +16,3 @@ SUBDIRS       = trimesh_base  \
                 aabb_binary_tree \
                 trimesh_attribute
 
-sources.files = *.pro
-sources.path = .
-INSTALLS += sources
