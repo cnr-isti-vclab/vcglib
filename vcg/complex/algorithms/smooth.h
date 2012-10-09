@@ -914,7 +914,7 @@ static void FaceNormalLaplacianVF(MeshType &m)
 
   FaceIterator fi;
 
-	tri::UpdateNormals<MeshType>::AreaNormalizeFace(m);
+	tri::UpdateNormal<MeshType>::AreaNormalizeFace(m);
 
 	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
 	{
@@ -948,7 +948,7 @@ static void FaceNormalLaplacianVF(MeshType &m)
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 		(*fi).N()=TDF[*fi].m;
 
-	tri::UpdateNormals<MeshType>::NormalizePerFace(m);
+	tri::UpdateNormal<MeshType>::NormalizePerFace(m);
 
 	TDF.Stop();
 }
@@ -968,7 +968,7 @@ static void FaceNormalLaplacianFF(MeshType &m, int step=1, bool SmoothSelected=f
   assert(tri::HasFFAdjacency(m));
 
   FaceIterator fi;
-  tri::UpdateNormals<MeshType>::NormalizePerFaceByArea(m);
+  tri::UpdateNormal<MeshType>::NormalizePerFaceByArea(m);
   for(int iStep=0;iStep<step;++iStep)
   {
     for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
@@ -984,7 +984,7 @@ static void FaceNormalLaplacianFF(MeshType &m, int step=1, bool SmoothSelected=f
       if(!SmoothSelected || (*fi).IsS())
         (*fi).N()=TDF[*fi].m;
 
-    tri::UpdateNormals<MeshType>::NormalizePerFace(m);
+    tri::UpdateNormal<MeshType>::NormalizePerFace(m);
   }
 }
 
@@ -1200,7 +1200,7 @@ static void VertexCoordPasoDoble(MeshType &m, int step, typename MeshType::Scala
 	for(int j=0;j<step;++j)
 	{
 
-		vcg::tri::UpdateNormals<MeshType>::PerFace(m);
+		vcg::tri::UpdateNormal<MeshType>::PerFace(m);
 		FaceNormalAngleThreshold(m,TDF,Sigma);
 		for(int k=0;k<FitStep;k++)
 			FitMesh(m,TDV,TDF,FitLambda);

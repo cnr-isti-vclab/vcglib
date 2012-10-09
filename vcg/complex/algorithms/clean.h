@@ -1316,8 +1316,8 @@ private:
       {
         if(m.vert.empty()) return false;
 
-        tri::UpdateNormals<MeshType>::PerVertexAngleWeighted(m);
-        tri::UpdateNormals<MeshType>::NormalizePerVertex(m);
+        tri::UpdateNormal<MeshType>::PerVertexAngleWeighted(m);
+        tri::UpdateNormal<MeshType>::NormalizePerVertex(m);
 
         std::vector< VertexPointer > minVertVec;
         std::vector< VertexPointer > maxVertVec;
@@ -1407,7 +1407,7 @@ private:
                   }
                 }
 
-                // tri::UpdateNormals<MeshType>::PerFace(m);
+                // tri::UpdateNormal<MeshType>::PerFace(m);
             }
             while( repeat && count );
             return total;
@@ -1456,7 +1456,7 @@ private:
                 }
             }
 
-            // tri::UpdateNormals<MeshType>::PerFace(m);
+            // tri::UpdateNormal<MeshType>::PerFace(m);
         }
         while( repeat && count );
         return total;
