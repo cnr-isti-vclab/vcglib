@@ -3,6 +3,7 @@ TEMPLATE      = subdirs
 SUBDIRS       = trimesh_base  \
                 trimesh_topology\
                 trimesh_smooth \
+                trimesh_curvature \
                 trimesh_refine \
                 trimesh_clustering \
                 trimesh_isosurface \
