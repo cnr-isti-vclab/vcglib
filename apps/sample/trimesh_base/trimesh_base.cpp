@@ -20,6 +20,14 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/*! \file trimesh_base.cpp
+\brief the minimal example of using the lib
+\ingroup code_sample
+
+This file contain a minimal example of the library
+
+*/
+
 #include<vcg/complex/complex.h>
 
 // input output
@@ -56,14 +64,12 @@ int main( int argc, char **argv )
 
   MyMesh m;
 
-  if(tri::io::ImporterOFF<MyMesh>::Open(m,argv[1])!=0)
+  if(tri::io::ImporterOFF<MyMesh>::Open(m,argv[1])!=tri::io::ImporterOFF<MyMesh>::NoError)
   {
     printf("Error reading file  %s\n",argv[1]);
     exit(0);
   }
 
-  tri::UpdateTopology<MyMesh>::FaceFace(m);
-  tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
   tri::UpdateNormal<MyMesh>::PerVertexNormalized(m);
   printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
   printf( "Mesh has %i vert and %i faces\n", m.VN(), m.FN() );
