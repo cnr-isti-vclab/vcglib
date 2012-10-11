@@ -43,7 +43,6 @@ sampling strategies (montecarlo, stratified etc).
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/flag.h>
-#include <vcg/space/box2.h>
 #include <vcg/space/segment2.h>
 
 namespace vcg
@@ -426,7 +425,7 @@ static void AllEdge(MetroMesh & m, VertexSampler &ps)
 }
 
 // Regular Uniform Edge sampling
-// Each edge is subdivided in a number of pieces proprtional to its lenght
+// Each edge is subdivided in a number of pieces proprtional to its length
 // Sample are choosen without touching the vertices.
 
 static void EdgeUniform(MetroMesh & m, VertexSampler &ps,int sampleNum, bool sampleFauxEdge=true)
@@ -434,7 +433,7 @@ static void EdgeUniform(MetroMesh & m, VertexSampler &ps,int sampleNum, bool sam
 		typedef typename UpdateTopology<MetroMesh>::PEdge SimpleEdge;
 		std::vector< SimpleEdge > Edges;
     UpdateTopology<MetroMesh>::FillUniqueEdgeVector(m,Edges,sampleFauxEdge);
-		// First loop compute total edge lenght;
+		// First loop compute total edge length;
 		float edgeSum=0;
 		typename std::vector< SimpleEdge >::iterator ei;
 		for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
@@ -673,7 +672,7 @@ static void FaceSubdivision(MetroMesh & m, VertexSampler &ps,int sampleNum, bool
 	ScalarType samplePerAreaUnit = sampleNum/area;
 	std::vector<FacePointer> faceVec;
 	FillAndShuffleFacePointerVector(m,faceVec);
-	vcg::tri::UpdateNormals<MetroMesh>::PerFaceNormalized(m);
+	vcg::tri::UpdateNormal<MetroMesh>::PerFaceNormalized(m);
 	double  floatSampleNum = 0.0;
 	int faceSampleNum;
     // Subdivision sampling.
@@ -764,7 +763,7 @@ static void FaceSubdivisionOld(MetroMesh & m, VertexSampler &ps,int sampleNum, b
     ScalarType samplePerAreaUnit = sampleNum/area;
     std::vector<FacePointer> faceVec;
     FillAndShuffleFacePointerVector(m,faceVec);
-    tri::UpdateNormals<MetroMesh>::PerFaceNormalized(m);
+    tri::UpdateNormal<MetroMesh>::PerFaceNormalized(m);
     double  floatSampleNum = 0.0;
     int faceSampleNum;
     // Subdivision sampling.
@@ -977,7 +976,7 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
 		S n[3]  = { b0-db0-dn0, b1-db1-dn1, b2-db2-dn2};
         for(int y=bbox.min[1]-1;y<=bbox.max[1]+1;++y)
         {
-            if((n[0]>=0 && n[1]>=0 && n[2]>=0) || (n[0]<=0 && n[1]<=0 && n[2]<=0))
+            if( ((n[0]>=0 && n[1]>=0 && n[2]>=0) || (n[0]<=0 && n[1]<=0 && n[2]<=0))  && (de != 0))
             {
                 typename MetroMesh::CoordType baryCoord;
                 baryCoord[0] =  double(-y*v1[0]+v2[0]*y+v1[1]*x-v2[0]*v1[1]+v1[0]*v2[1]-x*v2[1])/de;
