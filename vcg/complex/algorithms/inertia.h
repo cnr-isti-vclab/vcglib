@@ -20,22 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-History
-
-$Log: not supported by cvs2svn $
-Revision 1.3  2006/03/29 10:12:08  corsini
-Add cast to avoid warning
-
-Revision 1.2  2005/12/12 12:08:30  cignoni
-First working version
-
-Revision 1.1  2005/11/21 15:58:12  cignoni
-First Release (not working!)
-
-
-Revision 1.13  2005/11/17 00:42:03  cignoni
-****************************************************************************/
 #ifndef _VCG_INERTIA_
 #define _VCG_INERTIA_
 
@@ -56,10 +40,10 @@ journal of graphics tools, volume 1, number 2, 1996
 
 */
 
-#include <vcg/math/matrix33.h>
-#include <vcg/math/lin_algebra.h>
-
+#include <eigenlib/Eigen/Core>
+#include <eigenlib/Eigen/Eigenvalues>
 #include <vcg/complex/algorithms/update/normal.h>
+
 namespace vcg
 {
   namespace tri
@@ -194,7 +178,7 @@ void CompFaceIntegrals(FaceType &f)
 
 void Compute(MeshType &m)
 {
-  tri::UpdateNormals<MeshType>::PerFaceNormalized(m);
+  tri::UpdateNormal<MeshType>::PerFaceNormalized(m);
   double nx, ny, nz;
 
   T0 = T1[X] = T1[Y] = T1[Z]
@@ -266,51 +250,52 @@ void InertiaTensor(Matrix33<ScalarType> &J ){
   J[Z][X] = J[X][Z] += T0 * r[Z] * r[X];
 }
 
-void InertiaTensor(Matrix44<ScalarType> &J )
+//void InertiaTensor(Matrix44<ScalarType> &J )
+void InertiaTensor(Eigen::Matrix3d &J )
 {
-	J.SetIdentity();
-	Point3<ScalarType>  r;
+  J=Eigen::Matrix3d::Identity();
+  Point3d  r;
   r[X] = T1[X] / T0;
   r[Y] = T1[Y] / T0;
   r[Z] = T1[Z] / T0;
   /* compute inertia tensor */
-  J[X][X] = (T2[Y] + T2[Z]);
-  J[Y][Y] = (T2[Z] + T2[X]);
-  J[Z][Z] = (T2[X] + T2[Y]);
-  J[X][Y] = J[Y][X] = - TP[X];
-  J[Y][Z] = J[Z][Y] = - TP[Y];
-  J[Z][X] = J[X][Z] = - TP[Z];
+  J(X,X) = (T2[Y] + T2[Z]);
+  J(Y,Y) = (T2[Z] + T2[X]);
+  J(Z,Z) = (T2[X] + T2[Y]);
+  J(X,Y) = J(Y,X) = - TP[X];
+  J(Y,Z) = J(Z,Y) = - TP[Y];
+  J(Z,X) = J(X,Z) = - TP[Z];
 
-  J[X][X] -= T0 * (r[Y]*r[Y] + r[Z]*r[Z]);
-  J[Y][Y] -= T0 * (r[Z]*r[Z] + r[X]*r[X]);
-  J[Z][Z] -= T0 * (r[X]*r[X] + r[Y]*r[Y]);
-  J[X][Y] = J[Y][X] += T0 * r[X] * r[Y];
-  J[Y][Z] = J[Z][Y] += T0 * r[Y] * r[Z];
-  J[Z][X] = J[X][Z] += T0 * r[Z] * r[X];
+  J(X,X) -= T0 * (r[Y]*r[Y] + r[Z]*r[Z]);
+  J(Y,Y) -= T0 * (r[Z]*r[Z] + r[X]*r[X]);
+  J(Z,Z) -= T0 * (r[X]*r[X] + r[Y]*r[Y]);
+  J(X,Y) = J(Y,X) += T0 * r[X] * r[Y];
+  J(Y,Z) = J(Z,Y) += T0 * r[Y] * r[Z];
+  J(Z,X) = J(X,Z) += T0 * r[Z] * r[X];
 }
 
 
 /** Compute eigenvalues and eigenvectors of inertia tensor.
 		The eigenvectors make a rotation matrix that aligns the mesh along the axes of min/max inertia
  */
-void InertiaTensorEigen(Matrix44<ScalarType> &EV, Point4<ScalarType> &ev )
+void InertiaTensorEigen(Matrix33<ScalarType> &EV, Point3<ScalarType> &ev )
 {
-	Matrix44<ScalarType> it;
+	Eigen::Matrix3d it;
 	InertiaTensor(it);
-	Matrix44d EVd,ITd;ITd.Import(it);
-  Point4d evd;
-	int n;
-	Jacobi(ITd,evd,EVd,n);
-	EV.Import(EVd);
-	ev.Import(evd);
+	Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig(it);
+	Eigen::Vector3d c_val = eig.eigenvalues();
+	Eigen::Matrix3d c_vec = eig.eigenvectors();
+
+	EV.FromEigenMatrix(c_vec);
+	ev.FromEigenVector(c_val);
 }
 
 /** Compute covariance matrix of a mesh, i.e. the integral
 		int_{M} { (x-b)(x-b)^T }dx  where b is the barycenter and x spans over the mesh M
  */
-static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::Matrix33<ScalarType> &C){
+static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::Matrix33<ScalarType> &C)
+{
 	// find the barycenter
-
 	ConstFaceIterator fi;
 	ScalarType area = 0.0;
 	bary.SetZero();
@@ -345,15 +330,9 @@ static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::
 			const float da = n.Norm();
 			n/=da*da;
 
-			#ifndef VCG_USE_EIGEN
 			A.SetColumn(0, P1-P0);
 			A.SetColumn(1, P2-P0);
 			A.SetColumn(2, n);
-			#else
-			A.col(0) = P1-P0;
-			A.col(1) = P2-P0;
-			A.col(2) = n;
-			#endif
 			CoordType delta = P0 - bary;
 
 			/* DC is calculated as integral of (A*x+delta) * (A*x+delta)^T over the triangle,
