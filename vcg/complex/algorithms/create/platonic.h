@@ -30,6 +30,7 @@
 #include<vcg/complex/algorithms/update/flag.h>
 #include<vcg/complex/algorithms/update/position.h>
 #include<vcg/complex/algorithms/update/bounding.h>
+#include<vcg/complex/algorithms/clean.h>
 
 
 namespace vcg {
@@ -529,11 +530,34 @@ void Box(MeshType &in, const typename MeshType::BoxType & bb )
 
 }
 
+// Torus
+template <class MeshType>
+void Torus(MeshType &m, float hRingRadius, float vRingRadius, int vRingDiv=12, int hRingDiv=24 )
+{
+  m.Clear();
+  float angleStepV = (2.0f*M_PI)/vRingDiv;
+  float angleStepH = (2.0f*M_PI)/hRingDiv;
+
+  Allocator<MeshType>::AddVertices(m,(vRingDiv+1)*(hRingDiv+1));
+  for(float i=0;i<hRingDiv+1;++i)
+  {
+    Matrix44f RotM; RotM.SetRotateRad(i*angleStepH,Point3f(0,1,0));
+    for(float j=0;j<vRingDiv+1;++j)
+    {
+      Point3f p;
+      p[0]= vRingRadius*cos(j*angleStepV) + hRingRadius;
+      p[1]= vRingRadius*sin(j*angleStepV);
+      p[2] = 0;
+
+      m.vert[i*(vRingDiv+1)+j].P() = RotM*p;
+    }
+  }
+  FaceGrid(m,vRingDiv+1,hRingDiv+1);
+  tri::Clean<MeshType>::RemoveDuplicateVertex(m);
+}
 
 // this function build a mesh starting from a vector of generic coords (objects having a triple of float at their beginning)
 // and a vector of faces (objects having a triple of ints at theri beginning). 
-
-
 template <class MeshType,class V, class F >
 void Build( MeshType & in, const V & v, const F & f)
 {
