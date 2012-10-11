@@ -20,6 +20,15 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/*! \file trimesh_attribute.cpp
+\ingroup code_sample
+
+\brief the minimal example of using the attributes
+
+Attributes are a simple mechanism to associate user-defined 'attributes' to the simplicies and to the mesh.
+\ref attributes for more Details
+
+*/
 
 #include<vcg/complex/complex.h>
 
@@ -59,12 +68,12 @@ int main()
    ih[&*vi]= 1.0f;  //                or a pointer to it
    ih[i]   = 1.0f;  //                or an integer index
   }
-    
-  // Once created with AddPerVertexAttribute, an handle to the attribute can be obtained as follows
-  MyMesh::PerVertexAttributeHandle<float> rh = vcg::tri::Allocator<MyMesh>::GetPerVertexAttribute<float>(m,"Radiosity");
 
   // you can query if an attribute is present or not
   bool hasRadiosity = vcg::tri::HasPerVertexAttribute(m,"Radiosity");
+
+  // Once created with AddPerVertexAttribute, an handle to the attribute can be obtained as follows
+  MyMesh::PerVertexAttributeHandle<float> rh = vcg::tri::Allocator<MyMesh>::GetPerVertexAttribute<float>(m,"Radiosity");
 
   // you can delete an attibute by name
   vcg::tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,"Radiosity");

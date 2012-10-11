@@ -21,8 +21,9 @@
 *                                                                           *
 ****************************************************************************/
 /*! \file trimesh_base.cpp
-\brief the minimal example of using the lib
 \ingroup code_sample
+
+\brief the minimal example of using the lib
 
 This file contain a minimal example of the library
 

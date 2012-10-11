@@ -60,6 +60,11 @@ int main( int argc, char **argv )
 
   tri::UpdateTopology<MyMesh>::FaceFace(m);
   tri::UpdateCurvature<MyMesh>::PerVertex(m);
+  tri::UpdateCurvature<MyMesh>::MeanAndGaussian(m);
+  tri::UpdateCurvature<MyMesh>::PrincipalDirections(m);
+  tri::UpdateCurvature<MyMesh>::PrincipalDirectionsNormalCycle(m);
+  tri::UpdateCurvature<MyMesh>::PrincipalDirectionsPCA(m,m.bbox.Diag()/100);
+
   tri::UpdateNormal<MyMesh>::PerVertexNormalized(m);
   printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
   printf( "Mesh has %i vert and %i faces\n", m.VN(), m.FN() );
