@@ -1,2 +1,13 @@
-/** \page Examples
-\*
+/**
+\page examples
+
+There are a number of very simple and short examples meant to document the various features of the library.
+
+trimesh_base.cpp
+
+trimesh_attribute.cpp
+
+trimesh_normal.cpp
+
+
+*/

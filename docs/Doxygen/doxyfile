@@ -32,7 +32,7 @@ PROJECT_NAME           = "VCG Library"
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = 0.1
+PROJECT_NUMBER         = 
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description 
 # for a project that appears at the top of each page and should give viewer 
@@ -45,7 +45,7 @@ PROJECT_BRIEF          =
 # exceed 55 pixels and the maximum width should not exceed 200 pixels. 
 # Doxygen will copy the logo to the output directory.
 
-PROJECT_LOGO           = 
+PROJECT_LOGO           = /Users/cignoni/Documents/devel/vcglib/docs/Doxygen/img/vcglogo.png
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) 
 # base path where the generated documentation will be put. 
@@ -386,7 +386,7 @@ EXTRACT_STATIC         = NO
 # defined locally in source files will be included in the documentation. 
 # If set to NO only classes defined in header files are included.
 
-EXTRACT_LOCAL_CLASSES  = YES
+EXTRACT_LOCAL_CLASSES  = NO
 
 # This flag is only useful for Objective-C code. When set to YES local 
 # methods, which are defined in the implementation section but not in 
@@ -666,7 +666,9 @@ WARN_LOGFILE           =
 # with spaces.
 
 INPUT                  = . \
-                         ../../vcg/complex/algorithms/update
+                         ../../vcg/complex/algorithms/update \
+                         ../../apps/sample/trimesh_base \
+                         ../../apps/sample/trimesh_attribute
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 
@@ -731,7 +733,7 @@ EXCLUDE_SYMBOLS        =
 # directories that contain example code fragments that are included (see 
 # the \include command).
 
-EXAMPLE_PATH           = 
+EXAMPLE_PATH           = ../../apps/sample/trimesh_base
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the 
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
@@ -795,7 +797,7 @@ FILTER_SOURCE_PATTERNS =
 # Note: To get rid of all source code in the generated output, make sure also 
 # VERBATIM_HEADERS is set to NO.
 
-SOURCE_BROWSER         = NO
+SOURCE_BROWSER         = YES
 
 # Setting the INLINE_SOURCES tag to YES will include the body 
 # of functions and classes directly in the documentation.
@@ -849,7 +851,7 @@ VERBATIM_HEADERS       = NO
 # of all compounds will be generated. Enable this if the project 
 # contains a lot of classes, structs, unions or interfaces.
 
-ALPHABETICAL_INDEX     = NO
+ALPHABETICAL_INDEX     = YES
 
 # If the alphabetical index is enabled (see ALPHABETICAL_INDEX) then 
 # the COLS_IN_ALPHA_INDEX tag can be used to specify the number of columns 
