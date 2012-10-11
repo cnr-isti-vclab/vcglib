@@ -22,13 +22,19 @@
 ****************************************************************************/
 #ifndef __VCG_EXCEPTION_H
 #define __VCG_EXCEPTION_H
-
+#include <iostream>
+#include <stdexcept>
 namespace vcg
 {
-class MissingComponentException : public std::exception
+class MissingComponentException : public std::runtime_error
 {
 public:
-    MissingComponentException() {}
+  MissingComponentException(const std::string &err):std::runtime_error(err) { std::cout << "Missing Component Exception -" << err << "- \n";}
+    virtual const char *what() const throw ()
+    {
+      static char buf[128]="Missing Component";
+      return buf;
+    }
 };
 }
 

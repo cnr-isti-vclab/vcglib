@@ -76,7 +76,7 @@ namespace tri {
 
 		static void Set(ComputeMeshType &m)
 		{
-		   if(!FaceType::HasEdgePlane()) throw vcg::MissingComponentException();
+		  if(!FaceType::HasEdgePlane()) throw vcg::MissingComponentException("PerFaceEdgePlane");
 			for(FaceIterator f = m.face.begin(); f!=m.face.end(); ++f)
 				if(!(*f).IsD())
 					ComputeEdgePlane(*f);

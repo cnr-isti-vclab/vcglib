@@ -42,7 +42,7 @@ It must be included \b after complex.h
 */
 
 template <class ComputeMeshType>
-class UpdateNormal
+class   UpdateNormal
 {
 public:
 typedef ComputeMeshType MeshType; 	
@@ -63,7 +63,7 @@ typedef typename MeshType::FaceIterator   FaceIterator;
  */
 static void PerVertexClear(ComputeMeshType &m, bool ClearAllVertNormal=false)
 {
-  if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException();
+  if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException("PerVertexNormal");
   if(ClearAllVertNormal)
     UpdateFlags<ComputeMeshType>::VertexClearV(m);
   else
@@ -157,7 +157,7 @@ static void PerVertexNelsonMaxWeighted(ComputeMeshType &m)
 /// Not normalized. Use PerFaceNormalized() or call NormalizePerVertex() if you need unit length per face normals.
 static void PerFace(ComputeMeshType &m)
 {
-  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
+  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException("PerFaceNormal");
   for(FaceIterator f=m.face.begin();f!=m.face.end();++f)
             if( !(*f).IsD() )	face::ComputeNormal(*f);
 }
@@ -168,7 +168,7 @@ static void PerFace(ComputeMeshType &m)
 */
 static void PerVertexFromCurrentFaceNormal(ComputeMeshType &m)
 {
-  if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException();
+  if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException("PerVertexNormal");
 
  VertexIterator vi;
  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -191,7 +191,8 @@ static void PerVertexFromCurrentFaceNormal(ComputeMeshType &m)
 */
 static void PerFaceFromCurrentVertexNormal(ComputeMeshType &m)
 {
-  if(!HasPerVertexNormal(m) || !HasPerFaceNormal(m)) throw vcg::MissingComponentException();
+  if(!HasPerVertexNormal(m) ) throw vcg::MissingComponentException("PerVertexNormal");
+  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException("PerFaceNormal");
   for (FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi)
    if( !(*fi).IsD())
         {
@@ -207,7 +208,7 @@ static void PerFaceFromCurrentVertexNormal(ComputeMeshType &m)
 /// \brief Normalize the length of the vertex normals.
 static void NormalizePerVertex(ComputeMeshType &m)
 {
-  if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException();
+  if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException("PerVertexNormal");
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if( !(*vi).IsD() && (*vi).IsRW() ) 
 			(*vi).N().Normalize();
@@ -216,7 +217,7 @@ static void NormalizePerVertex(ComputeMeshType &m)
 /// \brief Normalize the length of the face normals.
 static void NormalizePerFace(ComputeMeshType &m)
 {
-  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
+  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException("PerFaceNormal");
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
       if( !(*fi).IsD() )	(*fi).N().Normalize();
 }
@@ -224,7 +225,7 @@ static void NormalizePerFace(ComputeMeshType &m)
 /// \brief Set the length of the face normals to their area (without recomputing their directions).
 static void NormalizePerFaceByArea(ComputeMeshType &m)
 {
-  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
+  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException("PerFaceNormal");
   FaceIterator fi;
   for(fi=m.face.begin();fi!=m.face.end();++fi)
     if( !(*fi).IsD() )
@@ -269,7 +270,7 @@ static void PerVertexNormalizedPerFaceNormalized(ComputeMeshType &m)
 	NormalizePerFace(m);
 }
 
-/// \brief
+/// \brief Exploit bitquads to compute a per-polygon face normal
 static void PerBitQuadFaceNormalized(ComputeMeshType &m)
 {
 	PerFace(m);
@@ -287,7 +288,7 @@ static void PerBitQuadFaceNormalized(ComputeMeshType &m)
 /// \brief Multiply the vertex normals by the matrix passed. By default, the scale component is removed.
 static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true)
 {
-  if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException();
+  if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException("PerVertexNormal");
     float scale;
 
 	Matrix33<ScalarType> mat33(mat,3);
@@ -308,7 +309,7 @@ static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat,
 /// \brief Multiply the face normals by the matrix passed. By default, the scale component is removed.
 static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true)
 {
-  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
+  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException("PerFaceNormal");
     float scale;
 
 	Matrix33<ScalarType> mat33(mat,3);
@@ -333,10 +334,10 @@ static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, b
 /// It requires FFAdjacency.
 static void PerWedgeCrease(ComputeMeshType &m, ScalarType angleRad)
 {
-  if(!HasPerWedgeNormal(m) ) throw vcg::MissingComponentException();
-  if(!HasFFAdjacency(m)) throw vcg::MissingComponentException();
+  if(!HasPerWedgeNormal(m) ) throw vcg::MissingComponentException("PerWedgeNormal");
+  if(!HasFFAdjacency(m)) throw vcg::MissingComponentException("Face-Face Adjacency");
 
-  ScalarType cosangle=Cos(angleRad);
+  ScalarType cosangle=math::Cos(angleRad);
 
   // Clear the per wedge normals
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
@@ -364,7 +365,7 @@ static void PerWedgeCrease(ComputeMeshType &m, ScalarType angleRad)
 
 static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 {
-	if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException();
+	if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException("PerFaceNormal");
 	FaceIterator f;
 	bool cn = true;
 
