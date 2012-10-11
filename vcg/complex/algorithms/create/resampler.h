@@ -327,8 +327,8 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			_oldM=&old_mesh;
 
 			// the following two steps are required to be sure that the point-face distance without precomputed data works well.
-			tri::UpdateNormals<Old_Mesh>::PerFaceNormalized(old_mesh);
-			tri::UpdateNormals<Old_Mesh>::PerVertexAngleWeighted(old_mesh);
+			tri::UpdateNormal<Old_Mesh>::PerFaceNormalized(old_mesh);
+			tri::UpdateNormal<Old_Mesh>::PerVertexAngleWeighted(old_mesh);
 			int _size=(int)old_mesh.fn*100;
 
 			_g.Set(_oldM->face.begin(),_oldM->face.end(),_size);
