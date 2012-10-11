@@ -418,7 +418,7 @@ namespace io {
         if(importparams.anglecull)
         {
           if(cb) cb(85,"PTX Mesh Loading - remove steep faces");
-          tri::UpdateNormals<OpenMeshType>::PerFaceNormalized(m);
+          tri::UpdateNormal<OpenMeshType>::PerFaceNormalized(m);
           for(FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
             if(!(*fi).IsD())
             {
