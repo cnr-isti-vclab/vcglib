@@ -113,7 +113,15 @@ public:
 		_v[2] = T(b[2]);
 		_v[3] = T(b[3]);
 	}
-	/// constuctor that imports from different Point4 types
+	template <class EigenVector>
+	inline void FromEigenVector( const EigenVector & b )
+	{
+		_v[0] = T(b[0]);
+		_v[1] = T(b[1]);
+		_v[2] = T(b[2]);
+		_v[3] = T(b[3]);
+	}
+	/// constructor that imports from different Point4 types
   template <class Q>
   static inline Point4 Construct( const Point4<Q> & b )
   {

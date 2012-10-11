@@ -247,6 +247,14 @@ public:
 
 	template <class Matrix44Type>
 	void FromMatrix(const Matrix44Type & m){for(int i = 0; i < 16; i++) V()[i]=m.V()[i];}
+
+	template <class EigenMatrix44Type>
+	void FromEigenMatrix(const EigenMatrix44Type & m){
+	  for(int i = 0; i < 4; i++)
+		for(int j = 0; j < 4; j++)
+		  ElementAt(i,j)=m(i,j);
+	}
+
 	void FromEulerAngles(T alpha, T beta, T gamma);
 	void SetZero();
   void SetIdentity();

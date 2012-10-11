@@ -93,7 +93,6 @@ created
 #define __VCGLIB_MATRIX33_H
 
 #include <stdio.h>
-#include <vcg/math/lin_algebra.h>
 #include <vcg/math/matrix44.h>
 #include <vcg/space/point3.h>
 #include <vector>
@@ -149,6 +148,20 @@ public:
 			{ (*this)[r][c] = m[i][j]; ++c;}
 			++r;
 		}
+	}
+
+	template <class EigenMatrix33Type>
+	void ToEigenMatrix(EigenMatrix33Type & m){
+	  for(int i = 0; i < 3; i++)
+		for(int j = 0; j < 3; j++)
+		  m(i,j)=(*this)[i][j];
+	}
+
+	template <class EigenMatrix33Type>
+	void FromEigenMatrix(const EigenMatrix33Type & m){
+	  for(int i = 0; i < 3; i++)
+		for(int j = 0; j < 3; j++)
+		  (*this)[i][j]=m(i,j);
 	}
 
 	///	Number of columns

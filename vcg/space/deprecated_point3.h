@@ -172,7 +172,13 @@ public:
 		_v[1] = P3ScalarType(b[1]);
 		_v[2] = P3ScalarType(b[2]);
 	}
-
+	template <class EigenVector>
+	inline void FromEigenVector( const EigenVector & b )
+	{
+		_v[0] = P3ScalarType(b[0]);
+		_v[1] = P3ScalarType(b[1]);
+		_v[2] = P3ScalarType(b[2]);
+	}
   template <class Q> 
   static inline Point3 Construct( const Point3<Q> & b )
   {

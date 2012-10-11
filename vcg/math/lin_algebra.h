@@ -52,7 +52,9 @@ Added initial disclaimer
 #include <vcg/math/base.h>
 #include <vcg/math/matrix44.h>
 #include <algorithm>
-
+#ifndef _YES_I_WANT_TO_USE_DANGEROUS_STUFF
+#error "Please do not never user this file. Use EIGEN!!!!"
+#endif
 namespace vcg
 {
 	/** \addtogroup math */

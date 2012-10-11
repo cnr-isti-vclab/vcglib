@@ -50,7 +50,6 @@ added diagonal matrix, outer produce and namespace
 #include <assert.h>
 #include <algorithm>
 #include <vcg/space/point.h>
-#include <vcg/math/lin_algebra.h>
 
 namespace vcg{
 	namespace ndim{
@@ -764,22 +763,22 @@ namespace vcg{
 
   /*! @} */
 
-	template <class MatrixType>
-	void Invert(MatrixType & m){
-		typedef typename MatrixType::ScalarType X;
-		X  *diag;
-		diag = new  X [m.ColumnsNumber()];
+//	template <class MatrixType>
+//	void Invert(MatrixType & m){
+//		typedef typename MatrixType::ScalarType X;
+//		X  *diag;
+//		diag = new  X [m.ColumnsNumber()];
 
-		MatrixType res(m.RowsNumber(),m.ColumnsNumber());
-		vcg::SingularValueDecomposition<MatrixType > (m,&diag[0],res,LeaveUnsorted,50 );
-		m.Transpose();		
-		// prodotto per la diagonale
-		unsigned  int i,j;
-		for (i=0; i<m.RowsNumber(); i++)
-					for (j=0; j<m.ColumnsNumber(); j++)
-						res[i][j]/= diag[j];
-		m = res *m;
-		}
+//		MatrixType res(m.RowsNumber(),m.ColumnsNumber());
+//		vcg::SingularValueDecomposition<MatrixType > (m,&diag[0],res,LeaveUnsorted,50 );
+//		m.Transpose();
+//		// prodotto per la diagonale
+//		unsigned  int i,j;
+//		for (i=0; i<m.RowsNumber(); i++)
+//					for (j=0; j<m.ColumnsNumber(); j++)
+//						res[i][j]/= diag[j];
+//		m = res *m;
+//		}
 
 	}
 }; // end of namespace
