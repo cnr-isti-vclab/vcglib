@@ -270,7 +270,7 @@ public:
     static void computeMFitmap(MeshType& m, float perc, int ringMax = 50)
     {
         vcg::tri::UpdateCurvatureFitting<MeshType>::computeCurvature(m);
-        vcg::tri::UpdateNormals<MeshType>::PerVertexAngleWeighted(m);
+        vcg::tri::UpdateNormal<MeshType>::PerVertexAngleWeighted(m);
 
         vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
         vcg::tri::UpdateTopology<MeshType>::VertexFace(m);
@@ -358,7 +358,7 @@ public:
     {
 
             vcg::tri::UpdateCurvatureFitting<MeshType>::computeCurvature(m);
-            vcg::tri::UpdateNormals<MeshType>::PerVertexAngleWeighted(m);
+            vcg::tri::UpdateNormal<MeshType>::PerVertexAngleWeighted(m);
 
             vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
             vcg::tri::UpdateTopology<MeshType>::VertexFace(m);
