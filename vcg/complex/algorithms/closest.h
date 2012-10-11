@@ -92,9 +92,9 @@ namespace vcg {
 
 		template <class MESH, class GRID>
 			typename MESH::FaceType * GetClosestFaceEP( MESH & mesh, GRID & gr, const typename GRID::CoordType & _p,
-			const typename GRID::ScalarType & _maxDist, typename GRID::ScalarType & _minDist,
-			typename GRID::CoordType &_closestPt, typename GRID::CoordType & _normf, 
-			typename GRID::CoordType & _ip)
+														const typename GRID::ScalarType & _maxDist, typename GRID::ScalarType & _minDist,
+														typename GRID::CoordType & _closestPt, typename GRID::CoordType & _normf,
+														typename GRID::CoordType & _ip)
 		{
 			typedef typename GRID::ScalarType ScalarType;
 			typedef Point3<ScalarType> Point3x;
@@ -109,12 +109,12 @@ namespace vcg {
 			{
 				// f=bestf;
 				//calcolo normale con interpolazione trilineare
-        InterpolationParameters<typename MESH::FaceType,typename MESH::ScalarType>(*bestf,bestf->N(),_closestPt, _ip);
-        _normf =  (bestf->V(0)->cN())*_ip[0]+
-          (bestf->V(1)->cN())*_ip[1]+
-          (bestf->V(2)->cN())*_ip[2] ;
+			  InterpolationParameters<typename MESH::FaceType,typename MESH::ScalarType>(*bestf,bestf->N(),_closestPt, _ip);
+			  _normf =  (bestf->V(0)->cN())*_ip[0]+
+				  (bestf->V(1)->cN())*_ip[1]+
+				  (bestf->V(2)->cN())*_ip[2] ;
 
-				_minDist = fabs(_minDist);
+			  _minDist = fabs(_minDist);
 				return(bestf);
 			}
 			return (0);
@@ -122,8 +122,8 @@ namespace vcg {
 
 		template <class MESH, class GRID>
 			typename MESH::FaceType * GetClosestFaceBase( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p,
-			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist,
-			typename GRID::CoordType &_closestPt)
+														  const typename GRID::ScalarType _maxDist,typename GRID::ScalarType & _minDist,
+														  typename GRID::CoordType &_closestPt)
 		{
 			typedef typename GRID::ScalarType ScalarType;
 			typedef Point3<ScalarType> Point3x;
@@ -137,7 +137,7 @@ namespace vcg {
 
 		template <class MESH, class GRID>
 			typename MESH::FaceType * GetClosestFaceEP( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p,
-			const typename GRID::ScalarType & _maxDist,typename GRID::ScalarType & _minDist,
+			const typename GRID::ScalarType _maxDist, typename GRID::ScalarType & _minDist,
 			typename GRID::CoordType &_closestPt)
 		{
 			typedef typename GRID::ScalarType ScalarType;
