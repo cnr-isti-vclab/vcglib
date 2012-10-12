@@ -24,7 +24,6 @@
 
 #include<wrap/io_trimesh/import_off.h>
 
-#include<vcg/complex/algorithms/update/curvature.h>
 #include<vcg/complex/algorithms/update/normal.h>
 
 using namespace vcg;
