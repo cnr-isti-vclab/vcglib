@@ -31,61 +31,66 @@ Attributes are a simple mechanism to associate user-defined 'attributes' to the 
 */
 
 #include<vcg/complex/complex.h>
-
+using namespace vcg;
 class MyEdge;
 class MyFace;
 class MyVertex;
-struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<MyVertex>		::AsVertexType,
-											vcg::Use<MyFace>			::AsFaceType>{};
+struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
+                                            Use<MyFace>			::AsFaceType>{};
 
-class MyVertex  : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f,vcg::vertex::Normal3f>{};
-class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::VertexRef, vcg::face::Normal3f> {};
+class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f,vertex::Normal3f>{};
+class MyFace    : public Face< MyUsedTypes, face::VertexRef, face::Normal3f> {};
 
-class MyMesh : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> > {};
+class MyMesh : public tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> > {};
 
 int main()
 {
   MyMesh m;
-  //...here m is filled
-
-  
   // add a per-vertex attribute with type float named "Irradiance"
-  MyMesh::PerVertexAttributeHandle<float> ih = vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<float> (m,std::string("Irradiance"));
+  MyMesh::PerVertexAttributeHandle<float> named_hv = tri::Allocator<MyMesh>::AddPerVertexAttribute<float> (m,std::string("Irradiance"));
 
   // add a per-vertex attribute with type float named "Radiosity"   
-  vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<float> (m,std::string("Radiosity"));
+  tri::Allocator<MyMesh>::AddPerVertexAttribute<float> (m,std::string("Radiosity"));
  
   // add a per-vertex attribute with type bool and no name specified
-  MyMesh::PerVertexAttributeHandle<bool> blocked_h = vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<bool> (m); 
+  MyMesh::PerVertexAttributeHandle<bool> anon_hv = tri::Allocator<MyMesh>::AddPerVertexAttribute<bool> (m);
   
   // add a per-face attribute with type bool and no name specified
-  MyMesh::PerFaceAttributeHandle<bool> blocked_hf = vcg::tri::Allocator<MyMesh>::AddPerFaceAttribute<bool> (m); 
+  MyMesh::PerFaceAttributeHandle<bool> anon_hf = tri::Allocator<MyMesh>::AddPerFaceAttribute<bool> (m);
 
   MyMesh::VertexIterator vi; int i = 0;
   for(vi   = m.vert.begin(); vi != m.vert.end(); ++vi,++i){
-   ih[vi]  = 1.0f;  // [] operator takes a iterator
-   ih[*vi] = 1.0f;  //                or a MyMesh::VertexType object
-   ih[&*vi]= 1.0f;  //                or a pointer to it
-   ih[i]   = 1.0f;  //                or an integer index
+   named_hv[vi]  = 1.0f;  // [] operator takes a iterator
+   named_hv[*vi] = 1.0f;  //                or a MyMesh::VertexType object
+   named_hv[&*vi]= 1.0f;  //                or a pointer to it
+   named_hv[i]   = 1.0f;  //                or an integer index
   }
 
   // you can query if an attribute is present or not
-  bool hasRadiosity = vcg::tri::HasPerVertexAttribute(m,"Radiosity");
+  bool hasRadiosity = tri::HasPerVertexAttribute(m,"Radiosity");
 
-  // Once created with AddPerVertexAttribute, an handle to the attribute can be obtained as follows
-  MyMesh::PerVertexAttributeHandle<float> rh = vcg::tri::Allocator<MyMesh>::GetPerVertexAttribute<float>(m,"Radiosity");
+  // Once created with AddPerVertexAttribute, an handle to the attribute can be obtained as follows 
+  MyMesh::PerVertexAttributeHandle<float> ret_hv = tri::Allocator<MyMesh>::GetPerVertexAttribute<float>(m,"Radiosity");
 
-  // you can delete an attibute by name
-  vcg::tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,"Radiosity");
+  // you can also have PerMesh attributes
+  MyMesh::PerMeshAttributeHandle<int> hm = tri::Allocator<MyMesh>::AddPerMeshAttribute<int> (m,std::string("ADummyIntegerAttribute"));
 
-  // you can delete an attibute by handle
-  vcg::tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,blocked_h);
+  // PerMesh attributes are accessed directly using the handle itself
+  hm() = 10;
 
-  bool res ;
-  res = vcg::tri::Allocator<MyMesh>::IsValidHandle(m,ih);printf("%d\n",res);
-  res = vcg::tri::Allocator<MyMesh>::IsValidHandle(m,blocked_hf);printf("%d\n",res);
-  vcg::tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,ih);
-  vcg::tri::Allocator<MyMesh>::DeletePerFaceAttribute(m,blocked_hf);
-  res = vcg::tri::Allocator<MyMesh>::IsValidHandle(m,ih);printf("%d\n",res);
-  res = vcg::tri::Allocator<MyMesh>::IsValidHandle(m,blocked_hf);printf("%d\n",res);
+  // you can delete an attribute by name
+  tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,"Radiosity");
+
+  // you can delete an attribute by handle
+  tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,anon_hv);
+
+  bool res;
+  res = tri::Allocator<MyMesh>::IsValidHandle(m,named_hv);         printf("Is Valid: %s\n",res?"Yes":"No");
+  res = tri::Allocator<MyMesh>::IsValidHandle(m,anon_hf); printf("Is Valid: %s\n",res?"Yes":"No");
+  res = tri::Allocator<MyMesh>::IsValidHandle(m,hm); printf("Is Valid: %s\n",res?"Yes":"No");
+  tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,ret_hv);
+  tri::Allocator<MyMesh>::DeletePerFaceAttribute(m,anon_hf);
+  res = tri::Allocator<MyMesh>::IsValidHandle(m,named_hv);         printf("Is Valid: %s\n",res?"Yes":"No");
+  res = tri::Allocator<MyMesh>::IsValidHandle(m,anon_hf); printf("Is Valid: %s\n",res?"Yes":"No");
+  res = tri::Allocator<MyMesh>::IsValidHandle(m,hm); printf("Is Valid: %s\n",res?"Yes":"No");
 }
