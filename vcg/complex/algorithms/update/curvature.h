@@ -126,7 +126,7 @@ public:
 
                     assert(tri::HasPerFaceVFAdjacency(m) && tri::HasPerVertexVFAdjacency(m));
 
-			vcg::tri::UpdateNormals<MeshType>::PerVertexNormalized(m);
+            vcg::tri::UpdateNormal<MeshType>::PerVertexNormalized(m);
 
 			VertexIterator vi;
 			for (vi =m.vert.begin(); vi !=m.vert.end(); ++vi) {
@@ -411,7 +411,7 @@ public:
 			SimpleTempData<VertContainer, AreaData> TDAreaPtr(m.vert);
 			SimpleTempData<VertContainer, typename MeshType::CoordType> TDContr(m.vert);
 
- 			vcg::tri::UpdateNormals<MeshType>::PerVertexNormalized(m);
+            vcg::tri::UpdateNormal<MeshType>::PerVertexNormalized(m);
      //Compute AreaMix in H (vale anche per K)
       for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi) if(!(*vi).IsD())
       {
