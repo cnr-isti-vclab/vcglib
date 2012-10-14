@@ -529,7 +529,6 @@ namespace vcg {
 					else
 						mesh.vert[i].ClearS();
 
-                    mesh.vert[i].missmatch=missmatch;
 				}
 			}
 
