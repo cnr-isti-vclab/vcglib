@@ -532,7 +532,7 @@ void Box(MeshType &in, const typename MeshType::BoxType & bb )
 
 // Torus
 template <class MeshType>
-void Torus(MeshType &m, float hRingRadius, float vRingRadius, int vRingDiv=12, int hRingDiv=24 )
+void Torus(MeshType &m, float hRingRadius, float vRingRadius, int hRingDiv=24, int vRingDiv=12 )
 {
   m.Clear();
   float angleStepV = (2.0f*M_PI)/vRingDiv;
