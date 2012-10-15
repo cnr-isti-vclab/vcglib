@@ -1621,13 +1621,16 @@ private:
     int sv = face::CountSharedVertex(f0,f1);
     if(sv==3) return true;
     if(sv==0) return (vcg::IntersectionTriangleTriangle<FaceType>((*f0),(*f1)));
-    //  if the faces share only a vertex, the opposite edge is tested against the face
+    //  if the faces share only a vertex, the opposite edge (as a segment) is tested against the face
+    //  to avoid degenerate cases where the two triangles have the opposite edge on a common plane
+    //  we offset the segment to test toward the shared vertex
     if(sv==1)
     {
       int i0,i1; ScalarType a,b;
       face::FindSharedVertex(f0,f1,i0,i1);
-      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f0).V1(i0)->P(),(*f0).V2(i0)->P()), *f1, a, b) )  return true;
-      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f1).V1(i1)->P(),(*f1).V2(i1)->P()), *f0, a, b) )  return true;
+      Point3f shP = f0->V(i0)->P()*0.5;
+      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f0).V1(i0)->P()*0.5+shP,(*f0).V2(i0)->P()*0.5+shP), *f1, a, b) )  return true;
+      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f1).V1(i1)->P()*0.5+shP,(*f1).V2(i1)->P()*0.5+shP), *f0, a, b) )  return true;
      }
 		return false;
 	}
