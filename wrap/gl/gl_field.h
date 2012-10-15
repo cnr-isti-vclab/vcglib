@@ -54,14 +54,15 @@ class GLField
 		GLDrawField(dir,center,size);
 	}
 	
-    static void GLDrawFaceSeams(const FaceType &f)
+    static void GLDrawFaceSeams(const FaceType &f,
+                                vcg::Point3<bool> seams)
     {
         glLineWidth(3);
 
         glBegin(GL_LINES);
         for (int i=0;i<3;i++)
         {
-            if (!f.IsSeam(i))continue;
+            if (!seams[i])continue;
 
             glVertex(f.V0(i)->P());
             glVertex(f.V1(i)->P());
@@ -83,8 +84,20 @@ class GLField
 public:
 
 	///singular vertices should be selected
-	static void GLDrawSingularities(const MeshType &mesh)
+    static void GLDrawSingularities(MeshType &mesh)
 	{
+        bool hasSingular = vcg::tri::HasPerVertexAttribute(mesh,std::string("Singular"));
+        bool hasSingularDegree = vcg::tri::HasPerVertexAttribute(mesh,std::string("SingularityDegree"));
+
+        if (!hasSingular)return;
+
+        typename MeshType::template PerVertexAttributeHandle<bool> Handle_Singular;
+        typename MeshType::template PerVertexAttributeHandle<int> Handle_SingularDegree;
+
+        Handle_Singular=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<bool>(mesh,std::string("Singular"));
+
+        Handle_SingularDegree=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<int>(mesh,std::string("SingularityDegree"));
+
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
 		glEnable(GL_COLOR_MATERIAL);
 		glDisable(GL_LIGHTING);
@@ -95,20 +108,19 @@ public:
         for (unsigned int i=0;i<mesh.vert.size();i++)
 		{
 			if (mesh.vert[i].IsD())continue;
-            if (!mesh.vert[i].IsSingular())continue;
-            int mmatch=mesh.vert[i].missmatch;
-            //bool IsSing=vcg::tri::CrossField<MeshType>::IsSingular(mesh.vert[i],mmatch);
-            //if (!IsSing)continue;
-            //assert(IsSing);
-			assert(mmatch!=0);
-			/*vcg::glColor(vcg::Color4b(255,0,0,255));*/
-			if (mmatch==1)vcg::glColor(vcg::Color4b(0,0,255,255));
-			else
-			if (mmatch==2)vcg::glColor(vcg::Color4b(255,0,0,255));
-			else
-			if (mmatch==3)vcg::glColor(vcg::Color4b(0,255,255,255));
-			
-			vcg::glVertex(mesh.vert[i].P());
+            if (!Handle_Singular[i])continue;
+            int mmatch=3;
+            if (hasSingularDegree)
+                mmatch=Handle_SingularDegree[i];
+
+
+            if (mmatch==1)vcg::glColor(vcg::Color4b(0,0,255,255));
+            else
+            if (mmatch==2)vcg::glColor(vcg::Color4b(255,0,0,255));
+            else
+            if (mmatch==3)vcg::glColor(vcg::Color4b(0,255,255,255));
+
+            vcg::glVertex(mesh.vert[i].P());
 			
 		}
 		glEnd();
@@ -145,8 +157,16 @@ public:
 		glPopAttrib();
 	}
 
-    static void GLDrawSeams(const MeshType &mesh)
+    static void GLDrawSeams(MeshType &mesh)
     {
+        bool hasSeam = vcg::tri::HasPerFaceAttribute(mesh,std::string("Seams"));
+        if(!hasSeam)return;
+        typedef typename MeshType::template PerFaceAttributeHandle<vcg::Point3<bool> > SeamsHandleType;
+        typedef typename vcg::tri::Allocator<MeshType> SeamsAllocator;
+
+        SeamsHandleType Handle_Seam;
+        Handle_Seam=SeamsAllocator::template GetPerFaceAttribute<vcg::Point3<bool> >(mesh,std::string("Seams"));
+
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glEnable(GL_COLOR_MATERIAL);
         glDisable(GL_LIGHTING);
@@ -155,7 +175,8 @@ public:
         for (unsigned int i=0;i<mesh.face.size();i++)
         {
             if (mesh.face[i].IsD())continue;
-            GLDrawFaceSeams(mesh.face[i]);
+            vcg::Point3<bool> seams=Handle_Seam[i];
+            GLDrawFaceSeams(mesh.face[i],seams);
         }
         glPopAttrib();
     }
