@@ -32,18 +32,14 @@
 #include <wrap/io_trimesh/import_ply.h>
 #include <wrap/io_trimesh/export_ply.h>
 
-using namespace vcg;
-using namespace std;
-
 class MyFace;
 class MyVertex;
 
-struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
-																				Use<MyFace>			::AsFaceType>{};
+struct MyUsedTypes : public UsedTypes<	Use<MyVertex>::AsVertexType,    Use<MyFace>::AsFaceType>{};
 
 class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
 class MyFace    : public Face < MyUsedTypes, face::VertexRef, face::Normal3f, face::BitFlags > {};
-class MyMesh    : public vcg::tri::TriMesh< vector<MyVertex>, vector<MyFace> > {};
+class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> > {};
 
 int  main(int argc, char **argv)
 {

@@ -40,8 +40,6 @@ This file contain a minimal example of the library
 // normals
 #include<vcg/complex/algorithms/update/normal.h>
 
-using namespace vcg;
-using namespace std;
 
 class MyEdge;
 class MyFace;
@@ -53,7 +51,7 @@ struct MyUsedTypes : public UsedTypes<	Use<MyVertex>   ::AsVertexType,
 class MyVertex  : public Vertex<MyUsedTypes, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
 class MyFace    : public Face< MyUsedTypes, face::FFAdj,  face::VertexRef, face::BitFlags > {};
 class MyEdge    : public Edge<MyUsedTypes>{};
-class MyMesh    : public tri::TriMesh< vector<MyVertex>, vector<MyFace> , vector<MyEdge>  > {};
+class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> , std::vector<MyEdge>  > {};
 
 int main( int argc, char **argv )
 {
@@ -71,7 +69,7 @@ int main( int argc, char **argv )
     exit(0);
   }
 
-  tri::UpdateNormal<MyMesh>::PerVertexNormalized(m);
+  vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalized(m);
   printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
   printf( "Mesh has %i vert and %i faces\n", m.VN(), m.FN() );
 
