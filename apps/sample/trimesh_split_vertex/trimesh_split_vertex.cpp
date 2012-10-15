@@ -130,13 +130,13 @@ int main(int argc, char ** argv)
 	srcMesh.face.EnableWedgeTex();
 #endif
 	vcg::tri::io::ImporterPLY<SrcMesh>::Open(srcMesh, argv[1]);
-	if ((srcMesh.vn <= 0) || (srcMesh.fn <= 0))
+	if ((srcMesh.VN() <= 0) || (srcMesh.FN() <= 0))
 	{
 		printf("invalid source mesh file.\n");
 		return -1;
 	}
-	const int srcVN = srcMesh.vn;
-	const int srcFN = srcMesh.fn;
+	const int srcVN = srcMesh.VN();
+	const int srcFN = srcMesh.FN();
 	printf("source mesh succesfully loaded.\n");
 
 #ifdef TEST_IN_PLACE_SPLIT
@@ -154,8 +154,8 @@ int main(int argc, char ** argv)
 		return -1;
 	}
 	printf("destination mesh succesfully saved.\n");
-	const int dstVN = dstMesh.vn;
-	const int dstFN = dstMesh.fn;
+	const int dstVN = dstMesh.VN();
+	const int dstFN = dstMesh.FN();
 
 	printf("\n");
 	printf("statistics:\n");

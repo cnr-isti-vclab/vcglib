@@ -64,7 +64,7 @@ int main( int argc, char **argv )
     return -1;
   }
 
-  printf("Mesh has %i vn %i fn\n",m.vn,m.fn);
+  printf("Mesh has %i vn %i fn\n",m.VN(),m.FN());
   tri::PoissonSolver<MyMesh> PS(m);
 
   if(!PS.IsFeaseable())

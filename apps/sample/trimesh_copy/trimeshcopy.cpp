@@ -101,16 +101,16 @@ bool UnitTest_Append(const char *filename1, const char *filename2)
       exit(-1);
   }
   int endOpen = clock();
-  std::cout << "mesh loaded in " << float(endOpen-startOpen)/CLOCKS_PER_SEC << " msecs. Verts: " << mr.vn << " Faces: " << mr.fn << "\n";
+  std::cout << "mesh loaded in " << float(endOpen-startOpen)/CLOCKS_PER_SEC << " msecs. Verts: " << mr.VN() << " Faces: " << mr.FN() << "\n";
 
   int startCopy = clock();
   vcg::tri::Append<MeshType,MeshType>::Mesh(ml,mr,false,true);
   int endCopy = clock();
   std::cout << "mesh copied in " << float(endCopy-startCopy)/CLOCKS_PER_SEC << " msecs." << std::endl;
 
-  assert(ml.vn==mr.vn);
+  assert(ml.VN()==mr.VN());
   assert(ml.en==mr.en);
-  assert(ml.fn==mr.fn);
+  assert(ml.FN()==mr.FN());
 
   int startSave = clock();
   vcg::tri::io::ExporterPLY<MeshType>::Save(ml,filename2);

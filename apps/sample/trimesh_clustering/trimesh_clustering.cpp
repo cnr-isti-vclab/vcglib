@@ -90,7 +90,7 @@ int  main(int argc, char **argv)
 		}
   vcg::tri::UpdateBounding<MyMesh>::Box(m);
   vcg::tri::UpdateNormal<MyMesh>::PerFace(m);
-  printf("Input mesh  vn:%i fn:%i\n",m.vn,m.fn);
+  printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
   vcg::tri::Clustering<MyMesh, vcg::tri::AverageColorCell<MyMesh> > Grid;
   Grid.DuplicateFaceParam=DupFace;
   Grid.Init(m.bbox,CellNum,CellSize);
@@ -104,7 +104,7 @@ int  main(int argc, char **argv)
   int t1=clock();
   Grid.ExtractMesh(m);
   int t2=clock();
-  printf("Output mesh vn:%i fn:%i\n",m.vn,m.fn);
+  printf("Output mesh vn:%i fn:%i\n",m.VN(),m.FN());
   printf("Simplified in :%i msec (%i+%i)\n",t2-t0,t1-t0,t2-t1);
 	
   vcg::tri::io::PlyInfo pi;

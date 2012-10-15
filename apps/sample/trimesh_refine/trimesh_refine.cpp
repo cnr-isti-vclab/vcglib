@@ -96,7 +96,7 @@ int  main(int argc, char **argv)
   tri::UpdateTopology<MyMesh>::FaceFace(m);
   tri::UpdateFlags<MyMesh>::FaceBorderFromFF(m);
   tri::UpdateNormal<MyMesh>::PerVertexNormalized(m);
-  printf("Input mesh  vn:%i fn:%i\n",m.vn,m.fn);
+  printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
 	
   n_steps=atoi(argv[3]);
 	
@@ -124,7 +124,7 @@ int  main(int argc, char **argv)
     }					
   }
   
-  printf("Output mesh vn:%i fn:%i\n",m.vn,m.fn);
+  printf("Output mesh vn:%i fn:%i\n",m.VN(),m.FN());
 
   vcg::tri::io::PlyInfo pi;
   pi.mask|=vcg::tri::io::Mask::IOM_BITPOLYGONAL;

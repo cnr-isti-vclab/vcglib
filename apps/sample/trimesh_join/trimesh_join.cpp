@@ -97,12 +97,12 @@ int main(int argc,char **argv )
         printf("Error reading file  %s\n",argv[1]);
 			  exit(0);
 		  }
-      printf("Input mesh %3i           vn:%9i fn:%9i\n",i, mr.vn, mr.fn);
+      printf("Input mesh %3i           vn:%9i fn:%9i\n",i, mr.VN(), mr.FN());
       if(ClipFlag) 
       { 
         tri::GenericVertexInterpolator<MyMesh> interp(mr);
         tri::TriMeshClipper<MyMesh>::Box(ClipBB,interp,mr);
-        printf("              clipped to vn:%9i fn:%9i\n", mr.vn, mr.fn);
+        printf("              clipped to vn:%9i fn:%9i\n", mr.VN(), mr.FN());
       }
       tri::UpdateBounding<MyMesh>::Box(mr);
       TotBB.Add(mr.bbox);
@@ -111,7 +111,7 @@ int main(int argc,char **argv )
   		++i;
 		}
   
-  printf("Output mesh vn:%i fn:%i\n",ml.vn,ml.fn);
+  printf("Output mesh vn:%i fn:%i\n",ml.VN(),ml.FN());
 	
   tri::io::ExporterPLY<MyMesh>::Save(ml,"joined.ply");
   int dv=tri::Clean<MyMesh>::RemoveDuplicateVertex(ml); 

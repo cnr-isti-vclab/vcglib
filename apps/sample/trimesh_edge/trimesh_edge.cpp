@@ -201,7 +201,7 @@ int main( int argc, char **argv )
     exit(0);
   }
   tri::UpdateBounding<MyMesh>::Box(m);
-  printf("Input mesh  vn:%i fn:%i\n",m.vn,m.fn);
+  printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
   srand(time(0));
 
   Plane3f slicingPlane;
@@ -210,7 +210,7 @@ int main( int argc, char **argv )
   vcg::IntersectionPlaneMesh<MyMesh, MyMesh, float>(m, slicingPlane, em );
   tri::Clean<MyMesh>::RemoveDuplicateVertex(em);
   vcg::tri::CapEdgeMesh(em,slice);
-  printf("Slice  mesh has %i vert and %i faces\n", slice.vn, slice.fn );
+  printf("Slice  mesh has %i vert and %i faces\n", slice.VN(), slice.FN() );
 
   MyMesh A,B;
   SplitMesh(m,A,B,slicingPlane);
@@ -218,7 +218,7 @@ int main( int argc, char **argv )
   tri::UpdatePosition<MyMesh>::Translate(B,-slicingPlane.Direction()*m.bbox.Diag()/80.0);
   tri::Append<MyMesh,MyMesh>::Mesh(sliced,A);
   tri::Append<MyMesh,MyMesh>::Mesh(sliced,B);
-  printf("Sliced mesh has %i vert and %i faces\n", sliced.vn, sliced.fn );
+  printf("Sliced mesh has %i vert and %i faces\n", sliced.VN(), sliced.FN() );
 
   tri::io::ExporterPLY<MyMesh>::Save(slice,"slice.ply",false);
   tri::io::ExporterPLY<MyMesh>::Save(sliced,"sliced.ply",false);

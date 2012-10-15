@@ -66,10 +66,10 @@ int main()
    named_hv[i]   = 1.0f;  //                or an integer index
   }
 
-  // you can query if an attribute is present or not
+  // query if an attribute is present or not
   bool hasRadiosity = tri::HasPerVertexAttribute(m,"Radiosity");
 
-  // Once created with AddPerVertexAttribute, an handle to the attribute can be obtained as follows 
+  // obtain another handle of a previously attribute
   MyMesh::PerVertexAttributeHandle<float> ret_hv = tri::Allocator<MyMesh>::GetPerVertexAttribute<float>(m,"Radiosity");
 
   // you can also have PerMesh attributes
@@ -78,10 +78,10 @@ int main()
   // PerMesh attributes are accessed directly using the handle itself
   hm() = 10;
 
-  // you can delete an attribute by name
+  // delete an attribute by name
   tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,"Radiosity");
 
-  // you can delete an attribute by handle
+  // delete an attribute by handle
   tri::Allocator<MyMesh>::DeletePerVertexAttribute(m,anon_hv);
 
   bool res;

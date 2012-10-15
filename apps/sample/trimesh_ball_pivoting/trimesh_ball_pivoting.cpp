@@ -93,7 +93,7 @@ int  main(int argc, char **argv)
 		}
   vcg::tri::UpdateBounding<MyMesh>::Box(m);
   vcg::tri::UpdateNormal<MyMesh>::PerFace(m);
-  printf("Input mesh  vn:%i fn:%i\n",m.vn,m.fn);
+  printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
 
   int t0=clock();
   // Initialization
@@ -106,7 +106,7 @@ int  main(int argc, char **argv)
 
   int t2=clock();
 
-  printf("Output mesh vn:%i fn:%i\n",m.vn,m.fn);
+  printf("Output mesh vn:%i fn:%i\n",m.VN(),m.FN());
   printf("Created in :%i msec (%i+%i)\n",t2-t0,t1-t0,t2-t1);
 	
   vcg::tri::io::PlyInfo pi;

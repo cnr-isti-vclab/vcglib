@@ -120,7 +120,7 @@ bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc, std:
   TriMeshGrid TRGrid;
   if(useFaceNumForGrid)
   {
-    TRGrid.Set(mr.face.begin(),mr.face.end(),mr.fn*2);
+    TRGrid.Set(mr.face.begin(),mr.face.end(),mr.FN()*2);
   }
   else
   {

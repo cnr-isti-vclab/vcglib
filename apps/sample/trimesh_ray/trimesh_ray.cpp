@@ -148,7 +148,7 @@ int main(int argc,char ** argv)
 
   printf("Initializated in %i msec\n",t1-t0);
   printf("Completed in %i msec\n",t2-t1);
-  printf("Shoot %i rays and found %i intersections\n",m.vn*samplePerVert,totRay);
+  printf("Shoot %i rays and found %i intersections\n",m.VN()*samplePerVert,totRay);
 
 return 0;
 }

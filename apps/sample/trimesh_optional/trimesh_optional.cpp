@@ -20,10 +20,8 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#include<vcg/complex/complex.h>
 
-#include<vcg/simplex/vertex/component_ocf.h>
-#include<vcg/simplex/face/component_ocf.h>
+#include<vcg/complex/complex.h>
 
 #include<vcg/complex/algorithms/create/platonic.h>
 #include<vcg/complex/algorithms/update/topology.h>
@@ -65,12 +63,11 @@ int main(int , char **)
   tri::Tetrahedron(cm);
   tri::Tetrahedron(cmof);
  
-  printf("Generated mesh has %i vertices and %i triangular faces\n",cm.vn,cm.fn);
+  printf("Generated mesh has %i vertices and %i triangular faces\n",cm.VN(),cm.FN());
   
-  /// Calculates both vertex and face normals.
-  /// The normal of a vertex v is the weigthed average of the normals of the faces incident on v.
-  /// normals are not normalized
+  assert(tri::HasFFAdjacency(cmof) == false);
   cmof.face.EnableFFAdjacency();
+  assert(tri::HasFFAdjacency(cmof) == true);
 
   tri::UpdateTopology<CMesh   >::FaceFace(cm);
   tri::UpdateTopology<CMeshOcf>::FaceFace(cmof);
@@ -78,19 +75,22 @@ int main(int , char **)
   tri::UpdateFlags<CMesh   >::FaceBorderFromFF(cm);
   tri::UpdateFlags<CMeshOcf>::FaceBorderFromFF(cmof);
 
-  tri::UpdateNormal<CMesh   >::PerVertexNormalized(cm);
-  tri::UpdateNormal<CMeshOcf>::PerVertexNormalized(cmof);
+  tri::UpdateNormal<CMesh   >::PerVertexPerFace(cm);
+  cmof.face.EnableNormal();  // if you remove this the next line will throw an exception for a missing 'normal' component
+  tri::UpdateNormal<CMeshOcf>::PerVertexPerFace(cmof);
 
   printf("Normal of face 0 is %f %f %f\n\n",cm.face[0].N()[0],cm.face[0].N()[1],cm.face[0].N()[2]);
-  int t0=0,t1=0;
-  while(t1-t0<200)
+  int t0=0,t1=0,t2=0;
+  while(float(t1-t0)/CLOCKS_PER_SEC < 0.5)
   {
     t0=clock();
     tri::Refine(cm,tri::MidPointButterfly<CMesh>(cm),0);
     t1=clock();
     tri::Refine(cmof,tri::MidPointButterfly<CMeshOcf>(cmof),0);
+    t2=clock();
   }
 
+  printf("Last Iteration: Refined a tetra up to a mesh of %i faces in %5.2f %5.2f sec\n",cm.FN(),float(t1-t0)/CLOCKS_PER_SEC,float(t2-t1)/CLOCKS_PER_SEC);
 	cmof.vert.EnableRadius();
 	cmof.vert.EnableQuality();
 
@@ -118,7 +118,6 @@ int main(int , char **)
         {
           float q =vi->Q();
           float r =vi->R();
-//          int ii = vcg::tri::Index(cmof, *vi);
           assert(q==r);
         }
       }

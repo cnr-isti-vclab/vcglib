@@ -22,7 +22,8 @@
 ****************************************************************************/
 #include<vcg/complex/complex.h>
 
-#include<wrap/io_trimesh/import_off.h>
+#include<wrap/io_trimesh/export_off.h>
+#include <vcg/complex/algorithms/create/platonic.h>
 
 #include<vcg/complex/algorithms/update/curvature.h>
 #include<vcg/complex/algorithms/update/normal.h>
@@ -44,26 +45,16 @@ class MyMesh    : public tri::TriMesh< vector<MyVertex>, vector<MyFace> , vector
 
 int main( int argc, char **argv )
 {
-  if(argc<2)
-  {
-    printf("Usage trimesh_base <meshfilename.obj>\n");
-    return -1;
-  }
-
   MyMesh m;
-
-  if(tri::io::ImporterOFF<MyMesh>::Open(m,argv[1])!=0)
-  {
-    printf("Error reading file  %s\n",argv[1]);
-    exit(0);
-  }
+  tri::Torus(m,30,10);
+  tri::io::ExporterOFF<MyMesh>::Save(m,"torus.off");
 
   tri::UpdateTopology<MyMesh>::FaceFace(m);
   tri::UpdateCurvature<MyMesh>::PerVertex(m);
-  tri::UpdateCurvature<MyMesh>::MeanAndGaussian(m);
-  tri::UpdateCurvature<MyMesh>::PrincipalDirections(m);
+//  tri::UpdateCurvature<MyMesh>::MeanAndGaussian(m);
+//  tri::UpdateCurvature<MyMesh>::PrincipalDirections(m);
   tri::UpdateCurvature<MyMesh>::PrincipalDirectionsNormalCycle(m);
-  tri::UpdateCurvature<MyMesh>::PrincipalDirectionsPCA(m,m.bbox.Diag()/100);
+//  tri::UpdateCurvature<MyMesh>::PrincipalDirectionsPCA(m,m.bbox.Diag()/100);
 
   tri::UpdateNormal<MyMesh>::PerVertexNormalized(m);
   printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
