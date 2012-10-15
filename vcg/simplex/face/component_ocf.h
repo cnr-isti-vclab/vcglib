@@ -31,11 +31,9 @@ Mainly the trick here is to store a base pointer in each simplex...
 ****************************************************************************/
 #ifndef __VCG_FACE_PLUS_COMPONENT_OCF
 #define __VCG_FACE_PLUS_COMPONENT_OCF
-
-#include <vcg/simplex/face/component.h>
-#include <vector>
-#include <limits>
-
+#ifndef __VCG_MESH
+#error "This file should not be included alone. It is automatically included by complex.h"
+#endif
 
 namespace vcg {
   namespace face {
@@ -50,17 +48,18 @@ class vector_ocf: public std::vector<VALUE_TYPE> {
 	typedef typename vector_ocf<VALUE_TYPE>::iterator ThisTypeIterator;
   
 public:
-	vector_ocf():std::vector<VALUE_TYPE>(){
-  ColorEnabled=false;
-	QualityEnabled=false;
-	MarkEnabled=false;
-  NormalEnabled=false;
-  CurvatureDirEnabled = false;
-  WedgeTexEnabled=false;
-  VFAdjacencyEnabled=false;
-  FFAdjacencyEnabled=false;
-  WedgeColorEnabled=false;
-  WedgeNormalEnabled=false;
+  vector_ocf():std::vector<VALUE_TYPE>()
+  {
+    ColorEnabled=false;
+    CurvatureDirEnabled = false;
+    MarkEnabled=false;
+    NormalEnabled=false;
+    QualityEnabled=false;
+    WedgeTexEnabled=false;
+    WedgeColorEnabled=false;
+    WedgeNormalEnabled=false;
+    VFAdjacencyEnabled=false;
+    FFAdjacencyEnabled=false;
   }
   
 // Auxiliary types to build internal vectors
@@ -125,9 +124,10 @@ public:
 };
 
 
-  // override di tutte le funzioni che possono spostare 
-	// l'allocazione in memoria del container
-	void push_back(const VALUE_TYPE & v)
+////////////////////////////////////////
+// All the standard methods of std::vector that can change the reallocation are
+// redefined in order to manage the additional data.
+    void push_back(const VALUE_TYPE & v)
   {
     BaseType::push_back(v);
 	BaseType::back()._ovp = this;
@@ -375,27 +375,27 @@ void DisableWedgeNormal() {
 }
 
 public:
-  std::vector<float> QV;
   std::vector<typename VALUE_TYPE::ColorType> CV;
+  std::vector<typename VALUE_TYPE::CurvatureDirType> CDV;
   std::vector<int> MV;
   std::vector<typename VALUE_TYPE::NormalType> NV;
-  std::vector<typename VALUE_TYPE::CurvatureDirType> CDV;
-  std::vector<struct AdjTypePack> AV;
-  std::vector<struct AdjTypePack> AF;
-  std::vector<class WedgeTexTypePack> WTV;
+  std::vector<float> QV;
   std::vector<class WedgeColorTypePack> WCV;
   std::vector<class WedgeNormalTypePack> WNV;
+  std::vector<class WedgeTexTypePack> WTV;
+  std::vector<struct AdjTypePack> AV;
+  std::vector<struct AdjTypePack> AF;
 
-  bool QualityEnabled;
   bool ColorEnabled;
+  bool CurvatureDirEnabled;
   bool MarkEnabled;
   bool NormalEnabled;
-  bool CurvatureDirEnabled;
+  bool QualityEnabled;
+  bool WedgeColorEnabled;
+  bool WedgeNormalEnabled;
   bool WedgeTexEnabled;
   bool VFAdjacencyEnabled;
   bool FFAdjacencyEnabled;
-  bool WedgeColorEnabled;
-  bool WedgeNormalEnabled;
 }; // end class vector_ocf
 
 
@@ -824,6 +824,12 @@ public:
   {
     if(FaceType::HasCurvatureDirOcf()) return fv.IsCurvatureDirEnabled();
     else return FaceType::HasCurvatureDir();
+  }
+  template < class FaceType >
+  bool FaceVectorHasPerFaceNormal(const face::vector_ocf<FaceType> &fv)
+  {
+    if(FaceType::HasFaceNormalOcf()) return fv.IsNormalEnabled();
+    else return FaceType::HasFaceNormal();
   }
   template < class FaceType >
   void ReorderFace( std::vector<size_t>  &newFaceIndex, face::vector_ocf< FaceType > &faceVec)

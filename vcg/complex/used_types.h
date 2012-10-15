@@ -11,8 +11,10 @@
 #include <vcg/container/derivation_chain.h>
 #include <vcg/complex/all_types.h>
 #include <vcg/simplex/vertex/component.h>
+#include <vcg/simplex/vertex/component_ocf.h>
 #include <vcg/simplex/vertex/base.h>
 #include <vcg/simplex/face/component.h>
+#include <vcg/simplex/face/component_ocf.h>
 #include <vcg/simplex/face/component_polygon.h>
 #include <vcg/simplex/face/base.h>
 #include <vcg/simplex/edge/component.h>

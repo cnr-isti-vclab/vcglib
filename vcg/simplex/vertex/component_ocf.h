@@ -20,65 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-	History
-
-$Log: not supported by cvs2svn $
-Revision 1.16  2008/04/03 23:15:40  cignoni
-added optional mark and cleaned up some nasty type bugs.
-
-Revision 1.15  2008/03/17 11:39:15  ganovelli
-added curvature and curvatruredir (compiled .net 2005 and gcc)
-
-Revision 1.14  2008/03/11 09:22:07  cignoni
-Completed the garbage collecting functions CompactVertexVector and CompactFaceVector.
-
-Revision 1.13  2008/02/05 20:42:43  cignoni
-Other small typos
-
-Revision 1.12  2008/02/04 21:26:49  ganovelli
-added ImportData which imports all local attributes into vertexplus and faceplus.
-A local attribute is everything (N(), C(), Q()....) except pointers to other simplices
-(i.e. FFAdj, VFAdj, VertexRef) which are set to NULL.
-Added some function for const attributes
-
-Revision 1.11  2007/12/11 18:25:31  cignoni
-added missing include limits
-
-Revision 1.10  2007/12/11 11:36:03  cignoni
-Added the CompactVertexVector garbage collecting function.
-
-Revision 1.9  2006/12/11 23:42:00  ganovelli
-bug Index()() instead of Index()
-
-Revision 1.8  2006/12/04 11:17:42  ganovelli
-added forward declaration of TriMesh
-
-Revision 1.7  2006/11/07 17:22:52  cignoni
-many gcc compiling issues
-
-Revision 1.6  2006/11/07 15:13:57  zifnab1974
-Necessary changes for compilation with gcc 3.4.6. Especially the hash function is a problem
-
-Revision 1.5  2006/11/07 11:29:24  cignoni
-Corrected some errors in the reflections Has*** functions
-
-Revision 1.4  2006/10/31 16:02:59  ganovelli
-vesione 2005 compliant
-
-Revision 1.3  2006/02/28 11:59:55  ponchio
-g++ compliance:
-
-begin() -> (*this).begin() and for end(), size(), Base(), Index()
-
-Revision 1.2  2005/12/12 11:17:32  cignoni
-Corrected update function, now only the needed simplexes should be updated.
-
-Revision 1.1  2005/10/14 15:07:59  cignoni
-First Really Working version
-
-
-****************************************************************************/
 
 /*
 Note
@@ -90,11 +31,9 @@ Mainly the trick here is to store a base pointer in each simplex...
 ****************************************************************************/
 #ifndef __VCG_VERTEX_PLUS_COMPONENT_OCF
 #define __VCG_VERTEX_PLUS_COMPONENT_OCF
-
-#include <vcg/simplex/vertex/component.h>
-
-#include <vector>
-#include <limits>
+#ifndef __VCG_MESH
+#error "This file should not be included alone. It is automatically included by complex.h"
+#endif
 
 namespace vcg {
 	namespace vertex {
@@ -108,21 +47,23 @@ class vector_ocf: public std::vector<VALUE_TYPE> {
 	typedef typename vector_ocf<VALUE_TYPE>::iterator ThisTypeIterator;
 
 public:
-	vector_ocf():std::vector<VALUE_TYPE>(){
-		ColorEnabled = false;
+  vector_ocf():std::vector<VALUE_TYPE>()
+  {
+    ColorEnabled = false;
     CurvatureEnabled = false;
     CurvatureDirEnabled = false;
     MarkEnabled = false;
-		NormalEnabled = false;
+    NormalEnabled = false;
     QualityEnabled = false;
     RadiusEnabled = false;
     TexCoordEnabled = false;
-		VFAdjacencyEnabled = false;
-	}
+    VFAdjacencyEnabled = false;
+  }
 
-	// override di tutte le funzioni che possono spostare
-	// l'allocazione in memoria del container
-	void push_back(const VALUE_TYPE & v)
+////////////////////////////////////////
+// All the standard methods of std::vector that can change the reallocation are
+// redefined in order to manage the additional data.
+  void push_back(const VALUE_TYPE & v)
 	{
 		BaseType::push_back(v);
 		BaseType::back()._ovp = this;
@@ -135,7 +76,9 @@ public:
 		if (CurvatureDirEnabled)  CuDV.push_back(typename VALUE_TYPE::CurvatureDirType());
 		if (RadiusEnabled)        RadiusV.push_back(typename VALUE_TYPE::RadiusType());
 	}
+
 	void pop_back();
+
 	void resize(const unsigned int & _size)
 	{
 		const unsigned int oldsize = BaseType::size();
@@ -304,21 +247,21 @@ struct VFAdjType {
 public:
   std::vector<typename VALUE_TYPE::ColorType> CV;
   std::vector<typename VALUE_TYPE::CurvatureType> CuV;
-	std::vector<typename VALUE_TYPE::CurvatureDirType> CuDV;
+  std::vector<typename VALUE_TYPE::CurvatureDirType> CuDV;
   std::vector<int> MV;
   std::vector<typename VALUE_TYPE::NormalType> NV;
   std::vector<typename VALUE_TYPE::QualityType> QV;
-	std::vector<typename VALUE_TYPE::RadiusType> RadiusV;
-	std::vector<typename VALUE_TYPE::TexCoordType> TV;
-	std::vector<struct VFAdjType> AV;
+  std::vector<typename VALUE_TYPE::RadiusType> RadiusV;
+  std::vector<typename VALUE_TYPE::TexCoordType> TV;
+  std::vector<struct VFAdjType> AV;
 
   bool ColorEnabled;
-	bool CurvatureEnabled;
-	bool CurvatureDirEnabled;
+  bool CurvatureEnabled;
+  bool CurvatureDirEnabled;
   bool MarkEnabled;
   bool NormalEnabled;
   bool QualityEnabled;
-	bool RadiusEnabled;
+  bool RadiusEnabled;
   bool TexCoordEnabled;
   bool VFAdjacencyEnabled;
 };
