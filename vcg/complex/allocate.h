@@ -30,20 +30,20 @@
 
 namespace vcg {
 
-	class PointerToAttribute
-	{
-	public:
-		SimpleTempDataBase * _handle;		// pointer to the SimpleTempData that stores the attribute
-		std::string _name;					// name of the attribute
-		int _sizeof;						// size of the attribute type (used only with VMI loading)
-		int _padding;						// padding 	(used only with VMI loading)
+class PointerToAttribute
+{
+public:
+    SimpleTempDataBase * _handle;		// pointer to the SimpleTempData that stores the attribute
+    std::string _name;					// name of the attribute
+    int _sizeof;						// size of the attribute type (used only with VMI loading)
+    int _padding;						// padding 	(used only with VMI loading)
 
-		int n_attr;							// unique ID of the attribute
+    int n_attr;							// unique ID of the attribute
 
-		void Resize(const int & sz){((SimpleTempDataBase *)_handle)->Resize(sz);}
-		void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase *)_handle)->Reorder(newVertIndex);}
-		bool operator<(const  PointerToAttribute    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
-	};
+	void Resize(const int & sz){((SimpleTempDataBase *)_handle)->Resize(sz);}
+	void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase *)_handle)->Reorder(newVertIndex);}
+	bool operator<(const  PointerToAttribute    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
+};
 
 	namespace tri {
 		/** \addtogroup trimesh */
@@ -81,14 +81,18 @@ namespace vcg {
 		}
 
 		/*@{*/
-		/// Class to safely add vertexes and faces to a mesh updating all the involved pointers.
-		/// It provides static memeber to add either vertex or faces to a trimesh.
-		template <class AllocateMeshType>
+		/*!
+		\brief  Class to safely add and delete elements in a mesh.
+
+        Adding elements to a mesh, like faces and vertices can involve the reallocation of the vectors of the involved elements.
+        This class provide the only safe methods to add elements.
+        It also provide an accessory class vcg::tri::PointerUpdater for updating pointers to mesh elements that are kept by the user.
+        */
+        template <class MeshType>
 		class Allocator
 		{
 
 		public:
-			typedef AllocateMeshType MeshType;
 			typedef typename MeshType::VertexType     VertexType;
 			typedef typename MeshType::VertexPointer  VertexPointer;
 			typedef typename MeshType::VertexIterator VertexIterator;
@@ -115,7 +119,10 @@ namespace vcg {
 			typedef typename std::set<PointerToAttribute>::const_iterator AttrConstIterator;
 			typedef typename std::set<PointerToAttribute >::iterator PAIte;
 
-			/** This class is used when allocating new vertexes and faces to update 
+			/*!
+			\brief Accessory class to update pointers after eventual reallocation caused by adding elements.
+
+			This class is used when allocating new vertexes and faces to update
 			the pointers that can be changed when resizing the involved vectors of vertex or faces.
 			It can also be used to prevent any update of the various mesh fields
 			(e.g. in case you are building all the connections by hand as in a importer);
@@ -148,12 +155,14 @@ namespace vcg {
 			};
 
 
-			/** Function to add n vertices to the mesh. The second parameter hold a vector of 
-			pointers to pointer to elements of the mesh that should be updated after a 
-			possible vector realloc. 
-			@param n Il numero di vertici che si vuole aggiungere alla mesh.
-			@param local_var Vettore di variabili locali che rappresentano puntatori a vertici. 
-			restituisce l'iteratore al primo elemento aggiunto.
+			/** \brief Add n vertices to the mesh.
+			Function to add n vertices to the mesh.
+			The elements are added always to the end of the vector. No attempt of reusing previously deleted element is done.
+			\sa PointerUpdater
+			\param m the mesh to be modified
+			\param n the number of elements to be added
+			\param pu  a PointerUpdater initialized so that it can be used to update pointers to vertices that could have become invalid after this adding.
+			\retval the iterator to the first element added.
 			*/
 			static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointer> &pu)
 			{
@@ -209,8 +218,7 @@ namespace vcg {
 				return last;// deve restituire l'iteratore alla prima faccia aggiunta;
 			}
 
-			/** Function to add n vertices to the mesh.
-			First wrapper, with no parameters
+			/** \brief Wrapper to AddVertices(); no PointerUpdater
 			*/
 			static VertexIterator AddVertices(MeshType &m, int n)
 			{
@@ -218,8 +226,7 @@ namespace vcg {
 				return AddVertices(m, n,pu);
 			}
 
-			/** Function to add n vertices to the mesh.
-			Second Wrapper, with a vector of vertex pointers to be updated.
+			/** \brief Wrapper to AddVertices() no PointerUpdater but a vector of VertexPointer pointers to be updated
 			*/
 			static VertexIterator AddVertices(MeshType &m, int n, std::vector<VertexPointer *> &local_vec)
 			{
@@ -233,14 +240,16 @@ namespace vcg {
 			}
 
       /* ++++++++++ edges +++++++++++++ */
-			/** Function to add n edges to the mesh. The second parameter hold a vector of 
-			pointers to pointer to elements of the mesh that should be updated after a 
-			possible vector realloc. 
-			@param n number of edges to be added
-			@param local_var vector of pointers to pointers to edges to be updated.
-			return an iterator to the first element added
-			*/
-			static EdgeIterator AddEdges(MeshType &m,int n, PointerUpdater<EdgePointer> &pu)
+            /** \brief Add n edges to the mesh.
+            Function to add n edges to the mesh.
+            The elements are added always to the end of the vector. No attempt of reusing previously deleted element is done.
+            \sa PointerUpdater
+            \param m the mesh to be modified
+            \param n the number of elements to be added
+            \param pu  a PointerUpdater initialized so that it can be used to update pointers to edges that could have become invalid after this adding.
+            \retval the iterator to the first element added.
+            */
+            static EdgeIterator AddEdges(MeshType &m,int n, PointerUpdater<EdgePointer> &pu)
 			{
 				EdgeIterator last;
 				if(n == 0) return m.edge.end();
@@ -896,7 +905,8 @@ namespace vcg {
 
 public:
 
-	/// Per Vertex Attributes
+	/*! \brief Check if an handle to a Per-Vertex Attribute is valid
+	*/
 	template <class ATTR_TYPE>
 	static 
 	bool IsValidHandle( MeshType & m,  const typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & a){
@@ -906,7 +916,11 @@ public:
 		return false;
 	}
 
-	template <class ATTR_TYPE> 
+	/*! \brief Add a Per-Vertex Attribute of the given ATTR_TYPE with the given name.
+
+	  No attribute with that name must exists (even of different type)
+	*/
+	template <class ATTR_TYPE>
 	static
 	typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
 	 AddPerVertexAttribute( MeshType & m, std::string name){
@@ -928,16 +942,18 @@ public:
 	 }
 
 	template <class ATTR_TYPE> 
-	static
-	typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
+	static typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
 	 AddPerVertexAttribute( MeshType & m){
 		 return AddPerVertexAttribute<ATTR_TYPE>(m,std::string(""));
 	 }
 
+	/*! \brief Try to retrieve an handle to an attribute with a given name and ATTR_TYPE
+	  \returns a invalid handle if no attribute with that name and type exists.
+	  */
 	template <class ATTR_TYPE> 
-	static
-		typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
-	GetPerVertexAttribute( MeshType & m, const std::string & name){
+	static typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
+	GetPerVertexAttribute( MeshType & m, const std::string & name)
+	{
 	  assert(!name.empty());
 	  PointerToAttribute h1; h1._name = name;
 	  typename std::set<PointerToAttribute > :: iterator i;
