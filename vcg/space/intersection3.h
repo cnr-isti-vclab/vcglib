@@ -596,7 +596,7 @@ bool IntersectionSegmentTriangle( const vcg::Segment3<ScalarType> & seg,
   line.Set(seg.P0(),dir);
 	ScalarType orig_dist;
   if(IntersectionLineTriangle<ScalarType>(line,vert0,vert1,vert2,orig_dist,a,b))
-    return (orig_dist<=length);
+    return (orig_dist>=0 && orig_dist<=length);
   return false;
 }
 /**
