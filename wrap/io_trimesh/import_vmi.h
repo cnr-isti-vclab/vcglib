@@ -35,8 +35,6 @@
 #ifndef __VCGLIB_IMPORT_VMI
 #define __VCGLIB_IMPORT_VMI
 
-#include <vcg/simplex/vertex/component_ocf.h>
-#include <vcg/simplex/face/component_ocf.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <wrap/callback.h>
 /*
