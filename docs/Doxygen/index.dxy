@@ -28,12 +28,13 @@ Documentation
 Start from the following pages for basic concepts and needs.
 - \subpage install "Installing the VCG Library"
 - \subpage basic_concepts "Basic Concepts"
+- \subpage flags "Bit Flags on mesh elements"
 - \subpage adjacency "Adjacency and Topology"
 - \subpage allocation "Creating and destroying elements"
 - \subpage attributes "Adding user defined attributes to mesh elements"
 - \subpage fileformat "Loading and saving meshes"
 - \subpage shot "Camera and shot abstraction for managing views"
-- \subpage examples "Short Examples showing various features of the lib"
+- \ref code_sample "Short Examples showing various features of the lib"
 
 Notable Applications
 ------- 

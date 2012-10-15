@@ -44,6 +44,10 @@ This module contains the documentation for the types and the functions used for 
 //@}
 
 /** \defgroup code_sample Code Examples
-This module contains a number of small examples to explain the library features
+\brief This module contains a number of small examples to explain the library features
+
+All the example here reported are located under vcglib/apps/sample
+Each sample has a minimal '.pro' file
+
 */
 

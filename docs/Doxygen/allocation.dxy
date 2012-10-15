@@ -1,4 +1,4 @@
-/** \page allocation 
+/** \page allocation Allocating and DeAllocating mesh elements
 Creating elements
 =================
 To create a simple single triangle mesh or to add elements to an existing mesh you should use the AddVertices and AddFaces functions, elements are added at the end of the mesh. These functions returns a pointer to the first allocated element.
