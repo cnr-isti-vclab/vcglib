@@ -539,14 +539,14 @@ void Torus(MeshType &m, float hRingRadius, float vRingRadius, int hRingDiv=24, i
   float angleStepH = (2.0f*M_PI)/hRingDiv;
 
   Allocator<MeshType>::AddVertices(m,(vRingDiv+1)*(hRingDiv+1));
-  for(float i=0;i<hRingDiv+1;++i)
+  for(int i=0;i<hRingDiv+1;++i)
   {
-    Matrix44f RotM; RotM.SetRotateRad(i*angleStepH,Point3f(0,1,0));
-    for(float j=0;j<vRingDiv+1;++j)
+    Matrix44f RotM; RotM.SetRotateRad(float(i%hRingDiv)*angleStepH,Point3f(0,1,0));
+    for(int j=0;j<vRingDiv+1;++j)
     {
       Point3f p;
-      p[0]= vRingRadius*cos(j*angleStepV) + hRingRadius;
-      p[1]= vRingRadius*sin(j*angleStepV);
+      p[0]= vRingRadius*cos(float(j%vRingDiv)*angleStepV) + hRingRadius;
+      p[1]= vRingRadius*sin(float(j%vRingDiv)*angleStepV);
       p[2] = 0;
 
       m.vert[i*(vRingDiv+1)+j].P() = RotM*p;
@@ -554,6 +554,8 @@ void Torus(MeshType &m, float hRingRadius, float vRingRadius, int hRingDiv=24, i
   }
   FaceGrid(m,vRingDiv+1,hRingDiv+1);
   tri::Clean<MeshType>::RemoveDuplicateVertex(m);
+  tri::Allocator<MeshType>::CompactVertexVector(m);
+
 }
 
 // this function build a mesh starting from a vector of generic coords (objects having a triple of float at their beginning)
