@@ -42,70 +42,6 @@ public:
   // Init
   MIQ(MeshType &_mesh):mesh(_mesh),PSolver(mesh){};
 
-  // Load a mesh from file
-  bool LoadMesh(const std::string PathMesh)
-  {
-      int position=PathMesh.find(".ply");
-      int err;
-      if (position==-1)
-      {
-          position=PathMesh.find(".obj");
-          //vcg::tri::io::ImporterOBJ<CMesh>::Info objInf;
-          int mask;
-          vcg::tri::io::ImporterOBJ<CMesh>::LoadMask(PathMesh.c_str(),mask);
-          err=vcg::tri::io::ImporterOBJ<CMesh>::Open(mesh,PathMesh.c_str(),mask);
-          assert(position!=-1);
-          if (err!=0)return false;
-      }
-      else
-      {
-          err=vcg::tri::io::ImporterPLY<CMesh>::Open(mesh,PathMesh.c_str());
-          if (err!=ply::E_NOERROR)return false;
-      }
-      ///UPDATE MESH STUFF
-      vcg::tri::UpdateBounding<CMesh>::Box(mesh);
-      vcg::tri::UpdateNormal<CMesh>::PerVertexNormalizedPerFace(mesh);
-      vcg::tri::UpdateNormal<CMesh>::PerFaceNormalized(mesh);
-      vcg::tri::UpdateTopology<CMesh>::FaceFace(mesh);
-      vcg::tri::UpdateTopology<CMesh>::VertexFace(mesh);
-      vcg::tri::UpdateFlags<CMesh>::FaceBorderFromFF(mesh);
-      vcg::tri::UpdateFlags<CMesh>::VertexBorderFromFace(mesh);
-      return true;
-  }
-
-  // Load a field from file
-  bool LoadField(const std::string PathFField,const std::string PathMesh=NULL)
-  {
-      SInit.Init(&mesh);
-
-      ///FIELD LOADING
-      int position=PathFField.find(".ffield");
-      if (position==-1)
-      {
-          position=PathFField.find(".grad");
-          assert(position!=-1);
-          SInit.InitFromGradOBJ(PathFField,PathMesh);
-      }
-      else
-          SInit.InitFromFField(PathFField);
-
-      VInd.Init(&mesh);
-      //mesh.ScaleToUnitBox();
-      VInd.InitMapping();
-      VInd.InitFaceIntegerVal();
-      VInd.InitSeamInfo();
-      return true;
-  }
-
-  // Load a mesh and a field from file
-  bool LoadMeshField(const std::string PathMesh, const std::string PathFField)
-  {
-      bool loaded=LoadMesh(PathMesh);
-      if (!loaded)return false;
-      LoadField(PathFField,PathMesh);
-
-      return true;
-  }
 
   // Parametrize the mesh
   void Solve(StiffMode stiffMode, double Stiffness = 5.0,
@@ -151,12 +87,6 @@ public:
       Quad.Quadrangulate(mesh,poly,factor);
   }
 
-//  void removeDuplicateVertices(std::vector<std::vector<double> >& V, std::vector< std::vector<int > >& F);
-
-//  void exportQuadMesh(std::string out);
-
-  //bool LoadData(std::string PathMesh,
-   //             std::string PathFField);
   // Bounding box of the param domain
   vcg::Box2<double> UVBox;
 
@@ -330,7 +260,7 @@ private:
       if (C<4)radius=4;
       AddStiffening(C,radius);
   }
-
+public:
   // Mesh class
   MeshType &mesh;
 
