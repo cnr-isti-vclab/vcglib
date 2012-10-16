@@ -1,22 +1,26 @@
 
 TEMPLATE      = subdirs
 SUBDIRS       = trimesh_base  \
-                trimesh_topology \
-                trimesh_smooth \
+                trimesh_attribute \
+                trimesh_ball_pivoting \
+                trimesh_closest \
+                trimesh_copy \
                 trimesh_curvature \
-                trimesh_normal \
-                trimesh_inertia \
-                trimesh_refine \
                 trimesh_clustering \
+                trimesh_edge \
+                trimesh_ext_mc \
+                trimesh_hole \
+                trimesh_inertia \
+                trimesh_intersection \
                 trimesh_isosurface \
                 trimesh_join \
-                trimesh_edge \
+                trimesh_normal \
                 trimesh_optional \
-                trimesh_intersection \
-                trimesh_ball_pivoting \
-                trimesh_hole \
+                trimesh_ray \
+                trimesh_refine \
                 trimesh_sampling \
+                trimesh_smooth \
+                trimesh_topology \
                 polygonmesh_base \
-                aabb_binary_tree \
-                trimesh_attribute
+                aabb_binary_tree
 

@@ -44,13 +44,13 @@ This file contain a minimal example of the library
 class MyEdge;
 class MyFace;
 class MyVertex;
-struct MyUsedTypes : public UsedTypes<	Use<MyVertex>   ::AsVertexType,
-                                        Use<MyEdge>     ::AsEdgeType,
-                                        Use<MyFace>     ::AsFaceType>{};
+struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<MyVertex>   ::AsVertexType,
+                                        vcg::Use<MyEdge>     ::AsEdgeType,
+                                        vcg::Use<MyFace>     ::AsFaceType>{};
 
-class MyVertex  : public Vertex<MyUsedTypes, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
-class MyFace    : public Face< MyUsedTypes, face::FFAdj,  face::VertexRef, face::BitFlags > {};
-class MyEdge    : public Edge<MyUsedTypes>{};
+class MyVertex  : public vcg::Vertex<MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags  >{};
+class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::FFAdj,  vcg::face::VertexRef, vcg::face::BitFlags > {};
+class MyEdge    : public vcg::Edge<MyUsedTypes>{};
 class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> , std::vector<MyEdge>  > {};
 
 int main( int argc, char **argv )
@@ -63,7 +63,7 @@ int main( int argc, char **argv )
 
   MyMesh m;
 
-  if(tri::io::ImporterOFF<MyMesh>::Open(m,argv[1])!=tri::io::ImporterOFF<MyMesh>::NoError)
+  if(vcg::tri::io::ImporterOFF<MyMesh>::Open(m,argv[1])!=vcg::tri::io::ImporterOFF<MyMesh>::NoError)
   {
     printf("Error reading file  %s\n",argv[1]);
     exit(0);

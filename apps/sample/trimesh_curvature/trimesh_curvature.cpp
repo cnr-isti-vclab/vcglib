@@ -20,6 +20,14 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/*! \file trimesh_curvature.cpp
+\ingroup code_sample
+
+\brief an example showing the various techniques for computing curvatures
+
+This file contain a minimal example of the library
+
+*/
 #include<vcg/complex/complex.h>
 
 #include<wrap/io_trimesh/export_off.h>
@@ -31,13 +39,13 @@
 class MyEdge;
 class MyFace;
 class MyVertex;
-struct MyUsedTypes : public UsedTypes<	Use<MyVertex>   ::AsVertexType,
-                                        Use<MyEdge>     ::AsEdgeType,
-                                        Use<MyFace>     ::AsFaceType>{};
+struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<MyVertex>   ::AsVertexType,
+                                            vcg::Use<MyEdge>     ::AsEdgeType,
+                                            vcg::Use<MyFace>     ::AsFaceType>{};
 
-class MyVertex  : public Vertex<MyUsedTypes, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
-class MyFace    : public Face< MyUsedTypes, face::FFAdj,  face::VertexRef, face::BitFlags > {};
-class MyEdge    : public Edge<MyUsedTypes>{};
+class MyVertex  : public vcg::Vertex<MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags  >{};
+class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::FFAdj,  vcg::face::VertexRef, vcg::face::BitFlags > {};
+class MyEdge    : public vcg::Edge<MyUsedTypes>{};
 class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> , std::vector<MyEdge>  > {};
 
 int main( int argc, char **argv )

@@ -34,11 +34,11 @@ Attributes are a simple mechanism to associate user-defined 'attributes' to the 
 class MyEdge;
 class MyFace;
 class MyVertex;
-struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
-                                            Use<MyFace>			::AsFaceType>{};
+struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<MyVertex>		::AsVertexType,
+                                            vcg::Use<MyFace>			::AsFaceType>{};
 
-class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f,vertex::Normal3f>{};
-class MyFace    : public Face< MyUsedTypes, face::VertexRef, face::Normal3f> {};
+class MyVertex  : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f,vcg::vertex::Normal3f>{};
+class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::VertexRef, vcg::face::Normal3f> {};
 
 class MyMesh : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> > {};
 

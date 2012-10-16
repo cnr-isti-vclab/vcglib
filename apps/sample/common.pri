@@ -1,4 +1,4 @@
-DEPENDPATH += .
+DEPENDPATH += . ../../..
 INCLUDEPATH += . ../../..
 CONFIG += console stl
 TEMPLATE = app
