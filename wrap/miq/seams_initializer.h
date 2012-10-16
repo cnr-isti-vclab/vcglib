@@ -4,7 +4,7 @@
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/simplex/face/topology.h>
-
+#include <wrap/io_trimesh/import_field.h>
 
 template <class MeshType>
 class SeamsInitializer
@@ -155,58 +155,58 @@ private:
         } while (!over);
     }
 
-    bool LoadSeamsMMFromOBJ(std::string PathOBJ)
-    {
-        FILE *f = fopen(PathOBJ.c_str(),"rt");
-        if (!f)
-            return false;
+//    bool LoadSeamsMMFromOBJ(std::string PathOBJ)
+//    {
+//        FILE *f = fopen(PathOBJ.c_str(),"rt");
+//        if (!f)
+//            return false;
 
-        for (unsigned int i=0;i<mesh->face.size();i++)
-        {
-            for (int j=0;j<3;j++)
-                Handle_Seams[i][j]=false;
-        }
+//        for (unsigned int i=0;i<mesh->face.size();i++)
+//        {
+//            for (int j=0;j<3;j++)
+//                Handle_Seams[i][j]=false;
+//        }
 
-        while (!feof(f))
-        {
+//        while (!feof(f))
+//        {
 
-            int f_int,v_int,rot;
-            int readed=fscanf(f,"sm %d %d %d\n",&f_int,&v_int,&rot);
-            ///skip lines
-            if (readed==0)
-            {
-                char buff[200];
-                fscanf(f,"%s\n",&buff[0]);
-            }
-            else ///add the actual seams
-            {
-                VertexType *v=&mesh->vert[v_int-1];
-                FaceType *f0=&mesh->face[f_int-1];
-                int e0=-1;
-                if (f0->V(0)==v)e0=0;
-                if (f0->V(1)==v)e0=1;
-                if (f0->V(2)==v)e0=2;
-                e0=(e0+2)%3;
-                assert(e0!=-1);
-                FaceType *f1;
-                int e1;
-                f1=f0->FFp(e0);
-                e1=f0->FFi(e0);
-                Handle_Seams[f0][e0]=true;
-                Handle_Seams[f1][e1]=true;
+//            int f_int,v_int,rot;
+//            int readed=fscanf(f,"sm %d %d %d\n",&f_int,&v_int,&rot);
+//            ///skip lines
+//            if (readed==0)
+//            {
+//                char buff[200];
+//                fscanf(f,"%s\n",&buff[0]);
+//            }
+//            else ///add the actual seams
+//            {
+//                VertexType *v=&mesh->vert[v_int-1];
+//                FaceType *f0=&mesh->face[f_int-1];
+//                int e0=-1;
+//                if (f0->V(0)==v)e0=0;
+//                if (f0->V(1)==v)e0=1;
+//                if (f0->V(2)==v)e0=2;
+//                e0=(e0+2)%3;
+//                assert(e0!=-1);
+//                FaceType *f1;
+//                int e1;
+//                f1=f0->FFp(e0);
+//                e1=f0->FFi(e0);
+//                Handle_Seams[f0][e0]=true;
+//                Handle_Seams[f1][e1]=true;
 
-                Handle_MMatch[f0][e0]=rot;
-                int rot1;
-                if (rot==0)rot1=0;
-                if (rot==1)rot1=3;
-                if (rot==2)rot1=2;
-                if (rot==3)rot1=1;
-                Handle_MMatch[f1][e1]=rot1;
-            }
-        }
-        //printf("NEED  %d LINES\n",i);
-        return true;
-    }
+//                Handle_MMatch[f0][e0]=rot;
+//                int rot1;
+//                if (rot==0)rot1=0;
+//                if (rot==1)rot1=3;
+//                if (rot==2)rot1=2;
+//                if (rot==3)rot1=1;
+//                Handle_MMatch[f1][e1]=rot1;
+//            }
+//        }
+//        //printf("NEED  %d LINES\n",i);
+//        return true;
+//    }
 
 
 
@@ -297,9 +297,9 @@ public:
     {
         AddAttributesIfNeeded();
         ///OPEN THE GRAD FILE
-        bool field_loaded=vcg::tri::CrossField<MeshType>::LoadGrad(mesh,PathGrad.c_str());
+        bool field_loaded=vcg::tri::io::ImporterFIELD<MeshType>::LoadGrad(mesh,PathGrad.c_str());
          if (!field_loaded)return false;
-        LoadSeamsMMFromOBJ(PathObj);
+        vcg::tri::io::ImporterFIELD<MeshType>::LoadSeamsMMFromOBJ(*mesh,PathObj);
         SelectSingularityByMM();
         return true;
     }
@@ -307,7 +307,7 @@ public:
     bool InitFromFField(const std::string &PathFField)
     {
         AddAttributesIfNeeded();
-        bool field_loaded=vcg::tri::CrossField<MeshType>::LoadFFIELD(mesh,PathFField.c_str());
+        bool field_loaded=vcg::tri::io::ImporterFIELD<MeshType>::LoadFFIELD(mesh,PathFField.c_str());
         if (!field_loaded)return false;
         vcg::tri::CrossField<MeshType>::MakeDirectionFaceCoherent(*mesh);
         InitMMatch();
