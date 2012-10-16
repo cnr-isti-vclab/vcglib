@@ -23,22 +23,6 @@
 #ifndef _VCG_INERTIA_
 #define _VCG_INERTIA_
 
-/*
-The algorithm is based on a three step reduction of the volume integrals
-to successively simpler integrals. The algorithm is designed to minimize
-the numerical errors that can result from poorly conditioned alignment of
-polyhedral faces. It is also designed for efficiency. All required volume
-integrals of a polyhedron are computed together during a single walk over
-the boundary of the polyhedron; exploiting common subexpressions reduces
-floating point operations.
-
-For more information, check out:
-
-Brian Mirtich,
-``Fast and Accurate Computation of Polyhedral Mass Properties,''
-journal of graphics tools, volume 1, number 2, 1996
-
-*/
 
 #include <eigenlib/Eigen/Core>
 #include <eigenlib/Eigen/Eigenvalues>
@@ -48,10 +32,27 @@ namespace vcg
 {
   namespace tri
   {
-template <class InertiaMeshType>
+  /*! \brief Methods for computing Polyhedral Mass properties (like inertia tensor, volume, etc)
+
+
+  The algorithm is based on a three step reduction of the volume integrals
+  to successively simpler integrals. The algorithm is designed to minimize
+  the numerical errors that can result from poorly conditioned alignment of
+  polyhedral faces. It is also designed for efficiency. All required volume
+  integrals of a polyhedron are computed together during a single walk over
+  the boundary of the polyhedron; exploiting common subexpressions reduces
+  floating point operations.
+
+  For more information, check out:
+
+  <b>Brian Mirtich,</b>
+  ``Fast and Accurate Computation of Polyhedral Mass Properties,''
+  journal of graphics tools, volume 1, number 2, 1996
+
+  */
+template <class MeshType>
 class Inertia
 {
-  typedef InertiaMeshType MeshType;
 	typedef typename MeshType::VertexType     VertexType;
 	typedef typename MeshType::VertexPointer  VertexPointer;
 	typedef typename MeshType::VertexIterator VertexIterator;
@@ -82,6 +83,12 @@ private :
  double T0, T1[3], T2[3], TP[3];
 
 public:
+ /*! \brief Basic constructor
+
+   When you create a Inertia object, you have to specify the mesh that it refers to.
+   The properties are computed at that moment. Subsequent modification of the mesh does not affect these values.
+   */
+ Inertia(MeshType &m) {Compute(m);}
 
 /* compute various integrations over projection of face */
  void compProjectionIntegrals(FaceType &f)
@@ -176,6 +183,11 @@ void CompFaceIntegrals(FaceType &f)
 }
 
 
+/*! main function to be called.
+
+  It requires a watertight mesh with per face normals.
+
+*/
 void Compute(MeshType &m)
 {
   tri::UpdateNormal<MeshType>::PerFaceNormalized(m);
@@ -216,11 +228,19 @@ void Compute(MeshType &m)
   TP[X] /= 2; TP[Y] /= 2; TP[Z] /= 2;
 }
 
+/*! \brief Return the Volume (or mass) of the mesh.
+
+Meaningful only if the mesh is watertight.
+*/
 ScalarType Mass()
 {
 	return static_cast<ScalarType>(T0);
 }
 
+/*! \brief Return the Center of Mass (or barycenter) of the mesh.
+
+Meaningful only if the mesh is watertight.
+*/
 Point3<ScalarType>  CenterOfMass()
 {
 	Point3<ScalarType>  r;
@@ -275,18 +295,20 @@ void InertiaTensor(Eigen::Matrix3d &J )
 }
 
 
-/** Compute eigenvalues and eigenvectors of inertia tensor.
-		The eigenvectors make a rotation matrix that aligns the mesh along the axes of min/max inertia
- */
+
+/*! \brief Return the Inertia tensor the mesh.
+
+  The result is factored as eigenvalues and eigenvectors (as ROWS).
+*/
 void InertiaTensorEigen(Matrix33<ScalarType> &EV, Point3<ScalarType> &ev )
 {
 	Eigen::Matrix3d it;
 	InertiaTensor(it);
 	Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig(it);
 	Eigen::Vector3d c_val = eig.eigenvalues();
-	Eigen::Matrix3d c_vec = eig.eigenvectors();
-
+	Eigen::Matrix3d c_vec = eig.eigenvectors(); // eigenvector are stored as columns.
 	EV.FromEigenMatrix(c_vec);
+	EV.transposeInPlace();
 	ev.FromEigenVector(c_val);
 }
 
