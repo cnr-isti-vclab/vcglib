@@ -607,8 +607,8 @@ class PoissonSolver
                  vcg::Point2<ScalarType> uv=vcg::Point2<ScalarType>(U,V);
                  ///assing
                  //f->realUV[k]=uv;
-                 ScalarType factor=(ScalarType)SIZEQUADS/(ScalarType)SIZEPARA;
-                 uv*=factor;
+//                 ScalarType factor=(ScalarType)SIZEQUADS/(ScalarType)SIZEPARA;
+//                 uv*=factor;
                  ///assing
                  f->WT(k).P()=uv;
              }

@@ -5,6 +5,8 @@
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/simplex/face/topology.h>
 
+
+
 struct SeamInfo
 {
     int v0,v0p,v1,v1p;
@@ -396,8 +398,6 @@ public:
         IndexToVert.clear();
         duplicated.clear();
 
-        //ClearMapping();
-
         InitMappingSeam();
 
         Handle_SystemInfo().num_vert_variables=Handle_SystemInfo().num_scalar_variables+1;
@@ -413,19 +413,15 @@ public:
         {
             FaceType *f=&mesh->face[j];
             if (f->IsD())continue;
-            //f->IntegerVar.clear();
             for (int k=0;k<3;k++)
             {
-                //if (f->IsSeam(k))
-                if (Handle_Seams[f][k])
+                 if (Handle_Seams[f][k])
                 {
-                    //f->IntegerVar.push_back(num_integer_cuts);
                     Handle_Integer[j][k]=Handle_SystemInfo().num_integer_cuts;
                     Handle_SystemInfo().num_integer_cuts++;
                 }
                 else
                     Handle_Integer[j][k]=-1;
-                //f->IntegerVar.push_back(-1);
             }
         }
     }
