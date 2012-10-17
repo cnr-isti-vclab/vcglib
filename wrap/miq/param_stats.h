@@ -1,7 +1,7 @@
 #ifndef PARAM_STATS_H
 #define PARAM_STATS_H
 #ifdef MIQ_USE_ROBUST
-#include "predicates.h"
+#include <predicates.h>
 #endif
 #include <vcg/space/triangle2.h>
 
@@ -10,7 +10,7 @@ inline bool IsFlipped(const CoordType2D &uv0,
                       const CoordType2D &uv1,
                       const CoordType2D &uv2)
 {
-    #ifdef USE_ROBUST
+    #ifdef MIQ_USE_ROBUST
     double pa[2] = {uv0.X(), uv0.Y()};
     double pb[2] = {uv1.X(), uv1.Y()};
     double pc[2] = {uv2.X(), uv2.Y()};
