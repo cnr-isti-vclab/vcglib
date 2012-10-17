@@ -154,6 +154,8 @@ public:
         bool hasStiffness = vcg::tri::HasPerFaceAttribute(mesh,std::string("Stiffness"));
         if(!hasStiffness)
             Handle_Stiffness=vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<float>(mesh,std::string("Stiffness"));
+        else
+            Handle_Stiffness=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<float>(mesh,std::string("Stiffness"));
 
         for(unsigned int i=0;i<mesh.face.size();i++)
         {
