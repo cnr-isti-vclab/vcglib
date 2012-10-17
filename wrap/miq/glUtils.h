@@ -146,5 +146,44 @@ public:
        glPopAttrib();
    }
 
+   template <class PolyMesh>
+   static void GLDrawPolygonalMesh(PolyMesh &polymesh)
+   {
+       glPushAttrib(GL_ALL_ATTRIB_BITS);
+       glEnable(GL_LIGHTING);
+       glEnable(GL_COLOR_MATERIAL);
+       glDisable(GL_TEXTURE_2D);
+       glColor3d(0.7,0.8,0.9);
+       //glFrontFace(GL_CW);
+       glDepthRange(0,0.998);
+       for (unsigned int i=0;i<polymesh.face.size();i++)
+       {
+           glBegin(GL_POLYGON);
+           for (int j=0;j<polymesh.face[i].VN();j++)
+           {
+               typename PolyMesh::VertexType* v=polymesh.face[i].V(j);
+               glNormal(v->N());
+               glVertex(v->P());
+           }
+           glEnd();
+       }
+
+       glDepthRange(0,0.997);
+       glDisable(GL_LIGHTING);
+       glEnable(GL_COLOR_MATERIAL);
+       glColor3d(0,0,0);
+       for (unsigned int i=0;i<polymesh.face.size();i++)
+       {
+           glBegin(GL_LINE_LOOP);
+           for (int j=0;j<polymesh.face[i].VN();j++)
+           {
+               typename PolyMesh::VertexType* v=polymesh.face[i].V(j);
+               glNormal(v->N());
+               glVertex(v->P());
+           }
+           glEnd();
+       }
+       glPopAttrib();
+   }
 };
 #endif
