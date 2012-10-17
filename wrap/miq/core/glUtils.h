@@ -2,7 +2,6 @@
 #define MIQ_GL_UTILS
 //#include <wrap/gl/space.h>
 #include "vertex_indexing.h"
-#include "quadrangulator.h"
 
 class Miq_Gl_Utils
 {
