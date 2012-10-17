@@ -41,7 +41,7 @@ class ImporterFIELD
 
 public:
 
-    static bool LoadGrad(MeshType *mesh,
+    static bool LoadGrad(MeshType &mesh,
                          const char *path)
     {
         FILE *f = fopen(path,"rt");
@@ -51,13 +51,13 @@ public:
         }
         int numF;
         fscanf(f,"%d\n",&numF);
-        assert(numF==mesh->fn);
+        assert(numF==mesh.fn);
         char skipstr[200];
         //int readed0;
         for (int i=0;i<9;i++)
             fscanf(f,"%s",&skipstr[0]);
 
-        for (int i=0;i<mesh->fn;i++)
+        for (int i=0;i<mesh.fn;i++)
         {
             int i0=-1;
             int i1=-1;
@@ -71,11 +71,11 @@ public:
             UV[2]= vcg::Point2<ScalarType>(u2,v2);
             CoordType dir1;
             CoordType dir2;
-            vcg::tri::CrossField<MeshType>::GradientToCross(mesh->face[i],UV[0],UV[1],UV[2],dir1,dir2);
+            vcg::tri::CrossField<MeshType>::GradientToCross(mesh.face[i],UV[0],UV[1],UV[2],dir1,dir2);
             dir1.Normalize();
             dir2.Normalize();
-            mesh->face[i].PD1()=dir1;
-            mesh->face[i].PD2()=dir2;
+            mesh.face[i].PD1()=dir1;
+            mesh.face[i].PD2()=dir2;
         }
         fclose(f);
         return true;
@@ -83,7 +83,7 @@ public:
 
     ///load a field on the mesh, it could be a vfield file (per vertex)
     ///or an ffield file (per face)
-    static bool LoadFFIELD(MeshType *mesh,
+    static bool LoadFFIELD(MeshType &mesh,
         const char *path,
         bool per_vertex=false)
     {
@@ -111,9 +111,9 @@ public:
                 while (fscanf(f,"%c",&c)!=EOF) if (c=='\n') break; // skip
                 fscanf(f,"%d",&nnv);
             }
-            int targetnum=mesh->fn;
+            int targetnum=mesh.fn;
             if (per_vertex)
-                targetnum=mesh->vn;
+                targetnum=mesh.vn;
             if (nnv != (int)targetnum)
             {
                 //if (errorMsg) sprintf(errorMsg,"Wrong element number. Found: %d. Expected: %d.",nnv,mesh->vn);
@@ -140,23 +140,23 @@ public:
 
                 if (per_vertex)
                 {
-                    mesh->vert[i].PD1().X()=(ScalarType) u.X();
-                    mesh->vert[i].PD1().Y()=(ScalarType) u.Y();
-                    mesh->vert[i].PD1().Z()=(ScalarType) u.Z();
-                    mesh->vert[i].PD2().X()=(ScalarType) v.X();
-                    mesh->vert[i].PD2().Y()=(ScalarType) v.Y();
-                    mesh->vert[i].PD2().Z()=(ScalarType) v.Z();
+                    mesh.vert[i].PD1().X()=(ScalarType) u.X();
+                    mesh.vert[i].PD1().Y()=(ScalarType) u.Y();
+                    mesh.vert[i].PD1().Z()=(ScalarType) u.Z();
+                    mesh.vert[i].PD2().X()=(ScalarType) v.X();
+                    mesh.vert[i].PD2().Y()=(ScalarType) v.Y();
+                    mesh.vert[i].PD2().Z()=(ScalarType) v.Z();
                 }
                 else
                 {
-                    mesh->face[i].PD1().X()=(ScalarType) u.X();
-                    mesh->face[i].PD1().Y()=(ScalarType) u.Y();
-                    mesh->face[i].PD1().Z()=(ScalarType) u.Z();
-                    mesh->face[i].PD2().X()=(ScalarType) v.X();
-                    mesh->face[i].PD2().Y()=(ScalarType) v.Y();
-                    mesh->face[i].PD2().Z()=(ScalarType) v.Z();
-                    mesh->face[i].PD1().Normalize();
-                    mesh->face[i].PD2().Normalize();
+                    mesh.face[i].PD1().X()=(ScalarType) u.X();
+                    mesh.face[i].PD1().Y()=(ScalarType) u.Y();
+                    mesh.face[i].PD1().Z()=(ScalarType) u.Z();
+                    mesh.face[i].PD2().X()=(ScalarType) v.X();
+                    mesh.face[i].PD2().Y()=(ScalarType) v.Y();
+                    mesh.face[i].PD2().Z()=(ScalarType) v.Z();
+                    mesh.face[i].PD1().Normalize();
+                    mesh.face[i].PD2().Normalize();
                 }
             }
         }
