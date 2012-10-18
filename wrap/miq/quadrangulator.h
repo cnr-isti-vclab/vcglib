@@ -1,7 +1,7 @@
 #ifndef MIQ_QUADRANGULATOR_H
 #define MIQ_QUADRANGULATOR_H
 
-
+#include <vcg/complex/complex.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/complex/algorithms/attribute_seam.h>
@@ -65,6 +65,7 @@ public:
     std::vector<std::pair<TriFaceType*,int> > IntegerLines;
     std::vector<TriVertexType*> IntegerVertex;
 
+private:
     static bool ToSplit(const vcg::Point2<ScalarType> &uv0,
                         const vcg::Point2<ScalarType> &uv1,
                         int Dir,
