@@ -178,6 +178,7 @@ namespace vcg{
 			}
 			if(!winner) newradius=radius+Si.voxel.Norm();
 			else newradius = _minDist;
+			iboxdone=iboxtodo;
 		}
 		while (_minDist>radius);
 
