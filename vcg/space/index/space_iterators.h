@@ -528,7 +528,7 @@ namespace vcg{
 		ScalarType step_size;		  //radius step
 		std::vector<Entry_Type> Elems; //element loaded from the current sphere
 
-		DISTFUNCTOR &dist_funct;
+		DISTFUNCTOR dist_funct;
 		TMARKER tm;
 
 		typedef typename std::vector<Entry_Type>::reverse_iterator ElemIterator;
