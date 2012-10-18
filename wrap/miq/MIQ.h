@@ -2,7 +2,6 @@
 #define __MIQ__
 
 #include <iostream>
-#include <vector>
 #include "quadrangulator.h"
 #include "core/poisson_solver.h"
 #include "core/param_stats.h"
@@ -10,8 +9,6 @@
 #include "core/vertex_indexing.h"
 #include "core/stiffening.h"
 #include <vcg/complex/algorithms/clean.h>
-#include <wrap/io_trimesh/import.h>
-#include <wrap/io_trimesh/export.h>
 
 #define USECOMISO
 

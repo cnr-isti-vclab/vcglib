@@ -139,7 +139,7 @@ private:
         assert(f0->cV1(edgef0)==f1->cV0(edgef1));
     }
 
-    bool IsSeam(CFace *f0,CFace *f1)
+    bool IsSeam(FaceType *f0,FaceType *f1)
     {
         for (int i=0;i<3;i++)
         {

@@ -8,7 +8,6 @@
 
 #include "auxmath.h"
 #include "sparsesystemdata.h"
-#include "mesh_type.h"
 #include "vertex_indexing.h"
 
 template <class MeshType>

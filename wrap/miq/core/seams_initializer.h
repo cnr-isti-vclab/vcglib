@@ -35,19 +35,19 @@ private:
     }
 
     ///return true if a vertex is singluar by looking at initialized missmatches
-    bool IsSingularByMMatch(const CVertex &v,int &missmatch)
+    bool IsSingularByMMatch(const VertexType &v,int &missmatch)
     {
         ///check that is on border..
         if (v.IsB())return false;
 
-        std::vector<CFace*> faces;
+        std::vector<FaceType*> faces;
         std::vector<int> edges;
-        vcg::face::VFOrderedStarVF_FF<CFace>(v,faces,edges);
+        vcg::face::VFOrderedStarVF_FF<FaceType>(v,faces,edges);
 
         missmatch=0;
         for (unsigned int i=0;i<faces.size();i++)
         {
-            CFace *curr_f=faces[i];
+            FaceType *curr_f=faces[i];
             int currMM=Handle_MMatch[curr_f][edges[i]];
             missmatch+=currMM;
         }
@@ -191,7 +191,7 @@ private:
 
 
     int InitTopologycalCuts(){
-        vcg::tri::UpdateFlags<CMesh>::FaceClearV(*mesh);
+        vcg::tri::UpdateFlags<MeshType>::FaceClearV(*mesh);
 
         for (FaceIterator f = mesh->face.begin(); f!=mesh->face.end(); f++)
             if (!f->IsD())
@@ -220,14 +220,14 @@ private:
     {
         for (unsigned int i=0;i<mesh->face.size();i++)
         {
-            CFace *curr_f=&mesh->face[i];
+            FaceType *curr_f=&mesh->face[i];
             for (int j=0;j<3;j++)
             {
-                CFace *opp_f=curr_f->FFp(j);
+                FaceType *opp_f=curr_f->FFp(j);
                 if (curr_f==opp_f)
                     Handle_MMatch[curr_f][j]=0;
                 else
-                    Handle_MMatch[curr_f][j]=vcg::tri::CrossField<CMesh>::MissMatchByCross(*curr_f,*opp_f);
+                    Handle_MMatch[curr_f][j]=vcg::tri::CrossField<MeshType>::MissMatchByCross(*curr_f,*opp_f);
             }
         }
     }

@@ -31,7 +31,7 @@ public:
 
         for (unsigned int i=0;i<mesh.face.size();i++)
         {
-            //CMesh::ScalarType val=MaxVal-mesh.face[i].stiffening+1;
+            //MeshType::ScalarType val=MaxVal-mesh.face[i].stiffening+1;
             ScalarType val=MaxVal-Handle_Stiffness[i]+1;
             if (val<1)val=1;
             mesh.face[i].C()=vcg::Color4b::ColorRamp(1.0,MaxVal,val);
@@ -54,7 +54,7 @@ public:
         assert(hasSingular);
 
         typename MeshType::template PerVertexAttributeHandle<bool> Handle_Singular;
-        Handle_Singular=vcg::tri::Allocator<CMesh>::GetPerVertexAttribute<bool>(mesh,std::string("Singular"));
+        Handle_Singular=vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool>(mesh,std::string("Singular"));
 
         std::vector<VertexType*> to_stiff;
         for(unsigned int i=0;i<mesh.vert.size();i++)
@@ -85,7 +85,7 @@ public:
             VertexType *v=to_stiff[i];
             for (int r=0;r<radius;r++)
             {
-                CMesh::ScalarType stiffVal=((CMesh::ScalarType)r)/(CMesh::ScalarType)radius;//((ScalarType)(radius-r))/(ScalarType)radius;
+                ScalarType stiffVal=((ScalarType)r)/(ScalarType)radius;//((ScalarType)(radius-r))/(ScalarType)radius;
                 stiffVal*=3.0;
                 stiffVal=Gauss(stiffVal)/0.4;
                 stiffVal=1+(stiffVal*C);
