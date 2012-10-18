@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <vector>
-#include "mesh_type.h"
 #include "quadrangulator.h"
 #include "core/poisson_solver.h"
 #include "core/param_stats.h"
