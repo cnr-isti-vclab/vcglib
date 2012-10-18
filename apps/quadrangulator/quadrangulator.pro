@@ -4,11 +4,8 @@
 COMISODIR = ../../../code/lib/CoMISo
 COMISOBUILDDIR = $$COMISODIR/buildMACOSX
 
-
-QT       += core
-QT       -= gui
-TARGET = miq
 TEMPLATE = app
+TARGET = quadrangulator
 
 # This is needed by CoMISo
 DEFINES += INCLUDE_TEMPLATES
@@ -37,7 +34,7 @@ HEADERS += $$VCGLIBDIR/vcg/complex/algorithms/parametrization/distortion.h
 HEADERS += $$VCGLIBDIR/wrap/io_trimesh/import_field.h
 HEADERS += $$VCGLIBDIR/wrap/io_trimesh/export_field.h
 SOURCES += $$VCGLIBDIR/wrap/ply/plylib.cpp
-SOURCES += main.cpp
+SOURCES += quadrangulator.cpp
 
 win32{
 # Awful problem with windows..
