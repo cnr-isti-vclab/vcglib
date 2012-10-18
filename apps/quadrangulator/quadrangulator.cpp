@@ -80,7 +80,7 @@ int main(int argc, const char * argv[])
 
     if (argc != 2)
     {
-        cout << "Not enough parameters: ./MIQ configfile" << endl;
+        cout << "Not enough parameters;\nUsage:\n\n./quadrangulator configfile" << endl;
         exit(EXIT_FAILURE);
     }
 

@@ -1,6 +1,6 @@
 # IMPORTANT
 # We assume that you have unzipped and compiled somewhere the COMISO solver
-# put here that path and and the name of the build dir.
+# put here that path and and the name of the build dir (from which the lib are copied).
 COMISODIR = ../../../code/lib/CoMISo
 COMISOBUILDDIR = $$COMISODIR/buildMACOSX
 
