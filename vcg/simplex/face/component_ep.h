@@ -74,6 +74,25 @@ private:
 EdgePlaneType _ep;
 };
 
+
+// This empty class is rarely useful but you need it if you have code
+// where you eventually decide (not at compile time) what closest algorithm you need.
+// (for example in unit testing...)
+
+template <class T> class EmptyEdgePlane: public T {
+public:
+typedef EdgePlaneInfo<typename T::VertexType::CoordType> EdgePlaneType;
+
+typename T::VertexType::CoordType &Edge(const int ) { assert(0);  static typename T::VertexType::CoordType dum; return dum;}
+typename T::VertexType::CoordType &cEdge(const int ) const { assert(0);  static typename T::VertexType::CoordType dum; return dum;}
+
+typename vcg::Plane3<typename T::VertexType::CoordType::ScalarType> &Plane() {assert(0);  static typename vcg::Plane3<typename T::VertexType::CoordType::ScalarType> dum; return dum;}
+typename vcg::Plane3<typename T::VertexType::CoordType::ScalarType> &cPlane() const {assert(0);  static typename vcg::Plane3<typename T::VertexType::CoordType::ScalarType> dum; return dum;}
+static bool HasEdgePlane()   {   return false; }
+
+static void Name(std::vector<std::string> & name){name.push_back(std::string(""));T::Name(name);}
+};
+
   } // end namespace face
 }// end namespace vcg
 #endif
