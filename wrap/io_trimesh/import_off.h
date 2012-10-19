@@ -476,14 +476,14 @@ namespace vcg
 								}
 							case 3:
 								{
-									if (tokens[vert_per_face+1].find('.')==size_t(-1))
+									if (tokens[vert_per_face+1].find('.')==std::string::npos) // if there is a float there is a dot
 									{
-										int rgb[3];
-										rgb[0] = atoi( tokens[vert_per_face+1].c_str() );
-										rgb[1] = atoi( tokens[vert_per_face+2].c_str() );
-										rgb[2] = atoi( tokens[vert_per_face+3].c_str() );
+										Color4b cc(Color4b::White);
+										cc[0] =  (unsigned char)atoi( tokens[vert_per_face+1].c_str() );
+										cc[1] =  (unsigned char)atoi( tokens[vert_per_face+2].c_str() );
+										cc[2] =  (unsigned char)atoi( tokens[vert_per_face+3].c_str() );
 										for ( ; f0<=f; f0++)
-											mesh.face[f0].C().SetRGB(rgb[0], rgb[1], rgb[2]);
+											mesh.face[f0].C()=cc;
 									}
 									else
 									{
@@ -498,15 +498,15 @@ namespace vcg
 								}
 							case 4:
 								{
-									if (tokens[vert_per_face+1].find('.')==0) // if it is a float there is a dot
+									if (tokens[vert_per_face+1].find('.')==std::string::npos) // if it is a float there is a dot
 									{
-										unsigned char color[4];
-										color[0] = (unsigned char) atoi(tokens[vert_per_face+1].c_str());
-										color[1] = (unsigned char) atoi(tokens[vert_per_face+2].c_str());
-										color[2] = (unsigned char) atoi(tokens[vert_per_face+3].c_str());
-										color[3] = (unsigned char) atoi(tokens[vert_per_face+4].c_str());
+										Color4b cc;
+										cc[0] = (unsigned char) atoi(tokens[vert_per_face+1].c_str());
+										cc[1] = (unsigned char) atoi(tokens[vert_per_face+2].c_str());
+										cc[2] = (unsigned char) atoi(tokens[vert_per_face+3].c_str());
+										cc[3] = (unsigned char) atoi(tokens[vert_per_face+4].c_str());
 										for ( ; f0<=f; f0++)
-											mesh.face[f0].C().Import(vcg::Color4f(color[0], color[1], color[2], color[3]));
+											mesh.face[f0].C()=cc;
 									}
 									else
 									{
