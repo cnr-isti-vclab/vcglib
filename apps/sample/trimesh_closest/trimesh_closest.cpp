@@ -1,15 +1,10 @@
 
 // stuff to define the mesh
-#include <vcg/simplex/vertex/base.h>
-#include <vcg/simplex/vertex/component_ocf.h>
-#include <vcg/simplex/face/base.h>
-#include <vcg/simplex/face/component_rt.h>
-#include <vcg/simplex/edge/base.h>
 #include <vcg/complex/complex.h>
-#include <vcg/complex/append.h>
+#include <vcg/simplex/face/component_ep.h>
 #include <vcg/complex/algorithms/point_sampling.h>
-#include <vcg/complex/algorithms/update/edges.h>
-
+#include <vcg/complex/algorithms/update/component_ep.h>
+#include <vcg/complex/algorithms/update/normal.h>
 
 // io
 #include <wrap/io_trimesh/import.h>
@@ -34,11 +29,9 @@ class BaseVertex  : public vcg::Vertex< BaseUsedTypes,
 class BaseEdge : public vcg::Edge< BaseUsedTypes> {};
 
 class BaseFace    : public vcg::Face< BaseUsedTypes,
-	vcg::face::Normal3f, vcg::face::VertexRef, vcg::face::BitFlags, vcg::face::Mark, vcg::face::EdgePlaneEmpty > {};
+	vcg::face::Normal3f, vcg::face::VertexRef, vcg::face::BitFlags, vcg::face::Mark, vcg::face::EmptyEdgePlane > {};
 
 class BaseMesh    : public vcg::tri::TriMesh<std::vector<BaseVertex>, std::vector<BaseFace> > {};
-
-
 
 
 class RTVertex;
@@ -85,7 +78,7 @@ bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc, std:
   int err=vcg::tri::io::Importer<MeshType>::Open(mr,filename1);
   tri::UpdateBounding<MeshType>::Box(mr);
 //  tri::UpdateNormals<MeshType>::PerFaceNormalized(mr);
-  tri::UpdateNormals<MeshType>::PerFace(mr);
+  tri::UpdateNormal<MeshType>::PerFace(mr);
   float dispAbs = mr.bbox.Diag()*dispPerc;
   if(err)
   {
@@ -129,7 +122,7 @@ bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc, std:
   }
 
   if(useEdge)
-     tri::UpdateEdges<MeshType>::Set(mr);
+     tri::UpdateComponentEP<MeshType>::Set(mr);
 
   int endGridInit = clock();
   printf("Grid Init %6.3f - ",float(endGridInit-startGridInit)/CLOCKS_PER_SEC);
@@ -211,11 +204,11 @@ int main(int argc ,char**argv)
 
   for(size_t i=0;i<resultVecRT11.size();++i)
   {
-    if(resultVecRT11[i]!=resultVecRT01[i]) printf("%i is diff",i);
-    if(resultVecRT11[i]!=resultVecRT00[i]) printf("%i is diff",i);
-    if(resultVecRT11[i]!=resultVecRT10[i]) printf("%i is diff",i);
-    if(resultVecRT11[i]!=resultVecBS00[i]) printf("%i is diff",i);
-    if(resultVecRT11[i]!=resultVecBS01[i]) printf("%i is diff",i);
+    if(resultVecRT11[i]!=resultVecRT01[i]) printf("%lu is diff",i);
+    if(resultVecRT11[i]!=resultVecRT00[i]) printf("%lu is diff",i);
+    if(resultVecRT11[i]!=resultVecRT10[i]) printf("%lu is diff",i);
+    if(resultVecRT11[i]!=resultVecBS00[i]) printf("%lu is diff",i);
+    if(resultVecRT11[i]!=resultVecBS01[i]) printf("%lu is diff",i);
   }
   return 0;
 }
