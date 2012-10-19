@@ -309,18 +309,23 @@ Note: The faux bit is used to color polygonal faces uniformly
   /*! \brief Perlin Noise.
   \return the number of changed vertexes (the selected ones)
 
-  Simple Perlin noise. To make things weirder each color band can be offset.
+  Simple Perlin noise. To make things weirder each color band can have its own offset and frequency.
+  Period is expressed in absolute terms.
+  So as period it is meaningful could be to use something in the range of 1/10 of the bbox diag.
   */
-  static void PerVertexPerlinNoise(MeshType& m, Box3f bbox, Matrix44<ScalarType> tr, float freq, Point3i channelOffsets=Point3i(0,0,0))
+  static void PerVertexPerlinNoise(MeshType& m, Point3f period, Point3f offset=Point3f(0,0,0))
   {
-    Point3<ScalarType> p;
+    Point3<ScalarType> p[3];
     for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
     {
       if(!(*vi).IsD()){
-        p = bbox.GlobalToLocal(tr * (*vi).P());   //actual vertex position scaled to bbox
-        (*vi).C() = Color4b( int(255*math::Perlin::Noise(channelOffsets[0]+p[0]*freq,channelOffsets[0]+p[1]*freq,channelOffsets[0]+p[2]*freq)),
-                             int(255*math::Perlin::Noise(channelOffsets[1]+p[0]*freq,channelOffsets[1]+p[1]*freq,channelOffsets[1]+p[2]*freq)),
-                             int(255*math::Perlin::Noise(channelOffsets[2]+p[0]*freq,channelOffsets[2]+p[1]*freq,channelOffsets[2]+p[2]*freq)),
+        // perlin noise is defined in 022
+        p[0] = (vi->P()/period[0])+offset;
+        p[1] = (vi->P()/period[1])+offset;
+        p[2] = (vi->P()/period[2])+offset;
+        (*vi).C() = Color4b( int(127+128.0*math::Perlin::Noise(p[0][0],p[0][1],p[0][2])),
+                             int(127+128.0*math::Perlin::Noise(p[1][0],p[1][1],p[1][2])),
+                             int(127+128.0*math::Perlin::Noise(p[2][0],p[2][1],p[2][2])),
                              255 );
       }
     }

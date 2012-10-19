@@ -52,13 +52,15 @@ int  main(int argc, char **argv)
 {
  MyMesh m;
 
+ vcg::tri::io::ImporterPLY<MyMesh>::Open(m,"../../meshes/torus_irregular.ply");
+
  vcg::tri::UpdateColor<MyMesh>::PerVertexConstant(m, vcg::Color4b::LightGray);
  vcg::tri::UpdateColor<MyMesh>::PerFaceConstant(m, vcg::Color4b::LightGray);
 
- vcg::tri::UpdateColor<MyMesh>::PerVertexPerlinNoise(m, vcg::Color4b::LightGray);
- vcg::tri::UpdateColor<MyMesh>::PerFaceFromVertex(m, vcg::Color4b::LightGray);
+ vcg::tri::UpdateColor<MyMesh>::PerVertexPerlinNoise(m,vcg::Point3f(0.5,0.75,1.0));
+ vcg::tri::UpdateColor<MyMesh>::PerFaceFromVertex(m);
 
 
-  vcg::tri::io::ExporterPLY<MyMesh>::Save(m,argv[2]);
+ vcg::tri::io::ExporterPLY<MyMesh>::Save(m,"out.ply",vcg::tri::io::Mask::IOM_FACECOLOR+vcg::tri::io::Mask::IOM_VERTCOLOR);
   return 0;
 }
