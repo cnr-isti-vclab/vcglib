@@ -20,18 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.2  2005/10/13 14:59:57  ganovelli
-versione con svd
-
-Revision 1.1  2005/03/14 17:04:24  ganovelli
-created
-
-
-****************************************************************************/
 
 #ifndef __VCGLIB_FITTING3
 #define __VCGLIB_FITTING3
@@ -40,166 +28,120 @@ created
 #include <vcg/space/plane3.h>
 #include <vcg/math/matrix44.h>
 #include <vcg/math/matrix33.h>
-#include <vcg/math/lin_algebra.h>
 
+#include <eigenlib/Eigen/Core>
+#include <eigenlib/Eigen/Eigenvalues>
 
 namespace vcg {
 
+/*! \brief compute the covariance matrix of a set of point
+
+  It returns also the barycenter of the point set
+  */
+template <class S >
+void ComputeCovarianceMatrix(const std::vector<Point3<S> > &pointVec, Point3<S> &barycenter, Eigen::Matrix<S,3,3> &m)
+{
+  // first cycle: compute the barycenter
+  barycenter.SetZero();
+  typename  std::vector< Point3<S> >::const_iterator pit;
+  for( pit = pointVec.begin(); pit != pointVec.end(); ++pit) barycenter+= (*pit);
+  barycenter/=pointVec.size();
+
+  // second cycle: compute the covariance matrix
+  m.setZero();
+  Eigen::Matrix<S,3,3> A;
+  Eigen::Vector3f p;
+  for(pit = pointVec.begin(); pit != pointVec.end(); ++pit) {
+    ((*pit)-barycenter).ToEigenVector(p);
+    m+= p*p.transpose(); // outer product
+  }
+}
+
+/*! \brief Compute the plane best fitting a set of points
+
+The algorithm used is the classical Covariance matrix eigenvector approach.
+
+*/
 template <class S>
-Point3<S> PlaneFittingPoints(const std::vector< Point3<S> > & samples, Plane3<S> & p, Point4<S> & eval, Matrix44<S> & evec)
+void FitPlaneToPointSet(const std::vector< Point3<S> > & pointVec, Plane3<S> & plane)
 {
-	Matrix44<S> m;m.SetZero();
-	typename std::vector< Point3<S> >::const_iterator it;
+  Eigen::Matrix3f covMat=Eigen::Matrix3f::Zero();
+  Point3<S> b;
+  ComputeCovarianceMatrix(pointVec,b,covMat);
 
-	Point3<S> c; c.SetZero();
-	for(it = samples.begin(); it != samples.end(); ++it)
-	{
-		c += *it;
-	}
-	c /= samples.size();
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eig(covMat);
+  Eigen::Vector3f eval = eig.eigenvalues();
+  Eigen::Matrix3f evec = eig.eigenvectors();
+  eval = eval.cwiseAbs();
+  int minInd;
+  eval.minCoeff(&minInd);
+  Point3<S> d;
+  d[0] = evec(0,minInd);
+  d[1] = evec(1,minInd);
+  d[2] = evec(2,minInd);
 
-	for(it = samples.begin(); it != samples.end(); ++it)
-	{
-		Point3<S> p = (*it) - c;
-		for(int j = 0 ; j < 3;++j)
-			*(Point3<S>*)&m[j][0] += p * p[j];
-	}
-
-	m[0][3] = m[1][3] = m[2][3] = S(0);
-	m[3][3] = S(1);
-	m[3][0] = m[3][1] = m[3][2] = S(0);
-
-	int n;
-	Point3<S> d;
-	Jacobi(m, eval, evec, n);
-
-	//Sort eigenvalues (tarinisort)
-	Point4<S> e;
-	e[0] = S(fabs(eval[0]));
-	e[1] = S(fabs(eval[1]));
-	e[2] = S(fabs(eval[2]));
-
-	int maxi, mini, medi;
-	if (e[1]    > e[0]) { maxi = 1; mini = 0; } else { maxi = 0; mini = 1;}
-	if (e[maxi] < e[2]) { maxi = 2;           } else if (e[mini] > e[2]) { mini = 2; };
-	medi = 3 - maxi -mini;
-
-	d[0] = evec[0][mini];
-	d[1] = evec[1][mini];
-	d[2] = evec[2][mini];
-
-	const S norm = d.Norm();
-	p.SetOffset(c.dot(d)/norm);
-	p.SetDirection(d/norm);
-
-	return Point3<S>(e[mini], e[medi], e[maxi]);
+  plane.Init(b,d);
 }
+
+/*! \brief compute the weighted covariance matrix of a set of point
+
+  It returns also the weighted barycenter of the point set.
+  When computing the covariance matrix  the weights are applied to the points transposed to the origin.
+  */
+template <class S >
+void ComputeWeightedCovarianceMatrix(const std::vector<Point3<S> > &pointVec, const std::vector<S> &weightVec, Point3<S> &bp, Eigen::Matrix<S,3,3> &m)
+{
+  assert(pointVec.size() == weightVec.size());
+  // First cycle: compute the weighted barycenter
+  bp.SetZero();
+  S wSum=0;
+  typename  std::vector< Point3<S> >::const_iterator pit;
+  typename  std::vector<  S>::const_iterator wit;
+  for( pit = pointVec.begin(),wit=weightVec.begin(); pit != pointVec.end(); ++pit,++wit)
+  {
+    bp+= (*pit)*(*wit);
+    wSum+=*wit;
+  }
+  bp /=wSum;
+
+  // Second cycle: compute the weighted covariance matrix
+  // The weights are applied to the points transposed to the origin.
+  m.setZero();
+  Eigen::Matrix<S,3,3> A;
+  Eigen::Vector3f p;
+  for( pit = pointVec.begin(),wit=weightVec.begin(); pit != pointVec.end(); ++pit,++wit)
+  {
+    (((*pit)-bp)*(*wit)).ToEigenVector(p);
+    m+= p*p.transpose(); // outer product
+  }
+  m/=wSum;
+}
+/*! \brief Compute the plane best fitting a set of points
+
+The algorithm used is the classical Covariance matrix eigenvector approach.
+*/
 
 template <class S>
-Point3<S> PlaneFittingPoints(const std::vector< Point3<S> > & samples, Plane3<S> & p)
+void WeightedFitPlaneToPointSet(const std::vector< Point3<S> > & pointVec, const std::vector<S> &weightVec, Plane3<S> & plane)
 {
-	Point4<S>   eval;
-	Matrix44<S> evec;
-	return PlaneFittingPoints(samples, p, eval, evec);
+  Eigen::Matrix3f covMat=Eigen::Matrix3f::Zero();
+  Point3<S> b;
+  ComputeWeightedCovarianceMatrix(pointVec,weightVec, b,covMat);
+
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eig(covMat);
+  Eigen::Vector3f eval = eig.eigenvalues();
+  Eigen::Matrix3f evec = eig.eigenvectors();
+  eval = eval.cwiseAbs();
+  int minInd;
+  eval.minCoeff(&minInd);
+  Point3<S> d;
+  d[0] = evec(0,minInd);
+  d[1] = evec(1,minInd);
+  d[2] = evec(2,minInd);
+
+  plane.Init(b,d);
 }
 
-template<class S>
-inline double FIT_VExp( const Point3<S> & x, const int i )
-{
-	assert(i>=0);
-	assert(i<4);
-	if(i==0) return 1;
-	else     return x[i-1];
-}
-
-	/** Fitting di piani: trova il piano che meglio approssima
-	    l'insieme di punti dato
-	 */
-template<class S>
-bool PlaneFittingPointsOld(  std::vector< Point3<S> > & samples, Plane3<S> & p )
-{
-	Point3<S> d;
-
-  const int N = 4;
-	S P[N][N];		// A = s' . s
-	S U[N][N];
-	int i,j,k,n;
-
-	n = (int)samples.size();
-	if(n<3)
-		return false;
-
-	//printf("\n p_prima: %f %f %f %f \n",p.Offset(),p.Direction()[0],p.Direction()[1],p.Direction()[2]);
-
-	for(i=0;i<N;++i)
-	{
-		for(j=i;j<N;++j)
-		{
-			P[i][j] = 0;
-			for(k=0;k<n;++k)
-				P[i][j] += FIT_VExp(samples[k],i) * FIT_VExp(samples[k],j);
-		}
-		for(j=0;j<i;++j)
-			P[i][j] = P[j][i];
-	}
-
-	//printf("D \n");
-	//for(i=0;i<N;++i){
-	//	printf("\n");
- //		for(j=0;j<N;++j)
-	//		printf("%2.3f\t",P[i][j]);
-	//}
-	//
-	Matrix44<S> m;
-	for(i=0;i<N;++i)
- 		for(j=0;j<N;++j)
-			m[i][j]=P[i][j];
-
-
-//	Point4<S> s;s.SetZero();
-//
-//	s.Normalize();
-//	printf("\n RES %f %f %f %f \n",s[0],s[1],s[2],s[3]);
-//printf("\n GJ \n");
-//	for(i=0;i<N;++i){
-//		printf("\n");
-// 		for(j=0;j<N;++j)
-//			printf("%2.3f\t",m[i][j]);
-//	}
-	for(i=0;i<N;++i)
-	{
-		U[i][i] = 1.0;
-		for(j=0;j<i;++j)
-			U[i][j] = 0.0;
-		for(j=i+1;j<N;++j)
-		{
-			if(P[i][i]==0.0)
-				return false;
-
-			U[i][j] = P[i][j]/P[i][i];
-			for(k=j;k<N;++k)
-				P[j][k] -= U[i][j]*P[i][k];
-		}
-	}
-
-	//printf("\n U \n");
-	//for(i=0;i<N;++i){
-	//	printf("\n");
- //		for(j=0;j<N;++j)
-	//		printf("%2.3f\t",U[i][j]);
-	//}
-
-	
- 	S norm = Point3<S>(U[1][2]*U[2][3]-U[1][3],-U[2][3],1).Norm();
-
- 	p.SetDirection(Point3<S>(U[1][2]*U[2][3]-U[1][3],-U[2][3],1));
- 	p.SetOffset(-(U[0][2]*U[2][3]-U[0][3]+U[0][1]*U[1][3]-U[0][1]*U[1][2]*U[2][3])/norm);
-
- 
-	//printf("\n p: %f %f %f %f \n",p.Offset(),p.Direction()[0],p.Direction()[1],p.Direction()[2]);
-
-	return true;
-}
 } // end namespace
 
 #endif
