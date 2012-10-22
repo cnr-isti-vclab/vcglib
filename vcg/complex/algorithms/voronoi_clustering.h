@@ -127,7 +127,7 @@ static void VoronoiColoring(MeshType &m, std::vector<VertexType *> &seedVec, boo
 				g.FarthestVertex(m,borderVec,farthest);
 		}
 
-		tri::UpdateColor<MeshType>::VertexQualityRamp(m);
+		tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
 }
 
 // It associates the faces with a given vertex according to the vertex associations
@@ -301,7 +301,7 @@ static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec, int
 		if(cb) cb(iter*100/relaxIter,"Voronoi Lloyd Relaxation: Searching New Seeds");
 			
     g.FarthestVertex(m,borderVec,farthest);
-        tri::UpdateColor<MeshType>::VertexQualityRamp(m);
+        tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
 
 		// Search the local maxima for each region and use them as new seeds	
 		std::vector< std::pair<float,VertexPointer> > seedMaxima(m.vert.size(),zz);
@@ -323,7 +323,7 @@ static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec, int
 								newSeeds.push_back(seedMaxima[i].second);
 					}
 		
-		tri::UpdateColor<MeshType>::VertexQualityRamp(m);
+		tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
     for(size_t i=0;i<seedVec.size();++i)
 			seedVec[i]->C() = Color4b::Black;
 		
