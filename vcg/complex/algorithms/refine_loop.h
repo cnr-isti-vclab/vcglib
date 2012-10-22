@@ -221,14 +221,12 @@ struct Centroid {
 	}
 	inline void addVertex(const typename MESH_TYPE::VertexType &v, LScalar w) {
 		LVector p(v.cP().X(), v.cP().Y(), v.cP().Z());
-		LVector n(v.cN().X(), v.cN().Y(), v.cN().Z());
-
 		sumP += p * w;
 		sumW += w;
 	}
-	inline void project(typename MESH_TYPE::VertexType &v) const {
+	inline void project(std::pair<Point3f,Point3f> &nv) const {
 		LVector position = sumP / sumW;
-		v.P() = Coord(position.X(), position.Y(), position.Z());
+		nv.first = Coord(position.X(), position.Y(), position.Z());
 	}
 };
 
@@ -274,7 +272,7 @@ struct LS3Projection {
 		sumDotPP += w * vcg::SquaredNorm(p);
 		sumW += w;
 	}
-	void project(typename MESH_TYPE::VertexType &v) const {
+	void project(std::pair<Point3f,Point3f>  &nv) const {
 		LScalar invSumW = Scalar(1)/sumW;
 		LScalar aux4 = beta * LScalar(0.5) *
 									(sumDotPN - invSumW*sumP.dot(sumN))
@@ -339,8 +337,8 @@ struct LS3Projection {
 			normal.Normalize();
 		}
 
-		v.P() = Coord(position.X(), position.Y(), position.Z());
-		v.N() = Coord(normal.X(), normal.Y(), normal.Z());
+		nv.first = Coord(position.X(), position.Y(), position.Z());
+		nv.second = Coord(normal.X(), normal.Y(), normal.Z());
 	}
 };
 
@@ -374,7 +372,10 @@ struct OddPointLoopGeneric : public std::unary_function<face::Pos<typename MESH_
 		if (he.IsBorder()) {
 			proj.addVertex(*l, 0.5);
 			proj.addVertex(*r, 0.5);
-			proj.project(nv);
+			std::pair<Point3f,Point3f>pp;
+			proj.project(pp);
+			nv.P()=pp.first;
+			nv.N()=pp.second;
 		}
 		else {
 			he.FlipE();	he.FlipV();
@@ -398,7 +399,11 @@ struct OddPointLoopGeneric : public std::unary_function<face::Pos<typename MESH_
 				proj.addVertex(*u, 1.0/8.0);
 				proj.addVertex(*d, 1.0/8.0);
 			}
-			proj.project(nv);
+			std::pair<Point3f,Point3f>pp;
+			proj.project(pp);
+			nv.P()=pp.first;
+			nv.N()=pp.second;
+//			proj.project(nv);
 		}
 
 	}
@@ -437,7 +442,7 @@ struct EvenPointLoopGeneric : public std::unary_function<face::Pos<typename MESH
 	inline EvenPointLoopGeneric(Projection proj = Projection(), Weight weight = Weight()) :
 		proj(proj), weight(weight), valence(0) {}
 	
-	void operator()(typename MESH_TYPE::VertexType &nv, face::Pos<typename MESH_TYPE::FaceType>  ep)	{
+	void operator()(std::pair<Point3f,Point3f> &nv, face::Pos<typename MESH_TYPE::FaceType>  ep)	{
 		proj.reset();
 		
 		face::Pos<typename MESH_TYPE::FaceType> he(ep.f,ep.z,ep.f->V(ep.z));
@@ -473,7 +478,11 @@ struct EvenPointLoopGeneric : public std::unary_function<face::Pos<typename MESH
 			proj.addVertex(*curr, 3.0/4.0);
 			proj.addVertex(*l, 1.0/8.0);
 			proj.addVertex(*r, 1.0/8.0);
+//			std::pair<Point3f,Point3f>pp;
 			proj.project(nv);
+//			nv.P()=pp.first;
+//			nv.N()=pp.second;
+//			proj.project(nv);
 		}
 		else {	//	Inner rule
 //			assert(!he.v->IsB()); border flag no longer updated (useless)
@@ -565,7 +574,8 @@ bool RefineOddEvenE(MESH_TYPE &m, ODD_VERT odd, EVEN_VERT even, PREDICATE edgePr
 	
 	// store updated vertices
 	std::vector<bool> updatedList(m.vn, false);
-	std::vector<typename MESH_TYPE::VertexType> newEven(m.vn);
+	//std::vector<typename MESH_TYPE::VertexType> newEven(m.vn);
+	std::vector<std::pair<Point3f,Point3f> > newEven(m.vn);
 
 	typename MESH_TYPE::VertexIterator vi;
 	typename MESH_TYPE::FaceIterator fi;
@@ -597,11 +607,13 @@ bool RefineOddEvenE(MESH_TYPE &m, ODD_VERT odd, EVEN_VERT even, PREDICATE edgePr
 	// refine dei vertici odd, crea dei nuovi vertici in coda
 	RefineE< MESH_TYPE, ODD_VERT > (m, odd, edgePred, RefineSelected, cbOdd);
 
-	typename std::vector<typename MESH_TYPE::VertexType>::iterator nei;
+	typename std::vector<std::pair<Point3f,Point3f> >::iterator nei;
 	for (nei=newEven.begin(); nei!=newEven.end(); ++nei) {
 		if(updatedList[nei-newEven.begin()]) {
-			m.vert[nei-newEven.begin()].ImportData(*nei);
-			assert(m.vert[nei-newEven.begin()].N() == nei->N());
+//			m.vert[nei-newEven.begin()].ImportData(*nei);
+//			assert(m.vert[nei-newEven.begin()].N() == nei->N());
+            m.vert[nei-newEven.begin()].P()=(*nei).first;
+            m.vert[nei-newEven.begin()].N()=(*nei).second;
 		}
 	}
 
