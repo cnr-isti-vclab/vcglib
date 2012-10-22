@@ -236,8 +236,8 @@ class Quadric
 
         vcg::tri::UpdateTopology<MeshType>::VertexFace(m);
 
-        vcg::tri::UpdateNormals<MeshType>::PerVertexAngleWeighted(m);
-        vcg::tri::UpdateNormals<MeshType>::NormalizeVertex(m);
+        vcg::tri::UpdateNormal<MeshType>::PerVertexAngleWeighted(m);
+        vcg::tri::UpdateNormal<MeshType>::NormalizePerVertex(m);
 
 
         VertexIterator vi;
