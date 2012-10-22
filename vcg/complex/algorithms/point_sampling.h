@@ -109,7 +109,7 @@ class TrivialSampler
 	}
 }; // end class TrivialSampler
 
-template <class MetroMesh, class VertexSampler>
+template <class MetroMesh, class VertexSampler = TrivialSampler< MetroMesh> >
 class SurfaceSampling
 {
 		typedef typename MetroMesh::CoordType			CoordType;
@@ -147,6 +147,15 @@ static unsigned int RandomInt(unsigned int i)
 static double RandomDouble01()
 {
 	return SamplingRandomGenerator().generate01();
+}
+
+static Point3f RandomPoint3fBall01()
+{
+  while(1)
+  {
+  Point3f p=Point3f(0.5f-RandomDouble01(),0.5f-RandomDouble01(),0.5f-RandomDouble01());
+  if(SquaredNorm(p)<=0.25) return p*2.0f;
+  }
 }
 
 #define FAK_LEN 1024
@@ -460,7 +469,7 @@ static void EdgeUniform(MetroMesh & m, VertexSampler &ps,int sampleNum, bool sam
 // Generate the barycentric coords of a random point over a single face, 
 // with a uniform distribution over the triangle. 
 // It uses the parallelogram folding trick. 
-static CoordType RandomBaricentric()
+static CoordType RandomBarycentric()
 {
 	CoordType interp;
 	interp[1] = RandomDouble01();
@@ -474,6 +483,14 @@ static CoordType RandomBaricentric()
 	assert(interp[1] + interp[2] <= 1.0);
 	interp[0]=1.0-(interp[1] + interp[2]);
 	return interp;
+}
+
+
+// Given a triangle return a random point over it
+static CoordType RandomPointInTriangle(const FaceType &f)
+{
+	CoordType u = RandomBarycentric();
+	return f.cP(0)*u[0] + f.cP(1)*u[1] + f.cP(2)*u[2];
 }
 
 static void StratifiedMontecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
@@ -493,7 +510,7 @@ static void StratifiedMontecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 			
 			// for every sample p_i in T...
 			for(int i=0; i < faceSampleNum; i++)
-					ps.AddFace(*fi,RandomBaricentric());
+					ps.AddFace(*fi,RandomBarycentric());
 			floatSampleNum -= (double) faceSampleNum; 
 		}
 }
@@ -524,7 +541,7 @@ static void MontecarloPoisson(MetroMesh & m, VertexSampler &ps,int sampleNum)
 
       // for every sample p_i in T...
       for(int i=0; i < faceSampleNum; i++)
-          ps.AddFace(*fi,RandomBaricentric());
+          ps.AddFace(*fi,RandomBarycentric());
 //      SampleNum -= (double) faceSampleNum;
     }
 }
@@ -560,7 +577,7 @@ static void Montecarlo(MetroMesh & m, VertexSampler &ps,int sampleNum)
 			assert(it != intervals.begin());
 			assert( (*(it-1)).first <val );
 			assert( (*(it)).first >= val);
-			ps.AddFace( *(*it).second, RandomBaricentric() );
+			ps.AddFace( *(*it).second, RandomBarycentric() );
 		}
 }
 	
@@ -595,7 +612,7 @@ static void WeightedMontecarlo(MetroMesh & m, VertexSampler &ps, int sampleNum)
 			
 			// for every sample p_i in T...
 			for(int i=0; i < faceSampleNum; i++)
-					ps.AddFace(*fi,RandomBaricentric());
+					ps.AddFace(*fi,RandomBarycentric());
 							
 			floatSampleNum -= (double) faceSampleNum; 
     }
@@ -614,7 +631,7 @@ static int SingleFaceSubdivision(int sampleNum, const CoordType & v0, const Coor
         CoordType SamplePoint;
         if(randSample) 
         {
-            CoordType rb=RandomBaricentric();
+            CoordType rb=RandomBarycentric();
             SamplePoint=v0*rb[0]+v1*rb[1]+v2*rb[2];
         }
         else SamplePoint=((v0+v1+v2)*(1.0f/3.0f));
@@ -703,7 +720,7 @@ static int SingleFaceSubdivisionOld(int sampleNum, const CoordType & v0, const C
         CoordType SamplePoint;
         if(randSample)
         {
-            CoordType rb=RandomBaricentric();
+            CoordType rb=RandomBarycentric();
             SamplePoint=v0*rb[0]+v1*rb[1]+v2*rb[2];
         }
         else SamplePoint=((v0+v1+v2)*(1.0f/3.0f));
@@ -819,7 +836,7 @@ static int SingleFaceSimilarDual(FacePointer fp, VertexSampler &ps, int n_sample
 						CoordType V2((i+0)*segmentLen,(j+1)*segmentLen, 1.0 - ((i+0)*segmentLen+(j+1)*segmentLen) ) ;
 						n_samples++;
 						if(randomFlag) 	{
-											CoordType rb=RandomBaricentric();
+											CoordType rb=RandomBarycentric();
 											ps.AddFace(*fp, V0*rb[0]+V1*rb[1]+V2*rb[2]);
 							} else  ps.AddFace(*fp,(V0+V1+V2)/3.0);
 
@@ -828,7 +845,7 @@ static int SingleFaceSimilarDual(FacePointer fp, VertexSampler &ps, int n_sample
 									CoordType V3((i+1)*segmentLen,(j+1)*segmentLen, 1.0 - ((i+1)*segmentLen+(j+1)*segmentLen) ) ;
 									n_samples++;
 									if(randomFlag) 	{
-														CoordType rb=RandomBaricentric();
+														CoordType rb=RandomBarycentric();
 														ps.AddFace(*fp, V3*rb[0]+V1*rb[1]+V2*rb[2]);
 										} else  ps.AddFace(*fp,(V3+V1+V2)/3.0);								
 							}
