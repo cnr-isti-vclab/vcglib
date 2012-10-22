@@ -119,36 +119,11 @@ public:
 
 	/** Compute the Frobenius Norm of the Matrix */
 	Scalar Norm() { return Base::cwise().abs2().sum(); }
-// 	{
-// 		// FIXME looks like there was a bug: j is not used !!!
-// 		Scalar SQsum=0;
-// 		for(int i=0;i<3;++i)
-// 			for(int j=0;j<3;++j)
-// 				SQsum += a[i]*a[i];
-// 		return (math::Sqrt(SQsum));
-// 	}
-
 
 	/** Computes the  covariance matrix of a set of 3d points. Returns the barycenter.
 	*/
 	// FIXME should be outside Matrix
-	template <class STLPOINTCONTAINER >
-	void Covariance(const STLPOINTCONTAINER &points, Point3<Scalar> &bp) {
-		assert(!points.empty());
-		typedef typename  STLPOINTCONTAINER::const_iterator PointIte;
-		// first cycle: compute the barycenter
-		bp.setZero();
-		for( PointIte pi = points.begin(); pi != points.end(); ++pi) bp+= (*pi);
-		bp/=points.size();
-		// second cycle: compute the covariance matrix
-		this->setZero();
-		vcg::Matrix33<ScalarType> A;
-		for( PointIte pi = points.begin(); pi != points.end(); ++pi) {
-				Point3<Scalar> p = (*pi)-bp;
-				A.OuterProduct(p,p);
-				(*this)+= A;
-		}
-	}
+
 
 	/**
 	It computes the cross covariance matrix of two set of 3d points P and X;
