@@ -25,7 +25,6 @@
 #define __VCGLIB_POLYGON_SUPPORT
 
 #include <vector>
-#include <vcg/complex/algorithms/subset.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/space/planar_polygon_tessellation.h>
 

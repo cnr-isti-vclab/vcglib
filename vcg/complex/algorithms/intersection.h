@@ -27,11 +27,12 @@
 #include<vcg/space/plane3.h>
 #include<vcg/space/segment3.h>
 #include<vcg/space/intersection3.h>
-#include<vcg/complex/allocate.h>
-#include<vcg/complex/algorithms/subset.h>
+#include<vcg/complex/complex.h>
+#include<vcg/complex/append.h>
 #include<vcg/complex/algorithms/closest.h>
 #include<vcg/complex/algorithms/update/quality.h>
-#include<vcg/complex/complex.h>
+#include<vcg/complex/algorithms/update/selection.h>
+
 
 #ifndef __VCGLIB_INTERSECTION_TRI_MESH
 #define __VCGLIB_INTERSECTION_TRI_MESH
@@ -329,13 +330,13 @@ void IntersectionBallMesh(	 TriMeshType & m, const vcg::Sphere3<ScalarType> &bal
 	std::pair<ScalarType, ScalarType> info;
 
 	if(tol == 0) tol = M_PI * ball.Radius() * ball.Radius() / 100000;
-
+	tri::UpdateSelection<TriMeshType>::FaceClear(m);
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
 	if(!(*fi).IsD() && IntersectionSphereTriangle<ScalarType>(ball  ,(*fi), witness , &info))
-		closests.push_back(&(*fi));
+	  (*fi).SetS();
 
 	res.Clear();
-	SubSet(res,closests);
+	tri::Append<TriMeshType,TriMeshType>::Selected(res,m);
 	int i =0;
 	while(i<res.fn){
 		 bool allIn = ( ball.IsIn(res.face[i].P(0)) && ball.IsIn(res.face[i].P(1))&&ball.IsIn(res.face[i].P(2)));
