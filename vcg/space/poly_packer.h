@@ -58,7 +58,7 @@ public:
 
   static Box2f getPolyOOBB(const std::vector<Point2x> &poly, float &rot)
   {
-    const int stepNum=16;
+    const int stepNum=64;
     float bestAngle;
 	float bestArea = std::numeric_limits<float>::max();
     Box2f bestBB;
