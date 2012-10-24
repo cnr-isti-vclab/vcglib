@@ -16,6 +16,7 @@ SUBDIRS       = trimesh_base  \
                 trimesh_intersection \
                 trimesh_isosurface \
                 trimesh_join \
+                trimesh_kdtree \
                 trimesh_normal \
                 trimesh_optional \
                 trimesh_ray \

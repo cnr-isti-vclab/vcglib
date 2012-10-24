@@ -27,7 +27,6 @@
 
 Attributes are a simple mechanism to associate user-defined 'attributes' to the simplicies and to the mesh.
 \ref attributes for more Details
-
 */
 
 #include<vcg/complex/complex.h>

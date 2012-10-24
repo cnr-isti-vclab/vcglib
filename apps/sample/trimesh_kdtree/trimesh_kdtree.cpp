@@ -20,59 +20,66 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/*! \file trimesh_base.cpp
+/*! \file trimesh_kdtree.cpp
 \ingroup code_sample
 
-\brief the minimal example of using the lib
+\brief An example about using the kdtree and meshes
 
-This file contain a minimal example of the library, showing how to load a mesh and how to compute per vertex normals on it.
-
+KdTree are one of the Spatial indexing data structure available.
+They are tailored for storing point-based structures and performing k-neighbours queries.
+In this simple example we simply compute the average distance of a vertex from its neighbours.
+\ref spatial_indexing for more Details
 */
 
 #include<vcg/complex/complex.h>
 
-// input output
-#include<wrap/io_trimesh/import_off.h>
-
-// topology computation
-#include<vcg/complex/algorithms/update/topology.h>
-
-// normals
+#include<wrap/io_trimesh/import.h>
+#include<wrap/io_trimesh/export.h>
+#include <vcg/space/index/kdtree/kdtree.h>
 #include<vcg/complex/algorithms/update/normal.h>
+#include<vcg/complex/algorithms/update/color.h>
 
+using namespace vcg;
+using namespace std;
 
 class MyEdge;
 class MyFace;
 class MyVertex;
-struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<MyVertex>   ::AsVertexType,
-                                        vcg::Use<MyEdge>     ::AsEdgeType,
-                                        vcg::Use<MyFace>     ::AsFaceType>{};
+struct MyUsedTypes : public UsedTypes<	Use<MyVertex>   ::AsVertexType,
+                                        Use<MyEdge>     ::AsEdgeType,
+                                        Use<MyFace>     ::AsFaceType>{};
 
-class MyVertex  : public vcg::Vertex<MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags  >{};
-class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::FFAdj,  vcg::face::VertexRef, vcg::face::BitFlags > {};
-class MyEdge    : public vcg::Edge<MyUsedTypes>{};
-class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> , std::vector<MyEdge>  > {};
+class MyVertex  : public Vertex<MyUsedTypes, vertex::Coord3f, vertex::Normal3f, vertex::Qualityf, vertex::Color4b, vertex::BitFlags  >{};
+class MyFace    : public Face< MyUsedTypes,  face::VertexRef, face::BitFlags > {};
+class MyEdge    : public Edge<MyUsedTypes>{};
+class MyMesh    : public tri::TriMesh< vector<MyVertex>, vector<MyFace> , vector<MyEdge>  > {};
 
 int main( int argc, char **argv )
 {
-  if(argc<2)
-  {
-    printf("Usage trimesh_base <meshfilename.obj>\n");
-    return -1;
-  }
-  /*! we simply
-    */
-  MyMesh m;
+  if(argc<2) argv[1]="../../meshes/torus_irregular.ply";
 
-  if(vcg::tri::io::ImporterOFF<MyMesh>::Open(m,argv[1])!=vcg::tri::io::ImporterOFF<MyMesh>::NoError)
+  MyMesh m;
+  if(tri::io::Importer<MyMesh>::Open(m,argv[1])!=0)
   {
     printf("Error reading file  %s\n",argv[1]);
     exit(0);
   }
 
-  vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalized(m);
-  printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
-  printf( "Mesh has %i vert and %i faces\n", m.VN(), m.FN() );
+  VertexConstDataWrapper<MyMesh> ww(m);
 
+  KdTree<float> tree(ww);
+  tree.setMaxNofNeighbors(3);
+  for (int j = 0; j < m.VN(); j++) {
+      tree.doQueryK(m.vert[j].cP());
+      int neighbours = tree.getNofFoundNeighbors();
+      float avgDist=0;
+      for (int i = 0; i < neighbours; i++) {
+          int neightId = tree.getNeighborId(i);
+          avgDist+=Distance(m.vert[j].cP(),m.vert[neightId].cP());
+      }
+      m.vert[j].Q() = avgDist/=neighbours;
+  }
+  tri::UpdateColor<MyMesh>::PerVertexQualityRamp(m);
+  tri::io::ExporterPLY<MyMesh>::Save(m,"out.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
   return 0;
 }

@@ -20,6 +20,12 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/*! \file trimesh_normal.cpp
+\ingroup code_sample
+
+\brief An example of all the methods for computing normals over a mesh.
+
+*/
 #include<vcg/complex/complex.h>
 
 #include<wrap/io_trimesh/import_off.h>
