@@ -95,6 +95,8 @@ int main()
        }
   }
 
-
+  // finally lets copy this mesh onto another one.
+  MyMesh m2;
+  vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m2,m);
 
 }

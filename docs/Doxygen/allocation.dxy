@@ -62,14 +62,10 @@ m.face.size() == m.FN()
 How to copy a mesh
 ------------
 Given the intricate nature of the mesh itself it is severely forbidden any attempt of copying meshes as simple object. To copy a mesh you have to use the Append utility class:
-\code
- #include<vcg/complex/trimesh/append.h>
+\dontinclude trimesh_allocate.cpp
+\skip m2
+\until Append
 
-MyMesh ml,mr;
-...
-tri::Append<MyMesh>::Mesh(ml,mr);
-\endcode
-
-This is equivalent to append the content of mr onto ml. If you want simple copy just clear ml before calling the above function.
+In the vcg::tri::Append utility class there are aslo functions for copying only a subset of the second mesh (the selected one) or to append the second mesh to the first one.
 
 */

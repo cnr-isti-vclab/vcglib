@@ -35,6 +35,7 @@ namespace tri {
 
 Adding elements to a mesh, like faces and vertices can involve the reallocation of the vectors of the involved elements.
 This class provide the only safe methods to add elements of a mesh to another one.
+\sa \ref allocation
 */
 template<class MeshLeft, class ConstMeshRight>
 class Append
@@ -176,7 +177,7 @@ public:
 // Append Right Mesh to the Left Mesh
 // Append::Mesh(ml, mr) is equivalent to ml += mr. 
 // Note MeshRigth could be costant...
- /*! \brief @Append the second mesh to the first one.
+ /*! \brief %Append the second mesh to the first one.
 
    The first mesh is not destroyed and no attempt of avoid duplication of already present elements is done.
    If requested only the selected elements are appended to the first one.
@@ -390,7 +391,7 @@ static void MeshCopy(MeshLeft& ml, ConstMeshRight& mr, bool selected=false)
   Mesh(ml,mr,selected);
   ml.bbox=mr.bbox;
 }
-/*! \brief @Append only the selected elements of second mesh to the first one.
+/*! \brief %Append only the selected elements of second mesh to the first one.
 
   It is just a wrap of the main Append::Mesh()
   */
