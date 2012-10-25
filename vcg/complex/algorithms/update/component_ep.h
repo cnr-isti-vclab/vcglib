@@ -30,8 +30,6 @@ namespace tri {
 
 /// \ingroup trimesh 
 
-	/// \headerfile edges.h vcg/complex/algorithms/update/edges.h
-
 	/// \brief This class is used to compute or update the precomputed data used to efficiently compute point-face distances.
 	template <class ComputeMeshType>
 	class UpdateComponentEP

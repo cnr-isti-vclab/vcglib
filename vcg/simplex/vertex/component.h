@@ -20,18 +20,14 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#include <vcg/complex/complex.h>
 #ifndef __VCG_VERTEX_PLUS_COMPONENT
 #define __VCG_VERTEX_PLUS_COMPONENT
 namespace vcg {
-  namespace vertex {
-/*
-Some naming Rules
-All the Components that can be added to a vertex should be defined in the namespace vert:
-
+namespace vertex {
+/** \addtogroup vertex
+  @{
 */
-
-  /*------------------------- Base Classes  -----------------------------------------*/
+/*------------------------- Base Classes  -----------------------------------------*/
 
   template <class S>
   struct CurvatureDirBaseType{
@@ -156,7 +152,10 @@ public:
 };
 
 /*-------------------------- COORD ----------------------------------------*/
+/*! \brief Geometric position of the vertex
 
+  Stored as a templated Point3.
+  */
 template <class A, class T> class Coord: public T {
 public:
   typedef A CoordType;
@@ -181,6 +180,10 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 };
 
 /*-------------------------- NORMAL ----------------------------------------*/
+  /*! \brief Normal of the vertex
+
+    Stored as a templated Point3. It can be of a different type of the Coord Component
+    */
 
 template <class A, class T> class Normal: public T {
 public:
@@ -213,6 +216,10 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/
+  /*! \brief Per vertex Incremental Mark
+
+      It is just an int that allow to efficent un-marking of the whole mesh. \sa UnmarkAll
+      */
 
 template <class T> class Mark: public T {
 public:
@@ -231,6 +238,12 @@ public:
 };
 
 /*-------------------------- TEXCOORD ----------------------------------------*/
+  /*! \brief Per vertex Texture Coords
+
+      Note that to have multiple different TexCoord for a single vertex (as it happens on atlas where a vertex can belong to two triangles mapped on different portionof the texture) you have two options:
+      - duplicate vertexes
+      - use PerWedge Texture coords
+      */
 
 template <class A, class TT> class TexCoord: public TT {
 public:
@@ -510,6 +523,9 @@ private:
 	int _zp ;
 };
 
+  /**
+    @}
+  */
 
 
   } // end namespace vert

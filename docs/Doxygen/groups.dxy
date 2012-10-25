@@ -9,19 +9,14 @@ This module contains the documentation for the types and the functions used for.
 This module contains the documentation for the types and the functions used for representing and managing mathematical entities.
 */
 
-/** \defgroup simplex Simplexes
-The module containing the various simplicial complexes
-*/
-
-//@{
 /** \defgroup vertex Vertexes
 Vertex of edge, triangular and tetrahedral meshes
 This module contains the documentation for the types and the functions used for representing and managing vertexes of meshes.
 */
+
 /** \defgroup face Faces 
 Face of a triangular or a tetrahedral mesh
 */
-//@}
 
 /** \defgroup trimesh Triangular Meshes
 This module contains the documentation for the types and the functions used for representing and managing generic \b triangular \b meshes.

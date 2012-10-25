@@ -40,11 +40,6 @@ namespace tri {
 /** \addtogroup trimesh */
 /*@{*/
 /*@{*/
-/** Class Mesh.
-    This is class for definition of a mesh.
-		@param VertContainerType (Template Parameter) Specifies the type of the vertices container any the vertex type.
-		@param FaceContainer (Template Parameter) Specifies the type of the faces container any the face type.
- */
 
 
  /* MeshTypeHolder is a class which is used to define the types in the mesh
@@ -135,13 +130,12 @@ namespace tri {
 								typedef typename HEdgeContainer::const_iterator ConstHEdgeIterator;
 };
 
-
-/*struct DummyContainer {};
-template <class CONT> struct Deriver: public MeshTypeHolder<CONT, typename CONT::value_type::IAm>{};
-template <> struct Deriver<DummyContainer>{}*/;
-
 template <typename T, typename CONT> struct Der: public MeshTypeHolder<T,CONT, typename CONT::value_type::IAm>{};
 struct DummyContainer{struct value_type{ typedef int IAm;}; };
+/** \brief The official \b mesh class
+
+As explained in \ref basic_concepts, this class is templated over a list of container of simplexes (like vertex, face, edges)
+ */
 
 template < class Container0 = DummyContainer, class Container1 = DummyContainer, class Container2 = DummyContainer, class Container3 = DummyContainer >
 class TriMesh
