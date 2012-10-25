@@ -103,9 +103,6 @@ public:
 		BORDER     = 0x0100,    // Border Flag
 		USER0      = 0x0200			// First user bit
   };
-
-	inline int & UberFlags () { return this->Flags();	}
-        inline int UberFlags() const 	{		return this->Flags();	}
  	
 	bool IsD() const {return (this->Flags() & DELETED) != 0;} ///  checks if the vertex is deleted
 	bool IsR() const {return (this->Flags() & NOTREAD) == 0;} ///  checks if the vertex is readable

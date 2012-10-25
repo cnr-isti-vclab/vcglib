@@ -83,9 +83,6 @@ All the Components that can be added to a vertex should be defined in the namesp
 //	inline const typename T::CoordType & cP0( const int j ) const { return cV(j)->P();}
 //	inline const typename T::CoordType & cP1( const int j ) const { return cV((j+1)%2)->P();}
 //
-//	inline       typename T::VertexType *       & UberV( const int j )	      { assert(j>=0 && j<2); return v[j]; }
-//	inline const typename T::VertexType * const & UberV( const int j ) const	{ assert(j>=0 && j<2);	return v[j];	}
-//
 //	template <class LeftF>
 //	void ImportData(const LeftF & leftF){ V(0) = NULL; V(1) = NULL; V(2) = NULL; T::ImportData(leftF);}
 //
