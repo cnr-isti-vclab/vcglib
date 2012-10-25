@@ -152,7 +152,7 @@ public:
 };
 
 /*-------------------------- COORD ----------------------------------------*/
-/*! \brief Geometric position of the vertex
+/*! \brief \em Component: \b Geometric \b Position of the vertex
 
   Stored as a templated Point3.
   */
@@ -180,9 +180,9 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 };
 
 /*-------------------------- NORMAL ----------------------------------------*/
-  /*! \brief Normal of the vertex
+  /*! \brief \em Component: \b %Normal of the vertex
 
-    Stored as a templated Point3. It can be of a different type of the Coord Component
+    Stored as a templated Point3. The type of the normal can be different type  with respect to the Coord component
     */
 
 template <class A, class T> class Normal: public T {
@@ -216,7 +216,7 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/
-  /*! \brief Per vertex Incremental Mark
+  /*! \brief Per vertex \b Incremental \b Mark
 
       It is just an int that allow to efficent un-marking of the whole mesh. \sa UnmarkAll
       */
@@ -238,7 +238,7 @@ public:
 };
 
 /*-------------------------- TEXCOORD ----------------------------------------*/
-  /*! \brief Per vertex Texture Coords
+  /*! \brief \em Component: Per vertex \b Texture Coords
 
       Note that to have multiple different TexCoord for a single vertex (as it happens on atlas where a vertex can belong to two triangles mapped on different portionof the texture) you have two options:
       - duplicate vertexes
@@ -270,6 +270,10 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 };
 
 /*------------------------- FLAGS -----------------------------------------*/
+  /*! \brief \em Component: Per vertex \b Flags
+
+      This component stores a 32 bit array of bit flags. These bit flags are used for keeping track of selection, deletion, visiting etc. \sa \ref flags for more details on common uses of flags.
+      */
 
 template <class T> class BitFlags:  public T {
 public:
@@ -288,6 +292,11 @@ private:
 
 
 /*-------------------------- Color  ----------------------------------*/
+  /*! \brief \em Component: Per vertex \b Color
+
+    Usually most of the library expects a color stored as 4 unsigned chars (so the component you use is a \c vertex::Color4b)
+    but you can also use float for the color components.
+     */
 
 template <class A, class T> class Color: public T {
 public:
@@ -311,6 +320,12 @@ template <class TT> class Color4b: public Color<vcg::Color4b, TT> {
 };
 
 /*-------------------------- Quality  ----------------------------------*/
+  /*! \brief \em Component: Per vertex \b quality
+The Quality Component is a generic place for storing a float. The term 'quality' is a bit misleading and it is due to its original storic meaning. You should intend it as a general purpose container.
+\sa vcg::tri::UpdateColor for methods transforming quality into colors
+\sa vcg::tri::UpdateQuality for methods to manage it
+
+*/
 
 template <class A, class TT> class Quality: public TT {
 public:
@@ -338,8 +353,9 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 
   /*-------------------------- Curvature   ----------------------------------*/
 
-
-
+  /*! \brief \em Component: Per vertex basic \b curvature
+    This component keeps the mean an gaussian curvature for a vertex. Used by some of the algorithms of vcg::tri::UpdateCurvature to store the computed curvatures.
+      */
   template <class A, class TT> class Curvature: public TT {
   public:
           typedef Point2<A> CurvatureType;
@@ -388,6 +404,10 @@ public:
 	static void Name(std::vector<std::string> & name){TT::Name(name);}
 };
 
+  /*! \brief \em Component: Per vertex \b curvature \b directions
+    This component keep the principal curvature directions. Used by some of the algorithms of vcg::tri::UpdateCurvature to store the computed curvatures.
+      */
+
 template <class A, class TT> class CurvatureDir: public TT {
 public:
   typedef A CurvatureDirType;
@@ -428,7 +448,10 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 };
 
 /*-------------------------- Radius  ----------------------------------*/
+  /*! \brief \em Component: Per vertex \b radius
 
+    This component keep a floating point value meant to be the average distance from the surrounding vertices. Used in point clouds by some of the point splatting and MLS surface algorithms.
+      */
 template <class A, class TT> class Radius: public TT {
 public:
   typedef A RadiusType;
@@ -449,18 +472,24 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 
 /*----------------------------- VEADJ ------------------------------*/
+/*! \brief \em Component: Per vertex \b Vertex-Edge adjacency relation
+    It stores a pointer to the first Edge of a list edges that is stored in a distributed way on the edges themselves.
+
+\sa vcg::tri::UpdateTopology for functions that compute this relation
+\sa iterators
+*/
 
 template <class T> class VEAdj: public T {
 public:
   VEAdj(){_ep=0;_zp=-1;}
   typename T::EdgePointer &VEp() {return _ep; }
-	typename T::EdgePointer const cVEp() const {return _ep; }
+  typename T::EdgePointer const cVEp() const {return _ep; }
   int &VEi() {return _zp; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) {  T::ImportData( left); }
+  template < class LeftV>
+  void ImportData(const LeftV  & left ) {  T::ImportData( left); }
   static bool HasVEAdjacency()   {   return true; }
   static bool HasVEAdjacencyOcc()   {   return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("VEAdj"));T::Name(name);}
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("VEAdj"));T::Name(name);}
 
 private:
   typename T::EdgePointer _ep ;
@@ -468,6 +497,14 @@ private:
 };
 
 /*----------------------------- VFADJ ------------------------------*/
+  /*! \brief \em Component: Per vertex \b Vertex-Face adjacency relation
+
+It stores a pointer to the first Face of a list of Faces that is stored in a distributed way on the faces themselves.
+Note that if you use this component it is expected that on the Face you use also the corresponding vcg::face::VFAdj component.
+
+  \sa vcg::tri::UpdateTopology for functions that compute this relation
+  \sa iterators
+  */
 
 template <class T> class VFAdj: public T {
 public:
