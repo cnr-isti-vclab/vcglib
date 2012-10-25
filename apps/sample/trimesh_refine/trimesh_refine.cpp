@@ -1,8 +1,3 @@
-#include<vcg/simplex/vertex/base.h>
-#include<vcg/simplex/face/base.h>
-#include<vcg/simplex/face/component_ocf.h>
-#include<vcg/simplex/face/topology.h>
-
 #include<vcg/complex/complex.h>
 
 #include <vcg/complex/algorithms/update/topology.h>
@@ -16,9 +11,6 @@
 // input output
 #include <wrap/io_trimesh/import_ply.h>
 #include <wrap/io_trimesh/export.h>
-
-// std
-#include <vector>
 
 using namespace vcg;
 using namespace std;

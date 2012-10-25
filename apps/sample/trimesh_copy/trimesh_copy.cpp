@@ -1,9 +1,5 @@
 
 // stuff to define the mesh
-#include <vcg/simplex/vertex/base.h>
-#include <vcg/simplex/vertex/component_ocf.h>
-#include <vcg/simplex/face/base.h>
-#include <vcg/simplex/edge/base.h>
 #include <vcg/complex/complex.h>
 #include <vcg/complex/append.h>
 // io
