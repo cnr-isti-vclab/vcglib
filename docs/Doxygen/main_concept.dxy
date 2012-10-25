@@ -35,7 +35,7 @@ It can be annoying when you see it but it is useful that every entity involved k
 - MyVertex1 also store a color value specified as 4 bytes
 - MyVertex2 store a long list of different components.
 
-Many other compenents are implemented in VCG, their complete list can be found *here*. You can place any combination of them as a template parameters of your vertex (your entity) type (order is unimportant). Now we have all it takes for a working definition of MyMesh type:
+Many other compenents are implemented in VCG, their complete list can be found in the vcg::vertex and vcg::face page. You can place any combination of them as a template parameters of your vertex (your entity) type (order is unimportant). Now we have all it takes for a working definition of MyMesh type:
 
 \dontinclude trimesh_base.cpp
 \skip complex.h

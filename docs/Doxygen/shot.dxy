@@ -20,21 +20,21 @@ In generale, the camera parameters can be divided in two groups:
 
 If these group of values are put in a proper camera model, it is possible to transform any point in the space in the corresponding point on the image plane of the camera (and viceversa).
 
-\image html "../img/shot-Camera_model.png" An example scheme of a perspective camera model
+\image html "shot-Camera_model.png" An example scheme of a perspective camera model
 
 
 In fact, given a simple perspective camera model like the one shown in figure, extrinsic parameters can be used to transform a point from its world coordinates {xw,yw,zw} to the camera 3D coordinate system {x,y,z}):
-\image html "../img/shot-Projection.png"
+\image html "shot-Projection.png"
 In this case the extrinsic parameters are a 3 X 3 rotation matrix R and a translation vector T, which define the orientation and position of the camera. In order to transform the 3D camera coordinate in 2D image plane coordinates (Xu,Yu) it's necessary to know the measure of the distance between the point of view and the image plane (OO1 in figure): this value, indicated with f, is usually known as the focal length. The relation between the camera and image coordinates of the point can be expressed as follows:
-\image html "../img/shot-Focal.jpg"
+\image html "shot-Focal.jpg"
 
 Another aspect of the structure of a camera that can be characterized is the distortion introduced by the lenses: if we suppose that the distortion is radial (performed along the radial direction respect to the center of distortion) we can calculate the undistorted image coordinates
 
-\image html "../img/shot-Distort1.jpg"
+\image html "shot-Distort1.jpg"
 where
-\image html "../img/shot-Distort2.jpg"
+\image html "shot-Distort2.jpg"
 and
-\image html "../img/shot-Distort3.jpg"
+\image html "shot-Distort3.jpg"
 
 In conclusion, a quite accurate model of a camera can be described by:
 - A 3x3 rotation matrix and a translation vector for extrinsic parameters

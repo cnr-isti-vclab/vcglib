@@ -17,7 +17,7 @@ vcg::face::FFAdj stores, for each edge e of the face f:
 FFp(e): a pointer to a face f' sharing e. If e is a border than points to the face f itself
 FFi(e):the index of e in the pointed face
 
-\image html "../img/FF_Adj.png" "Indexing of vertexes and edges"
+\image html "FF_Adj.png" "Indexing of vertexes and edges"
 
     f1->FFp(1) == f0
     f1->FFi(1) == 0
@@ -28,7 +28,7 @@ FFi(e):the index of e in the pointed face
 Note that we specified that FFp(e) point to a adjacent face, not to the adjacent face. The reason is that there could be more than two faces on the same edge, and this is seamlessly supported by VCG Lib. In the picture below is shown an example with 4 faces incident to the same edge
 
 
-\image html "../img/FF_nonmanifold.png" "Non manifold edge"
+\image html "FF_nonmanifold.png" "Non manifold edge"
 
 In this case the adjacencies are set to form a circular list (not necessarily sorted with the angle around the edge). This is done by the VCG Lib function that update these values (UpdateTopology<MeshType>::FFTopology(MeshType & m)).
 In this way VCG Lib provides a way to check if a mesh is manifold on a specific edge because the FF adjacency relation is mutual, i.e. the face f0 points to the face f1 which points to the face f0, if and only if the mesh is manifold over the corresponding edge.
@@ -56,7 +56,7 @@ For example consider c1: there is only another pos which is the same as c0 excep
 
 In the left of the table some other examples are shown just to make this point clear.
 
-\image html "../img/pos_example.png" "Pos Example"
+\image html "pos_example.png" "Pos Example"
 
     c2 = FlipV(c1)
     c0 = FlipE(c1)
@@ -136,7 +136,7 @@ vcg::vertex::VFAdj which is a vertex attribute containing a pointer to f0
 vcg::face::VFAdj which is a face attribute containing a pointer to the next face in the list v_star for each of its 3 vertices (4 in the case of tetrahedra)
 These two attributes are not only a pointers, they also contain an index referring the index of the vertex in the pointed face in the same style as the vcg::face::FFAdj does. The picture below shows a complete example:
 
-\image html "../img/VertexStar.png" "Example of vertex-face adjacency"
+\image html "VertexStar.png" "Example of vertex-face adjacency"
 
     v.VFp() == f2
     v.VFi() == 0
