@@ -1,6 +1,7 @@
 
 TEMPLATE      = subdirs
 SUBDIRS       = trimesh_base  \
+                trimesh_allocate \
                 trimesh_attribute \
                 trimesh_ball_pivoting \
                 trimesh_closest \

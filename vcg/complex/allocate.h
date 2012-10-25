@@ -126,6 +126,7 @@ public:
 			the pointers that can be changed when resizing the involved vectors of vertex or faces.
 			It can also be used to prevent any update of the various mesh fields
 			(e.g. in case you are building all the connections by hand as in a importer);
+			\sa \ref allocation
 			*/ 
 			template<class SimplexPointerType>
 			class PointerUpdater
@@ -133,6 +134,10 @@ public:
 			public:
 				PointerUpdater(void) : newBase(0), oldBase(0), newEnd(0), oldEnd(0), preventUpdateFlag(false) { ; }
         void Clear(){newBase=oldBase=newEnd=oldEnd=0;}
+           /*! \brief Update a pointer to an element of a mesh after a reallocation
+
+             The updating is correctly done only if this PointerUpdater have been passed to the corresponing allocation call. \sa \ref allocation
+             */
 				void Update(SimplexPointerType &vp)
 				{
 					//if(vp>=newBase && vp<newEnd) return;
@@ -143,6 +148,9 @@ public:
 					if(!remap.empty())
             vp  = newBase + remap[vp-newBase];
 				}
+  /*!
+  \brief return true if the allocation operation that initialized this PointerUpdater has caused a reallocation
+  */
 				bool NeedUpdate() {if((oldBase && newBase!=oldBase && !preventUpdateFlag) || !remap.empty()) return true; else return false;}
 
 				SimplexPointerType newBase;
@@ -303,7 +311,7 @@ public:
 				return last;// deve restituire l'iteratore alla prima faccia aggiunta;
 			}
 
-			/** Function to add n vertices to the mesh.
+			/** Function to add n edges to the mesh.
 			First wrapper, with no parameters
 			*/
 			static EdgeIterator AddEdges(MeshType &m, int n)
@@ -312,7 +320,7 @@ public:
 				return AddEdges(m, n,pu);
 			}
 
-      /** Function to add n vertices to the mesh.
+	  /** Function to add n edges to the mesh.
 			Second Wrapper, with a vector of vertex pointers to be updated.
 			*/
 			static EdgeIterator AddEdges(MeshType &m, int n, std::vector<EdgePointer*> &local_vec)
