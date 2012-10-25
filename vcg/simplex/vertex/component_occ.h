@@ -56,7 +56,6 @@ public:
   typedef typename CoordType::ScalarType      ScalarType;
 	typedef typename T::VertType VertType;
 	CoordType &P() { return CAT< vector_occ<VertType>,CoordType>::Instance()->Get((VertType*)this); }
-  CoordType &UberP() { return CAT< vector_occ<VertType>,CoordType>::Instance()->Get((VertType*)this); }
 };
 template <class T> class Coord3fOcc: public CoordOcc<vcg::Point3f, T> {};
 template <class T> class Coord3dOcc: public CoordOcc<vcg::Point3d, T> {};
