@@ -24,14 +24,18 @@
 #ifndef __VCGLIB_APPEND
 #define __VCGLIB_APPEND
 
-#include <vcg/complex/allocate.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/update/selection.h>
 #include <set>
 
 namespace vcg {
 namespace tri {
+/** \ingroup trimesh */
+/*! \brief  Class to safely duplicate and append (portion of) meshes.
 
+Adding elements to a mesh, like faces and vertices can involve the reallocation of the vectors of the involved elements.
+This class provide the only safe methods to add elements of a mesh to another one.
+*/
 template<class MeshLeft, class ConstMeshRight>
 class Append
 {
@@ -68,21 +72,21 @@ public:
 
  static void ImportVertexAdj(MeshLeft &ml, ConstMeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap ){
    // Vertex to Edge Adj
-   if(vcg::tri::HasVEAdjacency(ml) && vcg::tri::HasVEAdjacency(mr) && vr.cVEp() != 0){
+   if(HasVEAdjacency(ml) && HasVEAdjacency(mr) && vr.cVEp() != 0){
      size_t i = Index(mr,vr.cVEp());
      vl.VEp() = (i>ml.edge.size())? 0 : &ml.edge[remap.edge[i]];
      vl.VEi() = vr.VEi();
    }
 
    // Vertex to Face Adj
-   if(vcg::tri::HasPerVertexVFAdjacency(ml) && vcg::tri::HasPerVertexVFAdjacency(mr) && vr.cVFp() != 0 ){
+   if(HasPerVertexVFAdjacency(ml) && HasPerVertexVFAdjacency(mr) && vr.cVFp() != 0 ){
      size_t i = Index(mr,vr.cVFp());
      vl.VFp() = (i>ml.face.size())? 0 :&ml.face[remap.face[i]];
      vl.VFi() = vr.VFi();
    }
 
    // Vertex to HEdge Adj
-   if(vcg::tri::HasVHAdjacency(ml) && vcg::tri::HasVHAdjacency(mr) && vr.cVHp() != 0){
+   if(HasVHAdjacency(ml) && HasVHAdjacency(mr) && vr.cVHp() != 0){
      vl.VHp() = &ml.hedge[remap.hedge[Index(mr,vr.cVHp())]];
      vl.VHi() = vr.VHi();
    }
@@ -91,7 +95,7 @@ public:
  static void ImportEdgeAdj(MeshLeft &ml, ConstMeshRight &mr, EdgeLeft &el, const EdgeRight &er, Remap &remap)
  {
      // Edge to Edge  Adj
-     if(vcg::tri::HasEEAdjacency(ml) && vcg::tri::HasEEAdjacency(mr))
+     if(HasEEAdjacency(ml) && HasEEAdjacency(mr))
        for(unsigned int vi = 0; vi < 2; ++vi)
        {
          size_t idx = Index(mr,er.cEEp(vi));
@@ -100,14 +104,14 @@ public:
        }
 
      // Edge to Face  Adj
-     if(vcg::tri::HasEFAdjacency(ml) && vcg::tri::HasEFAdjacency(mr)){
+     if(HasEFAdjacency(ml) && HasEFAdjacency(mr)){
        size_t idx = Index(mr,er.cEFp());
        el.EFp() = (idx>ml.face.size())? 0 :&ml.face[remap.face[idx]];
        el.EFi() = er.cEFi();
      }
 
      // Edge to HEdge   Adj
-     if(vcg::tri::HasEHAdjacency(ml) && vcg::tri::HasEHAdjacency(mr))
+     if(HasEHAdjacency(ml) && HasEHAdjacency(mr))
        el.EHp() = &ml.hedge[remap.hedge[Index(mr,er.cEHp())]];
  }
 
@@ -115,7 +119,7 @@ public:
  static void ImportFaceAdj(MeshLeft &ml, ConstMeshRight &mr, FaceLeft &fl, const FaceRight &fr, Remap &remap )
  {
      // Face to Edge  Adj
-     if(vcg::tri::HasFEAdjacency(ml) && vcg::tri::HasFEAdjacency(mr)){
+     if(HasFEAdjacency(ml) && HasFEAdjacency(mr)){
        assert(fl.VN() == fr.VN());
        for( int vi = 0; vi < fl.VN(); ++vi ){
          size_t idx = Index(mr,fr.cFEp(vi));
@@ -124,7 +128,7 @@ public:
      }
 
      // Face to Face  Adj
-     if(vcg::tri::HasFFAdjacency(ml) && vcg::tri::HasFFAdjacency(mr)){
+     if(HasFFAdjacency(ml) && HasFFAdjacency(mr)){
        assert(fl.VN() == fr.VN());
        for( int vi = 0; vi < fl.VN(); ++vi ){
          size_t idx = Index(mr,fr.cFFp(vi));
@@ -134,44 +138,55 @@ public:
      }
 
      // Face to HEedge  Adj
-     if(vcg::tri::HasFHAdjacency(ml) && vcg::tri::HasFHAdjacency(mr))
+     if(HasFHAdjacency(ml) && HasFHAdjacency(mr))
        fl.FHp() = &ml.hedge[remap.hedge[Index(mr,fr.cFHp())]];
  }
 
  static void ImportHEdgeAdj(MeshLeft &ml, ConstMeshRight &mr, HEdgeLeft &hl, const HEdgeRight &hr, Remap &remap, bool /*sel*/ ){
    // HEdge to Vertex  Adj
-   if(vcg::tri::HasHVAdjacency(ml) && vcg::tri::HasHVAdjacency(mr))
+   if(HasHVAdjacency(ml) && HasHVAdjacency(mr))
      hl.HVp() = &ml.vert[remap.vert[Index(mr,hr.cHVp())]];
 
    // HEdge to Edge  Adj
-   if(vcg::tri::HasHEAdjacency(ml) && vcg::tri::HasHEAdjacency(mr)){
+   if(HasHEAdjacency(ml) && HasHEAdjacency(mr)){
      size_t idx = Index(mr,hr.cHEp()) ;
      hl.HEp() = (idx>ml.edge.size())? 0 : &ml.edge[remap.edge[idx]];
    }
 
    // HEdge to Face  Adj
-   if(vcg::tri::HasHFAdjacency(ml) && vcg::tri::HasHFAdjacency(mr)){
+   if(HasHFAdjacency(ml) && HasHFAdjacency(mr)){
      size_t idx = Index(mr,hr.cHFp());
      hl.HFp() = (idx>ml.face.size())? 0 :&ml.face[remap.face[idx]];
    }
 
 
    // HEdge to Opposite HEdge  Adj
-   if(vcg::tri::HasHOppAdjacency(ml) && vcg::tri::HasHOppAdjacency(mr))
+   if(HasHOppAdjacency(ml) && HasHOppAdjacency(mr))
      hl.HOp() = &ml.hedge[remap.hedge[Index(mr,hr.cHOp())]];
 
    // HEdge to Next  HEdge  Adj
-   if(vcg::tri::HasHNextAdjacency(ml) && vcg::tri::HasHNextAdjacency(mr))
+   if(HasHNextAdjacency(ml) && HasHNextAdjacency(mr))
      hl.HNp() = &ml.hedge[remap.hedge[Index(mr,hr.cHNp())]];
 
    // HEdge to Next  HEdge  Adj
-   if(vcg::tri::HasHPrevAdjacency(ml) && vcg::tri::HasHPrevAdjacency(mr))
+   if(HasHPrevAdjacency(ml) && HasHPrevAdjacency(mr))
      hl.HPp() = &ml.hedge[remap.hedge[Index(mr,hr.cHPp())]];
  }
 
 // Append Right Mesh to the Left Mesh
 // Append::Mesh(ml, mr) is equivalent to ml += mr. 
 // Note MeshRigth could be costant...
+ /*! \brief @Append the second mesh to the first one.
+
+   The first mesh is not destroyed and no attempt of avoid duplication of already present elements is done.
+   If requested only the selected elements are appended to the first one.
+   The second mesh is not changed at all (it could be constant) with the exception of the selection (see below note).
+
+   \note  If the the selection of the vertexes is not consistent with the face selection
+   the append could build faces referencing non existent vertices
+   so it is mandatory that the selection of the vertices reflects the loose selection
+  from edges and faces (e.g. if a face is selected all its vertices must be selected).
+ */
 
 static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, const bool adjFlag = false)
 {
@@ -179,6 +194,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   // the append could build faces referencing non existent vertices
   // so it is mandatory that the selection of the vertices reflects the loose selection
   // from edges and faces (e.g. if a face is selected all its vertices must be selected).
+  // note the use of the parameter for preserving existing vertex selection.
   if(selected)
   {
     assert(adjFlag == false); // It is rather meaningless to partially copy adj relations.
@@ -265,7 +281,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
       ml.edge[remap.edge[Index(mr,*ei)]].ImportData(*ei);
       // Edge to Vertex  Adj
       EdgeLeft &el = ml.edge[remap.edge[Index(mr,*ei)]];
-      if(vcg::tri::HasEVAdjacency(ml) && vcg::tri::HasEVAdjacency(mr)){
+      if(HasEVAdjacency(ml) && HasEVAdjacency(mr)){
         el.V(0) = &ml.vert[remap.vert[Index(mr,ei->cV(0))]];
         el.V(1) = &ml.vert[remap.vert[Index(mr,ei->cV(1))]];
       }
@@ -274,7 +290,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
 
   // face
   const int textureOffset =  ml.textures.size();
-  bool WTFlag = vcg::tri::HasPerWedgeTexCoord(mr) && (textureOffset>0);
+  bool WTFlag = HasPerWedgeTexCoord(mr) && (textureOffset>0);
   for(fi=mr.face.begin();fi!=mr.face.end();++fi)
     if(!(*fi).IsD() && (!selected || (*fi).IsS()))
     {
@@ -282,7 +298,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
       if(WTFlag)
         for(int i = 0; i < 3; ++i)
           fl.WT(i).n() +=textureOffset;
-      if(vcg::tri::HasFVAdjacency(ml) && vcg::tri::HasFVAdjacency(mr)){
+      if(HasFVAdjacency(ml) && HasFVAdjacency(mr)){
         fl.V(0) = &ml.vert[remap.vert[Index(mr,fi->cV(0))]];
         fl.V(1) = &ml.vert[remap.vert[Index(mr,fi->cV(1))]];
         fl.V(2) = &ml.vert[remap.vert[Index(mr,fi->cV(2))]];
@@ -365,13 +381,19 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
                 //        }
 }
 
+/*! \brief Copy the second mesh over the first one.
+  The first mesh is destroyed. If requested only the selected elements are copied.
+*/
 static void MeshCopy(MeshLeft& ml, ConstMeshRight& mr, bool selected=false)
 {
   ml.Clear();
   Mesh(ml,mr,selected);
   ml.bbox=mr.bbox;
 }
+/*! \brief @Append only the selected elements of second mesh to the first one.
 
+  It is just a wrap of the main Append::Mesh()
+  */
 static void Selected(MeshLeft& ml, ConstMeshRight& mr)
 {
   Mesh(ml,mr,true);

@@ -34,6 +34,7 @@
 #include <vcg/container/simple_temporary_data.h>
 #include <vcg/complex/used_types.h>
 #include <vcg/complex/allocate.h>
+#include <vcg/complex/append.h>
 
 namespace vcg {
 namespace tri {
