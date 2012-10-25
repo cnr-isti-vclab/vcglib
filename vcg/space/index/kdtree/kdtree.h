@@ -9,8 +9,6 @@
 #include <limits>
 #include <iostream>
 
-
-
 template<typename _DataType>
 class ConstDataWrapper
 {
@@ -31,6 +29,15 @@ protected:
 		const unsigned char* mpData;
 		int mStride;
 		size_t mSize;
+};
+
+template<class MeshType>
+class VertexConstDataWrapper :public  ConstDataWrapper<typename MeshType::CoordType>
+{
+public:
+  inline VertexConstDataWrapper(MeshType &m):
+    ConstDataWrapper<typename MeshType::CoordType> ( &(m.vert[0].P()), m.vert.size(), sizeof(typename MeshType::VertexType))
+     {}
 };
 
 /**
