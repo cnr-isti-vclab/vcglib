@@ -74,4 +74,18 @@ m.vert.size() == m.vn
 m.face.size() == m.fn
 \endcode
 Note that if there are no deleted elements in your mesh, the compactor functions returns immediately.
+
+How to copy a mesh
+------------
+Given the intricate nature of the mesh itself it is severely forbidden any attempt of copying meshes as simple object. To copy a mesh you have to use the Append utility class:
+\code
+ #include<vcg/complex/trimesh/append.h>
+
+MyMesh ml,mr;
+...
+tri::Append<MyMesh>::Mesh(ml,mr);
+\endcode
+
+This is equivalent to append the content of mr onto ml. If you want simple copy just clear ml before calling the above function.
+
 */

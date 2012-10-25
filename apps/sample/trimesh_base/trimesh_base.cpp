@@ -30,28 +30,26 @@ This file contain a minimal example of the library, showing how to load a mesh a
 */
 
 #include<vcg/complex/complex.h>
-
-// input output
 #include<wrap/io_trimesh/import_off.h>
-
-// topology computation
 #include<vcg/complex/algorithms/update/topology.h>
-
-// normals
 #include<vcg/complex/algorithms/update/normal.h>
 
+class MyVertex; class MyEdge; class MyFace;
+struct MyUsedTypes : public vcg::UsedTypes<vcg::Use<MyVertex>   ::AsVertexType,
+                                           vcg::Use<MyEdge>     ::AsEdgeType,
+                                           vcg::Use<MyFace>     ::AsFaceType>{};
 
-class MyEdge;
-class MyFace;
-class MyVertex;
-struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<MyVertex>   ::AsVertexType,
-                                        vcg::Use<MyEdge>     ::AsEdgeType,
-                                        vcg::Use<MyFace>     ::AsFaceType>{};
+class MyVertex  : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags  >{};
+class MyFace    : public vcg::Face<   MyUsedTypes, vcg::face::FFAdj,  vcg::face::VertexRef, vcg::face::BitFlags > {};
+class MyEdge    : public vcg::Edge<   MyUsedTypes> {};
 
-class MyVertex  : public vcg::Vertex<MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags  >{};
-class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::FFAdj,  vcg::face::VertexRef, vcg::face::BitFlags > {};
-class MyEdge    : public vcg::Edge<MyUsedTypes>{};
 class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> , std::vector<MyEdge>  > {};
+
+class MyVertex0  : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::BitFlags  >{};
+class MyVertex1  : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags  >{};
+class MyVertex2  : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Color4b, vcg::vertex::CurvatureDirf,
+                                                    vcg::vertex::Qualityf, vcg::vertex::Normal3f, vcg::vertex::BitFlags  >{};
+
 
 int main( int argc, char **argv )
 {
@@ -60,7 +58,7 @@ int main( int argc, char **argv )
     printf("Usage trimesh_base <meshfilename.obj>\n");
     return -1;
   }
-  /*! we simply
+  /*!
     */
   MyMesh m;
 
