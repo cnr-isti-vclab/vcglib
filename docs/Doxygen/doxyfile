@@ -680,7 +680,9 @@ INPUT                  = ../../vcg/complex/allocate.h \
                          . \
                          ../../vcg/complex/complex.h \
                          ../../vcg/simplex/vertex/component.h \
-                         ../../vcg/simplex/face/component.h
+                         ../../vcg/simplex/face/component.h \
+                         ../../vcg/complex/algorithms/create/platonic.h \
+                         ../../vcg/complex/append.h
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 

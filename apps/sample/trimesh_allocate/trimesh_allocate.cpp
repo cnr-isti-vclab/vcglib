@@ -86,7 +86,7 @@ int main()
        }
   }
 
-  // WRONG WAY of iterating: FN() != m.face.size() if there are deleted elemen
+  // WRONG WAY of iterating: FN() != m.face.size() if there are deleted elements
   for(int i=0;i<m.FN();++i)
   {
      if(!fi->IsD())
