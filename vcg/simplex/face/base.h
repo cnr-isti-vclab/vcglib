@@ -92,14 +92,6 @@ public:
 	typedef typename  FaceArityMax::ScalarType ScalarType;
 // ----- Flags stuff -----
 
-	inline int & UberFlags ()
-	{ 
-			return this->Flags();
-	}
-        inline int UberFlags() const
-	{
-		return this->Flags();
-	}
    	enum { 
 		
 		DELETED     = 0x00000001,		// Face is deleted from the mesh

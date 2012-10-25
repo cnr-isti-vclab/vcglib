@@ -26,12 +26,9 @@
 
 
 namespace vcg {
-				
-  namespace face {
-/*
-Some naming Rules
-All the Components that can be added to a vertex should be defined in the namespace vert:
-
+namespace face {
+/** \addtogroup face
+  @{
 */
 /*------------------------- EMPTY CORE COMPONENTS -----------------------------------------*/
 
@@ -156,6 +153,11 @@ public:
   };
 
   /*-------------------------- VertexRef ----------------------------------------*/
+/*! \brief The references to the vertexes of a triangular face
+
+  Stored as three pointers to the VertexType
+  */
+
 
 template <class T> class VertexRef: public T {
 public:
@@ -168,21 +170,17 @@ public:
   typedef typename T::VertexType::CoordType CoordType;
   typedef typename T::VertexType::ScalarType ScalarType;
 
-  inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<3); return v[j]; }
+  inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<3); return v[j]; } /// \brief The pointer to the i-th vertex
   inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<3); return v[j]; }
 	inline typename T::VertexType *  cV( const int j ) const { assert(j>=0 && j<3);	return v[j]; }
 
-	// Shortcut per accedere ai punti delle facce
-  inline       CoordType & P( const int j ) 	    {	assert(j>=0 && j<3);		return v[j]->P();	}
+  inline       CoordType & P( const int j ) 	    {	assert(j>=0 && j<3);		return v[j]->P();	} /// \brief Shortcut: the position of the  i-th vertex (equivalent to \c V(i)->P() )
   inline const CoordType & P( const int j ) const	{	assert(j>=0 && j<3);		return v[j]->cP(); }
   inline const CoordType &cP( const int j ) const	{	assert(j>=0 && j<3);		return v[j]->cP(); }
 
-	/** Return the pointer to the ((j+1)%3)-th vertex of the face.
-		@param j Index of the face vertex.
-	 */
-  inline typename T::VertexType * & V0( const int j )       { return V(j);}
-  inline typename T::VertexType * & V1( const int j )       { return V((j+1)%3);}
-  inline typename T::VertexType * & V2( const int j )       { return V((j+2)%3);}
+  inline typename T::VertexType * & V0( const int j )       { return V(j);}        /** \brief Return the pointer to the j-th vertex of the face. */
+  inline typename T::VertexType * & V1( const int j )       { return V((j+1)%3);}  /** \brief Return the pointer to the ((j+1)%3)-th vertex of the face. */
+  inline typename T::VertexType * & V2( const int j )       { return V((j+2)%3);}  /** \brief Return the pointer to the ((j+2)%3)-th vertex of the face. */
   inline typename T::VertexType *   V0( const int j ) const { return V(j);}
   inline typename T::VertexType *   V1( const int j ) const { return V((j+1)%3);}
   inline typename T::VertexType *   V2( const int j ) const { return V((j+2)%3);}
@@ -190,7 +188,6 @@ public:
   inline typename T::VertexType *  cV1( const int j ) const { return cV((j+1)%3);}
   inline typename T::VertexType *  cV2( const int j ) const { return cV((j+2)%3);}
 
-	/// Shortcut per accedere ai punti delle facce
   inline       CoordType &  P0( const int j )       { return V(j)->P();}
   inline       CoordType &  P1( const int j )       { return V((j+1)%3)->P();}
   inline       CoordType &  P2( const int j )       { return V((j+2)%3)->P();}
@@ -200,9 +197,6 @@ public:
   inline const CoordType & cP0( const int j ) const { return cV(j)->P();}
   inline const CoordType & cP1( const int j ) const { return cV((j+1)%3)->P();}
   inline const CoordType & cP2( const int j ) const { return cV((j+2)%3)->P();}
-
-	inline       typename T::VertexType *       & UberV( const int j )	      { assert(j>=0 && j<3); return v[j]; }
-	inline const typename T::VertexType * const & UberV( const int j ) const	{ assert(j>=0 && j<3);	return v[j];	}
 
     // Small comment about the fact that the pointers are zero filled.
     // The importLocal is meant for copyng stuff between very different meshes, so copying the pointers would be meaningless.

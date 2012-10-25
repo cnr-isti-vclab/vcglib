@@ -155,14 +155,6 @@ template <class BVT, class BET, typename BFT,class BTT,
 // ----- Flags stuff -----
 public:
   
-	inline int & UberFlags ()
-	{ 
-			return this->Flags();
-	}
-	inline const int UberFlags() const
-	{
-		return this->Flags();
-	}
    	enum { 
 		
 		DELETED     = 0x00000001,		// Face is deleted from the mesh

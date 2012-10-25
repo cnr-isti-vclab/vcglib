@@ -100,8 +100,6 @@ public:
 	inline const typename T::CoordType & cP1( const int j ) const { return cV((j+1)%4)->P();}
 	inline const typename T::CoordType & cP2( const int j ) const { return cV((j+2)%4)->P();}
 
-	inline       typename T::VertexType *       & UberV( const int j )	      { assert(j>=0 && j<4); return v[j]; }
-	inline const typename T::VertexType * const & UberV( const int j ) const	{ assert(j>=0 && j<4);	return v[j];	}
   static bool HasVertexRef()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("VertexRef"));T::Name(name);}
 

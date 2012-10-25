@@ -20,17 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.2  2007/05/04 16:16:40  ganovelli
-standardized to component style
-
-Revision 1.1  2006/10/13 14:11:49  cignoni
-first version
-
-****************************************************************************/
 
 #ifndef __VCG_FACE_PLUS_COMPONENT_RT
 #define __VCG_FACE_PLUS_COMPONENT_RT
@@ -46,6 +35,15 @@ struct EdgePlaneInfo{
 	::vcg::Plane3<typename CoordType::ScalarType> plane;
 	typename CoordType::ScalarType edgescale;
 };
+/** \addtogroup face
+  @{
+*/
+
+/*! \brief Per Face Precomputed Edge/Plane
+
+  This component is used to speed up some geometric queries like the ray-triangle intersection or the Point-Triangle distance.
+  Before using it you have to initialize it using \ref UpdateComponentEP class
+    */
 
 template <class T> class EdgePlane: public T {
 public:
@@ -92,6 +90,9 @@ static bool HasEdgePlane()   {   return false; }
 
 static void Name(std::vector<std::string> & name){name.push_back(std::string(""));T::Name(name);}
 };
+/**
+  @}
+*/
 
   } // end namespace face
 }// end namespace vcg
