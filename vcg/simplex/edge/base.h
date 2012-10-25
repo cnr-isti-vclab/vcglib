@@ -20,14 +20,12 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#include <vcg/complex/complex.h>
-
+#ifndef __VCG_MESH
+#error "This file should not be included alone. It is automatically included by complex.h"
+#endif
 #ifndef __VCG_EDGE_PLUS
 #define __VCG_EDGE_PLUS
-
-
 namespace vcg {
-
 /*------------------------------------------------------------------*/ 
 /* 
 The base class of all the recusive definition chain. It is just a container of the typenames of the various simplexes.

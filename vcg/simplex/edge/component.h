@@ -20,8 +20,9 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#include <vcg/complex/complex.h>
-
+#ifndef __VCG_MESH
+#error "This file should not be included alone. It is automatically included by complex.h"
+#endif
 #ifndef __VCG_EDGE_PLUS_COMPONENT
 #define __VCG_EDGE_PLUS_COMPONENT
 

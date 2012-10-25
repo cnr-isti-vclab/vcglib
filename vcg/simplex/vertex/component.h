@@ -20,6 +20,9 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+#ifndef __VCG_MESH
+#error "This file should not be included alone. It is automatically included by complex.h"
+#endif
 #ifndef __VCG_VERTEX_PLUS_COMPONENT
 #define __VCG_VERTEX_PLUS_COMPONENT
 namespace vcg {

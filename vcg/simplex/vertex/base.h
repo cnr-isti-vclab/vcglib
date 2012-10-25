@@ -20,34 +20,14 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#include <vcg/complex/complex.h>
+#ifndef __VCG_MESH
+#error "This file should not be included alone. It is automatically included by complex.h"
+#endif
 #ifndef __VCG_VERTEX_PLUS
 #define __VCG_VERTEX_PLUS
 
 namespace vcg {
 
-/*------------------------------------------------------------------*/ 
-/* 
-The base class of all the recusive definition chain. It is just a container of the typenames of the various simplexes.
-These typenames must be known form all the derived classes.
-*/
-//
-//template <class BVT, class BET, class BFT, class BTT>
-//class VertexTypeHolder{
-//  public:
-//  typedef BVT VertType;
-//  typedef BET EdgeType;
-//  typedef BFT FaceType;
-//  typedef BTT TetraType;
-//  typedef BVT *VertPointer;
-//  typedef BET *EdgePointer;
-//  typedef BFT *FacePointer;
-//  typedef BTT *TetraPointer;
-//	template < class LeftV>
-//	void ImportData(const LeftV  & /* left */ ) { }
-//    static void Name(std::vector<std::string> & /* name */){}
-//
-//};
 
 /* The base class form which we start to add our components.
 it has the empty definition for all the standard members (coords, color flags)
@@ -58,13 +38,6 @@ the subsequent overrides must be done in a sequence of derivation.
 In other words we cannot derive and add in a single derivation step 
 (with multiple ancestor), both the real (non-empty) normal and color but 
 we have to build the type a step a time (deriving from a single ancestor at a time). 
-
-
-*/ 
-//template <class UserUsedTypes>
-//class VertexBase: public vertex::EmptyCore< UserUsedTypes >{
-//};
-
 
 /* The Real Big Vertex class;
 

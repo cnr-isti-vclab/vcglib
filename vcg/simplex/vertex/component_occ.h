@@ -33,12 +33,11 @@ Working release (compilata solo su MSVC), component_occ � migrato da component
 
 
 ****************************************************************************/
+#ifndef __VCG_MESH
+#error "This file should not be included alone. It is automatically included by complex.h"
+#endif
 #ifndef __VCG_VERTEX_PLUS_COMPONENT_OCC
 #define __VCG_VERTEX_PLUS_COMPONENT_OCC
-
-#include <vcg/simplex/vertex/component.h>
-#include <vcg/container/vector_occ.h>
-
 
 namespace vcg {
   namespace vertex {

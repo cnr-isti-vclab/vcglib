@@ -22,13 +22,12 @@
 ****************************************************************************/
 
 /*
-Note
 OCF = Optional Component Fast (hopefully)
 compare with OCC(Optional Component Compact)
-
-Mainly the trick here is to store a base pointer in each simplex...
-
-****************************************************************************/
+*/
+#ifndef __VCG_MESH
+#error "This file should not be included alone. It is automatically included by complex.h"
+#endif
 #ifndef __VCG_VERTEX_PLUS_COMPONENT_OCF
 #define __VCG_VERTEX_PLUS_COMPONENT_OCF
 #ifndef __VCG_MESH
