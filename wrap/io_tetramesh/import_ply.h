@@ -244,27 +244,10 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	LoadPly_VertAux<ScalarType> va;
   
 	pi.mask = 0;
-	bool multit = false; // true if texture has a per face int spec the texture index
 
 	va.flags = 42;
 
   pi.status = ::vcg::ply::E_NOERROR;
-
-  // init defaults
-	VertexType tv;
-	tv.UberFlags() = 0;
-	if( VertexType::HasQuality() ) tv.Q()=1.0;
-	if( VertexType::HasColor() )     tv.C()=Color4b(Color4b::White);
-	
-	TetraType tf;
-	tf.UberFlags() = 0;
-	//if( FaceType::HasFaceQuality() )  tf.Q()=1.0;
-	//if( FaceType::HasWedgeColor() )   tf.WC(0)=tf.WC(1)=tf.WC(2)=Color4b(Color4b::White);
-	//if( FaceType::HasFaceColor() )    tf.C()=Color4b(Color4b::White);			
-	// Descrittori delle strutture
-
-  //bool isvflags = false;	// Il file contiene i flags 
-
 
 	// The main descriptor of the ply file 
 	vcg::ply::PlyFile pf;
@@ -442,7 +425,6 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
       for(j=0;j<n;++j)
 			{
 				if(pi.cb && (j%1000)==0) pi.cb(j*50/n,"Vertex Loading");
-				(*vi).UberFlags()=0;
 			  if( pf.Read( (void *)&(va) )==-1 )
 				{
 					pi.status = PlyInfo::E_SHORTFILE;
@@ -454,7 +436,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				(*vi).P()[2] = va.p[2];
 
 				if( pi.mask & ply::PLYMask::PM_VERTFLAGS )
-					(*vi).UberFlags() = va.flags;
+					(*vi).Flags() = va.flags;
 
 				if( pi.mask & ply::PLYMask::PM_VERTQUALITY )
 					(*vi).Q() = va.q;
@@ -514,7 +496,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 				if( pi.mask & ply::PLYMask::PM_TETRAFLAGS )
 				{
-					(*fi).UberFlags() = fa.flags;
+					(*fi).Flags() = fa.flags;
 				}
 
 				if( pi.mask & ply::PLYMask::PM_TETRAQUALITY )

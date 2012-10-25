@@ -85,7 +85,7 @@ namespace vcg {
 					for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
 					{
 						vp=&(*vi);
-            FlagV.push_back(vp->UberFlags()); // Save vertex flags
+			FlagV.push_back(vp->Flags()); // Save vertex flags
             if( ! vp->IsD() )
             {	// ***** ASCII *****
 
@@ -102,7 +102,7 @@ namespace vcg {
 								fprintf(fpout,"\n");
 								
 
-              vp->UberFlags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
+              vp->Flags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
               j++;
             }
 					}
@@ -119,7 +119,7 @@ namespace vcg {
               if(!polygon.empty())
               {
                 fprintf(fpout,"%d ", int(polygon.size()) );
-                for (size_t i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->UberFlags() );
+                for (size_t i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->Flags() );
                 fprintf(fpout,"\n");
               }
             }
@@ -130,7 +130,7 @@ namespace vcg {
 						  FacePointer fp=&(*fi);
 						  if( ! fp->IsD() )
 						  { fprintf(fpout,"3 %d %d %d\n",
-						  	  fp->cV(0)->UberFlags(),	fp->cV(1)->UberFlags(), fp->cV(2)->UberFlags() );
+							  fp->cV(0)->Flags(),	fp->cV(1)->Flags(), fp->cV(2)->Flags() );
 						  }
 					  }
           }
@@ -140,7 +140,7 @@ namespace vcg {
 					// Recupera i flag originali
 					j=0;
 					for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-						(*vi).UberFlags()=FlagV[j++]; 
+						(*vi).Flags()=FlagV[j++];
 
 					return 0;
 				}

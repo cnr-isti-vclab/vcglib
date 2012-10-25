@@ -640,7 +640,6 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
       for(j=0;j<n;++j)
 			{
 				if(pi.cb && (j%1000)==0) pi.cb(j*50/n,"Vertex Loading");
-				//(*vi).UberFlags()=0; // No more necessary, since 9/2005 flags are set to zero in the constuctor.
 			  if( pf.Read( (void *)&(va) )==-1 )
 				{
 					pi.status = PlyInfo::E_SHORTFILE;
@@ -652,7 +651,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				(*vi).P()[2] = va.p[2];
 
 				if( HasPerVertexFlags(m) &&  (pi.mask & Mask::IOM_VERTFLAGS) )
-					(*vi).UberFlags() = va.flags;
+					(*vi).Flags() = va.flags;
 
 				if( pi.mask & Mask::IOM_VERTQUALITY )
 					(*vi).Q() = (typename OpenMeshType::VertexType::QualityType)va.q;
@@ -750,7 +749,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 				if(HasPerFaceFlags(m) &&( pi.mask & Mask::IOM_FACEFLAGS) )
 				{
-					(*fi).UberFlags() = fa.flags;
+					(*fi).Flags() = fa.flags;
 				}
 
 				if( pi.mask & Mask::IOM_FACEQUALITY )

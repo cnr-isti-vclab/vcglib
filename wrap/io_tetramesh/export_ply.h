@@ -319,19 +319,19 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 	for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
 	{
 		vp=&(*vi);
-		FlagV.push_back(vp->UberFlags()); // Salva in ogni caso flag del vertice
+		FlagV.push_back(vp->Flags()); // Salva in ogni caso flag del vertice
 		if( ! vp->IsD() )
 		{
 			if(binary)
 			{
 				float t;
 
-				t = float(vp->UberP()[0]); fwrite(&t,sizeof(float),1,fpout);
-				t = float(vp->UberP()[1]); fwrite(&t,sizeof(float),1,fpout);
-				t = float(vp->UberP()[2]); fwrite(&t,sizeof(float),1,fpout);
+				t = float(vp->P()[0]); fwrite(&t,sizeof(float),1,fpout);
+				t = float(vp->P()[1]); fwrite(&t,sizeof(float),1,fpout);
+				t = float(vp->P()[2]); fwrite(&t,sizeof(float),1,fpout);
 				
 				if( pi.mask & ply::PLYMask::PM_VERTFLAGS )
-					fwrite(&(vp->UberFlags()),sizeof(int),1,fpout);
+					fwrite(&(vp->Flags()),sizeof(int),1,fpout);
 
 				if( HasPerVertexColor(m) && (pi.mask & ply::PLYMask::PM_VERTCOLOR) )
 					fwrite(&( vp->C() ),sizeof(char),4,fpout);
@@ -360,7 +360,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 				fprintf(fpout,"%g %g %g " ,vp->P()[0],vp->P()[1],vp->P()[2]);
 
 				if( pi.mask & ply::PLYMask::PM_VERTFLAGS )
-					fprintf(fpout,"%d ",vp->UberFlags());
+					fprintf(fpout,"%d ",vp->Flags());
 
 				if( HasPerVertexColor(m) && (pi.mask & ply::PLYMask::PM_VERTCOLOR) )
 					fprintf(fpout,"%d %d %d %d ",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
@@ -387,7 +387,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 				fprintf(fpout,"\n");
 			}
 
-			vp->UberFlags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
+			vp->Flags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
 			j++;
 		}
 	}
@@ -407,10 +407,10 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 			{ fcnt++;
 				if(binary)
 				{
-					vv[0]=fp->cV(0)->UberFlags();
-					vv[1]=fp->cV(1)->UberFlags();
-					vv[2]=fp->cV(2)->UberFlags();
-					vv[3]=fp->cV(2)->UberFlags();
+					vv[0]=fp->cV(0)->Flags();
+					vv[1]=fp->cV(1)->Flags();
+					vv[2]=fp->cV(2)->Flags();
+					vv[3]=fp->cV(2)->Flags();
 					fwrite(&c,1,1,fpout);
 					fwrite(vv,sizeof(int),4,fpout);
 
@@ -484,7 +484,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 				else	// ***** ASCII *****
 				{
 					fprintf(fpout,"3 %d %d %d ",
-						fp->cV(0)->UberFlags(),	fp->cV(1)->UberFlags(), fp->cV(2)->UberFlags() );
+						fp->cV(0)->Flags(),	fp->cV(1)->Flags(), fp->cV(2)->Flags() );
 
 					if( pi.mask & ply::PLYMask::PM_TETRAFLAGS )
 						fprintf(fpout,"%d ",fp->Flags());
@@ -563,7 +563,7 @@ static bool Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &
 	
 	// Recupera i flag originali
 	for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
-		(*vi).UberFlags()=FlagV[j++]; 
+		(*vi).Flags()=FlagV[j++];
 	
 	return 0;
 }

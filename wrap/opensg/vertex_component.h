@@ -112,7 +112,7 @@ public :
 	CoordType & P() { assert(0); return CoordType(); }
 	const CoordType & P() const { assert(0); return CoordType(); }
 	const CoordType & cP() const { assert(0); return CoordType(); }
-	CoordType & UberP() { assert(0); return CoordType(); }
+	CoordType & P() { assert(0); return CoordType(); }
 	static bool HasCoord() { return false; }
 	static void Name( std::vector< std::string > & name ) { T::Name(name); }
 };

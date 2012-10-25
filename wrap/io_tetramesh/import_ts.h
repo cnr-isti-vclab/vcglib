@@ -94,7 +94,7 @@ static int Open( Tetramesh & m, const char * filename )
 			m.tetra.back().V(1) = &m.vert[tp1];
 			m.tetra.back().V(2) = &m.vert[tp2];
 			m.tetra.back().V(3) = &m.vert[tp3];
-			m.tetra.back().UberFlags() = 0;			
+			m.tetra.back().Flags() = 0;
 		}
 	 }
 	 m.vn = nvertex;
@@ -103,7 +103,7 @@ static int Open( Tetramesh & m, const char * filename )
 		return 0;
 	 }
 	};// end class
-};// end of io
-};// end of tetra
-};// end of vcg
+}// end of io
+}// end of tetra
+}// end of vcg
 #endif

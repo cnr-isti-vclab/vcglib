@@ -69,10 +69,10 @@ namespace vcg {
 					for(j=0,vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
 					{
 						vp = &(*vi);
-						FlagV.push_back(vp->UberFlags());
+						FlagV.push_back(vp->Flags());
 						if (!vp->IsD())
 						{
-							vp->UberFlags() = j;
+							vp->Flags() = j;
 							j++;
 						}
 					}
@@ -94,8 +94,8 @@ namespace vcg {
 						{
 							for (int k=0; k<3; ++k)
 							{
-								int a = fp->cV(k)->UberFlags();
-								int b = fp->cV((k+1)%3)->UberFlags();
+								int a = fp->cV(k)->Flags();
+								int b = fp->cV((k+1)%3)->Flags();
 								if (a>b)
 									std::swap(a,b);
 								Edge e(a,b);
@@ -132,8 +132,8 @@ namespace vcg {
 						{
 							for (int k=0; k<3; ++k)
 							{
-								int a = fp->cV(k)->UberFlags();
-								int b = fp->cV((k+1)%3)->UberFlags();
+								int a = fp->cV(k)->Flags();
+								int b = fp->cV((k+1)%3)->Flags();
 								if (a>b)
 									std::swap(a,b);
 								Edge e(a,b);
@@ -154,8 +154,8 @@ namespace vcg {
 						{
 							for (int k=0; k<3; ++k)
 							{
-								int a = fp->cV(k)->UberFlags();
-								int b = fp->cV((k+1)%3)->UberFlags();
+								int a = fp->cV(k)->Flags();
+								int b = fp->cV((k+1)%3)->Flags();
 								if (a>b)
 									std::swap(a,b);
 								Edge e(a,b);
@@ -171,7 +171,7 @@ namespace vcg {
 
 					// Recupera i flag originali
 					for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
-						(*vi).UberFlags()=FlagV[j++];
+						(*vi).Flags()=FlagV[j++];
 
 					return 0;
 				}
