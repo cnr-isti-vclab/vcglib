@@ -21,14 +21,10 @@
 *                                                                           *
 ****************************************************************************/
 
-#include<vector>
-#include <algorithm>
-#include<vcg/space/point3.h>
 #include<vcg/space/plane3.h>
 #include<vcg/space/segment3.h>
 #include<vcg/space/intersection3.h>
 #include<vcg/complex/complex.h>
-#include<vcg/complex/append.h>
 #include<vcg/complex/algorithms/closest.h>
 #include<vcg/complex/algorithms/update/quality.h>
 #include<vcg/complex/algorithms/update/selection.h>

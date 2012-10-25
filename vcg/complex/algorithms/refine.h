@@ -450,7 +450,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 						wtt[3+i]=mid.WedgeInterp((*fi).WT(i),(*fi).WT((i+1)%3));
 					}
 
-				int orgflag=	(*fi).UberFlags();
+				int orgflag=	(*fi).Flags();
 				for(i=0;i<SplitTab[ind].TriNum;++i)
 					for(j=0;j<3;++j){
 						(*nf[i]).V(j)=&*vv[SplitTab[ind].TV[i][j]];
