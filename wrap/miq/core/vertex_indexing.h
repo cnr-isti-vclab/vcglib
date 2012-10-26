@@ -10,7 +10,7 @@
 struct SeamInfo
 {
     int v0,v0p,v1,v1p;
-    int integerVal;
+    int integerVar;
     //unsigned char RotInt;
     unsigned char MMatch;
 
@@ -19,13 +19,13 @@ struct SeamInfo
              int _v0p,
              int _v1p,
              int _MMatch,
-             int _integerVal)
+             int _integerVar)
     {
         v0=_v0;
         v1=_v1;
         v0p=_v0p;
         v1p=_v1p;
-        integerVal=_integerVal;
+        integerVar=_integerVar;
         MMatch=_MMatch;
     }
 
@@ -35,7 +35,7 @@ struct SeamInfo
         v1=S1.v1;
         v0p=S1.v0p;
         v1p=S1.v1p;
-        integerVal=S1.integerVal;
+        integerVar=S1.integerVar;
         MMatch=S1.MMatch;
     }
 };
@@ -50,6 +50,8 @@ struct MeshSystemInfo
     int num_integer_cuts;
     ///this are used for drawing purposes
     std::vector<SeamInfo> EdgeSeamInfo;
+    ///this are values of integer variables after optimization
+    std::vector<int> IntegerValues;
 };
 
 template <class MeshType>
@@ -438,7 +440,7 @@ public:
                 FaceType *f1=f0->FFp(k);
                 if (f1==f0)continue;
                 bool seam=Handle_Seams[f0][k];//f0->IsSeam(k);
-                if ((seam) &&(f0<f1))
+                if ((seam) )//&&(f0<f1))
                 {
                     int v0,v0p,v1,v1p;
                     unsigned char MM;
