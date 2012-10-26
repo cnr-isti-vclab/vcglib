@@ -73,7 +73,12 @@ public:
 	/// Default constructor
 	Pos(){}
 	/// Constructor which associates the half-edge element with a face, its edge and its vertex
-	Pos(FaceType * const fp, int const zp, VertexType * const vp){f=fp; z=zp; v=vp;}
+	/// \note that the input must be consistent, e.g. it should hold that \c vp==fp->V0(zp) or \c vp==fp->V1(zp)
+	Pos(FaceType * const fp, int const zp, VertexType * const vp)
+	{
+	  f=fp; z=zp; v=vp;
+	  assert((vp==fp->V0(zp))||(vp==fp->V1(zp)));
+	}
 	Pos(FaceType * const fp, int const zp){f=fp; z=zp; v=f->V(zp);}
 	Pos(FaceType * const fp, VertexType * const vp)
 	{
