@@ -40,7 +40,6 @@ namespace vcg {
 namespace tri {
 /** \addtogroup trimesh */
 /*@{*/
-/*@{*/
 
 
  /* MeshTypeHolder is a class which is used to define the types in the mesh
@@ -205,9 +204,9 @@ class TriMesh
 
 	/// Container of half edges, usually a vector.
 	HEdgeContainer hedge;	
-	/// Current number of hedges
+	/// Current number of halfedges; this member is for internal use only. You should always use the HN() member
 	int hn;
-	/// Current number of hedges; this member is for internal use only. You should always use the HN() member
+	/// Current number of halfedges;
 	inline int HN() const { return hn; }
 
 	/// Bounding box of the mesh
@@ -298,7 +297,7 @@ private:
 	Color4b c;
 public:
 
-	inline const Color4b & C() const
+	inline Color4b C() const
 	{
 		return c;
 	}
@@ -403,28 +402,42 @@ template <class MeshType> inline  void InitVertexIMark(MeshType & m)
 		if( !(*vi).IsD() && (*vi).IsRW() )
 			(*vi).InitIMark();
 }
-/** Access function to the incremental mark. 
+/** \brief Access function to the incremental mark.
+  You should not use this member directly. In most of the case just use IsMarked() and Mark()
 */
 template <class MeshType> inline int & IMark(MeshType & m){return m.imark;}
 
-/** Check if the vertex incremental mark matches the one of the mesh. 
-	@param v Vertex pointer
-*/
+/** \brief Check if the vertex incremental mark matches the one of the mesh.
+	@param m the mesh containing the element
+	@param v Vertex pointer */
 template <class MeshType> inline bool IsMarked(MeshType & m, typename MeshType::ConstVertexPointer  v )  { return v->IMark() == m.imark; }
-/** Check if the face incremental mark matches the one of the mesh. 
-	@param v Face pointer
-*/
+
+/** \brief Check if the face incremental mark matches the one of the mesh.
+	@param m the mesh containing the element
+	@param f Face pointer */
 template <class MeshType> inline bool IsMarked( MeshType & m,typename MeshType::ConstFacePointer f )  { return f->IMark() == m.imark; }
-/** Set the vertex incremental mark of the vertex to the one of the mesh.
-	@param v Vertex pointer
-*/
+
+/** \brief Set the vertex incremental mark of the vertex to the one of the mesh.
+	@param m the mesh containing the element
+	@param v Vertex pointer */
 template <class MeshType> inline void Mark(MeshType & m, typename MeshType::VertexPointer v )  { v->IMark() = m.imark; }
-/** Set the face incremental mark of the vertex to the one of the mesh.
-	@param v Vertex pointer
-*/
+
+/** \brief Set the face incremental mark of the vertex to the one of the mesh.
+	@param m the mesh containing the element
+	@param f Vertex pointer */
 template <class MeshType> inline void Mark(MeshType & m, typename MeshType::FacePointer f )  { f->IMark() = m.imark; }
-/// Unmark the mesh
-template <class MeshType> inline void UnMarkAll(MeshType & m) { ++m.imark; }
+
+
+/** \brief Unmark, in constant time, all the elements (face and vertices) of a mesh.
+    @param m the mesh containing the element
+
+    In practice this function just increment the internal counter that stores the value for which an element is considered marked;
+    therefore all the mesh elements become immediately un-mmarked.
+    */
+template <class MeshType> inline void UnMarkAll(MeshType & m)
+{
+  ++m.imark;
+}
 
 
 template < class CType0, class CType1 , class CType2, class CType3>

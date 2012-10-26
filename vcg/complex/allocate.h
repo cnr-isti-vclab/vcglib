@@ -46,7 +46,9 @@ public:
 };
 
 	namespace tri {
-		/** \addtogroup trimesh */
+/** \addtogroup trimesh
+@{
+*/
 		
 		template<class MeshType>
 		size_t Index(MeshType &m, const typename MeshType::VertexType &v) {return &v-&*m.vert.begin();}
@@ -80,7 +82,6 @@ public:
 					((typename MeshType::PointerToAttribute)(*ai)).Resize(sz);
 		}
 
-		/*@{*/
 		/*!
 		\brief  Class to safely add and delete elements in a mesh.
 
@@ -336,12 +337,14 @@ public:
 
 
       /* ++++++++++ hedges +++++++++++++ */
-			/** Function to add n edges to the mesh. The second parameter hold a vector of
+            /** Function to add n halfedges to the mesh. The second parameter hold a vector of
 			pointers to pointer to elements of the mesh that should be updated after a
 			possible vector realloc.
-			@param n number of edges to be added
-			@param local_var vector of pointers to pointers to edges to be updated.
-			return an iterator to the first element added
+			\sa PointerUpdater
+			\param m the mesh to be modified
+			\param n the number of elements to be added
+			\param pu  a PointerUpdater initialized so that it can be used to update pointers to edges that could have become invalid after this adding.
+			\retval the iterator to the first element added.
 			*/
 			static HEdgeIterator AddHEdges(MeshType &m,int n, PointerUpdater<HEdgePointer> &pu)
 			{
@@ -659,13 +662,14 @@ public:
 		}
 
 
-		/* 
-		Function to compact all the vertices that have been deleted and put them to the end of the vector. 
-		after this pass the isD test in the scanning of vertex vector, is no more strongly necessary.
-		It should not be called when TemporaryData is active;
+		/*!
+		\brief Compact vector of vertices removing deleted elements.
+		Deleted elements are put to the end of the vector and the vector is resized. Order between elements is preserved but not their position (hence the PointerUpdater)
+		After calling this function the \c IsD() test in the scanning a vector, is no more necessary.
+
+		\warning It should not be called when TemporaryData is active (but works correctly if attributes are present)
 		*/
-		
-		static void CompactVertexVector( MeshType &m,   PointerUpdater<VertexPointer> &pu   ) 
+		static void CompactVertexVector( MeshType &m,   PointerUpdater<VertexPointer> &pu   )
 		{
 			// If already compacted fast return please!
 			if(m.vn==(int)m.vert.size()) return; 
@@ -690,22 +694,21 @@ public:
 			 
 		}
 
-		/* 
-		Function to compact all the verices that have been deleted and put them to the end of the vector. 
-		Wrapper if not PointerUpdater is not wanted
-		*/
+		/*! \brief Wrapper without the PointerUpdater. */
 		static void CompactVertexVector( MeshType &m  ) {
 			PointerUpdater<VertexPointer>  pu;
 			CompactVertexVector(m,pu);
 		}
 
-    /*
-    Function to compact all the vertices that have been deleted and put them to the end of the vector.
-    after this pass the isD test in the scanning of vertex vector, is no more strongly necessary.
-    It should not be called when TemporaryData is active;
-    */
+	/*!
+	\brief Compact vector of edges removing deleted elements.
 
-    static void CompactEdgeVector( MeshType &m,   PointerUpdater<EdgePointer> &pu   )
+	Deleted elements are put to the end of the vector and the vector is resized. Order between elements is preserved but not their position (hence the PointerUpdater)
+	After calling this function the \c IsD() test in the scanning a vector, is no more necessary.
+
+	\warning It should not be called when TemporaryData is active (but works correctly if attributes are present)
+	*/
+	static void CompactEdgeVector( MeshType &m,   PointerUpdater<EdgePointer> &pu   )
     {
       // If already compacted fast return please!
       if(m.en==(int)m.edge.size()) return;
@@ -789,22 +792,20 @@ public:
           }
     }
 
-    /*
-    Function to compact all the verices that have been deleted and put them to the end of the vector.
-    Wrapper if not PointerUpdater is not wanted
-    */
+    /*! \brief Wrapper without the PointerUpdater. */
     static void CompactEdgeVector( MeshType &m  ) {
       PointerUpdater<EdgePointer>  pu;
       CompactEdgeVector(m,pu);
     }
 
-		/* 
-		Function to compact all the vertices that have been deleted and put them to the end of the vector. 
-		after this pass the isD test in the scanning of vertex vector, is no more strongly necessary.
-		It should not be called when TemporaryData is active;
+		/*!
+		\brief Compact vector of faces removing deleted elements.
+
+		Deleted elements are put to the end of the vector and the vector is resized. Order between elements is preserved but not their position (hence the PointerUpdater)
+		After calling this function the \c IsD() test in the scanning a vector, is no more necessary.
+		\warning It should not be called when TemporaryData is active (but works correctly if attributes are present)
 		*/
-		
-		static void CompactFaceVector( MeshType &m, PointerUpdater<FacePointer> &pu ) 
+		static void CompactFaceVector( MeshType &m, PointerUpdater<FacePointer> &pu )
 		{
 		  // If already compacted fast return please!
 			if(m.fn==(int)m.face.size()) return; 
@@ -900,10 +901,7 @@ public:
 
 		}
 
-		/* 
-		Function to compact all the face that have been deleted and put them to the end of the vector. 
-		Wrapper if not PointerUpdater is wanted
-		*/
+		/*! \brief Wrapper without the PointerUpdater. */
 		static void CompactFaceVector( MeshType &m  ) {
 			PointerUpdater<FacePointer>  pu;
 			CompactFaceVector(m,pu);

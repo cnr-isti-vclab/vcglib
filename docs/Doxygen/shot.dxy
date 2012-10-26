@@ -16,7 +16,7 @@ Then, a set of examples of the most important operations (projection and un-proj
 In generale, the camera parameters can be divided in two groups:
 - \b Extrinsic (or external) parameters: these are the parameters associated to the position in the space of the camera.
 
-- \bIntrinsic (or internal) parameters: these values are related to the peculiar characteristics of the camera, like the focal length (the zoom) or the distortion introduced by the lenses.
+- \b Intrinsic (or internal) parameters: these values are related to the peculiar characteristics of the camera, like the focal length (the zoom) or the distortion introduced by the lenses.
 
 If these group of values are put in a proper camera model, it is possible to transform any point in the space in the corresponding point on the image plane of the camera (and viceversa).
 

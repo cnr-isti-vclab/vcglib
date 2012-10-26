@@ -23,7 +23,7 @@
 /*! \file trimesh_allocate.cpp
 \ingroup code_sample
 
-\brief the minimal example of using the attributes
+\brief the minimal example about creating and deleting elements
 
 Attributes are a simple mechanism to associate user-defined 'attributes' to the simplicies and to the mesh.
 \ref attributes for more Details
@@ -94,6 +94,10 @@ int main()
         MyMesh::CoordType b = vcg::Barycenter(*fi);
        }
   }
+
+  // To remove the elements marked as deleted use
+  vcg::tri::Allocator<MyMesh>::CompactFaceVector(m);
+  vcg::tri::Allocator<MyMesh>::CompactVertexVector(m);
 
   // finally lets copy this mesh onto another one.
   MyMesh m2;
