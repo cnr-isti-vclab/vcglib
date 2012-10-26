@@ -612,6 +612,20 @@ class PoissonSolver
                  f->WT(k).P()=uv;
              }
         }
+        ///initialize the vector of integer variables to return their values
+        Handle_SystemInfo().IntegerValues.resize(n_integer_vars*2);
+        int baseIndex=(n_vert_vars)*2;
+        int endIndex=baseIndex+n_integer_vars*2;
+        int index=0;
+        for (int i=baseIndex;i<endIndex;i++)
+        {
+            ///assert that the value is an integer value
+            ScalarType value=X[i];
+            ScalarType diff=value-(int)floor(value+0.5);
+            assert(diff<0.00000001);
+            Handle_SystemInfo().IntegerValues[index]=value;
+            index++;
+        }
      }
 
     ///END GENERIC SYSTEM FUNCTIONS
@@ -647,7 +661,7 @@ class PoissonSolver
 			Cmplx rot=GetRotationComplex(interval);
 
 			///get the integer variable
-            int integerVar=offset_row+Handle_SystemInfo().EdgeSeamInfo[i].integerVal;
+            int integerVar=offset_row+Handle_SystemInfo().EdgeSeamInfo[i].integerVar;
 
             //Cmplx rotInt=GetRotationComplex(interval);
             if (integer_rounding)
