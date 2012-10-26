@@ -35,11 +35,7 @@ namespace vcg
 {
     namespace tri{
         /// \ingroup trimesh
-
-        /// \headerfile edge_support.h vcg/complex/algorithms/edge_support.h
-
         /// \brief This class is used to build edge based data structure from indexed data structure and viceversa
-
         /**
                 */
 

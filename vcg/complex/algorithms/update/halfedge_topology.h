@@ -42,7 +42,7 @@ namespace vcg
                   * Made by a series of a vertex rotation and a diagonal collapse.
                   *
                   * \param m Mesh
-                  * \param ep Edge to be collapsed
+                  * \param hp hegde to be collapsed
                   * \param vp Vertex that will be rotated
                   *
                   * \return Pointer to the new vertex
@@ -295,7 +295,7 @@ namespace vcg
                   * Removes a singlet replacing it with an edge
                   *
                   * \param m Mesh
-                  * \param vp Vertex shared by the two consecutive edges inside the singlet
+                  * \param fp Face that should be a singlet quad
                   *
                   * \return Pointer to an halfdedge representing the new edge
                   */
@@ -389,8 +389,7 @@ namespace vcg
                 /*!
                   * Rotates a non-border edge shared by two quads
                   *
-                  * \param m Mesh
-                  * \param ep Edge to be rotated
+                  * \param hp Edge to be rotated
                   * \param cw flag denoting a clockwise or counter-clockwise rotation
                   *
                   * \return Pointer to the rotated edge
@@ -485,7 +484,6 @@ namespace vcg
                 /*!
                   * Rotates a non-border vertex shared by only quads
                   *
-                  * \param m Mesh
                   * \param vp Vertex to be rotated
                   *
                   * \return Pointer to the rotated vertex
@@ -551,7 +549,7 @@ namespace vcg
                   * Collapses a generic edge
                   *
                   * \param m Mesh
-                  * \param ep Edge to be collapsed
+                  * \param hp Edge to be collapsed
                   * \param vp Vertex to be deleted
                   *
                   * \return Pointer to the other vertex belonging to the collapsed edge
@@ -717,6 +715,7 @@ namespace vcg
                   *
                   * \param m Mesh
                   * \param vps Vector of vertices (in ccw order) that will belong to the new face
+                  * \param hps Vector of hedges (in ccw order) that will belong to the new face
                   * \param non_manifold_vertices Vector of booleans denoting on the i-th position if the i-th vertex is non-manifold
                   *
                   * \return Pointer to the new face
@@ -1169,7 +1168,7 @@ namespace vcg
                 /*!
                   * Checks if a diagonal can be collapsed
                   *
-                  * \param vp Hedge whose vertex is one of the two vertices of the diagonal
+                  * \param hp Hedge whose vertex is one of the two vertices of the diagonal
                   *
                   * \retval true if diagonal can be collapsed
                   * \retval false if diagonal cannot be collapsed
@@ -1252,6 +1251,7 @@ namespace vcg
                 /*!
                   * Checks if a vertex is non-manifold, comparing local and global information (slow)
                   *
+                  * \param m Mesh
                   * \param vp Vertex to check
                   *
                   * \retval true if vertex is non-manifold
