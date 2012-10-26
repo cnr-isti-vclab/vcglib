@@ -154,8 +154,8 @@ public:
 	// Meaningful only for 1-manifold edge chain.
 	void NextE()
 	{
-		FlipV();
-		FlipE();
+       FlipE();
+       FlipV();
 	}
   
 		// Paolo Cignoni 19/6/99
