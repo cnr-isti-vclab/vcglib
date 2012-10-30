@@ -8,7 +8,7 @@ Adding element to a vector can cause reallocation, and therefore invalidation of
 
 \dontinclude trimesh_allocate.cpp
 \skip MyMesh
-\until f.V(2)=ivp[2];
+\until fi->V(2)=ivp[2];
 
 look to platonic.h for more examples.
 
