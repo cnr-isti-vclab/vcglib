@@ -39,7 +39,7 @@ In other words we cannot derive and add in a single derivation step
 (with multiple ancestor), both the real (non-empty) normal and color but 
 we have to build the type a step a time (deriving from a single ancestor at a time). 
 
-/* The Real Big Vertex class;
+ The Real Big Vertex class;
 
 The class __VertexArityMax__ is the one that is the Last to be derived,
 and therefore is the only one to know the real members 
