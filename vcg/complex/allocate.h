@@ -609,7 +609,8 @@ public:
 		*/
 		static void PermutateVertexVector(MeshType &m, PointerUpdater<VertexPointer> &pu) 
 		{
-			for(unsigned int i=0;i<m.vert.size();++i)
+		  if(m.vert.empty()) return;
+		  for(unsigned int i=0;i<m.vert.size();++i)
 			{
 				if(pu.remap[i]<size_t(m.vn))
                 {

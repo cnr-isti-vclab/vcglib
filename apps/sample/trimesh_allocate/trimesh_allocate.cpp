@@ -46,19 +46,17 @@ class MyMesh : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFa
 int main()
 {
   MyMesh m;
-  vcg::tri::Allocator<MyMesh>::AddVertices(m,3);
-  vcg::tri::Allocator<MyMesh>::AddFaces(m,1);
+  MyMesh::VertexIterator vi = vcg::tri::Allocator<MyMesh>::AddVertices(m,3);
+  MyMesh::FaceIterator fi = vcg::tri::Allocator<MyMesh>::AddFaces(m,1);
 
   MyMesh::VertexPointer ivp[3];
-  MyMesh::VertexIterator vi=m.vert.begin();
-  ivp[0]=&*vi;(*vi).P()=MyMesh::CoordType ( 0.0, 0.0, 0.0); ++vi;
-  ivp[1]=&*vi;(*vi).P()=MyMesh::CoordType ( 1.0, 0.0, 0.0); ++vi;
-  ivp[2]=&*vi;(*vi).P()=MyMesh::CoordType ( 0.0, 1.0, 0.0); ++vi;
+  ivp[0]=&*vi; vi->P()=MyMesh::CoordType ( 0.0, 0.0, 0.0); ++vi;
+  ivp[1]=&*vi; vi->P()=MyMesh::CoordType ( 1.0, 0.0, 0.0); ++vi;
+  ivp[2]=&*vi; vi->P()=MyMesh::CoordType ( 0.0, 1.0, 0.0); ++vi;
 
-  MyFace &f=m.face[0];
-  f.V(0)=ivp[0];
-  f.V(1)=ivp[1];
-  f.V(2)=ivp[2];
+  fi->V(0)=ivp[0];
+  fi->V(1)=ivp[1];
+  fi->V(2)=ivp[2];
 
   // a potentially dangerous pointer to a mesh element
   MyMesh::FacePointer fp = &m.face[0];
@@ -77,7 +75,6 @@ int main()
   vcg::tri::Allocator<MyMesh>::DeleteFace(m,m.face[3]);
 
   // If you loop in a mesh with deleted elements you have to skip them!
-  MyMesh::FaceIterator fi;
   for(fi = m.face.begin(); fi!=m.face.end(); ++fi )
   {
      if(!fi->IsD()) //    <---- Check added
