@@ -643,9 +643,9 @@ public:
 		  }
 		}
 	  }
-	  while (( line.length()==0 || line[0] == '#') && !stream.eof());  // skip comments and empty lines
+	  while (( line.empty() || (!line.empty() && line[0] == '#')) && !stream.eof());  // skip comments and empty lines
 
-	  if ( (line.length() == 0)||(line[0] == '#') )  // can be true only on last line of file
+	  if ( (line.length() == 0)||(!line.empty() && line[0] == '#') )  // can be true only on last line of file
 		return;
 
 	  size_t from		= 0;
