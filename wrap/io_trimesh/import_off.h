@@ -369,81 +369,103 @@ namespace vcg
 					unsigned int f0=0;
 
 
-          // Initial call to the QuadTriangulate with an empty vector to just reset the static set of existing diagonals
-          std::vector<VertexPointer> qtmp;
-          BitQuad<MESH_TYPE>::QuadTriangulate(qtmp);
+					// Initial call to the QuadTriangulate with an empty vector to just reset the static set of existing diagonals
+					std::vector<VertexPointer> qtmp;
+					BitQuad<MESH_TYPE>::QuadTriangulate(qtmp);
 
 					for (unsigned int f=0; f < nFaces; f++)
 					{
-						f0 = f;
-						if (stream.fail())
-							return InvalidFile;
+					  f0 = f;
+					  if (stream.fail())
+						return InvalidFile;
 
-						if(cb && (f%1000)==0)
-							cb(50+f*50/nFaces,"Face Loading");
+					  if(cb && (f%1000)==0)
+						cb(50+f*50/nFaces,"Face Loading");
 
-						TokenizeNextLine(stream, tokens);
-						int vert_per_face = atoi(tokens[0].c_str());
-            if(vert_per_face < 3)
-              return ErrorDegenerateFace;
-						k = 1;
-						if (vert_per_face == 3)
+					  TokenizeNextLine(stream, tokens);
+					  int vert_per_face = atoi(tokens[0].c_str());
+					  if(vert_per_face < 3)
+						return ErrorDegenerateFace;
+					  k = 1;
+					  if (vert_per_face == 3)
+					  {
+						for (int j = 0; j < 3; j++)
 						{
-							for (int j = 0; j < 3; j++)
-							{
-                                if (k == tokens.size())   // if EOL 		// Go to next line when needed
-								{
-									TokenizeNextLine(stream, tokens);
-                                    if (tokens.size() == 0) return InvalidFile; // if EOF
-									k = 0;
-								}
-							
-								mesh.face[f].V(j) = &(mesh.vert[ atoi(tokens[k].c_str()) ]);
-								k++;
-							}
+						  if (k == tokens.size())   // if EOL 		// Go to next line when needed
+						  {
+							TokenizeNextLine(stream, tokens);
+							if (tokens.size() == 0) return InvalidFile; // if EOF
+							k = 0;
+						  }
+
+						  mesh.face[f].V(j) = &(mesh.vert[ atoi(tokens[k].c_str()) ]);
+						  k++;
 						}
-						else
+					  }
+					  else
+					  {
+						// The face must be triangulated
+						unsigned int trigs = vert_per_face-3; // number of extra faces to add
+						nFaces += trigs;
+						Allocator<MESH_TYPE>::AddFaces(mesh, trigs);
+						std::vector<int> vertIndices(vert_per_face);
+						std::vector<vcg::Point3f > polygonVect(vert_per_face); // vec of polygon loops used for the triangulation of polygonal face
+						for (int j=0; j < vert_per_face; j++)
 						{
-							// The face must be triangulate
-							unsigned int trigs = vert_per_face-3; // number of extra faces to add
-							nFaces += trigs;
-							Allocator<MESH_TYPE>::AddFaces(mesh, trigs);
-                            std::vector<int> vertIndices(vert_per_face);
-							for (int j=0; j < vert_per_face; j++)
-							{
-                                if (k == tokens.size())   // if EOL // Go to next line when needed
-								{
-									TokenizeNextLine(stream, tokens);
-                                    if (tokens.size() == 0) return InvalidFile; // if EOF
-                                    k = 0;
-								}
-								vertIndices[j] = atoi(tokens[k].c_str());
-								k++;
-							}
-                            if(vert_per_face==4)
-                            {   // To well triangulate use the bitquad support function that reorders vertex for a simple fan
-                                std::vector<VertexPointer> q(4);
-                                for(int qqi=0;qqi<4;++qqi)
-                                  q[qqi]=& mesh.vert[vertIndices[qqi]];
-                                BitQuad<MESH_TYPE>::QuadTriangulate(q);
-                                for(int qqi=0;qqi<4;++qqi)
-                                  vertIndices[qqi] = q[qqi]- & mesh.vert[0];
-                            }
-                            // standard fan triangulation (we hope the polygon is convex...)
-                            for (int j=0; j<=vert_per_face-3; j++)
-                            {
-                                mesh.face[f+j].V(0) = &(mesh.vert[ vertIndices[0  ] ]);
-                                mesh.face[f+j].V(1) = &(mesh.vert[ vertIndices[1+j] ]);
-                                mesh.face[f+j].V(2) = &(mesh.vert[ vertIndices[2+j] ]);
-                                if (tri::HasPerFaceFlags(mesh)) {
-                                // tag internal polygonal edges as "faux"
-                                  if (j>0) mesh.face[f+j].SetF(0);
-                                  if (j<vert_per_face-3) mesh.face[f+j].SetF(2);
-                                  loadmask |= Mask::IOM_BITPOLYGONAL;
-                              }
-                            }
-                            f+=trigs;
+						  if (k == tokens.size())   // if EOL // Go to next line when needed
+						  {
+							TokenizeNextLine(stream, tokens);
+							if (tokens.size() == 0) return InvalidFile; // if EOF
+							k = 0;
+						  }
+						  vertIndices[j] = atoi(tokens[k].c_str());
+						  polygonVect[j] = mesh.vert[ vertIndices[j] ].P();
+						  k++;
 						}
+						if(vert_per_face==4)
+						{   // To well triangulate use the bitquad support function that reorders vertex for a simple fan
+						  std::vector<VertexPointer> q(4);
+						  for(int qqi=0;qqi<4;++qqi)
+							q[qqi]=& mesh.vert[vertIndices[qqi]];
+						  BitQuad<MESH_TYPE>::QuadTriangulate(q);
+						  for(int qqi=0;qqi<4;++qqi)
+							vertIndices[qqi] = q[qqi]- & mesh.vert[0];
+						  // build a two face fan
+						  for (int j=0; j<2; j++)
+						  {
+							mesh.face[f+j].V(0) = &(mesh.vert[ vertIndices[0  ] ]);
+							mesh.face[f+j].V(1) = &(mesh.vert[ vertIndices[1+j] ]);
+							mesh.face[f+j].V(2) = &(mesh.vert[ vertIndices[2+j] ]);
+							if (tri::HasPerFaceFlags(mesh)) {
+							  // tag internal polygonal edges as "faux"
+							  if (j>0) mesh.face[f+j].SetF(0);
+							  if (j<vert_per_face-3) mesh.face[f+j].SetF(2);
+							  loadmask |= Mask::IOM_BITPOLYGONAL;
+							}
+						  }
+						}
+						else // standard fan triangulation (we hope the polygon is convex...)
+						{
+						  std::vector<int> indexTriangulatedVect;
+						  //                              TessellatePlanarPolygon3(polygonVect,indexTriangulatedVect);
+						  std::vector< std::vector<Point3f> > loopVect;
+						  loopVect.push_back(polygonVect);
+#ifdef __gl_h_
+                          //qDebug("OK: using opengl tessellation for a polygon of %i vertices",vertexesPerFace);
+                          vcg::glu_tesselator::tesselate<vcg::Point3f>(loopVect, indexTriangulatedVect);
+#else
+                          //qDebug("Warning: using fan tessellation for a polygon of %i vertices",vertexesPerFace);
+                          InternalFanTessellator(loopVect, indexTriangulatedVect);
+#endif
+                          for (int j=0; j<indexTriangulatedVect.size(); j+=3)
+                          {
+                            mesh.face[f+j/3].V(0) = &(mesh.vert[ vertIndices[ indexTriangulatedVect[j+0] ] ]);
+                            mesh.face[f+j/3].V(1) = &(mesh.vert[ vertIndices[ indexTriangulatedVect[j+1] ] ]);
+                            mesh.face[f+j/3].V(2) = &(mesh.vert[ vertIndices[ indexTriangulatedVect[j+2] ] ]);
+                          }
+                        }
+                        f+=trigs;
+                      }
 
 						// NOTE: It is assumed that colored face takes exactly one text line
 						//       (otherwise it is impossible to parse color information since
@@ -540,7 +562,7 @@ namespace vcg
 					std::string line;
 					do
 						std::getline(stream, line, '\n');
-					while (line[0] == '#' || line.length()==0);
+					while (line[0] == '#' || line.length()==0 || line[0]=='\r');
 
 					size_t from = 0; 
 					size_t to = 0;
