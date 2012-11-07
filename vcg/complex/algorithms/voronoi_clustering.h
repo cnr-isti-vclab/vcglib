@@ -101,21 +101,21 @@ typedef typename MeshType::template PerFaceAttributeHandle<VertexPointer> PerFac
 
 static void ComputePerVertexSources(MeshType &m, std::vector<VertexType *> &seedVec)
 {
-  tri::Geo<MeshType> g;
-  VertexPointer farthest;
   tri::Allocator<MeshType>::DeletePerVertexAttribute(m,"sources"); // delete any conflicting handle regardless of the type...
   PerVertexPointerHandle vertexSources =  tri::Allocator<MeshType>:: template AddPerVertexAttribute<VertexPointer> (m,"sources");
+
   tri::Allocator<MeshType>::DeletePerFaceAttribute(m,"sources"); // delete any conflicting handle regardless of the type...
   PerFacePointerHandle faceSources =  tri::Allocator<MeshType>:: template AddPerFaceAttribute<VertexPointer> (m,"sources");
+
   assert(tri::Allocator<MeshType>::IsValidHandle(m,vertexSources));
-  g.FarthestVertex(m,seedVec,farthest,std::numeric_limits<ScalarType>::max(),&vertexSources);
+  tri::Geodesic<MeshType>::Compute(m,seedVec,std::numeric_limits<ScalarType>::max(),0,&vertexSources);
 }
 
 static void VoronoiColoring(MeshType &m, std::vector<VertexType *> &seedVec, bool frontierFlag=true)
 {
   PerVertexPointerHandle sources =  tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   assert(tri::Allocator<MeshType>::IsValidHandle(m,sources));
-  tri::Geo<MeshType> g;
+  tri::Geodesic<MeshType> g;
   VertexPointer farthest;
 
 		if(frontierFlag)
@@ -124,7 +124,7 @@ static void VoronoiColoring(MeshType &m, std::vector<VertexType *> &seedVec, boo
 				std::vector< std::pair<float,VertexPointer> > regionArea(m.vert.size(),zz);
 				std::vector<VertexPointer> borderVec;
 				GetAreaAndFrontier(m, sources,  regionArea, borderVec);
-				g.FarthestVertex(m,borderVec,farthest);
+				tri::Geodesic<MeshType>::Compute(m,borderVec);
 		}
 
 		tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
@@ -274,13 +274,11 @@ static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec, int
 	for(int iter=0;iter<relaxIter;++iter)
 	{
 		if(cb) cb(iter*100/relaxIter,"Voronoi Lloyd Relaxation: First Partitioning");
-		tri::Geo<MeshType> g;
-    VertexPointer farthest;
 		// first run: find for each point what is the closest to one of the seeds.
 		typename MeshType::template PerVertexAttributeHandle<VertexPointer> sources;
 		sources = tri::Allocator<MeshType>:: template AddPerVertexAttribute<VertexPointer> (m,"sources");
 		
-    g.FarthestVertex(m,seedVec,farthest,std::numeric_limits<ScalarType>::max(),&sources);
+		tri::Geodesic<MeshType>::Compute(m,seedVec,std::numeric_limits<ScalarType>::max(),0,&sources);
 		
 		std::pair<float,VertexPointer> zz(0,0);
 		std::vector< std::pair<float,VertexPointer> > regionArea(m.vert.size(),zz);
@@ -300,7 +298,7 @@ static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec, int
   
 		if(cb) cb(iter*100/relaxIter,"Voronoi Lloyd Relaxation: Searching New Seeds");
 			
-    g.FarthestVertex(m,borderVec,farthest);
+		tri::Geodesic<MeshType>::Compute(m,borderVec);
         tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
 
 		// Search the local maxima for each region and use them as new seeds	

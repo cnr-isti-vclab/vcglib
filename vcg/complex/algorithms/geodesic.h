@@ -20,29 +20,11 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#include <assert.h>
-#include <vcg/math/base.h>
-#include <vcg/container/simple_temporary_data.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
 #include <vcg/complex/algorithms/update/quality.h>
 #include <deque>
-#include <vector>
-#include <list>
 #include <functional>
-
-/*
-class for computing approximated geodesic distances on a mesh.
-
-basic example: farthest vertex from a specified one
-MyMesh m;
-MyMesh::VertexPointer seed,far;
-MyMesh::ScalarType dist;
-
-vcg::Geo<MyMesh> g;
-g.FarthestVertex(m,seed,far,d);
-
-*/
 #ifndef __VCGLIB_GEODESIC
 #define __VCGLIB_GEODESIC
 
@@ -59,8 +41,14 @@ struct EuclideanDistance{
   {return vcg::Distance(v0->cP(),v1->cP());}
 };
 
+/*! \brief class for computing approximate geodesic distances on a mesh
+ *
+basic example: farthest vertex from a specified one
+\sa trimesh_geodesic.cpp
+*/
+
 template <class MeshType, class DistanceFunctor = EuclideanDistance<MeshType> >
-class Geo{
+class Geodesic{
 
 public:
 
@@ -277,76 +265,48 @@ wrapping function.
 
 
 public:
-  /*
-      Given a mesh and a vector of pointers to seed vertices, this function assigns the approximated geodesic
-      distance from the closest source to all the mesh vertices  within the
-      specified interval and returns the found vertices writing on their Quality field the distance.
-      Optionally for each vertex it can store, in a passed attribute, its corresponding seed vertex.
-      To allocate such an attribute:
+  /*! \brief Given a set of source vertices compute the approximate geodesic distance to all the other vertices
 
-      typename MeshType::template PerVertexAttributeHandle<VertexPointer> sources;
-      sources =  tri::Allocator<CMeshO>::AddPerVertexAttribute<VertexPointer> (m,"sources");
+\param m the mesh
+\param seedVec a vector of Vertex pointers with the \em sources of the flood fill
+\param maxDistanceThr max distance that we travel on the mesh starting from the sources
+\param withinDistanceVec a pointer to a vector for storing the vertexes reached within the passed maxDistanceThr
+\param sourceSeed pointer to the handle to keep for each vertex its seed
+\param parentSeed pointer to the handle to keep for each vertex its parent in the closest tree
 
+Given a mesh and a vector of pointers to seed vertices, this function compute the approximated geodesic
+distance from the given sources to all the mesh vertices within the given maximum distance threshold.
+The computed distance is stored in the vertex::Quality component.
+Optionally for each vertex it can store, in a passed attribute, the corresponding seed vertex
+(e.g. the vertex of the source set closest to him) and the 'parent' in a tree forest that connects each vertex to the closest source.
+
+To allocate the attributes:
+\code
+      typename MeshType::template PerVertexAttributeHandle<VertexPointer> sourcesHandle;
+      sourcesHandle =  tri::Allocator<CMeshO>::AddPerVertexAttribute<MeshType::VertexPointer> (m,"sources");
+
+      typename MeshType::template PerVertexAttributeHandle<VertexPointer> parentHandle;
+      parentHandle =  tri::Allocator<CMeshO>::AddPerVertexAttribute<MeshType::VertexPointer> (m,"parent");
+\endcode
+\warning that this function has ALWAYS at least a linear cost (it use additional attributes that have a linear initialization)
+\todo make it O(output) by using incremental mark and persistent attributes.
             */
-  static bool FarthestVertex( MeshType & m,
-                              std::vector<VertexPointer> & seedVec,
-                              VertexPointer & farthest_vert,
-                              ScalarType distance_thr  = std::numeric_limits<ScalarType>::max(),
-                              typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sourceSeed = NULL,
-                              typename MeshType::template PerVertexAttributeHandle<VertexPointer> * parentSeed = NULL,
-                              std::vector<VertexPointer> *InInterval=NULL)
+  static bool Compute( MeshType & m,
+                       const std::vector<VertexPointer> & seedVec,
+                       ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
+                       std::vector<VertexPointer> *withinDistanceVec=NULL,
+                       typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sourceSeed = NULL,
+                       typename MeshType::template PerVertexAttributeHandle<VertexPointer> * parentSeed = NULL
+                       )
   {
-    typename std::vector<VertexPointer>::iterator fi;
-    std::vector<VertDist> vdSeedVec;
     if(seedVec.empty())	return false;
+    std::vector<VertDist> vdSeedVec;
+    typename std::vector<VertexPointer>::const_iterator fi;
     for( fi  = seedVec.begin(); fi != seedVec.end() ; ++fi)
         vdSeedVec.push_back(VertDist(*fi,0.0));
-    farthest_vert = Visit(m, vdSeedVec, false, distance_thr, sourceSeed, parentSeed, InInterval);
+
+    Visit(m, vdSeedVec, false, maxDistanceThr, sourceSeed, parentSeed, withinDistanceVec);
     return true;
-  }
-  /*
-  Given a mesh and  a  pointers to a vertex-source (source), assigns the approximated geodesic
-  distance from the vertex-source to all the mesh vertices and returns the pointer to the farthest
-  Note: it updates the field Q() of the vertices
-  */
-  static bool FarthestVertex( MeshType & m, VertexPointer seed, ScalarType distance_thr  = std::numeric_limits<ScalarType>::max())
-  {
-    std::vector<VertexPointer>  seedVec(1,seed);
-    VertexPointer v0;
-    return FarthestVertex(m,seedVec,v0,distance_thr);
-  }
-
-
-  /*
-  Same as FarthestPoint but the returned pointer is to a border vertex
-  Note: update the field Q() of the vertices
-  */
-  static void FarthestBVertex(MeshType & m,
-                              std::vector<VertexPointer> & seedVec,
-                              VertexPointer & farthest,
-                              ScalarType & distance,
-                              typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL
-      )
-  {
-    std::vector<VertDist>fr;
-    for(typename std::vector<VertexPointer>::iterator fi  = seedVec.begin(); fi != seedVec.end() ; ++fi)
-      fr.push_back(VertDist(*fi,0));
-    farthest =  Visit(m,fr,distance,true,sources);
-  }
-  /*
-            Same as FarthestPoint but the returned pointer is to a border vertex
-            Note: update the field Q() of the vertices
-            */
-  static void FarthestBVertex(	MeshType & m,
-                                VertexPointer seed,
-                                VertexPointer & farthest,
-                                ScalarType & distance,
-                                typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL)
-  {
-    std::vector<VertexPointer>  fro(1,seed);
-    VertexPointer v0;
-    FarthestBVertex(m,fro,v0,distance,sources);
-    farthest = v0;
   }
 
   /*
@@ -354,19 +314,16 @@ public:
             Note: update the field Q() of the vertices
             Note: it needs the border bit set.
             */
-  static bool DistanceFromBorder(	MeshType & m, typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL
-      ){
+  static bool DistanceFromBorder(	MeshType & m, typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sources = NULL)
+  {
     std::vector<VertexPointer> fro;
-    VertexIterator vi;
-    VertexPointer farthest;
-    for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+    for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
       if( (*vi).IsB())
         fro.push_back(&(*vi));
     if(fro.empty()) return false;
 
     tri::UpdateQuality<MeshType>::VertexConstant(m,0);
-
-    return FarthestVertex(m,fro,farthest,std::numeric_limits<ScalarType>::max(),sources);
+    return Compute(m,fro,std::numeric_limits<ScalarType>::max(),0,sources);
   }
 
 };// end class
