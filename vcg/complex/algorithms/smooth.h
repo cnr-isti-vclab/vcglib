@@ -33,6 +33,7 @@
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/halfedge_topology.h>
 #include <vcg/complex/algorithms/closest.h>
+#include <vcg/space/index/kdtree/kdtree.h>
 
 
 namespace vcg
@@ -1229,6 +1230,29 @@ static void VertexCoordPasoDobleFast(MeshType &m, int NormalSmoothStep, typename
 
   for(int j=0;j<FitStep;++j)
     FastFitMesh(m,TDV,SmoothSelected);
+}
+
+
+static void VertexNormalPointCloud(MeshType &m, int neighborNum)
+{
+  SimpleTempData<typename MeshType::VertContainer,Point3f > TD(m.vert,Point3f(0,0,0));
+  VertexConstDataWrapper<MeshType> ww(m);
+
+  KdTree<float> tree(ww);
+  tree.setMaxNofNeighbors(neighborNum);
+  for (VertexIterator vi = m.vert.begin();vi!=m.vert.end();++vi)
+  {
+      tree.doQueryK(vi->cP());
+      int neighbours = tree.getNofFoundNeighbors();
+      for (int i = 0; i < neighbours; i++)
+      {
+          int neightId = tree.getNeighborId(i);
+          TD[vi]+= m.vert[neightId].cN();
+      }
+  }
+  for (VertexIterator vi = m.vert.begin();vi!=m.vert.end();++vi)
+    vi->N()=TD[vi];
+  tri::UpdateNormal<MeshType>::NormalizePerVertex(m);
 }
 
 //! Laplacian smoothing with a reprojection on a target surface.
