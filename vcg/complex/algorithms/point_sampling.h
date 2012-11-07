@@ -1212,7 +1212,7 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
     if(pp.pds) {
       pp.pds->gridCellNum = (int)montecarloSHT.AllocatedCells.size();
       pp.pds->montecarloSampleNum = montecarloMesh.vn;
-}
+    }
     int removedCnt=0;
     if(pp.preGenFlag)
     {
@@ -1243,7 +1243,7 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
     int t2 = clock();
     if(pp.pds)
     {
-      pp.pds->gridTime = t1-t1;
+      pp.pds->gridTime = t1-t0;
       pp.pds->pruneTime = t2-t1;
     }
 }
