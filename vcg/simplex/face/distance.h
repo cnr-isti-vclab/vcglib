@@ -63,7 +63,7 @@ namespace vcg {
 		p = q - t*d; // p is the projection of q on the face plane
 		// Now Choose the best plane and test to see if p is inside the triangle
 		    
-		switch( f.Flags() & (FaceType::NORMX|FaceType::NORMY|FaceType::NORMZ) )
+		switch( f.cFlags() & (FaceType::NORMX|FaceType::NORMY|FaceType::NORMZ) )
 		{
 		case FaceType::NORMX:
 			b0 = f.cEdge(1)[1]*(p[2] - f.cP(1)[2]) - f.cEdge(1)[2]*(p[1] - f.cP(1)[1]);
