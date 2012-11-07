@@ -445,11 +445,11 @@ bool HasPerVertexVEAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & 
 template < class  CType0, class CType1, class CType2 , class CType3>
 bool HasPerEdgeVEAdjacency   (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::EdgeContainer::value_type::HasVEAdjacency();}
 
-template < class VertexType> bool VertexVectorHasPerFaceVFAdjacency     (const std::vector<VertexType> &) {  return VertexType::HasVFAdjacency(); }
-template < class FaceType  > bool   FaceVectorHasPerFaceVFAdjacency     (const std::vector<FaceType  > &) {  return FaceType::HasVFAdjacency(); }
+template < class VertexType> bool VertexVectorHasVFAdjacency     (const std::vector<VertexType> &) {  return VertexType::HasVFAdjacency(); }
+template < class FaceType  > bool   FaceVectorHasVFAdjacency     (const std::vector<FaceType  > &) {  return FaceType::HasVFAdjacency(); }
 
-template < class TriMeshType> bool   HasPerFaceVFAdjacency     (const TriMeshType &m) { return tri::FaceVectorHasPerFaceVFAdjacency  (m.vert); }
-template < class TriMeshType> bool HasPerVertexVFAdjacency     (const TriMeshType &m) { return tri::VertexVectorHasPerFaceVFAdjacency(m.vert); }
+template < class TriMeshType> bool   HasPerFaceVFAdjacency     (const TriMeshType &m) { return tri::FaceVectorHasVFAdjacency  (m.vert); }
+template < class TriMeshType> bool HasPerVertexVFAdjacency     (const TriMeshType &m) { return tri::VertexVectorHasVFAdjacency(m.vert); }
 
 
 template < class VertexType> bool VertexVectorHasPerVertexQuality     (const std::vector<VertexType> &) {  return VertexType::HasQuality     (); }
@@ -503,6 +503,8 @@ template < class TriMeshType> bool HasPerFaceCurvatureDir(const TriMeshType &m) 
 template < class TriMeshType> bool HasFFAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFFAdjacency   (m.face); }
 template < class TriMeshType> bool HasFEAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFEAdjacency   (m.face); }
 template < class TriMeshType> bool HasFVAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFVAdjacency   (m.face); }
+
+template < class TriMeshType> bool HasVFAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasVFAdjacency   (m.face) && tri::VertexVectorHasVFAdjacency(m.vert);  }
 
 
 
