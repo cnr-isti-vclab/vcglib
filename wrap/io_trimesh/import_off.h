@@ -27,6 +27,7 @@
 #include<vcg/complex/algorithms/bitquad_support.h>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/io_trimesh/import_obj.h>
 
 namespace vcg
 {
@@ -455,7 +456,7 @@ namespace vcg
                           vcg::glu_tesselator::tesselate<vcg::Point3f>(loopVect, indexTriangulatedVect);
 #else
                           //qDebug("Warning: using fan tessellation for a polygon of %i vertices",vertexesPerFace);
-                          InternalFanTessellator(loopVect, indexTriangulatedVect);
+                          ImporterOBJ<MESH_TYPE>::InternalFanTessellator(loopVect, indexTriangulatedVect);
 #endif
                           for (int j=0; j<indexTriangulatedVect.size(); j+=3)
                           {
