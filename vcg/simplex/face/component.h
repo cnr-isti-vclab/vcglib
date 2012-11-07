@@ -325,19 +325,21 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 };
 
 /*------------------------- BitFlags -----------------------------------------*/
+/*! \brief \em Component: Per face \b Flags
+
+This component stores a 32 bit array of bit flags. These bit flags are used for keeping track of selection, deletion, visiting etc. \sa \ref flags for more details on common uses of flags.
+*/
 template <class T> class BitFlags:  public T {
 public:
   BitFlags(){_flags=0;}
-   int &Flags() {return _flags; }
-  int Flags() const {return _flags; }
-  const int & cFlags() const {return _flags; }
-	template <class RightF>
-	void ImportData(const RightF & rightF){ Flags() = rightF.cFlags();T::ImportData(rightF);}
-	inline void Alloc(const int & ns){T::Alloc(ns);}
-	inline void Dealloc(){T::Dealloc();}
+  int &Flags() {return _flags; }
+  int cFlags() const {return _flags; }
+  template <class RightF>
+  void ImportData(const RightF & rightF){ Flags() = rightF.cFlags();T::ImportData(rightF);}
+  inline void Alloc(const int & ns){T::Alloc(ns);}
+  inline void Dealloc(){T::Dealloc();}
   static bool HasFlags()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
-
 
 private:
   int  _flags;    

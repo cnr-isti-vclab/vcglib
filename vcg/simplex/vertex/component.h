@@ -47,7 +47,7 @@ template <class TT> class EmptyCore: public TT {
 public:
   typedef int FlagType;
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
-  int cFlags() const { return 0; }
+  int cFlags() const { assert(0); return 0; }
   static bool HasFlags()   { return false; }
 
   typedef vcg::Point3f CoordType;
@@ -281,9 +281,9 @@ public:
 	BitFlags(){_flags=0;}
   typedef int FlagType;
   int &Flags() {return _flags; }
-  int Flags() const {return _flags; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { if(LeftV::HasFlags()) Flags() = left.Flags(); T::ImportData( left); }
+  int cFlags() const {return _flags; }
+    template < class LeftV>
+    void ImportData(const LeftV  & left ) { if(LeftV::HasFlags()) Flags() = left.cFlags(); T::ImportData( left); }
   static bool HasFlags()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
 
