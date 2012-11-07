@@ -410,7 +410,7 @@ namespace vcg
 						nFaces += trigs;
 						Allocator<MESH_TYPE>::AddFaces(mesh, trigs);
 						std::vector<int> vertIndices(vert_per_face);
-						std::vector<vcg::Point3f > polygonVect(vert_per_face); // vec of polygon loops used for the triangulation of polygonal face
+                        std::vector<vcg::Point3f > polygonVect(vert_per_face); // vec of polygon loops used for the triangulation of polygonal face
 						for (int j=0; j < vert_per_face; j++)
 						{
 						  if (k == tokens.size())   // if EOL // Go to next line when needed
@@ -420,7 +420,7 @@ namespace vcg
 							k = 0;
 						  }
 						  vertIndices[j] = atoi(tokens[k].c_str());
-						  polygonVect[j] = mesh.vert[ vertIndices[j] ].P();
+                          polygonVect[j].Import<ScalarType> (mesh.vert[ vertIndices[j] ].P());
 						  k++;
 						}
 						if(vert_per_face==4)
@@ -449,7 +449,7 @@ namespace vcg
 						{
 						  std::vector<int> indexTriangulatedVect;
 						  //                              TessellatePlanarPolygon3(polygonVect,indexTriangulatedVect);
-						  std::vector< std::vector<Point3f> > loopVect;
+                          std::vector< std::vector<Point3f> > loopVect;
 						  loopVect.push_back(polygonVect);
 #ifdef __gl_h_
                           //qDebug("OK: using opengl tessellation for a polygon of %i vertices",vertexesPerFace);
