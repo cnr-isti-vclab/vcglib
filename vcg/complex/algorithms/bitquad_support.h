@@ -910,7 +910,7 @@ static void SetValency(VertexType *v, int n){
 
 static int GetValency(const VertexType *v){
   //return (int)(v->cQ());
-  return ( v->Flags() >> (VALENCY_FLAGS) ) & 255;
+  return ( v->cFlags() >> (VALENCY_FLAGS) ) & 255;
 }
 
 static void IncreaseValency(VertexType *v, int dv=1){
