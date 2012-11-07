@@ -67,7 +67,7 @@ public:
   static bool HasWedgeTexCoordOcf()   { return false; }
 
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
-  int Flags() const { return 0; }
+  int cFlags() const { return 0; }
   static bool HasFlags()   { return false; }
   static bool HasFlagsOcf()   { return false; }
 
