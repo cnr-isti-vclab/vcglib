@@ -764,7 +764,7 @@ namespace io {
 			}
 
 			if(!m.face.empty()){
-            if(FaceVectorHasPerFaceVFAdjacency(m.face))
+			if(FaceVectorHasVFAdjacency(m.face))
 				for(vi = m.vert.begin(); vi != m.vert.end(); ++vi){
 					(*vi).VFp() = (*vi).VFp()-(FaceType*)offsetF+ &m.face[0];
 					(*vi).VFp() = (*vi).VFp()-(FaceType*)offsetF+ &m.face[0];
