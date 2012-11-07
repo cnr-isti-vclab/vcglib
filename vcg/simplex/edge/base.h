@@ -54,14 +54,14 @@ we have to build the type a step a time (deriving from a single ancestor at a ti
 
 
 */ 
-template <class UserTypes>
-				class EdgeBase: public		  edge::EmptyEFAdj<
-                                    edge::EmptyVEAdj<
-																		edge::EmptyEEAdj<
-																		edge::EmptyEHAdj<
-																		edge::EmptyBitFlags<
-																		edge::EmptyVertexRef<
-																		EdgeTypeHolder < UserTypes> >  > > > > >{};
+//template <class UserTypes>
+//                class EdgeBase: public		  edge::EmptyCore<
+//                                    edge::EmptyVEAdj<
+//                                                                        edge::EmptyCore<
+//																		edge::EmptyEHAdj<
+//																		edge::EmptyBitFlags<
+//																		edge::EmptyVertexRef<
+//																		EdgeTypeHolder < UserTypes> >  > > > > >{};
 
 
 /* The Real Big Edge class;
@@ -81,9 +81,8 @@ template <class UserTypes,
           template <typename> class C, template <typename> class D, 
           template <typename> class E, template <typename> class F,
           template <typename> class G, template <typename> class H,
-					template <typename> class I, template <typename> class J, 
-					template <typename> class K> 
-class EdgeArityMax: public K<Arity10<EdgeBase<UserTypes>, A, B, C, D, E, F, G, H, I, J> > {
+          template <typename> class I, template <typename> class J >
+class EdgeArityMax: public Arity10<edge::EmptyCore<UserTypes>, A, B, C, D, E, F, G, H, I, J> {
 
 // ----- Flags stuff -----
 public:
@@ -212,9 +211,8 @@ template <class UserTypes,
           template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
           template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
-					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
-					template <typename> class K = DefaultDeriver> 
-							class Edge: public EdgeArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J, K>  {
+          template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver >
+                            class Edge: public EdgeArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J>  {
 						public: typedef AllTypes::AEdgeType IAm; typedef UserTypes TypesPool;};
 
 }// end namespace

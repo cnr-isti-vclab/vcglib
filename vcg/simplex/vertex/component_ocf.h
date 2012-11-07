@@ -431,7 +431,7 @@ public:
 	{
 		//if((*this).Base().MarkEnabled && leftV.Base().MarkEnabled ) // WRONG I do not know anything about leftV!
 		if((*this).Base().MarkEnabled) // copy the data only if they are enabled in both vertices
-				IMark() = leftV.IMark();
+				IMark() = leftV.cIMark();
 		T::ImportData(leftV);
 	}
 	static bool HasMark()   { return true; }

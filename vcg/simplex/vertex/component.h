@@ -27,7 +27,7 @@
 #define __VCG_VERTEX_PLUS_COMPONENT
 namespace vcg {
 namespace vertex {
-/** \addtogroup vertex
+/** \addtogroup VertexComponentGroup
   @{
 */
 /*------------------------- Base Classes  -----------------------------------------*/
@@ -47,19 +47,18 @@ template <class TT> class EmptyCore: public TT {
 public:
   typedef int FlagType;
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
-  int Flags() const { return 0; }
+  int cFlags() const { return 0; }
   static bool HasFlags()   { return false; }
 
   typedef vcg::Point3f CoordType;
   typedef CoordType::ScalarType      ScalarType;
   CoordType &P() { static CoordType coord(0, 0, 0); return coord; }
-  const CoordType &P() const { static CoordType coord(0, 0, 0);  assert(0); return coord; }
-  const CoordType &cP() const { static CoordType coord(0, 0, 0);  assert(0); return coord; }
+  CoordType cP() const { static CoordType coord(0, 0, 0);  assert(0); return coord; }
   static bool HasCoord()   { return false; }
 
   typedef vcg::Point3s NormalType;
   NormalType &N() { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
-  const NormalType cN()const { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
+  NormalType cN() const { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   static bool HasNormal()   { return false; }
   static bool HasNormalOcf()   { return false; }
 
@@ -79,16 +78,15 @@ public:
 
   typedef int  MarkType;
   inline void InitIMark()    {  }
-  inline const int & cIMark() const { assert(0); static int tmp=-1; return tmp;}
-  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
-  inline int IMark() const {return 0;}
+  inline int cIMark()  const { assert(0); static int tmp=-1; return tmp;}
+  inline int &IMark()        { assert(0); static int tmp=-1; return tmp;}
   static bool HasMark()   { return false; }
   static bool HasMarkOcf()   { return false; }
-	static bool IsMarkEnabled(const typename TT::VertexType *)   { return false; }
+  static bool IsMarkEnabled(const typename TT::VertexType *)   { return false; }
 
   typedef ScalarType RadiusType;
-  RadiusType  &R(){ static ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
-  const RadiusType &cR() const { static const ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
+  RadiusType &R() { static ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
+  RadiusType cR() const { static const ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
   static bool HasRadius()     { return false; }
   static bool HasRadiusOcf()     { return false; }
   static bool IsRadiusEnabled(const typename TT::VertexType *)  { return false; }
@@ -100,18 +98,18 @@ public:
 	static bool IsTexCoordEnabled(const typename TT::VertexType *)  { return false; }
 
   typename TT::TetraPointer &VTp() { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
-	const typename TT::TetraPointer cVTp()const  { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
+  typename TT::TetraPointer cVTp() const  { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
   int &VTi() { static int z = 0; return z; }
   static bool HasVTAdjacency() { return false; }
 
   typename TT::FacePointer &VFp() { static typename TT::FacePointer fp=0;  assert(0); return fp; }
   const typename TT::FacePointer cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
-  int &VFi(){static int z=0; assert(0); return z;}
+  int &VFi() {static int z=0; assert(0); return z;}
   int cVFi() const {static int z=0; assert(0); return z;}
   static bool HasVFAdjacency()   {   return false; }
 
   typename TT::EdgePointer &VEp() { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
-	const typename TT::EdgePointer cVEp() const { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
+  const typename TT::EdgePointer cVEp() const { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
   int &VEi(){static int z=0; return z;}
   static bool HasVEAdjacency()   {   return false; }
 
@@ -221,7 +219,7 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/
   /*! \brief Per vertex \b Incremental \b Mark
 
-      It is just an int that allow to efficent un-marking of the whole mesh. \sa UnmarkAll
+      It is just an int that allows to efficently un-mark the whole mesh. \sa UnmarkAll
       */
 
 template <class T> class Mark: public T {
@@ -296,11 +294,10 @@ private:
 
 /*-------------------------- Color  ----------------------------------*/
   /*! \brief \em Component: Per vertex \b Color
-
-    Usually most of the library expects a color stored as 4 unsigned chars (so the component you use is a \c vertex::Color4b)
-    but you can also use float for the color components.
-     */
-
+   *
+   * Usually most of the library expects a color stored as 4 unsigned chars (so the component you use is a \c vertex::Color4b)
+   * but you can also use float for the color components.
+   */
 template <class A, class T> class Color: public T {
 public:
   Color():_color(vcg::Color4b::White) {}
@@ -563,11 +560,7 @@ private:
 	int _zp ;
 };
 
-  /**
-    @}
-  */
-
-
+  /** @} */   // End Doxygen VertexComponentGroup
   } // end namespace vert
 }// end namespace vcg
 #endif

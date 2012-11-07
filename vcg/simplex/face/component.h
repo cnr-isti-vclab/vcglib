@@ -29,7 +29,7 @@
 
 namespace vcg {
 namespace face {
-/** \addtogroup face
+/** \addtogroup FaceComponentGroup
   @{
 */
 /*------------------------- EMPTY CORE COMPONENTS -----------------------------------------*/
@@ -154,11 +154,11 @@ public:
   static void Name(std::vector<std::string> & name){T::Name(name);}
   };
 
-  /*-------------------------- VertexRef ----------------------------------------*/
+/*-------------------------- VertexRef ----------------------------------------*/
 /*! \brief The references to the vertexes of a triangular face
-
-  Stored as three pointers to the VertexType
-  */
+ *
+ * Stored as three pointers to the VertexType
+ */
 
 
 template <class T> class VertexRef: public T {
@@ -442,6 +442,11 @@ public:  static void Name(std::vector<std::string> & name){name.push_back(std::s
 };
 
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/ 
+/*! \brief Per vertex \b Incremental \b Mark
+
+    It is just an int that allows to efficently un-mark the whole mesh. \sa UnmarkAll
+    */
+
 template <class T> class Mark: public T {
 public:
   static bool HasMark()      { return true; }
@@ -530,6 +535,35 @@ private:
   char _vfi[3] ;    
 };
 
+/*----------------------------- EFADJ ------------------------------*/
+template <class T> class EFAdj: public T {
+public:
+    EFAdj(){
+        _efp[0]=0;
+        _efp[1]=0;
+        _efp[2]=0;
+        _efi[0]=-1;
+        _efi[1]=-1;
+        _efi[2]=-1;
+    }
+  typename T::FacePointer       &EFp(const int j)        { assert(j>=0 && j<3);  return _efp[j]; }
+  typename T::FacePointer const  EFp(const int j) const  { assert(j>=0 && j<3);  return _efp[j]; }
+  typename T::FacePointer const cEFp(const int j) const  { assert(j>=0 && j<3);  return _efp[j]; }
+  char &VFi(const int j) {return _efi[j]; }
+  template <class RightF>
+  void ImportData(const RightF & rightF){T::ImportData(rightF);}
+  inline void Alloc(const int & ns){T::Alloc(ns);}
+  inline void Dealloc(){T::Dealloc();}
+  static bool HasEFAdjacency()      {   return true; }
+  static bool HasEFAdjacencyOcc()   {   return false; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("EFAdj"));T::Name(name);}
+
+private:
+  typename T::FacePointer _efp[3] ;
+  char _efi[3] ;
+};
+
+
 /*----------------------------- FFADJ ------------------------------*/ 
 template <class T> class FFAdj: public T {
 public:
@@ -564,6 +598,7 @@ private:
 
 
 /*----------------------------- FEADJ ------------------------------*/ 
+
 template <class T> class FEAdj: public T {
 public:
 	FEAdj(){
@@ -574,10 +609,8 @@ public:
   typename T::EdgePointer       &FEp(const int j)        { assert(j>=0 && j<3);  return _fep[j]; }
   typename T::EdgePointer const  FEp(const int j) const  { assert(j>=0 && j<3);  return _fep[j]; }
   typename T::EdgePointer const cFEp(const int j) const  { assert(j>=0 && j<3);  return _fep[j]; }
-  char        &FEi(const int j)       { return _fei[j]; }
-  const char &cFEi(const int j) const { return _fei[j]; }
 
-  typename T::EdgePointer        &FEp1( const int j )       { return FEp((j+1)%3);}
+	typename T::EdgePointer        &FEp1( const int j )       { return FEp((j+1)%3);}
 	typename T::EdgePointer        &FEp2( const int j )       { return FEp((j+2)%3);}
 	typename T::EdgePointer  const  FEp1( const int j ) const { return FEp((j+1)%3);}
 	typename T::EdgePointer  const  FEp2( const int j ) const { return FEp((j+2)%3);}
@@ -612,6 +645,7 @@ public:
 private:
         typename T::HEdgePointer _fh ;
 };
+   /** @} */   // End Doxygen FaceComponentGroup
   } // end namespace face
 }// end namespace vcg
 #endif

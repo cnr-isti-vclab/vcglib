@@ -56,8 +56,8 @@ template <class UserTypes,
           template <typename> class C, template <typename> class D,
           template <typename> class E, template <typename> class F,
           template <typename> class G, template <typename> class H,
-					template <typename> class I, template <typename> class J,
-					template <typename> class K, template <typename> class L> 
+          template <typename> class I, template <typename> class J,
+          template <typename> class K, template <typename> class L>
 class VertexArityMax: public Arity12<vertex::EmptyCore<UserTypes>, A, B, C, D, E, F, G, H, I, J, K, L> {
 
 // ----- Flags stuff -----
@@ -77,13 +77,13 @@ public:
 		USER0      = 0x0200			// First user bit
   };
  	
-	bool IsD() const {return (this->Flags() & DELETED) != 0;} ///  checks if the vertex is deleted
-	bool IsR() const {return (this->Flags() & NOTREAD) == 0;} ///  checks if the vertex is readable
-	bool IsW() const {return (this->Flags() & NOTWRITE)== 0;}///  checks if the vertex is modifiable
-	bool IsRW() const {return (this->Flags() & (NOTREAD | NOTWRITE)) == 0;}/// This funcion checks whether the vertex is both readable and modifiable
-	bool IsS() const {return (this->Flags() & SELECTED) != 0;}///  checks if the vertex is Selected
-	bool IsB() const {return (this->Flags() & BORDER) != 0;}///  checks if the vertex is a border one
-	bool IsV() const {return (this->Flags() & VISITED) != 0;}///  checks if the vertex Has been visited
+    bool IsD() const {return (this->cFlags() & DELETED) != 0;} ///  checks if the vertex is deleted
+    bool IsR() const {return (this->cFlags() & NOTREAD) == 0;} ///  checks if the vertex is readable
+    bool IsW() const {return (this->cFlags() & NOTWRITE)== 0;}///  checks if the vertex is modifiable
+    bool IsRW() const {return (this->cFlags() & (NOTREAD | NOTWRITE)) == 0;}/// This funcion checks whether the vertex is both readable and modifiable
+    bool IsS() const {return (this->cFlags() & SELECTED) != 0;}///  checks if the vertex is Selected
+    bool IsB() const {return (this->cFlags() & BORDER) != 0;}///  checks if the vertex is a border one
+    bool IsV() const {return (this->cFlags() & VISITED) != 0;}///  checks if the vertex Has been visited
 	
 
 	/** Set the flag value

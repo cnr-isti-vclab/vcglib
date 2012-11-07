@@ -9,13 +9,16 @@ This module contains the documentation for the types and the functions used for.
 This module contains the documentation for the types and the functions used for representing and managing mathematical entities.
 */
 
-/** \defgroup vertex Vertexes
-Vertex of edge, triangular and tetrahedral meshes
-This module contains the documentation for the types and the functions used for representing and managing vertexes of meshes.
+/** \defgroup VertexComponentGroup Vertex Components
+\brief Components that you can use to compose your Vertex type
 */
 
-/** \defgroup face Faces 
-Face of a triangular or a tetrahedral mesh
+/** \defgroup EdgeComponentGroup Edge Components
+\brief Components that you can use to compose your Edge type
+*/
+
+/** \defgroup FaceComponentGroup Face Components
+\brief Components that you can use to compose your Face type
 */
 
 /** \defgroup trimesh Triangular Meshes

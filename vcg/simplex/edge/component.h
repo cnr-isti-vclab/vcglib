@@ -28,31 +28,84 @@
 
 namespace vcg {
   namespace edge {
+
+  /** \addtogroup EdgeComponentGroup
+    @{
+  */
+
 /*
 Some naming Rules
 All the Components that can be added to a vertex should be defined in the namespace edge:
 
 */
+  /*------------------------- EMPTY CORE COMPONENTS -----------------------------------------*/
 
-/*-------------------------- VERTEX ----------------------------------------*/
-template <class T> class EmptyVertexRef: public T {
+template <class T> class EmptyCore: public T
+  {
 public:
-	// typedef typename T::VertexType VertexType;
-	// typedef typename T::CoordType CoordType;
 	inline       typename T::VertexType *       &  V( const int j )       { (void)j; assert(0);  static typename T::VertexType *vp=0;         return vp;    }
 	inline       typename T::VertexType * const &  V( const int j ) const { (void)j; assert(0);  static typename T::VertexType *vp=0;         return vp;    }
 	inline       typename T::VertexType *         cV( const int j ) const { (void)j; assert(0);  static typename T::VertexType *vp=0;         return vp;    }
 	inline       typename T::CoordType &           P( const int j )       { (void)j; assert(0);  static typename T::CoordType coord(0, 0, 0); return coord; }
 	inline const typename T::CoordType &           P( const int j ) const { (void)j; assert(0);  static typename T::CoordType coord(0, 0, 0); return coord; }
 	inline const typename T::CoordType &          cP( const int j ) const { (void)j; assert(0);  static typename T::CoordType coord(0, 0, 0); return coord; }
-
-	template <class LeftF>
-	void ImportData(const LeftF & leftF) {T::ImportData(leftF);}
-
 	static bool HasEVAdjacency()   { return false; }
 	static bool HasVertexRef()     { return false; }
-	static void Name(std::vector<std::string> & name){T::Name(name);}
-};
+
+	typedef vcg::Color4b ColorType;
+	ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
+	ColorType cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+	static bool HasColor()   { return false; }
+
+    typedef float QualityType;
+    QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+    QualityType cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+    static bool HasQuality()   { return false; }
+
+    typedef int  MarkType;
+    inline void InitIMark()    {  }
+    inline int cIMark() const { assert(0); static int tmp=-1; return tmp;}
+    inline int &IMark()       { assert(0); static int tmp=-1; return tmp;}
+    static bool HasMark()   { return false; }
+
+    typedef int FlagType;
+    int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
+    int Flags() const { return 0; }
+    static bool HasFlags()   { return false; }
+
+    typename T::EdgePointer &VEp(const int &  ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+    typename T::EdgePointer cVEp(const int & ) const { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+    int &VEi(const int &){static int z=0; assert(0); return z;}
+    int cVEi(const int &) const {static int z=0; assert(0); return z;}
+    static bool HasVEAdjacency()   {   return false; }
+
+    typename T::EdgePointer &EEp(const int &  ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+    typename T::EdgePointer cEEp(const int & ) const { static typename T::EdgePointer ep=0;  assert(0); return ep; }
+    int &EEi(const int &){static int z=0; assert(0); return z;}
+    int cEEi(const int &) const {static int z=0; assert(0); return z;}
+    static bool HasEEAdjacency()   {   return false; }
+
+    typename T::HEdgePointer &EHp(  ) { static typename T::HEdgePointer hp=0;  assert(0); return hp; }
+    typename T::HEdgePointer cEHp(  ) const { static typename T::HEdgePointer hp=0;  assert(0); return hp; }
+    static bool HasEHAdjacency()   {   return false; }
+
+    typename T::FacePointer &EFp() { static typename T::FacePointer fp=0;  assert(0); return fp; }
+    typename T::FacePointer cEFp() const  { static typename T::FacePointer fp=0;  assert(0); return fp; }
+    int &EFi()   {static int z=0; return z;}
+    int &cEFi() const {static int z=0; return z;}
+    static bool HasEFAdjacency()   {   return false; }
+
+    template <class LeftF>
+    void ImportData(const LeftF & leftF) {T::ImportData(leftF);}
+    static void Name(std::vector<std::string> & name){T::Name(name);}
+  };
+
+  /*-------------------------- VertexRef ----------------------------------------*/
+  /*! \brief The references to the two vertexes of a edge
+   *
+   * Stored as pointers to the VertexType
+   */
+
 template <class T> class VertexRef: public T {
 public:
 	VertexRef(){
@@ -103,18 +156,10 @@ template <class T> class EVAdj : public VertexRef<T>{};
 
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/
 
-template <class T> class EmptyMark: public T {
-public:
-  static bool HasMark()   { return false; }
-  static bool HasMarkOcc()   { return false; }
-  inline void InitIMark()    {  }
-  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
-  inline int IMark() const {return 0;}
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { T::ImportData( left); }
-	static void Name(std::vector<std::string> & name){T::Name(name);}
-
-};
+/*! \brief \em Component: Per edge \b Incremental \b Mark
+ *
+ * An int that allows to efficently un-mark the whole mesh. \sa UnmarkAll
+ */
 template <class T> class Mark: public T {
 public:
   static bool HasMark()      { return true; }
@@ -131,19 +176,10 @@ public:
 };
 
 /*------------------------- FLAGS -----------------------------------------*/
-template <class T> class EmptyBitFlags: public T {
-public:
-	typedef int FlagType;
-  /// Return the vector of Flags(), senza effettuare controlli sui bit
-  int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
-  int Flags() const { return 0; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { T::ImportData( left); }
-  static bool HasFlags()   { return false; }
-	static void Name(std::vector<std::string> & name){T::Name(name);}
-
-};
-
+  /*! \brief \em Component: Per edge \b Flags
+   *
+   * This component stores a 32 bit array of bit flags. These bit flags are used for keeping track of selection, deletion, visiting etc. \sa \ref flags for more details on common uses of flags.
+   */
 template <class T> class BitFlags:  public T {
 public:
 	BitFlags(){_flags=0;}
@@ -159,24 +195,12 @@ private:
   int  _flags;
 };
 
-/*-------------------------- EMPTY COLOR & QUALITY ----------------------------------*/
-
-template <class T> class EmptyColorQuality: public T {
-public:
-  typedef float QualityType;
-  QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
-	static bool HasQuality()   { return false; }
-
-  typedef vcg::Color4b ColorType;
-  ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { T::ImportData( left); }
-  static bool HasColor()   { return false; }
-	static void Name(std::vector<std::string> & name){T::Name(name);}
-};
-
 /*-------------------------- Color  ----------------------------------*/
-
+  /*! \brief \em Component: Per edge \b Color
+   *
+   * Usually most of the library expects a color stored as 4 unsigned chars (so the component you use is a \c vertex::Color4b)
+   * but you can also use float for the color components.
+   */
 template <class A, class T> class Color: public T {
 public:
   Color():_color(vcg::Color4b::White) {}
@@ -198,7 +222,12 @@ template <class TT> class Color4b: public edge::Color<vcg::Color4b, TT> {
 };
 
 /*-------------------------- Quality  ----------------------------------*/
-
+  /*! \brief \em Component: Per edge \b quality
+   *
+   * The Quality Component is a generic place for storing a float. The term 'quality' is a bit misleading and it is due to its original storic meaning. You should intend it as a general purpose container.
+   * \sa vcg::tri::UpdateColor for methods transforming quality into colors
+   * \sa vcg::tri::UpdateQuality for methods to manage it
+   */
 template <class A, class TT> class Quality: public TT {
 public:
   typedef A QualityType;
@@ -224,19 +253,13 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 };
 
 /*----------------------------- VEADJ ------------------------------*/
-  template <class T> class EmptyVEAdj: public T {
-  public:
-	typename T::EdgePointer &VEp(const int &  ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
-	const typename T::EdgePointer cVEp(const int & ) const { static typename T::EdgePointer ep=0;  assert(0); return ep; }
-	int &VEi(const int &){static int z=0; assert(0); return z;}
-	int cVEi(const int &) const {static int z=0; assert(0); return z;}
-	template < class LeftV>
-	  void ImportData(const LeftV  & left ) { T::ImportData( left); }
-	static bool HasVEAdjacency()   {   return false; }
-	static bool HasVEAdjacencyOcc()   {   return false; }
-	static void Name(std::vector<std::string> & name){ T::Name(name);}
-  };
+  /*! \brief \em Component: Per vertex \b Vertex-Edge adjacency relation companion component
+  This component implement one element of the list of edges incident on a vertex.
+  You must use this component only toghether with the corresponding \ref vcg::vertex::VEAdj component in the vertex type
 
+  \sa vcg::tri::UpdateTopology for functions that compute this relation
+  \sa iterators
+  */
   template <class T> class VEAdj: public T {
   public:
 	VEAdj(){_ep[0]=0;_ep[1]=0;_zp[0]=-1;_zp[1]=-1;}
@@ -256,20 +279,19 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 	int _zp[2] ;
   };
 
-
 /*----------------------------- EEADJ ------------------------------*/
-template <class T> class EmptyEEAdj: public T {
-public:
-  typename T::EdgePointer &EEp(const int &  ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
-	const typename T::EdgePointer cEEp(const int & ) const { static typename T::EdgePointer ep=0;  assert(0); return ep; }
-  int &EEi(const int &){static int z=0; assert(0); return z;}
-  int cEEi(const int &) const {static int z=0; assert(0); return z;}
-	template < class LeftV>
-		void ImportData(const LeftV  & left ) { T::ImportData( left); }
-  static bool HasEEAdjacency()   {   return false; }
-  static bool HasEEAdjacencyOcc()   {   return false; }
-	static void Name(std::vector<std::string> & name){ T::Name(name);}
-};
+  /*! \brief \em Component: \b Edge-Edge adjacency relation
+  This component implement store the pointer (and index) of the adjacent edges.
+  If the vertex is 1-manifold (as in a classical polyline)
+  it holds that:
+  \code
+   e->EEp(i)->EEp(e->EEi(i)) == e
+  \endcode
+  otherwise the edges are connected in a unordered chain (quite similar to how Face-Face adjacency relation is stored);
+
+  \sa vcg::tri::UpdateTopology for functions that compute this relation
+  \sa iterators
+  */
 
 template <class T> class EEAdj: public T {
 public:
@@ -290,20 +312,7 @@ private:
   int _zp[2] ;
 };
 
-
 /*----------------------------- EHADJ ------------------------------*/
-template <class T> class EmptyEHAdj: public T {
-public:
-  typename T::HEdgePointer &EHp(  ) { static typename T::HEdgePointer hp=0;  assert(0); return hp; }
-	const typename T::HEdgePointer cEHp(  ) const { static typename T::HEdgePointer hp=0;  assert(0); return hp; }
-
-	template < class LeftV>
-		void ImportData(const LeftV  & left ) { T::ImportData( left); }
-  static bool HasEHAdjacency()   {   return false; }
-  static bool HasEHAdjacencyOcc()   {   return false; }
-	static void Name(std::vector<std::string> & name){ T::Name(name);}
-};
-
 template <class T> class EHAdj: public T {
 public:
   EHAdj(){_hp=0;}
@@ -320,70 +329,33 @@ private:
   typename T::HEdgePointer _hp ;
 };
 
-/*----------------------------- ETADJ ------------------------------*/
-
-
-template <class T> class EmptyETAdj: public T {
-public:
-	typename T::TetraPointer &ETp() { static typename T::TetraPointer tp = 0;  assert(0); return tp; }
-	typename T::TetraPointer cETp() { static typename T::TetraPointer tp = 0;  assert(0); return tp; }
-	int &VTi() { static int z = 0; return z; };
-	static bool HasETAdjacency() { return false; }
-	static bool HasETAdjacencyOcc() { return false; }
-	static void Name( std::vector< std::string > & name ) { T::Name(name); }
-};
-
-template <class T> class ETAdj: public T {
-public:
-	ETAdj() { _tp = 0; }
-	typename T::TetraPointer &ETp() { return _tp; }
-	typename T::TetraPointer cETp() { return _tp; }
-	int &ETi() {return _zp; }
-	static bool HasETAdjacency() { return true; }
-	static bool HasETAdjacencyOcc()   {   return true; }
-	static void Name( std::vector< std::string > & name ) { name.push_back( std::string("ETAdj") ); T::Name(name); }
-
-private:
-	typename T::TetraPointer _tp ;
-	int _zp ;
-};
-
-
-
 /*----------------------------- EFADJ ------------------------------*/
+  /*! \brief \em Component: \b Edge-Face adjacency relation
+  This component implement store the pointer to a face sharing this edge.
 
-template <class T> class EmptyEFAdj: public T {
-public:
-  typename T::FacePointer &EFp() { static typename T::FacePointer fp=0;  assert(0); return fp; }
-	const typename T::FacePointer cEFp() const  { static typename T::FacePointer fp=0;  assert(0); return fp; }
-	int &EFi()   {static int z=0; return z;};
-	const int &cEFi() const {static int z=0; return z;};
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { T::ImportData( left); }
-  static bool HasEFAdjacency()   {   return false; }
-  static bool HasEFAdjacencyOcc()   {   return false; }
-	static void Name(std::vector<std::string> & name){ T::Name(name);}
-};
+  \sa vcg::tri::UpdateTopology for functions that compute this relation
+  \sa iterators
+  */
 
 template <class T> class EFAdj: public T {
 public:
   EFAdj(){_fp=0;}
   typename T::FacePointer &EFp() {return _fp; }
-	const typename T::FacePointer cEFp() const {return _fp; }
-	int &EFi()   {static int z=0; return z;};
-	const int &cEFi() const  {return _zp; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) {  T::ImportData( left); }
+  typename T::FacePointer cEFp() const {return _fp; }
+  int &EFi()   {static int z=0; return z;}
+  int cEFi() const  {return _zp; }
+  template < class LeftV>
+  void ImportData(const LeftV  & left ) {  T::ImportData( left); }
   static bool HasEFAdjacency()   {   return true; }
   static bool HasEFAdjacencyOcc()   {   return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("EFAdj"));T::Name(name);}
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("EFAdj"));T::Name(name);}
 
 private:
   typename T::FacePointer _fp ;
   int _zp ;
 };
 
-
+  /** @} */   // End Doxygen EdgeComponentGroup
   } // end namespace edge
 }// end namespace vcg
 #endif
