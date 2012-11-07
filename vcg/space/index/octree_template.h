@@ -246,7 +246,7 @@ public:
 
 	The other approach is to use position as a bit string
 	codifying the tree path, but in this case you have to
-	supply also the level (e.g. the string lenght)
+	supply also the level (e.g. the string length)
 	you desire. The lower left corner node is always 0 ( (,) for the root (0,0) level 1, and (00,00) for level 2)
 
 	|              ~~~              |
@@ -412,7 +412,7 @@ public:
 			if((path[1]>>shiftLevel)%2) nextSon +=2;
 			if((path[2]>>shiftLevel)%2) nextSon +=4;
 			NodePointer nextNode = Son(curNode, nextSon);
-			if(nextNode!=NULL) // nessun nodo può aver Root() per figlio
+			if(nextNode!=NULL) // nessun nodo pu aver Root() per figlio
 				curNode = nextNode;
 			else
 			{
@@ -546,8 +546,8 @@ public:
 
 	// Dato un punto 3D nello spazio restituisce un array contenente
 	// i puntatori ai nodi che lo contengono, dalla radice fino alle foglie.
-	// I nodi mancanti dalla radice fino a profondità maxDepth vengono aggiunti.
-	// In posizione i ci sarà il nodo di livello i.
+	// I nodi mancanti dalla radice fino a profondit maxDepth vengono aggiunti.
+	// In posizione i ci sar il nodo di livello i.
 	// Restituisce lo z-order del punto p
 	ZOrderType BuildRoute(const CoordinateType &p, NodePointer *&route)
 	{
@@ -584,11 +584,11 @@ public:
 	}; //end of BuildRoute
 
 
-	// Restituisce il percorso dalla radice fino al nodo di profondità
-	// massima presente nell'octree contenente il nodo p. Nessun nuovo nodo è aggiunto
+	// Restituisce il percorso dalla radice fino al nodo di profondit
+	// massima presente nell'octree contenente il nodo p. Nessun nuovo nodo  aggiunto
 	// all'octree. In route sono inseriti gli indici dei nodi contenti p, dalla radice
-	// fino al nodo di profontidà massima presente; nelle eventuali posizioni rimaste
-	// libere è inserito il valore -1. Restituisce true se il punto p cade in una foglia
+	// fino al nodo di profontid massima presente; nelle eventuali posizioni rimaste
+	// libere  inserito il valore -1. Restituisce true se il punto p cade in una foglia
 	// dell'otree, false altrimenti
 	bool GetRoute(const CoordinateType &p, NodePointer *&route)
 	{
@@ -624,7 +624,7 @@ public:
 	}; //end of GetReoute
 
 	// Data una bounding-box bb_query, calcola l'insieme dei nodi di
-	// profondità depth il cui bounding-box ha intersezione non nulla con
+	// profondit depth il cui bounding-box ha intersezione non nulla con
 	// bb (la bounding-box dell'octree); i puntatori a tali nodi sono
 	// inseriti progressivamente in contained_nodes.
 	// The vector nodes must be cleared before calling this method.
