@@ -169,6 +169,7 @@ private:
 
     void SelectSingularityByMM()
     {
+        vcg::tri::UpdateFlags<MeshType>::VertexBorderFromNone(*mesh);
         for (unsigned int i=0;i<mesh->vert.size();i++)
         {
             if (mesh->vert[i].IsD())continue;
