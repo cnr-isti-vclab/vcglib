@@ -231,7 +231,7 @@ public:
   inline int & IMark()       { return _imark;}
   inline const int & IMark() const {return _imark;}
 	template < class LeftV>
-	void ImportData(const LeftV  & left ) { if(LeftV::HasMark())  IMark() = left.IMark(); T::ImportData( left); }
+	void ImportData(const LeftV  & left ) { if(LeftV::HasMark())  IMark() = left.cIMark(); T::ImportData( left); }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
 
  private:
