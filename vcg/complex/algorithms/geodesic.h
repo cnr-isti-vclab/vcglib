@@ -162,7 +162,7 @@ wrapping function.
     VertexPointer farthest=0,pw,pw1;
 
     //Requirements
-    assert(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m));
+    if(!HasVFAdjacency(m)) throw vcg::MissingComponentException("VFAdjacency");
     assert(!seedVec.empty());
 
     TempDataType TD(m.vert, std::numeric_limits<ScalarType>::max());
@@ -194,7 +194,7 @@ wrapping function.
       frontier.pop_back();
 
       assert(TD[curr].d <= d_heap);
-      if(TD[curr].d < d_heap )// a vertex whose distance has been improved after it was inserted in the queue
+      if(TD[curr].d < d_heap ) // a vertex whose distance has been improved after it was inserted in the queue
         continue;
       assert(TD[curr].d == d_heap);
 
@@ -288,6 +288,10 @@ To allocate the attributes:
       typename MeshType::template PerVertexAttributeHandle<VertexPointer> parentHandle;
       parentHandle =  tri::Allocator<CMeshO>::AddPerVertexAttribute<MeshType::VertexPointer> (m,"parent");
 \endcode
+
+It requires VF adjacency relation (e.g. vertex::VFAdj and face::VFAdj components)
+
+
 \warning that this function has ALWAYS at least a linear cost (it use additional attributes that have a linear initialization)
 \todo make it O(output) by using incremental mark and persistent attributes.
             */
@@ -309,8 +313,10 @@ To allocate the attributes:
     return true;
   }
 
-  /*
-            Assigns to each vertex of the mesh its distance to the closest vertex on the border
+  /* \brief Assigns to each vertex of the mesh its distance to the closest vertex on the boundary
+
+It is just a simple wrapper of the basic Compute()
+
             Note: update the field Q() of the vertices
             Note: it needs the border bit set.
             */
