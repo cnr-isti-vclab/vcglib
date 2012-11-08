@@ -659,7 +659,7 @@ private:
         typedef typename MeshType::FaceType F;
         if (!HasPerFaceFlags(m)) return false;
 				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
-          unsigned int tmp = fi->Flags()&(F::FAUX0|F::FAUX1|F::FAUX2);
+		  unsigned int tmp = fi->cFlags()&(F::FAUX0|F::FAUX1|F::FAUX2);
           if ( tmp!=F::FAUX0 && tmp!=F::FAUX1 && tmp!=F::FAUX2 && tmp!=0 ) return false;
         }
         return true;
@@ -674,7 +674,7 @@ private:
         typedef typename MeshType::FaceType F;
         int count=0;
 				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
-          unsigned int tmp = fi->Flags()&(F::FAUX0|F::FAUX1|F::FAUX2);
+		  unsigned int tmp = fi->cFlags()&(F::FAUX0|F::FAUX1|F::FAUX2);
           if ( tmp==F::FAUX0 || tmp==F::FAUX1 || tmp==F::FAUX2) count++;
         }
         return count / 2;
