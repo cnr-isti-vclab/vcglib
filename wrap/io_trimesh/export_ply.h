@@ -362,8 +362,8 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 
 	for(i=0;i<pi.fdn;i++)
 			fprintf(fpout,"property %s %s\n",pi.FaceData[i].stotypename(),pi.FaceData[i].propname);
-	// Saving of edges
-	if(m.en>0)
+	// Saving of edges is enabled if requested
+	if( m.en>0 && (pi.mask & Mask::IOM_EDGEINDEX) )
 	  fprintf(fpout,
 			  "element edge %d\n"
 			  "property int vertex1\n"
@@ -715,24 +715,27 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		}
 	assert(fcnt==m.fn);
 	int eauxvv[2];
-	int ecnt=0;
-	for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
+	if( pi.mask & Mask::IOM_EDGEINDEX )
+	{
+	  int ecnt=0;
+	  for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
+	  {
+		if( ! ei->IsD() )
 		{
-			if( ! ei->IsD() )
-			{
-				++ecnt;
-				if(binary)
-				{
-						eauxvv[0]=indices[ei->cV(0)];
-						eauxvv[1]=indices[ei->cV(1)];
-						fwrite(vv,sizeof(int),2,fpout);
-				}
-				else // ***** ASCII *****
-				  fprintf(fpout,"%d %d \n", indices[ei->cV(0)],	indices[ei->cV(1)]);
-			}
+		  ++ecnt;
+		  if(binary)
+		  {
+			eauxvv[0]=indices[ei->cV(0)];
+			eauxvv[1]=indices[ei->cV(1)];
+			fwrite(vv,sizeof(int),2,fpout);
+		  }
+		  else // ***** ASCII *****
+			fprintf(fpout,"%d %d \n", indices[ei->cV(0)],	indices[ei->cV(1)]);
+		}
+	  }
+	  assert(ecnt==m.en);
 	}
-	assert(ecnt==m.en);
-	fclose(fpout); 
+	fclose(fpout);
 	return 0;
 }
 
