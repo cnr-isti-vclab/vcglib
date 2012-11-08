@@ -141,7 +141,7 @@ public:
     (*f).V(0) = e0.VFlip();
     (*f).V(1) = e0.v;
     (*f).V(2) = e1.v;
-    ComputeNormal(*f);
+    face::ComputeNormalizedNormal(*f);
 
     face::FFAttachManifold(f,0,e0.f,e0.z);
     face::FFAttachManifold(f,1,e1.f,e1.z);
