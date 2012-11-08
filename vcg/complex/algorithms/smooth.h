@@ -1233,26 +1233,39 @@ static void VertexCoordPasoDobleFast(MeshType &m, int NormalSmoothStep, typename
 }
 
 
-static void VertexNormalPointCloud(MeshType &m, int neighborNum)
+static void VertexNormalPointCloud(MeshType &m, int neighborNum, int iterNum, KdTree<float> *tp=0)
 {
   SimpleTempData<typename MeshType::VertContainer,Point3f > TD(m.vert,Point3f(0,0,0));
   VertexConstDataWrapper<MeshType> ww(m);
+  KdTree<float> *tree=0;
+  if(tp==0) tree = new KdTree<float>(ww);
+  else tree=tp;
 
-  KdTree<float> tree(ww);
-  tree.setMaxNofNeighbors(neighborNum);
-  for (VertexIterator vi = m.vert.begin();vi!=m.vert.end();++vi)
+  tree->setMaxNofNeighbors(neighborNum);
+  for(int ii=0;ii<iterNum;++ii)
   {
-      tree.doQueryK(vi->cP());
-      int neighbours = tree.getNofFoundNeighbors();
+    for (VertexIterator vi = m.vert.begin();vi!=m.vert.end();++vi)
+    {
+      tree->doQueryK(vi->cP());
+      int neighbours = tree->getNofFoundNeighbors();
       for (int i = 0; i < neighbours; i++)
       {
-          int neightId = tree.getNeighborId(i);
+        int neightId = tree->getNeighborId(i);
+        if(m.vert[neightId].cN()*vi->cN()>0)
           TD[vi]+= m.vert[neightId].cN();
+        else
+          TD[vi]-= m.vert[neightId].cN();
       }
+    }
+    for (VertexIterator vi = m.vert.begin();vi!=m.vert.end();++vi)
+    {
+      vi->N()=TD[vi];
+      TD[vi]=Point3f(0,0,0);
+    }
+    tri::UpdateNormal<MeshType>::NormalizePerVertex(m);
   }
-  for (VertexIterator vi = m.vert.begin();vi!=m.vert.end();++vi)
-    vi->N()=TD[vi];
-  tri::UpdateNormal<MeshType>::NormalizePerVertex(m);
+
+  if(tp==0) delete tree;
 }
 
 //! Laplacian smoothing with a reprojection on a target surface.
