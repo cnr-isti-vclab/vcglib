@@ -458,7 +458,7 @@ namespace vcg
                           //qDebug("Warning: using fan tessellation for a polygon of %i vertices",vertexesPerFace);
                           ImporterOBJ<MESH_TYPE>::InternalFanTessellator(loopVect, indexTriangulatedVect);
 #endif
-                          for (int j=0; j<indexTriangulatedVect.size(); j+=3)
+                          for (size_t j=0; j<indexTriangulatedVect.size(); j+=3)
                           {
                             mesh.face[f+j/3].V(0) = &(mesh.vert[ vertIndices[ indexTriangulatedVect[j+0] ] ]);
                             mesh.face[f+j/3].V(1) = &(mesh.vert[ vertIndices[ indexTriangulatedVect[j+1] ] ]);
