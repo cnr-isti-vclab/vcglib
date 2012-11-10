@@ -175,56 +175,55 @@ public:
 			*/
 			static VertexIterator AddVertices(MeshType &m,int n, PointerUpdater<VertexPointer> &pu)
 			{
-				VertexIterator last;
-				if(n == 0) return m.vert.end();
-				pu.Clear();
-				if(m.vert.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
-        else {
-          pu.oldBase=&*m.vert.begin(); 
-  				pu.oldEnd=&m.vert.back()+1; 
-        }
+			  VertexIterator last;
+			  if(n == 0) return m.vert.end();
+			  pu.Clear();
+			  if(m.vert.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
+			  else {
+				pu.oldBase=&*m.vert.begin();
+				pu.oldEnd=&m.vert.back()+1;
+			  }
 
-				m.vert.resize(m.vert.size()+n);
-				m.vn+=n;
+			  m.vert.resize(m.vert.size()+n);
+			  m.vn+=n;
 
-				typename std::set<PointerToAttribute>::iterator ai;
-				for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai)
-					((PointerToAttribute)(*ai)).Resize(m.vert.size());
+			  typename std::set<PointerToAttribute>::iterator ai;
+			  for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai)
+				((PointerToAttribute)(*ai)).Resize(m.vert.size());
 
-				pu.newBase = &*m.vert.begin();
-				pu.newEnd =  &m.vert.back()+1; 
-                                if(pu.NeedUpdate())
+			  pu.newBase = &*m.vert.begin();
+			  pu.newEnd =  &m.vert.back()+1;
+			  if(pu.NeedUpdate())
+			  {
+				for (FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi)
+				  if(!(*fi).IsD())
+					for(int i=0; i < (*fi).VN(); ++i)
+					  if ((*fi).cV(i)!=0) pu.Update((*fi).V(i));
+
+				for (EdgeIterator ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
+				  if(!(*ei).IsD())
+				  {
+					if(HasEVAdjacency (m)) { pu.Update((*ei).V(0)); pu.Update((*ei).V(1));}
+					//							if(HasEVAdjacency(m))   pu.Update((*ei).EVp());
+				  }
+				HEdgeIterator hi;
+				for (hi=m.hedge.begin(); hi!=m.hedge.end(); ++hi)
+				  if(!(*hi).IsD())
+				  {
+					if(HasHVAdjacency (m))
 					{
-					FaceIterator fi;
-					for (fi=m.face.begin(); fi!=m.face.end(); ++fi)
-						if(!(*fi).IsD())
-							for(int i=0; i < (*fi).VN(); ++i)
-								if ((*fi).cV(i)!=0) pu.Update((*fi).V(i));
-					EdgeIterator ei;
-					for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
-						if(!(*ei).IsD())
-						{
-              if(HasEVAdjacency (m)) { pu.Update((*ei).V(0));pu.Update((*ei).V(1));}
-//							if(HasEVAdjacency(m))   pu.Update((*ei).EVp());
-						}
-                                        HEdgeIterator hi;
-                                        for (hi=m.hedge.begin(); hi!=m.hedge.end(); ++hi)
-                                                if(!(*hi).IsD())
-                                                {
-                                                        if(HasHVAdjacency (m))
-                                                        {
-                                                            pu.Update((*hi).HVp());
-                                                        }
-                                                }
+					  pu.Update((*hi).HVp());
+					}
+				  }
 
-						// e poiche' lo spazio e' cambiato si ricalcola anche last da zero  
-				}
-				unsigned int siz=(unsigned int)m.vert.size()-n;	
-			
-				last = m.vert.begin(); 
-				advance(last,siz);
-			
-				return last;// deve restituire l'iteratore alla prima faccia aggiunta;
+				// e poiche' lo spazio e' cambiato si ricalcola anche last da zero
+			  }
+			  unsigned int siz=(unsigned int)m.vert.size()-n;
+
+			  last = m.vert.begin();
+			  advance(last,siz);
+
+			  return last;// deve restituire l'iteratore alla prima faccia aggiunta;
 			}
 
 			/** \brief Wrapper to AddVertices(); no PointerUpdater
