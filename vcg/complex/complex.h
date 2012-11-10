@@ -472,6 +472,18 @@ template < class TriMeshType> bool HasPerVertexCurvature   (const TriMeshType &m
 template < class TriMeshType> bool HasPerVertexCurvatureDir(const TriMeshType &m) { return tri::VertexVectorHasPerVertexCurvatureDir(m.vert); }
 template < class TriMeshType> bool HasPerVertexTexCoord    (const TriMeshType &m) { return tri::VertexVectorHasPerVertexTexCoord    (m.vert); }
 
+template < class EdgeType> bool EdgeVectorHasPerEdgeQuality     (const std::vector<EdgeType> &) {  return EdgeType::HasQuality     (); }
+template < class EdgeType> bool EdgeVectorHasPerEdgeNormal      (const std::vector<EdgeType> &) {  return EdgeType::HasNormal      (); }
+template < class EdgeType> bool EdgeVectorHasPerEdgeColor       (const std::vector<EdgeType> &) {  return EdgeType::HasColor       (); }
+template < class EdgeType> bool EdgeVectorHasPerEdgeMark        (const std::vector<EdgeType> &) {  return EdgeType::HasMark        (); }
+template < class EdgeType> bool EdgeVectorHasPerEdgeFlags       (const std::vector<EdgeType> &) {  return EdgeType::HasFlags       (); }
+
+template < class TriMeshType> bool HasPerEdgeQuality     (const TriMeshType &m) { return tri::EdgeVectorHasPerEdgeQuality     (m.edge); }
+template < class TriMeshType> bool HasPerEdgeNormal      (const TriMeshType &m) { return tri::EdgeVectorHasPerEdgeNormal      (m.edge); }
+template < class TriMeshType> bool HasPerEdgeColor       (const TriMeshType &m) { return tri::EdgeVectorHasPerEdgeColor       (m.edge); }
+template < class TriMeshType> bool HasPerEdgeMark        (const TriMeshType &m) { return tri::EdgeVectorHasPerEdgeMark        (m.edge); }
+template < class TriMeshType> bool HasPerEdgeFlags       (const TriMeshType &m) { return tri::EdgeVectorHasPerEdgeFlags       (m.edge); }
+
 
 template < class FaceType>    bool FaceVectorHasPerWedgeColor   (const std::vector<FaceType> &) {  return FaceType::HasWedgeColor   (); }
 template < class FaceType>    bool FaceVectorHasPerWedgeNormal  (const std::vector<FaceType> &) {  return FaceType::HasWedgeNormal  (); }
