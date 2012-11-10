@@ -582,7 +582,8 @@ void VFAppend(FaceType* & f, int z)
 }
 
 /*!
-* Compute the set of vertices adjacent to a given vertex using VF adjacency. 
+* \brief Compute the set of vertices adjacent to a given vertex using VF adjacency
+*
 *	\param vp	pointer to the vertex whose star has to be computed.
 *	\param starVec a std::vector of Vertex pointer that is filled with the adjacent vertices.
 *
@@ -606,27 +607,10 @@ void VVStarVF( typename FaceType::VertexType* vp, std::vector<typename FaceType:
 	starVec.resize(new_end-starVec.begin());
 }
 
-/*!
-* Compute the set of faces adjacent to a given vertex using VF adjacency. 
-*	\param vp	pointer to the vertex whose star has to be computed.
-*	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
-*
-*/
-template <class FaceType>
-void VFStarVF( typename FaceType::VertexType* vp, std::vector<FaceType *> &faceVec)
-{
-	typedef typename FaceType::VertexType* VertexPointer;
-	faceVec.clear();
-	face::VFIterator<FaceType> vfi(vp);
-	while(!vfi.End())
-	{
-		faceVec.push_back(vfi.F());
-		++vfi;
-	}
-}
 
 /*!
-* Compute the set of faces adjacent to a given vertex using VF adjacency.
+* \brief Compute the set of faces adjacent to a given vertex using VF adjacency.
+*
 *	\param vp	pointer to the vertex whose star has to be computed.
 *	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
 *   \param indexes a std::vector of integer of the vertex as it is seen from the faces
@@ -638,6 +622,7 @@ void VFStarVF( typename FaceType::VertexType* vp,
 {
     typedef typename FaceType::VertexType* VertexPointer;
     faceVec.clear();
+    indexes.clear();
     face::VFIterator<FaceType> vfi(vp);
     while(!vfi.End())
     {
@@ -645,6 +630,36 @@ void VFStarVF( typename FaceType::VertexType* vp,
         indexes.push_back(vfi.I());
         ++vfi;
     }
+}
+
+
+/*!
+* \brief Compute the set of faces incident onto a given edge using FF adjacency.
+*
+*	\param fp	pointer to the face whose star has to be computed
+*	\param ei	the index of the edge
+*	\param faceVec a std::vector of Face pointer that is filled with the faces incident on that edge.
+*   \param indexes a std::vector of integer of the edge position as it is seen from the faces
+*/
+template <class FaceType>
+void EFStarFF( FaceType* fp, int ei,
+               std::vector<FaceType *> &faceVec,
+               std::vector<int> &indVed)
+{
+  assert(fp->FFp(ei)!=0);
+  faceVec.clear();
+  indVed.clear();
+  FaceType* fpit=fp;
+  int eit=ei;
+  do
+  {
+    faceVec.push_back(fpit);
+    indVed.push_back(eit);
+    FaceType *new_fpit = fpit->FFp(eit);
+    int       new_eit  = fpit->FFi(eit);
+    fpit=new_fpit;
+    eit=new_eit;
+  } while(fpit != fp);
 }
 
 
@@ -687,91 +702,35 @@ static void VFExtendedStarVF(typename FaceType::VertexType* vp,
     }
     
 /*!
-* Compute the ordered set of faces adjacent to a given vertex using VF adjacency.and FF adiacency 
-*	\param vp	pointer to the vertex whose star has to be computed.
+* Compute the ordered set of faces adjacent to a given vertex using FF adiacency
+*	\param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
 *	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
+*	\param edgeVec a std::vector of indexes filled with the indexes of the corresponding edges shared between the faces.
 *
 */
 template <class FaceType>
-static void VFOrderedStarVF_FF(const typename FaceType::VertexType &vp,
-								std::vector<FaceType*> &faceVec)
+static void VFOrderedStarFF(Pos<FaceType> &startPos,
+						std::vector<FaceType*> &faceVec,
+						std::vector<int> &edgeVec)
 {
+  bool foundBorder=false;
+  Pos<FaceType> curPos=startPos;
+  do
+  {
+    assert(curPos.IsManifold());
+    if(curPos.IsBorder()) foundBorder=true;
 
-	///check that is not on border..
-	assert (!vp.IsB());
-
-	///get first face sharing the edge
-    FaceType *f_init=vp.cVFp();
-    int edge_init=vp.cVFi();
-
-	///and initialize the pos
-	vcg::face::Pos<FaceType> VFI(f_init,edge_init);
-	bool complete_turn=false;
-	do  
-	{
-		FaceType *curr_f=VFI.F();
-		faceVec.push_back(curr_f);
-
-		int curr_edge=VFI.E();
-
-		///assert that is not a border edge
-		assert(curr_f->FFp(curr_edge)!=curr_f);
-
-		///continue moving 
-		VFI.FlipF();
-		VFI.FlipE();
-
-		FaceType *next_f=VFI.F();
-
-		///test if I've finiseh with the face exploration
-		complete_turn=(next_f==f_init);
-		/// or if I've just crossed a mismatch
-	}while (!complete_turn);
-}
-
-
-/*!
-* Compute the ordered set of faces adjacent to a given vertex using VF adjacency.and FF adiacency
-*	\param vp	pointer to the vertex whose star has to be computed.
-*	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
-*
-*/
-template <class FaceType>
-static void VFOrderedStarVF_FF(const typename FaceType::VertexType &vp,
-                                std::vector<FaceType*> &faceVec,
-                               std::vector<int> &edgeVec)
-{
-
-    ///check that is not on border..
-    assert (!vp.IsB());
-
-    ///get first face sharing the edge
-    FaceType *f_init=vp.cVFp();
-    int edge_init=vp.cVFi();
-
-    ///and initialize the pos
-    vcg::face::Pos<FaceType> VFI(f_init,edge_init);
-    bool complete_turn=false;
-    do
-    {
-        FaceType *curr_f=VFI.F();
-        faceVec.push_back(curr_f);
-
-        int curr_edge=VFI.E();
-        edgeVec.push_back(curr_edge);
-        ///assert that is not a border edge
-        assert(curr_f->FFp(curr_edge)!=curr_f);
-
-        ///continue moving
-        VFI.FlipF();
-        VFI.FlipE();
-
-        FaceType *next_f=VFI.F();
-
-        ///test if I've finiseh with the face exploration
-        complete_turn=(next_f==f_init);
-        /// or if I've just crossed a mismatch
-    }while (!complete_turn);
+    faceVec.push_back(curPos.F());
+    edgeVec.push_back(curPos.E());
+    curPos.FlipF();
+    curPos.FlipE();
+  } while(curPos!=startPos);
+  if(foundBorder)
+  {
+    assert((faceVec.size()%2)==0); // if we found a border we visited each face exactly twice.
+    faceVec.resize(faceVec.size()/2);
+    edgeVec.resize(edgeVec.size()/2);
+  }
 }
 
 /*!
