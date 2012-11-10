@@ -42,8 +42,8 @@ struct EuclideanDistance{
 };
 
 /*! \brief class for computing approximate geodesic distances on a mesh
- *
-basic example: farthest vertex from a specified one
+
+  require VF Adjacency relation
 \sa trimesh_geodesic.cpp
 */
 
@@ -163,6 +163,7 @@ wrapping function.
 
     //Requirements
     if(!HasVFAdjacency(m)) throw vcg::MissingComponentException("VFAdjacency");
+    if(!HasPerVertexQuality(m)) throw vcg::MissingComponentException("VertexQuality");
     assert(!seedVec.empty());
 
     TempDataType TD(m.vert, std::numeric_limits<ScalarType>::max());
@@ -290,7 +291,7 @@ To allocate the attributes:
 \endcode
 
 It requires VF adjacency relation (e.g. vertex::VFAdj and face::VFAdj components)
-
+It requires per vertex Quality (e.g. vertex::Quality component)
 
 \warning that this function has ALWAYS at least a linear cost (it use additional attributes that have a linear initialization)
 \todo make it O(output) by using incremental mark and persistent attributes.
