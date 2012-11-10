@@ -48,7 +48,7 @@ class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::FFAdj,  vcg::face::V
 class MyEdge    : public vcg::Edge<MyUsedTypes>{};
 class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> , std::vector<MyEdge>  > {};
 
-int main( int argc, char **argv )
+int main( int /*argc*/, char **/*argv*/ )
 {
   MyMesh m;
   vcg::tri::Torus(m,30,10);

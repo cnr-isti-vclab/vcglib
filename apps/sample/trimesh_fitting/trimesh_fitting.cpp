@@ -55,7 +55,7 @@ class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<M
 float EvalPlane(vcg::Plane3f &pl, vcg::Point3f &dir, std::vector<vcg::Point3f> posVec)
 {
   float off=0;
-  for(int i=0;i<posVec.size();++i)
+  for(size_t i=0;i<posVec.size();++i)
     off += fabs(vcg::SignedDistancePlanePoint(pl,posVec[i]));
 
   off/=float(posVec.size());

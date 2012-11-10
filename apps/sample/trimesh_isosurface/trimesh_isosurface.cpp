@@ -47,7 +47,7 @@ class MyMesh		: public vcg::tri::TriMesh< std::vector< MyVertex>, std::vector< M
 
 typedef SimpleVolume<SimpleVoxel> MyVolume;
 
-int main(int argc , char *argv[])
+int main(int /*argc*/ , char **/*argv*/)
 {
 	MyVolume	volume;
   

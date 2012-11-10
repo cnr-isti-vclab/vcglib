@@ -115,7 +115,7 @@ bool UnitTest_Append(const char *filename1, const char *filename2)
   return true;
 }
 
-int main(int argc ,char**argv)
+int main(int /*argc*/ ,char**argv)
 {
 	UnitTest_Append<MyMesh>(argv[1],"out.ply");
 	UnitTest_Append<OcfMesh>(argv[1],"out.ply");
