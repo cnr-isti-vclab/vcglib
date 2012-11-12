@@ -30,21 +30,39 @@ public:
    }
 
    template <class MeshType>
-   static void DrawFlippedFacesIfSelected(MeshType &Tmesh)
+   static void DrawFlippedFacesIfSelected(MeshType &ParamMesh,
+                                          bool DrawUV=false,
+                                          vcg::Color4b color=vcg::Color4b(255,0,0,255),
+                                          typename MeshType::ScalarType width=2.0)
    {
+       typedef typename MeshType::FaceType FaceType;
+       typedef typename MeshType::CoordType CoordType;
+       typedef typename MeshType::ScalarType ScalarType;
+
        glPushAttrib(GL_ALL_ATTRIB_BITS);
        glDisable(GL_LIGHTING);
-       glLineWidth(1.5);
-       glDepthRange(0,0.998);
-       vcg::glColor(vcg::Color4b(255,0,0,255));
+       glLineWidth(width);
+       vcg::glColor(color);
        glBegin(GL_LINES);
-       for (unsigned int i=0;i<Tmesh.face.size();i++)
+       for (unsigned int i=0;i<ParamMesh.face.size();i++)
        {
-           if (!Tmesh.face[i].IsS())continue;
+           FaceType *f=&ParamMesh.face[i];
+           if (!f->IsS())continue;
            for (int k=0;k<3;k++)
            {
-               vcg::glVertex(Tmesh.face[i].P0(k));
-               vcg::glVertex(Tmesh.face[i].P1(k));
+               CoordType p0,p1;
+               if (!DrawUV)
+               {
+                   p0=f->P0(k);
+                   p1=f->P1(k);
+               }
+               else
+               {
+                   p0=CoordType(f->WT(k).P().X(),f->WT(k).P().Y(),0);
+                   p1=CoordType(f->WT((k+1)%3).P().X(),f->WT((k+1)%3).P().Y(),0);
+               }
+               vcg::glVertex(p0);
+               vcg::glVertex(p1);
            }
        }
        glEnd();
