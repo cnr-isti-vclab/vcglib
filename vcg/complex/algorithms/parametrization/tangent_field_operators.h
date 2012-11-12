@@ -498,8 +498,10 @@ namespace vcg {
 				if (v.IsB())return false;
 
 				std::vector<FaceType*> faces;
-				//SortedFaces(v,faces);
-				vcg::face::VFOrderedStarVF_FF(v,faces);
+                std::vector<int> edges;
+                //SortedFaces(v,faces);
+                vcg::face::Pos<FaceType> pos(v.VFp(), v.VFi());
+                vcg::face::VFOrderedStarFF(pos, faces, edges);
 
 				missmatch=0;
                 for (unsigned int i=0;i<faces.size();i++)
