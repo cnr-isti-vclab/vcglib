@@ -44,7 +44,12 @@ private:
 
         std::vector<FaceType*> faces;
         std::vector<int> edges;
-        vcg::face::VFOrderedStarVF_FF<FaceType>(v,faces,edges);
+
+        //SortedFaces(v,faces);
+        //vcg::face::VFOrderedStarVF_FF(v,faces);
+        vcg::face::Pos<FaceType> pos(v.cVFp(), v.cVFi());
+        vcg::face::VFOrderedStarFF(pos,faces,edges);
+        //vcg::face::VFOrderedStarVF_FF<FaceType>(v,faces,edges);
 
         missmatch=0;
         for (unsigned int i=0;i<faces.size();i++)
