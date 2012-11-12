@@ -677,7 +677,8 @@ static void VFExtendedStarVF(typename FaceType::VertexType* vp,
     {
         ///initialize front
         faceVec.clear();
-        vcg::face::VFStarVF<FaceType>(vp,faceVec);
+        std::vector<int> indexes;
+        vcg::face::VFStarVF<FaceType>(vp,faceVec,indexes);
         ///then dilate front
         ///for each step
         for (int step=0;step<num_step;step++)
