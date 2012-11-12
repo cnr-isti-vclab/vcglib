@@ -500,7 +500,7 @@ namespace vcg {
 				std::vector<FaceType*> faces;
                 std::vector<int> edges;
                 //SortedFaces(v,faces);
-                vcg::face::Pos<FaceType> pos(v.VFp(), v.VFi());
+                vcg::face::Pos<FaceType> pos(v.cVFp(), v.cVFi());
                 vcg::face::VFOrderedStarFF(pos, faces, edges);
 
 				missmatch=0;
