@@ -750,7 +750,7 @@ class PoissonSolver
 		printf("\n SET %d INTEGER VALUES \n",n_integer_vars);
         ///add penalization term for integer variables
         double penalization=0.000001;
-       int offline_index=ScalarSize;
+        int offline_index=ScalarSize;
         for(unsigned int i = 0; i < (n_integer_vars)*2; ++i)
 		{
 			int index=offline_index+i;
