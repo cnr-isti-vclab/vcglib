@@ -28,27 +28,21 @@
 #define VCGLIB_UPDATE_CURVATURE_FITTING
 
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/math/base.h>
-#include <vcg/math/matrix.h>
 #include <vcg/simplex/face/topology.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/container/simple_temporary_data.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/point_sampling.h>
-#include <vcg/complex/append.h>
 #include <vcg/complex/algorithms/intersection.h>
 #include <vcg/complex/algorithms/inertia.h>
-#include <vcg/math/matrix33.h>
+#include <vcg/complex/algorithms/nring.h>
 
 #include <eigenlib/Eigen/Core>
 #include <eigenlib/Eigen/QR>
 #include <eigenlib/Eigen/LU>
 #include <eigenlib/Eigen/SVD>
 #include <eigenlib/Eigen/Eigenvalues>
-// GG include
-#include <vector>
-#include <vcg/complex/algorithms/nring.h>
 
 
 namespace vcg {
@@ -116,17 +110,17 @@ class Quadric
         return 2.0*c()*v + b()*u + e();
     }
 
-    double duv(double u, double v)
+    double duv(double /*u*/, double /*v*/)
     {
         return b();
     }
 
-    double duu(double u, double v)
+    double duu(double /*u*/, double /*v*/)
     {
         return 2.0*a();
     }
 
-    double dvv(double u, double v)
+    double dvv(double /*u*/, double /*v*/)
     {
         return 2.0*c();
     }
@@ -231,8 +225,9 @@ class Quadric
 
     static void computeCurvature(MeshType & m)
     {
+      Allocator<MeshType>::CompactVertexVector(m);
 
-				assert(tri::HasPerVertexVFAdjacency(m) && tri::HasPerFaceVFAdjacency(m) );
+      if(!HasFVAdjacency(m)) throw vcg::MissingComponentException("FVAdjacency");
 
         vcg::tri::UpdateTopology<MeshType>::VertexFace(m);
 
@@ -357,17 +352,17 @@ class Quadric
             return 2.0*c()*v + b()*u + e();
         }
 
-        double duv(double u, double v)
+        double duv(double /*u*/, double /*v*/)
         {
             return b();
         }
 
-        double duu(double u, double v)
+        double duu(double /*u*/, double /*v*/)
         {
             return 2.0*a();
         }
 
-        double dvv(double u, double v)
+        double dvv(double /*u*/, double /*v*/)
         {
             return 2.0*c();
         }
