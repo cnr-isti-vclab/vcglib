@@ -27,6 +27,8 @@ private:
     typename  MeshType::template PerVertexAttributeHandle<int> Handle_SingularDegree;
     ///seam per face
     typename  MeshType::template PerFaceAttributeHandle<vcg::Point3<bool> > Handle_Seams;
+    ///seam index per face
+    typename  MeshType::template PerFaceAttributeHandle<vcg::Point3i > Handle_SeamsIndex;
 
     bool IsRotSeam(const FaceType *f0,const int edge)
     {
@@ -82,6 +84,12 @@ private:
             Handle_Seams=vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<vcg::Point3<bool> >(*mesh,std::string("Seams"));
         else
             Handle_Seams=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3<bool> >(*mesh,std::string("Seams"));
+
+        bool HasHandleSeamsIndex=vcg::tri::HasPerFaceAttribute(*mesh,std::string("SeamsIndex"));
+        if (!HasHandleSeamsIndex)
+            Handle_SeamsIndex=vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<vcg::Point3i >(*mesh,std::string("SeamsIndex"));
+        else
+            Handle_SeamsIndex=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3i >(*mesh,std::string("SeamsIndex"));
     }
 
 
@@ -169,7 +177,7 @@ private:
 
     void SelectSingularityByMM()
     {
-        vcg::tri::UpdateFlags<MeshType>::VertexBorderFromNone(*mesh);
+
         for (unsigned int i=0;i<mesh->vert.size();i++)
         {
             if (mesh->vert[i].IsD())continue;
@@ -233,6 +241,119 @@ private:
         }
     }
 
+    void InitSeamIndexes()
+    {
+        ///initialize seams indexes
+        for (unsigned int i=0;i<mesh->face.size();i++)
+        {
+            FaceType *f=&mesh->face[i];
+            for (int j=0;j<3;j++)
+               Handle_SeamsIndex[f][j]=-1;
+        }
+
+        std::vector<std::vector<std::pair<FaceType*,int> > > seamsVert;
+        seamsVert.resize(mesh->vert.size());
+        for (unsigned int i=0;i<mesh->face.size();i++)
+        {
+            FaceType *f=&mesh->face[i];
+             for (int j=0;j<3;j++)
+             {
+                 if (f->IsB(j))continue;
+                 if (Handle_Seams[f][j])
+                 {
+                     VertexType *v0=f->V0(j);
+                     VertexType *v1=f->V1(j);
+                     if (v0>v1)continue;
+                     int index0=v0-&mesh->vert[0];
+                     int index1=v1-&mesh->vert[0];
+                     std::pair<FaceType*,int> entry=std::pair<FaceType*,int>(f,j);
+                     seamsVert[index0].push_back(entry);
+                     seamsVert[index1].push_back(entry);
+                 }
+             }
+        }
+
+        int curr_index=0;
+        for (unsigned int i=0;i<mesh->vert.size();i++)
+        {
+            VertexType *v_seam=&mesh->vert[i];
+            bool IsVertex=(Handle_Singular[i])||(seamsVert[i].size()>2)||
+                          (v_seam->IsB());
+
+            if(!IsVertex)continue;
+
+            ///then follows the seam
+            for (int j=0;j<seamsVert[i].size();j++)
+            {
+                FaceType *f=seamsVert[i][j].first;
+                int edge=seamsVert[i][j].second;
+
+                VertexType *v0=v_seam;
+                VertexType *v1=NULL;
+
+                ///the index is already initialized
+                if (Handle_SeamsIndex[f][edge]!=-1)continue;
+                bool finished=false;
+                do
+                {
+                    ///otherwise follow the index
+                    Handle_SeamsIndex[f][edge]=curr_index;///set current value
+                    FaceType *f1=f->FFp(edge);
+                    int edge1=f->FFi(edge);
+                    Handle_SeamsIndex[f1][edge1]=curr_index;///set current value
+
+                    assert((v0==f->V0(edge))||
+                           (v0==f->V1(edge)));
+
+                    if (f->V0(edge)==v0)
+                        v1=f->V1(edge);
+                    else
+                        v1=f->V0(edge);
+
+                   assert(v0!=v1);
+                   //int index0=v0-&mesh->vert[0];
+                   int index1=v1-&mesh->vert[0];
+
+                   bool IsVertex=(Handle_Singular[v1])||
+                                 (seamsVert[index1].size()>2)||
+                                 (v1->IsB());
+                   if(IsVertex)
+                       finished=true;
+                   else
+                   {
+                       assert(seamsVert[index1].size()==2);
+                       FaceType *f_new[2];
+                       int edge_new[2];
+
+                       f_new[0]=seamsVert[index1][0].first;
+                       edge_new[0]=seamsVert[index1][0].second;
+                       f_new[1]=seamsVert[index1][1].first;
+                       edge_new[1]=seamsVert[index1][1].second;
+
+                       assert((f_new[0]==f)||(f_new[1]==f));
+                       assert((edge_new[0]==edge)||(edge_new[1]==edge));
+
+                       if ((f_new[0]==f)&&(edge_new[0]==edge))
+                       {
+                           f=f_new[1];
+                           edge=edge_new[1];
+                       }
+                       else
+                       {
+                           f=f_new[0];
+                           edge=edge_new[0];
+                       }
+                       v0=v1;
+                   }
+                }
+                while (!finished);
+                //return;
+                curr_index++;
+            }
+        }
+
+    }
+
 public:
 
 
@@ -241,7 +362,12 @@ public:
               bool initMM,
               bool initCuts)
     {
+
         mesh=_mesh;
+
+        vcg::tri::UpdateFlags<MeshType>::VertexBorderFromNone(*mesh);
+        vcg::tri::UpdateFlags<MeshType>::FaceBorderFromNone(*mesh);
+
         AddAttributesIfNeeded();
         if (orient_globally)
             vcg::tri::CrossField<MeshType>::MakeDirectionFaceCoherent(*mesh);
@@ -253,6 +379,7 @@ public:
             InitTopologycalCuts();
             AddSeamsByMM();
         }
+        InitSeamIndexes();
     }
 
     SeamsInitializer(){mesh=NULL;}
