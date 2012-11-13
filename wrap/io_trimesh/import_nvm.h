@@ -20,8 +20,8 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#ifndef __VCGLIB_IMPORTERBUNDLER
-#define __VCGLIB_IMPORTERBUNDLER
+#ifndef __VCGLIB_IMPORTERNVM
+#define __VCGLIB_IMPORTERNVM
 
 #include <stddef.h>
 #include <stdio.h>
@@ -30,23 +30,19 @@
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
 
-extern "C"
-{
-#include <jhead.h>
-int ReadJpegSections (FILE * infile, ReadMode_t ReadMode);
-void ResetJpgfile(void);
-}
+#include <QString>
+#include <QImageReader>
 
 namespace vcg {
 namespace tri {
 namespace io {
 
-  struct Correspondence{
+  /*struct Correspondence{
                 Correspondence(unsigned int id_img_,unsigned int key_,float x_,float y_):id_img(id_img_),key(key_),x(x_),y(y_){}
     unsigned int id_img,key;
     float x;
     float y;
-  };
+  };*/
 
         typedef std::vector<Correspondence> CorrVec;
 
@@ -54,7 +50,7 @@ namespace io {
 This class encapsulate a filter for opening bundler file
 */
 template <class OpenMeshType>
-class ImporterOUT
+class ImporterNVM
 {
 public:
 
@@ -66,7 +62,7 @@ typedef typename OpenMeshType::VertexIterator VertexIterator;
 typedef typename OpenMeshType::FaceIterator FaceIterator;
 typedef typename OpenMeshType::EdgeIterator EdgeIterator;
 
-static void readline(FILE *fp, char *line, int max=100){
+static void readline(FILE *fp, char *line, int max=1000){
     int i=0;
     char c;
     fscanf(fp, "%c", &c);
@@ -77,11 +73,13 @@ static void readline(FILE *fp, char *line, int max=100){
     line[i] = '\0'; //end of string
 }
 
-static bool ReadHeader(FILE *fp,unsigned int &num_cams, unsigned int &num_points){
-    char line[100];
-    readline(fp, line); if( (line[0]=='\0') || (0!=strcmp("# Bundle file v0.3", line)) ) return false;
+static bool ReadHeader(FILE *fp,unsigned int &num_cams){
+    char line[1000];
+    readline(fp, line); 
+	if( (line[0]=='\0') || (0!=strcmp("NVM_V3 ", line)) ) return false;
+	readline(fp, line);
     readline(fp, line); if(line[0]=='\0') return false;
-    sscanf(line, "%d %d", &num_cams, &num_points);
+    sscanf(line, "%d", &num_cams);
     return true;
 }
 
@@ -96,54 +94,74 @@ static bool ReadHeader(const char * filename,unsigned int &/*num_cams*/, unsigne
 
 static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
                  std::vector<std::string > & image_filenames,
-                 const char * filename,const char * filename_images, const char * filename_images_path = "",CallBackPos *cb=0)
+                 const char * filename, CallBackPos *cb=0)
 {
   unsigned int   num_cams,num_points;
 
   FILE *fp = fopen(filename,"r");
   if(!fp) return false;
-  ReadHeader(fp, num_cams,  num_points);
-  char line[100];
-  if(cb) cb(0,"Reading images");
-  ReadImagesFilenames(filename_images, image_filenames);
+  ReadHeader(fp, num_cams);
+  char line[1000], name[1000];
+ /* if(cb) cb(0,"Reading images");
+  ReadImagesFilenames(filename_images, image_filenames);*/
 
   if(cb) cb(50,"Reading cameras");
+  //image_filenames.resize(num_cams);
   shots.resize(num_cams);
   for(uint i = 0; i < num_cams;++i)
   {
     float f, k1, k2;
-    float R[16]={0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1};
+    vcg::Point4f R;
     vcg::Point3f t;
 
-    readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &f, &k1, &k2);
+	readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%s %f %f %f %f %f %f %f %f %f", name, &f, &(R[0]), &(R[1]), &(R[2]), &(R[3]), &(t[0]), &(t[1]), &(t[2]), &k1);
+
+	std::string n(name);
+	image_filenames.push_back(n);
+
+	/*readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &f, &k1, &k2);
 
     readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &(R[0]), &(R[1]), &(R[2]));  R[3] = 0;
     readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &(R[4]), &(R[5]), &(R[6]));  R[7] = 0;
     readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &(R[8]), &(R[9]), &(R[10])); R[11] = 0;
 
-    readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &(t[0]), &(t[1]), &(t[2]));
+    readline(fp, line); if(line[0]=='\0') return false; sscanf(line, "%f %f %f", &(t[0]), &(t[1]), &(t[2]));*/
 
-    vcg::Matrix44f mat = vcg::Matrix44<vcg::Shotf::ScalarType>::Construct<float>(R);
+    //vcg::Matrix44f mat = vcg::Matrix44<vcg::Shotf::ScalarType>::Construct<float>(R);
 
-    vcg::Matrix33f Rt = vcg::Matrix33f( vcg::Matrix44f(mat), 3);
+    vcg::Quaternion<float> qfrom; qfrom.Import(R);
+
+	vcg::Matrix44f mat; qfrom.ToMatrix(mat);
+
+    /*vcg::Matrix33f Rt = vcg::Matrix33f( vcg::Matrix44f(mat), 3);
     Rt.Transpose();
 
-    vcg::Point3f pos = Rt * vcg::Point3f(t[0], t[1], t[2]);
+    vcg::Point3f pos = Rt * vcg::Point3f(t[0], t[1], t[2]);*/
 
-    shots[i].Extrinsics.SetTra(vcg::Point3<vcg::Shotf::ScalarType>::Construct<float>(-pos[0],-pos[1],-pos[2]));
+	mat[1][0]=-mat[1][0];
+	mat[1][1]=-mat[1][1];
+	mat[1][2]=-mat[1][2];
+
+	mat[2][0]=-mat[2][0];
+	mat[2][1]=-mat[2][1];
+	mat[2][2]=-mat[2][2];
+
+    shots[i].Extrinsics.SetTra(vcg::Point3<vcg::Shotf::ScalarType>::Construct<float>(t[0],t[1],t[2]));
     shots[i].Extrinsics.SetRot(mat);
 
-    shots[i].Intrinsics.FocalMm    = f;
+    shots[i].Intrinsics.FocalMm    = f/100.0f;
     shots[i].Intrinsics.k[0] = 0.0;//k1; To be uncommented when distortion is taken into account reliably
     shots[i].Intrinsics.k[1] = 0.0;//k2;
-    shots[i].Intrinsics.PixelSizeMm = vcg::Point2f(1,1);
+    shots[i].Intrinsics.PixelSizeMm = vcg::Point2f(0.01,0.01);
 	QImageReader sizeImg(QString::fromStdString(image_filenames[i]));
 	QSize size=sizeImg.size();
 	shots[i].Intrinsics.ViewportPx = vcg::Point2i(size.width(),size.height());
 	shots[i].Intrinsics.CenterPx[0] = (int)((double)shots[i].Intrinsics.ViewportPx[0]/2.0f);
 	shots[i].Intrinsics.CenterPx[1] = (int)((double)shots[i].Intrinsics.ViewportPx[1]/2.0f);
-    //AddIntrinsics(shots[i], std::string(filename_images_path).append(image_filenames[i]).c_str());
   }
+  readline(fp, line);
+  readline(fp, line); if(line[0]=='\0') return false;
+    sscanf(line, "%d", &num_points);
 
   // load all correspondences
   typename OpenMeshType::template PerVertexAttributeHandle<CorrVec> ch = vcg::tri::Allocator<OpenMeshType>::template GetPerVertexAttribute<CorrVec>(m,"correspondences");
@@ -192,18 +210,6 @@ static bool ReadImagesFilenames(const char *  filename,std::vector<std::string> 
 		return true;
 }
 
-static bool  AddIntrinsics(vcg::Shotf &shot, const char * image_file)
-{
-	::ResetJpgfile();
-	FILE * pFile = fopen(image_file, "rb");
-	int ret = ::ReadJpegSections (pFile, READ_METADATA);
-	fclose(pFile);
-	if(ret==0) return false;
-	shot.Intrinsics.ViewportPx = vcg::Point2i(ImageInfo.Width, ImageInfo.Height);
-	shot.Intrinsics.CenterPx   = vcg::Point2f(float(ImageInfo.Width/2.0), float(ImageInfo.Height/2.0));
-
-	return true;
-}
 }; // end class
 
 
