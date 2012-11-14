@@ -596,7 +596,7 @@ public:
 namespace tri
 {
 template < class VertexType >
-bool VertexVectorHasPerVertexVFAdjacency(const vertex::vector_ocf<VertexType> &fv)
+bool VertexVectorHasVFAdjacency(const vertex::vector_ocf<VertexType> &fv)
 {
   if(VertexType::HasVFAdjacencyOcf()) return fv.IsVFAdjacencyEnabled();
   else return VertexType::HasVFAdjacency();

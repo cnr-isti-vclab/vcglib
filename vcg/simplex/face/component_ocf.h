@@ -775,7 +775,7 @@ public:
   namespace tri
   {
   template < class FaceType >
-  bool FaceVectorHasPerFaceVFAdjacency(const face::vector_ocf<FaceType> &fv)
+  bool FaceVectorHasVFAdjacency(const face::vector_ocf<FaceType> &fv)
   {
     if(FaceType::HasVFAdjacencyOcf()) return fv.IsVFAdjacencyEnabled();
     else return FaceType::HasVFAdjacency();
