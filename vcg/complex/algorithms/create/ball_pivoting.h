@@ -25,8 +25,8 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   typedef GridStaticPtr<typename MESH::VertexType, typename MESH::ScalarType > StaticGrid;        
   
   float radius;          //radius of the ball
-  float min_edge;        //min lenght of an edge 
-  float max_edge;        //min lenght of an edge 
+  float min_edge;        //min length of an edge 
+  float max_edge;        //min length of an edge 
   float max_angle;       //max angle between 2 faces (cos(angle) actually)  
   
  public:
@@ -190,16 +190,16 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
       Mark(vv1);
       Mark(vv2);            
       
-      v0 = vv0 - &*this->mesh.vert.begin();
-      v1 = vv1 - &*this->mesh.vert.begin();
-      v2 = vv2 - &*this->mesh.vert.begin();            
+      v0 = tri::Index(this->mesh,vv0);
+      v1 = tri::Index(this->mesh,vv1);
+      v2 = tri::Index(this->mesh,vv2);
       return true;      
     }
     return false;    
   }
   
-  //select a new vertex, mark as Visited and mark as usedBit all neighbours (less than min_edge)
-  int Place(FrontEdge &edge,typename AdvancingFront<MESH>::ResultIterator &touch) {
+  // Given an edge select a new vertex, mark as Visited and mark as usedBit all neighbours (less than min_edge)
+  int Place(FrontEdge &edge, typename AdvancingFront<MESH>::ResultIterator &touch) {
     Point3x v0 = this->mesh.vert[edge.v0].P();
     Point3x v1 = this->mesh.vert[edge.v1].P();  
     Point3x v2 = this->mesh.vert[edge.v2].P();  
@@ -230,9 +230,9 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     // r is the radius of the thorus of all possible spheres passing throug v0 and v1
     ScalarType r = sqrt(radius*radius - axis_len/4);
     
-    std::vector<VertexType *> targets;
+    std::vector<VertexType *> targets; // The vector of
     std::vector<ScalarType> dists;    
-    std::vector<Point3x> points;
+    std::vector<Point3x> points; // never used.
     
     tri::GetInSphereVertex(this->mesh, grid, middle, r + radius, targets, dists, points);
           
@@ -242,21 +242,22 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     
     VertexType *candidate = NULL;
     ScalarType min_angle = M_PI;
-
-    for(int i = 0; i < static_cast<int>(targets.size()); i++) {      
+    //
+    // Loop over all the nearest vertexes and choose the best one according the ball pivoting strategy.
+    //
+    for(size_t i = 0; i < targets.size(); i++) {
       VertexType *v = targets[i];
-      int id = v - &*this->mesh.vert.begin();
-      if(v->IsD()) continue; 
-
+      if(v->IsD()) continue;
+      int vInd = tri::Index(this->mesh,v);
       // this should always be true IsB => IsV , IsV => IsU
       if(v->IsB()) assert(v->IsV());
       if(v->IsV()) assert(v->IsUserBit(usedBit));
       
       
       if(v->IsUserBit(usedBit) && !(v->IsB())) continue;
-      if(id == edge.v0 || id == edge.v1 || id == edge.v2) continue;
+      if(vInd == edge.v0 || vInd == edge.v1 || vInd == edge.v2) continue;
         
-      Point3x p = this->mesh.vert[id].P();
+      Point3x p = this->mesh.vert[vInd].P();
                                 
       /* Find the sphere through v0, p, v1 (store center on end_pivot */
       if(!FindSphere(v0, p, v1, center)) {
@@ -264,7 +265,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
       }
       
       /* Angle between old center and new center */
-      ScalarType alpha = Angle(start_pivot, center - middle, axis);
+      ScalarType alpha = OrientedAngleRad(start_pivot, center - middle, axis);
     
       /* adding a small bias to already chosen vertices.
          doesn't solve numerical problems, but helps. */
@@ -280,7 +281,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
         Point3x proj = p - axis * (axis * p - axis * middle);
         ScalarType beta = angle(start_pivot, proj - middle, axis);
       
-        if(alpha > beta) alpha -= 2*M_PI; 
+        if(alpha > beta) alpha -= 2*M_PI;
       } */
       if(candidate == NULL || alpha < min_angle) {
         candidate = v;
@@ -299,35 +300,35 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
       assert((candidate->P() - v1).Norm() > min_edge);    
     }
     
-    int id = candidate - &*this->mesh.vert.begin();
-    assert(id != edge.v0 && id != edge.v1);
+    int candidateIndex = tri::Index(this->mesh,candidate);
+    assert(candidateIndex != edge.v0 && candidateIndex != edge.v1);
     
     Point3x newnormal = ((candidate->P() - v0)^(v1 - v0)).Normalize();
-    if(normal.dot(newnormal) < max_angle || this->nb[id] >= 2) {
+    if(normal.dot(newnormal) < max_angle || this->nb[candidateIndex] >= 2) {
       return -1;
     }
 
-    //test if id is in some border (to return touch
-		for(std::list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
-		{
-			if((*k).v0 == id) 
-			{
-                                touch.first = AdvancingFront<MESH>::FRONT;
-				touch.second = k;
-			}
-		}
-		for(std::list<FrontEdge>::iterator k = this->deads.begin(); k != this->deads.end(); k++)
-		{
-			if((*k).v0 == id)
-			{
-                                touch.first = AdvancingFront<MESH>::DEADS;
-				touch.second = k; 
-			}
-		}
-       
+	//test if id is in some border (to return touch
+	for(std::list<FrontEdge>::iterator k = this->front.begin(); k != this->front.end(); k++)
+	{
+	  if((*k).v0 == candidateIndex)
+	  {
+		touch.first = AdvancingFront<MESH>::FRONT;
+		touch.second = k;
+	  }
+	}
+	for(std::list<FrontEdge>::iterator k = this->deads.begin(); k != this->deads.end(); k++)
+	{
+	  if((*k).v0 == candidateIndex)
+	  {
+		touch.first = AdvancingFront<MESH>::DEADS;
+		touch.second = k;
+	  }
+	}
+
     //mark vertices close to candidate
     Mark(candidate);
-    return id;
+    return candidateIndex;
   }
   
  private:
@@ -341,7 +342,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   /* returns the sphere touching p0, p1, p2 of radius r such that
      the normal of the face points toward the center of the sphere */
      
-  bool FindSphere(Point3x &p0, Point3x &p1, Point3x &p2, Point3x &center) {
+  bool FindSphere(const Point3x &p0, const Point3x &p1, const Point3x &p2, Point3x &center) {
     //we want p0 to be always the smallest one.
     Point3x p[3];
     
@@ -392,7 +393,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   }         
   
   /* compute angle from p to q, using axis for orientation */
-  ScalarType Angle(Point3x p, Point3x q, Point3x &axis) {
+  ScalarType OrientedAngleRad(Point3x p, Point3x q, Point3x &axis) {
     p.Normalize();
     q.Normalize();
     Point3x vec = p^q;

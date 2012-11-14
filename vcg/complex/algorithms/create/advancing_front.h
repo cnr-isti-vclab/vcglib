@@ -11,11 +11,15 @@
 namespace vcg {
   namespace tri {
 
+/* An active edge on the advancing front.
+ * belong to a triangle (v0,v1,v2)
+ * v0, v1 the active edge
+ * v2     internal vertex
+*/
 class FrontEdge { 
  public:       
   int v0, v1, v2;   //v0, v1 represent the FrontEdge, v2 the other vertex 
                     //in the face this FrontEdge belongs to    
-  int face;         //index of the face             
   bool active; //keep tracks of wether it is in front or in deads
     
   //the loops in the front are mantained as a double linked list
@@ -23,14 +27,14 @@ class FrontEdge {
   std::list<FrontEdge>::iterator previous;
   
   FrontEdge() {}
-  FrontEdge(int _v0, int _v1, int _v2, int _face): 
-             v0(_v0), v1(_v1), v2(_v2), face(_face), active(true) {
+  FrontEdge(int _v0, int _v1, int _v2):
+             v0(_v0), v1(_v1), v2(_v2), active(true) {
                assert(v0 != v1 && v1 != v2 && v0 != v2);
   }
   
-	const bool operator==(const FrontEdge& f) const
+    bool operator==(const FrontEdge& f) const
 	{
-		return ((v0 == f.v0) && (v1 == f.v1) && (v2 == f.v2) && (face == f.face)); 
+		return ((v0 == f.v0) && (v1 == f.v1) && (v2 == f.v2) );
 	}
 };  
 
@@ -39,6 +43,7 @@ template <class MESH> class AdvancingFront {
 
   typedef typename MESH::VertexType     VertexType;
   typedef typename MESH::FaceType       FaceType;
+  typedef typename MESH::FaceIterator       FaceIterator;
   typedef typename MESH::ScalarType     ScalarType;
   typedef typename MESH::VertexType::CoordType   Point3x;
       
@@ -121,16 +126,17 @@ protected:
   }        
   
   //create the FrontEdge loops from seed faces
-  void CreateLoops() {   
-    VertexType *start = &*mesh.vert.begin();
-    for(int i = 0; i < (int)mesh.face.size(); i++) {
+  void CreateLoops()
+  {
+    for(size_t i = 0; i < mesh.face.size(); i++)
+    {
       FaceType &f = mesh.face[i];     
       if(f.IsD()) continue;
        
       for(int k = 0; k < 3; k++) {
         if(f.IsB(k)) {
-          NewEdge(FrontEdge(f.V0(k) - start, f.V1(k) - start, f.V2(k) - start, i));     
-          nb[f.V0(k)-start]++;
+          addNewEdge(FrontEdge(tri::Index(mesh,f.V0(k)),tri::Index(mesh,f.V1(k)),tri::Index(mesh,f.V2(k))) );
+          nb[tri::Index(mesh,f.V0(k))]++;
         }          
       }
     }
@@ -176,7 +182,7 @@ protected:
       mesh.vert[v0].SetB();
       nb[v[i]]++;
   
-      e = front.insert(front.begin(), FrontEdge(v0, v1, v2, mesh.face.size()));
+      e = front.insert(front.begin(), FrontEdge(v0, v1, v2));
       if(i != 0) {
         (*last).next = e;    
         (*e).previous = last;
@@ -218,7 +224,7 @@ public:
     assert(v2 != v0 && v2 != v1);  
       
     if ((touch.first == FRONT) && (touch.second != front.end()) ||
-		(touch.first == DEADS) && (touch.second != deads.end()))
+        (touch.first == DEADS) && (touch.second != deads.end()))
 
 	{  
       //check for orientation and manifoldness    
@@ -240,7 +246,7 @@ public:
           
         Detach(v0);
   
-        std::list<FrontEdge>::iterator up = NewEdge(FrontEdge(v2, v1, v0, mesh.face.size()));
+        std::list<FrontEdge>::iterator up = addNewEdge(FrontEdge(v2, v1, v0));
         MoveFront(up);
         (*up).previous = previous.previous;
         (*up).next = current.next;
@@ -266,7 +272,7 @@ public:
                           v1           */      
     
         Detach(v1);
-        std::list<FrontEdge>::iterator up = NewEdge(FrontEdge(v0, v2, v1, mesh.face.size()));
+        std::list<FrontEdge>::iterator up = addNewEdge(FrontEdge(v0, v2, v1));
         MoveFront(up);
         (*up).previous = current.previous;
         (*up).next = (*current.next).next;
@@ -303,8 +309,8 @@ public:
         
         nb[v2]++;    
   
-        std::list<FrontEdge>::iterator down = NewEdge(FrontEdge(v2, v1, v0, mesh.face.size()));      
-        std::list<FrontEdge>::iterator up = NewEdge(FrontEdge(v0, v2, v1, mesh.face.size()));                            
+        std::list<FrontEdge>::iterator down = addNewEdge(FrontEdge(v2, v1, v0));
+        std::list<FrontEdge>::iterator up = addNewEdge(FrontEdge(v0, v2, v1));
       
         (*right).next = down;
         (*down).previous = right;
@@ -322,8 +328,8 @@ public:
               
       
     } 
-	else if ((touch.first == FRONT) && (touch.second == front.end()) || 
-		     (touch.first == DEADS) && (touch.second == deads.end()))
+    else if ((touch.first == FRONT) && (touch.second == front.end()) ||
+             (touch.first == DEADS) && (touch.second == deads.end()))   
 	{
 //        assert(CheckEdge(v0, v2));
 //        assert(CheckEdge(v2, v1));
@@ -340,8 +346,8 @@ public:
         nb[v2]++;                 
         mesh.vert[v2].SetB();
 
-        std::list<FrontEdge>::iterator down = NewEdge(FrontEdge(v2, v1, v0, mesh.face.size()));
-        std::list<FrontEdge>::iterator up = NewEdge(FrontEdge(v0, v2, v1, mesh.face.size()));                        
+        std::list<FrontEdge>::iterator down = addNewEdge(FrontEdge(v2, v1, v0));
+        std::list<FrontEdge>::iterator up = addNewEdge(FrontEdge(v0, v2, v1));
   
         (*down).previous = up;
         (*up).next = down;
@@ -359,13 +365,22 @@ public:
 protected:
   void AddFace(int v0, int v1, int v2) {
     assert(v0 < (int)mesh.vert.size() && v1 < (int)mesh.vert.size() && v2 < (int)mesh.vert.size());  
-    FaceType face;
-    face.V(0) = &mesh.vert[v0];
-    face.V(1) = &mesh.vert[v1];
-    face.V(2) = &mesh.vert[v2];
-    ComputeNormalizedNormal(face);
-    mesh.face.push_back(face);
-    mesh.fn++;
+    FaceIterator fi = vcg::tri::Allocator<MESH>::AddFaces(mesh,1);
+    fi->ClearFlags();
+    fi->V(0) = &mesh.vert[v0];
+    fi->V(1) = &mesh.vert[v1];
+    fi->V(2) = &mesh.vert[v2];
+    ComputeNormalizedNormal(*fi);
+    if(tri::HasVFAdjacency(mesh))
+    {
+      for(int j=0;j<3;++j)
+      {
+        (*fi).VFp(j) = (*fi).V(j)->VFp();
+        (*fi).VFi(j) = (*fi).V(j)->VFi();
+        (*fi).V(j)->VFp() = &(*fi);
+        (*fi).V(j)->VFi() = j;
+      }
+    }
   }
     
   void AddVertex(VertexType &vertex) {
@@ -384,13 +399,13 @@ protected:
     nb.push_back(0);
   }
 
+  // Given a possible new edge v0-v1
+  // it checks that:
+  // 1) the orientation is consistent (all the faces with vertex v0 and v1 have the edge in the opposite way)
+  // 2) the edge appears at least once
 
   bool CheckEdge(int v0, int v1) {
     int tot = 0;
-    //HACK to speed up things until i can use a seach structure
-/*    int i = mesh.face.size() - 4*(front.size());
-    if(front.size() < 100) i = mesh.face.size() - 100;
-    if(i < 0) i = 0;*/
     VertexType *vv0 = &(mesh.vert[v0]);
     VertexType *vv1 = &(mesh.vert[v1]);    
     
@@ -410,7 +425,7 @@ protected:
   //front management:
 
   //Add a new FrontEdge to the back of the queue
-  std::list<FrontEdge>::iterator NewEdge(FrontEdge e) {                  
+  std::list<FrontEdge>::iterator addNewEdge(FrontEdge e) {
     return front.insert(front.end(), e);
   }     
   
@@ -427,7 +442,6 @@ protected:
 		tmp.previous->next = newe;
 		tmp.next->previous = newe;
 	}
-
   }
   
   void Erase(std::list<FrontEdge>::iterator e) {
