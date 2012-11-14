@@ -2,7 +2,8 @@
 #define BALL_PIVOTING_H
 
 #include "advancing_front.h"
-#include <vcg/space/index/grid_static_ptr.h>
+#include <vcg/space/index/kdtree/kdtree.h>
+
 #include <vcg/complex/algorithms/closest.h>
 
 /* Ball pivoting algorithm:
@@ -22,15 +23,13 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   typedef typename MESH::ScalarType     ScalarType;
   typedef typename MESH::VertexIterator     VertexIterator;
   typedef typename MESH::VertexType::CoordType   Point3x;
-  typedef GridStaticPtr<typename MESH::VertexType, typename MESH::ScalarType > StaticGrid;        
-  
+
   float radius;          //radius of the ball
   float min_edge;        //min length of an edge 
   float max_edge;        //min length of an edge 
   float max_angle;       //max angle between 2 faces (cos(angle) actually)  
   
  public:
-  ScalarType radi() { return radius; }        
 
 	// if radius ==0 an autoguess for the ball pivoting radius is attempted 
 	// otherwise the passed value (in absolute mesh units) is used.
@@ -58,57 +57,49 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     min_edge *= radius;
     max_edge *= radius;    
       
-    //enlarging the bbox for out-of-box queries
-		Box3<ScalarType> BPbbox=this->mesh.bbox;
-    BPbbox.Offset(4*radius);
-    grid.Set(this->mesh.vert.begin(), this->mesh.vert.end(), BPbbox);
-    
-    //mark visited points
-    std::vector<VertexType *> targets;      
-    std::vector<Point3x> points;      
-    std::vector<ScalarType> dists;
+    VertexConstDataWrapper<MESH> ww(this->mesh);
+    tree = new KdTree<float>(ww);
+    tree->setMaxNofNeighbors(16);
     
     usedBit = VertexType::NewBitFlag();
-    for(int i = 0; i < (int)this->mesh.vert.size(); i++)
-       this->mesh.vert[i].ClearUserBit(usedBit);
-       
+    UpdateFlags<MESH>::VertexClear(this->mesh,usedBit);
     UpdateFlags<MESH>::VertexClearV(this->mesh);    
     
     for(int i = 0; i < (int)this->mesh.face.size(); i++) {
       FaceType &f = this->mesh.face[i];
       if(f.IsD()) continue;
       for(int k = 0; k < 3; k++) {
-        f.V(k)->SetV();
-        int n = tri::GetInSphereVertex(this->mesh, grid, f.V(k)->P(), min_edge, targets, dists, points);
-        for(int t = 0; t < n; t++) {
-          targets[t]->SetUserBit(usedBit);
-          assert(targets[t]->IsUserBit(usedBit));
-        }
-        assert(f.V(k)->IsUserBit(usedBit));
+        Mark(f.V(k));
       }
     }    
   }
   
   ~BallPivoting() {
     VertexType::DeleteBitFlag(usedBit);
+    delete tree;
   }
   
   bool Seed(int &v0, int &v1, int &v2) {               
     //get a sphere of neighbours
     std::vector<VertexType *> targets;      
-    std::vector<Point3x> points;      
-    std::vector<ScalarType> dists;
     while(++last_seed < (int)(this->mesh.vert.size())) {
       VertexType &seed = this->mesh.vert[last_seed];
       if(seed.IsD() || seed.IsUserBit(usedBit)) continue;                      
       
       seed.SetUserBit(usedBit);       
 
-      int n = tri::GetInSphereVertex(this->mesh, grid, seed.P(), 2*radius, targets, dists, points);
-      if(n < 3) {      
-        continue;
-      }        
-      
+      tree->doQueryK(seed.P());
+      int nn = tree->getNofFoundNeighbors();
+      for(int i=0;i<nn;++i)
+      {
+        VertexType *vp = &this->mesh.vert[tree->getNeighborId(i)];
+        if(Distance(seed.P(),vp->cP()) > 2*radius) continue;
+        targets.push_back(vp);
+      }
+
+      int n = targets.size();
+      if(n<3) continue;
+
       bool success = true;
       //find the closest visited or boundary
       for(int i = 0; i < n; i++) {         
@@ -229,26 +220,22 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     
     // r is the radius of the thorus of all possible spheres passing throug v0 and v1
     ScalarType r = sqrt(radius*radius - axis_len/4);
+
     
-    std::vector<VertexType *> targets; // The vector of
-    std::vector<ScalarType> dists;    // never used.
-    std::vector<Point3x> points; // never used.
-    
-    tri::GetInSphereVertex(this->mesh, grid, middle, r + radius, targets, dists, points);
-          
-    if(targets.size() == 0) {
-      return -1; //this really would be strange but one never knows.
-    }
+    tree->doQueryK(middle);
+    int nn = tree->getNofFoundNeighbors();
+    if(nn==0) return -1;
     
     VertexType *candidate = NULL;
     ScalarType min_angle = M_PI;
     //
     // Loop over all the nearest vertexes and choose the best one according the ball pivoting strategy.
     //
-    for(size_t i = 0; i < targets.size(); i++) {
-      VertexType *v = targets[i];
-      if(v->IsD()) continue;
-      int vInd = tri::Index(this->mesh,v);
+    for (int i = 0; i < nn; i++) {
+      int vInd = tree->getNeighborId(i);
+      VertexType *v = &this->mesh.vert[vInd];
+      if(Distance(middle,v->cP()) > r + radius) continue;
+
       // this should always be true IsB => IsV , IsV => IsU
       if(v->IsB()) assert(v->IsV());
       if(v->IsV()) assert(v->IsUserBit(usedBit));
@@ -334,10 +321,9 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
  private:
   int last_seed;     //used for new seeds when front is empty
   int usedBit;       //use to detect if a vertex has been already processed.
-  Point3x baricenter;//used for the first seed.
-  
-  StaticGrid grid;       //lookup grid for points
-  
+  Point3x baricenter;//used for the first seed.  
+  KdTree<float> *tree;
+
     
   /* returns the sphere touching p0, p1, p2 of radius r such that
      the normal of the face points toward the center of the sphere */
@@ -404,12 +390,13 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   }          
   
   void Mark(VertexType *v) {
-    std::vector<VertexType *> targets;      
-    std::vector<Point3x> points;      
-    std::vector<ScalarType> dists;       
-    int n = tri::GetInSphereVertex(this->mesh, grid, v->P(), min_edge, targets, dists, points);
-    for(int t = 0; t < n; t++) 
-      targets[t]->SetUserBit(usedBit);
+    tree->doQueryK(v->cP());
+    int n = tree->getNofFoundNeighbors();
+    for (int i = 0; i < n; i++) {
+      VertexType *vp = &this->mesh.vert[tree->getNeighborId(i)];
+      if(Distance(v->cP(),vp->cP())<min_edge)
+        vp->SetUserBit(usedBit);
+    }
     v->SetV();
   }
 };

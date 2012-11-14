@@ -6,7 +6,6 @@
 #include <wrap/callback.h>
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/flag.h>
-#include <map>
 
 namespace vcg {
   namespace tri {
