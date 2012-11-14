@@ -231,7 +231,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     ScalarType r = sqrt(radius*radius - axis_len/4);
     
     std::vector<VertexType *> targets; // The vector of
-    std::vector<ScalarType> dists;    
+    std::vector<ScalarType> dists;    // never used.
     std::vector<Point3x> points; // never used.
     
     tri::GetInSphereVertex(this->mesh, grid, middle, r + radius, targets, dists, points);

@@ -76,9 +76,9 @@ template <class MESH> class AdvancingFront {
     CreateLoops();
   }
   virtual ~AdvancingFront() {}
-  virtual ScalarType radi() { return 0; }
                         
-  void BuildMesh(CallBackPos call = NULL, int interval = 512) {        
+  void BuildMesh(CallBackPos call = NULL, int interval = 512)
+  {
     float finalfacesext = mesh.vert.size() * 2.0f;
 	if(call) call(0, "Advancing front");
 	while(1) {
@@ -101,30 +101,10 @@ protected:
   enum ListID {FRONT,DEADS};
   typedef std::pair< ListID,std::list<FrontEdge>::iterator > ResultIterator;
   virtual bool Seed(int &v0, int &v1, int &v2) = 0;
-  virtual int Place(FrontEdge &e, ResultIterator &touch) = 0;  
+  // This function must find a vertex to be added to edge 'e'.
+  // return -1 in case of failure
+  virtual int Place(FrontEdge &e, ResultIterator &touch) = 0;
 
-  bool CheckFrontEdge(int v0, int v1) {
-    int tot = 0;
-    //HACK to speed up things until i can use a seach structure
-//    int i = mesh.face.size() - 4*(front.size());
-//    if(front.size() < 100) i = mesh.face.size() - 100;
-    int  i = 0;
-    if(i < 0) i = 0;
-    for(; i < (int)mesh.face.size(); i++) { 
-      FaceType &f = mesh.face[i];
-      for(int k = 0; k < 3; k++) {
-        if(v1== (int)f.V(k) && v0 == (int)f.V((k+1)%3)) ++tot;
-        else if(v0 == (int)f.V(k) && v1 == (int)f.V((k+1)%3)) { //orientation non constistent
-           return false;
-        }
-      }
-      if(tot >= 2) { //non manifold
-        return false;
-      }
-    }
-    return true;
-  }        
-  
   //create the FrontEdge loops from seed faces
   void CreateLoops()
   {
@@ -408,7 +388,20 @@ protected:
     int tot = 0;
     VertexType *vv0 = &(mesh.vert[v0]);
     VertexType *vv1 = &(mesh.vert[v1]);    
-    
+    if(tri::HasVFAdjacency(mesh))
+    {
+      face::VFIterator<FaceType> vfi(vv0);
+      for (;!vfi.End();++vfi)
+      {
+        FaceType *f = vfi.F();
+        for(int k = 0; k < 3; k++) {
+          if(vv0 == f->V0(k) && vv1 == f->V1(k))  //orientation non constistent
+             return false;
+          else if(vv1 == f->V0(k) && vv0 == f->V1(k)) ++tot;
+        }
+      }
+      return true;
+    }
     for(int i = 0; i < (int)mesh.face.size(); i++) { 
       FaceType &f = mesh.face[i];
       for(int k = 0; k < 3; k++) {
