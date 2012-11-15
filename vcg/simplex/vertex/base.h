@@ -146,7 +146,7 @@ public:
 
  template<class BoxType>
   void GetBBox( BoxType & bb ) const
-  {	  bb.Set(this->P());  }
+  {	  bb.Set(this->cP());  }
 
           };
 

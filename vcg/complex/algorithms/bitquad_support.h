@@ -70,7 +70,7 @@ public:
   typedef typename VertexType::ScalarType ScalarType;
   static void Apply( const VertexType &a,  const VertexType &b, ScalarType t, VertexType &res){
     /*assert (&a != &b);*/
-    res.P() = a.P()*(1-t) + b.P()*(t);
+    res.P() = a.cP()*(1-t) + b.cP()*(t);
     if (a.IsB()||b.IsB()) res.SetB();
   }
 };
@@ -639,7 +639,7 @@ static bool IsSingletFF(const FaceType& f, int wedge){
 
 // version that uses vertex valency
 static bool IsSinglet(const FaceType& f, int wedge){
-  return (GetValency( f.V(wedge) ) == 1) && (!f.V(wedge)->IsB() ) ;
+  return (GetValency( f.cV(wedge) ) == 1) && (!f.cV(wedge)->IsB() ) ;
 }
 
 static bool CollapseEdgeDirect(FaceType &f, int w0, MeshType& m){

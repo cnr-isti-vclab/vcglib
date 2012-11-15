@@ -65,7 +65,7 @@ namespace tri
     inline void operator () (const VertexType & v0, const VertexType & v1, const VertexType & v2, const ScalarType & a, const ScalarType & b, VertexType & r) const
     {
       // position
-      r.P() = v0.P() + (v1.P() - v0.P()) * a + (v2.P() - v0.P()) * b;
+      r.P() = v0.cP() + (v1.cP() - v0.cP()) * a + (v2.cP() - v0.cP()) * b;
 
       // normal
       if (tri::HasPerVertexNormal(m))
