@@ -46,108 +46,94 @@ namespace vertex {
 template <class TT> class EmptyCore: public TT {
 public:
   typedef int FlagType;
-  int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
+  int &Flags()       { assert(0); static int dummyflags(0);  return dummyflags; }
   int cFlags() const { assert(0); return 0; }
   static bool HasFlags()   { return false; }
 
   typedef vcg::Point3f CoordType;
   typedef CoordType::ScalarType      ScalarType;
-  CoordType &P() { static CoordType coord(0, 0, 0); return coord; }
-  CoordType cP() const { static CoordType coord(0, 0, 0);  assert(0); return coord; }
+  CoordType &P()       { assert(0); static CoordType coord(0, 0, 0); return coord; }
+  CoordType cP() const { assert(0); static CoordType coord(0, 0, 0);  assert(0); return coord; }
   static bool HasCoord()   { return false; }
 
   typedef vcg::Point3s NormalType;
-  NormalType &N() { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
-  NormalType cN() const { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
-  static bool HasNormal()   { return false; }
-  static bool HasNormalOcf()   { return false; }
+  NormalType &N()       { assert(0); static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  NormalType cN() const { assert(0); static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  static bool HasNormal()    { return false; }
 
   typedef float QualityType;
-  QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
-  const QualityType &cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+  QualityType &Q()       { assert(0); static QualityType dummyQuality(0); return dummyQuality; }
+  QualityType cQ() const { assert(0); static QualityType dummyQuality(0); return dummyQuality; }
   static bool HasQuality()   { return false; }
-  static bool HasQualityOcf()   { return false; }
-	static bool IsQualityEnabled(const typename TT::VertexType *)   { return false; }
 
   typedef vcg::Color4b ColorType;
-  ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
-  const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  ColorType &C()       { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
+  ColorType cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   static bool HasColor()   { return false; }
-  static bool HasColorOcf()   { return false; }
-	static bool IsColorEnabled(const typename TT::VertexType *) { return false; }
 
   typedef int  MarkType;
-  inline void InitIMark()    {  }
-  inline int cIMark()  const { assert(0); static int tmp=-1; return tmp;}
-  inline int &IMark()        { assert(0); static int tmp=-1; return tmp;}
+  void InitIMark()    {  }
+  int cIMark()  const { assert(0); static int tmp=-1; return tmp;}
+  int &IMark()        { assert(0); static int tmp=-1; return tmp;}
   static bool HasMark()   { return false; }
-  static bool HasMarkOcf()   { return false; }
-  static bool IsMarkEnabled(const typename TT::VertexType *)   { return false; }
 
   typedef ScalarType RadiusType;
-  RadiusType &R() { static ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
+  RadiusType &R()       { static ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
   RadiusType cR() const { static const ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
   static bool HasRadius()     { return false; }
-  static bool HasRadiusOcf()     { return false; }
-  static bool IsRadiusEnabled(const typename TT::VertexType *)  { return false; }
 
   typedef vcg::TexCoord2<float,1> TexCoordType;
-  TexCoordType &T() { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
-  const TexCoordType &cT() const { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
+  TexCoordType &T()       { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
+  TexCoordType cT() const { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
   static bool HasTexCoord()   { return false; }
-	static bool IsTexCoordEnabled(const typename TT::VertexType *)  { return false; }
 
-  typename TT::TetraPointer &VTp() { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
+  typename TT::TetraPointer &VTp()       { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
   typename TT::TetraPointer cVTp() const  { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
   int &VTi() { static int z = 0; return z; }
   static bool HasVTAdjacency() { return false; }
 
-  typename TT::FacePointer &VFp() { static typename TT::FacePointer fp=0;  assert(0); return fp; }
-  const typename TT::FacePointer cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
-  int &VFi() {static int z=0; assert(0); return z;}
-  int cVFi() const {static int z=0; assert(0); return z;}
+  typename TT::FacePointer &VFp()       { static typename TT::FacePointer fp=0;  assert(0); return fp; }
+  typename TT::FacePointer cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
+  int &VFi()       { static int z=0; assert(0); return z;}
+  int cVFi() const { static int z=0; assert(0); return z;}
   static bool HasVFAdjacency()   {   return false; }
 
-  typename TT::EdgePointer &VEp() { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
-  const typename TT::EdgePointer cVEp() const { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
-  int &VEi(){static int z=0; return z;}
+  typename TT::EdgePointer &VEp()       { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
+  typename TT::EdgePointer cVEp() const { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
+  int &VEi()       { static int z=0; return z;}
+  int cVEi() const { static int z=0; return z;}
   static bool HasVEAdjacency()   {   return false; }
 
-	typename TT::HEdgePointer &VHp() { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
-	const typename TT::HEdgePointer cVHp() const  { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
-	int &VHi(){static int z=0; return z;}
-	static bool HasVHAdjacency()   {   return false; }
-
+  typename TT::HEdgePointer &VHp()       { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
+  typename TT::HEdgePointer cVHp() const { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
+  int &VHi()       { static int z=0; return z;}
+  int cVHi() const { static int z=0; return z;}
+  static bool HasVHAdjacency()   {   return false; }
 
   typedef Point3f VecType;
-	typedef Point2f CurvatureType;
-	float &Kh() { static float dummy = 0.f; assert(0);return dummy;}
-  float &Kg() { static float dummy = 0.f; assert(0);return dummy;}
-  const float &cKh() const { static float dummy = 0.f; assert(0); return dummy;}
-  const float &cKg() const { static float dummy = 0.f; assert(0); return dummy;}
+  typedef Point2f CurvatureType;
+  float &Kh()       { static float dummy = 0.f; assert(0);return dummy;}
+  float &Kg()       { static float dummy = 0.f; assert(0);return dummy;}
+  float cKh() const { static float dummy = 0.f; assert(0); return dummy;}
+  float cKg() const { static float dummy = 0.f; assert(0); return dummy;}
 
-	typedef CurvatureDirBaseType<float> CurvatureDirType;
-  VecType &PD1(){static VecType v(0,0,0); assert(0);return v;}
-  VecType &PD2(){static VecType v(0,0,0); assert(0);return v;}
-  const VecType &cPD1() const {static VecType v(0,0,0); assert(0);return v;}
-  const VecType &cPD2() const {static VecType v(0,0,0); assert(0);return v;}
+  typedef CurvatureDirBaseType<float> CurvatureDirType;
+  VecType &PD1()       {static VecType v(0,0,0); assert(0);return v;}
+  VecType &PD2()       {static VecType v(0,0,0); assert(0);return v;}
+  VecType cPD1() const {static VecType v(0,0,0); assert(0);return v;}
+  VecType cPD2() const {static VecType v(0,0,0); assert(0);return v;}
 
-  ScalarType &K1(){ static ScalarType v = 0.0;assert(0);return v;}
-  ScalarType &K2(){ static ScalarType v = 0.0;assert(0);return v;}
-  const ScalarType &cK1() const {static ScalarType v = 0.0;assert(0);return v;}
-  const ScalarType &cK2()const  {static ScalarType v = 0.0;assert(0);return v;}
+  ScalarType &K1()       { static ScalarType v = 0.0;assert(0);return v;}
+  ScalarType &K2()       { static ScalarType v = 0.0;assert(0);return v;}
+  ScalarType cK1() const {static ScalarType v = 0.0;assert(0);return v;}
+  ScalarType cK2() const  {static ScalarType v = 0.0;assert(0);return v;}
 
   static bool HasCurvature()			{ return false; }
   static bool HasCurvatureDir()			{ return false; }
-  static bool HasCurvatureOcf()			{ return false; }
-  static bool HasCurvatureDirOcf()			{ return false; }
 
-  static bool IsCurvatureDirEnabled(const typename TT::VertexType *)  { return false; }
-  static bool IsCurvatureEnabled(const typename TT::VertexType *)  { return false; }
-
-  template < class LeftV>
-  void ImportData(const LeftV  & /*left*/ ) {
-//			TT::ImportData( left);
+  template < class RightValueType>
+  void ImportData(const RightValueType  & /*rVert*/ ) {
+//			TT::ImportData( rVert);
   }
   static void Name(std::vector<std::string> & name){TT::Name(name);}
 };
@@ -161,14 +147,13 @@ template <class A, class T> class Coord: public T {
 public:
   typedef A CoordType;
   typedef typename A::ScalarType      ScalarType;
-  CoordType &P() { return _coord; }
-  const CoordType &P() const { return _coord; }
-  const CoordType &cP() const { return _coord; }
+  inline CoordType &P()       { return _coord; }
+  inline CoordType cP() const { return _coord; }
 
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { if(LeftV::HasCoord()) P().Import(left.cP()); T::ImportData( left); }
+  template < class RightValueType>
+  void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasCoord()) P().Import(rVert.cP()); T::ImportData( rVert); }
   static bool HasCoord()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord"));T::Name(name);}
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord"));T::Name(name);}
 
 private:
   CoordType _coord;
@@ -189,17 +174,15 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class A, class T> class Normal: public T {
 public:
   typedef A NormalType;
-  NormalType &N() { return _norm; }
-  const NormalType &cN() const { return _norm; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ){
-		if(LeftV::HasNormal())
-			N().Import(left.cN());
-		T::ImportData( left);
-	}
+  inline NormalType &N()       { return _norm; }
+  inline NormalType cN() const { return _norm; }
+  template < class RightValueType>
+  void ImportData(const RightValueType  & rVert ){
+    if(RightValueType::HasNormal())  N().Import(rVert.cN());
+    T::ImportData( rVert);
+  }
   static bool HasNormal()   { return true; }
-//  static bool HasNormalOcf() { return false; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal"));T::Name(name);}
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal"));T::Name(name);}
 
 private:
   NormalType _norm;
@@ -224,15 +207,13 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 template <class T> class Mark: public T {
 public:
+  inline int cIMark() const { return _imark;}
+  inline int &IMark()       { return _imark;}
   static bool HasMark()      { return true; }
-  static bool HasMarkOcc()   { return true; }
   inline void InitIMark()    { _imark = 0; }
-  inline const int & cIMark() const { return _imark;}
-  inline int & IMark()       { return _imark;}
-  inline const int & IMark() const {return _imark;}
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { if(LeftV::HasMark())  IMark() = left.cIMark(); T::ImportData( left); }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
+  template < class RightValueType>
+  void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasMark())  IMark() = rVert.cIMark(); T::ImportData( rVert); }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
 
  private:
 	int _imark;
@@ -250,9 +231,9 @@ template <class A, class TT> class TexCoord: public TT {
 public:
   typedef A TexCoordType;
   TexCoordType &T() { return _t; }
-  const TexCoordType &cT()  const { return _t; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { if(LeftV::HasTexCoord())  T() = left.cT(); TT::ImportData( left); }
+  TexCoordType cT()  const { return _t; }
+    template < class RightValueType>
+    void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasTexCoord())  T() = rVert.cT(); TT::ImportData( rVert); }
   static bool HasTexCoord()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord"));TT::Name(name);}
 
@@ -278,14 +259,14 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 template <class T> class BitFlags:  public T {
 public:
-	BitFlags(){_flags=0;}
+  BitFlags(){_flags=0;}
   typedef int FlagType;
-  int &Flags() {return _flags; }
-  int cFlags() const {return _flags; }
-    template < class LeftV>
-    void ImportData(const LeftV  & left ) { if(LeftV::HasFlags()) Flags() = left.cFlags(); T::ImportData( left); }
+  inline int &Flags()       {return _flags; }
+  inline int cFlags() const {return _flags; }
+  template < class RightValueType>
+  void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasFlags()) Flags() = rVert.cFlags(); T::ImportData( rVert); }
   static bool HasFlags()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
 
 private:
   int  _flags;
@@ -302,13 +283,12 @@ template <class A, class T> class Color: public T {
 public:
   Color():_color(vcg::Color4b::White) {}
   typedef A ColorType;
-  ColorType &C() { return _color; }
-  const ColorType &C() const { return _color; }
-  const ColorType &cC() const { return _color; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { if(LeftV::HasColor()) C() = left.cC();  T::ImportData( left); }
+  inline ColorType &C()       { return _color; }
+  inline ColorType cC() const { return _color; }
+  template < class RightValueType>
+  void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasColor()) C() = rVert.cC();  T::ImportData( rVert); }
   static bool HasColor()   { return true; }
-	static bool IsColorEnabled(typename T::VertexType *)   { return true; }
+  static bool IsColorEnabled(typename T::VertexType *)   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
 
 private:
@@ -330,12 +310,12 @@ The Quality Component is a generic place for storing a float. The term 'quality'
 template <class A, class TT> class Quality: public TT {
 public:
   typedef A QualityType;
-  QualityType &Q() { return _quality; }
-  const QualityType & cQ() const {return _quality; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { if(LeftV::HasQuality()) Q() = left.cQ(); TT::ImportData( left); }
+  inline QualityType &Q()       { return _quality; }
+  inline QualityType cQ() const {return _quality; }
+  template < class RightValueType>
+  void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasQuality()) Q() = rVert.cQ(); TT::ImportData( rVert); }
   static bool HasQuality()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));TT::Name(name);}
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));TT::Name(name);}
 
 private:
   QualityType _quality;
@@ -358,19 +338,19 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
       */
   template <class A, class TT> class Curvature: public TT {
   public:
-          typedef Point2<A> CurvatureType;
-          typedef typename CurvatureType::ScalarType ScalarType;
-          ScalarType  &Kh(){ return _hk[0];}
-          ScalarType  &Kg(){ return _hk[1];}
-          const ScalarType &cKh() const { return  _hk[0];}
-          const ScalarType &cKg() const { return  _hk[1];}
+    typedef Point2<A> CurvatureType;
+    typedef typename CurvatureType::ScalarType ScalarType;
+    ScalarType &Kh()       { return _hk[0];}
+    ScalarType &Kg()       { return _hk[1];}
+    ScalarType cKh() const { return _hk[0];}
+    ScalarType cKg() const { return _hk[1];}
 
-          static bool HasCurvature()   { return true; }
-          static bool IsCurvatureEnabled(typename TT::VertexType *)   { return true; }
-          static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvature"));TT::Name(name);}
+    static bool HasCurvature()   { return true; }
+    static bool IsCurvatureEnabled(typename TT::VertexType *)   { return true; }
+    static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvature"));TT::Name(name);}
 
   private:
-          Point2<A> _hk;
+    Point2<A> _hk;
   };
 
 
@@ -384,25 +364,25 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 /*-------------------------- Curvature Direction ----------------------------------*/
 
 
-template <class TT> class EmptyCurvatureDir: public TT {
-public:
-  typedef CurvatureDirBaseType<float> CurvatureDirType;
+  template <class TT> class EmptyCurvatureDir: public TT {
+  public:
+    typedef CurvatureDirBaseType<float> CurvatureDirType;
 
-	Point3f &PD1(){static Point3f dummy(0,0,0); return dummy;}
-	Point3f &PD2(){static Point3f dummy(0,0,0); return dummy;}
-	const Point3f &cPD1() const {static Point3f dummy(0,0,0); return dummy;}
-	const Point3f &cPD2()const {static Point3f dummy(0,0,0); return dummy;}
+    Point3f &PD1()       { static Point3f dummy(0,0,0); return dummy;}
+    Point3f &PD2()       { static Point3f dummy(0,0,0); return dummy;}
+    Point3f cPD1() const { static Point3f dummy(0,0,0); return dummy;}
+    Point3f cPD2() const { static Point3f dummy(0,0,0); return dummy;}
 
-	float &K1(){ static float dummy(0);assert(0);return dummy;}
-	float &K2(){ static float dummy(0);assert(0);return dummy;}
-	const float &cK1()const { static float dummy(0);assert(0);return dummy;}
-	const float &cK2()const { static float dummy(0);assert(0);return dummy;}
+    float &K1()       { static float dummy(0);assert(0);return dummy;}
+    float &K2()       { static float dummy(0);assert(0);return dummy;}
+    float cK1() const { static float dummy(0);assert(0);return dummy;}
+    float cK2() const { static float dummy(0);assert(0);return dummy;}
 
-  static bool HasCurvatureDir()   { return false; }
-	template < class LeftV>
-		void ImportData(const LeftV  & left ) { TT::ImportData( left); }
-	static void Name(std::vector<std::string> & name){TT::Name(name);}
-};
+    static bool HasCurvatureDir()   { return false; }
+    template < class RightValueType>
+    void ImportData(const RightValueType  & rVert ) { TT::ImportData( rVert); }
+    static void Name(std::vector<std::string> & name){TT::Name(name);}
+  };
 
   /*! \brief \em Component: Per vertex \b curvature \b directions
     This component keep the principal curvature directions. Used by some of the algorithms of vcg::tri::UpdateCurvature to store the computed curvatures.
@@ -423,13 +403,13 @@ public:
 	ScalarType &K2(){ return _curv.k2;}
 	const ScalarType &cK1() const {return _curv.k1;}
 	const ScalarType &cK2()const  {return _curv.k2;}
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) {
-	  if(LeftV::HasCurvatureDir()) {
-		PD1() = left.cPD1(); PD2() = left.cPD2();
-		K1()  = left.cK1();  K2()  = left.cK2();
+	template < class RightValueType>
+	void ImportData(const RightValueType  & rVert ) {
+	  if(RightValueType::HasCurvatureDir()) {
+		PD1() = rVert.cPD1(); PD2() = rVert.cPD2();
+		K1()  = rVert.cK1();  K2()  = rVert.cK2();
 	  }
-	  TT::ImportData( left);
+	  TT::ImportData( rVert);
 	}
 
 	static bool HasCurvatureDir()   { return true; }
@@ -452,19 +432,19 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 
     This component keep a floating point value meant to be the average distance from the surrounding vertices. Used in point clouds by some of the point splatting and MLS surface algorithms.
       */
-template <class A, class TT> class Radius: public TT {
-public:
-  typedef A RadiusType;
-  RadiusType &R() { return _radius; }
-  const RadiusType & cR() const {return _radius; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { if(LeftV::HasRadius()) R() = left.cR(); TT::ImportData( left); }
-  static bool HasRadius()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Radius"));TT::Name(name);}
+  template <class A, class TT> class Radius: public TT {
+  public:
+    typedef A RadiusType;
+    RadiusType &R()       { return _radius; }
+    RadiusType cR() const {return _radius; }
+    template < class RightValueType>
+    void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasRadius()) R() = rVert.cR(); TT::ImportData( rVert); }
+    static bool HasRadius()   { return true; }
+    static void Name(std::vector<std::string> & name){name.push_back(std::string("Radius"));TT::Name(name);}
 
-private:
-  RadiusType _radius;
-};
+  private:
+    RadiusType _radius;
+  };
 
 template <class TT> class Radiusf: public Radius<float, TT> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Radiusf"));TT::Name(name);}
@@ -482,13 +462,13 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class T> class VEAdj: public T {
 public:
   VEAdj(){_ep=0;_zp=-1;}
-  typename T::EdgePointer &VEp() {return _ep; }
-  typename T::EdgePointer const cVEp() const {return _ep; }
-  int &VEi() {return _zp; }
-  template < class LeftV>
-  void ImportData(const LeftV  & left ) {  T::ImportData( left); }
+  typename T::EdgePointer &VEp()       {return _ep; }
+  typename T::EdgePointer cVEp() const {return _ep; }
+  int &VEi()       {return _zp; }
+  int cVEi() const {return _zp; }
+  template < class RightValueType>
+  void ImportData(const RightValueType  & rVert ) {  T::ImportData( rVert); }
   static bool HasVEAdjacency()   {   return true; }
-  static bool HasVEAdjacencyOcc()   {   return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("VEAdj"));T::Name(name);}
 
 private:
@@ -506,36 +486,34 @@ Note that if you use this component it is expected that on the Face you use also
   \sa iterators
   */
 
-template <class T> class VFAdj: public T {
-public:
-  VFAdj(){_fp=0;_zp=-1;}
-  typename T::FacePointer &VFp() {return _fp; }
-	typename T::FacePointer const cVFp() const  {return _fp; }
-  int &VFi() {return _zp; }
-  int const &cVFi() const {return _zp; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { T::ImportData( left); }
-  static bool HasVFAdjacency()   {   return true; }
-  static bool HasVFAdjacencyOcc()   {   return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdj"));T::Name(name);}
+  template <class T> class VFAdj: public T {
+  public:
+    VFAdj(){_fp=0;_zp=-1;}
+    typename T::FacePointer &VFp()        { return _fp; }
+    typename T::FacePointer cVFp() const  { return _fp; }
+    int &VFi()       { return _zp; }
+    int cVFi() const { return _zp; }
+    template < class RightValueType>
+    void ImportData(const RightValueType  & rVert ) { T::ImportData( rVert); }
+    static bool HasVFAdjacency()   {   return true; }
+    static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdj"));T::Name(name);}
 
-private:
-  typename T::FacePointer _fp ;
-  int _zp ;
-};
+  private:
+    typename T::FacePointer _fp ;
+    int _zp ;
+  };
 
 /*----------------------------- VHADJ ------------------------------*/
 
 template <class T> class VHAdj: public T {
 public:
 	VHAdj(){_hp=0;_zp=-1;}
-	typename T::HEdgePointer &VHp() {return _hp; }
-	typename T::HEdgePointer cVHp() {return _hp; }
+	typename T::HEdgePointer &VHp()       {return _hp; }
+	typename T::HEdgePointer cVHp() const {return _hp; }
 	int &VHi() {return _zp; }
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) {  T::ImportData( left); }
+	template < class RightValueType>
+	void ImportData(const RightValueType  & rVert ) {  T::ImportData( rVert); }
 	static bool HasVHAdjacency()   {   return true; }
-	static bool HasVHAdjacencyOcc()   {   return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("VHAdj"));T::Name(name);}
 
 private:
@@ -548,11 +526,10 @@ private:
 template <class T> class VTAdj: public T {
 public:
 	VTAdj() { _tp = 0; _zp=-1;}
-	typename T::TetraPointer &VTp() { return _tp; }
-	typename T::TetraPointer cVTp() { return _tp; }
+	typename T::TetraPointer &VTp()       { return _tp; }
+	typename T::TetraPointer cVTp() const { return _tp; }
 	int &VTi() {return _zp; }
 	static bool HasVTAdjacency() { return true; }
-	static bool HasVTAdjacencyOcc()   {   return true; }
 	static void Name( std::vector< std::string > & name ) { name.push_back( std::string("VTAdj") ); T::Name(name); }
 
 private:

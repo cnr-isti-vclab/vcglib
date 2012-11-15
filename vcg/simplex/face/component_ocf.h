@@ -390,12 +390,7 @@ public:
 }; // end class vector_ocf
 
 
-//template<>	void EnableAttribute<typename VALUE_TYPE::NormalType>(){	NormalEnabled=true;}
-
-/*------------------------- COORD -----------------------------------------*/ 
 /*----------------------------- VFADJ ------------------------------*/ 
-
-
 template <class T> class VFAdjOcf: public T {
 public:
   typename T::FacePointer &VFp(const int j) {
@@ -422,83 +417,75 @@ public:
 
 private:
 };
+
 /*----------------------------- FFADJ ------------------------------*/ 
-
-
 template <class T> class FFAdjOcf: public T {
 public:
   typename T::FacePointer &FFp(const int j) {
-    assert((*this).Base().FFAdjacencyEnabled); 
-    return (*this).Base().AF[(*this).Index()]._fp[j]; 
+    assert((*this).Base().FFAdjacencyEnabled);
+    return (*this).Base().AF[(*this).Index()]._fp[j];
   }
 
-  typename T::FacePointer const  FFp(const int j) const { return cFFp(j);}
-  typename T::FacePointer const cFFp(const int j) const {
-    if(! (*this).Base().FFAdjacencyEnabled ) return 0; 
-    else return (*this).Base().AF[(*this).Index()]._fp[j]; 
+  typename T::FacePointer cFFp(const int j) const {
+    if(! (*this).Base().FFAdjacencyEnabled ) return 0;
+    else return (*this).Base().AF[(*this).Index()]._fp[j];
   }
 
-  char &FFi(const int j) {
-    assert((*this).Base().FFAdjacencyEnabled); 
-    return (*this).Base().AF[(*this).Index()]._zp[j]; 
+  char &FFi(const int j)       {
+    assert((*this).Base().FFAdjacencyEnabled);
+    return (*this).Base().AF[(*this).Index()]._zp[j];
   }
   char cFFi(const int j) const {
-    assert((*this).Base().FFAdjacencyEnabled); 
-    return (*this).Base().AF[(*this).Index()]._zp[j]; 
+    assert((*this).Base().FFAdjacencyEnabled);
+    return (*this).Base().AF[(*this).Index()]._zp[j];
   }
-	
-	typename T::FacePointer        &FFp1( const int j )       { return FFp((j+1)%3);}
-	typename T::FacePointer        &FFp2( const int j )       { return FFp((j+2)%3);}
-	typename T::FacePointer  const  FFp1( const int j ) const { return FFp((j+1)%3);}
-	typename T::FacePointer  const  FFp2( const int j ) const { return FFp((j+2)%3);}
-	
-	typename T::FacePointer   &		Neigh( const int j )		{ return FFp(j);}
-	typename T::FacePointer  const  cNeigh( const int j ) const { return cFFp(j);}
-	unsigned int SizeNeigh(){return 3;}
 
-	template <class LeftF>
-	void ImportData(const LeftF & leftF){
-		T::ImportData(leftF);
-	}
+  typename T::FacePointer  &FFp1( const int j )       { return FFp((j+1)%3);}
+  typename T::FacePointer  &FFp2( const int j )       { return FFp((j+2)%3);}
+  typename T::FacePointer  cFFp1( const int j ) const { return FFp((j+1)%3);}
+  typename T::FacePointer  cFFp2( const int j ) const { return FFp((j+2)%3);}
+
+  typename T::FacePointer  &Neigh( const int j )		{ return FFp(j);}
+  typename T::FacePointer  cNeigh( const int j ) const { return cFFp(j);}
+  unsigned int SizeNeigh(){return 3;}
+
+  template <class LeftF>
+  void ImportData(const LeftF & leftF){
+    T::ImportData(leftF);
+  }
   static bool HasFFAdjacency()   {   return true; }
   static bool HasFFAdjacencyOcf()   { return true; }
-
-private:
 };
 
 /*------------------------- Normal -----------------------------------------*/ 
-
 template <class A, class T> class NormalOcf: public T {
 public:
   typedef A NormalType;
   static bool HasFaceNormal()   { return true; }
   static bool HasFaceNormalOcf()   { return true; }
 
-  NormalType &N() { 
+  NormalType &N()       {
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-    assert((*this).Base().NormalEnabled); 
+    assert((*this).Base().NormalEnabled);
     return (*this).Base().NV[(*this).Index()];  }
-  const NormalType &cN() const { 
+  NormalType cN() const {
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-    assert((*this).Base().NormalEnabled); 
+    assert((*this).Base().NormalEnabled);
     return (*this).Base().NV[(*this).Index()];  }
 
-	template <class LeftF>
-	void ImportData(const LeftF & leftF){
-		if((*this).Base().NormalEnabled && leftF.Base().NormalEnabled)
-			N() = leftF.cN(); 
-		T::ImportData(leftF);
-	}
-
+  template <class LeftF>
+  void ImportData(const LeftF & leftF){
+    if((*this).Base().NormalEnabled && LeftF::HasNormal())
+      N() = leftF.cN();
+    T::ImportData(leftF);
+  }
 };
 
 template <class T> class Normal3sOcf: public NormalOcf<vcg::Point3s, T> {};
 template <class T> class Normal3fOcf: public NormalOcf<vcg::Point3f, T> {};
 template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {};
 
-
 /*------------------------- CurvatureDir -----------------------------------------*/
-
 template <class S>
 struct CurvatureDirOcfBaseType{
         typedef Point3<S> VecType;
@@ -510,64 +497,64 @@ struct CurvatureDirOcfBaseType{
 
 template <class A, class T> class CurvatureDirOcf: public T {
 public:
-    typedef A CurvatureDirType;
-    typedef typename CurvatureDirType::VecType VecType;
-    typedef typename CurvatureDirType::ScalarType ScalarType;
+  typedef A CurvatureDirType;
+  typedef typename CurvatureDirType::VecType VecType;
+  typedef typename CurvatureDirType::ScalarType ScalarType;
 
   static bool HasCurvatureDir()   { return true; }
-  static bool HaCurvatureDirOcf()   { return true; }
+  static bool HasCurvatureDirOcf()   { return true; }
 
-  VecType &PD1(){
-                  assert((*this).Base().CurvatureDirEnabled);
-                  return (*this).Base().CDV[(*this).Index()].max_dir;
-                }
+  VecType &PD1()       {
+    assert((*this).Base().CurvatureDirEnabled);
+    return (*this).Base().CDV[(*this).Index()].max_dir;
+  }
 
-  VecType &PD2(){
-                  assert((*this).Base().CurvatureDirEnabled);
-                  return (*this).Base().CDV[(*this).Index()].min_dir;
-                }
+  VecType &PD2()       {
+    assert((*this).Base().CurvatureDirEnabled);
+    return (*this).Base().CDV[(*this).Index()].min_dir;
+  }
 
-  const VecType &cPD1() const {
-                  assert((*this).Base().CurvatureDirEnabled);
-                  return (*this).Base().CDV[(*this).Index()].max_dir;
-                }
+  VecType cPD1() const {
+    assert((*this).Base().CurvatureDirEnabled);
+    return (*this).Base().CDV[(*this).Index()].max_dir;
+  }
 
-  const VecType &cPD2() const {
-                  assert((*this).Base().CurvatureDirEnabled);
-                  return (*this).Base().CDV[(*this).Index()].min_dir;
-                }
+  VecType cPD2() const {
+    assert((*this).Base().CurvatureDirEnabled);
+    return (*this).Base().CDV[(*this).Index()].min_dir;
+  }
 
-  ScalarType &K1(){
-                  // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-                  assert((*this).Base().NormalEnabled);
-                  return (*this).Base().CDV[(*this).Index()].k1;
-                  }
-  ScalarType &K2(){
-                  // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-                  assert((*this).Base().NormalEnabled);
-                  return (*this).Base().CDV[(*this).Index()].k2;
-                  }
-  const ScalarType &cK1() const {
-                  // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-                  assert((*this).Base().NormalEnabled);
-                  return (*this).Base().CDV[(*this).Index()].k1;
-                  }
-  const ScalarType &cK2() const {
-                  // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-                  assert((*this).Base().NormalEnabled);
-                  return (*this).Base().CDV[(*this).Index()].k2;
-                  }
+  ScalarType &K1()       {
+    // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
+    assert((*this).Base().NormalEnabled);
+    return (*this).Base().CDV[(*this).Index()].k1;
+  }
+  ScalarType &K2()       {
+    // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
+    assert((*this).Base().NormalEnabled);
+    return (*this).Base().CDV[(*this).Index()].k2;
+  }
+  ScalarType cK1() const {
+    // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
+    assert((*this).Base().NormalEnabled);
+    return (*this).Base().CDV[(*this).Index()].k1;
+  }
+  ScalarType cK2() const {
+    // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
+    assert((*this).Base().NormalEnabled);
+    return (*this).Base().CDV[(*this).Index()].k2;
+  }
 
 
-        template <class LeftF>
-        void ImportData(const LeftF & leftF){
-                if((*this).Base().CurvatureDirEnabled && leftF.Base().CurvatureDirEnabled)
-                        PD1() = leftF.cPD1();
-                        PD2() = leftF.cPD2();
-                        K1() = leftF.cK1();
-                        K2() = leftF.cK2();
-                T::ImportData(leftF);
-        }
+  template <class LeftF>
+  void ImportData(const LeftF & leftF){
+    if((*this).Base().CurvatureDirEnabled && LeftF::HasCurvatureDir())
+      PD1() = leftF.cPD1();
+    PD2() = leftF.cPD2();
+    K1() = leftF.cK1();
+    K2() = leftF.cK2();
+    T::ImportData(leftF);
+  }
 
 };
 
@@ -579,30 +566,24 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 };
 
 ///*-------------------------- QUALITY ----------------------------------*/ 
-
 template <class A, class T> class QualityOcf: public T {
 public:
   typedef A QualityType;
-  QualityType &Q() { 
-    assert((*this).Base().QualityEnabled); 
-    return (*this).Base().QV[(*this).Index()]; 
+  QualityType &Q()        {
+    assert((*this).Base().QualityEnabled);
+    return (*this).Base().QV[(*this).Index()];
   }
-  const QualityType  Q() const  { 
-    assert((*this).Base().QualityEnabled); 
-    return (*this).Base().QV[(*this).Index()]; 
-  }
-  const QualityType  cQ() const  { 
-    assert((*this).Base().QualityEnabled); 
-    return (*this).Base().QV[(*this).Index()]; 
+  QualityType cQ() const  {
+    assert((*this).Base().QualityEnabled);
+    return (*this).Base().QV[(*this).Index()];
   }
 
-	template <class LeftF>
-	void ImportData(const LeftF & leftF){
-		//if((*this).Base().QualityEnabled && leftF.Base().QualityEnabled)// WRONG I do not know anything about leftV!
-		if((*this).Base().QualityEnabled)
-				Q() = leftF.cQ(); 
-		T::ImportData(leftF);
-	}
+  template <class LeftF>
+  void ImportData(const LeftF & leftF){
+    if((*this).Base().QualityEnabled && LeftF::HasFaceQuality())
+      Q() = leftF.cQ();
+    T::ImportData(leftF);
+  }
   static bool HasFaceQuality()   { return true; }
   static bool HasFaceQualityOcf()   { return true; }
 };
@@ -610,30 +591,24 @@ public:
 template <class T> class QualityfOcf: public QualityOcf<float, T> {};
 
 ///*-------------------------- COLOR ----------------------------------*/ 
-
 template <class A, class T> class ColorOcf: public T {
 public:
   typedef A ColorType;
-  ColorType &C() { 
-    assert((*this).Base().ColorEnabled); 
-    return (*this).Base().CV[(*this).Index()]; 
+  ColorType &C()        {
+    assert((*this).Base().ColorEnabled);
+    return (*this).Base().CV[(*this).Index()];
   }
-	const ColorType  C() const  { 
-    assert((*this).Base().ColorEnabled); 
-    return (*this).Base().CV[(*this).Index()]; 
-  }
-  const ColorType  cC() const  { 
-    assert((*this).Base().ColorEnabled); 
-    return (*this).Base().CV[(*this).Index()]; 
+  ColorType cC() const  {
+    assert((*this).Base().ColorEnabled);
+    return (*this).Base().CV[(*this).Index()];
   }
 
-	template <class LeftF>
-	void ImportData(const LeftF & leftF){
-		//if((*this).Base().ColorEnabled && leftF.Base().ColorEnabled)// WRONG I do not know anything about leftV!
-		if((*this).Base().ColorEnabled )
-				C() = leftF.cC(); 
-		T::ImportData(leftF);
-	}
+  template <class LeftF>
+  void ImportData(const LeftF & leftF){
+    if((*this).Base().ColorEnabled && LeftF::HasFaceColor())
+      C() = leftF.cC();
+    T::ImportData(leftF);
+  }
   static bool HasFaceColor()   { return true; }
   static bool HasFaceColorOcf()   { return true; }
 };
@@ -641,46 +616,42 @@ public:
 template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
 
 ///*-------------------------- MARK  ----------------------------------*/ 
-
 template <class T> class MarkOcf: public T {
 public:
-  inline int & IMark()       { 
-    assert((*this).Base().MarkEnabled); 
-    return (*this).Base().MV[(*this).Index()]; 
+  inline int &IMark()       {
+    assert((*this).Base().MarkEnabled);
+    return (*this).Base().MV[(*this).Index()];
   }
- 
-  inline int IMark() const   { 
-    assert((*this).Base().MarkEnabled); 
-    return (*this).Base().MV[(*this).Index()]; 
+  inline int cIMark() const {
+    assert((*this).Base().MarkEnabled);
+    return (*this).Base().MV[(*this).Index()];
   } ;
 
-	template <class LeftF>
-	void ImportData(const LeftF & leftF){
-		//if((*this).Base().MarkEnabled && leftF.Base().MarkEnabled)// WRONG I do not know anything about leftV!
-		if((*this).Base().MarkEnabled)
-			IMark() = leftF.IMark(); 
-		T::ImportData(leftF);
-	}
+  template <class LeftF>
+  void ImportData(const LeftF & leftF){
+    if((*this).Base().MarkEnabled && LeftF::HasFaceMark())
+      IMark() = leftF.cIMark();
+    T::ImportData(leftF);
+  }
   static bool HasFaceMark()   { return true; }
   static bool HasFaceMarkOcf()   { return true; }
   inline void InitIMark()    { IMark() = 0; }
 };
 
 ///*-------------------------- WEDGE TEXCOORD  ----------------------------------*/ 
-
 template <class A, class TT> class WedgeTexCoordOcf: public TT {
 public:
   WedgeTexCoordOcf(){ }
   typedef A TexCoordType;
-  TexCoordType &WT(const int i)              { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
-  TexCoordType const &cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
-	template <class LeftF>
-	void ImportData(const LeftF & leftF){
-		//if(this->Base().WedgeTexEnabled && leftF.Base().WedgeTexEnabled)  // WRONG I do not know anything about leftV!
-		if(this->Base().WedgeTexEnabled)
-		{ WT(0) = leftF.cWT(0); WT(1) = leftF.cWT(1); WT(2) = leftF.cWT(2); }
-		TT::ImportData(leftF);
-	}
+  TexCoordType &WT(const int i)       { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
+  TexCoordType cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
+  template <class LeftF>
+  void ImportData(const LeftF & leftF){
+    //if(this->Base().WedgeTexEnabled && leftF.Base().WedgeTexEnabled)  // WRONG I do not know anything about leftV!
+    if(this->Base().WedgeTexEnabled && LeftF::HasWedgeTexCoord())
+    { WT(0) = leftF.cWT(0); WT(1) = leftF.cWT(1); WT(2) = leftF.cWT(2); }
+    TT::ImportData(leftF);
+  }
   static bool HasWedgeTexCoord()   { return true; }
   static bool HasWedgeTexCoordOcf()   { return true; }
 };
@@ -688,20 +659,18 @@ public:
 template <class T> class WedgeTexCoordfOcf: public WedgeTexCoordOcf<TexCoord2<float,1>, T> {};
 
 ///*-------------------------- WEDGE COLOR  ----------------------------------*/
-
 template <class A, class TT> class WedgeColorOcf: public TT {
 public:
   WedgeColorOcf(){ }
   typedef A ColorType;
   ColorType &WC(const int i)              { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
   const ColorType cWC(const int i) const { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
-	template <class LeftF>
-	void ImportData(const LeftF & leftF){
-		//if(this->Base().WedgeColorEnabled && leftF.Base().WedgeColorEnabled)  // WRONG I do not know anything about leftV!
-		if(this->Base().WedgeColorEnabled)
-		{ WC(0) = leftF.cWC(0); WC(1) = leftF.cWC(1); WC(2) = leftF.cWC(2); }
-		TT::ImportData(leftF);
-	}
+  template <class LeftF>
+  void ImportData(const LeftF & leftF){
+    if(this->Base().WedgeColorEnabled && LeftF::HasWedgeColor())
+    { WC(0) = leftF.cWC(0); WC(1) = leftF.cWC(1); WC(2) = leftF.cWC(2); }
+    TT::ImportData(leftF);
+  }
   static bool HasWedgeColor()   { return true; }
   static bool HasWedgeColorOcf()   { return true; }
 };
@@ -709,20 +678,18 @@ public:
 template <class T> class WedgeColor4bOcf: public WedgeColorOcf<vcg::Color4b, T> {};
 
 ///*-------------------------- WEDGE NORMAL ----------------------------------*/
-
 template <class A, class TT> class WedgeNormalOcf: public TT {
 public:
   WedgeNormalOcf(){ }
   typedef A NormalType;
   NormalType &WN(const int i)              { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
   NormalType const &cWN(const int i) const { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
-	template <class LeftF>
-	void ImportData(const LeftF & leftF){
-		//if(this->Base().WedgeNormalEnabled && leftF.Base().WedgeNormalEnabled)  // WRONG I do not know anything about leftV!
-		if(this->Base().WedgeNormalEnabled)
-		{ WN(0) = leftF.cWN(0); WN(1) = leftF.cWN(1); WN(2) = leftF.cWN(2); }
-		TT::ImportData(leftF);
-	}
+  template <class LeftF>
+  void ImportData(const LeftF & leftF){
+    if(this->Base().WedgeNormalEnabled && LeftF::HasWedgeNormal())
+    { WN(0) = leftF.cWN(0); WN(1) = leftF.cWN(1); WN(2) = leftF.cWN(2); }
+    TT::ImportData(leftF);
+  }
   static bool HasWedgeNormal()   { return true; }
   static bool HasWedgeNormalOcf()   { return true; }
 };
@@ -732,38 +699,39 @@ template <class T> class WedgeNormal3fOcf: public WedgeNormalOcf<vcg::Point3f, T
 template <class T> class WedgeNormal3dOcf: public WedgeNormalOcf<vcg::Point3d, T> {};
 
 ///*-------------------------- InfoOpt  ----------------------------------*/
-
 template < class T> class InfoOcf: public T {
 public:
-    // You should never ever try to copy a vertex that has OCF stuff.
-		// use ImportData function.
-    inline InfoOcf &operator=(const InfoOcf & /*other*/) {
-        assert(0); return *this;
-    }
+  // You should never ever try to copy a vertex that has OCF stuff.
+  // use ImportData function.
+  inline InfoOcf &operator=(const InfoOcf & /*other*/) {
+    assert(0); return *this;
+  }
 
 
   vector_ocf<typename T::FaceType> &Base() const { return *_ovp;}
 
-	template <class LeftF>
-	void ImportData(const LeftF & leftF){T::ImportData(leftF);}
+  template <class LeftF>
+  void ImportData(const LeftF & leftF){T::ImportData(leftF);}
 
-  static bool HasFaceColorOcf()   { return false; }
-  static bool HasFaceNormalOcf()   { return false; }
-  static bool HasFaceCurvatureDirOcf()   { return false; }
-  static bool HasFaceMarkOcf()   { return false; }
-  static bool HasWedgeTexCoordOcf()   { return false; }
-  static bool HasFFAdjacencyOcf()   { return false; }
-  static bool HasVFAdjacencyOcf()   { return false; }
-  //static bool HasFaceQualityOcf()   { return false; }
+  static bool HasFaceColorOcf()        { return false; }
+  static bool HasFaceQualityOcf()        { return false; }
+  static bool HasFaceNormalOcf()       { return false; }
+  static bool HasFaceCurvatureDirOcf() { return false; }
+  static bool HasFaceMarkOcf()         { return false; }
+  static bool HasWedgeTexCoordOcf()    { return false; }
+  static bool HasWedgeColorOcf()       { return false; }
+  static bool HasWedgeNormalOcf()      { return false; }
+  static bool HasFFAdjacencyOcf()      { return false; }
+  static bool HasVFAdjacencyOcf()      { return false; }
 
   inline int Index() const {
-    typename T::FaceType const *tp=static_cast<typename T::FaceType const *>(this); 
+    typename T::FaceType const *tp=static_cast<typename T::FaceType const *>(this);
     int tt2=tp- &*(_ovp->begin());
     return tt2;
-  } 
+  }
 public:
   // ovp Optional Vector Pointer
-  // Pointer to the base vector where each face element is stored. 
+  // Pointer to the base vector where each face element is stored.
   // used to access to the vectors of the other optional members.
   vector_ocf<typename T::FaceType> *_ovp;
 };
