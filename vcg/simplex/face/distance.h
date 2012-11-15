@@ -69,21 +69,21 @@ namespace vcg {
 			b0 = f.cEdge(1)[1]*(p[2] - f.cP(1)[2]) - f.cEdge(1)[2]*(p[1] - f.cP(1)[1]);
 			if(b0<=0)
 			{
-				b0 = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
+				b0 = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
 				if(dist>b0) { dist = b0; return true; }
 				else return false;
 			}
 			b1 = f.cEdge(2)[1]*(p[2] - f.cP(2)[2]) - f.cEdge(2)[2]*(p[1] - f.cP(2)[1]);
 			if(b1<=0)
 			{
-				b1 = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+				b1 = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
 				if(dist>b1) { dist = b1; return true; }
 				else return false;
 			}
 			b2 = f.cEdge(0)[1]*(p[2] - f.cP(0)[2]) - f.cEdge(0)[2]*(p[1] - f.cP(0)[1]);
 			if(b2<=0)
 			{
-				b2 = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+				b2 = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
@@ -92,10 +92,10 @@ namespace vcg {
 			if( (b=std::min(b0,std::min(b1,b2)) ) < EPS*DoubleArea(f))
 			{
 			  ScalarType bt;
-			  if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
-			  else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+			  if(b==b0) 	    bt = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
+			  else if(b==b1) 	bt = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
 			  else {          assert(b==b2);
-				bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+				bt = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 			  }
 			  if(dist>bt) { dist = bt; return true; }
 			  else return false;
@@ -106,31 +106,31 @@ namespace vcg {
 			b0 = f.cEdge(1)[2]*(p[0] - f.cP(1)[0]) - f.cEdge(1)[0]*(p[2] - f.cP(1)[2]);
 			if(b0<=0)
 			{
-				b0 = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
+				b0 = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
 				if(dist>b0) { dist = b0; return true; }
 				else return false;
 			}
 			b1 = f.cEdge(2)[2]*(p[0] - f.cP(2)[0]) - f.cEdge(2)[0]*(p[2] - f.cP(2)[2]);
 			if(b1<=0)
 			{
-				b1 = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+				b1 = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
 				if(dist>b1) { dist = b1; return true; }
 				else return false;
 			}
 			b2 = f.cEdge(0)[2]*(p[0] - f.cP(0)[0]) - f.cEdge(0)[0]*(p[2] - f.cP(0)[2]);
 			if(b2<=0)
 			{
-				b2 = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+				b2 = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
 			if( (b=math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
 			{
 			  ScalarType bt;
-			  if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
-			  else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+			  if(b==b0) 	    bt = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
+			  else if(b==b1) 	bt = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
 			  else { assert(b==b2);
-				bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+				bt = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 			  }
 			  if(dist>bt) { dist = bt; return true; }
 				else return false;
@@ -141,31 +141,31 @@ namespace vcg {
 			b0 = f.cEdge(1)[0]*(p[1] - f.cP(1)[1]) - f.cEdge(1)[1]*(p[0] - f.cP(1)[0]);
 			if(b0<=0)
 			{
-				b0 = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
+				b0 = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
 				if(dist>b0) { dist = b0; return true; }
 				else return false;
 			}
 			b1 = f.cEdge(2)[0]*(p[1] - f.cP(2)[1]) - f.cEdge(2)[1]*(p[0] - f.cP(2)[0]);
 			if(b1<=0)
 			{
-				b1 = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+				b1 = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
 				if(dist>b1) { dist = b1; return true; }
 				else return false;
 			}
 			b2 = f.cEdge(0)[0]*(p[1] - f.cP(0)[1]) - f.cEdge(0)[1]*(p[0] - f.cP(0)[0]);
 			if(b2<=0)
 			{
-				b2 = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+				b2 = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 				if(dist>b2) { dist = b2; return true; }
 				else return false;
 			}
 			if( (b=math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
 			{
 			  ScalarType bt;
-			  if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
-			  else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+			  if(b==b0) 	    bt = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
+			  else if(b==b1) 	bt = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
 			  else { assert(b==b2);
-				bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+				bt = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 			  }
 
 			  if(dist>bt) { dist = bt; return true; }
@@ -320,21 +320,21 @@ namespace vcg {
 						b0 = fEdge[1][1]*(p[2] - f.cP(1)[2]) - fEdge[1][2]*(p[1] - f.cP(1)[1]);
 						if(b0<=0)
 						{
-							b0 = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
+							b0 = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
 							if(dist>b0) { dist = b0; return true; }
 							else return false;
 						}
 							b1 = fEdge[2][1]*(p[2] - f.cP(2)[2]) - fEdge[2][2]*(p[1] - f.cP(2)[1]);
 						if(b1<=0)
 						{
-							b1 = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+							b1 = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
 							if(dist>b1) { dist = b1; return true; }
 							else return false;
 						}
 							b2 = fEdge[0][1]*(p[2] - f.cP(0)[2]) - fEdge[0][2]*(p[1] - f.cP(0)[1]);
 						if(b2<=0)
 						{
-							b2 = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+							b2 = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 							if(dist>b2) { dist = b2; return true; }
 							else return false;
 						}
@@ -348,9 +348,9 @@ namespace vcg {
 						if( (b=vcg::math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
 							{
 								ScalarType bt;
-								if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
-								else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
-								else if(b==b2) 	bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+								if(b==b0) 	    bt = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
+								else if(b==b1) 	bt = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
+								else if(b==b2) 	bt = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 								//printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPSILON*Area(),bt);
 								if(dist>bt) { dist = bt; return true; }
 								else return false;
@@ -364,30 +364,30 @@ namespace vcg {
 						b0 = fEdge[1][2]*(p[0] - f.cP(1)[0]) - fEdge[1][0]*(p[2] - f.cP(1)[2]);
 						if(b0<=0)
 						{
-							b0 = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
+							b0 = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
 							if(dist>b0) { dist = b0; return true; }
 							else return false;
 						}
 							b1 = fEdge[2][2]*(p[0] - f.cP(2)[0]) - fEdge[2][0]*(p[2] - f.cP(2)[2]);
 						if(b1<=0)
 						{
-							b1 = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+							b1 = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
 							if(dist>b1) { dist = b1; return true; }
 							else return false;
 						}
 							b2 = fEdge[0][2]*(p[0] - f.cP(0)[0]) - fEdge[0][0]*(p[2] - f.cP(0)[2]);
 						if(b2<=0)
 						{
-							b2 = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+							b2 = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 							if(dist>b2) { dist = b2; return true; }
 							else return false;
 						}
             if( (b=vcg::math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
 							{
 								ScalarType bt;
-								if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
-								else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
-								else if(b==b2) 	bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+								if(b==b0) 	    bt = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
+								else if(b==b1) 	bt = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
+								else if(b==b2) 	bt = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 								//printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPSILON*Area(),bt);
 								if(dist>bt) { dist = bt; return true; }
 								else return false;
@@ -401,30 +401,30 @@ namespace vcg {
 						b0 = fEdge[1][0]*(p[1] - f.cP(1)[1]) - fEdge[1][1]*(p[0] - f.cP(1)[0]);
 						if(b0<=0)
 						{
-							b0 = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
+							b0 = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
 							if(dist>b0) { dist = b0; return true; }
 							else return false;
 						}
 							b1 = fEdge[2][0]*(p[1] - f.cP(2)[1]) - fEdge[2][1]*(p[0] - f.cP(2)[0]);
 						if(b1<=0)
 						{
-							b1 = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
+							b1 = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
 							if(dist>b1) { dist = b1; return true; }
 							else return false;
 						}
 							b2 = fEdge[0][0]*(p[1] - f.cP(0)[1]) - fEdge[0][1]*(p[0] - f.cP(0)[0]);
 						if(b2<=0)
 						{
-							b2 = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+							b2 = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 							if(dist>b2) { dist = b2; return true; }
 							else return false;
 						}
             if( (b=vcg::math::Min<ScalarType>(b0,b1,b2)) < EPS*DoubleArea(f))
 							{
 								ScalarType bt;
-								if(b==b0) 	    bt = PSDist(q,f.V(1)->cP(),f.V(2)->cP(),p);
-								else if(b==b1) 	bt = PSDist(q,f.V(2)->cP(),f.V(0)->cP(),p);
-								else if(b==b2) 	bt = PSDist(q,f.V(0)->cP(),f.V(1)->cP(),p);
+								if(b==b0) 	    bt = PSDist(q,f.cV(1)->cP(),f.cV(2)->cP(),p);
+								else if(b==b1) 	bt = PSDist(q,f.cV(2)->cP(),f.cV(0)->cP(),p);
+								else if(b==b2) 	bt = PSDist(q,f.cV(0)->cP(),f.cV(1)->cP(),p);
 								//printf("Warning area:%g %g %g %g thr:%g bt:%g\n",Area(), b0,b1,b2,EPSILON*Area(),bt);
 								
 								if(dist>bt) { dist = bt; return true; }

@@ -345,9 +345,9 @@ static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
 		if(!(*fi).IsD())
 		{
-			const CoordType &P0 = (*fi).P(0);
-			const CoordType &P1 = (*fi).P(1);
-			const CoordType &P2 = (*fi).P(2);
+			const CoordType &P0 = (*fi).cP(0);
+			const CoordType &P1 = (*fi).cP(1);
+			const CoordType &P2 = (*fi).cP(2);
 			CoordType  n = ((P1-P0)^(P2-P0));
 			const float da = n.Norm();
 			n/=da*da;

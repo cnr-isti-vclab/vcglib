@@ -282,12 +282,13 @@ namespace vcg {
             Segment3<typename TRIANGLETYPE::ScalarType> & sg)
     {
       typedef typename TRIANGLETYPE::ScalarType T;
-      if(IntersectionPlaneSegment(pl,Segment3<T>(tr.P(0),tr.P(1)),sg.P0())){
-        if(IntersectionPlaneSegment(pl,Segment3<T>(tr.P(0),tr.P(2)),sg.P1()))
+      if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(0),tr.cP(1)),sg.P0()))
+      {
+        if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(0),tr.cP(2)),sg.P1()))
           return true;
         else
         {
-          if(IntersectionPlaneSegment(pl,Segment3<T>(tr.P(1),tr.P(2)),sg.P1()))
+          if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(1),tr.cP(2)),sg.P1()))
             return true;
           else assert(0);
               return true;
@@ -295,9 +296,9 @@ namespace vcg {
       }
       else
       {
-        if(IntersectionPlaneSegment(pl,Segment3<T>(tr.P(1),tr.P(2)),sg.P0()))
+        if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(1),tr.cP(2)),sg.P0()))
         {
-          if(IntersectionPlaneSegment(pl,Segment3<T>(tr.P(0),tr.P(2)),sg.P1()))return true;
+          if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(0),tr.cP(2)),sg.P1()))return true;
           assert(0);
           return true;
         }
@@ -305,12 +306,12 @@ namespace vcg {
       return false;
     }
 
-  /// intersection between two triangles
-  template<typename TRIANGLETYPE> 
+    /// intersection between two triangles
+    template<typename TRIANGLETYPE>
     inline bool IntersectionTriangleTriangle(const TRIANGLETYPE & t0,const TRIANGLETYPE & t1){
-    return NoDivTriTriIsect(t0.P0(0),t0.P0(1),t0.P0(2),
-			    t1.P0(0),t1.P0(1),t1.P0(2));
-  }
+      return NoDivTriTriIsect(t0.cP(0),t0.cP(1),t0.cP(2),
+                              t1.cP(0),t1.cP(1),t1.cP(2));
+    }
 
   template<class T>
     inline bool IntersectionTriangleTriangle(Point3<T> V0,Point3<T> V1,Point3<T> V2,
@@ -608,7 +609,7 @@ bool IntersectionSegmentTriangle( const vcg::Segment3<typename TriangleType::Sca
                   const TriangleType &t,
                   typename TriangleType::ScalarType & a ,typename TriangleType::ScalarType & b)
 {
-  return IntersectionSegmentTriangle(seg,t.P(0),t.P(1),t.P(2),a,b);
+  return IntersectionSegmentTriangle(seg,t.cP(0),t.cP(1),t.cP(2),a,b);
 }
 
 template<class ScalarType>
@@ -727,10 +728,10 @@ public:
 		ScalarType u;
 		ScalarType v;
 
-		bool bret = IntersectionRayTriangle(ray, Point3<SCALARTYPE>::Construct(f.P(0)), Point3<SCALARTYPE>::Construct(f.P(1)), Point3<SCALARTYPE>::Construct(f.P(2)), t, u, v);
+		bool bret = IntersectionRayTriangle(ray, Point3<SCALARTYPE>::Construct(f.cP(0)), Point3<SCALARTYPE>::Construct(f.cP(1)), Point3<SCALARTYPE>::Construct(f.cP(2)), t, u, v);
 		if (BACKFACETEST) {
 			if (!bret) {
-				bret = IntersectionRayTriangle(ray, Point3<SCALARTYPE>::Construct(f.P(0)), Point3<SCALARTYPE>::Construct(f.P(2)), Point3<SCALARTYPE>::Construct(f.P(1)), t, u, v);
+				bret = IntersectionRayTriangle(ray, Point3<SCALARTYPE>::Construct(f.cP(0)), Point3<SCALARTYPE>::Construct(f.cP(2)), Point3<SCALARTYPE>::Construct(f.cP(1)), t, u, v);
 			}
 		}
 		return (bret);

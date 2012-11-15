@@ -410,12 +410,12 @@ template <class MeshType> inline int & IMark(MeshType & m){return m.imark;}
 /** \brief Check if the vertex incremental mark matches the one of the mesh.
 	@param m the mesh containing the element
 	@param v Vertex pointer */
-template <class MeshType> inline bool IsMarked(MeshType & m, typename MeshType::ConstVertexPointer  v )  { return v->IMark() == m.imark; }
+template <class MeshType> inline bool IsMarked(MeshType & m, typename MeshType::ConstVertexPointer  v )  { return v->cIMark() == m.imark; }
 
 /** \brief Check if the face incremental mark matches the one of the mesh.
 	@param m the mesh containing the element
 	@param f Face pointer */
-template <class MeshType> inline bool IsMarked( MeshType & m,typename MeshType::ConstFacePointer f )  { return f->IMark() == m.imark; }
+template <class MeshType> inline bool IsMarked( MeshType & m,typename MeshType::ConstFacePointer f )  { return f->cIMark() == m.imark; }
 
 /** \brief Set the vertex incremental mark of the vertex to the one of the mesh.
 	@param m the mesh containing the element

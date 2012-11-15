@@ -62,12 +62,12 @@ template <class SCALARTYPE>
 			const Point3<typename VERTEXTYPE::ScalarType> fp = Point3<typename VERTEXTYPE::ScalarType>::Construct(p);
 
 			typename VERTEXTYPE::ScalarType md;		// distance between v and fp
-			md = (v.P() - fp).Norm();
+			md = (v.cP() - fp).Norm();
 
 			if (md <= minDist) 
 			{
 				minDist = (SCALARTYPE)(md);		// minDist is updated to the closest distance
-				q = v.P();						// q is the current closest point
+				q = v.cP();						// q is the current closest point
 
 				return true;
 			}

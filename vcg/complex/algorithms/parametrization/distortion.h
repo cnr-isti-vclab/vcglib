@@ -49,9 +49,9 @@ namespace vcg {
 				  uv1=f->cWT(1).P();
 				  uv2=f->cWT(2).P();
 				} else {
-				  uv0=f->V(0)->T().P();
-				  uv1=f->V(1)->T().P();
-				  uv2=f->V(2)->T().P();
+				  uv0=f->cV(0)->T().P();
+				  uv1=f->cV(1)->T().P();
+				  uv2=f->cV(2)->T().P();
 				}
 				ScalarType AreaUV=((uv1-uv0)^(uv2-uv0))/2.0;
 				return AreaUV;
@@ -60,7 +60,7 @@ namespace vcg {
             static ScalarType EdgeLenght3D(const FaceType *f,int e)
 			{
 				assert((e>=0)&&(e<3));
-				ScalarType length=(f->P0(e)-f->P1(e)).Norm();
+				ScalarType length=(f->cP0(e)-f->cP1(e)).Norm();
 				return (length);
 			}
 
@@ -117,9 +117,9 @@ namespace vcg {
 			static ScalarType AngleRad3D(const FaceType *f,int e)
 			{
 				assert((e>=0)&&(e<3));
-				CoordType p0=f->P((e+2)%3);
-				CoordType p1=f->P(e);
-				CoordType p2=f->P((e+1)%3);
+				CoordType p0=f->cP((e+2)%3);
+				CoordType p1=f->cP(e);
+				CoordType p2=f->cP((e+1)%3);
 				typedef typename CoordType::ScalarType ScalarType;
 				CoordType dir0=p2-p1;
 				CoordType dir1=p0-p1;
@@ -134,9 +134,9 @@ namespace vcg {
 				uv1=f->cWT((e+0)%3).P();
 				uv2=f->cWT((e+1)%3).P();
 			  } else {
-				uv0=f->V2(e)->T().P();
-				uv1=f->V0(e)->T().P();
-				uv2=f->V1(e)->T().P();
+				uv0=f->cV2(e)->T().P();
+				uv1=f->cV0(e)->T().P();
+				uv2=f->cV1(e)->T().P();
 			  }
 				vcg::Point2<ScalarType> dir0=uv2-uv1;
 				vcg::Point2<ScalarType> dir1=uv0-uv1;
