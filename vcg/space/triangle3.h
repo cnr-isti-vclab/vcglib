@@ -58,19 +58,19 @@ protected:
 	Point3<ScalarType> _v[3];
 public:
 
-	/// Shortcut per accedere ai punti delle facce
-	inline CoordType & P( const int j ) { return _v[j];}
-	inline CoordType & P0( const int j ) { return _v[j];}
-	inline CoordType & P1( const int j ) { return _v[(j+1)%3];}
-	inline CoordType & P2( const int j ) { return _v[(j+2)%3];}
+  /// Shortcut per accedere ai punti delle facce
+  inline CoordType & P( const int j ) { return _v[j];}
+  inline CoordType & P0( const int j ) { return _v[j];}
+  inline CoordType & P1( const int j ) { return _v[(j+1)%3];}
+  inline CoordType & P2( const int j ) { return _v[(j+2)%3];}
   inline const CoordType &  P( const int j ) const { return _v[j];}
   inline const CoordType & cP( const int j ) const { return _v[j];}
   inline const CoordType &  P0( const int j ) const { return _v[j];}
-	inline const CoordType &  P1( const int j ) const { return _v[(j+1)%3];}
-	inline const CoordType &  P2( const int j ) const { return _v[(j+2)%3];}
-	inline const CoordType & cP0( const int j ) const { return _v[j];}
-	inline const CoordType & cP1( const int j ) const { return _v[(j+1)%3];}
-	inline const CoordType & cP2( const int j ) const { return _v[(j+2)%3];}
+  inline const CoordType &  P1( const int j ) const { return _v[(j+1)%3];}
+  inline const CoordType &  P2( const int j ) const { return _v[(j+2)%3];}
+  inline const CoordType & cP0( const int j ) const { return _v[j];}
+  inline const CoordType & cP1( const int j ) const { return _v[(j+1)%3];}
+  inline const CoordType & cP2( const int j ) const { return _v[(j+2)%3];}
 
 }; //end Class
 
@@ -80,7 +80,7 @@ public:
 template<class TriangleType>
 Point3<typename TriangleType::ScalarType> Normal(const TriangleType &t)
 {
-  return (( t.P(1) - t.P(0)) ^ (t.P(2) - t.P(0)));
+  return (( t.cP(1) - t.cP(0)) ^ (t.cP(2) - t.cP(0)));
 }
 template<class Point3Type>
 Point3Type Normal( Point3Type const &p0, Point3Type const & p1,  Point3Type const & p2)
@@ -92,7 +92,7 @@ Point3Type Normal( Point3Type const &p0, Point3Type const & p1,  Point3Type cons
 template<class TriangleType>
 Point3<typename TriangleType::ScalarType> NormalizedNormal(const TriangleType &t)
 {
-  return (( t.P(1) - t.P(0)) ^ (t.P(2) - t.P(0))).Normalize();
+  return (( t.cP(1) - t.cP(0)) ^ (t.cP(2) - t.cP(0))).Normalize();
 }
 template<class Point3Type>
 Point3Type NormalizedNormal( Point3Type const &p0, Point3Type const & p1,  Point3Type const & p2)
@@ -120,9 +120,9 @@ template<class TriangleType, class ScalarType>
 bool InterpolationParameters(const TriangleType t, const int Axis, const Point3<ScalarType> & P,  Point3<ScalarType> & L)
 {
 	typedef Point2<ScalarType> P2;
-	if(Axis==0) return InterpolationParameters2( P2(t.P(0)[1],t.P(0)[2]), P2(t.P(1)[1],t.P(1)[2]), P2(t.P(2)[1],t.P(2)[2]), P2(P[1],P[2]), L);
-	if(Axis==1) return InterpolationParameters2( P2(t.P(0)[0],t.P(0)[2]), P2(t.P(1)[0],t.P(1)[2]), P2(t.P(2)[0],t.P(2)[2]), P2(P[0],P[2]), L);
-	if(Axis==2) return InterpolationParameters2( P2(t.P(0)[0],t.P(0)[1]), P2(t.P(1)[0],t.P(1)[1]), P2(t.P(2)[0],t.P(2)[1]), P2(P[0],P[1]), L);
+	if(Axis==0) return InterpolationParameters2( P2(t.cP(0)[1],t.cP(0)[2]), P2(t.cP(1)[1],t.cP(1)[2]), P2(t.cP(2)[1],t.cP(2)[2]), P2(P[1],P[2]), L);
+	if(Axis==1) return InterpolationParameters2( P2(t.cP(0)[0],t.cP(0)[2]), P2(t.cP(1)[0],t.cP(1)[2]), P2(t.cP(2)[0],t.cP(2)[2]), P2(P[0],P[2]), L);
+	if(Axis==2) return InterpolationParameters2( P2(t.cP(0)[0],t.cP(0)[1]), P2(t.cP(1)[0],t.cP(1)[1]), P2(t.cP(2)[0],t.cP(2)[1]), P2(P[0],P[1]), L);
 	return false; 
 }
 /// Handy Wrapper of the above one that uses the passed normal N to choose the right orientation
@@ -247,41 +247,41 @@ P3ScalarType QualityMeanRatio(Point3<P3ScalarType> const &p0,
 template<class TriangleType>
 typename TriangleType::ScalarType DoubleArea(const TriangleType &t) 
 {
-	return Norm( (t.P(1) - t.P(0)) ^ (t.P(2) - t.P(0)) );
+    return Norm( (t.cP(1) - t.cP(0)) ^ (t.cP(2) - t.cP(0)) );
 }
 
 template<class TriangleType>
 typename TriangleType::ScalarType CosWedge(const TriangleType &t, int k)
 {
   typename TriangleType::CoordType 
-    e0 = t.P((k+1)%3) - t.P(k),
-    e1 = t.P((k+2)%3) - t.P(k);
+    e0 = t.cP((k+1)%3) - t.cP(k),
+    e1 = t.cP((k+2)%3) - t.cP(k);
   return (e0*e1)/(e0.Norm()*e1.Norm());
 }
 
 template<class TriangleType>
 Point3<typename TriangleType::ScalarType> Barycenter(const TriangleType &t) 
 {
-	return ((t.P(0)+t.P(1)+t.P(2))/(typename TriangleType::ScalarType) 3.0);
+    return ((t.cP(0)+t.cP(1)+t.cP(2))/(typename TriangleType::ScalarType) 3.0);
 }
 
 template<class TriangleType>
 typename TriangleType::ScalarType Perimeter(const TriangleType &t) 
 {
-	return Distance(t.P(0),t.P(1))+
-		     Distance(t.P(1),t.P(2))+
-				 Distance(t.P(2),t.P(0));
+  return Distance(t.cP(0),t.cP(1))+
+         Distance(t.cP(1),t.cP(2))+
+         Distance(t.cP(2),t.cP(0));
 }
 
 template<class TriangleType>
 Point3<typename TriangleType::ScalarType> Circumcenter(const TriangleType &t)
 {
-   typename TriangleType::ScalarType a2 = (t.P(1) - t.P(2)).SquaredNorm();
-   typename TriangleType::ScalarType b2 = (t.P(2) - t.P(0)).SquaredNorm();
-   typename TriangleType::ScalarType c2 = (t.P(0) - t.P(1)).SquaredNorm();      
-   Point3<typename TriangleType::ScalarType>c = t.P(0)*a2*(-a2 + b2 + c2) + 
-                                                t.P(1)*b2*( a2 - b2 + c2) + 
-                                                t.P(2)*c2*( a2 + b2 - c2);
+   typename TriangleType::ScalarType a2 = (t.cP(1) - t.cP(2)).SquaredNorm();
+   typename TriangleType::ScalarType b2 = (t.cP(2) - t.cP(0)).SquaredNorm();
+   typename TriangleType::ScalarType c2 = (t.cP(0) - t.cP(1)).SquaredNorm();
+   Point3<typename TriangleType::ScalarType>c = t.cP(0)*a2*(-a2 + b2 + c2) +
+                                                t.cP(1)*b2*( a2 - b2 + c2) +
+                                                t.cP(2)*c2*( a2 + b2 - c2);
    c /= 2*(a2*b2 + a2*c2 + b2*c2) - a2*a2 - b2*b2 - c2*c2;
    return c;
 }

@@ -98,7 +98,7 @@ class TrivialSampler
 	}
 	void AddFace(const FaceType &f, const CoordType &p) 
 	{
-		sampleVec->push_back(f.P(0)*p[0] + f.P(1)*p[1] +f.P(2)*p[2] );
+		sampleVec->push_back(f.cP(0)*p[0] + f.cP(1)*p[1] +f.cP(2)*p[2] );
 	}
 	
         void AddTextureSample(const FaceType &, const CoordType &, const Point2i &, float )
