@@ -285,7 +285,7 @@ private:
             if(!IsVertex)continue;
 
             ///then follows the seam
-            for (int j=0;j<seamsVert[i].size();j++)
+            for (unsigned int j=0;j<seamsVert[i].size();j++)
             {
                 FaceType *f=seamsVert[i][j].first;
                 int edge=seamsVert[i][j].second;
