@@ -130,7 +130,7 @@ private:
         v0=HandleS_Index[f0][edgef0];
         v1=HandleS_Index[f0][(edgef0+1)%3];
         ////get the index on opposite side
-        assert(f0->FFp(edgef0)==f1);
+        assert(f0->cFFp(edgef0)==f1);
         int edgef1=f0->cFFi(edgef0);
         v1p=HandleS_Index[f1][edgef1];
         v0p=HandleS_Index[f1][(edgef1+1)%3];
