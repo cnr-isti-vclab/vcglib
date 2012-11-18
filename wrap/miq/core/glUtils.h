@@ -7,6 +7,137 @@ class Miq_Gl_Utils
 {
 public:
 
+    ///singular vertices should be selected
+    template <class MeshType>
+    static void GLDrawSingularities(MeshType &mesh,
+                                    float size=8,
+                                    bool DrawUV=false)
+    {
+        bool hasSingular = vcg::tri::HasPerVertexAttribute(mesh,std::string("Singular"));
+        bool hasSingularDegree = vcg::tri::HasPerVertexAttribute(mesh,std::string("SingularityDegree"));
+
+        if (!hasSingular)return;
+
+        typename MeshType::template PerVertexAttributeHandle<bool> Handle_Singular;
+        typename MeshType::template PerVertexAttributeHandle<int> Handle_SingularDegree;
+
+        Handle_Singular=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<bool>(mesh,std::string("Singular"));
+
+        Handle_SingularDegree=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<int>(mesh,std::string("SingularityDegree"));
+
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glEnable(GL_COLOR_MATERIAL);
+        glDisable(GL_LIGHTING);
+        glDepthRange(0,0.999);
+        glPointSize(size);
+        glBegin(GL_POINTS);
+        glColor4d(0,0,1,0.7);
+        for (unsigned int j=0;j<mesh.face.size();j++)
+        {
+            CFace *f=&mesh.face[j];
+            if (f->IsD())continue;
+            for (int i=0;i<3;i++)
+            {
+                CVertex *v=f->V(i);
+                if (!Handle_Singular[v])continue;
+                int mmatch=3;
+                if (hasSingularDegree)
+                    mmatch=Handle_SingularDegree[i];
+                if (!DrawUV)
+                    vcg::glVertex(v->P());
+                else
+                    glVertex3d(f->WT(i).P().X(),f->WT(i).P().Y(),0);
+            }
+        }
+
+        glEnd();
+        glPopAttrib();
+    }
+
+    template <class FaceType>
+    static void GLDrawFaceSeams(const FaceType &f,
+                                vcg::Point3<bool> seams,
+                                vcg::Color4b seamCol[3],
+                                float size=3,
+                                bool UV=false)
+    {
+        typedef typename FaceType::CoordType CoordType;
+        typedef typename FaceType::ScalarType ScalarType;
+        glLineWidth(size);
+        glBegin(GL_LINES);
+        for (int i=0;i<3;i++)
+        {
+            if (!seams[i])continue;
+            vcg::glColor(seamCol[i]);
+            if (!UV)
+            {
+                glVertex(f.cV0(i)->P());
+                glVertex(f.cV1(i)->P());
+            }
+            else
+            {
+                int i0=i;
+                int i1=(i0+1)%3;
+                CoordType p0=CoordType(f.cWT(i0).P().X(),f.cWT(i0).P().Y(),0);
+                CoordType p1=CoordType(f.cWT(i1).P().X(),f.cWT(i1).P().Y(),0);
+                glVertex(p0);
+                glVertex(p1);
+            }
+        }
+        glEnd();
+    }
+
+    template <class MeshType>
+    static void GLDrawSeams(MeshType &mesh,
+                            float size=3,
+                            bool UV=false)
+    {
+        bool hasSeam = vcg::tri::HasPerFaceAttribute(mesh,std::string("Seams"));
+        if(!hasSeam)return;
+        bool HasSeamIndex=vcg::tri::HasPerFaceAttribute(mesh,std::string("SeamsIndex"));
+
+        typedef typename MeshType::template PerFaceAttributeHandle<vcg::Point3<bool> > SeamsHandleType;
+        typedef typename MeshType::template PerFaceAttributeHandle<vcg::Point3i > SeamsIndexHandleType;
+
+        typedef typename vcg::tri::Allocator<MeshType> SeamsAllocator;
+
+        SeamsHandleType Handle_Seam;
+        Handle_Seam=SeamsAllocator::template GetPerFaceAttribute<vcg::Point3<bool> >(mesh,std::string("Seams"));
+
+        SeamsIndexHandleType Handle_SeamIndex;
+        if (HasSeamIndex)
+        Handle_SeamIndex=SeamsAllocator::template GetPerFaceAttribute<vcg::Point3i >(mesh,std::string("SeamsIndex"));
+
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glEnable(GL_COLOR_MATERIAL);
+        glDisable(GL_LIGHTING);
+
+        glDepthRange(0,0.999);
+        for (unsigned int i=0;i<mesh.face.size();i++)
+        {
+            if (mesh.face[i].IsD())continue;
+            vcg::Point3<bool> seams=Handle_Seam[i];
+            vcg::Color4b seamCol[3];
+            for (int j=0;j<3;j++)
+            {
+                seamCol[j]=vcg::Color4b(0,255,0,255);
+                if (HasSeamIndex)
+                {
+                    int index=Handle_SeamIndex[i][j];
+                    //assert(index>0);
+                    if (index>=0)
+                        seamCol[j]=vcg::Color4b::Scatter(100,index);
+                }
+            }
+
+            GLDrawFaceSeams(mesh.face[i],seams,seamCol,size,UV);
+
+        }
+        glPopAttrib();
+    }
+
+   ///this is useful to debug the output
+   ///of the vertex indexing class
    template <class VertexIndexingType>
    static void GLDrawVertexIndexing(VertexIndexingType &VI)
    {
@@ -29,45 +160,6 @@ public:
        glPopAttrib();
    }
 
-   template <class MeshType>
-   static void DrawFlippedFacesIfSelected(MeshType &ParamMesh,
-                                          bool DrawUV=false,
-                                          vcg::Color4b color=vcg::Color4b(255,0,0,255),
-                                          typename MeshType::ScalarType width=2.0)
-   {
-       typedef typename MeshType::FaceType FaceType;
-       typedef typename MeshType::CoordType CoordType;
-       typedef typename MeshType::ScalarType ScalarType;
-
-       glPushAttrib(GL_ALL_ATTRIB_BITS);
-       glDisable(GL_LIGHTING);
-       glLineWidth(width);
-       vcg::glColor(color);
-       glBegin(GL_LINES);
-       for (unsigned int i=0;i<ParamMesh.face.size();i++)
-       {
-           FaceType *f=&ParamMesh.face[i];
-           if (!f->IsS())continue;
-           for (int k=0;k<3;k++)
-           {
-               CoordType p0,p1;
-               if (!DrawUV)
-               {
-                   p0=f->P0(k);
-                   p1=f->P1(k);
-               }
-               else
-               {
-                   p0=CoordType(f->WT(k).P().X(),f->WT(k).P().Y(),0);
-                   p1=CoordType(f->WT((k+1)%3).P().X(),f->WT((k+1)%3).P().Y(),0);
-               }
-               vcg::glVertex(p0);
-               vcg::glVertex(p1);
-           }
-       }
-       glEnd();
-       glPopAttrib();
-   }
 
    template <class QuadrangulatorType>
    static void QuadGLDrawIntegerVertices(QuadrangulatorType &Quadr)
@@ -160,46 +252,6 @@ public:
            glEnd();
        }
 
-       glPopAttrib();
-   }
-
-   template <class PolyMesh>
-   static void GLDrawPolygonalMesh(PolyMesh &polymesh)
-   {
-       glPushAttrib(GL_ALL_ATTRIB_BITS);
-       glEnable(GL_LIGHTING);
-       glEnable(GL_COLOR_MATERIAL);
-       glDisable(GL_TEXTURE_2D);
-       glColor3d(0.7,0.8,0.9);
-       //glFrontFace(GL_CW);
-       glDepthRange(0,0.998);
-       for (unsigned int i=0;i<polymesh.face.size();i++)
-       {
-           glBegin(GL_POLYGON);
-           for (int j=0;j<polymesh.face[i].VN();j++)
-           {
-               typename PolyMesh::VertexType* v=polymesh.face[i].V(j);
-               glNormal(v->N());
-               glVertex(v->P());
-           }
-           glEnd();
-       }
-
-       glDepthRange(0,0.997);
-       glDisable(GL_LIGHTING);
-       glEnable(GL_COLOR_MATERIAL);
-       glColor3d(0,0,0);
-       for (unsigned int i=0;i<polymesh.face.size();i++)
-       {
-           glBegin(GL_LINE_LOOP);
-           for (int j=0;j<polymesh.face[i].VN();j++)
-           {
-               typename PolyMesh::VertexType* v=polymesh.face[i].V(j);
-               glNormal(v->N());
-               glVertex(v->P());
-           }
-           glEnd();
-       }
        glPopAttrib();
    }
 };
