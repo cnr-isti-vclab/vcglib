@@ -119,6 +119,7 @@ public:
   static void FaceClearS(MeshType &m) {FaceClear(m,FaceType::SELECTED);}
   static void FaceClearF(MeshType &m) { FaceClear(m,FaceType::FAUX012);}
 
+  static void EdgeSetV(MeshType &m) { EdgeSet(m,EdgeType::VISITED);}
   static void VertexSetV(MeshType &m) { VertexSet(m,VertexType::VISITED);}
   static void VertexSetB(MeshType &m) { VertexSet(m,VertexType::BORDER);}
   static void FaceSetV(MeshType &m) { FaceSet(m,FaceType::VISITED);}
