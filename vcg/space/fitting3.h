@@ -49,7 +49,6 @@ void ComputeCovarianceMatrix(const std::vector<Point3<S> > &pointVec, Point3<S> 
 
   // second cycle: compute the covariance matrix
   m.setZero();
-  Eigen::Matrix<S,3,3> A;
   Eigen::Vector3f p;
   for(pit = pointVec.begin(); pit != pointVec.end(); ++pit) {
     ((*pit)-barycenter).ToEigenVector(p);
