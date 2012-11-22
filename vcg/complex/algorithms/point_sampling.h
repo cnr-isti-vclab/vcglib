@@ -1465,6 +1465,16 @@ static void SubdivideAndSample(MetroMesh & m, std::vector<Point3f> &pvec, const 
 
 
 
+template <class MeshType>
+void MontecarloSampling(MeshType &m, // the mesh that has to be sampled
+                     std::vector<Point3f> &montercarloSamples, // the vector that will contain the set of points
+                     int sampleNum) // the desired number sample, if zero you must set the radius to the wanted value
+{
+  typedef tri::TrivialSampler<MeshType> BaseSampler;
+  BaseSampler mcSampler(montercarloSamples);
+  tri::SurfaceSampling<MeshType,BaseSampler>::Montecarlo(m, mcSampler, sampleNum);
+}
+
 // Yet another simpler wrapper for the generation of a poisson disk distribution over a mesh.
 //
 template <class MeshType>
