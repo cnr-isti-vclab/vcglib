@@ -94,13 +94,13 @@ bool IntersectionPlaneGrid( GridType & grid, Plane3<ScalarType> plane, std::vect
 
 /** \addtogroup complex */
 /*@{*/
-/** 
-    Basic Function computing the intersection between  a trimesh and a plane. It returns an EdgeMesh without needing anything else.
+/** \brief Compute the intersection between a trimesh and a plane building an edge mesh.
+ *
+    Basic Function Computing the intersection between a trimesh and a plane. It returns an EdgeMesh without needing anything else.
 		Note: This version always returns a segment for each triangle of the mesh which intersects with the plane. In other
 		words there are 2*n vertices where n is the number of segments fo the mesh. You can run vcg::edge:Unify to unify
 		the vertices closer that a given value epsilon. Note that, due to subtraction error during triangle plane intersection,
 		it is not safe to put epsilon to 0. 
-// TODO si dovrebbe considerare la topologia face-face della trimesh per derivare quella della edge mesh..
 */
 template < typename  TriMeshType, typename EdgeMeshType, class ScalarType >
 bool IntersectionPlaneMesh(TriMeshType & m,
@@ -131,13 +131,11 @@ bool IntersectionPlaneMesh(TriMeshType & m,
 
 /** \addtogroup complex */
 /*@{*/
-/**
-	Basic Function computing the intersection between  a trimesh and a plane. It returns an EdgeMesh without needing anything else.
-		Note: This version always returns a segment for each triangle of the mesh which intersects with the plane. In other
-		words there are 2*n vertices where n is the number of segments fo the mesh. You can run vcg::edge:Unify to unify
-		the vertices closer that a given value epsilon. Note that, due to subtraction error during triangle plane intersection,
-		it is not safe to put epsilon to 0.
-// TODO si dovrebbe considerare la topologia face-face della trimesh per derivare quella della edge mesh..
+/** \brief  More stable version of the IntersectionPlaneMesh function
+ *
+ * This version of the make a first pass storing the distance to the plane
+ * into vertex quality and then use this value to compute in a safe way the
+ * intersection.
 */
 template < typename  TriMeshType, typename EdgeMeshType, class ScalarType >
 bool IntersectionPlaneMeshQuality(TriMeshType & m,
