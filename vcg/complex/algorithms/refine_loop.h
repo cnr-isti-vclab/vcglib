@@ -604,16 +604,12 @@ bool RefineOddEvenE(MESH_TYPE &m, ODD_VERT odd, EVEN_VERT even, PREDICATE edgePr
 	
 	MESH_TYPE::VertexType::DeleteBitFlag(evenFlag);
 
-	// refine dei vertici odd, crea dei nuovi vertici in coda
+	// Now apply the stored normal and position to the initial vertex set (note that newEven is << m.vert)
 	RefineE< MESH_TYPE, ODD_VERT > (m, odd, edgePred, RefineSelected, cbOdd);
-
-	typename std::vector<std::pair<Point3f,Point3f> >::iterator nei;
-	for (nei=newEven.begin(); nei!=newEven.end(); ++nei) {
-		if(updatedList[nei-newEven.begin()]) {
-//			m.vert[nei-newEven.begin()].ImportData(*nei);
-//			assert(m.vert[nei-newEven.begin()].N() == nei->N());
-            m.vert[nei-newEven.begin()].P()=(*nei).first;
-            m.vert[nei-newEven.begin()].N()=(*nei).second;
+	for(size_t i=0;i<newEven.size();++i) {
+			if(updatedList[i]) {
+			  m.vert[i].P()=newEven[i].first;
+			  m.vert[i].N()=newEven[i].second;
 		}
 	}
 
