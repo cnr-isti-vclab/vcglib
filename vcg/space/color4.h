@@ -226,7 +226,20 @@ inline static Color4 ColorRamp(const float &minf,const float  &maxf ,float v )
   rc.SetColorRamp(minf,maxf,v);
   return rc;
 }
-};
+
+inline static unsigned short ToUnsignedB5G5R5(Color4 &) { return 0;}
+inline static unsigned short ToUnsignedR5G5B5(Color4 &) { return 0;}
+
+inline static Color4 FromUnsignedB5G5R5(unsigned short)
+{
+  return Color4(Color4::White);
+}
+inline static Color4 FromUnsignedR5G5B5(unsigned short)
+{
+  return Color4(Color4::White);
+}
+
+}; /// END CLASS ///////////////////
 
 template <> template <>
 inline void Color4<float>::Import(const Color4<unsigned char> &b)
@@ -311,6 +324,48 @@ inline Color4<unsigned char> Color4<unsigned char>::operator + ( const Color4<un
 typedef Color4<unsigned char>  Color4b;
 typedef Color4<float>          Color4f;
 typedef Color4<double>         Color4d;
+
+
+template<>
+inline unsigned short Color4<unsigned char>::ToUnsignedB5G5R5(Color4<unsigned char> &cc)
+{
+  unsigned short r = cc[0]/8;
+  unsigned short g = cc[1]/8;
+  unsigned short b = cc[2]/8;
+  unsigned short res = b + g*32 + r*1024;
+  return res;
+}
+
+template<>
+inline unsigned short Color4<unsigned char>::ToUnsignedR5G5B5(Color4<unsigned char> &cc)
+{
+  unsigned short r = cc[0]/8;
+  unsigned short g = cc[1]/8;
+  unsigned short b = cc[2]/8;
+  unsigned short res = r + g*32 + b*1024;
+  return res;
+}
+
+
+template<>
+inline Color4<unsigned char> Color4<unsigned char>::FromUnsignedR5G5B5(unsigned short val)
+{
+  unsigned short r = val % 32 *8;
+  unsigned short g = ((val/32)%32)*8;
+  unsigned short b = ((val/1024)%32)*8;
+      Color4b cc((unsigned char)r,(unsigned char)g,(unsigned char)b,(unsigned char)255);
+  return cc;
+}
+
+template<>
+inline Color4<unsigned char> Color4<unsigned char>::FromUnsignedB5G5R5(unsigned short val)
+{
+  unsigned short b = val % 32 *8;
+  unsigned short g = ((val/32)%32)*8;
+  unsigned short r = ((val/1024)%32)*8;
+      Color4b cc((unsigned char)r,(unsigned char)g,(unsigned char)b,(unsigned char)255);
+  return cc;
+}
 
 /*@}*/
 

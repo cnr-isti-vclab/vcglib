@@ -25,6 +25,7 @@
 #define __VCGLIB_IMPORT_STL
 #include <stdio.h>
 #include <wrap/callback.h>
+#include <vcg/space/color4.h>
 
 namespace vcg {
 namespace tri {
@@ -79,28 +80,59 @@ static const char *ErrorMsg(int error)
   else return stl_error_msg[error];
 };
 
-static bool LoadMask(const char * /*filename*/, int &mask)
+static bool LoadMask(const char * filename, int &mask)
 {
+  bool magicMode;
   mask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
+  if(IsSTLColored(filename,magicMode))
+    mask |= Mask::IOM_FACECOLOR;
   return true;
 }
 
-static int Open(OpenMeshType &mesh, const char *filename, int &loadmask, CallBackPos *cb=0)
+/* Try to guess if a stl has color
+ *
+ * rules:
+ * - It has to be binary
+ * - The per face attribute should be not zero
+ *
+ */
+static bool IsSTLColored(const char * filename, bool &magicsMode)
 {
-  loadmask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
-  return Open(mesh,filename,cb);
+  if(IsSTLBinary(filename)==false) return false;
+   FILE *fp = fopen(filename, "r");
+   char buf[STL_LABEL_SIZE+1];
+   fread(buf,sizeof(char),STL_LABEL_SIZE,fp);
+   std::string strInput(buf);
+   size_t cInd = strInput.rfind("COLOR=");
+   size_t mInd = strInput.rfind("MATERIAL=");
+   if(cInd!=std::string::npos && mInd!=std::string::npos)
+     magicsMode = true;
+   else
+     magicsMode = false;
+   int facenum;
+   fread(&facenum, sizeof(int), 1, fp);
+
+   for(int i=0;i<std::min(facenum,1000);++i)
+   {
+     unsigned short attr;
+     Point3f norm;
+     Point3f tri[3];
+     fread(&norm,sizeof(Point3f),1,fp);
+     fread(&tri,sizeof(Point3f),3,fp);
+     fread(&attr,sizeof(unsigned short),1,fp);
+     if(attr!=0)
+     {
+      if(Color4b::FromUnsignedR5G5B5(attr) != Color4b(Color4b::White)) return true;
+     }
+   }
+
+   return false;
 }
 
-static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
+static bool IsSTLBinary(const char * filename)
 {
-  FILE *fp;
   bool binary=false;
-  fp = fopen(filename, "r");
-  if(fp == NULL)
-    {
-      return E_CANTOPEN;
-    }
-
+  FILE *fp = fopen(filename, "r");
   /* Find size of file */
   fseek(fp, 0, SEEK_END);
   int file_size = ftell(fp);
@@ -115,18 +147,29 @@ static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
   for(unsigned int i = 0; i < sizeof(tmpbuf); i++)
     {
       if(tmpbuf[i] > 127)
- 	      {
-	        binary=true;
-	        break;
-	      }
+          {
+            binary=true;
+            break;
+          }
     }
   // Now we know if the stl file is ascii or binary.
   fclose(fp);
-  if(binary) return OpenBinary(m,filename,cb);
+  return binary;
+}
+
+static int Open( OpenMeshType &m, const char * filename, int &loadMask, CallBackPos *cb=0)
+{
+  FILE *fp = fopen(filename, "r");
+  if(fp == NULL)
+      return E_CANTOPEN;
+  fclose(fp);
+  loadMask |= Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
+
+  if(IsSTLBinary(filename)) return OpenBinary(m,filename,loadMask,cb);
   else return OpenAscii(m,filename,cb);
 }
 
-static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
+static int OpenBinary( OpenMeshType &m, const char * filename, int &loadMask, CallBackPos *cb=0)
 {
   FILE *fp;
   fp = fopen(filename, "rb");
@@ -135,6 +178,10 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
     return E_CANTOPEN;
   }
    
+  bool magicsMode;
+  if(!IsSTLColored(filename,magicsMode))
+    loadMask = loadMask & (~Mask::IOM_FACECOLOR);
+
   int facenum;
   fseek(fp, STL_LABEL_SIZE, SEEK_SET);
   fread(&facenum, sizeof(int), 1, fp);
@@ -145,12 +192,17 @@ static int OpenBinary( OpenMeshType &m, const char * filename, CallBackPos *cb=0
   // For each triangle read the normal, the three coords and a short set to zero
 	for(int i=0;i<facenum;++i)
     {
-      short attr;
+      unsigned short attr;
       Point3f norm;
       Point3f tri[3];
       fread(&norm,sizeof(Point3f),1,fp);
       fread(&tri,sizeof(Point3f),3,fp);
-      fread(&attr,sizeof(short),1,fp);
+      fread(&attr,sizeof(unsigned short),1,fp);
+      if(tri::HasPerFaceColor(m) && (loadMask & Mask::IOM_FACECOLOR) )
+      {
+        if(magicsMode) (*fi).C()= Color4b::FromUnsignedR5G5B5(attr);
+                  else (*fi).C()= Color4b::FromUnsignedB5G5R5(attr);
+      }
       for(int k=0;k<3;++k)
       {
         (*vi).P().Import(tri[k]); 

@@ -75,12 +75,12 @@ public:
 typedef typename SaveMeshType::FaceType FaceType;
 typedef unsigned short CallBackSTLFaceAttribute(const SaveMeshType &m, const FaceType &f);
 
-static int Save(SaveMeshType &m, const char * filename, const int &/*mask*/, CallBackPos *)
+static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos *)
 {
- return Save(m,filename,true);
+ return Save(m,filename,true,mask);
 }
 
-static int Save(SaveMeshType &m, const char * filename , bool binary =true, const char *objectname=0, CallBackSTLFaceAttribute *faceAttributeCallback = NULL)
+static int Save(SaveMeshType &m, const char * filename , bool binary =true, int mask=0, const char *objectname=0, bool magicsMode=0)
 {
   typedef typename SaveMeshType::FaceIterator FaceIterator;
 	FILE *fp;
@@ -94,14 +94,23 @@ static int Save(SaveMeshType &m, const char * filename , bool binary =true, cons
 		// Write Header
 		char header[128]="VCG                                                                                                  ";
 		if(objectname)	strncpy(header,objectname,80);
+		if(magicsMode)
+		{
+		  strncpy(header,"COLOR=XXX MATERIAL=AAA BBB CCC                                                                       ",80);
+		  for(int i=0;i<3;++i)
+		  {
+			header[0x06+i]=0x7f;
+			header[0x13+i]=0x7f;
+			header[0x17+i]=0x7f;
+			header[0x1b+i]=0x7f;
+		  }
+		}
 		fwrite(header,80,1,fp);
 		// write number of facets
 		fwrite(&m.fn,1,sizeof(int),fp); 
 		Point3f p;
 		unsigned short attributes=0;
-    
-    FaceIterator fi;		
-		for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
+		for(FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
 		{
 			// For each triangle write the normal, the three coords and a short set to zero
 			p.Import(vcg::NormalizedNormal(*fi));
@@ -111,8 +120,10 @@ static int Save(SaveMeshType &m, const char * filename , bool binary =true, cons
 				p.Import((*fi).V(k)->P());
 				fwrite(p.V(),3,sizeof(float),fp);
 			}
-			if (faceAttributeCallback != NULL) {
-                attributes = (*faceAttributeCallback)(m, *fi);                
+			if ((mask & Mask::IOM_FACECOLOR) && tri::HasPerFaceColor(m))
+			{
+			  if(magicsMode) attributes = 32768 | vcg::Color4b::ToUnsignedR5G5B5(fi->C());
+						else attributes = 32768 | vcg::Color4b::ToUnsignedB5G5R5(fi->C());
 			}
 			fwrite(&attributes,1,sizeof(short),fp);
 		}
@@ -164,6 +175,7 @@ static int GetExportMaskCapability()
 	int capability = 0;			
 	capability |= vcg::tri::io::Mask::IOM_VERTCOORD;
 	capability |= vcg::tri::io::Mask::IOM_FACEINDEX;
+	capability |= vcg::tri::io::Mask::IOM_FACECOLOR;
 	return capability;
 }
 
