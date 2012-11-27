@@ -66,6 +66,7 @@ template<class MESH> class TrivialEar
 public:
   typedef typename MESH::FaceType FaceType;
   typedef typename MESH::FacePointer FacePointer;
+  typedef typename MESH::VertexPointer VertexPointer;
   typedef typename face::Pos<FaceType>    PosType;
   typedef typename MESH::ScalarType ScalarType;
   typedef typename MESH::CoordType CoordType;
@@ -126,6 +127,24 @@ public:
   }
   bool IsConcave() const {return(angleRad > (float)M_PI);}
 
+  // When you close an ear you have to check that the newly added triangle does not create non manifold situations
+  // This can happen if the new edge already exists in the mesh.
+  // We test that looping around one extreme of the ear we do not find the other vertex
+  bool CheckManifoldAfterEarClose()
+  {
+    PosType pp = e1;
+    VertexPointer otherV =  e0.VFlip();
+    assert(pp.IsBorder());
+    do
+    {
+      pp.FlipE();
+      pp.FlipF();
+      if(pp.VFlip()==otherV) return false;
+    }
+    while(!pp.IsBorder());
+    return true;
+  }
+
   virtual bool Close(PosType &np0, PosType &np1, FaceType * f)
   {
     // simple topological check
@@ -137,6 +156,8 @@ public:
     //usato per generare una delle due nuove orecchie.
     PosType	ep=e0; ep.FlipV(); ep.NextB(); ep.FlipV(); // he precedente a e0
     PosType	en=e1; en.NextB();												 // he successivo a e1
+    if(ep!=en)
+      if(!CheckManifoldAfterEarClose()) return false;
 
     (*f).V(0) = e0.VFlip();
     (*f).V(1) = e0.v;
