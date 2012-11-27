@@ -389,7 +389,7 @@ static void MeshCopy(MeshLeft& ml, ConstMeshRight& mr, bool selected=false)
 {
   ml.Clear();
   Mesh(ml,mr,selected);
-  ml.bbox=mr.bbox;
+  ml.bbox.Import(mr.bbox);
 }
 /*! \brief %Append only the selected elements of second mesh to the first one.
 
