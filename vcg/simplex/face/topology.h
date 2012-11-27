@@ -531,6 +531,13 @@ static void FlipEdge(FaceType &f, const int z)
 	}
 }
 
+template <class FaceType>
+void VFDetach(FaceType & f)
+{
+  VFDetach(f,0);
+  VFDetach(f,1);
+  VFDetach(f,2);
+}
 
 // Stacca la faccia corrente dalla catena di facce incidenti sul vertice z, 
 // NOTA funziona SOLO per la topologia VF!!!
