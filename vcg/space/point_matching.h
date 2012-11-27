@@ -118,8 +118,8 @@ void ComputeRigidMatchMatrix(std::vector<Point3<S> > &Pfix,
   Eigen::SelfAdjointEigenSolver<Eigen::Matrix4d> eig(QQ);
   Eigen::Vector4d eval = eig.eigenvalues();
   Eigen::Matrix4d evec = eig.eigenvectors();
-  std::cout << "EigenVectors:" << std::endl << evec << std::endl;
-  std::cout << "eigenvalues:" << std::endl << eval << std::endl;
+//  std::cout << "EigenVectors:" << std::endl << evec << std::endl;
+//  std::cout << "Eigenvalues:" << std::endl << eval << std::endl;
   int ind;
   eval.cwiseAbs().maxCoeff(&ind);
 
@@ -143,10 +143,10 @@ void ComputeRigidMatchMatrix(std::vector<Point3<S> > &Pfix,
  * IEEE TPAMI Vol 14, No 2 1992
  */
 
-  template < class  S >
-  void ComputeRigidMatchMatrix(std::vector<Point3<S> > &Pfix,
-                               std::vector<Point3<S> > &Pmov,
-                               Matrix44<S> &res)
+template < class  S >
+void ComputeRigidMatchMatrix(std::vector<Point3<S> > &Pfix,
+                             std::vector<Point3<S> > &Pmov,
+                             Matrix44<S> &res)
 {
     Quaternion<S>  q;
     Point3<S>  tr;
@@ -162,44 +162,32 @@ void ComputeRigidMatchMatrix(std::vector<Point3<S> > &Pfix,
 }
 
 
-#if 0
 /*
 Compute a similarity matching (rigid + uniform scaling)
 simply create a temporary point set with the correct scaling factor
 */ 
-static bool ComputeSimilarityMatchMatrix(		Matrix44x &res,
-                                    std::vector<Point3x> &Pfix,		// vertici corrispondenti su fix (rossi)
-						std::vector<Point3x> &Pmov) 		// normali scelti su mov (verdi)
+template <class S>
+void ComputeSimilarityMatchMatrix(std::vector<Point3<S> > &Pfix,
+                                  std::vector<Point3<S> > &Pmov,
+                                  Matrix44<S> &res)
 {
-	Quaternionx qtmp;
-	Point3x tr;
-	
-	std::vector<Point3x> Pnew(Pmov.size());
-	
-	ScalarType scalingFactor=0;
-	
-	for(size_t i=0;i<( Pmov.size()-1);++i)
-	{
-			scalingFactor += Distance(Pmov[i],Pmov[i+1])/ Distance(Pfix[i],Pfix[i+1]);
-#ifdef _DEBUG
-			printf("Scaling Factor is %f",scalingFactor/(i+1));
-#endif
-	}
-	scalingFactor/=(Pmov.size()-1);
+  S scalingFactor=0;
+  for(size_t i=0;i<( Pmov.size()-1);++i)
+  {
+    scalingFactor += Distance(Pmov[i],Pmov[i+1])/ Distance(Pfix[i],Pfix[i+1]);
+  }
+  scalingFactor/=(Pmov.size()-1);
 
-	for(size_t i=0;i<Pmov.size();++i)
-		Pnew[i]=Pmov[i]/scalingFactor;		
-		
-	
-	bool ret=ComputeRigidMatchMatrix(res,Pfix,Pnew,qtmp,tr);
-	if(!ret) return false;
-	Matrix44x scaleM; scaleM.SetDiagonal(1.0/scalingFactor);
-	
-	res = res * scaleM;
-	return true;
+  std::vector<Point3<S> > Pnew(Pmov.size());
+  for(size_t i=0;i<Pmov.size();++i)
+    Pnew[i]=Pmov[i]/scalingFactor;
+
+  ComputeRigidMatchMatrix(Pfix,Pnew,res);
+
+  Matrix44<S> scaleM; scaleM.SetDiagonal(1.0/scalingFactor);
+  res = res * scaleM;
 }
 
-#endif
 } // end namespace
 
 #endif
