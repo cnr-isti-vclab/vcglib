@@ -33,10 +33,7 @@ used in the paper pseudocode.
 #include <vcg/space/point4.h>
 #include <vcg/space/line3.h>
 #include <vcg/space/plane3.h>
-#include <vcg/math/base.h>
-#include <vcg/math/point_matching.h>
-#include <vcg/math/matrix44.h>
-
+#include <vcg/space/point_matching.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/complex/algorithms/update/bounding.h>
@@ -386,7 +383,7 @@ FourPCS<MeshType>::IsTransfCongruent(FourPoints fp,vcg::Matrix44<ScalarType> & m
 		p =  fp[0] + n;
 		fix.push_back(p);
 
-		vcg::PointMatching<ScalarType>::ComputeRigidMatchMatrix(mat,fix,mov);
+		vcg::ComputeRigidMatchMatrix(fix,mov,mat);
 		
 		ScalarType err = 0.0;
 		for(int i = 0; i < 4; ++i) err+= (mat * mov[i] - fix[i]).SquaredNorm();
