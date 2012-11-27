@@ -147,8 +147,9 @@ template <class A, class T> class Coord: public T {
 public:
   typedef A CoordType;
   typedef typename A::ScalarType      ScalarType;
-  inline CoordType &P()       { return _coord; }
-  inline CoordType cP() const { return _coord; }
+  inline const CoordType &P() const { return _coord; }
+  inline       CoordType &P()       { return _coord; }
+  inline       CoordType cP() const { return _coord; }
 
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasCoord()) P().Import(rVert.cP()); T::ImportData( rVert); }
@@ -174,8 +175,9 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class A, class T> class Normal: public T {
 public:
   typedef A NormalType;
-  inline NormalType &N()       { return _norm; }
-  inline NormalType cN() const { return _norm; }
+  inline const NormalType &N() const { return _norm; }
+  inline       NormalType &N()       { return _norm; }
+  inline       NormalType cN() const { return _norm; }
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ){
     if(RightValueType::HasNormal())  N().Import(rVert.cN());
@@ -207,8 +209,9 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 template <class T> class Mark: public T {
 public:
-  inline int cIMark() const { return _imark;}
-  inline int &IMark()       { return _imark;}
+  inline const int &IMark() const { return _imark;}
+  inline       int &IMark()       { return _imark;}
+  inline       int cIMark() const { return _imark;}
   static bool HasMark()      { return true; }
   inline void InitIMark()    { _imark = 0; }
   template < class RightValueType>
@@ -230,8 +233,9 @@ public:
 template <class A, class TT> class TexCoord: public TT {
 public:
   typedef A TexCoordType;
-  TexCoordType &T() { return _t; }
-  TexCoordType cT()  const { return _t; }
+  const TexCoordType &T() const { return _t; }
+        TexCoordType &T()       { return _t; }
+        TexCoordType cT() const { return _t; }
     template < class RightValueType>
     void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasTexCoord())  T() = rVert.cT(); TT::ImportData( rVert); }
   static bool HasTexCoord()   { return true; }
@@ -261,8 +265,9 @@ template <class T> class BitFlags:  public T {
 public:
   BitFlags(){_flags=0;}
   typedef int FlagType;
-  inline int &Flags()       {return _flags; }
-  inline int cFlags() const {return _flags; }
+  inline const int &Flags() const {return _flags; }
+  inline       int &Flags()       {return _flags; }
+  inline       int cFlags() const {return _flags; }
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasFlags()) Flags() = rVert.cFlags(); T::ImportData( rVert); }
   static bool HasFlags()   { return true; }
@@ -283,8 +288,9 @@ template <class A, class T> class Color: public T {
 public:
   Color():_color(vcg::Color4b::White) {}
   typedef A ColorType;
-  inline ColorType &C()       { return _color; }
-  inline ColorType cC() const { return _color; }
+  inline const ColorType &C() const { return _color; }
+  inline       ColorType &C()       { return _color; }
+  inline       ColorType cC() const { return _color; }
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasColor()) C() = rVert.cC();  T::ImportData( rVert); }
   static bool HasColor()   { return true; }
@@ -310,8 +316,9 @@ The Quality Component is a generic place for storing a float. The term 'quality'
 template <class A, class TT> class Quality: public TT {
 public:
   typedef A QualityType;
-  inline QualityType &Q()       { return _quality; }
-  inline QualityType cQ() const {return _quality; }
+  inline const QualityType &Q() const { return _quality; }
+  inline       QualityType &Q()       { return _quality; }
+  inline       QualityType cQ() const {return _quality; }
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasQuality()) Q() = rVert.cQ(); TT::ImportData( rVert); }
   static bool HasQuality()   { return true; }
@@ -340,10 +347,12 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
   public:
     typedef Point2<A> CurvatureType;
     typedef typename CurvatureType::ScalarType ScalarType;
-    ScalarType &Kh()       { return _hk[0];}
-    ScalarType &Kg()       { return _hk[1];}
-    ScalarType cKh() const { return _hk[0];}
-    ScalarType cKg() const { return _hk[1];}
+    const ScalarType &Kh() const { return _hk[0];}
+    const ScalarType &Kg() const { return _hk[1];}
+          ScalarType &Kh()       { return _hk[0];}
+          ScalarType &Kg()       { return _hk[1];}
+          ScalarType cKh() const { return _hk[0];}
+          ScalarType cKg() const { return _hk[1];}
 
     static bool HasCurvature()   { return true; }
     static bool IsCurvatureEnabled(typename TT::VertexType *)   { return true; }
@@ -368,10 +377,12 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
   public:
     typedef CurvatureDirBaseType<float> CurvatureDirType;
 
-    Point3f &PD1()       { static Point3f dummy(0,0,0); return dummy;}
-    Point3f &PD2()       { static Point3f dummy(0,0,0); return dummy;}
-    Point3f cPD1() const { static Point3f dummy(0,0,0); return dummy;}
-    Point3f cPD2() const { static Point3f dummy(0,0,0); return dummy;}
+    const Point3f &PD1() const { static Point3f dummy(0,0,0); return dummy;}
+    const Point3f &PD2() const { static Point3f dummy(0,0,0); return dummy;}
+          Point3f &PD1()       { static Point3f dummy(0,0,0); return dummy;}
+          Point3f &PD2()       { static Point3f dummy(0,0,0); return dummy;}
+          Point3f cPD1() const { static Point3f dummy(0,0,0); return dummy;}
+          Point3f cPD2() const { static Point3f dummy(0,0,0); return dummy;}
 
     float &K1()       { static float dummy(0);assert(0);return dummy;}
     float &K2()       { static float dummy(0);assert(0);return dummy;}
@@ -435,8 +446,9 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
   template <class A, class TT> class Radius: public TT {
   public:
     typedef A RadiusType;
-    RadiusType &R()       { return _radius; }
-    RadiusType cR() const {return _radius; }
+    const RadiusType &R() const { return _radius; }
+          RadiusType &R()       { return _radius; }
+          RadiusType cR() const {return _radius; }
     template < class RightValueType>
     void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasRadius()) R() = rVert.cR(); TT::ImportData( rVert); }
     static bool HasRadius()   { return true; }

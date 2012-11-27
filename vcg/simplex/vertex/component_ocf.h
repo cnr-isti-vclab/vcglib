@@ -305,8 +305,9 @@ public:
   static bool HasNormal()   { return true; }
   static bool HasNormalOcf()   { return true; }
 
-  NormalType &N()       { assert((*this).Base().NormalEnabled); return (*this).Base().NV[(*this).Index()];  }
-  NormalType cN() const { assert((*this).Base().NormalEnabled); return (*this).Base().NV[(*this).Index()];  }
+  const NormalType &N() const { assert((*this).Base().NormalEnabled); return (*this).Base().NV[(*this).Index()];  }
+        NormalType &N()       { assert((*this).Base().NormalEnabled); return (*this).Base().NV[(*this).Index()];  }
+        NormalType cN() const { assert((*this).Base().NormalEnabled); return (*this).Base().NV[(*this).Index()];  }
 
   template <class LeftV>
   void ImportData(const LeftV & leftV){
@@ -324,8 +325,9 @@ template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {public:
 template <class A, class T> class ColorOcf: public T {
 public:
   typedef A ColorType;
-  ColorType &C()       { assert((*this).Base().ColorEnabled); return (*this).Base().CV[(*this).Index()]; }
-  ColorType cC() const { assert((*this).Base().ColorEnabled); return (*this).Base().CV[(*this).Index()]; }
+  const ColorType &C() const { assert((*this).Base().ColorEnabled); return (*this).Base().CV[(*this).Index()]; }
+        ColorType &C()       { assert((*this).Base().ColorEnabled); return (*this).Base().CV[(*this).Index()]; }
+        ColorType cC() const { assert((*this).Base().ColorEnabled); return (*this).Base().CV[(*this).Index()]; }
   template <class LeftV>
   void ImportData(const LeftV & leftV)
   {
@@ -347,8 +349,9 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class A, class T> class QualityOcf: public T {
 public:
   typedef A QualityType;
-  QualityType &Q()       { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()]; }
-  QualityType cQ() const { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()]; }
+  const QualityType &Q() const { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()]; }
+        QualityType &Q()       { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()]; }
+        QualityType cQ() const { assert((*this).Base().QualityEnabled); return (*this).Base().QV[(*this).Index()]; }
   template <class LeftV>
   void ImportData(const LeftV & leftV)
   {
@@ -370,8 +373,9 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class A, class TT> class TexCoordOcf: public TT {
 public:
   typedef A TexCoordType;
-  TexCoordType &T()       { assert((*this).Base().TexCoordEnabled); return (*this).Base().TV[(*this).Index()]; }
-  TexCoordType cT() const { assert((*this).Base().TexCoordEnabled); return (*this).Base().TV[(*this).Index()]; }
+  const TexCoordType &T() const { assert((*this).Base().TexCoordEnabled); return (*this).Base().TV[(*this).Index()]; }
+        TexCoordType &T()       { assert((*this).Base().TexCoordEnabled); return (*this).Base().TV[(*this).Index()]; }
+        TexCoordType cT() const { assert((*this).Base().TexCoordEnabled); return (*this).Base().TV[(*this).Index()]; }
   template < class LeftV>
   void ImportData(const LeftV & leftV)
   {
@@ -392,8 +396,9 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class T> class MarkOcf: public T {
 public:
   typedef int MarkType;
-  inline int &IMark()         { assert((*this).Base().MarkEnabled);  return (*this).Base().MV[(*this).Index()];   }
-  inline int cIMark() const   {  assert((*this).Base().MarkEnabled); return (*this).Base().MV[(*this).Index()]; }
+  inline const int &IMark() const { assert((*this).Base().MarkEnabled);  return (*this).Base().MV[(*this).Index()];   }
+  inline       int &IMark()       { assert((*this).Base().MarkEnabled);  return (*this).Base().MV[(*this).Index()];   }
+  inline       int cIMark() const {  assert((*this).Base().MarkEnabled); return (*this).Base().MV[(*this).Index()]; }
 
   template <class LeftV>
   void ImportData(const LeftV & leftV)
@@ -499,8 +504,9 @@ public:
   typedef A RadiusType;
   typedef RadiusType ScalarType;
 
-  RadiusType &R()       { assert((*this).Base().RadiusEnabled); return (*this).Base().RadiusV[(*this).Index()];}
-  RadiusType cR() const { assert((*this).Base().RadiusEnabled); return (*this).Base().RadiusV[(*this).Index()];}
+  const RadiusType &R() const { assert((*this).Base().RadiusEnabled); return (*this).Base().RadiusV[(*this).Index()];}
+        RadiusType &R()       { assert((*this).Base().RadiusEnabled); return (*this).Base().RadiusV[(*this).Index()];}
+        RadiusType cR() const { assert((*this).Base().RadiusEnabled); return (*this).Base().RadiusV[(*this).Index()];}
 
   template <class LeftV>
   void ImportData(const LeftV & leftV)
