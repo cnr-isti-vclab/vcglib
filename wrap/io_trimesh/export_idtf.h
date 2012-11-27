@@ -462,9 +462,9 @@ typedef typename SaveMeshType::CoordType CoordType;
 		idtf.write(3,"MESH_FACE_POSITION_LIST {");
 		for(ConstFaceIterator fit = m.face.begin();fit != m.face.end();++fit)  
 		{
-			idtf.write(4,TextUtility::nmbToStr(fit->V(0) - &(*m.vert.begin())) + " " +
-				TextUtility::nmbToStr(fit->V(1) - &(*m.vert.begin())) + " " + 
-				TextUtility::nmbToStr(fit->V(2) - &(*m.vert.begin())));
+			idtf.write(4,TextUtility::nmbToStr(fit->cV(0) - &(*m.vert.begin())) + " " +
+				TextUtility::nmbToStr(fit->cV(1) - &(*m.vert.begin())) + " " +
+				TextUtility::nmbToStr(fit->cV(2) - &(*m.vert.begin())));
 		}
 		idtf.write(3,"}");
 

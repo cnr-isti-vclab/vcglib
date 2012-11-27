@@ -627,7 +627,7 @@ namespace Tags
 			{
 				for(unsigned int ii = 0; ii < nedge; ++ii)
 				{
-					int dist  = it->V(ii) - &(*m.vert.begin());
+					int dist  = vcg::tri::Index(m,it->cV(ii));
 					_text.push_back(QString::number(dist));
 					if (vcol)
 						_text.push_back(QString::number(dist));
@@ -650,7 +650,7 @@ namespace Tags
 				for(unsigned int ii = 0; ii < nedge; ++ii)
 				{
 					const typename MESHTYPE::FaceType& f = m.face[*it];
-					int dist  = f.V(ii) - &(*m.vert.begin());
+					int dist  = f.cV(ii) - &(*m.vert.begin());
 					_text.push_back(QString::number(dist));
 					if (vcol)
 						_text.push_back(QString::number(dist));
