@@ -802,8 +802,8 @@ void SplatRenderer<MeshType>::drawSplats(std::vector<MeshType*> & meshes, vcg::G
 			glTexCoordPointer(
 				1,
 				GL_FLOAT,
-				size_t(&m.vert[1].cR())-size_t(&m.vert[0].cR()),
-				&m.vert[0].cR()
+				size_t(&m.vert[1].R())-size_t(&m.vert[0].R()),
+				&m.vert[0].R()
 			);
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 			glClientActiveTexture(GL_TEXTURE0);
