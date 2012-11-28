@@ -297,16 +297,9 @@ private:
 	Color4b c;
 public:
 
-	inline Color4b C() const
-	{
-		return c;
-	}
-
-	inline Color4b & C()
-	{
-		return c;
-	}
-
+    inline const Color4b &C() const	{ return c; }
+    inline       Color4b &C()       { return c;  }
+    inline       Color4b cC() const { return c;  }
 
 	/// Default constructor
 	TriMesh()
