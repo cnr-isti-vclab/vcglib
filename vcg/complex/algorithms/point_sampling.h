@@ -1260,7 +1260,7 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
  */
 static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &montecarloMesh, ScalarType diskRadius, const struct PoissonDiskParam pp=PoissonDiskParam())
 {
-  int t0=clock();
+//  int t0=clock();
 	// spatial index of montecarlo samples - used to choose a new sample to insert
     MontecarloSHT montecarloSHTVec[5];
 

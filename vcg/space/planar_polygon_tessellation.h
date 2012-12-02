@@ -116,11 +116,11 @@ namespace vcg {
 		Point3x n;
 
 		math::SubtractiveRingRNG rg;
-		int i12[2];
+		size_t i12[2];
 		S bestsn = -1.0;
 		Point3x bestn,u,v;
 		for(size_t i  =0; i < points.size();++i){
-			for(int j = 0; j < 2; ++j){ i12[j] = i; while(i12[j]==i) i12[j] = rg.generate(points.size()-1);}
+			for(size_t j = 0; j < 2; ++j){ i12[j] = i; while(i12[j]==i) i12[j] = rg.generate(points.size()-1);}
 			n = (points[i12[0]]-points[i])^(points[i12[1]]-points[i]);
 			S sn = n.SquaredNorm();
 			if(sn > bestsn){ bestsn = sn; bestn = n;} 
