@@ -110,7 +110,7 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
   shots.resize(num_cams);
   for(uint i = 0; i < num_cams;++i)
   {
-    float f, k1, k2;
+    float f, k1;
     vcg::Point4f R;
     vcg::Point3f t;
 

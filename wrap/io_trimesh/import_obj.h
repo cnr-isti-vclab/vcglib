@@ -530,7 +530,7 @@ public:
 	} // end while stream not eof
 	assert((numTriangles +numVertices) == numVerticesPlusFaces+extraTriangles);
 
-	FaceIterator   fi = vcg::tri::Allocator<OpenMeshType>::AddFaces(m,numTriangles);
+    vcg::tri::Allocator<OpenMeshType>::AddFaces(m,numTriangles);
   //-------------------------------------------------------------------------------
 
 	// Now the final passes:

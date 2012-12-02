@@ -96,7 +96,7 @@ static bool ReadHeader(const char * filename,unsigned int &/*num_cams*/, unsigne
 
 static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
                  std::vector<std::string > & image_filenames,
-                 const char * filename,const char * filename_images, const char * filename_images_path = "",CallBackPos *cb=0)
+                 const char * filename,const char * filename_images, CallBackPos *cb=0)
 {
   unsigned int   num_cams,num_points;
 
