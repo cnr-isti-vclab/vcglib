@@ -80,12 +80,12 @@ public:
   const CoordType &cP(int i) const {return P(i);}
   const CoordType &P(int i) const {
     switch(i) {
-    case 0 : return e0.v->cP();
-    case 1 : return e1.v->cP();
-    case 2 : return e0.VFlip()->cP();
+    case 0 : return e0.v->P();
+    case 1 : return e1.v->P();
+    case 2 : return e0.VFlip()->P();
     default: assert(0);
     }
-    return e0.v->cP();
+    return e0.v->P();
   }
 
   ScalarType quality;

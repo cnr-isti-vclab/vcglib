@@ -181,7 +181,7 @@ public:
         // compute matrix Q^t M Q
         Matrix33<ScalarType> QtMQ = (Q.transpose() * M * Q);
 
-        CoordType bl = Q.GetColumn(0);
+//        CoordType bl = Q.GetColumn(0);
         CoordType T1 = Q.GetColumn(1);
         CoordType T2 = Q.GetColumn(2);
 

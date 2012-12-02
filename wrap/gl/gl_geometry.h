@@ -67,7 +67,7 @@ static void fghCircleTable(double **sint,double **cost,const int n)
 /*
  * Draws a solid sphere
  */
-static void glutSolidSphere(GLdouble radius, GLint slices, GLint stacks)
+inline void glutSolidSphere(GLdouble radius, GLint slices, GLint stacks)
 {
     int i,j;
 
@@ -155,7 +155,7 @@ static void glutSolidSphere(GLdouble radius, GLint slices, GLint stacks)
 /*
  * Draws a wire sphere
  */
-static void glutWireSphere(GLdouble radius, GLint slices, GLint stacks)
+inline void glutWireSphere(GLdouble radius, GLint slices, GLint stacks)
 {
     int i,j;
 
