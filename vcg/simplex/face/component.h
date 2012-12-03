@@ -52,6 +52,7 @@ public:
   NormalType &WN(int) { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   NormalType cWN(int) const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
 
+  static bool HasNormal()    { return false; }
   static bool HasWedgeNormal()   { return false; }
   static bool HasFaceNormal()   { return false; }
 
