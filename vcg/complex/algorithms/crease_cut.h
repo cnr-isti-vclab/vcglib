@@ -118,7 +118,7 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 	
 	// A questo punto ho un vettore che mi direbbe per ogni faccia quale vertice devo mettere. Dopo che ho aggiunto i vertici necessari,
 	// rifaccio il giro delle facce
-	qDebug("adding %i vert for %i crease edges ",newVertexCounter-m.vn, creaseCounter);				
+	//qDebug("adding %i vert for %i crease edges ",newVertexCounter-m.vn, creaseCounter);				
 	tri::Allocator<MESH_TYPE>::AddVertices(m,newVertexCounter-m.vn);
  
 	tri::UpdateFlags<MESH_TYPE>::VertexClearV(m);
