@@ -43,7 +43,6 @@ class UpdateFlags
 
 public:
   typedef UpdateMeshType MeshType;
-  typedef vcg::face::Pos<typename UpdateMeshType::FaceType> PosType;
   typedef typename MeshType::ScalarType     ScalarType;
   typedef typename MeshType::VertexType     VertexType;
   typedef typename MeshType::VertexPointer  VertexPointer;
@@ -72,7 +71,7 @@ public:
 
   static void VertexClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
   {
-    if(!HasPerVertexFlags(m)) throw vcg::MissingComponentException("VertexFlags");
+    tri::RequirePerVertexFlags(m);
     int andMask = ~FlagMask;
     for(VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
       if(!(*vi).IsD()) (*vi).Flags() &= andMask ;
@@ -80,7 +79,7 @@ public:
 
   static void EdgeClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
   {
-    if(!HasPerEdgeFlags(m)) throw vcg::MissingComponentException("EdgeFlags");
+    tri::RequirePerEdgeFlags(m);
     int andMask = ~FlagMask;
     for(EdgeIterator ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
       if(!(*ei).IsD()) (*ei).Flags() &= andMask ;
@@ -88,7 +87,7 @@ public:
 
   static void FaceClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
   {
-    if(!HasPerFaceFlags(m)) throw vcg::MissingComponentException("FaceFlags");
+    tri::RequirePerFaceFlags(m);
     int andMask = ~FlagMask;
     for(FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi)
       if(!(*fi).IsD()) (*fi).Flags() &= andMask ;
@@ -96,14 +95,14 @@ public:
 
   static void VertexSet(MeshType &m, unsigned int FlagMask)
   {
-    if(!HasPerVertexFlags(m)) throw vcg::MissingComponentException("VertexFlags");
+    tri::RequirePerVertexFlags(m);
     for(VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
       if(!(*vi).IsD()) (*vi).Flags() |= FlagMask ;
   }
 
   static void FaceSet(MeshType &m, unsigned int FlagMask)
   {
-    if(!HasPerFaceFlags(m)) throw vcg::MissingComponentException("FaceFlags");
+    tri::RequirePerFaceFlags(m);
     for(FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi)
       if(!(*fi).IsD()) (*fi).Flags() |= FlagMask ;
   }
@@ -133,8 +132,9 @@ public:
 */
   static void FaceBorderFromFF(MeshType &m)
   {
-    if(!HasPerFaceFlags(m)) throw vcg::MissingComponentException("FaceFlags");
-    if(!HasFFAdjacency(m)) throw vcg::MissingComponentException("FFAdj");
+    tri::RequirePerFaceFlags(m);
+    tri::RequireFFAdjacency(m);
+
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)if(!(*fi).IsD())
       for(int j=0;j<3;++j)
       {
@@ -146,8 +146,8 @@ public:
 
   static void FaceBorderFromVF(MeshType &m)
   {
-    if(!HasPerFaceFlags(m)) throw vcg::MissingComponentException("FaceFlags");
-    if(!HasVFAdjacency(m)) throw vcg::MissingComponentException("VFAdj");
+    tri::RequirePerFaceFlags(m);
+    tri::RequireVFAdjacency(m);
 
     FaceClearB(m);
     int visitedBit=VertexType::NewBitFlag();
@@ -232,7 +232,7 @@ public:
   // versione minimale che non calcola i complex flag.
   static void VertexBorderFromNone(MeshType &m)
   {
-    if(!HasPerVertexFlags(m)) throw vcg::MissingComponentException("VertexFlags");
+    tri::RequirePerVertexFlags(m);
 
     std::vector<EdgeSorter> e;
     typename UpdateMeshType::FaceIterator pf;
@@ -278,7 +278,7 @@ public:
   /// It has a O(fn log fn) complexity.
   static void FaceBorderFromNone(MeshType &m)
   {
-    if(!HasPerFaceFlags(m)) throw vcg::MissingComponentException("FaceFlags");
+    tri::RequirePerFaceFlags(m);
 
     std::vector<EdgeSorter> e;
     typename UpdateMeshType::FaceIterator pf;
@@ -331,9 +331,8 @@ public:
   /// Compute the PerVertex Border flag deriving it from the border flag of faces
   static void VertexBorderFromFace(MeshType &m)
   {
-    if(!HasPerFaceFlags(m)) throw vcg::MissingComponentException("FaceFlags");
-    if(!HasPerVertexFlags(m)) throw vcg::MissingComponentException("VertexFlags");
-
+    tri::RequirePerFaceFlags(m);
+    tri::RequirePerVertexFlags(m);
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
       (*vi).ClearB();
 
@@ -351,8 +350,8 @@ public:
   //
   static void FaceFauxCrease(MeshType &m,float AngleRad)
   {
-    if(!HasPerFaceFlags(m)) throw vcg::MissingComponentException("FaceFlags");
-    if(!HasFFAdjacency(m)) throw vcg::MissingComponentException("FFAdj");
+    tri::RequirePerFaceFlags(m);
+    tri::RequireFFAdjacency(m);
 
     typename MeshType::FaceIterator f;
 

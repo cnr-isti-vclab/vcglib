@@ -90,9 +90,7 @@ public:
 	*/
   static void PrincipalDirections(MeshType &m)
   {
-
-    assert(tri::HasPerFaceVFAdjacency(m) && tri::HasPerVertexVFAdjacency(m));
-
+    tri::RequireVFAdjacency(m);
     vcg::tri::UpdateNormal<MeshType>::PerVertexAngleWeighted(m);
     vcg::tri::UpdateNormal<MeshType>::NormalizePerVertex(m);
 
@@ -400,7 +398,8 @@ For further details, please, refer to: \n
 */
 static void MeanAndGaussian(MeshType & m)
 {
-  assert(HasFFAdjacency(m));
+  tri::RequireFFAdjacency(m);
+
   float area0, area1, area2, angle0, angle1, angle2;
   FaceIterator fi;
   VertexIterator vi;
@@ -591,12 +590,10 @@ static void MeanAndGaussian(MeshType & m)
 
 	static void PerVertex(MeshType & m)
 	{
-	  // VFAdjacency required!
-	  assert(FaceType::HasVFAdjacency());
-	  assert(VertexType::HasVFAdjacency());
+	  tri::RequireVFAdjacency(m);
 
-		for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-			ComputeSingleVertexCurvature(&*vi,false);
+	  for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+		ComputeSingleVertexCurvature(&*vi,false);
 	}
 
 
@@ -612,9 +609,9 @@ static void MeanAndGaussian(MeshType & m)
 	*/
 
 	static void PrincipalDirectionsNormalCycle(MeshType & m){
-		assert(VertexType::HasVFAdjacency());
-		assert(FaceType::HasFFAdjacency());
-		assert(FaceType::HasFaceNormal());
+	  tri::RequireVFAdjacency(m);
+	  tri::RequireFFAdjacency(m);
+	  tri::RequirePerFaceNormal(m);
 
 		typename MeshType::VertexIterator vi;
 
@@ -625,7 +622,6 @@ static void MeanAndGaussian(MeshType & m)
 			p.FlipE();
 			typename MeshType::VertexType * firstv = p.VFlip();
 			assert(p.F()->V(p.VInd())==&(*vi));
-
 
 			do{
 				if( p.F() != p.FFlip()){
