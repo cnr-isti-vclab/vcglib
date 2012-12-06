@@ -54,7 +54,6 @@ public:
 
   static bool HasNormal()    { return false; }
   static bool HasWedgeNormal()   { return false; }
-  static bool HasFaceNormal()   { return false; }
 
   typedef int WedgeTexCoordType;
   typedef vcg::TexCoord2<float,1> TexCoordType;
@@ -69,7 +68,7 @@ public:
 
   inline void InitIMark()    {  }
   inline int &IMark()       { assert(0); static int tmp=-1; return tmp;}
-  inline int cIMark() const {return 0;}
+  inline int cIMark() const { return 0;}
 
   typedef int MarkType;
   typedef float QualityType;
@@ -85,25 +84,25 @@ public:
   Quality3Type &Q3()       { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
   Quality3Type cQ3() const { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
 
-  static bool HasFaceColor()   { return false; }
+  static bool HasColor()   { return false; }
   static bool HasWedgeColor()   { return false; }
-  static bool HasFaceQuality()   { return false; }
-  static bool HasFaceQuality3()   { return false; }
-  static bool HasFaceMark()   { return false; }
+  static bool HasQuality()   { return false; }
+  static bool HasQuality3()   { return false; }
+  static bool HasMark()   { return false; }
 
   typedef int VFAdjType;
-  typename T::FacePointer &VFp(int)       { static typename T::FacePointer fp=0;  assert(0); return fp; }
-  typename T::FacePointer cVFp(int) const { static typename T::FacePointer fp=0; return fp; }
-  typename T::FacePointer &FFp(int)       { static typename T::FacePointer fp=0;  assert(0); return fp; }
-  typename T::FacePointer cFFp(int) const { static typename T::FacePointer fp=0; return fp; }
-  typename T::EdgePointer &FEp(int)       { static typename T::EdgePointer fp=0;  assert(0); return fp; }
-  typename T::EdgePointer cFEp(int) const { static typename T::EdgePointer fp=0; return fp; }
-  typename T::HEdgePointer &FHp()       { static typename T::HEdgePointer fp=0;  assert(0); return fp; }
-  typename T::HEdgePointer cFHp() const { static typename T::HEdgePointer fp=0; assert(0);return fp; }
-  char &VFi(int)       { static char z=0;  assert(0); return z;}
-  char &FFi(int)       { static char z=0;  assert(0); return z;}
-  char cVFi(int) const { static char z=0; return z;}
-  char cFFi(int) const { static char z=0; return z;}
+  typename T::FacePointer &VFp(int)       { static typename T::FacePointer fp=0; assert(0); return fp; }
+  typename T::FacePointer cVFp(int) const { static typename T::FacePointer fp=0; assert(0); return fp; }
+  typename T::FacePointer &FFp(int)       { static typename T::FacePointer fp=0; assert(0); return fp; }
+  typename T::FacePointer cFFp(int) const { static typename T::FacePointer fp=0; assert(0); return fp; }
+  typename T::EdgePointer &FEp(int)       { static typename T::EdgePointer fp=0; assert(0); return fp; }
+  typename T::EdgePointer cFEp(int) const { static typename T::EdgePointer fp=0; assert(0); return fp; }
+  typename T::HEdgePointer &FHp()       { static typename T::HEdgePointer fp=0; assert(0); return fp; }
+  typename T::HEdgePointer cFHp() const { static typename T::HEdgePointer fp=0; assert(0); return fp; }
+  char &VFi(int)       { static char z=0; assert(0); return z;}
+  char &FFi(int)       { static char z=0; assert(0); return z;}
+  char cVFi(int) const { static char z=0; assert(0); return z;}
+  char cFFi(int) const { static char z=0; assert(0); return z;}
 
   static bool HasVFAdjacency()   {   return false; }
   static bool HasFFAdjacency()   {   return false; }
@@ -112,10 +111,10 @@ public:
 
   typedef int CurvatureDirType;
 
-  Point3f &PD1()       { static Point3f dummy(0,0,0); return dummy;}
-  Point3f &PD2()       { static Point3f dummy(0,0,0); return dummy;}
-  Point3f cPD1() const { static Point3f dummy(0,0,0); return dummy;}
-  Point3f cPD2() const { static Point3f dummy(0,0,0); return dummy;}
+  Point3f &PD1()       { static Point3f dummy(0,0,0); assert(0); return dummy;}
+  Point3f &PD2()       { static Point3f dummy(0,0,0); assert(0); return dummy;}
+  Point3f cPD1() const { static Point3f dummy(0,0,0); assert(0); return dummy;}
+  Point3f cPD2() const { static Point3f dummy(0,0,0); assert(0); return dummy;}
 
   float &K1()      { static float dummy(0); assert(0); return dummy;}
   float &K2()      { static float dummy(0); assert(0); return dummy;}
@@ -204,13 +203,13 @@ public:
   template <class RightValueType>
   void ImportData(const RightValueType & rightF)
   {
-    if(RightValueType::HasFaceNormal()) N().Import(rightF.cN());
+    if(RightValueType::HasNormal()) N().Import(rightF.cN());
     T::ImportData( rightF);
   }
 
   inline void Alloc(const int & ns){T::Alloc(ns);}
   inline void Dealloc(){T::Dealloc();}
-  static bool HasFaceNormal()   { return true; }
+  static bool HasNormal()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("NormalAbs"));T::Name(name);}
 
 private:
@@ -334,13 +333,13 @@ public:
   ColorType cC() const { return _color; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
-    if(RightValueType::HasFaceColor())
+    if(RightValueType::HasColor())
       C() = rightF.cC();
     T::ImportData(rightF);
   }
   inline void Alloc(const int & ns){T::Alloc(ns);}
   inline void Dealloc(){T::Dealloc();}
-  static bool HasFaceColor()   { return true; }
+  static bool HasColor()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
 
 private:
@@ -387,13 +386,13 @@ public:
   QualityType cQ() const { return _quality; }
     template <class RightValueType>
     void ImportData(const RightValueType & rightF){
-      if(RightValueType::HasFaceQuality())
+      if(RightValueType::HasQuality())
         Q() = rightF.cQ();
       T::ImportData(rightF);
     }
 	inline void Alloc(const int & ns){T::Alloc(ns);}
 	inline void Dealloc(){T::Dealloc();}
-  static bool HasFaceQuality()   { return true; }
+  static bool HasQuality()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));T::Name(name);}
 private:
   QualityType _quality;    
@@ -417,12 +416,12 @@ public:
   Quality3Type cQ3() const { return _quality; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
-    if(RightValueType::HasFaceQuality3()) Q3() = rightF.cQ3();
+    if(RightValueType::HasQuality3()) Q3() = rightF.cQ3();
     T::ImportData(rightF);
   }
   inline void Alloc(const int & ns){T::Alloc(ns);}
   inline void Dealloc(){T::Dealloc();}
-  static bool HasFaceQuality3()   { return true; }
+  static bool HasQuality3()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality3"));T::Name(name);}
 private:
   Quality3Type _quality;
@@ -449,10 +448,10 @@ public:
   inline int &IMark()       { return _imark;}
   inline int cIMark() const { return _imark;}
   inline void InitIMark()    { _imark = 0; }
-  static bool HasFaceMark()      { return true; }
+  static bool HasMark()      { return true; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
-    if(RightValueType::HasFaceMark())
+    if(RightValueType::HasMark())
       IMark() = rightF.cIMark();
     T::ImportData(rightF);
   }

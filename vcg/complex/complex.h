@@ -593,6 +593,40 @@ bool HasPerMeshAttribute(const MESH_TYPE &m,   std::string   name){
 		return (ai!= m.mesh_attr.end() ) ;
 }
 
+
+template <class MeshType> void RequireVFAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
+template <class MeshType> void RequireFFAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
+template <class MeshType> void RequireFEAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
+template <class MeshType> void RequireFHAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
+
+template <class MeshType> void RequirePerVertexQuality     (MeshType &m) { if(!tri::HasPerVertexQuality     (m)) throw vcg::MissingComponentException("PerVertexQuality     "); }
+template <class MeshType> void RequirePerVertexNormal      (MeshType &m) { if(!tri::HasPerVertexNormal      (m)) throw vcg::MissingComponentException("PerVertexNormal      "); }
+template <class MeshType> void RequirePerVertexColor       (MeshType &m) { if(!tri::HasPerVertexColor       (m)) throw vcg::MissingComponentException("PerVertexColor       "); }
+template <class MeshType> void RequirePerVertexMark        (MeshType &m) { if(!tri::HasPerVertexMark        (m)) throw vcg::MissingComponentException("PerVertexMark        "); }
+template <class MeshType> void RequirePerVertexFlags       (MeshType &m) { if(!tri::HasPerVertexFlags       (m)) throw vcg::MissingComponentException("PerVertexFlags       "); }
+template <class MeshType> void RequirePerVertexRadius      (MeshType &m) { if(!tri::HasPerVertexRadius      (m)) throw vcg::MissingComponentException("PerVertexRadius      "); }
+template <class MeshType> void RequirePerVertexCurvature   (MeshType &m) { if(!tri::HasPerVertexCurvature   (m)) throw vcg::MissingComponentException("PerVertexCurvature   "); }
+template <class MeshType> void RequirePerVertexCurvatureDir(MeshType &m) { if(!tri::HasPerVertexCurvatureDir(m)) throw vcg::MissingComponentException("PerVertexCurvatureDir"); }
+template <class MeshType> void RequirePerVertexTexCoord    (MeshType &m) { if(!tri::HasPerVertexTexCoord    (m)) throw vcg::MissingComponentException("PerVertexTexCoord    "); }
+
+template <class MeshType> void RequirePerEdgeQuality (MeshType &m) { if(!tri::HasPerEdgeQuality (m)) throw vcg::MissingComponentException("PerEdgeQuality "); }
+template <class MeshType> void RequirePerEdgeNormal  (MeshType &m) { if(!tri::HasPerEdgeNormal  (m)) throw vcg::MissingComponentException("PerEdgeNormal  "); }
+template <class MeshType> void RequirePerEdgeColor   (MeshType &m) { if(!tri::HasPerEdgeColor   (m)) throw vcg::MissingComponentException("PerEdgeColor   "); }
+template <class MeshType> void RequirePerEdgeMark    (MeshType &m) { if(!tri::HasPerEdgeMark    (m)) throw vcg::MissingComponentException("PerEdgeMark    "); }
+template <class MeshType> void RequirePerEdgeFlags   (MeshType &m) { if(!tri::HasPerEdgeFlags   (m)) throw vcg::MissingComponentException("PerEdgeFlags   "); }
+
+template <class MeshType> void RequirePerFaceFlags       (MeshType &m) { if(!tri::HasPerFaceFlags       (m)) throw vcg::MissingComponentException("PerFaceFlags       "); }
+template <class MeshType> void RequirePerFaceNormal      (MeshType &m) { if(!tri::HasPerFaceNormal      (m)) throw vcg::MissingComponentException("PerFaceNormal      "); }
+template <class MeshType> void RequirePerFaceColor       (MeshType &m) { if(!tri::HasPerFaceColor       (m)) throw vcg::MissingComponentException("PerFaceColor       "); }
+template <class MeshType> void RequirePerFaceMark        (MeshType &m) { if(!tri::HasPerFaceMark        (m)) throw vcg::MissingComponentException("PerFaceMark        "); }
+template <class MeshType> void RequirePerFaceQuality     (MeshType &m) { if(!tri::HasPerFaceQuality     (m)) throw vcg::MissingComponentException("PerFaceQuality     "); }
+template <class MeshType> void RequirePerFaceCurvatureDir(MeshType &m) { if(!tri::HasPerFaceCurvatureDir(m)) throw vcg::MissingComponentException("PerFaceCurvatureDir"); }
+
+template <class MeshType> void RequirePerFaceWedgeColor   (MeshType &m) { if(!tri::HasPerWedgeColor   (m)) throw vcg::MissingComponentException("PerFaceWedgeColor   "); }
+template <class MeshType> void RequirePerFaceWedgeNormal  (MeshType &m) { if(!tri::HasPerWedgeNormal  (m)) throw vcg::MissingComponentException("PerFaceWedgeNormal  "); }
+template <class MeshType> void RequirePerFaceWedgeTexCoord(MeshType &m) { if(!tri::HasPerWedgeTexCoord(m)) throw vcg::MissingComponentException("PerFaceWedgeTexCoord"); }
+
+
 /*@}*/
 /*@}*/
 }	 // end namespace

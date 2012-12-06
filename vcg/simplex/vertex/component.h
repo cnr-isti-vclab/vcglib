@@ -377,12 +377,12 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
   public:
     typedef CurvatureDirBaseType<float> CurvatureDirType;
 
-    const Point3f &PD1() const { static Point3f dummy(0,0,0); return dummy;}
-    const Point3f &PD2() const { static Point3f dummy(0,0,0); return dummy;}
-          Point3f &PD1()       { static Point3f dummy(0,0,0); return dummy;}
-          Point3f &PD2()       { static Point3f dummy(0,0,0); return dummy;}
-          Point3f cPD1() const { static Point3f dummy(0,0,0); return dummy;}
-          Point3f cPD2() const { static Point3f dummy(0,0,0); return dummy;}
+    const Point3f &PD1() const { static Point3f dummy(0,0,0);assert(0); return dummy;}
+    const Point3f &PD2() const { static Point3f dummy(0,0,0);assert(0); return dummy;}
+          Point3f &PD1()       { static Point3f dummy(0,0,0);assert(0); return dummy;}
+          Point3f &PD2()       { static Point3f dummy(0,0,0);assert(0); return dummy;}
+          Point3f cPD1() const { static Point3f dummy(0,0,0);assert(0); return dummy;}
+          Point3f cPD2() const { static Point3f dummy(0,0,0);assert(0); return dummy;}
 
     float &K1()       { static float dummy(0);assert(0);return dummy;}
     float &K2()       { static float dummy(0);assert(0);return dummy;}
@@ -413,7 +413,7 @@ public:
 	ScalarType &K1(){ return _curv.k1;}
 	ScalarType &K2(){ return _curv.k2;}
 	const ScalarType &cK1() const {return _curv.k1;}
-	const ScalarType &cK2()const  {return _curv.k2;}
+	const ScalarType &cK2() const {return _curv.k2;}
 	template < class RightValueType>
 	void ImportData(const RightValueType  & rVert ) {
 	  if(RightValueType::HasCurvatureDir()) {

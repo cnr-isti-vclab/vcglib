@@ -235,52 +235,52 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 	
 bool IsQualityEnabled() const {return QualityEnabled;}
 void EnableQuality() {
-	assert(VALUE_TYPE::HasFaceQualityOcf());
+	assert(VALUE_TYPE::HasQualityOcf());
 	QualityEnabled=true;
 	QV.resize((*this).size());
 }
 
 void DisableQuality() {
-	assert(VALUE_TYPE::HasFaceQualityOcf());
+	assert(VALUE_TYPE::HasQualityOcf());
 	QualityEnabled=false;
 	QV.clear();
 }
 	
 bool IsColorEnabled() const {return ColorEnabled;}
 void EnableColor() {
-  assert(VALUE_TYPE::HasFaceColorOcf());
+  assert(VALUE_TYPE::HasColorOcf());
   ColorEnabled=true;
   CV.resize((*this).size());
 }
 
 void DisableColor() {
-  assert(VALUE_TYPE::HasFaceColorOcf());
+  assert(VALUE_TYPE::HasColorOcf());
   ColorEnabled=false;
   CV.clear();
 }
 
 bool IsMarkEnabled() const {return MarkEnabled;}
 void EnableMark() {
-  assert(VALUE_TYPE::HasFaceMarkOcf());
+  assert(VALUE_TYPE::HasMarkOcf());
   MarkEnabled=true;
   MV.resize((*this).size());
 }
 
 void DisableMark() {
-  assert(VALUE_TYPE::HasFaceMarkOcf());
+  assert(VALUE_TYPE::HasMarkOcf());
   MarkEnabled=false;
   MV.clear();
 }
 
 bool IsNormalEnabled() const {return NormalEnabled;}
 void EnableNormal() {
-  assert(VALUE_TYPE::HasFaceNormalOcf());
+  assert(VALUE_TYPE::HasNormalOcf());
   NormalEnabled=true;
   NV.resize((*this).size());
 }
 
 void DisableNormal() {
-  assert(VALUE_TYPE::HasFaceNormalOcf());
+  assert(VALUE_TYPE::HasNormalOcf());
   NormalEnabled=false;
   NV.clear();
 }
@@ -461,8 +461,8 @@ public:
 template <class A, class T> class NormalOcf: public T {
 public:
   typedef A NormalType;
-  static bool HasFaceNormal()   { return true; }
-  static bool HasFaceNormalOcf()   { return true; }
+  static bool HasNormal()   { return true; }
+  static bool HasNormalOcf()   { return true; }
 
   NormalType &N()       {
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
@@ -580,12 +580,12 @@ public:
 
   template <class LeftF>
   void ImportData(const LeftF & leftF){
-    if((*this).Base().QualityEnabled && LeftF::HasFaceQuality())
+    if((*this).Base().QualityEnabled && LeftF::HasQuality())
       Q() = leftF.cQ();
     T::ImportData(leftF);
   }
-  static bool HasFaceQuality()   { return true; }
-  static bool HasFaceQualityOcf()   { return true; }
+  static bool HasQuality()   { return true; }
+  static bool HasQualityOcf()   { return true; }
 };
 
 template <class T> class QualityfOcf: public QualityOcf<float, T> {};
@@ -605,12 +605,12 @@ public:
 
   template <class LeftF>
   void ImportData(const LeftF & leftF){
-    if((*this).Base().ColorEnabled && LeftF::HasFaceColor())
+    if((*this).Base().ColorEnabled && LeftF::HasColor())
       C() = leftF.cC();
     T::ImportData(leftF);
   }
-  static bool HasFaceColor()   { return true; }
-  static bool HasFaceColorOcf()   { return true; }
+  static bool HasColor()   { return true; }
+  static bool HasColorOcf()   { return true; }
 };
 
 template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
@@ -629,12 +629,12 @@ public:
 
   template <class LeftF>
   void ImportData(const LeftF & leftF){
-    if((*this).Base().MarkEnabled && LeftF::HasFaceMark())
+    if((*this).Base().MarkEnabled && LeftF::HasMark())
       IMark() = leftF.cIMark();
     T::ImportData(leftF);
   }
-  static bool HasFaceMark()   { return true; }
-  static bool HasFaceMarkOcf()   { return true; }
+  static bool HasMark()   { return true; }
+  static bool HasMarkOcf()   { return true; }
   inline void InitIMark()    { IMark() = 0; }
 };
 
@@ -713,11 +713,11 @@ public:
   template <class LeftF>
   void ImportData(const LeftF & leftF){T::ImportData(leftF);}
 
-  static bool HasFaceColorOcf()        { return false; }
-  static bool HasFaceQualityOcf()        { return false; }
-  static bool HasFaceNormalOcf()       { return false; }
-  static bool HasFaceCurvatureDirOcf() { return false; }
-  static bool HasFaceMarkOcf()         { return false; }
+  static bool HasColorOcf()        { return false; }
+  static bool HasQualityOcf()        { return false; }
+  static bool HasNormalOcf()       { return false; }
+  static bool HasCurvatureDirOcf() { return false; }
+  static bool HasMarkOcf()         { return false; }
   static bool HasWedgeTexCoordOcf()    { return false; }
   static bool HasWedgeColorOcf()       { return false; }
   static bool HasWedgeNormalOcf()      { return false; }
@@ -763,20 +763,20 @@ public:
   template < class FaceType >
   bool FaceVectorHasPerFaceColor(const face::vector_ocf<FaceType> &fv)
   {
-    if(FaceType::HasFaceColorOcf()) return fv.IsColorEnabled();
-    else return FaceType::HasFaceColor();
+    if(FaceType::HasColorOcf()) return fv.IsColorEnabled();
+    else return FaceType::HasColor();
   }
   template < class FaceType >
   bool FaceVectorHasPerFaceQuality(const face::vector_ocf<FaceType> &fv)
   {
-    if(FaceType::HasFaceQualityOcf()) return fv.IsQualityEnabled();
-    else return FaceType::HasFaceQuality();
+    if(FaceType::HasQualityOcf()) return fv.IsQualityEnabled();
+    else return FaceType::HasQuality();
   }
   template < class FaceType >
   bool FaceVectorHasPerFaceMark(const face::vector_ocf<FaceType> &fv)
   {
-    if(FaceType::HasFaceMarkOcf()) return fv.IsMarkEnabled();
-    else return FaceType::HasFaceMark();
+    if(FaceType::HasMarkOcf()) return fv.IsMarkEnabled();
+    else return FaceType::HasMark();
   }
   template < class FaceType >
   bool FaceVectorHasPerFaceCurvatureDir(const face::vector_ocf<FaceType> &fv)
@@ -787,8 +787,8 @@ public:
   template < class FaceType >
   bool FaceVectorHasPerFaceNormal(const face::vector_ocf<FaceType> &fv)
   {
-    if(FaceType::HasFaceNormalOcf()) return fv.IsNormalEnabled();
-    else return FaceType::HasFaceNormal();
+    if(FaceType::HasNormalOcf()) return fv.IsNormalEnabled();
+    else return FaceType::HasNormal();
   }
   template < class FaceType >
   void ReorderFace( std::vector<size_t>  &newFaceIndex, face::vector_ocf< FaceType > &faceVec)
