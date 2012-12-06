@@ -496,11 +496,11 @@ template < class TriMeshType> bool HasPerWedgeTexCoord(const TriMeshType &m) { r
 template < class  CType0, class CType1, class CType2 , class CType3>
 bool HasPolyInfo (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::FaceContainer::value_type::HasPolyInfo();}
 
-template < class FaceType>    bool FaceVectorHasPerFaceFlags  (const std::vector<FaceType> &) {  return FaceType::HasFlags      (); }
-template < class FaceType>    bool FaceVectorHasPerFaceNormal (const std::vector<FaceType> &) {  return FaceType::HasFaceNormal (); }
-template < class FaceType>    bool FaceVectorHasPerFaceColor  (const std::vector<FaceType> &) {  return FaceType::HasFaceColor  (); }
-template < class FaceType>    bool FaceVectorHasPerFaceMark   (const std::vector<FaceType> &) {  return FaceType::HasFaceMark   (); }
-template < class FaceType>    bool FaceVectorHasPerFaceQuality(const std::vector<FaceType> &) {  return FaceType::HasFaceQuality(); }
+template < class FaceType>    bool FaceVectorHasPerFaceFlags  (const std::vector<FaceType> &) {  return FaceType::HasFlags  (); }
+template < class FaceType>    bool FaceVectorHasPerFaceNormal (const std::vector<FaceType> &) {  return FaceType::HasNormal (); }
+template < class FaceType>    bool FaceVectorHasPerFaceColor  (const std::vector<FaceType> &) {  return FaceType::HasColor  (); }
+template < class FaceType>    bool FaceVectorHasPerFaceMark   (const std::vector<FaceType> &) {  return FaceType::HasMark   (); }
+template < class FaceType>    bool FaceVectorHasPerFaceQuality(const std::vector<FaceType> &) {  return FaceType::HasQuality(); }
 template < class FaceType>    bool FaceVectorHasFFAdjacency   (const std::vector<FaceType> &) {  return FaceType::HasFFAdjacency(); }
 template < class FaceType>    bool FaceVectorHasFEAdjacency   (const std::vector<FaceType> &) {  return FaceType::HasFEAdjacency(); }
 template < class FaceType>    bool FaceVectorHasFVAdjacency   (const std::vector<FaceType> &) {  return FaceType::HasFVAdjacency(); }
