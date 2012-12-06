@@ -602,9 +602,9 @@ bool HasPerMeshAttribute(const MESH_TYPE &m,   std::string   name){
 
 
 template <class MeshType> void RequireVFAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
-template <class MeshType> void RequireFFAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
-template <class MeshType> void RequireFEAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
-template <class MeshType> void RequireFHAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
+template <class MeshType> void RequireFFAdjacency    (MeshType &m) { if(!tri::HasFFAdjacency   (m)) throw vcg::MissingComponentException("FFAdjacency"); }
+template <class MeshType> void RequireFEAdjacency    (MeshType &m) { if(!tri::HasVEAdjacency   (m)) throw vcg::MissingComponentException("VEAdjacency"); }
+template <class MeshType> void RequireFHAdjacency    (MeshType &m) { if(!tri::HasVHAdjacency   (m)) throw vcg::MissingComponentException("VHAdjacency"); }
 
 template <class MeshType> void RequirePerVertexQuality     (MeshType &m) { if(!tri::HasPerVertexQuality     (m)) throw vcg::MissingComponentException("PerVertexQuality     "); }
 template <class MeshType> void RequirePerVertexNormal      (MeshType &m) { if(!tri::HasPerVertexNormal      (m)) throw vcg::MissingComponentException("PerVertexNormal      "); }
