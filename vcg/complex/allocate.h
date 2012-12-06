@@ -30,22 +30,7 @@
 
 namespace vcg {
 
-class PointerToAttribute
-{
-public:
-    SimpleTempDataBase * _handle;		// pointer to the SimpleTempData that stores the attribute
-    std::string _name;					// name of the attribute
-    int _sizeof;						// size of the attribute type (used only with VMI loading)
-    int _padding;						// padding 	(used only with VMI loading)
-
-    int n_attr;							// unique ID of the attribute
-
-	void Resize(const int & sz){((SimpleTempDataBase *)_handle)->Resize(sz);}
-	void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase *)_handle)->Reorder(newVertIndex);}
-	bool operator<(const  PointerToAttribute    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
-};
-
-	namespace tri {
+namespace tri {
 /** \addtogroup trimesh
 @{
 */
