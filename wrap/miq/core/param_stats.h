@@ -172,6 +172,26 @@ typename FaceType::ScalarType LaplaceDistortion(FaceType &f ,typename FaceType::
 }
 
 template< class MeshType>
+void UpdateUVBox(MeshType &mesh)
+{
+  typedef typename MeshType::ScalarType ScalarType;
+  typename  MeshType::template PerMeshAttributeHandle<vcg::Box2<ScalarType> > Handle_UVBox;
+  bool HasUVBox=vcg::tri::HasPerMeshAttribute(mesh,std::string("UVBox"));
+  if (!HasUVBox)
+      Handle_UVBox=vcg::tri::Allocator<MeshType>::template AddPerMeshAttribute<vcg::Box2<ScalarType> >(mesh,std::string("UVBox"));
+  else
+      Handle_UVBox=vcg::tri::Allocator<MeshType>::template GetPerMeshAttribute<vcg::Box2<ScalarType> >(mesh,"UVBox");
+  Handle_UVBox().SetNull();
+  for (unsigned int i=0;i<mesh.face.size();i++)
+  {
+      if (mesh.face[i].IsD())continue;
+      Handle_UVBox().Add(mesh.face[i].WT(0).P());
+      Handle_UVBox().Add(mesh.face[i].WT(1).P());
+      Handle_UVBox().Add(mesh.face[i].WT(2).P());
+  }
+}
+
+template< class MeshType>
 void SetFaceQualityByDistortion(MeshType &Tmesh,
                                 typename MeshType::ScalarType h)
 {
