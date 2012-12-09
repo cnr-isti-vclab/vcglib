@@ -58,6 +58,22 @@ namespace vcg {
 				return ret;
 			}
 
+            static int FollowLineDirection(const FaceType &f0,
+                                           const FaceType &f1,
+                                           int dir)
+            {
+                ///first it rotate dir to match with f1
+                CoordType dir0=CrossVector(f0,dir);
+                CoordType dir0R=vcg::tri::CrossField<MeshType>::Rotate(f0,f1,dir0);
+                ///then get the closest upf to K*PI/2 rotations
+                CoordType dir1_test=CrossVector(f1,dir);
+                CoordType dir2_test=-dir1_test;
+                if ((dir1_test*dir0R)>(dir2_test*dir0R))
+                    return dir;
+                 return ((dir+2)%4);
+
+            }
+
             static void SetVertCrossFromCurvature(MeshType &mesh)
 			{
 				vcg::tri::UpdateTopology<MeshType>::FaceFace(mesh);
