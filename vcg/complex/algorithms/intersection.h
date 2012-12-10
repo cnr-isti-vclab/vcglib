@@ -142,8 +142,8 @@ bool IntersectionPlaneMesh(TriMeshType & m,
 									Plane3<ScalarType>  pl,
 									EdgeMeshType & em)
 {
-  std::vector<Point3f> ptVec;
-  std::vector<Point3f> nmVec;
+  std::vector<Point3<ScalarType> > ptVec;
+  std::vector<Point3<ScalarType> > nmVec;
 
   typename TriMeshType::template PerVertexAttributeHandle < ScalarType > qH =
       tri::Allocator<TriMeshType> :: template AddPerVertexAttribute < ScalarType >(m,"TemporaryPlaneDistance");
@@ -161,18 +161,18 @@ bool IntersectionPlaneMesh(TriMeshType & m,
       {
         if((qH[m.face[i].V0(j)] * qH[m.face[i].V1(j)])<0)
        {
-         const Point3f &p0 = m.face[i].V0(j)->cP();
-         const Point3f &p1 = m.face[i].V1(j)->cP();
-         const Point3f &n0 = m.face[i].V0(j)->cN();
-         const Point3f &n1 = m.face[i].V1(j)->cN();
+         const Point3<ScalarType> &p0 = m.face[i].V0(j)->cP();
+         const Point3<ScalarType> &p1 = m.face[i].V1(j)->cP();
+         const Point3<ScalarType> &n0 = m.face[i].V0(j)->cN();
+         const Point3<ScalarType> &n1 = m.face[i].V1(j)->cN();
          float q0 = qH[m.face[i].V0(j)];
          float q1 = qH[m.face[i].V1(j)];
 //         printf("Intersection ( %3.2f %3.2f %3.2f )-( %3.2f %3.2f %3.2f )\n",p0[0],p0[1],p0[2],p1[0],p1[1],p1[2]);
-         Point3f pp;
-         Segment3f seg(p0,p1);
+         Point3<ScalarType> pp;
+         Segment3<ScalarType> seg(p0,p1);
          IntersectionPlaneSegment(pl,seg,pp);
          ptVec.push_back(pp);
-         Point3f nn =(n0*fabs(q1) + n1*fabs(q0))/fabs(q0-q1);
+         Point3<ScalarType> nn =(n0*fabs(q1) + n1*fabs(q0))/fabs(q0-q1);
          nmVec.push_back(nn);
        }
         if(qH[m.face[i].V(j)]==0)  ptVec.push_back(m.face[i].V(j)->cP());
