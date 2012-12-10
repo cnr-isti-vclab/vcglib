@@ -29,7 +29,10 @@ namespace vcg
 class MissingComponentException : public std::runtime_error
 {
 public:
-  MissingComponentException(const std::string &err):std::runtime_error(err) { std::cout << "Missing Component Exception -" << err << "- \n";}
+  MissingComponentException(const std::string &err):std::runtime_error(err)
+  {
+    std::cout << "Missing Component Exception -" << err << "- \n";
+  }
     virtual const char *what() const throw ()
     {
       static char buf[128]="Missing Component";
