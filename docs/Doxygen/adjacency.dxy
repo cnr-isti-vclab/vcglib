@@ -106,7 +106,7 @@ This implementation does not work if the vertex is on the border. Just try with 
 Jumping Pos
 -----------
 The Jumping Pos works exactly like the Pos, only it does not bounce when it encounters the border. Instead, it jump around the vertex as if the to border faces sharing the vertex (faces f0 and f2 in the image) were adjacent.
-
+\code
 sf/apps/sample/trimesh_pos_demo/trimesh_pos_demo.cpp
 
     #include <vcg/simplex/face/jumping_pos.h> // include the definition of jumping pos
@@ -126,7 +126,7 @@ sf/apps/sample/trimesh_pos_demo/trimesh_pos_demo.cpp
         p.NextFE();
       }while(p.f!=start);
     }
-
+\endcode
 VF Adjacency
 ------------
 
@@ -154,7 +154,7 @@ VFIterator
 ----------
 
 VFIterator is a simple iterator to run over the faces in the one-ring neighborhood of a vertex using the VF Adjacency (it is just like Pos for the FF Adjacency) The following code snippet shows how to use the VFIterator:
-
+\code
 sf/apps/sample/trimesh_pos_demo/trimesh_vfiter_demo.cpp
 
 #include <vcg/simplex/face/pos.h> // include the definition of  VFIterator
@@ -173,6 +173,16 @@ void OneRingNeighborhoodVF( MyVertex * v)
     // ...do something with face f
   }
 }
+\endcode
+Stars and Rings
+---------------
+We have a few handy functions to recover the set of faces/vertices incident on vertex:
+
+- \ref vcg::face::VFOrderedStarFF
+- \ref vcg::face::VVStarVF
+- \ref vcg::face::VFStarVF
+- \ref vcg::face::VFExtendedStarVF
+- \ref vcg::face::EFStarFF
 
 Few facts on FF adjacency and VF adjacency
 ------------------------------------------

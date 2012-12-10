@@ -396,7 +396,7 @@ void SwapEdge(FaceType &f, const int z)
 */
 
 template <class FaceType>
-static bool CheckFlipEdgeNormal(FaceType &f, const int z, const float angleRad)
+bool CheckFlipEdgeNormal(FaceType &f, const int z, const float angleRad)
 {
   typedef typename FaceType::VertexType VertexType;
   typedef typename VertexType::CoordType CoordType;
@@ -429,7 +429,7 @@ static bool CheckFlipEdgeNormal(FaceType &f, const int z, const float angleRad)
 *	\param z	the edge index
 */
 template <class FaceType>
-static bool CheckFlipEdge(FaceType &f, int z)
+bool CheckFlipEdge(FaceType &f, int z)
 {
   typedef typename FaceType::VertexType VertexType;
   typedef typename vcg::face::Pos< FaceType > PosType;
@@ -481,7 +481,7 @@ static bool CheckFlipEdge(FaceType &f, int z)
 *       formed by the face \a f and the face adjacent to the specified edge.
 */
 template <class FaceType>
-static void FlipEdge(FaceType &f, const int z)
+void FlipEdge(FaceType &f, const int z)
 {	
 	assert(z>=0);
 	assert(z<3);
@@ -671,14 +671,15 @@ void EFStarFF( FaceType* fp, int ei,
 
 
 /*!
- * Compute the set of faces adjacent to a given vertex using VF adjacency.
+ * \brief Compute the set of faces adjacent to a given vertex using VF adjacency.
+ *
  * The set is faces is extended of a given number of step
  *	\param vp	pointer to the vertex whose star has to be computed.
  *  \param num_step the number of step to extend the star
  *	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
  */
 template <class FaceType>
-static void VFExtendedStarVF(typename FaceType::VertexType* vp,
+void VFExtendedStarVF(typename FaceType::VertexType* vp,
                              const int num_step,
                              std::vector<FaceType*> &faceVec)
     {
@@ -710,14 +711,15 @@ static void VFExtendedStarVF(typename FaceType::VertexType* vp,
     }
     
 /*!
-* Compute the ordered set of faces adjacent to a given vertex using FF adiacency
+ * \brief Compute the ordered set of faces adjacent to a given vertex using FF adiacency
+*
 *	\param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
 *	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
 *	\param edgeVec a std::vector of indexes filled with the indexes of the corresponding edges shared between the faces.
 *
 */
 template <class FaceType>
-static void VFOrderedStarFF(Pos<FaceType> &startPos,
+void VFOrderedStarFF(Pos<FaceType> &startPos,
 						std::vector<FaceType*> &faceVec,
 						std::vector<int> &edgeVec)
 {

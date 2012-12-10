@@ -186,7 +186,7 @@ SEPARATE_MEMBER_PAGES  = NO
 # The TAB_SIZE tag can be used to set the number of spaces in a tab. 
 # Doxygen uses this value to replace tabs by spaces in code fragments.
 
-TAB_SIZE               = 2
+TAB_SIZE               = 8
 
 # This tag can be used to specify a number of aliases that acts 
 # as commands in the documentation. An alias has the form "name=value". 
@@ -665,26 +665,27 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = ../../vcg/complex/allocate.h \
+INPUT                  = . \
+                         ../../vcg/simplex/vertex/component.h \
+                         ../../vcg/simplex/edge/component.h \
+                         ../../vcg/simplex/face/component.h \
+                         ../../vcg/simplex/face/topology.h \
+                         ../../vcg/complex/complex.h \
+                         ../../vcg/complex/allocate.h \
+                         ../../vcg/complex/append.h \
                          ../../vcg/complex/algorithms/update \
                          ../../vcg/complex/algorithms/inertia.h \
                          ../../vcg/complex/algorithms/point_sampling.h \
                          ../../vcg/complex/algorithms/clean.h \
                          ../../vcg/complex/algorithms/refine.h \
+                         ../../vcg/complex/algorithms/create/platonic.h \
+                         ../../vcg/complex/algorithms/geodesic.h
                          ../../apps/sample/trimesh_base \
                          ../../apps/sample/trimesh_attribute \
                          ../../apps/sample/trimesh_smooth \
                          ../../apps/sample/trimesh_refine \
                          ../../apps/sample/trimesh_inertia \
-                         ../../apps/sample/trimesh_sampling \
-                         . \
-                         ../../vcg/complex/complex.h \
-                         ../../vcg/simplex/vertex/component.h \
-                         ../../vcg/simplex/face/component.h \
-                         ../../vcg/complex/algorithms/create/platonic.h \
-                         ../../vcg/complex/append.h \
-                         ../../vcg/simplex/edge/component.h \
-                         ../../vcg/complex/algorithms/geodesic.h
+                         ../../apps/sample/trimesh_sampling
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 
