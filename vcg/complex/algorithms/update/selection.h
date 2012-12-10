@@ -38,7 +38,8 @@ template <class ComputeMeshType>
 class SelectionStack
 {
   typedef typename ComputeMeshType::template PerVertexAttributeHandle< bool > vsHandle;
-  typedef typename ComputeMeshType::template PerFaceAttributeHandle< bool > fsHandle;
+  typedef typename ComputeMeshType::template PerEdgeAttributeHandle< bool >   esHandle;
+  typedef typename ComputeMeshType::template PerFaceAttributeHandle< bool >   fsHandle;
 
 public:
   SelectionStack(ComputeMeshType &m)
@@ -49,16 +50,22 @@ public:
   bool push()
   {
     vsHandle vsH = Allocator<ComputeMeshType>::template AddPerVertexAttribute< bool >(*_m);
+    esHandle esH = Allocator<ComputeMeshType>::template AddPerEdgeAttribute< bool >(*_m);
     fsHandle fsH = Allocator<ComputeMeshType>::template AddPerFaceAttribute< bool >  (*_m);
     typename ComputeMeshType::VertexIterator vi;
     for(vi = _m->vert.begin(); vi != _m->vert.end(); ++vi)
       if( !(*vi).IsD() ) vsH[*vi] = (*vi).IsS() ;
+
+    typename ComputeMeshType::EdgeIterator ei;
+    for(ei = _m->edge.begin(); ei != _m->edge.end(); ++ei)
+      if( !(*ei).IsD() ) esH[*ei] = (*ei).IsS() ;
 
     typename ComputeMeshType::FaceIterator fi;
     for(fi = _m->face.begin(); fi != _m->face.end(); ++fi)
       if( !(*fi).IsD() ) fsH[*fi] = (*fi).IsS() ;
 
     vsV.push_back(vsH);
+    esV.push_back(esH);
     fsV.push_back(fsH);
     return true;
   }
@@ -67,6 +74,7 @@ public:
   {
     if(vsV.empty()) return false;
     vsHandle vsH = vsV.back();
+    esHandle esH = esV.back();
     fsHandle fsH = fsV.back();
     if(! (Allocator<ComputeMeshType>::template IsValidHandle(*_m, vsH))) return false;
 
@@ -77,6 +85,14 @@ public:
         if(vsH[*vi]) (*vi).SetS() ;
         else (*vi).ClearS() ;
       }
+
+    typename ComputeMeshType::EdgeIterator ei;
+    for(ei = _m->edge.begin(); ei != _m->edge.end(); ++ei)
+      if( !(*ei).IsD() )
+      {
+        if(esH[*ei]) (*ei).SetS() ;
+        else (*ei).ClearS() ;
+      }
     typename ComputeMeshType::FaceIterator fi;
     for(fi = _m->face.begin(); fi != _m->face.end(); ++fi)
       if( !(*fi).IsD() )
@@ -86,8 +102,10 @@ public:
       }
 
     Allocator<ComputeMeshType>::template DeletePerVertexAttribute<bool>(*_m,vsH);
+    Allocator<ComputeMeshType>::template DeletePerEdgeAttribute<bool>(*_m,esH);
     Allocator<ComputeMeshType>::template DeletePerFaceAttribute<bool>(*_m,fsH);
     vsV.pop_back();
+    esV.pop_back();
     fsV.pop_back();
     return true;
   }
@@ -95,6 +113,7 @@ public:
 private:
   ComputeMeshType *_m;
   std::vector<vsHandle> vsV;
+  std::vector<esHandle> esV;
   std::vector<fsHandle> fsV;
 
 };
