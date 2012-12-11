@@ -100,6 +100,13 @@ public:
       if(!(*vi).IsD()) (*vi).Flags() |= FlagMask ;
   }
 
+  static void EdgeSet(MeshType &m, unsigned int FlagMask)
+  {
+    tri::RequirePerEdgeFlags(m);
+    for(EdgeIterator ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
+      if(!(*ei).IsD()) (*ei).Flags() |= FlagMask ;
+  }
+
   static void FaceSet(MeshType &m, unsigned int FlagMask)
   {
     tri::RequirePerFaceFlags(m);
