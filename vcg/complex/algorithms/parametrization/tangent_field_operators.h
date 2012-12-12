@@ -58,6 +58,19 @@ namespace vcg {
 				return ret;
 			}
 
+            static int FollowDirection(const FaceType &f0,
+                                       const  FaceType &f1,
+                                       int dir0)
+            {
+                ///first it rotate dir to match with f1
+                CoordType dirS=CrossVector(f0,dir0);
+                CoordType dirR=vcg::tri::CrossField<MeshType>::Rotate(f0,f1,dirS);
+                ///then get the closest upf to K*PI/2 rotations
+                CoordType dir1=f1.cPD1();
+                int ret=I_K_PI(dir1,dirR,f1.cN());
+                return ret;
+            }
+
             static int FollowLineDirection(const FaceType &f0,
                                            const FaceType &f1,
                                            int dir)
@@ -351,11 +364,29 @@ namespace vcg {
 			/// a and b should be in the same plane orthogonal to N
 			static CoordType K_PI(const CoordType &a, const CoordType &b, const CoordType &n)
 			{
-				CoordType c = (a^n).normalized();
+                CoordType c = (a^n).normalized();///POSSIBLE SOURCE OF BUG CHECK CROSS PRODUCT
 				ScalarType scorea = a*b;
 				ScalarType scorec = c*b;
 				if (fabs(scorea)>=fabs(scorec)) return a*Sign(scorea); else return c*Sign(scorec);
 			}
+
+            // returns the 90 deg rotation of a (around n) most similar to target b
+            /// a and b should be in the same plane orthogonal to N
+            static int I_K_PI(const CoordType &a, const CoordType &b, const CoordType &n)
+            {
+                CoordType c = (n^a).normalized();
+                ScalarType scorea = a*b;
+                ScalarType scorec = c*b;
+                if (fabs(scorea)>=fabs(scorec))///0 or 2
+                {
+                    if (scorea>0)return 0;
+                    return 2;
+                }else ///1 or 3
+                {
+                    if (scorec>0)return 1;
+                    return 3;
+                }
+            }
 
 			///interpolate cross field with barycentric coordinates
 			static CoordType InterpolateCrossField(const CoordType &t0,
