@@ -670,6 +670,42 @@ void EFStarFF( FaceType* fp, int ei,
 }
 
 
+    /* Compute the set of faces adjacent to a given face using FF adjacency.
+    * The set is faces is extended of a given number of step
+    *	\param fp	pointer to the face whose star has to be computed.
+    *  \param num_step the number of step to extend the star
+    *	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
+    */
+    template <class FaceType>
+    static void FFExtendedStarFF(FaceType *fp,
+                                 const int num_step,
+                                 std::vector<FaceType*> &faceVec)
+    {
+        ///initialize front
+        faceVec.push_back(fp);
+        ///then dilate front
+        ///for each step
+        for (int step=0;step<num_step;step++)
+        {
+            std::vector<FaceType*> toAdd;
+            for (unsigned int i=0;i<faceVec.size();i++)
+            {
+                FaceType *f=faceVec[i];
+                for (int k=0;k<3;k++)
+                {
+                    FaceType *f1=f->FFp(k);
+                    if (f1==f)continue;
+                    toAdd.push_back(f1);
+                }
+            }
+            faceVec.insert(faceVec.end(),toAdd.begin(),toAdd.end());
+            std::sort(faceVec.begin(),faceVec.end());
+            typename std::vector<FaceType*>::iterator new_end=std::unique(faceVec.begin(),faceVec.end());
+            int dist=distance(faceVec.begin(),new_end);
+            faceVec.resize(dist);
+        }
+    }
+
 /*!
  * \brief Compute the set of faces adjacent to a given vertex using VF adjacency.
  *
@@ -833,9 +869,10 @@ bool FindSharedFaces(typename FaceType::VertexType *v0,
 {
     std::vector<FaceType*> faces0;
     std::vector<FaceType*> faces1;
-
-    VFOrderedStarVF_FF(*v0,faces0);
-    VFOrderedStarVF_FF(v1,faces1);
+    std::vector<int> index0;
+    std::vector<int> index1;
+    VFStarVF<FaceType>(v0,faces0,index0);
+    VFStarVF<FaceType>(v1,faces1,index1);
     ///then find the intersection
     std::sort(faces0.begin(),faces0.end());
     std::sort(faces1.begin(),faces1.end());
