@@ -398,102 +398,103 @@ bool RefineE(MESH_TYPE &m, MIDPOINT mid, EDGEPRED ep,bool RefineSelected=false, 
 	FaceIterator oldendf = lastf; 
 	
 /*
-                v0
-
-   
-                f0
-
-				mp01    f3      mp02
-             
-					
-         f1             f2
-
- v1            mp12                v2
-
+ *               v0
+ *
+ *
+ *               f0
+ *
+ *       mp01     f3     mp02
+ *
+ *
+ *       f1               f2
+ *
+ *v1            mp12                v2
+ *
 */
 
-	VertexPointer vv[6];	// The six vertices that arise in the single triangle splitting 
-												//     0..2 Original triangle vertices  
-												//     3..5 mp01, mp12, mp20 midpoints of the three edges
+	VertexPointer vv[6];	// The six vertices that arise in the single triangle splitting
+	//     0..2 Original triangle vertices
+	//     3..5 mp01, mp12, mp20 midpoints of the three edges
 	FacePointer nf[4];   // The (up to) four faces that are created.
 
-  TexCoordType wtt[6];  // per ogni faccia sono al piu' tre i nuovi valori 
-																							 // di texture per wedge (uno per ogni edge) 
-  
+	TexCoordType wtt[6];  // per ogni faccia sono al piu' tre i nuovi valori
+	// di texture per wedge (uno per ogni edge)
+
 	int fca=0,fcn =0;
 	for(fi=m.face.begin();fi!=oldendf;++fi) if(!(*fi).IsD())
-		{
-				if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
-        fcn++;
-				vv[0]=(*fi).V(0);
-				vv[1]=(*fi).V(1);
-				vv[2]=(*fi).V(2);
-        vv[3] = RD[fi].vp[0];
-        vv[4] = RD[fi].vp[1];
-        vv[5] = RD[fi].vp[2];
+	{
+	  if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
+	  fcn++;
+	  vv[0]=(*fi).V(0);
+	  vv[1]=(*fi).V(1);
+	  vv[2]=(*fi).V(2);
+	  vv[3] = RD[fi].vp[0];
+	  vv[4] = RD[fi].vp[1];
+	  vv[5] = RD[fi].vp[2];
 
-				int ind=((&*vv[3])?1:0)+((&*vv[4])?2:0)+((&*vv[5])?4:0);
-				
-				nf[0]=&*fi;
-				int i;
-				for(i=1;i<SplitTab[ind].TriNum;++i){
-						nf[i]=&*lastf; ++lastf; fca++;
-						if(RefineSelected || (*fi).IsS()) (*nf[i]).SetS();
-						if(tri::HasPerFaceColor(m))
-											nf[i]->C()=(*fi).cC();
-				}
-        
-				 					
-        if(tri::HasPerWedgeTexCoord(m))
-					for(i=0;i<3;++i)	{
-						wtt[i]=(*fi).WT(i);
-						wtt[3+i]=mid.WedgeInterp((*fi).WT(i),(*fi).WT((i+1)%3));
-					}
+	  int ind=((&*vv[3])?1:0)+((&*vv[4])?2:0)+((&*vv[5])?4:0);
 
-				int orgflag=	(*fi).Flags();
-				for(i=0;i<SplitTab[ind].TriNum;++i)
-					for(j=0;j<3;++j){
-						(*nf[i]).V(j)=&*vv[SplitTab[ind].TV[i][j]];
-						
-						if(tri::HasPerWedgeTexCoord(m)) //analogo ai vertici...
-									(*nf[i]).WT(j)=wtt[SplitTab[ind].TV[i][j]];
+	  nf[0]=&*fi;
+	  int i;
+	  for(i=1;i<SplitTab[ind].TriNum;++i){
+		nf[i]=&*lastf; ++lastf; fca++;
+		if(RefineSelected || (*fi).IsS()) (*nf[i]).SetS();
+		nf[i]->ImportData(*fi);
+//		if(tri::HasPerFaceColor(m))
+//  		nf[i]->C()=(*fi).cC();
+	  }
 
-						assert((*nf[i]).V(j)!=0);
-						if(SplitTab[ind].TE[i][j]!=3){
-							if(orgflag & (MESH_TYPE::FaceType::BORDER0<<(SplitTab[ind].TE[i][j]))) 
-								(*nf[i]).SetB(j); 
-							else
-								(*nf[i]).ClearB(j);
-						} 
-						else (*nf[i]).ClearB(j);						
-					}
 
-		if(SplitTab[ind].TriNum==3 && 
-							SquaredDistance(vv[SplitTab[ind].swap[0][0]]->P(),vv[SplitTab[ind].swap[0][1]]->P()) < 
-							SquaredDistance(vv[SplitTab[ind].swap[1][0]]->P(),vv[SplitTab[ind].swap[1][1]]->P()) )
-							{ // swap the last two triangles
-								(*nf[2]).V(1)=(*nf[1]).V(0);
-								(*nf[1]).V(1)=(*nf[2]).V(0);
-								if(tri::HasPerWedgeTexCoord(m)){ //swap also textures coordinates
-									(*nf[2]).WT(1)=(*nf[1]).WT(0);
-									(*nf[1]).WT(1)=(*nf[2]).WT(0);
-								}
-								
-								if((*nf[1]).IsB(0)) (*nf[2]).SetB(1); else (*nf[2]).ClearB(1);
-								if((*nf[2]).IsB(0)) (*nf[1]).SetB(1); else (*nf[1]).ClearB(1);
-								(*nf[1]).ClearB(0);
-								(*nf[2]).ClearB(0);
-							}
+	  if(tri::HasPerWedgeTexCoord(m))
+		for(i=0;i<3;++i)	{
+		  wtt[i]=(*fi).WT(i);
+		  wtt[3+i]=mid.WedgeInterp((*fi).WT(i),(*fi).WT((i+1)%3));
 		}
+
+	  int orgflag=	(*fi).Flags();
+	  for(i=0;i<SplitTab[ind].TriNum;++i)
+		for(j=0;j<3;++j){
+		  (*nf[i]).V(j)=&*vv[SplitTab[ind].TV[i][j]];
+
+		  if(tri::HasPerWedgeTexCoord(m)) //analogo ai vertici...
+			(*nf[i]).WT(j)=wtt[SplitTab[ind].TV[i][j]];
+
+		  assert((*nf[i]).V(j)!=0);
+		  if(SplitTab[ind].TE[i][j]!=3){
+			if(orgflag & (MESH_TYPE::FaceType::BORDER0<<(SplitTab[ind].TE[i][j])))
+			  (*nf[i]).SetB(j);
+			else
+			  (*nf[i]).ClearB(j);
+		  }
+		  else (*nf[i]).ClearB(j);
+		}
+
+	  if(SplitTab[ind].TriNum==3 &&
+		 SquaredDistance(vv[SplitTab[ind].swap[0][0]]->P(),vv[SplitTab[ind].swap[0][1]]->P()) <
+		 SquaredDistance(vv[SplitTab[ind].swap[1][0]]->P(),vv[SplitTab[ind].swap[1][1]]->P()) )
+	  { // swap the last two triangles
+		(*nf[2]).V(1)=(*nf[1]).V(0);
+		(*nf[1]).V(1)=(*nf[2]).V(0);
+		if(tri::HasPerWedgeTexCoord(m)){ //swap also textures coordinates
+		  (*nf[2]).WT(1)=(*nf[1]).WT(0);
+		  (*nf[1]).WT(1)=(*nf[2]).WT(0);
+		}
+
+		if((*nf[1]).IsB(0)) (*nf[2]).SetB(1); else (*nf[2]).ClearB(1);
+		if((*nf[2]).IsB(0)) (*nf[1]).SetB(1); else (*nf[1]).ClearB(1);
+		(*nf[1]).ClearB(0);
+		(*nf[2]).ClearB(0);
+	  }
+	}
 	
 	assert(lastf==m.face.end());	 // critical assert: we MUST have used all the faces that we forecasted we need and that we previously allocated.
 	assert(!m.vert.empty());
-	 for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD()){
-			assert((*fi).V(0)>=&*m.vert.begin() && (*fi).V(0)<=&m.vert.back() );
-			assert((*fi).V(1)>=&*m.vert.begin() && (*fi).V(1)<=&m.vert.back() );
-			assert((*fi).V(2)>=&*m.vert.begin() && (*fi).V(2)<=&m.vert.back() );
-	 }
-	tri::UpdateTopology<MESH_TYPE>::FaceFace(m);	
+	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD()){
+	  assert((*fi).V(0)>=&*m.vert.begin() && (*fi).V(0)<=&m.vert.back() );
+	  assert((*fi).V(1)>=&*m.vert.begin() && (*fi).V(1)<=&m.vert.back() );
+	  assert((*fi).V(2)>=&*m.vert.begin() && (*fi).V(2)<=&m.vert.back() );
+	}
+	tri::UpdateTopology<MESH_TYPE>::FaceFace(m);
 	
 	tri::Allocator<MESH_TYPE> :: template DeletePerFaceAttribute<RefinedFaceData<VertexPointer> >  (m,RD);
 
