@@ -55,37 +55,44 @@ public:
   CoordType &P()       { assert(0); static CoordType coord(0, 0, 0); return coord; }
   CoordType cP() const { assert(0); static CoordType coord(0, 0, 0);  assert(0); return coord; }
   static bool HasCoord()   { return false; }
+  inline bool IsCoordEnabled() const { return TT::VertexType::HasCoord();}
 
   typedef vcg::Point3s NormalType;
   NormalType &N()       { assert(0); static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
   NormalType cN() const { assert(0); static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
   static bool HasNormal()    { return false; }
+  inline bool IsNormalEnabled() const { return TT::VertexType::HasNormal();}
 
   typedef float QualityType;
   QualityType &Q()       { assert(0); static QualityType dummyQuality(0); return dummyQuality; }
   QualityType cQ() const { assert(0); static QualityType dummyQuality(0); return dummyQuality; }
   static bool HasQuality()   { return false; }
+  inline bool IsQualityEnabled() const { return TT::VertexType::HasQuality();}
 
   typedef vcg::Color4b ColorType;
   ColorType &C()       { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
   ColorType cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   static bool HasColor()   { return false; }
+  inline bool IsColorEnabled() const { return TT::VertexType::HasColor();}
 
   typedef int  MarkType;
   void InitIMark()    {  }
   int cIMark()  const { assert(0); static int tmp=-1; return tmp;}
   int &IMark()        { assert(0); static int tmp=-1; return tmp;}
   static bool HasMark()   { return false; }
+  inline bool IsMarkEnabled() const { return TT::VertexType::HasMark();}
 
   typedef ScalarType RadiusType;
   RadiusType &R()       { static ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
   RadiusType cR() const { static const ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
   static bool HasRadius()     { return false; }
+  inline bool IsRadiusEnabled() const { return TT::VertexType::HasRadius();}
 
   typedef vcg::TexCoord2<float,1> TexCoordType;
   TexCoordType &T()       { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
   TexCoordType cT() const { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
   static bool HasTexCoord()   { return false; }
+  inline bool IsTexCoordEnabled() const { return TT::VertexType::HasTexCoord();}
 
   typename TT::TetraPointer &VTp()       { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
   typename TT::TetraPointer cVTp() const  { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
@@ -130,6 +137,8 @@ public:
 
   static bool HasCurvature()			{ return false; }
   static bool HasCurvatureDir()			{ return false; }
+  inline bool IsCurvatureEnabled() const { return TT::VertexType::HasCurvature();}
+  inline bool IsCurvatureDirEnabled() const { return TT::VertexType::HasCurvatureDir();}
 
   template < class RightValueType>
   void ImportData(const RightValueType  & /*rVert*/ ) {
@@ -152,7 +161,7 @@ public:
   inline       CoordType cP() const { return _coord; }
 
   template < class RightValueType>
-  void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasCoord()) P().Import(rVert.cP()); T::ImportData( rVert); }
+  void ImportData(const RightValueType  & rVert ) { if(rVert.IsCoordEnabled()) P().Import(rVert.cP()); T::ImportData( rVert); }
   static bool HasCoord()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord"));T::Name(name);}
 
@@ -180,7 +189,7 @@ public:
   inline       NormalType cN() const { return _norm; }
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ){
-    if(RightValueType::HasNormal())  N().Import(rVert.cN());
+    if(rVert.IsNormalEnabled())  N().Import(rVert.cN());
     T::ImportData( rVert);
   }
   static bool HasNormal()   { return true; }
@@ -215,7 +224,7 @@ public:
   static bool HasMark()      { return true; }
   inline void InitIMark()    { _imark = 0; }
   template < class RightValueType>
-  void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasMark())  IMark() = rVert.cIMark(); T::ImportData( rVert); }
+  void ImportData(const RightValueType  & rVert ) { if(rVert.IsMarkEnabled())  IMark() = rVert.cIMark(); T::ImportData( rVert); }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
 
  private:
@@ -237,7 +246,7 @@ public:
         TexCoordType &T()       { return _t; }
         TexCoordType cT() const { return _t; }
     template < class RightValueType>
-    void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasTexCoord())  T() = rVert.cT(); TT::ImportData( rVert); }
+    void ImportData(const RightValueType  & rVert ) { if(rVert.IsTexCoordEnabled())  T() = rVert.cT(); TT::ImportData( rVert); }
   static bool HasTexCoord()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord"));TT::Name(name);}
 
@@ -292,9 +301,8 @@ public:
   inline       ColorType &C()       { return _color; }
   inline       ColorType cC() const { return _color; }
   template < class RightValueType>
-  void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasColor()) C() = rVert.cC();  T::ImportData( rVert); }
+  void ImportData(const RightValueType  & rVert ) { if(rVert.IsColorEnabled()) C() = rVert.cC();  T::ImportData( rVert); }
   static bool HasColor()   { return true; }
-  static bool IsColorEnabled(typename T::VertexType *)   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
 
 private:
@@ -320,7 +328,7 @@ public:
   inline       QualityType &Q()       { return _quality; }
   inline       QualityType cQ() const {return _quality; }
   template < class RightValueType>
-  void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasQuality()) Q() = rVert.cQ(); TT::ImportData( rVert); }
+  void ImportData(const RightValueType  & rVert ) { if(rVert.IsQualityEnabled()) Q() = rVert.cQ(); TT::ImportData( rVert); }
   static bool HasQuality()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));TT::Name(name);}
 
@@ -354,8 +362,16 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
           ScalarType cKh() const { return _hk[0];}
           ScalarType cKg() const { return _hk[1];}
 
+          template < class RightValueType>
+          void ImportData(const RightValueType  & rVert ) {
+            if(rVert.IsCurvatureEnabled()) {
+              Kh() = rVert.cKh();
+              Kg() = rVert.cKg();
+            }
+            TT::ImportData( rVert);
+          }
+
     static bool HasCurvature()   { return true; }
-    static bool IsCurvatureEnabled(typename TT::VertexType *)   { return true; }
     static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvature"));TT::Name(name);}
 
   private:
@@ -371,29 +387,6 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
   };
 
 /*-------------------------- Curvature Direction ----------------------------------*/
-
-
-  template <class TT> class EmptyCurvatureDir: public TT {
-  public:
-    typedef CurvatureDirBaseType<float> CurvatureDirType;
-
-    const Point3f &PD1() const { static Point3f dummy(0,0,0);assert(0); return dummy;}
-    const Point3f &PD2() const { static Point3f dummy(0,0,0);assert(0); return dummy;}
-          Point3f &PD1()       { static Point3f dummy(0,0,0);assert(0); return dummy;}
-          Point3f &PD2()       { static Point3f dummy(0,0,0);assert(0); return dummy;}
-          Point3f cPD1() const { static Point3f dummy(0,0,0);assert(0); return dummy;}
-          Point3f cPD2() const { static Point3f dummy(0,0,0);assert(0); return dummy;}
-
-    float &K1()       { static float dummy(0);assert(0);return dummy;}
-    float &K2()       { static float dummy(0);assert(0);return dummy;}
-    float cK1() const { static float dummy(0);assert(0);return dummy;}
-    float cK2() const { static float dummy(0);assert(0);return dummy;}
-
-    static bool HasCurvatureDir()   { return false; }
-    template < class RightValueType>
-    void ImportData(const RightValueType  & rVert ) { TT::ImportData( rVert); }
-    static void Name(std::vector<std::string> & name){TT::Name(name);}
-  };
 
   /*! \brief \em Component: Per vertex \b curvature \b directions
     This component keep the principal curvature directions. Used by some of the algorithms of vcg::tri::UpdateCurvature to store the computed curvatures.
@@ -416,7 +409,7 @@ public:
 	const ScalarType &cK2() const {return _curv.k2;}
 	template < class RightValueType>
 	void ImportData(const RightValueType  & rVert ) {
-	  if(RightValueType::HasCurvatureDir()) {
+	  if(rVert.IsCurvatureDirEnabled()) {
 		PD1() = rVert.cPD1(); PD2() = rVert.cPD2();
 		K1()  = rVert.cK1();  K2()  = rVert.cK2();
 	  }
@@ -450,7 +443,7 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
           RadiusType &R()       { return _radius; }
           RadiusType cR() const {return _radius; }
     template < class RightValueType>
-    void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasRadius()) R() = rVert.cR(); TT::ImportData( rVert); }
+    void ImportData(const RightValueType  & rVert ) { if(rVert.IsRadiusEnabled()) R() = rVert.cR(); TT::ImportData( rVert); }
     static bool HasRadius()   { return true; }
     static void Name(std::vector<std::string> & name){name.push_back(std::string("Radius"));TT::Name(name);}
 
