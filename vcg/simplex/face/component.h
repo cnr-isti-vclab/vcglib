@@ -52,15 +52,12 @@ public:
   NormalType &WN(int) { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   NormalType cWN(int) const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
 
-  static bool HasNormal()    { return false; }
-  static bool HasWedgeNormal()   { return false; }
 
   typedef int WedgeTexCoordType;
   typedef vcg::TexCoord2<float,1> TexCoordType;
   TexCoordType &WT(const int) { static TexCoordType dummy_texture;  assert(0); return dummy_texture;}
   TexCoordType const &cWT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
 
-  static bool HasWedgeTexCoord()   { return false; }
 
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
   int cFlags() const { return 0; }
@@ -85,10 +82,25 @@ public:
   Quality3Type cQ3() const { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
 
   static bool HasColor()   { return false; }
-  static bool HasWedgeColor()   { return false; }
   static bool HasQuality()   { return false; }
   static bool HasQuality3()   { return false; }
   static bool HasMark()   { return false; }
+  static bool HasNormal()    { return false; }
+
+  static bool HasWedgeColor()   { return false; }
+  static bool HasWedgeNormal()   { return false; }
+  static bool HasWedgeTexCoord()   { return false; }
+
+  // Interfaces for dynamic types
+  inline bool IsColorEnabled( ) const { return T::FaceType::HasColor(); }
+  inline bool IsQualityEnabled( ) const { return T::FaceType::HasQuality(); }
+  inline bool IsQuality3Enabled( ) const { return T::FaceType::HasQuality3(); }
+  inline bool IsMarkEnabled( ) const { return T::FaceType::HasMark(); }
+  inline bool IsNormalEnabled( ) const { return T::FaceType::HasNormal(); }
+
+  inline bool IsWedgeColorEnabled( ) const { return T::FaceType::HasWedgeColor(); }
+  inline bool IsWedgeNormalEnabled( ) const { return T::FaceType::HasWedgeNormal(); }
+  inline bool IsWedgeTexCoordEnabled( ) const { return T::FaceType::HasWedgeTexCoord(); }
 
   typedef int VFAdjType;
   typename T::FacePointer &VFp(int)       { static typename T::FacePointer fp=0; assert(0); return fp; }
@@ -127,7 +139,7 @@ public:
 
   static bool HasPolyInfo()   { return false; }
 
-  template <class RightValueType>
+   template <class RightValueType>
   void ImportData(const RightValueType & rightF) {T::ImportData(rightF);}
   inline void Alloc(const int & ns) {T::Alloc(ns);}
   inline void Dealloc(){T::Dealloc();}
@@ -203,8 +215,8 @@ public:
   template <class RightValueType>
   void ImportData(const RightValueType & rightF)
   {
-    if(RightValueType::HasNormal()) N().Import(rightF.cN());
-    T::ImportData( rightF);
+    if(rightF.IsNormalEnabled()) N().Import(rightF.cN());
+    T::ImportData(rightF);
   }
 
   inline void Alloc(const int & ns){T::Alloc(ns);}
@@ -222,7 +234,7 @@ public:
   inline NormalType &WN(int j)       { return _wnorm[j]; }
   inline NormalType cWN(int j) const { return _wnorm[j]; }
   template <class RightValueType>
-  void ImportData(const RightValueType & rightF){ if(RightValueType::HasWedgeNormal()) for (int i=0; i<3; ++i) { WN(i) = rightF.cWN(i); } T::ImportData(rightF);}
+  void ImportData(const RightValueType & rightF){ if(rightF.IsWedgeNormalEnabled()) for (int i=0; i<3; ++i) { WN(i) = rightF.cWN(i); } T::ImportData(rightF);}
   inline void Alloc(const int & ns){T::Alloc(ns);}
   inline void Dealloc(){T::Dealloc();}
   static bool HasWedgeNormal()   { return true; }
@@ -276,7 +288,7 @@ public:
   TexCoordType cWT(const int i) const { return _wt[i]; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
-    if(RightValueType::HasWedgeTexCoord())
+    if(rightF.IsWedgeTexCoordEnabled())
       for (int i=0; i<3; ++i) { WT(i) = rightF.cWT(i); }
     T::ImportData(rightF);
   }
@@ -333,8 +345,7 @@ public:
   ColorType cC() const { return _color; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
-    if(RightValueType::HasColor())
-      C() = rightF.cC();
+    if(rightF.IsColorEnabled()) C() = rightF.cC();
     T::ImportData(rightF);
   }
   inline void Alloc(const int & ns){T::Alloc(ns);}
@@ -354,7 +365,7 @@ public:
 
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
-    if (RightValueType::HasWedgeColor())
+    if (rightF.IsWedgeColorEnabled())
     {
       for (int i=0; i<3; ++i) { WC(i) = rightF.cWC(i); }
     }
@@ -386,7 +397,7 @@ public:
   QualityType cQ() const { return _quality; }
     template <class RightValueType>
     void ImportData(const RightValueType & rightF){
-      if(RightValueType::HasQuality())
+      if(rightF.IsQualityEnabled())
         Q() = rightF.cQ();
       T::ImportData(rightF);
     }
@@ -416,7 +427,7 @@ public:
   Quality3Type cQ3() const { return _quality; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
-    if(RightValueType::HasQuality3()) Q3() = rightF.cQ3();
+    if(rightF.IsQuality3Enabled()) Q3() = rightF.cQ3();
     T::ImportData(rightF);
   }
   inline void Alloc(const int & ns){T::Alloc(ns);}
@@ -451,7 +462,7 @@ public:
   static bool HasMark()      { return true; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
-    if(RightValueType::HasMark())
+    if(rightF.IsMarkEnabled())
       IMark() = rightF.cIMark();
     T::ImportData(rightF);
   }
@@ -487,12 +498,12 @@ public:
   ScalarType cK1() const {return _curv.k1;}
   ScalarType cK2() const {return _curv.k2;}
   template < class RightValueType>
-  void ImportData(const RightValueType  & left ) {
-    if(RightValueType::HasCurvatureDir()) {
-      PD1() = left.cPD1(); PD2() = left.cPD2();
-      K1()  = left.cK1();  K2()  = left.cK2();
+  void ImportData(const RightValueType  & rightF ) {
+    if(rightF.IsCurvatureDirEnabled()) {
+      PD1() = rightF.cPD1(); PD2() = rightF.cPD2();
+      K1()  = rightF.cK1();  K2()  = rightF.cK2();
     }
-    TT::ImportData( left);
+    TT::ImportData(rightF);
   }
 
   static bool HasCurvatureDir()   { return true; }

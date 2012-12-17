@@ -41,7 +41,7 @@ class vector_ocf: public std::vector<VALUE_TYPE> {
 public:
   vector_ocf():std::vector<VALUE_TYPE>()
   {
-    ColorEnabled=false;
+    _ColorEnabled=false;
     CurvatureDirEnabled = false;
     MarkEnabled=false;
     NormalEnabled=false;
@@ -123,7 +123,7 @@ public:
     BaseType::push_back(v);
 	BaseType::back()._ovp = this;
     if (QualityEnabled)     QV.push_back(0);
-	if (ColorEnabled)       CV.push_back(vcg::Color4b(vcg::Color4b::White));
+    if (_ColorEnabled)       CV.push_back(vcg::Color4b(vcg::Color4b::White));
 	if (MarkEnabled)        MV.push_back(0);
     if (NormalEnabled)      NV.push_back(typename VALUE_TYPE::NormalType());
 	if (CurvatureDirEnabled)    CDV.push_back(typename VALUE_TYPE::CurvatureDirType());
@@ -144,7 +144,7 @@ public:
 		  _updateOVP(firstnew,(*this).end());
 	  }  
     if (QualityEnabled)     QV.resize(_size);
-	if (ColorEnabled)       CV.resize(_size);
+    if (_ColorEnabled)       CV.resize(_size);
 	if (MarkEnabled)        MV.resize(_size);
 	if (NormalEnabled)      NV.resize(_size);
 	if (CurvatureDirEnabled)CDV.resize(_size);
@@ -159,7 +159,7 @@ public:
     BaseType::reserve(_size);
 
     if (QualityEnabled)     QV.reserve(_size);
-	if (ColorEnabled)       CV.reserve(_size);
+    if (_ColorEnabled)       CV.reserve(_size);
 	if (MarkEnabled)        MV.reserve(_size);
 	if (NormalEnabled)      NV.reserve(_size);
 	if (CurvatureDirEnabled)CDV.reserve(_size);
@@ -190,7 +190,7 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 {
 	size_t i=0;
 	if (QualityEnabled)     assert( QV.size() == newFaceIndex.size() );
-	if (ColorEnabled)       assert( CV.size() == newFaceIndex.size() );
+	if (_ColorEnabled)       assert( CV.size() == newFaceIndex.size() );
 	if (MarkEnabled)        assert( MV.size() == newFaceIndex.size() );
 	if (NormalEnabled)      assert( NV.size() == newFaceIndex.size() );
 	if (CurvatureDirEnabled)assert(CDV.size() == newFaceIndex.size() );
@@ -206,7 +206,7 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 				{
 					assert(newFaceIndex[i] <= i);
 					if (QualityEnabled)      QV[newFaceIndex[i]] =  QV[i]; 
-					if (ColorEnabled)        CV[newFaceIndex[i]] =  CV[i]; 
+					if (_ColorEnabled)        CV[newFaceIndex[i]] =  CV[i];
 					if (MarkEnabled)         MV[newFaceIndex[i]] =  MV[i];
 					if (NormalEnabled)       NV[newFaceIndex[i]] =  NV[i];
 					if (CurvatureDirEnabled) CDV[newFaceIndex[i]] =  CDV[i];
@@ -219,7 +219,7 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 		}
 	
 	if (QualityEnabled)      QV.resize(BaseType::size());
-	if (ColorEnabled)        CV.resize(BaseType::size());
+	if (_ColorEnabled)        CV.resize(BaseType::size());
 	if (MarkEnabled)         MV.resize(BaseType::size());
 	if (NormalEnabled)       NV.resize(BaseType::size());
 	if (CurvatureDirEnabled) CDV.resize(BaseType::size());
@@ -246,16 +246,16 @@ void DisableQuality() {
 	QV.clear();
 }
 	
-bool IsColorEnabled() const {return ColorEnabled;}
+bool IsColorEnabled() const {return _ColorEnabled;}
 void EnableColor() {
   assert(VALUE_TYPE::HasColorOcf());
-  ColorEnabled=true;
+  _ColorEnabled=true;
   CV.resize((*this).size());
 }
 
 void DisableColor() {
   assert(VALUE_TYPE::HasColorOcf());
-  ColorEnabled=false;
+  _ColorEnabled=false;
   CV.clear();
 }
 
@@ -326,14 +326,14 @@ void DisableFFAdjacency() {
   AF.clear();
 }
 
-bool IsWedgeTexEnabled() const {return WedgeTexEnabled;}
-void EnableWedgeTex() {
+bool IsWedgeTexCoordEnabled() const {return WedgeTexEnabled;}
+void EnableWedgeTexCoord() {
   assert(VALUE_TYPE::HasWedgeTexCoordOcf());
   WedgeTexEnabled=true;
   WTV.resize((*this).size(),WedgeTexTypePack());
 }
 
-void DisableWedgeTex() {
+void DisableWedgeTexCoord() {
   assert(VALUE_TYPE::HasWedgeTexCoordOcf());
   WedgeTexEnabled=false;
   WTV.clear();
@@ -377,7 +377,7 @@ public:
   std::vector<struct AdjTypePack> AV;
   std::vector<struct AdjTypePack> AF;
 
-  bool ColorEnabled;
+  bool _ColorEnabled;
   bool CurvatureDirEnabled;
   bool MarkEnabled;
   bool NormalEnabled;
@@ -408,9 +408,9 @@ public:
     return (*this).Base().AV[(*this).Index()]._zp[j]; 
   }
 
-	template <class LeftF>
-	void ImportData(const LeftF & leftF){
-		T::ImportData(leftF);
+	template <class RightFaceType>
+	void ImportData(const RightFaceType & rightF){
+		T::ImportData(rightF);
 	}
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   { return true; }
@@ -449,9 +449,9 @@ public:
   typename T::FacePointer  cNeigh( const int j ) const { return cFFp(j);}
   unsigned int SizeNeigh(){return 3;}
 
-  template <class LeftF>
-  void ImportData(const LeftF & leftF){
-    T::ImportData(leftF);
+  template <class RightFaceType>
+  void ImportData(const RightFaceType & rightF){
+    T::ImportData(rightF);
   }
   static bool HasFFAdjacency()   {   return true; }
   static bool HasFFAdjacencyOcf()   { return true; }
@@ -473,11 +473,11 @@ public:
     assert((*this).Base().NormalEnabled);
     return (*this).Base().NV[(*this).Index()];  }
 
-  template <class LeftF>
-  void ImportData(const LeftF & leftF){
-    if((*this).Base().NormalEnabled && LeftF::HasNormal())
-      N() = leftF.cN();
-    T::ImportData(leftF);
+  template <class RightFaceType>
+  void ImportData(const RightFaceType & rightF){
+    if((*this).IsNormalEnabled() && rightF.IsNormalEnabled())
+      N() = rightF.cN();
+    T::ImportData(rightF);
   }
 };
 
@@ -546,14 +546,14 @@ public:
   }
 
 
-  template <class LeftF>
-  void ImportData(const LeftF & leftF){
-    if((*this).Base().CurvatureDirEnabled && LeftF::HasCurvatureDir())
-      PD1() = leftF.cPD1();
-    PD2() = leftF.cPD2();
-    K1() = leftF.cK1();
-    K2() = leftF.cK2();
-    T::ImportData(leftF);
+  template <class RightFaceType>
+  void ImportData(const RightFaceType & rightF){
+    if((*this).IsCurvatureDirEnabled() && rightF.IsCurvatureDirEnabled())
+      PD1() = rightF.cPD1();
+    PD2() = rightF.cPD2();
+    K1() = rightF.cK1();
+    K2() = rightF.cK2();
+    T::ImportData(rightF);
   }
 
 };
@@ -578,11 +578,11 @@ public:
     return (*this).Base().QV[(*this).Index()];
   }
 
-  template <class LeftF>
-  void ImportData(const LeftF & leftF){
-    if((*this).Base().QualityEnabled && LeftF::HasQuality())
-      Q() = leftF.cQ();
-    T::ImportData(leftF);
+  template <class RightFaceType>
+  void ImportData(const RightFaceType & rightF){
+    if((*this).IsQualityEnabled() && rightF.IsQualityEnabled())
+      Q() = rightF.cQ();
+    T::ImportData(rightF);
   }
   static bool HasQuality()   { return true; }
   static bool HasQualityOcf()   { return true; }
@@ -595,19 +595,19 @@ template <class A, class T> class ColorOcf: public T {
 public:
   typedef A ColorType;
   ColorType &C()        {
-    assert((*this).Base().ColorEnabled);
+    assert((*this).Base()._ColorEnabled);
     return (*this).Base().CV[(*this).Index()];
   }
   ColorType cC() const  {
-    assert((*this).Base().ColorEnabled);
+    assert((*this).Base()._ColorEnabled);
     return (*this).Base().CV[(*this).Index()];
   }
 
-  template <class LeftF>
-  void ImportData(const LeftF & leftF){
-    if((*this).Base().ColorEnabled && LeftF::HasColor())
-      C() = leftF.cC();
-    T::ImportData(leftF);
+  template <class RightFaceType>
+  void ImportData(const RightFaceType & rightF){
+    if((*this).IsColorEnabled() && rightF.IsColorEnabled())
+      C() = rightF.cC();
+    T::ImportData(rightF);
   }
   static bool HasColor()   { return true; }
   static bool HasColorOcf()   { return true; }
@@ -625,13 +625,13 @@ public:
   inline int cIMark() const {
     assert((*this).Base().MarkEnabled);
     return (*this).Base().MV[(*this).Index()];
-  } ;
+  }
 
-  template <class LeftF>
-  void ImportData(const LeftF & leftF){
-    if((*this).Base().MarkEnabled && LeftF::HasMark())
-      IMark() = leftF.cIMark();
-    T::ImportData(leftF);
+  template <class RightFaceType>
+  void ImportData(const RightFaceType & rightF){
+    if((*this).IsMarkEnabled() && rightF.IsMarkEnabled())
+      IMark() = rightF.cIMark();
+    T::ImportData(rightF);
   }
   static bool HasMark()   { return true; }
   static bool HasMarkOcf()   { return true; }
@@ -645,12 +645,11 @@ public:
   typedef A TexCoordType;
   TexCoordType &WT(const int i)       { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
   TexCoordType cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
-  template <class LeftF>
-  void ImportData(const LeftF & leftF){
-    //if(this->Base().WedgeTexEnabled && leftF.Base().WedgeTexEnabled)  // WRONG I do not know anything about leftV!
-    if(this->Base().WedgeTexEnabled && LeftF::HasWedgeTexCoord())
-    { WT(0) = leftF.cWT(0); WT(1) = leftF.cWT(1); WT(2) = leftF.cWT(2); }
-    TT::ImportData(leftF);
+  template <class RightFaceType>
+  void ImportData(const RightFaceType & rightF){
+    if(this->IsWedgeTexCoordEnabled() && rightF.IsWedgeTexCoordEnabled())
+    { WT(0) = rightF.cWT(0); WT(1) = rightF.cWT(1); WT(2) = rightF.cWT(2); }
+    TT::ImportData(rightF);
   }
   static bool HasWedgeTexCoord()   { return true; }
   static bool HasWedgeTexCoordOcf()   { return true; }
@@ -665,11 +664,11 @@ public:
   typedef A ColorType;
   ColorType &WC(const int i)              { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
   const ColorType cWC(const int i) const { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
-  template <class LeftF>
-  void ImportData(const LeftF & leftF){
-    if(this->Base().WedgeColorEnabled && LeftF::HasWedgeColor())
-    { WC(0) = leftF.cWC(0); WC(1) = leftF.cWC(1); WC(2) = leftF.cWC(2); }
-    TT::ImportData(leftF);
+  template <class RightFaceType>
+  void ImportData(const RightFaceType & rightF){
+    if(this->IsWedgeColorEnabled() && rightF.IsWedgeColorEnabled())
+    { WC(0) = rightF.cWC(0); WC(1) = rightF.cWC(1); WC(2) = rightF.cWC(2); }
+    TT::ImportData(rightF);
   }
   static bool HasWedgeColor()   { return true; }
   static bool HasWedgeColorOcf()   { return true; }
@@ -684,11 +683,11 @@ public:
   typedef A NormalType;
   NormalType &WN(const int i)              { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
   NormalType const &cWN(const int i) const { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
-  template <class LeftF>
-  void ImportData(const LeftF & leftF){
-    if(this->Base().WedgeNormalEnabled && LeftF::HasWedgeNormal())
-    { WN(0) = leftF.cWN(0); WN(1) = leftF.cWN(1); WN(2) = leftF.cWN(2); }
-    TT::ImportData(leftF);
+  template <class RightFaceType>
+  void ImportData(const RightFaceType & rightF){
+    if(this->IsWedgeNormalEnabled() && rightF.IsWedgeNormalEnabled())
+    { WN(0) = rightF.cWN(0); WN(1) = rightF.cWN(1); WN(2) = rightF.cWN(2); }
+    TT::ImportData(rightF);
   }
   static bool HasWedgeNormal()   { return true; }
   static bool HasWedgeNormalOcf()   { return true; }
@@ -710,19 +709,33 @@ public:
 
   vector_ocf<typename T::FaceType> &Base() const { return *_ovp;}
 
-  template <class LeftF>
-  void ImportData(const LeftF & leftF){T::ImportData(leftF);}
+  template <class RightFaceType>
+  void ImportData(const RightFaceType & rightF){T::ImportData(rightF);}
 
   static bool HasColorOcf()        { return false; }
-  static bool HasQualityOcf()        { return false; }
-  static bool HasNormalOcf()       { return false; }
   static bool HasCurvatureDirOcf() { return false; }
   static bool HasMarkOcf()         { return false; }
+  static bool HasNormalOcf()       { return false; }
+  static bool HasQualityOcf()      { return false; }
   static bool HasWedgeTexCoordOcf()    { return false; }
   static bool HasWedgeColorOcf()       { return false; }
   static bool HasWedgeNormalOcf()      { return false; }
   static bool HasFFAdjacencyOcf()      { return false; }
   static bool HasVFAdjacencyOcf()      { return false; }
+
+  inline bool IsColorEnabled()          const  { return _ovp->IsColorEnabled();}
+  inline bool IsCurvatureDirEnabled( )  const  { return _ovp->IsCurvatureDirEnabled(); }
+  inline bool IsMarkEnabled( )          const  { return _ovp->IsMarkEnabled(); }
+  inline bool IsNormalEnabled( )        const  { return _ovp->IsNormalEnabled(); }
+  inline bool IsQualityEnabled( )       const  { return _ovp->IsQualityEnabled(); }
+
+  inline bool IsWedgeColorEnabled( )    const { return _ovp->IsWedgeColorEnabled(); }
+  inline bool IsWedgeNormalEnabled( )   const { return _ovp->IsWedgeNormalEnabled(); }
+  inline bool IsWedgeTexCoordEnabled( ) const { return _ovp->IsWedgeTexCoordEnabled(); }
+
+
+
+
 
   inline int Index() const {
     typename T::FaceType const *tp=static_cast<typename T::FaceType const *>(this);
@@ -757,7 +770,7 @@ public:
   template < class FaceType >
   bool FaceVectorHasPerWedgeTexCoord(const face::vector_ocf<FaceType> &fv)
   {
-    if(FaceType::HasWedgeTexCoordOcf()) return fv.IsWedgeTexEnabled();
+    if(FaceType::HasWedgeTexCoordOcf()) return fv.IsWedgeTexCoordEnabled();
     else return FaceType::HasWedgeTexCoord();
   }
   template < class FaceType >
