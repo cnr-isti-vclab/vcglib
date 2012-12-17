@@ -92,14 +92,15 @@ public:
   static bool HasWedgeTexCoord()   { return false; }
 
   // Interfaces for dynamic types
-  inline bool IsColorEnabled( ) const { return T::FaceType::HasColor(); }
-  inline bool IsQualityEnabled( ) const { return T::FaceType::HasQuality(); }
-  inline bool IsQuality3Enabled( ) const { return T::FaceType::HasQuality3(); }
-  inline bool IsMarkEnabled( ) const { return T::FaceType::HasMark(); }
-  inline bool IsNormalEnabled( ) const { return T::FaceType::HasNormal(); }
+  inline bool IsColorEnabled( )        const { return T::FaceType::HasColor(); }
+  inline bool IsCurvatureDirEnabled( ) const { return T::FaceType::HasCurvatureDir(); }
+  inline bool IsMarkEnabled( )         const { return T::FaceType::HasMark(); }
+  inline bool IsNormalEnabled( )       const { return T::FaceType::HasNormal(); }
+  inline bool IsQualityEnabled( )      const { return T::FaceType::HasQuality(); }
+  inline bool IsQuality3Enabled( )     const { return T::FaceType::HasQuality3(); }
 
-  inline bool IsWedgeColorEnabled( ) const { return T::FaceType::HasWedgeColor(); }
-  inline bool IsWedgeNormalEnabled( ) const { return T::FaceType::HasWedgeNormal(); }
+  inline bool IsWedgeColorEnabled( )    const { return T::FaceType::HasWedgeColor(); }
+  inline bool IsWedgeNormalEnabled( )   const { return T::FaceType::HasWedgeNormal(); }
   inline bool IsWedgeTexCoordEnabled( ) const { return T::FaceType::HasWedgeTexCoord(); }
 
   typedef int VFAdjType;
