@@ -35,10 +35,15 @@ template <class MeshType>
 struct EuclideanDistance{
   typedef typename MeshType::VertexType VertexType;
   typedef typename MeshType::ScalarType  ScalarType;
+  typedef typename MeshType::FacePointer FacePointer;
 
   EuclideanDistance(){}
+
   ScalarType operator()(const VertexType * v0, const VertexType * v1) const
   {return vcg::Distance(v0->cP(),v1->cP());}
+
+  ScalarType operator()(const FacePointer f0, const FacePointer f1) const
+  {return vcg::Distance(Barycenter(*f0),Barycenter(*f1));}
 };
 
 /*! \brief class for computing approximate geodesic distances on a mesh
@@ -55,6 +60,7 @@ public:
   typedef typename MeshType::VertexType VertexType;
   typedef typename MeshType::VertexIterator VertexIterator;
   typedef typename MeshType::VertexPointer VertexPointer;
+  typedef typename MeshType::FacePointer FacePointer;
   typedef typename MeshType::FaceType  FaceType;
   typedef typename MeshType::CoordType  CoordType;
   typedef typename MeshType::ScalarType  ScalarType;
@@ -70,6 +76,30 @@ public:
     ScalarType d;
   };
 
+
+  struct DIJKDist{
+    DIJKDist(VertexPointer _v):v(_v){}
+    VertexPointer v;
+
+    bool operator < (const DIJKDist &o) const
+    {
+      if( v->Q() != o.v->Q())
+        return v->Q() > o.v->Q();
+      return v<o.v;
+    }
+   };
+
+  /* Auxiliary class for keeping the heap of vertices to visit and their estimated distance */
+    struct FaceDist{
+      FaceDist(FacePointer _f):f(_f){}
+      FacePointer f;
+      bool operator < (const FaceDist &o) const
+      {
+        if( f->Q() != o.f->Q())
+          return f->Q() > o.f->Q();
+        return f<o.f;
+      }
+    };
 
   /* Temporary data to associate to all the vertices: estimated distance and boolean flag */
   struct TempData{
@@ -332,6 +362,154 @@ It is just a simple wrapper of the basic Compute()
     tri::UpdateQuality<MeshType>::VertexConstant(m,0);
     return Compute(m,fro,std::numeric_limits<ScalarType>::max(),0,sources);
   }
+
+
+  static bool ConvertPerVertexSeedToPerFaceSeed(MeshType &m, const std::vector<VertexPointer> &vertexSeedVec,
+                                                 std::vector<FacePointer> &faceSeedVec)
+  {
+    tri::RequireVFAdjacency(m);
+    tri::RequirePerFaceMark(m);
+
+    faceSeedVec.clear();
+    tri::UnMarkAll(m);
+    for(size_t i=0;i<vertexSeedVec.size();++i)
+    {
+      for(face::VFIterator<FaceType> vfi(vertexSeedVec[i]);!vfi.End();++vfi)
+      {
+        if(tri::IsMarked(m,vfi.F())) return false;
+        faceSeedVec.push_back(vfi.F());
+        tri::Mark(m,vfi.F());
+      }
+    }
+    return true;
+  }
+
+
+  static void PerFaceDijsktraCompute(MeshType &m, const std::vector<FacePointer> &seedVec,
+                                     ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
+                                     std::vector<FacePointer> *InInterval=NULL
+                                     )
+  {
+    tri::RequireFFAdjacency(m);
+    tri::RequirePerFaceMark(m);
+    tri::RequirePerFaceQuality(m);
+
+    typename MeshType::template PerFaceAttributeHandle<FacePointer> sourceHandle
+        = tri::Allocator<MeshType>::template GetPerFaceAttribute<FacePointer> (m,"sources");
+    if(!tri::Allocator<MeshType>::IsValidHandle(m,sourceHandle))
+      sourceHandle =  tri::Allocator<MeshType>::template AddPerFaceAttribute<FacePointer> (m,"sources");
+
+    typename MeshType::template PerFaceAttributeHandle<FacePointer> parentHandle
+        = tri::Allocator<MeshType>::template GetPerFaceAttribute<FacePointer> (m,"parent");
+    if(!tri::Allocator<MeshType>::IsValidHandle(m,parentHandle))
+      parentHandle =  tri::Allocator<MeshType>::template AddPerFaceAttribute<FacePointer> (m,"parent");
+
+    std::vector<FaceDist> Heap;
+    tri::UnMarkAll(m);
+    for(size_t i=0;i<seedVec.size();++i)
+    {
+      tri::Mark(m,seedVec[i]);
+      seedVec[i]->Q()=0;
+      sourceHandle[seedVec[i]]=seedVec[i];
+      parentHandle[seedVec[i]]=seedVec[i];
+      Heap.push_back(FaceDist(seedVec[i]));
+      if (InInterval!=NULL) InInterval->push_back(seedVec[i]);
+    }
+
+    std::make_heap(Heap.begin(),Heap.end());
+    while(!Heap.empty())
+    {
+      pop_heap(Heap.begin(),Heap.end());
+      FacePointer curr = (Heap.back()).f;
+      Heap.pop_back();
+
+      for(int i=0;i<3;++i)
+      {
+        if(!face::IsBorder(*curr,i) )
+        {
+          FacePointer nextF = curr->FFp(i);
+          ScalarType nextDist = curr->Q() + DistanceFunctor()(curr,nextF);
+          if( (nextDist < maxDistanceThr) &&
+              (!tri::IsMarked(m,nextF) ||  nextDist < nextF->Q()) )
+          {
+            nextF->Q() = nextDist;
+            tri::Mark(m,nextF);
+            Heap.push_back(FaceDist(nextF));
+            push_heap(Heap.begin(),Heap.end());
+            if (InInterval!=NULL) InInterval->push_back(nextF);
+            sourceHandle[nextF] = sourceHandle[curr];
+            parentHandle[nextF] = curr;
+//            printf("Heapsize %i nextDist = %f curr face %i next face %i \n",Heap.size(), nextDist, tri::Index(m,curr), tri::Index(m,nextF));
+          }
+        }
+      }
+    }
+  }
+
+
+
+
+  static void PerVertexDijsktraCompute(MeshType &m, const std::vector<VertexPointer> &seedVec,
+                                     ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
+                                     std::vector<VertexPointer> *InInterval=NULL
+                                     )
+  {
+    tri::RequireVFAdjacency(m);
+    tri::RequirePerVertexMark(m);
+    tri::RequirePerVertexQuality(m);
+
+    typename MeshType::template PerVertexAttributeHandle<VertexPointer> sourceHandle
+        = tri::Allocator<MeshType>::template GetPerVertexAttribute<VertexPointer> (m,"sources");
+    if(!tri::Allocator<MeshType>::IsValidHandle(m,sourceHandle))
+      sourceHandle =  tri::Allocator<MeshType>::template AddPerVertexAttribute<VertexPointer> (m,"sources");
+
+    typename MeshType::template PerVertexAttributeHandle<VertexPointer> parentHandle
+        = tri::Allocator<MeshType>::template GetPerVertexAttribute<VertexPointer> (m,"parent");
+    if(!tri::Allocator<MeshType>::IsValidHandle(m,parentHandle))
+      parentHandle =  tri::Allocator<MeshType>::template AddPerVertexAttribute<VertexPointer> (m,"parent");
+
+    std::vector<DIJKDist> Heap;
+    tri::UnMarkAll(m);
+
+    for(size_t i=0;i<seedVec.size();++i)
+    {
+      assert(!tri::IsMarked(m,seedVec[i]));
+      tri::Mark(m,seedVec[i]);
+      seedVec[i]->Q()=0;
+      sourceHandle[seedVec[i]]=seedVec[i];
+      parentHandle[seedVec[i]]=seedVec[i];
+      Heap.push_back(DIJKDist(seedVec[i]));
+      if (InInterval!=NULL) InInterval->push_back(seedVec[i]);
+    }
+
+    std::make_heap(Heap.begin(),Heap.end());
+    while(!Heap.empty())
+    {
+      pop_heap(Heap.begin(),Heap.end());
+      VertexPointer curr = (Heap.back()).v;
+      Heap.pop_back();
+      std::vector<VertexPointer> vertVec;
+      face::VVStarVF<FaceType>(curr,vertVec);
+      for(size_t i=0;i<vertVec.size();++i)
+      {
+        VertexPointer nextV = vertVec[i];
+        ScalarType nextDist = curr->Q() + DistanceFunctor()(curr,nextV);
+        if( (nextDist < maxDistanceThr) &&
+            (!tri::IsMarked(m,nextV) ||  nextDist < nextV->Q()) )
+        {
+          nextV->Q() = nextDist;
+          tri::Mark(m,nextV);
+          Heap.push_back(DIJKDist(nextV));
+          push_heap(Heap.begin(),Heap.end());
+          if (InInterval!=NULL) InInterval->push_back(nextV);
+          sourceHandle[nextV] = sourceHandle[curr];
+          parentHandle[nextV] = curr;
+//          printf("Heapsize %i nextDist = %f curr vert %i next vert %i \n",Heap.size(), nextDist, tri::Index(m,curr), tri::Index(m,nextV));
+        }
+      }
+    }
+  }
+
 
 };// end class
 }// end namespace tri
