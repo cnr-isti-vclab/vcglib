@@ -48,7 +48,7 @@ namespace vcg
 	class Add_Ons
 	{
 	public:
-		enum DrawMode  {DMUser,DMWire,DMSolid} ;
+		enum DrawMode  {DMUser,DMWire,DMSolid,DMFlat} ;
 	private:
 
 		///used to find right transformation in case of rotation 
@@ -76,7 +76,12 @@ namespace vcg
 			{
 			case DMUser		  :
 				break;
-			case DMWire		  :	
+			case DMFlat		  :
+			  glEnable(GL_CULL_FACE);
+			  glEnable(GL_LIGHTING);
+			  glEnable(GL_NORMALIZE);
+				break;
+			case DMWire		  :
 				glDisable(GL_CULL_FACE);
 				glDisable(GL_LIGHTING);
 				glDisable(GL_NORMALIZE);
@@ -244,7 +249,6 @@ public:
 		///draw a cone
 		static void Cone(int slices,float lenght,float width,bool useDisplList)
 		{
-			assert(!glGetError());
 			static std::map<int,GLint> Disp_listMap;
 			GLint cone_List=-1;
 			std::map<int,GLint>::const_iterator it=Disp_listMap.find(slices);
@@ -259,14 +263,12 @@ public:
 			}
 
 			glScaled(lenght,width,width);
-			assert(!glGetError());
 			if (((!glIsList(cone_List))&&(useDisplList))||(!useDisplList))
 			{
 				int h=1;
 				vcg::Point3f p0;
 				vcg::Point3f P[2];
 				vcg::Point3f N[2];
-				assert(!glGetError());
 				glScaled(lenght,width,width);
 				if (useDisplList)
 				{
@@ -275,7 +277,7 @@ public:
 				}
 				for(h=0; h < 2; ++h)
 				{
-					assert(!glGetError());
+//					assert(!glGetError());
 					//glBegin(GL_TRIANGLE_FAN);
 					p0 = Point3f(0,0,0);
 					if(h==0) p0[0]+=1.f;
@@ -290,17 +292,17 @@ public:
 						if (b==slices) angle=0;
 						N[1] = Point3f( 1.f, sinf(angle), cosf(angle) );
 						P[1] = Point3f( 0,   sinf(angle), cosf(angle));
-						assert(!glGetError());
 						glBegin(GL_TRIANGLES);
-						Point3f n =  ( (P[0]-p0) ^ (P[2]-p0) ).Normalize();
-						glNormal3f(n[0],n[1],n[2]);
-						glVertex3f(p0[0],p0[1],p0[2]);
+						Point3f n =  ( (P[0]-p0) ^ (P[1]-p0) ).Normalize();
+//						Point3f n =  ( (N[0]+N[1]) ).Normalize();
+						glNormal(n);
+						glVertex(p0);
 						glNormal3f(N[0][0],N[0][1],N[0][2]);
 						glVertex3f(P[0][0],P[0][1],P[0][2]);
 						glNormal3f(N[1][0],N[1][1],N[1][2]);
 						glVertex3f(P[1][0],P[1][1],P[1][2]);
 						glEnd();
-						assert(!glGetError());
+//						assert(!glGetError());
 						N[0] = N[1];
 						P[0] = P[1];
 					}
@@ -340,6 +342,9 @@ public:
 				glPushMatrix();		
 				glMultMatrixf(&tr[0][0]);
 				vcg::Point3f Direct=(head-tail);
+				if(body_width == 0) body_width = Direct.Norm()/40.0f;
+				if(head_lenght == 0) head_lenght = Direct.Norm()/5.0f;
+				if(head_width == 0) head_width = Direct.Norm()/15.0f;
 				float l_body=Direct.Norm()-head_lenght;
 				glPushMatrix();
 				//glTranslate(vcg::Point3f(tail.Norm(),0,0));
