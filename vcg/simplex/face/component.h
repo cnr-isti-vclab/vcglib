@@ -457,6 +457,7 @@ public:  static void Name(std::vector<std::string> & name){name.push_back(std::s
 
 template <class T> class Mark: public T {
 public:
+  Mark():_imark(0){}
   inline int &IMark()       { return _imark;}
   inline int cIMark() const { return _imark;}
   inline void InitIMark()    { _imark = 0; }

@@ -148,7 +148,7 @@ bool IsMarkEnabled() const {return MarkEnabled;}
 void EnableMark() {
 	assert(VALUE_TYPE::HasMarkOcf());
 	MarkEnabled=true;
-	MV.resize((*this).size());
+	MV.resize((*this).size(),0);
 }
 void DisableMark() {
 	assert(VALUE_TYPE::HasMarkOcf());
@@ -355,7 +355,7 @@ public:
   template <class RightVertexType>
   void ImportData(const RightVertexType & rightV)
   {
-    if((*this).IsQualityEnabled && rightV.IsQualityEnabled() ) // copy the data only if they are enabled in both vertices
+    if((*this).IsQualityEnabled() && rightV.IsQualityEnabled() ) // copy the data only if they are enabled in both vertices
       Q() = rightV.cQ();
     T::ImportData(rightV);
   }

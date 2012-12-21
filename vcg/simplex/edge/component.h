@@ -162,16 +162,17 @@ template <class T> class EVAdj : public VertexRef<T>{};
  */
 template <class T> class Mark: public T {
 public:
-  static bool HasMark()      { return true; }
-  static bool HasMarkOcc()   { return true; }
-  inline void InitIMark()    { _imark = 0; }
-  inline int & IMark()       { return _imark;}
-  inline const int & IMark() const {return _imark;}
-	template < class LeftV>
-	void ImportData(const LeftV  & left ) { IMark() = left.IMark(); T::ImportData( left); }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
+    Mark():_imark(0){}
+    static bool HasMark()      { return true; }
+    static bool HasMarkOcc()   { return true; }
+    inline void InitIMark()    { _imark = 0; }
+    inline int & IMark()       { return _imark;}
+    inline const int & IMark() const {return _imark;}
+    template < class LeftV>
+    void ImportData(const LeftV  & left ) { IMark() = left.IMark(); T::ImportData( left); }
+    static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
 
- private:
+  private:
 	int _imark;
 };
 
