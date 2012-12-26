@@ -387,7 +387,8 @@ It is just a simple wrapper of the basic Compute()
 
   static void PerFaceDijsktraCompute(MeshType &m, const std::vector<FacePointer> &seedVec,
                                      ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
-                                     std::vector<FacePointer> *InInterval=NULL
+                                     std::vector<FacePointer> *InInterval=NULL,
+                                     FacePointer FaceTarget=NULL
                                      )
   {
     tri::RequireFFAdjacency(m);
@@ -421,6 +422,7 @@ It is just a simple wrapper of the basic Compute()
     {
       pop_heap(Heap.begin(),Heap.end());
       FacePointer curr = (Heap.back()).f;
+      if ((FaceTarget!=NULL)&&(curr==FaceTarget))return;
       Heap.pop_back();
 
       for(int i=0;i<3;++i)
@@ -451,7 +453,7 @@ It is just a simple wrapper of the basic Compute()
 
   static void PerVertexDijsktraCompute(MeshType &m, const std::vector<VertexPointer> &seedVec,
                                      ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
-                                     std::vector<VertexPointer> *InInterval=NULL
+                                     std::vector<VertexPointer> *InInterval=NULL,bool avoid_selected=false
                                      )
   {
     tri::RequireVFAdjacency(m);
@@ -493,6 +495,7 @@ It is just a simple wrapper of the basic Compute()
       for(size_t i=0;i<vertVec.size();++i)
       {
         VertexPointer nextV = vertVec[i];
+        if ((avoid_selected)&&(nextV->IsS()))continue;
         ScalarType nextDist = curr->Q() + DistanceFunctor()(curr,nextV);
         if( (nextDist < maxDistanceThr) &&
             (!tri::IsMarked(m,nextV) ||  nextDist < nextV->Q()) )
