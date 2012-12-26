@@ -189,6 +189,9 @@ private:
             {
                 //mesh->vert[i].SetS();
                 Handle_Singular[i]=true;
+                if (missmatch==3)missmatch=1;
+                else
+                if (missmatch==1)missmatch=3;
                 Handle_SingularDegree[i]=missmatch;
             }
             else
