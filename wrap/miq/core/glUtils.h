@@ -15,7 +15,6 @@ public:
     {
         bool hasSingular = vcg::tri::HasPerVertexAttribute(mesh,std::string("Singular"));
         bool hasSingularDegree = vcg::tri::HasPerVertexAttribute(mesh,std::string("SingularityDegree"));
-
         if (!hasSingular)return;
 
         typename MeshType::template PerVertexAttributeHandle<bool> Handle_Singular;
@@ -31,7 +30,7 @@ public:
         glDepthRange(0,0.999);
         glPointSize(size);
         glBegin(GL_POINTS);
-        glColor4d(0,0,1,0.7);
+        glColor4d(0,1,1,0.7);
         for (unsigned int j=0;j<mesh.face.size();j++)
         {
             CFace *f=&mesh.face[j];
@@ -40,9 +39,14 @@ public:
             {
                 CVertex *v=f->V(i);
                 if (!Handle_Singular[v])continue;
-                int mmatch=3;
+                //int mmatch=3;
                 if (hasSingularDegree)
-                    mmatch=Handle_SingularDegree[i];
+                {
+                    int mmatch=Handle_SingularDegree[v];
+                    if (mmatch==1)vcg::glColor(vcg::Color4b(255,0,0,255));///valence 5
+                    if (mmatch==2)vcg::glColor(vcg::Color4b(0,255,0,255));///valence 6
+                    if (mmatch==3)vcg::glColor(vcg::Color4b(0,0,255,255));///valence 3
+                }
                 if (!DrawUV)
                     vcg::glVertex(v->P());
                 else
