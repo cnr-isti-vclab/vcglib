@@ -67,7 +67,21 @@ namespace vcg {
                 CoordType dirR=vcg::tri::CrossField<MeshType>::Rotate(f0,f1,dirS);
                 ///then get the closest upf to K*PI/2 rotations
                 CoordType dir1=f1.cPD1();
-                int ret=I_K_PI(dir1,dirR,f1.cN());
+                //int ret=I_K_PI(dir1,dirR,f1.cN());
+                CoordType dir[4];
+                CrossVector(f1,dir);
+                ScalarType best=-1;
+                int ret=-1;
+                for (int i=0;i<4;i++)
+                {
+                    ScalarType dot=dir[i]*dirR;
+                    if (dot>best)
+                    {
+                        best=dot;
+                        ret=i;
+                    }
+                }
+                assert(ret!=-1);
                 return ret;
             }
 
@@ -367,7 +381,7 @@ namespace vcg {
                 CoordType c = (a^n).normalized();///POSSIBLE SOURCE OF BUG CHECK CROSS PRODUCT
 				ScalarType scorea = a*b;
 				ScalarType scorec = c*b;
-				if (fabs(scorea)>=fabs(scorec)) return a*Sign(scorea); else return c*Sign(scorec);
+                if (fabs(scorea)>=fabs(scorec)) return a*Sign(scorea); else return c*Sign(scorec);
 			}
 
             // returns the 90 deg rotation of a (around n) most similar to target b
