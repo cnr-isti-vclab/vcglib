@@ -388,8 +388,8 @@ It is just a simple wrapper of the basic Compute()
   static void PerFaceDijsktraCompute(MeshType &m, const std::vector<FacePointer> &seedVec,
                                      ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
                                      std::vector<FacePointer> *InInterval=NULL,
-                                     FacePointer FaceTarget=NULL
-                                     )
+                                     FacePointer FaceTarget=NULL,
+                                     bool avoid_selected=false)
   {
     tri::RequireFFAdjacency(m);
     tri::RequirePerFaceMark(m);
@@ -435,6 +435,7 @@ It is just a simple wrapper of the basic Compute()
               (!tri::IsMarked(m,nextF) ||  nextDist < nextF->Q()) )
           {
             nextF->Q() = nextDist;
+            if ((avoid_selected)&&(nextF->IsS()))continue;
             tri::Mark(m,nextF);
             Heap.push_back(FaceDist(nextF));
             push_heap(Heap.begin(),Heap.end());
@@ -453,8 +454,8 @@ It is just a simple wrapper of the basic Compute()
 
   static void PerVertexDijsktraCompute(MeshType &m, const std::vector<VertexPointer> &seedVec,
                                      ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
-                                     std::vector<VertexPointer> *InInterval=NULL,bool avoid_selected=false
-                                     )
+                                     std::vector<VertexPointer> *InInterval=NULL,bool avoid_selected=false,
+                                     VertexPointer target=NULL)
   {
     tri::RequireVFAdjacency(m);
     tri::RequirePerVertexMark(m);
@@ -489,6 +490,7 @@ It is just a simple wrapper of the basic Compute()
     {
       pop_heap(Heap.begin(),Heap.end());
       VertexPointer curr = (Heap.back()).v;
+      if ((target!=NULL)&&(target==curr))return;
       Heap.pop_back();
       std::vector<VertexPointer> vertVec;
       face::VVStarVF<FaceType>(curr,vertVec);
