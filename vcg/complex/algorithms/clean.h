@@ -477,7 +477,7 @@ private:
 
       static int SplitNonManifoldVertex(MeshType& m, float moveThreshold)
       {
-        assert(HasFFAdjacency(m));
+        RequireFFAdjacency(m);
         typedef std::pair<FacePointer,int> FaceInt; // a face and the index of the vertex that we have to change
         //
         std::vector<std::pair<VertexPointer, std::vector<FaceInt> > >ToSplitVec;
@@ -515,7 +515,7 @@ private:
         VertexIterator firstVp = tri::Allocator<MeshType>::AddVertices(m,ToSplitVec.size(),pu);
         for(size_t i =0;i<ToSplitVec.size();++i)
         {
-          qDebug("Splitting Vertex %i",ToSplitVec[i].first-&*m.vert.begin());
+//          qDebug("Splitting Vertex %i",ToSplitVec[i].first-&*m.vert.begin());
           VertexPointer np=ToSplitVec[i].first;
           pu.Update(np);
           firstVp->ImportData(*np);
@@ -766,8 +766,8 @@ private:
 			 */
       static bool HasConsistentPerFaceFauxFlag(const MeshType &m)
       {
-        assert(HasPerFaceFlags(m));
-        assert(HasFFAdjacency(m)); // todo: remove this constraint
+        RequireFFAdjacency(m);
+        RequirePerFaceFlags(m);
         
         for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
           if(!(*fi).IsD()) 
@@ -783,7 +783,7 @@ private:
       
       static bool HasConsistentEdges(const MeshType &m)
       {
-        assert(HasPerFaceFlags(m));
+        RequirePerFaceFlags(m);
         
         for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
           if(!(*fi).IsD()) 
@@ -806,7 +806,7 @@ private:
       static int CountNonManifoldEdgeEE( MeshType & m, bool SelectFlag=false)
       {
         assert(m.fn == 0 && m.en >0); // just to be sure we are using an edge mesh...
-        assert(tri::HasEEAdjacency(m));
+        RequireEEAdjacency(m);
         tri::UpdateTopology<MeshType>::EdgeEdge(m);
 
         if(SelectFlag) UpdateSelection<MeshType>::VertexClear(m);
@@ -843,6 +843,7 @@ private:
        */
       static int CountNonManifoldEdgeFF( MeshType & m, bool SelectFlag=false)
       {
+        RequireFFAdjacency(m);
         int nmfBit[3];
         nmfBit[0]= FaceType::NewBitFlag();
         nmfBit[1]= FaceType::NewBitFlag();
@@ -855,7 +856,6 @@ private:
           UpdateSelection<MeshType>::VertexClear(m);
           UpdateSelection<MeshType>::FaceClear(m);
         }
-        assert(tri::HasFFAdjacency(m));
 
         int edgeCnt = 0;
         for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
@@ -895,7 +895,7 @@ private:
        */
       static int CountNonManifoldVertexFF( MeshType & m, bool selectVert = true )
 			{
-        assert(tri::HasFFAdjacency(m));
+		RequireFFAdjacency(m);
         if(selectVert) UpdateSelection<MeshType>::VertexClear(m);
 
 				int nonManifoldCnt=0;
@@ -1173,9 +1173,7 @@ private:
 			 */
 			static void IsRegularMesh(MeshType &m, bool &Regular, bool &Semiregular)
 			{
-				// This algorithm requires Vertex-Face topology
-				assert(m.HasVFTopology());
-
+			  RequireVFAdjacency(m);
 				Regular = true;
 			
 				VertexIterator vi;
@@ -1221,9 +1219,9 @@ private:
 //      static void IsOrientedMesh(MeshType &m, bool &Oriented, bool &Orientable)
       static void OrientCoherentlyMesh(MeshType &m, bool &Oriented, bool &Orientable)
 			{
+		RequireFFAdjacency(m);
         assert(&Oriented != &Orientable);
-				// This algorithms requires FF topology
-				assert(HasFFAdjacency(m));
+
 				// This algorithms require FF topology initialized
 				assert(m.face.back().FFp(0));
 
@@ -1366,8 +1364,8 @@ private:
       // - choose the edge that brings to the face f1 containing the vertex opposite to that edge.
       static int RemoveFaceFoldByFlip(MeshType &m, float normalThresholdDeg=175, bool repeat=true)
       {
-            assert(HasFFAdjacency(m));
-            assert(HasPerVertexMark(m));
+        RequireFFAdjacency(m);
+        RequirePerVertexMark(m);
             //Counters for logging and convergence
             int count, total = 0;
 
@@ -1416,9 +1414,9 @@ private:
 
 	static int RemoveTVertexByFlip(MeshType &m, float threshold=40, bool repeat=true)
 	{
-		assert(HasFFAdjacency(m));
-		assert(HasPerVertexMark(m));
-        //Counters for logging and convergence
+	  RequireFFAdjacency(m);
+	  RequirePerVertexMark(m);
+		//Counters for logging and convergence
         int count, total = 0;
 
         do {
@@ -1464,8 +1462,8 @@ private:
 
 	static int RemoveTVertexByCollapse(MeshType &m, float threshold=40, bool repeat=true)
 	{
-      assert(tri::HasPerVertexMark(m));
-        //Counters for logging and convergence
+	  RequirePerVertexMark(m);
+		//Counters for logging and convergence
         int count, total = 0;
 
         do {
@@ -1502,8 +1500,8 @@ private:
 
       static bool SelfIntersections(MeshType &m, std::vector<FaceType*> &ret)
 			{
-        assert(HasPerFaceMark(m));// Needed by the UG
-				Box3< ScalarType> bbox;
+		RequirePerFaceMark(m);
+			Box3< ScalarType> bbox;
 				TriMeshGrid   gM;
         ret.clear();
 				FaceIterator fi;
@@ -1563,7 +1561,7 @@ private:
       */
       static bool IsFFAdjacencyConsistent(MeshType &m)
       {
-        if(!HasFFAdjacency(m)) return false;
+        RequireFFAdjacency(m);
 
         for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
           if(!(*fi).IsD()) 
