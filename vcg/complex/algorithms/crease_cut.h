@@ -73,7 +73,6 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 	tri::UpdateFlags<MESH_TYPE>::VertexClearV(m);
 	std::vector<int> indVec(m.fn*3,-1);
 	int newVertexCounter=m.vn;
-	int creaseCounter=0;
 	int startVn=m.vn;
 	FaceIterator fi;
 	//const FaceType * nextf;
