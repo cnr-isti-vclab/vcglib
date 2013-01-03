@@ -29,6 +29,7 @@
 #include <vcg/complex/algorithms/update/bounding.h>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <QImageReader>
 
 extern "C"
 {
