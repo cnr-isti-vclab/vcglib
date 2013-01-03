@@ -469,7 +469,7 @@ namespace io {
                                 // face wedgetexcoord
                                 ReadString(f,s);
                                 if( s == std::string("HAS_FACE_WEDGETEXCOORD_OCF")) {
-                                        face.EnableWedgeTex();
+                                        face.EnableWedgeTexCoord();
                                         Read((void*)&face.WTV[0],sizeof(typename FaceType::WedgeTexCoordType),face.size(),f);
                                 }
 
