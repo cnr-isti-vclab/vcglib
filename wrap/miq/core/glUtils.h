@@ -94,7 +94,8 @@ public:
     template <class MeshType>
     static void GLDrawSeams(MeshType &mesh,
                             float size=3,
-                            bool UV=false)
+                            bool UV=false,
+                            int numCuts=200)
     {
         bool hasSeam = vcg::tri::HasPerFaceAttribute(mesh,std::string("Seams"));
         if(!hasSeam)return;
@@ -130,7 +131,7 @@ public:
                     int index=Handle_SeamIndex[i][j];
                     //assert(index>0);
                     if (index>=0)
-                        seamCol[j]=vcg::Color4b::Scatter(100,index);
+                        seamCol[j]=vcg::Color4b::Scatter(numCuts,index);
                 }
             }
 
