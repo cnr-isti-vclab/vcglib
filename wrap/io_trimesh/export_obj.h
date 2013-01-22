@@ -44,7 +44,8 @@ namespace io {
 		typedef typename SaveMeshType::FaceIterator FaceIterator;
 		typedef typename SaveMeshType::VertexIterator VertexIterator;
 		typedef typename SaveMeshType::VertexType VertexType;
-	
+        typedef typename SaveMeshType::ScalarType ScalarType;
+        typedef typename SaveMeshType::CoordType CoordType;
 		/*
 			enum of all the types of error
 		*/
@@ -144,7 +145,7 @@ namespace io {
 			
 			//vertexs + normal
 			VertexIterator vi;
-			std::map<Point3f,int> NormalVertex;
+            std::map<CoordType,int> NormalVertex;
       std::vector<int> VertexId(m.vert.size());
 			int numvert = 0;
 			int curNormalIndex = 1;
@@ -193,7 +194,7 @@ namespace io {
 			
 			//faces + texture coords
 			FaceIterator fi;
-			std::map<vcg::TexCoord2<float>,int> CoordIndexTexture;
+            std::map<vcg::TexCoord2<ScalarType>,int> CoordIndexTexture;
 			unsigned int material_num = 0;
 			int mem_index = 0; //var temporany
 			int curTexCoordIndex = 1; 
@@ -288,9 +289,9 @@ namespace io {
 		/*
 			returns index of the texture coord
 		*/
-		inline static int GetIndexVertexTexture(std::map<TexCoord2<float>,int> &mapTexToInt, const vcg::TexCoord2<float> &wt)
+        inline static int GetIndexVertexTexture(typename std::map<TexCoord2<ScalarType>,int> &mapTexToInt, const vcg::TexCoord2<ScalarType> &wt)
 		{
-			std::map<vcg::TexCoord2<float>,int>::iterator iter= mapTexToInt.find(wt);
+            typename std::map<vcg::TexCoord2<ScalarType>,int>::iterator iter= mapTexToInt.find(wt);
 			if(iter != mapTexToInt.end()) return (*iter).second;
 			else 		return -1;
 			// Old wrong version.	
@@ -301,9 +302,9 @@ namespace io {
 		/*
 			returns index of the vertex normal
 		*/
-		inline static int GetIndexVertexNormal(SaveMeshType &/*m*/, std::map<Point3f,int> &mapNormToInt, const Point3f &norm )
+        inline static int GetIndexVertexNormal(SaveMeshType &/*m*/, std::map<CoordType,int> &mapNormToInt, const CoordType &norm )
 		{
-		  std::map<Point3f,int>::iterator iter= mapNormToInt.find(norm);
+          typename std::map<CoordType,int>::iterator iter= mapNormToInt.find(norm);
 			if(iter != mapNormToInt.end()) return (*iter).second;
 			else 		return -1;
 			// Old wrong version.	
@@ -337,7 +338,8 @@ namespace io {
 			adds a new index to the coordinate of Texture if it is the first time 
 			which is otherwise met not execute anything
 		*/
-		inline static bool AddNewTextureCoord(std::map<vcg::TexCoord2<float>,int> &m, const vcg::TexCoord2<float> &wt,int value)
+        inline static bool AddNewTextureCoord(std::map<typename vcg::TexCoord2<ScalarType>,int> &m,
+                                              const typename vcg::TexCoord2<ScalarType> &wt,int value)
 		{
 			int index = m[wt];
 			if(index==0){m[wt]=value;return true;}
@@ -348,7 +350,7 @@ namespace io {
 			adds a new index to the normal per vertex if it is the first time 
 			which is otherwise met does not execute anything
 		*/
-		inline static bool AddNewNormalVertex(std::map<Point3f,int> &m, Point3f &n ,int value)
+        inline static bool AddNewNormalVertex(typename std::map<CoordType,int> &m, CoordType &n ,int value)
 		{
 			int index = m[n];
 			if(index==0){m[n]=value;return true;}
