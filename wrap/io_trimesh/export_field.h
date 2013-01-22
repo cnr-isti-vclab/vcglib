@@ -60,6 +60,25 @@ public:
         fclose(f);
     }
 
+    ///Save a 4 rosy format file as used by
+    ///Interactive Visualization of Rotational Symmetry Fields on Surfaces
+    ///Jonathan Palacios and Eugene Zhang
+    static void Save4ROSYFace(MeshType &mesh,
+                        const char *path)
+    {
+        FILE *f = fopen(path,"wt");
+        fprintf(f,"%d\n",mesh.vn);
+        fprintf(f,"4\n");
+        for (unsigned int i=0;i<mesh.face.size();i++)
+        {
+            float dirX=(float)mesh.face[i].PD1().X();
+            float dirY=(float)mesh.face[i].PD1().Y();
+            float dirZ=(float)mesh.face[i].PD1().Z();
+            fprintf(f,"%f %f %f \n",dirX,dirY,dirZ);
+
+        }
+        fclose(f);
+    }
 
 }; // end class
 
