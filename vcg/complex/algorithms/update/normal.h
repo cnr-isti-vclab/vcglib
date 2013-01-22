@@ -25,6 +25,7 @@
 #define __VCG_TRI_UPDATE_NORMALS
 
 #include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/math/matrix44.h>
 
 namespace vcg {
 namespace tri {
