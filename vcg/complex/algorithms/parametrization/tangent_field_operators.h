@@ -82,6 +82,7 @@ namespace vcg {
                     }
                 }
                 assert(ret!=-1);
+
                 return ret;
             }
 
@@ -327,7 +328,8 @@ namespace vcg {
 			static void SetVertCrossVectorFromFace(VertexType &v)
 			{
 				std::vector<FaceType *> faceVec;
-				vcg::face::VFStarVF(&v,faceVec);
+                std::vector<int> index;
+                vcg::face::VFStarVF(&v,faceVec,index);
 				std::vector<CoordType> TangVect;
 				std::vector<CoordType> Norms;
                 for (unsigned int i=0;i<faceVec.size();i++)
