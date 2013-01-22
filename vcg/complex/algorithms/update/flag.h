@@ -71,7 +71,7 @@ public:
 
   static void VertexClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
   {
-    tri::RequirePerVertexFlags(m);
+    RequirePerVertexFlags(m);
     int andMask = ~FlagMask;
     for(VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
       if(!(*vi).IsD()) (*vi).Flags() &= andMask ;
@@ -79,7 +79,7 @@ public:
 
   static void EdgeClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
   {
-    tri::RequirePerEdgeFlags(m);
+    RequirePerEdgeFlags(m);
     int andMask = ~FlagMask;
     for(EdgeIterator ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
       if(!(*ei).IsD()) (*ei).Flags() &= andMask ;
@@ -87,7 +87,7 @@ public:
 
   static void FaceClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
   {
-    tri::RequirePerFaceFlags(m);
+    RequirePerFaceFlags(m);
     int andMask = ~FlagMask;
     for(FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi)
       if(!(*fi).IsD()) (*fi).Flags() &= andMask ;
@@ -95,21 +95,21 @@ public:
 
   static void VertexSet(MeshType &m, unsigned int FlagMask)
   {
-    tri::RequirePerVertexFlags(m);
+    RequirePerVertexFlags(m);
     for(VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
       if(!(*vi).IsD()) (*vi).Flags() |= FlagMask ;
   }
 
   static void EdgeSet(MeshType &m, unsigned int FlagMask)
   {
-    tri::RequirePerEdgeFlags(m);
+    RequirePerEdgeFlags(m);
     for(EdgeIterator ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
       if(!(*ei).IsD()) (*ei).Flags() |= FlagMask ;
   }
 
   static void FaceSet(MeshType &m, unsigned int FlagMask)
   {
-    tri::RequirePerFaceFlags(m);
+    RequirePerFaceFlags(m);
     for(FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi)
       if(!(*fi).IsD()) (*fi).Flags() |= FlagMask ;
   }
@@ -139,8 +139,8 @@ public:
 */
   static void FaceBorderFromFF(MeshType &m)
   {
-    tri::RequirePerFaceFlags(m);
-    tri::RequireFFAdjacency(m);
+    RequirePerFaceFlags(m);
+    RequireFFAdjacency(m);
 
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)if(!(*fi).IsD())
       for(int j=0;j<3;++j)
@@ -153,8 +153,8 @@ public:
 
   static void FaceBorderFromVF(MeshType &m)
   {
-    tri::RequirePerFaceFlags(m);
-    tri::RequireVFAdjacency(m);
+    RequirePerFaceFlags(m);
+    RequireVFAdjacency(m);
 
     FaceClearB(m);
     int visitedBit=VertexType::NewBitFlag();
@@ -239,7 +239,7 @@ public:
   // versione minimale che non calcola i complex flag.
   static void VertexBorderFromNone(MeshType &m)
   {
-    tri::RequirePerVertexFlags(m);
+    RequirePerVertexFlags(m);
 
     std::vector<EdgeSorter> e;
     typename UpdateMeshType::FaceIterator pf;
@@ -285,7 +285,7 @@ public:
   /// It has a O(fn log fn) complexity.
   static void FaceBorderFromNone(MeshType &m)
   {
-    tri::RequirePerFaceFlags(m);
+    RequirePerFaceFlags(m);
 
     std::vector<EdgeSorter> e;
     typename UpdateMeshType::FaceIterator pf;
@@ -338,8 +338,8 @@ public:
   /// Compute the PerVertex Border flag deriving it from the border flag of faces
   static void VertexBorderFromFace(MeshType &m)
   {
-    tri::RequirePerFaceFlags(m);
-    tri::RequirePerVertexFlags(m);
+    RequirePerFaceFlags(m);
+    RequirePerVertexFlags(m);
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
       (*vi).ClearB();
 
@@ -357,8 +357,8 @@ public:
   //
   static void FaceFauxCrease(MeshType &m,float AngleRad)
   {
-    tri::RequirePerFaceFlags(m);
-    tri::RequireFFAdjacency(m);
+    RequirePerFaceFlags(m);
+    RequireFFAdjacency(m);
 
     typename MeshType::FaceIterator f;
 
