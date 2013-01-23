@@ -17,13 +17,28 @@ template <class MeshType> class Extrude
   typedef typename MeshType::EdgeIterator EdgeIterator;
   typedef typename MeshType::FaceIterator FaceIterator;
 
-static void ProfileWithCap(MeshType &profile, MeshType &surface, const vcg::Similarityf &sim )
+static void ProfileWithCap(MeshType &profile, MeshType &fullSurface, const vcg::Similarityf &sim )
 {
-  surface.Clear();
+  fullSurface.Clear();
+  MeshType lowCapSurf,topCapSurf;
+  ProfileWithCap(profile,fullSurface,lowCapSurf,topCapSurf,sim);
+  tri::Append<MeshType,MeshType>::Mesh(fullSurface,lowCapSurf);
+  tri::Append<MeshType,MeshType>::Mesh(fullSurface,topCapSurf);
+  tri::Clean<MeshType>::RemoveDuplicateVertex(fullSurface);
+  bool oriented,orientable;
+  tri::UpdateTopology<MeshType>::FaceFace(fullSurface);
+  tri::Clean<MeshType>::OrientCoherentlyMesh(fullSurface,oriented,orientable);
+}
+
+static void ProfileWithCap(MeshType &profile, MeshType &sideSurf, MeshType &lowCapSurf, MeshType &topCapSurf, const vcg::Similarityf &sim )
+{
+  sideSurf.Clear();
+  lowCapSurf.Clear();
+  topCapSurf.Clear();
 
   for(VertexIterator vi=profile.vert.begin();vi!=profile.vert.end();++vi)
   {
-    VertexIterator vp=tri::Allocator<MeshType>::AddVertices(surface,2);
+    VertexIterator vp=tri::Allocator<MeshType>::AddVertices(sideSurf,2);
     vp->P()=vi->P();
     ++vp;
     vp->P()= sim*vi->P() ;
@@ -34,30 +49,23 @@ static void ProfileWithCap(MeshType &profile, MeshType &surface, const vcg::Simi
     int i0=tri::Index(profile,ei->V(0));
     int i1=tri::Index(profile,ei->V(1));
 
-    FaceIterator fp= tri::Allocator<MeshType>::AddFaces(surface,2);
-    fp->V(0) = &surface.vert[i0*2];
-    fp->V(1) = &surface.vert[i1*2];
-    fp->V(2) = &surface.vert[i0*2+1];
+    FaceIterator fp= tri::Allocator<MeshType>::AddFaces(sideSurf,2);
+    fp->V(0) = &sideSurf.vert[i0*2];
+    fp->V(1) = &sideSurf.vert[i1*2];
+    fp->V(2) = &sideSurf.vert[i0*2+1];
     ++fp;
-    fp->V(0) = &surface.vert[i1*2+1];
-    fp->V(1) = &surface.vert[i0*2+1];
-    fp->V(2) = &surface.vert[i1*2];
+    fp->V(0) = &sideSurf.vert[i1*2+1];
+    fp->V(1) = &sideSurf.vert[i0*2+1];
+    fp->V(2) = &sideSurf.vert[i1*2];
   }
 
-  MeshType cap1;
+  tri::CapEdgeMesh(profile,lowCapSurf);
+  if(lowCapSurf.fn==0) CapEdgeMesh(profile,lowCapSurf,true);
 
-  tri::CapEdgeMesh(profile,cap1);
-  if(cap1.fn==0) CapEdgeMesh(profile,cap1,true);
-  tri::Append<MeshType,MeshType>::Mesh(surface,cap1);
-
-  for(VertexIterator vi=cap1.vert.begin();vi!=cap1.vert.end();++vi)
+  tri::Append<MeshType,MeshType>::Mesh(topCapSurf,lowCapSurf);
+  for(VertexIterator vi=topCapSurf.vert.begin();vi!=topCapSurf.vert.end();++vi)
     vi->P() = sim*vi->P();
-  tri::Append<MeshType,MeshType>::Mesh(surface,cap1);
-
-  tri::Clean<MeshType>::RemoveDuplicateVertex(surface);
-  bool oriented,orientable;
-  tri::UpdateTopology<MeshType>::FaceFace(surface);
-  tri::Clean<MeshType>::OrientCoherentlyMesh(surface,oriented,orientable);
+//  tri::Append<MeshType,MeshType>::Mesh(sideSurf,lowCapSurf);
 }
 
 static void ProfileWithCap(MeshType &profile, MeshType &surface, const Point3f offset)
