@@ -920,7 +920,7 @@ namespace vcg {
 					if(bHasPerFaceColor)		oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
 					if(bHasPerVertexColor)	oi.mask |= vcg::tri::io::Mask::IOM_VERTCOLOR; 
 					if (bHasNormals) {
-						if (oi.numTexCoords==oi.numVertices)
+						if (oi.numNormals == oi.numVertices)
 							oi.mask |= vcg::tri::io::Mask::IOM_VERTNORMAL;
 						else
 							oi.mask |= vcg::tri::io::Mask::IOM_WEDGNORMAL;
