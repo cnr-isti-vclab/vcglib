@@ -453,63 +453,61 @@ public:
   inline  void UpdateHeap(HeapType & h_ret,BaseParameterClass *_pp)
   {
     QParameter *pp=(QParameter *)_pp;
-		this->GlobalMark()++;
-		VertexType *v[2];
-		v[0]= this->pos.V(0);
-        v[1]= this->pos.V(1);	
-		v[1]->IMark() = this->GlobalMark();
+    this->GlobalMark()++;
+    VertexType *v[2];
+    v[0]= this->pos.V(0);
+    v[1]= this->pos.V(1);
+    v[1]->IMark() = this->GlobalMark();
 
-		// First loop around the remaining vertex to unmark visited flags
-    vcg::face::VFIterator<FaceType> vfi(v[1]);	
-		while (!vfi.End()){
-			vfi.V1()->ClearV();
-			vfi.V2()->ClearV();
-			++vfi;
-		}
+    // First loop around the remaining vertex to unmark visited flags
+    vcg::face::VFIterator<FaceType> vfi(v[1]);
+    while (!vfi.End()){
+      vfi.V1()->ClearV();
+      vfi.V2()->ClearV();
+      ++vfi;
+    }
 
-    // Second Loop 
-		vfi = face::VFIterator<FaceType>(v[1]);	
-		while (!vfi.End())
+    // Second Loop
+    vfi = face::VFIterator<FaceType>(v[1]);
+    while (!vfi.End())
     {
-			assert(!vfi.F()->IsD());
-      for (int j=0;j<3;j++)
-			{
-				if( !(vfi.V1()->IsV()) && vfi.V1()->IsRW())
-				{
-				  vfi.V1()->SetV();
-          h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.V0(),vfi.V1()), this->GlobalMark(),_pp)));
-				  std::push_heap(h_ret.begin(),h_ret.end());
-          if(!IsSymmetric(pp)){
-            h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.V1(),vfi.V0()), this->GlobalMark(),_pp)));
-					  std::push_heap(h_ret.begin(),h_ret.end());
-				  }
+      assert(!vfi.F()->IsD());
+      if( !(vfi.V1()->IsV()) && vfi.V1()->IsRW())
+      {
+        vfi.V1()->SetV();
+        h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.V0(),vfi.V1()), this->GlobalMark(),_pp)));
+        std::push_heap(h_ret.begin(),h_ret.end());
+        if(!IsSymmetric(pp)){
+          h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.V1(),vfi.V0()), this->GlobalMark(),_pp)));
+          std::push_heap(h_ret.begin(),h_ret.end());
         }
-				if(  !(vfi.V2()->IsV()) && vfi.V2()->IsRW())
-				{
-					vfi.V2()->SetV();
-          h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.V0(),vfi.V2()),this->GlobalMark(),_pp)));
-				  std::push_heap(h_ret.begin(),h_ret.end());
-          if(!IsSymmetric(pp)){
-            h_ret.push_back( HeapElem(new MYTYPE(VertexPair(vfi.V2(),vfi.V0()), this->GlobalMark(),_pp) )  );
-					  std::push_heap(h_ret.begin(),h_ret.end());
-				  }
+      }
+      if(  !(vfi.V2()->IsV()) && vfi.V2()->IsRW())
+      {
+        vfi.V2()->SetV();
+        h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.V0(),vfi.V2()),this->GlobalMark(),_pp)));
+        std::push_heap(h_ret.begin(),h_ret.end());
+        if(!IsSymmetric(pp)){
+          h_ret.push_back( HeapElem(new MYTYPE(VertexPair(vfi.V2(),vfi.V0()), this->GlobalMark(),_pp) )  );
+          std::push_heap(h_ret.begin(),h_ret.end());
         }
-        if(pp->SafeHeapUpdate && vfi.V1()->IsRW() && vfi.V2()->IsRW() )
-        {
-          h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.V1(),vfi.V2()),this->GlobalMark(),_pp)));
-				  std::push_heap(h_ret.begin(),h_ret.end());
-          if(!IsSymmetric(pp)){
-            h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.V2(),vfi.V1()), this->GlobalMark(),_pp)));
-					  std::push_heap(h_ret.begin(),h_ret.end());
-				  }
+      }
+      if(pp->SafeHeapUpdate && vfi.V1()->IsRW() && vfi.V2()->IsRW() )
+      {
+        h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.V1(),vfi.V2()),this->GlobalMark(),_pp)));
+        std::push_heap(h_ret.begin(),h_ret.end());
+        if(!IsSymmetric(pp)){
+          h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.V2(),vfi.V1()), this->GlobalMark(),_pp)));
+          std::push_heap(h_ret.begin(),h_ret.end());
         }
-			}
+      }
+
       ++vfi;
     }
 
   }
 
-static void InitQuadric(TriMeshType &m,BaseParameterClass *_pp)
+  static void InitQuadric(TriMeshType &m,BaseParameterClass *_pp)
 {
   QParameter *pp=(QParameter *)_pp;
 	typename TriMeshType::FaceIterator pf;

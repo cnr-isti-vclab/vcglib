@@ -134,61 +134,56 @@ public:
 
   inline  void UpdateHeap(HeapType & h_ret, BaseParameterClass *pp)
   {
-		GlobalMark()++; int nn=0;
-		VertexType *v[2];
-		v[0]= pos.V(0);v[1]=pos.V(1);	
-		v[1]->IMark() = GlobalMark();
+    GlobalMark()++;
+    VertexType *v[2];
+    v[0]= pos.V(0);v[1]=pos.V(1);
+    v[1]->IMark() = GlobalMark();
 
-		// First loop around the remaining vertex to unmark visited flags
+    // First loop around the remaining vertex to unmark visited flags
     vcg::face::VFIterator<FaceType> vfi(v[1]);
-		while (!vfi.End()){
-			vfi.V1()->ClearV();
-			vfi.V2()->ClearV();
-			++vfi;
-		}
+    while (!vfi.End()){
+      vfi.V1()->ClearV();
+      vfi.V2()->ClearV();
+      ++vfi;
+    }
 
     // Second Loop: add all the outgoing edges around v[1]
     // for each face add the two edges outgoing from v[1] and not visited.
     vfi = face::VFIterator<FaceType>(v[1]);
     while (!vfi.End())
     {
-			assert(!vfi.F()->IsD());
-      for (int j=0;j<3;j++)
-			{
-				if( !(vfi.V1()->IsV()) && (vfi.V1()->IsRW()))
-				{
-          vfi.V1()->SetV();
-          h_ret.push_back(HeapElem(new MYTYPE(VertexPair( vfi.V(),vfi.V1() ),GlobalMark(),pp)));
+      assert(!vfi.F()->IsD());
+      if( !(vfi.V1()->IsV()) && (vfi.V1()->IsRW()))
+      {
+        vfi.V1()->SetV();
+        h_ret.push_back(HeapElem(new MYTYPE(VertexPair( vfi.V(),vfi.V1() ),GlobalMark(),pp)));
+        std::push_heap(h_ret.begin(),h_ret.end());
+        if(! this->IsSymmetric(pp)){
+          h_ret.push_back(HeapElem(new MYTYPE(VertexPair( vfi.V1(),vfi.V()),GlobalMark(),pp)));
           std::push_heap(h_ret.begin(),h_ret.end());
-          if(! this->IsSymmetric(pp)){
-            h_ret.push_back(HeapElem(new MYTYPE(VertexPair( vfi.V1(),vfi.V()),GlobalMark(),pp)));
-            std::push_heap(h_ret.begin(),h_ret.end());
-          }
         }
-				if(  !(vfi.V2()->IsV()) && (vfi.V2()->IsRW()))
-				{
-					vfi.V2()->SetV();
-          h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark(),pp)));
+      }
+      if(  !(vfi.V2()->IsV()) && (vfi.V2()->IsRW()))
+      {
+        vfi.V2()->SetV();
+        h_ret.push_back(HeapElem(new MYTYPE(VertexPair(vfi.F()->V(vfi.I()),vfi.F()->V2(vfi.I())),GlobalMark(),pp)));
+        std::push_heap(h_ret.begin(),h_ret.end());
+        if(! this->IsSymmetric(pp)){
+          h_ret.push_back(HeapElem(new MYTYPE(VertexPair (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark(),pp)));
           std::push_heap(h_ret.begin(),h_ret.end());
-          if(! this->IsSymmetric(pp)){
-            h_ret.push_back(HeapElem(new MYTYPE(VertexPair (vfi.F()->V1(vfi.I()),vfi.F()->V(vfi.I())),GlobalMark(),pp)));
-            std::push_heap(h_ret.begin(),h_ret.end());
-          }
         }
-        //        if(vfi.V1()->IsRW() && vfi.V2()->IsRW() )
-//        {
-//          h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V1(),vfi.V2()),this->GlobalMark())));
-//          std::push_heap(h_ret.begin(),h_ret.end());
-//          if(IsSymmetric()){
-//            h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V2(),vfi.V1()), this->GlobalMark())));
-//            std::push_heap(h_ret.begin(),h_ret.end());
-//          }
-//        }
-
-			}
-      ++vfi;nn++;
-    }
-//		printf("ADDED %d\n",nn);
+      }
+      //        if(vfi.V1()->IsRW() && vfi.V2()->IsRW() )
+      //        {
+      //          h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V1(),vfi.V2()),this->GlobalMark())));
+      //          std::push_heap(h_ret.begin(),h_ret.end());
+      //          if(IsSymmetric()){
+      //            h_ret.push_back(HeapElem(new MYTYPE(EdgeType(vfi.V2(),vfi.V1()), this->GlobalMark())));
+      //            std::push_heap(h_ret.begin(),h_ret.end());
+      //          }
+      //        }
+      ++vfi;
+    } // end while
   }
 
   ModifierType IsOfType(){ return TriEdgeCollapseOp;}
