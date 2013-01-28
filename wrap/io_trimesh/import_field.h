@@ -119,6 +119,10 @@ public:
                 //if (errorMsg) sprintf(errorMsg,"Wrong element number. Found: %d. Expected: %d.",nnv,mesh->vn);
                 return false;
             }
+
+            if( per_vertex && !HasPerVertexCurvatureDir(mesh)) throw vcg::MissingComponentException("PerVertexCurvatureDir");
+            if(!per_vertex && !HasPerFaceCurvatureDir(mesh))   throw vcg::MissingComponentException("PerFaceCurvatureDir");
+
             while (fscanf(f,"%c",&c)!=EOF) if (c=='\n') break; // skip
             // skip strange string line
             while (fscanf(f,"%c",&c)!=EOF) if (c=='\n') break;
@@ -140,23 +144,13 @@ public:
 
                 if (per_vertex)
                 {
-                    mesh.vert[i].PD1().X()=(ScalarType) u.X();
-                    mesh.vert[i].PD1().Y()=(ScalarType) u.Y();
-                    mesh.vert[i].PD1().Z()=(ScalarType) u.Z();
-                    mesh.vert[i].PD2().X()=(ScalarType) v.X();
-                    mesh.vert[i].PD2().Y()=(ScalarType) v.Y();
-                    mesh.vert[i].PD2().Z()=(ScalarType) v.Z();
+                  mesh.vert[i].PD1().Import(u);
+                  mesh.vert[i].PD2().Import(v);
                 }
                 else
                 {
-                    mesh.face[i].PD1().X()=(ScalarType) u.X();
-                    mesh.face[i].PD1().Y()=(ScalarType) u.Y();
-                    mesh.face[i].PD1().Z()=(ScalarType) u.Z();
-                    mesh.face[i].PD2().X()=(ScalarType) v.X();
-                    mesh.face[i].PD2().Y()=(ScalarType) v.Y();
-                    mesh.face[i].PD2().Z()=(ScalarType) v.Z();
-                    mesh.face[i].PD1().Normalize();
-                    mesh.face[i].PD2().Normalize();
+                  mesh.face[i].PD1().Import(u);
+                  mesh.face[i].PD2().Import(v);
                 }
             }
         }
