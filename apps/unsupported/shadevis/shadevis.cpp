@@ -271,7 +271,7 @@ void  ViewDisplay (void)
   if(Q==&QL) DrawLightVector();	
   QL.GetView();
   QV.GetView();
-  QV.Apply(false);
+  QV.Apply();
   if(ShowDirFlag) DrawViewVector();
 
   float d = 2.0/m.bbox.Diag();

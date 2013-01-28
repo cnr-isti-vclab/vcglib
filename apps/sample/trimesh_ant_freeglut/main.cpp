@@ -120,7 +120,7 @@ void Display(){
 		track.center=vcg::Point3f(0, 0, 0);
 		track.radius= 1;
 		track.GetView();
-		track.Apply(false);
+		track.Apply();
 		glPushMatrix();
 		float d=1.0f/mesh.bbox.Diag();
 		vcg::glScale(d);

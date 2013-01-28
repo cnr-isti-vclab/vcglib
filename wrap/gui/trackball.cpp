@@ -112,14 +112,6 @@ void Trackball::Apply () {
   glTranslate (-center);
 }
 
-void Trackball::Apply(bool ToDraw) {
-  Apply();
-  if(ToDraw){
-    DrawPostApply();
-  }
-}
-
-
 void Trackball::ApplyInverse() {
   glTranslate(center);
   glMultMatrix(track.InverseMatrix());

@@ -128,7 +128,7 @@ void GLWidget::paintGL ()
     track.radius= 1;
     track.GetView();
     glPushMatrix();
-    track.Apply(false);
+    track.Apply();
     glPushMatrix();
     if(mesh.vert.size()>0)
     {

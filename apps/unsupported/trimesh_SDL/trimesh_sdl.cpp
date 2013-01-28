@@ -150,7 +150,7 @@ void display(){
     track.radius= 1;
 
 		track.GetView();
-    track.Apply(false);
+	track.Apply();
     glPushMatrix();
     float d=1.0f/mesh.bbox.Diag();
     glScale(d);

@@ -67,7 +67,7 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
   manipulator->radius=size;
   manipulator->center=position;
   manipulator->GetView();
-  manipulator->Apply(false);  
+  manipulator->Apply();
    
   MovableCoordinateFrame::Render(glw);
   

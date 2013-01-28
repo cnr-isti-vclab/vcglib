@@ -248,18 +248,15 @@ public:
     @brief Initialize the camera instance.
   */
   void GetView();
-  /*!
-    @brief Apply the current transformation on the OpenGL modelview matrix.
 
-    @param Draw true if has to call DrawPostApply() after the application.
-  */
-  void Apply(bool Draw);
   /*!
-    @brief Old application of the transformation.
+    @brief Application of the transformation.
 
-    @warning This function does \b not call DrawPostApply() after the application.
+    @warning This function does \b not draw anything. You have to call DrawPostApply() after drawing everything.
+
   */
   void Apply ();
+
   /*!
     @brief Draw the current manipulator.
 
@@ -269,6 +266,7 @@ public:
     @warning This function assumes that the OpenGL modelview matrix has been initialized with Apply ().
   */
   void DrawPostApply();
+
   /*!
     @brief Apply the \b inverse of current transformation on the OpenGL modelview matrix.
   */

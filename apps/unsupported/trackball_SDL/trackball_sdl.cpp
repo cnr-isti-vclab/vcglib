@@ -203,7 +203,7 @@ void display(){
     glTranslate( -observerPos );
 
 		track.GetView();
-    track.Apply(false);
+	track.Apply();
     glPushMatrix();
     float d=mesh.bbox.Diag();
     glScale(1.5f/d);
