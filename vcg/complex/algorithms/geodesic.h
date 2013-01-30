@@ -397,13 +397,9 @@ It is just a simple wrapper of the basic Compute()
 
     typename MeshType::template PerFaceAttributeHandle<FacePointer> sourceHandle
         = tri::Allocator<MeshType>::template GetPerFaceAttribute<FacePointer> (m,"sources");
-    if(!tri::Allocator<MeshType>::IsValidHandle(m,sourceHandle))
-      sourceHandle =  tri::Allocator<MeshType>::template AddPerFaceAttribute<FacePointer> (m,"sources");
 
     typename MeshType::template PerFaceAttributeHandle<FacePointer> parentHandle
         = tri::Allocator<MeshType>::template GetPerFaceAttribute<FacePointer> (m,"parent");
-    if(!tri::Allocator<MeshType>::IsValidHandle(m,parentHandle))
-      parentHandle =  tri::Allocator<MeshType>::template AddPerFaceAttribute<FacePointer> (m,"parent");
 
     std::vector<FaceDist> Heap;
     tri::UnMarkAll(m);
@@ -463,13 +459,9 @@ It is just a simple wrapper of the basic Compute()
 
     typename MeshType::template PerVertexAttributeHandle<VertexPointer> sourceHandle
         = tri::Allocator<MeshType>::template GetPerVertexAttribute<VertexPointer> (m,"sources");
-    if(!tri::Allocator<MeshType>::IsValidHandle(m,sourceHandle))
-      sourceHandle =  tri::Allocator<MeshType>::template AddPerVertexAttribute<VertexPointer> (m,"sources");
 
     typename MeshType::template PerVertexAttributeHandle<VertexPointer> parentHandle
         = tri::Allocator<MeshType>::template GetPerVertexAttribute<VertexPointer> (m,"parent");
-    if(!tri::Allocator<MeshType>::IsValidHandle(m,parentHandle))
-      parentHandle =  tri::Allocator<MeshType>::template AddPerVertexAttribute<VertexPointer> (m,"parent");
 
     std::vector<DIJKDist> Heap;
     tri::UnMarkAll(m);
