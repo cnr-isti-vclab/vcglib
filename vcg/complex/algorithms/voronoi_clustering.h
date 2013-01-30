@@ -187,7 +187,7 @@ static void FaceAssociateRegion(MeshType &m)
 
 static int FaceSelectAssociateRegion(MeshType &m, VertexPointer vp)
 {
-  PerFacePointerHandle sources =  tri::Allocator<MeshType>:: template GetPerFaceAttribute<VertexPointer> (m,"sources");
+  PerFacePointerHandle sources =  tri::Allocator<MeshType>:: template FindPerFaceAttribute<VertexPointer> (m,"sources");
   assert(tri::Allocator<MeshType>::IsValidHandle(m,sources));
   tri::UpdateSelection<MeshType>::Clear(m);
   int selCnt=0;

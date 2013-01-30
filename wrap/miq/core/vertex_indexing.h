@@ -277,11 +277,7 @@ private:
 
         ///other per mesh attributes
         ///see if already exists otherwise it creates it
-        bool HasSystemInfo=vcg::tri::HasPerMeshAttribute(*mesh,std::string("SystemInfo"));
-        if (!HasSystemInfo)
-            Handle_SystemInfo=vcg::tri::Allocator<MeshType>::template AddPerMeshAttribute<MeshSystemInfo>(*mesh,std::string("SystemInfo"));
-        else
-            Handle_SystemInfo=vcg::tri::Allocator<MeshType>::template GetPerMeshAttribute<MeshSystemInfo>(*mesh,"SystemInfo");
+        Handle_SystemInfo=vcg::tri::Allocator<MeshType>::template GetPerMeshAttribute<MeshSystemInfo>(*mesh,std::string("SystemInfo"));
 
         Handle_SystemInfo().num_scalar_variables=0;
         Handle_SystemInfo().num_vert_variables=0;
@@ -289,40 +285,27 @@ private:
 
         duplicated.clear();
 
-        bool HasSystemIndex=vcg::tri::HasPerFaceAttribute(*mesh,std::string("SystemIndex"));
-        if (!HasSystemIndex)
-            HandleS_Index = vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<vcg::Point3i>(*mesh,std::string("SystemIndex"));
-        else
-            HandleS_Index = vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3i>(*mesh,std::string("SystemIndex"));
+        HandleS_Index = vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3i>(*mesh,std::string("SystemIndex"));
 
-        bool HasHandleInteger=vcg::tri::HasPerFaceAttribute(*mesh,std::string("Integer"));
-        if (!HasHandleInteger)
-            Handle_Integer= vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<vcg::Point3i>(*mesh,std::string("Integer"));
-        else
-            Handle_Integer= vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3i>(*mesh,std::string("Integer"));
-
-        bool HasHandleVertexInteger=vcg::tri::HasPerVertexAttribute(*mesh,std::string("VertInteger"));
-        if (!HasHandleVertexInteger)
-            HandleV_Integer=vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<std::vector<int> >(*mesh,std::string("VertInteger"));
-        else
-            HandleV_Integer=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<std::vector<int> >(*mesh,std::string("VertInteger"));
+        Handle_Integer= vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3i>(*mesh,std::string("Integer"));
+        HandleV_Integer=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<std::vector<int> >(*mesh,std::string("VertInteger"));
 
 
         bool HasHandleMMatch=vcg::tri::HasPerFaceAttribute(*mesh,std::string("MissMatch"));
         assert(HasHandleMMatch);
-        Handle_MMatch = vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3i>(*mesh,std::string("MissMatch"));
+        Handle_MMatch = vcg::tri::Allocator<MeshType>::template FindPerFaceAttribute<vcg::Point3i>(*mesh,std::string("MissMatch"));
 
         bool HasHandleSingularity=vcg::tri::HasPerVertexAttribute(*mesh,std::string("Singular"));
         assert(HasHandleSingularity);
-        Handle_Singular=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<bool>(*mesh,std::string("Singular"));
+        Handle_Singular=vcg::tri::Allocator<MeshType>::template FindPerVertexAttribute<bool>(*mesh,std::string("Singular"));
 
         bool HasHandleSingularityDegree=vcg::tri::HasPerVertexAttribute(*mesh,std::string("SingularityDegree"));
         assert(HasHandleSingularityDegree);
-        Handle_SingularDegree=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<int>(*mesh,std::string("SingularityDegree"));
+        Handle_SingularDegree=vcg::tri::Allocator<MeshType>::template FindPerVertexAttribute<int>(*mesh,std::string("SingularityDegree"));
 
         bool HasHandleSeams=vcg::tri::HasPerFaceAttribute(*mesh,std::string("Seams"));
         assert(HasHandleSeams);
-        Handle_Seams=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3<bool> >(*mesh,std::string("Seams"));
+        Handle_Seams=vcg::tri::Allocator<MeshType>::template FindPerFaceAttribute<vcg::Point3<bool> >(*mesh,std::string("Seams"));
 
     }
 

@@ -48,7 +48,7 @@ public:
         if(!hasStiffness)
             Handle_Stiffness=vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<float>(mesh,std::string("Stiffness"));
         else
-            Handle_Stiffness=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<float>(mesh,std::string("Stiffness"));
+            Handle_Stiffness=vcg::tri::Allocator<MeshType>::template FindPerFaceAttribute<float>(mesh,std::string("Stiffness"));
 
         bool hasSingular = vcg::tri::HasPerVertexAttribute(mesh,std::string("Singular"));
         assert(hasSingular);
@@ -114,7 +114,7 @@ public:
         if(!hasStiffness)
             Handle_Stiffness=vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<float>(mesh,std::string("Stiffness"));
         else
-            Handle_Stiffness=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<float>(mesh,std::string("Stiffness"));
+            Handle_Stiffness=vcg::tri::Allocator<MeshType>::template FindPerFaceAttribute<float>(mesh,std::string("Stiffness"));
 
         bool flipped = NumFlips(mesh)>0;
         //if (h == 0.0)
@@ -155,7 +155,7 @@ public:
         if(!hasStiffness)
             Handle_Stiffness=vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<float>(mesh,std::string("Stiffness"));
         else
-            Handle_Stiffness=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<float>(mesh,std::string("Stiffness"));
+            Handle_Stiffness=vcg::tri::Allocator<MeshType>::template FindPerFaceAttribute<float>(mesh,std::string("Stiffness"));
 
         for(unsigned int i=0;i<mesh.face.size();i++)
         {

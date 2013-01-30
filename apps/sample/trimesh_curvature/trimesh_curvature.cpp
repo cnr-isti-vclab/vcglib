@@ -55,10 +55,10 @@ int main( int /*argc*/, char **/*argv*/ )
   vcg::tri::io::ExporterOFF<MyMesh>::Save(m,"torus.off");
 
   vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
-  vcg::tri::UpdateCurvature<MyMesh>::PerVertex(m);
+//  vcg::tri::UpdateCurvature<MyMesh>::VertexCurvature(m);
   vcg::tri::UpdateCurvature<MyMesh>::MeanAndGaussian(m);
   vcg::tri::UpdateCurvature<MyMesh>::PrincipalDirections(m);
-  vcg::tri::UpdateCurvature<MyMesh>::PrincipalDirectionsNormalCycle(m);
+  //vcg::tri::UpdateCurvature<MyMesh>::PrincipalDirectionsNormalCycles(m);
   vcg::tri::UpdateCurvature<MyMesh>::PrincipalDirectionsPCA(m,m.bbox.Diag()/100);
 
   vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalized(m);

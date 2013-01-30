@@ -711,8 +711,8 @@ public:
 			bool CrossDir1 = tri::HasPerFaceAttribute(mesh,"CrossDir1");
 			assert(CrossDir0);
 			assert(CrossDir1);
-			Fh0= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir0"));
-			Fh1= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir1"));
+            Fh0= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir0"));
+            Fh1= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir1"));
 		}	
 		correct_fixed=_correct_fixed;
 		fieldScale=_fieldScale;

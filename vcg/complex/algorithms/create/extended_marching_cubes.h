@@ -33,7 +33,6 @@
 #include <vcg/math/matrix.h>
 #include <vcg/math/lin_algebra.h>
 #include <vcg/simplex/face/topology.h>
-#include <vcg/complex/algorithms/update/edges.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/allocate.h>

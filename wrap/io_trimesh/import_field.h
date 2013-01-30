@@ -194,13 +194,13 @@ public:
         if (!HasHandleMMatch)
             Handle_MMatch = vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<vcg::Point3i>(mesh,std::string("MissMatch"));
         else
-            Handle_MMatch = vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3i>(mesh,std::string("MissMatch"));
+            Handle_MMatch = vcg::tri::Allocator<MeshType>::template FindPerFaceAttribute<vcg::Point3i>(mesh,std::string("MissMatch"));
 
         bool HasHandleSeams=vcg::tri::HasPerFaceAttribute(mesh,std::string("Seams"));
         if (!HasHandleSeams)
             Handle_Seams=vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<vcg::Point3<bool> >(mesh,std::string("Seams"));
         else
-            Handle_Seams=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3<bool> >(mesh,std::string("Seams"));
+            Handle_Seams=vcg::tri::Allocator<MeshType>::template FindPerFaceAttribute<vcg::Point3<bool> >(mesh,std::string("Seams"));
 
         FILE *f = fopen(PathOBJ.c_str(),"rt");
         if (!f)

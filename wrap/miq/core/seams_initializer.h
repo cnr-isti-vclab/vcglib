@@ -62,36 +62,11 @@ private:
     ///initialized mapping structures if are not already initialized
     void AddAttributesIfNeeded()
     {
-
-        bool HasHandleMMatch=vcg::tri::HasPerFaceAttribute(*mesh,std::string("MissMatch"));
-        if (!HasHandleMMatch)
-            Handle_MMatch = vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<vcg::Point3i>(*mesh,std::string("MissMatch"));
-        else
-            Handle_MMatch = vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3i>(*mesh,std::string("MissMatch"));
-
-        bool HasHandleSingularity=vcg::tri::HasPerVertexAttribute(*mesh,std::string("Singular"));
-        if (!HasHandleSingularity)
-            Handle_Singular=vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<bool>(*mesh,std::string("Singular"));
-        else
-            Handle_Singular=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<bool>(*mesh,std::string("Singular"));
-
-        bool HasHandleSingularityDegree=vcg::tri::HasPerVertexAttribute(*mesh,std::string("SingularityDegree"));
-        if (!HasHandleSingularityDegree)
-            Handle_SingularDegree=vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<int>(*mesh,std::string("SingularityDegree"));
-        else
-            Handle_SingularDegree=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<int>(*mesh,std::string("SingularityDegree"));
-
-        bool HasHandleSeams=vcg::tri::HasPerFaceAttribute(*mesh,std::string("Seams"));
-        if (!HasHandleSeams)
-            Handle_Seams=vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<vcg::Point3<bool> >(*mesh,std::string("Seams"));
-        else
-            Handle_Seams=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3<bool> >(*mesh,std::string("Seams"));
-
-        bool HasHandleSeamsIndex=vcg::tri::HasPerFaceAttribute(*mesh,std::string("SeamsIndex"));
-        if (!HasHandleSeamsIndex)
-            Handle_SeamsIndex=vcg::tri::Allocator<MeshType>::template AddPerFaceAttribute<vcg::Point3i >(*mesh,std::string("SeamsIndex"));
-        else
-            Handle_SeamsIndex=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3i >(*mesh,std::string("SeamsIndex"));
+        Handle_MMatch = vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3i>(*mesh,std::string("MissMatch"));
+        Handle_Singular=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<bool>(*mesh,std::string("Singular"));
+        Handle_SingularDegree=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<int>(*mesh,std::string("SingularityDegree"));
+        Handle_Seams=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3<bool> >(*mesh,std::string("Seams"));
+        Handle_SeamsIndex=vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<vcg::Point3i >(*mesh,std::string("SeamsIndex"));
     }
 
 

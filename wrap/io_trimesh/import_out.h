@@ -148,8 +148,6 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
 
   // load all correspondences
   typename OpenMeshType::template PerVertexAttributeHandle<CorrVec> ch = vcg::tri::Allocator<OpenMeshType>::template GetPerVertexAttribute<CorrVec>(m,"correspondences");
-  if(!vcg::tri::Allocator<OpenMeshType>::IsValidHandle(m,ch))
-    ch = vcg::tri::Allocator<OpenMeshType>::template AddPerVertexAttribute<CorrVec>(m,"correspondences");
 
   typename OpenMeshType::VertexIterator vi = vcg::tri::Allocator<OpenMeshType>::AddVertices(m,num_points);
   for(uint i = 0; i < num_points;++i,++vi){

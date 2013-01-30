@@ -45,16 +45,16 @@ int main()
 {
   MyMesh m;
   // add a per-vertex attribute with type float named "Irradiance"
-  MyMesh::PerVertexAttributeHandle<float> named_hv = vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<float> (m,std::string("Irradiance"));
+  MyMesh::PerVertexAttributeHandle<float> named_hv = vcg::tri::Allocator<MyMesh>:: GetPerVertexAttribute<float> (m,std::string("Irradiance"));
 
   // add a per-vertex attribute with type float named "Radiosity"   
-  vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<float> (m,std::string("Radiosity"));
+  vcg::tri::Allocator<MyMesh>:: GetPerVertexAttribute<float> (m,std::string("Radiosity"));
  
   // add a per-vertex attribute with type bool and no name specified
-  MyMesh::PerVertexAttributeHandle<bool> anon_hv = vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<bool> (m);
+  MyMesh::PerVertexAttributeHandle<bool> anon_hv = vcg::tri::Allocator<MyMesh>:: GetPerVertexAttribute<bool> (m);
   
   // add a per-face attribute with type bool and no name specified
-  MyMesh::PerFaceAttributeHandle<bool> anon_hf = vcg::tri::Allocator<MyMesh>::AddPerFaceAttribute<bool> (m);
+  MyMesh::PerFaceAttributeHandle<bool> anon_hf = vcg::tri::Allocator<MyMesh>:: GetPerFaceAttribute<bool> (m);
 
   MyMesh::VertexIterator vi; int i = 0;
   for(vi   = m.vert.begin(); vi != m.vert.end(); ++vi,++i){
@@ -64,14 +64,16 @@ int main()
    named_hv[i]   = 1.0f;  //                or an integer index
   }
 
+  vcg::tri::Allocator<MyMesh>::ClearPerVertexAttribute<float>(m,named_hv);
+
   // query if an attribute is present or not
   bool hasRadiosity = vcg::tri::HasPerVertexAttribute(m,"Radiosity");
 
   // obtain another handle of a previously attribute
-  MyMesh::PerVertexAttributeHandle<float> ret_hv = vcg::tri::Allocator<MyMesh>::GetPerVertexAttribute<float>(m,"Radiosity");
+   MyMesh::PerVertexAttributeHandle<float> ret_hv = vcg::tri::Allocator<MyMesh>:: FindPerVertexAttribute<float>(m,"Radiosity");
 
   // you can also have PerMesh attributes
-  MyMesh::PerMeshAttributeHandle<int> hm = vcg::tri::Allocator<MyMesh>::AddPerMeshAttribute<int> (m,std::string("ADummyIntegerAttribute"));
+  MyMesh::PerMeshAttributeHandle<int> hm = vcg::tri::Allocator<MyMesh>:: GetPerMeshAttribute<int> (m,std::string("ADummyIntegerAttribute"));
 
   // PerMesh attributes are accessed directly using the handle itself
   hm() = 10;

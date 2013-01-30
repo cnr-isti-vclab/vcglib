@@ -24,7 +24,6 @@
 #ifndef __VCGLIB_TRIALLOCATOR
 #define __VCGLIB_TRIALLOCATOR
 
-#include <typeinfo>
 #include <map>
 #include <set>
 
@@ -914,7 +913,7 @@ public:
 	template <class ATTR_TYPE>
 	static
 	typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
-	 AddPerVertexAttribute( MeshType & m, std::string name){
+     AddPerVertexAttribute( MeshType & m, std::string name){
 		PAIte i;
 		PointerToAttribute h;
 		h._name = name;
@@ -932,18 +931,35 @@ public:
 		return typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>(res.first->_handle,res.first->n_attr );
 	 }
 
-	template <class ATTR_TYPE> 
-	static typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
-	 AddPerVertexAttribute( MeshType & m){
-		 return AddPerVertexAttribute<ATTR_TYPE>(m,std::string(""));
-	 }
+    template <class ATTR_TYPE>
+    static typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
+     AddPerVertexAttribute( MeshType & m){
+         return AddPerVertexAttribute<ATTR_TYPE>(m,std::string(""));
+     }
+
+    /*! \brief gives a handle to a per-vertex attribute with a given name and ATTR_TYPE
+      \returns a valid handle. If the name is not empty and an attribute with that name and type exists returns a handle to it.
+        Otherwise return a hanlde to a newly created.
+      */
+    template <class ATTR_TYPE>
+    static
+    typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
+      GetPerVertexAttribute( MeshType & m, std::string name = std::string("")){
+        typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> h;
+        if(!name.empty()){
+            h =  FindPerVertexAttribute<ATTR_TYPE>(m,name);
+            if(IsValidHandle(m,h))
+                return h;
+        }
+        return AddPerVertexAttribute<ATTR_TYPE>(m,name);
+    }
 
 	/*! \brief Try to retrieve an handle to an attribute with a given name and ATTR_TYPE
 	  \returns a invalid handle if no attribute with that name and type exists.
 	  */
 	template <class ATTR_TYPE> 
 	static typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE>
-	GetPerVertexAttribute( MeshType & m, const std::string & name)
+     FindPerVertexAttribute( MeshType & m, const std::string & name)
 	{
 	  assert(!name.empty());
 	  PointerToAttribute h1; h1._name = name;
@@ -965,6 +981,9 @@ public:
 		return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL,0);		
 	}
 
+    /*! \brief query the mesh for all the attributes per vertex
+      \returns the name of all attributes with a non-empy name.
+      */
 	template <class ATTR_TYPE>
   static void GetAllPerVertexAttribute(MeshType & m, std::vector<std::string> &all){
     all.clear();
@@ -973,13 +992,28 @@ public:
         if(!(*i)._name.empty())
         {
             typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE> hh;
-            hh = Allocator<MeshType>:: template GetPerVertexAttribute <ATTR_TYPE>(m,(*i)._name);
+            hh = Allocator<MeshType>:: template  FindPerVertexAttribute <ATTR_TYPE>(m,(*i)._name);
             if(IsValidHandle<ATTR_TYPE>(m,hh))
                 all.push_back((*i)._name);
         }
 	}
 
-	template <class ATTR_TYPE> 
+  template <class ATTR_TYPE>
+  static
+  void
+  ClearPerVertexAttribute( MeshType & m,typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & h){
+      typename std::set<PointerToAttribute > ::iterator i;
+      for( i = m.vert_attr.begin(); i !=  m.vert_attr.end(); ++i)
+          if( (*i)._handle == h._handle ){
+              for(typename MeshType::VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+                  h[vi] = ATTR_TYPE();
+              return;}
+          assert(0);
+  }
+
+  /*! \brief If  the per-vertex attribute exists, delete it.
+    */
+  template <class ATTR_TYPE>
 	static
 		void
 	DeletePerVertexAttribute( MeshType & m,typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & h){
@@ -988,9 +1022,8 @@ public:
 			if( (*i)._handle == h._handle ){
 				delete ((SimpleTempData<VertContainer,ATTR_TYPE>*)(*i)._handle);
 				m.vert_attr.erase(i); 
-				return;}
-			assert(0);
-	}
+                return;}
+    }
 
 	// Generic DeleteAttribute.
 	// It must not crash if you try to delete a non existing attribute,
@@ -1046,10 +1079,28 @@ public:
 		 return AddPerEdgeAttribute<ATTR_TYPE>(m,std::string(""));
 	 }
 	
+    /*! \brief gives a handle to a per-edge attribute with a given name and ATTR_TYPE
+      \returns a valid handle. If the name is not empty and an attribute with that name and type exists returns a handle to it.
+        Otherwise return a hanlde to a newly created.
+      */
+    template <class ATTR_TYPE>
+    static
+    typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
+      GetPerEdgeAttribute( MeshType & m, std::string name = std::string("")){
+        typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE> h;
+        if(!name.empty()){
+            h =  FindPerEdgeAttribute<ATTR_TYPE>(m,name);
+            if(IsValidHandle(m,h))
+                return h;
+        }
+        return AddPerEdgeAttribute<ATTR_TYPE>(m,name);
+    }
+
+
 	template <class ATTR_TYPE> 
 	static
 		typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
-	GetPerEdgeAttribute( MeshType & m, const std::string & name){
+     FindPerEdgeAttribute( MeshType & m, const std::string & name){
 	  assert(!name.empty());
 	  PointerToAttribute h1; h1._name = name;
 	  typename std::set<PointerToAttribute > ::const_iterator i;
@@ -1067,21 +1118,27 @@ public:
 		  }
 		  return typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
 		}
-//		if((*i)._typename == typeid(ATTR_TYPE).name() )
-//		  return typename MeshType:: template PerVertexAttributeHandle<ATTR_TYPE>(NULL,0);
 
 	  return typename MeshType:: template PerEdgeAttributeHandle<ATTR_TYPE>(NULL,0);
 	}
 
 	template <class ATTR_TYPE>
 	static void GetAllPerEdgeAttribute(const MeshType & m, std::vector<std::string> &all){
-		typename std::set<PointerToAttribute > :: iterator i;
-		for(i = m.edge_attr.begin(); i != m.edge_attr.end(); ++i )
-				if((*i)._typename == typeid(ATTR_TYPE).name())
-						all.push_back((*i)._name);
-	}
+        all.clear();
+        typename std::set<PointerToAttribute > :: const_iterator i;
+        for(i = m.edge_attr.begin(); i != m.edge_attr.end(); ++i )
+        if(!(*i)._name.empty())
+        {
+            typename MeshType:: template PerEdgeAttributeHandle<ATTR_TYPE> hh;
+            hh = Allocator<MeshType>:: template  FindPerEdgeAttribute <ATTR_TYPE>(m,(*i)._name);
+            if(IsValidHandle<ATTR_TYPE>(m,hh))
+                all.push_back((*i)._name);
+        }
+    }
 
-	template <class ATTR_TYPE> 
+    /*! \brief If  the per-edge attribute exists, delete it.
+      */
+    template <class ATTR_TYPE>
 	static
 		void
 	DeletePerEdgeAttribute( MeshType & m,typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE> & h){
@@ -1091,7 +1148,6 @@ public:
 				delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
 				m.edge_attr.erase(i); 
 				return;}
-			assert(0);
 	}
 
 	// Generic DeleteAttribute.
@@ -1145,11 +1201,28 @@ public:
 	 AddPerFaceAttribute( MeshType & m){
 		 return AddPerFaceAttribute<ATTR_TYPE>(m,std::string(""));
 	 }
-		
+
+    /*! \brief gives a handle to a per-edge attribute with a given name and ATTR_TYPE
+      \returns a valid handle. If the name is not empty and an attribute with that name and type exists returns a handle to it.
+        Otherwise return a hanlde to a newly created.
+      */
+    template <class ATTR_TYPE>
+    static
+    typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
+      GetPerFaceAttribute( MeshType & m, std::string name = std::string("")){
+        typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE> h;
+        if(!name.empty()){
+            h =  FindPerFaceAttribute<ATTR_TYPE>(m,name);
+            if(IsValidHandle(m,h))
+                return h;
+        }
+        return AddPerFaceAttribute<ATTR_TYPE>(m,name);
+    }
+
 	template <class ATTR_TYPE> 
 	static
 		typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
-	 GetPerFaceAttribute( MeshType & m, const std::string & name){
+      FindPerFaceAttribute( MeshType & m, const std::string & name){
 		assert(!name.empty());
 		PointerToAttribute h1; h1._name = name;
 		typename std::set<PointerToAttribute > ::iterator i;
@@ -1178,12 +1251,14 @@ public:
         if(!(*i)._name.empty())
         {
             typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE> hh;
-            hh = Allocator<MeshType>:: template GetPerFaceAttribute <ATTR_TYPE>(m,(*i)._name);
+            hh = Allocator<MeshType>:: template  FindPerFaceAttribute <ATTR_TYPE>(m,(*i)._name);
             if(IsValidHandle<ATTR_TYPE>(m,hh))
                 all.push_back((*i)._name);
         }
 	}
 
+  /*! \brief If  the per-face attribute exists, delete it.
+    */
 	template <class ATTR_TYPE> 
 	static
 		void
@@ -1194,7 +1269,7 @@ public:
 				delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
 				m.face_attr.erase(i); 
 				return;}
-			assert(0);
+
 	}
 
 	// Generic DeleteAttribute.
@@ -1241,10 +1316,27 @@ public:
 		return typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>(res.first->_handle,res.first->n_attr);
 	 }
 		
+    /*! \brief gives a handle to a per-edge attribute with a given name and ATTR_TYPE
+      \returns a valid handle. If the name is not empty and an attribute with that name and type exists returns a handle to it.
+        Otherwise return a hanlde to a newly created.
+      */
+    template <class ATTR_TYPE>
+    static
+    typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
+      GetPerMeshAttribute( MeshType & m, std::string name = std::string("")){
+        typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE> h;
+        if(!name.empty()){
+            h =  FindPerMeshAttribute<ATTR_TYPE>(m,name);
+            if(IsValidHandle(m,h))
+                return h;
+        }
+        return AddPerMeshAttribute<ATTR_TYPE>(m,name);
+    }
+
 	template <class ATTR_TYPE> 
 	static
 		typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
-	 GetPerMeshAttribute( MeshType & m, const std::string & name){
+      FindPerMeshAttribute( MeshType & m, const std::string & name){
 		assert(!name.empty());
 		PointerToAttribute h1; h1._name = name;
 		typename std::set<PointerToAttribute > ::iterator i;
@@ -1275,7 +1367,9 @@ public:
 						all.push_back((*i)._name);
 	}
 
-	template <class ATTR_TYPE> 
+    /*! \brief If  the per-mesh attribute exists, delete it.
+      */
+    template <class ATTR_TYPE>
 	static
 		void
 	DeletePerMeshAttribute( MeshType & m,typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE> & h){
@@ -1285,7 +1379,6 @@ public:
 				delete (( Attribute<ATTR_TYPE> *)(*i)._handle);
 				m.mesh_attr.erase(i); 
 				return;}
-			assert(0);
 	}
 
 	static
