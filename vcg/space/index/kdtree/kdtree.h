@@ -165,7 +165,7 @@ void KdTree<Scalar>::setMaxNofNeighbors(unsigned int k)
         * a simple stack is by far much faster.
   *
   * The result of the query, the k-nearest neighbors, are internally stored into a stack, where the
-  * topmost element
+  * topmost element [0] is NOT the nearest but the farthest!! (they are not sorted but arranged into a heap)
         */
 template<typename Scalar>
 void KdTree<Scalar>::doQueryK(const VectorType& queryPoint)
