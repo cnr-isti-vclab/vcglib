@@ -1509,7 +1509,7 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
   int t1=clock();
   pp.pds->montecarloTime = t1-t0;
 
-  tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(m, pdSampler, m, radius,pp);
+  tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(m, pdSampler, MontecarloMesh, radius,pp);
   int t2=clock();
   pp.pds->totalTime = t2-t0;
 }
