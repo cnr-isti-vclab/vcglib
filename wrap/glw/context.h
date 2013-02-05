@@ -460,11 +460,7 @@ class Context : public detail::NonCopyable
 				if (GLEW_ARB_uniform_buffer_object)
 				{
 					GLint uniformBuffers = 0;
-					
 					glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &uniformBuffers);
-					GLenum err = glGetError();
-					const GLubyte* errr = gluErrorString(err);
-					assert(err == GL_NO_ERROR);
 					this->m_maxUniformBuffers = int(uniformBuffers);
 					for (int i=0; i<this->m_maxUniformBuffers; ++i)
 					{
