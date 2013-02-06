@@ -291,7 +291,7 @@ public:
 
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   {   return true; }
-    static bool IsVFAdjacencyEnabled(const typename T::VertexType *vp)   {return vp->Base().VFAdjacencyEnabled;}
+  bool IsVFAdjacencyEnabled(const typename T::VertexType *vp)   {return vp->Base().VFAdjacencyEnabled;}
 
    static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdjOcf"));T::Name(name);}
 private:
@@ -302,6 +302,7 @@ private:
 template <class A, class T> class NormalOcf: public T {
 public:
   typedef A NormalType;
+  inline bool IsNormalEnabled( )       const  { return this->Base().IsNormalEnabled(); }
   static bool HasNormal()   { return true; }
   static bool HasNormalOcf()   { return true; }
 
@@ -336,6 +337,7 @@ public:
     T::ImportData(rightV);
   }
 
+  inline bool IsColorEnabled()         const  { return this->Base().IsColorEnabled();}
   static bool HasColor()   { return true; }
   static bool HasColorOcf()   { assert(!T::HasColorOcf()); return true; }
 };
@@ -359,6 +361,7 @@ public:
       Q() = rightV.cQ();
     T::ImportData(rightV);
   }
+  inline bool IsQualityEnabled( )      const  { return this->Base().IsQualityEnabled(); }
   static bool HasQuality()   { return true; }
   static bool HasQualityOcf()   { assert(!T::HasQualityOcf()); return true; }
 };
@@ -383,6 +386,7 @@ public:
       T() = rightV.cT();
     TT::ImportData(rightV);
   }
+  inline bool IsTexCoordEnabled( )     const  { return this->Base().IsTexCoordEnabled(); }
   static bool HasTexCoord()   { return true; }
   static bool HasTexCoordOcf()   { assert(!TT::HasTexCoordOcf()); return true; }
 };
@@ -407,6 +411,7 @@ public:
       IMark() = rightV.cIMark();
     T::ImportData(rightV);
   }
+  inline bool IsMarkEnabled( )         const  { return this->Base().IsMarkEnabled(); }
   static bool HasMark()   { return true; }
   static bool HasMarkOcf()   { return true; }
   inline void InitIMark()    { IMark() = 0; }
@@ -437,6 +442,7 @@ public:
     TT::ImportData(rightV);
   }
 
+  inline bool IsCurvatureEnabled( )    const  { return this->Base().IsCurvatureDirEnabled(); }
   static bool HasCurvature() { return true; }
   static bool HasCurvatureOcf()   { return true; }
 };
@@ -484,6 +490,8 @@ public:
     }
     TT::ImportData(rightV);
   }
+
+  inline bool IsCurvatureDirEnabled( ) const  { return this->Base().IsCurvatureDirEnabled(); }
   static bool HasCurvatureDir()  { return true; }
   static bool HasCurvatureDirOcf()  { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirOcf"));TT::Name(name);}
@@ -516,6 +524,7 @@ public:
     TT::ImportData(rightV);
   }
 
+  inline bool IsRadiusEnabled( )       const  { return this->Base().IsRadiusEnabled(); }
   static bool HasRadius()     { return true; }
   static bool HasRadiusOcf()  { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("RadiusOcf")); TT::Name(name);}
@@ -554,16 +563,6 @@ public:
 	static bool HasRadiusOcf()   { return false; }
 	static bool HasTexCoordOcf()   { return false; }
 	static bool HasVFAdjacencyOcf()   { return false; }
-
-	inline bool IsColorEnabled()         const  { return _ovp->IsColorEnabled();}
-	inline bool IsCurvatureEnabled( )    const  { return _ovp->IsCurvatureDirEnabled(); }
-	inline bool IsCurvatureDirEnabled( ) const  { return _ovp->IsCurvatureDirEnabled(); }
-	inline bool IsMarkEnabled( )         const  { return _ovp->IsMarkEnabled(); }
-	inline bool IsNormalEnabled( )       const  { return _ovp->IsNormalEnabled(); }
-	inline bool IsQualityEnabled( )      const  { return _ovp->IsQualityEnabled(); }
-	inline bool IsRadiusEnabled( )       const  { return _ovp->IsRadiusEnabled(); }
-	inline bool IsTexCoordEnabled( )     const  { return _ovp->IsTexCoordEnabled(); }
-
 };
 
 

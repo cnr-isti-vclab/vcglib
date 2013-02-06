@@ -408,6 +408,11 @@ public:
     return (*this).Base().AV[(*this).Index()]._zp[j]; 
   }
 
+  char cVFi(const int j) const {
+    assert((*this).Base().VFAdjacencyEnabled);
+    return (*this).Base().AV[(*this).Index()]._zp[j];
+  }
+
 	template <class RightFaceType>
 	void ImportData(const RightFaceType & rightF){
 		T::ImportData(rightF);
@@ -461,6 +466,7 @@ public:
 template <class A, class T> class NormalOcf: public T {
 public:
   typedef A NormalType;
+  inline bool IsNormalEnabled( )        const  { return this->Base().IsNormalEnabled(); }
   static bool HasNormal()   { return true; }
   static bool HasNormalOcf()   { return true; }
 
@@ -501,6 +507,7 @@ public:
   typedef typename CurvatureDirType::VecType VecType;
   typedef typename CurvatureDirType::ScalarType ScalarType;
 
+  inline bool IsCurvatureDirEnabled( )  const  { return this->Base().IsCurvatureDirEnabled(); }
   static bool HasCurvatureDir()   { return true; }
   static bool HasCurvatureDirOcf()   { return true; }
 
@@ -584,6 +591,7 @@ public:
       Q() = rightF.cQ();
     T::ImportData(rightF);
   }
+  inline bool IsQualityEnabled( )       const  { return this->Base().IsQualityEnabled(); }
   static bool HasQuality()   { return true; }
   static bool HasQualityOcf()   { return true; }
 };
@@ -609,6 +617,7 @@ public:
       C() = rightF.cC();
     T::ImportData(rightF);
   }
+  inline bool IsColorEnabled()          const  { return this->Base().IsColorEnabled();}
   static bool HasColor()   { return true; }
   static bool HasColorOcf()   { return true; }
 };
@@ -633,6 +642,7 @@ public:
       IMark() = rightF.cIMark();
     T::ImportData(rightF);
   }
+  inline bool IsMarkEnabled( )          const  { return this->Base().IsMarkEnabled(); }
   static bool HasMark()   { return true; }
   static bool HasMarkOcf()   { return true; }
   inline void InitIMark()    { IMark() = 0; }
@@ -651,6 +661,7 @@ public:
     { WT(0) = rightF.cWT(0); WT(1) = rightF.cWT(1); WT(2) = rightF.cWT(2); }
     TT::ImportData(rightF);
   }
+  inline bool IsWedgeTexCoordEnabled( ) const { return this->Base().IsWedgeTexCoordEnabled(); }
   static bool HasWedgeTexCoord()   { return true; }
   static bool HasWedgeTexCoordOcf()   { return true; }
 };
@@ -670,6 +681,7 @@ public:
     { WC(0) = rightF.cWC(0); WC(1) = rightF.cWC(1); WC(2) = rightF.cWC(2); }
     TT::ImportData(rightF);
   }
+  inline bool IsWedgeColorEnabled( )    const { return this->Base().IsWedgeColorEnabled(); }
   static bool HasWedgeColor()   { return true; }
   static bool HasWedgeColorOcf()   { return true; }
 };
@@ -689,6 +701,7 @@ public:
     { WN(0) = rightF.cWN(0); WN(1) = rightF.cWN(1); WN(2) = rightF.cWN(2); }
     TT::ImportData(rightF);
   }
+  inline bool IsWedgeNormalEnabled( )   const { return this->Base().IsWedgeNormalEnabled(); }
   static bool HasWedgeNormal()   { return true; }
   static bool HasWedgeNormalOcf()   { return true; }
 };
@@ -723,15 +736,7 @@ public:
   static bool HasFFAdjacencyOcf()      { return false; }
   static bool HasVFAdjacencyOcf()      { return false; }
 
-  inline bool IsColorEnabled()          const  { return _ovp->IsColorEnabled();}
-  inline bool IsCurvatureDirEnabled( )  const  { return _ovp->IsCurvatureDirEnabled(); }
-  inline bool IsMarkEnabled( )          const  { return _ovp->IsMarkEnabled(); }
-  inline bool IsNormalEnabled( )        const  { return _ovp->IsNormalEnabled(); }
-  inline bool IsQualityEnabled( )       const  { return _ovp->IsQualityEnabled(); }
 
-  inline bool IsWedgeColorEnabled( )    const { return _ovp->IsWedgeColorEnabled(); }
-  inline bool IsWedgeNormalEnabled( )   const { return _ovp->IsWedgeNormalEnabled(); }
-  inline bool IsWedgeTexCoordEnabled( ) const { return _ovp->IsWedgeTexCoordEnabled(); }
 
 
 
