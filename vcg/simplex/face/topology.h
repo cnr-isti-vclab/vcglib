@@ -614,6 +614,41 @@ void VVStarVF( typename FaceType::VertexType* vp, std::vector<typename FaceType:
 	starVec.resize(new_end-starVec.begin());
 }
 
+/*!
+ * \brief Compute the set of vertices adjacent to a given vertex using VF adjacency.
+ *
+ * The set is faces is extended of a given number of step
+ *	\param vp	pointer to the vertex whose star has to be computed.
+ *  \param num_step the number of step to extend the star
+ *	\param vertVec a std::vector of Ve pointer that is filled with the adjacent faces.
+ */
+template <class FaceType>
+void VVExtendedStarVF(typename FaceType::VertexType* vp,
+                      const int num_step,
+                      std::vector<typename FaceType::VertexType *> &vertVec)
+    {
+        typedef typename FaceType::VertexType VertexType;
+        ///initialize front
+        vertVec.clear();
+        vcg::face::VVStarVF<FaceType>(vp,vertVec);
+        ///then dilate front
+        ///for each step
+        for (int step=0;step<num_step-1;step++)
+        {
+            std::vector<VertexType *> toAdd;
+            for (unsigned int i=0;i<vertVec.size();i++)
+            {
+                std::vector<VertexType *> Vtemp;
+                vcg::face::VVStarVF<FaceType>(vp,Vtemp);
+                toAdd.insert(toAdd.end(),Vtemp.begin(),Vtemp.end());
+            }
+            vertVec.insert(vertVec.end(),toAdd.begin(),toAdd.end());
+            std::sort(vertVec.begin(),vertVec.end());
+            typename std::vector<typename FaceType::VertexType *>::iterator new_end=std::unique(vertVec.begin(),vertVec.end());
+            int dist=distance(vertVec.begin(),new_end);
+            vertVec.resize(dist);
+        }
+    }
 
 /*!
 * \brief Compute the set of faces adjacent to a given vertex using VF adjacency.
