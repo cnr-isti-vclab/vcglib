@@ -534,6 +534,7 @@ public:
   typename T::FacePointer &VFp(const int j)        { assert(j>=0 && j<3);  return _vfp[j]; }
   typename T::FacePointer cVFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
   char &VFi(const int j) {return _vfi[j]; }
+  char cVFi(const int j)const {return _vfi[j]; }
     template <class RightValueType>
     void ImportData(const RightValueType & rightF){T::ImportData(rightF);}
 	inline void Alloc(const int & ns){T::Alloc(ns);}
