@@ -112,22 +112,23 @@ class TrivialSampler
 template <class MetroMesh, class VertexSampler = TrivialSampler< MetroMesh> >
 class SurfaceSampling
 {
-		typedef typename MetroMesh::CoordType			CoordType;
-		typedef typename MetroMesh::ScalarType			ScalarType;
-		typedef typename MetroMesh::VertexType			VertexType;
-		typedef typename MetroMesh::VertexPointer		VertexPointer;
-		typedef typename MetroMesh::VertexIterator		VertexIterator;
-		typedef typename MetroMesh::FacePointer			FacePointer;
-		typedef typename MetroMesh::FaceIterator		FaceIterator;
-		typedef typename MetroMesh::FaceType			FaceType;
-		typedef typename MetroMesh::FaceContainer		FaceContainer;
+  typedef typename MetroMesh::CoordType       CoordType;
+  typedef typename MetroMesh::ScalarType      ScalarType;
+  typedef typename MetroMesh::VertexType      VertexType;
+  typedef typename MetroMesh::VertexPointer   VertexPointer;
+  typedef typename MetroMesh::VertexIterator  VertexIterator;
+  typedef typename MetroMesh::FacePointer     FacePointer;
+  typedef typename MetroMesh::FaceIterator    FaceIterator;
+  typedef typename MetroMesh::FaceType        FaceType;
+  typedef typename MetroMesh::FaceContainer   FaceContainer;
+  typedef typename vcg::Box3<ScalarType>      BoxType;
 
-		typedef typename vcg::SpatialHashTable<FaceType, ScalarType> MeshSHT;
-		typedef typename vcg::SpatialHashTable<FaceType, ScalarType>::CellIterator MeshSHTIterator;
-		typedef typename vcg::SpatialHashTable<VertexType, ScalarType> MontecarloSHT;
-		typedef typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator MontecarloSHTIterator;
-		typedef typename vcg::SpatialHashTable<VertexType, ScalarType> SampleSHT;
-		typedef typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator SampleSHTIterator;
+  typedef typename vcg::SpatialHashTable<FaceType, ScalarType> MeshSHT;
+  typedef typename vcg::SpatialHashTable<FaceType, ScalarType>::CellIterator MeshSHTIterator;
+  typedef typename vcg::SpatialHashTable<VertexType, ScalarType> MontecarloSHT;
+  typedef typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator MontecarloSHTIterator;
+  typedef typename vcg::SpatialHashTable<VertexType, ScalarType> SampleSHT;
+  typedef typename vcg::SpatialHashTable<VertexType, ScalarType>::CellIterator SampleSHTIterator;
 
 public:
 
@@ -1186,11 +1187,12 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
     int t0 = clock();
 
     // inflating
-    origMesh.bbox.Offset(cellsize);
+    BoxType bb=origMesh.bbox;
+    bb.Offset(cellsize);
 
-    int sizeX = std::max(1.0f,origMesh.bbox.DimX() / cellsize);
-    int sizeY = std::max(1.0f,origMesh.bbox.DimY() / cellsize);
-    int sizeZ = std::max(1.0f,origMesh.bbox.DimZ() / cellsize);
+    int sizeX = std::max(1.0f,bb.DimX() / cellsize);
+    int sizeY = std::max(1.0f,bb.DimY() / cellsize);
+    int sizeZ = std::max(1.0f,bb.DimZ() / cellsize);
     Point3i gridsize(sizeX, sizeY, sizeZ);
     if(pp.pds) pp.pds->gridSize = gridsize;
 
@@ -1198,7 +1200,7 @@ static void PoissonDiskPruning(MetroMesh &origMesh, VertexSampler &ps, MetroMesh
     if(pp.adaptiveRadiusFlag)
         ComputePoissonSampleRadii(montecarloMesh, diskRadius, pp.radiusVariance, pp.invertQuality);
 
-    montecarloSHT.InitEmpty(origMesh.bbox, gridsize);
+    montecarloSHT.InitEmpty(bb, gridsize);
 
     for (VertexIterator vi = montecarloMesh.vert.begin(); vi != montecarloMesh.vert.end(); vi++)
         montecarloSHT.Add(&(*vi));
@@ -1272,16 +1274,17 @@ static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
     ScalarType cellsize = 2.0f* diskRadius / sqrt(3.0);
 
 	// inflating
-	origMesh.bbox.Offset(cellsize);
+	BoxType bb=origMesh.bbox;
+	bb.Offset(cellsize);
 
-  int sizeX = std::max(1.0f,origMesh.bbox.DimX() / cellsize);
-  int sizeY = std::max(1.0f,origMesh.bbox.DimY() / cellsize);
-  int sizeZ = std::max(1.0f,origMesh.bbox.DimZ() / cellsize);
+  int sizeX = std::max(1.0f,bb.DimX() / cellsize);
+  int sizeY = std::max(1.0f,bb.DimY() / cellsize);
+  int sizeZ = std::max(1.0f,bb.DimZ() / cellsize);
 	Point3i gridsize(sizeX, sizeY, sizeZ);
 
     // spatial hash table of the generated samples - used to check the radius constrain
     SampleSHT checkSHT;
-    checkSHT.InitEmpty(origMesh.bbox, gridsize);
+    checkSHT.InitEmpty(bb, gridsize);
 
 
 	// sampling algorithm
@@ -1297,7 +1300,7 @@ static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 	int level = 0;
 	
     // initialize spatial hash to index pre-generated samples
-    montecarloSHTVec[0].InitEmpty(origMesh.bbox, gridsize);
+    montecarloSHTVec[0].InitEmpty(bb, gridsize);
     // create active cell list
     for (VertexIterator vi = montecarloMesh.vert.begin(); vi != montecarloMesh.vert.end(); vi++)
         montecarloSHTVec[0].Add(&(*vi));
@@ -1313,7 +1316,7 @@ static void PoissonDisk(MetroMesh &origMesh, VertexSampler &ps, MetroMesh &monte
 
         if(level>0)
         {// initialize spatial hash with the remaining points
-            montecarloSHT.InitEmpty(origMesh.bbox, gridsize);
+            montecarloSHT.InitEmpty(bb, gridsize);
             // create active cell list
             for (typename MontecarloSHT::HashIterator hi = montecarloSHTVec[level-1].hash_table.begin(); hi != montecarloSHTVec[level-1].hash_table.end(); hi++)
                 montecarloSHT.Add((*hi).second);
