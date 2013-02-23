@@ -63,7 +63,43 @@ public:
 	/// Generates a random number in the (0,1) real interval.
 	virtual double generate01open()=0;
   virtual double generateRange(double minV, double maxV) { return minV+(maxV-minV)*generate01(); }
+
 };
+
+template <class ScalarType, class GeneratorType>
+void GeneratePointInBox3Uniform(GeneratorType &rnd, const Box3<ScalarType> &bb, Point3<ScalarType> &p)
+{
+  p = Point3<ScalarType>(
+        (ScalarType) rnd.generateRange(double(bb.min[0]),double(bb.max[0])),
+      (ScalarType) rnd.generateRange(double(bb.min[1]),double(bb.max[1])),
+      (ScalarType) rnd.generateRange(double(bb.min[2]),double(bb.max[2]))
+      );
+}
+/*
+ * This is the algorithm proposed by George Marsaglia [1]
+ * to generate a point over a unit sphere
+ * Independently generate V1 and V2, taken from a uniform distribution on (-1,1) such that
+ * S=(V1^2+V2^2)<1
+ *
+ * The random vector is then :
+ * (2V1 sqrt(1-S), 2V2 sqrt(1-S),1-2S)
+ *
+ * Marsaglia, G. "Choosing a Point from the Surface of a Sphere." Ann. Math. Stat. 43, 645-646, 1972.
+ */
+template <class ScalarType, class GeneratorType>
+void GeneratePointOnUnitSphereUniform(GeneratorType &rnd, Point3<ScalarType> &p)
+{
+  double x,y,s;
+  do
+  {
+    x = 2.0*rnd.generate01()-1.0;
+    y = 2.0*rnd.generate01()-1.0;
+    s = x*x+y*y;
+  } while (s>1);
+  p[0]= ScalarType(2 * x * sqrt(1-s));
+  p[1]= ScalarType(2 * y * sqrt(1-s));
+  p[2]= ScalarType(1-2*s);
+}
 
 /**
  * Uniform RNG derived from a STL extension of sgi.
@@ -346,14 +382,15 @@ public:
 };
 
 
-/* boxmuller
- * Implements the Polar form of the Box-Muller Transformation
- *  (c) Copyright 1994, Everett F. Carter Jr.
- *  Permission is granted by the author to use this software for any
- *  application provided this copyright notice is preserved.
+/* Returns a value with normal distribution with mean m, standard deviation s
+ *
+ * It implements the Polar form of the Box-Muller Transformation
+ * A transformation which transforms from a two-dimensional continuous uniform distribution
+ * to a two-dimensional bivariate normal distribution
+ * with mean m, standard deviation s
  */
 inline double box_muller(RandomGenerator &generator, double m, double s) /* normal random variate generator */
-{ /* mean m, standard deviation s */
+{ /* */
   double x1, x2, w, y1;
   static double y2;
   static int use_last = 0;
