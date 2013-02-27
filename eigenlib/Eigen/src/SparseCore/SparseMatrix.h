@@ -572,6 +572,16 @@ class SparseMatrix
       *this = other.derived();
     }
 
+    /** \brief Copy constructor with in-place evaluation */
+    template<typename OtherDerived>
+    SparseMatrix(const ReturnByValue<OtherDerived>& other)
+      : Base(), m_outerSize(0), m_innerSize(0), m_outerIndex(0), m_innerNonZeros(0)
+    {
+      check_template_parameters();
+      initAssignment(other);
+      other.evalTo(*this);
+    }
+
     /** Swaps the content of two sparse matrices of the same type.
       * This is a fast operation that simply swaps the underlying pointers and parameters. */
     inline void swap(SparseMatrix& other)
@@ -613,7 +623,10 @@ class SparseMatrix
     
     template<typename OtherDerived>
     inline SparseMatrix& operator=(const ReturnByValue<OtherDerived>& other)
-    { return Base::operator=(other.derived()); }
+    {
+      initAssignment(other);
+      return Base::operator=(other.derived());
+    }
     
     template<typename OtherDerived>
     inline SparseMatrix& operator=(const EigenBase<OtherDerived>& other)
@@ -623,7 +636,6 @@ class SparseMatrix
     template<typename OtherDerived>
     EIGEN_DONT_INLINE SparseMatrix& operator=(const SparseMatrixBase<OtherDerived>& other)
     {
-      initAssignment(other.derived());
       const bool needToTranspose = (Flags & RowMajorBit) != (OtherDerived::Flags & RowMajorBit);
       if (needToTranspose)
       {
@@ -635,40 +647,45 @@ class SparseMatrix
         typedef typename internal::remove_all<OtherCopy>::type _OtherCopy;
         OtherCopy otherCopy(other.derived());
 
-        Eigen::Map<Matrix<Index, Dynamic, 1> > (m_outerIndex,outerSize()).setZero();
+        SparseMatrix dest(other.rows(),other.cols());
+        Eigen::Map<Matrix<Index, Dynamic, 1> > (dest.m_outerIndex,dest.outerSize()).setZero();
+
         // pass 1
         // FIXME the above copy could be merged with that pass
         for (Index j=0; j<otherCopy.outerSize(); ++j)
           for (typename _OtherCopy::InnerIterator it(otherCopy, j); it; ++it)
-            ++m_outerIndex[it.index()];
+            ++dest.m_outerIndex[it.index()];
 
         // prefix sum
         Index count = 0;
-        VectorXi positions(outerSize());
-        for (Index j=0; j<outerSize(); ++j)
+        VectorXi positions(dest.outerSize());
+        for (Index j=0; j<dest.outerSize(); ++j)
         {
-          Index tmp = m_outerIndex[j];
-          m_outerIndex[j] = count;
+          Index tmp = dest.m_outerIndex[j];
+          dest.m_outerIndex[j] = count;
           positions[j] = count;
           count += tmp;
         }
-        m_outerIndex[outerSize()] = count;
+        dest.m_outerIndex[dest.outerSize()] = count;
         // alloc
-        m_data.resize(count);
+        dest.m_data.resize(count);
         // pass 2
         for (Index j=0; j<otherCopy.outerSize(); ++j)
         {
           for (typename _OtherCopy::InnerIterator it(otherCopy, j); it; ++it)
           {
             Index pos = positions[it.index()]++;
-            m_data.index(pos) = j;
-            m_data.value(pos) = it.value();
+            dest.m_data.index(pos) = j;
+            dest.m_data.value(pos) = it.value();
           }
         }
+        this->swap(dest);
         return *this;
       }
       else
       {
+        if(other.isRValue())
+          initAssignment(other.derived());
         // there is no special optimization
         return Base::operator=(other.derived());
       }
@@ -888,6 +905,7 @@ protected:
         m_data.value(p) = m_data.value(p-1);
         --p;
       }
+      eigen_assert((p<=startId || m_data.index(p-1)!=inner) && "you cannot insert an element that already exist, you must call coeffRef to this end");
 
       m_innerNonZeros[outer]++;
 
