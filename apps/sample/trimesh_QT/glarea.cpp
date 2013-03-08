@@ -71,8 +71,8 @@ void GLArea::initMesh(QString message)
 	// update bounding box
 	vcg::tri::UpdateBounding<CMesh>::Box(mesh);
 	// update Normals
-        vcg::tri::UpdateNormals<CMesh>::PerVertexNormalizedPerFace(mesh);
-        vcg::tri::UpdateNormals<CMesh>::PerFaceNormalized(mesh);
+        vcg::tri::UpdateNormal<CMesh>::PerVertexNormalizedPerFace(mesh);
+        vcg::tri::UpdateNormal<CMesh>::PerFaceNormalized(mesh);
 	// Initialize the opengl wrapper
  	glWrap.m = &mesh;
   	glWrap.Update();
@@ -109,7 +109,7 @@ void GLArea::paintGL ()
     track.center=vcg::Point3f(0, 0, 0);
     track.radius= 1;
 	track.GetView();
-    track.Apply(false);
+    track.Apply();
     glPushMatrix();
     float d=1.0f/mesh.bbox.Diag();
     vcg::glScale(d);

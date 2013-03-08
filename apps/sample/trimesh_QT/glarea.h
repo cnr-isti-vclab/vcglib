@@ -38,8 +38,6 @@ Initial release.
 #include <QtOpenGL/QGLWidget>
 
 /// vcg imports
-#include <vcg/simplex/vertex/base.h>
-#include <vcg/simplex/face/base.h>
 #include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/update/normal.h>
