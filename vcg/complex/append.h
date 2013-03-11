@@ -353,7 +353,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
 					id_r = 0;
 					for(ei=mr.edge.begin();ei!=mr.edge.end();++ei,++id_r)
 						if( !(*ei).IsD() && (!selected || (*ei).IsS()))
-							memcpy((*al)._handle->At(remap.vert[Index(mr,*ei)]),(*ar)._handle->At(id_r),
+                            memcpy((*al)._handle->At(remap.edge[Index(mr,*ei)]),(*ar)._handle->At(id_r),
 								(*al)._handle->SizeOf());
 				}
 			}
@@ -366,7 +366,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
 					id_r = 0;
 					for(fi=mr.face.begin();fi!=mr.face.end();++fi,++id_r)
 						if( !(*fi).IsD() && (!selected || (*fi).IsS()))
-							memcpy((*al)._handle->At(remap.vert[Index(mr,*fi)]),(*ar)._handle->At(id_r),
+                            memcpy((*al)._handle->At(remap.face[Index(mr,*fi)]),(*ar)._handle->At(id_r),
 								(*al)._handle->SizeOf());
 				}
 			}
