@@ -618,8 +618,8 @@ bool IntersectionPlaneBox(const vcg::Plane3<ScalarType> &pl,
 {
 	ScalarType dist,dist1;
 	if(bbox.IsNull()) return false; // intersection with a  null bbox is empty
-	dist = Distance(pl,bbox.P(0)) ;
-	for (int i=1;i<8;i++)  if(  Distance(pl,bbox.P(i))*dist<0) return true;
+	dist = SignedDistancePlanePoint(pl,bbox.P(0)) ;
+	for (int i=1;i<8;i++)  if(  SignedDistancePlanePoint(pl,bbox.P(i))*dist<0) return true;
 	return true;
 }
 
