@@ -645,6 +645,13 @@ namespace tri {
             }
 		}
 
+		static void CompactEveryVector( MeshType &m)
+		{
+		  CompactVertexVector(m);
+		  CompactEdgeVector(m);
+		  CompactFaceVector(m);
+		}
+
 
 		/*!
 		\brief Compact vector of vertices removing deleted elements.
