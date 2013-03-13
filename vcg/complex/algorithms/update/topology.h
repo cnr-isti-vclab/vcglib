@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -30,7 +30,7 @@
 
 namespace vcg {
 namespace tri {
-/// \ingroup trimesh 
+/// \ingroup trimesh
 
 /// \headerfile topology.h vcg/complex/algorithms/update/topology.h
 
@@ -41,7 +41,7 @@ class UpdateTopology
 {
 
 public:
-typedef UpdateMeshType MeshType; 
+typedef UpdateMeshType MeshType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
@@ -54,15 +54,15 @@ typedef typename MeshType::FaceIterator   FaceIterator;
 
 /// \headerfile topology.h vcg/complex/algorithms/update/topology.h
 
-/// \brief Auxiliairy data structure for computing face face adjacency information. 
-/** 
+/// \brief Auxiliairy data structure for computing face face adjacency information.
+/**
 It identifies and edge storing two vertex pointer and a face pointer where it belong.
 */
 
 class PEdge
 {
 public:
-	
+
 	VertexPointer  v[2];		// the two Vertex pointer are ordered!
 	FacePointer    f;		  // the face where this edge belong
 	int      z;				      // index in [0..2] of the edge of the face
@@ -74,7 +74,7 @@ void Set( FacePointer  pf, const int nz )
 	assert(pf!=0);
 	assert(nz>=0);
 	assert(nz<pf->VN());
-	
+
 	v[0] = pf->V(nz);
 	v[1] = pf->V(pf->Next(nz));
 	assert(v[0] != v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
@@ -99,23 +99,23 @@ inline bool operator == ( const PEdge & pe ) const
 };
 
 // Fill a vector with all the edges of the mesh.
-// each edge is stored in the vector the number of times that it appears in the mesh, with the referring face. 
+// each edge is stored in the vector the number of times that it appears in the mesh, with the referring face.
 // optionally it can skip the faux edges (to retrieve only the real edges of a triangulated polygonal mesh)
 
 static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e, bool includeFauxEdge=true)
 {
 	FaceIterator pf;
 	typename std::vector<PEdge>::iterator p;
-	
+
 	// Alloco il vettore ausiliario
-	//e.resize(m.fn*3);			
+	//e.resize(m.fn*3);
 	FaceIterator fi;
 	int n_edges = 0;
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi) if(! (*fi).IsD()) n_edges+=(*fi).VN();
 	e.resize(n_edges);
-	
+
 	p = e.begin();
-	for(pf=m.face.begin();pf!=m.face.end();++pf)		
+	for(pf=m.face.begin();pf!=m.face.end();++pf)
 		if( ! (*pf).IsD() )
 			for(int j=0;j<(*pf).VN();++j)
 			if(includeFauxEdge || !(*pf).IsF(j))
@@ -123,7 +123,7 @@ static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e, bool includeFauxE
 					(*p).Set(&(*pf),j);
 					++p;
 				}
-			
+
 	if(includeFauxEdge) assert(p==e.end());
 	else e.resize(p-e.begin());
 }
@@ -215,7 +215,7 @@ static void AllocateEdge(MeshType &m)
 /// \brief Update the Face-Face topological relation by allowing to retrieve for each face what other faces shares their edges.
 static void FaceFace(MeshType &m)
 {
-  if(!HasFFAdjacency(m)) throw vcg::MissingComponentException("FFAdjacency");
+  RequireFFAdjacency(m);
   if( m.fn == 0 ) return;
 
   std::vector<PEdge> e;
@@ -256,24 +256,24 @@ static void FaceFace(MeshType &m)
 }
 
 /// \brief Update the Vertex-Face topological relation.
-/** 
+/**
 The function allows to retrieve for each vertex the list of faces sharing this vertex.
+After this call all the VF component are initialized. Isolated vertices have a null list of faces.
+\sa vcg::vertex::VFAdj
+\sa vcg::face::VFAdj
 */
 
 static void VertexFace(MeshType &m)
 {
-  if(!HasVFAdjacency(m)) throw vcg::MissingComponentException("VFAdjacency");
+  RequireVFAdjacency(m);
 
-  VertexIterator vi;
-  FaceIterator fi;
-
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
   {
     (*vi).VFp() = 0;
-    (*vi).VFi() = 0;
+    (*vi).VFi() = 0; // note that (0,-1) means uninitiazlied while 0,0 is the valid initialized values for isolated vertices.
   }
 
-  for(fi=m.face.begin();fi!=m.face.end();++fi)
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
     if( ! (*fi).IsD() )
     {
       for(int j=0;j<(*fi).VN();++j)
@@ -289,8 +289,8 @@ static void VertexFace(MeshType &m)
 
 /// \headerfile topology.h vcg/complex/algorithms/update/topology.h
 
-/// \brief Auxiliairy data structure for computing face face adjacency information. 
-/** 
+/// \brief Auxiliairy data structure for computing face face adjacency information.
+/**
 It identifies and edge storing two vertex pointer and a face pointer where it belong.
 */
 
@@ -339,21 +339,21 @@ public:
 
 /// \brief Update the Face-Face topological relation so that it reflects the per-wedge texture connectivity
 
-/** 
+/**
 Using this function two faces are adjacent along the FF relation IFF the two faces have matching texture coords along the involved edge.
 In other words F1->FFp(i) == F2 iff F1 and F2 have the same tex coords along edge i
 */
 
 static void FaceFaceFromTexCoord(MeshType &m)
 {
-	if(!HasPerWedgeTexCoord(m)) throw vcg::MissingComponentException("PerWedgeTexCoord");
-	if(!HasFFAdjacency(m)) throw vcg::MissingComponentException("FFAdjacency");
+  RequireFFAdjacency(m);
+  RequirePerFaceWedgeTexCoord(m);
 
   std::vector<PEdgeTex> e;
-	FaceIterator pf;
-	typename std::vector<PEdgeTex>::iterator p;
+    FaceIterator pf;
+    typename std::vector<PEdgeTex>::iterator p;
 
-	if( m.fn == 0 ) return;
+    if( m.fn == 0 ) return;
 
 //	e.resize(m.fn*3);								// Alloco il vettore ausiliario
 	FaceIterator fi;
@@ -372,10 +372,10 @@ static void FaceFaceFromTexCoord(MeshType &m)
 						++p;
 					 }
 			}
-	
+
 	e.resize(p-e.begin());   // remove from the end of the edge vector the unitiailized ones
 	//assert(p==e.end()); // this formulation of the assert argument is not really correct, will crash on visual studio
-	sort(e.begin(), e.end());		
+	sort(e.begin(), e.end());
 
 	int ne = 0;											// number of real edges
 	typename std::vector<PEdgeTex>::iterator pe,ps;
@@ -416,10 +416,10 @@ static void FaceFaceFromTexCoord(MeshType &m)
 /// \brief Test correctness of VFtopology
 static void TestVertexFace(MeshType &m)
 {
-	SimpleTempData<typename MeshType::VertContainer, int > numVertex(m.vert,0);
+    SimpleTempData<typename MeshType::VertContainer, int > numVertex(m.vert,0);
 
   assert(tri::HasPerVertexVFAdjacency(m));
-	
+
 	FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
 	{
@@ -464,11 +464,11 @@ static void TestFaceFace(MeshType &m)
   assert(HasFFAdjacency(m));
 
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-	{
+    {
     if (!fi->IsD())
-		{
+        {
       for (int i=0;i<(*fi).VN();i++)
-			{
+            {
         FaceType *ffpi=fi->FFp(i);
         int e=fi->FFi(i);
         //invariant property of FF topology for two manifold meshes
@@ -485,8 +485,8 @@ static void TestFaceFace(MeshType &m)
 
         assert( (ffv0i==v0i) || (ffv0i==v1i) );
         assert( (ffv1i==v0i) || (ffv1i==v1i) );
-			}
-			
+            }
+
 		}
 	}
 }
@@ -521,7 +521,7 @@ inline bool operator !=  ( const PVertexEdge & pe ) const { return ( v!=pe.v ); 
 
 static void EdgeEdge(MeshType &m)
 {
-  if(!HasEEAdjacency(m)) throw vcg::MissingComponentException("EEAdjacency");
+  RequireEEAdjacency(m);
   std::vector<PVertexEdge> v;
   if( m.en == 0 ) return;
 
@@ -573,7 +573,7 @@ static void EdgeEdge(MeshType &m)
 
 static void VertexEdge(MeshType &m)
 {
-   if(!HasVEAdjacency(m)) throw vcg::MissingComponentException("VEAdjacency");
+  RequireVEAdjacency(m);
 
   VertexIterator vi;
   EdgeIterator ei;
