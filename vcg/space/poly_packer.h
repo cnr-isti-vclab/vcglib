@@ -58,9 +58,9 @@ public:
 
   static Box2f getPolyOOBB(const std::vector<Point2x> &poly, float &rot)
   {
-    const int stepNum=64;
+    const int stepNum=32;
     float bestAngle;
-	float bestArea = std::numeric_limits<float>::max();
+    float bestArea = std::numeric_limits<float>::max();
     Box2f bestBB;
 
     for(int i=0;i<stepNum;++i)
@@ -166,6 +166,73 @@ static bool PackAsObjectOrientedRect(const std::vector< std::vector<Point2x> > &
   }
   return ret;
 }
+
+
+static bool PackMultiAsObjectOrientedRect(const std::vector< std::vector<Point2x> > &polyVec,
+                  const Point2x containerSizeX, const int containerNum,
+                  std::vector<Similarity2x> &trVec, std::vector<int> &indVec,
+                  std::vector<Point2x> &coveredContainerVec)
+{
+  trVec.clear();
+  trVec.resize(polyVec.size());
+  std::vector<Box2x> bbVec;
+  std::vector<float> rotVec;
+  for(size_t i=0;i<polyVec.size();++i)
+  {
+    float rot;
+    bbVec.push_back(getPolyOOBB(polyVec[i],rot));
+    rotVec.push_back(rot);
+  }
+
+  bool ret= RectPacker<float>::PackMulti(bbVec,containerSizeX,containerNum,trVec,indVec,coveredContainerVec);
+
+  for(size_t i=0;i<polyVec.size();++i)
+  {
+    trVec[i].rotRad=rotVec[i];
+  }
+  return ret;
+}
+
+static bool WritePolyVec(const std::vector< std::vector<Point2x> > &polyVec, const char *filename)
+{
+  FILE *fp=fopen(filename,"w");
+  if(!fp) return false;
+  fprintf(fp,"%lu\n",polyVec.size());
+  for(size_t i=0;i<polyVec.size();++i)
+  {
+    fprintf(fp,"%lu\n",polyVec[i].size());
+    for(size_t j=0;j<polyVec[i].size();++j)
+      fprintf(fp,"%f %f ",polyVec[i][j].X(),polyVec[i][j].Y());
+    fprintf(fp,"\n");
+  }
+  fclose(fp);
+  return true;
+}
+
+static bool ReadPolyVec(std::vector< std::vector<Point2x> > &polyVec, const char *filename)
+{
+  FILE *fp=fopen(filename,"r");
+  if(!fp) return false;
+  int sz;
+  fscanf(fp,"%i\n",&sz);
+  polyVec.clear();
+  polyVec.resize(sz);
+  for(size_t i=0;i<polyVec.size();++i)
+  {
+    fscanf(fp,"%i\n",&sz);
+    polyVec[i].resize(sz);
+    for(size_t j=0;j<polyVec[i].size();++j)
+    {
+      float x,y;
+      fscanf(fp,"%f %f",&x,&y);
+      polyVec[i][j].X()=x;
+      polyVec[i][j].Y()=y;
+    }
+  }
+  fclose(fp);
+  return true;
+}
+
 
 }; // end class
 } // end namespace vcg
