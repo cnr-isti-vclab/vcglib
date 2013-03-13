@@ -101,9 +101,16 @@ public:
 
   typename TT::FacePointer &VFp()       { static typename TT::FacePointer fp=0;  assert(0); return fp; }
   typename TT::FacePointer cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
-  int &VFi()       { static int z=0; assert(0); return z;}
-  int cVFi() const { static int z=0; assert(0); return z;}
-  static bool HasVFAdjacency()   {   return false; }
+  int &VFi()       { static int z=-1; assert(0); return z;}
+  int cVFi() const { static int z=-1; assert(0); return z;}
+  static bool HasVFAdjacency()   { return false; }
+  bool IsVFInitialized() const {return static_cast<const typename TT::VertexType *>(this)->cVFi()!=-1;}
+  void VFClear() {
+    if(IsVFInitialized()) {
+      static_cast<typename TT::VertexPointer>(this)->VFp()=0;
+      static_cast<typename TT::VertexPointer>(this)->VFi()=-1;
+    }
+  }
 
   typename TT::EdgePointer &VEp()       { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
   typename TT::EdgePointer cVEp() const { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
@@ -229,7 +236,7 @@ public:
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
 
  private:
-	int _imark;
+    int _imark;
 };
 
 /*-------------------------- TEXCOORD ----------------------------------------*/
@@ -249,7 +256,7 @@ public:
     template < class RightValueType>
     void ImportData(const RightValueType  & rVert ) { if(rVert.IsTexCoordEnabled())  T() = rVert.cT(); TT::ImportData( rVert); }
   static bool HasTexCoord()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord"));TT::Name(name);}
+    static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord"));TT::Name(name);}
 
 private:
   TexCoordType _t;
@@ -311,7 +318,7 @@ private:
 };
 
 template <class TT> class Color4b: public Color<vcg::Color4b, TT> {
-	public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));TT::Name(name);}
+    public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));TT::Name(name);}
 };
 
 /*-------------------------- Quality  ----------------------------------*/
@@ -396,8 +403,8 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class A, class TT> class CurvatureDir: public TT {
 public:
   typedef A CurvatureDirType;
-	typedef typename CurvatureDirType::VecType VecType;
-	typedef typename CurvatureDirType::ScalarType ScalarType;
+    typedef typename CurvatureDirType::VecType VecType;
+    typedef typename CurvatureDirType::ScalarType ScalarType;
 
 	VecType &PD1(){ return _curv.max_dir;}
 	VecType &PD2(){ return _curv.min_dir;}
@@ -485,10 +492,11 @@ private:
 /*----------------------------- VFADJ ------------------------------*/
   /*! \brief \em Component: Per vertex \b Vertex-Face adjacency relation
 
-It stores a pointer to the first Face of a list of Faces that is stored in a distributed way on the faces themselves.
+It stores a pointer to the first face of a list of faces that is stored in a distributed way on the faces themselves.
 Note that if you use this component it is expected that on the Face you use also the corresponding vcg::face::VFAdj component.
 
   \sa vcg::tri::UpdateTopology for functions that compute this relation
+  \sa vcg::face::VFAdj
   \sa iterators
   */
 

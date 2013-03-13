@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -116,7 +116,13 @@ public:
   char &FFi(int)       { static char z=0; assert(0); return z;}
   char cVFi(int) const { static char z=0; assert(0); return z;}
   char cFFi(int) const { static char z=0; assert(0); return z;}
-
+  bool IsVFInitialized(const int j) const {return  static_cast<const typename T::FaceType *>(this)->cVFi(j)!=-1;}
+  void VFClear(int j) {
+    if(IsVFInitialized(j)) {
+      static_cast<typename T::FacePointer>(this)->VFp(j)=0;
+      static_cast<typename T::FacePointer>(this)->VFi(j)=-1;
+    }
+  }
   static bool HasVFAdjacency()   {   return false; }
   static bool HasFFAdjacency()   {   return false; }
   static bool HasFEAdjacency()   {   return false; }
@@ -279,7 +285,7 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 };
 
 
-/*-------------------------- TexCoord ----------------------------------------*/ 
+/*-------------------------- TexCoord ----------------------------------------*/
 
 template <class A, class T> class WedgeTexCoord: public T {
 public:
@@ -334,7 +340,7 @@ public:
   static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
 
 private:
-  int  _flags;    
+  int  _flags;
 };
 
 /*-------------------------- Color ----------------------------------*/
@@ -390,7 +396,7 @@ template <class T> class Color4b: public Color<vcg::Color4b, T> { public:
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));T::Name(name);}
 };
 
-/*-------------------------- Quality  ----------------------------------*/ 
+/*-------------------------- Quality  ----------------------------------*/
 template <class A, class T> class Quality: public T {
 public:
   typedef A QualityType;
@@ -402,12 +408,12 @@ public:
         Q() = rightF.cQ();
       T::ImportData(rightF);
     }
-	inline void Alloc(const int & ns){T::Alloc(ns);}
-	inline void Dealloc(){T::Dealloc();}
+    inline void Alloc(const int & ns){T::Alloc(ns);}
+    inline void Dealloc(){T::Dealloc();}
   static bool HasQuality()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));T::Name(name);}
 private:
-  QualityType _quality;    
+  QualityType _quality;
 };
 
 template <class T> class Qualitys: public Quality<short, T> {
@@ -449,7 +455,7 @@ template <class T> class Quality3d: public Quality3<double, T> {
 public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality3d"));T::Name(name);}
 };
 
-/*-------------------------- INCREMENTAL MARK  ----------------------------------------*/ 
+/*-------------------------- INCREMENTAL MARK  ----------------------------------------*/
 /*! \brief Per vertex \b Incremental \b Mark
 
     It is just an \c int that allows to efficently (in constant time) un-mark the whole mesh. \sa UnmarkAll
@@ -523,13 +529,32 @@ template <class T> class CurvatureDird: public CurvatureDir<CurvatureDirBaseType
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDird"));T::Name(name);}
 };
 
-/*----------------------------- VFADJ ------------------------------*/ 
+/*----------------------------- VFADJ ------------------------------*/
+/*! \brief \em Component: Per Face \b Vertex-Face adjacency relation
+
+It stores a pointer to the next face of the list of faces incident on a vertex that is stored in a distributed way on the faces themselves.
+Note that if you use this component it is expected that on the Vertex you use also the corresponding vcg::vertex::VFAdj component.
+Note that for this component we have three class of values:
+- \b valid: a valid pointer in the range of the vector of faces
+- \b null: a null pointer, used to indicate the end of the list
+- \b uninitialized: a special value that you can test/set with the IsVFInitialized()/VFClear() functions;
+	 it is used to indicate when the VF Topology is not computed.
+
+\sa vcg::tri::UpdateTopology for functions that compute this relation
+\sa vcg::vertex::VFAdj
+\sa iterators
+*/
+
+
 template <class T> class VFAdj: public T {
 public:
 	VFAdj(){
 		_vfp[0]=0;
 		_vfp[1]=0;
 		_vfp[2]=0;
+		_vfi[0]=-1;
+		_vfi[1]=-1;
+		_vfi[2]=-1;
 	}
   typename T::FacePointer &VFp(const int j)        { assert(j>=0 && j<3);  return _vfp[j]; }
   typename T::FacePointer cVFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
@@ -537,14 +562,14 @@ public:
   char cVFi(const int j)const {return _vfi[j]; }
     template <class RightValueType>
     void ImportData(const RightValueType & rightF){T::ImportData(rightF);}
-	inline void Alloc(const int & ns){T::Alloc(ns);}
-	inline void Dealloc(){T::Dealloc();}
+    inline void Alloc(const int & ns){T::Alloc(ns);}
+    inline void Dealloc(){T::Dealloc();}
   static bool HasVFAdjacency()      {   return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdj"));T::Name(name);}
 
 private:
-  typename T::FacePointer _vfp[3] ;    
-  char _vfi[3] ;    
+  typename T::FacePointer _vfp[3] ;
+  char _vfi[3] ;
 };
 
 /*----------------------------- EFADJ ------------------------------*/
@@ -574,7 +599,20 @@ private:
 };
 
 
-/*----------------------------- FFADJ ------------------------------*/ 
+/*----------------------------- FFADJ ------------------------------*/
+/*! \brief \em Component: Per Face \b Face-Face adjacency relation
+
+It encodes the adjacency of faces through edges; for 2-manifold edges it just point to the other face,
+and for non manifold edges (where more than 2 faces share the same edge) it stores a pointer to the next
+face of the ring of faces incident on a edge.
+ Note that border faces points to themselves.
+ NULL pointer is used as a special value to indicate when the FF Topology is not computed.
+
+\sa vcg::tri::UpdateTopology for functions that compute this relation
+\sa vcg::vertex::VFAdj
+\sa iterators
+*/
+
 template <class T> class FFAdj: public T {
 public:
   FFAdj(){
@@ -605,7 +643,7 @@ private:
 };
 
 
-/*----------------------------- FEADJ ------------------------------*/ 
+/*----------------------------- FEADJ ------------------------------*/
 
 template <class T> class FEAdj: public T {
 public:
