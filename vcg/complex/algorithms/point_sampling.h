@@ -42,6 +42,7 @@ sampling strategies (montecarlo, stratified etc).
 #include <vcg/complex/algorithms/stat.h>
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/space/segment2.h>
 
@@ -1510,10 +1511,11 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
   tri::Allocator<MeshType>::AddVertices(MontecarloMesh,MontecarloSamples.size());
   for(size_t i=0;i<MontecarloSamples.size();++i)
     MontecarloMesh.vert[i].P()=MontecarloSamples[i];
+  tri::UpdateBounding<MeshType>::Box(MontecarloMesh);
   int t1=clock();
   pp.pds->montecarloTime = t1-t0;
 
-  tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(m, pdSampler, MontecarloMesh, radius,pp);
+  tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(pdSampler, MontecarloMesh, radius,pp);
   int t2=clock();
   pp.pds->totalTime = t2-t0;
 }
