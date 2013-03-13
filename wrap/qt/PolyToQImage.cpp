@@ -20,6 +20,41 @@ void PolyDumper::rectSetToPolySet(vector< Box2f > &rectVec, vector< vector<Point
 }
 
 
+void PolyDumper::multiRectSetToSinglePolySet(vector< Box2f > &rectVec,  vector<Similarity2f> &trVec, vector<int> &indVec,
+                                             int ind, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trPolyVec)
+{
+  polyVec.clear();
+  trPolyVec.clear();
+
+  for(size_t i=0;i<rectVec.size();++i)
+    if(indVec[i]==ind)
+    {
+      trPolyVec.push_back(trVec[i]);
+      Box2f &b=rectVec[i];
+      polyVec.resize(polyVec.size()+1);
+      polyVec.back().push_back(b.min);
+      polyVec.back().push_back(Point2f(b.max[0],b.min[1]));
+      polyVec.back().push_back(b.max);
+      polyVec.back().push_back(Point2f(b.min[0],b.max[1]));
+    }
+}
+
+void PolyDumper::multiPolySetToSinglePolySet(std::vector< std::vector<Point2f> > &multiPolyVec, std::vector<Similarity2f> &multiTrVec, std::vector<int> &indVec,
+                                             int ind, std::vector< std::vector<Point2f> > &singlePolyVec, std::vector<Similarity2f> &singleTrVec)
+{
+  singlePolyVec.clear();
+  singleTrVec.clear();
+
+  for(size_t i=0;i<multiPolyVec.size();++i)
+    if(indVec[i]==ind)
+    {
+      singleTrVec.push_back(multiTrVec[i]);
+      singlePolyVec.resize(singlePolyVec.size()+1);
+      singlePolyVec.back()=multiPolyVec[i];
+    }
+}
+
+
 void PolyDumper::dumpPolySetSVG(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, PolyDumperParam &pp)
 {
 	vector< vector< vector<Point2f> > > polyVecVec(polyVec.size());
@@ -270,7 +305,7 @@ void  PolyDumper::dumpPolySetPNG(const char * imageName,
 		///FIND THE BARYCENTER
 		int radius;
 		Point2f bc;
-		bc=GetIncenter(polyVecVec[i],trVec[i],radius,100);
+		bc=GetIncenter(polyVecVec[i],trVec[i],radius,10);
 
 		if (pp.randomColor)
 			bb.setColor(vcg::ColorConverter::ToQColor(Color4b::Scatter(polyVecVec.size(),i)));

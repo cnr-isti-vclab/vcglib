@@ -70,10 +70,14 @@ class PolyDumper
 	///this is used to write labels within the polygon, it handle polygons with holes too
 	static vcg::Point2f GetIncenter(const std::vector< std::vector<vcg::Point2f> > &polyVec,
 										const vcg::Similarity2f &tra1,int &radius,int resolution=100);
+public:
 
 	static void rectSetToPolySet(std::vector< vcg::Box2f > &rectVec, std::vector< std::vector<vcg::Point2f> > &polyVec);
+	static void multiRectSetToSinglePolySet(std::vector< vcg::Box2f > &rectVec, std::vector<vcg::Similarity2f> &trVec, std::vector<int> &indVec,
+											int ind, std::vector< std::vector<vcg::Point2f> > &polyVec, std::vector<vcg::Similarity2f> &trPolyVec);
+	static void multiPolySetToSinglePolySet(std::vector< std::vector< vcg::Point2f> > &multipolyVec,  std::vector< vcg::Similarity2f> &trVec, std::vector<int> &indVec,
+												 int ind, std::vector< std::vector< vcg::Point2f> > &polyVec, std::vector< vcg::Similarity2f> &trPolyVec);
 
-public:
 	///write a polygon on a PNG file, format of the polygon is vector of vector of contours...nested contours are holes
 	///takes the name of the image in input, the set of polygons, the set of per polygons transformation, 
 	///the label to be written and the global parameter for drawing style

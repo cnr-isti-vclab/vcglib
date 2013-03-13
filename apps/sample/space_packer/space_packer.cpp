@@ -22,6 +22,7 @@
 ****************************************************************************/
 #include <QtOpenGL/QtOpenGL>
 #include<vcg/space/box2.h>
+#include<vcg/space/box3.h>
 #include<vcg/math/random_generator.h>
 #include<wrap/qt/col_qt_convert.h>
 #include <vcg/space/rect_packer.h>
@@ -98,31 +99,58 @@ void buildRandPolySet(int polyNum, vector< vector<Point2f> > &polyVec)
 
 int main( int argc, char **argv )
 {
-  QApplication pippo(argc,argv);
+  vector<Similarity2f> trVec;
+  vector<Similarity2f> trPolyVec;
+  vector< vector<Point2f> > polySet;
+  vector< vector<Point2f> > multiPolySet;
+  Point2f finalSize;
+  std::vector<Point2f> finalSizeVec;
+  const Point2f containerSize(1000,1000);
+    PolyDumperParam pp;
+  std::vector<int> contInd;
 
   vector<Box2f> rectVec;
-  buildRandRectSet(1000, rectVec);
-  vector<Similarity2f> trVec;
-  vector< vector<Point2f> > polySet;
-  Point2f finalSize;
+  buildRandRectSet(10,rectVec);
+//  RectPacker<float>::Pack(rectVec,containerSize,trVec,finalSize);
+  RectPacker<float>::PackMulti(rectVec,containerSize,3,trVec,contInd,finalSizeVec);
+  RectPacker<float>::Stat s = RectPacker<float>::stat();
+  printf("RectPacker attempt %i time %5.3f %5.3f\n",s.pack_attempt_num,s.pack_total_time,s.pack_attempt_time);
+
+//  PolyDumper::rectSetToPolySet(rectVec,polySet);
+
+//  PolyDumper::multiRectSetToSinglePolySet(rectVec,trVec,contInd,0,polySet,trPolyVec);
+//  PolyDumper::dumpPolySetPNG("testpolyEq0.png",polySet,trPolyVec,pp);
+//  PolyDumper::multiRectSetToSinglePolySet(rectVec,trVec,contInd,1,polySet,trPolyVec);
+//  PolyDumper::dumpPolySetPNG("testpolyEq1.png",polySet,trPolyVec,pp);
+//  PolyDumper::multiRectSetToSinglePolySet(rectVec,trVec,contInd,2,polySet,trPolyVec);
+//  PolyDumper::dumpPolySetPNG("testpolyEq2.png",polySet,trPolyVec,pp);
+
+
+//   buildRandPolySet(100,polySet);
+//   PolyPacker<float>::PackMultiAsObjectOrientedRect(polySet,containerSize,3,trVec,contInd,finalSizeVec);
+
+//   PolyDumper::multiPolySetToSinglePolySet(polySet,trVec,contInd,0,multiPolySet,trPolyVec);
+//   PolyDumper::dumpPolySetPNG("testpolyEq0.png",multiPolySet,trPolyVec,pp);
+
+//   PolyDumper::multiPolySetToSinglePolySet(polySet,trVec,contInd,1,multiPolySet,trPolyVec);
+//   PolyDumper::dumpPolySetPNG("testpolyEq1.png",multiPolySet,trPolyVec,pp);
+
+//   PolyDumper::multiPolySetToSinglePolySet(polySet,trVec,contInd,2,multiPolySet,trPolyVec);
+//   PolyDumper::dumpPolySetPNG("testpolyEq2.png",multiPolySet,trPolyVec,pp);
+
+   //  PolyDumper::dumpPolySetPNG("testpolyOO.png",polySet,trVec,pp);
+
+
   buildRandPolySet(100,polySet);
-  PolyDumperParam pp;
- /* PolyPacker<float>::PackAsEqualSquares(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
-  dumpPolySet("testpolyEq.png",polySet,trVec,pp);
-  PolyPacker<float>::PackAsAxisAlignedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
-  dumpPolySet("testpolyAA.png",polySet,trVec,pp);
-  PolyPacker<float>::PackAsObjectOrientedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
-  dumpPolySet("testpolyOO.png",polySet,trVec,pp);*/
 
-  //PolyPacker<float>::PackAsAxisAlignedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
-  PolyPacker<float>::PackAsObjectOrientedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
-  //dumpPolySetPNG("testpolyEq.png",polySet,trVec,pp);
-  PolyDumper::dumpPolySetSVG("testpolyEq.svg",polySet,trVec,pp);
+  PolyPacker<float>::PackAsEqualSquares(polySet,containerSize,trVec,finalSize);
+  PolyDumper::dumpPolySetPNG("testpolyEq.png",polySet,trVec,pp);
 
-  /*PolyPacker<float>::PackAsAxisAlignedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
-  dumpPolySetSVG("testpolyAA.svg",polySet,trVec,pp);
-  PolyPacker<float>::PackAsObjectOrientedRect(polySet,Point2f(1024.0f,1024.0f),trVec,finalSize);
-  dumpPolySetSVG("testpolyOO.svg",polySet,trVec,pp);*/
+  PolyPacker<float>::PackAsAxisAlignedRect(polySet,containerSize,trVec,finalSize);
+  PolyDumper::dumpPolySetPNG("testpolyAA.png",polySet,trVec,pp);
+
+  PolyPacker<float>::PackAsObjectOrientedRect(polySet,containerSize,trVec,finalSize);
+  PolyDumper::dumpPolySetPNG("testpolyOO.png",polySet,trVec,pp);
 
   return 0;
 }
