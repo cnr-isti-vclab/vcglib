@@ -64,7 +64,7 @@ public:
     bool remove() {
         count.testAndSetOrdered(READY, REMOVE);
         count.testAndSetOrdered(CACHE, REMOVE);
-#if(QT_VERSION < 0x05000000)
+#if(QT_VERSION < 0x050000)
         return count <= REMOVE;
 #else
         return count.load() <= REMOVE;                   //might have become OUSIDE in the meanwhile
@@ -72,7 +72,7 @@ public:
     }
 
     bool isLocked() {
-#if(QT_VERSION < 0x05000000)
+#if(QT_VERSION < 0x050000)
         return count > 0;
 #else
         return count.load() > 0;
@@ -86,7 +86,7 @@ public:
     }
 
     bool operator<(const Token &a) const {
-#if(QT_VERSION < 0x05000000)
+#if(QT_VERSION < 0x050000)
         if(count == a.count)
             return priority < a.priority;
         return count < a.count;
@@ -97,7 +97,7 @@ public:
 #endif
     }
     bool operator>(const Token &a) const {
-#if(QT_VERSION < 0x05000000)
+#if(QT_VERSION < 0x050000)
         if(count == a.count)
             return priority > a.priority;
         return count > a.count;

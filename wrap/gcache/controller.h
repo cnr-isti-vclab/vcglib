@@ -81,7 +81,7 @@ class Controller {
 
   ///start the various cache threads.
   void start() {
-    if(!stopped) return;
+    assert(stopped);
     assert(!paused);
     assert(caches.size() > 1);
     caches.back()->final = true;

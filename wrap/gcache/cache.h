@@ -202,7 +202,7 @@ protected:
                         remove = this->heap.popMin();
                     } else {
                         last.count.testAndSetOrdered(Token::READY, Token::CACHE);
-#if(QT_VERSION < 0x05000000)
+#if(QT_VERSION < 0x050000)
                 int last_count = last.count;
 #else
                 int last_count = last.count.load();
@@ -254,7 +254,7 @@ protected:
             input->rebuild();                                  //if dirty rebuild
             if(input->heap.size()) {                           //we need something in input to tranfer.
                 Token &first = input->heap.max();
-#if(QT_VERSION < 0x05000000)
+#if(QT_VERSION < 0x050000)
                 int first_count = first.count;
 #else
                 int first_count = first.count.load();
