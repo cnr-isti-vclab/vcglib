@@ -87,7 +87,7 @@ public:
                 Token *token = &(this->heap[i]);
                 //tokens.push_back(token);
                 s_curr -= drop(token);
-                assert(!(token->count >= Token::LOCKED));
+                assert(!(token->count.load() >= Token::LOCKED));
                 if(final)
                     token->count.testAndSetOrdered(Token::READY, Token::CACHE);
                 input->heap.push(token);
@@ -112,7 +112,7 @@ public:
                 if(functor(token)) { //drop it
                     tokens.push_back(token);
                     s_curr -= drop(token);
-                    assert(token->count < Token::LOCKED);
+                    assert(token->count.load() < Token::LOCKED);
                     if(final)
                         token->count.testAndSetOrdered(Token::READY, Token::CACHE);
                 } else
@@ -198,7 +198,7 @@ protected:
                         remove = this->heap.popMin();
                     } else {
                         last.count.testAndSetOrdered(Token::READY, Token::CACHE);
-                        if(last.count <= Token::CACHE) { //was not locked and now can't be locked, remove it.
+                        if(last.count.load() <= Token::CACHE) { //was not locked and now can't be locked, remove it.
                             remove = this->heap.popMin();
                         } else { //last item is locked need to reorder stack
                             remove = this->heap.popMin();
@@ -245,7 +245,7 @@ protected:
             input->rebuild();                                  //if dirty rebuild
             if(input->heap.size()) {                           //we need something in input to tranfer.
                 Token &first = input->heap.max();
-                if(first.count > Token::REMOVE &&
+                if(first.count.load() > Token::REMOVE &&
                         (!last || first.priority > last->priority)) { //if !last we already decided we want a transfer., otherwise check for a swap
                     insert = input->heap.popMax();                 //remove item from heap, while we transfer it.
                 }

@@ -61,10 +61,10 @@ class Token {
   bool remove() {
     count.testAndSetOrdered(READY, REMOVE);
     count.testAndSetOrdered(CACHE, REMOVE);
-    return count <= REMOVE;                   //might have become OUSIDE in the meanwhile
+    return count.load() <= REMOVE;                   //might have become OUSIDE in the meanwhile
   }
 
-  bool isLocked() { return count > 0; }
+  bool isLocked() { return count.load() > 0; }
   bool isInCache() { return count != OUTSIDE; }  //careful, can be used only when provider thread is locked.
 
   ///copy priority to swap space [do not use, should be private]
@@ -73,14 +73,14 @@ class Token {
   }
 
   bool operator<(const Token &a) const {
-    if(count == a.count)
+      if(count.load() == a.count.load())
       return priority < a.priority;
-    return count < a.count;
+    return count.load() < a.count.load();
   }
   bool operator>(const Token &a) const {
-    if(count == a.count)
+    if(count.load() == a.count.load())
       return priority > a.priority;
-    return count > a.count;
+    return count.load() > a.count.load();
   }
 };
 
