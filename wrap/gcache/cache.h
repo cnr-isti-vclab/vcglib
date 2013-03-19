@@ -18,6 +18,9 @@ typedef unsigned __int64 uint64_t;
 #include <limits.h>
 #include <vector>
 #include <list>
+
+#include "token.h"
+
 #include <wrap/system/multithreading/mt.h>
 #include <wrap/system/multithreading/atomic_int.h>
 
@@ -87,7 +90,7 @@ public:
                 Token *token = &(this->heap[i]);
                 //tokens.push_back(token);
                 s_curr -= drop(token);
-                assert(!(token->count.load() >= Token::LOCKED));
+                //assert(!(token->count.load() >= Token::LOCKED));
                 if(final)
                     token->count.testAndSetOrdered(Token::READY, Token::CACHE);
                 input->heap.push(token);
@@ -112,7 +115,7 @@ public:
                 if(functor(token)) { //drop it
                     tokens.push_back(token);
                     s_curr -= drop(token);
-                    assert(token->count.load() < Token::LOCKED);
+                    //assert(token->count.load() < Token::LOCKED);
                     if(final)
                         token->count.testAndSetOrdered(Token::READY, Token::CACHE);
                 } else
@@ -140,25 +143,18 @@ protected:
     virtual int drop(Token *token) = 0;
     ///make sure the get function do not access token after abort is returned.
 
-
-
-
-    ///called in as first thing in run()
-    virtual void begin() {}
     virtual void middle() {}
-    ///called in as last thing in run()
-    virtual void end() {}
 
     ///[should be protected]
     void run() {
         assert(input);
         /* basic operation of the cache:
-       1) transfer first element of input_cache if
-          cache has room OR first element in input as higher priority of last element
-       2) make room until eliminating an element would leave space. */
-        begin();
+          1) make room until eliminating an element would leave empty space.
+          2) transfer first element of input_cache if
+          cache has room OR first element in input has higher priority of last element */
+
         while(!this->quit) {
-            input->check_queue.enter(true);     //wait for cache below to load something or priorities to change
+            input->check_queue.enter();     //wait for cache below to load something or priorities to change
             if(this->quit) break;
 
             middle();
@@ -166,11 +162,11 @@ protected:
             if(unload() || load()) {
                 new_data.testAndSetOrdered(0, 1);  //if not changed, set as changed
                 input->check_queue.open();        //we signal ourselves to check again
+                cout << "loaded or unloaded\n";
             }
             input->check_queue.leave();
         }
         this->quit = false;                   //in case someone wants to restart;
-        end();
     }
 
 
@@ -198,7 +194,12 @@ protected:
                         remove = this->heap.popMin();
                     } else {
                         last.count.testAndSetOrdered(Token::READY, Token::CACHE);
-                        if(last.count.load() <= Token::CACHE) { //was not locked and now can't be locked, remove it.
+#if(QT_VERSION < 0x05000000)
+                int last_count = last.count;
+#else
+                int last_count = last.count.load();
+#endif
+                        if(last_count <= Token::CACHE) { //was not locked and now can't be locked, remove it.
                             remove = this->heap.popMin();
                         } else { //last item is locked need to reorder stack
                             remove = this->heap.popMin();
@@ -245,7 +246,12 @@ protected:
             input->rebuild();                                  //if dirty rebuild
             if(input->heap.size()) {                           //we need something in input to tranfer.
                 Token &first = input->heap.max();
-                if(first.count.load() > Token::REMOVE &&
+#if(QT_VERSION < 0x05000000)
+                int first_count = first.count;
+#else
+                int first_count = first.count.load();
+#endif
+                if(first_count > Token::REMOVE &&
                         (!last || first.priority > last->priority)) { //if !last we already decided we want a transfer., otherwise check for a swap
                     insert = input->heap.popMax();                 //remove item from heap, while we transfer it.
                 }
@@ -279,22 +285,5 @@ protected:
 };
 
 } //namespace
-/* TODO use the following class to allow multiple cache transfers at the same time  */
-
-/*
-template<typename Token>
-class Transfer: public mt::thread {
- public:
-  Transfer(Cache<Token> *_cache): cache(_cache) {}
- private:
-  Cache<Token> *cache;
-
-  void run() {
-    cache->loop();
-    //end();
-  }
-};
-
-*/
 
 #endif // GCACHE_H
