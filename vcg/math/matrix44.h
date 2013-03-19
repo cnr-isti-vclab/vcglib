@@ -672,6 +672,7 @@ template <class T> Matrix44<T> Inverse(const Matrix44<T> &m) {
   mmi=mm.inverse();
   Matrix44<T> res;
   res.FromEigenMatrix(mmi);
+  return res;
 }
 
 } //namespace

@@ -490,7 +490,8 @@ Matrix33<S> Inverse(const Matrix33<S>&m)
   mmi=mm.inverse();
   Matrix33<S> res;
   res.FromEigenMatrix(mmi);
-    }
+  return res;
+}
 
 ///given 2 vector centered into origin calculate the rotation matrix from first to the second
 template <class S>
