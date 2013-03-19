@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -87,7 +87,7 @@ void GeneratePointInBox3Uniform(GeneratorType &rnd, const Box3<ScalarType> &bb, 
  * Marsaglia, G. "Choosing a Point from the Surface of a Sphere." Ann. Math. Stat. 43, 645-646, 1972.
  */
 template <class ScalarType, class GeneratorType>
-void GeneratePointOnUnitSphereUniform(GeneratorType &rnd, Point3<ScalarType> &p)
+void GeneratePointOnUnitSphereUniform(GeneratorType &rnd, vcg::Point3<ScalarType> &p)
 {
   double x,y,s;
   do
@@ -104,7 +104,7 @@ void GeneratePointOnUnitSphereUniform(GeneratorType &rnd, Point3<ScalarType> &p)
 /**
  * Uniform RNG derived from a STL extension of sgi.
  *
- * It is based on the Subtractive Ring method. 
+ * It is based on the Subtractive Ring method.
  * This implementation assumes that int is 32 bits.
  *
  * References
@@ -145,14 +145,14 @@ public:
 		unsigned int __k = 1;
 		_M_table[54] = seed;
 		size_t __i;
-		for (__i = 0; __i < 54; __i++) 
+		for (__i = 0; __i < 54; __i++)
 		{
 			size_t __ii = (21 * (__i + 1) % 55) - 1;
 			_M_table[__ii] = __k;
 			__k = seed - __k;
 			seed = _M_table[__ii];
 		}
-		for (int __loop = 0; __loop < 4; __loop++) 
+		for (int __loop = 0; __loop < 4; __loop++)
 		{
 			for (__i = 0; __i < 55; __i++)
 				_M_table[__i] = _M_table[__i] - _M_table[(1 + __i + 30) % 55];
@@ -251,9 +251,9 @@ public:
 	void initialize(unsigned int seed)
 	{
 		mt[0]= seed & 0xffffffffu;
-		for (mti=1; mti<N; mti++) 
+		for (mti=1; mti<N; mti++)
 		{
-			mt[mti] = (1812433253u * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti); 
+			mt[mti] = (1812433253u * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);
 			/* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
 			/* In the previous versions, MSBs of the seed affect   */
 			/* only MSBs of the array mt[].                        */
@@ -263,7 +263,7 @@ public:
 		}
 	}
 
-	/** 
+	/**
 	 * Initialize by an array with array-length.
 	 *
 	 * init_key is the array for initializing keys
@@ -275,39 +275,39 @@ public:
 		initialize(19650218u);
 		i=1; j=0;
 		k = (N>key_length ? N : key_length);
-		for (; k; k--) 
+		for (; k; k--)
 		{
 			mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1664525u)) + init_key[j] + j; /* non linear */
 			mt[i] &= 0xffffffffu; /* for WORDSIZE > 32 machines */
 			i++; j++;
-			
-			if (i>=N) 
-			{ 
-				mt[0] = mt[N-1]; 
-				i=1; 
+
+			if (i>=N)
+			{
+				mt[0] = mt[N-1];
+				i=1;
 			}
 
 			if (j>=key_length) j=0;
 		}
 
-		for (k=N-1; k; k--) 
+		for (k=N-1; k; k--)
 		{
 			mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941u)) - i; /* non linear */
 			mt[i] &= 0xffffffffu; /* for WORDSIZE > 32 machines */
 			i++;
-			if (i>=N) 
-			{ 
-				mt[0] = mt[N-1]; 
-				i=1; 
+			if (i>=N)
+			{
+				mt[0] = mt[N-1];
+				i=1;
 			}
 		}
 
-		mt[0] = 0x80000000u; /* MSB is 1; assuring non-zero initial array */ 
+		mt[0] = 0x80000000u; /* MSB is 1; assuring non-zero initial array */
 	}
 
-	/** 
+	/**
 	 * Return a random number in the [0,0xffffffff] interval using the improved Marsenne Twister algorithm.
-	 * 
+	 *
 	 * NOTE: Limit is not considered, the interval is fixed.
 	 */
 	unsigned int generate(unsigned int /*limit*/)
@@ -320,13 +320,13 @@ public:
 		{
 			int kk;
 
-			for (kk=0;kk<N-M;kk++) 
+			for (kk=0;kk<N-M;kk++)
 			{
 				y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
 				mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1u];
 			}
 
-			for (;kk<N-1;kk++) 
+			for (;kk<N-1;kk++)
 			{
 				y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
 				mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1u];
@@ -352,13 +352,13 @@ public:
 	/// Returns a random number in the [0,1] real interval using the improved Marsenne-Twister.
 	double generate01closed()
 	{
-		return generate(0)*(1.0/4294967295.0); 
+		return generate(0)*(1.0/4294967295.0);
 	}
 
 	/// Returns a random number in the [0,1) real interval using the improved Marsenne-Twister.
 	double generate01()
 	{
-		return generate(0)*(1.0/4294967296.0); 
+		return generate(0)*(1.0/4294967296.0);
 	}
 
 	/// Generates a random number in the (0,1) real interval using the improved Marsenne-Twister.
@@ -403,10 +403,10 @@ inline double box_muller(RandomGenerator &generator, double m, double s) /* norm
     use_last = 0;
   } else {
     do {
-	  x1 = 2.0 * generator.generate01closed() - 1.0;
-	  x2 = 2.0 * generator.generate01closed() - 1.0;
-	  w = x1 * x1 + x2 * x2;
-	} while ( w >= 1.0 );
+      x1 = 2.0 * generator.generate01closed() - 1.0;
+      x2 = 2.0 * generator.generate01closed() - 1.0;
+      w = x1 * x1 + x2 * x2;
+    } while ( w >= 1.0 );
     w = sqrt( (-2.0 * log( w ) ) / w );
     y1 = x1 * w;
     y2 = x2 * w;
@@ -421,7 +421,7 @@ inline double box_muller(RandomGenerator &generator, double m, double s) /* norm
 
 /*
    Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
-   All rights reserved.                          
+   All rights reserved.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
@@ -434,8 +434,8 @@ inline double box_muller(RandomGenerator &generator, double m, double s) /* norm
         notice, this list of conditions and the following disclaimer in the
         documentation and/or other materials provided with the distribution.
 
-     3. The names of its contributors may not be used to endorse or promote 
-        products derived from this software without specific prior written 
+     3. The names of its contributors may not be used to endorse or promote
+        products derived from this software without specific prior written
         permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
