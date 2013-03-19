@@ -143,7 +143,14 @@ protected:
     virtual int drop(Token *token) = 0;
     ///make sure the get function do not access token after abort is returned.
 
+
+
+
+    ///called in as first thing in run()
+    virtual void begin() {}
     virtual void middle() {}
+    ///called in as last thing in run()
+    virtual void end() {}
 
     ///[should be protected]
     void run() {
@@ -152,7 +159,7 @@ protected:
           1) make room until eliminating an element would leave empty space.
           2) transfer first element of input_cache if
           cache has room OR first element in input has higher priority of last element */
-
+        begin();
         while(!this->quit) {
             input->check_queue.enter();     //wait for cache below to load something or priorities to change
             if(this->quit) break;
@@ -167,6 +174,7 @@ protected:
             input->check_queue.leave();
         }
         this->quit = false;                   //in case someone wants to restart;
+        end();
     }
 
 
