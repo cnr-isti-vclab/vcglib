@@ -20,75 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.18  2007/04/19 14:30:26  pietroni
-added RotationMatrix method to calculate rotation matrix along an axis
-
-Revision 1.17  2007/04/07 23:06:47  pietroni
-Added function RotationMatrix
-
-Revision 1.16  2007/01/29 00:20:25  pietroni
--Used scalar type passed as template argument istead of double to prevent warnings.. in Rotate function
-
-Revision 1.15  2006/09/25 23:05:29  ganovelli
-added constructor from matrix44 excluding a row and colum
-
-Revision 1.14  2006/06/22 08:00:05  ganovelli
-bug in operator + with MatrixxDig
-
-Revision 1.13  2006/01/20 16:41:44  pietroni
-added operators:
-            operator -= ( const Matrix33Diag<S>  &p )
-           Matrix33  operator - ( const Matrix33Diag<S>  &p )
-           Matrix33  operator + ( const Matrix33 &m )
-           Matrix33  operator + ( const Matrix33Diag<S>  &p )
-
-Revision 1.12  2005/11/14 10:28:25  cignoni
-Changed Invert -> FastInvert for the function based on the maple expansion
-
-Revision 1.11  2005/10/13 15:45:23  ponchio
-Changed a Zero in SetZero in WeightedCrossCovariance() (again)
-
-Revision 1.10  2005/10/05 17:06:12  pietroni
-corrected sintax error on singular value decomposition
-
-Revision 1.9  2005/09/29 09:53:58  ganovelli
-added inverse by SVD
-
-Revision 1.8  2005/06/10 14:51:54  cignoni
-Changed a Zero in SetZero in WeightedCrossCovariance()
-
-Revision 1.7  2005/06/10 11:46:49  pietroni
-Added Norm Function
-
-Revision 1.6  2005/06/07 14:29:56  ganovelli
-changed from Matrix33Ide to MatrixeeDiag
-
-Revision 1.5  2005/05/23 15:05:26  ganovelli
-Matrix33Diag Added: it implements diagonal matrix. Added only operator += in Matrix33
-
-Revision 1.4  2005/04/11 14:11:22  pietroni
-changed swap to math::Swap in Traspose Function
-
-Revision 1.3  2004/10/18 15:03:02  fiorin
-Updated interface: all Matrix classes have now the same interface
-
-Revision 1.2  2004/07/13 06:48:26  cignoni
-removed uppercase references in include
-
-Revision 1.1  2004/05/28 13:09:05  ganovelli
-created
-
-Revision 1.1  2004/05/28 13:00:39  ganovelli
-created
-
-
-****************************************************************************/
-
-
 #ifndef __VCGLIB_MATRIX33_H
 #define __VCGLIB_MATRIX33_H
 
@@ -99,24 +30,11 @@ created
 
 namespace vcg {
 
-template <class S>
-class Matrix33Diag:public Point3<S>{
-public:
-
-    /** @name Matrix33
-    Class Matrix33Diag.
-    This is the class for definition of a diagonal matrix 3x3.
-    @param S (Templete Parameter) Specifies the ScalarType field.
-*/
-    Matrix33Diag(const S & p0,const S & p1,const S & p2):Point3<S>(p0,p1,p2){};
-    Matrix33Diag(const  Point3<S>&p ):Point3<S>(p){};
-};
-
 template<class S>
 /** @name Matrix33
     Class Matrix33.
     This is the class for definition of a matrix 3x3.
-    @param S (Templete Parameter) Specifies the ScalarType field.
+    @param S (Template Parameter) Specifies the ScalarType field.
 */
 class Matrix33
 {
@@ -206,14 +124,6 @@ public:
         return *this;
     }
 
-    /// Modificatore somma per matrici 3x3
-    Matrix33 & operator += ( const Matrix33Diag<S>  &p )
-    {
-        a[0] += p[0];
-        a[4] += p[1];
-        a[8] += p[2];
-        return *this;
-    }
 
     /// Modificatore sottrazione per matrici 3x3
     Matrix33 & operator -= ( const Matrix33 &m )
@@ -223,16 +133,7 @@ public:
         return *this;
     }
 
-    /// Modificatore somma per matrici 3x3
-    Matrix33 & operator -= ( const Matrix33Diag<S>  &p )
-    {
-        a[0] -= p[0];
-        a[4] -= p[1];
-        a[8] -= p[2];
-        return *this;
-    }
-
-    /// Modificatore divisione per scalare
+     /// Modificatore divisione per scalare
     Matrix33 & operator /= ( const S &s )
     {
         for(int i=0;i<9;++i)
@@ -265,30 +166,6 @@ public:
                 for(i=0;i<9;++i) this->a[i] = r.a[i];
     }
 
-    /// Dot product with a diagonal matrix
-    Matrix33 operator * ( const Matrix33Diag< S> & t ) const
-    {
-        Matrix33<S> r;
-
-        int i,j;
-        for(i=0;i<3;++i)
-            for(j=0;j<3;++j)
-                    r[i][j] = (*this)[i][j]*t[j];
-
-        return r;
-    }
-
-        /// Dot product modifier with a diagonal matrix
-    void operator *=( const Matrix33Diag< S> & t )
-    {
-            Matrix33<S> r;
-        int i,j;
-        for(i=0;i<3;++i)
-            for(j=0;j<3;++j)
-                                        r[i][j] = (*this)[i][j]*t[j];
-                for(i=0;i<9;++i) this->a[i] = r.a[i];
-        }
-
     /// Modificatore prodotto per costante
     Matrix33 & operator *= ( const S t )
     {
@@ -316,17 +193,6 @@ public:
 
         return r;
     }
-
-    /// Operatore sottrazione di matrici 3x3 con matrici diagonali
-    Matrix33  operator - ( const Matrix33Diag<S>  &p ) const
-    {
-        Matrix33<S> r=a;
-        r[0][0] -= p[0];
-        r[1][1] -= p[1];
-        r[2][2] -= p[2];
-        return r;
-    }
-
     /// Operatore sottrazione per matrici 3x3
     Matrix33  operator + ( const Matrix33 &m ) const
     {
@@ -336,17 +202,6 @@ public:
 
         return r;
     }
-
-    /// Operatore addizione di matrici 3x3 con matrici diagonali
-    Matrix33  operator + ( const Matrix33Diag<S>  &p ) const
-    {
-        Matrix33<S> r=(*this);
-        r[0][0] += p[0];
-        r[1][1] += p[1];
-        r[2][2] += p[2];
-        return r;
-    }
-
     /** Operatore per il prodotto matrice-vettore.
         @param v A point in $R^{3}$
         @return Il vettore risultante in $R^{3}$
@@ -484,42 +339,6 @@ public:
         return a[0]*(a[4]*a[8]-a[5]*a[7]) -
                  a[1]*(a[3]*a[8]-a[5]*a[6]) +
                      a[2]*(a[3]*a[7]-a[4]*a[6]) ;
-    }
-
-  // Warning, this Inversion code can be HIGHLY NUMERICALLY UNSTABLE!
-  // In most case you are advised to use the Invert() method based on SVD decomposition.
-
-    Matrix33 & FastInvert()
-    {
-            // Maple produsse:
-        S t4  = a[0]*a[4];
-        S t6  = a[0]*a[5];
-        S t8  = a[1]*a[3];
-        S t10 = a[2]*a[3];
-        S t12 = a[1]*a[6];
-        S t14 = a[2]*a[6];
-        S t17 = 1/(t4*a[8]-t6*a[7]-t8*a[8]+t10*a[7]+t12*a[5]-t14*a[4]);
-        S a0  = a[0];
-        S a1  = a[1];
-        S a3  = a[3];
-        S a4  = a[4];
-        a[0]  =  (a[4]*a[8]-a[5]*a[7])*t17;
-        a[1]  = -(a[1]*a[8]-a[2]*a[7])*t17;
-        a[2]  =  (a1  *a[5]-a[2]*a[4])*t17;
-        a[3]  = -(a[3]*a[8]-a[5]*a[6])*t17;
-        a[4]  =  (a0  *a[8]-t14      )*t17;
-        a[5]  = -(t6 - t10)*t17;
-        a[6]  =  (a3  *a[7]-a[4]*a[6])*t17;
-        a[7]  = -(a[0]*a[7]-t12)*t17;
-        a[8]  =  (t4-t8)*t17;
-
-        return *this;
-    }
-
-  void show(FILE * /*fp*/)
-    {
-        for(int i=0;i<3;++i)
-            printf("| %g \t%g \t%g |\n",a[3*i+0],a[3*i+1],a[3*i+2]);
     }
 
 // return the Trace of the matrix i.e. the sum of the diagonal elements
@@ -663,27 +482,14 @@ vcg::Matrix33<S> TransformationMatrix(const vcg::Point3<S> dirX,
     /////then find the inverse
     return (Trans);
 }
-
-template <class S>
-void 	 Invert(Matrix33<S> &m)
-    {
-        Matrix33<S> v;
-        Point3<typename Matrix33<S>::ScalarType> e;
-        SingularValueDecomposition(m,&e[0],v);
-        e[0]=1/e[0];e[1]=1/e[1];e[2]=1/e[2];
-        m.Transpose();
-        m = v * Matrix33Diag<S>(e) * m;
-    }
-
 template <class S>
 Matrix33<S> Inverse(const Matrix33<S>&m)
     {
-        Matrix33<S> v,m_copy=m;
-        Point3<S> e;
-        SingularValueDecomposition(m_copy,&e[0],v);
-        m_copy.Transpose();
-        e[0]=1/e[0];e[1]=1/e[1];e[2]=1/e[2];
-        return v * Matrix33Diag<S>(e) * m_copy;
+  Eigen::Matrix3d mm,mmi;
+  m.ToEigenMatrix(mm);
+  mmi=mm.inverse();
+  Matrix33<S> res;
+  res.FromEigenMatrix(mmi);
     }
 
 ///given 2 vector centered into origin calculate the rotation matrix from first to the second

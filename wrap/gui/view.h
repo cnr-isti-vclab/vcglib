@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -98,7 +98,7 @@ y is upward!
 
 namespace vcg {
 /**
-This class represent the viewing parameters under opengl. 
+This class represent the viewing parameters under opengl.
 Mainly it stores the projection and modelview matrix and the viewport
 and it is used to simply project back and forth points, computing line of sight, planes etc.
 
@@ -119,21 +119,21 @@ public:
 
   /// Return the line of view passing through point P.
   Line3<T> ViewLineFromModel(const Point3<T> &p);
-  
+
   /// Return the line passing through the point p and the observer.
   Line3<T> ViewLineFromWindow(const Point3<T> &p);
-  
+
   /// Convert coordinates from the range -1..1 of Normalized Device Coords to range 0 viewport[2]
   Point3<T> NormDevCoordToWindowCoord(const Point3<T> &p) const;
-  
+
   /// Convert coordinates from 0--viewport[2] to the range -1..1 of Normalized Device Coords to
   Point3<T> WindowCoordToNormDevCoord(const Point3<T> &p) const;
 
   Matrix44<T> proj;
   Matrix44<T> model;
   Matrix44<T> matrix;
-  Matrix44<T> inverse;  
-  int viewport[4];    
+  Matrix44<T> inverse;
+  int viewport[4];
 };
 
 template <class T> void View<T>::GetView() {
@@ -142,8 +142,7 @@ template <class T> void View<T>::GetView() {
 	glGetIntegerv(GL_VIEWPORT, (GLint*)viewport);
 
 	matrix = proj*model;
-	inverse = matrix;
-	Invert(inverse);
+	inverse = vcg::Inverse(matrix);
 }
 
 template <class T> void View<T>::SetView(const float *_proj,
@@ -162,16 +161,13 @@ template <class T> void View<T>::SetView(const float *_proj,
 }
 
 template <class T> Point3<T> View<T>::ViewPoint() const {
-  Matrix44<T> mi=model;
-  Invert(mi);
-  return mi* Point3<T>(0, 0, 0);
+  return vcg::Inverse(model)* Point3<T>(0, 0, 0);
 }
 // Note that p it is assumed to be in model coordinate.
 template <class T> Plane3<T> View<T>::ViewPlaneFromModel(const Point3<T> &p)
 {
   //compute normal, pointing away from view.
-  Matrix44<T> imodel = model;
-  Invert(imodel);
+  Matrix44<T> imodel = vcg::Inverse(model);
   Point3<T> vp=ViewPoint();
   vcg::Point3f n = imodel * vcg::Point3<T>(0.0f, 0, -1.0f) - vp;
 
@@ -214,14 +210,14 @@ template <class T> Point3<T> View<T>::UnProject(const Point3<T> &p) const {
 }
 
 // Come spiegato nelle glspec
-// dopo la perspective division le coordinate sono dette normalized device coords ( NDC ). 
+// dopo la perspective division le coordinate sono dette normalized device coords ( NDC ).
 // Per passare alle window coords si deve fare la viewport transformation.
 // Le coordinate di viewport stanno tra -1 e 1
 
 template <class T> Point3<T> View<T>::NormDevCoordToWindowCoord(const Point3<T> &p) const {
   Point3<T> a;
   a[0] = (p[0]+1)*(viewport[2]/(T)2.0)+viewport[0];
-	a[1] = (p[1]+1)*(viewport[3]/(T)2.0)+viewport[1];
+    a[1] = (p[1]+1)*(viewport[3]/(T)2.0)+viewport[1];
   //a[1] = viewport[3] - a[1];
   a[2] = (p[2]+1)/2;
   return a;
@@ -231,9 +227,9 @@ template <class T> Point3<T> View<T>::NormDevCoordToWindowCoord(const Point3<T> 
 template <class T> Point3<T> View<T>::WindowCoordToNormDevCoord(const Point3<T> &p) const {
   Point3<T> a;
   a[0] = (p[0]- viewport[0])/ (viewport[2]/(T)2.0) - 1;
-	a[1] = (p[1]- viewport[1])/ (viewport[3]/(T)2.0) - 1;
+    a[1] = (p[1]- viewport[1])/ (viewport[3]/(T)2.0) - 1;
   //a[1] = -a[1];
-	a[2] = 2*p[2] - 1;
+    a[2] = 2*p[2] - 1;
   return a;
 }
 
