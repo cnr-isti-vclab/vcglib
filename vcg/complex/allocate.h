@@ -600,12 +600,14 @@ namespace tri {
 					  assert(!m.vert[i].IsD());
 					  m.vert[ pu.remap [i] ].ImportData(m.vert[i]);
 					  if(HasVFAdjacency(m))
+					  {
 						if (m.vert[i].IsVFInitialized())
 						{
 						  m.vert[ pu.remap[i] ].VFp() = m.vert[i].cVFp();
 						  m.vert[ pu.remap[i] ].VFi() = m.vert[i].cVFi();
 						}
 						else m.vert [ pu.remap[i] ].VFClear();
+					  }
 					}
 				  }
 
