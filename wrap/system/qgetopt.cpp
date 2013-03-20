@@ -245,7 +245,7 @@ bool GetOpt::parse(QString &error) {
         return false;
       }
       Option o;
-      if(!findOption(arg[1].toAscii(), o)) {
+      if(!findOption(arg[1].toLatin1(), o)) {
          error = "Unknown option: '" + arg + "'";
         return false;
       }
