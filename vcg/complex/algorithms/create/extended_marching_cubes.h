@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -30,8 +30,6 @@
 #include <assert.h>
 #include <vector>
 #include <vcg/math/base.h>
-#include <vcg/math/matrix.h>
-#include <vcg/math/lin_algebra.h>
 #include <vcg/simplex/face/topology.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/topology.h>
@@ -39,6 +37,7 @@
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/space/point3.h>
 #include "emc_lookup_table.h"
+#include <eigenlib/Eigen/SVD>
 
 namespace vcg
 {
@@ -50,23 +49,23 @@ namespace vcg
 
 			/*
 		* Cube description:
-		*         3 ________ 2           _____2__     
-		*         /|       /|         / |       /|    
-		*       /  |     /  |      11/  3   10/  |    
-		*   7 /_______ /    |      /__6_|__ /    |1   
-		*    |     |  |6    |     |     |     |    
-		*    |    0|__|_____|1    |     |__|_0|__|    
-		*    |    /   |    /      7   8/   5    /     
-		*    |  /     |  /        |  /     |  /9      
-		*    |/_______|/          |/___4___|/         
-		*   4          5                  
+		*         3 ________ 2           _____2__
+		*         /|       /|         / |       /|
+		*       /  |     /  |      11/  3   10/  |
+		*   7 /_______ /    |      /__6_|__ /    |1
+		*    |     |  |6    |     |     |     |
+		*    |    0|__|_____|1    |     |__|_0|__|
+		*    |    /   |    /      7   8/   5    /
+		*    |  /     |  /        |  /     |  /9
+		*    |/_______|/          |/___4___|/
+		*   4          5
 		*/
 
 		//! This class implements the Extended Marching Cubes algorithm.
 		/*!
-		*	The implementation is enough generic: this class works only on one volume cell for each 
+		*	The implementation is enough generic: this class works only on one volume cell for each
 		*	call to <CODE>ProcessCell</CODE>. Using the field value at the cell corners, it adds to the
-		*	mesh the triangles set approximating the surface that cross that cell. 
+		*	mesh the triangles set approximating the surface that cross that cell.
 		*	@param TRIMESH_TYPE (Template parameter) the mesh type that will be constructed
 		*	@param WALKER_TYPE	(Template parameter) the class that implements the traversal ordering of the volume.
 		**/
@@ -82,7 +81,7 @@ namespace vcg
 #else
 			typedef _W64 unsigned int   size_t;
 #endif
-#endif 
+#endif
 			typedef typename vcg::tri::Allocator< TRIMESH_TYPE > AllocatorType;
 			typedef typename TRIMESH_TYPE::ScalarType			ScalarType;
 			typedef typename TRIMESH_TYPE::VertexType			VertexType;
@@ -94,11 +93,11 @@ namespace vcg
 			typedef typename TRIMESH_TYPE::CoordType			CoordType;
 			typedef typename TRIMESH_TYPE::CoordType*			CoordPointer;
 
-      struct LightEdge
+	  struct LightEdge
 			{
-        LightEdge(size_t _face, size_t _edge):face(_face), edge(_edge) { }
+		LightEdge(size_t _face, size_t _edge):face(_face), edge(_edge) { }
 				size_t face, edge;
-      };
+	  };
 
 			/*!
 			*	Constructor
@@ -116,7 +115,7 @@ namespace vcg
 			};
 
 			/*!
-			*	Execute the initialiazation. 
+			*	Execute the initialiazation.
 			*	This method must be executed before the first call to <CODE>ApplyEMC</CODE>
 			*/
 			void Initialize()
@@ -127,13 +126,13 @@ namespace vcg
 			};
 
 			/*!
-			*	
+			*
 			*	This method must be executed after the last call to <CODE>ApplyEMC</CODE>
 			*/
 			void Finalize()
 			{
 				assert(_initialized && !_finalized);
-        FlipEdges();
+		FlipEdges();
 
 				VertexIterator v_iter = _mesh->vert.begin();
 				VertexIterator v_end	= _mesh->vert.end();
@@ -210,7 +209,7 @@ namespace vcg
 					for (n=0; n<vertices_num; ++n)
 						vertices_list.push_back( vertices_idx[ indices[n] ] );
 
-          VertexPointer feature = FindFeature( vertices_list );
+		  VertexPointer feature = FindFeature( vertices_list );
 					if (feature != NULL) // i.e. is a valid vertex
 					{
 						// feature -> create triangle fan around feature vertex
@@ -288,24 +287,24 @@ namespace vcg
 
 				CoordType *points		= new CoordType[ vertices_num ];
 				CoordType *normals	= new CoordType[ vertices_num ];
-        Box3<ScalarType> bb;
+		Box3<ScalarType> bb;
 				for (i=0; i<vertices_num; i++)
 				{
 					points[i]		= _mesh->vert[ vertices_idx[i] ].P();
-                    normals[i].Import(_mesh->vert[ vertices_idx[i] ].N());
-         bb.Add(points[i]);
+					normals[i].Import(_mesh->vert[ vertices_idx[i] ].N());
+		 bb.Add(points[i]);
 				}
 
 				// move barycenter of points into (0, 0, 0)
 				CoordType center((ScalarType) 0.0, (ScalarType) 0.0, (ScalarType) 0.0);
-				for (i=0; i<vertices_num; ++i)  
+				for (i=0; i<vertices_num; ++i)
 					center += points[i];
 				center /= (ScalarType) vertices_num;
-				for (i=0; i<vertices_num; ++i)  
+				for (i=0; i<vertices_num; ++i)
 					points[i] -= center;
 
 				// normal angle criterion
-				double c, minC, maxC; 
+				double c, minC, maxC;
 				CoordType axis;
 				for (minC=1.0, i=0; i<vertices_num-1; ++i)
 				{
@@ -320,7 +319,7 @@ namespace vcg
 					}
 				} //end for (minC=1.0, i=0; i<vertNumber; ++i)
 
-				if (minC > cos(_featureAngle)) 
+				if (minC > cos(_featureAngle))
 					return NULL;  // invalid vertex
 
 				// ok, we have a feature: is it edge or corner, i.e. rank 2 or 3 ?
@@ -331,62 +330,75 @@ namespace vcg
 					if (c < minC)  minC = c;
 					if (c > maxC)  maxC = c;
 				}
-        c = std::max< double >(fabs(minC), fabs(maxC));
+				c = std::max< double >(fabs(minC), fabs(maxC));
 				c = sqrt(1.0-c*c);
 				rank = (c > cos(_featureAngle) ? 2 : 3);
 
 				// setup linear system (find intersection of tangent planes)
-				vcg::ndim::Matrix<double>  A((unsigned int) vertices_num, 3);
-				double *b = new double[ vertices_num ];
+				//--vcg::ndim::Matrix<double>  A((unsigned int) vertices_num, 3);
+				Eigen::MatrixXd A(vertices_num,3);
+
+				//--double *b = new double[ vertices_num ];
+				Eigen::MatrixXd b(vertices_num,1);
+
 				for (i=0; i<vertices_num; ++i)
 				{
-					A[i][0] =  normals[i][0];
-					A[i][1] =  normals[i][1];
-					A[i][2] =  normals[i][2];
-					b[i]		=  (points[i] * normals[i]);
+				  //--A[i][0] =  normals[i][0];
+				  //--A[i][1] =  normals[i][1];
+				  //--A[i][2] =  normals[i][2];
+				  //--b[i]		=  (points[i] * normals[i]);
+				  A(i,0) =  normals[i][0];
+				  A(i,0) =  normals[i][1];
+				  A(i,0) =  normals[i][2];
+				  b(i)		=  (points[i] * normals[i]);
 				}
 
 				// SVD of matrix A
-				vcg::ndim::Matrix<double>  V(3, 3);
-				double *w = new double[vertices_num];
-				vcg::SingularValueDecomposition< typename vcg::ndim::Matrix<double> > (A, w, V, LeaveUnsorted, 100);
+				Eigen::JacobiSVD<Eigen::MatrixXd> svd(A);
+				Eigen::MatrixXd sol(3,1);
+				sol=svd.solve(b);
+
+				// vcg::ndim::Matrix<double>  V(3, 3);
+				// double *w = new double[vertices_num];
+				// vcg::SingularValueDecomposition< typename vcg::ndim::Matrix<double> > (A, w, V, LeaveUnsorted, 100);
 
 				// rank == 2 -> suppress smallest singular value
-				if (rank == 2)
-				{
-					double        smin   = DBL_MAX; // the max value, as defined in <float.h>
-					unsigned int  sminid = 0;
-          unsigned int  srank  = std::min< unsigned int >(vertices_num, 3u);
+//				if (rank == 2)
+//				{
+//					double        smin   = DBL_MAX; // the max value, as defined in <float.h>
+//					unsigned int  sminid = 0;
+//		  unsigned int  srank  = std::min< unsigned int >(vertices_num, 3u);
 
-					for (i=0; i<srank; ++i)
-					{
-						if (w[i] < smin)
-						{
-							smin   = w[i];
-							sminid = i;
-						}
-					}
-					w[sminid] = 0.0;
-				}
-
-				// SVD backsubstitution -> least squares, least norm solution x
-				double *x = new double[3];
-				vcg::SingularValueBacksubstitution< vcg::ndim::Matrix<double> >(A, w, V, x, b);
+//					for (i=0; i<srank; ++i)
+//					{
+//						if (w[i] < smin)
+//						{
+//							smin   = w[i];
+//							sminid = i;
+//						}
+//					}
+//					w[sminid] = 0.0;
+//				}
+//
+//				// SVD backsubstitution -> least squares, least norm solution x
+//				double *x = new double[3];
+//				vcg::SingularValueBacksubstitution< vcg::ndim::Matrix<double> >(A, w, V, x, b);
 
 				// transform x to world coords
-				CoordType point((ScalarType) x[0], (ScalarType) x[1], (ScalarType) x[2]);
+				//--CoordType point((ScalarType) x[0], (ScalarType) x[1], (ScalarType) x[2]);
+				CoordType point((ScalarType) sol[0], (ScalarType) sol[1], (ScalarType) sol[2]);
 				point += center;
 
         // Safety check if the feature point found by svd is
         // out of the bbox of the vertices perhaps it is better to put it back in the center...
         if(!bb.IsIn(point)) point = center;
 
-				// insert the feature-point 
+				// insert the feature-point
 				VertexPointer mean_point = &*AllocatorType::AddVertices( *_mesh, 1);
 				mean_point->SetUserBit(_featureFlag);
 				mean_point->P() = point;
 				mean_point->N().SetZero();
-				delete []x;
+//				delete []x;
 				delete []points;
 				delete []normals;
 				return mean_point;
@@ -394,7 +406,7 @@ namespace vcg
 
 			/*!
 			*	Postprocessing step performed during the finalization tha flip some of the mesh edges.
-			*	The flipping criterion is quite simple: each edge is flipped if it will connect two 
+			*	The flipping criterion is quite simple: each edge is flipped if it will connect two
 			*	feature samples after the flip.
 			*/
 			void FlipEdges()
@@ -405,11 +417,11 @@ namespace vcg
 				FaceIterator f_end  = _mesh->face.end();
 				for (i=0; f_iter!=f_end; f_iter++, i++)
 				{
-          if (f_iter->V(1) > f_iter->V(0)) edges.push_back( LightEdge(i,0) );
-          if (f_iter->V(2) > f_iter->V(1)) edges.push_back( LightEdge(i,1) );
-          if (f_iter->V(0) > f_iter->V(2)) edges.push_back( LightEdge(i,2) );
+		  if (f_iter->V(1) > f_iter->V(0)) edges.push_back( LightEdge(i,0) );
+		  if (f_iter->V(2) > f_iter->V(1)) edges.push_back( LightEdge(i,1) );
+		  if (f_iter->V(0) > f_iter->V(2)) edges.push_back( LightEdge(i,2) );
 				}
-        vcg::tri::UpdateTopology< TRIMESH_TYPE >::FaceFace( *_mesh );
+		vcg::tri::UpdateTopology< TRIMESH_TYPE >::FaceFace( *_mesh );
 
         // Select all the triangles that has a vertex shared with a non manifold edge.
         int nonManifEdge = tri::Clean< TRIMESH_TYPE >::CountNonManifoldEdgeFF(*_mesh,true);
@@ -431,7 +443,7 @@ namespace vcg
 //          |     /  |
 //          |  /     |
 //          v0------v3
-          if (!(f->IsS()) && vcg::face::CheckFlipEdge< FaceType >(*f, z))
+		  if (!(f->IsS()) && vcg::face::CheckFlipEdge< FaceType >(*f, z))
 					{
 						VertexPointer v0, v1, v2, v3;
 						v0 = f->V(z);
@@ -441,12 +453,12 @@ namespace vcg
 						w = f->FFi(z);
 						v3 = g->V2(w);
 						bool b0, b1, b2, b3;
-            b0 = !v0->IsUserBit(_featureFlag) ;
-            b1 = !v1->IsUserBit(_featureFlag) ;
-            b2 =	v2->IsUserBit(_featureFlag) ;
-            b3 =	v3->IsUserBit(_featureFlag) ;
+			b0 = !v0->IsUserBit(_featureFlag) ;
+			b1 = !v1->IsUserBit(_featureFlag) ;
+			b2 =	v2->IsUserBit(_featureFlag) ;
+			b3 =	v3->IsUserBit(_featureFlag) ;
 						if( b0 && b1 && b2 && b3)
-                  vcg::face::FlipEdge< FaceType >(*f, z);
+				  vcg::face::FlipEdge< FaceType >(*f, z);
 
 					} // end if (vcg::face::CheckFlipEdge< _Face >(*f, z))
 				} // end for( ; e_it!=e_end; e_it++)
