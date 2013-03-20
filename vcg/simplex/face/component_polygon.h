@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -48,8 +48,8 @@ public:
 		inline const int &  VN() const { return _ns;}
 		inline int Prev(const int & i){ return (i+(VN()-1))%VN();}
 		inline int Next(const int & i){ return (i+1)%VN();}
-    inline void Alloc(const int & /*ns*/){}
-    inline void Dealloc(){}
+	inline void Alloc(const int & /*ns*/){}
+	inline void Dealloc(){}
 
 		// EmptyPFHAdj
 		typename T::HEdgePointer       &FHp(const int & )       { static typename T::HEdgePointer fp=0;  assert(0); return fp; }
@@ -59,7 +59,7 @@ private:
 	int _ns;
 };
 
-/*-------------------------- VERTEX ----------------------------------------*/ 
+/*-------------------------- VERTEX ----------------------------------------*/
 template <class T> class PEmptyFVAdj: public T {
 public:
 	typedef typename T::VertexType::CoordType CoordType;
@@ -71,23 +71,23 @@ public:
   inline       typename T::CoordType & P( const int /*j*/ ) 	    {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
   inline const typename T::CoordType & P( const int /*j*/ ) const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
   inline const typename T::CoordType &cP( const int /*j*/ ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
-	template <class LeftF>
-	void ImportData(const LeftF & leftF) {T::ImportData(leftF);}
-  	static bool HasFVAdjN()   { return false; }
-	static void Name(std::vector<std::string> & name){T::Name(name);}
+    template <class LeftF>
+    void ImportData(const LeftF & leftF) {T::ImportData(leftF);}
+    static bool HasFVAdjN()   { return false; }
+    static void Name(std::vector<std::string> & name){T::Name(name);}
   inline void Alloc(const int & /*ns*/){T::Alloc();}
-	inline void Dealloc(){T::Dealloc();}
+    inline void Dealloc(){T::Dealloc();}
 
 };
 template <class T> class PFVAdj: public T {
 public:
-	typedef typename  T::VertexType::CoordType CoordType;
- 	typedef typename  T::VertexType::ScalarType ScalarType;
- 	typedef typename  T::VertexType VertexType;
+    typedef typename  T::VertexType::CoordType CoordType;
+    typedef typename  T::VertexType::ScalarType ScalarType;
+    typedef typename  T::VertexType VertexType;
 
-	PFVAdj(){_vpoly = NULL;}
- 	inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<this->VN()); return  _vpoly[j]; }
-	inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<this->VN()); return  _vpoly[j]; }
+    PFVAdj(){_vpoly = NULL;}
+    inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<this->VN()); return  _vpoly[j]; }
+    inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<this->VN()); return  _vpoly[j]; }
     inline typename T::VertexType *        cV( const int j ) const { assert(j>=0 && j<this->VN());	return _vpoly[j]; }
 
 
@@ -105,49 +105,45 @@ public:
 	inline const  VertexType * const & cV2( const int j ) const { return cV((j+2)%this->VN());}
 
 	// Shortcut per accedere ai punti delle facce
-	inline        CoordType & P( const int j ) 	    {	assert(j>=0 && j<this->VN());		return _vpoly[j]->P();	}
-	inline const  CoordType & P( const int j ) const	{	assert(j>=0 && j<this->VN());		return _vpoly[j]->cP(); }
-	inline const  CoordType &cP( const int j ) const	{	assert(j>=0 && j<this->VN());		return _vpoly[j]->cP(); }
+	inline        CoordType &P( const int j ) 	    {	assert(j>=0 && j<this->VN());		return _vpoly[j]->P();	}
+	inline const  CoordType cP( const int j ) const	{	assert(j>=0 && j<this->VN());		return _vpoly[j]->cP(); }
 
 	/// Shortcut per accedere ai punti delle facce
-	inline        CoordType &  P0( const int j )       { return V(j)->P();}
-	inline        CoordType &  P1( const int j )       { return V((j+1)%this->VN())->P();}
-	inline        CoordType &  P2( const int j )       { return V((j+2)%this->VN())->P();}
-	inline const  CoordType &  P0( const int j ) const { return V(j)->P();}
-	inline const  CoordType &  P1( const int j ) const { return V((j+1)%this->VN())->P();}
-	inline const  CoordType &  P2( const int j ) const { return V((j+2)%this->VN())->P();}
-	inline const  CoordType & cP0( const int j ) const { return cV(j)->P();}
-	inline const  CoordType & cP1( const int j ) const { return cV((j+1)%this->VN())->P();}
-	inline const  CoordType & cP2( const int j ) const { return cV((j+2)%this->VN())->P();}
+	inline        CoordType & P0( const int j )       { return V(j)->P();}
+	inline        CoordType & P1( const int j )       { return V((j+1)%this->VN())->P();}
+	inline        CoordType & P2( const int j )       { return V((j+2)%this->VN())->P();}
+	inline const  CoordType  cP0( const int j ) const { return cV(j)->P();}
+	inline const  CoordType  cP1( const int j ) const { return cV((j+1)%this->VN())->P();}
+	inline const  CoordType  cP2( const int j ) const { return cV((j+2)%this->VN())->P();}
 
 	template <class LeftF>
 	void ImportData(const LeftF & leftF){  for(int i  =0; i < this->VN(); ++i) V(i) = NULL; T::ImportData(leftF);}
-	inline void Alloc(const int & ns) {		
+	inline void Alloc(const int & ns) {
 		if(_vpoly == NULL){this->SetVN(ns);
-			_vpoly = new   typename T::VertexType*[this->VN()]; 
+			_vpoly = new   typename T::VertexType*[this->VN()];
 				for(int i = 0; i < this->VN(); ++i) _vpoly[i] = 0;
 		}
 		T::Alloc(ns);
 	}
 	inline void Dealloc() {	if(_vpoly!=NULL){
-														delete [] _vpoly; 
+														delete [] _vpoly;
 														_vpoly = NULL;
 														}
 													T::Dealloc();
 	}
 
   static bool HasFVAdjacency()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("PFVAdj"));T::Name(name);}
+    static void Name(std::vector<std::string> & name){name.push_back(std::string("PFVAdj"));T::Name(name);}
 
   private:
-	typename T::VertexPointer *_vpoly;
+    typename T::VertexPointer *_vpoly;
 };
 
-/*----------------------------- PVFADJ ------------------------------*/ 
+/*----------------------------- PVFADJ ------------------------------*/
 template <class T> class EmptyPVFAdj: public T {
 public:
  typedef typename T::VertexType VertexType;
-	typedef int VFAdjType;
+    typedef int VFAdjType;
   typename T::FacePointer       &VFp(const int)       { static typename T::FacePointer fp=0;  assert(0); return fp; }
   typename T::FacePointer       cVFp(const int) const { return 0; }
   typename T::FacePointer       &FFp(const int)       { static typename T::FacePointer fp=0;  assert(0); return fp; }
@@ -184,17 +180,17 @@ public:
   typename T::FacePointer const  VFp(const int j) const  { assert(j>=0 && j<this->VN());  return _vfpP[j]; }
   typename T::FacePointer const cVFp(const int j) const  { assert(j>=0 && j<this->VN());  return _vfpP[j]; }
   char &VFi(const int j) {return _vfiP[j]; }
-	template <class LeftF>
-	void ImportData(const LeftF & leftF){T::ImportData(leftF);}
-	inline void Alloc(const int & ns) { 
-		if(_vfpP == NULL){
-			this->SetVN(ns);
-			_vfpP = new  FaceType*[this->VN()]; 
-			_vfiP = new  char[this->VN()];
+    template <class LeftF>
+    void ImportData(const LeftF & leftF){T::ImportData(leftF);}
+    inline void Alloc(const int & ns) {
+        if(_vfpP == NULL){
+            this->SetVN(ns);
+            _vfpP = new  FaceType*[this->VN()];
+            _vfiP = new  char[this->VN()];
       for(int i = 0; i < this->VN(); ++i) {_vfpP[i] = 0;_vfiP[i] = -1;}
-		}
-		T::Alloc(ns);
-													
+        }
+        T::Alloc(ns);
+
 	}
 	unsigned int SizeNeigh(){ return this->VN();}
 
@@ -210,32 +206,32 @@ public:
   static void Name(std::vector<std::string> & name){name.push_back(std::string("PVFAdj"));T::Name(name);}
 
 private:
-  typename T::FacePointer *_vfpP ;    
-  char *_vfiP ;    
+  typename T::FacePointer *_vfpP ;
+  char *_vfiP ;
 };
 
-/*----------------------------- FFADJ ------------------------------*/ 
+/*----------------------------- FFADJ ------------------------------*/
 
 template <class T> class PFFAdj: public T {
 public:
  typedef typename T::FaceType FaceType;
-	PFFAdj(){_ffpP = NULL; _ffiP = NULL; }
-	typename T::FacePointer       &FFp(const int j)        { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
+    PFFAdj(){_ffpP = NULL; _ffiP = NULL; }
+    typename T::FacePointer       &FFp(const int j)        { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
   typename T::FacePointer const  FFp(const int j) const  { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
   typename T::FacePointer const cFFp(const int j) const  { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
   char        &FFi(const int j)       { return _ffiP[j]; }
   const char &cFFi(const int j) const { return _ffiP[j]; }
-	
+
 	template <class LeftF>
 	void ImportData(const LeftF & leftF){T::ImportData(leftF);}
 	inline void Alloc(const int & ns) {
-		if( _ffpP == NULL){	
+		if( _ffpP == NULL){
 			this->SetVN(ns);
-			_ffpP = new  FaceType*[this->VN()]; 
+			_ffpP = new  FaceType*[this->VN()];
 			_ffiP = new  char[this->VN()];
 			for(int i = 0; i < this->VN(); ++i) {_ffpP[i] = 0;_ffiP[i] = 0;}
 		}
-		T::Alloc(ns);									
+		T::Alloc(ns);
 	}
 	inline void Dealloc() {	if(_ffpP!=NULL){
 														delete [] _ffpP; _ffpP = NULL;
@@ -249,29 +245,29 @@ public:
   static void Name(std::vector<std::string> & name){name.push_back(std::string("PFFAdj"));T::Name(name);}
 
 //private:
-  typename T::FacePointer *_ffpP ;    
-  char *_ffiP ;    
+  typename T::FacePointer *_ffpP ;
+  char *_ffiP ;
 };
 
-/*----------------------------- PFEADJ ------------------------------*/ 
+/*----------------------------- PFEADJ ------------------------------*/
 
 template <class T> class PFEAdj: public T {
 public:
  typedef typename T::EdgeType EdgeType;
-	PFEAdj(){_fepP = NULL;  }
-	typename T::EdgePointer       &FEp(const int j)        { assert(j>=0 && j<this->VN());  return _fepP[j]; }
+    PFEAdj(){_fepP = NULL;  }
+    typename T::EdgePointer       &FEp(const int j)        { assert(j>=0 && j<this->VN());  return _fepP[j]; }
   typename T::EdgePointer const  FEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
   typename T::EdgePointer const cFEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
-	
+
 	template <class LeftF>
 	void ImportData(const LeftF & leftF){T::ImportData(leftF);}
 	inline void Alloc(const int & ns) {
-	if( _fepP == NULL){	
+	if( _fepP == NULL){
 		this->SetVN(ns);
-		_fepP = new  EdgeType *[this->VN()]; 
+		_fepP = new  EdgeType *[this->VN()];
 		for(int i = 0; i < this->VN(); ++i) {_fepP[i] = 0;}
 	}
-		T::Alloc(ns);									
+		T::Alloc(ns);
 	}
 	inline void Dealloc() {	if(_fepP!=NULL) {delete [] _fepP; _fepP = NULL;} T::Dealloc();}
 
