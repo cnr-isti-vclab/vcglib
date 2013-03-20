@@ -29,7 +29,7 @@
 #include <QMap>
 #include <QVariant>
 
-/* Example usage: 
+/* Example usage:
 
   QString file1, file2;
   QString o_gamma = "10";
@@ -52,8 +52,17 @@ class GetOpt {
     QString name;
     QString description;
     QVariant *value;
-    bool *b;
+    QString *string_value;
+    double *double_value;
+    int *int_value;
+    bool *boolean_value;
+
+    Option(): value(NULL), string_value(NULL), double_value(NULL), int_value(NULL), boolean_value(NULL) {}
+    Option(Type _type, char _o, QString _name, QString _descr):
+        type(_type), o(_o), name(_name), description(_descr),
+        value(NULL), string_value(NULL), double_value(NULL), int_value(NULL), boolean_value(NULL) {}
   };
+
   bool unlimitedArgs;
   QList<Option> options;
 
@@ -72,13 +81,18 @@ class GetOpt {
 
   //add a valued option (v will be left untouched if the option is not given)
   void addOption(char s, const QString &longname, const QString &description, QVariant *v);
+  void addOption(char s, const QString &longname, const QString &description, QString *v);
+  void addOption(char s, const QString &longname, const QString &description, double *v);
+  void addOption(char s, const QString &longname, const QString &description, int *v);
+  void addOption(char s, const QString &longname, const QString &description, bool *v);
+
 
   //add an argument
   void addArgument(const QString &name, const QString &description, QVariant *v);
 
   //add an optional agrument
   void addOptionalArgument(const QString &name, const QString &description, QVariant *v);
- 
+
   //allow an unlimited number of optional arguments
   void allowUnlimitedArguments(bool allow) { unlimitedArgs = allow; }
 

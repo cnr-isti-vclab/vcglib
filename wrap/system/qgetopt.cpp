@@ -50,21 +50,21 @@ void GetOpt::addSwitch(char s, const QString &name, const QString &description, 
   option.o = s;
   option.name = name;
   option.description = description;
-  option.b = b;
+  option.boolean_value = b;
   options.push_back(option);
 }
 
   //add a valued option (v will be left untouched if the option is not given)
 void GetOpt::addOption(char s, const QString &name, const QString &description, QVariant *v ) {
-  Option option;
-  assert(!findOption(s, option));
-  assert(!findArg(name, option));
-  option.type = Option::OPTION;
-  option.o = s;
-  option.name = name;
-  option.description = description;
+  Option option(Option::OPTION, s, name, description);
   option.value = v;
+
+  assert(!findOption(s, option)); //TODO make this check systematic
+  assert(!findArg(name, option));
+
   options.push_back(option);
+
+
 }
   //add an argument
 void GetOpt::addArgument(const QString &name, const QString &description, QVariant *v) {
@@ -76,6 +76,28 @@ void GetOpt::addArgument(const QString &name, const QString &description, QVaria
   option.value = v;
   options.push_back(option);
 }
+
+void GetOpt::addOption(char s, const QString &longname, const QString &description, QString *v) {
+    Option option(Option::OPTION, s, longname, description);
+    option.string_value = v;
+    options.push_back(option);
+}
+void GetOpt::addOption(char s, const QString &longname, const QString &description, double *v) {
+    Option option(Option::OPTION, s, longname, description);
+    option.double_value = v;
+    options.push_back(option);
+}
+void GetOpt::addOption(char s, const QString &longname, const QString &description, int *v) {
+    Option option(Option::OPTION, s, longname, description);
+    option.int_value = v;
+    options.push_back(option);
+}
+void GetOpt::addOption(char s, const QString &longname, const QString &description, bool *v) {
+    Option option(Option::OPTION, s, longname, description);
+    option.boolean_value = v;
+    options.push_back(option);
+}
+
   //add an optional agrument
 void GetOpt::addOptionalArgument(const QString &name, const QString &description, QVariant *v) {
   Option option;
@@ -127,7 +149,7 @@ QString GetOpt::usage() {
     Option &o = options[i];
     int len = o.name.size() + 2;
     switch(o.type) {
-      case Option::ARGUMENT: 
+      case Option::ARGUMENT:
       case Option::OPTIONAL: break;
       case Option::SWITCH:   len += 5; break;
       case Option::OPTION:   len += 16; break;
@@ -149,7 +171,7 @@ QString GetOpt::usage() {
     QString blank = "";
     blank.resize(maxlen - line.size());
     blank.fill(' ');
-    line += blank + formatDesc(o.description, maxlen) + "\n"; 
+    line += blank + formatDesc(o.description, maxlen) + "\n";
     u += line;
   }
   return u;
@@ -183,7 +205,7 @@ bool GetOpt::parse(QString &error) {
         return false;
       }
       if(o.type == Option::SWITCH) {
-        *(o.b) = true;
+        *(o.boolean_value) = true;
       } else { //OPTION
         i++;
         if(args.size() <= i) {
@@ -195,13 +217,25 @@ bool GetOpt::parse(QString &error) {
           error = "Missing argument after option '" + arg + "'";
           return false;
         }
+        QVariant::Type type;
+        if(o.value) type = o.value->type();
+        if(o.string_value) type = QVariant::String;
+        if(o.double_value) type = QVariant::Double;
+        if(o.int_value) type = QVariant::Int;
+        if(o.boolean_value) type = QVariant::Bool;
         QVariant v(arg);
-        if(!v.canConvert(o.value->type()) || !v.convert(o.value->type())) {
+
+        if(!v.canConvert(type) || !v.convert(type)) {
           error = "Error while parsing option " + o.name + ": cannot convert " +
-                  arg + " to: " + o.value->typeName();
+                  arg + " to: " + v.typeName();
           return false;
         }
-        *(o.value) = v;
+        if(o.value)
+          *(o.value) = v;
+        if(o.string_value) *(o.string_value) = v.toString();
+        if(o.double_value) *(o.double_value) = v.toDouble();
+        if(o.int_value) *(o.int_value) = v.toInt();
+        if(o.boolean_value) *(o.boolean_value) = v.toBool();
       }
 
     //option
@@ -216,7 +250,7 @@ bool GetOpt::parse(QString &error) {
         return false;
       }
       if(o.type == Option::SWITCH) {
-        *(o.b) = true;
+        *(o.boolean_value) = true;
       } else { //OPTION
         i++;
         if(args.size() <= i) {
@@ -239,7 +273,7 @@ bool GetOpt::parse(QString &error) {
     //argument
     } else {
       arguments.push_back(arg);
-    } 
+    }
   }
   //test arguments
   for(int i = 0; i < options.size(); i++) {
