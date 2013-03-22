@@ -91,10 +91,6 @@ Edited Comments and GPL license
 #include <assert.h>
 #include <limits>
 
-/// static_assert: implemented as a macro for "assert", but it is separated for clarity.
-/// Should be used for checking integrity constraints that can be tested at complile time,
-/// as the ones involving templated constants in templated classes.
-#define static_assert assert
 
   #ifdef __BORLANDC__
     float sqrtf (float v) {return sqrt(v);}
@@ -114,7 +110,7 @@ namespace math {
  class MagnitudoComparer
     {
       public:
-	    inline bool operator() ( const SCALAR a, const SCALAR b ) { return fabs(a)>fabs(b);  }
+        inline bool operator() ( const SCALAR a, const SCALAR b ) { return fabs(a)>fabs(b);  }
     };
 
   inline float Sqrt(const short v)   { return sqrtf(v); }
@@ -136,7 +132,7 @@ namespace math {
   inline double Asin(const double v)   { return asin(v); }
   inline double Atan2(const double v0,const double v1)   { return atan2(v0,v1); }
 
-	template <typename T> inline static T Sqr(T a) { return a*a; }
+    template <typename T> inline static T Sqr(T a) { return a*a; }
 
   template<class T> inline const T & Min(const T &a, const T &b,const T &c){
     if (a<b) {
@@ -146,7 +142,7 @@ namespace math {
       if(b<c) return b;
       else return c;
       }
-	}
+    }
   template<class T> inline const T & Max(const T &a, const T &b, const T &c){
     if (a>b) {
       if(a>c) return a;
@@ -212,7 +208,7 @@ template<class T> int IsNAN(T t)
 
 /// a type that stands for "void". Useful for Parameter type of a point.
 class VoidType{ public:
-	VoidType(){};
+    VoidType(){};
 };
 
 }	// End vcg namespace
