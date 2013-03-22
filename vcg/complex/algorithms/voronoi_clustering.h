@@ -279,7 +279,23 @@ static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec, int
 		sources = tri::Allocator<MeshType>:: template AddPerVertexAttribute<VertexPointer> (m,"sources");
 		
 		tri::Geodesic<MeshType>::Compute(m,seedVec,std::numeric_limits<ScalarType>::max(),0,&sources);
-		
+
+		// Delete all the (hopefully) small regions that have not been reached by the seeds;
+		tri::UpdateFlags<MeshType>::VertexClearV(m);
+		for(int i=0;i<m.vert.size();++i)
+		  if(sources[i]==0) m.vert[i].SetV();
+
+		for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi)
+		  if(fi->V(0)->IsV() || fi->V(1)->IsV() || fi->V(2)->IsV() )
+		  {
+			face::VFDetach(*fi);
+			tri::Allocator<MeshType>::DeleteFace(m,*fi);
+		  }
+		qDebug("Deleted faces not reached: %i -> %i",int(m.face.size()),m.fn);
+		tri::Clean<MeshType>::RemoveUnreferencedVertex(m);
+		tri::Allocator<MeshType>::CompactFaceVector(m);
+		tri::Allocator<MeshType>::CompactVertexVector(m);
+
 		std::pair<float,VertexPointer> zz(0,0);
 		std::vector< std::pair<float,VertexPointer> > regionArea(m.vert.size(),zz);
 		std::vector<VertexPointer> borderVec;
@@ -305,7 +321,7 @@ static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec, int
 		std::vector< std::pair<float,VertexPointer> > seedMaxima(m.vert.size(),zz);
 		for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) 
 		{
-			int seedIndex = sources[vi] - &*m.vert.begin();
+			int seedIndex = tri::Index(m,sources[vi]);
 			if(seedMaxima[seedIndex].first < (*vi).Q()) 
 				{	
 					seedMaxima[seedIndex].first=(*vi).Q(); 
