@@ -348,13 +348,13 @@ namespace vcg
 				  //--A[i][2] =  normals[i][2];
 				  //--b[i]		=  (points[i] * normals[i]);
 				  A(i,0) =  normals[i][0];
-				  A(i,0) =  normals[i][1];
-				  A(i,0) =  normals[i][2];
+				  A(i,1) =  normals[i][1];
+				  A(i,2) =  normals[i][2];
 				  b(i)		=  (points[i] * normals[i]);
 				}
 
 				// SVD of matrix A
-				Eigen::JacobiSVD<Eigen::MatrixXd> svd(A);
+				Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 				Eigen::MatrixXd sol(3,1);
 				sol=svd.solve(b);
 
@@ -386,7 +386,7 @@ namespace vcg
 
 				// transform x to world coords
 				//--CoordType point((ScalarType) x[0], (ScalarType) x[1], (ScalarType) x[2]);
-				CoordType point((ScalarType) sol[0], (ScalarType) sol[1], (ScalarType) sol[2]);
+				CoordType point((ScalarType) sol(0), (ScalarType) sol(1), (ScalarType) sol(2));
 				point += center;
 
         // Safety check if the feature point found by svd is
@@ -411,58 +411,59 @@ namespace vcg
 			*/
 			void FlipEdges()
 			{
-				size_t i;
-				std::vector< LightEdge > edges;
-				FaceIterator f_iter = _mesh->face.begin();
-				FaceIterator f_end  = _mesh->face.end();
-				for (i=0; f_iter!=f_end; f_iter++, i++)
+			  std::vector< LightEdge > edges;
+			  for (FaceIterator fi = _mesh->face.begin(); fi!=_mesh->face.end(); fi++)
+			  {
+				size_t i = tri::Index(*_mesh,*fi);
+				if (fi->V(1) > fi->V(0)) edges.push_back( LightEdge(i,0) );
+				if (fi->V(2) > fi->V(1)) edges.push_back( LightEdge(i,1) );
+				if (fi->V(0) > fi->V(2)) edges.push_back( LightEdge(i,2) );
+			  }
+			  vcg::tri::UpdateTopology< TRIMESH_TYPE >::FaceFace( *_mesh );
+
+			  // Select all the triangles that has a vertex shared with a non manifold edge.
+			  int nonManifEdge = tri::Clean< TRIMESH_TYPE >::CountNonManifoldEdgeFF(*_mesh,true);
+			  if(nonManifEdge >0)
+				tri::UpdateSelection< TRIMESH_TYPE >::FaceFromVertexLoose(*_mesh);
+			  //qDebug("Got %i non manif edges",nonManifEdge);
+
+			  typename std::vector< LightEdge >::iterator e_it	= edges.begin();
+			  typename std::vector< LightEdge >::iterator e_end	= edges.end();
+
+			  FacePointer g, f;
+			  int			w, z;
+			  for( ; e_it!=e_end; e_it++)
+			  {
+				f = &_mesh->face[e_it->face];
+				z = (int) e_it->edge;
+
+				//          v2------v1    swap the diagonal only if v2 and v3 are feature and v0 and v1 are not.
+				//          |     /  |
+				//          |  /     |
+				//          v0------v3
+				if (!(f->IsS()) && vcg::face::CheckFlipEdge< FaceType >(*f, z))
 				{
-		  if (f_iter->V(1) > f_iter->V(0)) edges.push_back( LightEdge(i,0) );
-		  if (f_iter->V(2) > f_iter->V(1)) edges.push_back( LightEdge(i,1) );
-		  if (f_iter->V(0) > f_iter->V(2)) edges.push_back( LightEdge(i,2) );
-				}
-		vcg::tri::UpdateTopology< TRIMESH_TYPE >::FaceFace( *_mesh );
+				  VertexPointer v0, v1, v2, v3;
+				  v0 = f->V(z);
+				  v1 = f->V1(z);
+				  v2 = f->V2(z);
+				  g = f->FFp(z);
+				  w = f->FFi(z);
+				  v3 = g->V2(w);
+				  bool b0, b1, b2, b3;
+				  b0 = !v0->IsUserBit(_featureFlag) ;
+				  b1 = !v1->IsUserBit(_featureFlag) ;
+				  b2 =	v2->IsUserBit(_featureFlag) ;
+				  b3 =	v3->IsUserBit(_featureFlag) ;
+				  if( b0 && b1 && b2 && b3)
+					vcg::face::FlipEdge< FaceType >(*f, z);
 
-        // Select all the triangles that has a vertex shared with a non manifold edge.
-        int nonManifEdge = tri::Clean< TRIMESH_TYPE >::CountNonManifoldEdgeFF(*_mesh,true);
-        if(nonManifEdge >0)
-          tri::UpdateSelection< TRIMESH_TYPE >::FaceFromVertexLoose(*_mesh);
-        //qDebug("Got %i non manif edges",nonManifEdge);
+				} // end if (vcg::face::CheckFlipEdge< _Face >(*f, z))
+			  } // end for( ; e_it!=e_end; e_it++)
 
-				typename std::vector< LightEdge >::iterator e_it		= edges.begin();
-				typename std::vector< LightEdge >::iterator e_end	= edges.end();
+			} //end of FlipEdges
 
-				FacePointer g, f;
-				int			w, z;
-				for( ; e_it!=e_end; e_it++)
-				{
-					f = &_mesh->face[e_it->face];
-					z = (int) e_it->edge;
 
-//          v2------v1    swap the diagonal only if v2 and v3 are feature and v0 and v1 are not.
-//          |     /  |
-//          |  /     |
-//          v0------v3
-		  if (!(f->IsS()) && vcg::face::CheckFlipEdge< FaceType >(*f, z))
-					{
-						VertexPointer v0, v1, v2, v3;
-						v0 = f->V(z);
-						v1 = f->V1(z);
-						v2 = f->V2(z);
-						g = f->FFp(z);
-						w = f->FFi(z);
-						v3 = g->V2(w);
-						bool b0, b1, b2, b3;
-			b0 = !v0->IsUserBit(_featureFlag) ;
-			b1 = !v1->IsUserBit(_featureFlag) ;
-			b2 =	v2->IsUserBit(_featureFlag) ;
-			b3 =	v3->IsUserBit(_featureFlag) ;
-						if( b0 && b1 && b2 && b3)
-				  vcg::face::FlipEdge< FaceType >(*f, z);
-
-					} // end if (vcg::face::CheckFlipEdge< _Face >(*f, z))
-				} // end for( ; e_it!=e_end; e_it++)
-			}; //end of FlipEdges
 		}; // end of class ExtendedMarchingCubes
 		//	/*! @} */
 		// end of Doxygen documentation

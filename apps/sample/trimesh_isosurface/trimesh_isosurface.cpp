@@ -36,9 +36,9 @@ class MyFace;
 class MyVertex;
 
 struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
-																				Use<MyFace>			::AsFaceType>{};
+                                                                                Use<MyFace>			::AsFaceType>{};
 
-class MyVertex     : public Vertex< MyUsedTypes, vertex::Coord3f>{};
+class MyVertex     : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags>{};
 class MyFace       : public Face< MyUsedTypes, face::VertexRef, face::BitFlags> {};
 
 class MyMesh		: public vcg::tri::TriMesh< std::vector< MyVertex>, std::vector< MyFace > > {};
@@ -49,15 +49,15 @@ typedef SimpleVolume<SimpleVoxel> MyVolume;
 
 int main(int /*argc*/ , char **/*argv*/)
 {
-	MyVolume	volume;
-  
+    MyVolume	volume;
+
   typedef vcg::tri::TrivialWalker<MyMesh,MyVolume>	MyWalker;
-	typedef vcg::tri::MarchingCubes<MyMesh, MyWalker>	MyMarchingCubes;
-	MyWalker walker;
-	
+    typedef vcg::tri::MarchingCubes<MyMesh, MyWalker>	MyMarchingCubes;
+    MyWalker walker;
+
 
   // Simple initialization of the volume with some cool perlin noise
-	volume.Init(Point3i(64,64,64));
+    volume.Init(Point3i(64,64,64));
   for(int i=0;i<64;i++)
     for(int j=0;j<64;j++)
       for(int k=0;k<64;k++)

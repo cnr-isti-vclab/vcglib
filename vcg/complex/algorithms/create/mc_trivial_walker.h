@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -26,7 +26,7 @@
 
 namespace vcg {
 
-// Very simple volume class. 
+// Very simple volume class.
 // just an example of the interface that the trivial walker expects
 
 template <class VOX_TYPE>
@@ -35,11 +35,11 @@ class SimpleVolume
 public:
   typedef VOX_TYPE VoxelType;
   std::vector<VoxelType> Vol;
-  
+
   Point3i sz;   /// Dimensioni griglia come numero di celle per lato
-  
-  const Point3i &ISize() {return sz;};   /// Dimensioni griglia come numero di celle per lato
- 	
+
+  const Point3i &ISize() {return sz;}   /// Dimensioni griglia come numero di celle per lato
+
   void Init(Point3i _sz)
   {
     sz=_sz;
@@ -47,39 +47,45 @@ public:
   }
 
   float Val(const int &x,const int &y,const int &z) const {
-      return cV(x,y,z).V(); 
-    //else return numeric_limits<float>::quiet_NaN( ); 
+      return cV(x,y,z).V();
+    //else return numeric_limits<float>::quiet_NaN( );
   }
 
   float &Val(const int &x,const int &y,const int &z) {
-      return V(x,y,z).V(); 
-    //else return numeric_limits<float>::quiet_NaN( ); 
+      return V(x,y,z).V();
+    //else return numeric_limits<float>::quiet_NaN( );
   }
 
 	VOX_TYPE &V(const int &x,const int &y,const int &z) {
-		return Vol[x+y*sz[0]+z*sz[0]*sz[1]]; 
+		return Vol[x+y*sz[0]+z*sz[0]*sz[1]];
+	}
+
+	VOX_TYPE &V(const Point3i &pi) {
+		return Vol[ pi[0] + pi[1]*sz[0] + pi[2]*sz[0]*sz[1] ];
 	}
 
 	const VOX_TYPE &cV(const int &x,const int &y,const int &z) const {
-		return Vol[x+y*sz[0]+z*sz[0]*sz[1]]; 
+		return Vol[x+y*sz[0]+z*sz[0]*sz[1]];
 	}
 
 
-typedef enum { XAxis=0,YAxis=1,ZAxis=2} VolumeAxis;
+	typedef enum { XAxis=0,YAxis=1,ZAxis=2} VolumeAxis;
 
-template < class VertexPointerType,  VolumeAxis AxisVal >
-  void GetIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointerType &v, const float thr)
-{
-			float f1 = Val(p1.X(), p1.Y(), p1.Z())-thr;
-			float f2 = Val(p2.X(), p2.Y(), p2.Z())-thr;
-			float u = (float) f1/(f1-f2);
-			if(AxisVal==XAxis) v->P().X() = (float) p1.X()*(1-u) + u*p2.X();
-                    else v->P().X() = (float) p1.X();
-			if(AxisVal==YAxis) v->P().Y() = (float) p1.Y()*(1-u) + u*p2.Y();
-			              else v->P().Y() = (float) p1.Y();
-			if(AxisVal==ZAxis) v->P().Z() = (float) p1.Z()*(1-u) + u*p2.Z();
-			              else v->P().Z() = (float) p1.Z();
-}
+	template < class VertexPointerType,  VolumeAxis AxisVal >
+	void GetIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointerType &v, const float thr)
+	{
+	  float f1 = V(p1).V()-thr;
+	  float f2 = V(p2).V()-thr;
+	  float u = (float) f1/(f1-f2);
+	  if(AxisVal==XAxis) v->P().X() = (float) p1.X()*(1-u) + u*p2.X();
+					else v->P().X() = (float) p1.X();
+	  if(AxisVal==YAxis) v->P().Y() = (float) p1.Y()*(1-u) + u*p2.Y();
+					else v->P().Y() = (float) p1.Y();
+	  if(AxisVal==ZAxis) v->P().Z() = (float) p1.Z()*(1-u) + u*p2.Z();
+					else v->P().Z() = (float) p1.Z();
+
+	  if(VoxelType::HasNormal()) v->N() = V(p1).N()*(1-u) + V(p2).N()*u;
+	}
 
 template < class VertexPointerType >
   void GetXIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointerType &v, const float thr)
@@ -93,32 +99,31 @@ template < class VertexPointerType >
   void GetZIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointerType &v, const float thr)
 { GetIntercept<VertexPointerType,ZAxis>(p1,p2,v,thr); }
 };
-template <class VolumeType>
-class RawVolumeImporter
-{
-public:
-  enum DataType
-{
-		// Funzioni superiori
-  UNDEF=0,
-  BYTE=1,
-  SHORT=2,
-  FLOAT=3
-};
-
-static bool Open(const char *filename, VolumeType &V, Point3i sz, DataType d)
-{
-return true;
-}
-};
 
 class SimpleVoxel
 {
 private:
   float _v;
 public:
-  float &V() {return _v;};
-  float V() const {return _v;};
+  float &V() {return _v;}
+  float V() const {return _v;}
+  static bool HasNormal() {return false;}
+  vcg::Point3f N() const {return Point3f(0,0,0);}
+  vcg::Point3f &N()  { static Point3f _p(0,0,0); return _p;}
+};
+
+class SimpleVoxelWithNormal
+{
+private:
+  float _v;
+  vcg::Point3f _n;
+public:
+  float &V() {return _v;}
+  float V() const {return _v;}
+  vcg::Point3f &N() {return _n;}
+  vcg::Point3f N() const {return _n;}
+  static bool HasNormal() {return true;}
+
 };
 
 
@@ -126,21 +131,21 @@ namespace tri {
 
 
 // La classe Walker implementa la politica di visita del volume; conoscendo l'ordine di visita del volume
-// Ë conveniente che il Walker stesso si faccia carico del caching dei dati utilizzati durante l'esecuzione 
+// Ë conveniente che il Walker stesso si faccia carico del caching dei dati utilizzati durante l'esecuzione
 // degli algoritmi MarchingCubes ed ExtendedMarchingCubes, in particolare il calcolo del volume ai vertici
 // delle celle e delle intersezioni della superficie con le celle. In questo esempio il volume da processare
 // viene suddiviso in fette; in questo modo se il volume ha dimensione h*l*w (rispettivamente altezza,
 // larghezza e profondit‡), lo spazio richiesto per il caching dei vertici gi‡ allocati passa da O(h*l*w)
-// a O(h*l). 
+// a O(h*l).
 
 template <class MeshType, class VolumeType>
 class TrivialWalker
 {
 private:
-	typedef int VertexIndex;
+    typedef int VertexIndex;
   typedef typename MeshType::ScalarType ScalarType;
   typedef typename MeshType::VertexPointer VertexPointer;
-	public:
+    public:
 
   // bbox is the portion of the volume to be computed
   // resolution determine the sampling step:
@@ -148,37 +153,37 @@ private:
 
 
   void Init(VolumeType &volume)
-	{
-		_bbox				= Box3i(Point3i(0,0,0),volume.ISize());
-		_slice_dimension = _bbox.DimX()*_bbox.DimZ();
+    {
+        _bbox				= Box3i(Point3i(0,0,0),volume.ISize());
+        _slice_dimension = _bbox.DimX()*_bbox.DimZ();
 
 		_x_cs = new VertexIndex[ _slice_dimension ];
 		_y_cs = new VertexIndex[ _slice_dimension ];
 		_z_cs = new VertexIndex[ _slice_dimension ];
 		_x_ns = new VertexIndex[ _slice_dimension ];
 		_z_ns = new VertexIndex[ _slice_dimension ];
-	
+
 	};
 
 	~TrivialWalker()
 	{_thr=0;}
-  
-	template<class EXTRACTOR_TYPE>
+
+    template<class EXTRACTOR_TYPE>
   void BuildMesh(MeshType &mesh, VolumeType &volume, EXTRACTOR_TYPE &extractor, const float threshold, vcg::CallBackPos * cb=0)
-	{
+    {
     Init(volume);
-		_volume = &volume;
-		_mesh		= &mesh;
-		_mesh->Clear();
+        _volume = &volume;
+        _mesh		= &mesh;
+        _mesh->Clear();
     _thr=threshold;
-		vcg::Point3i p1, p2;
+        vcg::Point3i p1, p2;
 
 		Begin();
 		extractor.Initialize();
 		for (int j=_bbox.min.Y(); j<(_bbox.max.Y()-1)-1; j+=1)
-    {
+	{
 
-      if(cb && ((j%10)==0) ) 	cb(j*_bbox.DimY()/100.0,"Marching volume");
+	  if(cb && ((j%10)==0) ) 	cb(j*_bbox.DimY()/100.0,"Marching volume");
 
 			for (int i=_bbox.min.X(); i<(_bbox.max.X()-1)-1; i+=1)
 			{
@@ -186,7 +191,7 @@ private:
 				{
 					p1.X()=i;									p1.Y()=j;									p1.Z()=k;
 					p2.X()=i+1;	p2.Y()=j+1;	p2.Z()=k+1;
-          extractor.ProcessCell(p1, p2);
+		  extractor.ProcessCell(p1, p2);
 				}
 			}
 			NextSlice();
@@ -198,11 +203,11 @@ private:
 
 	float V(int pi, int pj, int pk)
 	{
-    return _volume->Val(pi, pj, pk)-_thr;
+	return _volume->Val(pi, pj, pk)-_thr;
 	}
 
 	bool Exist(const vcg::Point3i &p0, const vcg::Point3i &p1, VertexPointer &v)
-	{ 
+	{
 		int pos = p0.X()+p0.Z()*_bbox.max.X();
 		int vidx;
 
@@ -219,8 +224,8 @@ private:
 		return v!=NULL;
 	}
 
-	void GetXIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v) 
-	{ 
+	void GetXIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v)
+	{
 		int i = p1.X() - _bbox.min.X();
 		int z = p1.Z() - _bbox.min.Z();
 		VertexIndex index = i+z*_bbox.max.X();
@@ -231,7 +236,7 @@ private:
 			{
 				_x_cs[index] = (VertexIndex) _mesh->vert.size();
 				pos = _x_cs[index];
-                Allocator<MeshType>::AddVertices( *_mesh, 1 );
+				Allocator<MeshType>::AddVertices( *_mesh, 1 );
 				v = &_mesh->vert[pos];
 				_volume->GetXIntercept(p1, p2, v, _thr);
 				return;
@@ -249,10 +254,10 @@ private:
 				return;
 			}
 		}
-    assert(pos >=0 && size_t(pos)< _mesh->vert.size());
+	assert(pos >=0 && size_t(pos)< _mesh->vert.size());
 		v = &_mesh->vert[pos];
 	}
-	void GetYIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v) 
+	void GetYIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v)
 	{
 		int i = p1.X() - _bbox.min.X();
 		int z = p1.Z() - _bbox.min.Z();
@@ -268,7 +273,7 @@ private:
 		}
 		v = &_mesh->vert[pos];
 	}
-	void GetZIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v) 
+	void GetZIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v)
 	{
 		int i = p1.X() - _bbox.min.X();
 		int z = p1.Z() - _bbox.min.Z();
@@ -306,26 +311,26 @@ protected:
 
 	int _slice_dimension;
 	int	_current_slice;
-	
+
 	VertexIndex *_x_cs; // indici dell'intersezioni della superficie lungo gli Xedge della fetta corrente
 	VertexIndex	*_y_cs; // indici dell'intersezioni della superficie lungo gli Yedge della fetta corrente
 	VertexIndex *_z_cs; // indici dell'intersezioni della superficie lungo gli Zedge della fetta corrente
-	VertexIndex *_x_ns; // indici dell'intersezioni della superficie lungo gli Xedge della prossima fetta 
-	VertexIndex *_z_ns; // indici dell'intersezioni della superficie lungo gli Zedge della prossima fetta 
+	VertexIndex *_x_ns; // indici dell'intersezioni della superficie lungo gli Xedge della prossima fetta
+	VertexIndex *_z_ns; // indici dell'intersezioni della superficie lungo gli Zedge della prossima fetta
 
 	MeshType		*_mesh;
 	VolumeType	*_volume;
 
   float _thr;
-	void NextSlice() 
-	{
-		memset(_x_cs, -1, _slice_dimension*sizeof(VertexIndex));
-		memset(_y_cs,	-1, _slice_dimension*sizeof(VertexIndex));
-		memset(_z_cs, -1, _slice_dimension*sizeof(VertexIndex));
+    void NextSlice()
+    {
+        memset(_x_cs, -1, _slice_dimension*sizeof(VertexIndex));
+        memset(_y_cs,	-1, _slice_dimension*sizeof(VertexIndex));
+        memset(_z_cs, -1, _slice_dimension*sizeof(VertexIndex));
 
 		std::swap(_x_cs, _x_ns);
-		std::swap(_z_cs, _z_ns);		
-		
+		std::swap(_z_cs, _z_ns);
+
 		_current_slice += 1;
 	}
 
@@ -338,9 +343,9 @@ protected:
 		memset(_z_cs, -1, _slice_dimension*sizeof(VertexIndex));
 		memset(_x_ns, -1, _slice_dimension*sizeof(VertexIndex));
 		memset(_z_ns, -1, _slice_dimension*sizeof(VertexIndex));
-		
+
 	}
 };
-} // end namespace 
-} // end namespace 
+} // end namespace
+} // end namespace
 #endif // __VCGTEST_WALKER

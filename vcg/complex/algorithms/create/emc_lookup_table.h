@@ -4,7 +4,7 @@
 *        Copyright (C) 2002 by Computer Graphics Group, RWTH Aachen         *
 *                         www.rwth-graphics.de                              *
 *                                                                           *
-*---------------------------------------------------------------------------* 
+*---------------------------------------------------------------------------*
 *                                                                           *
 *                                License                                    *
 *                                                                           *
@@ -23,7 +23,7 @@
 *                                                                           *
 \*===========================================================================*/
 
-//== TABLES ================================================================== 
+//== TABLES ==================================================================
 
 #ifndef __VCG_EMC_LOOK_UP_TABLE
 #define __VCG_EMC_LOOK_UP_TABLE
@@ -35,7 +35,7 @@ namespace vcg
 		class EMCLookUpTable
 		{
 		public:
-			static const int EdgeTable(unsigned char cubetype)
+			static int EdgeTable(unsigned char cubetype)
 			{
 				static const int edgeTable[256]=
 				{
@@ -70,11 +70,11 @@ namespace vcg
 						0xe90, 0xf99, 0xc93, 0xd9a, 0xa96, 0xb9f, 0x895, 0x99c,
 						0x69c, 0x795, 0x49f, 0x596, 0x29a, 0x393, 0x99 , 0x190,
 						0xf00, 0xe09, 0xd03, 0xc0a, 0xb06, 0xa0f, 0x905, 0x80c,
-						0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0   
+						0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0
 				};
 				return edgeTable[cubetype];
 			}; // end of EdgeTable
-			
+
 			//-----------------------------------------------------------------------------
 
 			static int* TriTable(unsigned char cubetype, int u)
@@ -904,7 +904,7 @@ namespace vcg
 			//-----------------------------------------------------------------------------
 
 
-			static const int PolyTable(unsigned int cubetype, int u)
+			static int PolyTable(unsigned int cubetype, int u)
 			{
 				static const int polyTable[8][16] =
 				{
