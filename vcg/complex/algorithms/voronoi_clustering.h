@@ -120,7 +120,9 @@ static void VoronoiColoring(MeshType &m, std::vector<VertexType *> &seedVec, boo
 
 		if(frontierFlag)
 		{
-				std::pair<float,VertexPointer> zz(0,0);
+				//static_cast<VertexPointer>(NULL) has been introduced just to avoid an error in the MSVS2010's compiler confusing pointer with int. You could use nullptr to avoid it, but it's not supported by all compilers. 
+				//The error should have been removed from MSVS2012				
+				std::pair<float,VertexPointer> zz(0.0f,static_cast<VertexPointer>(NULL));
 				std::vector< std::pair<float,VertexPointer> > regionArea(m.vert.size(),zz);
 				std::vector<VertexPointer> borderVec;
 				GetAreaAndFrontier(m, sources,  regionArea, borderVec);
@@ -296,7 +298,9 @@ static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec, int
 		tri::Allocator<MeshType>::CompactFaceVector(m);
 		tri::Allocator<MeshType>::CompactVertexVector(m);
 
-		std::pair<float,VertexPointer> zz(0,0);
+		//static_cast<VertexPointer>(NULL) has been introduced just to avoid an error in the MSVS2010's compiler confusing pointer with int. You could use nullptr to avoid it, but it's not supported by all compilers. 
+		//The error should have been removed from MSVS2012				
+		std::pair<float,VertexPointer> zz(0.0f,static_cast<VertexPointer>(NULL));
 		std::vector< std::pair<float,VertexPointer> > regionArea(m.vert.size(),zz);
 		std::vector<VertexPointer> borderVec;
 
