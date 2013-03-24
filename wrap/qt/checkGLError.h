@@ -43,7 +43,7 @@ class checkGLError
 		return message;
 	}
 	
-	static void qDebug(const char* m) {
+	static void debugInfo(const char* m) {
 		QString message=makeString(m);
     if(message.isEmpty()) return;
     ::qDebug("%s",qPrintable(message));

@@ -76,7 +76,7 @@ namespace vcg
 
     static void exit2D(QPainter *painter)
     {
-      checkGLError::qDebug("glLabel");
+      //checkGLError::qDebug("glLabel");
       painter->restore();
       painter->beginNativePainting();
       glMatrixMode(GL_PROJECTION);
@@ -84,7 +84,7 @@ namespace vcg
       glMatrixMode(GL_MODELVIEW);
       glPopMatrix();
       glPopAttrib();
-      checkGLError::qDebug("glLabel");
+      //checkGLError::qDebug("glLabel");
     }
 
   public:
