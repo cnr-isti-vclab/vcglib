@@ -31,11 +31,11 @@
 
 #include <wrap/io_trimesh/io_mask.h>
 
-#include <QtXml/QDomDocument>
-#include <QtCore/QFile>
-#include <QtXml/QXmlStreamWriter>
-#include <QtCore/QStringList>
-#include <QtCore/QMap>
+#include <QDomDocument>
+#include <QFile>
+#include <QXmlStreamWriter>
+#include <QStringList>
+#include <QMap>
 
 #include <vcg/space/point3.h>
 #include <vcg/space/texcoord2.h>

@@ -25,11 +25,11 @@
 
 #include <vector>
 #include <set>
-#include <QtXml/QDomDocument>
-#include<QtCore/QFile>
-#include<QtCore/QVector>
-#include <QtXml/QXmlStreamWriter>
-#include <QtCore/QString>
+#include <QDomDocument>
+#include<QFile>
+#include<QVector>
+#include <QXmlStreamWriter>
+#include <QString>
 
 class XMLTag
 {
