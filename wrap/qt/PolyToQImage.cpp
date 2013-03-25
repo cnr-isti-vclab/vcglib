@@ -5,42 +5,47 @@
 using namespace vcg;
 using namespace std;
 
-void PolyDumper::rectSetToPolySet(vector< Box2f > &rectVec, vector< vector<Point2f> > &polyVec)
+void PolyDumper::rectSetToOutline2Vec(vector< Box2f > &rectVec, vector< vector<Point2f> > &outline2Vec)
 {
-	polyVec.clear();
+	outline2Vec.clear();
 	for(size_t i=0;i<rectVec.size();++i)
 	{
 		Box2f &b=rectVec[i];
-		polyVec.resize(polyVec.size()+1);
-		polyVec.back().push_back(b.min);
-		polyVec.back().push_back(Point2f(b.max[0],b.min[1]));
-		polyVec.back().push_back(b.max);
-		polyVec.back().push_back(Point2f(b.min[0],b.max[1]));
+		outline2Vec.resize(outline2Vec.size()+1);
+		outline2Vec.back().push_back(b.min);
+		outline2Vec.back().push_back(Point2f(b.max[0],b.min[1]));
+		outline2Vec.back().push_back(b.max);
+		outline2Vec.back().push_back(Point2f(b.min[0],b.max[1]));
 	}
 }
 
 
-void PolyDumper::multiRectSetToSinglePolySet(vector< Box2f > &rectVec,  vector<Similarity2f> &trVec, vector<int> &indVec,
-                                             int ind, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trPolyVec)
+void PolyDumper::multiRectSetToSingleOutline2Vec(vector< Box2f > &rectVec,
+                                                 vector<Similarity2f> &trVec, vector<int> &indVec,
+                                                 int ind, vector< vector<Point2f> > &outline2Vec,
+                                                 vector<Similarity2f> &trOutline2Vec)
 {
-  polyVec.clear();
-  trPolyVec.clear();
+  outline2Vec.clear();
+  trOutline2Vec.clear();
 
   for(size_t i=0;i<rectVec.size();++i)
     if(indVec[i]==ind)
     {
-      trPolyVec.push_back(trVec[i]);
+      trOutline2Vec.push_back(trVec[i]);
       Box2f &b=rectVec[i];
-      polyVec.resize(polyVec.size()+1);
-      polyVec.back().push_back(b.min);
-      polyVec.back().push_back(Point2f(b.max[0],b.min[1]));
-      polyVec.back().push_back(b.max);
-      polyVec.back().push_back(Point2f(b.min[0],b.max[1]));
+      outline2Vec.resize(outline2Vec.size()+1);
+      outline2Vec.back().push_back(b.min);
+      outline2Vec.back().push_back(Point2f(b.max[0],b.min[1]));
+      outline2Vec.back().push_back(b.max);
+      outline2Vec.back().push_back(Point2f(b.min[0],b.max[1]));
     }
 }
 
-void PolyDumper::multiPolySetToSinglePolySet(std::vector< std::vector<Point2f> > &multiPolyVec, std::vector<Similarity2f> &multiTrVec, std::vector<int> &indVec,
-                                             int ind, std::vector< std::vector<Point2f> > &singlePolyVec, std::vector<Similarity2f> &singleTrVec)
+void PolyDumper::multiOutline2VecToSingleOutline2Vec(std::vector< std::vector<Point2f> > &multiPolyVec,
+                                                     std::vector<Similarity2f> &multiTrVec,
+                                                     std::vector<int> &indVec, int ind,
+                                                     std::vector< std::vector<Point2f> > &singlePolyVec,
+                                                     std::vector<Similarity2f> &singleTrVec)
 {
   singlePolyVec.clear();
   singleTrVec.clear();
@@ -55,7 +60,7 @@ void PolyDumper::multiPolySetToSinglePolySet(std::vector< std::vector<Point2f> >
 }
 
 
-void PolyDumper::dumpPolySetSVG(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, PolyDumperParam &pp)
+void PolyDumper::dumpOutline2VecSVG(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, PolyDumper::Param &pp)
 {
 	vector< vector< vector<Point2f> > > polyVecVec(polyVec.size());
 	for(size_t i=0;i<polyVec.size();++i)
@@ -63,10 +68,10 @@ void PolyDumper::dumpPolySetSVG(const char * imageName, vector< vector<Point2f> 
 		polyVecVec[i].resize(1);
 		polyVecVec[i][0]=polyVec[i];
 	}
-	dumpPolySetSVG(imageName,polyVecVec,trVec,pp);
+	dumpOutline2VecSVG(imageName,polyVecVec,trVec,pp);
 }
 
-void PolyDumper::dumpPolySetPNG(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, PolyDumperParam &pp)
+void PolyDumper::dumpOutline2VecPNG(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, PolyDumper::Param &pp)
 {
 	vector< vector< vector<Point2f> > > polyVecVec(polyVec.size());
 	for(size_t i=0;i<polyVec.size();++i)
@@ -74,22 +79,22 @@ void PolyDumper::dumpPolySetPNG(const char * imageName, vector< vector<Point2f> 
 		polyVecVec[i].resize(1);
 		polyVecVec[i][0]=polyVec[i];
 	}
-	dumpPolySetPNG(imageName,polyVecVec,trVec,pp);
+	dumpOutline2VecPNG(imageName,polyVecVec,trVec,pp);
 }
 
-void PolyDumper::dumpPolySetPNG(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, PolyDumperParam &pp)
+void PolyDumper::dumpOutline2VecPNG(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, PolyDumper::Param &pp)
+{
+	vector<string> labelVec;
+	dumpOutline2VecPNG(imageName,polyVecVec,trVec,labelVec,pp);
+}
+
+void PolyDumper::dumpOutline2VecSVG(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, PolyDumper::Param &pp)
 {
 	vector<string> labelVec(polyVecVec.size());
-	dumpPolySetPNG(imageName,polyVecVec,trVec,labelVec,pp);
+	dumpOutline2VecSVG(imageName,polyVecVec,trVec,labelVec,pp);
 }
 
-void PolyDumper::dumpPolySetSVG(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, PolyDumperParam &pp)
-{
-	vector<string> labelVec(polyVecVec.size());
-	dumpPolySetSVG(imageName,polyVecVec,trVec,labelVec,pp);
-}
-
-///this class draw a black mask fora given polygon, cenetered and scaled to fit with 
+///this class draw a black mask fora given polygon, cenetered and scaled to fit with
 ///the image size, it return the transformation to tranform back the polygon to 2D space
 void PolyDumper::DrawPolygonMask(const vector< vector<Point2f> > &polyVec,
 								QImage &img,
@@ -199,7 +204,7 @@ vcg::Point2f PolyDumper::GetIncenter(const vector< vector<Point2f> > &polyVec,
 {
 	///INITIALIZE THE IMAGE
 	QImage img(resolution,resolution,QImage::Format_RGB32);
-	img.fill(vcg::ColorConverter::ToQColor(vcg::Color4b(255,255,255,255)).rgb());
+	img.fill(vcg::ColorConverter::ToQColor(vcg::Color4b::White));
 	Similarity2f tra0;
 	///DRAW THE MASK
 	DrawPolygonMask(polyVec,img,tra0,tra1);
@@ -214,7 +219,7 @@ vcg::Point2f PolyDumper::GetIncenter(const vector< vector<Point2f> > &polyVec,
 	for (int x=0;x<sizeX;x++)
 		for (int y=0;y<sizeY;y++)
 		{
-			///flipped because of 
+			///flipped because of
 			///same artifacts of Mquads
 			int val=qGray(img.pixel(x,y));
 			///if is outside
@@ -256,88 +261,88 @@ vcg::Point2f PolyDumper::GetIncenter(const vector< vector<Point2f> > &polyVec,
 
 
 ///write a polygon on a PNG file, format of the polygon is vector of vector of contours...nested contours are holes
-///takes the name of the image in input, the set of polygons, the set of per polygons transformation, 
+///takes the name of the image in input, the set of polygons, the set of per polygons transformation,
 ///the label to be written and the global parameter for drawing style
-void  PolyDumper::dumpPolySetPNG(const char * imageName, 
-										vector< vector< vector<Point2f> > > &polyVecVec, 
-										vector<Similarity2f> &trVec, 
-										vector<string> &labelVec, 
-										PolyDumperParam &pp)
+void  PolyDumper::dumpOutline2VecPNG(const char * imageName,
+										vector< vector< vector<Point2f> > > &polyVecVec,
+										vector<Similarity2f> &trVec,
+										vector<string> &labelVec,
+										Param &pp)
 {
-	///SET THE FONT
-	assert(polyVecVec.size() == trVec.size());
-	int fontSize=ceil(std::max(pp.width,pp.height)/100.0);
-	QFont qf("courier",fontSize);
+  ///SET THE FONT
+  assert(polyVecVec.size() == trVec.size());
+  int fontSize=ceil(std::max(pp.width,pp.height)/100.0);
+  QFont qf("courier",fontSize);
 
-	///SET THE DRAWING SIZE
-	QImage img(pp.width,pp.height,QImage::Format_RGB32);
-	img.fill(vcg::ColorConverter::ToQColor( pp.backgroundColor).rgb());
+  ///SET THE DRAWING SIZE
+  QImage img(pp.width,pp.height,QImage::Format_RGB32);
+  img.fill(vcg::ColorConverter::ToQColor( pp.backgroundColor).rgb());
 
-	///SETUP OF DRAWING PROCEDURE
-	QPainter painter;
-	painter.begin(&img);
-	QBrush bb;
-	if (pp.fill)
-		bb.setStyle(Qt::SolidPattern);
-	QPen qp;
-	qp.setWidthF(0);
+  ///SETUP OF DRAWING PROCEDURE
+  QPainter painter;
+  painter.begin(&img);
+  QBrush bb;
+  if (pp.fill)
+    bb.setStyle(Qt::SolidPattern);
+  QPen qp;
+  qp.setWidthF(0);
 
-	for(size_t i=0;i<polyVecVec.size();++i)
-	{
-		///SET THE CURRENT TRANSFORMATION
-		painter.resetTransform();
-		painter.translate(trVec[i].tra[0],trVec[i].tra[1]);
-		painter.rotate(math::ToDeg(trVec[i].rotRad));
-		painter.scale(trVec[i].sca,trVec[i].sca);
-		QPainterPath QPP;
+  for(size_t i=0;i<polyVecVec.size();++i)
+  {
+    ///SET THE CURRENT TRANSFORMATION
+    painter.resetTransform();
+    painter.translate(trVec[i].tra[0],trVec[i].tra[1]);
+    painter.rotate(math::ToDeg(trVec[i].rotRad));
+    painter.scale(trVec[i].sca,trVec[i].sca);
+    QPainterPath QPP;
 
-		for(size_t jj=0;jj<polyVecVec[i].size();++jj)
-		{
-			QVector<QPointF> ppQ;
-			for(size_t j=0;j<polyVecVec[i][jj].size();++j)
-			{
-				Point2f pp=polyVecVec[i][jj][j];
-				ppQ.push_back(QPointF(pp[0],pp[1]));
-			}
-			ppQ.push_back(QPointF(polyVecVec[i][jj][0][0],polyVecVec[i][jj][0][1]));
-			QPP.addPolygon(QPolygonF(ppQ));
-		}
-		///FIND THE BARYCENTER
-		int radius;
-		Point2f bc;
-		bc=GetIncenter(polyVecVec[i],trVec[i],radius,10);
+    for(size_t jj=0;jj<polyVecVec[i].size();++jj)
+    {
+      QVector<QPointF> ppQ;
+      for(size_t j=0;j<polyVecVec[i][jj].size();++j)
+      {
+        Point2f pp=polyVecVec[i][jj][j];
+        ppQ.push_back(QPointF(pp[0],pp[1]));
+      }
+      ppQ.push_back(QPointF(polyVecVec[i][jj][0][0],polyVecVec[i][jj][0][1]));
+      QPP.addPolygon(QPolygonF(ppQ));
+    }
 
-		if (pp.randomColor)
-			bb.setColor(vcg::ColorConverter::ToQColor(Color4b::Scatter(polyVecVec.size(),i)));
-		else
-			bb.setColor(vcg::ColorConverter::ToQColor(pp.FillColor));
+    if (pp.randomColor)
+      bb.setColor(vcg::ColorConverter::ToQColor(Color4b::Scatter(polyVecVec.size(),i)));
+    else
+      bb.setColor(vcg::ColorConverter::ToQColor(pp.FillColor));
 
-		painter.setBrush(bb);
-		painter.setPen(qp);
-		painter.drawPath(QPP);
-
-		///DRAW THE TEXT
-		painter.setFont(qf);
-		painter.resetTransform();
-		painter.translate(trVec[i].tra[0],trVec[i].tra[1]);
-
-		painter.drawText(bc[0]-radius,bc[1]-radius,radius*2,radius*2,Qt::AlignHCenter|Qt::AlignCenter,QString(labelVec[i].c_str()));
-	}
-	painter.end();
-	img.save(imageName);
+    painter.setBrush(bb);
+    painter.setPen(qp);
+    painter.drawPath(QPP);
+    if(!labelVec.empty())
+    {
+      ///FIND THE BARYCENTER
+      int radius;
+      Point2f bc=GetIncenter(polyVecVec[i],trVec[i],radius,10);
+      ///DRAW THE TEXT
+      painter.setFont(qf);
+      painter.resetTransform();
+      painter.translate(trVec[i].tra[0],trVec[i].tra[1]);
+      painter.drawText(bc[0]-radius,bc[1]-radius,radius*2,radius*2,Qt::AlignHCenter|Qt::AlignCenter,QString(labelVec[i].c_str()));
+    }
+  }
+  painter.end();
+  img.save(imageName);
 }
 
 
 ///write a polygon on a SVG file, format of the polygon is vector of vector of contours...nested contours are holes
-///takes the name of the image in input, the set of polygons, the set of per polygons transformation, 
+///takes the name of the image in input, the set of polygons, the set of per polygons transformation,
 ///the label to be written and the global parameter for drawing style
-void PolyDumper::dumpPolySetSVG(const char * imageName, 
-									   vector< vector< vector<Point2f> > > &polyVecVec, 
-									   vector<Similarity2f> &trVec, 
+void PolyDumper::dumpOutline2VecSVG(const char * imageName,
+									   vector< vector< vector<Point2f> > > &polyVecVec,
+									   vector<Similarity2f> &trVec,
 									   vector< vector< string> > &labelVecVec,
 									   vector<vector<Point2f> > &labelPosVecVec,
 									   vector<vector<float> >&labelRadVecVec,
-									   PolyDumperParam &pp)
+									   PolyDumper::Param &pp)
 {
 	assert(polyVecVec.size() == trVec.size());
 
@@ -425,11 +430,11 @@ void PolyDumper::dumpPolySetSVG(const char * imageName,
 	painter.end();
 }
 
-void PolyDumper::dumpPolySetSVG(const char * imageName,
+void PolyDumper::dumpOutline2VecSVG(const char * imageName,
 									   vector< vector< vector<Point2f> > > &polyVecVec,
 									   vector<Similarity2f> &trVec,
 									   vector< string > &labelVec,
-									   PolyDumperParam &pp)
+									   PolyDumper::Param &pp)
 {
   vector< vector< string> > labelVecVec(labelVec.size());
   vector< vector<Point2f> > labelPosVec;
@@ -438,6 +443,6 @@ void PolyDumper::dumpPolySetSVG(const char * imageName,
   {
     labelVecVec[i].push_back(labelVec[i]);
   }
-  dumpPolySetSVG(imageName,polyVecVec,trVec,labelVecVec,labelPosVec,labelRadVec,pp);
+  dumpOutline2VecSVG(imageName,polyVecVec,trVec,labelVecVec,labelPosVec,labelRadVec,pp);
 }
 
