@@ -1064,49 +1064,42 @@ private:
         return ConnectedComponents(m,CCV);
       }
 
-	  static int ConnectedComponents(MeshType &m, std::vector< std::pair<int,FacePointer> > &CCV)
-			{
-				FaceIterator fi;
-				FacePointer l;
-			CCV.clear();
-
-				for(fi=m.face.begin();fi!=m.face.end();++fi)
-					(*fi).ClearS();
-
-        int Compindex=0;
+      static int ConnectedComponents(MeshType &m, std::vector< std::pair<int,FacePointer> > &CCV)
+      {
+        tri::RequireFFAdjacency(m);
+        CCV.clear();
+        tri::UpdateSelection<MeshType>::FaceClear(m);
         std::stack<FacePointer> sf;
         FacePointer fpt=&*(m.face.begin());
-                for(fi=m.face.begin();fi!=m.face.end();++fi)
-                {
-                    if(!((*fi).IsD()) && !(*fi).IsS())
-                    {
-                        (*fi).SetS();
-                        CCV.push_back(std::make_pair(0,&*fi));
-                        sf.push(&*fi);
-                        while (!sf.empty())
-                        {
-                            fpt=sf.top();
+        for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+        {
+          if(!((*fi).IsD()) && !(*fi).IsS())
+          {
+            (*fi).SetS();
+            CCV.push_back(std::make_pair(0,&*fi));
+            sf.push(&*fi);
+            while (!sf.empty())
+            {
+              fpt=sf.top();
               ++CCV.back().first;
-                            sf.pop();
-                            for(int j=0;j<3;++j)
-                            {
-                                if( !face::IsBorder(*fpt,j) )
-                                {
-                                    l=fpt->FFp(j);
-                                    if( !(*l).IsS() )
-                                    {
-                                        (*l).SetS();
-                                        sf.push(l);
-                                    }
-                                }
-                            }
-                        }
-                        Compindex++;
-                    }
+              sf.pop();
+              for(int j=0;j<3;++j)
+              {
+                if( !face::IsBorder(*fpt,j) )
+                {
+                  FacePointer l = fpt->FFp(j);
+                  if( !(*l).IsS() )
+                  {
+                    (*l).SetS();
+                    sf.push(l);
+                  }
                 }
-        assert(int(CCV.size())==Compindex);
-                return Compindex;
+              }
             }
+          }
+        }
+        return int(CCV.size());
+      }
 
 
 			/**
