@@ -571,12 +571,12 @@ namespace vcg
 					tokens.clear();
 					do
 					{
-						while ( (line[from]==' ' || line[from] == '\t'  || line[from] == '\r') && from!=length)
+						while (from!=length && (line[from]==' ' || line[from] == '\t'  || line[from] == '\r'))
 							from++;
 						if(from!=length)
 						{
 							to = from+1;
-                            while ( (((line[to]!=' ') && (line[to] != '\t'))  || (line[to] == '\r')) && to!=length)
+                            while ( to!=length && (((line[to]!=' ') && (line[to] != '\t'))  || (line[to] == '\r')))
 								to++;
 							tokens.push_back(line.substr(from, to-from).c_str());
 							from = to;
