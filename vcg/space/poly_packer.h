@@ -67,9 +67,9 @@ public:
     {
       float angle = float(i)*(M_PI/2.0)/float(stepNum);
       Box2f bb;
-      for(size_t i=0;i<poly.size();++i)
+      for(size_t j=0;j<poly.size();++j)
       {
-        Point2f pp=poly[i];
+        Point2f pp=poly[j];
         pp.Rotate(angle);
         bb.Add(pp);
       }
