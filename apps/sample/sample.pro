@@ -12,7 +12,7 @@ SUBDIRS       = trimesh_base  \
                 trimesh_edge \
                 trimesh_fitting \
                 trimesh_geodesic \
-#                trimesh_ext_mc \
+                trimesh_ext_mc \
                 trimesh_hole \
                 trimesh_inertia \
                 trimesh_intersection \
@@ -21,12 +21,15 @@ SUBDIRS       = trimesh_base  \
                 trimesh_kdtree \
                 trimesh_normal \
                 trimesh_optional \
+                trimesh_pointmatching \
                 trimesh_ray \
                 trimesh_refine \
                 trimesh_sampling \
                 trimesh_smooth \
                 trimesh_split_vertex \
+                trimesh_texture \
                 trimesh_topology \
                 polygonmesh_base \
+                space_packer \
                 aabb_binary_tree
 

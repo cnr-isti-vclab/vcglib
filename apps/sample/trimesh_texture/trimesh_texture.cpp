@@ -20,6 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+#include <QtOpenGL/QtOpenGL>
 
 #include<vcg/complex/complex.h>
 
@@ -31,11 +32,14 @@
 #include<vcg/complex/algorithms/outline_support.h>
 
 #include<vcg/simplex/face/pos.h>
-#include <vcg/space/poly_packer.h>
-#include <wrap/qt/PolyToQImage.h>
-//#include<vcg/../../sandbox/bernabeia/polypacker/new_polypacker.h>
-using namespace vcg;
 
+#include <vcg/space/outline2_packer.h>
+#include <wrap/qt/outline2_rasterizer.h>
+
+#include <vcg/space/rasterized_outline2_packer.h>
+#include <wrap/qt/Outline2ToQImage.h>
+
+using namespace vcg;
 
 class MyEdge;
 class MyFace;
@@ -71,24 +75,55 @@ int main(int ,char ** )
   tri::Clean<MyMesh>::ConnectedComponents(tm,fpVec);
   printf("Mesh has %i texture components\n",fpVec.size());
   tri::io::ExporterPLY<MyMesh>::Save(tm,"out.ply");
-
-  std::vector< std::vector<Point3f> > outline3Vec;
   std::vector< std::vector<Point2f> > outline2Vec;
-  tri::OutlineUtil<MyMesh>::ConvertMeshBoundaryToOutline3Vec(tm, outline3Vec);
-  printf("Mesh has %i texture components\n",outline3Vec.size());
-  tri::OutlineUtil<MyMesh>::ConvertOutline3VeToOutline2Vec(outline3Vec,outline2Vec);
-  PolyDumper::Param pp;
+
+  for(size_t i=0; i<fpVec.size();++i)
+  {
+    tri::UpdateSelection<MyMesh>::FaceClear(tm);
+    fpVec[i].second->SetS();
+    tri::UpdateSelection<MyMesh>::FaceConnectedFF(tm);
+    tri::UpdateSelection<MyMesh>::VertexClear(tm);
+    tri::UpdateSelection<MyMesh>::VertexFromFaceLoose(tm);
+
+    MyMesh comp;
+    tri::Append<MyMesh,MyMesh>::Mesh(comp, tm, true);
+
+    std::vector< std::vector<Point3f> > outline3Vec;
+    tri::OutlineUtil<float>::ConvertMeshBoundaryToOutline3Vec(comp, outline3Vec);
+    std::vector< std::vector<Point2f> > compOutline2Vec;
+    tri::OutlineUtil<float>::ConvertOutline3VecToOutline2Vec(outline3Vec,compOutline2Vec);
+    int largestInd=tri::OutlineUtil<float>::LargestOutline2(compOutline2Vec);
+    if(tri::OutlineUtil<float>::Outline2Area(compOutline2Vec[largestInd])<0)
+      tri::OutlineUtil<float>::ReverseOutline2(compOutline2Vec[largestInd]);
+
+    outline2Vec.push_back(compOutline2Vec[largestInd]);
+  }
+
+  printf("Mesh has %i texture components\n",outline2Vec.size());
+
+  Outline2Dumper::Param pp;
   Similarity2f sim;
   sim.sca=1024.0f;
   std::vector<Similarity2f> trVec(outline2Vec.size(),sim);
   printf("Mesh has %i texture components\n",outline2Vec.size());
-  PolyDumper::dumpOutline2VecPNG("PrePack.png",outline2Vec,trVec,pp);
+  Outline2Dumper::dumpOutline2VecPNG("PrePack.png",outline2Vec,trVec,pp);
 
-  const Point2f containerSize(1024,1024);
+  const Point2i containerSize(1024,1024);
   Point2f finalSize(1024,1024);
   PolyPacker<float>::PackAsAxisAlignedRect(outline2Vec,containerSize,trVec,finalSize);
 
-  PolyDumper::dumpOutline2VecPNG("PostPack.png",outline2Vec,trVec,pp);
+  Outline2Dumper::dumpOutline2VecPNG("PostPack.png",outline2Vec,trVec,pp);
+
+  RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Parameters packingParam;
+
+  packingParam.costFunction  = RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Parameters::LowestHorizon;
+  packingParam.doubleHorizon = true;
+  packingParam.cellSize = 4;
+  packingParam.rotationNum = 16; //number of rasterizations in 90°
+
+  RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Pack(outline2Vec,containerSize,trVec,packingParam);
+  Outline2Dumper::dumpOutline2VecPNG("PostPackRR.png",outline2Vec,trVec,pp);
+
 
   return 0;
 }
