@@ -20,8 +20,8 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#ifndef __VCG_POLY_PACKER_H__
-#define __VCG_POLY_PACKER_H__
+#ifndef __VCG_OUTLINE2_PACKER_H__
+#define __VCG_OUTLINE2_PACKER_H__
 
 #include <limits>
 #include <stdio.h>
@@ -86,11 +86,11 @@ public:
   }
 
 static  bool PackAsEqualSquares(const std::vector< std::vector<Point2x> > &polyVec,
-                  const Point2x containerSizeX,
+                  const Point2i containerSizeX,
                   std::vector<Similarity2x> &trVec,
                   Point2x &coveredContainer)
 {
-  int minSide = int(min(containerSizeX[0],containerSizeX[1]));
+  int minSide = std::min(containerSizeX[0],containerSizeX[1]);
   const vcg::Point2i containerSize(minSide,minSide);
   int polyPerLine = ceil(sqrt((double)polyVec.size()));
   int pixelPerPoly = minSide / (polyPerLine);
@@ -127,7 +127,7 @@ static  bool PackAsEqualSquares(const std::vector< std::vector<Point2x> > &polyV
 }
 
 static bool PackAsAxisAlignedRect(const std::vector< std::vector<Point2x> > &polyVec,
-                  const Point2x containerSizeX,
+                  const Point2i containerSizeX,
                   std::vector<Similarity2x> &trVec,
                   Point2x &coveredContainer)
 {
@@ -143,7 +143,7 @@ static bool PackAsAxisAlignedRect(const std::vector< std::vector<Point2x> > &pol
 }
 
 static bool PackAsObjectOrientedRect(const std::vector< std::vector<Point2x> > &polyVec,
-                  const Point2x containerSizeX,
+                  const Point2i containerSizeX,
                   std::vector<Similarity2x> &trVec,
                   Point2x &coveredContainer)
 {

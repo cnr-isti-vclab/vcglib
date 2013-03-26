@@ -59,7 +59,7 @@ public:
 
 
   static  bool Pack(const std::vector<Box2x > & rectVec,  /// the set of rectangles that have to be packed (generic floats, no req.)
-                    const Point2x containerSizeX,         /// the size of the container where they has to be fitted (usually in pixel size)
+                    const Point2i containerSizeX,         /// the size of the container where they has to be fitted (usually in pixel size)
                     std::vector<Similarity2x> &trVec,     /// the result, a set of similarity transformation that have to be applied to the rect to get their position
                     Point2x &coveredContainer)            /// the sub portion of the container covered by the solution.
 {
@@ -91,7 +91,7 @@ public:
 
 
 static  bool PackOccupancy(const std::vector<Box2x > & rectVec,  /// the set of rectangles that have to be packed
-                  const Point2x containerSizeX,         /// the size of the container where they has to be fitted (usually in pixel size)
+                  const Point2i containerSizeX,         /// the size of the container where they has to be fitted (usually in pixel size)
                   const SCALAR_TYPE occupancyRatio,     /// the expected percentage of the container that has to be covered
                   std::vector<Similarity2x> &trVec,     /// the result, a set of similarity transformation that have to be applied to the rect to get their position
                   Point2x &coveredContainer)            /// the sub portion of the container covered by the solution.
@@ -146,7 +146,7 @@ static  bool PackOccupancy(const std::vector<Box2x > & rectVec,  /// the set of 
     return true;
   }
 static  bool PackMulti(const std::vector<Box2x > & rectVec,  /// the set of rectangles that have to be packed (generic floats, no req.)
-                  const Point2x containerSizeX,         /// the size of the container where they has to be fitted (usually in pixel size)
+                  const Point2i containerSizeX,         /// the size of the container where they has to be fitted (usually in pixel size)
                   const int containerNum,
                   std::vector<Similarity2x> &trVec,     /// the result, a set of similarity transformation that have to be applied to the rect to get their position
                   std::vector<int> &indVec,
@@ -182,7 +182,7 @@ static  bool PackMulti(const std::vector<Box2x > & rectVec,  /// the set of rect
 }
 
 static  bool PackOccupancyMulti(const std::vector<Box2x > & rectVec,  /// the set of rectangles that have to be packed
-                                const Point2x containerSizeX,         /// the size of the container where they has to be fitted (usually in pixel size)
+                                const Point2i containerSizeX,         /// the size of the container where they has to be fitted (usually in pixel size)
                                 const int containerNum,
                                 const SCALAR_TYPE occupancyRatio,     /// the expected percentage of the container that has to be covered
                                 std::vector<Similarity2x> &trVec,     /// the result, a set of similarity transformation that have to be applied to the rect to get their position
@@ -305,15 +305,15 @@ static bool PackInt(const std::vector<vcg::Point2i> & sizes, // the sizes of the
     {
       assert(x>=0 && x<max_size[0]);
       assert(y>=0 && y<max_size[1]);
-	    grid[x+y*max_size[0]] = j+1;
+        grid[x+y*max_size[0]] = j+1;
     }
 
   // Posiziono tutti gli altri
   for(i=1;i<n;++i)
   {
-		j = perm[i];
+        j = perm[i];
     assert(j>=0 && j<n);
-		assert(posiz[j][0]==-1);
+        assert(posiz[j][0]==-1);
 
     int bestx,besty,bestsx,bestsy,bestArea;
 
@@ -331,14 +331,14 @@ static bool PackInt(const std::vector<vcg::Point2i> & sizes, // the sizes of the
 
     int finterior = 0;
 
-    for(y=0;y<=ly;y++)
+	for(y=0;y<=ly;y++)
 		{
-      for(x=0;x<=lx;)
+	  for(x=0;x<=lx;)
 			{
 				int px;
-        int c = Grid(x,y+sy-1);
-        // Intersection check
-        if(!c) c = Grid(x+sx-1,y+sy-1);
+		int c = Grid(x,y+sy-1);
+		// Intersection check
+		if(!c) c = Grid(x+sx-1,y+sy-1);
 				if(!c)
 				{
 					for(px=x;px<x+sx;px++)
@@ -350,24 +350,24 @@ static bool PackInt(const std::vector<vcg::Point2i> & sizes, // the sizes of the
 
 				if(c)	// Salto il rettangolo
 				{
-          --c;  // we store id+1...
-          assert(c>=0 && c<n);
+		  --c;  // we store id+1...
+		  assert(c>=0 && c<n);
 					assert(posiz[c][0]!=-1);
 					x = posiz[c][0] + sizes[c][0];
 				}
-        else // x,y are an admissible position where we can put the rectangle
+		else // x,y are an admissible position where we can put the rectangle
 				{
-          int nsx = std::max(global_size[0],x+sx);
-          int nsy = std::max(global_size[1],y+sy);
-          int area   = nsx*nsy;
+		  int nsx = std::max(global_size[0],x+sx);
+		  int nsy = std::max(global_size[1],y+sy);
+		  int area   = nsx*nsy;
 
-          if(bestArea==-1 || bestArea>area)
+		  if(bestArea==-1 || bestArea>area)
 					{
 						bestx  = x;
 						besty  = y;
 						bestsx = nsx;
 						bestsy = nsy;
-            bestArea  = area;
+			bestArea  = area;
 						if( bestsx==global_size[0] && bestsy==global_size[1] )
 							finterior = 1;
 					}
@@ -378,7 +378,7 @@ static bool PackInt(const std::vector<vcg::Point2i> & sizes, // the sizes of the
 			if( finterior ) break;
 		}
 
-    if(bestArea==-1)
+	if(bestArea==-1)
 		{
 			return false;
 		}
@@ -390,10 +390,10 @@ static bool PackInt(const std::vector<vcg::Point2i> & sizes, // the sizes of the
 		for(y=posiz[j][1];y<posiz[j][1]+sy;y++)
 			for(x=posiz[j][0];x<posiz[j][0]+sx;x++)
 			{
-        assert(x>=0 && x<max_size[0]);
-        assert(y>=0 && y<max_size[1]);
+		assert(x>=0 && x<max_size[0]);
+		assert(y>=0 && y<max_size[1]);
 				grid[x+y*max_size[0]] = j+1;
-			}	
+			}
 	}
 
 #undef Grid

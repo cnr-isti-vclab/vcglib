@@ -28,7 +28,7 @@ public:
    * @param a vector of points
    * @return the area of the polygon
    */
-  static ScalarType Outline2Area(std::vector< Point2<ScalarType> > &outline2)
+  static ScalarType Outline2Area(const std::vector< Point2<ScalarType> > &outline2)
   {
       float   area=0;
       for (size_t i=0,j=outline2.size()-1; i<outline2.size(); i++) {
@@ -43,7 +43,7 @@ public:
    * @param a vector of points
    * @return the length of the perimeter
    */
-  static ScalarType Outline2Perimeter(std::vector< Point2<ScalarType>  > &outline2)
+  static ScalarType Outline2Perimeter(const std::vector< Point2<ScalarType>  > &outline2)
   {
       float dd=0; int sz = outline2.size();
 
@@ -71,6 +71,10 @@ public:
   }
 
 
+  static void ReverseOutline2(std::vector< Point2<ScalarType> > &outline2)
+  {
+    std::reverse(outline2.begin(),outline2.end());
+  }
 
 
   static void BuildRandomOutlineVec(int outlineNum, std::vector< std::vector< Point2f > > &outline2Vec, int seed=0)
@@ -108,10 +112,25 @@ public:
     }
   }
 
-
+  static int LargestOutline2(const std::vector< std::vector< Point2f > > &outline2Vec)
+  {
+    float maxArea =0;
+    int maxInd=-1;
+    for(size_t i=0;i<outline2Vec.size();++i)
+    {
+      float curArea = fabs(Outline2Area(outline2Vec[i]));
+      if(curArea > maxArea)
+      {
+        maxArea=curArea;
+        maxInd=i;
+      }
+    }
+    assert(maxInd>=0);
+    return maxInd;
+  }
 
   template<class PointType>
-  static bool ConvertOutline3VeToOutline2Vec(std::vector< std::vector< PointType> > &outline3Vec, std::vector< std::vector< Point2f> > &outline2Vec )
+  static bool ConvertOutline3VecToOutline2Vec(std::vector< std::vector< PointType> > &outline3Vec, std::vector< std::vector< Point2f> > &outline2Vec )
   {
     outline2Vec.resize(outline3Vec.size());
     for(size_t i=0;i<outline3Vec.size();++i)
