@@ -226,8 +226,8 @@ public:
       ///default constructor
       Parameters()
       {
-          costFunction = MinWastedSpace;
-          doubleHorizon=false;
+          costFunction = LowestHorizon;
+          doubleHorizon=true;
           rotationNum = 16;
           cellSize = 8;
       }
@@ -479,7 +479,9 @@ public:
 
         float totalArea = 0;
         for (size_t j = 0; j < polyPointsVec.size(); j++) {
-            totalArea +=  tri::OutlineUtil<SCALAR_TYPE>::Outline2Area(polyPointsVec[j]);
+            float curArea = tri::OutlineUtil<SCALAR_TYPE>::Outline2Area(polyPointsVec[j]);
+            if(curArea<0) tri::OutlineUtil<SCALAR_TYPE>::ReverseOutline2(polyPointsVec[j]);
+            totalArea += fabs(curArea);
         }
 
         //we first set it to the "optimal" scale
