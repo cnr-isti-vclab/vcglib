@@ -1,16 +1,14 @@
-#include "qtpolyrasterizer.h"
+#include <wrap/qt/outline2_rasterizer.h>
 #include <wrap/qt/col_qt_convert.h>
 #include "stdio.h"
 #include "math.h"
-#include <QDebug>
 #include <vcg/space/color4.h>
 #include <wrap/qt/col_qt_convert.h>
-#include <new_polypacker.h>
 
 using namespace vcg;
 using namespace std;
 
-void QtPolyRasterizer::rasterize(RasterizedOutline2 &poly,
+void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
                                  float scale,
                                  int rast_i,
                                  int rotationNum,
@@ -164,7 +162,7 @@ void QtPolyRasterizer::rasterize(RasterizedOutline2 &poly,
 
 // rotates the grid 90 degree clockwise (by simple swap)
 // used to lower the cost of rasterization.
-vector<vector<int> > QtPolyRasterizer::rotateGridCWise(vector< vector<int> >& inGrid) {
+vector<vector<int> > QtOutline2Rasterizer::rotateGridCWise(vector< vector<int> >& inGrid) {
     vector<vector<int> > outGrid(inGrid[0].size());
     for (int i = 0; i < inGrid[0].size(); i++) {
         outGrid[i].reserve(inGrid.size());

@@ -8,15 +8,10 @@
 #include <vcg/space/color4.h>
 #include <vcg/space/box2.h>
 #include <vcg/math/similarity2.h>
-
-///this class is used to pass global
-///parameters to the polygonal dumper
-namespace vcg{
-class RasterizedOutline2;
-}
+#include <vcg/space/rasterized_outline2_packer.h>
 
 ///this class is used to draw polygons on an image could be vectorial or not
-class QtPolyRasterizer
+class QtOutline2Rasterizer
 {
 public:
     static void rasterize(vcg::RasterizedOutline2 &poly,

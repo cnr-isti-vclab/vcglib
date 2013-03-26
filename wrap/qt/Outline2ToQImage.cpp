@@ -1,11 +1,9 @@
-
-
-#include "PolyToQImage.h"
+#include "Outline2ToQImage.h"
 #include <wrap/qt/col_qt_convert.h>
 using namespace vcg;
 using namespace std;
 
-void PolyDumper::rectSetToOutline2Vec(vector< Box2f > &rectVec, vector< vector<Point2f> > &outline2Vec)
+void Outline2Dumper::rectSetToOutline2Vec(vector< Box2f > &rectVec, vector< vector<Point2f> > &outline2Vec)
 {
 	outline2Vec.clear();
 	for(size_t i=0;i<rectVec.size();++i)
@@ -20,7 +18,7 @@ void PolyDumper::rectSetToOutline2Vec(vector< Box2f > &rectVec, vector< vector<P
 }
 
 
-void PolyDumper::multiRectSetToSingleOutline2Vec(vector< Box2f > &rectVec,
+void Outline2Dumper::multiRectSetToSingleOutline2Vec(vector< Box2f > &rectVec,
                                                  vector<Similarity2f> &trVec, vector<int> &indVec,
                                                  int ind, vector< vector<Point2f> > &outline2Vec,
                                                  vector<Similarity2f> &trOutline2Vec)
@@ -41,7 +39,7 @@ void PolyDumper::multiRectSetToSingleOutline2Vec(vector< Box2f > &rectVec,
     }
 }
 
-void PolyDumper::multiOutline2VecToSingleOutline2Vec(const std::vector< std::vector<Point2f> > &multiPolyVec,
+void Outline2Dumper::multiOutline2VecToSingleOutline2Vec(const std::vector< std::vector<Point2f> > &multiPolyVec,
                                                      const std::vector<Similarity2f> &multiTrVec,
                                                      const std::vector<int> &indVec, int ind,
                                                      std::vector< std::vector<Point2f> > &singlePolyVec,
@@ -60,7 +58,7 @@ void PolyDumper::multiOutline2VecToSingleOutline2Vec(const std::vector< std::vec
 }
 
 
-void PolyDumper::dumpOutline2VecSVG(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, PolyDumper::Param &pp)
+void Outline2Dumper::dumpOutline2VecSVG(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, Outline2Dumper::Param &pp)
 {
 	vector< vector< vector<Point2f> > > polyVecVec(polyVec.size());
 	for(size_t i=0;i<polyVec.size();++i)
@@ -71,7 +69,7 @@ void PolyDumper::dumpOutline2VecSVG(const char * imageName, vector< vector<Point
 	dumpOutline2VecSVG(imageName,polyVecVec,trVec,pp);
 }
 
-void PolyDumper::dumpOutline2VecPNG(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, PolyDumper::Param &pp)
+void Outline2Dumper::dumpOutline2VecPNG(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, Outline2Dumper::Param &pp)
 {
 	vector< vector< vector<Point2f> > > polyVecVec(polyVec.size());
 	for(size_t i=0;i<polyVec.size();++i)
@@ -82,13 +80,13 @@ void PolyDumper::dumpOutline2VecPNG(const char * imageName, vector< vector<Point
 	dumpOutline2VecPNG(imageName,polyVecVec,trVec,pp);
 }
 
-void PolyDumper::dumpOutline2VecPNG(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, PolyDumper::Param &pp)
+void Outline2Dumper::dumpOutline2VecPNG(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, Outline2Dumper::Param &pp)
 {
 	vector<string> labelVec;
 	dumpOutline2VecPNG(imageName,polyVecVec,trVec,labelVec,pp);
 }
 
-void PolyDumper::dumpOutline2VecSVG(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, PolyDumper::Param &pp)
+void Outline2Dumper::dumpOutline2VecSVG(const char * imageName, vector< vector< vector<Point2f> > > &polyVecVec, vector<Similarity2f> &trVec, Outline2Dumper::Param &pp)
 {
 	vector<string> labelVec(polyVecVec.size());
 	dumpOutline2VecSVG(imageName,polyVecVec,trVec,labelVec,pp);
@@ -96,7 +94,7 @@ void PolyDumper::dumpOutline2VecSVG(const char * imageName, vector< vector< vect
 
 ///this class draw a black mask fora given polygon, cenetered and scaled to fit with
 ///the image size, it return the transformation to tranform back the polygon to 2D space
-void PolyDumper::DrawPolygonMask(const vector< vector<Point2f> > &polyVec,
+void Outline2Dumper::DrawPolygonMask(const vector< vector<Point2f> > &polyVec,
 								QImage &img,
 								Similarity2f &ret,
 								const Similarity2f &trans)
@@ -161,7 +159,7 @@ void PolyDumper::DrawPolygonMask(const vector< vector<Point2f> > &polyVec,
 
 ///return the max radius of a point inside a polygon ,given the mask image
 ///actually it evaluate the maximum bounding box
-int PolyDumper::getMaxMaskRadius(int x,int y,QImage &img)
+int Outline2Dumper::getMaxMaskRadius(int x,int y,QImage &img)
 {
 	int sizeY=img.size().height();
 	int sizeX=img.size().width();
@@ -197,7 +195,7 @@ int PolyDumper::getMaxMaskRadius(int x,int y,QImage &img)
 
 ///return the point inside the polygon with the bigger distance to the border,
 ///this is used to write labels within the polygon, it handle polygons with holes too
-vcg::Point2f PolyDumper::GetIncenter(const vector< vector<Point2f> > &polyVec,
+vcg::Point2f Outline2Dumper::GetIncenter(const vector< vector<Point2f> > &polyVec,
 											const Similarity2f &tra1,
 											int &radius,
 											int resolution)
@@ -263,7 +261,7 @@ vcg::Point2f PolyDumper::GetIncenter(const vector< vector<Point2f> > &polyVec,
 ///write a polygon on a PNG file, format of the polygon is vector of vector of contours...nested contours are holes
 ///takes the name of the image in input, the set of polygons, the set of per polygons transformation,
 ///the label to be written and the global parameter for drawing style
-void  PolyDumper::dumpOutline2VecPNG(const char * imageName,
+void  Outline2Dumper::dumpOutline2VecPNG(const char * imageName,
 										vector< vector< vector<Point2f> > > &polyVecVec,
 										vector<Similarity2f> &trVec,
 										vector<string> &labelVec,
@@ -336,13 +334,13 @@ void  PolyDumper::dumpOutline2VecPNG(const char * imageName,
 ///write a polygon on a SVG file, format of the polygon is vector of vector of contours...nested contours are holes
 ///takes the name of the image in input, the set of polygons, the set of per polygons transformation,
 ///the label to be written and the global parameter for drawing style
-void PolyDumper::dumpOutline2VecSVG(const char * imageName,
+void Outline2Dumper::dumpOutline2VecSVG(const char * imageName,
 									   vector< vector< vector<Point2f> > > &polyVecVec,
 									   vector<Similarity2f> &trVec,
 									   vector< vector< string> > &labelVecVec,
 									   vector<vector<Point2f> > &labelPosVecVec,
 									   vector<vector<float> >&labelRadVecVec,
-									   PolyDumper::Param &pp)
+									   Outline2Dumper::Param &pp)
 {
 	assert(polyVecVec.size() == trVec.size());
 
@@ -430,11 +428,11 @@ void PolyDumper::dumpOutline2VecSVG(const char * imageName,
 	painter.end();
 }
 
-void PolyDumper::dumpOutline2VecSVG(const char * imageName,
+void Outline2Dumper::dumpOutline2VecSVG(const char * imageName,
 									   vector< vector< vector<Point2f> > > &polyVecVec,
 									   vector<Similarity2f> &trVec,
 									   vector< string > &labelVec,
-									   PolyDumper::Param &pp)
+									   Outline2Dumper::Param &pp)
 {
   vector< vector< string> > labelVecVec(labelVec.size());
   vector< vector<Point2f> > labelPosVec;

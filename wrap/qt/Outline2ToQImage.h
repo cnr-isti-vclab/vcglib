@@ -12,7 +12,7 @@
 ///parameters to the polygonal dumper
 
 ///this class is used to draw polygons on an image could be vectorial or not
-class PolyDumper
+class Outline2Dumper
 {
 public:
   class Param
