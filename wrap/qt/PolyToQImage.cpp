@@ -41,9 +41,9 @@ void PolyDumper::multiRectSetToSingleOutline2Vec(vector< Box2f > &rectVec,
     }
 }
 
-void PolyDumper::multiOutline2VecToSingleOutline2Vec(std::vector< std::vector<Point2f> > &multiPolyVec,
-                                                     std::vector<Similarity2f> &multiTrVec,
-                                                     std::vector<int> &indVec, int ind,
+void PolyDumper::multiOutline2VecToSingleOutline2Vec(const std::vector< std::vector<Point2f> > &multiPolyVec,
+                                                     const std::vector<Similarity2f> &multiTrVec,
+                                                     const std::vector<int> &indVec, int ind,
                                                      std::vector< std::vector<Point2f> > &singlePolyVec,
                                                      std::vector<Similarity2f> &singleTrVec)
 {

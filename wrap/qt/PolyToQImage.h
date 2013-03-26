@@ -77,7 +77,7 @@ public:
 	static void rectSetToOutline2Vec(std::vector< vcg::Box2f > &rectVec, std::vector< std::vector<vcg::Point2f> > &polyVec);
 	static void multiRectSetToSingleOutline2Vec(std::vector< vcg::Box2f > &rectVec, std::vector<vcg::Similarity2f> &trVec, std::vector<int> &indVec,
 											int ind, std::vector< std::vector<vcg::Point2f> > &polyVec, std::vector<vcg::Similarity2f> &trPolyVec);
-	static void multiOutline2VecToSingleOutline2Vec(std::vector< std::vector< vcg::Point2f> > &multipolyVec,  std::vector< vcg::Similarity2f> &trVec, std::vector<int> &indVec,
+	static void multiOutline2VecToSingleOutline2Vec(const std::vector<std::vector<vcg::Point2f> > &multipolyVec,  const std::vector<vcg::Similarity2f> &trVec, const std::vector<int> &indVec,
 												 int ind, std::vector< std::vector< vcg::Point2f> > &polyVec, std::vector< vcg::Similarity2f> &trPolyVec);
 
 	///write a polygon on a PNG file, format of the polygon is vector of vector of contours...nested contours are holes
