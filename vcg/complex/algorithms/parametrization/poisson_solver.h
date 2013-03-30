@@ -26,8 +26,6 @@
 
 #define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
 #include <eigenlib/Eigen/Sparse>
-//#include <eigenlib/Eigen/SparseCore>
-//#include <eigenlib/Eigen/SparseCholesky>
 #include <eigenlib/unsupported/Eigen/SparseExtra>
 
 #include <time.h>
@@ -111,35 +109,6 @@ class PoissonSolver
 
     }
 
-    /*void FindFarestVert(VertexType* &v0,VertexType* &v1)
-    {
-        UpdateBounding<MeshType>::Box(mesh);
-        ScalarType d0=mesh.bbox.Diag();
-        ScalarType d1=d0;
-        v0=NULL;
-        v1=NULL;
-        for (unsigned int j=0;j<mesh.vert.size();j++)
-        {
-            VertexType *v=&mesh.vert[j];
-            if (!v->IsD())
-            {
-                ScalarType d_test=(v->P()-mesh.bbox.min).Norm();
-                if (d_test<d0)
-                {
-                    v0=v;
-                    d0=d_test;
-                }
-                d_test=(v->P()-mesh.bbox.max).Norm();
-                if (d_test<d1)
-                {
-                    v1=v;
-                    d1=d_test;
-                }
-            }
-        }
-        assert(v0!=NULL);
-        assert(v1!=NULL);
-    }*/
 
     void FindFarthestVert(VertexType* &v0,VertexType* &v1)
     {
@@ -497,20 +466,6 @@ class PoissonSolver
 
     bool Solve()
     {
-        //A.finalize();
-        //Eigen::SparseMatrix<double> As=Eigen::SparseMatrix<double>(A);
-        //As.finalize();
-        //
-        //SparseLDLT<SparseMatrix<double>,Taucs> ldlt_of_A(As);
-        //if(!ldlt_of_A.succeeded())
-        //{
-        //	printf("Decomposition Failed \n");
-        //	return false;
-        //}
-        ///*printf("\n");*/
-
-        //ldlt_of_A.solveInPlace(b);
-
         //return true;
         A.finalize();
         Eigen::SparseMatrix<double> As=Eigen::SparseMatrix<double>(A);
@@ -642,42 +597,6 @@ public:
         to_fix.resize(dist);
     }
 
-    /*///fix default vertices no need if already border on other vertices are fixed
-    ///you need at least 2 fixed for solving without field ,
-    ///while only 1 if you conforms to a given cross field
-    void FixDefaultVertices()
-    {
-        ///in this case there are already vertices fixed, so no need to fix by default
-        assert(to_fix.size()==0);
-        ///then fix only one vertex
-        if (use_direction_field)
-        {
-            for (size_t i=0;i<mesh.vert.size();i++)
-                if (!mesh.vert[i].IsD())
-                {
-                    mesh.vert[i].T().P()=Point2<ScalarType>(0,0);
-                    to_fix.push_back(&mesh.vert[i]);
-                    return;
-                }
-        }
-        ///then fix 2 vertices
-        else
-        {
-            VertexType *v0;
-            VertexType *v1;
-            FindFarestVert(v0,v1);
-            if (v0==v1)
-            {
-                tri::io::ExporterPLY<MeshType>::Save(mesh,"./parametrized.ply");
-                assert(0);
-            }
-            v0->T().P()=Point2<ScalarType>(0,0);
-            v1->T().P()=Point2<ScalarType>(1,0);
-            to_fix.push_back(v0);
-            to_fix.push_back(v1);
-            return;
-        }
-    }*/
 
     ///fix default vertices no need if already border on other vertices are fixed
     ///you need at least 2 fixed for solving without field ,
