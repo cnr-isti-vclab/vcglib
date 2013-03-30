@@ -26,6 +26,7 @@
 
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/math/matrix44.h>
+#include <vcg/complex/exception.h>
 
 namespace vcg {
 namespace tri {
@@ -160,7 +161,8 @@ static void PerFace(ComputeMeshType &m)
 {
   if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException("PerFaceNormal");
   for(FaceIterator f=m.face.begin();f!=m.face.end();++f)
-            if( !(*f).IsD() )	face::ComputeNormal(*f);
+            if( !(*f).IsD() )
+                face::ComputeNormal(*f);
 }
 
 /// \brief Calculates the vertex normal by averaging the current per-face normals.
