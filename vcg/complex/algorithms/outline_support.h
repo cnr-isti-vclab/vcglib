@@ -63,13 +63,28 @@ public:
    */
   static Box2<ScalarType> Outline2BBox(const std::vector<Point2<ScalarType> > &outline2)
   {
-      Box2<ScalarType> bb;
-      for(size_t i=0;i<outline2.size();++i)
-          bb.Add(outline2[i]);
+    Box2<ScalarType> bb;
+    for(size_t i=0;i<outline2.size();++i)
+      bb.Add(outline2[i]);
 
-      return bb;
+    return bb;
   }
 
+  /**
+   * Returns the bounding box of the polygon defined by the parameter points
+   * @param a vector of points
+   * @return the bounding box of the polygon
+   * @see Box2
+   */
+  static Box2<ScalarType> Outline2VecBBox(const std::vector<std::vector<Point2<ScalarType> > > &outline2Vec)
+  {
+    Box2<ScalarType> bb;
+    for(size_t j=0;j<outline2Vec.size();++j)
+      for(size_t i=0;i<outline2Vec[j].size();++i)
+        bb.Add(outline2Vec[j][i]);
+
+    return bb;
+  }
 
   static void ReverseOutline2(std::vector< Point2<ScalarType> > &outline2)
   {
