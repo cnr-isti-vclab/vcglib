@@ -1,13 +1,16 @@
 #ifndef VORONOI_ATLAS_H
 #define VORONOI_ATLAS_H
+
 #include<vcg/complex/algorithms/parametrization/poisson_solver.h>
 #include<vcg/complex/algorithms/parametrization/uv_utils.h>
 #include<vcg/complex/algorithms/parametrization/distortion.h>
-#include<vcg/space/poly_packer.h>
-#include<vcg/complex/append.h>
+#include<vcg/space/outline2_packer.h>
+#include<vcg/space/rasterized_outline2_packer.h>
 #include<vcg/complex/algorithms/update/texture.h>
 #include<vcg/complex/algorithms/point_sampling.h>
 #include<vcg/complex/algorithms/voronoi_clustering.h>
+
+#include<wrap/qt/outline2_rasterizer.h>
 
 namespace vcg {
 namespace tri {
@@ -83,6 +86,7 @@ public:
  {
    VoronoiAtlasParam()
    {
+     maxIterNum = 5;
      sampleNum=10;
      overlap=false;
    }
@@ -102,6 +106,7 @@ public:
    int sampleNum;
    bool overlap;
    Stat vas;
+   int maxIterNum;
  };
 
  // Main parametrization function:
@@ -125,13 +130,14 @@ public:
   // Main processing loop
   do
   {
+    qDebug("************ ITERATION %i sampling mesh of %i with %i ************",pp.vas.iterNum,m.fn,pp.sampleNum);
     int st0=clock();
     std::vector<Point3f> PoissonSamples;
     float diskRadius=0;
     tri::PoissonSampling(m,PoissonSamples,pp.sampleNum,diskRadius);
     int st1=clock();
     pp.vas.samplingTime+= st1-st0;
-    printf("Sampling created a new mesh of %lu points\n",PoissonSamples.size());
+    qDebug("Sampling created a new mesh of %lu points\n",PoissonSamples.size());
     std::vector<VertexType *> seedVec;
     tri::VoronoiProcessing<VoroMesh>::SeedToVertexConversion(m,PoissonSamples,seedVec);
     tri::UpdateTopology<VoroMesh>::VertexFace(m);
@@ -145,6 +151,8 @@ public:
     {
       VoroMesh *rm = new VoroMesh();
       int selCnt = tri::VoronoiProcessing<VoroMesh>::FaceSelectAssociateRegion(m,seedVec[i]);
+      qDebug("Region %i of %i faces",i,selCnt);
+      if(selCnt==0) continue;
       assert(selCnt>0);
       if(pp.overlap){
       tri::UpdateSelection<VoroMesh>::VertexFromFaceLoose(m);
@@ -165,16 +173,24 @@ public:
         CollectUVBorder(rm,uvBorder);
         meshRegionVec.push_back(rm);
         uvBorders.push_back(uvBorder);
+        int foldedCnt = tri::Distortion<VoroMesh,false>::Folded(*rm);
+        if( foldedCnt > rm->fn/10)
+        {
+          badRegionVec.push_back(rm);
+          qDebug("-- region %i Parametrized but with %i fold on %i!",i,foldedCnt,rm->fn);
+        }
+        else qDebug("-- region %i Parametrized!",i);
+
       } else
       {
-        qDebug("ACH - mesh %i is NOT homeomorphic to a disk\n",i);
+        qDebug("-- region %i is NOT homeomorphic to a disk\n",i);
         badRegionVec.push_back(rm);
       }
       int tp1=clock();
       pp.vas.unwrapTime +=tp1-tp0;
       ++pp.vas.iterNum;
     }
-
+    qDebug("\n -- Completed (%i bad regions) -- \n", badRegionVec.size());
     VoroMesh *rm = new VoroMesh();
     tri::VoronoiProcessing<VoroMesh>::FaceSelectAssociateRegion(m,0);
     tri::Append<VoroMesh,VoroMesh>::Mesh(*rm, m, true);
@@ -189,7 +205,7 @@ public:
     if(!badRegionVec.empty())
     {
       for(size_t i=0;i<badRegionVec.size();++i)
-        if(badRegionVec[i]->fn>10)
+        if(badRegionVec[i]->fn>50)
           tri::Append<VoroMesh,VoroMesh>::Mesh(m, *badRegionVec[i], false);
 
       tri::Clean<VoroMesh>::RemoveDuplicateFace(m);
@@ -201,7 +217,10 @@ public:
 
   std::vector<Similarity2f> trVec;
   Point2f finalSize;
-  PolyPacker<float>::PackAsObjectOrientedRect(uvBorders,Point2f(1024.0f,1024.0f),trVec,finalSize);
+  //PolyPacker<float>::WritePolyVec(uvBorders,"borders.poly");
+  PolyPacker<float>::PackAsObjectOrientedRect(uvBorders,Point2i(1024,1024),trVec,finalSize);
+  RasterizedOutline2Packer<float,QtOutline2Rasterizer>::Parameters prp;
+  RasterizedOutline2Packer<float,QtOutline2Rasterizer>::Pack(uvBorders,Point2i(1024,1024),trVec,prp);
   // loop again over all the patches
   pp.vas.regionNum=meshRegionVec.size();
   for(size_t i=0; i<meshRegionVec.size();++i)
