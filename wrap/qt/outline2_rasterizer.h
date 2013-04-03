@@ -2,7 +2,7 @@
 #define QTPOLYRASTERIZER_H
 
 #include <QImage>
-#include <QSvgGenerator>
+//#include <QSvgGenerator>
 #include <QPainter>
 #include <vcg/space/point2.h>
 #include <vcg/space/color4.h>
