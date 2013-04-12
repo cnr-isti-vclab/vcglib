@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -44,7 +44,7 @@ namespace vcg {
 	namespace tri {
 		namespace io {
 
-			/** 
+			/**
 			This class encapsulate a filter for importing obj (Alias Wavefront) meshes.
 			Warning: this code assume little endian (PC) architecture!!!
 			*/
@@ -74,7 +74,7 @@ namespace vcg {
 					}
 
 					/// It returns a bit mask describing the field preesnt in the ply file
-					int mask;  
+					int mask;
 
 					/// a Simple callback that can be used for long obj parsing.
 					// it returns the current position, and formats a string with a description of what th efunction is doing (loading vertexes, faces...)
@@ -82,7 +82,7 @@ namespace vcg {
 
 					/// number of vertices
 					int numVertices;
-					/// number of faces (the number of triangles could be 
+					/// number of faces (the number of triangles could be
 					/// larger in presence of polygonal faces
 					int numFaces;
 					/// number of texture coords indexes
@@ -102,7 +102,7 @@ namespace vcg {
 				//	short attr;  // material index
 				//};
 				struct ObjIndexedFace
-				{ 
+				{
 					void set(const int & num){v.resize(num);n.resize(num); t.resize(num);}
 					std::vector<int> v;
 					std::vector<int> n;
@@ -146,7 +146,7 @@ namespace vcg {
 
 				// to check if a given error is critical or not.
 				static bool ErrorCritical(int err)
-				{ 
+				{
 					if(err<0x00A && err>=0) return false;
 					return true;
 				}
@@ -169,7 +169,7 @@ namespace vcg {
 						"No face field found",																				//  9
 						"Vertex statement with less than 3 coords",										// 10
 						"Texture coords statement with less than 2 coords",						// 11
-						"Vertex normal statement with less than 3 coords",						// 12  
+						"Vertex normal statement with less than 3 coords",						// 12
 						"Face with less than 3 vertices",															// 13
 						"Bad vertex index in face",																		// 14
 						"Bad texture coords index in face",														// 15
@@ -184,7 +184,7 @@ namespace vcg {
 					else return obj_error_msg[error];
 				};
 
-				// Helper functions that checks the range of indexes 
+				// Helper functions that checks the range of indexes
 				// putting them in the correct range if less than zero (as in the obj style)
 
 				static bool GoodObjIndex(int &index, const int maxVal)
@@ -248,7 +248,7 @@ namespace vcg {
 					std::string	header;
 
 					short currentMaterialIdx = 0;			// index of current material into materials vector
-					Color4b currentColor=Color4b::LightGray;	// we declare this outside code block since other 
+					Color4b currentColor=Color4b::LightGray;	// we declare this outside code block since other
 					// triangles of this face will share the same color
 
 					Material defaultMaterial;					// default material: white
@@ -265,7 +265,7 @@ namespace vcg {
 					VertexIterator vi = vcg::tri::Allocator<OpenMeshType>::AddVertices(m,oi.numVertices);
 					//FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,oi.numFaces);
 					std::vector<Color4b> vertexColorVector;
-					ObjIndexedFace	ff; 
+					ObjIndexedFace	ff;
 					const char *loadingStr = "Loading";
 					while (!stream.eof())
 					{
@@ -337,7 +337,7 @@ namespace vcg {
 								CoordType n;
 								n[0] = (ScalarType) atof(tokens[1].c_str());
 								n[1] = (ScalarType) atof(tokens[2].c_str());
-								n[2] = (ScalarType) atof(tokens[3].c_str());	
+								n[2] = (ScalarType) atof(tokens[3].c_str());
 								normals.push_back(n);
 
 								numVNormals++;
@@ -416,6 +416,8 @@ namespace vcg {
 										GoodObjIndex(indexTVect[pi],oi.numTexCoords);
 										polygonVect[0][pi].Import(m.vert[indexVVect[pi]].cP());
 									}
+									if(vertexesPerFace>3)
+									   oi.mask |= Mask::IOM_BITPOLYGONAL;
 
 									if(vertexesPerFace<5)
 										InternalFanTessellator(polygonVect, indexTriangulatedVect);
@@ -463,7 +465,7 @@ namespace vcg {
 										{ // verifying validity of texture coords indices
 											bool invalid = false;
 											for(int i=0;i<3;i++)
-												if(!GoodObjIndex(ff.t[i],oi.numTexCoords)) 
+												if(!GoodObjIndex(ff.t[i],oi.numTexCoords))
 												{
 													//return E_BAD_VERT_TEX_INDEX;
 													invalid = true;
@@ -882,7 +884,7 @@ namespace vcg {
 						lineCount++;
 						std::getline(stream, line);
 						totRead+=line.size();
-						if(oi.cb && (lineCount%1000)==0) 
+						if(oi.cb && (lineCount%1000)==0)
 							(*oi.cb)( (int)(100.0*(float(totRead))/float(length)), "Loading mask...");
 						if(line.size()>2)
 						{
@@ -908,17 +910,17 @@ namespace vcg {
 						}
 					}
 					oi.mask = 0;
-					if (oi.numTexCoords)	
+					if (oi.numTexCoords)
 					{
 						if (oi.numTexCoords==oi.numVertices)
 							oi.mask |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
 
 						oi.mask |= vcg::tri::io::Mask::IOM_WEDGTEXCOORD;
 						// Usually if you have tex coords you also have materials
-						oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
+						oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR;
 					}
-					if(bHasPerFaceColor)		oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR; 
-					if(bHasPerVertexColor)	oi.mask |= vcg::tri::io::Mask::IOM_VERTCOLOR; 
+					if(bHasPerFaceColor)		oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR;
+					if(bHasPerVertexColor)	oi.mask |= vcg::tri::io::Mask::IOM_VERTCOLOR;
 					if (bHasNormals) {
 						if (oi.numNormals == oi.numVertices)
 							oi.mask |= vcg::tri::io::Mask::IOM_VERTNORMAL;
@@ -975,7 +977,7 @@ namespace vcg {
 									first = false;
 								//strcpy(currentMaterial.name, tokens[1].c_str());
 								if(tokens.size() < 2)
-									return false; 
+									return false;
 								currentMaterial.materialName=tokens[1];
 							}
 							else if (header.compare("Ka")==0)
@@ -1015,7 +1017,7 @@ namespace vcg {
 									return false;
 								currentMaterial.Tr = (float) atof(tokens[1].c_str());
 							}
-							else if (header.compare("Ns")==0)  // shininess        
+							else if (header.compare("Ns")==0)  // shininess
 							{
 								if (tokens.size() < 2)
 									return false;

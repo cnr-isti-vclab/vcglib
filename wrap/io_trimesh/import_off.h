@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -37,7 +37,7 @@ namespace vcg
 		{
 			// /** \addtogroup  */
 			// /* @{ */
-			/** 
+			/**
 			This class encapsulate a filter for importing OFF meshes.
 			A basic description of the OFF file format can be found at http://www.geomview.org/docs/html/geomview_41.html
 			*/
@@ -58,7 +58,7 @@ namespace vcg
 				// OFF codes
 				enum OFFCodes {NoError=0, CantOpen, InvalidFile,
 					InvalidFile_MissingOFF,
-          UnsupportedFormat, ErrorNotTriangularFace,ErrorHighDimension,ErrorDegenerateFace};
+		  UnsupportedFormat, ErrorNotTriangularFace,ErrorHighDimension,ErrorDegenerateFace};
 
 				/*!
 				*	Standard call for knowing the meaning of an error code
@@ -71,9 +71,9 @@ namespace vcg
 					{
 						"No errors", "Can't open file", "Invalid file",
 						"Invalid file: OFF file should have in the first line the OFF keyword as a first token",
-              "Unsupported format", "Face with more than 3 vertices","File with high dimensional vertexes are not supported", "Error Degenerate Face with less than 3 vertices"				};
+			  "Unsupported format", "Face with more than 3 vertices","File with high dimensional vertexes are not supported", "Error Degenerate Face with less than 3 vertices"				};
 
-          if(message_code>6 || message_code<0)
+		  if(message_code>6 || message_code<0)
 						return "Unknown error";
 					else
 						return error_msg[message_code];
@@ -90,9 +90,9 @@ namespace vcg
 				{
 					// To obtain the loading mask all the file must be parsed
 					// to distinguish between per-vertex and per-face color attribute.
-          loadmask=0;
+		  loadmask=0;
 					MESH_TYPE dummyMesh;
-          return (Open(dummyMesh, filename, loadmask)==NoError);
+		  return (Open(dummyMesh, filename, loadmask)==NoError);
 				}
 
 				static int Open(MESH_TYPE &mesh, const char *filename,CallBackPos *cb=0)
@@ -109,7 +109,7 @@ namespace vcg
 				 *  \return             the operation result
 				 */
 				static int Open(MESH_TYPE &mesh, const char *filename, int &loadmask,
-          CallBackPos *cb=0)
+		  CallBackPos *cb=0)
 				{
 					std::ifstream stream(filename);
 					if (stream.fail())
@@ -129,14 +129,14 @@ namespace vcg
 					 [ST][C][N][4][n]OFF	# Header keyword
 					 [Ndim]		# Space dimension of vertices, present only if nOFF
 					 NVertices  NFaces  NEdges   # NEdges not used or checked
-					 
+
 					 x[0]  y[0]  z[0]	# Vertices, possibly with normals, colors, and/or texture coordinates, in that order,  if the prefixes N, C, ST are present.
 					 # If 4OFF, each vertex has 4 components including a final homogeneous component.
 					 # If nOFF, each vertex has Ndim components.
 					 # If 4nOFF, each vertex has Ndim+1 components.
 					 ...
 					 x[NVertices-1]  y[NVertices-1]  z[NVertices-1]
-					 
+
 					 # Faces
 					 # Nv = # vertices on this face
 					 # v[0] ... v[Nv-1]: vertex indices
@@ -147,7 +147,7 @@ namespace vcg
 					 # nothing: default
 					 # integer: colormap index
 					 # 3 or 4 integers: RGB[A] values 0..255
-					 # 3 or 4 floats: RGB[A] values 0..1				 
+					 # 3 or 4 floats: RGB[A] values 0..1
 					 */
 					std::string header = tokens[0];
 					if (header.rfind("OFF") != std::basic_string<char>::npos)
@@ -163,11 +163,11 @@ namespace vcg
 						}
 				else return InvalidFile_MissingOFF;
 
-        // If the file is slightly malformed and it has nvert and nface AFTER the OFF string instead of in the next line
+		// If the file is slightly malformed and it has nvert and nface AFTER the OFF string instead of in the next line
 				// we manage it here...
 				if(tokens.size()==1) TokenizeNextLine(stream, tokens);
 				else tokens.erase(tokens.begin(),tokens.begin()+1);
-					
+
 					// Update loading mask
 					///////////////////////////////////////
 
@@ -178,11 +178,11 @@ namespace vcg
 					if (isColorDefined)			{ loadmask |= Mask::IOM_VERTCOLOR;loadmask |= Mask::IOM_FACECOLOR;}
 
 
-          //if(onlyMaskFlag) return NoError;
-					
-					
+		  //if(onlyMaskFlag) return NoError;
+
+
 					mesh.Clear();
-					
+
 					// check on next 2 lines to detect corrupted files
 					if(tokens.size() < 3)
 						return InvalidFile;
@@ -208,7 +208,7 @@ namespace vcg
 
 					for (unsigned int i=0; i<nVertices; i++, v_iter++)
 					{
-						if (cb && (i%1000)==0) 
+						if (cb && (i%1000)==0)
 							cb(i*50/nVertices, "Vertex Loading");
 
 						// Read 3 vertex coordinates
@@ -280,20 +280,20 @@ namespace vcg
 								{
 									// read RGB color
 									if (tokens[k].find(".") == size_t(-1))// if it is a float there is a dot
-									{ 
+									{
 										// integers
-										unsigned char r = 
+										unsigned char r =
 											static_cast<unsigned char>(atoi(tokens[k].c_str()));
-										unsigned char g = 
+										unsigned char g =
 											static_cast<unsigned char>(atoi(tokens[k+1].c_str()));
-										unsigned char b = 
+										unsigned char b =
 											static_cast<unsigned char>(atoi(tokens[k+2].c_str()));
 
 										vcg::Color4b color(r, g, b, 255);
 										(*v_iter).C().Import(color);
 									}
 									else
-									{ 
+									{
 										// floats
 										float r = static_cast<float>(atof(tokens[k].c_str()));
 										float g = static_cast<float>(atof(tokens[k+1].c_str()));
@@ -307,13 +307,13 @@ namespace vcg
 								{
 									// read RGBA color
 									if (tokens[k].find(".") == size_t(-1))
-									{ 
+									{
 										// integers
-										unsigned char r = 
+										unsigned char r =
 											static_cast<unsigned char>(atoi(tokens[k].c_str()));
-										unsigned char g = 
+										unsigned char g =
 											static_cast<unsigned char>(atoi(tokens[k+1].c_str()));
-										unsigned char b = 
+										unsigned char b =
 											static_cast<unsigned char>(atoi(tokens[k+2].c_str()));
 										unsigned char a =
 											static_cast<unsigned char>(atoi(tokens[k+3].c_str()));
@@ -322,7 +322,7 @@ namespace vcg
 										(*v_iter).C().Import(color);
 									}
 									else
-									{ 
+									{
 										// floats
 										float r = static_cast<float>(atof(tokens[k].c_str()));
 										float g = static_cast<float>(atof(tokens[k+1].c_str()));
@@ -410,7 +410,7 @@ namespace vcg
 						nFaces += trigs;
 						Allocator<MESH_TYPE>::AddFaces(mesh, trigs);
 						std::vector<int> vertIndices(vert_per_face);
-                        std::vector<vcg::Point3f > polygonVect(vert_per_face); // vec of polygon loops used for the triangulation of polygonal face
+						std::vector<vcg::Point3f > polygonVect(vert_per_face); // vec of polygon loops used for the triangulation of polygonal face
 						for (int j=0; j < vert_per_face; j++)
 						{
 						  if (k == tokens.size())   // if EOL // Go to next line when needed
@@ -420,7 +420,7 @@ namespace vcg
 							k = 0;
 						  }
 						  vertIndices[j] = atoi(tokens[k].c_str());
-                          polygonVect[j].Import<ScalarType> (mesh.vert[ vertIndices[j] ].P());
+						  polygonVect[j].Import<ScalarType> (mesh.vert[ vertIndices[j] ].P());
 						  k++;
 						}
 						if(vert_per_face==4)
@@ -449,7 +449,7 @@ namespace vcg
 						{
 						  std::vector<int> indexTriangulatedVect;
 						  //                              TessellatePlanarPolygon3(polygonVect,indexTriangulatedVect);
-                          std::vector< std::vector<Point3f> > loopVect;
+						  std::vector< std::vector<Point3f> > loopVect;
 						  loopVect.push_back(polygonVect);
 #ifdef __gl_h_
                           //qDebug("OK: using opengl tessellation for a polygon of %i vertices",vertexesPerFace);
@@ -463,6 +463,14 @@ namespace vcg
                             mesh.face[f+j/3].V(0) = &(mesh.vert[ vertIndices[ indexTriangulatedVect[j+0] ] ]);
                             mesh.face[f+j/3].V(1) = &(mesh.vert[ vertIndices[ indexTriangulatedVect[j+1] ] ]);
                             mesh.face[f+j/3].V(2) = &(mesh.vert[ vertIndices[ indexTriangulatedVect[j+2] ] ]);
+                            // To correctly set Faux edges we have to clear the faux bit for all the edges that do not correspond to consecutive vertices
+                            // Consecutivity is in the space of the index of the polygon.
+                            for(int qq=0;qq<3;++qq)
+                            {
+                              if( (indexTriangulatedVect[j+qq]+1)%indexTriangulatedVect.size() == indexTriangulatedVect[j+(qq+1)%3])
+                                mesh.face[f+j/3].ClearF(qq);
+                              else mesh.face[f+j/3].SetF(qq);
+                            }
                           }
                         }
                         f+=trigs;
@@ -471,11 +479,11 @@ namespace vcg
 						// NOTE: It is assumed that colored face takes exactly one text line
 						//       (otherwise it is impossible to parse color information since
 						//        color components can vary)
-            size_t color_elements = tokens.size() - vert_per_face-1;
-            isColorDefined |= (color_elements>0);
-            if(isColorDefined) loadmask |= Mask::IOM_FACECOLOR;
+			size_t color_elements = tokens.size() - vert_per_face-1;
+			isColorDefined |= (color_elements>0);
+			if(isColorDefined) loadmask |= Mask::IOM_FACECOLOR;
 
-            if( (color_elements>0)  && tri::HasPerFaceColor(mesh) )
+			if( (color_elements>0)  && tri::HasPerFaceColor(mesh) )
 						{
 
 
@@ -551,21 +559,21 @@ namespace vcg
 
 				} // end Open
 
-    protected:
-			
+	protected:
+
 				/*!
 				* Read the next valid line and parses it into "tokens", allowing the tokens to be read one at a time.
 				* \param stream	The object providing the input stream
 				*	\param tokens	The "tokens" in the next line
 				*/
-                                inline static void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens)
+								inline static void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens)
 				{
 					std::string line;
 					do
 						std::getline(stream, line, '\n');
 					while (line[0] == '#' || line.length()==0 || line[0]=='\r');
 
-					size_t from = 0; 
+					size_t from = 0;
 					size_t to = 0;
 					size_t length = line.size();
 					tokens.clear();
@@ -590,9 +598,9 @@ namespace vcg
 				*	\param		i	the color index
 				*	\return			the corresponding <CODE>vcg::Color4f</CODE> color
 				*/
-				static const vcg::Color4f ColorMap(int i) 
+				static const vcg::Color4f ColorMap(int i)
 				{
-					static const float colorMap[148][4] = 
+					static const float colorMap[148][4] =
 					{
 						{ 1.0f,	 1.0f,	 1.0f,	 1.0f	 },
 						{ 1.0f,	 1.0f,	 1.0f,	 1.0f	 },
