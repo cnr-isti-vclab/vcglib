@@ -266,7 +266,7 @@ namespace io {
 			}//for
 			fprintf(fp,"# %d faces, %d coords texture\n\n",m.fn,int(CoordIndexTexture.size()));
 			
-			fprintf(fp,"# End of File");
+			fprintf(fp,"# End of File\n");
 			fclose(fp);
 
 			int r = 0;
