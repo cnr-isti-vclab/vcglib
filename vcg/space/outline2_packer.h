@@ -183,8 +183,8 @@ static bool PackMultiAsObjectOrientedRect(const std::vector< std::vector<Point2x
     bbVec.push_back(getPolyOOBB(polyVec[i],rot));
     rotVec.push_back(rot);
   }
-
-  bool ret= RectPacker<float>::PackMulti(bbVec,containerSizeX,containerNum,trVec,indVec,coveredContainerVec);
+  const Point2i containerSizeI=Point2i::Construct(containerSizeX);
+  bool ret= RectPacker<float>::PackMulti(bbVec,containerSizeI,containerNum,trVec,indVec,coveredContainerVec);
 
   for(size_t i=0;i<polyVec.size();++i)
   {
