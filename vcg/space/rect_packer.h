@@ -146,7 +146,7 @@ static  bool PackOccupancy(const std::vector<Box2x > & rectVec,  /// the set of 
     return true;
   }
 static  bool PackMulti(const std::vector<Box2x > & rectVec,  /// the set of rectangles that have to be packed (generic floats, no req.)
-                  const Point2i containerSizeX,         /// the size of the container where they has to be fitted (usually in pixel size)
+                  const Point2i containerSizeI,         /// the size of the container where they has to be fitted (usually in pixel size)
                   const int containerNum,
                   std::vector<Similarity2x> &trVec,     /// the result, a set of similarity transformation that have to be applied to the rect to get their position
                   std::vector<int> &indVec,
@@ -163,7 +163,7 @@ static  bool PackMulti(const std::vector<Box2x > & rectVec,  /// the set of rect
   {
     stat().pack_attempt_num++;
     int t0=clock();
-    ret=PackOccupancyMulti(rectVec,containerSizeX,containerNum,currOccupancy,currTrVec, currIndVec, currCovered);
+    ret=PackOccupancyMulti(rectVec,containerSizeI,containerNum,currOccupancy,currTrVec, currIndVec, currCovered);
     stat().pack_attempt_time = float(clock()-t0)/float(CLOCKS_PER_SEC);
     if(ret)
     {
