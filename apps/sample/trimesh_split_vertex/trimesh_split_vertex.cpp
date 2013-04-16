@@ -121,7 +121,7 @@ int main(int argc, char ** argv)
 
 	SrcMesh srcMesh;
 #ifdef TEST_IN_PLACE_SPLIT
-	srcMesh.face.EnableWedgeTex();
+	srcMesh.face.EnableWedgeTexCoord();
 #endif
 	vcg::tri::io::ImporterPLY<SrcMesh>::Open(srcMesh, argv[1]);
 	if ((srcMesh.VN() <= 0) || (srcMesh.FN() <= 0))
