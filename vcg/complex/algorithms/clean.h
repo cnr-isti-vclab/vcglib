@@ -307,7 +307,8 @@ private:
 			*/
 			static int RemoveDuplicateEdge( MeshType & m)    // V1.0
 			{
-			  assert(m.fn == 0 && m.en >0); // just to be sure we are using an edge mesh...
+              //assert(m.fn == 0 && m.en >0); // just to be sure we are using an edge mesh...
+                if (m.en==0)return 0;
 			  std::vector<SortedPair> eVec;
 			  for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
 				if(!(*ei).IsD())
