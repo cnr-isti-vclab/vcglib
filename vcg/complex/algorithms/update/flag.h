@@ -124,6 +124,10 @@ public:
   static void FaceClearB(MeshType &m) { FaceClear(m,FaceType::BORDER012);}
   static void FaceClearS(MeshType &m) {FaceClear(m,FaceType::SELECTED);}
   static void FaceClearF(MeshType &m) { FaceClear(m,FaceType::FAUX012);}
+  static void FaceClearCreases(MeshType &m) { FaceClear(m,FaceType::CREASE0);
+                                              FaceClear(m,FaceType::CREASE1);
+                                              FaceClear(m,FaceType::CREASE2);
+                                            }
 
   static void EdgeSetV(MeshType &m) { EdgeSet(m,EdgeType::VISITED);}
   static void VertexSetV(MeshType &m) { VertexSet(m,VertexType::VISITED);}
@@ -269,13 +273,13 @@ public:
         if(pe-ps==1) 	{
           ps->v[0]->SetB();
           ps->v[1]->SetB();
-        } else
+        }/* else
           if(pe-ps!=2)  {  // not twomanyfold!
             for(;ps!=pe;++ps) {
               ps->v[0]->SetB(); // Si settano border anche i complex.
               ps->v[1]->SetB();
             }
-          }
+          }*/
         ps = pe;
       }
     }
