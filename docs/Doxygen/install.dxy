@@ -1,18 +1,17 @@
-/** \page install 
+/** \page install
 
 Installation and folder structure
 ================
 
 VCG Lib uses a SVN repository. To get the right subset of the svn trunk in the devel folder you should issue the following svn command:
 
-    svn co https://vcg.svn.sourceforge.net/svnroot/vcg/trunk/vcglib vcglib
-
+    svn checkout svn://svn.code.sf.net/p/vcg/code/trunk/vcglib vcglib
 
 Windows users with tortoisesvn (http://www.tortoisesvn.net) installed should
 
 1. create a folder named vcglib.
 2. right-click in the newly created vcglib folder and choose SVN Checkout
-3. put in the first parameter: https://vcg.svn.sourceforge.net/svnroot/vcg/trunk/vcglib
+3. put in the first parameter: https://svn.code.sf.net/p/vcg/code/trunk/vcglib
 4. press ok and wait, it should start to check out the last revision of the whole tree.
 
 Folder Structure
