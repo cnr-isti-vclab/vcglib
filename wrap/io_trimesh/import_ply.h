@@ -63,12 +63,10 @@ typedef typename OpenMeshType::VertexType VertexType;
 typedef typename OpenMeshType::FaceType FaceType;
 typedef typename OpenMeshType::VertexIterator VertexIterator;
 typedef typename OpenMeshType::FaceIterator FaceIterator;
-  typedef typename OpenMeshType::EdgeIterator EdgeIterator;
-
-//template <class T> int PlyType () {	assert(0);  return 0;}
+typedef typename OpenMeshType::EdgeIterator EdgeIterator;
 
 #define MAX_USER_DATA 256
-// Struttura ausiliaria per la lettura del file ply
+// Auxiliary structure for reading ply files
 struct LoadPly_FaceAux
 {
 	unsigned char size;
@@ -104,12 +102,12 @@ struct LoadPly_EdgeAux
 // Yet another auxiliary data structure for loading some strange ply files 
 // the original stanford range data...
 struct LoadPly_RangeGridAux {
-      unsigned char num_pts;
-      int pts[5];
-    };
+	unsigned char num_pts;
+	int pts[5];
+};
 
 
-// Struttura ausiliaria per la lettura del file ply
+// Auxiliary structure to load vertex data
 template<class S>
 struct LoadPly_VertAux
 {
@@ -126,7 +124,7 @@ struct LoadPly_VertAux
 	float u,v,w;
 };
 
-// Struttura ausiliaria caricamento camera
+// Auxiliary structure to load the camera
 struct LoadPly_Camera
 {
 	float view_px;
@@ -169,25 +167,25 @@ static const  PropDescriptor &VertDesc(int i)
 /*08*/ {"vertex", "diffuse_red"  ,     ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,r),0,0,0,0,0  ,0},
 /*09*/ {"vertex", "diffuse_green",     ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,g),0,0,0,0,0  ,0},
 /*10*/ {"vertex", "diffuse_blue" ,     ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,b),0,0,0,0,0  ,0},
-/*11*/ {"vertex", "confidence",ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0},
+/*11*/ {"vertex", "confidence", ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0},
 /*12*/ {"vertex", "nx",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n)                       ,0,0,0,0,0  ,0},
 /*13*/ {"vertex", "ny",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 1*sizeof(ScalarType),0,0,0,0,0  ,0},
 /*14*/ {"vertex", "nz",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
 /*15*/ {"vertex", "radius",     ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,radius),0,0,0,0,0  ,0},
-/*16*/ {"vertex", "texture_u",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,u),0,0,0,0,0  ,0},
-/*17*/ {"vertex", "texture_v",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,v),0,0,0,0,0  ,0},
-/*18*/ {"vertex", "texture_w",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,w),0,0,0,0,0  ,0},
-/*19*/ {"vertex", "intensity",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,intensity),0,0,0,0,0  ,0},
+/*16*/ {"vertex", "texture_u",  ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,u),0,0,0,0,0  ,0},
+/*17*/ {"vertex", "texture_v",  ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,v),0,0,0,0,0  ,0},
+/*18*/ {"vertex", "texture_w",  ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,w),0,0,0,0,0  ,0},
+/*19*/ {"vertex", "intensity",  ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,intensity),0,0,0,0,0  ,0},
 /*20*/ {"vertex", "s",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,u),0,0,0,0,0  ,0},
 /*21*/ {"vertex", "t",    ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,v),0,0,0,0,0  ,0},
 // DOUBLE
 /*22*/ {"vertex", "x",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0  ,0},
-/*23*/ {"vertex", "y",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + sizeof(ScalarType),0,0,0,0,0  ,0},
+/*23*/ {"vertex", "y",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + sizeof(ScalarType)  ,0,0,0,0,0  ,0},
 /*24*/ {"vertex", "z",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
-/*25*/ {"vertex", "nx",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n)                       ,0,0,0,0,0  ,0},
-/*26*/ {"vertex", "ny",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 1*sizeof(ScalarType),0,0,0,0,0  ,0},
-/*27*/ {"vertex", "nz",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
-/*28*/ {"vertex", "radius",     ply::T_DOUBLE, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,radius),0,0,0,0,0  ,0},
+/*25*/ {"vertex", "nx",        ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n)                       ,0,0,0,0,0  ,0},
+/*26*/ {"vertex", "ny",        ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 1*sizeof(ScalarType),0,0,0,0,0  ,0},
+/*27*/ {"vertex", "nz",        ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
+/*28*/ {"vertex", "radius",    ply::T_DOUBLE, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,radius),0,0,0,0,0  ,0},
 
 	};
 	return pv[i];
@@ -196,47 +194,47 @@ static const  PropDescriptor &VertDesc(int i)
 #define _FACEDESC_FIRST_  9 // the first descriptor with possible vertex indices
 #define _FACEDESC_LAST_  21
 static const  PropDescriptor &FaceDesc(int i)  
-{		
+{
 	static const 	PropDescriptor qf[_FACEDESC_LAST_]=
 	{
-/*                                       on file 	     on memory                                             on file 	     on memory */
-/*  0 */			{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/*  1 */			{"face", "flags",          ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,flags),     0,0,0,0,0  ,0},
-/*  2 */			{"face", "quality",        ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux,q),         0,0,0,0,0  ,0},
-/*  3 */			{"face", "texcoord",       ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux,texcoord),    1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_FaceAux,ntexcoord)   ,0},
-/*  4 */			{"face", "color",          ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux,colors),    1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_FaceAux,ncolors)   ,0},
-/*  5 */			{"face", "texnumber",      ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,texcoordind), 0,0,0,0,0  ,0},
-/*  6 */			{"face", "red"  ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,r),         0,0,0,0,0  ,0},
-/*  7 */			{"face", "green",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,g),         0,0,0,0,0  ,0},
-/*  8 */			{"face", "blue" ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,b),         0,0,0,0,0  ,0},
-/*  9 */			{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size)  ,0},
-/* 10 */			{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 11 */			{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_INT,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/*      	                           on file       on memory                                                on file       on memory */
+/*  0 */	{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_UCHAR, ply::T_UCHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/*  1 */	{"face", "flags",          ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,flags),       0,0,0,0,0  ,0},
+/*  2 */	{"face", "quality",        ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux,q),           0,0,0,0,0  ,0},
+/*  3 */	{"face", "texcoord",       ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux,texcoord),    1,0,ply::T_UCHAR, ply::T_UCHAR,offsetof(LoadPly_FaceAux,ntexcoord) ,0},
+/*  4 */	{"face", "color",          ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux,colors),      1,0,ply::T_UCHAR, ply::T_UCHAR,offsetof(LoadPly_FaceAux,ncolors)   ,0},
+/*  5 */	{"face", "texnumber",      ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,texcoordind), 0,0,0,0,0  ,0},
+/*  6 */	{"face", "red"  ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,r),           0,0,0,0,0  ,0},
+/*  7 */	{"face", "green",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,g),           0,0,0,0,0  ,0},
+/*  8 */	{"face", "blue" ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,b),           0,0,0,0,0  ,0},
+/*  9 */	{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_UCHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 10 */	{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_CHAR,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 11 */	{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_INT,   ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 
-/* 12 */			{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 13 */			{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_INT,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 14 */			{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 15 */			{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 16 */			{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_INT,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 17 */			{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_CHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 18 */			{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 19 */			{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_INT,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 20 */			{"face", "vertex_indices", ply::T_CHAR,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),		     1,0,ply::T_UCHAR,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size) ,0}
+/* 12 */	{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_CHAR,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 13 */	{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_INT,   ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 14 */	{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_UCHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 15 */	{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_CHAR,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 16 */	{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_INT,   ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 17 */	{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_CHAR,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 18 */	{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_UCHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 19 */	{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_INT,   ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 20 */	{"face", "vertex_indices", ply::T_CHAR,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_UCHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0}
 	};
 	return qf[i];
 }
-static const  PropDescriptor &TristripDesc(int i)  
-{		
-	static const 	PropDescriptor qf[1]=
+static const PropDescriptor &TristripDesc(int i)
+{
+	static const PropDescriptor qf[1]=
 	{
 		{"tristrips","vertex_indices", ply::T_INT,  ply::T_INT,  offsetof(LoadPly_TristripAux,v),		  1,1,ply::T_INT,ply::T_INT,offsetof(LoadPly_TristripAux,size) ,0},				
 	};
 	return qf[i];
 }
 
-static const  PropDescriptor &EdgeDesc(int i)
+static const PropDescriptor &EdgeDesc(int i)
 {
-	static const 	PropDescriptor qf[2]=
+	static const PropDescriptor qf[2]=
 	{
 		{"edge","vertex1", ply::T_INT,  ply::T_INT,  offsetof(LoadPly_EdgeAux,v1),		  0,0,0,0,0  ,0},
 		{"edge","vertex2", ply::T_INT,  ply::T_INT,  offsetof(LoadPly_EdgeAux,v2),		  0,0,0,0,0  ,0},
@@ -249,8 +247,8 @@ static const  PropDescriptor &EdgeDesc(int i)
 static const  PropDescriptor &RangeDesc(int i)  
 {		
 	static const PropDescriptor range_props[1] = {
-      {"range_grid","vertex_indices", ply::T_INT, ply::T_INT, offsetof(LoadPly_RangeGridAux,pts), 1, 0, ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_RangeGridAux,num_pts),0},
-    };
+		{"range_grid","vertex_indices", ply::T_INT, ply::T_INT, offsetof(LoadPly_RangeGridAux,pts), 1, 0, ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_RangeGridAux,num_pts),0},
+	};
 	return range_props[i];
 }
 
@@ -288,52 +286,52 @@ static const  PropDescriptor &CameraDesc(int i)
 /// Standard call for knowing the meaning of an error code
 static const char *ErrorMsg(int error)
 {
-  static std::vector<std::string> ply_error_msg;
-  if(ply_error_msg.empty())
-  {
-    ply_error_msg.resize(PlyInfo::E_MAXPLYINFOERRORS );
-    ply_error_msg[ply::E_NOERROR				]="No errors";
-	  ply_error_msg[ply::E_CANTOPEN				]="Can't open file";
-    ply_error_msg[ply::E_NOTHEADER ]="Header not found";
-      ply_error_msg[ply::E_UNESPECTEDEOF	]="Eof in header";
-	  ply_error_msg[ply::E_NOFORMAT				]="Format not found";
-	  ply_error_msg[ply::E_SYNTAX				]="Syntax error on header";
-	  ply_error_msg[ply::E_PROPOUTOFELEMENT]="Property without element";
-	  ply_error_msg[ply::E_BADTYPENAME		]="Bad type name";
-	  ply_error_msg[ply::E_ELEMNOTFOUND		]="Element not found";
-	  ply_error_msg[ply::E_PROPNOTFOUND		]="Property not found";
-	  ply_error_msg[ply::E_BADTYPE				]="Bad type on addtoread";
-	  ply_error_msg[ply::E_INCOMPATIBLETYPE]="Incompatible type";
-	  ply_error_msg[ply::E_BADCAST				]="Bad cast";
+	static std::vector<std::string> ply_error_msg;
+	if(ply_error_msg.empty())
+	{
+		ply_error_msg.resize(PlyInfo::E_MAXPLYINFOERRORS );
+		ply_error_msg[ply::E_NOERROR				]="No errors";
+		ply_error_msg[ply::E_CANTOPEN				]="Can't open file";
+		ply_error_msg[ply::E_NOTHEADER ]="Header not found";
+		ply_error_msg[ply::E_UNESPECTEDEOF	]="Eof in header";
+		ply_error_msg[ply::E_NOFORMAT				]="Format not found";
+		ply_error_msg[ply::E_SYNTAX				]="Syntax error on header";
+		ply_error_msg[ply::E_PROPOUTOFELEMENT]="Property without element";
+		ply_error_msg[ply::E_BADTYPENAME		]="Bad type name";
+		ply_error_msg[ply::E_ELEMNOTFOUND		]="Element not found";
+		ply_error_msg[ply::E_PROPNOTFOUND		]="Property not found";
+		ply_error_msg[ply::E_BADTYPE				]="Bad type on addtoread";
+		ply_error_msg[ply::E_INCOMPATIBLETYPE]="Incompatible type";
+		ply_error_msg[ply::E_BADCAST				]="Bad cast";
 
-    ply_error_msg[PlyInfo::E_NO_VERTEX      ]="No vertex field found";
-    ply_error_msg[PlyInfo::E_NO_FACE        ]="No face field found";
-	  ply_error_msg[PlyInfo::E_SHORTFILE      ]="Unespected eof";
-	  ply_error_msg[PlyInfo::E_NO_3VERTINFACE ]="Face with more than 3 vertices";
-	  ply_error_msg[PlyInfo::E_BAD_VERT_INDEX ]="Bad vertex index in face";
-	  ply_error_msg[PlyInfo::E_BAD_VERT_INDEX_EDGE ]="Bad vertex index in edge";
-	  ply_error_msg[PlyInfo::E_NO_6TCOORD     ]="Face with no 6 texture coordinates";
-	  ply_error_msg[PlyInfo::E_DIFFER_COLORS  ]="Number of color differ from vertices";
-  }
+		ply_error_msg[PlyInfo::E_NO_VERTEX      ]="No vertex field found";
+		ply_error_msg[PlyInfo::E_NO_FACE        ]="No face field found";
+		ply_error_msg[PlyInfo::E_SHORTFILE      ]="Unespected eof";
+		ply_error_msg[PlyInfo::E_NO_3VERTINFACE ]="Face with more than 3 vertices";
+		ply_error_msg[PlyInfo::E_BAD_VERT_INDEX ]="Bad vertex index in face";
+		ply_error_msg[PlyInfo::E_BAD_VERT_INDEX_EDGE ]="Bad vertex index in edge";
+		ply_error_msg[PlyInfo::E_NO_6TCOORD     ]="Face with no 6 texture coordinates";
+		ply_error_msg[PlyInfo::E_DIFFER_COLORS  ]="Number of color differ from vertices";
+	}
 
-  if(error>PlyInfo::E_MAXPLYINFOERRORS || error<0) return "Unknown error";
-  else return ply_error_msg[error].c_str();
+	if(error>PlyInfo::E_MAXPLYINFOERRORS || error<0) return "Unknown error";
+	else return ply_error_msg[error].c_str();
 };
 
 // to check if a given error is critical or not.
 static bool ErrorCritical(int err)
-{ 
+{
 	if(err == PlyInfo::E_NO_FACE) return false;
 	return true;
 }
-	
+
 
 /// Standard call for reading a mesh, returns 0 on success.
 static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
 {
 	PlyInfo pi;
-  pi.cb=cb; 
-  return Open(m, filename, pi);
+	pi.cb=cb;
+	return Open(m, filename, pi);
 }
 
 /// Read a mesh and store in loadmask the loaded field
@@ -342,24 +340,24 @@ static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
 /// in the file are read in. 
 static int Open( OpenMeshType &m, const char * filename, int & loadmask, CallBackPos *cb =0)
 {
-  PlyInfo pi;
-  pi.cb=cb; 
-  int r =  Open(m, filename,pi);
-  loadmask=pi.mask;
-  return r;
+	PlyInfo pi;
+	pi.cb=cb;
+	int r = Open(m, filename,pi);
+	loadmask=pi.mask;
+	return r;
 }
 
 
 /// read a mesh with all the possible option specified in the PlyInfo obj, returns 0 on success.
 static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 {
-  assert(filename!=0);
+	assert(filename!=0);
 	std::vector<VertexPointer> index;
 	LoadPly_FaceAux fa;
 	LoadPly_EdgeAux ea;
 	LoadPly_TristripAux tsa;
 	LoadPly_VertAux<ScalarType> va;
-  
+
 	LoadPly_RangeGridAux rga;
 	std::vector<int> RangeGridAuxVec;
 	int RangeGridCols=0;
@@ -372,7 +370,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 	va.flags = 42;
 
-  pi.status = ::vcg::ply::E_NOERROR;
+	pi.status = ::vcg::ply::E_NOERROR;
 
 	/*
 	// TO BE REMOVED: tv not used AND "spurious" vertex declaration causes error if ocf
@@ -387,19 +385,19 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 	// Descrittori delle strutture
 
-  //bool isvflags = false;	// Il file contiene i flags 
+	//bool isvflags = false;	// Il file contiene i flags
 
 
 	// The main descriptor of the ply file 
 	vcg::ply::PlyFile pf;
-  
-  // Open the file and parse the header
-  if( pf.Open(filename,vcg::ply::PlyFile::MODE_READ)==-1 )
+
+	// Open the file and parse the header
+	if( pf.Open(filename,vcg::ply::PlyFile::MODE_READ)==-1 )
 	{
 		pi.status = pf.GetError();
 		return pi.status;
 	}
-  pi.header = pf.GetHeader();
+	pi.header = pf.GetHeader();
 
 	// Descrittori della camera
 	{  // Check that all the camera properties are present.
@@ -414,46 +412,46 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		if(found) pi.mask |= Mask::IOM_CAMERA;
 	}
 
-  // Descrittori dati standard (vertex coord e faces)
-  if( pf.AddToRead(VertDesc(0))==-1 && pf.AddToRead(VertDesc(22)) ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
-  if( pf.AddToRead(VertDesc(1))==-1 && pf.AddToRead(VertDesc(23)) ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
-  if( pf.AddToRead(VertDesc(2))==-1 && pf.AddToRead(VertDesc(24)) ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
+	// Standard data desciptors (vertex coord and faces)
+	if( pf.AddToRead(VertDesc(0))==-1 && pf.AddToRead(VertDesc(22)) ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
+	if( pf.AddToRead(VertDesc(1))==-1 && pf.AddToRead(VertDesc(23)) ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
+	if( pf.AddToRead(VertDesc(2))==-1 && pf.AddToRead(VertDesc(24)) ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
 	if( pf.AddToRead(FaceDesc(0))==-1 ) // Se fallisce si prova anche la sintassi di rapidform con index al posto di indices
-			{
-				int ii; 
-				for(ii=_FACEDESC_FIRST_;ii< _FACEDESC_LAST_;++ii)
-					if( pf.AddToRead(FaceDesc(ii))!=-1 ) break;
-					
-			  if(ii==_FACEDESC_LAST_) 
-					if(pf.AddToRead(TristripDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono tristrip alla levoy.
-						if(pf.AddToRead(RangeDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono rangemap alla levoy.
-									{ 
-										pi.status = PlyInfo::E_NO_FACE;   
-										//return pi.status;  no face is not a critical error. let's continue.
-									}
-									
-			}
-		// Descrittori facoltativi dei flags
-  if(pf.AddToRead(EdgeDesc(0) )!= -1 && pf.AddToRead(EdgeDesc(1)) != -1 )
-                  pi.mask |= Mask::IOM_EDGEINDEX;
+	{
+		int ii;
+		for (ii=_FACEDESC_FIRST_;ii< _FACEDESC_LAST_;++ii)
+			if( pf.AddToRead(FaceDesc(ii))!=-1 ) break;
 
-  if(vcg::tri::HasPerVertexFlags(m) && pf.AddToRead(VertDesc(3))!=-1 )
-            pi.mask |= Mask::IOM_VERTFLAGS;
+		if (ii==_FACEDESC_LAST_)
+		if(pf.AddToRead(TristripDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono tristrip alla levoy.
+		if(pf.AddToRead(RangeDesc(0))==-1) // Se fallisce tutto si prova a vedere se ci sono rangemap alla levoy.
+		{
+			pi.status = PlyInfo::E_NO_FACE;
+			//return pi.status;  no face is not a critical error. let's continue.
+		}
 
-	 if( vcg::tri::HasPerVertexNormal(m) )
-	 {
-     if(		pf.AddToRead(VertDesc(12))!=-1  && pf.AddToRead(VertDesc(13))!=-1  && pf.AddToRead(VertDesc(14))!=-1 )
-			 pi.mask |= Mask::IOM_VERTNORMAL;
-     else // try also for Normals stored with doubles
-       if(		pf.AddToRead(VertDesc(25))!=-1  && pf.AddToRead(VertDesc(26))!=-1  && pf.AddToRead(VertDesc(27))!=-1 )
-         pi.mask |= Mask::IOM_VERTNORMAL;
+	}
+	// Optional flag descriptors
+	if(pf.AddToRead(EdgeDesc(0) )!= -1 && pf.AddToRead(EdgeDesc(1)) != -1 )
+		pi.mask |= Mask::IOM_EDGEINDEX;
+
+	if(vcg::tri::HasPerVertexFlags(m) && pf.AddToRead(VertDesc(3))!=-1 )
+		pi.mask |= Mask::IOM_VERTFLAGS;
+
+	if( vcg::tri::HasPerVertexNormal(m) )
+	{
+		if(		pf.AddToRead(VertDesc(12))!=-1  && pf.AddToRead(VertDesc(13))!=-1  && pf.AddToRead(VertDesc(14))!=-1 )
+			pi.mask |= Mask::IOM_VERTNORMAL;
+		else // try also for Normals stored with doubles
+			if(		pf.AddToRead(VertDesc(25))!=-1  && pf.AddToRead(VertDesc(26))!=-1  && pf.AddToRead(VertDesc(27))!=-1 )
+				pi.mask |= Mask::IOM_VERTNORMAL;
 
 	 }
 	 
-  if( vcg::tri::HasPerVertexQuality(m) )
+	if( vcg::tri::HasPerVertexQuality(m) )
 	{
 		if( pf.AddToRead(VertDesc(4))!=-1 ||
-		    pf.AddToRead(VertDesc(11))!=-1 )
+				pf.AddToRead(VertDesc(11))!=-1 )
 			pi.mask |= Mask::IOM_VERTQUALITY;
 	}
 
@@ -473,7 +471,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		}
 		if( pf.AddToRead(VertDesc(19))!=-1 )
 		{
-		  hasIntensity = true; 
+			hasIntensity = true;
 			pi.mask |= Mask::IOM_VERTCOLOR;
 		}
 
@@ -489,18 +487,18 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			pi.mask |= Mask::IOM_VERTTEXCOORD;
 		}
 	}
-    if(tri::HasPerVertexRadius(m))
-			{
-				if( pf.AddToRead(VertDesc(15))!=-1 )
-						pi.mask |= Mask::IOM_VERTRADIUS;
-        else if( pf.AddToRead(VertDesc(28))!=-1 )
-          pi.mask |= Mask::IOM_VERTRADIUS;
-			}
-			// se ci sono i flag per vertice ci devono essere anche i flag per faccia
+	if(tri::HasPerVertexRadius(m))
+	{
+		if( pf.AddToRead(VertDesc(15))!=-1 )
+			pi.mask |= Mask::IOM_VERTRADIUS;
+		else if( pf.AddToRead(VertDesc(28))!=-1 )
+			pi.mask |= Mask::IOM_VERTRADIUS;
+	}
+	// se ci sono i flag per vertice ci devono essere anche i flag per faccia
 	if( pf.AddToRead(FaceDesc(1))!=-1 )
 		pi.mask |= Mask::IOM_FACEFLAGS;
 
-  if( vcg::tri::HasPerFaceQuality(m) )
+	if( vcg::tri::HasPerFaceQuality(m) )
 	{
 		if( pf.AddToRead(FaceDesc(2))!=-1 )
 			pi.mask |= Mask::IOM_FACEQUALITY;
@@ -529,7 +527,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		}
 	}
 
-  if( vcg::tri::HasPerFaceColor(m) || vcg::tri::HasPerVertexColor(m) || vcg::tri::HasPerWedgeColor(m) )
+	if( vcg::tri::HasPerFaceColor(m) || vcg::tri::HasPerVertexColor(m) || vcg::tri::HasPerWedgeColor(m) )
 	{
 		if( pf.AddToRead(FaceDesc(4))!=-1 )
 		{
@@ -537,11 +535,11 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		}
 	}
 
-	// Descrittori definiti dall'utente, 
+	// User defined descriptors
 	std::vector<PropDescriptor> VPV(pi.vdn); // property descriptor relative al tipo LoadPly_VertexAux
-  std::vector<PropDescriptor> FPV(pi.fdn); // property descriptor relative al tipo LoadPly_FaceAux
+	std::vector<PropDescriptor> FPV(pi.fdn); // property descriptor relative al tipo LoadPly_FaceAux
 	if(pi.vdn>0){
-	// Compute the total size needed to load additional per vertex data.
+		// Compute the total size needed to load additional per vertex data.
 		size_t totsz=0;
 		for(int i=0;i<pi.vdn;i++){
 			VPV[i] = pi.VertexData[i];
@@ -549,10 +547,10 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			totsz+=pi.VertexData[i].memtypesize();
 			if( pf.AddToRead(VPV[i])==-1 ) { pi.status = pf.GetError(); return pi.status; }
 		}
-		if(totsz > MAX_USER_DATA) 
-		{ 
-			pi.status = vcg::ply::E_BADTYPE; 
-			return pi.status; 
+		if(totsz > MAX_USER_DATA)
+		{
+			pi.status = vcg::ply::E_BADTYPE;
+			return pi.status;
 		}
 	}
 	if(pi.fdn>0){
@@ -563,18 +561,18 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			totsz+=pi.FaceData[i].memtypesize();
 			if( pf.AddToRead(FPV[i])==-1 ) { pi.status = pf.GetError(); return pi.status; }
 		}
-		if(totsz > MAX_USER_DATA) 
-		{ 
-      pi.status = vcg::ply::E_BADTYPE; 
-			return pi.status; 
+		if(totsz > MAX_USER_DATA)
+		{
+			pi.status = vcg::ply::E_BADTYPE;
+			return pi.status;
 		}
 	}
 
-  /**************************************************************/
-  /* Main Reading Loop */
-  /**************************************************************/
-  m.Clear();
-  for(int i=0;i<int(pf.elements.size());i++)
+	/**************************************************************/
+	/* Main Reading Loop */
+	/**************************************************************/
+	m.Clear();
+	for(int i=0;i<int(pf.elements.size());i++)
 	{
 		int n = pf.ElemNumber(i);
 
@@ -590,17 +588,17 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				{
 					pi.status = PlyInfo::E_SHORTFILE;
 					return pi.status;
-				}	
+				}
 				//camera.valid     = true;
 
 				// extrinsic
 				m.shot.Extrinsics.SetIdentity();
 				// view point
 				m.shot.Extrinsics.SetTra(Point3<ScalarType>( ca.view_px,ca.view_py,ca.view_pz));
-	
+
 				// axis (i.e. rotation).
 				Matrix44<ScalarType> rm;
-                rm.SetIdentity();
+				rm.SetIdentity();
 				rm[0][0] = ca.x_axisx;
 				rm[0][1] = ca.x_axisy;
 				rm[0][2] = ca.x_axisz;
@@ -635,12 +633,12 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			int j;
 
 			pf.SetCurElement(i);
-      VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,n);
+			VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,n);
 			
-      for(j=0;j<n;++j)
+			for(j=0;j<n;++j)
 			{
 				if(pi.cb && (j%1000)==0) pi.cb(j*50/n,"Vertex Loading");
-			  if( pf.Read( (void *)&(va) )==-1 )
+				if( pf.Read( (void *)&(va) )==-1 )
 				{
 					pi.status = PlyInfo::E_SHORTFILE;
 					return pi.status;
@@ -657,40 +655,40 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					(*vi).Q() = (typename OpenMeshType::VertexType::QualityType)va.q;
 
 				if( pi.mask & Mask::IOM_VERTNORMAL )
-					{
-						(*vi).N()[0]=va.n[0];
-						(*vi).N()[1]=va.n[1];
-						(*vi).N()[2]=va.n[2];
-					}
+				{
+					(*vi).N()[0]=va.n[0];
+					(*vi).N()[1]=va.n[1];
+					(*vi).N()[2]=va.n[2];
+				}
 
-        if( pi.mask & Mask::IOM_VERTTEXCOORD )
-          {
-            (*vi).T().P().X() = va.u;
-            (*vi).T().P().Y() = va.v;
-          }
+				if( pi.mask & Mask::IOM_VERTTEXCOORD )
+				{
+					(*vi).T().P().X() = va.u;
+					(*vi).T().P().Y() = va.v;
+				}
 				
 				if( pi.mask & Mask::IOM_VERTCOLOR )
+				{
+					if(hasIntensity)
+						(*vi).C().SetGrayShade(va.intensity);
+					else
 					{
-						if(hasIntensity)
-								(*vi).C().SetGrayShade(va.intensity);
-						else
-							{
-								(*vi).C()[0] = va.r;
-								(*vi).C()[1] = va.g;
-								(*vi).C()[2] = va.b;
-								(*vi).C()[3] = 255;
-							}
+						(*vi).C()[0] = va.r;
+						(*vi).C()[1] = va.g;
+						(*vi).C()[2] = va.b;
+						(*vi).C()[3] = 255;
 					}
+				}
 				if( pi.mask & Mask::IOM_VERTRADIUS )
-						(*vi).R() = va.radius; 
+					(*vi).R() = va.radius;
 
 				
-				for(int k=0;k<pi.vdn;k++)	
+				for(int k=0;k<pi.vdn;k++)
 					memcpy((char *)(&*vi) + pi.VertexData[k].offset1,
-									(char *)(&va) + VPV[k].offset1, 
-									VPV[k].memtypesize());
-			++vi;
-      }
+						   (char *)(&va) + VPV[k].offset1,
+						   VPV[k].memtypesize());
+				++vi;
+			}
 
 			index.resize(n);
 			for(j=0,vi=m.vert.begin();j<n;++j,++vi)
@@ -698,32 +696,32 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		}
 		else if( !strcmp( pf.ElemName(i),"edge") && (n>0) )/******************** EDGE READING *******************************/
 		{
-		  assert( pi.mask & Mask::IOM_EDGEINDEX );
-		  EdgeIterator ei=Allocator<OpenMeshType>::AddEdges(m,n);
-		  pf.SetCurElement(i);
-		  for(int j=0;j<n;++j)
-		  {
-			  if(pi.cb && (j%1000)==0) pi.cb(50+j*50/n,"Edge Loading");
-			  if( pf.Read(&ea)==-1 )
-			  {
-				  pi.status = PlyInfo::E_SHORTFILE;
-				  return pi.status;
-			  }
-			  if( ea.v1<0 || ea.v2<0 || ea.v1>=m.vn || ea.v2>=m.vn)
-			  {
-				  pi.status = PlyInfo::E_BAD_VERT_INDEX_EDGE;
-				  return pi.status;
-			  }
-			  (*ei).V(0) = index[ ea.v1 ];
-			  (*ei).V(1) = index[ ea.v2 ];
-			  ++ei;
-		  }
+			assert( pi.mask & Mask::IOM_EDGEINDEX );
+			EdgeIterator ei=Allocator<OpenMeshType>::AddEdges(m,n);
+			pf.SetCurElement(i);
+			for(int j=0;j<n;++j)
+			{
+				if(pi.cb && (j%1000)==0) pi.cb(50+j*50/n,"Edge Loading");
+				if( pf.Read(&ea)==-1 )
+				{
+					pi.status = PlyInfo::E_SHORTFILE;
+					return pi.status;
+				}
+				if( ea.v1<0 || ea.v2<0 || ea.v1>=m.vn || ea.v2>=m.vn)
+				{
+					pi.status = PlyInfo::E_BAD_VERT_INDEX_EDGE;
+					return pi.status;
+				}
+				(*ei).V(0) = index[ ea.v1 ];
+				(*ei).V(1) = index[ ea.v2 ];
+				++ei;
+			}
 		}
 		else if( !strcmp( pf.ElemName(i),"face") && (n>0) )/******************** FACE READING ****************************************/
 		{
 			int j;
 			
-      FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,n);
+			FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,n);
 			pf.SetCurElement(i);
 
 			for(j=0;j<n;++j)
@@ -738,11 +736,11 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				}
 				if(fa.size!=3)
 				{ // Non triangular face are manageable ONLY if there are no Per Wedge attributes
-          if( ( pi.mask & Mask::IOM_WEDGCOLOR ) || ( pi.mask & Mask::IOM_WEDGTEXCOORD ) )
-          { 
-					  pi.status = PlyInfo::E_NO_3VERTINFACE;
-					  return pi.status;
-          }
+					if( ( pi.mask & Mask::IOM_WEDGCOLOR ) || ( pi.mask & Mask::IOM_WEDGTEXCOORD ) )
+					{
+						pi.status = PlyInfo::E_NO_3VERTINFACE;
+						return pi.status;
+					}
 				}
 				
 				if(HasPolyInfo(m)) (*fi).Alloc(3);
@@ -772,7 +770,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 						(*fi).WT(k).u() = fa.texcoord[k*2+0];
 						(*fi).WT(k).v() = fa.texcoord[k*2+1];
 						if(multit) (*fi).WT(k).n() = fa.texcoordind;
-            else (*fi).WT(k).n()=0; // safely intialize texture index
+						else (*fi).WT(k).n()=0; // safely intialize texture index
 					}
 				}
 
@@ -789,13 +787,13 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					//if(FaceType::HasFaceColor()){
 					//if(pi.mask & Mask::IOM_FACECOLOR){
 					if(HasPerFaceColor(m))	{
-							(*fi).C()[0] = (unsigned char)((fa.colors[0*3+0]*255+fa.colors[1*3+0]*255+fa.colors[2*3+0]*255)/3.0f);
-							(*fi).C()[1] = (unsigned char)((fa.colors[0*3+1]*255+fa.colors[1*3+1]*255+fa.colors[2*3+1]*255)/3.0f);
-							(*fi).C()[2] = (unsigned char)((fa.colors[0*3+2]*255+fa.colors[1*3+2]*255+fa.colors[2*3+2]*255)/3.0f);
+						(*fi).C()[0] = (unsigned char)((fa.colors[0*3+0]*255+fa.colors[1*3+0]*255+fa.colors[2*3+0]*255)/3.0f);
+						(*fi).C()[1] = (unsigned char)((fa.colors[0*3+1]*255+fa.colors[1*3+1]*255+fa.colors[2*3+1]*255)/3.0f);
+						(*fi).C()[2] = (unsigned char)((fa.colors[0*3+2]*255+fa.colors[1*3+2]*255+fa.colors[2*3+2]*255)/3.0f);
 					}
 				}
-        /// Now the temporary struct 'fa' is ready to be copied into the real face '*fi'
-        /// This loop 
+				/// Now the temporary struct 'fa' is ready to be copied into the real face '*fi'
+				/// This loop
 				for(k=0;k<3;++k)
 				{
 					if( fa.v[k]<0 || fa.v[k]>=m.vn )
@@ -806,53 +804,53 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					(*fi).V(k) = index[ fa.v[k] ];
 				}
 
-        // tag faux vertices of first face
-        if (fa.size>3) fi->SetF(2); 
+				// tag faux vertices of first face
+				if (fa.size>3) fi->SetF(2);
 
-				for(k=0;k<pi.fdn;k++)	
+				for(k=0;k<pi.fdn;k++)
 					memcpy((char *)(&(*fi)) + pi.FaceData[k].offset1,
-								 (char *)(&fa) + FPV[k].offset1, 
-									FPV[k].memtypesize());
+						   (char *)(&fa) + FPV[k].offset1,
+						   FPV[k].memtypesize());
 
 
-        ++fi;
-    
-        // Non Triangular Faces Loop
-        // It performs a simple fan triangulation.
-        if(fa.size>3)
-        {
-          int curpos=int(fi-m.face.begin());
-          Allocator<OpenMeshType>::AddFaces(m,fa.size-3);
-				  fi=m.face.begin()+curpos;
+				++fi;
+
+				// Non Triangular Faces Loop
+				// It performs a simple fan triangulation.
+				if(fa.size>3)
+				{
+					int curpos=int(fi-m.face.begin());
+					Allocator<OpenMeshType>::AddFaces(m,fa.size-3);
+					fi=m.face.begin()+curpos;
 					pi.mask |= Mask::IOM_BITPOLYGONAL;
-        }     
-        for(int qq=0;qq<fa.size-3;++qq)
-        {
-          (*fi).V(0) = index[ fa.v[0] ];
-          for(k=1;k<3;++k)
-				  {
-					  if( fa.v[2+qq]<0 || fa.v[2+qq]>=m.vn )
-					  {
-					    pi.status = PlyInfo::E_BAD_VERT_INDEX;
-					    return pi.status;
-					  }
-					  (*fi).V(k) = index[ fa.v[1+qq+k] ];
-					  
-				  }
-  
-				  // tag faux vertices of extra faces
-				  fi->SetF(0);
- 				  if (qq!=fa.size-3) fi->SetF(2);
-				  
-				  for(k=0;k<pi.fdn;k++)	
-					  memcpy((char *)(&(*fi)) + pi.FaceData[k].offset1,
-						  		 (char *)(&fa) + FPV[k].offset1, FPV[k].memtypesize());
-          ++fi;
-        }
+				}
+				for(int qq=0;qq<fa.size-3;++qq)
+				{
+					(*fi).V(0) = index[ fa.v[0] ];
+					for(k=1;k<3;++k)
+					{
+						if( fa.v[2+qq]<0 || fa.v[2+qq]>=m.vn )
+						{
+							pi.status = PlyInfo::E_BAD_VERT_INDEX;
+							return pi.status;
+						}
+						(*fi).V(k) = index[ fa.v[1+qq+k] ];
 
-      }
+					}
+
+					// tag faux vertices of extra faces
+					fi->SetF(0);
+					if (qq!=fa.size-3) fi->SetF(2);
+
+					for(k=0;k<pi.fdn;k++)
+						memcpy((char *)(&(*fi)) + pi.FaceData[k].offset1,
+							   (char *)(&fa) + FPV[k].offset1, FPV[k].memtypesize());
+					++fi;
+				}
+
+			}
 		}else if( !strcmp( pf.ElemName(i),"tristrips") )//////////////////// LETTURA TRISTRIP DI STANFORD
-		{ 
+		{
 			int j;
 			pf.SetCurElement(i);
 			int numvert_tmp = (int)m.vert.size();
@@ -868,7 +866,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				int remainder=0;
 				for(k=0;k<tsa.size-2;++k)
 				{
-					if(pi.cb && (k%1000)==0) pi.cb(50+k*50/tsa.size,"Tristrip Face Loading");				
+					if(pi.cb && (k%1000)==0) pi.cb(50+k*50/tsa.size,"Tristrip Face Loading");
 					if(tsa.v[k]<0 || tsa.v[k]>=numvert_tmp )	{
 						pi.status = PlyInfo::E_BAD_VERT_INDEX;
 						return pi.status;
@@ -877,7 +875,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					{
 						k+=2;
 						if(k%2) remainder=0;
-							 else remainder=1;
+						else remainder=1;
 						continue;
 					}
 					Allocator<OpenMeshType>::AddFaces(m,1);
@@ -892,7 +890,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		else if( !strcmp( pf.ElemName(i),"range_grid") )//////////////////// LETTURA RANGEMAP DI STANFORD
 		{
 			//qDebug("Starting Reading of Range Grid");
-			if(RangeGridCols==0) // not initialized. 
+			if(RangeGridCols==0) // not initialized.
 			{
 				for(int co=0;co<int(pf.comments.size());++co)
 				{
@@ -900,12 +898,12 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					std::string num_rows = "num_rows";
 					std::string &c = pf.comments[co];
 					std::string bufstr,bufclean;
-					if( num_cols == c.substr(0,num_cols.length()) ) 
+					if( num_cols == c.substr(0,num_cols.length()) )
 					{
 						bufstr = c.substr(num_cols.length()+1);
 						RangeGridCols = atoi(bufstr.c_str());
 					}
-					if( num_rows == c.substr(0,num_cols.length()) ) 
+					if( num_rows == c.substr(0,num_cols.length()) )
 					{
 						bufstr = c.substr(num_rows.length()+1);
 						RangeGridRows = atoi(bufstr.c_str());
@@ -925,20 +923,20 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					pi.status = PlyInfo::E_SHORTFILE;
 					return pi.status;
 				}
-				else 
+				else
 				{
 					if(rga.num_pts == 0)
 						RangeGridAuxVec.push_back(-1);
-					else 
+					else
 						RangeGridAuxVec.push_back(rga.pts[0]);
 				}
-			} 
+			}
 			//qDebug("Completed the reading of %i indexes",RangeGridAuxVec.size());
 			tri::FaceGrid(m, RangeGridAuxVec, RangeGridCols,RangeGridRows);
 		}
 		else
 		{
-				// Skippaggio elementi non gestiti
+			// Skippaggio elementi non gestiti
 			int n = pf.ElemNumber(i);
 			pf.SetCurElement(i);
 
@@ -953,28 +951,28 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		}
 	}
 
-  // Parsing texture names
+	// Parsing texture names
 	m.textures.clear();
 	m.normalmaps.clear();
 
 	for(int co=0;co<int(pf.comments.size());++co)
 	{
-    std::string TFILE = "TextureFile";
+		std::string TFILE = "TextureFile";
 		std::string NFILE = "TextureNormalFile";
 		std::string &c = pf.comments[co];
-//		char buf[256];
-    std::string bufstr,bufclean;
+		//		char buf[256];
+		std::string bufstr,bufclean;
 		int i,n;
 
-    if( TFILE == c.substr(0,TFILE.length()) ) 
+		if( TFILE == c.substr(0,TFILE.length()) )
 		{
-      bufstr = c.substr(TFILE.length()+1);
+			bufstr = c.substr(TFILE.length()+1);
 			n = static_cast<int>(bufstr.length());
 			for(i=0;i<n;i++)
 				if( bufstr[i]!=' ' && bufstr[i]!='\t' && bufstr[i]>32 && bufstr[i]<125 )	bufclean.push_back(bufstr[i]);
 			
 			char buf2[255];
-      ply::interpret_texture_name( bufclean.c_str(),filename,buf2 );
+			ply::interpret_texture_name( bufclean.c_str(),filename,buf2 );
 			m.textures.push_back( std::string(buf2) );
 		}
 		/*if( !strncmp(c,NFILE,strlen(NFILE)) )
@@ -983,7 +981,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			n = strlen(buf);
 			for(i=j=0;i<n;i++)
 				if( buf[i]!=' ' && buf[i]!='\t' && buf[i]>32 && buf[i]<125 )	buf[j++] = buf[i];
-			
+
 			buf[j] = 0;
 			char buf2[255];
 			__interpret_texture_name( buf,filename,buf2 );
@@ -991,7 +989,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		}*/
 	}
 
-  // vn and fn should be correct but if someone wrongly saved some deleted elements they can be wrong.
+	// vn and fn should be correct but if someone wrongly saved some deleted elements they can be wrong.
 	m.vn = 0;
 	VertexIterator vi;
 	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -1008,7 +1006,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 }
 
 
-	// Caricamento camera da un ply
+// Caricamento camera da un ply
 int LoadCamera(const char * filename)
 {
 	vcg::ply::PlyFile pf;
@@ -1049,7 +1047,7 @@ int LoadCamera(const char * filename)
 				{
 					this->pi.status = PlyInfo::E_SHORTFILE;
 					return this->pi.status;
-				}	
+				}
 				this->camera.valid     = true;
 				this->camera.view_p[0] = ca.view_px;
 				this->camera.view_p[1] = ca.view_py;
@@ -1085,8 +1083,8 @@ int LoadCamera(const char * filename)
 
 static bool LoadMask(const char * filename, int &mask)
 {
-  PlyInfo pi;
-  return LoadMask(filename, mask,pi);
+	PlyInfo pi;
+	return LoadMask(filename, mask,pi);
 }
 static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
 {
@@ -1098,57 +1096,55 @@ static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
 		return false;
 	}
 
-  if( pf.AddToRead(VertDesc(0))!=-1 &&
-      pf.AddToRead(VertDesc(1))!=-1 &&
-      pf.AddToRead(VertDesc(2))!=-1 )   mask |= Mask::IOM_VERTCOORD;
-  if( pf.AddToRead(VertDesc(22))!=-1 &&
-      pf.AddToRead(VertDesc(23))!=-1 &&
-      pf.AddToRead(VertDesc(24))!=-1 )   mask |= Mask::IOM_VERTCOORD;
+	if( pf.AddToRead(VertDesc( 0))!=-1 &&
+		pf.AddToRead(VertDesc( 1))!=-1 &&
+		pf.AddToRead(VertDesc( 2))!=-1 )   mask |= Mask::IOM_VERTCOORD;
+	if( pf.AddToRead(VertDesc(22))!=-1 &&
+		pf.AddToRead(VertDesc(23))!=-1 &&
+		pf.AddToRead(VertDesc(24))!=-1 )   mask |= Mask::IOM_VERTCOORD;
 
-  if( pf.AddToRead(VertDesc(12))!=-1 &&
-      pf.AddToRead(VertDesc(13))!=-1 &&
-      pf.AddToRead(VertDesc(14))!=-1 )   mask |= Mask::IOM_VERTNORMAL;
-  if( pf.AddToRead(VertDesc(25))!=-1 &&
-      pf.AddToRead(VertDesc(26))!=-1 &&
-      pf.AddToRead(VertDesc(27))!=-1 )   mask |= Mask::IOM_VERTNORMAL;
+	if( pf.AddToRead(VertDesc(12))!=-1 &&
+		pf.AddToRead(VertDesc(13))!=-1 &&
+		pf.AddToRead(VertDesc(14))!=-1 )   mask |= Mask::IOM_VERTNORMAL;
+	if( pf.AddToRead(VertDesc(25))!=-1 &&
+		pf.AddToRead(VertDesc(26))!=-1 &&
+		pf.AddToRead(VertDesc(27))!=-1 )   mask |= Mask::IOM_VERTNORMAL;
 
-	if( pf.AddToRead(VertDesc(3))!=-1 )		mask |= Mask::IOM_VERTFLAGS;
-	if( pf.AddToRead(VertDesc(4))!=-1 )		mask |= Mask::IOM_VERTQUALITY;
-	if( pf.AddToRead(VertDesc(11))!=-1 )	mask |= Mask::IOM_VERTQUALITY;
-	if( pf.AddToRead(VertDesc(15))!=-1 )	mask |= Mask::IOM_VERTRADIUS;
-  if( pf.AddToRead(VertDesc(28))!=-1 )	mask |= Mask::IOM_VERTRADIUS;
-	if( ( pf.AddToRead(VertDesc( 5))!=-1 ) && 
-		  ( pf.AddToRead(VertDesc( 6))!=-1 ) &&
-			( pf.AddToRead(VertDesc( 7))!=-1 )  )  mask |= Mask::IOM_VERTCOLOR;
-	if( ( pf.AddToRead(VertDesc( 8))!=-1 ) && 
-		  ( pf.AddToRead(VertDesc( 9))!=-1 ) &&
-			( pf.AddToRead(VertDesc(10))!=-1 )  )  mask |= Mask::IOM_VERTCOLOR;
-	if(   pf.AddToRead(VertDesc(19))!=-1 )     mask |= Mask::IOM_VERTCOLOR;
+	if( pf.AddToRead(VertDesc( 3))!=-1 )   mask |= Mask::IOM_VERTFLAGS;
+	if( pf.AddToRead(VertDesc( 4))!=-1 )   mask |= Mask::IOM_VERTQUALITY;
+	if( pf.AddToRead(VertDesc(11))!=-1 )   mask |= Mask::IOM_VERTQUALITY;
+	if( pf.AddToRead(VertDesc(15))!=-1 )   mask |= Mask::IOM_VERTRADIUS;
+	if( pf.AddToRead(VertDesc(28))!=-1 )   mask |= Mask::IOM_VERTRADIUS;
+	if( pf.AddToRead(VertDesc( 5))!=-1 &&
+		pf.AddToRead(VertDesc( 6))!=-1 &&
+		pf.AddToRead(VertDesc( 7))!=-1  )  mask |= Mask::IOM_VERTCOLOR;
+	if( pf.AddToRead(VertDesc( 8))!=-1 &&
+		pf.AddToRead(VertDesc( 9))!=-1 &&
+		pf.AddToRead(VertDesc(10))!=-1  )  mask |= Mask::IOM_VERTCOLOR;
+	if( pf.AddToRead(VertDesc(19))!=-1  )  mask |= Mask::IOM_VERTCOLOR;
 	
-	if(( pf.AddToRead(VertDesc(20))!=-1 ) &&  (pf.AddToRead(VertDesc(21))!=-1))
-		 mask |= Mask::IOM_VERTTEXCOORD;
+	if( pf.AddToRead(VertDesc(20))!=-1  &&
+		pf.AddToRead(VertDesc(21))!=-1)    mask |= Mask::IOM_VERTTEXCOORD;
 		 
-	if(( pf.AddToRead(VertDesc(16))!=-1 ) &&  (pf.AddToRead(VertDesc(17))!=-1))
-		 mask |= Mask::IOM_VERTTEXCOORD;
+	if( pf.AddToRead(VertDesc(16))!=-1  &&
+		pf.AddToRead(VertDesc(17))!=-1)    mask |= Mask::IOM_VERTTEXCOORD;
 		
-	if( pf.AddToRead(FaceDesc(0))!=-1 ) mask |= Mask::IOM_FACEINDEX;
-	if( pf.AddToRead(FaceDesc(1))!=-1 ) mask |= Mask::IOM_FACEFLAGS;
+	if( pf.AddToRead(FaceDesc(0))!=-1 )    mask |= Mask::IOM_FACEINDEX;
+	if( pf.AddToRead(FaceDesc(1))!=-1 )    mask |= Mask::IOM_FACEFLAGS;
 
-	if( pf.AddToRead(FaceDesc(2))!=-1 ) mask |= Mask::IOM_FACEQUALITY;
-	if( pf.AddToRead(FaceDesc(3))!=-1 ) mask |= Mask::IOM_WEDGTEXCOORD;
-	if( pf.AddToRead(FaceDesc(5))!=-1 ) mask |= Mask::IOM_WEDGTEXMULTI;
-	if( pf.AddToRead(FaceDesc(4))!=-1 ) mask |= Mask::IOM_WEDGCOLOR;
-	if( ( pf.AddToRead(FaceDesc(6))!=-1 ) && 
-		  ( pf.AddToRead(FaceDesc(7))!=-1 ) &&
-			( pf.AddToRead(FaceDesc(8))!=-1 )  )  mask |= Mask::IOM_FACECOLOR;
+	if( pf.AddToRead(FaceDesc(2))!=-1 )    mask |= Mask::IOM_FACEQUALITY;
+	if( pf.AddToRead(FaceDesc(3))!=-1 )    mask |= Mask::IOM_WEDGTEXCOORD;
+	if( pf.AddToRead(FaceDesc(5))!=-1 )    mask |= Mask::IOM_WEDGTEXMULTI;
+	if( pf.AddToRead(FaceDesc(4))!=-1 )    mask |= Mask::IOM_WEDGCOLOR;
+	if( pf.AddToRead(FaceDesc(6))!=-1 &&
+		pf.AddToRead(FaceDesc(7))!=-1 &&
+		pf.AddToRead(FaceDesc(8))!=-1 )    mask |= Mask::IOM_FACECOLOR;
 
-
- return true;
+	return true;
 }
 
 
 }; // end class
-
 
 
 } // end namespace tri
