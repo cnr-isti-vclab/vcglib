@@ -1,4 +1,4 @@
-/** \page adjacency 
+/** \page adjacency
 Adjacency
 =========
 VCG Lib does not have a hard-coded way to encode the adjacencies among simplices. It all depends on which attributes are stored with the simplices and how they are used. I the previous examples the definition of face has always included the attribute vcg::face::VertexRef , which stores 3 pointers to MyVertex accessible with the member function V() (the well known Indexed Data Structure). The reason is that almost all of the algorithms currently implemented in VCG Lib assume its presence. So, if your type MyFace does not include the attribute vcg::face::VertexRef, the definition will be correct but almost no algorithm will work..
@@ -130,7 +130,9 @@ sf/apps/sample/trimesh_pos_demo/trimesh_pos_demo.cpp
 VF Adjacency
 ------------
 
-VCG Lib implements vertex-to-face adjacency, i.e. given a vertex v we can retrieve all the faces incident to v. Let v_star =(f0,f1,f2,...,fk) be the set faces incident to v arranged in a sequence (with no preferred criteria). VCG Lib allows to retrieve v_star in optimal time ( O(#star_v) by using the following attibutes:
+VCG Lib implements vertex-to-face adjacency, i.e. given a vertex v we can retrieve all the faces incident to v.
+Let v_star =(f0,f1,f2,...,fk) be the set faces incident to v arranged in a sequence (with no preferred criteria).
+VCG Lib allows to retrieve v_star in optimal time ( O( star_v) ) by using the following attibutes:
 
 vcg::vertex::VFAdj which is a vertex attribute containing a pointer to f0
 vcg::face::VFAdj which is a face attribute containing a pointer to the next face in the list v_star for each of its 3 vertices (4 in the case of tetrahedra)
