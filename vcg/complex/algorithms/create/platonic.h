@@ -578,7 +578,7 @@ void Build( MeshType & in, const V & v, const F & f)
 
   typename MeshType::VertexType tv;
 
-  for(int i=0;i<v.size();++i)
+  for(size_t i=0;i<v.size();++i)
   {
     float *vv=(float *)(&v[i]);
     in.vert[i].P() = CoordType( vv[0],vv[1],vv[2]);
@@ -594,7 +594,7 @@ void Build( MeshType & in, const V & v, const F & f)
 
   typename MeshType::FaceType ft;
 
-  for(int i=0;i<f.size();++i)
+  for(size_t i=0;i<f.size();++i)
   {
     int * ff=(int *)(&f[i]);
     assert( ff[0]>=0 );
