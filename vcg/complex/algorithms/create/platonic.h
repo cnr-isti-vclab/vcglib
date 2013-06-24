@@ -558,54 +558,65 @@ void Torus(MeshType &m, float hRingRadius, float vRingRadius, int hRingDiv=24, i
 
 }
 
+
 // this function build a mesh starting from a vector of generic coords (objects having a triple of float at their beginning)
 // and a vector of faces (objects having a triple of ints at theri beginning).
 template <class MeshType,class V, class F >
 void Build( MeshType & in, const V & v, const F & f)
 {
- typedef typename MeshType::ScalarType ScalarType;
- typedef typename MeshType::CoordType CoordType;
- typedef typename MeshType::VertexPointer  VertexPointer;
- typedef typename MeshType::VertexIterator VertexIterator;
- typedef typename MeshType::FaceIterator   FaceIterator;
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef typename MeshType::CoordType CoordType;
+  typedef typename MeshType::VertexPointer  VertexPointer;
+  typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::FaceIterator   FaceIterator;
 
- Allocator<MeshType>::AddVertices(in,v.size());
- Allocator<MeshType>::AddFaces(in,f.size());
+  in.Clear();
+  Allocator<MeshType>::AddVertices(in,v.size());
+  Allocator<MeshType>::AddFaces(in,f.size());
 
-    typename V::const_iterator vi;
+  typename V::const_iterator vi;
 
-    typename MeshType::VertexType tv;
+  typename MeshType::VertexType tv;
 
-	for(int i=0;i<v.size();++i)
-	{
-		float *vv=(float *)(&v[i]);
-		in.vert[i].P() = CoordType( vv[0],vv[1],vv[2]);
-	}
+  for(int i=0;i<v.size();++i)
+  {
+    float *vv=(float *)(&v[i]);
+    in.vert[i].P() = CoordType( vv[0],vv[1],vv[2]);
+  }
 
   std::vector<VertexPointer> index(in.vn);
-    VertexIterator j;
-    int k;
-    for(k=0,j=in.vert.begin();j!=in.vert.end();++j,++k)
-        index[k] = &*j;
+  VertexIterator j;
+  int k;
+  for(k=0,j=in.vert.begin();j!=in.vert.end();++j,++k)
+    index[k] = &*j;
 
-    typename F::const_iterator fi;
+  typename F::const_iterator fi;
 
-    typename MeshType::FaceType ft;
+  typename MeshType::FaceType ft;
 
-	for(int i=0;i<f.size();++i)
-	{
-	int * ff=(int *)(&f[i]);
-		assert( ff[0]>=0 );
-		assert( ff[1]>=0 );
-		assert( ff[2]>=0 );
-		assert( ff[0]<in.vn );
-		assert( ff[1]<in.vn );
-		assert( ff[2]<in.vn );
-		in.face[i].V(0) = &in.vert[ ff[0] ];
-		in.face[i].V(1) = &in.vert[ ff[0] ];
-		in.face[i].V(2) = &in.vert[ ff[0] ];
+  for(int i=0;i<f.size();++i)
+  {
+    int * ff=(int *)(&f[i]);
+    assert( ff[0]>=0 );
+    assert( ff[1]>=0 );
+    assert( ff[2]>=0 );
+    assert( ff[0]<in.vn );
+    assert( ff[1]<in.vn );
+    assert( ff[2]<in.vn );
+    in.face[i].V(0) = &in.vert[ ff[0] ];
+    in.face[i].V(1) = &in.vert[ ff[0] ];
+    in.face[i].V(2) = &in.vert[ ff[0] ];
+  }
 
-	}
+  tri::UpdateBounding<MeshType>::Box(in);
+}
+
+
+template <class MeshType,class V>
+void Build( MeshType & in, const V & v)
+{
+  std::vector<int[3]> dummyfaceVec;
+  Build(in,v,dummyfaceVec);
 }
 
 // Build a regular grid mesh as a typical height field mesh
