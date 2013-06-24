@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -27,13 +27,13 @@
 
 namespace vcg {
 namespace tri {
-/// \ingroup trimesh 
+/// \ingroup trimesh
 
 /// \headerfile flag.h vcg/complex/algorithms/update/flag.h
 
 /// \brief Management, updating and computation of per-vertex and per-face flags (like border flags).
 
-/** 
+/**
 This class is used to compute or update some of the flags that can be stored in the mesh components. For now just Border flags (e.g. the flag that tells if a given edge of a face belong to a border of the mesh or not).
 */
 
@@ -358,11 +358,44 @@ public:
           }
       }
   }
-  //
+
+
+  /// \brief Marks feature edges according to two signed dihedral angles.
+  /// Actually it marks as fauxedges all the non feature edges,
+  /// e.g. the edge such that the signed dihedral angle between the normal of two faces sharing it, is between the two given thresholds.
+  /// In this way all the near planar edges are marked as Faux Edges (e.g. edges to be ignored)
+  /// Note that it uses the signed dihedral angle convention (negative for concave edges and positive for convex ones);
+  static void FaceFauxSignedCrease(MeshType &m, float AngleRadNeg, float AngleRadPos )
+  {
+    RequirePerFaceFlags(m);
+    RequireFFAdjacency(m);
+    //initially Nothing is faux (e.g all crease)
+    FaceClearF(m);
+    // Then mark faux only if the signed angle is the range.
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+    {
+      for(int z=0;z<(*fi).VN();++z)
+      {
+        if(!face::IsBorder(*fi,z) )
+        {
+          ScalarType angle = DihedralAngleRad(*fi,z);
+          if(angle>AngleRadNeg && angle<AngleRadPos)
+            (*fi).SetF(z);
+        }
+      }
+    }
+  }
+
+
+  /// \brief Marks feature edges according to a given angle
+  /// Actually it marks as fauxedges all the non feature edges,
+  /// e.g. the edge such that the angle between the normal of two faces sharing it is less than the given threshold.
+  /// In this way all the near planar edges are marked as Faux Edges (e.g. edges to be ignored)
   static void FaceFauxCrease(MeshType &m,float AngleRad)
   {
     RequirePerFaceFlags(m);
     RequireFFAdjacency(m);
+    RequirePerFaceNormal(m);
 
     typename MeshType::FaceIterator f;
 
