@@ -42,6 +42,7 @@ class UpdateTopology
 
 public:
 typedef UpdateMeshType MeshType;
+typedef typename MeshType::ScalarType     ScalarType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
@@ -63,39 +64,47 @@ class PEdge
 {
 public:
 
-	VertexPointer  v[2];		// the two Vertex pointer are ordered!
-	FacePointer    f;		  // the face where this edge belong
-	int      z;				      // index in [0..2] of the edge of the face
+  VertexPointer  v[2];  // the two Vertex pointer are ordered!
+  FacePointer    f;     // the face where this edge belong
+  int            z;     // index in [0..2] of the edge of the face
 
   PEdge() {}
 
-void Set( FacePointer  pf, const int nz )
-{
-	assert(pf!=0);
-	assert(nz>=0);
-	assert(nz<pf->VN());
+  void Set( FacePointer  pf, const int nz )
+  {
+    assert(pf!=0);
+    assert(nz>=0);
+    assert(nz<pf->VN());
 
-	v[0] = pf->V(nz);
-	v[1] = pf->V(pf->Next(nz));
-	assert(v[0] != v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
+    v[0] = pf->V(nz);
+    v[1] = pf->V(pf->Next(nz));
+    assert(v[0] != v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
 
-	if( v[0] > v[1] ) math::Swap(v[0],v[1]);
-	f    = pf;
-	z    = nz;
-}
+    if( v[0] > v[1] ) math::Swap(v[0],v[1]);
+    f    = pf;
+    z    = nz;
+  }
 
-inline bool operator <  ( const PEdge & pe ) const
-{
-	if( v[0]<pe.v[0] ) return true;
-	else if( v[0]>pe.v[0] ) return false;
-	else return v[1] < pe.v[1];
-}
+  inline bool operator <  ( const PEdge & pe ) const
+  {
+    if( v[0]<pe.v[0] ) return true;
+    else if( v[0]>pe.v[0] ) return false;
+    else return v[1] < pe.v[1];
+  }
 
-inline bool operator == ( const PEdge & pe ) const
-{
-	return v[0]==pe.v[0] && v[1]==pe.v[1];
-}
-
+  inline bool operator == ( const PEdge & pe ) const
+  {
+    return v[0]==pe.v[0] && v[1]==pe.v[1];
+  }
+  /// Convert from edge barycentric coord to the face baricentric coord a point on the current edge.
+  /// Face barycentric coordinates are relative to the edge face.
+  inline Point3<ScalarType> EdgeBarycentricToFaceBarycentric(ScalarType u) const
+  {
+    Point3<ScalarType> interp(0,0,0);
+    interp[ this->z     ] = u;
+    interp[(this->z+1)%3] = 1.0f-u;
+    return interp;
+  }
 };
 
 // Fill a vector with all the edges of the mesh.
