@@ -62,20 +62,42 @@ public:
 
 	/// Generates a random number in the (0,1) real interval.
 	virtual double generate01open()=0;
-  virtual double generateRange(double minV, double maxV) { return minV+(maxV-minV)*generate01(); }
+	virtual double generateRange(double minV, double maxV) { return minV+(maxV-minV)*generate01(); }
 
 };
 
+///  \brief Generate the barycentric coords of a random point over a single face,
+///  with a uniform distribution over the triangle.
+/// It uses the parallelogram folding trick.
 template <class ScalarType, class GeneratorType>
-void GeneratePointInBox3Uniform(GeneratorType &rnd, const Box3<ScalarType> &bb, Point3<ScalarType> &p)
+vcg::Point3<ScalarType> GenerateBarycentricUniform(GeneratorType &rnd)
 {
-  p = Point3<ScalarType>(
-        (ScalarType) rnd.generateRange(double(bb.min[0]),double(bb.max[0])),
+  vcg::Point3<ScalarType>  interp;
+    interp[1] = rnd.generate01();
+    interp[2] = rnd.generate01();
+    if(interp[1] + interp[2] > 1.0)
+    {
+        interp[1] = 1.0 - interp[1];
+        interp[2] = 1.0 - interp[2];
+        }
+
+	assert(interp[1] + interp[2] <= 1.0);
+	interp[0]=1.0-(interp[1] + interp[2]);
+	return interp;
+}
+
+///  \brief Generate a random point insidie a box with uniform distribution
+template <class ScalarType, class GeneratorType>
+vcg::Point3<ScalarType> GeneratePointInBox3Uniform(GeneratorType &rnd, const Box3<ScalarType> &bb)
+{
+  return Point3<ScalarType>(
+      (ScalarType) rnd.generateRange(double(bb.min[0]),double(bb.max[0])),
       (ScalarType) rnd.generateRange(double(bb.min[1]),double(bb.max[1])),
       (ScalarType) rnd.generateRange(double(bb.min[2]),double(bb.max[2]))
       );
 }
-/*
+
+/** \brief Generate a point over the surface of a unit sphere with uniform distribution
  * This is the algorithm proposed by George Marsaglia [1]
  * to generate a point over a unit sphere
  * Independently generate V1 and V2, taken from a uniform distribution on (-1,1) such that
@@ -87,8 +109,9 @@ void GeneratePointInBox3Uniform(GeneratorType &rnd, const Box3<ScalarType> &bb, 
  * Marsaglia, G. "Choosing a Point from the Surface of a Sphere." Ann. Math. Stat. 43, 645-646, 1972.
  */
 template <class ScalarType, class GeneratorType>
-void GeneratePointOnUnitSphereUniform(GeneratorType &rnd, vcg::Point3<ScalarType> &p)
+vcg::Point3<ScalarType> GeneratePointOnUnitSphereUniform(GeneratorType &rnd)
 {
+  vcg::Point3<ScalarType> p;
   double x,y,s;
   do
   {
@@ -99,7 +122,24 @@ void GeneratePointOnUnitSphereUniform(GeneratorType &rnd, vcg::Point3<ScalarType
   p[0]= ScalarType(2 * x * sqrt(1-s));
   p[1]= ScalarType(2 * y * sqrt(1-s));
   p[2]= ScalarType(1-2*s);
+  return p;
 }
+
+/// \brief generate a point inside a unit sphere with uniform distribution
+template <class ScalarType, class GeneratorType>
+vcg::Point3<ScalarType> GeneratePointInUnitBallUniform(GeneratorType &rnd)
+{
+  vcg::Point3<ScalarType> p;
+  while(1)
+  {
+    p.Import(Point3d(0.5-rnd.generate01(),0.5-rnd.generate01(),0.5-rnd.generate01()));
+    if(SquaredNorm(p)<=0.25){
+      p*=2;
+      return p;
+    }
+  }
+}
+
 
 /**
  * Uniform RNG derived from a STL extension of sgi.
