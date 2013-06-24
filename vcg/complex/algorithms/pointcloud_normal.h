@@ -98,7 +98,7 @@ public:
     bool useViewPoint;  /// if the position of the viewpoint has to be used.
   };
 
-  static void Compute(MeshType &m, Param p, vcg::CallBackPos * cb)
+  static void Compute(MeshType &m, Param p, vcg::CallBackPos * cb=0)
   {
     tri::Allocator<MeshType>::CompactVertexVector(m);
     if(cb) cb(1,"Building KdTree...");
