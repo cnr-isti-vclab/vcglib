@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -35,16 +35,16 @@ namespace face {
 /*@{*/
 
 /** Return a boolean that indicate if the face is complex.
-    @param j Index of the edge
+	@param j Index of the edge
 	@return true se la faccia e' manifold, false altrimenti
 */
 template <class FaceType>
-inline bool IsManifold( FaceType const & f, const int j ) 
+inline bool IsManifold( FaceType const & f, const int j )
 {
   assert(f.cFFp(j) != 0); // never try to use this on uncomputed topology
   if(FaceType::HasFFAdjacency())
-	  return ( f.cFFp(j) == &f || &f == f.cFFp(j)->cFFp(f.cFFi(j)) );
-  else 
+      return ( f.cFFp(j) == &f || &f == f.cFFp(j)->cFFp(f.cFFi(j)) );
+  else
     return true;
 }
 
@@ -53,30 +53,80 @@ inline bool IsManifold( FaceType const & f, const int j )
 	@return true if j is an edge of border, false otherwise
 */
 template <class FaceType>
-inline bool IsBorder(FaceType const & f,  const int j ) 
+inline bool IsBorder(FaceType const & f,  const int j )
 {
   if(FaceType::HasFFAdjacency())
-	  return f.cFFp(j)==&f;
+      return f.cFFp(j)==&f;
     //return f.IsBorder(j);
-  
+
   assert(0);
   return true;
 }
 
+/*! \brief Compute the signed dihedral angle between the normals of two adjacent faces
+ *
+ * The angle between the normal is signed according to the concavity/convexity of the
+ * dihedral angle: negative if the edge shared between the two faces is concave, positive otherwise.
+ * The surface it is assumend to be oriented.
+ * It simply use the projection of  the opposite vertex onto the plane of the other one.
+ * It does not assume anything on face normals.
+*
+*     v0 ___________ vf1
+*       |\          |
+*       |  \i1   f1 |
+*       |    \      |
+*       |f0  i0\    |
+*       |        \  |
+*       |__________\|
+*    vf0             v1
+*/
+
+template <class FaceType>
+inline typename FaceType::ScalarType DihedralAngleRad(FaceType & f,  const int i )
+{
+  typedef typename FaceType::ScalarType ScalarType;
+  typedef typename FaceType::CoordType CoordType;
+  typedef typename FaceType::VertexType VertexType;
+
+  FaceType *f0 = &f;
+  FaceType *f1 = f.FFp(i);
+  int i0=i;
+  int i1=f.FFi(i);
+  VertexType *vf0 = f0->V2(i0);
+  VertexType *vf1 = f1->V2(i1);
+
+  CoordType n0 = NormalizedNormal(*f0);
+  CoordType n1 = NormalizedNormal(*f1);
+  ScalarType off0 = n0*vf0->P();
+  ScalarType off1 = n1*vf1->P();
+
+  ScalarType dist01 = off0 - n0*vf1->P();
+  ScalarType dist10 = off1 - n1*vf0->P();
+
+  // just to be sure use the sign of the largest in absolute value;
+  ScalarType sign;
+  if(fabs(dist01) > fabs(dist10)) sign = dist01;
+  else sign=dist10;
+
+  ScalarType angleRad=Angle(f0->N(),f1->N());
+
+  if(sign > 0 ) return angleRad;
+  else return -angleRad;
+}
 
 /// Count border edges of the face
 template <class FaceType>
-inline int BorderCount(FaceType const & f) 
+inline int BorderCount(FaceType const & f)
 {
   if(FaceType::HasFFAdjacency())
   {
     int t = 0;
-	  if( IsBorder(f,0) ) ++t;
-	  if( IsBorder(f,1) ) ++t;
-	  if( IsBorder(f,2) ) ++t;
-	  return t;
+      if( IsBorder(f,0) ) ++t;
+      if( IsBorder(f,1) ) ++t;
+      if( IsBorder(f,2) ) ++t;
+      return t;
   }
-	else 	return 3;
+    else 	return 3;
 }
 
 
@@ -88,31 +138,31 @@ inline int ComplexSize(FaceType & f, const int e)
   {
     if(face::IsBorder<FaceType>(f,e))  return 1;
     if(face::IsManifold<FaceType>(f,e)) return 2;
-                      
+
     // Non manifold case
-    Pos< FaceType > fpos(&f,e); 
+    Pos< FaceType > fpos(&f,e);
     int cnt=0;
     do
     {
-		  fpos.NextF();
+          fpos.NextF();
       assert(!fpos.IsBorder());
       assert(!fpos.IsManifold());
-		  ++cnt;
-	  }
-	  while(fpos.f!=&f);
+          ++cnt;
+      }
+      while(fpos.f!=&f);
     assert (cnt>2);
-	  return cnt;
+      return cnt;
   }
   assert(0);
-	return 2;
+    return 2;
 }
 
 
-/** This function check the FF topology correctness for an edge of a face. 
-    It's possible to use it also in non-two manifold situation.
+/** This function check the FF topology correctness for an edge of a face.
+	It's possible to use it also in non-two manifold situation.
 		The function cannot be applicated if the adjacencies among faces aren't defined.
-		@param f the face to be checked 
-		@param e Index of the edge to be checked 
+		@param f the face to be checked
+		@param e Index of the edge to be checked
 */
 template <class FaceType>
 bool FFCorrectness(FaceType & f, const int e)
@@ -125,7 +175,7 @@ bool FFCorrectness(FaceType & f, const int e)
    else return false;
   }
 
-  if(f.FFp(e)->FFp(f.FFi(e))==&f) // plain two manifold 
+  if(f.FFp(e)->FFp(f.FFi(e))==&f) // plain two manifold
   {
     if(f.FFp(e)->FFi(f.FFi(e))==e) return true;
     else return false;
@@ -135,15 +185,15 @@ bool FFCorrectness(FaceType & f, const int e)
   // all the faces must be connected in a loop.
 
   Pos< FaceType > curFace(&f,e);  // Build the half edge
-  	int cnt=0;
+    int cnt=0;
   do
-	{ 
-		if(curFace.IsManifold()) return false;  
-		if(curFace.IsBorder()) return false;
-		curFace.NextF();
-		cnt++;
+    {
+        if(curFace.IsManifold()) return false;
+        if(curFace.IsBorder()) return false;
+        curFace.NextF();
+        cnt++;
     assert(cnt<100);
-	}
+    }
   while ( curFace.f != &f);
   return true;
 }
@@ -162,7 +212,7 @@ void FFDetachManifold(FaceType & f, const int e)
     assert(!IsBorder<FaceType>(f,e));  // Never try to detach a border edge!
     FaceType *ffp = f.FFp(e);
     //int ffi=f.FFp(e);
-	int ffi=f.FFi(e);
+    int ffi=f.FFi(e);
 
     f.FFp(e)=&f;
     f.FFi(e)=e;
@@ -178,11 +228,11 @@ void FFDetachManifold(FaceType & f, const int e)
     assert(FFCorrectness<FaceType>(*ffp,ffi));
 }
 
-/** This function detach the face from the adjacent face via the edge e. 
-    It's possible to use it also in non-two manifold situation.
+/** This function detach the face from the adjacent face via the edge e.
+	It's possible to use it also in non-two manifold situation.
 		The function cannot be applicated if the adjacencies among faces aren't defined.
-		@param f the face to be detached 
-		@param e Index of the edge to be detached 
+		@param f the face to be detached
+		@param e Index of the edge to be detached
 */
 
 template <class FaceType>
@@ -193,10 +243,10 @@ void FFDetach(FaceType & f, const int e)
     int complexity;
     assert(complexity=ComplexSize(f,e));
 
-    Pos< FaceType > FirstFace(&f,e);  // Build the half edge
+	Pos< FaceType > FirstFace(&f,e);  // Build the half edge
 	Pos< FaceType > LastFace(&f,e);  // Build the half edge
-	FirstFace.NextF(); 
-    LastFace.NextF();
+	FirstFace.NextF();
+	LastFace.NextF();
 	int cnt=0;
 
     // then in case of non manifold face continue to advance LastFace
@@ -204,26 +254,26 @@ void FFDetach(FaceType & f, const int e)
     // preceed the face I want to erase
 
 	while ( LastFace.f->FFp(LastFace.z) != &f)
-	{ 
-        assert(ComplexSize(*LastFace.f,LastFace.z)==complexity);
+	{
+		assert(ComplexSize(*LastFace.f,LastFace.z)==complexity);
 		assert(!LastFace.IsManifold());   // We enter in this loop only if we are on a non manifold edge
 		assert(!LastFace.IsBorder());
 		LastFace.NextF();
 		cnt++;
-        assert(cnt<100);
+		assert(cnt<100);
 	}
 
-	assert(LastFace.f->FFp(LastFace.z)==&f);
+    assert(LastFace.f->FFp(LastFace.z)==&f);
     assert(f.FFp(e)== FirstFace.f);
 
-	// Now we link the last one to the first one, skipping the face to be detached;
+    // Now we link the last one to the first one, skipping the face to be detached;
     LastFace.f->FFp(LastFace.z) = FirstFace.f;
     LastFace.f->FFi(LastFace.z) = FirstFace.z;
     assert(ComplexSize(*LastFace.f,LastFace.z)==complexity-1);
 
     // At the end selfconnect the chosen edge to make a border.
     f.FFp(e) = &f;
-	f.FFi(e) = e;
+    f.FFi(e) = e;
     assert(ComplexSize(f,e)==1);
 
     assert(FFCorrectness<FaceType>(*LastFace.f,LastFace.z));
@@ -235,7 +285,7 @@ void FFDetach(FaceType & f, const int e)
 		The function cannot be applicated if the adjacencies among faces aren't define.
 		@param z1 Index of the edge
 		@param f2 Pointer to the face
-		@param z2 The edge of the face f2 
+		@param z2 The edge of the face f2
 */
 template <class FaceType>
 void FFAttach(FaceType * &f, int z1, FaceType *&f2, int z2)
@@ -253,12 +303,12 @@ void FFAttach(FaceType * &f, int z1, FaceType *&f2, int z2)
 	//Salvo i dati di f1 prima di sovrascrivere
   FaceType *f1prec = f->FFp(z1);
   int z1prec = f->FFi(z1);
-	//Aggiorno f1
-	f->FFp(z1) = TEPB.f->FFp(TEPB.z);  
-	f->FFi(z1) = TEPB.f->FFi(TEPB.z);
-	//Aggiorno la faccia che precede f2
-	TEPB.f->FFp(TEPB.z) = f1prec;
-	TEPB.f->FFi(TEPB.z) = z1prec;
+    //Aggiorno f1
+    f->FFp(z1) = TEPB.f->FFp(TEPB.z);
+    f->FFi(z1) = TEPB.f->FFi(TEPB.z);
+    //Aggiorno la faccia che precede f2
+    TEPB.f->FFp(TEPB.z) = f1prec;
+    TEPB.f->FFi(TEPB.z) = z1prec;
 }
 
 /** This function attach the face (via the edge z1) to another face (via the edge z2).
@@ -300,7 +350,7 @@ void AssertAdj(FaceType & f)
 
 	assert(f.FFp(0)->FFi(f.FFi(0))==0);
 	assert(f.FFp(1)->FFi(f.FFi(1))==1);
-	assert(f.FFp(2)->FFi(f.FFi(2))==2); 
+	assert(f.FFp(2)->FFi(f.FFi(2))==2);
 }
 
 /**
@@ -325,7 +375,7 @@ bool CheckOrientation(FaceType &f, int z)
 }
 
 
-/** 
+/**
  * This function change the orientation of the face by inverting the index of two vertex.
  * @param z Index of the edge
  */
@@ -436,21 +486,21 @@ bool CheckFlipEdge(FaceType &f, int z)
 
   if (z<0 || z>2)  return false;
 
-	// boundary edges cannot be flipped
+    // boundary edges cannot be flipped
   if (face::IsBorder(f, z)) return false;
 
 	FaceType *g = f.FFp(z);
 	int		 w = f.FFi(z);
 
-	// check if the vertices of the edge are the same
+    // check if the vertices of the edge are the same
   // e.g. the mesh has to be well oriented
-	if (g->V(w)!=f.V1(z) || g->V1(w)!=f.V(z) )
-		return false;
+    if (g->V(w)!=f.V1(z) || g->V1(w)!=f.V(z) )
+        return false;
 
-	// check if the flipped edge is already present in the mesh
+    // check if the flipped edge is already present in the mesh
   // f_v2 and g_v2 are the vertices of the new edge
   VertexType *f_v2 = f.V2(z);
-	VertexType *g_v2 = g->V2(w);
+    VertexType *g_v2 = g->V2(w);
 
   // just a sanity check. If this happens the mesh is not manifold.
   if (f_v2 == g_v2) return false;
@@ -460,15 +510,15 @@ bool CheckFlipEdge(FaceType &f, int z)
 
   PosType pos(&f, (z+2)%3, f_v2);
   PosType startPos=pos;
-	do
-	{
-		pos.NextE();
+    do
+    {
+        pos.NextE();
     if (g_v2 == pos.VFlip())
-			return false;
-	}
+            return false;
+    }
   while (pos != startPos);
 
-	return true;
+    return true;
 }
 
 /*!
@@ -477,20 +527,20 @@ bool CheckFlipEdge(FaceType &f, int z)
 *	\param f	pointer to the face
 *	\param z	the edge index
 *
-* Note: For <em>edge flip</em> we intend the swap of the diagonal of the rectangle 
+* Note: For <em>edge flip</em> we intend the swap of the diagonal of the rectangle
 *       formed by the face \a f and the face adjacent to the specified edge.
 */
 template <class FaceType>
 void FlipEdge(FaceType &f, const int z)
-{	
+{
 	assert(z>=0);
 	assert(z<3);
 	assert( !IsBorder(f,z) );
 	assert( face::IsManifold<FaceType>(f, z));
 
- 	FaceType *g = f.FFp(z);
+	FaceType *g = f.FFp(z);
 	int		 w = f.FFi(z);
-	
+
 	assert( g->V(w)	== f.V1(z) );
 	assert( g->V1(w)== f.V(z) );
 	assert( g->V2(w)!= f.V(z) );
@@ -499,14 +549,14 @@ void FlipEdge(FaceType &f, const int z)
 
 	f.V1(z) = g->V2(w);
 	g->V1(w) = f.V2(z);
-	
-    f.FFp(z)				= g->FFp((w+1)%3);
+
+	f.FFp(z)				= g->FFp((w+1)%3);
 	f.FFi(z)				= g->FFi((w+1)%3);
-    g->FFp(w)				= f.FFp((z+1)%3);
+	g->FFp(w)				= f.FFp((z+1)%3);
 	g->FFi(w)				= f.FFi((z+1)%3);
-    f.FFp((z+1)%3)				= g;
+	f.FFp((z+1)%3)				= g;
 	f.FFi((z+1)%3)	= (w+1)%3;
-    g->FFp((w+1)%3)			= &f;
+	g->FFp((w+1)%3)			= &f;
 	g->FFi((w+1)%3) = (z+1)%3;
 
 	if(f.FFp(z)==g)
@@ -539,7 +589,7 @@ void VFDetach(FaceType & f)
   VFDetach(f,2);
 }
 
-// Stacca la faccia corrente dalla catena di facce incidenti sul vertice z, 
+// Stacca la faccia corrente dalla catena di facce incidenti sul vertice z,
 // NOTA funziona SOLO per la topologia VF!!!
 // usata nelle classi di collapse
 template <class FaceType>
@@ -553,8 +603,8 @@ void VFDetach(FaceType & f, int z)
 	}
 	else  // scan the list of faces in order to finde the current face f to be detached
 	{
-    VFIterator<FaceType> x(f.V(z)->VFp(),f.V(z)->VFi());
-    VFIterator<FaceType> y;
+	VFIterator<FaceType> x(f.V(z)->VFp(),f.V(z)->VFi());
+	VFIterator<FaceType> y;
 
 		for(;;)
 		{
@@ -571,14 +621,14 @@ void VFDetach(FaceType & f, int z)
 	}
 }
 
-/// Append a face in VF list of vertex f->V(z) 
+/// Append a face in VF list of vertex f->V(z)
 template <class FaceType>
 void VFAppend(FaceType* & f, int z)
 {
 	typename FaceType::VertexType *v = f->V(z);
 	if (v->VFp()!=0)
 	{
-		FaceType *f0=v->VFp();	
+		FaceType *f0=v->VFp();
 		int z0=v->VFi();
 		//append
 		f->VFp(z)=f0;
@@ -608,7 +658,7 @@ void VVStarVF( typename FaceType::VertexType* vp, std::vector<typename FaceType:
 				starVec.push_back(vfi.F()->V2(vfi.I()));
 				++vfi;
 			}
-				
+
 	std::sort(starVec.begin(),starVec.end());
 	typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
 	starVec.resize(new_end-starVec.begin());
@@ -780,7 +830,7 @@ void VFExtendedStarVF(typename FaceType::VertexType* vp,
             faceVec.resize(dist);
         }
     }
-    
+
 /*!
  * \brief Compute the ordered set of faces adjacent to a given vertex using FF adiacency
 *
