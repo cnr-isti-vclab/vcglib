@@ -120,7 +120,7 @@ private:
 			typedef typename MeshType::ConstVertexIterator ConstVertexIterator;
 		  typedef typename MeshType::EdgeIterator   EdgeIterator;
 		  typedef typename MeshType::EdgePointer  EdgePointer;
-            typedef	typename MeshType::CoordType			CoordType;
+			typedef	typename MeshType::CoordType			CoordType;
 			typedef	typename MeshType::ScalarType			ScalarType;
 			typedef typename MeshType::FaceType       FaceType;
 			typedef typename MeshType::FacePointer    FacePointer;
@@ -308,8 +308,8 @@ private:
 			*/
 			static int RemoveDuplicateEdge( MeshType & m)    // V1.0
 			{
-              //assert(m.fn == 0 && m.en >0); // just to be sure we are using an edge mesh...
-                if (m.en==0)return 0;
+			  //assert(m.fn == 0 && m.en >0); // just to be sure we are using an edge mesh...
+				if (m.en==0)return 0;
 			  std::vector<SortedPair> eVec;
 			  for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
 				if(!(*ei).IsD())
@@ -944,117 +944,115 @@ private:
 				return nonManifoldCnt;
 			}
 
-			static void CountEdges( MeshType & m, int &count_e, int &boundary_e )
+	  static void CountEdges( MeshType & m, int &count_e, int &boundary_e )
+	  {
+		tri::RequireFFAdjacency(m);
+		count_e=0;
+		boundary_e=0;
+		UpdateFlags<MeshType>::FaceClearV(m);
+		bool counted =false;
+		for(FaceIterator fi=m.face.begin();fi!=m.face.end();fi++)
+		{
+		  if(!((*fi).IsD()))
+		  {
+			(*fi).SetV();
+			count_e +=3; //assume that we have to increase the number of edges with three
+			for(int j=0; j<3; j++)
 			{
-				count_e=0;
-				boundary_e=0;
-				UpdateFlags<MeshType>::FaceClearV(m);
-				FaceIterator fi;
-				vcg::face::Pos<FaceType> he;
-				vcg::face::Pos<FaceType> hei;
-				bool counted =false;
-				for(fi=m.face.begin();fi!=m.face.end();fi++)
+			  if (face::IsBorder(*fi,j)) //If this edge is a border edge
+				boundary_e++; // then increase the number of boundary edges
+			  else if (IsManifold(*fi,j))//If this edge is manifold
+			  {
+				if((*fi).FFp(j)->IsV()) //If the face on the other side of the edge is already selected
+				  count_e--; // we counted one edge twice
+			  }
+			  else//We have a non-manifold edge
+			  {
+				vcg::face::Pos<FaceType> hei(&(*fi), j , fi->V(j));
+				vcg::face::Pos<FaceType> he=hei;
+				he.NextF();
+				while (he.f!=hei.f)// so we have to iterate all faces that are connected to this edge
 				{
-					if(!((*fi).IsD()))
-					{
-					(*fi).SetV();
-					count_e +=3; //assume that we have to increase the number of edges with three
-					for(int j=0; j<3; j++)
-					{
-			if (face::IsBorder(*fi,j)) //If this edge is a border edge
-							boundary_e++; // then increase the number of boundary edges
-						else if (IsManifold(*fi,j))//If this edge is manifold
-						{
-							if((*fi).FFp(j)->IsV()) //If the face on the other side of the edge is already selected
-								count_e--; // we counted one edge twice
-						}
-						else//We have a non-manifold edge
-						{
-							hei.Set(&(*fi), j , fi->V(j));
-							he=hei;
-							he.NextF();
-							while (he.f!=hei.f)// so we have to iterate all faces that are connected to this edge
-							{
-								if (he.f->IsV())// if one of the other faces was already visited than this edge was counted already.
-								{
-									counted=true;
-									break;
-								}
-								else
-								{
-									he.NextF();
-								}
-							}
-							if (counted)
-							{
-								count_e--;
-								counted=false;
-							}
-						}
-					}
-					}
+				  if (he.f->IsV())// if one of the other faces was already visited than this edge was counted already.
+				  {
+					counted=true;
+					break;
+				  }
+				  else
+				  {
+					he.NextF();
+				  }
 				}
-			}
-
-
-			static int CountHoles( MeshType & m)
-			{
-		int numholev=0;
-		FaceIterator fi;
-
-				FaceIterator gi;
-				vcg::face::Pos<FaceType> he;
-				vcg::face::Pos<FaceType> hei;
-
-		std::vector< std::vector<Point3x> > holes; //indices of vertices
-
-				vcg::tri::UpdateFlags<MeshType>::VertexClearS(m);
-
-				gi=m.face.begin(); fi=gi;
-
-				for(fi=m.face.begin();fi!=m.face.end();fi++)//for all faces do
+				if (counted)
 				{
-					for(int j=0;j<3;j++)//for all edges
-					{
-						if(fi->V(j)->IsS()) continue;
-
-			if(face::IsBorder(*fi,j))//found an unvisited border edge
-						{
-							he.Set(&(*fi),j,fi->V(j)); //set the face-face iterator to the current face, edge and vertex
-			  std::vector<Point3x> hole; //start of a new hole
-							hole.push_back(fi->P(j)); // including the first vertex
-							numholev++;
-							he.v->SetS(); //set the current vertex as selected
-							he.NextB(); //go to the next boundary edge
-
-
-							while(fi->V(j) != he.v)//will we do not encounter the first boundary edge.
-							{
-								Point3x newpoint = he.v->P(); //select its vertex.
-								if(he.v->IsS())//check if this vertex was selected already, because then we have an additional hole.
-								{
-									//cut and paste the additional hole.
-				  std::vector<Point3x> hole2;
-									int index = static_cast<int>(find(hole.begin(),hole.end(),newpoint)
-										- hole.begin());
-									for(unsigned int i=index; i<hole.size(); i++)
-										hole2.push_back(hole[i]);
-
-									hole.resize(index);
-									if(hole2.size()!=0) //annoying in degenerate cases
-										holes.push_back(hole2);
-								}
-								hole.push_back(newpoint);
-								numholev++;
-								he.v->SetS(); //set the current vertex as selected
-								he.NextB(); //go to the next boundary edge
-							}
-							holes.push_back(hole);
-						}
-					}
+				  count_e--;
+				  counted=false;
 				}
-				return static_cast<int>(holes.size());
+			  }
 			}
+		  }
+		}
+	  }
+
+
+  static int CountHoles( MeshType & m)
+  {
+    int numholev=0;
+    FaceIterator fi;
+
+    FaceIterator gi;
+    vcg::face::Pos<FaceType> he;
+    vcg::face::Pos<FaceType> hei;
+
+    std::vector< std::vector<Point3x> > holes; //indices of vertices
+
+    vcg::tri::UpdateFlags<MeshType>::VertexClearS(m);
+
+    gi=m.face.begin(); fi=gi;
+
+    for(fi=m.face.begin();fi!=m.face.end();fi++)//for all faces do
+    {
+      for(int j=0;j<3;j++)//for all edges
+      {
+        if(fi->V(j)->IsS()) continue;
+
+        if(face::IsBorder(*fi,j))//found an unvisited border edge
+        {
+          he.Set(&(*fi),j,fi->V(j)); //set the face-face iterator to the current face, edge and vertex
+          std::vector<Point3x> hole; //start of a new hole
+          hole.push_back(fi->P(j)); // including the first vertex
+          numholev++;
+          he.v->SetS(); //set the current vertex as selected
+          he.NextB(); //go to the next boundary edge
+
+
+          while(fi->V(j) != he.v)//will we do not encounter the first boundary edge.
+          {
+            Point3x newpoint = he.v->P(); //select its vertex.
+            if(he.v->IsS())//check if this vertex was selected already, because then we have an additional hole.
+            {
+              //cut and paste the additional hole.
+              std::vector<Point3x> hole2;
+              int index = static_cast<int>(find(hole.begin(),hole.end(),newpoint)
+                                           - hole.begin());
+              for(unsigned int i=index; i<hole.size(); i++)
+                hole2.push_back(hole[i]);
+
+              hole.resize(index);
+              if(hole2.size()!=0) //annoying in degenerate cases
+                holes.push_back(hole2);
+            }
+            hole.push_back(newpoint);
+            numholev++;
+            he.v->SetS(); //set the current vertex as selected
+            he.NextB(); //go to the next boundary edge
+          }
+          holes.push_back(hole);
+        }
+      }
+    }
+    return static_cast<int>(holes.size());
+  }
 
       /*
   Compute the set of connected components of a given mesh
@@ -1212,103 +1210,105 @@ private:
 					Semiregular = false;
 				}
 			}
-//      static void IsOrientedMesh(MeshType &m, bool &Oriented, bool &Orientable)
-	  static void OrientCoherentlyMesh(MeshType &m, bool &Oriented, bool &Orientable)
-			{
-		RequireFFAdjacency(m);
-		assert(&Oriented != &Orientable);
-
-				// This algorithms require FF topology initialized
-				assert(m.face.back().FFp(0));
 
 
-				Orientable = true;
-				Oriented = true;
+  static bool IsCoherentlyOrientedMesh(MeshType &m)
+  {
+    for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+      if (!fi->IsD())
+        for(int i=0;i<3;++i)
+          if(!face::CheckOrientation(*fi,i))
+            return false;
 
-				// Ensure that each face is deselected
-				FaceIterator fi;
-				for (fi = m.face.begin(); fi != m.face.end(); ++fi)
-					fi->ClearS();
+    return true;
+  }
 
-                // initialize stack
-        std::stack<FacePointer> faces;
+  static void OrientCoherentlyMesh(MeshType &m, bool &Oriented, bool &Orientable)
+  {
+    RequireFFAdjacency(m);
+    assert(&Oriented != &Orientable);
+    assert(m.face.back().FFp(0));    // This algorithms require FF topology initialized
 
-				// for each face of the mesh
-				FacePointer fp,fpaux;
-				int iaux;
-				for (fi = m.face.begin(); fi != m.face.end(); ++fi)
-				{
-					if (!fi->IsD() && !fi->IsS())
-					{
-						// each face put in the stack is selected (and oriented)
-						fi->SetS();
-						faces.push(&(*fi));
+    Orientable = true;
+    Oriented = true;
 
-						// empty the stack
-						while (!faces.empty())
-						{
-							fp = faces.top();
-							faces.pop();
+    tri::UpdateSelection<MeshType>::FaceClear(m);
+    std::stack<FacePointer> faces;
+    for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+    {
+      if (!fi->IsD() && !fi->IsS())
+      {
+        // each face put in the stack is selected (and oriented)
+        fi->SetS();
+        faces.push(&(*fi));
 
-							// make consistently oriented the adjacent faces
-							for (int j = 0; j < 3; j++)
-							{
-								// get one of the adjacent face
-								fpaux = fp->FFp(j);
-								iaux = fp->FFi(j);
+        // empty the stack
+        while (!faces.empty())
+        {
+          FacePointer fp = faces.top();
+          faces.pop();
 
-								if (!fpaux->IsD() && fpaux != fp && face::IsManifold<FaceType>(*fp, j))
-								{
-									if (!CheckOrientation(*fpaux, iaux))
-									{
-					Oriented = false;
+          // make consistently oriented the adjacent faces
+          for (int j = 0; j < 3; j++)
+          {
+            // get one of the adjacent face
+            FacePointer fpaux = fp->FFp(j);
+            int iaux = fp->FFi(j);
 
-										if (!fpaux->IsS())
-										{
-											face::SwapEdge<FaceType,true>(*fpaux, iaux);
-											assert(CheckOrientation(*fpaux, iaux));
-										}
-										else
-					{
-											Orientable = false;
-					  break;
-					}
-									}
+            if (!fpaux->IsD() && fpaux != fp && face::IsManifold<FaceType>(*fp, j))
+            {
+              if (!CheckOrientation(*fpaux, iaux))
+              {
+                Oriented = false;
 
-									// put the oriented face into the stack
+                if (!fpaux->IsS())
+                {
+                  face::SwapEdge<FaceType,true>(*fpaux, iaux);
+                  assert(CheckOrientation(*fpaux, iaux));
+                }
+                else
+                {
+                  Orientable = false;
+                  break;
+                }
+              }
 
-									if (!fpaux->IsS())
-									{
-										fpaux->SetS();
-										faces.push(fpaux);
-									}
-								}
-							}
-						}
-					}
+              // put the oriented face into the stack
 
-					if (!Orientable)	break;
-				}
-			}
-	  /// Flip the orientation of the whole mesh flipping all the faces (by swapping the first two vertices)
-			static void FlipMesh(MeshType &m, bool selected=false)
-	  {
-		for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if(!(*fi).IsD())
-		  if(!selected || (*fi).IsS())
-		{
-				   face::SwapEdge<FaceType,false>((*fi), 0);
-				 if (HasPerWedgeTexCoord(m))
-							std::swap((*fi).WT(0),(*fi).WT(1));
-		}
-	  }
-	  /// Flip a mesh so that its normals are orented outside.
-	  /// Just for safety it uses a voting scheme.
-	  /// It assumes that
-	  /// mesh has already has coherent normals.
-	  /// mesh is watertight and signle component.
-	  static bool FlipNormalOutside(MeshType &m)
-	  {
-		if(m.vert.empty()) return false;
+              if (!fpaux->IsS())
+              {
+                fpaux->SetS();
+                faces.push(fpaux);
+              }
+            }
+          }
+        }
+      }
+
+      if (!Orientable)	break;
+    }
+  }
+
+
+  /// Flip the orientation of the whole mesh flipping all the faces (by swapping the first two vertices)
+            static void FlipMesh(MeshType &m, bool selected=false)
+      {
+        for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if(!(*fi).IsD())
+          if(!selected || (*fi).IsS())
+        {
+                   face::SwapEdge<FaceType,false>((*fi), 0);
+                 if (HasPerWedgeTexCoord(m))
+                            std::swap((*fi).WT(0),(*fi).WT(1));
+        }
+      }
+      /// Flip a mesh so that its normals are orented outside.
+      /// Just for safety it uses a voting scheme.
+      /// It assumes that
+      /// mesh has already has coherent normals.
+      /// mesh is watertight and signle component.
+      static bool FlipNormalOutside(MeshType &m)
+      {
+        if(m.vert.empty()) return false;
 
         tri::UpdateNormal<MeshType>::PerVertexAngleWeighted(m);
         tri::UpdateNormal<MeshType>::NormalizePerVertex(m);
@@ -1494,43 +1494,42 @@ private:
         return total;
     }
 
-	  static bool SelfIntersections(MeshType &m, std::vector<FaceType*> &ret)
-			{
-		RequirePerFaceMark(m);
-			Box3< ScalarType> bbox;
-				TriMeshGrid   gM;
-		ret.clear();
-				FaceIterator fi;
-		  int referredBit = FaceType::NewBitFlag();
-		tri::UpdateFlags<MeshType>::FaceClear(m,referredBit);
+	static bool SelfIntersections(MeshType &m, std::vector<FaceType*> &ret)
+	{
+	  RequirePerFaceMark(m);
+	  ret.clear();
+	  int referredBit = FaceType::NewBitFlag();
+	  tri::UpdateFlags<MeshType>::FaceClear(m,referredBit);
 
-				std::vector<FaceType*> inBox;
-				gM.Set(m.face.begin(),m.face.end());
+	  TriMeshGrid gM;
+	  gM.Set(m.face.begin(),m.face.end());
 
-				for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-				{
-		  (*fi).SetUserBit(referredBit);
-					(*fi).GetBBox(bbox);
-					vcg::tri::GetInBoxFace(m, gM, bbox,inBox);
-					bool Intersected=false;
-		  typename std::vector<FaceType*>::iterator fib;
-		  for(fib=inBox.begin();fib!=inBox.end();++fib)
-		  {
-			if(!(*fib)->IsUserBit(referredBit) && (*fib != &*fi) )
-			  if(TestFaceFaceIntersection(&*fi,*fib)){
-				ret.push_back(*fib);
-				if(!Intersected) {
-				  ret.push_back(&*fi);
-				  Intersected=true;
-				}
+	  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+	  {
+		(*fi).SetUserBit(referredBit);
+		Box3< ScalarType> bbox;
+		(*fi).GetBBox(bbox);
+		std::vector<FaceType*> inBox;
+		vcg::tri::GetInBoxFace(m, gM, bbox,inBox);
+		bool Intersected=false;
+		typename std::vector<FaceType*>::iterator fib;
+		for(fib=inBox.begin();fib!=inBox.end();++fib)
+		{
+		  if(!(*fib)->IsUserBit(referredBit) && (*fib != &*fi) )
+			if(Clean<MeshType>::TestFaceFaceIntersection(&*fi,*fib)){
+			  ret.push_back(*fib);
+			  if(!Intersected) {
+				ret.push_back(&*fi);
+				Intersected=true;
 			  }
-		  }
-					inBox.clear();
-				}
-
-		FaceType::DeleteBitFlag(referredBit);
-				return (ret.size()>0);
 			}
+		}
+		inBox.clear();
+	  }
+
+	  FaceType::DeleteBitFlag(referredBit);
+	  return (ret.size()>0);
+	}
 
       /**
       This function simply test that the vn and fn counters be consistent with the size of the containers and the number of deleted simplexes.
@@ -1623,8 +1622,19 @@ private:
       int i0,i1; ScalarType a,b;
       face::FindSharedVertex(f0,f1,i0,i1);
       Point3f shP = f0->V(i0)->P()*0.5;
-      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f0).V1(i0)->P()*0.5+shP,(*f0).V2(i0)->P()*0.5+shP), *f1, a, b) )  return true;
-      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f1).V1(i1)->P()*0.5+shP,(*f1).V2(i1)->P()*0.5+shP), *f0, a, b) )  return true;
+      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f0).V1(i0)->P()*0.5+shP,(*f0).V2(i0)->P()*0.5+shP), *f1, a, b) )
+      {
+        // a,b are the param coords of the intersection point of the segment.
+        if(a+b>=1 || a<=EPSIL || b<=EPSIL ) return false;
+        return true;
+      }
+      if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f1).V1(i1)->P()*0.5+shP,(*f1).V2(i1)->P()*0.5+shP), *f0, a, b) )
+      {
+        // a,b are the param coords of the intersection point of the segment.
+        if(a+b>=1 || a<=EPSIL || b<=EPSIL ) return false;
+        return true;
+      }
+
      }
         return false;
     }
