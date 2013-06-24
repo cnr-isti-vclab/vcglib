@@ -467,7 +467,7 @@ namespace vcg
                             // Consecutivity is in the space of the index of the polygon.
                             for(int qq=0;qq<3;++qq)
                             {
-                              if( (indexTriangulatedVect[j+qq]+1)%indexTriangulatedVect.size() == indexTriangulatedVect[j+(qq+1)%3])
+                              if( (indexTriangulatedVect[j+qq]+1)%int(indexTriangulatedVect.size()) == indexTriangulatedVect[j+(qq+1)%3])
                                 mesh.face[f+j/3].ClearF(qq);
                               else mesh.face[f+j/3].SetF(qq);
                             }
@@ -584,7 +584,7 @@ namespace vcg
 						if(from!=length)
 						{
 							to = from+1;
-                            while ( to!=length && (((line[to]!=' ') && (line[to] != '\t'))  || (line[to] == '\r')))
+							while ( to!=length && (((line[to]!=' ') && (line[to] != '\t'))  || (line[to] == '\r')))
 								to++;
 							tokens.push_back(line.substr(from, to-from).c_str());
 							from = to;
