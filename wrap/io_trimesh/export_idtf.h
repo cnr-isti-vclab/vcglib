@@ -247,7 +247,7 @@ public:
 
 	static void removeConvertedTexturesFiles(const QStringList& conv_file)
 	{
-		for(unsigned int ii = 0;ii < conv_file.size();++ii)
+        for(QStringList::size_type ii = 0;ii < conv_file.size();++ii)
 		{
 			QDir dir(QtUtilityFunctions::pathWithoutFileName(conv_file[ii]));
 			dir.remove(QtUtilityFunctions::fileNameFromPath(conv_file[ii]));
@@ -375,9 +375,8 @@ typedef typename SaveMeshType::CoordType CoordType;
 					idtf.write(2,"}");
 				}
 
-
+                idtf.write(1,"}");
 			}
-			idtf.write(1,"}");
 			idtf.write(0,"}");
 			idtf.write(0,"");
 		}
