@@ -167,19 +167,19 @@ void CompFaceIntegrals(FaceType &f)
   Faa = k1 * Paa;
   Fbb = k1 * Pbb;
   Fcc = k3 * (SQR(n[A])*Paa + 2*n[A]*n[B]*Pab + SQR(n[B])*Pbb
-	 + w*(2*(n[A]*Pa + n[B]*Pb) + w*P1));
+     + w*(2*(n[A]*Pa + n[B]*Pb) + w*P1));
 
   Faaa = k1 * Paaa;
   Fbbb = k1 * Pbbb;
   Fccc = -k4 * (CUBE(n[A])*Paaa + 3*SQR(n[A])*n[B]*Paab
-	   + 3*n[A]*SQR(n[B])*Pabb + CUBE(n[B])*Pbbb
-	   + 3*w*(SQR(n[A])*Paa + 2*n[A]*n[B]*Pab + SQR(n[B])*Pbb)
-	   + w*w*(3*(n[A]*Pa + n[B]*Pb) + w*P1));
+       + 3*n[A]*SQR(n[B])*Pabb + CUBE(n[B])*Pbbb
+       + 3*w*(SQR(n[A])*Paa + 2*n[A]*n[B]*Pab + SQR(n[B])*Pbb)
+       + w*w*(3*(n[A]*Pa + n[B]*Pb) + w*P1));
 
   Faab = k1 * Paab;
   Fbbc = -k2 * (n[A]*Pabb + n[B]*Pbbb + w*Pbb);
   Fcca = k3 * (SQR(n[A])*Paaa + 2*n[A]*n[B]*Paab + SQR(n[B])*Pabb
-	 + w*(2*(n[A]*Paa + n[B]*Pab) + w*Pa));
+     + w*(2*(n[A]*Paa + n[B]*Pab) + w*Pa));
 }
 
 
@@ -196,9 +196,9 @@ void Compute(MeshType &m)
   T0 = T1[X] = T1[Y] = T1[Z]
      = T2[X] = T2[Y] = T2[Z]
      = TP[X] = TP[Y] = TP[Z] = 0;
-	FaceIterator fi;
-  for (fi=m.face.begin(); fi!=m.face.end();++fi) if(!(*fi).IsD()) {
-		FaceType &f=(*fi);
+    FaceIterator fi;
+    for (fi=m.face.begin(); fi!=m.face.end();++fi) if(!(*fi).IsD() && vcg::DoubleArea(*fi)>std::numeric_limits<float>::min()) {
+        FaceType &f=(*fi);
 
     nx = fabs(f.N()[0]);
     ny = fabs(f.N()[1]);
@@ -234,7 +234,7 @@ Meaningful only if the mesh is watertight.
 */
 ScalarType Mass()
 {
-	return static_cast<ScalarType>(T0);
+    return static_cast<ScalarType>(T0);
 }
 
 /*! \brief Return the Center of Mass (or barycenter) of the mesh.
@@ -243,14 +243,14 @@ Meaningful only if the mesh is watertight.
 */
 Point3<ScalarType>  CenterOfMass()
 {
-	Point3<ScalarType>  r;
+    Point3<ScalarType>  r;
   r[X] = T1[X] / T0;
   r[Y] = T1[Y] / T0;
   r[Z] = T1[Z] / T0;
-	return r;
+    return r;
 }
 void InertiaTensor(Matrix33<ScalarType> &J ){
-	Point3<ScalarType>  r;
+    Point3<ScalarType>  r;
   r[X] = T1[X] / T0;
   r[Y] = T1[Y] / T0;
   r[Z] = T1[Z] / T0;
@@ -313,7 +313,7 @@ void InertiaTensorEigen(Matrix33<ScalarType> &EV, Point3<ScalarType> &ev )
 }
 
 /** Compute covariance matrix of a mesh, i.e. the integral
-		int_{M} { (x-b)(x-b)^T }dx  where b is the barycenter and x spans over the mesh M
+        int_{M} { (x-b)(x-b)^T }dx  where b is the barycenter and x spans over the mesh M
  */
 static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::Matrix33<ScalarType> &C)
 {
@@ -341,7 +341,7 @@ static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::
 	// integral of (x,y,0) in the same triangle
 	CoordType X(1/6.0,1/6.0,0);
 	vcg::Matrix33<ScalarType> A, // matrix that bring the vertices to (v1-v0,v2-v0,n)
-												    DC;
+													DC;
 	for(fi = m.face.begin(); fi != m.face.end(); ++fi)
 		if(!(*fi).IsD())
 		{
@@ -370,7 +370,7 @@ static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::
 			tmp.OuterProduct(delta,delta);
 			DC+=tmp*0.5;
 // 		DC*=fabs(A.Determinant());	// the determinant of A is the jacobian of the change of variables A*x+delta
- 			DC*=da;											// the determinant of A is also the double area of *fi
+			DC*=da;											// the determinant of A is also the double area of *fi
 			C+=DC;
 	}
 
