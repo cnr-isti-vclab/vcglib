@@ -98,8 +98,9 @@ static bool LoadMask(const char * filename, int &mask)
  */
 static bool IsSTLColored(const char * filename, bool &magicsMode)
 {
-  if(IsSTLBinary(filename)==false) return false;
-   FILE *fp = fopen(filename, "r");
+  if(IsSTLBinary(filename)==false)
+    return false;
+   FILE *fp = fopen(filename, "rb");
    char buf[STL_LABEL_SIZE+1];
    fread(buf,sizeof(char),STL_LABEL_SIZE,fp);
    std::string strInput(buf);
@@ -122,7 +123,8 @@ static bool IsSTLColored(const char * filename, bool &magicsMode)
      fread(&attr,sizeof(unsigned short),1,fp);
      if(attr!=0)
      {
-      if(Color4b::FromUnsignedR5G5B5(attr) != Color4b(Color4b::White)) return true;
+      if(Color4b::FromUnsignedR5G5B5(attr) != Color4b(Color4b::White))
+	return true;
      }
    }
 
