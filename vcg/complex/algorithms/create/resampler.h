@@ -40,7 +40,7 @@ namespace tri {
 /*@{*/
 /*@{*/
 /** Class Resampler.
-    This is class reasmpling a mesh using marching cubes methods
+	This is class reasmpling a mesh using marching cubes methods
 		@param OLD_MESH_TYPE (Template Parameter) Specifies the type of mesh to be resampled
 		@param NEW_MESH_TYPE (Template Parameter) Specifies the type of output mesh.
  */
@@ -139,18 +139,18 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			int index=GetSliceIndex(x,z);
 
 			if (y==CurrentSlice) return _v_cs[index];
-		                 	else return _v_ns[index];
+							else return _v_ns[index];
 		}
 
 		float V(int x,int y,int z)
 		{
-    	if(DiscretizeFlag) return VV(x,y,z).second+offset<0?-1:1;
+		if(DiscretizeFlag) return VV(x,y,z).second+offset<0?-1:1;
 			return VV(x,y,z).second+offset;
 		}
 		///return true if the distance form the mesh is less than maxdim and return distance
-    field_value DistanceFromMesh(Point3f &pp,Old_Mesh */*mesh*/)
+	field_value DistanceFromMesh(Point3f &pp,Old_Mesh */*mesh*/)
 		{
-      float dist;
+	  float dist;
 			typename Old_Mesh::FaceType *f=NULL;
 			const float max_dist = max_dim;
 			vcg::Point3f testPt;
@@ -175,22 +175,22 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			assert(retIP); // this should happen only if the starting mesh has degenerate faces.
 
 			const float InterpolationEpsilon = 0.00001f;
-			int zeroCnt=0;  
+			int zeroCnt=0;
 			if(pip[0]<InterpolationEpsilon) ++zeroCnt;
 			if(pip[1]<InterpolationEpsilon) ++zeroCnt;
 			if(pip[2]<InterpolationEpsilon) ++zeroCnt;
 			assert(zeroCnt<3);
-						 
+
 			Point3f dir=(testPt-closestPt).Normalize();
 
 			// Note that the two signs could be discordant.
 			// Always choose the best one according to where the nearest point falls.
 			float signBest;
-			
+
 			// Compute test if the point see the surface normal from inside or outside
 			// Surface normal for improved robustness is computed both by face and interpolated from vertices.
 			if(zeroCnt>0) // we Not are in the middle of the face so the face normal is NOT reliable.
-			{	
+			{
 				closestNormV =  (f->V(0)->cN())*pip[0] + (f->V(1)->cN())*pip[1] + (f->V(2)->cN())*pip[2] ;
 				signBest =  dir.dot(closestNormV) ;
 			}
@@ -205,7 +205,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			return field_value(true,dist);
 		}
 
-    field_value MultiDistanceFromMesh(Point3f &pp, Old_Mesh */*mesh*/)
+	field_value MultiDistanceFromMesh(Point3f &pp, Old_Mesh */*mesh*/)
 		{
 			float distSum=0;
 			int positiveCnt=0; // positive results counter
@@ -226,7 +226,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 				distSum += fabs(ff.second);
 				if(ff.second>0) positiveCnt ++;
 			}
-      if(positiveCnt<=MultiSample/2) distSum = -distSum;
+	  if(positiveCnt<=MultiSample/2) distSum = -distSum;
 			return field_value(true, distSum/MultiSample);
 		}
 
@@ -294,7 +294,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			}	while(flippedCnt>0);
 
 
-#ifndef NO_QT
+#ifdef QT_VERSION
 			if(flippedTot>0)
 				qDebug("Flipped %i values in %i times",flippedTot,flippedTimes);
 #endif
@@ -338,11 +338,11 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 
 			Begin();
 			extractor.Initialize();
-      for (int j=0; j<=this->siz.Y(); j++)
+	  for (int j=0; j<=this->siz.Y(); j++)
 			{
-                if (cb) cb((100*j)/this->siz.Y(),"Marching ");
+				if (cb) cb((100*j)/this->siz.Y(),"Marching ");
 				ProcessSlice<EXTRACTOR_TYPE>(extractor);//find cells where there is the isosurface and examine it
-        NextSlice();
+		NextSlice();
 			}
 			extractor.Finalize();
 			typename New_Mesh::VertexIterator vi;
@@ -493,14 +493,14 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 		///if there is a vertex in z axis of a cell return the vertex or create it
 		void GetXIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v)
 		{
-      assert(p1.X()+1 == p2.X());
+	  assert(p1.X()+1 == p2.X());
 			assert(p1.Y()   == p2.Y());
 			assert(p1.Z()   == p2.Z());
 
 			int i = p1.X();// (p1.X() - _bbox.min.X())/_cell_size.X();
 			int z = p1.Z();//(p1.Z() - _bbox.min.Z())/_cell_size.Z();
 			VertexIndex index = i+z*this->siz.X();
-      VertexIndex pos=-1;
+	  VertexIndex pos=-1;
 			if (p1.Y()==CurrentSlice)
 			{
 				if ((pos=_x_cs[index])==-1)
@@ -525,21 +525,21 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 					return;
 				}
 			}
-      assert(pos>=0);
+	  assert(pos>=0);
 			v = &_newM->vert[pos];
 		}
 
 		///if there is a vertex in y axis of a cell return the vertex or create it
 		void GetYIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v)
 		{
-      assert(p1.X()   == p2.X());
+	  assert(p1.X()   == p2.X());
 			assert(p1.Y()+1 == p2.Y());
 			assert(p1.Z()   == p2.Z());
 
 			int i = p1.X(); // (p1.X() - _bbox.min.X())/_cell_size.X();
 			int z = p1.Z(); // (p1.Z() - _bbox.min.Z())/_cell_size.Z();
 			VertexIndex index = i+z*this->siz.X();
-      VertexIndex pos=-1;
+	  VertexIndex pos=-1;
 			if ((pos=_y_cs[index])==-1)
 			{
 				_y_cs[index] = (VertexIndex) _newM->vert.size();
@@ -548,14 +548,14 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 				v = &_newM->vert[ pos ];
 				v->P()=Interpolate(p1,p2,1);
 			}
-      assert(pos>=0);
-      v = &_newM->vert[pos];
+	  assert(pos>=0);
+	  v = &_newM->vert[pos];
 		}
 
 		///if there is a vertex in z axis of a cell return the vertex or create it
 		void GetZIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer &v)
 		{
-      assert(p1.X()   == p2.X());
+	  assert(p1.X()   == p2.X());
 			assert(p1.Y()   == p2.Y());
 			assert(p1.Z()+1 == p2.Z());
 
@@ -563,7 +563,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 			int z = p1.Z(); //(p1.Z() - _bbox.min.Z())/_cell_size.Z();
 			VertexIndex index = i+z*this->siz.X();
 
-      VertexIndex pos=-1;
+	  VertexIndex pos=-1;
 			if (p1.Y()==CurrentSlice)
 			{
 				if ((pos=_z_cs[index])==-1)
@@ -588,7 +588,7 @@ template <class OLD_MESH_TYPE,class NEW_MESH_TYPE, class FLT, class DISTFUNCTOR 
 					return;
 				}
 			}
-      assert(pos>=0);
+	  assert(pos>=0);
 			v = &_newM->vert[pos];
 		}
 
