@@ -148,9 +148,9 @@ private:
                                                vcg::TexCoord2<ScalarType> &t1)
         {
             vcg::TexCoord2<ScalarType> tmp;
-            if (t0.n() != t1.n())
-                cerr << "Failed assertion: Quadrangulator::WedgeInterp1" << endl;
-            // assert(t0.n()== t1.n()); TODO put back
+//            if (t0.n() != t1.n())
+//                cerr << "Failed assertion: Quadrangulator::WedgeInterp1" << endl;
+//            // assert(t0.n()== t1.n()); TODO put back
             tmp.n()=t0.n();
             // assert(alpha>=0); TODO put back
             if (alpha<0)
@@ -466,7 +466,8 @@ public:
         ///then split the tris
         SplitTris(Tmesh,factor,tolerance);
         ///join the vertices back!
-        ScalarType EPS=(ScalarType)0.00000001;
+        //ScalarType EPS=(ScalarType)0.00000001;
+        ScalarType EPS=(ScalarType)0.000001;
         vcg::tri::Clean<TriMesh>::MergeCloseVertex(Tmesh,EPS);
 
         vcg::tri::UpdateNormal<TriMesh>::PerFaceNormalized(Tmesh);	 // update Normals
