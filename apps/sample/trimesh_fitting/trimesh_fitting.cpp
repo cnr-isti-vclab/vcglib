@@ -52,7 +52,7 @@ class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::FFAdj,  vcg::face::V
 class MyEdge    : public vcg::Edge<MyUsedTypes>{};
 class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> , std::vector<MyEdge>  > {};
 
-float EvalPlane(vcg::Plane3f &pl, vcg::Point3f &dir, std::vector<vcg::Point3f> posVec)
+float EvalPlane(vcg::Plane3f &pl, std::vector<vcg::Point3f> posVec)
 {
   float off=0;
   for(size_t i=0;i<posVec.size();++i)
@@ -63,7 +63,7 @@ float EvalPlane(vcg::Plane3f &pl, vcg::Point3f &dir, std::vector<vcg::Point3f> p
 }
 
 
-int main( int argc, char **argv )
+int main( )
 {
   MyMesh m;
   vcg::tri::Icosahedron(m);
@@ -76,6 +76,7 @@ int main( int argc, char **argv )
   int cnt=0;
   float scaleFac = m.bbox.Diag()/10.0f;
   printf("ScaleFac %f\n\n",scaleFac);
+  vcg::math::MarsenneTwisterRNG rnd;
   for(int i=0;i<m.FN();++i)
   {
     std::vector<vcg::Point3f> ExactVec;
@@ -87,7 +88,7 @@ int main( int argc, char **argv )
     {
       vcg::Point3f p = vcg::tri::SurfaceSampling<MyMesh>::RandomPointInTriangle(m.face[i]);
       ExactVec.push_back(p);
-      vcg::Point3f off=vcg::tri::SurfaceSampling<MyMesh>::RandomPoint3fBall01();
+      vcg::Point3f off = vcg::math::GeneratePointInUnitBallUniform<float>(rnd);
       p+=off*scaleFac;
       float w =  std::max(0.0, 1.0f-fabs(vcg::SignedDistancePlanePoint(pl,p))/scaleFac);
       PerturbVec.push_back(p);
@@ -95,13 +96,13 @@ int main( int argc, char **argv )
     }
 
     vcg::FitPlaneToPointSet(ExactVec,ple);
-    float err=EvalPlane(ple,m.face[i].N(),ExactVec);
+    float err=EvalPlane(ple,ExactVec);
 
     vcg::FitPlaneToPointSet(PerturbVec,plf);
-    float err0=EvalPlane(plf,m.face[i].N(),ExactVec);
+    float err0=EvalPlane(plf,ExactVec);
 
     vcg::WeightedFitPlaneToPointSet(PerturbVec,WeightVec,plw);
-    float err1=EvalPlane(plw,m.face[i].N(),ExactVec);
+    float err1=EvalPlane(plw,ExactVec);
     printf("Exact %5.3f Fit to Perturbed %5.3f Weighted fit to perturbed %5.3f\n",err,err0,err1);
     if(err0>err1) cnt++;
   }

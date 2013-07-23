@@ -48,7 +48,7 @@ class MyFace    : public vcg::Face < MyUsedTypes, vcg::face::VertexRef, vcg::fac
 class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> > {};
 
 
-int  main(int argc, char **argv)
+int  main()
 {
  MyMesh m;
 
