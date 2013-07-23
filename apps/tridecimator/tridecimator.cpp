@@ -1,25 +1,9 @@
-#include <vector>
-#include <limits>
-
-#include <stdio.h>
-#include <stdlib.h>
-
-
 // stuff to define the mesh
-#include <vcg/simplex/vertex/base.h>
-#include <vcg/simplex/face/base.h>
-#include <vcg/simplex/edge/base.h>
 #include <vcg/complex/complex.h>
-
-#include <vcg/math/quadric.h>
-#include <vcg/complex/algorithms/clean.h>
 
 // io
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
-
-// update
-#include <vcg/complex/algorithms/update/topology.h>
 
 // local optimization
 #include <vcg/complex/algorithms/local_optimization.h>
@@ -37,9 +21,9 @@ For edge collpases we need verteses with:
 - per vertex Normal
 
 
-Moreover for using a quadric based collapse the vertex class 
+Moreover for using a quadric based collapse the vertex class
 must have also a Quadric member Q();
-Otherwise the user have to provide an helper function object 
+Otherwise the user have to provide an helper function object
 to recover the quadric.
 
 ******************************************************/
@@ -84,32 +68,32 @@ class MyTriEdgeCollapse: public vcg::tri::TriEdgeCollapseQuadric< MyMesh, Vertex
 
 void Usage()
 {
-  	printf(
+    printf(
            "---------------------------------\n"
            "         TriSimp V.1.0 \n"
            "     http://vcg.isti.cnr.it\n"
            "    http://vcg.sourceforge.net\n"
            "   release date: "__DATE__"\n"
            "---------------------------------\n\n"
-		  "TriDecimator 1.0 \n"__DATE__"\n"
+          "TriDecimator 1.0 \n"__DATE__"\n"
       "Copyright 2003-2012 Visual Computing Lab I.S.T.I. C.N.R.\n"
       "\nUsage:  "\
       "tridecimator fileIn fileOut face_num [opt]\n"\
       "Where opt can be:\n"\
       "     -e# QuadricError threshold  (range [0,inf) default inf)\n"
-			"     -b# Boundary Weight (default .5)\n"
-			"     -q# Quality threshold (range [0.0, 0.866],  default .3 )\n"
-			"     -n# Normal threshold  (degree range [0,180] default 90)\n"
-			"     -E# Minimal admitted quadric value (default 1e-15, must be >0)\n"
-			"     -Q[y|n]  Use or not Quality Threshold (default yes)\n"
-			"     -N[y|n]  Use or not Normal Threshold (default no)\n"
-			"     -A[y|n]  Use or not Area Weighted Quadrics (default yes)\n"
-			"     -O[y|n]  Use or not vertex optimal placement (default yes)\n"
-			"     -S[y|n]  Use or not Scale Independent quadric measure(default yes) \n"
-			"     -B[y|n]  Preserve or not mesh boundary (default no)\n"
-			"     -T[y|n]  Preserve or not Topology (default no)\n"
-			"     -H[y|n]  Use or not Safe Heap Update (default no)\n"
-		  "     -P       Before simplification, remove duplicate & unreferenced vertices\n"
+            "     -b# Boundary Weight (default .5)\n"
+            "     -q# Quality threshold (range [0.0, 0.866],  default .3 )\n"
+            "     -n# Normal threshold  (degree range [0,180] default 90)\n"
+            "     -E# Minimal admitted quadric value (default 1e-15, must be >0)\n"
+            "     -Q[y|n]  Use or not Quality Threshold (default yes)\n"
+            "     -N[y|n]  Use or not Normal Threshold (default no)\n"
+            "     -A[y|n]  Use or not Area Weighted Quadrics (default yes)\n"
+            "     -O[y|n]  Use or not vertex optimal placement (default yes)\n"
+            "     -S[y|n]  Use or not Scale Independent quadric measure(default yes) \n"
+            "     -B[y|n]  Preserve or not mesh boundary (default no)\n"
+            "     -T[y|n]  Preserve or not Topology (default no)\n"
+            "     -H[y|n]  Use or not Safe Heap Update (default no)\n"
+          "     -P       Before simplification, remove duplicate & unreferenced vertices\n"
                                        );
   exit(-1);
 }
@@ -129,7 +113,7 @@ if(argc<4) Usage();
     exit(-1);
   }
   printf("mesh loaded %d %d \n",mesh.vn,mesh.fn);
-    
+
   TriEdgeCollapseQuadricParameter qparams;
   qparams.QualityThr  =.3;
   float TargetError=std::numeric_limits<float>::max();
@@ -175,12 +159,12 @@ if(argc<4) Usage();
 
 
   printf("reducing it to %i\n",FinalSize);
-	
+
   vcg::tri::UpdateBounding<MyMesh>::Box(mesh);
-  
+
   // decimator initialization
   vcg::LocalOptimization<MyMesh> DeciSession(mesh,&qparams);
-	
+
   int t1=clock();
   DeciSession.Init<MyTriEdgeCollapse>();
   int t2=clock();
@@ -196,8 +180,8 @@ if(argc<4) Usage();
   int t3=clock();
   printf("mesh  %d %d Error %g \n",mesh.vn,mesh.fn,DeciSession.currMetric);
   printf("\nCompleted in (%i+%i) msec\n",t2-t1,t3-t2);
-	
+
   vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh,argv[2]);
-	return 0;
+    return 0;
 
 }
