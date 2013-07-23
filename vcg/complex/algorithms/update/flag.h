@@ -326,11 +326,11 @@ public:
       {
         if(pe-ps==1) 	{
           ps->f->SetB(ps->z);
-        } else
+        } /*else
           if(pe-ps!=2)  {  // Caso complex!!
             for(;ps!=pe;++ps)
               ps->f->SetB(ps->z); // Si settano border anche i complex.
-          }
+          }*/
         ps = pe;
       }
       if(pe==e.end()) break;
