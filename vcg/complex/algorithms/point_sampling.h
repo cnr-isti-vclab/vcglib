@@ -40,6 +40,7 @@ sampling strategies (montecarlo, stratified etc).
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/spatial_hashing.h>
 #include <vcg/complex/algorithms/stat.h>
+#include <vcg/complex/algorithms/create/platonic.h>
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/bounding.h>
@@ -55,7 +56,6 @@ namespace tri
 
 /**
  \brief An basic sampler class that show the required interface used by the SurfaceSampling class.
-
 
  Most of the methods of sampling classes call the AddFace method of this class with the face containing the sample and its barycentric coord.
  Beside being an example of how to write a sampler it provides a simple way to use the various sampling classes.
@@ -114,6 +114,39 @@ public:
     // if edgeDist is > 0 then the corrisponding point is affecting face color even if outside the face area (in texture space)
   }
 }; // end class TrivialSampler
+
+
+
+
+
+template <class MeshType>
+class MeshSampler
+{
+public:
+  typedef typename MeshType::VertexType  VertexType;
+  typedef typename MeshType::FaceType    FaceType;
+  typedef typename MeshType::CoordType   CoordType;
+
+  MeshSampler(MeshType &_m):m(_m){}
+  MeshType &m;
+
+  void AddVert(const VertexType &p)
+  {
+    tri::Allocator<MeshType>::AddVertices(m,1);
+    m.vert.back().ImportData(p);
+  }
+
+  void AddFace(const FaceType &f, CoordType p)
+  {
+    tri::Allocator<MeshType>::AddVertices(m,1);
+    m.vert.back().P() = f.cP(0)*p[0] + f.cP(1)*p[1] +f.cP(2)*p[2];
+    m.vert.back().N() = f.cV(0)->N()*p[0] + f.cV(1)->N()*p[1] + f.cV(2)->N()*p[2];
+    m.vert.back().Q() = f.cV(0)->Q()*p[0] + f.cV(1)->Q()*p[1] + f.cV(2)->Q()*p[2];
+  }
+}; // end class BaseSampler
+
+
+
 
 
 /**
@@ -1232,6 +1265,9 @@ static int ComputePoissonSampleNum(MetroMesh &origMesh, ScalarType diskRadius)
 	return sampleNum;
 }
 
+// Note that this function actually CHANGE the quality of the montecarlo samples so that it represents the expected radius of each sample
+// the expected radius of the sample is computed so that it linearly maps the quality between diskradius / variance and diskradius*variance
+
 static void ComputePoissonSampleRadii(MetroMesh &sampleMesh, ScalarType diskRadius, ScalarType radiusVariance, bool invert)
 {
 	VertexIterator vi;
@@ -1270,6 +1306,7 @@ static void PoissonDiskPruning(VertexSampler &ps, MetroMesh &montecarloMesh,
     if(pp.pds) pp.pds->gridSize = gridsize;
 
     // if we are doing variable density sampling we have to prepare the random samples quality with the correct expected radii.
+    // At this point we just assume that there is the quality values as sampled from the base mesh
     if(pp.adaptiveRadiusFlag)
         ComputePoissonSampleRadii(montecarloMesh, diskRadius, pp.radiusVariance, pp.invertQuality);
 
@@ -1542,6 +1579,16 @@ static void SubdivideAndSample(MetroMesh & m, std::vector<Point3f> &pvec, const 
 }; // end class
 
 
+template <class MeshType>
+void MontecarloSampling(MeshType &m, // the mesh that has to be sampled
+                     MeshType &mm, // the mesh that will contain the samples
+                     int sampleNum) // the desired number sample, if zero you must set the radius to the wanted value
+{
+  typedef tri::MeshSampler<MeshType> BaseSampler;
+  MeshSampler<MeshType> mcSampler(&mm);
+  tri::SurfaceSampling<MeshType,BaseSampler>::Montecarlo(m, mcSampler, sampleNum);
+}
+
 
 template <class MeshType>
 void MontecarloSampling(MeshType &m, // the mesh that has to be sampled
@@ -1559,9 +1606,13 @@ template <class MeshType>
 void PoissonSampling(MeshType &m, // the mesh that has to be sampled
                      std::vector<Point3f> &poissonSamples, // the vector that will contain the set of points
                      int sampleNum, // the desired number sample, if zero you must set the radius to the wanted value
-                     float &radius) // the Poisson Disk Radius (used if sampleNum==0, setted if sampleNum!=0)
+                     float &radius,  // the Poisson Disk Radius (used if sampleNum==0, setted if sampleNum!=0)
+                     float radiusVariance=1)
+
 {
   typedef tri::TrivialSampler<MeshType> BaseSampler;
+  typedef tri::MeshSampler<MeshType> MontecarloSampler;
+
   typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam pp;
   typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam::Stat stat;
   pp.pds = &stat;
@@ -1572,22 +1623,24 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
 
   pp.pds->sampleNum = sampleNum;
   poissonSamples.clear();
-  std::vector<Point3f> MontecarloSamples;
+//  std::vector<Point3f> MontecarloSamples;
   MeshType MontecarloMesh;
 
   // First step build the sampling
-  BaseSampler mcSampler(MontecarloSamples);
+  MontecarloSampler mcSampler(MontecarloMesh);
   BaseSampler pdSampler(poissonSamples);
 
-  tri::SurfaceSampling<MeshType,BaseSampler>::Montecarlo(m, mcSampler, std::max(10000,sampleNum*40));
-
-  tri::Allocator<MeshType>::AddVertices(MontecarloMesh,MontecarloSamples.size());
-  for(size_t i=0;i<MontecarloSamples.size();++i)
-    MontecarloMesh.vert[i].P()=MontecarloSamples[i];
+  tri::SurfaceSampling<MeshType,MontecarloSampler>::Montecarlo(m, mcSampler, std::max(10000,sampleNum*40));
   tri::UpdateBounding<MeshType>::Box(MontecarloMesh);
+//  tri::Build(MontecarloMesh, MontecarloSamples);
   int t1=clock();
   pp.pds->montecarloTime = t1-t0;
 
+  if(radiusVariance !=1)
+  {
+    pp.adaptiveRadiusFlag=true;
+    pp.radiusVariance=radiusVariance;
+  }
   tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(pdSampler, MontecarloMesh, radius,pp);
   int t2=clock();
   pp.pds->totalTime = t2-t0;
