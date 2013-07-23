@@ -162,7 +162,7 @@ private:
             bool isSing=IsSingularByMMatch(mesh->vert[i],missmatch);
             if (isSing)
             {
-                //mesh->vert[i].SetS();
+                mesh->vert[i].SetS();
                 Handle_Singular[i]=true;
                 if (missmatch==3)missmatch=1;
                 else
@@ -171,7 +171,7 @@ private:
             }
             else
             {
-                //mesh->vert[i].ClearS();
+                mesh->vert[i].ClearS();
                 Handle_Singular[i]=false;
                 Handle_SingularDegree[i]=0;
             }
@@ -345,8 +345,10 @@ public:
 
         mesh=_mesh;
 
-        vcg::tri::UpdateFlags<MeshType>::VertexBorderFromNone(*mesh);
-        vcg::tri::UpdateFlags<MeshType>::FaceBorderFromNone(*mesh);
+        vcg::tri::UpdateTopology<MeshType>::FaceFace(*_mesh);
+        vcg::tri::UpdateFlags<MeshType>::FaceBorderFromFF(*_mesh);
+        vcg::tri::UpdateFlags<MeshType>::VertexBorderFromFace(*_mesh);
+
 
         AddAttributesIfNeeded();
         if (orient_globally)
@@ -359,7 +361,7 @@ public:
             InitTopologycalCuts();
             AddSeamsByMM();
         }
-        InitSeamIndexes();
+        //InitSeamIndexes();
     }
 
     SeamsInitializer(){mesh=NULL;}
