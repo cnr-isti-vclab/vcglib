@@ -50,8 +50,8 @@ int main(int ,char ** )
   //update the face-face topology
   vcg::tri::UpdateTopology<MyMesh>::FaceFace(m);
 
-  // Now for each face the F() members are meaningful
-  
+  // Now for each face the FFp() FFi() members are correctly initialized 
+
   if(face::IsBorder(m.face[0],0)) printf("Edge 0 of face 0 is a border\n");
   else printf("Edge 0 of face 0 is NOT a border\n"); // always this path!
 
@@ -76,7 +76,7 @@ int main(int ,char ** )
   {
     for(int j=0;j<3;j++)
     {
-      if ( face::IsBorder(*fi,j) && tri::IsMarked(m,&*fi))
+      if ( face::IsBorder(*fi,j) && !tri::IsMarked(m,&*fi))
       {
         tri::Mark(m,&*fi);
         hei.Set(&*fi,j,fi->V(j));
@@ -84,7 +84,7 @@ int main(int ,char ** )
         do
         {
           BorderEdgeNum++;
-          he.NextB(); // next edge along a border
+          he.NextB(); // next pos along a border
           tri::Mark(m,he.f);
         }
         while (he.f!=hei.f);
