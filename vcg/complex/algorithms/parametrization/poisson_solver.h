@@ -130,13 +130,13 @@ class PoissonSolver
                 if (vt1->IsD())continue;
                 if (!vt0->IsB())continue;
                 if (!vt1->IsB())continue;
-//                ScalarType d_test=(vt0->P()-vt1->P()).Norm();
-                ScalarType Dx=fabs(vt0->P().X()-vt1->P().X());
-                ScalarType Dy=fabs(vt0->P().Y()-vt1->P().Y());
-                ScalarType Dz=fabs(vt0->P().Z()-vt1->P().Z());
+                ScalarType d_test=(vt0->P()-vt1->P()).Norm();
+//                ScalarType Dx=fabs(vt0->P().X()-vt1->P().X());
+//                ScalarType Dy=fabs(vt0->P().Y()-vt1->P().Y());
+//                ScalarType Dz=fabs(vt0->P().Z()-vt1->P().Z());
 
-//                ScalarType d_test=std::max(Dx,std::max(Dy,Dz));
-                ScalarType d_test=std::max(fabs(Dx-Dy),std::max(fabs(Dx-Dz),fabs(Dy-Dz)));
+                //ScalarType d_test=std::max(Dx,std::max(Dy,Dz));
+                //ScalarType d_test=std::max(fabs(Dx-Dy),std::max(fabs(Dx-Dz),fabs(Dy-Dz)));
                 if (d_test>dmax)
                 {
                     dmax=d_test;
