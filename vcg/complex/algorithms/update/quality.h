@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -33,11 +33,11 @@
 
 namespace vcg {
 namespace tri {
-/// \ingroup trimesh 
+/// \ingroup trimesh
 
 /// \headerfile quality.h vcg/complex/algorithms/update/quality.h
 
-/// \brief Generation of per-vertex and per-face qualities. 
+/// \brief Generation of per-vertex and per-face qualities.
 /**
  It works according to various strategy, like geodesic distance from the border (UpdateQuality::VertexGeodesicFromBorder) or curvature ecc.
  This class is templated over the mesh and (like all other Update* classes) has only static members; Typical usage:
@@ -51,7 +51,7 @@ template <class UpdateMeshType>
 class UpdateQuality
 {
 public:
-  typedef UpdateMeshType MeshType; 
+  typedef UpdateMeshType MeshType;
   typedef typename MeshType::ScalarType     ScalarType;
   typedef typename MeshType::VertexType     VertexType;
   typedef typename MeshType::VertexPointer  VertexPointer;
@@ -60,133 +60,22 @@ public:
   typedef typename MeshType::FacePointer    FacePointer;
   typedef typename MeshType::FaceIterator   FaceIterator;
 
-class VQualityHeap
-{
-public:
-	float q;
-	VertexPointer p;
-	inline VQualityHeap( VertexPointer np )
-	{
-		q = np->Q();
-		p = np;
-	}
-		// Attenzione il minore e' maggiore
-	inline bool operator <  ( const VQualityHeap & vq ) const { return q >  vq.q; }
-	inline bool operator == ( const VQualityHeap & vq ) const { return q == vq.q; }
-	inline bool operator >  ( const VQualityHeap & vq ) const { return q <  vq.q; }
-	inline bool operator != ( const VQualityHeap & vq ) const { return q != vq.q; }
-	inline bool operator <= ( const VQualityHeap & vq ) const { return q >= vq.q; }
-	inline bool operator >= ( const VQualityHeap & vq ) const { return q <= vq.q; }
-	inline bool is_valid() const { return q==p->Q(); }
-};
-
-
-
-// *** IMPORTANT REQUIREMENTS 
-//            VF topology 
-//            Border FLags 
-//        tri::UpdateTopology<SMesh>::VertexFace(sm);
-//        tri::UpdateFlags<SMesh>::FaceBorderFromVF(sm);   
-//
-// Calcola la qualita' come distanza geodesica dal bordo della mesh.
-// Robusta funziona anche per mesh non manifold.
-// La qualita' memorizzata indica la distanza assoluta dal bordo della mesh.
-// Nota prima del 13/11/03 in alcuni casi rari SPT andava in loop perche' poteva capitare
-// che per approx numeriche ben strane pw->Q() > pv->Q()+d ma durante la memorizzazione 
-// della nuova distanza essa rimanesse uguale a prima. Patchato rimettendo i vertici nello 
-// heap solo se migliorano la distanza di un epsilon == 1/100000 della mesh diag.
-
-/// \brief Compute, for each vertex of the mesh the geodesic distance from the border of the mesh itself.
-
-/** 
-It uses the classical Dijkstra Shortest Path Tree algorithm. 
-The geodesic distance is approximated by allowing to walk only along edges of the mesh.
- 
-\warning VF topology, Per Vertex Quality and border flags already computed (see UpdateFlags::FaceBorderFromVF and UpdateTopology::VertexFace);
-
-*/
-static void VertexGeodesicFromBorder(MeshType &m)	// R1
-{
-	//Requirements
-  assert(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m));
-  assert(HasPerVertexQuality(m));
-
-  std::vector< VQualityHeap > heap;
-	VertexIterator v;
-	FaceIterator f;
-	int j;
-
-	for(v=m.vert.begin();v!=m.vert.end();++v)
-		(*v).Q() = -1;
-	for(f=m.face.begin();f!=m.face.end();++f)			// Inserisco nell'heap i v di bordo
-		if(!(*f).IsD())
-			for(j=0;j<3;++j)
-				if( (*f).IsB(j) )
-				{
-					for(int k=0;k<2;++k)
-					{
-						VertexPointer pv = (*f).V((j+k)%3);
-						if( pv->Q()==-1 )
-						{
-							pv->Q() = 0;
-							heap.push_back(VQualityHeap(pv));
-						}
-					}
-				}
-	
- const ScalarType loc_eps=m.bbox.Diag()/ScalarType(100000);
- while( heap.size()!=0 )							// Shortest path tree
-	{
-		VertexPointer pv;
-    std::pop_heap(heap.begin(),heap.end());
-		if( ! heap.back().is_valid() )
-		{
-			heap.pop_back();
-			continue;
-		}
-		pv = heap.back().p;
-		heap.pop_back();
-	  
-		for(face::VFIterator<FaceType> vfi(pv) ; !vfi.End(); ++vfi )
-		{
-			for(int k=0;k<2;++k)
-			{
-				VertexPointer pw;
-				float d;
-				if(k==0) pw = vfi.f->V1(vfi.z);
-				else     pw = vfi.f->V2(vfi.z);
-				d = Distance(pv->P(),pw->P());
-				if( pw->Q()==-1 || pw->Q() > pv->Q()+d + loc_eps)
-				{
-					pw->Q() = pv->Q()+d;
-					heap.push_back(VQualityHeap(pw));
-          std::push_heap(heap.begin(),heap.end());
-				}
-			}
-		}
-	}
-
-	for(v=m.vert.begin();v!=m.vert.end();++v)
-		if(v->Q()==-1)
-			v->Q() = 0;
-}
-
 
 /** Assign to each vertex of the mesh a constant quality value. Useful for initialization.
 */
 static void VertexConstant(MeshType &m, float q)
 {
-	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
-		(*vi).Q()=q;
+  tri::RequirePerVertexQuality(m);
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+    (*vi).Q()=q;
 }
 
 /** Clamp each vertex of the mesh with a range of values.
 */
 static void VertexClamp(MeshType &m, float qmin, float qmax)
 {
-  VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+  tri::RequirePerVertexQuality(m);
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
     (*vi).Q()=std::min(qmax, std::max(qmin,(*vi).Q()));
 }
 
@@ -194,6 +83,7 @@ static void VertexClamp(MeshType &m, float qmin, float qmax)
 */
 static void VertexNormalize(MeshType &m, float qmin=0.0, float qmax=1.0)
 {
+  tri::RequirePerVertexQuality(m);
   ScalarType deltaRange = qmax-qmin;
   std::pair<ScalarType,ScalarType> minmax = tri::Stat<MeshType>::ComputePerVertexQualityMinMax(m);
   VertexIterator vi;
@@ -205,10 +95,10 @@ static void VertexNormalize(MeshType &m, float qmin=0.0, float qmax=1.0)
 */
 static void FaceNormalize(MeshType &m, float qmin=0.0, float qmax=1.0)
 {
+  tri::RequirePerFaceQuality(m);
   ScalarType deltaRange = qmax-qmin;
   std::pair<ScalarType,ScalarType> minmax = tri::Stat<MeshType>::ComputePerFaceQualityMinMax(m);
-  FaceIterator fi;
-  for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+  for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
     (*fi).Q() = qmin+deltaRange*((*fi).Q() - minmax.first)/(minmax.second - minmax.first);
 }
 
@@ -216,27 +106,54 @@ static void FaceNormalize(MeshType &m, float qmin=0.0, float qmax=1.0)
 */
 static void FaceConstant(MeshType &m, float q)
 {
-	FaceIterator fi;
-	for(fi=m.face.begin();fi!=m.face.end();++fi)		
-		(*fi).Q()=q;
+  tri::RequirePerFaceQuality(m);
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+    (*fi).Q()=q;
 }
 
-/** Assign to each face of the mesh its double area.
+/** Assign to each face of the mesh its area.
 */
 static void FaceArea(MeshType &m)
 {
-	FaceIterator fi;
-	for(fi=m.face.begin();fi!=m.face.end();++fi)		
-		(*fi).Q()=vcg::DoubleArea(*fi)/2;
+  tri::RequirePerFaceQuality(m);
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+    (*fi).Q()=vcg::DoubleArea(*fi)/ScalarType(2.0);
+}
+
+static void VertexFromFace( MeshType &m, bool areaWeighted=true)
+{
+  tri::RequirePerFaceQuality(m);
+  tri::RequirePerVertexQuality(m);
+  SimpleTempData<typename MeshType::VertContainer, ScalarType> TQ(m.vert,0);
+  SimpleTempData<typename MeshType::VertContainer, ScalarType> TCnt(m.vert,0);
+
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+    if(!(*fi).IsD())
+    {
+      ScalarType weight=1.0;
+      if(areaWeighted) weight = vcg::DoubleArea(*fi);
+      for(int j=0;j<3;++j)
+      {
+        TQ[(*fi).V(j)]+=(*fi).Q();
+        TCnt[(*fi).V(j)]+=weight;
+      }
+    }
+
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+    if(!(*vi).IsD() && TCnt[*vi]>0 )
+    {
+      (*vi).Q() = TQ[*vi] / TCnt[*vi];
+    }
 }
 
 static void FaceFromVertex( MeshType &m)
 {
-	FaceIterator fi;
-	for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-	{
-		(*fi).Q() = ((*fi).V(0)->Q()+(*fi).V(1)->Q()+(*fi).V(2)->Q())/3.0f;
-	}
+  tri::RequirePerFaceQuality(m);
+  tri::RequirePerVertexQuality(m);
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+  {
+    (*fi).Q() = ((*fi).V(0)->Q()+(*fi).V(1)->Q()+(*fi).V(2)->Q())/3.0f;
+  }
 }
 
 static void VertexFromPlane(MeshType &m, const Plane3<ScalarType> &pl)
@@ -246,19 +163,19 @@ static void VertexFromPlane(MeshType &m, const Plane3<ScalarType> &pl)
 }
 
 static void VertexFromGaussianCurvatureHG(MeshType &m)
-{ 
+{
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvature(m);
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-		(*vi).Q() = (*vi).Kg();
+        (*vi).Q() = (*vi).Kg();
 }
 
 static void VertexFromMeanCurvatureHG(MeshType &m)
-{ 
+{
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvature(m);
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-		(*vi).Q() = (*vi).Kh();
+        (*vi).Q() = (*vi).Kh();
 }
 
 static void VertexFromGaussianCurvatureDir(MeshType &m)
@@ -278,45 +195,45 @@ static void VertexFromMeanCurvatureDir(MeshType &m)
 }
 
 /*
- *  Absolute Curvature                     
+ *  Absolute Curvature
  *
  *                  2|H|                if K >= 0
  *  |k1| + |k2| = <
  *                  2 * sqrt(|H|^2-K)   otherwise
  *
- * defs and formulas taken from 
- *     
+ * defs and formulas taken from
+ *
  * Improved curvature estimation for watershed segmentation of 3-dimensional meshes
  * S Pulla, A Razdan, G Farin - Arizona State University, Tech. Rep, 2001
  * and from
- * Optimizing 3D triangulations using discrete curvature analysis  
- * N Dyn, K Hormann, SJ Kim, D Levin - Mathematical Methods for Curves and Surfaces: Oslo, 2000 
+ * Optimizing 3D triangulations using discrete curvature analysis
+ * N Dyn, K Hormann, SJ Kim, D Levin - Mathematical Methods for Curves and Surfaces: Oslo, 2000
  */
 
 static void VertexFromAbsoluteCurvature(MeshType &m)
-{ 
+{
 	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
 	{
-		if((*vi).Kg() >= 0) 
+		if((*vi).Kg() >= 0)
 					(*vi).Q() = math::Abs( 2*(*vi).Kh() );
 		else
-		      (*vi).Q() = 2*math::Sqrt(math::Abs( (*vi).Kh()*(*vi).Kh() - (*vi).Kg())); 
+			  (*vi).Q() = 2*math::Sqrt(math::Abs( (*vi).Kh()*(*vi).Kh() - (*vi).Kg()));
 	}
 }
 
 /*
  * RMS Curvature =   sqrt(4H^2-2K)
- * def and formula taken from 
- *     
+ * def and formula taken from
+ *
  * Improved curvature estimation for watershed segmentation of 3-dimensional meshes
  * S Pulla, A Razdan, G Farin - Arizona State University, Tech. Rep, 2001
- */ 
+ */
 static void VertexFromRMSCurvature(MeshType &m)
-{ 
+{
 	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD()) 
-		(*vi).Q() = math::Sqrt(math::Abs( 4*(*vi).Kh()*(*vi).Kh() - 2*(*vi).Kg())); 
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+		(*vi).Q() = math::Sqrt(math::Abs( 4*(*vi).Kh()*(*vi).Kh() - 2*(*vi).Kg()));
 }
 
 
