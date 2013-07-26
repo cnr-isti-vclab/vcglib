@@ -74,20 +74,20 @@ private:
 
 
 public:
-	/// \brief Compute principal direction and magniuto of curvature.
+	/// \brief Compute principal direction and magnitudo of curvature.
 
 /*
 	Compute principal direction and magniuto of curvature as describe in the paper:
 	@InProceedings{bb33922,
   author =	"G. Taubin",
   title =	"Estimating the Tensor of Curvature of a Surface from a
-		 Polyhedral Approximation",
+         Polyhedral Approximation",
   booktitle =	"International Conference on Computer Vision",
   year = 	"1995",
   pages =	"902--907",
   URL =  	"http://dx.doi.org/10.1109/ICCV.1995.466840",
   bibsource =	"http://www.visionbib.com/bibliography/describe440.html#TT32253",
-	*/
+    */
   static void PrincipalDirections(MeshType &m)
   {
     tri::RequireVFAdjacency(m);
@@ -566,7 +566,7 @@ static void MeanAndGaussian(MeshType & m)
 				ang1 = math::Abs(Angle(f->N(), v1->N()));
 				ang2 = math::Abs(Angle(f->N(), v2->N()));
 				v->Kh() += ( (math::Sqrt(s01) / 2.0) * ang1 +
-				             (math::Sqrt(s02) / 2.0) * ang2 );
+							 (math::Sqrt(s02) / 2.0) * ang2 );
 			}
 
 			++vfi;
@@ -682,8 +682,40 @@ static void MeanAndGaussian(MeshType & m)
 			(*vi).K2() = lambda[1];
 		}
 	}
+
+	static void PerVertexBasicRadialCrossField(MeshType &m, float anisotropyRatio = 1.0 )
+	{
+	  tri::RequirePerVertexCurvatureDir(m);
+	  CoordType c=m.bbox.Center();
+	  float maxRad = m.bbox.Diag()/2.0f;
+
+      for(int i=0;i<m.vert.size();++i) {
+        CoordType dd = m.vert[i].P()-c;
+        dd.Normalize();
+        m.vert[i].PD1()=dd^m.vert[i].N();
+        m.vert[i].PD1().Normalize();
+        m.vert[i].PD2()=m.vert[i].N()^m.vert[i].PD1();
+        m.vert[i].PD2().Normalize();
+        // Now the anisotropy
+        // the idea is that the ratio between the two direction is at most <anisotropyRatio>
+        // eg  |PD1|/|PD2| < ratio
+        // and |PD1|^2 + |PD2|^2 == 1
+
+        float q =Distance(m.vert[i].P(),c) / maxRad;  // it is in the 0..1 range
+        const float minRatio = 1.0f/anisotropyRatio;
+        const float maxRatio = anisotropyRatio;
+        const float curRatio = minRatio + (maxRatio-minRatio)*q;
+        float pd1Len = sqrt(1.0/(1+curRatio*curRatio));
+        float pd2Len = curRatio * pd1Len;
+        assert(fabs(curRatio - pd2Len/pd1Len)<0.0000001);
+        assert(fabs(pd1Len*pd1Len + pd2Len*pd2Len - 1.0f)<0.0001);
+        m.vert[i].PD1() *= pd1Len;
+        m.vert[i].PD2() *= pd2Len;
+      }
+    }
+
 };
 
-}
-}
+} // end namespace tri
+} // end namespace vcg
 #endif
