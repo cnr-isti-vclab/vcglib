@@ -80,7 +80,7 @@ public:
     v[1] = pf->V(pf->Next(nz));
     assert(v[0] != v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
 
-    if( v[0] > v[1] ) math::Swap(v[0],v[1]);
+    if( v[0] > v[1] ) std::swap(v[0],v[1]);
     f    = pf;
     z    = nz;
   }
