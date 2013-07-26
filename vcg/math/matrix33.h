@@ -261,9 +261,9 @@ public:
     /// Funzione per eseguire la trasposta della matrice
     Matrix33 & Transpose()
     {
-        math::Swap(a[1],a[3]);
-        math::Swap(a[2],a[6]);
-        math::Swap(a[5],a[7]);
+        std::swap(a[1],a[3]);
+        std::swap(a[2],a[6]);
+        std::swap(a[5],a[7]);
         return *this;
     }
 

@@ -516,7 +516,7 @@ This procedure decompose it in a sequence of
 
 - ScaleV and Tranv are obiviously scaling and translation.
 - ShearV contains three scalars with, respectively,
-	  ShearXY, ShearXZ and ShearYZ
+      ShearXY, ShearXZ and ShearYZ
 - RotateV contains the rotations (in degree!) around the x,y,z axis
   The input matrix is modified leaving inside it a simple roto translation.
 
@@ -661,7 +661,7 @@ template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p)
 template <class T> Matrix44<T> &Transpose(Matrix44<T> &m) {
 	for(int i = 1; i < 4; i++)
 		for(int j = 0; j < i; j++) {
-			math::Swap(m.ElementAt(i, j), m.ElementAt(j, i));
+			std::swap(m.ElementAt(i, j), m.ElementAt(j, i));
 		}
 	return m;
 }

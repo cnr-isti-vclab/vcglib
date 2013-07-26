@@ -88,13 +88,13 @@ public:
 		const Point4 &y = *this;
 
 		res[0] =  y[1]*x[2]*z[3]-y[1]*x[3]*z[2]-x[1]*y[2]*z[3]+
-		          x[1]*y[3]*z[2]+z[1]*y[2]*x[3]-z[1]*y[3]*x[2];
+				  x[1]*y[3]*z[2]+z[1]*y[2]*x[3]-z[1]*y[3]*x[2];
 		res[1] =  y[0]*x[3]*z[2]-z[0]*y[2]*x[3]-y[0]*x[2]*
-		          z[3]+z[0]*y[3]*x[2]+x[0]*y[2]*z[3]-x[0]*y[3]*z[2];
+				  z[3]+z[0]*y[3]*x[2]+x[0]*y[2]*z[3]-x[0]*y[3]*z[2];
 		res[2] = -y[0]*z[1]*x[3]+x[0]*z[1]*y[3]+y[0]*x[1]*
-  		        z[3]-x[0]*y[1]*z[3]-z[0]*x[1]*y[3]+z[0]*y[1]*x[3];
+				z[3]-x[0]*y[1]*z[3]-z[0]*x[1]*y[3]+z[0]*y[1]*x[3];
 		res[3] = -z[0]*y[1]*x[2]-y[0]*x[1]*z[2]+x[0]*y[1]*
-		          z[2]+y[0]*z[1]*x[2]-x[0]*z[1]*y[2]+z[0]*x[1]*y[2];
+				  z[2]+y[0]*z[1]*x[2]-x[0]*z[1]*y[2]+z[0]*x[1]*y[2];
 		return res;
 	}
 
@@ -117,11 +117,11 @@ public:
 		frexp( double(k0), &exp0 );frexp( double(k1), &exp1 );
 		frexp( double(k2), &exp2 );frexp( double(k3), &exp3 );
 
-		if (exp0>exp1) { math::Swap(k0,k1); math::Swap(exp0,exp1); }
-		if (exp2>exp3) { math::Swap(k2,k3); math::Swap(exp2,exp3); }
-		if (exp0>exp2) { math::Swap(k0,k2); math::Swap(exp0,exp2); }
-		if (exp1>exp3) { math::Swap(k1,k3); math::Swap(exp1,exp3); }
-		if (exp2>exp3) { math::Swap(k2,k3); math::Swap(exp2,exp3); }
+		if (exp0>exp1) { std::swap(k0,k1); std::swap(exp0,exp1); }
+		if (exp2>exp3) { std::swap(k2,k3); std::swap(exp2,exp3); }
+		if (exp0>exp2) { std::swap(k0,k2); std::swap(exp0,exp2); }
+		if (exp1>exp3) { std::swap(k1,k3); std::swap(exp1,exp3); }
+		if (exp2>exp3) { std::swap(k2,k3); std::swap(exp2,exp3); }
 
 		return ( (k0 + k1) + k2 ) +k3;
 	}

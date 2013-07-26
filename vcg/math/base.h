@@ -90,6 +90,7 @@ Edited Comments and GPL license
 #include <math.h>
 #include <assert.h>
 #include <limits>
+#include <algorithm>
 
 
   #ifdef __BORLANDC__
@@ -153,15 +154,12 @@ namespace math {
       }
   }
 
-	template<class T> inline void Swap(T &a, T &b){
-		T tmp=a; a=b; b=tmp;
-	}
 	template<class T> inline void Sort(T &a, T &b){
-		if (a>b) Swap(a,b);
+		if (a>b) std::swap(a,b);
 	}
 	template<class T> inline void Sort(T &a, T &b, T &c){
-		if (a>b) Swap(a,b);
-		if (b>c) {Swap(b,c); if (a>b) Swap(a,b);}
+		if (a>b) std::swap(a,b);
+		if (b>c) {std::swap(b,c); if (a>b) std::swap(a,b);}
 	}
 
 /* Some <math.h> files do not define M_PI... */

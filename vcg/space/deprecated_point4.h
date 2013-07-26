@@ -69,14 +69,14 @@ namespace vcg {
     /**
         The templated class for representing a point in 4D space.
         The class is templated over the ScalarType class that is used to represent coordinates.
-				All the usual operator (* + - ...) are defined.
+                All the usual operator (* + - ...) are defined.
      */
 
 template <class T> class Point4
 {
 public:
   /// The only data member. Hidden to user.
-	T _v[4];
+    T _v[4];
 
 public:
 	typedef T ScalarType;
@@ -134,104 +134,104 @@ public:
 
   /** @name Data Access.
    access to data is done by overloading of [] or explicit naming of coords (x,y,z,w)
-	**/
-	inline const T & operator [] ( const int i ) const
-	{
-		assert(i>=0 && i<4);
-		return _v[i];
-	}
-	inline T & operator [] ( const int i )
-	{
-		assert(i>=0 && i<4);
-		return _v[i];
-	}
-	inline T &X() {return _v[0];}
-	inline T &Y() {return _v[1];}
-	inline T &Z() {return _v[2];}
-	inline T &W() {return _v[3];}
-	inline T const * V() const
-	{
-		return _v;
-	}
-	inline T * V()
-	{
-		return _v;
-	}
-	inline const T & V ( const int i ) const
-	{
-		assert(i>=0 && i<4);
-		return _v[i];
-	}
-	inline T & V ( const int i )
-	{
-		assert(i>=0 && i<4);
-		return _v[i];
-	}
-		/// Padding function: give a default 0 value to all the elements that are not in the [0..2] range.
-		/// Useful for managing in a consistent way object that could have point2 / point3 / point4
-	inline T Ext( const int i ) const
-	{
-		if(i>=0 && i<=3) return _v[i];
-		else             return 0;
-	}
+    **/
+    inline const T & operator [] ( const int i ) const
+    {
+        assert(i>=0 && i<4);
+        return _v[i];
+    }
+    inline T & operator [] ( const int i )
+    {
+        assert(i>=0 && i<4);
+        return _v[i];
+    }
+    inline T &X() {return _v[0];}
+    inline T &Y() {return _v[1];}
+    inline T &Z() {return _v[2];}
+    inline T &W() {return _v[3];}
+    inline T const * V() const
+    {
+        return _v;
+    }
+    inline T * V()
+    {
+        return _v;
+    }
+    inline const T & V ( const int i ) const
+    {
+        assert(i>=0 && i<4);
+        return _v[i];
+    }
+    inline T & V ( const int i )
+    {
+        assert(i>=0 && i<4);
+        return _v[i];
+    }
+        /// Padding function: give a default 0 value to all the elements that are not in the [0..2] range.
+        /// Useful for managing in a consistent way object that could have point2 / point3 / point4
+    inline T Ext( const int i ) const
+    {
+        if(i>=0 && i<=3) return _v[i];
+        else             return 0;
+    }
 //@}
 
 //@{
   /** @name Linear operators and the likes
   **/
-	inline Point4 operator + ( const Point4 & p) const
-	{
-		return Point4( _v[0]+p._v[0], _v[1]+p._v[1], _v[2]+p._v[2], _v[3]+p._v[3] );
-	}
-	inline Point4 operator - ( const Point4 & p) const
-	{
-		return Point4( _v[0]-p._v[0], _v[1]-p._v[1], _v[2]-p._v[2], _v[3]-p._v[3] );
-	}
-	inline Point4 operator * ( const T s ) const
-	{
-		return Point4( _v[0]*s, _v[1]*s, _v[2]*s, _v[3]*s );
-	}
-	inline Point4 operator / ( const T s ) const
-	{
-		return Point4( _v[0]/s, _v[1]/s, _v[2]/s, _v[3]/s );
-	}
-	inline Point4 & operator += ( const Point4 & p)
-	{
-		_v[0] += p._v[0]; _v[1] += p._v[1]; _v[2] += p._v[2]; _v[3] += p._v[3];
-		return *this;
-	}
-	inline Point4 & operator -= ( const Point4 & p )
-	{
-		_v[0] -= p._v[0]; _v[1] -= p._v[1]; _v[2] -= p._v[2]; _v[3] -= p._v[3];
-		return *this;
-	}
-	inline Point4 & operator *= ( const T s )
-	{
-		_v[0] *= s; _v[1] *= s; _v[2] *= s; _v[3] *= s;
-		return *this;
-	}
-	inline Point4 & operator /= ( const T s )
-	{
-		_v[0] /= s; _v[1] /= s; _v[2] /= s; _v[3] /= s;
-		return *this;
-	}
-	inline Point4 operator - () const
-	{
-		return Point4( -_v[0], -_v[1], -_v[2], -_v[3] );
-	}
-	inline Point4 VectProd ( const Point4 &x, const Point4 &z ) const
-	{
-		Point4 res;
-		const Point4 &y = *this;
+    inline Point4 operator + ( const Point4 & p) const
+    {
+        return Point4( _v[0]+p._v[0], _v[1]+p._v[1], _v[2]+p._v[2], _v[3]+p._v[3] );
+    }
+    inline Point4 operator - ( const Point4 & p) const
+    {
+        return Point4( _v[0]-p._v[0], _v[1]-p._v[1], _v[2]-p._v[2], _v[3]-p._v[3] );
+    }
+    inline Point4 operator * ( const T s ) const
+    {
+        return Point4( _v[0]*s, _v[1]*s, _v[2]*s, _v[3]*s );
+    }
+    inline Point4 operator / ( const T s ) const
+    {
+        return Point4( _v[0]/s, _v[1]/s, _v[2]/s, _v[3]/s );
+    }
+    inline Point4 & operator += ( const Point4 & p)
+    {
+        _v[0] += p._v[0]; _v[1] += p._v[1]; _v[2] += p._v[2]; _v[3] += p._v[3];
+        return *this;
+    }
+    inline Point4 & operator -= ( const Point4 & p )
+    {
+        _v[0] -= p._v[0]; _v[1] -= p._v[1]; _v[2] -= p._v[2]; _v[3] -= p._v[3];
+        return *this;
+    }
+    inline Point4 & operator *= ( const T s )
+    {
+        _v[0] *= s; _v[1] *= s; _v[2] *= s; _v[3] *= s;
+        return *this;
+    }
+    inline Point4 & operator /= ( const T s )
+    {
+        _v[0] /= s; _v[1] /= s; _v[2] /= s; _v[3] /= s;
+        return *this;
+    }
+    inline Point4 operator - () const
+    {
+        return Point4( -_v[0], -_v[1], -_v[2], -_v[3] );
+    }
+    inline Point4 VectProd ( const Point4 &x, const Point4 &z ) const
+    {
+        Point4 res;
+        const Point4 &y = *this;
 
 		res[0] = y[1]*x[2]*z[3]-y[1]*x[3]*z[2]-x[1]*y[2]*z[3]+
-		         x[1]*y[3]*z[2]+z[1]*y[2]*x[3]-z[1]*y[3]*x[2];
+				 x[1]*y[3]*z[2]+z[1]*y[2]*x[3]-z[1]*y[3]*x[2];
 		res[1] = y[0]*x[3]*z[2]-z[0]*y[2]*x[3]-y[0]*x[2]*
-		         z[3]+z[0]*y[3]*x[2]+x[0]*y[2]*z[3]-x[0]*y[3]*z[2];
+				 z[3]+z[0]*y[3]*x[2]+x[0]*y[2]*z[3]-x[0]*y[3]*z[2];
 		res[2] = -y[0]*z[1]*x[3]+x[0]*z[1]*y[3]+y[0]*x[1]*
-  		         z[3]-x[0]*y[1]*z[3]-z[0]*x[1]*y[3]+z[0]*y[1]*x[3];
+				 z[3]-x[0]*y[1]*z[3]-z[0]*x[1]*y[3]+z[0]*y[1]*x[3];
 		res[3] = -z[0]*y[1]*x[2]-y[0]*x[1]*z[2]+x[0]*y[1]*
-		         z[2]+y[0]*z[1]*x[2]-x[0]*z[1]*y[2]+z[0]*x[1]*y[2];
+				 z[2]+y[0]*z[1]*x[2]-x[0]*z[1]*y[2]+z[0]*x[1]*y[2];
 		return res;
 	}
 //@}
@@ -239,70 +239,70 @@ public:
 //@{
   /** @name Norms and normalizations
   **/
-	/// Euclidian normal
-	inline T Norm() const
-	{
-		return math::Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
-	}
-	/// Squared euclidian normal
-	inline T SquaredNorm() const
-	{
-		return _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3];
-	}
-	/// Euclidian normalization
+    /// Euclidian normal
+    inline T Norm() const
+    {
+        return math::Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
+    }
+    /// Squared euclidian normal
+    inline T SquaredNorm() const
+    {
+        return _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3];
+    }
+    /// Euclidian normalization
   inline Point4 & Normalize()
-	{
-		T n = sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
-		if(n>0.0) {	_v[0] /= n;	_v[1] /= n;	_v[2] /= n; _v[3] /= n; }
-		return *this;
-	}
-	/// Homogeneous normalization (division by W)
-	inline Point4 & HomoNormalize(){
-		if (_v[3]!=0.0) {	_v[0] /= _v[3];	_v[1] /= _v[3];	_v[2] /= _v[3]; _v[3]=1.0; }
-		return *this;
-	};
+    {
+        T n = sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
+        if(n>0.0) {	_v[0] /= n;	_v[1] /= n;	_v[2] /= n; _v[3] /= n; }
+        return *this;
+    }
+    /// Homogeneous normalization (division by W)
+    inline Point4 & HomoNormalize(){
+        if (_v[3]!=0.0) {	_v[0] /= _v[3];	_v[1] /= _v[3];	_v[2] /= _v[3]; _v[3]=1.0; }
+        return *this;
+    };
 
 //@}
 
 //@{
   /** @name Comparison operators (lexicographical order)
   **/
-	inline bool operator == (  const Point4& p ) const
-	{
-		return _v[0]==p._v[0] && _v[1]==p._v[1] && _v[2]==p._v[2] && _v[3]==p._v[3];
-	}
-	inline bool operator != ( const Point4 & p ) const
-	{
-		return _v[0]!=p._v[0] || _v[1]!=p._v[1] || _v[2]!=p._v[2] || _v[3]!=p._v[3];
-	}
-	inline bool operator <  ( Point4 const & p ) const
-	{
-		return	(_v[3]!=p._v[3])?(_v[3]<p._v[3]):
-				(_v[2]!=p._v[2])?(_v[2]<p._v[2]):
-				(_v[1]!=p._v[1])?(_v[1]<p._v[1]):
-				(_v[0]<p._v[0]);
-	}
-	inline bool operator >  ( const Point4 & p ) const
-	{
-		return	(_v[3]!=p._v[3])?(_v[3]>p._v[3]):
-				(_v[2]!=p._v[2])?(_v[2]>p._v[2]):
-				(_v[1]!=p._v[1])?(_v[1]>p._v[1]):
-				(_v[0]>p._v[0]);
-	}
-	inline bool operator <= ( const Point4 & p ) const
-	{
-		return	(_v[3]!=p._v[3])?(_v[3]< p._v[3]):
-				(_v[2]!=p._v[2])?(_v[2]< p._v[2]):
-				(_v[1]!=p._v[1])?(_v[1]< p._v[1]):
-				(_v[0]<=p._v[0]);
-	}
-	inline bool operator >= ( const Point4 & p ) const
-	{
-		return	(_v[3]!=p._v[3])?(_v[3]> p._v[3]):
-				(_v[2]!=p._v[2])?(_v[2]> p._v[2]):
-				(_v[1]!=p._v[1])?(_v[1]> p._v[1]):
-				(_v[0]>=p._v[0]);
-	}
+    inline bool operator == (  const Point4& p ) const
+    {
+        return _v[0]==p._v[0] && _v[1]==p._v[1] && _v[2]==p._v[2] && _v[3]==p._v[3];
+    }
+    inline bool operator != ( const Point4 & p ) const
+    {
+        return _v[0]!=p._v[0] || _v[1]!=p._v[1] || _v[2]!=p._v[2] || _v[3]!=p._v[3];
+    }
+    inline bool operator <  ( Point4 const & p ) const
+    {
+        return	(_v[3]!=p._v[3])?(_v[3]<p._v[3]):
+                (_v[2]!=p._v[2])?(_v[2]<p._v[2]):
+                (_v[1]!=p._v[1])?(_v[1]<p._v[1]):
+                (_v[0]<p._v[0]);
+    }
+    inline bool operator >  ( const Point4 & p ) const
+    {
+        return	(_v[3]!=p._v[3])?(_v[3]>p._v[3]):
+                (_v[2]!=p._v[2])?(_v[2]>p._v[2]):
+                (_v[1]!=p._v[1])?(_v[1]>p._v[1]):
+                (_v[0]>p._v[0]);
+    }
+    inline bool operator <= ( const Point4 & p ) const
+    {
+        return	(_v[3]!=p._v[3])?(_v[3]< p._v[3]):
+                (_v[2]!=p._v[2])?(_v[2]< p._v[2]):
+                (_v[1]!=p._v[1])?(_v[1]< p._v[1]):
+                (_v[0]<=p._v[0]);
+    }
+    inline bool operator >= ( const Point4 & p ) const
+    {
+        return	(_v[3]!=p._v[3])?(_v[3]> p._v[3]):
+                (_v[2]!=p._v[2])?(_v[2]> p._v[2]):
+                (_v[1]!=p._v[1])?(_v[1]> p._v[1]):
+                (_v[0]>=p._v[0]);
+    }
 //@}
 
 //@{
@@ -316,10 +316,10 @@ public:
 	}
 	inline T dot( const Point4 & p ) const { return (*this) * p; }
   inline Point4 operator ^ (  const Point4& /*p*/ ) const
-	{
-		assert(0);// not defined by two vectors (only put for metaprogramming)
-		return Point4();
-	}
+    {
+        assert(0);// not defined by two vectors (only put for metaprogramming)
+        return Point4();
+    }
 
 	/// slower version, more stable (double precision only)
 	T StableDot ( const Point4<T> & p ) const
@@ -331,11 +331,11 @@ public:
 		frexp( double(k0), &exp0 );frexp( double(k1), &exp1 );
 		frexp( double(k2), &exp2 );frexp( double(k3), &exp3 );
 
-		if (exp0>exp1) { math::Swap(k0,k1); math::Swap(exp0,exp1); }
-		if (exp2>exp3) { math::Swap(k2,k3); math::Swap(exp2,exp3); }
-		if (exp0>exp2) { math::Swap(k0,k2); math::Swap(exp0,exp2); }
-		if (exp1>exp3) { math::Swap(k1,k3); math::Swap(exp1,exp3); }
-		if (exp2>exp3) { math::Swap(k2,k3); math::Swap(exp2,exp3); }
+		if (exp0>exp1) { std::swap(k0,k1); std::swap(exp0,exp1); }
+		if (exp2>exp3) { std::swap(k2,k3); std::swap(exp2,exp3); }
+		if (exp0>exp2) { std::swap(k0,k2); std::swap(exp0,exp2); }
+		if (exp1>exp3) { std::swap(k1,k3); std::swap(exp1,exp3); }
+		if (exp2>exp3) { std::swap(k2,k3); std::swap(exp2,exp3); }
 
 		return ( (k0 + k1) + k2 ) +k3;
 	}
@@ -363,19 +363,19 @@ inline T Norm( const Point4<T> & p )
 template <class T>
 inline T SquaredNorm( const Point4<T> & p )
 {
-    return p.SquaredNorm();
+	return p.SquaredNorm();
 }
 
 template <class T>
 inline T Distance( const Point4<T> & p1, const Point4<T> & p2 )
 {
-    return Norm(p1-p2);
+	return Norm(p1-p2);
 }
 
 template <class T>
 inline T SquaredDistance( const Point4<T> & p1, const Point4<T> & p2 )
 {
-    return SquaredNorm(p1-p2);
+	return SquaredNorm(p1-p2);
 }
 
 	/// slower version of dot product, more stable (double precision only)
