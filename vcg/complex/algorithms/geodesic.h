@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -46,13 +46,110 @@ struct EuclideanDistance{
   {return vcg::Distance(Barycenter(*f0),Barycenter(*f1));}
 };
 
+
+template <class MeshType>
+class IsotropicDistance{
+private:
+  // The only member of this class. The attribute handle used to
+  typename MeshType::template PerVertexAttributeHandle<float> wH;
+public:
+  typedef typename MeshType::VertexType VertexType;
+  typedef typename MeshType::ScalarType  ScalarType;
+  typedef typename MeshType::FacePointer FacePointer;
+
+  /// The constructor reads per vertex quality and transfer it into a per vertex attribute mapping it into the specified range.
+  /// The variance parameter specify how the distance is biased by the quality
+  /// the distance is scaled by a factor that range from 1/variance to variance according to a linear mapping of quality range.
+  ///  So for example if you have a quality distributed in the 0..1 range and you specify a variance of 2 it means
+  /// that the distance will be scaled from 0.5 to 2 their original values.
+
+  IsotropicDistance(MeshType &m, float variance)
+  {
+    // the wH attribute store the scaling factor to be applied to the distance
+    wH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m,"distW");
+    float qmin = 1.0f/variance;
+    float qmax = variance;
+    float qrange = qmax-qmin;
+    std::pair<float,float> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
+    float range = minmax.second-minmax.first;
+    for(int i=0;i<m.vert.size();++i)
+      wH[i]=qmin+((m.vert[i].Q()-minmax.first)/range)*qrange;
+
+//    qDebug("Range %f %f %f",minmax.first,minmax.second,range);
+  }
+
+  ScalarType operator()( VertexType * v0,  VertexType * v1)
+  {
+    float scale = (wH[v0]+wH[v1])/2.0f;
+    return (1.0f/scale)*vcg::Distance(v0->cP(),v1->cP());
+  }
+};
+
+
+template <class MeshType>
+struct BasicCrossFunctor
+{
+  BasicCrossFunctor(MeshType &m) { tri::RequirePerVertexCurvatureDir(m); }
+  typedef typename MeshType::VertexType VertexType;
+
+  Point3f D1(VertexType &v) { return v.PD1(); }
+  Point3f D2(VertexType &v) { return v.PD1(); }
+};
+
+/**
+ * Anisotropic Distance Functor
+ *
+ * Given a couple of vertexes over the surface (usually an edge)
+ * it returns a distance value that is biased according to a tangential cross field.
+ * It is assumed that the cross field is smooth enough so that you can safely blend the two directions
+ *
+ */
+template <class MeshType>
+class AnisotropicDistance{
+  typedef typename MeshType::VertexType VertexType;
+  typedef typename MeshType::ScalarType  ScalarType;
+  typedef typename MeshType::VertexIterator VertexIterator;
+
+  typename MeshType::template PerVertexAttributeHandle<Point3f> wxH,wyH;
+public:
+  template <class CrossFunctor > AnisotropicDistance(MeshType &m, CrossFunctor &cf)
+  {
+    wxH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<Point3f> (m,"distDirX");
+    wyH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<Point3f> (m,"distDirY");
+
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+    {
+      wxH[vi]=cf.D1(*vi);
+      wyH[vi]=cf.D2(*vi);
+    }
+   }
+
+  ScalarType operator()( VertexType * v0,  VertexType * v1)
+  {
+    Point3f dd = v0->cP()-v1->cP();
+    float x = dd * (wxH[v0]+wxH[v1])/2.0f;
+    float y = dd * (wyH[v0]+wyH[v1])/2.0f;
+
+    return sqrt(x*x+y*y);
+  }
+};
+
+
+
+
+
+
+
+
+
+
 /*! \brief class for computing approximate geodesic distances on a mesh
 
   require VF Adjacency relation
 \sa trimesh_geodesic.cpp
 */
 
-template <class MeshType, class DistanceFunctor = EuclideanDistance<MeshType> >
+template <class MeshType>
 class Geodesic{
 
 public:
@@ -129,7 +226,9 @@ public:
   //************** calcolo della distanza di pw in base alle distanze note di pw1 e curr
   //************** sapendo che (curr,pw,pw1) e'una faccia della mesh
   //************** (vedi figura in file distance.gif)
-  static ScalarType Distance(const VertexPointer &pw,
+  template <class DistanceFunctor>
+  static ScalarType Distance(DistanceFunctor &distFunc,
+                             const VertexPointer &pw,
                              const VertexPointer &pw1,
                              const VertexPointer &curr,
                              const ScalarType &d_pw1,
@@ -137,9 +236,9 @@ public:
   {
     ScalarType curr_d=0;
 
-    ScalarType ew_c  = DistanceFunctor()(pw,curr);
-    ScalarType ew_w1 = DistanceFunctor()(pw,pw1);
-    ScalarType ec_w1 = DistanceFunctor()(pw1,curr);
+    ScalarType ew_c  = distFunc(pw,curr);
+    ScalarType ew_w1 = distFunc(pw,pw1);
+    ScalarType ec_w1 = distFunc(pw1,curr);
     CoordType w_c =  (pw->cP()-curr->cP()).Normalize() * ew_c;
     CoordType w_w1 = (pw->cP() - pw1->cP()).Normalize() * ew_w1;
     CoordType w1_c =  (pw1->cP() - curr->cP()).Normalize() * ec_w1;
@@ -179,10 +278,12 @@ approximated geodesic distance to the closest seeds.
 This is function is not meant to be called (although is not prevented). Instead, it is invoked by
 wrapping function.
 */
+  template <class DistanceFunctor>
   static  VertexPointer Visit(
       MeshType & m,
       std::vector<VertDist> & seedVec, // the set of seed to start from
-      bool farthestOnBorder = false,
+      DistanceFunctor &distFunc,
+//      bool farthestOnBorder = false,
       ScalarType distance_threshold  = std::numeric_limits<ScalarType>::max(),                    // cut off distance (do no compute anything farther than this value)
       typename MeshType::template PerVertexAttributeHandle<VertexPointer> * vertSource = NULL,    // if present we put in this attribute the closest source for each vertex
       typename MeshType::template PerVertexAttributeHandle<VertexPointer> * vertParent = NULL,    // if present we put in this attribute the parent in the path that goes from the vertex to the closest source
@@ -231,7 +332,7 @@ wrapping function.
 
       d_curr =  TD[curr].d;
 
-      bool isLeaf = (!farthestOnBorder || curr->IsB());
+//      bool isLeaf = (!farthestOnBorder || curr->IsB());
 
       face::VFIterator<FaceType> x;int k;
 
@@ -249,7 +350,7 @@ wrapping function.
 
           const ScalarType & d_pw1  =  TD[pw1].d;
           {
-            const ScalarType inter  = DistanceFunctor()(curr,pw1);//(curr->P() - pw1->P()).Norm();
+            const ScalarType inter  = distFunc(curr,pw1);//(curr->P() - pw1->P()).Norm();
             const ScalarType tol = (inter + d_curr + d_pw1)*.0001f;
 
             if (	(TD[pw1].source != TD[curr].source)||// not the same source
@@ -257,9 +358,9 @@ wrapping function.
                     (inter + d_pw1  < d_curr +tol  ) ||
                     (d_curr + d_pw1  < inter +tol  )   // triangular inequality
                     )
-              curr_d = d_curr + DistanceFunctor()(pw,curr);//(pw->P()-curr->P()).Norm();
+              curr_d = d_curr + distFunc(pw,curr);//(pw->P()-curr->P()).Norm();
             else
-              curr_d = Distance(pw,pw1,curr,d_pw1,d_curr);
+              curr_d = Distance(distFunc,pw,pw1,curr,d_pw1,d_curr);
           }
 
           if(TD[pw].d > curr_d){
@@ -269,12 +370,12 @@ wrapping function.
             frontier.push_back(VertDist(pw,curr_d));
             push_heap(frontier.begin(),frontier.end(),pred());
           }
-          if(isLeaf){
+//          if(isLeaf){
             if(d_curr > max_distance){
               max_distance = d_curr;
               farthest = curr;
             }
-          }
+//          }
         }
     }// end while
 
@@ -327,7 +428,16 @@ It requires per vertex Quality (e.g. vertex::Quality component)
 \todo make it O(output) by using incremental mark and persistent attributes.
             */
   static bool Compute( MeshType & m,
+                       const std::vector<VertexPointer> & seedVec)
+  {
+    EuclideanDistance<MeshType> dd;
+    return Compute(m,seedVec,dd);
+  }
+
+  template <class DistanceFunctor>
+  static bool Compute( MeshType & m,
                        const std::vector<VertexPointer> & seedVec,
+                       DistanceFunctor &distFunc,
                        ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
                        std::vector<VertexPointer> *withinDistanceVec=NULL,
                        typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sourceSeed = NULL,
@@ -339,8 +449,7 @@ It requires per vertex Quality (e.g. vertex::Quality component)
     typename std::vector<VertexPointer>::const_iterator fi;
     for( fi  = seedVec.begin(); fi != seedVec.end() ; ++fi)
         vdSeedVec.push_back(VertDist(*fi,0.0));
-
-    Visit(m, vdSeedVec, false, maxDistanceThr, sourceSeed, parentSeed, withinDistanceVec);
+    Visit(m, vdSeedVec, distFunc, maxDistanceThr, sourceSeed, parentSeed, withinDistanceVec);
     return true;
   }
 
@@ -358,9 +467,9 @@ It is just a simple wrapper of the basic Compute()
       if( (*vi).IsB())
         fro.push_back(&(*vi));
     if(fro.empty()) return false;
-
+    EuclideanDistance<MeshType> dd;
     tri::UpdateQuality<MeshType>::VertexConstant(m,0);
-    return Compute(m,fro,std::numeric_limits<ScalarType>::max(),0,sources);
+    return Compute(m,fro,dd,std::numeric_limits<ScalarType>::max(),0,sources);
   }
 
 
@@ -384,8 +493,9 @@ It is just a simple wrapper of the basic Compute()
     return true;
   }
 
-
+  template <class DistanceFunctor>
   static void PerFaceDijsktraCompute(MeshType &m, const std::vector<FacePointer> &seedVec,
+                                     DistanceFunctor &distFunc,
                                      ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
                                      std::vector<FacePointer> *InInterval=NULL,
                                      FacePointer FaceTarget=NULL,
@@ -426,7 +536,7 @@ It is just a simple wrapper of the basic Compute()
         if(!face::IsBorder(*curr,i) )
         {
           FacePointer nextF = curr->FFp(i);
-          ScalarType nextDist = curr->Q() + DistanceFunctor()(curr,nextF);
+          ScalarType nextDist = curr->Q() + distFunc(curr,nextF);
           if( (nextDist < maxDistanceThr) &&
               (!tri::IsMarked(m,nextF) ||  nextDist < nextF->Q()) )
           {
@@ -448,7 +558,9 @@ It is just a simple wrapper of the basic Compute()
 
 
 
+  template <class DistanceFunctor>
   static void PerVertexDijsktraCompute(MeshType &m, const std::vector<VertexPointer> &seedVec,
+                                       DistanceFunctor &distFunc,
                                      ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
                                      std::vector<VertexPointer> *InInterval=NULL,bool avoid_selected=false,
                                      VertexPointer target=NULL)
@@ -490,7 +602,7 @@ It is just a simple wrapper of the basic Compute()
       {
         VertexPointer nextV = vertVec[i];
         if ((avoid_selected)&&(nextV->IsS()))continue;
-        ScalarType nextDist = curr->Q() + DistanceFunctor()(curr,nextV);
+        ScalarType nextDist = curr->Q() + distFunc(curr,nextV);
         if( (nextDist < maxDistanceThr) &&
             (!tri::IsMarked(m,nextV) ||  nextDist < nextV->Q()) )
         {
