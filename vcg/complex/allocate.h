@@ -243,57 +243,61 @@ namespace tri {
             */
             static EdgeIterator AddEdges(MeshType &m,int n, PointerUpdater<EdgePointer> &pu)
             {
-                EdgeIterator last;
-                if(n == 0) return m.edge.end();
-                pu.Clear();
-                if(m.edge.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
-                else {
-                    pu.oldBase=&*m.edge.begin();
-                    pu.oldEnd=&m.edge.back()+1;
-                }
+              EdgeIterator last;
+              if(n == 0) return m.edge.end();
+              pu.Clear();
+              if(m.edge.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
+              else {
+                pu.oldBase=&*m.edge.begin();
+                pu.oldEnd=&m.edge.back()+1;
+              }
 
-				m.edge.resize(m.edge.size()+n);
-				m.en+=n;
+              m.edge.resize(m.edge.size()+n);
+              m.en+=n;
 
-				typename std::set<typename MeshType::PointerToAttribute>::iterator ai;
-				for(ai = m.edge_attr.begin(); ai != m.edge_attr.end(); ++ai)
-					((typename MeshType::PointerToAttribute)(*ai)).Resize(m.edge.size());
+              typename std::set<typename MeshType::PointerToAttribute>::iterator ai;
+              for(ai = m.edge_attr.begin(); ai != m.edge_attr.end(); ++ai)
+                ((typename MeshType::PointerToAttribute)(*ai)).Resize(m.edge.size());
 
-				pu.newBase = &*m.edge.begin();
-				pu.newEnd =  &m.edge.back()+1;
-								 if(pu.NeedUpdate())
-					{
-					FaceIterator fi;
-					for (fi=m.face.begin(); fi!=m.face.end(); ++fi){
-												//if(HasFHEAdjacency(m))
-												//        pu.Update((*fi).FHEp());
-						if(!(*fi).IsD())
-							for(int i=0; i < (*fi).VN(); ++i)
-								if ((*fi).cFEp(i)!=0) pu.Update((*fi).FEp(i));
-					}
+              pu.newBase = &*m.edge.begin();
+              pu.newEnd =  &m.edge.back()+1;
+              if(pu.NeedUpdate())
+              {
+                if(HasFEAdjacency(m))
+                  for (FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi){
+                    if(!(*fi).IsD())
+                      for(int i=0; i < (*fi).VN(); ++i)
+                        if ((*fi).cFEp(i)!=0) pu.Update((*fi).FEp(i));
+                  }
 
-                    VertexIterator vi;
-                                        if(HasVEAdjacency(m))
-                                            for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
-                        if(!(*vi).IsD())
-                                                        if ((*vi).cVEp()!=0) pu.Update((*vi).VEp());
+                if(HasVEAdjacency(m))
+                  for (VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+                    if(!(*vi).IsD())
+                      if ((*vi).cVEp()!=0) pu.Update((*vi).VEp());
 
-                                        HEdgeIterator hi;
-                                        if(HasHEAdjacency(m))
-                                            for (hi=m.hedge.begin(); hi!=m.hedge.end(); ++hi)
-                                                if(!(*hi).IsD())
-                                                        if ((*hi).cHEp()!=0) pu.Update((*hi).HEp());
+                if(HasHEAdjacency(m))
+                  for (HEdgeIterator hi=m.hedge.begin(); hi!=m.hedge.end(); ++hi)
+                    if(!(*hi).IsD())
+                      if ((*hi).cHEp()!=0) pu.Update((*hi).HEp());
+              }
+              unsigned int siz=(unsigned int)m.edge.size()-n;
 
+              last = m.edge.begin();
+              advance(last,siz);
 
+              return last;// deve restituire l'iteratore alla prima faccia aggiunta;
+            }
 
-				}
-				unsigned int siz=(unsigned int)m.edge.size()-n;
-
-				last = m.edge.begin();
-				advance(last,siz);
-
-				return last;// deve restituire l'iteratore alla prima faccia aggiunta;
+			/** Function to add a single edge to the mesh. and initializing it with two VertexPointer
+			*/
+			static EdgeIterator AddEdge(MeshType &m, VertexPointer v0, VertexPointer v1)
+			{
+				EdgeIterator ei= AddEdges(m, 1);
+				ei->V(0)=v0;
+				ei->V(1)=v1;
+				return ei;
 			}
+
 
 			/** Function to add n edges to the mesh.
 			First wrapper, with no parameters
@@ -422,6 +426,19 @@ namespace tri {
 				return v_ret;
 			}
 
+
+			/** Function to add a face to the mesh and initializing it with the three given VertexPointers
+			First wrapper, with no parameters
+			*/
+			static FaceIterator AddFace(MeshType &m, VertexPointer v0, VertexPointer v1, VertexPointer v2)
+			{
+				PointerUpdater<FacePointer> pu;
+				FaceIterator fi = AddFaces(m,1,pu);
+				fi->V(0)=v0;
+				fi->V(1)=v1;
+				fi->V(2)=v2;
+				return fi;
+			}
 
 			/** Function to add n faces to the mesh.
 			First wrapper, with no parameters
