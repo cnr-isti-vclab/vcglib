@@ -120,69 +120,71 @@ namespace vcg {
 
 				enum OBJError {
 					// Successfull opening
-					E_NOERROR													= 0x000,	//	0  (position of correspondig string in the array)
+					E_NOERROR                           = 0*2+0,  //  A*2+B  (A position of correspondig string in the array, B=1 if not critical)
 
 					// Non Critical Errors (only odd numbers)
-					E_NON_CRITICAL_ERROR							= 0x001,
-					E_MATERIAL_FILE_NOT_FOUND					= 0x003,	//  1
-					E_MATERIAL_NOT_FOUND							= 0x005,	//  2
-					E_TEXTURE_NOT_FOUND								= 0x007,	//  3
-					E_VERTICES_WITH_SAME_IDX_IN_FACE	= 0x009,  //	4
+					E_NON_CRITICAL_ERROR                = 0*2+1,
+					E_MATERIAL_FILE_NOT_FOUND           = 1*2+1,
+					E_MATERIAL_NOT_FOUND                = 2*2+1,
+					E_TEXTURE_NOT_FOUND                 = 3*2+1,
+					E_VERTICES_WITH_SAME_IDX_IN_FACE    = 4*2+1,
+					E_LESS_THAN_3_VERT_IN_FACE          = 5*2+1,
 
 					// Critical Opening Errors (only even numbers)
-					E_CANTOPEN										=	0x00A,	//  5
-					E_UNESPECTEDEOF								= 0x00C,	//  6
-					E_ABORTED											= 0x00E,	//  7
-					E_NO_VERTEX										= 0x010,	//  8
-					E_NO_FACE											= 0x012,	//  9
-					E_BAD_VERTEX_STATEMENT				= 0x014,	// 10
-					E_BAD_VERT_TEX_STATEMENT			= 0x016,	// 11
-					E_BAD_VERT_NORMAL_STATEMENT	  = 0x018,	// 12
-					E_LESS_THAN_3VERTINFACE				= 0x01A,	// 13
-					E_BAD_VERT_INDEX							= 0x01C,	// 14
-					E_BAD_VERT_TEX_INDEX 					= 0x01E,	// 15
-					E_BAD_VERT_NORMAL_INDEX 			= 0x020		// 16
+					E_CANTOPEN                          = 6*2+0,
+					E_UNEXPECTED_EOF                     = 7*2+0,
+					E_ABORTED                           = 8*2+0,
+					E_NO_VERTEX                         = 9*2+0,
+					E_NO_FACE                           =10*2+0,
+					E_BAD_VERTEX_STATEMENT              =11*2+0,
+					E_BAD_VERT_TEX_STATEMENT            =12*2+0,
+					E_BAD_VERT_NORMAL_STATEMENT         =13*2+0,
+					E_BAD_VERT_INDEX                    =14*2+0,
+					E_BAD_VERT_TEX_INDEX                =15*2+0,
+					E_BAD_VERT_NORMAL_INDEX             =16*2+0,
+					E_LESS_THAN_4_VERT_IN_QUAD          =17*2+0
 				};
 
 				// to check if a given error is critical or not.
 				static bool ErrorCritical(int err)
 				{
-					if(err<0x00A && err>=0) return false;
+					if (err==0) return false;
+					if (err&1) return false;
 					return true;
 				}
 
 				static const char* ErrorMsg(int error)
 				{
-					static const char* obj_error_msg[] =
+					const int MAXST = 18;
+					static const char* obj_error_msg[MAXST] =
 					{
-						"No errors",																									//  0
+						/*  0 */ "No errors",
 
-						"Material library file wrong or not found, a default white material is used",						//  1
-						"Some materials definitions were not found, a default white material is used where no material was available",  // 2
-						"Texture file not found",																			//  3
-						"Identical index vertices found in the same face",						//	4
+						/*  1 */ "Material library file wrong or not found, a default white material is used",
+						/*  2 */ "Some materials definitions were not found, a default white material is used where no material was available",
+						/*  3 */ "Texture file not found",
+						/*  4 */ "Identical vertex indices found in the same faces -- faces ignored",
+						/*  5 */ "Faces with fewer than 3 vertices  -- faces ignored",
 
-						"Can't open file",																						//  5
-						"Premature End of file",																			//  6
-						"File opening aborted",																				//  7
-						"No vertex field found",																			//  8
-						"No face field found",																				//  9
-						"Vertex statement with less than 3 coords",										// 10
-						"Texture coords statement with less than 2 coords",						// 11
-						"Vertex normal statement with less than 3 coords",						// 12
-						"Face with less than 3 vertices",															// 13
-						"Bad vertex index in face",																		// 14
-						"Bad texture coords index in face",														// 15
-						"Bad vertex normal index in face"															// 16
+						/*  6 */ "Can't open file",
+						/*  7 */ "Premature End of File. File truncated?",
+						/*  8 */ "Loading aborted by user",
+						/*  9 */ "No vertex found",
+						/* 10 */ "No face found",
+						/* 11 */ "Vertex statement with fewer than 3 coords",
+						/* 12 */ "Texture coords statement with fewer than 2 coords",
+						/* 13 */ "Vertex normal statement with fewer than 3 coords",
+						/* 14 */ "Bad vertex index in face",
+						/* 15 */ "Bad texture coords index in face",
+						/* 16 */ "Bad vertex normal index in face",
+						/* 17 */ "Quad faces with number of corners different from 4"
 					};
 
-					// due to approximation, following line works well for either even (critical err codes)
-					// or odd (non critical ones) numbers
-					error = (int) error/2;
+					error >>= 1;
 
-					if(error>15 || error<0) return "Unknown error";
+					if( (error>=MAXST) || (error<0) ) return "Unknown error";
 					else return obj_error_msg[error];
-				};
+				}
 
 				// Helper functions that checks the range of indexes
 				// putting them in the correct range if less than zero (as in the obj style)
@@ -346,11 +348,24 @@ namespace vcg {
 							{
 								loadingStr="Face Loading";
 
-								bool QuadFlag = false; // QOBJ format by Silva et al for simply storing quadrangular meshes.
-								if(header.compare("q")==0) { QuadFlag=true; assert(numTokens == 5); }
-
-								if (numTokens < 4) return E_LESS_THAN_3VERTINFACE;
 								int vertexesPerFace = static_cast<int>(tokens.size()-1);
+
+								bool QuadFlag = false; // QOBJ format by Silva et al for simply storing quadrangular meshes.
+								if(header.compare("q")==0) {
+									QuadFlag=true;
+									if (vertexesPerFace != 4) {
+										return E_LESS_THAN_4_VERT_IN_QUAD;
+									}
+								}
+
+
+								if (vertexesPerFace < 3) {
+									// face with fewer than 3 vertices found: ignore this face
+									extraTriangles--;
+									result = E_LESS_THAN_3_VERT_IN_FACE;
+									continue;
+								}
+
 
 								if( (vertexesPerFace>3) && OpenMeshType::FaceType::HasPolyInfo() )
 								{
@@ -374,8 +389,11 @@ namespace vcg {
 									std::vector<int> tmp = ff.v;
 									std::sort(tmp.begin(),tmp.end());
 									std::unique(tmp.begin(),tmp.end());
-									if(tmp.size() != ff.v.size())
+									if(tmp.size() != ff.v.size()) {
 										result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
+										extraTriangles--;
+										continue;
+									}
 
 									for(int i=0;i<vertexesPerFace;i++)
 										if(!GoodObjIndex(ff.v[i],numVertices))
@@ -476,8 +494,11 @@ namespace vcg {
 										}
 
 										// verifying validity of vertex indices
-										if ((ff.v[0] == ff.v[1]) || (ff.v[0] == ff.v[2]) || (ff.v[1] == ff.v[2]))
+										if ((ff.v[0] == ff.v[1]) || (ff.v[0] == ff.v[2]) || (ff.v[1] == ff.v[2])) {
 											result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
+											extraTriangles--;
+											continue;
+										}
 
 										{
 											bool invalid = false;
@@ -488,7 +509,7 @@ namespace vcg {
 													invalid = true;
 													break;
 												}
-												if (invalid) continue;
+											if (invalid) continue;
 										}
 
 										// assigning face normal
