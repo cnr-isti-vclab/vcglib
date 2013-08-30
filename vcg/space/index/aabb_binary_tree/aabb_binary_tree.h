@@ -73,6 +73,16 @@ public:
 		return (this->tree);
 	}
 
+	bool Empty()
+	{
+		return (this->tree.pRoot == 0);
+	}
+
+	void Clear(void)
+	{
+		this->tree.Clear();
+	}
+
 	template <class OBJITER>
 	inline void Set(const OBJITER & _oBegin, const OBJITER & _oEnd) {
 		GetPointerFunctor getPtr;
