@@ -1289,18 +1289,18 @@ static void ComputePoissonSampleRadii(MetroMesh &sampleMesh, ScalarType diskRadi
 	}
 }
 
-// Trivial approach that puts all the samples in a UG and removes all the ones that surely do not fit the
-static void PoissonDiskPruning(VertexSampler &ps, MetroMesh &montecarloMesh,
-                               ScalarType diskRadius, const struct PoissonDiskParam pp=PoissonDiskParam())
-{
-    // spatial index of montecarlo samples - used to choose a new sample to insert
-    MontecarloSHT montecarloSHT;
-    // initialize spatial hash table for searching
-    // radius is the radius of empty disk centered over the samples (e.g. twice of the empty space disk)
-    // This radius implies that when we pick a sample in a cell all that cell will not be touched again.
-    ScalarType cellsize = 4.0f* diskRadius / sqrt(3.0);
-    int t0 = clock();
+// initialize spatial hash table for searching
+// radius is the radius of empty disk centered over the samples (e.g. twice of the empty space disk)
+// This radius implies that when we pick a sample in a cell all that cell probably will not be touched again.
+// Howvever we must ensure that we do not put too many vertices inside each hash
 
+static void InitSpatialHashTable(MetroMesh &montecarloMesh, MontecarloSHT &montecarloSHT, ScalarType diskRadius,
+                                 const struct PoissonDiskParam pp=PoissonDiskParam())
+{
+  ScalarType cellsize = 2.0f* diskRadius / sqrt(3.0);
+  float occupancyRatio=0;
+  do
+  {
     // inflating
     BoxType bb=montecarloMesh.bbox;
     assert(!bb.IsNull());
@@ -1312,24 +1312,37 @@ static void PoissonDiskPruning(VertexSampler &ps, MetroMesh &montecarloMesh,
     Point3i gridsize(sizeX, sizeY, sizeZ);
     if(pp.pds) pp.pds->gridSize = gridsize;
 
+    montecarloSHT.InitEmpty(bb, gridsize);
+
+    for (VertexIterator vi = montecarloMesh.vert.begin(); vi != montecarloMesh.vert.end(); vi++)
+      montecarloSHT.Add(&(*vi));
+    montecarloSHT.UpdateAllocatedCells();
+    pp.pds->gridCellNum = (int)montecarloSHT.AllocatedCells.size();
+    cellsize/=2.0f;
+    occupancyRatio = float(montecarloMesh.vn) / float(montecarloSHT.AllocatedCells.size());
+    qDebug(" %i / %i = %i", montecarloMesh.vn / montecarloSHT.AllocatedCells.size(),occupancyRatio);
+  }
+  while( occupancyRatio> 100);
+}
+
+// Trivial approach that puts all the samples in a UG and removes all the ones that surely do not fit the
+static void PoissonDiskPruning(VertexSampler &ps, MetroMesh &montecarloMesh,
+                               ScalarType diskRadius, const struct PoissonDiskParam pp=PoissonDiskParam())
+{
+    int t0 = clock();
+    // spatial index of montecarlo samples - used to choose a new sample to insert
+    MontecarloSHT montecarloSHT;
+    InitSpatialHashTable(montecarloMesh,montecarloSHT,diskRadius,pp);
+
     // if we are doing variable density sampling we have to prepare the random samples quality with the correct expected radii.
     // At this point we just assume that there is the quality values as sampled from the base mesh
     if(pp.adaptiveRadiusFlag)
         ComputePoissonSampleRadii(montecarloMesh, diskRadius, pp.radiusVariance, pp.invertQuality);
 
-    montecarloSHT.InitEmpty(bb, gridsize);
-
-    for (VertexIterator vi = montecarloMesh.vert.begin(); vi != montecarloMesh.vert.end(); vi++)
-        montecarloSHT.Add(&(*vi));
-
-    montecarloSHT.UpdateAllocatedCells();
-
-
     unsigned int (*p_myrandom)(unsigned int) = RandomInt;
     std::random_shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
     int t1 = clock();
     if(pp.pds) {
-      pp.pds->gridCellNum = (int)montecarloSHT.AllocatedCells.size();
       pp.pds->montecarloSampleNum = montecarloMesh.vn;
     }
     int removedCnt=0;
