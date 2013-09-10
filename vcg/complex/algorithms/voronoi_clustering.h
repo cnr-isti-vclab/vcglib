@@ -352,8 +352,12 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m, MeshType &outM, MeshType &p
   // There is a voronoi edge if there are two corner face that share two sources.
   // In such a case we add a pair of triangles with an edge connecting these two corner faces
   // and with the two involved sources
+  // For each pair of adjacent sources we store the first of the two corner that we encounter.
   std::map<std::pair<VertexPointer,VertexPointer>, FacePointer > VoronoiEdge;
 
+
+  // First Loop build all the triangles connecting seeds with voronoi edges
+  // we loop over the edges and build two triangles for each edge
   for(size_t i=0;i<cornerVec.size();++i)
   {
     for(int j=0;j<3;++j)
@@ -372,7 +376,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m, MeshType &outM, MeshType &p
         FaceIterator fi;
         fi = tri::Allocator<MeshType>::AddFace(outM,&(outM.vert[seedMap[v0]]), corner0, corner1);
         fi->SetF(0); fi->SetF(2);
-        fi = tri::Allocator<MeshType>::AddFace(outM,&(outM.vert[seedMap[v1]]), corner0, corner1);
+        fi = tri::Allocator<MeshType>::AddFace(outM,&(outM.vert[seedMap[v1]]), corner1, corner0);
         fi->SetF(0); fi->SetF(2);
 
         tri::Allocator<MeshType>::AddEdge(poly,&(poly.vert[tri::Index(outM,corner0)]),&(poly.vert[tri::Index(outM,corner1)])  );
@@ -380,7 +384,10 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m, MeshType &outM, MeshType &p
     }
   }
 
-  // Now build the boundary facets, e.g. the triangles with an edge on the boundary that connects two bordercorner face.
+  // Now build the boundary facets:
+  // Two cases:
+  // - triangles with an edge on the boundary that connects two bordercorner face.
+  // - triangles with only a vertex on the border and an internal 'corner'
     for(size_t i=0;i<borderCornerVec.size();++i)
     {
         VertexPointer v0 = sources[borderCornerVec[i]->V(0)];
@@ -397,42 +404,33 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m, MeshType &outM, MeshType &p
           VertexPointer corner1 = &(outM.vert[bcOff+otherCorner]);
           FaceIterator fi = tri::Allocator<MeshType>::AddFace(outM,&(outM.vert[seedMap[v0]]), corner0, corner1);
           fi->SetF(0);fi->SetF(2);
+
+          tri::Allocator<MeshType>::AddEdge(poly,&(poly.vert[tri::Index(outM,corner0)]),&(poly.vert[tri::Index(outM,corner1)])  );
         }
+
         if(VoronoiEdge[std::make_pair(VertexPointer(0),v1)] == 0)
           VoronoiEdge[std::make_pair(VertexPointer(0),v1)] = borderCornerVec[i];
         else
         {
           int otherCorner = cornerMap[VoronoiEdge[std::make_pair(VertexPointer(0),v1)]];
-          FaceIterator fi=tri::Allocator<MeshType>::AddFaces(outM,1);
           VertexPointer corner0 = &(outM.vert[bcOff+i]);
           VertexPointer corner1 = &(outM.vert[bcOff+otherCorner]);
-          fi->V(0) = &(outM.vert[seedMap[v1]]);
-          fi->V(1) = corner0;
-          fi->V(2) = corner1;
-          fi->SetF(0);fi->SetF(2);
-        }
-        if(VoronoiEdge[std::make_pair(v0,v1)] == 0)
-          assert(0);
-        else
-        {
-          int otherCorner = cornerMap[VoronoiEdge[std::make_pair(v0,v1)]];
-          FaceIterator fi=tri::Allocator<MeshType>::AddFaces(outM,2);
-          VertexPointer corner0 = &(outM.vert[bcOff+i]);
-          VertexPointer corner1 = &(outM.vert[cOff+otherCorner]);
-          fi->V(0) = &(outM.vert[seedMap[v0]]);
-          fi->V(1) = corner0;
-          fi->V(2) = corner1;
+          FaceIterator fi = tri::Allocator<MeshType>::AddFace(outM,&(outM.vert[seedMap[v1]]), corner0, corner1);
           fi->SetF(0);fi->SetF(2);
           tri::Allocator<MeshType>::AddEdge(poly,&(poly.vert[tri::Index(outM,corner0)]),&(poly.vert[tri::Index(outM,corner1)])  );
-
-          ++fi;
-          fi->V(0) = &(outM.vert[seedMap[v1]]);
-          fi->V(1) = corner0;
-          fi->V(2) = corner1;
-          fi->SetF(0);fi->SetF(2);
-          tri::Allocator<MeshType>::AddEdge(poly,&(poly.vert[tri::Index(outM,corner0)]),&(poly.vert[tri::Index(outM,corner1)])  );
-
         }
+
+        assert(VoronoiEdge[std::make_pair(v0,v1)]!=0);
+
+        int otherCorner = cornerMap[VoronoiEdge[std::make_pair(v0,v1)]];
+        VertexPointer corner0 = &(outM.vert[bcOff+i]);
+        VertexPointer corner1 = &(outM.vert[cOff+otherCorner]);
+        FaceIterator fi = tri::Allocator<MeshType>::AddFace(outM,&(outM.vert[seedMap[v0]]), corner0, corner1);
+        fi->SetF(0);fi->SetF(2);
+        fi = tri::Allocator<MeshType>::AddFace(outM,&(outM.vert[seedMap[v1]]), corner0, corner1);
+        fi->SetF(0);fi->SetF(2);
+
+        tri::Allocator<MeshType>::AddEdge(poly,&(poly.vert[tri::Index(outM,corner0)]),&(poly.vert[tri::Index(outM,corner1)])  );
     }
 }
 static void DeleteUnreachedRegions(MeshType &m, PerVertexPointerHandle &sources)
