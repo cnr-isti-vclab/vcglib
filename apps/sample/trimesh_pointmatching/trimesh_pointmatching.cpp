@@ -54,7 +54,7 @@ class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::FFAdj,  vcg::face::V
 class MyEdge    : public vcg::Edge<MyUsedTypes>{};
 class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> , std::vector<MyEdge>  > {};
 
-float EvalPlane(vcg::Plane3f &pl, vcg::Point3f &dir, std::vector<vcg::Point3f> posVec)
+float EvalPlane(vcg::Plane3f &pl, std::vector<vcg::Point3f> posVec)
 {
   float off=0;
   for(size_t i=0;i<posVec.size();++i)
@@ -65,7 +65,7 @@ float EvalPlane(vcg::Plane3f &pl, vcg::Point3f &dir, std::vector<vcg::Point3f> p
 }
 
 
-int main( int argc, char **argv )
+int main( )
 {
   MyMesh m;
   vcg::tri::Icosahedron(m);
@@ -83,12 +83,15 @@ int main( int argc, char **argv )
 
   Matrix44f RotM;
   Matrix44f TraM;
-  vcg::tri::SurfaceSampling<MyMesh>::RandomPoint3fBall01();
-  RotM.SetRotateDeg(rand()%360,vcg::tri::SurfaceSampling<MyMesh>::RandomPoint3fBall01());
+  Point3f dir;
+  vcg::math::MarsenneTwisterRNG rnd;
+
+  vcg::math::GeneratePointInUnitBallUniform<float>(rnd);
+  RotM.SetRotateDeg(rand()%360,dir);
   TraM.SetTranslate(1,2,3);
   Matrix44f RigidM = RotM*TraM;
 
-  for(int i=0;i<ExactVec.size();++i)
+  for(size_t i=0;i<ExactVec.size();++i)
     PerturbVec[i]=RigidM*ExactVec[i];
 
   Quaternionf q;
