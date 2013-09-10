@@ -117,7 +117,7 @@ bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc, std:
   }
   else
   {
-    float avgEdge = tri::Stat<MeshType>::ComputeFaceEdgeAverage(mr);
+    float avgEdge = tri::Stat<MeshType>::ComputeEdgeLengthAverage(mr);
     TRGrid.SetWithRadius(mr.face.begin(),mr.face.end(),avgEdge*2);
   }
 
