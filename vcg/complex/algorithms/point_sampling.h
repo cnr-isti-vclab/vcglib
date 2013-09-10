@@ -1292,7 +1292,7 @@ static void ComputePoissonSampleRadii(MetroMesh &sampleMesh, ScalarType diskRadi
 // initialize spatial hash table for searching
 // radius is the radius of empty disk centered over the samples (e.g. twice of the empty space disk)
 // This radius implies that when we pick a sample in a cell all that cell probably will not be touched again.
-// Howvever we must ensure that we do not put too many vertices inside each hash
+// Howvever we must ensure that we do not put too many vertices inside each hash cell
 
 static void InitSpatialHashTable(MetroMesh &montecarloMesh, MontecarloSHT &montecarloSHT, ScalarType diskRadius,
                                  const struct PoissonDiskParam pp=PoissonDiskParam())
@@ -1320,7 +1320,7 @@ static void InitSpatialHashTable(MetroMesh &montecarloMesh, MontecarloSHT &monte
     pp.pds->gridCellNum = (int)montecarloSHT.AllocatedCells.size();
     cellsize/=2.0f;
     occupancyRatio = float(montecarloMesh.vn) / float(montecarloSHT.AllocatedCells.size());
-    qDebug(" %i / %i = %i", montecarloMesh.vn / montecarloSHT.AllocatedCells.size(),occupancyRatio);
+    qDebug(" %i / %i = %6.3f", montecarloMesh.vn , montecarloSHT.AllocatedCells.size(),occupancyRatio);
   }
   while( occupancyRatio> 100);
 }
