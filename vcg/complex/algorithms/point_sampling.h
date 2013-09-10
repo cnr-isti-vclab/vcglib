@@ -1154,37 +1154,6 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
     }
 }
 
-// generate Poisson-disk sample using a set of pre-generated samples (with the Montecarlo algorithm)
-// It always return a point.
-static VertexPointer getPrecomputedMontecarloSample(Point3i &cell, MontecarloSHT & samplepool,float &currentRadius, bool adaptiveRadiusFlag)
-{
-	MontecarloSHTIterator cellBegin, cellEnd;
-	samplepool.Grid(cell, cellBegin, cellEnd);
-	if(adaptiveRadiusFlag)  currentRadius = (*cellBegin)->Q();
-	return *cellBegin;
-}
-
-static VertexPointer getBestPrecomputedMontecarloSample(Point3i &cell, MontecarloSHT & samplepool,float &currentRadius, bool adaptiveRadiusFlag)
-{
-  MontecarloSHTIterator cellBegin,cellEnd;
-  samplepool.Grid(cell, cellBegin, cellEnd);
-  VertexPointer bestSample=0;
-  int minRemoveCnt = std::numeric_limits<int>::max();
-  std::vector<typename MontecarloSHT::HashIterator> inSphVec;
-  for(MontecarloSHTIterator ci=cellBegin;ci!=cellEnd;++ci)
-  {
-    VertexPointer sp = *ci;
-    if(adaptiveRadiusFlag)  currentRadius = sp->Q();
-    int curRemoveCnt = samplepool.CountInSphere(sp->cP(),currentRadius,inSphVec);
-    if(curRemoveCnt < minRemoveCnt)
-    {
-      bestSample = sp;
-      minRemoveCnt = curRemoveCnt;
-    }
-  }
-  return bestSample;
-}
-
 // check the radius constrain
 static bool checkPoissonDisk(SampleSHT & sht, const Point3<ScalarType> & p, ScalarType radius)
 {
@@ -1210,6 +1179,7 @@ struct PoissonDiskParam
   {
     adaptiveRadiusFlag = false;
     bestSampleChoiceFlag = true;
+    bestSamplePoolSize = 10;
     radiusVariance =1;
     MAXLEVELS = 5;
     invertQuality = false;
@@ -1233,15 +1203,52 @@ struct PoissonDiskParam
 
   bool geodesicDistanceFlag;
   bool bestSampleChoiceFlag; // In poisson disk pruning when we choose a sample in a cell, we choose the sample that remove the minimal number of other samples. This previlege the "on boundary" samples.
+  int bestSamplePoolSize;
   bool adaptiveRadiusFlag;
   float radiusVariance;
   bool invertQuality;
-  bool preGenFlag;   // when generating a poisson distribution, you can initialize the set of computed points with ALL the vertices of another mesh. Useful for building progressive refinements.
+  bool preGenFlag;        // when generating a poisson distribution, you can initialize the set of computed points with ALL the vertices of another mesh. Useful for building progressive refinements.
   MetroMesh *preGenMesh;
   int MAXLEVELS;
 
   Stat *pds;
 };
+
+
+// generate Poisson-disk sample using a set of pre-generated samples (with the Montecarlo algorithm)
+// It always return a point.
+static VertexPointer getSampleFromCell(Point3i &cell, MontecarloSHT & samplepool)
+{
+	MontecarloSHTIterator cellBegin, cellEnd;
+	samplepool.Grid(cell, cellBegin, cellEnd);
+	return *cellBegin;
+}
+
+// Given a cell of the grid it search the point that remove the minimum number of other samples
+// it linearly scan all the points of a cell.
+
+static VertexPointer getBestPrecomputedMontecarloSample(Point3i &cell, MontecarloSHT & samplepool, ScalarType diskRadius, const PoissonDiskParam &pp)
+{
+  MontecarloSHTIterator cellBegin,cellEnd;
+  samplepool.Grid(cell, cellBegin, cellEnd);
+  VertexPointer bestSample=0;
+  int minRemoveCnt = std::numeric_limits<int>::max();
+  std::vector<typename MontecarloSHT::HashIterator> inSphVec;
+  int i=0;
+  for(MontecarloSHTIterator ci=cellBegin; ci!=cellEnd && i<pp.bestSamplePoolSize; ++ci,i++)
+  {
+    VertexPointer sp = *ci;
+    if(pp.adaptiveRadiusFlag)  diskRadius = sp->Q();
+    int curRemoveCnt = samplepool.CountInSphere(sp->cP(),diskRadius,inSphVec);
+    if(curRemoveCnt < minRemoveCnt)
+    {
+      bestSample = sp;
+      minRemoveCnt = curRemoveCnt;
+    }
+  }
+  return bestSample;
+}
+
 
 static ScalarType ComputePoissonDiskRadius(MetroMesh &origMesh, int sampleNum)
 {
@@ -1326,7 +1333,7 @@ static void PoissonDiskPruning(VertexSampler &ps, MetroMesh &montecarloMesh,
       pp.pds->montecarloSampleNum = montecarloMesh.vn;
     }
     int removedCnt=0;
-    if(pp.preGenFlag)
+    if(pp.preGenFlag && pp.preGenMesh !=0)
     {
       // Initial pass for pruning the Hashed grid with the an eventual pre initialized set of samples
       for(VertexIterator vi =pp.preGenMesh->vert.begin(); vi!=pp.preGenMesh->vert.end();++vi)
@@ -1345,9 +1352,14 @@ static void PoissonDiskPruning(VertexSampler &ps, MetroMesh &montecarloMesh,
             if( montecarloSHT.EmptyCell(montecarloSHT.AllocatedCells[i])  ) continue;
             ScalarType currentRadius =diskRadius;
             VertexPointer sp;
-            if(pp.geodesicDistanceFlag)
-            sp= getPrecomputedMontecarloSample(montecarloSHT.AllocatedCells[i], montecarloSHT, currentRadius, pp.adaptiveRadiusFlag);
-            sp = getBestPrecomputedMontecarloSample(montecarloSHT.AllocatedCells[i], montecarloSHT, currentRadius, pp.adaptiveRadiusFlag);
+            if(pp.bestSampleChoiceFlag)
+              sp = getBestPrecomputedMontecarloSample(montecarloSHT.AllocatedCells[i], montecarloSHT, diskRadius, pp);
+            else
+              sp = getSampleFromCell(montecarloSHT.AllocatedCells[i], montecarloSHT);
+
+            if(pp.adaptiveRadiusFlag)
+              currentRadius = sp->Q();
+
             ps.AddVert(*sp);
             if(pp.geodesicDistanceFlag) removedCnt += montecarloSHT.RemoveInSphereNormal(sp->cP(),sp->cN(),GDF,currentRadius);
                             else        removedCnt += montecarloSHT.RemoveInSphere(sp->cP(),currentRadius);
@@ -1648,8 +1660,8 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
 // simpler wrapper for the pruning
 //
 template <class MeshType>
-void PoissonPruning(MeshType &m, // the mesh that has to be sampled
-                    std::vector<Point3f> &poissonSamples, // the vector that will contain the set of points
+void PoissonPruning(MeshType &m, // the mesh that has to be pruned
+                    std::vector<Point3f> &poissonSamples, // the vector that will contain the chosen set of points
                     float & radius)
 {
     typedef tri::TrivialSampler<MeshType> BaseSampler;
