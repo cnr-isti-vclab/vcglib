@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -44,14 +44,14 @@ template <class FaceType>
 bool IsManifold(FaceType const & f,  const int j );
 
 /**  Templated over the class face, it stores a \em position over a face in a mesh.
-	It contain a pointer to the current face, 
+	It contain a pointer to the current face,
 	the index of one edge and a pointer to one of the vertices of the edge.
 	See also the JumpingPos in jumping_pos.h for an iterator that loops
 	around the faces of a vertex without requiring the VF topology.
  */
- 
 
-template <class FaceType> 
+
+template <class FaceType>
 class Pos
 {
 public:
@@ -62,7 +62,7 @@ public:
 	typedef Pos<FaceType> PosType;
 	/// The scalar type
 	typedef typename VertexType::ScalarType ScalarType;
-	
+
 	/// Pointer to the face of the half-edge
 	typename FaceType::FaceType *f;
 	/// Index of the edge
@@ -88,9 +88,9 @@ public:
 			if (f->V(i) == v) { z = f->Prev(i); break;}
 	}
 
-	// Official Access functions functions 
+    // Official Access functions functions
    VertexType *& V(){ return v; }
-	 int         & E(){ return z; }
+     int         & E(){ return z; }
    FaceType   *& F(){ return f; }
 
    VertexType * V() const { return v; }
@@ -98,31 +98,31 @@ public:
    FaceType   * F() const { return f; }
 
 // Returns the face index of the vertex inside the face.
-// Note that this is DIFFERENT from using the z member that denotes the edge index inside the face. 
+// Note that this is DIFFERENT from using the z member that denotes the edge index inside the face.
 // It should holds that Vind != (z+1)%3   &&   Vind == z || Vind = z+2%3
    int VInd()
-	 {
-		 for(int i = 0; i < f->VN(); ++i) if(v==f->V(i)) return i;
-		 assert(0);
-		 return -1;
-	 }
+     {
+         for(int i = 0; i < f->VN(); ++i) if(v==f->V(i)) return i;
+         assert(0);
+         return -1;
+     }
 
-  
+
 	/// Operator to compare two half-edge
 	inline bool operator == ( PosType const & p ) const {
 			return (f==p.f && z==p.z && v==p.v);
-	} 
+	}
 
 	/// Operator to compare two half-edge
 	inline bool operator != ( PosType const & p ) const {
 			return (f!=p.f || z!=p.z || v!=p.v);
-	} 
+	}
 	/// Operator to order half-edge; it's compare at the first the face pointers, then the index of the edge and finally the vertex pointers
 	inline bool operator <= ( PosType const & p) const {
-    return	(f!=p.f)?(f<p.f):
+	return	(f!=p.f)?(f<p.f):
 						(z!=p.z)?(z<p.z):
 						(v<=p.v);
-	}	
+	}
 
 	/// Assignment operator
 	inline FaceType & operator = ( const FaceType & h ){
@@ -151,14 +151,14 @@ public:
 		f = t->FFp(z);
 		z = t->FFi(z);
 	}
-  
+
 		// Paolo Cignoni 19/6/99
 		// Si muove sulla faccia adiacente a f, lungo uno spigolo che
-		// NON e' j, e che e' adiacente a v 
-		// in questo modo si scandiscono tutte le facce incidenti in un 
+		// NON e' j, e che e' adiacente a v
+		// in questo modo si scandiscono tutte le facce incidenti in un
 		// vertice f facendo Next() finche' non si ritorna all'inizio
 		// Nota che sul bordo rimbalza, cioe' se lo spigolo !=j e' di bordo
-		// restituisce sempre la faccia f ma con nj che e' il nuovo spigolo di bordo 
+		// restituisce sempre la faccia f ma con nj che e' il nuovo spigolo di bordo
 		// vecchi parametri:     	FaceType * & f, VertexType * v, int & j
 
 	/// It moves on the adjacent face incident to v, via a different edge that j
@@ -167,7 +167,7 @@ public:
 		assert( f->V(z)==v || f->V(f->Next(z))==v ); // L'edge j deve contenere v
 		FlipE();
 		FlipF();
-		assert( f->V(z)==v || f->V(f->Next(z))==v ); 
+		assert( f->V(z)==v || f->V(f->Next(z))==v );
 	}
 	// Cambia edge mantenendo la stessa faccia e lo stesso vertice
 	/// Changes edge maintaining the same face and the same vertex
@@ -182,7 +182,7 @@ public:
 	// Cambia Faccia mantenendo lo stesso vertice e lo stesso edge
 	// Vale che he.flipf.flipf= he
 	// Se l'he e' di bordo he.flipf()==he
-	// Si puo' usare SOLO se l'edge e' 2manifold altrimenti 
+	// Si puo' usare SOLO se l'edge e' 2manifold altrimenti
 	// si deve usare nextf
 
 	/// Changes face maintaining the same vertex and the same edge
@@ -202,7 +202,7 @@ public:
 	void FlipV()
 	{
 		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
-		
+
 		if(f->V(f->Next(z))==v)
 			v=f->V(z);
 		else
@@ -210,38 +210,38 @@ public:
 
 		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
 	}
-	
+
   /// return the vertex that it should have if we make FlipV;
     VertexType *VFlip() const
-	{
-		assert(f->cV(f->Prev(z))!=v && (f->cV(f->Next(z))==v || f->cV(z)==v));
-		if(f->cV(f->Next(z))==v)	return f->cV(z);
-								else			return f->cV(f->Next(z));
-	}
+    {
+        assert(f->cV(f->Prev(z))!=v && (f->cV(f->Next(z))==v || f->cV(z)==v));
+        if(f->cV(f->Next(z))==v)	return f->cV(z);
+                                else			return f->cV(f->Next(z));
+    }
 
   /// return the face that it should have if we make FlipF;
     FaceType *FFlip() const
-	{
-		assert( f->FFp(z)->FFp(f->FFi(z))==f );
-		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z+0)%f->VN())==v));
-		FaceType *nf=f->FFp(z);
-		return nf;
+    {
+        assert( f->FFp(z)->FFp(f->FFi(z))==f );
+        assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z+0)%f->VN())==v));
+        FaceType *nf=f->FFp(z);
+        return nf;
   }
 
 
 	// Trova il prossimo half-edge di bordo (nhe)
-	// tale che 
+	// tale che
 	// --nhe.f adiacente per vertice a he.f
-	// --nhe.v adiacente per edge di bordo a he.v 
-	// l'idea e' che se he e' un half edge di bordo 
-	// si puo scorrere tutto un bordo facendo 
+	// --nhe.v adiacente per edge di bordo a he.v
+	// l'idea e' che se he e' un half edge di bordo
+	// si puo scorrere tutto un bordo facendo
 	//
 	//		hei=he;
 	//		do
 	//			hei.Nextb()
 	//		while(hei!=he);
-	
-	/// Finds the next half-edge border 
+
+	/// Finds the next half-edge border
 	void NextB( )
 	{
 		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
@@ -250,11 +250,11 @@ public:
 	//finche' non si trova una faccia di bordo.
 		do
 			NextE();
-      while(!IsBorder());
-		
+	  while(!IsBorder());
+
 		// L'edge j e' di bordo e deve contenere v
-		assert(IsBorder() &&( f->V(z)==v || f->V(f->Next(z))==v )); 
-		
+		assert(IsBorder() &&( f->V(z)==v || f->V(f->Next(z))==v ));
+
 		FlipV();
 		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
 		assert(f->FFp(z)==f); // f is border along j
@@ -263,13 +263,13 @@ public:
 	/// Checks if the half-edge is of border
 	bool IsBorder()
 	{
-    return face::IsBorder(*f,z);
+	return face::IsBorder(*f,z);
 	}
 
   bool IsManifold()
-	{
+    {
     return face::IsManifold(*f,z);
-	}
+    }
 
 	/*!
 	 * Returns the number of vertices incident on the vertex pos is currently pointing to.
@@ -313,17 +313,17 @@ public:
     while (ht!=*this);
     return count;
   }
-	/** Function to inizialize an half-edge.
-		@param fp Puntatore alla faccia
-		@param zp Indice dell'edge
-		@param vp Puntatore al vertice
-	*/
-	void Set(FaceType  * const fp, int const zp,  VertexType  * const vp)
-	{
-		f=fp;z=zp;v=vp;
-		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
-	}
-	
+    /** Function to inizialize an half-edge.
+        @param fp Puntatore alla faccia
+        @param zp Indice dell'edge
+        @param vp Puntatore al vertice
+    */
+    void Set(FaceType  * const fp, int const zp,  VertexType  * const vp)
+    {
+        f=fp;z=zp;v=vp;
+        assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
+    }
+
 	void Set(FaceType  * const pFace, VertexType  * const pVertex)
 	{
 		f = pFace;
@@ -366,20 +366,20 @@ public:
 };
 
 /** Class VFIterator.
-	This class is used as an iterator over the VF adjacency. 
+    This class is used as an iterator over the VF adjacency.
   It allow to easily traverse all the faces around a given vertex v;
   The faces are traversed in no particular order. No Manifoldness requirement.
 
   typical example:
 
     VertexPointer v;
-    vcg::face::VFIterator<FaceType> vfi(v);	
+    vcg::face::VFIterator<FaceType> vfi(v);
     for (;!vfi.End();++vfi)
-			vfi.F()->ClearV();
-			
-		// Alternative 
+            vfi.F()->ClearV();
 
-    vcg::face::VFIterator<FaceType> vfi(f, 1);
+        // Alternative
+
+	vcg::face::VFIterator<FaceType> vfi(f, 1);
 		while (!vfi.End()){
 			vfi.F()->ClearV();
 			++vfi;
@@ -389,9 +389,9 @@ public:
 	See also the JumpingPos in jumping_pos.h for an iterator that loops
 	around the faces of a vertex using FF topology and without requiring the VF topology.
 
- */ 
+ */
 
-template <typename FaceType> 
+template <typename FaceType>
 class VFIterator
 {
 public:
@@ -409,34 +409,33 @@ public:
 	FaceType *f;
 	/// Index of the vertex
 	int z;
-	
+
 	/// Default constructor
 	VFIterator(){}
 	/// Constructor which associates the half-edge elementet with a face and its vertex
 	VFIterator(FaceType * _f,  const int &  _z){f = _f; z = _z;  assert(z>=0 && "VFAdj must be initialized");}
 
-	/// Constructor which takes a pointer to vertex 
+	/// Constructor which takes a pointer to vertex
 	VFIterator(VertexType * _v){f = _v->VFp(); z = _v->VFi(); assert(z>=0 && "VFAdj must be initialized");}
 
 	VFIFaceType *&	F() { return f;}
 	int	&					  I() { return z;}
-  
-  // Access to the vertex. Having a VFIterator vfi, it corresponds to 
+
+  // Access to the vertex. Having a VFIterator vfi, it corresponds to
   // vfi.V() = vfi.F()->V(vfi.I())
   inline VertexType *V() const { return f->V(z);}
 
-  inline VertexType * const & V0() const { return f->V0(z);} 
+  inline VertexType * const & V0() const { return f->V0(z);}
   inline VertexType * const & V1() const { return f->V1(z);}
   inline VertexType * const & V2() const { return f->V2(z);}
-	
+
   bool End() const {return f==0;}
-  VFIFaceType *operator++() {
+  void operator++() {
     FaceType* t = f;
-		f = f->VFp(z);
-		z = t->VFi(z);
-    return f;
+        f = t->VFp(z);
+        z = t->VFi(z);
   }
-		
+
 };
 
 /*@}*/
