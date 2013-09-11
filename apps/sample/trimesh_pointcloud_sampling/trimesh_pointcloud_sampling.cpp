@@ -58,6 +58,7 @@ int main( int argc, char **argv )
   MyMesh rndM;
 
   tri::MeshSampler<MyMesh> mps(subM);
+  tri::MeshSampler<MyMesh> mrs(rndM);
 
   if(tri::io::Importer<MyMesh>::Open(m,argv[1])!=0)
   {
@@ -78,12 +79,20 @@ int main( int argc, char **argv )
 
   int t0=clock();
   tri::Clustering<MyMesh, vcg::tri::AverageColorCell<MyMesh> > ClusteringGrid;
-  ClusteringGrid.Init(m.bbox,100000,radius);
+  ClusteringGrid.Init(m.bbox,100000,radius*sqrt(2.0f));
   ClusteringGrid.AddPointSet(m);
   ClusteringGrid.ExtractMesh(cluM);
   int t1=clock();
   tri::io::ExporterPLY<MyMesh>::Save(cluM,"ClusterMesh.ply");
   printf("Sampled %i vertices in %5.2f\n",cluM.VN(), float(t1-t0)/float(CLOCKS_PER_SEC));
+
+  int t2=clock();
+  int sampleNum = (cluM.VN()+subM.VN())/2;
+  tri::SurfaceSampling<MyMesh,tri::MeshSampler<MyMesh> >::VertexUniform(m, mrs,sampleNum);
+  int t3=clock();
+  tri::io::ExporterPLY<MyMesh>::Save(rndM,"RandomMesh.ply");
+  printf("Sampled %i vertices in %5.2f\n",rndM.VN(), float(t3-t2)/float(CLOCKS_PER_SEC));
+
 
   return 0;
 }
