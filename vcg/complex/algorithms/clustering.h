@@ -20,44 +20,6 @@
  * for more details.                                                         *
  *                                                                           *
  ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.11  2006/06/08 13:55:16  cignoni
-Added ColorPreserving Cellbase template.
-
-Revision 1.10  2006/05/26 10:18:11  cignoni
-Re-adapted to ms compilers
-
-Revision 1.9  2006/05/25 09:37:14  cignoni
-Many changes for the different interpretation of hash_set between gcc and .net. Probably to be completed.
-
-Revision 1.8  2006/05/24 16:42:22  m_di_benedetto
-Corrected bbox inflation amount in case of _cellsize != 0
-
-Revision 1.7  2006/05/24 15:16:01  cignoni
-better comment to the init parameters
-
-Revision 1.6  2006/05/24 08:54:04  cignoni
-Added missing std:: to swap
-
-Revision 1.5  2006/05/21 06:40:31  cignoni
-Added DoubleFace management
-
-Revision 1.4  2006/05/19 20:49:03  m_di_benedetto
-Added check for empty generated mesh (prevent call to mesh allocator with zero vertices or faces).
-
-Revision 1.3  2006/05/18 22:20:53  m_di_benedetto
-added check for deleted faces and modified/added std namespace qualifier.
-
-Revision 1.2  2006/05/18 13:59:20  cignoni
-Some minor optimizations
-
-Revision 1.1  2006/05/16 21:56:06  cignoni
-First working Version
-
-****************************************************************************/
 
 #ifndef __VCGLIB_CLUSTERING
 #define __VCGLIB_CLUSTERING
@@ -123,91 +85,90 @@ public:
 template<class MeshType  >
 class  NearestToCenter
 {
-    typedef typename MeshType::ScalarType ScalarType;
-    typedef typename MeshType::CoordType CoordType;
-    typedef typename MeshType::VertexType  VertexType;
-    typedef typename MeshType::FaceType  FaceType;
-    typedef BasicGrid<typename MeshType::ScalarType> GridType;
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef typename MeshType::CoordType CoordType;
+  typedef typename MeshType::VertexType  VertexType;
+  typedef typename MeshType::FaceType  FaceType;
+  typedef BasicGrid<typename MeshType::ScalarType> GridType;
 
-  public:
-    inline void AddVertex(MeshType &/*m*/, GridType &g, Point3i &pi, VertexType &v)
-		{
-			CoordType c;
-			g.IPiToBoxCenter(pi,c);
-			ScalarType newDist = Distance(c,v.cP());
-			if(!valid || newDist < bestDist)
-			{
-				valid=true;
-				bestDist=newDist;
-				bestPos=v.cP();
-				bestN=v.cN();
-				orig=&v;
-			}
-		}
-	inline void AddFaceVertex(MeshType &/*m*/, FaceType &/*f*/, int /*i*/)    {		assert(0);}
-    NearestToCenter(): valid(false){}
-		
-   CoordType bestPos;
-   CoordType bestN;
-	 ScalarType bestDist;
-	 bool valid;
-	 int id;
-	 VertexType *orig;
-   CoordType Pos() const
+public:
+  inline void AddVertex(MeshType &/*m*/, GridType &g, Point3i &pi, VertexType &v)
+  {
+    CoordType c;
+    g.IPiToBoxCenter(pi,c);
+    ScalarType newDist = Distance(c,v.cP());
+    if(!valid || newDist < bestDist)
+    {
+      valid=true;
+      bestDist=newDist;
+      bestPos=v.cP();
+      bestN=v.cN();
+      orig=&v;
+    }
+  }
+  inline void AddFaceVertex(MeshType &/*m*/, FaceType &/*f*/, int /*i*/)    {		assert(0);}
+  NearestToCenter(): valid(false){}
+
+  CoordType bestPos;
+  CoordType bestN;
+  ScalarType bestDist;
+  bool valid;
+  int id;
+  VertexType *orig;
+  CoordType Pos() const
   {
     assert(valid);
-		return bestPos;
+    return bestPos;
   }
   Color4b Col() const {return Color4b::White;}
-	CoordType N() const {return bestN;}
-	VertexType * Ptr() const {return orig;}
+  CoordType N() const {return bestN;}
+  VertexType * Ptr() const {return orig;}
 
 };
-
-
 
 template<class MeshType>
 class  AverageColorCell
 {
   typedef typename MeshType::CoordType CoordType;
   typedef typename MeshType::FaceType  FaceType;
-	typedef typename MeshType::VertexType  VertexType;
+  typedef typename MeshType::VertexType  VertexType;
 
-	typedef BasicGrid<typename MeshType::ScalarType> GridType;
+  typedef BasicGrid<typename MeshType::ScalarType> GridType;
 
-  public:
-    inline void AddFaceVertex(MeshType &/*m*/, FaceType &f, int i)
-    {
-      p+=f.cV(i)->cP();
-      c+=CoordType(f.cV(i)->C()[0],f.cV(i)->C()[1],f.cV(i)->C()[2]);
+public:
+  inline void AddFaceVertex(MeshType &/*m*/, FaceType &f, int i)
+  {
+    p+=f.cV(i)->cP();
+    c+=CoordType(f.cV(i)->C()[0],f.cV(i)->C()[1],f.cV(i)->C()[2]);
 
-      // we prefer to use the un-normalized face normal so small faces facing away are dropped out
-      // and the resulting average is weighed with the size of the faces falling here.
-      n+=f.cN();
-      cnt++;
-    }
-    inline void AddVertex(MeshType &/*m*/, GridType &/*g*/, Point3i &/*pi*/, VertexType &v)
-		{
-		  p+=v.cP();
-      n+=v.cN();
-			c+=CoordType(v.C()[0],v.C()[1],v.C()[2]);
-      cnt++;
-		}
+    // we prefer to use the un-normalized face normal so small faces facing away are dropped out
+    // and the resulting average is weighed with the size of the faces falling here.
+    n+=f.cN();
+    cnt++;
+  }
+  inline void AddVertex(MeshType &m, GridType &/*g*/, Point3i &/*pi*/, VertexType &v)
+  {
+    p+=v.cP();
+    n+=v.cN();
+    if(tri::HasPerVertexColor(m))
+       c+=CoordType(v.C()[0],v.C()[1],v.C()[2]);
+    cnt++;
+  }
 
-    AverageColorCell(): p(0,0,0), n(0,0,0), c(0,0,0),cnt(0){}
-   CoordType p;
-   CoordType n;
-   CoordType c;
-   int cnt;
-   int id;
+  AverageColorCell(): p(0,0,0), n(0,0,0), c(0,0,0),cnt(0){}
+  CoordType p;
+  CoordType n;
+  CoordType c;
+  int cnt;
+  int id;
   Color4b Col() const
   {
     return Color4b(c[0]/cnt,c[1]/cnt,c[2]/cnt,255);
   }
-	
-	CoordType      N() const {return n;}
-	VertexType * Ptr() const {return 0;}
-	CoordType    Pos() const { return p/cnt; }
+
+  CoordType      N() const {return n;}
+  VertexType * Ptr() const {return 0;}
+  CoordType    Pos() const { return p/cnt; }
 };
 
 
@@ -235,16 +196,16 @@ class Clustering
   bool DuplicateFaceParam;
 
   // This class keeps the references to the three cells where a face has its vertexes.
-	class SimpleTri
+    class SimpleTri
   {
   public:
     CellType *v[3];
     int ii(int i) const {return *((int *)(&(v[i])));}
     bool operator < ( const SimpleTri &p) const {
       return	(v[2]!=p.v[2])?(v[2]<p.v[2]):
-				(v[1]!=p.v[1])?(v[1]<p.v[1]):
-				(v[0]<p.v[0]);
-	  }
+                (v[1]!=p.v[1])?(v[1]<p.v[1]):
+                (v[0]<p.v[0]);
+      }
 
     // Sort the vertex of the face maintaining the original face orientation (it only ensure that v0 is the minimum)
     void sortOrient()
@@ -281,13 +242,13 @@ class Clustering
 
   void Init(Box3<ScalarType> _mbb, int _size, ScalarType _cellsize=0)
   {
-		GridCell.clear();
-		TriSet.clear();
+        GridCell.clear();
+        TriSet.clear();
     Grid.bbox=_mbb;
-	///inflate the bb calculated
+    ///inflate the bb calculated
       ScalarType infl = (_cellsize == (ScalarType)0) ? (Grid.bbox.Diag() / _size) : (_cellsize);
-	  Grid.bbox.min-=CoordType(infl,infl,infl);
-	  Grid.bbox.max+=CoordType(infl,infl,infl);
+      Grid.bbox.min-=CoordType(infl,infl,infl);
+      Grid.bbox.max+=CoordType(infl,infl,infl);
     Grid.dim  = Grid.bbox.max - Grid.bbox.min;
     if(		_cellsize==0)
         BestDim( _size, Grid.dim, Grid.siz );
@@ -300,7 +261,6 @@ class Clustering
 		Grid.voxel[2] = Grid.dim[2]/Grid.siz[2];
   }
 
-
   BasicGrid<ScalarType> Grid;
 
 #ifdef _MSC_VER
@@ -308,7 +268,7 @@ class Clustering
   typedef typename STDEXT::hash_set<SimpleTri>::iterator TriHashSetIterator;
 #else
   struct SimpleTriHashFunc{
-	inline	size_t	operator ()(const SimpleTri &p) const {return size_t(p);}
+    inline	size_t	operator ()(const SimpleTri &p) const {return size_t(p);}
   };
   STDEXT::hash_set<SimpleTri,SimpleTriHashFunc> TriSet;
   typedef typename STDEXT::hash_set<SimpleTri,SimpleTriHashFunc>::iterator TriHashSetIterator;
@@ -334,43 +294,43 @@ class Clustering
   {
     FaceIterator fi;
     for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-			{      
-				HashedPoint3i pi;
-				SimpleTri st;
-				for(int i=0;i<3;++i)
-				{
-					Grid.PToIP((*fi).cV(i)->cP(), pi );
-					st.v[i]=&(GridCell[pi]);
-					st.v[i]->AddFaceVertex(m,*(fi),i);
-				}
-				if( (st.v[0]!=st.v[1]) && (st.v[0]!=st.v[2]) && (st.v[1]!=st.v[2]) )
-				{ // if we allow the duplication of faces we sort the vertex only partially (to maintain the original face orientation)
-					if(DuplicateFaceParam) st.sortOrient();
+            {
+                HashedPoint3i pi;
+                SimpleTri st;
+                for(int i=0;i<3;++i)
+                {
+                    Grid.PToIP((*fi).cV(i)->cP(), pi );
+                    st.v[i]=&(GridCell[pi]);
+                    st.v[i]->AddFaceVertex(m,*(fi),i);
+                }
+                if( (st.v[0]!=st.v[1]) && (st.v[0]!=st.v[2]) && (st.v[1]!=st.v[2]) )
+                { // if we allow the duplication of faces we sort the vertex only partially (to maintain the original face orientation)
+                    if(DuplicateFaceParam) st.sortOrient();
                                         else st.sort();
-					TriSet.insert(st);
-				}
-			//  printf("Inserted %8i triangles, clustered to %8i tri and %i cells\n",distance(m.face.begin(),fi),TriSet.size(),GridCell.size());
-			}
+                    TriSet.insert(st);
+                }
+            //  printf("Inserted %8i triangles, clustered to %8i tri and %i cells\n",distance(m.face.begin(),fi),TriSet.size(),GridCell.size());
+            }
   }
 
   int CountPointSet() {return GridCell.size(); }
 
   void SelectPointSet(MeshType &m)
   {
-		typename STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
+        typename STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
                 UpdateSelection<MeshType>::VertexClear(m);
-		for(gi=GridCell.begin();gi!=GridCell.end();++gi)
+        for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
       VertexType *ptr=(*gi).second.Ptr();
-			if(ptr && ( ptr >= &*m.vert.begin() )  &&  ( ptr <= &*(m.vert.end() - 1) )  )
-					ptr->SetS();
+            if(ptr && ( ptr >= &*m.vert.begin() )  &&  ( ptr <= &*(m.vert.end() - 1) )  )
+                    ptr->SetS();
     }
-	}
+    }
   void ExtractPointSet(MeshType &m)
   {
     m.Clear();
 
-		if (GridCell.empty()) return;
+        if (GridCell.empty()) return;
 
     Allocator<MeshType>::AddVertices(m,GridCell.size());
     typename STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
@@ -379,20 +339,18 @@ class Clustering
     {
       m.vert[i].P()=(*gi).second.Pos();
       m.vert[i].N()=(*gi).second.N();
-      m.vert[i].C()=(*gi).second.Col();
-			++i;
+     if(HasPerVertexColor(m))
+        m.vert[i].C()=(*gi).second.Col();
+            ++i;
     }
- 
+
   }
 
   void ExtractMesh(MeshType &m)
   {
     m.Clear();
 
-		if (TriSet.empty() || GridCell.empty())
-		{
-			return;
-		}
+    if (GridCell.empty())  return;
 
     Allocator<MeshType>::AddVertices(m,GridCell.size());
     typename STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
@@ -400,11 +358,13 @@ class Clustering
     for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
       m.vert[i].P()=(*gi).second.Pos();
-      if(m.vert[i].HasColor())
+      m.vert[i].N()=(*gi).second.N();
+      if(HasPerVertexColor(m))
         m.vert[i].C()=(*gi).second.Col();
       (*gi).second.id=i;
       ++i;
     }
+
     Allocator<MeshType>::AddFaces(m,TriSet.size());
     TriHashSetIterator ti;
     i=0;
@@ -417,7 +377,7 @@ class Clustering
       // the best orientation according to the averaged normal
       if(!DuplicateFaceParam)
       {
-		  CoordType N=vcg::Normal(m.face[i]);
+          CoordType N=vcg::Normal(m.face[i]);
       int badOrient=0;
       if( N.dot((*ti).v[0]->N()) <0) ++badOrient;
       if( N.dot((*ti).v[1]->N()) <0) ++badOrient;
