@@ -141,7 +141,8 @@ public:
     tri::Allocator<MeshType>::AddVertices(m,1);
     m.vert.back().P() = f.cP(0)*p[0] + f.cP(1)*p[1] +f.cP(2)*p[2];
     m.vert.back().N() = f.cV(0)->N()*p[0] + f.cV(1)->N()*p[1] + f.cV(2)->N()*p[2];
-    m.vert.back().Q() = f.cV(0)->Q()*p[0] + f.cV(1)->Q()*p[1] + f.cV(2)->Q()*p[2];
+    if(tri::HasPerVertexQuality(m) )
+       m.vert.back().Q() = f.cV(0)->Q()*p[0] + f.cV(1)->Q()*p[1] + f.cV(2)->Q()*p[2];
   }
 }; // end class BaseSampler
 
@@ -1310,17 +1311,20 @@ static void InitSpatialHashTable(MetroMesh &montecarloMesh, MontecarloSHT &monte
     int sizeY = std::max(1.0f,bb.DimY() / cellsize);
     int sizeZ = std::max(1.0f,bb.DimZ() / cellsize);
     Point3i gridsize(sizeX, sizeY, sizeZ);
-    if(pp.pds) pp.pds->gridSize = gridsize;
 
     montecarloSHT.InitEmpty(bb, gridsize);
 
     for (VertexIterator vi = montecarloMesh.vert.begin(); vi != montecarloMesh.vert.end(); vi++)
       montecarloSHT.Add(&(*vi));
     montecarloSHT.UpdateAllocatedCells();
-    pp.pds->gridCellNum = (int)montecarloSHT.AllocatedCells.size();
+    if(pp.pds)
+    {
+      pp.pds->gridSize = gridsize;
+      pp.pds->gridCellNum = (int)montecarloSHT.AllocatedCells.size();
+    }
     cellsize/=2.0f;
     occupancyRatio = float(montecarloMesh.vn) / float(montecarloSHT.AllocatedCells.size());
-    qDebug(" %i / %i = %6.3f", montecarloMesh.vn , montecarloSHT.AllocatedCells.size(),occupancyRatio);
+//    qDebug(" %i / %i = %6.3f", montecarloMesh.vn , montecarloSHT.AllocatedCells.size(),occupancyRatio);
   }
   while( occupancyRatio> 100);
 }
