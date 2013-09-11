@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -38,16 +38,16 @@ template <class TYPE>
 int PlyType ()  { return 0;}
 
 
-// 10/6/05 Cignoni this specialization must be inlined becouse otherwise if we include this 
+// 10/6/05 Cignoni this specialization must be inlined becouse otherwise if we include this
 // .h in two different cpp we should get a double definition error during linking
 
 template <> inline int PlyType <float >()  { return ply::T_FLOAT; }
 template <> inline int PlyType <double>()  { return ply::T_DOUBLE; }
-template <> inline int PlyType <int   >()  { return ply::T_INT; } 
+template <> inline int PlyType <int   >()  { return ply::T_INT; }
 template <> inline int PlyType <short >()  { return ply::T_SHORT; }
 template <> inline int PlyType <unsigned char >()  { return ply::T_UCHAR; }
 
-/** 
+/**
 This class encapsulate a filter for opening ply meshes.
 The ply file format is quite extensible...
 */
@@ -78,19 +78,19 @@ struct LoadPly_FaceAux
 	int texcoordind;
 	float colors[32];
 	unsigned char ncolors;
-	
+
 	unsigned char r;
 	unsigned char g;
 	unsigned char b;
 
-	unsigned char data[MAX_USER_DATA];  
+	unsigned char data[MAX_USER_DATA];
 };
 
 struct LoadPly_TristripAux
 {
 	int size;
 	int *v;
-	unsigned char data[MAX_USER_DATA];  
+	unsigned char data[MAX_USER_DATA];
 };
 
 struct LoadPly_EdgeAux
@@ -99,7 +99,7 @@ struct LoadPly_EdgeAux
 	unsigned char data[MAX_USER_DATA];
 };
 
-// Yet another auxiliary data structure for loading some strange ply files 
+// Yet another auxiliary data structure for loading some strange ply files
 // the original stanford range data...
 struct LoadPly_RangeGridAux {
 	unsigned char num_pts;
@@ -119,7 +119,7 @@ struct LoadPly_VertAux
 	unsigned char r;
 	unsigned char g;
 	unsigned char b;
-	unsigned char data[MAX_USER_DATA];  
+	unsigned char data[MAX_USER_DATA];
 	float radius;
 	float u,v,w;
 };
@@ -153,7 +153,7 @@ struct LoadPly_Camera
 };
 
 #define _VERTDESC_LAST_  29
-static const  PropDescriptor &VertDesc(int i)  
+static const  PropDescriptor &VertDesc(int i)
 {
 	static const PropDescriptor pv[_VERTDESC_LAST_]={
 /*00*/ {"vertex", "x",         ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0  ,0},
@@ -193,7 +193,7 @@ static const  PropDescriptor &VertDesc(int i)
 
 #define _FACEDESC_FIRST_  9 // the first descriptor with possible vertex indices
 #define _FACEDESC_LAST_  21
-static const  PropDescriptor &FaceDesc(int i)  
+static const  PropDescriptor &FaceDesc(int i)
 {
 	static const 	PropDescriptor qf[_FACEDESC_LAST_]=
 	{
@@ -227,7 +227,7 @@ static const PropDescriptor &TristripDesc(int i)
 {
 	static const PropDescriptor qf[1]=
 	{
-		{"tristrips","vertex_indices", ply::T_INT,  ply::T_INT,  offsetof(LoadPly_TristripAux,v),		  1,1,ply::T_INT,ply::T_INT,offsetof(LoadPly_TristripAux,size) ,0},				
+		{"tristrips","vertex_indices", ply::T_INT,  ply::T_INT,  offsetof(LoadPly_TristripAux,v),		  1,1,ply::T_INT,ply::T_INT,offsetof(LoadPly_TristripAux,size) ,0},
 	};
 	return qf[i];
 }
@@ -244,8 +244,8 @@ static const PropDescriptor &EdgeDesc(int i)
 
 // Descriptor for the Stanford Data Repository Range Maps.
 // In practice a grid with some invalid elements. Coords are saved only for good elements
-static const  PropDescriptor &RangeDesc(int i)  
-{		
+static const  PropDescriptor &RangeDesc(int i)
+{
 	static const PropDescriptor range_props[1] = {
 		{"range_grid","vertex_indices", ply::T_INT, ply::T_INT, offsetof(LoadPly_RangeGridAux,pts), 1, 0, ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_RangeGridAux,num_pts),0},
 	};
@@ -253,8 +253,8 @@ static const  PropDescriptor &RangeDesc(int i)
 }
 
 
-static const  PropDescriptor &CameraDesc(int i)  
-{		
+static const  PropDescriptor &CameraDesc(int i)
+{
 	static const PropDescriptor cad[23] =
 	{
 		{"camera","view_px",ply::T_FLOAT,ply::T_FLOAT,offsetof(LoadPly_Camera,view_px),0,0,0,0,0  ,0},
@@ -336,8 +336,8 @@ static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
 
 /// Read a mesh and store in loadmask the loaded field
 /// Note that loadmask is not read! just modified. You cannot specify what fields
-/// have to be read. ALL the data for which your mesh HasSomething and are present 
-/// in the file are read in. 
+/// have to be read. ALL the data for which your mesh HasSomething and are present
+/// in the file are read in.
 static int Open( OpenMeshType &m, const char * filename, int & loadmask, CallBackPos *cb =0)
 {
 	PlyInfo pi;
@@ -362,8 +362,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	std::vector<int> RangeGridAuxVec;
 	int RangeGridCols=0;
 	int RangeGridRows=0;
-	
-	
+
+
 	pi.mask = 0;
 	bool hasIntensity = false; // the intensity is a strange way to code single channel color used sometimes in rangemap. it is a kind of color. so it do not need another entry in the IOM mask.
 	bool multit = false; // true if texture has a per face int spec the texture index
@@ -388,7 +388,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	//bool isvflags = false;	// Il file contiene i flags
 
 
-	// The main descriptor of the ply file 
+	// The main descriptor of the ply file
 	vcg::ply::PlyFile pf;
 
 	// Open the file and parse the header
@@ -447,7 +447,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				pi.mask |= Mask::IOM_VERTNORMAL;
 
 	 }
-	 
+
 	if( vcg::tri::HasPerVertexQuality(m) )
 	{
 		if( pf.AddToRead(VertDesc(4))!=-1 ||
@@ -634,7 +634,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 			pf.SetCurElement(i);
 			VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,n);
-			
+
 			for(j=0;j<n;++j)
 			{
 				if(pi.cb && (j%1000)==0) pi.cb(j*50/n,"Vertex Loading");
@@ -643,7 +643,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					pi.status = PlyInfo::E_SHORTFILE;
 					return pi.status;
 				}
-				
+
 				(*vi).P()[0] = va.p[0];
 				(*vi).P()[1] = va.p[1];
 				(*vi).P()[2] = va.p[2];
@@ -666,7 +666,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 					(*vi).T().P().X() = va.u;
 					(*vi).T().P().Y() = va.v;
 				}
-				
+
 				if( pi.mask & Mask::IOM_VERTCOLOR )
 				{
 					if(hasIntensity)
@@ -682,7 +682,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 				if( pi.mask & Mask::IOM_VERTRADIUS )
 					(*vi).R() = va.radius;
 
-				
+
 				for(int k=0;k<pi.vdn;k++)
 					memcpy((char *)(&*vi) + pi.VertexData[k].offset1,
 						   (char *)(&va) + VPV[k].offset1,
@@ -720,7 +720,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 		else if( !strcmp( pf.ElemName(i),"face") && (n>0) )/******************** FACE READING ****************************************/
 		{
 			int j;
-			
+
 			FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,n);
 			pf.SetCurElement(i);
 
@@ -742,7 +742,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 						return pi.status;
 					}
 				}
-				
+
 				if(HasPolyInfo(m)) (*fi).Alloc(3);
 
 				if(HasPerFaceFlags(m) &&( pi.mask & Mask::IOM_FACEFLAGS) )
@@ -970,7 +970,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 			n = static_cast<int>(bufstr.length());
 			for(i=0;i<n;i++)
 				if( bufstr[i]!=' ' && bufstr[i]!='\t' && bufstr[i]>32 && bufstr[i]<125 )	bufclean.push_back(bufstr[i]);
-			
+
 			char buf2[255];
 			ply::interpret_texture_name( bufclean.c_str(),filename,buf2 );
 			m.textures.push_back( std::string(buf2) );
@@ -991,17 +991,16 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 
 	// vn and fn should be correct but if someone wrongly saved some deleted elements they can be wrong.
 	m.vn = 0;
-	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+	for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
 		if( ! (*vi).IsD() )
 			++m.vn;
 
 	m.fn = 0;
-	FaceIterator fi;
-	for(fi=m.face.begin();fi!=m.face.end();++fi)
+	for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
 		if( ! (*fi).IsD() )
 			++m.fn;
 
+	tri::UpdateBounding<OpenMeshType>::Box(m);
 	return 0;
 }
 
@@ -1122,13 +1121,13 @@ static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
 		pf.AddToRead(VertDesc( 9))!=-1 &&
 		pf.AddToRead(VertDesc(10))!=-1  )  mask |= Mask::IOM_VERTCOLOR;
 	if( pf.AddToRead(VertDesc(19))!=-1  )  mask |= Mask::IOM_VERTCOLOR;
-	
+
 	if( pf.AddToRead(VertDesc(20))!=-1  &&
 		pf.AddToRead(VertDesc(21))!=-1)    mask |= Mask::IOM_VERTTEXCOORD;
-		 
+
 	if( pf.AddToRead(VertDesc(16))!=-1  &&
 		pf.AddToRead(VertDesc(17))!=-1)    mask |= Mask::IOM_VERTTEXCOORD;
-		
+
 	if( pf.AddToRead(FaceDesc(0))!=-1 )    mask |= Mask::IOM_FACEINDEX;
 	if( pf.AddToRead(FaceDesc(1))!=-1 )    mask |= Mask::IOM_FACEFLAGS;
 
