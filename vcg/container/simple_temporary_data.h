@@ -49,6 +49,7 @@ First Working Release (with this comment)
 #define __VCGLIB_SIMPLE__
 
 #include <limits>
+#include <assert.h>
 #include <vector>
 #include <cstring>
  
