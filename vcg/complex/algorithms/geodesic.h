@@ -127,8 +127,8 @@ public:
   ScalarType operator()( VertexType * v0,  VertexType * v1)
   {
     Point3f dd = v0->cP()-v1->cP();
-    float x = dd * (wxH[v0]+wxH[v1])/2.0f;
-    float y = dd * (wyH[v0]+wyH[v1])/2.0f;
+    float x = (fabs(dd * wxH[v0])+fabs(dd *wxH[v1]))/2.0f;
+    float y = (fabs(dd * wyH[v0])+fabs(dd *wyH[v1]))/2.0f;
 
     return sqrt(x*x+y*y);
   }
