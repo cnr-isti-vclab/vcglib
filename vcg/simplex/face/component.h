@@ -400,6 +400,7 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class A, class T> class Quality: public T {
 public:
   typedef A QualityType;
+  Quality():_quality(0) {}
   QualityType &Q()       { return _quality; }
   QualityType cQ() const { return _quality; }
     template <class RightValueType>

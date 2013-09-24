@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -35,9 +35,9 @@ All the Components that can be added to a faceex should be defined in the namesp
 
 template <class VALUE_TYPE>
 class vector_ocf: public std::vector<VALUE_TYPE> {
-  typedef std::vector<VALUE_TYPE> BaseType; 
-	typedef typename vector_ocf<VALUE_TYPE>::iterator ThisTypeIterator;
-  
+  typedef std::vector<VALUE_TYPE> BaseType;
+    typedef typename vector_ocf<VALUE_TYPE>::iterator ThisTypeIterator;
+
 public:
   vector_ocf():std::vector<VALUE_TYPE>()
   {
@@ -52,32 +52,32 @@ public:
     VFAdjacencyEnabled=false;
     FFAdjacencyEnabled=false;
   }
-  
+
 // Auxiliary types to build internal vectors
 struct AdjTypePack {
-  typename VALUE_TYPE::FacePointer _fp[3] ;    
-  char _zp[3] ;  
+  typename VALUE_TYPE::FacePointer _fp[3] ;
+  char _zp[3] ;
 
-  // Default constructor. 
+  // Default constructor.
   // Needed because we need to know if adjacency is initialized or not
   // when resizing vectors and during an allocate face.
-  AdjTypePack() { 
- 		_fp[0]=0;
-		_fp[1]=0;
-		_fp[2]=0;
+  AdjTypePack() {
+        _fp[0]=0;
+        _fp[1]=0;
+        _fp[2]=0;
   }
   };
-  
+
 //template <class TexCoordType>
 class WedgeTexTypePack {
 public:
-  WedgeTexTypePack() { 
+  WedgeTexTypePack() {
     wt[0].U()=.5;wt[0].V()=.5;
     wt[1].U()=.5;wt[1].V()=.5;
     wt[2].U()=.5;wt[2].V()=.5;
-    wt[0].N()=-1; 
-    wt[1].N()=-1; 
-    wt[2].N()=-1; 
+    wt[0].N()=-1;
+    wt[1].N()=-1;
+    wt[2].N()=-1;
   }
 
   typename VALUE_TYPE::TexCoordType wt[3];
@@ -87,13 +87,13 @@ class WedgeColorTypePack {
 public:
   WedgeColorTypePack() {
   typedef typename VALUE_TYPE::ColorType::ScalarType WedgeColorScalarType;
-	for (int i=0; i<3; ++i)
-	{
+    for (int i=0; i<3; ++i)
+    {
     wc[i][0] = WedgeColorScalarType(255);
     wc[i][1] = WedgeColorScalarType(255);
     wc[i][2] = WedgeColorScalarType(255);
     wc[i][3] = WedgeColorScalarType(255);
-	}
+    }
   }
 
   typename VALUE_TYPE::ColorType wc[3];
@@ -103,12 +103,12 @@ class WedgeNormalTypePack {
 public:
   WedgeNormalTypePack() {
   typedef typename VALUE_TYPE::NormalType::ScalarType WedgeNormalScalarType;
-	for (int i=0; i<3; ++i)
-	{
+    for (int i=0; i<3; ++i)
+    {
     wn[i][0] = WedgeNormalScalarType(0);
     wn[i][1] = WedgeNormalScalarType(0);
     wn[i][2] = WedgeNormalScalarType(1);
-	}
+    }
   }
 
   typename VALUE_TYPE::NormalType wn[3];
@@ -121,55 +121,55 @@ public:
     void push_back(const VALUE_TYPE & v)
   {
     BaseType::push_back(v);
-	BaseType::back()._ovp = this;
+    BaseType::back()._ovp = this;
     if (QualityEnabled)     QV.push_back(0);
     if (_ColorEnabled)       CV.push_back(vcg::Color4b(vcg::Color4b::White));
-	if (MarkEnabled)        MV.push_back(0);
+    if (MarkEnabled)        MV.push_back(0);
     if (NormalEnabled)      NV.push_back(typename VALUE_TYPE::NormalType());
-	if (CurvatureDirEnabled)    CDV.push_back(typename VALUE_TYPE::CurvatureDirType());
-	if (VFAdjacencyEnabled) AV.push_back(AdjTypePack());
+    if (CurvatureDirEnabled)    CDV.push_back(typename VALUE_TYPE::CurvatureDirType());
+    if (VFAdjacencyEnabled) AV.push_back(AdjTypePack());
     if (FFAdjacencyEnabled) AF.push_back(AdjTypePack());
-	if (WedgeTexEnabled)    WTV.push_back(WedgeTexTypePack());
-	if (WedgeColorEnabled)  WCV.push_back(WedgeColorTypePack());
-	if (WedgeNormalEnabled) WNV.push_back(WedgeNormalTypePack());
+    if (WedgeTexEnabled)    WTV.push_back(WedgeTexTypePack());
+    if (WedgeColorEnabled)  WCV.push_back(WedgeColorTypePack());
+    if (WedgeNormalEnabled) WNV.push_back(WedgeNormalTypePack());
   }
-	void pop_back();
-  void resize(const unsigned int & _size) 
+    void pop_back();
+  void resize(const unsigned int & _size)
   {
-	  unsigned int oldsize = BaseType::size();
+      unsigned int oldsize = BaseType::size();
     BaseType::resize(_size);
-	  if(oldsize<_size){
-		  ThisTypeIterator firstnew = BaseType::begin();
-		  advance(firstnew,oldsize);
-		  _updateOVP(firstnew,(*this).end());
-	  }  
-    if (QualityEnabled)     QV.resize(_size);
+      if(oldsize<_size){
+          ThisTypeIterator firstnew = BaseType::begin();
+          advance(firstnew,oldsize);
+          _updateOVP(firstnew,(*this).end());
+      }
+    if (QualityEnabled)     QV.resize(_size,0);
     if (_ColorEnabled)       CV.resize(_size);
-	if (MarkEnabled)        MV.resize(_size);
-	if (NormalEnabled)      NV.resize(_size);
-	if (CurvatureDirEnabled)CDV.resize(_size);
-	if (VFAdjacencyEnabled) AV.resize(_size);
+    if (MarkEnabled)        MV.resize(_size);
+    if (NormalEnabled)      NV.resize(_size);
+    if (CurvatureDirEnabled)CDV.resize(_size);
+    if (VFAdjacencyEnabled) AV.resize(_size);
     if (FFAdjacencyEnabled) AF.resize(_size);
     if (WedgeTexEnabled)    WTV.resize(_size,WedgeTexTypePack());
-	if (WedgeColorEnabled)  WCV.resize(_size);
-	if (WedgeNormalEnabled) WNV.resize(_size);
+    if (WedgeColorEnabled)  WCV.resize(_size);
+    if (WedgeNormalEnabled) WNV.resize(_size);
    }
   void reserve(const unsigned int & _size)
   {
     BaseType::reserve(_size);
 
     if (QualityEnabled)     QV.reserve(_size);
-    if (_ColorEnabled)       CV.reserve(_size);
-	if (MarkEnabled)        MV.reserve(_size);
-	if (NormalEnabled)      NV.reserve(_size);
-	if (CurvatureDirEnabled)CDV.reserve(_size);
-	if (VFAdjacencyEnabled) AV.reserve(_size);
-	if (FFAdjacencyEnabled) AF.reserve(_size);
-	if (WedgeTexEnabled)    WTV.reserve(_size);
-	if (WedgeColorEnabled)  WCV.reserve(_size);
-	if (WedgeNormalEnabled) WNV.reserve(_size);
+    if (_ColorEnabled)      CV.reserve(_size);
+    if (MarkEnabled)        MV.reserve(_size);
+    if (NormalEnabled)      NV.reserve(_size);
+    if (CurvatureDirEnabled)CDV.reserve(_size);
+    if (VFAdjacencyEnabled) AV.reserve(_size);
+    if (FFAdjacencyEnabled) AF.reserve(_size);
+    if (WedgeTexEnabled)    WTV.reserve(_size);
+    if (WedgeColorEnabled)  WCV.reserve(_size);
+    if (WedgeNormalEnabled) WNV.reserve(_size);
 
-	if( BaseType::empty()) return ;
+    if( BaseType::empty()) return ;
 
     ThisTypeIterator oldbegin=(*this).begin();
     if(oldbegin!=(*this).begin()) _updateOVP((*this).begin(),(*this).end());
@@ -182,9 +182,9 @@ public:
     for(fi=lbegin;fi!=lend;++fi)
         (*fi)._ovp=this;
  }
- 
- 
-  
+
+
+
 // this function is called by the specialized Reorder function, that is called whenever someone call the allocator::CompactVertVector
 void ReorderFace(std::vector<size_t> &newFaceIndex )
 {
@@ -205,7 +205,7 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 			if(newFaceIndex[i] != std::numeric_limits<size_t>::max() )
 				{
 					assert(newFaceIndex[i] <= i);
-					if (QualityEnabled)      QV[newFaceIndex[i]] =  QV[i]; 
+					if (QualityEnabled)      QV[newFaceIndex[i]] =  QV[i];
 					if (_ColorEnabled)        CV[newFaceIndex[i]] =  CV[i];
 					if (MarkEnabled)         MV[newFaceIndex[i]] =  MV[i];
 					if (NormalEnabled)       NV[newFaceIndex[i]] =  NV[i];
@@ -217,9 +217,9 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 					if (WedgeNormalEnabled) WNV[newFaceIndex[i]] = WNV[i];
 				}
 		}
-	
-	if (QualityEnabled)      QV.resize(BaseType::size());
-	if (_ColorEnabled)        CV.resize(BaseType::size());
+
+	if (QualityEnabled)      QV.resize(BaseType::size(),0);
+	if (_ColorEnabled)       CV.resize(BaseType::size());
 	if (MarkEnabled)         MV.resize(BaseType::size());
 	if (NormalEnabled)       NV.resize(BaseType::size());
 	if (CurvatureDirEnabled) CDV.resize(BaseType::size());
@@ -232,12 +232,12 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 
 ////////////////////////////////////////
 // Enabling Functions
-	
+
 bool IsQualityEnabled() const {return QualityEnabled;}
 void EnableQuality() {
 	assert(VALUE_TYPE::HasQualityOcf());
 	QualityEnabled=true;
-	QV.resize((*this).size());
+	QV.resize((*this).size(),0);
 }
 
 void DisableQuality() {
@@ -245,7 +245,7 @@ void DisableQuality() {
 	QualityEnabled=false;
 	QV.clear();
 }
-	
+
 bool IsColorEnabled() const {return _ColorEnabled;}
 void EnableColor() {
   assert(VALUE_TYPE::HasColorOcf());
@@ -390,22 +390,22 @@ public:
 }; // end class vector_ocf
 
 
-/*----------------------------- VFADJ ------------------------------*/ 
+/*----------------------------- VFADJ ------------------------------*/
 template <class T> class VFAdjOcf: public T {
 public:
   typename T::FacePointer &VFp(const int j) {
-    assert((*this).Base().VFAdjacencyEnabled); 
-    return (*this).Base().AV[(*this).Index()]._fp[j]; 
+    assert((*this).Base().VFAdjacencyEnabled);
+    return (*this).Base().AV[(*this).Index()]._fp[j];
   }
 
   typename T::FacePointer cVFp(const int j) const {
-    if(! (*this).Base().VFAdjacencyEnabled ) return 0; 
-    else return (*this).Base().AV[(*this).Index()]._fp[j]; 
+    if(! (*this).Base().VFAdjacencyEnabled ) return 0;
+    else return (*this).Base().AV[(*this).Index()]._fp[j];
   }
 
   char &VFi(const int j) {
-    assert((*this).Base().VFAdjacencyEnabled); 
-    return (*this).Base().AV[(*this).Index()]._zp[j]; 
+    assert((*this).Base().VFAdjacencyEnabled);
+    return (*this).Base().AV[(*this).Index()]._zp[j];
   }
 
   char cVFi(const int j) const {
@@ -423,7 +423,7 @@ public:
 private:
 };
 
-/*----------------------------- FFADJ ------------------------------*/ 
+/*----------------------------- FFADJ ------------------------------*/
 template <class T> class FFAdjOcf: public T {
 public:
   typename T::FacePointer &FFp(const int j) {
@@ -462,7 +462,7 @@ public:
   static bool HasFFAdjacencyOcf()   { return true; }
 };
 
-/*------------------------- Normal -----------------------------------------*/ 
+/*------------------------- Normal -----------------------------------------*/
 template <class A, class T> class NormalOcf: public T {
 public:
   typedef A NormalType;
@@ -572,7 +572,7 @@ template <class T> class CurvatureDirdOcf: public CurvatureDirOcf<CurvatureDirOc
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDirdOcf"));T::Name(name);}
 };
 
-///*-------------------------- QUALITY ----------------------------------*/ 
+///*-------------------------- QUALITY ----------------------------------*/
 template <class A, class T> class QualityOcf: public T {
 public:
   typedef A QualityType;
@@ -598,7 +598,7 @@ public:
 
 template <class T> class QualityfOcf: public QualityOcf<float, T> {};
 
-///*-------------------------- COLOR ----------------------------------*/ 
+///*-------------------------- COLOR ----------------------------------*/
 template <class A, class T> class ColorOcf: public T {
 public:
   typedef A ColorType;
@@ -624,7 +624,7 @@ public:
 
 template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
 
-///*-------------------------- MARK  ----------------------------------*/ 
+///*-------------------------- MARK  ----------------------------------*/
 template <class T> class MarkOcf: public T {
 public:
   inline int &IMark()       {
@@ -648,7 +648,7 @@ public:
   inline void InitIMark()    { IMark() = 0; }
 };
 
-///*-------------------------- WEDGE TEXCOORD  ----------------------------------*/ 
+///*-------------------------- WEDGE TEXCOORD  ----------------------------------*/
 template <class A, class TT> class WedgeTexCoordOcf: public TT {
 public:
   WedgeTexCoordOcf(){ }
@@ -755,7 +755,7 @@ public:
 };
 
   } // end namespace face
-  
+
   template < class, class,class,class > class TriMesh;
 
   namespace tri

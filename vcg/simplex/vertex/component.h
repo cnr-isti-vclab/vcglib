@@ -332,6 +332,8 @@ The Quality Component is a generic place for storing a float. The term 'quality'
 template <class A, class TT> class Quality: public TT {
 public:
   typedef A QualityType;
+  Quality():_quality(0) {}
+
   inline const QualityType &Q() const { return _quality; }
   inline       QualityType &Q()       { return _quality; }
   inline       QualityType cQ() const {return _quality; }

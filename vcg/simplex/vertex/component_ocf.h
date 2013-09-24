@@ -63,20 +63,21 @@ public:
 // All the standard methods of std::vector that can change the reallocation are
 // redefined in order to manage the additional data.
   void push_back(const VALUE_TYPE & v)
-	{
-		BaseType::push_back(v);
-		BaseType::back()._ovp = this;
-		if (ColorEnabled)         CV.push_back(vcg::Color4b(vcg::Color4b::White));
-		if (MarkEnabled)          MV.push_back(0);
-		if (NormalEnabled)        NV.push_back(typename VALUE_TYPE::NormalType());
-		if (TexCoordEnabled)      TV.push_back(typename VALUE_TYPE::TexCoordType());
-		if (VFAdjacencyEnabled)   AV.push_back(VFAdjType());
-		if (CurvatureEnabled)     CuV.push_back(typename VALUE_TYPE::CurvatureType());
-		if (CurvatureDirEnabled)  CuDV.push_back(typename VALUE_TYPE::CurvatureDirType());
-		if (RadiusEnabled)        RadiusV.push_back(typename VALUE_TYPE::RadiusType());
-	}
+    {
+        BaseType::push_back(v);
+        BaseType::back()._ovp = this;
+        if (ColorEnabled)         CV.push_back(vcg::Color4b(vcg::Color4b::White));
+        if (QualityEnabled)       QV.push_back(0);
+        if (MarkEnabled)          MV.push_back(0);
+        if (NormalEnabled)        NV.push_back(typename VALUE_TYPE::NormalType());
+        if (TexCoordEnabled)      TV.push_back(typename VALUE_TYPE::TexCoordType());
+        if (VFAdjacencyEnabled)   AV.push_back(VFAdjType());
+        if (CurvatureEnabled)     CuV.push_back(typename VALUE_TYPE::CurvatureType());
+        if (CurvatureDirEnabled)  CuDV.push_back(typename VALUE_TYPE::CurvatureDirType());
+        if (RadiusEnabled)        RadiusV.push_back(typename VALUE_TYPE::RadiusType());
+    }
 
-	void pop_back();
+    void pop_back();
 
 	void resize(const unsigned int & _size)
 	{
@@ -88,6 +89,7 @@ public:
 			_updateOVP(firstnew,(*this).end());
 		}
 		if (ColorEnabled)         CV.resize(_size);
+		if (QualityEnabled)       QV.resize(_size,0);
 		if (MarkEnabled)          MV.resize(_size);
 		if (NormalEnabled)        NV.resize(_size);
 		if (TexCoordEnabled)      TV.resize(_size);
@@ -101,6 +103,7 @@ public:
 	{
 		BaseType::reserve(_size);
 		if (ColorEnabled)        CV.reserve(_size);
+		if (QualityEnabled)      QV.reserve(_size);
 		if (MarkEnabled)         MV.reserve(_size);
 		if (NormalEnabled)       NV.reserve(_size);
 		if (TexCoordEnabled)     TV.reserve(_size);
@@ -124,7 +127,7 @@ bool IsQualityEnabled() const {return QualityEnabled;}
 void EnableQuality() {
 	assert(VALUE_TYPE::HasQualityOcf());
 	QualityEnabled=true;
-	QV.resize((*this).size());
+	QV.resize((*this).size(),0);
 }
 void DisableQuality() {
 	assert(VALUE_TYPE::HasQualityOcf());
@@ -285,9 +288,9 @@ public:
     }
     template <class RightVertexType>
     void ImportData(const RightVertexType & rightV)
-	{
-		T::ImportData(rightV);
-	}
+    {
+        T::ImportData(rightV);
+    }
 
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   {   return true; }
@@ -538,11 +541,11 @@ template <class T> class RadiusdOcf: public RadiusOcf<double, T> {};
 
 template < class T> class InfoOcf: public T {
 public:
-    // You should never ever try to copy a vertex that has OCF stuff.
+	// You should never ever try to copy a vertex that has OCF stuff.
 		// use ImportData function.
-    inline InfoOcf &operator=(const InfoOcf & /*other*/) {
-        assert(0); return *this;
-    }
+	inline InfoOcf &operator=(const InfoOcf & /*other*/) {
+		assert(0); return *this;
+	}
 
 		vector_ocf<typename T::VertexType> &Base() const { return *_ovp;}
 
