@@ -226,13 +226,20 @@ protected:
 			}
 		}
 
-		if (fullInside || (node->IsLeaf()) || (node->ObjectsCount() <= minNodeObjectsCount)) {
+		// Intermediate BVs containing a sufficient number of objects are marked fully visible even if they don't
+		if (fullInside || (node->ObjectsCount() <= minNodeObjectsCount)) {
 			node->Flags() |= FC_FULLY_VISIBLE_BIT;
 			nodeApply(*node);
 			return;
 		}
 
 		node->Flags() |= FC_PARTIALLY_VISIBLE_BIT;
+
+		if ((node->IsLeaf()))
+		{
+			nodeApply(*node);
+			return;
+		}
 
 		//ClassType::NodeVsFrustum(node->children[0], viewerPosition, f, newMask, minNodeObjectsCount, nodeApply);
 		//ClassType::NodeVsFrustum(node->children[1], viewerPosition, f, newMask, minNodeObjectsCount, nodeApply);
