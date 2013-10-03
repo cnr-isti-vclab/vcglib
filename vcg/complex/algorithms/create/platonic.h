@@ -615,7 +615,7 @@ void Build( MeshType & in, const V & v, const F & f)
 template <class MeshType,class V>
 void Build( MeshType & in, const V & v)
 {
-  std::vector<int[3]> dummyfaceVec;
+  std::vector<Point3i> dummyfaceVec;
   Build(in,v,dummyfaceVec);
 }
 
