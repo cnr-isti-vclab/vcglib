@@ -99,6 +99,8 @@ namespace tri {
 			typedef typename MeshType::HEdgeIterator HEdgeIterator;
 			typedef typename MeshType::HEdgeContainer HEdgeContainer;
 
+			typedef typename MeshType::CoordType     CoordType;
+
 
 			typedef typename MeshType::PointerToAttribute PointerToAttribute;
 			typedef typename std::set<PointerToAttribute>::iterator AttrIterator;
@@ -227,10 +229,29 @@ namespace tri {
 				VertexIterator v_ret =  AddVertices(m, n,pu);
 
                 typename std::vector<VertexPointer *>::iterator vi;
-            for(vi=local_vec.begin();vi!=local_vec.end();++vi)
-               pu.Update(**vi);
+                for(vi=local_vec.begin();vi!=local_vec.end();++vi)
+                  pu.Update(**vi);
                 return v_ret;
             }
+
+            /** \brief Wrapper to AddVertices() to add a single vertex with given coords
+            */
+            static VertexIterator AddVertex(MeshType &m, const CoordType &p)
+            {
+              VertexIterator v_ret =  AddVertices(m, 1);
+              v_ret->P()=p;
+              return v_ret;
+            }
+            /** \brief Wrapper to AddVertices() to add a single vertex with given coords and color
+            */
+            static VertexIterator AddVertex(MeshType &m, const CoordType &p, const Color4b &c)
+            {
+              VertexIterator v_ret =  AddVertices(m, 1);
+              v_ret->P()=p;
+              v_ret->C()=c;
+              return v_ret;
+            }
+
 
       /* ++++++++++ edges +++++++++++++ */
             /** \brief Add n edges to the mesh.
