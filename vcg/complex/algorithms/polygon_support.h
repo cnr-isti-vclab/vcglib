@@ -112,6 +112,7 @@ namespace tri {
 	**/
 	static void ImportFromTriMesh( PolyMeshType & pm,  TriMeshType & tm){
 
+         vcg::tri::UpdateFlags<TriMeshType>::FaceClearV(tm);
 		// the vertices are the same, simply import them
 		int cnt = 0;
 		typename TriMeshType ::ConstVertexIterator tvi;
