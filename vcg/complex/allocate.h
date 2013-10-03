@@ -454,6 +454,10 @@ namespace tri {
 			*/
 			static FaceIterator AddFace(MeshType &m, VertexPointer v0, VertexPointer v1, VertexPointer v2)
 			{
+			  assert(m.vert.size()>0);
+			  assert(v0>=&m.vert.front() && v0<=&m.vert.back());
+			  assert(v1>=&m.vert.front() && v1<=&m.vert.back());
+			  assert(v2>=&m.vert.front() && v2<=&m.vert.back());
 				PointerUpdater<FacePointer> pu;
 				FaceIterator fi = AddFaces(m,1,pu);
 				fi->V(0)=v0;
