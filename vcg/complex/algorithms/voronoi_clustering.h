@@ -447,6 +447,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
     }
   }
 
+  // Final pass
   // search for a boundary face
   face::Pos<FaceType> pos,startPos;
   for(int i=0;i<3;++i)
@@ -456,9 +457,13 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
     }
   assert(pos.IsBorder());
   startPos=pos;
+  bool foundBorderSeed=false;
   FacePointer curBorderCorner = pos.F();
   do
   {
+    pos.NextB();
+    if(sources[pos.V()]==pos.V())
+      foundBorderSeed=true;
     assert(isBorderCorner(curBorderCorner,sources));
     if(isBorderCorner(pos.F(),sources))
       if(pos.F() != curBorderCorner)
@@ -469,10 +474,12 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
         int otherCorner1 = vertexIndCornerMap[curBorderCorner];
         VertexPointer corner0 = &(outMesh.vert[otherCorner0]);
         VertexPointer corner1 = &(outMesh.vert[otherCorner1]);
-        tri::Allocator<MeshType>::AddFace(outMesh,curSeed,corner0,corner1);
+        if(!foundBorderSeed)
+          tri::Allocator<MeshType>::AddFace(outMesh,curSeed,corner0,corner1);
+        foundBorderSeed=false;
         curBorderCorner=pos.F();
       }
-    pos.NextB();
+
   }
   while(pos!=startPos);
 
@@ -483,26 +490,16 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   tri::UpdateTopology<MeshType>::FaceFace(outMesh);
   tri::Clean<MeshType>::OrientCoherentlyMesh(outMesh,oriented,orientable);
   assert(orientable);
+  // check that the normal of the input mesh are consistent with the result
+  tri::UpdateNormal<MeshType>::PerVertexNormalizedPerFaceNormalized(outMesh);
+  tri::UpdateNormal<MeshType>::PerVertexNormalizedPerFaceNormalized(m);
+  if(seedVec[0]->N() * outMesh.vert[0].N() < 0 )
+    tri::Clean<MeshType>::FlipMesh(outMesh);
 
-  // 2) search and mark folded stuff
-  tri::UpdateNormal<MeshType>::PerFaceNormalized(outMesh);
-  tri::UpdateFlags<MeshType>::FaceClearV(outMesh);
-  for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi)
-  {
-    int badDiedralCnt=0;
-    for(int i=0;i<3;++i)
-      if(fi->N() * fi->FFp(i)->N() <0 ) badDiedralCnt++;
-
-    if(badDiedralCnt == 2) fi->SetV();
-  }
-  // 3) actual deleting
-  for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi)
-    if(fi->IsV())  Allocator<MeshType>::DeleteFace(outMesh,*fi);
-  tri::Allocator<MeshType>::CompactEveryVector(outMesh);
   tri::UpdateTopology<MeshType>::FaceFace(outMesh);
   tri::UpdateFlags<MeshType>::FaceBorderFromFF(outMesh);
 
-  // 4) set up faux bits
+  // 2) set up faux bits
   for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi)
     for(int i=0;i<3;++i)
     {
