@@ -24,7 +24,9 @@
 #include<vcg/complex/complex.h>
 #include<vcg/complex/algorithms/create/platonic.h>
 #include<wrap/io_trimesh/import_ply.h>
+#include<wrap/io_trimesh/export_off.h>
 #include<wrap/io_trimesh/export_ply.h>
+#include<wrap/io_trimesh/export_dxf.h>
 #include<vcg/complex/algorithms/point_sampling.h>
 #include<vcg/complex/algorithms/voronoi_clustering.h>
 
@@ -39,8 +41,8 @@ struct MyUsedTypes : public UsedTypes<	Use<MyVertex>   ::AsVertexType,
                                         Use<MyEdge>     ::AsEdgeType,
                                         Use<MyFace>     ::AsFaceType>{};
 
-class MyVertex  : public Vertex<MyUsedTypes,  vertex::Coord3f, vertex::Normal3f, vertex::VFAdj , vertex::Qualityf, vertex::Color4b, vertex::BitFlags  >{};
-class MyFace    : public Face< MyUsedTypes,   face::VertexRef, face::BitFlags, face::VFAdj > {};
+class MyVertex  : public Vertex<MyUsedTypes,  vertex::Coord3f, vertex::Normal3f, vertex::VFAdj, vertex::Qualityf, vertex::Color4b, vertex::BitFlags  >{};
+class MyFace    : public Face< MyUsedTypes,   face::VertexRef, face::Normal3f, face::BitFlags, face::VFAdj, face::FFAdj > {};
 //class MyEdge    : public Edge< MyUsedTypes> {};
 class MyEdge    : public Edge< MyUsedTypes, edge::VertexRef, edge::BitFlags>{};
 class MyMesh    : public tri::TriMesh< vector<MyVertex>, vector<MyEdge>, vector<MyFace>   > {};
@@ -64,7 +66,7 @@ int main( int argc, char **argv )
   MyMesh baseMesh, outMesh, polyMesh;
   if(argc < 4 )
   {
-    printf("Usage trimesh_voronoisampling mesh sampleNum variance iterNum\n");
+    printf("Usage trimesh_voronoisampling mesh sampleNum iterNum variance \n");
      return -1;
   }
   int sampleNum = atoi(argv[2]);
@@ -80,31 +82,67 @@ int main( int argc, char **argv )
   }
 
   tri::UpdateTopology<MyMesh>::VertexFace(baseMesh);
+  tri::UpdateFlags<MyMesh>::FaceBorderFromVF(baseMesh);
+
+  // -- Build the mesh with corners
+  MyMesh cornerMesh;
+  std::vector<Point3f> sampleVec;
+  tri::TrivialSampler<MyMesh> mps(sampleVec);
+  tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::VertexBorderCorner(baseMesh,mps,math::ToRad(150.f));
+  tri::Build(cornerMesh,sampleVec);
+
+  // -- Build the montercarlo sampling of the surface
+  MyMesh MontecarloSurfaceMesh;
+  sampleVec.clear();
+  tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::Montecarlo(baseMesh,mps,50000);
+  tri::Build(MontecarloSurfaceMesh,sampleVec);
+  tri::io::ExporterPLY<MyMesh>::Save(MontecarloSurfaceMesh,"MontecarloSurfaceMesh.ply");
+
+  // -- Prune the montecarlo sampling with poisson strategy using the precomputed corner vertexes.
+  tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskParam pp;
+  pp.preGenMesh = &cornerMesh;
+  pp.preGenFlag=true;
+  sampleVec.clear();
+  float radius = tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::ComputePoissonDiskRadius(baseMesh,sampleNum);
+  tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, MontecarloSurfaceMesh, radius, pp);
+  MyMesh PoissonMesh;
+  tri::Build(PoissonMesh,sampleVec);
+  tri::io::ExporterPLY<MyMesh>::Save(PoissonMesh,"PoissonMesh.ply");
+
   std::vector<MyVertex *> seedVec;
-  vector<Point3f> pointVec;
-  float radius=0;
+  tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,sampleVec,seedVec);
+  float eps = baseMesh.bbox.Diag()/10000.0f;
+  for(int i=0;i<cornerMesh.vert.size();++i)
+  {
+    for(int j=0;j<seedVec.size();++j)
+      if(Distance(cornerMesh.vert[i].P(),seedVec[j]->P()) < eps)
+        seedVec[j]->SetS();
+  }
+
   tri::VoronoiProcessingParameter vpp;
   vpp.deleteUnreachedRegionFlag=true;
-
-
-  tri::PoissonSampling<MyMesh>(baseMesh,pointVec,sampleNum,radius);
-  tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,pointVec,seedVec);
+  vpp.fixSelectedSeed=true;
 
   tri::EuclideanDistance<MyMesh> dd;
+  int t0=clock();
   tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::VoronoiRelaxing(baseMesh, seedVec, iterNum, dd, vpp);
-  tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::ConvertVoronoiDiagramToMesh(baseMesh,outMesh,polyMesh,seedVec, dd, vpp);
-  tri::io::ExporterPLY<MyMesh>::Save(outMesh,"out.ply",tri::io::Mask::IOM_VERTCOLOR );
+  int t1=clock();
+  tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::ConvertVoronoiDiagramToMesh(baseMesh,outMesh,polyMesh, seedVec, dd, vpp);
+  tri::io::ExporterPLY<MyMesh>::Save(baseMesh,"base.ply",tri::io::Mask::IOM_VERTCOLOR );
+  tri::io::ExporterPLY<MyMesh>::Save(outMesh,"out.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_FLAGS );
   tri::io::ExporterPLY<MyMesh>::Save(polyMesh,"poly.ply",tri::io::Mask::IOM_VERTCOLOR| tri::io::Mask::IOM_EDGEINDEX ,false);
 
-  tri::io::ImporterPLY<MyMesh>::Open(baseMesh,argv[1]);
-  tri::UpdateTopology<MyMesh>::VertexFace(baseMesh);
-  tri::PoissonSampling<MyMesh>(baseMesh,pointVec,sampleNum,radius,radiusVariance);
-  tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,pointVec,seedVec);
-  tri::IsotropicDistance<MyMesh> id(baseMesh,radiusVariance);
-  tri::VoronoiProcessing<MyMesh, tri::IsotropicDistance<MyMesh> >::VoronoiRelaxing(baseMesh, seedVec, iterNum,id,vpp);
-  tri::VoronoiProcessing<MyMesh, tri::IsotropicDistance<MyMesh> >::ConvertVoronoiDiagramToMesh(baseMesh,outMesh,polyMesh,seedVec, id, vpp);
+//  tri::io::ImporterPLY<MyMesh>::Open(baseMesh,argv[1]);
+//  tri::UpdateTopology<MyMesh>::VertexFace(baseMesh);
+//  tri::PoissonSampling<MyMesh>(baseMesh,pointVec,sampleNum,radius,radiusVariance);
+//  tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,pointVec,seedVec);
+//  tri::IsotropicDistance<MyMesh> id(baseMesh,radiusVariance);
+//  tri::VoronoiProcessing<MyMesh, tri::IsotropicDistance<MyMesh> >::VoronoiRelaxing(baseMesh, seedVec, iterNum,id,vpp);
+//  tri::VoronoiProcessing<MyMesh, tri::IsotropicDistance<MyMesh> >::ConvertVoronoiDiagramToMesh(baseMesh,outMesh,polyMesh,seedVec, id, vpp);
 
-  tri::io::ExporterPLY<MyMesh>::Save(outMesh,"outW.ply",tri::io::Mask::IOM_VERTCOLOR );
-  tri::io::ExporterPLY<MyMesh>::Save(polyMesh,"polyW.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_EDGEINDEX,false);
+//  tri::io::ExporterPLY<MyMesh>::Save(outMesh,"outW.ply",tri::io::Mask::IOM_VERTCOLOR );
+//  tri::io::ExporterPLY<MyMesh>::Save(polyMesh,"polyW.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_EDGEINDEX,false);
+//  tri::io::ExporterDXF<MyMesh>::Save(polyMesh,"outW.dxf");
+  printf("Completed! %i iterations in %f sec for %i seeds \n",iterNum,float(t1-t0)/CLOCKS_PER_SEC,seedVec.size());
   return 0;
 }
