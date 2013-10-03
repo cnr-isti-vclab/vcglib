@@ -433,8 +433,41 @@ static void VertexUniform(MetroMesh & m, VertexSampler &ps, int sampleNum)
 		ps.AddVert(*vertVec[i]);
 }
 
+/// \brief Sample all the border corner vertices
+///
+/// It assumes that the border flag have been set over the mesh.
+/// All the vertices on the border where the surface forms an angle smaller than the given threshold are sampled.
+///
+static void VertexBorderCorner(MetroMesh & m, VertexSampler &ps, float angleRad)
+{
+  typename MetroMesh::template PerVertexAttributeHandle  <float> angleSumH = tri::Allocator<MetroMesh>:: template GetPerVertexAttribute<float> (m);
+
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+    angleSumH[vi]=0;
+
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+  {
+    for(int i=0;i<3;++i)
+    {
+      angleSumH[fi->V(i)] += vcg::Angle(fi->P2(i) - fi->P0(i),fi->P1(i) - fi->P0(i));
+    }
+  }
+
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+  {
+    if(angleSumH[vi]<angleRad)
+        ps.AddVert(*vi);
+  }
+
+  tri::Allocator<MetroMesh>:: template DeletePerVertexAttribute<float> (m,angleSumH);
+}
+
 /// Sample all the crease vertices.
-/// e.g. all the vertices where there are at least three non faux edges.
+/// It assumes that the crease edges had been marked as non-faux edges
+/// for example by using
+/// tri::UpdateFlags<MeshType>::FaceFauxCrease(mesh,creaseAngleRad);
+/// Then it chooses all the vertices where there are at least three non faux edges.
+///
 static void VertexCrease(MetroMesh & m, VertexSampler &ps)
 {
   typedef typename UpdateTopology<MetroMesh>::PEdge SimpleEdge;
