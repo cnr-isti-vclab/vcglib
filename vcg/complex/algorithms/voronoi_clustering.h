@@ -142,9 +142,7 @@ static void VoronoiColoring(MeshType &m, std::vector<VertexType *> &seedVec, boo
     std::pair<float,VertexPointer> zz(0.0f,static_cast<VertexPointer>(NULL));
     std::vector< std::pair<float,VertexPointer> > regionArea(m.vert.size(),zz);
     std::vector<VertexPointer> borderVec;
-    std::vector<FacePointer> cornerVec;
-    std::vector<FacePointer> borderCornerVec;
-    GetAreaAndFrontier(m, sources,  regionArea, borderVec, cornerVec, borderCornerVec);
+    GetAreaAndFrontier(m, sources,  regionArea, borderVec);
     tri::Geodesic<MeshType>::Compute(m,borderVec);
   }
 
@@ -499,7 +497,24 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   tri::UpdateTopology<MeshType>::FaceFace(outMesh);
   tri::UpdateFlags<MeshType>::FaceBorderFromFF(outMesh);
 
-  // 2) set up faux bits
+  // 2) Remove Flips
+  tri::UpdateNormal<MeshType>::PerFaceNormalized(outMesh);
+  tri::UpdateFlags<MeshType>::FaceClearV(outMesh);
+  for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi)
+  {
+    int badDiedralCnt=0;
+    for(int i=0;i<3;++i)
+      if(fi->N() * fi->FFp(i)->N() <0 ) badDiedralCnt++;
+
+    if(badDiedralCnt == 2) fi->SetV();
+  }
+  for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi)
+    if(fi->IsV())  Allocator<MeshType>::DeleteFace(outMesh,*fi);
+  tri::Allocator<MeshType>::CompactEveryVector(outMesh);
+  tri::UpdateTopology<MeshType>::FaceFace(outMesh);
+  tri::UpdateFlags<MeshType>::FaceBorderFromFF(outMesh);
+
+  // 3) set up faux bits
   for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi)
     for(int i=0;i<3;++i)
     {
@@ -510,6 +525,11 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
     }
 
   //******************** END OF CLEANING ****************
+
+
+  // ******************* star to tri conversion *********
+
+
 
   // Now a plain conversion of the non faux edges into a polygonal mesh
   std::vector< typename tri::UpdateTopology<MeshType>::PEdge> EdgeVec;
