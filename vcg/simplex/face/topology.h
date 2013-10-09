@@ -481,7 +481,6 @@ void FFEdgeCollapse(MeshType &m, typename MeshType::FaceType &f, const int z)
   // Final Pass to update the vertex ptrs in all the involved faces
   for(size_t i=0;i<faceToBeChanged.size();++i) {
     assert(faceToBeChanged[i].V() == delV);
-    printf("Changing face %i of vert %i\n",tri::Index(m,faceToBeChanged[i].F()),tri::Index(m,faceToBeChanged[i].V()));
     faceToBeChanged[i].F()->V(faceToBeChanged[i].VInd()) =surV;
   }
 
