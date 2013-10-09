@@ -66,14 +66,14 @@ int main( int argc, char **argv )
   MyMesh baseMesh, outMesh, polyMesh;
   if(argc < 4 )
   {
-    printf("Usage trimesh_voronoisampling mesh sampleNum iterNum variance \n");
+    printf("Usage trimesh_voronoisampling mesh sampleNum iterNum edgeCollapsePerc \n");
      return -1;
   }
   int sampleNum = atoi(argv[2]);
   int iterNum   = atoi(argv[3]);
-  float radiusVariance = atof(argv[4]);
+  float collapseShortEdgePerc = atof(argv[4]);
 
-  printf("Reading %s and sampling %i points with %i iteration and using %f variance\n",argv[1],sampleNum,iterNum,radiusVariance);
+  printf("Reading %s and sampling %i points with %i iteration and using %f variance\n",argv[1],sampleNum,iterNum,collapseShortEdgePerc);
   int ret= tri::io::ImporterPLY<MyMesh>::Open(baseMesh,argv[1]);
   if(ret!=0)
   {
@@ -112,9 +112,9 @@ int main( int argc, char **argv )
   std::vector<MyVertex *> seedVec;
   tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,sampleVec,seedVec);
   float eps = baseMesh.bbox.Diag()/10000.0f;
-  for(int i=0;i<cornerMesh.vert.size();++i)
+  for(size_t i=0;i<cornerMesh.vert.size();++i)
   {
-    for(int j=0;j<seedVec.size();++j)
+    for(size_t j=0;j<seedVec.size();++j)
       if(Distance(cornerMesh.vert[i].P(),seedVec[j]->P()) < eps)
         seedVec[j]->SetS();
   }
@@ -122,6 +122,9 @@ int main( int argc, char **argv )
   tri::VoronoiProcessingParameter vpp;
   vpp.deleteUnreachedRegionFlag=true;
   vpp.fixSelectedSeed=true;
+  vpp.collapseShortEdge=true;
+  vpp.collapseShortEdgePerc=collapseShortEdgePerc;
+  vpp.triangulateRegion = true;
 
   tri::EuclideanDistance<MyMesh> dd;
   int t0=clock();
@@ -143,6 +146,6 @@ int main( int argc, char **argv )
 //  tri::io::ExporterPLY<MyMesh>::Save(outMesh,"outW.ply",tri::io::Mask::IOM_VERTCOLOR );
 //  tri::io::ExporterPLY<MyMesh>::Save(polyMesh,"polyW.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_EDGEINDEX,false);
 //  tri::io::ExporterDXF<MyMesh>::Save(polyMesh,"outW.dxf");
-  printf("Completed! %i iterations in %f sec for %i seeds \n",iterNum,float(t1-t0)/CLOCKS_PER_SEC,seedVec.size());
+  printf("Completed! %i iterations in %f sec for %lu seeds \n",iterNum,float(t1-t0)/CLOCKS_PER_SEC,seedVec.size());
   return 0;
 }
