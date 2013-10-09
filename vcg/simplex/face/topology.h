@@ -204,6 +204,7 @@ bool FFCorrectness(FaceType & f, const int e)
         The function cannot be applicated if the adjacencies among faces aren't defined.
         @param f the face to be detached
         @param e Index of the edge to be detached
+        \note it updates border flag and faux flags (the detached edge has it border bit flagged and faux bit cleared)
 */
 template <class FaceType>
 void FFDetachManifold(FaceType & f, const int e)
@@ -388,6 +389,12 @@ void SwapEdge(FaceType &f, const int z)
 	// swap V0(z) with V1(z)
 	std::swap(f.V0(z), f.V1(z));
 
+	// Managemnt of faux edge information (edge z is not affected)
+	bool Faux1 = f.IsF((z+1)%3);
+	bool Faux2 = f.IsF((z+2)%3);
+	if(Faux1) f.SetF((z+2)%3); else f.ClearF((z+2)%3);
+	if(Faux2) f.SetF((z+1)%3); else f.ClearF((z+1)%3);
+
 	if(f.HasFFAdjacency() && UpdateTopology)
 	{
 		// store information to preserve topology
@@ -424,6 +431,72 @@ void SwapEdge(FaceType &f, const int z)
 		f.FFp(z1) = g2p;
 		f.FFp(z2) = g1p;
 	}
+}
+
+/*! Perform a simple edge collapse
+ * The edge z is collapsed and the vertex V(z) is collapsed onto the vertex V1(Z)
+ * It assumes that the mesh is Manifold.
+ * If the mesh is not manifold it will crash (there will be faces with deleted vertexes around)
+ *           f12
+ *   surV ___________
+ *       |\          |
+ *       |  \    f1  |
+ *   f01 |    \ z1   | f11
+ *       | f0 z0\    |
+ *       |        \  |
+ *       |__________\|
+ *          f02      delV
+ */
+template <class MeshType>
+void FFEdgeCollapse(MeshType &m, typename MeshType::FaceType &f, const int z)
+{
+  typedef typename MeshType::FaceType FaceType;
+  typedef typename MeshType::VertexType VertexType;
+  typedef typename vcg::face::Pos< FaceType > PosType;
+  FaceType *f0 = &f;
+  int z0=z;
+  FaceType *f1 = f.FFp(z);
+  int z1=f.FFi(z);
+
+  VertexType *delV=f.V0(z);
+  VertexType *surV=f.V1(z);
+
+  // Collect faces that have to be updated
+  PosType delPos(f0,delV);
+  std::vector<PosType> faceToBeChanged;
+  VFOrderedStarFF(delPos,faceToBeChanged);
+
+  // Topology Stitching
+  FaceType *f01= 0,*f02= 0,*f11= 0,*f12= 0;
+  int       i01=-1, i02=-1, i11=-1, i12=-1;
+  // Note that the faux bit is preserved only if both of the edges to be stiched are faux.
+  bool f0Faux = f0->IsF((z0+1)%3) && f0->IsF((z0+2)%3);
+  bool f1Faux = f1->IsF((z1+1)%3) && f1->IsF((z1+2)%3);
+
+  if(!face::IsBorder(*f0,(z0+1)%3)) { f01 = f0->FFp((z0+1)%3); i01=f0->FFi((z0+1)%3); FFDetachManifold(*f0,(z0+1)%3);}
+  if(!face::IsBorder(*f0,(z0+2)%3)) { f02 = f0->FFp((z0+2)%3); i02=f0->FFi((z0+2)%3); FFDetachManifold(*f0,(z0+2)%3);}
+  if(!face::IsBorder(*f1,(z1+1)%3)) { f11 = f1->FFp((z1+1)%3); i11=f1->FFi((z1+1)%3); FFDetachManifold(*f1,(z1+1)%3);}
+  if(!face::IsBorder(*f1,(z1+2)%3)) { f12 = f1->FFp((z1+2)%3); i12=f1->FFi((z1+2)%3); FFDetachManifold(*f1,(z1+2)%3);}
+
+  // Final Pass to update the vertex ptrs in all the involved faces
+  for(size_t i=0;i<faceToBeChanged.size();++i) {
+    assert(faceToBeChanged[i].V() == delV);
+    printf("Changing face %i of vert %i\n",tri::Index(m,faceToBeChanged[i].F()),tri::Index(m,faceToBeChanged[i].V()));
+    faceToBeChanged[i].F()->V(faceToBeChanged[i].VInd()) =surV;
+  }
+
+  if(f01 && f02)
+  {
+    FFAttachManifold(f01,i01,f02,i02);
+    if(f0Faux) {f01->SetF(i01); f02->SetF(i02);}
+  }
+  if(f11 && f12)  {
+    FFAttachManifold(f11,i11,f12,i12);
+    if(f1Faux) {f11->SetF(i11); f12->SetF(i12);}
+  }
+  tri::Allocator<MeshType>::DeleteFace(m,*f0);
+  if(f1!=f0) tri::Allocator<MeshType>::DeleteFace(m,*f1);
+  tri::Allocator<MeshType>::DeleteVertex(m,*delV);
 }
 
 /*!
@@ -833,34 +906,64 @@ void VFExtendedStarVF(typename FaceType::VertexType* vp,
 
 /*!
  * \brief Compute the ordered set of faces adjacent to a given vertex using FF adiacency
-*
-*	\param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
-*	\param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
-*	\param edgeVec a std::vector of indexes filled with the indexes of the corresponding edges shared between the faces.
-*
+ *
+ * \param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
+ * \param posVec a std::vector of Pos filled with Pos arranged around the passed vertex.
+ *
 */
+template <class FaceType>
+void VFOrderedStarFF(Pos<FaceType> &startPos,
+                     std::vector<Pos<FaceType> > &posVec)
+{
+  posVec.clear();
+  bool foundBorder=false;
+  size_t firstBorderInd;
+  Pos<FaceType> curPos=startPos;
+  do
+  {
+    assert(curPos.IsManifold());
+    if(curPos.IsBorder() && !foundBorder) {
+      foundBorder=true;
+      firstBorderInd = posVec.size();
+    }
+    posVec.push_back(curPos);
+    curPos.FlipF();
+    curPos.FlipE();
+  } while(curPos!=startPos);
+  // if we found a border we visited each face exactly twice,
+  // and we have to extract the border-to-border pos sequence
+  if(foundBorder)
+  {
+    size_t halfSize=posVec.size()/2;
+    assert((posVec.size()%2)==0);
+    posVec.erase(posVec.begin()+firstBorderInd+1+halfSize, posVec.end());
+    posVec.erase(posVec.begin(),posVec.begin()+firstBorderInd+1);
+    assert(posVec.size()==halfSize);
+  }
+}
+
+/*!
+ * \brief Compute the ordered set of faces adjacent to a given vertex using FF adiacency
+ *
+ * \param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
+ * \param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
+ * \param edgeVec a std::vector of indexes filled with the indexes of the corresponding edges shared between the faces.
+ *
+*/
+
 template <class FaceType>
 void VFOrderedStarFF(Pos<FaceType> &startPos,
 						std::vector<FaceType*> &faceVec,
 						std::vector<int> &edgeVec)
 {
-  bool foundBorder=false;
-  Pos<FaceType> curPos=startPos;
-  do
+  std::vector<Pos<FaceType> > posVec;
+  VFOrderedStarFF(startPos,posVec);
+  faceVec.clear();
+  edgeVec.clear();
+  for(size_t i=0;i<posVec.size();++i)
   {
-    assert(curPos.IsManifold());
-    if(curPos.IsBorder()) foundBorder=true;
-
-    faceVec.push_back(curPos.F());
-    edgeVec.push_back(curPos.E());
-    curPos.FlipF();
-    curPos.FlipE();
-  } while(curPos!=startPos);
-  if(foundBorder)
-  {
-    assert((faceVec.size()%2)==0); // if we found a border we visited each face exactly twice.
-    faceVec.resize(faceVec.size()/2);
-    edgeVec.resize(edgeVec.size()/2);
+    faceVec.push_back(posVec[i].F());
+    edgeVec.push_back(posVec[i].E());
   }
 }
 
