@@ -66,11 +66,17 @@ struct VoronoiProcessingParameter
     areaThresholdPerc=0;
     deleteUnreachedRegionFlag=false;
     fixSelectedSeed=false;
+    collapseShortEdge=false;
+    collapseShortEdgePerc = 0.01f;
+    triangulateRegion=false;
   }
   int colorStrategy;
   float areaThresholdPerc;
   bool deleteUnreachedRegionFlag;
   bool fixSelectedSeed;
+  bool triangulateRegion;
+  bool collapseShortEdge;
+  float collapseShortEdgePerc;
 };
 
 template <class MeshType, class DistanceFunctor = EuclideanDistance<MeshType> >
@@ -513,33 +519,67 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   tri::Allocator<MeshType>::CompactEveryVector(outMesh);
   tri::UpdateTopology<MeshType>::FaceFace(outMesh);
   tri::UpdateFlags<MeshType>::FaceBorderFromFF(outMesh);
+  tri::UpdateFlags<MeshType>::VertexBorderFromFace(outMesh);
 
   // 3) set up faux bits
   for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi)
     for(int i=0;i<3;++i)
     {
-      int v0 = tri::Index(outMesh,fi->V0(i) );
-      int v1 = tri::Index(outMesh,fi->V1(i) );
+      size_t v0 = tri::Index(outMesh,fi->V0(i) );
+      size_t v1 = tri::Index(outMesh,fi->V1(i) );
       if (v0 < seedVec.size() && !(seedVec[v0]->IsB() && fi->IsB(i))) fi->SetF(i);
       if (v1 < seedVec.size() && !(seedVec[v1]->IsB() && fi->IsB(i))) fi->SetF(i);
     }
+
+  if(vpp.collapseShortEdge)
+  {
+    float distThr = m.bbox.Diag() * vpp.collapseShortEdgePerc;
+    for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi) if(!fi->IsD())
+    {
+      for(int i=0;i<3;++i)
+        if((Distance(fi->P0(i),fi->P1(i))<distThr) && !fi->IsF(i))
+        {
+          printf("Collapsing face %i:%i e%i \n",tri::Index(outMesh,*fi),tri::Index(outMesh,fi->FFp(i)),i);
+          if(!fi->V(i)->IsB())
+            face::FFEdgeCollapse(outMesh, *fi,i);
+          break;
+        }
+    }
+  }
 
   //******************** END OF CLEANING ****************
 
 
   // ******************* star to tri conversion *********
-
-
+  if(vpp.triangulateRegion)
+  {
+    for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi) if(!fi->IsD())
+    {
+      for(int i=0;i<3;++i)
+      {
+        bool b0 = fi->V0(i)->IsB();
+        bool b1 = fi->V1(i)->IsB();
+        if( ((b0  && b1) || (fi->IsF(i) && !b0 && !b1) ) &&
+            tri::Index(outMesh,fi->V(i))<seedVec.size())
+        {
+//          if(b0==b1)
+          if(!seedVec[tri::Index(outMesh,fi->V(i))]->IsS())
+            face::FFEdgeCollapse(outMesh, *fi,i);
+          break;
+        }
+      }
+    }
+  }
 
   // Now a plain conversion of the non faux edges into a polygonal mesh
   std::vector< typename tri::UpdateTopology<MeshType>::PEdge> EdgeVec;
   tri::UpdateTopology<MeshType>::FillUniqueEdgeVector(outMesh,EdgeVec,false);
   tri::UpdateTopology<MeshType>::AllocateEdge(outMesh);
 
-  for(int i=0;i<EdgeVec.size();++i)
+  for(size_t i=0;i<EdgeVec.size();++i)
   {
-    int e0 = tri::Index(outMesh,EdgeVec[i].v[0]);
-    int e1 = tri::Index(outMesh,EdgeVec[i].v[1]);
+    size_t e0 = tri::Index(outMesh,EdgeVec[i].v[0]);
+    size_t e1 = tri::Index(outMesh,EdgeVec[i].v[1]);
     assert(e0<outPoly.vert.size());
     tri::Allocator<MeshType>::AddEdge(outPoly,&(outPoly.vert[e0]),&(outPoly.vert[e1]));
   }
@@ -635,9 +675,11 @@ static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec, int
         seedMaxima[seedIndex].second=&*vi;
       }
     }
+    // update the seedvector with the new maxima (For the vertex not selected)
     std::vector<VertexPointer> newSeeds;
     for(size_t i=0;i<seedMaxima.size();++i)
       if(seedMaxima[i].second)
+      {
         if(vpp.fixSelectedSeed && sources[seedMaxima[i].second]->IsS())
         {
           newSeeds.push_back(sources[seedMaxima[i].second]);
@@ -647,8 +689,8 @@ static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec, int
         seedMaxima[i].second->C() = Color4b::Gray;
         if(regionArea[i].first >= areaThreshold)
           newSeeds.push_back(seedMaxima[i].second);
+        }
       }
-
 
     for(size_t i=0;i<frontierVec.size();++i)
       frontierVec[i]->C() = Color4b::Gray;
