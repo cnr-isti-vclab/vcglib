@@ -31,9 +31,9 @@
 #include <stack>
 
 // VCG headers
+#include <vcg/complex/complex.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
-#include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/space/index/spatial_hashing.h>
