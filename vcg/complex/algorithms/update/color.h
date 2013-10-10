@@ -287,7 +287,7 @@ It require FaceFace Adjacency becouse it relies on the output of the ConnecteCom
     std::vector< std::pair<int, typename MeshType::FacePointer> > CCV;
     int ScatterSize= std::min (100,tri::Clean<MeshType>::ConnectedComponents(m, CCV)); // number of random color to be used. Never use too many.
 
-    ConnectedIterator<MeshType> ci;
+    ConnectedComponentIterator<MeshType> ci;
     for(unsigned int i=0;i<CCV.size();++i)
     {
       Color4b BaseColor = Color4b::Scatter(ScatterSize, i%ScatterSize,.4f,.7f);

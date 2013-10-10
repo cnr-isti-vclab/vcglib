@@ -44,108 +44,102 @@
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/space/triangle3.h>
 
-
 namespace vcg {
-	namespace tri{
-template <class ConnectedMeshType>
-class ConnectedIterator
-{
-	public:
-			typedef ConnectedMeshType MeshType;
-			typedef typename MeshType::VertexType     VertexType;
-			typedef typename MeshType::VertexPointer  VertexPointer;
-			typedef typename MeshType::VertexIterator VertexIterator;
-			typedef	typename MeshType::ScalarType			ScalarType;
-			typedef typename MeshType::FaceType       FaceType;
-			typedef typename MeshType::FacePointer    FacePointer;
-			typedef typename MeshType::FaceIterator   FaceIterator;
-			typedef typename MeshType::ConstFaceIterator   ConstFaceIterator;
-			typedef typename MeshType::FaceContainer  FaceContainer;
+namespace tri{
 
+template <class ConnectedMeshType>
+class ConnectedComponentIterator
+{
+public:
+  typedef ConnectedMeshType MeshType;
+  typedef typename MeshType::VertexType     VertexType;
+  typedef typename MeshType::VertexPointer  VertexPointer;
+  typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::ScalarType     ScalarType;
+  typedef typename MeshType::FaceType       FaceType;
+  typedef typename MeshType::FacePointer    FacePointer;
+  typedef typename MeshType::FaceIterator   FaceIterator;
+  typedef typename MeshType::ConstFaceIterator   ConstFaceIterator;
+  typedef typename MeshType::FaceContainer  FaceContainer;
 
 public:
- void operator ++()
- {
+  void operator ++()
+  {
     FacePointer fpt=sf.top();
-  sf.pop();
+    sf.pop();
     for(int j=0;j<3;++j)
-        if( !face::IsBorder(*fpt,j) )
-            {
-                FacePointer l=fpt->FFp(j);
+      if( !face::IsBorder(*fpt,j) )
+      {
+        FacePointer l=fpt->FFp(j);
         if( !tri::IsMarked(*mp,l) )
-                {
+        {
           tri::Mark(*mp,l);
-                    sf.push(l);
-                }
-            }
-}
+          sf.push(l);
+        }
+      }
+  }
 
- void start(MeshType &m, FacePointer p)
- {
-  mp=&m;
-  while(!sf.empty()) sf.pop();
-  UnMarkAll(m);
-  assert(p);
-  assert(!p->IsD());
-  tri::Mark(m,p);
+  void start(MeshType &m, FacePointer p)
+  {
+    mp=&m;
+    while(!sf.empty()) sf.pop();
+    UnMarkAll(m);
+    assert(p);
+    assert(!p->IsD());
+    tri::Mark(m,p);
     sf.push(p);
- }
- bool completed() {
-   return sf.empty();
- }
+  }
 
- FacePointer operator *()
- {
-   return sf.top();
- }
+  bool completed() {
+    return sf.empty();
+  }
+
+  FacePointer operator *()
+  {
+    return sf.top();
+  }
 private:
   std::stack<FacePointer> sf;
   MeshType *mp;
 };
 
 
-		///
-		/** \addtogroup trimesh */
-		/*@{*/
-	/// Class of static functions to clean//restore meshs.
-		template <class CleanMeshType>
-		class Clean
-		{
+///
+/** \addtogroup trimesh */
+/*@{*/
+/// Class of static functions to clean//restore meshs.
+template <class CleanMeshType>
+class Clean
+{
 
-		public:
-			typedef CleanMeshType MeshType;
-			typedef typename MeshType::VertexType     VertexType;
-			typedef typename MeshType::VertexPointer  VertexPointer;
-			typedef typename MeshType::VertexIterator VertexIterator;
-			typedef typename MeshType::ConstVertexIterator ConstVertexIterator;
-		  typedef typename MeshType::EdgeIterator   EdgeIterator;
-		  typedef typename MeshType::EdgePointer  EdgePointer;
-			typedef	typename MeshType::CoordType			CoordType;
-			typedef	typename MeshType::ScalarType			ScalarType;
-			typedef typename MeshType::FaceType       FaceType;
-			typedef typename MeshType::FacePointer    FacePointer;
-			typedef typename MeshType::FaceIterator   FaceIterator;
-			typedef typename MeshType::ConstFaceIterator   ConstFaceIterator;
-			typedef typename MeshType::FaceContainer  FaceContainer;
-	  typedef typename vcg::Box3<ScalarType>  Box3Type;
+public:
+  typedef CleanMeshType MeshType;
+  typedef typename MeshType::VertexType     VertexType;
+  typedef typename MeshType::VertexPointer  VertexPointer;
+  typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::ConstVertexIterator ConstVertexIterator;
+  typedef typename MeshType::EdgeIterator   EdgeIterator;
+  typedef typename MeshType::EdgePointer  EdgePointer;
+  typedef typename MeshType::CoordType   CoordType;
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef typename MeshType::FaceType       FaceType;
+  typedef typename MeshType::FacePointer    FacePointer;
+  typedef typename MeshType::FaceIterator   FaceIterator;
+  typedef typename MeshType::ConstFaceIterator   ConstFaceIterator;
+  typedef typename MeshType::FaceContainer  FaceContainer;
+  typedef typename vcg::Box3<ScalarType>  Box3Type;
 
-			typedef GridStaticPtr<FaceType, ScalarType > TriMeshGrid;
-			typedef Point3<ScalarType> Point3x;
+  typedef GridStaticPtr<FaceType, ScalarType > TriMeshGrid;
+  typedef Point3<ScalarType> Point3x;
 
-			//TriMeshGrid   gM;
-			//FaceIterator fi;
-			//FaceIterator gi;
-			//vcg::face::Pos<FaceType> he;
-			//vcg::face::Pos<FaceType> hei;
-
-			/* classe di confronto per l'algoritmo di eliminazione vertici duplicati*/
-			class RemoveDuplicateVert_Compare{
-			public:
-				inline bool operator()(VertexPointer const &a, VertexPointer const &b)
-				{
-					return (*a).cP() < (*b).cP();
-				}
-			};
+  /* classe di confronto per l'algoritmo di eliminazione vertici duplicati*/
+  class RemoveDuplicateVert_Compare{
+  public:
+    inline bool operator()(VertexPointer const &a, VertexPointer const &b)
+    {
+      return (*a).cP() < (*b).cP();
+    }
+  };
 
 
 			/** This function removes all duplicate vertices of the mesh by looking only at their spatial positions.
@@ -627,7 +621,7 @@ private:
 			static bool IsBitQuadOnly(const MeshType &m)
 	  {
 		typedef typename MeshType::FaceType F;
-		if (!HasPerFaceFlags(m)) return false;
+			  tri::RequirePerFaceFlags(m);
 				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
 		  unsigned int tmp = fi->Flags()&(F::FAUX0|F::FAUX1|F::FAUX2);
 		  if ( tmp != F::FAUX0 && tmp != F::FAUX1 && tmp != F::FAUX2) return false;
@@ -636,207 +630,187 @@ private:
 	  }
 
 
-	  /**
-			 * Is the mesh only composed by triangles? (non polygonal faces)
-			 */
-	  static bool IsBitTriOnly(const MeshType &m)
-			{
-		if (!HasPerFaceFlags(m)) return true;
-				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) {
-		  if (
-			!fi->IsD()  &&  fi->IsAnyF()
-		  ) return false;
-		}
-		return true;
-	  }
+  /**
+* Is the mesh only composed by triangles? (non polygonal faces)
+*/
+  static bool IsBitTriOnly(const MeshType &m)
+  {
+    tri::RequirePerFaceFlags(m);
+    for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) {
+      if ( !fi->IsD()  &&  fi->IsAnyF() ) return false;
+    }
+    return true;
+  }
 
-      static bool IsBitPolygonal(const MeshType &m){
-        return !IsBitTriOnly(m);
-      }
+  static bool IsBitPolygonal(const MeshType &m){
+    return !IsBitTriOnly(m);
+  }
 
-	  /**
-			 * Is the mesh only composed by quadrilaterals and triangles? (no pentas, etc)
-			 */
-			static bool IsBitTriQuadOnly(const MeshType &m)
-	  {
-		typedef typename MeshType::FaceType F;
-		if (!HasPerFaceFlags(m)) return false;
-				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
-		  unsigned int tmp = fi->cFlags()&(F::FAUX0|F::FAUX1|F::FAUX2);
-		  if ( tmp!=F::FAUX0 && tmp!=F::FAUX1 && tmp!=F::FAUX2 && tmp!=0 ) return false;
-		}
-		return true;
-	  }
+  /**
+   * Is the mesh only composed by quadrilaterals and triangles? (no pentas, etc)
+   * It assumes that the bits are consistent. In that case there can be only a single faux edge.
+   */
+  static bool IsBitTriQuadOnly(const MeshType &m)
+  {
+    tri::RequirePerFaceFlags(m);
+    typedef typename MeshType::FaceType F;
+    for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
+      unsigned int tmp = fi->cFlags()&(F::FAUX0|F::FAUX1|F::FAUX2);
+      if ( tmp!=F::FAUX0 && tmp!=F::FAUX1 && tmp!=F::FAUX2 && tmp!=0 ) return false;
+    }
+    return true;
+  }
 
-			/**
-			 * How many quadrilaterals?
-			 */
-			static int CountBitQuads(const MeshType &m)
-	  {
-		if (!HasPerFaceFlags(m)) return 0;
-		typedef typename MeshType::FaceType F;
-		int count=0;
-				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
-		  unsigned int tmp = fi->cFlags()&(F::FAUX0|F::FAUX1|F::FAUX2);
-		  if ( tmp==F::FAUX0 || tmp==F::FAUX1 || tmp==F::FAUX2) count++;
-		}
-		return count / 2;
-	  }
+  /**
+   * How many quadrilaterals?
+   * It assumes that the bits are consistent. In that case we count the tris with a single faux edge and divide by two.
+   */
+  static int CountBitQuads(const MeshType &m)
+  {
+    tri::RequirePerFaceFlags(m);
+    typedef typename MeshType::FaceType F;
+    int count=0;
+    for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
+      unsigned int tmp = fi->cFlags()&(F::FAUX0|F::FAUX1|F::FAUX2);
+      if ( tmp==F::FAUX0 || tmp==F::FAUX1 || tmp==F::FAUX2) count++;
+    }
+    return count / 2;
+  }
 
-			/**
-			 * How many triangles? (non polygonal faces)
-			 */
-			static int CountBitTris(const MeshType &m)
-	  {
-		if (!HasPerFaceFlags(m)) return m.fn;
-		int count=0;
-				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
-		  if (!(fi->IsAnyF())) count++;
-		}
-		return count;
-	  }
+  /**
+   * How many triangles? (non polygonal faces)
+   */
+  static int CountBitTris(const MeshType &m)
+  {
+    tri::RequirePerFaceFlags(m);
+    int count=0;
+    for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD()) {
+      if (!(fi->IsAnyF())) count++;
+    }
+    return count;
+  }
 
-			/**
-			 * How many polygons of any kind? (including triangles)
-			 */
-			static int CountBitPolygons(const MeshType &m)
-			{
-		if (!HasPerFaceFlags(m)) return m.fn;
-		typedef typename MeshType::FaceType F;
-		int count = 0;
-				for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD())  {
-		  if (fi->IsF(0)) count++;
-		  if (fi->IsF(1)) count++;
-		  if (fi->IsF(2)) count++;
-		}
-		return m.fn - count/2;
-	  }
+  /**
+   * How many polygons of any kind? (including triangles)
+   * it assumes that there are no faux vertexes (e.g vertices completely surrounded by faux edges)
+   */
+  static int CountBitPolygons(const MeshType &m)
+  {
+    tri::RequirePerFaceFlags(m);
+    int count = 0;
+    for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD())  {
+      if (fi->IsF(0)) count++;
+      if (fi->IsF(1)) count++;
+      if (fi->IsF(2)) count++;
+    }
+    return m.fn - count/2;
+  }
 
-		/**
-			* The number of polygonal faces is
-			*  FN - EN_f (each faux edge hides exactly one triangular face or in other words a polygon of n edges has n-3 faux edges.)
-			* In the general case where a The number of polygonal faces is
-			*	 FN - EN_f + VN_f
-			*	where:
-			*	 EN_f is the number of faux edges.
-			*	 VN_f is the number of faux vertices (e.g vertices completely surrounded by faux edges)
-	  * as a intuitive proof think to a internal vertex that is collapsed onto a border of a polygon:
-			* it deletes 2 faces, 1 faux edges and 1 vertex so to keep the balance you have to add back the removed vertex.
-			*/
-			static int CountBitLargePolygons(MeshType &m)
-			{
-
-				UpdateFlags<MeshType>::VertexSetV(m);
-				// First loop Clear all referenced vertices
-				for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-						if (!fi->IsD())
-								for(int i=0;i<3;++i) fi->V(i)->ClearV();
-
-
-        // Second Loop, count (twice) faux edges and mark all vertices touched by non faux edges (e.g vertexes on the boundary of a polygon)
-                if (!HasPerFaceFlags(m)) return m.fn;
-        typedef typename MeshType::FaceType F;
-        int countE = 0;
-                for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-                        if (!fi->IsD())  {
-                                for(int i=0;i<3;++i)
-                                {
-                                    if (fi->IsF(i))
-                                            countE++;
-                                    else
-                                    {
-                                            fi->V0(i)->SetV();
-                                            fi->V1(i)->SetV();
-                                    }
-                                }
-                }
-                // Third Loop, count the number of referenced vertexes that are completely surrounded by faux edges.
-
-		int countV = 0;
-				for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-						if (!vi->IsD() && !vi->IsV()) countV++;
-
-        return m.fn - countE/2 + countV ;
-      }
+  /**
+  * The number of polygonal faces is
+  *  FN - EN_f (each faux edge hides exactly one triangular face or in other words a polygon of n edges has n-3 faux edges.)
+  * In the general case where a The number of polygonal faces is
+  *	 FN - EN_f + VN_f
+  *	where:
+  *	 EN_f is the number of faux edges.
+  *	 VN_f is the number of faux vertices (e.g vertices completely surrounded by faux edges)
+  * as a intuitive proof think to a internal vertex that is collapsed onto a border of a polygon:
+  * it deletes 2 faces, 1 faux edges and 1 vertex so to keep the balance you have to add back the removed vertex.
+  */
+  static int CountBitLargePolygons(MeshType &m)
+  {
+    tri::RequirePerFaceFlags(m);
+    UpdateFlags<MeshType>::VertexSetV(m);
+    // First loop Clear all referenced vertices
+    for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+      if (!fi->IsD())
+        for(int i=0;i<3;++i) fi->V(i)->ClearV();
 
 
-	  /**
-			 * Checks that the mesh has consistent per-face faux edges
-			 * (the ones that merges triangles into larger polygons).
-			 * A border edge should never be faux, and faux edges should always be
-			 * reciprocated by another faux edges.
-			 * It requires FF adjacency.
-			 */
-	  static bool HasConsistentPerFaceFauxFlag(const MeshType &m)
-	  {
-		RequireFFAdjacency(m);
-		RequirePerFaceFlags(m);
-
-        for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-          if(!(*fi).IsD())
-            for (int k=0; k<3; k++)
-                      if( fi->IsF(k) != fi->cFFp(k)->IsF(fi->cFFi(k)) ) {
-                return false;
-              }
-              // non-reciprocal faux edge!
-              // (OR: border faux edge, which is likewise inconsistent)
-
-        return true;
-      }
-
-      static bool HasConsistentEdges(const MeshType &m)
-      {
-        RequirePerFaceFlags(m);
-
-        for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-          if(!(*fi).IsD())
-            for (int k=0; k<3; k++)
-                        {
-                      VertexType *v0=(*fi).V(0);
-                            VertexType *v1=(*fi).V(1);
-                            VertexType *v2=(*fi).V(2);
-                            if ((v0==v1)||(v0==v2)||(v1==v2))
-                                return false;
-             }
-
-        return true;
-      }
-
-      /**
-       * Count the number of non manifold edges in a polylinemesh, e.g. the edges where there are more than 2 incident faces.
-       *
-       */
-      static int CountNonManifoldEdgeEE( MeshType & m, bool SelectFlag=false)
-      {
-        assert(m.fn == 0 && m.en >0); // just to be sure we are using an edge mesh...
-        RequireEEAdjacency(m);
-        tri::UpdateTopology<MeshType>::EdgeEdge(m);
-
-        if(SelectFlag) UpdateSelection<MeshType>::VertexClear(m);
-
-        int nonManifoldCnt=0;
-        SimpleTempData<typename MeshType::VertContainer, int > TD(m.vert,0);
-
-        // First Loop, just count how many faces are incident on a vertex and store it in the TemporaryData Counter.
-        EdgeIterator ei;
-        for (ei = m.edge.begin(); ei != m.edge.end(); ++ei)	if (!ei->IsD())
+    // Second Loop, count (twice) faux edges and mark all vertices touched by non faux edges
+    // (e.g vertexes on the boundary of a polygon)
+    int countE = 0;
+    for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+      if (!fi->IsD())  {
+        for(int i=0;i<3;++i)
         {
-          TD[(*ei).V(0)]++;
-          TD[(*ei).V(1)]++;
-        }
-
-        tri::UpdateFlags<MeshType>::VertexClearV(m);
-        // Second Loop, Check that each vertex have been seen 1 or 2 times.
-        for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)	if (!vi->IsD())
-        {
-          if( TD[vi] >2 )
+          if (fi->IsF(i))
+            countE++;
+          else
           {
-            if(SelectFlag) (*vi).SetS();
-            nonManifoldCnt++;
+            fi->V0(i)->SetV();
+            fi->V1(i)->SetV();
           }
         }
-        return nonManifoldCnt;
       }
+    // Third Loop, count the number of referenced vertexes that are completely surrounded by faux edges.
+
+    int countV = 0;
+    for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+      if (!vi->IsD() && !vi->IsV()) countV++;
+
+    return m.fn - countE/2 + countV ;
+  }
+
+
+  /**
+  * Checks that the mesh has consistent per-face faux edges
+  * (the ones that merges triangles into larger polygons).
+  * A border edge should never be faux, and faux edges should always be
+  * reciprocated by another faux edges.
+  * It requires FF adjacency.
+  */
+  static bool HasConsistentPerFaceFauxFlag(const MeshType &m)
+  {
+    RequireFFAdjacency(m);
+    RequirePerFaceFlags(m);
+
+    for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+      if(!(*fi).IsD())
+        for (int k=0; k<3; k++)
+          if( ( fi->IsF(k) != fi->cFFp(k)->IsF(fi->cFFi(k)) ) ||
+              ( fi->IsF(k) && face::IsBorder(*fi,k)) )
+          {
+            return false;
+          }
+    return true;
+  }
+
+  /**
+   * Count the number of non manifold edges in a polylinemesh, e.g. the edges where there are more than 2 incident faces.
+   *
+   */
+  static int CountNonManifoldEdgeEE( MeshType & m, bool SelectFlag=false)
+  {
+    assert(m.fn == 0 && m.en >0); // just to be sure we are using an edge mesh...
+    RequireEEAdjacency(m);
+    tri::UpdateTopology<MeshType>::EdgeEdge(m);
+
+    if(SelectFlag) UpdateSelection<MeshType>::VertexClear(m);
+
+    int nonManifoldCnt=0;
+    SimpleTempData<typename MeshType::VertContainer, int > TD(m.vert,0);
+
+    // First Loop, just count how many faces are incident on a vertex and store it in the TemporaryData Counter.
+    EdgeIterator ei;
+    for (ei = m.edge.begin(); ei != m.edge.end(); ++ei)	if (!ei->IsD())
+    {
+      TD[(*ei).V(0)]++;
+      TD[(*ei).V(1)]++;
+    }
+
+    tri::UpdateFlags<MeshType>::VertexClearV(m);
+    // Second Loop, Check that each vertex have been seen 1 or 2 times.
+    for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)	if (!vi->IsD())
+    {
+      if( TD[vi] >2 )
+      {
+        if(SelectFlag) (*vi).SetS();
+        nonManifoldCnt++;
+      }
+    }
+    return nonManifoldCnt;
+  }
 
       /**
        * Count the number of non manifold edges in a mesh, e.g. the edges where there are more than 2 incident faces.
@@ -1572,7 +1546,7 @@ private:
       */
       static bool HasConsistentPerWedgeTexCoord(MeshType &m)
       {
-        if(!HasPerWedgeTexCoord(m)) return false;
+        tri::RequirePerFaceWedgeTexCoord(m);
 
         for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
           if(!(*fi).IsD())
@@ -1585,20 +1559,20 @@ private:
         return true;
       }
 
-		/**
-		Simple check that there are no face with all collapsed tex coords.
-		*/
-		static bool HasZeroTexCoordFace(MeshType &m)
-		{
-			if(!HasPerWedgeTexCoord(m)) return false;
+      /**
+  Simple check that there are no face with all collapsed tex coords.
+  */
+      static bool HasZeroTexCoordFace(MeshType &m)
+      {
+        tri::RequirePerFaceWedgeTexCoord(m);
 
-			for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-				if(!(*fi).IsD())
-				{
-					if( (*fi).WT(0).P() == (*fi).WT(1).P() && (*fi).WT(0).P() == (*fi).WT(2).P() ) return false;
-				}
-			return true;
-		}
+        for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+          if(!(*fi).IsD())
+          {
+            if( (*fi).WT(0).P() == (*fi).WT(1).P() && (*fi).WT(0).P() == (*fi).WT(2).P() ) return false;
+          }
+        return true;
+      }
 
 
   /**
@@ -1642,51 +1616,51 @@ private:
 
 
 /**
-	  This function merge all the vertices that are closer than the given radius
+      This function merge all the vertices that are closer than the given radius
 */
-static int MergeCloseVertex(MeshType &m, const ScalarType radius)
-	{
-			int mergedCnt=0;
-						mergedCnt = ClusterVertex(m,radius);
-			RemoveDuplicateVertex(m,true);
-			return mergedCnt;
-	}
+  static int MergeCloseVertex(MeshType &m, const ScalarType radius)
+  {
+    int mergedCnt=0;
+    mergedCnt = ClusterVertex(m,radius);
+    RemoveDuplicateVertex(m,true);
+    return mergedCnt;
+  }
 
-static int ClusterVertex(MeshType &m, const ScalarType radius)
-    {
-      if(m.vn==0) return 0;
-      // some spatial indexing structure does not work well with deleted vertices...
-      tri::Allocator<MeshType>::CompactVertexVector(m);
-      typedef vcg::SpatialHashTable<VertexType, ScalarType> SampleSHT;
-            SampleSHT sht;
-            tri::VertTmark<MeshType> markerFunctor;
-            typedef vcg::vertex::PointDistanceFunctor<ScalarType> VDistFunct;
-            std::vector<VertexType*> closests;
-            int mergedCnt=0;
-      sht.Set(m.vert.begin(), m.vert.end());
-            UpdateFlags<MeshType>::VertexClearV(m);
-            for(VertexIterator viv = m.vert.begin(); viv!= m.vert.end(); ++viv)
-                if(!(*viv).IsD() && !(*viv).IsV())
-                    {
-                        (*viv).SetV();
-                        Point3<ScalarType> p = viv->cP();
-                        Box3<ScalarType> bb(p-Point3<ScalarType>(radius,radius,radius),p+Point3<ScalarType>(radius,radius,radius));
-                        GridGetInBox(sht, markerFunctor, bb, closests);
-                        // qDebug("Vertex %i has %i closest", &*viv - &*m.vert.begin(),closests.size());
-            for(size_t i=0; i<closests.size(); ++i)
-                        {
-                            ScalarType dist = Distance(p,closests[i]->cP());
-                            if(dist < radius && !closests[i]->IsV())
-                                                {
-//													printf("%f %f \n",dist,radius);
-													mergedCnt++;
-													closests[i]->SetV();
-													closests[i]->P()=p;
-												}
-						}
-					}
-			return mergedCnt;
-	}
+  static int ClusterVertex(MeshType &m, const ScalarType radius)
+  {
+    if(m.vn==0) return 0;
+    // some spatial indexing structure does not work well with deleted vertices...
+    tri::Allocator<MeshType>::CompactVertexVector(m);
+    typedef vcg::SpatialHashTable<VertexType, ScalarType> SampleSHT;
+    SampleSHT sht;
+    tri::VertTmark<MeshType> markerFunctor;
+    typedef vcg::vertex::PointDistanceFunctor<ScalarType> VDistFunct;
+    std::vector<VertexType*> closests;
+    int mergedCnt=0;
+    sht.Set(m.vert.begin(), m.vert.end());
+    UpdateFlags<MeshType>::VertexClearV(m);
+    for(VertexIterator viv = m.vert.begin(); viv!= m.vert.end(); ++viv)
+      if(!(*viv).IsD() && !(*viv).IsV())
+      {
+        (*viv).SetV();
+        Point3<ScalarType> p = viv->cP();
+        Box3<ScalarType> bb(p-Point3<ScalarType>(radius,radius,radius),p+Point3<ScalarType>(radius,radius,radius));
+        GridGetInBox(sht, markerFunctor, bb, closests);
+        // qDebug("Vertex %i has %i closest", &*viv - &*m.vert.begin(),closests.size());
+        for(size_t i=0; i<closests.size(); ++i)
+        {
+          ScalarType dist = Distance(p,closests[i]->cP());
+          if(dist < radius && !closests[i]->IsV())
+          {
+            //													printf("%f %f \n",dist,radius);
+            mergedCnt++;
+            closests[i]->SetV();
+            closests[i]->P()=p;
+          }
+        }
+      }
+    return mergedCnt;
+  }
 
 
 static std::pair<int,int>  RemoveSmallConnectedComponentsSize(MeshType &m, int maxCCSize)
@@ -1695,7 +1669,7 @@ static std::pair<int,int>  RemoveSmallConnectedComponentsSize(MeshType &m, int m
       int TotalCC=ConnectedComponents(m, CCV);
             int DeletedCC=0;
 
-      ConnectedIterator<MeshType> ci;
+      ConnectedComponentIterator<MeshType> ci;
       for(unsigned int i=0;i<CCV.size();++i)
       {
         std::vector<typename MeshType::FacePointer> FPV;
@@ -1721,7 +1695,7 @@ static std::pair<int,int> RemoveSmallConnectedComponentsDiameter(MeshType &m, Sc
   std::vector< std::pair<int, typename MeshType::FacePointer> > CCV;
       int TotalCC=ConnectedComponents(m, CCV);
       int DeletedCC=0;
-      tri::ConnectedIterator<MeshType> ci;
+      tri::ConnectedComponentIterator<MeshType> ci;
       for(unsigned int i=0;i<CCV.size();++i)
       {
         Box3f bb;
@@ -1751,7 +1725,7 @@ static std::pair<int,int> RemoveHugeConnectedComponentsDiameter(MeshType &m, Sca
   std::vector< std::pair<int, typename MeshType::FacePointer> > CCV;
       int TotalCC=ConnectedComponents(m, CCV);
       int DeletedCC=0;
-      tri::ConnectedIterator<MeshType> ci;
+      tri::ConnectedComponentIterator<MeshType> ci;
       for(unsigned int i=0;i<CCV.size();++i)
       {
         Box3f bb;
