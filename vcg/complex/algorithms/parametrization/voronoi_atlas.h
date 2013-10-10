@@ -138,10 +138,11 @@ public:
     int st1=clock();
     pp.vas.samplingTime+= st1-st0;
     qDebug("Sampling created a new mesh of %lu points\n",PoissonSamples.size());
+    EuclideanDistance<VoroMesh> edFunc;
     std::vector<VertexType *> seedVec;
     tri::VoronoiProcessing<VoroMesh>::SeedToVertexConversion(m,PoissonSamples,seedVec);
     tri::UpdateTopology<VoroMesh>::VertexFace(m);
-    tri::VoronoiProcessing<VoroMesh>::ComputePerVertexSources(m,seedVec);
+    tri::VoronoiProcessing<VoroMesh>::ComputePerVertexSources(m,seedVec,edFunc);
     tri::VoronoiProcessing<VoroMesh>::FaceAssociateRegion(m);
     tri::VoronoiProcessing<VoroMesh>::VoronoiColoring(m,seedVec,true);
     std::vector<VoroMesh *> badRegionVec;
