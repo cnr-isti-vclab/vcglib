@@ -27,6 +27,7 @@
 #include <map>
 #include <set>
 #include <vcg/container/simple_temporary_data.h>
+#include <vcg/space/color4.h>
 
 namespace vcg {
 
