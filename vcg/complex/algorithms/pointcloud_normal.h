@@ -73,11 +73,15 @@ public:
           if(!m.vert[neightId].IsV())
           {
             heap.push_back(WArc(vp,&(m.vert[neightId])));
-            if(heap.back().w < 0.3f) heap.pop_back();
+            //std::push_heap(heap.begin(),heap.end());
+            if(heap.back().w < 0.3f) 
+				heap.pop_back();
+			else
+				std::push_heap(heap.begin(),heap.end());
           }
         }
     }
-    std::push_heap(heap.begin(),heap.end());
+    //std::push_heap(heap.begin(),heap.end());
   }
   /*! \brief parameters for the normal generation
    */
