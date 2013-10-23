@@ -60,6 +60,7 @@ namespace io
 			//capability |= MeshModel::IOM_CAMERA;
 
 			//vert
+			capability |= Mask::IOM_VERTCOORD;
 			capability |= Mask::IOM_VERTNORMAL;
 			capability |= Mask::IOM_VERTTEXCOORD;
 			capability |= Mask::IOM_VERTCOLOR;

@@ -27,6 +27,7 @@
 //importer for collada's files
 
 #include <wrap/dae/util_dae.h>
+#include <wrap/dae/poly_triangulator.h>
 
 // uncomment one of the following line to enable the Verbose debugging for the parsing
 //#define QDEBUG if(1) ; else {assert(0);} 
@@ -119,20 +120,29 @@ namespace io {
 			return indtx;
 		}
 
-		static int VertexColorAttribute(ColladaMesh& m,const QStringList face,const QStringList wc,const QDomNode wcsrc,const int meshfaceind,const int faceind, const int vertind,const int component)
-		{
-			int indcl = -1;
-			if (!wcsrc.isNull())
-			{
-				indcl = face.at(faceind).toInt();
-				assert(indcl * 3 < wc.size());
-				m.vert[vertind].C() = vcg::Color4b(	(unsigned char)(wc.at(indcl * 3).toFloat()*255.0),
-																													(unsigned char)(wc.at(indcl * 3 + 1).toFloat()*255.0),
-																													(unsigned char)(wc.at(indcl * 3 + 2).toFloat()*255.0),
-																													1.0);
-			}
-			return indcl;
-		}
+		//static int VertexColorAttribute(ColladaMesh& m,const QStringList face,const QStringList wc,const QDomNode wcsrc,const int meshfaceind,const int faceind, const int vertind,const int component)
+		//{
+		//	int indcl = -1;
+		//	if (!wcsrc.isNull())
+		//	{
+		//		indcl = face.at(faceind).toInt();
+		//		assert(indcl * component < wc.size());
+		//		assert((component == 4) || (component == 3));
+		//		vcg::Color4b c;
+		//		if (component == 3)
+		//			c[3] = 255;
+		//		for(unsigned int ii = 0;ii < component;++ii)
+		//			c[ii] = (unsigned char)(wc.at(indcl * component + ii).toFloat()*255.0);
+		//		/*m.vert[vertind].C() = vcg::Color4b(	(unsigned char)(wc.at(indcl * component).toFloat()*255.0),
+		//											(unsigned char)(wc.at(indcl * component + 1).toFloat()*255.0),
+		//											(unsigned char)(wc.at(indcl * component + 2).toFloat()*255.0),
+		//											(unsigned char)(wc.at(indcl * component + 3).toFloat()*255.0));*/
+		//		m.vert[vertind].C() = c;
+
+		//	}
+		//	return indcl;
+		//}
+
 
 		static void FindStandardWedgeAttributes(WedgeAttribute& wed,const QDomNode nd,const QDomDocument doc)
 		{
@@ -146,17 +156,30 @@ namespace io {
 				if (isThereTag(src,"accessor"))
 				{
 					QDomNodeList wedatts = src.toElement().elementsByTagName("accessor");
-					wed.stride = wedatts.at(0).toElement().attribute("stride").toInt();
+					wed.stridetx = wedatts.at(0).toElement().attribute("stride").toInt();
 				}
 				else 
-					wed.stride = 2;
+					wed.stridetx = 2;
 			}
-			else
-				wed.stride = 2;
+			//else
+			//	wed.stridetx = 2;
 
 			wed.offtx = findStringListAttribute(wed.wt,wed.wtsrc,nd,doc,"TEXCOORD"); 
 
 			wed.wcsrc = findNodeBySpecificAttributeValue(nd,"input","semantic","COLOR");
+			if (!wed.wtsrc.isNull())
+			{
+				QDomNode src = attributeSourcePerSimplex(nd,doc,"COLOR");
+				if (isThereTag(src,"accessor"))
+				{
+					QDomNodeList wedatts = src.toElement().elementsByTagName("accessor");
+					wed.stridecl = wedatts.at(0).toElement().attribute("stride").toInt();
+				}
+				else 
+					wed.stridecl = 3;
+			}
+			/*else
+				wed.stridecl = 3;*/
 			wed.offcl = findStringListAttribute(wed.wc,wed.wcsrc,nd,doc,"COLOR"); 
 		}
 	
@@ -229,7 +252,7 @@ namespace io {
 							polyTemp._pv[tt] = &(m.vert[indvt + offset]);
 							faceIndexCnt +=faceAttributeNum;
 							
-							WedgeTextureAttribute(polyTemp._txc[tt],faceIndexList,ind_txt, wa.wt ,wa.wtsrc, jj + wa.offtx,wa.stride);
+							WedgeTextureAttribute(polyTemp._txc[tt],faceIndexList,ind_txt, wa.wt ,wa.wtsrc, jj + wa.offtx,wa.stridetx);
 
 							/****************
 						
@@ -396,12 +419,16 @@ namespace io {
 							assert(indvt + offset < m.vert.size());
 							m.face[ff].V(tt) = &(m.vert[indvt + offset]);
 
-							if(tri::HasPerWedgeNormal(m)) WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
-							if(tri::HasPerVertexColor(m)) 	VertexColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,indvt + offset,tt);
+							//if(tri::HasPerWedgeNormal(m)) 
+							//	//WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
+							//if(tri::HasPerVertexColor(m)) 	
+							//{
+							//	//VertexColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,indvt + offset,wa.stridecl);
+							//}
 
 							if(tri::HasPerWedgeTexCoord(m) && ind_txt != -1)
 							{
-								WedgeTextureAttribute(m,face,ind_txt,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt,wa.stride);
+								WedgeTextureAttribute(m,face,ind_txt,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt,wa.stridetx);
 							}
 
 							jj += faceAttributeNum;
@@ -503,6 +530,8 @@ namespace io {
 						valueStringList(geosrcverttext,srcnodetext,"float_array");
 
                     QDomNode srcnodecolor = attributeSourcePerSimplex(vertices.at(0),*(info.doc),"COLOR");
+					QDomNodeList accesslist = srcnodecolor.toElement().elementsByTagName("accessor");
+
 					QStringList geosrcvertcol;
 					if (!srcnodecolor.isNull())
 						valueStringList(geosrcvertcol,srcnodecolor,"float_array");
@@ -524,8 +553,15 @@ namespace io {
 
 						if (!srcnodecolor.isNull())
 						{
-						//assert((ii * 4 < geosrcvertcol.size()) && (ii * 4 + 1 < geosrcvertcol.size()) && (ii * 4 + 2 < geosrcvertcol.size()) && (ii * 4 + 1 < geosrcvertcol.size()));
-							m.vert[vv].C() = vcg::Color4b(geosrcvertcol[ii * 3].toFloat()*255.0,geosrcvertcol[ii * 3 + 1].toFloat()*255.0,geosrcvertcol[ii * 3 + 2].toFloat()*255.0,1.0);
+							if (accesslist.size() > 0)
+							{
+								//component per color...obviously we assume they are RGB or RGBA if ARGB you get fancy effects....
+								if (accesslist.at(0).childNodes().size() == 4)
+									m.vert[vv].C() = vcg::Color4b(geosrcvertcol[ii * 4].toFloat()*255.0,geosrcvertcol[ii * 4 + 1].toFloat()*255.0,geosrcvertcol[ii * 4 + 2].toFloat()*255.0,geosrcvertcol[ii * 4 + 3].toFloat()*255.0);
+								else
+									if (accesslist.at(0).childNodes().size() == 3)
+										m.vert[vv].C() = vcg::Color4b(geosrcvertcol[ii * 3].toFloat()*255.0,geosrcvertcol[ii * 3 + 1].toFloat()*255.0,geosrcvertcol[ii * 3 + 2].toFloat()*255.0,255.0);
+							}
 						}
 
 						if (!srcnodetext.isNull())
