@@ -254,7 +254,7 @@ typedef Matrix44<double> Matrix44d;
 
 
 template <class T> Matrix44<T>::Matrix44(const Matrix44<T> &m) {
-	memcpy((T *)_a, (T *)m._a, 16 * sizeof(T));
+    memcpy((T *)_a, (const T *)m._a, 16 * sizeof(T));
 }
 
 template <class T> Matrix44<T>::Matrix44(const T v[]) {
