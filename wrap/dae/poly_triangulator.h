@@ -2,6 +2,7 @@
 #define POLY_TRIANGULATOR_H
 
 #include "util_dae.h"
+#include <wrap/gl/glu_tesselator.h>
 
 namespace vcg {
 namespace tri {
