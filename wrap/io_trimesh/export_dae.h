@@ -67,8 +67,8 @@ namespace io
 			//face
 
 			////wedg
-			capability |= Mask::IOM_WEDGTEXCOORD;
 			capability |= Mask::IOM_WEDGNORMAL;
+			capability |= Mask::IOM_WEDGTEXCOORD;
 
 			return capability;
 		}

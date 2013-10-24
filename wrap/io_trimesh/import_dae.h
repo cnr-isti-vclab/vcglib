@@ -120,28 +120,23 @@ namespace io {
 			return indtx;
 		}
 
-		//static int VertexColorAttribute(ColladaMesh& m,const QStringList face,const QStringList wc,const QDomNode wcsrc,const int meshfaceind,const int faceind, const int vertind,const int component)
-		//{
-		//	int indcl = -1;
-		//	if (!wcsrc.isNull())
-		//	{
-		//		indcl = face.at(faceind).toInt();
-		//		assert(indcl * component < wc.size());
-		//		assert((component == 4) || (component == 3));
-		//		vcg::Color4b c;
-		//		if (component == 3)
-		//			c[3] = 255;
-		//		for(unsigned int ii = 0;ii < component;++ii)
-		//			c[ii] = (unsigned char)(wc.at(indcl * component + ii).toFloat()*255.0);
-		//		/*m.vert[vertind].C() = vcg::Color4b(	(unsigned char)(wc.at(indcl * component).toFloat()*255.0),
-		//											(unsigned char)(wc.at(indcl * component + 1).toFloat()*255.0),
-		//											(unsigned char)(wc.at(indcl * component + 2).toFloat()*255.0),
-		//											(unsigned char)(wc.at(indcl * component + 3).toFloat()*255.0));*/
-		//		m.vert[vertind].C() = c;
-
-		//	}
-		//	return indcl;
-		//}
+		static int VertexColorAttribute(ColladaMesh& m,const QStringList face,const QStringList wc,const QDomNode wcsrc,const int faceind, const int vertind,const int colorcomponent)
+		{
+			int indcl = -1;
+			if (!wcsrc.isNull())
+			{
+				indcl = face.at(faceind).toInt();
+				assert((colorcomponent == 4) || (colorcomponent == 3));
+				assert(indcl * colorcomponent < wc.size());
+				vcg::Color4b c;
+				if (colorcomponent == 3)
+					c[3] = 255;
+				for(unsigned int ii = 0;ii < colorcomponent;++ii)
+					c[ii] = (unsigned char)(wc.at(indcl * colorcomponent + ii).toFloat()*255.0);
+				m.vert[vertind].C() = c;
+			}
+			return indcl;
+		}
 
 
 		static void FindStandardWedgeAttributes(WedgeAttribute& wed,const QDomNode nd,const QDomDocument doc)
@@ -167,7 +162,7 @@ namespace io {
 			wed.offtx = findStringListAttribute(wed.wt,wed.wtsrc,nd,doc,"TEXCOORD"); 
 
 			wed.wcsrc = findNodeBySpecificAttributeValue(nd,"input","semantic","COLOR");
-			if (!wed.wtsrc.isNull())
+			if (!wed.wcsrc.isNull())
 			{
 				QDomNode src = attributeSourcePerSimplex(nd,doc,"COLOR");
 				if (isThereTag(src,"accessor"))
@@ -419,12 +414,12 @@ namespace io {
 							assert(indvt + offset < m.vert.size());
 							m.face[ff].V(tt) = &(m.vert[indvt + offset]);
 
-							//if(tri::HasPerWedgeNormal(m)) 
-							//	//WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
-							//if(tri::HasPerVertexColor(m)) 	
-							//{
-							//	//VertexColorAttribute(m,face,wa.wc,wa.wcsrc,ff,jj + wa.offcl,indvt + offset,wa.stridecl);
-							//}
+							if(tri::HasPerWedgeNormal(m)) 
+								WedgeNormalAttribute(m,face,wa.wn,wa.wnsrc,ff,jj + wa.offnm,tt);
+							if(tri::HasPerVertexColor(m)) 	
+							{
+								VertexColorAttribute(m,face,wa.wc,wa.wcsrc,jj + wa.offcl,indvt + offset,wa.stridecl);
+							}
 
 							if(tri::HasPerWedgeTexCoord(m) && ind_txt != -1)
 							{
