@@ -25,6 +25,8 @@
 
 #include <wrap/dae/xmldocumentmanaging.h>
 #include <vcg/space/point4.h>
+#include <vcg/space/color4.h>
+
 #include <QtGui/QImage>
 #include <QtCore/QVector>
 
@@ -32,11 +34,15 @@
 
 
 
+
 template<typename POINTTYPE>
-           struct CoordNumber{public:	static unsigned int coord()	{		return 0; 	}};
+struct CoordNumber{public:	static unsigned int coord()	{		return 0; 	}};
+
 template<> struct CoordNumber<vcg::Point2f> { public:	static unsigned int coord() { return 2;	} };
 template<> struct CoordNumber<vcg::Point3f> { public:	static unsigned int coord() {	return 3;	} };
 template<> struct CoordNumber<vcg::Point4f> { public: static unsigned int coord() {	return 4;	} };
+
+template<> struct CoordNumber<vcg::Color4b> { public:	static unsigned int coord() { return 4;	} };
 
 
 namespace Collada
@@ -866,37 +872,45 @@ public:
 		contributornode->_sons.push_back(new XLeaf(new Tags::AuthoringToolTag()));
 		
 		assetnode->_sons.push_back(contributornode);
-		assetnode->_sons.push_back(new XLeaf(new Tags::UpAxisTag()));
 		assetnode->_sons.push_back(new XLeaf(new Tags::CreatedTag()));//added
 		assetnode->_sons.push_back(new XLeaf(new Tags::ModifiedTag()));
+		assetnode->_sons.push_back(new XLeaf(new Tags::UpAxisTag()));
 		root->_sons.push_back(assetnode);
 		
-		XNode* libimages = new XNode(new Tags::LibraryImagesTag());
+		XNode* libimages = NULL;
 		for(unsigned int ii = 0;ii < m.textures.size();++ii)
 		{
+			if ( ii == 0)
+				libimages = new XNode(new Tags::LibraryImagesTag());
 			QString subfix = QString::number(ii); 
 			XNode* imagenode = new XNode(new Tags::ImageTag(QString("texture") + subfix,QString("texture") + subfix));
 			XLeaf* initfromnode = new XLeaf(new Tags::InitFromTag(QString::fromStdString(m.textures[ii])));
 			imagenode->_sons.push_back(initfromnode);
 			libimages->_sons.push_back(imagenode);
+			if (ii == 0)
+				root->_sons.push_back(libimages);
 		}
-		root->_sons.push_back(libimages);
 
-		XNode* libmaterials = new XNode(new Tags::LibraryMaterialsTag());
+		XNode* libmaterials = NULL;
 		for(unsigned int ii = 0;ii < m.textures.size();++ii)
 		{
+			if ( ii == 0)
+				libmaterials = new XNode(new Tags::LibraryMaterialsTag());
 			QString subfix = QString::number(ii); 
 			QString mat = "material" + subfix;
 			XNode* materialnode = new XNode(new Tags::MaterialTag(mat,mat));
 			XLeaf* instanceeff = new XLeaf(new Tags::InstanceEffectTag(mat+"-fx"));
 			materialnode->_sons.push_back(instanceeff);
 			libmaterials->_sons.push_back(materialnode);
+			if ( ii == 0)
+				root->_sons.push_back(libmaterials);
 		}
-		root->_sons.push_back(libmaterials);
 
-		XNode* libeffects = new XNode(new Tags::LibraryEffectsTag());
+		XNode* libeffects = NULL;
 		for(unsigned int ii = 0;ii < m.textures.size();++ii)
 		{
+			if ( ii == 0)
+				libeffects = new XNode(new Tags::LibraryEffectsTag());
 			QString subfix = QString::number(ii); 
 			QString mat = "material" + subfix + "-fx";
 			XNode* effectnode = new XNode(new Tags::EffectTag(mat));
@@ -930,44 +944,17 @@ public:
 			XNode* technode = new XNode(new Tags::TechniqueTag("common"));
 			XNode* blinnnode = new XNode(new Tags::BlinnTag());
 			
-			XNode* emissionnode = new XNode(new Tags::EmissionTag());
-			XLeaf* colorem = new XLeaf(new Tags::ColorTag(0,0,0,1));
-			XNode* ambientnode = new XNode(new Tags::AmbientTag());
-			XLeaf* coloramb = new XLeaf(new Tags::ColorTag(0,0,0,1));
 			XNode* diffusenode = new XNode(new Tags::DiffuseTag());
-			XLeaf* texturenode = new XLeaf(new Tags::TextureTag(tex,"UVSET0"));
-			XNode* specularnode = new XNode(new Tags::SpecularTag());
-			XLeaf* colorspec = new XLeaf(new Tags::ColorTag(0,0,0,1));
-			XNode* shinenode = new XNode(new Tags::ShininessTag());
-			XLeaf* floatshine = new XLeaf(new Tags::FloatTag(0.3));
-			XNode* reflectivenode = new XNode(new Tags::ReflectiveTag());
-			XLeaf* colorref = new XLeaf(new Tags::ColorTag(0,0,0,1));
-			XNode* reflectivitynode = new XNode(new Tags::ReflectivityTag());
-			XLeaf* floatrefl = new XLeaf(new Tags::FloatTag(0.5));
-			XNode* transparentnode = new XNode(new Tags::TransparentTag());
-			XLeaf* colortra = new XLeaf(new Tags::ColorTag(0,0,0,1));
-			XNode* transparencynode = new XNode(new Tags::TransparencyTag());
-			XLeaf* floattra = new XLeaf(new Tags::FloatTag(0.0));
-			XNode* refranode = new XNode(new Tags::IndexOfRefractionTag());
-			XLeaf* floatrefrac = new XLeaf(new Tags::FloatTag(0.0));
+			XLeaf* texturenode = new XLeaf(new Tags::TextureTag(tex+"-sampler","UVSET0"));
 
-			connectHierarchyNode(blinnnode,emissionnode,colorem);
-			connectHierarchyNode(blinnnode,ambientnode,coloramb);
 			connectHierarchyNode(blinnnode,diffusenode,texturenode);
-			connectHierarchyNode(blinnnode,specularnode,colorspec);
-			connectHierarchyNode(blinnnode,shinenode,floatshine);
-			connectHierarchyNode(blinnnode,reflectivenode,colorref);
-			connectHierarchyNode(blinnnode,reflectivitynode,floatrefl);
-			connectHierarchyNode(blinnnode,transparentnode,colortra);
-			connectHierarchyNode(blinnnode,transparencynode,floattra);
-			connectHierarchyNode(blinnnode,refranode,floatrefrac);
-			
 			connectHierarchyNode(procommnode,technode,blinnnode);
 
 			effectnode->_sons.push_back(procommnode);
 			libeffects->_sons.push_back(effectnode);
+			if ( ii == 0)
+				root->_sons.push_back(libeffects);
 		}
-		root->_sons.push_back(libeffects);
 
 		XNode* libgeo = new XNode(new Tags::LibraryGeometriesTag());
 		QString subfix = "0"; 
@@ -1027,23 +1014,26 @@ public:
 		bool vcolormask = bool((mask & vcg::tri::io::Mask::IOM_VERTCOLOR));
 		if (vcolormask)
 		{
+			unsigned int color_component_number = 4;
 			XNode* sourcevcolor = new XNode(new Tags::SourceTag(shape+"-lib-vcolor","vcolor"));
 
 			//we export only triangular face
-			XLeaf* floatvcolorarr = new XLeaf(new Tags::FloatArrayTag(shape+"-lib-vcolor-array",m.vert.size() * return_component_number,m,Tags::FloatArrayTag::VERTCOLOR,return_component_number));
+			XLeaf* floatvcolorarr = new XLeaf(new Tags::FloatArrayTag(shape+"-lib-vcolor-array",m.vert.size() * color_component_number,m,Tags::FloatArrayTag::VERTCOLOR,color_component_number));
 			XNode* techcommvcolornode = new XNode(new Tags::TechniqueCommonTag());
-			XNode* accessorvcolornode = new XNode(new Tags::AccessorTag(m.vert.size(),shape+"-lib-vcolor-array",return_component_number));
+			XNode* accessorvcolornode = new XNode(new Tags::AccessorTag(m.vert.size(),shape+"-lib-vcolor-array",color_component_number));
 			
 			//I have to make up the following piece of code
 			XNode* paramvcolorx = new XNode(new Tags::ParamTag("R","float"));
 			XNode* paramvcolory = new XNode(new Tags::ParamTag("G","float"));
 			XNode* paramvcolorz = new XNode(new Tags::ParamTag("B","float"));
+			XNode* paramvcolora = new XNode(new Tags::ParamTag("A","float"));
 
 			sourcevcolor->_sons.push_back(floatvcolorarr);
 
 			accessorvcolornode->_sons.push_back(paramvcolorx);
 			accessorvcolornode->_sons.push_back(paramvcolory);
 			accessorvcolornode->_sons.push_back(paramvcolorz);
+			accessorvcolornode->_sons.push_back(paramvcolora);
 
 			techcommvcolornode->_sons.push_back(accessorvcolornode);
 			sourcevcolor->_sons.push_back(techcommvcolornode);
@@ -1078,8 +1068,9 @@ public:
 
 		XNode* vertnode = new XNode(new Tags::VerticesTag(shape+"-lib-vertices"));
 		XNode* inputposnode = new XNode(new Tags::InputTag("POSITION",shape+"-lib-positions"));
-		//XNode* inputvcolnode = new XNode(new Tags::InputTag("COLOR",shape+"-lib-vcolor"));
 		vertnode->_sons.push_back(inputposnode);
+	
+		//XNode* inputvcolnode = new XNode(new Tags::InputTag("COLOR",shape+"-lib-vcolor"));
 		//vertnode->_sons.push_back(inputvcolnode);
 
 		meshnode->_sons.push_back(vertnode);
@@ -1116,23 +1107,24 @@ public:
 				trianglesnode = new XNode(new Tags::TrianglesTag(m.face.size()));
 			}
 			else
-					trianglesnode = new XNode(new Tags::TrianglesTag(mytripatches[indmat].size(),"material" + QString::number(indmat)));
+				trianglesnode = new XNode(new Tags::TrianglesTag(mytripatches[indmat].size(),"material" + QString::number(indmat)));
 
 			XNode* inputtrinode = new XNode(new Tags::InputTag(0,"VERTEX",shape+"-lib-vertices"));
 			trianglesnode->_sons.push_back(inputtrinode);
+
 			int offs=1;
 			if (vcolormask)
 			{
 				XNode* inputvcolnode = new XNode(new Tags::InputTag(offs,"COLOR",shape+"-lib-vcolor"));
 				trianglesnode->_sons.push_back(inputvcolnode);
-				offs++;
+				++offs;
 			}
 
 			if (normalmask)
 			{
 				XNode* inputnormnode = new XNode(new Tags::InputTag(offs,"NORMAL",shape+"-lib-normals"));
 				trianglesnode->_sons.push_back(inputnormnode);
-				offs++;
+				++offs;
 			}
 
 			if (texmask)
@@ -1163,16 +1155,20 @@ public:
 		XNode* visualscenenode = new XNode(new Tags::VisualSceneTag("VisualSceneNode","VisualScene"));
 		XNode* nodenode = new XNode(new Tags::NodeTag("node","node"));
 		XNode* instgeonode = new XNode(new Tags::InstanceGeometryTag(shape+"-lib"));
-		XNode* bindnode = new XNode(new Tags::BindMaterialTag());
-		XNode* techcommmatnode = new XNode(new Tags::TechniqueCommonTag());
-		for(unsigned int ii = 0; ii < m.textures.size(); ++ii)
+		if (m.textures.size() > 0)
 		{
-			XNode* instmatnode = new XNode(new Tags::InstanceMaterialTag("material"  + QString::number(ii),"material" + QString::number(ii)));
-			XNode* bindvertnode = new XNode(new Tags::BindVertexInputTag("UVSET0","TEXCOORD","0"));
-			connectHierarchyNode(techcommmatnode,instmatnode,bindvertnode);
+			XNode* bindnode = new XNode(new Tags::BindMaterialTag());
+			XNode* techcommmatnode = new XNode(new Tags::TechniqueCommonTag());
+			for(unsigned int ii = 0; ii < m.textures.size(); ++ii)
+			{
+				XNode* instmatnode = new XNode(new Tags::InstanceMaterialTag("material"  + QString::number(ii),"material" + QString::number(ii)));
+				XNode* bindvertnode = new XNode(new Tags::BindVertexInputTag("UVSET0","TEXCOORD","0"));
+				connectHierarchyNode(techcommmatnode,instmatnode,bindvertnode);
+			}
+			connectHierarchyNode(visualscenenode,nodenode,instgeonode,bindnode,techcommmatnode);
 		}
-
-		connectHierarchyNode(visualscenenode,nodenode,instgeonode,bindnode,techcommmatnode);
+		else
+			connectHierarchyNode(visualscenenode,nodenode,instgeonode);
 		libvisualnode->_sons.push_back(visualscenenode);
 		root->_sons.push_back(libvisualnode);
 
