@@ -107,6 +107,7 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
   char line[100];
   if(cb) cb(0,"Reading images");
   ReadImagesFilenames(filename_images, image_filenames);
+  const QString path_im = QFileInfo(filename_images).absolutePath()+QString("/");
 
   if(cb) cb(50,"Reading cameras");
   shots.resize(num_cams);
@@ -138,8 +139,15 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
     shots[i].Intrinsics.k[0] = 0.0;//k1; To be uncommented when distortion is taken into account reliably
     shots[i].Intrinsics.k[1] = 0.0;//k2;
     shots[i].Intrinsics.PixelSizeMm = vcg::Point2f(1,1);
+	QSize size;
 	QImageReader sizeImg(QString::fromStdString(image_filenames[i]));
-	QSize size=sizeImg.size();
+	if(sizeImg.size()==QSize(-1,-1))
+	{
+		QImageReader sizeImg(QString::fromStdString(qPrintable(path_im)+image_filenames[i]));
+		size=sizeImg.size();
+	}
+	else
+		size=sizeImg.size();
 	shots[i].Intrinsics.ViewportPx = vcg::Point2i(size.width(),size.height());
 	shots[i].Intrinsics.CenterPx[0] = (int)((double)shots[i].Intrinsics.ViewportPx[0]/2.0f);
 	shots[i].Intrinsics.CenterPx[1] = (int)((double)shots[i].Intrinsics.ViewportPx[1]/2.0f);
