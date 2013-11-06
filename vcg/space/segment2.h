@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -39,15 +39,15 @@ namespace vcg {
 
 /** \addtogroup space */
 /*@{*/
-/** 
+/**
 Templated class for 3D segment.
   This is the class for a segment in 3D space. A Segment is stored just as its two extrema (Point3).
-	@param SegmentScalarType (template parameter) Specifies the type of scalar used to represent coords.
+    @param SegmentScalarType (template parameter) Specifies the type of scalar used to represent coords.
 */
 template <class SegmentScalarType >
 class Segment2
 {
-public: 
+public:
 
 	/// The scalar type
 	typedef SegmentScalarType ScalarType;
@@ -65,42 +65,42 @@ private:
 
 public:
 
-		/// Members to access either extrema
-  inline const PointType &P0() const { return _p0; } 
-  inline const PointType &P1() const { return _p1; } 
-  inline PointType &P0() { return _p0; } 
-  inline PointType &P1() { return _p1; } 
-		/// The empty constructor
-	Segment2() {};
-		/// The (a,b) constructor
-	Segment2(const PointType &a, const PointType &b) { _p0=a; _p1=b; };
-		/// Operator to compare segments
-	inline bool operator == ( SegmentType const & p ) const
-	{	return _p0==p._p0 && _p1==p._p1; }
-		/// Operator to dispare segments
-	inline bool operator != ( SegmentType const & p ) const
-	{	return _p0!=p._p0 || _p1!=p._p1; }
-		/// initializes the segment with its extrema
-	void Set( const PointType &a, const PointType &b)
-	{	_p0=a; _p1=b;}
-	  /// calculates the point of parameter t on the segment.
-	  /// if t is in [0..1] returned point is inside the segment
-	inline PointType P( const ScalarType t ) const
-	{ return _p0 + (_p1 - _p0) * t; }
-	  /// return the middle point
-	inline PointType MidPoint( ) const
-	{ return ( _p0 +  _p1) / ScalarType(2.0) ; }
-	  /// return the bounding box
-	inline Box2<ScalarType> BBox( ) const
-	{ 
-	  Box2<ScalarType> t; 
-	  t.Add(_p0);
- 	  t.Add(_p1);
-	  return t; 
-	}
-		/// returns segment length
-	ScalarType Length()
-	{ return (_p0 - _p1).Norm(); }
+        /// Members to access either extrema
+  inline const PointType &P0() const { return _p0; }
+  inline const PointType &P1() const { return _p1; }
+  inline PointType &P0() { return _p0; }
+  inline PointType &P1() { return _p1; }
+        /// The empty constructor
+    Segment2() {};
+        /// The (a,b) constructor
+    Segment2(const PointType &a, const PointType &b) { _p0=a; _p1=b; };
+        /// Operator to compare segments
+    inline bool operator == ( SegmentType const & p ) const
+    {	return _p0==p._p0 && _p1==p._p1; }
+        /// Operator to dispare segments
+    inline bool operator != ( SegmentType const & p ) const
+    {	return _p0!=p._p0 || _p1!=p._p1; }
+        /// initializes the segment with its extrema
+    void Set( const PointType &a, const PointType &b)
+    {	_p0=a; _p1=b;}
+      /// calculates the point of parameter t on the segment.
+      /// if t is in [0..1] returned point is inside the segment
+    inline PointType Lerp( const ScalarType t ) const
+    { return _p0 + (_p1 - _p0) * t; }
+      /// return the middle point
+    inline PointType MidPoint( ) const
+    { return ( _p0 +  _p1) / ScalarType(2.0) ; }
+      /// return the bounding box
+    inline Box2<ScalarType> BBox( ) const
+    {
+      Box2<ScalarType> t;
+      t.Add(_p0);
+      t.Add(_p1);
+      return t;
+    }
+        /// returns segment length
+    ScalarType Length()
+    { return (_p0 - _p1).Norm(); }
 
 	/// returns segment length
 	ScalarType Length() const
@@ -143,8 +143,8 @@ typedef Segment2<int>	 Segment2i;
 typedef Segment2<float>  Segment2f;
 typedef Segment2<double> Segment2d;
 
-template <class ScalarType> 
-Point2<ScalarType> ClosestPoint( Segment2<ScalarType> s, const Point2<ScalarType> & p) 
+template <class ScalarType>
+Point2<ScalarType> ClosestPoint( Segment2<ScalarType> s, const Point2<ScalarType> & p)
 {
 	vcg::Line2<ScalarType, true> l;
 	l.Set(s.P0(),s.P1()-s.P0());
