@@ -1165,7 +1165,7 @@ static void FaceSimilar(MetroMesh & m, VertexSampler &ps,int sampleNum, bool dua
                     if (correctSafePointsBaryCoords)
                     {
                         // Add x,y sample with closePoint barycentric coords (on edge)
-                        baryCoord[closeEdge] = (closePoint - borderEdges[closeEdge].P(1)).Norm()/edgeLength[closeEdge];
+                        baryCoord[closeEdge] = (closePoint - borderEdges[closeEdge].P1()).Norm()/edgeLength[closeEdge];
                         baryCoord[(closeEdge+1)%3] = 1 - baryCoord[closeEdge];
                         baryCoord[(closeEdge+2)%3] = 0;
                     } else {
