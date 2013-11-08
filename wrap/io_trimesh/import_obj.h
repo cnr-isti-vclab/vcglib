@@ -400,7 +400,8 @@ namespace vcg {
 											return E_BAD_VERT_INDEX;
 
 
-									if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL ) // assigning face normal
+									if(( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL ) ||
+									   ( oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL  ) )
 									{
 										// verifying validity of vertex normal indices
 										for(int i=0;i<vertexesPerFace;i++)
@@ -469,6 +470,8 @@ namespace vcg {
 										{
 											locInd[iii]=indexTriangulatedVect[pi+iii];
 											ff.v[iii]=indexVVect[ locInd[iii] ];
+											ff.n[iii]=indexNVect[ locInd[iii] ];
+//											qDebug("ff.n[iii]=indexNVect[ locInd[iii] ]; %i", ff.n[iii]);
 											ff.t[iii]=indexTVect[ locInd[iii] ];
 										}
 
@@ -513,7 +516,8 @@ namespace vcg {
 										}
 
 										// assigning face normal
-										if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+										if ( ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL  ) ||
+											 ( oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL  ) )
 										{   // verifying validity of vertex normal indices
 											bool invalid = false;
 											for(int i=0;i<3;i++)
@@ -609,6 +613,7 @@ namespace vcg {
 
 							if ( oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL )
 							{
+//							  qDebug("XXXXXX %i",indexedFaces[i].n[j]);
 								m.face[i].V(j)->N().Import(normals[indexedFaces[i].n[j]]);
 							}
 
@@ -721,7 +726,6 @@ namespace vcg {
 				{
 					static const char delimiter = '/';
 
-					(void)mask;
 					vId = nId = tId = 0;
 					if (token.empty()) return;
 
@@ -730,11 +734,13 @@ namespace vcg {
 
 					const bool hasPosition = true;
 					const bool hasTexcoord = (firstSep  != std::string::npos) && ((firstSep + 1) < secondSep);
-					const bool hasNormal   = (secondSep != std::string::npos);
-
+					const bool hasNormal   = (secondSep != std::string::npos) || (mask & Mask::IOM_WEDGNORMAL) || (mask & Mask::IOM_VERTNORMAL);
+					assert(mask & Mask::IOM_VERTNORMAL);
 					if (hasPosition) vId = atoi(token.substr(0, firstSep).c_str()) - 1;
-					if (hasTexcoord) tId = atoi(token.substr(firstSep + 1, secondSep - firstSep - 1).c_str()) - 1;
-					if (hasNormal  ) nId = atoi(token.substr(secondSep + 1).c_str()) - 1;
+					if (hasTexcoord) tId =               atoi(token.substr(firstSep + 1, secondSep - firstSep - 1).c_str()) - 1;
+					if (hasNormal)
+					  nId = atoi(token.substr(secondSep + 1).c_str()) - 1;
+//					qDebug("%s -> %i %i %i",token.c_str(),vId,nId,tId);
 					/*
 					const std::string vStr = (hasPosition) ? (token.substr(0, firstSep))                            : ("0");
 					const std::string tStr = (hasTexcoord) ? (token.substr(firstSep + 1, secondSep - firstSep - 1)) : ("0");
