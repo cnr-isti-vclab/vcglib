@@ -125,12 +125,13 @@ public:
 	}
 
 	/// Assignment operator
-	inline FaceType & operator = ( const FaceType & h ){
+	inline PosType & operator = ( const PosType & h ){
 		f=h.f;
 		z=h.z;
 		v=h.v;
 		return *this;
 		}
+
 	/// Set to null the half-edge
 	void SetNull(){
 		f=0;
