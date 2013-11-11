@@ -735,7 +735,7 @@ namespace vcg {
 					const bool hasPosition = true;
 					const bool hasTexcoord = (firstSep  != std::string::npos) && ((firstSep + 1) < secondSep);
 					const bool hasNormal   = (secondSep != std::string::npos) || (mask & Mask::IOM_WEDGNORMAL) || (mask & Mask::IOM_VERTNORMAL);
-					assert(mask & Mask::IOM_VERTNORMAL);
+
 					if (hasPosition) vId = atoi(token.substr(0, firstSep).c_str()) - 1;
 					if (hasTexcoord) tId =               atoi(token.substr(firstSep + 1, secondSep - firstSep - 1).c_str()) - 1;
 					if (hasNormal)
