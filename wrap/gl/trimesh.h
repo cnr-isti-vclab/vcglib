@@ -445,7 +445,7 @@ void DrawFill()
 		if(tm==TMPerWedgeMulti)
 		{
 			curtexname=(*fi).WT(0).n();
-			if ((curtexname >= 0) && (curtexname < TMId.size()))
+			if ((curtexname >= 0) && (curtexname < (int)TMId.size()))
 			{
 				glEnable(GL_TEXTURE_2D);
 				glBindTexture(GL_TEXTURE_2D,TMId[curtexname]);
