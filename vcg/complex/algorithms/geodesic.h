@@ -217,15 +217,27 @@ public:
     {return (v0.d > v1.d);}
   };
 
-  struct pred_addr: public std::binary_function<VertDist,VertDist,bool>{
-    pred_addr(){}
-    bool operator()(const VertDist& v0, const VertDist& v1) const
-    {return (v0.v > v1.v);}
-  };
+  /*
+   *
+  curr:   vertex for which distance should be estimated
+  d_pw1:  distance of pw1 from the source
+  d_curr: distance of curr from the source
 
-  //************** calcolo della distanza di pw in base alle distanze note di pw1 e curr
-  //************** sapendo che (curr,pw,pw1) e'una faccia della mesh
-  //************** (vedi figura in file distance.gif)
+The function estimates the distance of pw from the source
+in the assumption the mesh is developable (and without holes)
+along the path, so that (source,pw1,curr) from a triangle.
+All the math is to comput the angles at pw1 and curr with the Erone formula.
+
+The if cases take care of the cases where the angles are obtuse.
+
+              curr
+      d_pw1    +
+               |      +pw
+source+        |
+        d_curr +
+              pw1
+
+   */
   template <class DistanceFunctor>
   static ScalarType Distance(DistanceFunctor &distFunc,
                              const VertexPointer &pw,
@@ -271,6 +283,9 @@ public:
     return (curr_d);
   }
 
+
+
+
 /*
 This is the low level version of the geodesic computation framework.
 Starting from the seeds, it assign a distance value to each vertex. The distance of a vertex is its
@@ -278,20 +293,19 @@ approximated geodesic distance to the closest seeds.
 This is function is not meant to be called (although is not prevented). Instead, it is invoked by
 wrapping function.
 */
+
   template <class DistanceFunctor>
   static  VertexPointer Visit(
       MeshType & m,
-      std::vector<VertDist> & seedVec, // the set of seed to start from
+      std::vector<VertDist> & seedVec, // the set of seeds to start from
       DistanceFunctor &distFunc,
-//      bool farthestOnBorder = false,
       ScalarType distance_threshold  = std::numeric_limits<ScalarType>::max(),                    // cut off distance (do no compute anything farther than this value)
       typename MeshType::template PerVertexAttributeHandle<VertexPointer> * vertSource = NULL,    // if present we put in this attribute the closest source for each vertex
       typename MeshType::template PerVertexAttributeHandle<VertexPointer> * vertParent = NULL,    // if present we put in this attribute the parent in the path that goes from the vertex to the closest source
       std::vector<VertexPointer> *InInterval=NULL)
   {
-    std::vector<VertDist> frontier;
-    VertexPointer farthest=0,pw,pw1;
-
+    VertexPointer farthest=0;
+//    int t0=clock();
     //Requirements
     if(!HasVFAdjacency(m)) throw vcg::MissingComponentException("VFAdjacency");
     if(!HasPerVertexQuality(m)) throw vcg::MissingComponentException("VertexQuality");
@@ -299,31 +313,31 @@ wrapping function.
 
     TempDataType TD(m.vert, std::numeric_limits<ScalarType>::max());
 
+    // initialize Heap
+    std::vector<VertDist> frontierHeap;
     typename std::vector <VertDist >::iterator ifr;
     for(ifr = seedVec.begin(); ifr != seedVec.end(); ++ifr){
-      (*ifr).d = 0.0;
-      TD[(*ifr).v].d = 0.0;
+      TD[(*ifr).v].d = (*ifr).d;
       TD[(*ifr).v].source  = (*ifr).v;
       TD[(*ifr).v].parent  = (*ifr).v;
-      frontier.push_back(VertDist((*ifr).v,0.0));
+      frontierHeap.push_back(*ifr);
     }
-    // initialize Heap
-    make_heap(frontier.begin(),frontier.end(),pred());
+    make_heap(frontierHeap.begin(),frontierHeap.end(),pred());
 
     ScalarType curr_d,d_curr = 0.0,d_heap;
     ScalarType max_distance=0.0;
-
-    while(!frontier.empty() && max_distance < distance_threshold)
+//    int t1=clock();
+    while(!frontierHeap.empty() && max_distance < distance_threshold)
     {
-      pop_heap(frontier.begin(),frontier.end(),pred());
-      VertexPointer curr = (frontier.back()).v;
+      pop_heap(frontierHeap.begin(),frontierHeap.end(),pred());
+      VertexPointer curr = (frontierHeap.back()).v;
       if (InInterval!=NULL) InInterval->push_back(curr);
 
       if(vertSource!=NULL)  (*vertSource)[curr] = TD[curr].source;
       if(vertParent!=NULL)  (*vertParent)[curr] = TD[curr].parent;
 
-      d_heap = (frontier.back()).d;
-      frontier.pop_back();
+      d_heap = (frontierHeap.back()).d;
+      frontierHeap.pop_back();
 
       assert(TD[curr].d <= d_heap);
       if(TD[curr].d < d_heap ) // a vertex whose distance has been improved after it was inserted in the queue
@@ -332,20 +346,18 @@ wrapping function.
 
       d_curr =  TD[curr].d;
 
-//      bool isLeaf = (!farthestOnBorder || curr->IsB());
-
-      face::VFIterator<FaceType> x;int k;
-
-      for( x.f = curr->VFp(), x.z = curr->VFi(); x.f!=0; ++x )
-        for(k=0;k<2;++k)
+      for(face::VFIterator<FaceType>  vfi(curr) ; vfi.f!=0; ++vfi )
+      {
+        for(int k=0;k<2;++k)
         {
+          VertexPointer pw,pw1;
           if(k==0) {
-            pw = x.f->V1(x.z);
-            pw1=x.f->V2(x.z);
+            pw = vfi.f->V1(vfi.z);
+            pw1= vfi.f->V2(vfi.z);
           }
           else {
-            pw = x.f->V2(x.z);
-            pw1=x.f->V1(x.z);
+            pw = vfi.f->V2(vfi.z);
+            pw1= vfi.f->V1(vfi.z);
           }
 
           const ScalarType & d_pw1  =  TD[pw1].d;
@@ -367,8 +379,8 @@ wrapping function.
             TD[pw].d = curr_d;
             TD[pw].source = TD[curr].source;
             TD[pw].parent = curr;
-            frontier.push_back(VertDist(pw,curr_d));
-            push_heap(frontier.begin(),frontier.end(),pred());
+            frontierHeap.push_back(VertDist(pw,curr_d));
+            push_heap(frontierHeap.begin(),frontierHeap.end(),pred());
           }
 //          if(isLeaf){
             if(d_curr > max_distance){
@@ -377,7 +389,9 @@ wrapping function.
             }
 //          }
         }
+      } // end for VFIterator
     }// end while
+//    int t2=clock();
 
     // Copy found distance onto the Quality (\todo parametric!)
     if (InInterval==NULL)
@@ -391,10 +405,10 @@ wrapping function.
       for(size_t i=0;i<InInterval->size();i++)
         (*InInterval)[i]->Q() =  TD[(*InInterval)[i]].d;
     }
-
+//    int t3=clock();
+//    printf("Init  %6.3f\nVisit %6.3f\nFinal %6.3f\n",float(t1-t0)/CLOCKS_PER_SEC,float(t2-t1)/CLOCKS_PER_SEC,float(t3-t2)/CLOCKS_PER_SEC);
     return farthest;
   }
-
 
 public:
   /*! \brief Given a set of source vertices compute the approximate geodesic distance to all the other vertices
