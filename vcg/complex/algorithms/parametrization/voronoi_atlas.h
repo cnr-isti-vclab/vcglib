@@ -144,7 +144,7 @@ public:
     tri::UpdateTopology<VoroMesh>::VertexFace(m);
     tri::VoronoiProcessing<VoroMesh>::ComputePerVertexSources(m,seedVec,edFunc);
     tri::VoronoiProcessing<VoroMesh>::FaceAssociateRegion(m);
-    tri::VoronoiProcessing<VoroMesh>::VoronoiColoring(m,seedVec,true);
+    tri::VoronoiProcessing<VoroMesh>::VoronoiColoring(m,true);
     std::vector<VoroMesh *> badRegionVec;
     int st2=clock();
     pp.vas.voronoiTime+=st2-st1;
