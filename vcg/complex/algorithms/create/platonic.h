@@ -25,7 +25,6 @@
 #define __VCGLIB_PLATONIC
 
 #include<vcg/math/base.h>
-#include<vcg/complex/allocate.h>
 #include<vcg/complex/algorithms/refine.h>
 #include<vcg/complex/algorithms/update/flag.h>
 #include<vcg/complex/algorithms/update/position.h>
@@ -42,9 +41,9 @@ namespace tri {
         that represent surfaces of platonic solids,
                 and other simple shapes.
 
-				 The 1st parameter is the mesh that will
-				be filled with the solid.
-		*/
+                 The 1st parameter is the mesh that will
+                be filled with the solid.
+        */
 template <class TetraMeshType>
 void Tetrahedron(TetraMeshType &in)
 {
@@ -135,31 +134,31 @@ void Dodecahedron(DodMeshType & in)
 
   int h,i,j,m=0;
 
-	bool used[N_points];
-	for (i=0; i<N_points; i++) used[i]=false;
+    bool used[N_points];
+    for (i=0; i<N_points; i++) used[i]=false;
 
-	int reindex[20+12 *10];
-	ScalarType xx,yy,zz, sx,sy,sz;
+    int reindex[20+12 *10];
+    ScalarType xx,yy,zz, sx,sy,sz;
 
-	int order[5]={0,1,8,6,2};
-	int added[12];
+    int order[5]={0,1,8,6,2};
+    int added[12];
 
-	VertexIterator vi=in.vert.begin();
+    VertexIterator vi=in.vert.begin();
 
-	for (i=0; i<12; i++) {
-		sx=sy=sz=0;
-		for (int j=0; j<5; j++) {
-			h= penta[ i*9 + order[j]  ]-1;
-		  xx=vv[h*3];yy=vv[h*3+1];zz=vv[h*3+2]; sx+=xx; sy+=yy; sz+=zz;
-			if (!used[h]) {
-				(*vi).P()=CoordType( xx, yy, zz ); vi++;
-				used[h]=true;
-				reindex[ h ] = m++;
-			}
-		}
-		(*vi).P()=CoordType( sx/5.0, sy/5.0, sz/5.0 ); 	vi++;
-		added[ i ] = m++;
-	}
+    for (i=0; i<12; i++) {
+        sx=sy=sz=0;
+        for (int j=0; j<5; j++) {
+            h= penta[ i*9 + order[j]  ]-1;
+          xx=vv[h*3];yy=vv[h*3+1];zz=vv[h*3+2]; sx+=xx; sy+=yy; sz+=zz;
+            if (!used[h]) {
+                (*vi).P()=CoordType( xx, yy, zz ); vi++;
+                used[h]=true;
+                reindex[ h ] = m++;
+            }
+        }
+        (*vi).P()=CoordType( sx/5.0, sy/5.0, sz/5.0 ); 	vi++;
+        added[ i ] = m++;
+    }
 
   std::vector<VertexPointer> index(in.vn);
 
@@ -167,19 +166,19 @@ void Dodecahedron(DodMeshType & in)
 
   FaceIterator fi=in.face.begin();
 
-	for (i=0; i<12; i++) {
-		for (j=0; j<5; j++){
-		  (*fi).V(0)=index[added[i] ];
-		(*fi).V(1)=index[reindex[penta[i*9 + order[j      ] ] -1 ] ];
-		(*fi).V(2)=index[reindex[penta[i*9 + order[(j+1)%5] ] -1 ] ];
-		if (HasPerFaceFlags(in)) {
-		// tag faux edges
-		(*fi).SetF(0);
-		(*fi).SetF(2);
-	  }
-		  fi++;
-		}
-	}
+    for (i=0; i<12; i++) {
+        for (j=0; j<5; j++){
+          (*fi).V(0)=index[added[i] ];
+        (*fi).V(1)=index[reindex[penta[i*9 + order[j      ] ] -1 ] ];
+        (*fi).V(2)=index[reindex[penta[i*9 + order[(j+1)%5] ] -1 ] ];
+        if (HasPerFaceFlags(in)) {
+        // tag faux edges
+        (*fi).SetF(0);
+        (*fi).SetF(2);
+      }
+          fi++;
+        }
+    }
 }
 
 template <class OctMeshType>
@@ -233,24 +232,24 @@ void Icosahedron(IcoMeshType &in)
     CoordType ( 0,-L, 1),
     CoordType ( 0,-L,-1),
 
-	CoordType ( L, 1, 0),
-	CoordType ( L,-1, 0),
-	CoordType (-L, 1, 0),
-	CoordType (-L,-1, 0),
+    CoordType ( L, 1, 0),
+    CoordType ( L,-1, 0),
+    CoordType (-L, 1, 0),
+    CoordType (-L,-1, 0),
 
-	CoordType ( 1, 0, L),
-	CoordType (-1, 0, L),
-	CoordType ( 1, 0,-L),
-	CoordType (-1, 0,-L)
-	};
+    CoordType ( 1, 0, L),
+    CoordType (-1, 0, L),
+    CoordType ( 1, 0,-L),
+    CoordType (-1, 0,-L)
+    };
 
-	int ff[20][3]={
-		{1,0,4},{0,1,6},{2,3,5},{3,2,7},
-		{4,5,10},{5,4,8},{6,7,9},{7,6,11},
-		{8,9,2},{9,8,0},{10,11,1},{11,10,3},
-		{0,8,4},{0,6,9},{1,4,10},{1,11,6},
-		{2,5,8},{2,9,7},{3,10,5},{3,7,11}
-	};
+    int ff[20][3]={
+        {1,0,4},{0,1,6},{2,3,5},{3,2,7},
+        {4,5,10},{5,4,8},{6,7,9},{7,6,11},
+        {8,9,2},{9,8,0},{10,11,1},{11,10,3},
+        {0,8,4},{0,6,9},{1,4,10},{1,11,6},
+        {2,5,8},{2,9,7},{3,10,5},{3,7,11}
+    };
 
 
   in.Clear();
@@ -368,33 +367,33 @@ void Sphere(MeshType &in, const int subdiv = 3 )
  typedef typename MeshType::FaceIterator   FaceIterator;
     if(in.vn==0 && in.fn==0) Icosahedron(in);
 
-	VertexIterator vi;
-	for(vi = in.vert.begin(); vi!=in.vert.end();++vi)
-		vi->P().Normalize();
+    VertexIterator vi;
+    for(vi = in.vert.begin(); vi!=in.vert.end();++vi)
+        vi->P().Normalize();
 
-	tri::UpdateFlags<MeshType>::FaceBorderFromNone(in);
-	tri::UpdateTopology<MeshType>::FaceFace(in);
+    tri::UpdateFlags<MeshType>::FaceBorderFromNone(in);
+    tri::UpdateTopology<MeshType>::FaceFace(in);
 
-	size_t lastsize = 0;
-	for(int i = 0 ; i < subdiv; ++i)
-	{
-		Refine< MeshType, MidPoint<MeshType> >(in, MidPoint<MeshType>(&in), 0);
+    size_t lastsize = 0;
+    for(int i = 0 ; i < subdiv; ++i)
+    {
+        Refine< MeshType, MidPoint<MeshType> >(in, MidPoint<MeshType>(&in), 0);
 
-		for(vi = in.vert.begin() + lastsize; vi != in.vert.end(); ++vi)
-			vi->P().Normalize();
+        for(vi = in.vert.begin() + lastsize; vi != in.vert.end(); ++vi)
+            vi->P().Normalize();
 
-		lastsize = in.vert.size();
-	}
+        lastsize = in.vert.size();
+    }
 }
 
 
-	/// r1 = raggio 1, r2 = raggio2, h = altezza (asse y)
+    /// r1 = raggio 1, r2 = raggio2, h = altezza (asse y)
 template <class MeshType>
 void Cone( MeshType& in,
-		  const typename MeshType::ScalarType r1,
-		  const typename MeshType::ScalarType r2,
-		  const typename MeshType::ScalarType h,
-		  const int SubDiv = 36  )
+          const typename MeshType::ScalarType r1,
+          const typename MeshType::ScalarType r2,
+          const typename MeshType::ScalarType h,
+          const int SubDiv = 36  )
 {
  typedef typename MeshType::ScalarType ScalarType;
  typedef typename MeshType::CoordType CoordType;
@@ -433,14 +432,14 @@ void Cone( MeshType& in,
         b2 += SubDiv;
     }
 
-	if(r2!=0)
-	{
-		for(i=0;i<SubDiv;++i)
-		{
-			double a = math::ToRad(i*360.0/SubDiv);
-			ivp[cnt]=&*vi; (*vi).P()= CoordType( r2*cos(a), h/2.0, r2*sin(a)); ++vi;++cnt;
-		}
-	}
+    if(r2!=0)
+    {
+        for(i=0;i<SubDiv;++i)
+        {
+            double a = math::ToRad(i*360.0/SubDiv);
+            ivp[cnt]=&*vi; (*vi).P()= CoordType( r2*cos(a), h/2.0, r2*sin(a)); ++vi;++cnt;
+        }
+    }
 
   FaceIterator fi=in.face.begin();
 
@@ -456,29 +455,29 @@ void Cone( MeshType& in,
       (*fi).V(1)=ivp[b2+(i+1)%SubDiv];
         }
 
-	if(r1==0) for(i=0;i<SubDiv;++i,++fi)
-		{
-	  (*fi).V(0)=ivp[0];
-	  (*fi).V(1)=ivp[b2+i];
-	  (*fi).V(2)=ivp[b2+(i+1)%SubDiv];
-		}
+    if(r1==0) for(i=0;i<SubDiv;++i,++fi)
+        {
+      (*fi).V(0)=ivp[0];
+      (*fi).V(1)=ivp[b2+i];
+      (*fi).V(2)=ivp[b2+(i+1)%SubDiv];
+        }
   if(r2==0)	for(i=0;i<SubDiv;++i,++fi){
       (*fi).V(0)=ivp[1];
       (*fi).V(2)=ivp[b1+i];
       (*fi).V(1)=ivp[b1+(i+1)%SubDiv];
         }
 
-	if(r1!=0 && r2!=0)for(i=0;i<SubDiv;++i)
-		{
-	  (*fi).V(0)=ivp[b1+i];
-	  (*fi).V(1)=ivp[b2+i];
-	  (*fi).V(2)=ivp[b2+(i+1)%SubDiv];
-	  ++fi;
-	  (*fi).V(0)=ivp[b1+i];
-	  (*fi).V(1)=ivp[b2+(i+1)%SubDiv];
-	  (*fi).V(2)=ivp[b1+(i+1)%SubDiv];
-	  ++fi;
-		}
+    if(r1!=0 && r2!=0)for(i=0;i<SubDiv;++i)
+        {
+      (*fi).V(0)=ivp[b1+i];
+      (*fi).V(1)=ivp[b2+i];
+      (*fi).V(2)=ivp[b2+(i+1)%SubDiv];
+      ++fi;
+      (*fi).V(0)=ivp[b1+i];
+      (*fi).V(1)=ivp[b2+(i+1)%SubDiv];
+      (*fi).V(2)=ivp[b1+(i+1)%SubDiv];
+      ++fi;
+        }
 }
 
 
@@ -654,10 +653,10 @@ void Grid(MeshType & in, int w, int h, float wl, float hl, float *data=0)
 template <class MeshType>
 void FaceGrid(MeshType & in, int w, int h)
 {
-	assert(in.vn == (int)in.vert.size()); // require a compact vertex vector
-	assert(in.vn >= w*h); // the number of vertices should match the number of expected grid vertices
+    assert(in.vn == (int)in.vert.size()); // require a compact vertex vector
+    assert(in.vn >= w*h); // the number of vertices should match the number of expected grid vertices
 
-	Allocator<MeshType>::AddFaces(in,(w-1)*(h-1)*2);
+    Allocator<MeshType>::AddFaces(in,(w-1)*(h-1)*2);
 
 //   i+0,j+0 -- i+0,j+1
 //      |   \     |
@@ -694,8 +693,8 @@ void FaceGrid(MeshType & in, int w, int h)
 template <class MeshType>
 void FaceGrid(MeshType & in, const std::vector<int> &grid, int w, int h)
 {
-	assert(in.vn == (int)in.vert.size()); // require a compact vertex vector
-	assert(in.vn <= w*h); // the number of vertices should match the number of expected grid vertices
+    assert(in.vn == (int)in.vert.size()); // require a compact vertex vector
+    assert(in.vn <= w*h); // the number of vertices should match the number of expected grid vertices
 
 //	    V0       V1
 //   i+0,j+0 -- i+0,j+1
@@ -715,27 +714,27 @@ void FaceGrid(MeshType & in, const std::vector<int> &grid, int w, int h)
             int V2i= grid[(i+1)*w+j+0];
             int V3i= grid[(i+1)*w+j+1];
 
-			int ndone=0;
-			bool quad = (V0i>=0 && V1i>=0 && V2i>=0 && V3i>=0 ) && tri::HasPerFaceFlags(in);
+            int ndone=0;
+            bool quad = (V0i>=0 && V1i>=0 && V2i>=0 && V3i>=0 ) && tri::HasPerFaceFlags(in);
 
-			if(V0i>=0 && V2i>=0 && V3i>=0 )
-			{
-				typename MeshType::FaceIterator f= Allocator<MeshType>::AddFaces(in,1);
-				f->V(0)=&(in.vert[V3i]);
-				f->V(1)=&(in.vert[V2i]);
-				f->V(2)=&(in.vert[V0i]);
-				if (quad) f->SetF(2);
-				ndone++;
-			}
-			if(V0i>=0 && V1i>=0 && V3i>=0 )
-			{
-				typename MeshType::FaceIterator f= Allocator<MeshType>::AddFaces(in,1);
-				f->V(0)=&(in.vert[V0i]);
-				f->V(1)=&(in.vert[V1i]);
-				f->V(2)=&(in.vert[V3i]);
-				if (quad) f->SetF(2);
-				ndone++;
-			}
+            if(V0i>=0 && V2i>=0 && V3i>=0 )
+            {
+                typename MeshType::FaceIterator f= Allocator<MeshType>::AddFaces(in,1);
+                f->V(0)=&(in.vert[V3i]);
+                f->V(1)=&(in.vert[V2i]);
+                f->V(2)=&(in.vert[V0i]);
+                if (quad) f->SetF(2);
+                ndone++;
+            }
+            if(V0i>=0 && V1i>=0 && V3i>=0 )
+            {
+                typename MeshType::FaceIterator f= Allocator<MeshType>::AddFaces(in,1);
+                f->V(0)=&(in.vert[V0i]);
+                f->V(1)=&(in.vert[V1i]);
+                f->V(2)=&(in.vert[V3i]);
+                if (quad) f->SetF(2);
+                ndone++;
+            }
 
             if (ndone==0) { // try diag the other way
          if(V2i>=0 && V0i>=0 && V1i>=0 )
@@ -850,49 +849,49 @@ void OrientedDisk(MeshType &m, int slices, Point3f center, Point3f norm, float r
 template <class MeshType>
 void Cylinder(int slices, int stacks, MeshType & m){
 
-	typename MeshType::VertexIterator vi = vcg::tri::Allocator<MeshType>::AddVertices(m,slices*(stacks+1));
-	for ( int i = 0; i < stacks+1; ++i)
-	for ( int j = 0; j < slices; ++j)
-	{
-		float x,y,h;
-				x = cos(	2.0 * M_PI / slices * j);
-				y = sin(	2.0 * M_PI / slices * j);
-				h = 2 * i / (float)(stacks) - 1;
+    typename MeshType::VertexIterator vi = vcg::tri::Allocator<MeshType>::AddVertices(m,slices*(stacks+1));
+    for ( int i = 0; i < stacks+1; ++i)
+    for ( int j = 0; j < slices; ++j)
+    {
+        float x,y,h;
+                x = cos(	2.0 * M_PI / slices * j);
+                y = sin(	2.0 * M_PI / slices * j);
+                h = 2 * i / (float)(stacks) - 1;
 
-				(*vi).P() = typename MeshType::CoordType(x,h,y);
-				++vi;
-		}
+                (*vi).P() = typename MeshType::CoordType(x,h,y);
+                ++vi;
+        }
 
-	typename MeshType::FaceIterator fi ;
-	for ( int j = 0; j < stacks; ++j)
-		for ( int i = 0; i < slices; ++i)
-	{
-	   int a,b,c,d;
-	   a =  (j+0)*slices + i;
-	   b =  (j+1)*slices + i;
-	   c =  (j+1)*slices + (i+1)%slices;
-	   d =  (j+0)*slices + (i+1)%slices;
-			 if(((i+j)%2) == 0){
-				fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-				(*fi).V(0) = &m.vert[ a ];
-				(*fi).V(1) = &m.vert[ b ];
-				(*fi).V(2) = &m.vert[ c ];
+    typename MeshType::FaceIterator fi ;
+    for ( int j = 0; j < stacks; ++j)
+        for ( int i = 0; i < slices; ++i)
+    {
+       int a,b,c,d;
+       a =  (j+0)*slices + i;
+       b =  (j+1)*slices + i;
+       c =  (j+1)*slices + (i+1)%slices;
+       d =  (j+0)*slices + (i+1)%slices;
+             if(((i+j)%2) == 0){
+                fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+                (*fi).V(0) = &m.vert[ a ];
+                (*fi).V(1) = &m.vert[ b ];
+                (*fi).V(2) = &m.vert[ c ];
 
-				fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-				(*fi).V(0) = &m.vert[ c ];
-				(*fi).V(1) = &m.vert[ d ];
-				(*fi).V(2) = &m.vert[ a ];
-			 }
-			 else{
-				fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-				(*fi).V(0) = &m.vert[ b ];
-				(*fi).V(1) = &m.vert[ c ];
-				(*fi).V(2) = &m.vert[ d ];
+                fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+                (*fi).V(0) = &m.vert[ c ];
+                (*fi).V(1) = &m.vert[ d ];
+                (*fi).V(2) = &m.vert[ a ];
+             }
+             else{
+                fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+                (*fi).V(0) = &m.vert[ b ];
+                (*fi).V(1) = &m.vert[ c ];
+                (*fi).V(2) = &m.vert[ d ];
 
-				fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-				(*fi).V(0) = &m.vert[ d ];
-				(*fi).V(1) = &m.vert[ a ];
-				(*fi).V(2) = &m.vert[ b ];
+                fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+                (*fi).V(0) = &m.vert[ d ];
+                (*fi).V(1) = &m.vert[ a ];
+                (*fi).V(2) = &m.vert[ b ];
 
              }
     }
@@ -908,47 +907,47 @@ void Cylinder(int slices, int stacks, MeshType & m){
 
 template <class MeshType>
 void GenerateCameraMesh(MeshType &in){
-	typedef typename MeshType::CoordType MV;
-	MV vv[52]={
-		MV(-0.000122145 , -0.2 ,0.35),
-		MV(0.000122145 , -0.2 ,-0.35),MV(-0.000122145 , 0.2 ,0.35),MV(0.000122145 , 0.2 ,-0.35),MV(0.999878 , -0.2 ,0.350349),MV(1.00012 , -0.2 ,-0.349651),MV(0.999878 , 0.2 ,0.350349),MV(1.00012 , 0.2 ,-0.349651),MV(1.28255 , 0.1 ,0.754205),MV(1.16539 , 0.1 ,1.03705),MV(0.88255 , 0.1 ,1.15421),
-		MV(0.599707 , 0.1 ,1.03705),MV(0.48255 , 0.1 ,0.754205),MV(0.599707 , 0.1 ,0.471362),MV(0.88255 , 0.1 ,0.354205),MV(1.16539 , 0.1 ,0.471362),MV(1.28255 , -0.1 ,0.754205),MV(1.16539 , -0.1 ,1.03705),MV(0.88255 , -0.1 ,1.15421),MV(0.599707 , -0.1 ,1.03705),MV(0.48255 , -0.1 ,0.754205),
-		MV(0.599707 , -0.1 ,0.471362),MV(1.16539 , -0.1 ,0.471362),MV(0.88255 , -0.1 ,0.354205),MV(3.49164e-005 , 0 ,-0.1),MV(1.74582e-005 , -0.0866025 ,-0.05),MV(-1.74582e-005 , -0.0866025 ,0.05),MV(-3.49164e-005 , 8.74228e-009 ,0.1),MV(-1.74582e-005 , 0.0866025 ,0.05),MV(1.74582e-005 , 0.0866025 ,-0.05),MV(-0.399913 , 1.99408e-022 ,-0.25014),
-		MV(-0.399956 , -0.216506 ,-0.12514),MV(-0.400044 , -0.216506 ,0.12486),MV(-0.400087 , 2.18557e-008 ,0.24986),MV(-0.400044 , 0.216506 ,0.12486),MV(-0.399956 , 0.216506 ,-0.12514),MV(0.479764 , 0.1 ,0.754205),MV(0.362606 , 0.1 ,1.03705),MV(0.0797637 , 0.1 ,1.15421),MV(-0.203079 , 0.1 ,1.03705),MV(-0.320236 , 0.1 ,0.754205),
-		MV(-0.203079 , 0.1 ,0.471362),MV(0.0797637 , 0.1 ,0.354205),MV(0.362606 , 0.1 ,0.471362),MV(0.479764 , -0.1 ,0.754205),MV(0.362606 , -0.1 ,1.03705),MV(0.0797637 , -0.1 ,1.15421),MV(-0.203079 , -0.1 ,1.03705),MV(-0.320236 , -0.1 ,0.754205),MV(0.0797637 , -0.1 ,0.354205),MV(0.362606 , -0.1 ,0.471362),
-		MV(-0.203079 , -0.1 ,0.471362),	};
-	int ff[88][3]={
-		{0,2,3},
-		{3,1,0},{4,5,7},{7,6,4},{0,1,5},{5,4,0},{1,3,7},{7,5,1},{3,2,6},{6,7,3},{2,0,4},
-		{4,6,2},{10,9,8},{10,12,11},{10,13,12},{10,14,13},{10,15,14},{10,8,15},{8,17,16},{8,9,17},{9,18,17},
-		{9,10,18},{10,19,18},{10,11,19},{11,20,19},{11,12,20},{12,21,20},{12,13,21},{13,23,21},{13,14,23},{14,22,23},
-		{14,15,22},{15,16,22},{15,8,16},{23,16,17},{23,17,18},{23,18,19},{23,19,20},{23,20,21},{23,22,16},{25,27,26},
-		{25,28,27},{25,29,28},{25,24,29},{24,31,30},{24,25,31},{25,32,31},{25,26,32},{26,33,32},{26,27,33},{27,34,33},
-		{27,28,34},{28,35,34},{28,29,35},{29,30,35},{29,24,30},{35,30,31},{35,31,32},{35,32,33},{35,33,34},{42,37,36},
-		{42,38,37},{42,39,38},{42,40,39},{42,41,40},{42,36,43},{36,45,44},{36,37,45},{37,46,45},{37,38,46},{38,47,46},
-		{38,39,47},{39,48,47},{39,40,48},{40,51,48},{40,41,51},{41,49,51},{41,42,49},{42,50,49},{42,43,50},{43,44,50},
-		{43,36,44},{51,44,45},{51,45,46},{51,46,47},{51,47,48},{51,49,50},{51,50,44},
-	};
+    typedef typename MeshType::CoordType MV;
+    MV vv[52]={
+        MV(-0.000122145 , -0.2 ,0.35),
+        MV(0.000122145 , -0.2 ,-0.35),MV(-0.000122145 , 0.2 ,0.35),MV(0.000122145 , 0.2 ,-0.35),MV(0.999878 , -0.2 ,0.350349),MV(1.00012 , -0.2 ,-0.349651),MV(0.999878 , 0.2 ,0.350349),MV(1.00012 , 0.2 ,-0.349651),MV(1.28255 , 0.1 ,0.754205),MV(1.16539 , 0.1 ,1.03705),MV(0.88255 , 0.1 ,1.15421),
+        MV(0.599707 , 0.1 ,1.03705),MV(0.48255 , 0.1 ,0.754205),MV(0.599707 , 0.1 ,0.471362),MV(0.88255 , 0.1 ,0.354205),MV(1.16539 , 0.1 ,0.471362),MV(1.28255 , -0.1 ,0.754205),MV(1.16539 , -0.1 ,1.03705),MV(0.88255 , -0.1 ,1.15421),MV(0.599707 , -0.1 ,1.03705),MV(0.48255 , -0.1 ,0.754205),
+        MV(0.599707 , -0.1 ,0.471362),MV(1.16539 , -0.1 ,0.471362),MV(0.88255 , -0.1 ,0.354205),MV(3.49164e-005 , 0 ,-0.1),MV(1.74582e-005 , -0.0866025 ,-0.05),MV(-1.74582e-005 , -0.0866025 ,0.05),MV(-3.49164e-005 , 8.74228e-009 ,0.1),MV(-1.74582e-005 , 0.0866025 ,0.05),MV(1.74582e-005 , 0.0866025 ,-0.05),MV(-0.399913 , 1.99408e-022 ,-0.25014),
+        MV(-0.399956 , -0.216506 ,-0.12514),MV(-0.400044 , -0.216506 ,0.12486),MV(-0.400087 , 2.18557e-008 ,0.24986),MV(-0.400044 , 0.216506 ,0.12486),MV(-0.399956 , 0.216506 ,-0.12514),MV(0.479764 , 0.1 ,0.754205),MV(0.362606 , 0.1 ,1.03705),MV(0.0797637 , 0.1 ,1.15421),MV(-0.203079 , 0.1 ,1.03705),MV(-0.320236 , 0.1 ,0.754205),
+        MV(-0.203079 , 0.1 ,0.471362),MV(0.0797637 , 0.1 ,0.354205),MV(0.362606 , 0.1 ,0.471362),MV(0.479764 , -0.1 ,0.754205),MV(0.362606 , -0.1 ,1.03705),MV(0.0797637 , -0.1 ,1.15421),MV(-0.203079 , -0.1 ,1.03705),MV(-0.320236 , -0.1 ,0.754205),MV(0.0797637 , -0.1 ,0.354205),MV(0.362606 , -0.1 ,0.471362),
+        MV(-0.203079 , -0.1 ,0.471362),	};
+    int ff[88][3]={
+        {0,2,3},
+        {3,1,0},{4,5,7},{7,6,4},{0,1,5},{5,4,0},{1,3,7},{7,5,1},{3,2,6},{6,7,3},{2,0,4},
+        {4,6,2},{10,9,8},{10,12,11},{10,13,12},{10,14,13},{10,15,14},{10,8,15},{8,17,16},{8,9,17},{9,18,17},
+        {9,10,18},{10,19,18},{10,11,19},{11,20,19},{11,12,20},{12,21,20},{12,13,21},{13,23,21},{13,14,23},{14,22,23},
+        {14,15,22},{15,16,22},{15,8,16},{23,16,17},{23,17,18},{23,18,19},{23,19,20},{23,20,21},{23,22,16},{25,27,26},
+        {25,28,27},{25,29,28},{25,24,29},{24,31,30},{24,25,31},{25,32,31},{25,26,32},{26,33,32},{26,27,33},{27,34,33},
+        {27,28,34},{28,35,34},{28,29,35},{29,30,35},{29,24,30},{35,30,31},{35,31,32},{35,32,33},{35,33,34},{42,37,36},
+        {42,38,37},{42,39,38},{42,40,39},{42,41,40},{42,36,43},{36,45,44},{36,37,45},{37,46,45},{37,38,46},{38,47,46},
+        {38,39,47},{39,48,47},{39,40,48},{40,51,48},{40,41,51},{41,49,51},{41,42,49},{42,50,49},{42,43,50},{43,44,50},
+        {43,36,44},{51,44,45},{51,45,46},{51,46,47},{51,47,48},{51,49,50},{51,50,44},
+    };
 
-	 in.Clear();
-	 Allocator<MeshType>::AddVertices(in,52);
-	 Allocator<MeshType>::AddFaces(in,88);
+     in.Clear();
+     Allocator<MeshType>::AddVertices(in,52);
+     Allocator<MeshType>::AddFaces(in,88);
 
-	in.vn=52;in.fn=88;
-	int i,j;
-	for(i=0;i<in.vn;i++)
-				in.vert[i].P()=vv[i];;
+    in.vn=52;in.fn=88;
+    int i,j;
+    for(i=0;i<in.vn;i++)
+                in.vert[i].P()=vv[i];;
 
-	std::vector<typename MeshType::VertexPointer> index(in.vn);
+    std::vector<typename MeshType::VertexPointer> index(in.vn);
 
-	typename MeshType::VertexIterator vi;
-	for(j=0,vi=in.vert.begin();j<in.vn;++j,++vi)	index[j] = &*vi;
-	for(j=0;j<in.fn;++j)
-	{
-		in.face[j].V(0)=index[ff[j][0]];
-		in.face[j].V(1)=index[ff[j][1]];
-		in.face[j].V(2)=index[ff[j][2]];
-	}
+    typename MeshType::VertexIterator vi;
+    for(j=0,vi=in.vert.begin();j<in.vn;++j,++vi)	index[j] = &*vi;
+    for(j=0;j<in.fn;++j)
+    {
+        in.face[j].V(0)=index[ff[j][0]];
+        in.face[j].V(1)=index[ff[j][1]];
+        in.face[j].V(2)=index[ff[j][2]];
+    }
 }
 
 template <class MeshType>
