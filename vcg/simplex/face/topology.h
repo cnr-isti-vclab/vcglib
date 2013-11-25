@@ -25,9 +25,6 @@
 #define _VCG_FACE_TOPOLOGY
 
 #include <vcg/simplex/face/pos.h>
-#include <vcg/complex/allocate.h>
-#include <vector>
-#include <algorithm>
 
 namespace vcg {
 namespace face {
@@ -35,8 +32,8 @@ namespace face {
 /*@{*/
 
 /** Return a boolean that indicate if the face is complex.
-	@param j Index of the edge
-	@return true se la faccia e' manifold, false altrimenti
+    @param j Index of the edge
+    @return true se la faccia e' manifold, false altrimenti
 */
 template <class FaceType>
 inline bool IsManifold( FaceType const & f, const int j )
@@ -49,8 +46,8 @@ inline bool IsManifold( FaceType const & f, const int j )
 }
 
 /** Return a boolean that indicate if the j-th edge of the face is a border.
-	@param j Index of the edge
-	@return true if j is an edge of border, false otherwise
+    @param j Index of the edge
+    @return true if j is an edge of border, false otherwise
 */
 template <class FaceType>
 inline bool IsBorder(FaceType const & f,  const int j )
@@ -159,10 +156,10 @@ inline int ComplexSize(FaceType & f, const int e)
 
 
 /** This function check the FF topology correctness for an edge of a face.
-	It's possible to use it also in non-two manifold situation.
-		The function cannot be applicated if the adjacencies among faces aren't defined.
-		@param f the face to be checked
-		@param e Index of the edge to be checked
+    It's possible to use it also in non-two manifold situation.
+        The function cannot be applicated if the adjacencies among faces aren't defined.
+        @param f the face to be checked
+        @param e Index of the edge to be checked
 */
 template <class FaceType>
 bool FFCorrectness(FaceType & f, const int e)
@@ -230,10 +227,10 @@ void FFDetachManifold(FaceType & f, const int e)
 }
 
 /** This function detach the face from the adjacent face via the edge e.
-	It's possible to use it also in non-two manifold situation.
-		The function cannot be applicated if the adjacencies among faces aren't defined.
-		@param f the face to be detached
-		@param e Index of the edge to be detached
+    It's possible to use it also in non-two manifold situation.
+        The function cannot be applicated if the adjacencies among faces aren't defined.
+        @param f the face to be detached
+        @param e Index of the edge to be detached
 */
 
 template <class FaceType>
@@ -244,25 +241,25 @@ void FFDetach(FaceType & f, const int e)
     int complexity;
     assert(complexity=ComplexSize(f,e));
 
-	Pos< FaceType > FirstFace(&f,e);  // Build the half edge
-	Pos< FaceType > LastFace(&f,e);  // Build the half edge
-	FirstFace.NextF();
-	LastFace.NextF();
-	int cnt=0;
+    Pos< FaceType > FirstFace(&f,e);  // Build the half edge
+    Pos< FaceType > LastFace(&f,e);  // Build the half edge
+    FirstFace.NextF();
+    LastFace.NextF();
+    int cnt=0;
 
     // then in case of non manifold face continue to advance LastFace
     // until I find it become the one that
     // preceed the face I want to erase
 
-	while ( LastFace.f->FFp(LastFace.z) != &f)
-	{
-		assert(ComplexSize(*LastFace.f,LastFace.z)==complexity);
-		assert(!LastFace.IsManifold());   // We enter in this loop only if we are on a non manifold edge
-		assert(!LastFace.IsBorder());
-		LastFace.NextF();
-		cnt++;
-		assert(cnt<100);
-	}
+    while ( LastFace.f->FFp(LastFace.z) != &f)
+    {
+        assert(ComplexSize(*LastFace.f,LastFace.z)==complexity);
+        assert(!LastFace.IsManifold());   // We enter in this loop only if we are on a non manifold edge
+        assert(!LastFace.IsBorder());
+        LastFace.NextF();
+        cnt++;
+        assert(cnt<100);
+    }
 
     assert(LastFace.f->FFp(LastFace.z)==&f);
     assert(f.FFp(e)== FirstFace.f);
@@ -283,25 +280,25 @@ void FFDetach(FaceType & f, const int e)
 
 
 /** This function attach the face (via the edge z1) to another face (via the edge z2). It's possible to use it also in non-two manifold situation.
-		The function cannot be applicated if the adjacencies among faces aren't define.
-		@param z1 Index of the edge
-		@param f2 Pointer to the face
-		@param z2 The edge of the face f2
+        The function cannot be applicated if the adjacencies among faces aren't define.
+        @param z1 Index of the edge
+        @param f2 Pointer to the face
+        @param z2 The edge of the face f2
 */
 template <class FaceType>
 void FFAttach(FaceType * &f, int z1, FaceType *&f2, int z2)
 {
-	//typedef FEdgePosB< FACE_TYPE > ETYPE;
-	Pos< FaceType > EPB(f2,z2);
-	Pos< FaceType > TEPB;
-	TEPB = EPB;
-	EPB.NextF();
-	while( EPB.f != f2)  //Alla fine del ciclo TEPB contiene la faccia che precede f2
-	{
-		TEPB = EPB;
-		EPB.NextF();
-	}
-	//Salvo i dati di f1 prima di sovrascrivere
+    //typedef FEdgePosB< FACE_TYPE > ETYPE;
+    Pos< FaceType > EPB(f2,z2);
+    Pos< FaceType > TEPB;
+    TEPB = EPB;
+    EPB.NextF();
+    while( EPB.f != f2)  //Alla fine del ciclo TEPB contiene la faccia che precede f2
+    {
+        TEPB = EPB;
+        EPB.NextF();
+    }
+    //Salvo i dati di f1 prima di sovrascrivere
   FaceType *f1prec = f->FFp(z1);
   int z1prec = f->FFi(z1);
     //Aggiorno f1
@@ -313,11 +310,11 @@ void FFAttach(FaceType * &f, int z1, FaceType *&f2, int z2)
 }
 
 /** This function attach the face (via the edge z1) to another face (via the edge z2).
-		It is not possible to use it also in non-two manifold situation.
-		The function cannot be applicated if the adjacencies among faces aren't define.
-		@param z1 Index of the edge
-		@param f2 Pointer to the face
-		@param z2 The edge of the face f2
+        It is not possible to use it also in non-two manifold situation.
+        The function cannot be applicated if the adjacencies among faces aren't define.
+        @param z1 Index of the edge
+        @param f2 Pointer to the face
+        @param z2 The edge of the face f2
 */
 template <class FaceType>
 void FFAttachManifold(FaceType * &f1, int z1, FaceType *&f2, int z2)
@@ -345,13 +342,13 @@ void FFSetBorder(FaceType * &f1, int z1)
 template <class FaceType>
 void AssertAdj(FaceType & f)
 {
-	assert(f.FFp(0)->FFp(f.FFi(0))==&f);
-	assert(f.FFp(1)->FFp(f.FFi(1))==&f);
-	assert(f.FFp(2)->FFp(f.FFi(2))==&f);
+    assert(f.FFp(0)->FFp(f.FFi(0))==&f);
+    assert(f.FFp(1)->FFp(f.FFi(1))==&f);
+    assert(f.FFp(2)->FFp(f.FFi(2))==&f);
 
-	assert(f.FFp(0)->FFi(f.FFi(0))==0);
-	assert(f.FFp(1)->FFi(f.FFi(1))==1);
-	assert(f.FFp(2)->FFi(f.FFi(2))==2);
+    assert(f.FFp(0)->FFi(f.FFi(0))==0);
+    assert(f.FFp(1)->FFi(f.FFi(1))==1);
+    assert(f.FFp(2)->FFi(f.FFi(2))==2);
 }
 
 /**
@@ -362,17 +359,17 @@ void AssertAdj(FaceType & f)
 template <class FaceType>
 bool CheckOrientation(FaceType &f, int z)
 {
-	if (IsBorder(f, z))
-		return true;
-	else
-	{
-		FaceType *g = f.FFp(z);
-		int gi = f.FFi(z);
-		if (f.V0(z) == g->V1(gi))
-			return true;
-		else
-			return false;
-	}
+    if (IsBorder(f, z))
+        return true;
+    else
+    {
+        FaceType *g = f.FFp(z);
+        int gi = f.FFi(z);
+        if (f.V0(z) == g->V1(gi))
+            return true;
+        else
+            return false;
+    }
 }
 
 
@@ -386,51 +383,51 @@ void SwapEdge(FaceType &f, const int z) { SwapEdge<FaceType,true>(f,z); }
 template <class FaceType, bool UpdateTopology>
 void SwapEdge(FaceType &f, const int z)
 {
-	// swap V0(z) with V1(z)
-	std::swap(f.V0(z), f.V1(z));
+    // swap V0(z) with V1(z)
+    std::swap(f.V0(z), f.V1(z));
 
-	// Managemnt of faux edge information (edge z is not affected)
-	bool Faux1 = f.IsF((z+1)%3);
-	bool Faux2 = f.IsF((z+2)%3);
-	if(Faux1) f.SetF((z+2)%3); else f.ClearF((z+2)%3);
-	if(Faux2) f.SetF((z+1)%3); else f.ClearF((z+1)%3);
+    // Managemnt of faux edge information (edge z is not affected)
+    bool Faux1 = f.IsF((z+1)%3);
+    bool Faux2 = f.IsF((z+2)%3);
+    if(Faux1) f.SetF((z+2)%3); else f.ClearF((z+2)%3);
+    if(Faux2) f.SetF((z+1)%3); else f.ClearF((z+1)%3);
 
-	if(f.HasFFAdjacency() && UpdateTopology)
-	{
-		// store information to preserve topology
-		int z1 = (z+1)%3;
-		int z2 = (z+2)%3;
-		FaceType *g1p = f.FFp(z1);
-		FaceType *g2p = f.FFp(z2);
-		int g1i = f.FFi(z1);
-		int g2i = f.FFi(z2);
+    if(f.HasFFAdjacency() && UpdateTopology)
+    {
+        // store information to preserve topology
+        int z1 = (z+1)%3;
+        int z2 = (z+2)%3;
+        FaceType *g1p = f.FFp(z1);
+        FaceType *g2p = f.FFp(z2);
+        int g1i = f.FFi(z1);
+        int g2i = f.FFi(z2);
 
-		// g0 face topology is not affected by the swap
+        // g0 face topology is not affected by the swap
 
-		if (g1p != &f)
-		{
-			g1p->FFi(g1i) = z2;
-			f.FFi(z2) = g1i;
-		}
-		else
-		{
-			f.FFi(z2) = z2;
-		}
+        if (g1p != &f)
+        {
+            g1p->FFi(g1i) = z2;
+            f.FFi(z2) = g1i;
+        }
+        else
+        {
+            f.FFi(z2) = z2;
+        }
 
-		if (g2p != &f)
-		{
-			g2p->FFi(g2i) = z1;
-			f.FFi(z1) = g2i;
-		}
-		else
-		{
-			f.FFi(z1) = z1;
-		}
+        if (g2p != &f)
+        {
+            g2p->FFi(g2i) = z1;
+            f.FFi(z1) = g2i;
+        }
+        else
+        {
+            f.FFi(z1) = z1;
+        }
 
-		// finalize swap
-		f.FFp(z1) = g2p;
-		f.FFp(z2) = g1p;
-	}
+        // finalize swap
+        f.FFp(z1) = g2p;
+        f.FFp(z2) = g1p;
+    }
 }
 
 /*! Perform a simple edge collapse
@@ -561,8 +558,8 @@ bool CheckFlipEdge(FaceType &f, int z)
     // boundary edges cannot be flipped
   if (face::IsBorder(f, z)) return false;
 
-	FaceType *g = f.FFp(z);
-	int		 w = f.FFi(z);
+    FaceType *g = f.FFp(z);
+    int		 w = f.FFi(z);
 
     // check if the vertices of the edge are the same
   // e.g. the mesh has to be well oriented
@@ -605,52 +602,52 @@ bool CheckFlipEdge(FaceType &f, int z)
 template <class FaceType>
 void FlipEdge(FaceType &f, const int z)
 {
-	assert(z>=0);
-	assert(z<3);
-	assert( !IsBorder(f,z) );
-	assert( face::IsManifold<FaceType>(f, z));
+    assert(z>=0);
+    assert(z<3);
+    assert( !IsBorder(f,z) );
+    assert( face::IsManifold<FaceType>(f, z));
 
-	FaceType *g = f.FFp(z);
-	int		 w = f.FFi(z);
+    FaceType *g = f.FFp(z);
+    int		 w = f.FFi(z);
 
-	assert( g->V(w)	== f.V1(z) );
-	assert( g->V1(w)== f.V(z) );
-	assert( g->V2(w)!= f.V(z) );
-	assert( g->V2(w)!= f.V1(z) );
-	assert( g->V2(w)!= f.V2(z) );
+    assert( g->V(w)	== f.V1(z) );
+    assert( g->V1(w)== f.V(z) );
+    assert( g->V2(w)!= f.V(z) );
+    assert( g->V2(w)!= f.V1(z) );
+    assert( g->V2(w)!= f.V2(z) );
 
-	f.V1(z) = g->V2(w);
-	g->V1(w) = f.V2(z);
+    f.V1(z) = g->V2(w);
+    g->V1(w) = f.V2(z);
 
-	f.FFp(z)				= g->FFp((w+1)%3);
-	f.FFi(z)				= g->FFi((w+1)%3);
-	g->FFp(w)				= f.FFp((z+1)%3);
-	g->FFi(w)				= f.FFi((z+1)%3);
-	f.FFp((z+1)%3)				= g;
-	f.FFi((z+1)%3)	= (w+1)%3;
-	g->FFp((w+1)%3)			= &f;
-	g->FFi((w+1)%3) = (z+1)%3;
+    f.FFp(z)				= g->FFp((w+1)%3);
+    f.FFi(z)				= g->FFi((w+1)%3);
+    g->FFp(w)				= f.FFp((z+1)%3);
+    g->FFi(w)				= f.FFi((z+1)%3);
+    f.FFp((z+1)%3)				= g;
+    f.FFi((z+1)%3)	= (w+1)%3;
+    g->FFp((w+1)%3)			= &f;
+    g->FFi((w+1)%3) = (z+1)%3;
 
-	if(f.FFp(z)==g)
-	{
-		f.FFp(z) = &f;
-		f.FFi(z) = z;
-	}
-	else
-	{
-		f.FFp(z)->FFp( f.FFi(z) ) = &f;
-		f.FFp(z)->FFi( f.FFi(z) ) = z;
-	}
-	if(g->FFp(w)==&f)
-	{
-		g->FFp(w)=g;
-		g->FFi(w)=w;
-	}
-	else
-	{
-		g->FFp(w)->FFp( g->FFi(w) ) = g;
-		g->FFp(w)->FFi( g->FFi(w) ) = w;
-	}
+    if(f.FFp(z)==g)
+    {
+        f.FFp(z) = &f;
+        f.FFi(z) = z;
+    }
+    else
+    {
+        f.FFp(z)->FFp( f.FFi(z) ) = &f;
+        f.FFp(z)->FFi( f.FFi(z) ) = z;
+    }
+    if(g->FFp(w)==&f)
+    {
+        g->FFp(w)=g;
+        g->FFi(w)=w;
+    }
+    else
+    {
+        g->FFp(w)->FFp( g->FFi(w) ) = g;
+        g->FFp(w)->FFi( g->FFi(w) ) = w;
+    }
 }
 
 template <class FaceType>
@@ -667,47 +664,47 @@ void VFDetach(FaceType & f)
 template <class FaceType>
 void VFDetach(FaceType & f, int z)
 {
-	if(f.V(z)->VFp()==&f )  //if it is the first face detach from the begin
-	{
-		int fz = f.V(z)->VFi();
-		f.V(z)->VFp() = f.VFp(fz);
-		f.V(z)->VFi() = f.VFi(fz);
-	}
-	else  // scan the list of faces in order to finde the current face f to be detached
-	{
-	VFIterator<FaceType> x(f.V(z)->VFp(),f.V(z)->VFi());
-	VFIterator<FaceType> y;
+    if(f.V(z)->VFp()==&f )  //if it is the first face detach from the begin
+    {
+        int fz = f.V(z)->VFi();
+        f.V(z)->VFp() = f.VFp(fz);
+        f.V(z)->VFi() = f.VFi(fz);
+    }
+    else  // scan the list of faces in order to finde the current face f to be detached
+    {
+    VFIterator<FaceType> x(f.V(z)->VFp(),f.V(z)->VFi());
+    VFIterator<FaceType> y;
 
-		for(;;)
-		{
-			y = x;
-			++x;
-			assert(x.f!=0);
-			if(x.f==&f) // found!
-			{
-				y.f->VFp(y.z) = f.VFp(z);
-				y.f->VFi(y.z) = f.VFi(z);
-				break;
-			}
-		}
-	}
+        for(;;)
+        {
+            y = x;
+            ++x;
+            assert(x.f!=0);
+            if(x.f==&f) // found!
+            {
+                y.f->VFp(y.z) = f.VFp(z);
+                y.f->VFi(y.z) = f.VFi(z);
+                break;
+            }
+        }
+    }
 }
 
 /// Append a face in VF list of vertex f->V(z)
 template <class FaceType>
 void VFAppend(FaceType* & f, int z)
 {
-	typename FaceType::VertexType *v = f->V(z);
-	if (v->VFp()!=0)
-	{
-		FaceType *f0=v->VFp();
-		int z0=v->VFi();
-		//append
-		f->VFp(z)=f0;
-		f->VFi(z)=z0;
-	}
-	v->VFp()=f;
-	v->VFi()=z;
+    typename FaceType::VertexType *v = f->V(z);
+    if (v->VFp()!=0)
+    {
+        FaceType *f0=v->VFp();
+        int z0=v->VFi();
+        //append
+        f->VFp(z)=f0;
+        f->VFi(z)=z0;
+    }
+    v->VFp()=f;
+    v->VFi()=z;
 }
 
 /*!
@@ -721,19 +718,19 @@ void VFAppend(FaceType* & f, int z)
 template <class FaceType>
 void VVStarVF( typename FaceType::VertexType* vp, std::vector<typename FaceType::VertexType *> &starVec)
 {
-	typedef typename FaceType::VertexType* VertexPointer;
-	starVec.clear();
-	face::VFIterator<FaceType> vfi(vp);
-	while(!vfi.End())
-			{
-				starVec.push_back(vfi.F()->V1(vfi.I()));
-				starVec.push_back(vfi.F()->V2(vfi.I()));
-				++vfi;
-			}
+    typedef typename FaceType::VertexType* VertexPointer;
+    starVec.clear();
+    face::VFIterator<FaceType> vfi(vp);
+    while(!vfi.End())
+            {
+                starVec.push_back(vfi.F()->V1(vfi.I()));
+                starVec.push_back(vfi.F()->V2(vfi.I()));
+                ++vfi;
+            }
 
-	std::sort(starVec.begin(),starVec.end());
-	typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
-	starVec.resize(new_end-starVec.begin());
+    std::sort(starVec.begin(),starVec.end());
+    typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
+    starVec.resize(new_end-starVec.begin());
 }
 
 /*!
@@ -952,8 +949,8 @@ void VFOrderedStarFF(Pos<FaceType> &startPos,
 
 template <class FaceType>
 void VFOrderedStarFF(Pos<FaceType> &startPos,
-						std::vector<FaceType*> &faceVec,
-						std::vector<int> &edgeVec)
+                        std::vector<FaceType*> &faceVec,
+                        std::vector<int> &edgeVec)
 {
   std::vector<Pos<FaceType> > posVec;
   VFOrderedStarFF(startPos,posVec);
