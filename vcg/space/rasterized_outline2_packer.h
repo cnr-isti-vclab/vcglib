@@ -522,7 +522,7 @@ public:
             }
             finalArea +=  tri::OutlineUtil<SCALAR_TYPE>::Outline2Area(oldPoints);
         }
-        printf("PACKING EFFICIENCY: %f with scale %f\n", finalArea/gridArea, latestSuccessScale);
+//        printf("PACKING EFFICIENCY: %f with scale %f\n", finalArea/gridArea, latestSuccessScale);
     }
 
     //tries to pack polygons using the given gridSize and scaleFactor
@@ -563,7 +563,7 @@ public:
         for(size_t i=0;i<polyVec.size();i++) perm[i] = i;
         sort(perm.begin(),perm.end(),ComparisonFunctor<float>(polyVec));
 
-        printf("BEGIN OF PACKING\n");
+//        printf("BEGIN OF PACKING\n");
 
         // **** First Step: Rasterize all the polygons ****
         for (size_t i = 0; i < polyVec.size(); i++) {
@@ -643,7 +643,7 @@ public:
 
             //if we couldn't find a valid position for the poly return false, as we couldn't pack with the current scaleFactor
             if (bestRastIndex == -1) {
-                printf("Items didn't fit using %f as scaleFactor\n", scaleFactor);
+//                printf("Items didn't fit using %f as scaleFactor\n", scaleFactor);
                 return false;
             }
 
@@ -687,7 +687,7 @@ public:
         }
 
         //sort polyToContainer and trVec so that we have them ordered for dumping
-        printf("SUCCESSFULLY PACKED with scaleFactor %f\n", scaleFactor);
+//        printf("SUCCESSFULLY PACKED with scaleFactor %f\n", scaleFactor);
         return true;
     }
 
