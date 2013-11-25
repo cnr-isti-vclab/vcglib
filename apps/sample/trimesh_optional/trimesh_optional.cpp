@@ -21,6 +21,16 @@
 *                                                                           *
 ****************************************************************************/
 
+/*! \file trimesh_optional.cpp
+\ingroup code_sample
+
+\brief the minimal example of using the \ref optional_component "Optional Components".
+
+This file shows how to dynamically allocate component that you do not need most of the time.
+
+*/
+
+
 #include<vcg/complex/complex.h>
 
 #include<vcg/complex/algorithms/create/platonic.h>
@@ -29,33 +39,49 @@
 #include<vcg/complex/algorithms/update/normal.h>
 #include<vcg/complex/algorithms/update/bounding.h>
 #include<vcg/complex/algorithms/update/curvature.h>
-#include <vcg/complex/algorithms/refine.h>
 #include <vcg/complex/algorithms/refine_loop.h>
 #include <wrap/io_trimesh/export_off.h>
-#include <wrap/io_trimesh/export_off.h>
-class CFace;
-class CFaceOcf;
 
-class CVertex;
-class CVertexOcf;
+class MyFace;
+class MyVertex;
 
-struct MyUsedTypes:		 public	vcg::UsedTypes<vcg::Use<CVertex>::AsVertexType,vcg::Use<CFace>::AsFaceType>{};
-struct MyUsedTypesOcf: public vcg::UsedTypes<vcg::Use<CVertexOcf>::AsVertexType,vcg::Use<CFaceOcf>::AsFaceType>{};
+struct MyUsedTypes:    public	vcg::UsedTypes<
+    vcg::Use<MyVertex>::AsVertexType,
+    vcg::Use<MyFace  >::AsFaceType>{};
 
-// Optional stuff has two suffixes:
-// OCF Optional Component Fast
-// OCC Optional Component Compact
+class MyVertex     : public vcg::Vertex<	MyUsedTypes,
+    vcg::vertex::Coord3f,  vcg::vertex::Qualityf,
+    vcg::vertex::Color4b,  vcg::vertex::BitFlags,
+    vcg::vertex::Normal3f, vcg::vertex::VFAdj >{};
 
-class CVertex     : public vcg::Vertex<	MyUsedTypes,
-	vcg::vertex::Coord3f, vcg::vertex::BitFlags,vcg::vertex::Normal3f >{};
-class CVertexOcf  : public vcg::Vertex< MyUsedTypesOcf,
-	vcg::vertex::InfoOcf,  vcg::vertex::Coord3f, vcg::vertex::QualityfOcf,vcg::vertex::Color4b,
-	vcg::vertex::BitFlags, vcg::vertex::Normal3f,vcg::vertex::RadiusfOcf, vcg::vertex::CurvatureDirfOcf, vcg::vertex::CurvaturefOcf >{};
-class CFace       : public vcg::Face< MyUsedTypes,    vcg::face::FFAdj,    vcg::face::VertexRef, vcg::face::BitFlags, vcg::face::Normal3f > {};
-class CFaceOcf    : public vcg::Face< MyUsedTypesOcf, vcg::face::InfoOcf, vcg::face::FFAdjOcf, vcg::face::VertexRef, vcg::face::BitFlags, vcg::face::Normal3fOcf > {};
+class MyFace       : public vcg::Face< MyUsedTypes,
+    vcg::face::FFAdj,   vcg::face::VFAdj,
+    vcg::face::Color4b, vcg::face::VertexRef,
+    vcg::face::BitFlags,   vcg::face::Normal3f > {};
+class MyMesh       : public vcg::tri::TriMesh<     std::vector<MyVertex   >,           std::vector<MyFace   > > {};
 
-class CMesh       : public vcg::tri::TriMesh<     std::vector<CVertex   >,           std::vector<CFace   > > {};
-class CMeshOcf    : public vcg::tri::TriMesh<     vcg::vertex::vector_ocf<CVertexOcf>, vcg::face::vector_ocf<CFaceOcf> > {};
+
+class MyVertexOcf;
+class MyFaceOcf;
+
+struct MyUsedTypesOcf: public	vcg::UsedTypes<
+    vcg::Use<MyVertexOcf>::AsVertexType,
+    vcg::Use<MyFaceOcf>::AsFaceType>{};
+
+class MyVertexOcf  : public vcg::Vertex< MyUsedTypesOcf,
+    vcg::vertex::InfoOcf,       //   <--- Note the use of the 'special' InfoOcf component
+    vcg::vertex::Coord3f,  vcg::vertex::QualityfOcf,
+    vcg::vertex::Color4b,  vcg::vertex::BitFlags,
+    vcg::vertex::Normal3f, vcg::vertex::VFAdjOcf >{};
+
+class MyFaceOcf    : public vcg::Face< MyUsedTypesOcf,
+    vcg::face::InfoOcf,         //   <--- Note the use of the 'special' InfoOcf component
+    vcg::face::FFAdjOcf,   vcg::face::VFAdjOcf,
+    vcg::face::Color4bOcf, vcg::face::VertexRef,
+    vcg::face::BitFlags,   vcg::face::Normal3fOcf > {};
+
+// the mesh class must make use of the 'vector_ocf' containers instead of the classical std::vector
+class MyMeshOcf : public vcg::tri::TriMesh< vcg::vertex::vector_ocf<MyVertexOcf>, vcg::face::vector_ocf<MyFaceOcf> > {};
 
 
 using namespace vcg;
@@ -63,79 +89,59 @@ using namespace std;
 
 int main(int , char **)
 {
-	CMesh cm;
-	CMeshOcf cmof;
- 
+  MyMesh cm;
+  MyMeshOcf cmof;
+
   tri::Tetrahedron(cm);
   tri::Tetrahedron(cmof);
- 
+
   printf("Generated mesh has %i vertices and %i triangular faces\n",cm.VN(),cm.FN());
-  
+
   assert(tri::HasFFAdjacency(cmof) == false);
   cmof.face.EnableFFAdjacency();
   assert(tri::HasFFAdjacency(cmof) == true);
 
-  tri::UpdateTopology<CMesh   >::FaceFace(cm);
-  tri::UpdateTopology<CMeshOcf>::FaceFace(cmof);
+  assert(tri::HasVFAdjacency(cmof) == false);
+  cmof.vert.EnableVFAdjacency();
+  cmof.face.EnableVFAdjacency();
+  assert(tri::HasVFAdjacency(cmof) == true);
 
-  tri::UpdateFlags<CMesh   >::FaceBorderFromFF(cm);
-  tri::UpdateFlags<CMeshOcf>::FaceBorderFromFF(cmof);
+  tri::UpdateTopology<MyMesh   >::FaceFace(cm);
+  tri::UpdateTopology<MyMeshOcf>::FaceFace(cmof);
 
-  tri::UpdateNormal<CMesh   >::PerVertexPerFace(cm);
-  cmof.face.EnableNormal();  // if you remove this the next line will throw an exception for a missing 'normal' component
-  tri::UpdateNormal<CMeshOcf>::PerVertexPerFace(cmof);
+  tri::UpdateFlags<MyMesh   >::FaceBorderFromFF(cm);
+  tri::UpdateFlags<MyMeshOcf>::FaceBorderFromFF(cmof);
 
-  cmof.vert.EnableCurvature();
-  cmof.vert.EnableCurvatureDir();
+  tri::UpdateNormal<MyMesh   >::PerVertexPerFace(cm);
+  cmof.face.EnableNormal();  // remove this line and you will throw an exception for a missing 'normal' component
+  tri::UpdateNormal<MyMeshOcf>::PerVertexPerFace(cmof);
+
   cmof.vert.EnableQuality();
 
-  tri::UpdateColor<CMeshOcf>::PerVertexConstant(cmof,Color4b::LightGray);
+  tri::UpdateColor<MyMeshOcf>::PerVertexConstant(cmof,Color4b::LightGray);
+  printf("cmof IsColorEnabled() %s\n",cmof.face.back().IsColorEnabled()?"Yes":"No");
+  cmof.face.EnableColor();
+  tri::UpdateColor<MyMeshOcf>::PerFaceConstant(cmof,Color4b::LightGray);
   cmof.vert[0].C()=Color4b::Red;
+
+  printf("cmof IsColorEnabled() %s\n",cmof.face.back().IsColorEnabled()?"Yes":"No");
+  printf("cm IsColorEnabled() %s\n",cm.face.back().IsColorEnabled()?"Yes":"No");
+  printf("cm IsColorEnabled() %s\n",cm.face.back().HasColor()?"Yes":"No");
 
   printf("Normal of face 0 is %f %f %f\n\n",cm.face[0].N()[0],cm.face[0].N()[1],cm.face[0].N()[2]);
   int t0=0,t1=0,t2=0;
-  while(float(t1-t0)/CLOCKS_PER_SEC < 0.0025)
+  while(float(t1-t0)/CLOCKS_PER_SEC < 0.1f)
   {
     t0=clock();
-//        tri::Refine(cm,tri::MidPointButterfly<CMesh>(cm),0);
-//    tri::UpdateCurvature<CMeshOcf>::MeanAndGaussian(cmof);
-//    tri::UpdateQuality<CMeshOcf>::VertexFromGaussianCurvature(cmof);
-
-    tri::RefineOddEven<CMesh> (cm, tri::OddPointLoop<CMesh>(cm), tri::EvenPointLoop<CMesh>(), 0);
-    tri::Refine(cmof,tri::MidPoint<CMeshOcf>(&cmof),0);
+    tri::RefineOddEven<MyMesh> (cm, tri::OddPointLoop<MyMesh>(cm), tri::EvenPointLoop<MyMesh>(), 0);
     t1=clock();
-    tri::RefineOddEven<CMesh> (cm, tri::OddPointLoop<CMesh>(cm), tri::EvenPointLoop<CMesh>(), 0);
+    tri::RefineOddEven<MyMeshOcf> (cmof, tri::OddPointLoop<MyMeshOcf>(cmof), tri::EvenPointLoop<MyMeshOcf>(), 0);
     t2=clock();
   }
-  printf("Last Iteration: Refined a tetra up to a mesh of %i faces in %5.2f %5.2f sec\n",cm.FN(),float(t1-t0)/CLOCKS_PER_SEC,float(t2-t1)/CLOCKS_PER_SEC);
-    tri::io::ExporterOFF<CMeshOcf>::Save(cmof,"test.off",tri::io::Mask::IOM_VERTCOLOR);
-	unsigned int hh = 0;
-	for(CMeshOcf::VertexIterator vi = cmof.vert.begin(); vi!=cmof.vert.end();++vi,++hh){
-		if(hh%3==0)
-			vcg::tri::Allocator<CMeshOcf>::DeleteVertex(cmof,*vi);
-	}
-
-    cmof.vert.EnableRadius();
-//  return 0;
-  for(CMeshOcf::VertexIterator vi = cmof.vert.begin(); vi!=cmof.vert.end();++vi)
-    if(!(*vi).IsD())
-      {
-          vi->Q() = tri::Index(cmof,*vi);
-          vi->R() = vi->P()[0];
-        }
-
-
-      tri::Allocator<CMeshOcf>::CompactVertexVector(cmof);
-      tri::UpdateBounding<CMeshOcf>::Box(cmof);
-      for(CMeshOcf::VertexIterator vi = cmof.vert.begin(); vi!=cmof.vert.end();++vi)
-      {
-        if(!(*vi).IsD())
-        {
-          float q =vi->Q();
-          float r =vi->R();
-        }
-      }
-
+  printf("Last Iteration: Refined a tetra up to a mesh of %i faces in:\n"
+         "Standard Component %5.2f sec\n"
+         "OCF      Component %5.2f sec\n",cm.FN(),float(t1-t0)/CLOCKS_PER_SEC,float(t2-t1)/CLOCKS_PER_SEC);
+  tri::io::ExporterOFF<MyMeshOcf>::Save(cmof,"test.off",tri::io::Mask::IOM_VERTCOLOR);
 
   return 0;
 }
