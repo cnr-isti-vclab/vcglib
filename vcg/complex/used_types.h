@@ -32,57 +32,57 @@ struct _Face  ;
 struct _HEdge ;
 
 struct DummyTypes{
-		typedef _Vertex VertexType; 		// simplex types
-		typedef _Edge EdgeType;
-		typedef _Face FaceType;
-	 	typedef char TetraType;
-		typedef _HEdge HEdgeType; 		// connector types
+        typedef _Vertex VertexType; 		// simplex types
+        typedef _Edge EdgeType;
+        typedef _Face FaceType;
+        typedef char TetraType;
+        typedef _HEdge HEdgeType; 		// connector types
 
-		typedef vcg::Point3<bool> CoordType; 		 
-		typedef char ScalarType;						 
+        typedef vcg::Point3<bool> CoordType;
+        typedef char ScalarType;
 
-		typedef VertexType * VertexPointer;
-		typedef EdgeType *	EdgePointer		;
-		typedef FaceType * FacePointer		;
-		typedef TetraType * TetraPointer	;
-		typedef HEdgeType * HEdgePointer	;
+        typedef VertexType * VertexPointer;
+        typedef EdgeType *	EdgePointer		;
+        typedef FaceType * FacePointer		;
+        typedef TetraType * TetraPointer	;
+        typedef HEdgeType * HEdgePointer	;
 
     static void Name(std::vector<std::string> & /*name*/){}
-		template < class LeftV>
-		void ImportData(const LeftV  & /*left*/ ) {}
+        template < class LeftV>
+        void ImportData(const LeftV  & /*left*/ ) {}
 };
 
 template <class A>
-	struct Use{
-		template <class T> struct AsVertexType: public T{typedef A VertexType;	typedef VertexType * VertexPointer	;};
-		template <class T> struct AsEdgeType: public T{typedef A EdgeType;			typedef EdgeType *	EdgePointer			;};
-		template <class T> struct AsFaceType: public T{typedef A FaceType;			typedef FaceType * FacePointer			;};
-		template <class T> struct AsTetraType: public T{typedef A TetraType;		typedef TetraType * TetraPointer		;};
-		template <class T> struct AsHEdgeType: public T{typedef A HEdgeType;		typedef HEdgeType * HEdgePointer		;};
+    struct Use{
+        template <class T> struct AsVertexType: public T{typedef A VertexType;	typedef VertexType * VertexPointer	;};
+        template <class T> struct AsEdgeType: public T{typedef A EdgeType;			typedef EdgeType *	EdgePointer			;};
+        template <class T> struct AsFaceType: public T{typedef A FaceType;			typedef FaceType * FacePointer			;};
+        template <class T> struct AsTetraType: public T{typedef A TetraType;		typedef TetraType * TetraPointer		;};
+        template <class T> struct AsHEdgeType: public T{typedef A HEdgeType;		typedef HEdgeType * HEdgePointer		;};
 };
 
 template <template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
-					template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
-					template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
-					template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver >
-					class UsedTypes: public Arity12<DummyTypes, 
-								Use<  Vertex	<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsVertexType,
-								Use<  Edge		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsEdgeType,
-								Use<  Face		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsFaceType,
-								Use<  HEdge	  <UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsHEdgeType,
-							A, B, C, D, E, F, G, H    
-					>  {
+                    template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
+                    template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
+                    template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver >
+                    class UsedTypes: public Arity12<DummyTypes,
+                                Use<  Vertex	<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsVertexType,
+                                Use<  Edge		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsEdgeType,
+                                Use<  Face		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsFaceType,
+                                Use<  HEdge	  <UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsHEdgeType,
+                            A, B, C, D, E, F, G, H
+                    >  {
 };
 
 
 
 
-	
-struct _UsedTypes: public UsedTypes< 
-	Use<_Vertex>::AsVertexType,
-	Use<_Edge  >::AsEdgeType,
-	Use<_Face  >::AsFaceType,
-	Use<_HEdge >::AsHEdgeType
+
+struct _UsedTypes: public UsedTypes<
+    Use<_Vertex>::AsVertexType,
+    Use<_Edge  >::AsEdgeType,
+    Use<_Face  >::AsFaceType,
+    Use<_HEdge >::AsHEdgeType
 >{};
 
 struct _Vertex: public  Vertex<_UsedTypes>{};
