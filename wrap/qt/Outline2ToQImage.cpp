@@ -58,15 +58,18 @@ void Outline2Dumper::multiOutline2VecToSingleOutline2Vec(const std::vector< std:
 }
 
 
-void Outline2Dumper::dumpOutline2VecSVG(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, Outline2Dumper::Param &pp)
+void Outline2Dumper::dumpOutline2VecSVG(const char * imageName,
+										vector< vector<Point2f> > &outline2Vec,
+										vector<Similarity2f> &trVec,
+										Outline2Dumper::Param &pp)
 {
-	vector< vector< vector<Point2f> > > polyVecVec(polyVec.size());
-	for(size_t i=0;i<polyVec.size();++i)
+	vector< vector< vector<Point2f> > > outline2VecVec(outline2Vec.size());
+	for(size_t i=0;i<outline2Vec.size();++i)
 	{
-		polyVecVec[i].resize(1);
-		polyVecVec[i][0]=polyVec[i];
+		outline2VecVec[i].resize(1);
+		outline2VecVec[i][0]=outline2Vec[i];
 	}
-	dumpOutline2VecSVG(imageName,polyVecVec,trVec,pp);
+	dumpOutline2VecSVG(imageName,outline2VecVec,trVec,pp);
 }
 
 void Outline2Dumper::dumpOutline2VecPNG(const char * imageName, vector< vector<Point2f> > &polyVec, vector<Similarity2f> &trVec, Outline2Dumper::Param &pp)
@@ -197,7 +200,7 @@ int Outline2Dumper::getMaxMaskRadius(int x,int y,QImage &img)
 ///this is used to write labels within the polygon, it handle polygons with holes too
 vcg::Point2f Outline2Dumper::GetIncenter(const vector< vector<Point2f> > &polyVec,
 											const Similarity2f &tra1,
-											int &radius,
+											float &radius,
 											int resolution)
 {
 	///INITIALIZE THE IMAGE
@@ -317,7 +320,7 @@ void  Outline2Dumper::dumpOutline2VecPNG(const char * imageName,
     if(!labelVec.empty())
     {
       ///FIND THE BARYCENTER
-      int radius;
+      float radius;
       Point2f bc=GetIncenter(polyVecVec[i],trVec[i],radius,10);
       ///DRAW THE TEXT
       painter.setFont(qf);
@@ -335,14 +338,14 @@ void  Outline2Dumper::dumpOutline2VecPNG(const char * imageName,
 ///takes the name of the image in input, the set of polygons, the set of per polygons transformation,
 ///the label to be written and the global parameter for drawing style
 void Outline2Dumper::dumpOutline2VecSVG(const char * imageName,
-									   vector< vector< vector<Point2f> > > &polyVecVec,
+									   vector< vector< vector<Point2f> > > &outline2VecVec,
 									   vector<Similarity2f> &trVec,
 									   vector< vector< string> > &labelVecVec,
-									   vector<vector<Point2f> > &labelPosVecVec,
+									   vector< vector<Similarity2f> > &labelTrVecVec,
 									   vector<vector<float> >&labelRadVecVec,
 									   Outline2Dumper::Param &pp)
 {
-	assert(polyVecVec.size() == trVec.size());
+	assert(outline2VecVec.size() == trVec.size());
 
 
 	///SET THE FONT
@@ -366,34 +369,35 @@ void Outline2Dumper::dumpOutline2VecSVG(const char * imageName,
 		bb.setStyle(Qt::SolidPattern);
 
 	QPen qp;
-
 	///SET THE GLOBAL SCALING FACTOR
-	float Scalesvg=1.f/(float)trVec[0].sca;
-	qp.setWidthF(Scalesvg);
-	for(size_t i=0;i<polyVecVec.size();++i)
+	for(size_t i=0;i<outline2VecVec.size();++i)
 	{
-		///SET THE CURRENT TRANSFORMATION
+	  // we assume that
+	  float scalingFactorforPenWidth=1.f/(float)trVec[i].sca;
+	  qp.setWidthF(pp.penWidth*scalingFactorforPenWidth);
+	  qp.setColor(vcg::ColorConverter::ToQColor(pp.lineColor));
+	  ///SET THE CURRENT TRANSFORMATION
 		painter.resetTransform();
 		painter.translate(trVec[i].tra[0],trVec[i].tra[1]);
 		painter.rotate(math::ToDeg(trVec[i].rotRad));
 		painter.scale(trVec[i].sca,trVec[i].sca);
 		QPainterPath QPP;
 
-		for(size_t jj=0;jj<polyVecVec[i].size();++jj)
+		for(size_t jj=0;jj<outline2VecVec[i].size();++jj)
 		{
 			QVector<QPointF> ppQ;
-			for(size_t j=0;j<polyVecVec[i][jj].size();++j)
+			for(size_t j=0;j<outline2VecVec[i][jj].size();++j)
 			{
-				Point2f pp=polyVecVec[i][jj][j];
+				Point2f pp=outline2VecVec[i][jj][j];
 				ppQ.push_back(QPointF(pp[0],pp[1]));
 			}
-			ppQ.push_back(QPointF(polyVecVec[i][jj][0][0],polyVecVec[i][jj][0][1]));
+			ppQ.push_back(QPointF(outline2VecVec[i][jj][0][0],outline2VecVec[i][jj][0][1]));
 			QPP.addPolygon(QPolygonF(ppQ));
 		}
 		///FIND THE INCENTER
 
 		if (pp.randomColor)
-			bb.setColor(vcg::ColorConverter::ToQColor(Color4b::Scatter(polyVecVec.size(),i)));
+			bb.setColor(vcg::ColorConverter::ToQColor(Color4b::Scatter(outline2VecVec.size(),i)));
 		else
 			bb.setColor(vcg::ColorConverter::ToQColor(pp.FillColor));
 
@@ -405,16 +409,16 @@ void Outline2Dumper::dumpOutline2VecSVG(const char * imageName,
 		///DRAW THE TEXT
 		painter.setFont(qf);
 		float radius;
-		int radiusInt;
+//		int radiusInt;
 		Point2f bc;
 		// if we do not have labelPos use the old method of empty disk.
-		if(labelPosVecVec.empty()) bc=GetIncenter(polyVecVec[i],trVec[i],radiusInt);
-		radius = radiusInt;
+		if(labelTrVecVec.empty()) bc=GetIncenter(outline2VecVec[i],trVec[i],radius);
+//		radius = radiusInt;
 		for(size_t labelInd=0;labelInd<labelVecVec[i].size();++labelInd)
 		{
-		  if(!labelPosVecVec.empty())
+		  if(!labelTrVecVec.empty())
 		  {
-			bc= labelPosVecVec[i][labelInd];
+			bc = labelTrVecVec[i][labelInd].tra;
 			bc.Rotate(trVec[i].rotRad);
 			bc *= trVec[i].sca;
 			radius=labelRadVecVec[i][labelInd];
@@ -422,6 +426,8 @@ void Outline2Dumper::dumpOutline2VecSVG(const char * imageName,
 		  }
 		  painter.resetTransform();
 		  painter.translate(trVec[i].tra[0],trVec[i].tra[1]);
+		  qp.setColor(vcg::ColorConverter::ToQColor(pp.labelColor));
+		  painter.setPen(qp);
 		  painter.drawText(bc[0]-radius,bc[1]-radius,radius*2,radius*2,Qt::AlignHCenter|Qt::AlignCenter,QString(labelVecVec[i][labelInd].c_str()));
 		}
 	}
@@ -435,12 +441,12 @@ void Outline2Dumper::dumpOutline2VecSVG(const char * imageName,
 									   Outline2Dumper::Param &pp)
 {
   vector< vector< string> > labelVecVec(labelVec.size());
-  vector< vector<Point2f> > labelPosVec;
+  vector< vector<Similarity2f> > labelTrVec;
   vector< vector<float> >labelRadVec;
   for(size_t i=0;i<labelVec.size();++i)
   {
     labelVecVec[i].push_back(labelVec[i]);
   }
-  dumpOutline2VecSVG(imageName,polyVecVec,trVec,labelVecVec,labelPosVec,labelRadVec,pp);
+  dumpOutline2VecSVG(imageName,polyVecVec,trVec,labelVecVec,labelTrVec,labelRadVec,pp);
 }
 

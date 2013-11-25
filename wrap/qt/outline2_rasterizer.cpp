@@ -64,7 +64,7 @@ void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
     //create the polygon to print it
     QVector<QPointF> points;
     vector<Point2f> newpoints = poly.getPoints();
-    for (int i = 0; i < newpoints.size(); i++) {
+    for (size_t i = 0; i < newpoints.size(); i++) {
         points.push_back(QPointF(newpoints[i].X(), newpoints[i].Y()));
     }
     painter.drawPolygon(QPolygonF(points));
@@ -112,7 +112,7 @@ void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
     //create the polygon to print it
     QVector<QPointF> points2;
     vector<Point2f> newpoints2 = poly.getPoints();
-    for (int i = 0; i < newpoints2.size(); i++) {
+    for (size_t i = 0; i < newpoints2.size(); i++) {
         points2.push_back(QPointF(newpoints2[i].X(), newpoints2[i].Y()));
     }
     painter.drawPolygon(QPolygonF(points2));
@@ -164,9 +164,9 @@ void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
 // used to lower the cost of rasterization.
 vector<vector<int> > QtOutline2Rasterizer::rotateGridCWise(vector< vector<int> >& inGrid) {
     vector<vector<int> > outGrid(inGrid[0].size());
-    for (int i = 0; i < inGrid[0].size(); i++) {
+    for (size_t i = 0; i < inGrid[0].size(); i++) {
         outGrid[i].reserve(inGrid.size());
-        for (int j = 0; j < inGrid.size(); j++) {
+        for (size_t j = 0; j < inGrid.size(); j++) {
             outGrid[i].push_back(inGrid[inGrid.size() - j - 1][i]);
         }
     }
