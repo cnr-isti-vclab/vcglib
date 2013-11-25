@@ -1,12 +1,12 @@
 /** \mainpage The VCG Library
-The Visualization and Computer Graphics Library (VCG for short) is 
-a open source portable C++ templated library for manipulation, processing 
-and displaying with OpenGL of triangle and tetrahedral meshes. 
+The Visualization and Computer Graphics Library (VCG for short) is
+a open source portable C++ templated library for manipulation, processing
+and displaying with OpenGL of triangle and tetrahedral meshes.
 
 The library, composed by more than 100k lines of code,
-is released under the GPL license, and it is the base of most of the 
-software tools of the <b>Visual Computing Lab</b> of the Italian National Research Council Institute ISTI 
-(http://vcg.isti.cnr.it), like metro and MeshLab. 
+is released under the GPL license, and it is the base of most of the
+software tools of the <b>Visual Computing Lab</b> of the Italian National Research Council Institute ISTI
+(http://vcg.isti.cnr.it), like metro and MeshLab.
 
 
 The VCG library is tailored to mostly manage triangular meshes:
@@ -29,6 +29,7 @@ Documentation
 Start from the following pages for basic concepts and examples.
 - \subpage install "Installing the VCG Library"
 - \subpage basic_concepts "Basic Concepts"
+- \subpage optional_component "Optional Component"
 - \subpage flags "Bit Flags on mesh elements"
 - \subpage adjacency "Adjacency and Topology"
 - \subpage allocation "Creating and destroying elements"
@@ -38,7 +39,7 @@ Start from the following pages for basic concepts and examples.
 - \ref code_sample "Short Examples showing various features of the library"
 
 Notable Applications
-------- 
+-------
 A number of applications have been developed using the vcglib:
 - <a href="http://meshlab.sourceforge.net">MeshLab</a>: the renowed open source mesh processing is based on this library.
 - \subpage metro "Metro, the tool for measuring differences between meshes"
