@@ -2,12 +2,6 @@
 #define VCG_HEDGE_TOPOLOGY
 
 #include <vcg/connectors/halfedge_pos.h>
-#include <vcg/complex/allocate.h>
-
-#include <vector>
-#include <set>
-#include <algorithm>
-#include <cstring>
 
 using namespace std;
 using namespace vcg::hedge;

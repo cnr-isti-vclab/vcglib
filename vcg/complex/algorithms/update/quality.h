@@ -26,10 +26,6 @@
 #include <vcg/simplex/face/topology.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/stat.h>
-#include <algorithm>
-#include <vector>
-#include <stack>
-#include <assert.h>
 
 namespace vcg {
 namespace tri {
@@ -212,14 +208,14 @@ static void VertexFromMeanCurvatureDir(MeshType &m)
 
 static void VertexFromAbsoluteCurvature(MeshType &m)
 {
-	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-	{
-		if((*vi).Kg() >= 0)
-					(*vi).Q() = math::Abs( 2*(*vi).Kh() );
-		else
-			  (*vi).Q() = 2*math::Sqrt(math::Abs( (*vi).Kh()*(*vi).Kh() - (*vi).Kg()));
-	}
+    VertexIterator vi;
+    for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+    {
+        if((*vi).Kg() >= 0)
+                    (*vi).Q() = math::Abs( 2*(*vi).Kh() );
+        else
+              (*vi).Q() = 2*math::Sqrt(math::Abs( (*vi).Kh()*(*vi).Kh() - (*vi).Kg()));
+    }
 }
 
 /*
@@ -231,9 +227,9 @@ static void VertexFromAbsoluteCurvature(MeshType &m)
  */
 static void VertexFromRMSCurvature(MeshType &m)
 {
-	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-		(*vi).Q() = math::Sqrt(math::Abs( 4*(*vi).Kh()*(*vi).Kh() - 2*(*vi).Kg()));
+    VertexIterator vi;
+    for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+        (*vi).Q() = math::Sqrt(math::Abs( 4*(*vi).Kh()*(*vi).Kh() - 2*(*vi).Kg()));
 }
 
 

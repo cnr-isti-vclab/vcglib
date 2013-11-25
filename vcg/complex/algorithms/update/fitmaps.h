@@ -27,10 +27,7 @@
 #include <vcg/math/histogram.h>
 
 #include <vcg/simplex/face/jumping_pos.h>
-#include <vcg/complex/allocate.h>
 #include <vcg/complex/algorithms/update/flag.h>
-#include <vector>
-#include <set>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/curvature.h>
 #include <vcg/complex/algorithms/update/topology.h>
@@ -41,8 +38,6 @@
 #include <eigenlib/Eigen/QR>
 #include <eigenlib/Eigen/LU>
 #include <eigenlib/Eigen/SVD>
-
-#include <algorithm>
 
 #include <vcg/complex/algorithms/nring.h>
 

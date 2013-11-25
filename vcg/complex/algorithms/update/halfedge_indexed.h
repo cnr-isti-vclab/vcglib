@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -24,11 +24,8 @@
 #ifndef __VCGLIB_HALFEDGE_
 #define __VCGLIB_HALFEDGE_
 
-#include <vector>
-#include <vcg/complex/allocate.h>
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/update/halfedge_topology.h>
 
 namespace vcg
@@ -56,8 +53,8 @@ namespace vcg
 
             struct VertexPairEdgePtr{
                 VertexPairEdgePtr(VertexPointer _v0,VertexPointer _v1,HEdgePointer _ep):v0(_v0),v1(_v1),ep(_ep){if(v0>v1) std::swap(v0,v1);}
-                const bool operator <(const VertexPairEdgePtr &o) const {return (v0 == o.v0)? (v1<o.v1):(v0<o.v0);}
-                const bool operator ==(const VertexPairEdgePtr &o) const {return (v0 == o.v0)&& (v1==o.v1);}
+                bool operator <(const VertexPairEdgePtr &o) const {return (v0 == o.v0)? (v1<o.v1):(v0<o.v0);}
+                bool operator ==(const VertexPairEdgePtr &o) const {return (v0 == o.v0)&& (v1==o.v1);}
 
                 VertexPointer v0,v1;
                 HEdgePointer ep;
@@ -342,7 +339,7 @@ namespace vcg
                             }
                         }
 
-												if( HasHEAdjacency(m) && (m.en!=0))
+                                                if( HasHEAdjacency(m) && (m.en!=0))
                         {
                             if( ! ep->HEp())
                                 return false; //halfedge must point to an edge
@@ -368,7 +365,7 @@ namespace vcg
                         if( ep->HNp()->IsD())
                             return false; //
 
-												if(hasHP)
+                                                if(hasHP)
                         if( ep->HNp()->HPp() != ep)
                             return false; //
 
@@ -467,9 +464,9 @@ namespace vcg
             /** Adds an edge between the sources of e0 and e1 and set all the topology relations.
         If the edges store the pointers to the faces then a new face is created.
     <--- e1 ---- X <------e1_HEPp---
-                 ^ 	
+                 ^
                  ||
-             ei0 || ei1     
+             ei0 || ei1
                  ||
                   v
          ----e0_HEPp-> X ----- e0 ------>
@@ -526,9 +523,9 @@ namespace vcg
 
             /** Detach the topology relations of a given edge
     <--- e->HENPp -X --- <---------eO_HEPp---
-                   ^ 	
+                   ^
                    ||
-               e   || e->HEOp()     
+               e   || e->HEOp()
                    ||
                     v
          ----e_HEPp--> X ----- e->HEOp->HENPp() ------>
@@ -589,8 +586,8 @@ namespace vcg
 
             struct VertexPairEdgePtr{
                 VertexPairEdgePtr(VertexPointer _v0,VertexPointer _v1,HEdgePointer _ep):v0(_v0),v1(_v1),ep(_ep){if(v0>v1) std::swap(v0,v1);}
-                const bool operator <(const VertexPairEdgePtr &o) const {return (v0 == o.v0)? (v1<o.v1):(v0<o.v0);}
-                const bool operator ==(const VertexPairEdgePtr &o) const {return (v0 == o.v0)&& (v1==o.v1);}
+                bool operator <(const VertexPairEdgePtr &o) const {return (v0 == o.v0)? (v1<o.v1):(v0<o.v0);}
+                bool operator ==(const VertexPairEdgePtr &o) const {return (v0 == o.v0)&& (v1==o.v1);}
 
                 VertexPointer v0,v1;
                 HEdgePointer ep;
@@ -642,7 +639,7 @@ namespace vcg
                     std::vector<VertexPointer> vpts;
                     do{vpts.push_back((*ep).HVp()); ep=ep->HNp();}while(ep!=epF);
                     //int idbg  =fp->VN();
-                    if(fp->VN() != vpts.size()){
+                    if(size_t(fp->VN()) != vpts.size()){
                         fp->Dealloc();
                         fp ->Alloc(vpts.size());
                     }
