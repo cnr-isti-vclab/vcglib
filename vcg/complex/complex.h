@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -21,21 +21,30 @@
 *                                                                           *
 ****************************************************************************/
 
-#ifndef __VCG_MESH
+#ifndef __VCG_MESH_H
+#define __VCG_MESH_H
 #define __VCG_MESH
 
 #include <assert.h>
 #include <string>
 #include <vector>
 #include <set>
-#include <exception>
-
+#include <stack>
+#include <algorithm>
+#include <map>
+#include <iostream>
+#include <stdexcept>
+#include <limits>
+#include <set>
 #include <vcg/complex/exception.h>
 #include <vcg/container/simple_temporary_data.h>
 #include <vcg/complex/used_types.h>
 #include <vcg/complex/base.h>
 #include <vcg/complex/allocate.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/update/selection.h>
 #include <vcg/complex/append.h>
 
+#undef __VCG_MESH
 #endif
 

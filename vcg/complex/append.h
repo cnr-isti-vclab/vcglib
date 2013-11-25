@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -23,10 +23,6 @@
 
 #ifndef __VCGLIB_APPEND
 #define __VCGLIB_APPEND
-
-#include <vcg/complex/algorithms/update/flag.h>
-#include <vcg/complex/algorithms/update/selection.h>
-#include <set>
 
 namespace vcg {
 namespace tri {
@@ -68,7 +64,7 @@ public:
  typedef typename ConstMeshRight::FacePointer    FacePointerRight;
 
  struct Remap{
-		std::vector<int> vert,face,edge, hedge;
+        std::vector<int> vert,face,edge, hedge;
  };
 
  static void ImportVertexAdj(MeshLeft &ml, ConstMeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap ){
@@ -175,7 +171,7 @@ public:
  }
 
 // Append Right Mesh to the Left Mesh
-// Append::Mesh(ml, mr) is equivalent to ml += mr. 
+// Append::Mesh(ml, mr) is equivalent to ml += mr.
 // Note MeshRigth could be costant...
  /*! \brief %Append the second mesh to the first one.
 
@@ -316,60 +312,60 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
       ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,*hi)]],*hi,remap,selected);
     }
 
-		// phase 3.
-		// take care of other per mesh data: textures,   attributes
+        // phase 3.
+        // take care of other per mesh data: textures,   attributes
 
-		// At the end concatenate the vector with texture names.
-		ml.textures.insert(ml.textures.end(),mr.textures.begin(),mr.textures.end());
+        // At the end concatenate the vector with texture names.
+        ml.textures.insert(ml.textures.end(),mr.textures.begin(),mr.textures.end());
 
-		// Attributes. Copy only those attributes that are present in both meshes
-		// Two attributes in different meshes are considered the same if they have the same
-		// name and the same type. This may be deceiving because they could in fact have
-		// different semantic, but this is up to the developer.
-		// If the left mesh has attributes that are not in the right mesh, their values for the elements
-		// of the right mesh will be uninitialized
+        // Attributes. Copy only those attributes that are present in both meshes
+        // Two attributes in different meshes are considered the same if they have the same
+        // name and the same type. This may be deceiving because they could in fact have
+        // different semantic, but this is up to the developer.
+        // If the left mesh has attributes that are not in the right mesh, their values for the elements
+        // of the right mesh will be uninitialized
 
-		unsigned int id_r;
-		typename std::set< PointerToAttribute  >::iterator al, ar;
+        unsigned int id_r;
+        typename std::set< PointerToAttribute  >::iterator al, ar;
 
-		// per vertex attributes
-		for(al = ml.vert_attr.begin(); al != ml.vert_attr.end(); ++al)
-			if(!(*al)._name.empty()){
-				ar =    mr.vert_attr.find(*al);
-				if(ar!= mr.vert_attr.end()){
-					id_r = 0;
-					for(vi=mr.vert.begin();vi!=mr.vert.end();++vi,++id_r)
-						if( !(*vi).IsD() && (!selected || (*vi).IsS()))
-							memcpy((*al)._handle->At(remap.vert[Index(mr,*vi)]),(*ar)._handle->At(id_r),
-								(*al)._handle->SizeOf());
-				}
-			}
+        // per vertex attributes
+        for(al = ml.vert_attr.begin(); al != ml.vert_attr.end(); ++al)
+            if(!(*al)._name.empty()){
+                ar =    mr.vert_attr.find(*al);
+                if(ar!= mr.vert_attr.end()){
+                    id_r = 0;
+                    for(vi=mr.vert.begin();vi!=mr.vert.end();++vi,++id_r)
+                        if( !(*vi).IsD() && (!selected || (*vi).IsS()))
+                            memcpy((*al)._handle->At(remap.vert[Index(mr,*vi)]),(*ar)._handle->At(id_r),
+                                (*al)._handle->SizeOf());
+                }
+            }
 
-		// per edge attributes
-		for(al = ml.edge_attr.begin(); al != ml.edge_attr.end(); ++al)
-			if(!(*al)._name.empty()){
-				ar =    mr.edge_attr.find(*al);
-				if(ar!= mr.edge_attr.end()){
-					id_r = 0;
-					for(ei=mr.edge.begin();ei!=mr.edge.end();++ei,++id_r)
-						if( !(*ei).IsD() && (!selected || (*ei).IsS()))
+        // per edge attributes
+        for(al = ml.edge_attr.begin(); al != ml.edge_attr.end(); ++al)
+            if(!(*al)._name.empty()){
+                ar =    mr.edge_attr.find(*al);
+                if(ar!= mr.edge_attr.end()){
+                    id_r = 0;
+                    for(ei=mr.edge.begin();ei!=mr.edge.end();++ei,++id_r)
+                        if( !(*ei).IsD() && (!selected || (*ei).IsS()))
                             memcpy((*al)._handle->At(remap.edge[Index(mr,*ei)]),(*ar)._handle->At(id_r),
-								(*al)._handle->SizeOf());
-				}
-			}
+                                (*al)._handle->SizeOf());
+                }
+            }
 
-		// per face attributes
-		for(al = ml.face_attr.begin(); al != ml.face_attr.end(); ++al)
-			if(!(*al)._name.empty()){
-				ar =    mr.face_attr.find(*al);
-				if(ar!= mr.face_attr.end()){
-					id_r = 0;
-					for(fi=mr.face.begin();fi!=mr.face.end();++fi,++id_r)
-						if( !(*fi).IsD() && (!selected || (*fi).IsS()))
+        // per face attributes
+        for(al = ml.face_attr.begin(); al != ml.face_attr.end(); ++al)
+            if(!(*al)._name.empty()){
+                ar =    mr.face_attr.find(*al);
+                if(ar!= mr.face_attr.end()){
+                    id_r = 0;
+                    for(fi=mr.face.begin();fi!=mr.face.end();++fi,++id_r)
+                        if( !(*fi).IsD() && (!selected || (*fi).IsS()))
                             memcpy((*al)._handle->At(remap.face[Index(mr,*fi)]),(*ar)._handle->At(id_r),
-								(*al)._handle->SizeOf());
-				}
-			}
+                                (*al)._handle->SizeOf());
+                }
+            }
 
                 // per mesh attributes
                 // if both ml and mr have an attribute with the same name, no action is done

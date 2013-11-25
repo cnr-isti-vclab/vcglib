@@ -1,7 +1,5 @@
 #ifndef VCG_BITQUAD_SUPPORT
 #define VCG_BITQUAD_SUPPORT
-#include <vector>
-#include <set>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/simplex/face/topology.h>
 #include <vcg/space/planar_polygon_tessellation.h>
@@ -811,8 +809,8 @@ static bool CollapseDiag(FaceType &f, ScalarType interpol, MeshType& m, Pos* aff
     pf = t;
   } while ((pf!=fb));
 
-	pi = fauxb;
-	pf = fb;
+    pi = fauxb;
+    pf = fb;
 
   do {
     pf->V(pi) = va;
