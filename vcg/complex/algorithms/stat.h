@@ -20,20 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-History
-
-$Log: not supported by cvs2svn $
-Revision 1.3  2007/01/11 10:12:19  cignoni
-Removed useless and conflicting inclusion of face.h
-
-Revision 1.2  2006/05/25 09:39:09  cignoni
-missing std and other gcc detected syntax errors
-
-Revision 1.1  2006/05/21 06:59:13  cignoni
-Initial Commit
-
-****************************************************************************/
 
 #ifndef __VCGLIB_TRIMESH_STAT
 #define __VCGLIB_TRIMESH_STAT
@@ -44,11 +30,8 @@ Initial Commit
 #include <vcg/math/histogram.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
-#include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/complex/allocate.h>
-#include <vcg/complex/algorithms/update/flag.h>
 
 
 namespace vcg {

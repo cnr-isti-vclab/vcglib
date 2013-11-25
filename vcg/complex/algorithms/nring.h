@@ -25,21 +25,19 @@
  ****************************************************************************/
 
 #include <vcg/simplex/face/jumping_pos.h>
-#include <vcg/complex/allocate.h>
 #include <vcg/complex/algorithms/update/flag.h>
-#include <vector>
 
 namespace vcg
 {
-namespace tri 
+namespace tri
 {
-		
-	/** \addtogroup trimesh */
-	/*@{*/
-	/*@{*/
-	/** Class Mesh.
-	 This is class for extracting n-ring of vertexes or faces, starting from a vertex of a mesh.
-	 */
+
+    /** \addtogroup trimesh */
+    /*@{*/
+    /*@{*/
+    /** Class Mesh.
+     This is class for extracting n-ring of vertexes or faces, starting from a vertex of a mesh.
+     */
 template <class MeshType>
 class Nring
 {
@@ -67,10 +65,10 @@ public:
         insertAndFlag(v);
 
     }
-	
+
     ~Nring()
     {
-		clear();
+        clear();
     }
 
     void insertAndFlag1Ring(VertexType* v)
