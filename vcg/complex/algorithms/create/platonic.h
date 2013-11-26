@@ -847,62 +847,80 @@ void OrientedDisk(MeshType &m, int slices, Point3f center, Point3f norm, float r
 }
 
 template <class MeshType>
-void Cylinder(int slices, int stacks, MeshType & m){
+void OrientedCylinder(MeshType & m, const Point3f origin, const Point3f end, float radius, int slices=32, int stacks=4 )
+{
+  Cylinder(slices,stacks,m);
+  tri::UpdatePosition<MeshType>::Translate(m,Point3f(0,1,0));
+  tri::UpdatePosition<MeshType>::Scale(m,Point3f(1,0.5f,1));
 
-    typename MeshType::VertexIterator vi = vcg::tri::Allocator<MeshType>::AddVertices(m,slices*(stacks+1));
-    for ( int i = 0; i < stacks+1; ++i)
+  Matrix44f scale;
+  float height = Distance(origin,end);
+  tri::UpdatePosition<MeshType>::Scale(m,Point3f(radius,height,radius));
+  Point3f norm = end-origin;
+  float angleRad = Angle(Point3f(0,1,0),norm);
+  Point3f axis = Point3f(0,1,0)^norm;
+  Matrix44f rotM;
+  rotM.SetRotateRad(angleRad,axis);
+  tri::UpdatePosition<MeshType>::Matrix(m,rotM);
+  tri::UpdatePosition<MeshType>::Translate(m,origin);
+}
+
+template <class MeshType>
+void Cylinder(int slices, int stacks, MeshType & m)
+{
+  m.Clear();
+  typename MeshType::VertexIterator vi = vcg::tri::Allocator<MeshType>::AddVertices(m,slices*(stacks+1));
+  for ( int i = 0; i < stacks+1; ++i)
     for ( int j = 0; j < slices; ++j)
     {
-        float x,y,h;
-                x = cos(	2.0 * M_PI / slices * j);
-                y = sin(	2.0 * M_PI / slices * j);
-                h = 2 * i / (float)(stacks) - 1;
+      float x,y,h;
+      x = cos(	2.0 * M_PI / slices * j);
+      y = sin(	2.0 * M_PI / slices * j);
+      h = 2 * i / (float)(stacks) - 1;
 
-                (*vi).P() = typename MeshType::CoordType(x,h,y);
-                ++vi;
-        }
-
-    typename MeshType::FaceIterator fi ;
-    for ( int j = 0; j < stacks; ++j)
-        for ( int i = 0; i < slices; ++i)
-    {
-       int a,b,c,d;
-       a =  (j+0)*slices + i;
-       b =  (j+1)*slices + i;
-       c =  (j+1)*slices + (i+1)%slices;
-       d =  (j+0)*slices + (i+1)%slices;
-             if(((i+j)%2) == 0){
-                fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-                (*fi).V(0) = &m.vert[ a ];
-                (*fi).V(1) = &m.vert[ b ];
-                (*fi).V(2) = &m.vert[ c ];
-
-                fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-                (*fi).V(0) = &m.vert[ c ];
-                (*fi).V(1) = &m.vert[ d ];
-                (*fi).V(2) = &m.vert[ a ];
-             }
-             else{
-                fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-                (*fi).V(0) = &m.vert[ b ];
-                (*fi).V(1) = &m.vert[ c ];
-                (*fi).V(2) = &m.vert[ d ];
-
-                fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
-                (*fi).V(0) = &m.vert[ d ];
-                (*fi).V(1) = &m.vert[ a ];
-                (*fi).V(2) = &m.vert[ b ];
-
-             }
+      (*vi).P() = typename MeshType::CoordType(x,h,y);
+      ++vi;
     }
 
-   if (HasPerFaceFlags(m)) {
-     for (typename MeshType::FaceIterator fi=m.face.begin(); fi!=m.face.end(); fi++) {
-       (*fi).SetF(2);
-     }
-   }
+  typename MeshType::FaceIterator fi ;
+  for ( int j = 0; j < stacks; ++j)
+    for ( int i = 0; i < slices; ++i)
+    {
+      int a,b,c,d;
+      a =  (j+0)*slices + i;
+      b =  (j+1)*slices + i;
+      c =  (j+1)*slices + (i+1)%slices;
+      d =  (j+0)*slices + (i+1)%slices;
+      if(((i+j)%2) == 0){
+        fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+        (*fi).V(0) = &m.vert[ a ];
+        (*fi).V(1) = &m.vert[ b ];
+        (*fi).V(2) = &m.vert[ c ];
 
+        fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+        (*fi).V(0) = &m.vert[ c ];
+        (*fi).V(1) = &m.vert[ d ];
+        (*fi).V(2) = &m.vert[ a ];
+      }
+      else{
+        fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+        (*fi).V(0) = &m.vert[ b ];
+        (*fi).V(1) = &m.vert[ c ];
+        (*fi).V(2) = &m.vert[ d ];
 
+        fi = vcg::tri::Allocator<MeshType>::AddFaces(m,1);
+        (*fi).V(0) = &m.vert[ d ];
+        (*fi).V(1) = &m.vert[ a ];
+        (*fi).V(2) = &m.vert[ b ];
+
+      }
+    }
+
+  if (HasPerFaceFlags(m)) {
+    for (typename MeshType::FaceIterator fi=m.face.begin(); fi!=m.face.end(); fi++) {
+      (*fi).SetF(2);
+    }
+  }
 }
 
 template <class MeshType>
