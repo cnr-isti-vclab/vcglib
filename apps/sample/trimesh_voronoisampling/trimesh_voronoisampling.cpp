@@ -125,13 +125,14 @@ int main( int argc, char **argv )
   vpp.collapseShortEdge=true;
   vpp.collapseShortEdgePerc=collapseShortEdgePerc;
   vpp.triangulateRegion = true;
+  vpp.unbiasedSeedFlag =true;
 
   tri::EuclideanDistance<MyMesh> dd;
   int t0=clock();
   tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::VoronoiRelaxing(baseMesh, seedVec, iterNum, dd, vpp);
   int t1=clock();
   tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::ConvertVoronoiDiagramToMesh(baseMesh,outMesh,polyMesh, seedVec, dd, vpp);
-  tri::io::ExporterPLY<MyMesh>::Save(baseMesh,"base.ply",tri::io::Mask::IOM_VERTCOLOR );
+  tri::io::ExporterPLY<MyMesh>::Save(baseMesh,"base.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
   tri::io::ExporterPLY<MyMesh>::Save(outMesh,"out.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_FLAGS );
   tri::io::ExporterPLY<MyMesh>::Save(polyMesh,"poly.ply",tri::io::Mask::IOM_VERTCOLOR| tri::io::Mask::IOM_EDGEINDEX ,false);
 
