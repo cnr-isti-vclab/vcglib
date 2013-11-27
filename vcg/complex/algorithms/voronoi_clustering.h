@@ -69,14 +69,20 @@ struct VoronoiProcessingParameter
     collapseShortEdge=false;
     collapseShortEdgePerc = 0.01f;
     triangulateRegion=false;
+    unbiasedSeedFlag = true;
+    geodesicRelaxFlag = true;
   }
   int colorStrategy;
   float areaThresholdPerc;
   bool deleteUnreachedRegionFlag;
-  bool fixSelectedSeed;
+  bool unbiasedSeedFlag;
+  bool fixSelectedSeed;   /// the vertexes that are selected are used as fixed seeds:
+                          /// They will not move during relaxing
+                          /// and they will be always included in the final triangulation (if on a border).
   bool triangulateRegion;
   bool collapseShortEdge;
   float collapseShortEdgePerc;
+  bool geodesicRelaxFlag;
 };
 
 template <class MeshType, class DistanceFunctor = EuclideanDistance<MeshType> >
@@ -91,31 +97,33 @@ class VoronoiProcessing
   typedef typename MeshType::FaceIterator			FaceIterator;
   typedef typename MeshType::FaceType					FaceType;
   typedef typename MeshType::FaceContainer		FaceContainer;
+  typedef typename tri::Geodesic<MeshType>::VertDist VertDist;
+
 public:
 
 
 // Given a vector of point3f it finds the closest vertices on the mesh.
 static void SeedToVertexConversion(MeshType &m,std::vector<CoordType> &seedPVec,std::vector<VertexType *> &seedVVec)
 {
-	typedef typename vcg::SpatialHashTable<VertexType, ScalarType> HashVertexGrid;
-	seedVVec.clear();
+    typedef typename vcg::SpatialHashTable<VertexType, ScalarType> HashVertexGrid;
+    seedVVec.clear();
 
-	HashVertexGrid HG;
-	HG.Set(m.vert.begin(),m.vert.end());
+    HashVertexGrid HG;
+    HG.Set(m.vert.begin(),m.vert.end());
 
-	const float dist_upper_bound=m.bbox.Diag()/10.0;
+    const float dist_upper_bound=m.bbox.Diag()/10.0;
 
-	typename std::vector<CoordType>::iterator pi;
-	for(pi=seedPVec.begin();pi!=seedPVec.end();++pi)
-		{
-			float dist;
-			VertexPointer vp;
-			vp=tri::GetClosestVertex<MeshType,HashVertexGrid>(m, HG, *pi, dist_upper_bound, dist);
-			if(vp)
-				{
-					seedVVec.push_back(vp);
-				}
-		}
+    typename std::vector<CoordType>::iterator pi;
+    for(pi=seedPVec.begin();pi!=seedPVec.end();++pi)
+        {
+            float dist;
+            VertexPointer vp;
+            vp=tri::GetClosestVertex<MeshType,HashVertexGrid>(m, HG, *pi, dist_upper_bound, dist);
+            if(vp)
+                {
+                    seedVVec.push_back(vp);
+                }
+        }
 }
 
 typedef typename MeshType::template PerVertexAttributeHandle<VertexPointer> PerVertexPointerHandle;
@@ -134,12 +142,10 @@ static void ComputePerVertexSources(MeshType &m, std::vector<VertexType *> &seed
   tri::Geodesic<MeshType>::Compute(m,seedVec,df,std::numeric_limits<ScalarType>::max(),0,&vertexSources);
 }
 
-static void VoronoiColoring(MeshType &m, std::vector<VertexType *> &seedVec, bool frontierFlag=true)
+static void VoronoiColoring(MeshType &m, bool frontierFlag=true)
 {
   PerVertexPointerHandle sources =  tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   assert(tri::Allocator<MeshType>::IsValidHandle(m,sources));
-  tri::Geodesic<MeshType> g;
-  VertexPointer farthest;
 
   if(frontierFlag)
   {
@@ -147,14 +153,22 @@ static void VoronoiColoring(MeshType &m, std::vector<VertexType *> &seedVec, boo
     //The error should have been removed from MSVS2012
     std::pair<float,VertexPointer> zz(0.0f,static_cast<VertexPointer>(NULL));
     std::vector< std::pair<float,VertexPointer> > regionArea(m.vert.size(),zz);
-    std::vector<VertexPointer> borderVec;
-    GetAreaAndFrontier(m, sources,  regionArea, borderVec);
-    tri::Geodesic<MeshType>::Compute(m,borderVec);
+    std::vector<VertexPointer> frontierVec;
+    GetAreaAndFrontier(m, sources,  regionArea, frontierVec);
+    tri::Geodesic<MeshType>::Compute(m,frontierVec);
   }
-
   tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
 }
 
+static void VoronoiAreaColoring(MeshType &m,std::vector<VertexType *> &seedVec,
+                                std::vector< std::pair<float,VertexPointer> > &regionArea)
+{
+  PerVertexPointerHandle vertexSources =  tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+  float meshArea = tri::Stat<MeshType>::ComputeMeshArea(m);
+  float expectedArea = meshArea/float(seedVec.size());
+  for(size_t i=0;i<m.vert.size();++i)
+      m.vert[i].C()=Color4b::ColorRamp(expectedArea *0.75f ,expectedArea*1.25f, regionArea[tri::Index(m,vertexSources[i])].first);
+}
 // It associates the faces with a given vertex according to the vertex associations
 //
 // It READS  the PerVertex attribute 'sources'
@@ -263,9 +277,7 @@ static int FaceSelectRegion(MeshType &m, VertexPointer vp)
 /// (e.g. for all vertexes we know what is the corresponding voronoi region)
 /// we compute:
 ///  area of all the voronoi regions
-///  the vector of the frontier vertexes (e.g. vert of faces shared by two regions)
-///  the vector of the corner faces (ie the faces shared exactly by three regions)
-///  the vector of the frontier faces that are on the boundary.
+///  the vector of the frontier vertexes (e.g. vert of faces shared by at least two regions)
 ///
 ///  Area is computed only for triangles that fully belong to a given source.
 
@@ -301,6 +313,12 @@ static void GetAreaAndFrontier(MeshType &m, PerVertexPointerHandle &sources,
   }
 }
 
+
+/// Given a mesh with for each vertex the link to the closest seed
+/// we compute:
+///  the vector of the corner faces (ie the faces shared exactly by three regions)
+///  the vector of the frontier faces that are on the boundary.
+
 static void GetFaceCornerVec(MeshType &m, PerVertexPointerHandle &sources,
                                std::vector<FacePointer> &cornerVec,
                                std::vector<FacePointer> &borderCornerVec)
@@ -312,7 +330,7 @@ static void GetFaceCornerVec(MeshType &m, PerVertexPointerHandle &sources,
     VertexPointer s0 = sources[(*fi).V(0)];
     VertexPointer s1 = sources[(*fi).V(1)];
     VertexPointer s2 = sources[(*fi).V(2)];
-
+    assert(s0 && s1 && s2);
     if(s1!=s2 && s0!=s1 && s0!=s2) {
         cornerVec.push_back(&*fi);
       }
@@ -370,16 +388,17 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   tri::UpdateTopology<MeshType>::FaceFace(m);
   tri::UpdateFlags<MeshType>::FaceBorderFromFF(m);
 
-  std::map<VertexPointer, int> seedMap;
+  std::map<VertexPointer, int> seedMap;  // It says if a given vertex of m is a seed (and what)
   for(size_t i=0;i<m.vert.size();++i)
     seedMap[&(m.vert[i])]=-1;
   for(size_t i=0;i<seedVec.size();++i)
     seedMap[seedVec[i]]=i;
 
-  std::vector<FacePointer> innerCornerVec, borderCornerVec;
+  std::vector<FacePointer> innerCornerVec,   // Faces adjacent to three different regions
+                           borderCornerVec;  // Faces that are on the border and adjacent to at least two regions.
   GetFaceCornerVec(m, sources, innerCornerVec, borderCornerVec);
 
-  std::map<FacePointer,int> vertexIndCornerMap;
+  std::map<FacePointer,int> vertexIndCornerMap; // Given a cornerFace (border or inner) what is the corresponding vertex?
   for(size_t i=0;i<m.face.size();++i)
     vertexIndCornerMap[&(m.face[i])]=-1;
 
@@ -436,57 +455,69 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   // we do **only** triangles with a  bordercorner and a internal 'corner'
   for(size_t i=0;i<borderCornerVec.size();++i)
   {
-    VertexPointer v0 = sources[borderCornerVec[i]->V(0)]; // All bordercorner faces have only two different regions
-    VertexPointer v1 = sources[borderCornerVec[i]->V(1)];
-    if(v1==v0)    v1 = sources[borderCornerVec[i]->V(2)];
-    if(v1<v0) std::swap(v0,v1); assert(v1!=v0);
+    VertexPointer s0 = sources[borderCornerVec[i]->V(0)]; // All bordercorner faces have only two different regions
+    VertexPointer s1 = sources[borderCornerVec[i]->V(1)];
+    if(s1==s0)    s1 = sources[borderCornerVec[i]->V(2)];
+    if(s1<s0) std::swap(s0,s1); assert(s1!=s0);
 
-    FacePointer innerCorner = VoronoiEdge[std::make_pair(v0,v1)] ;
+    FacePointer innerCorner = VoronoiEdge[std::make_pair(s0,s1)] ;
     if(innerCorner)
     {
       VertexPointer corner0 = &(outMesh.vert[vertexIndCornerMap[innerCorner]]);
       VertexPointer corner1 = &(outMesh.vert[vertexIndCornerMap[borderCornerVec[i]]]);
-      tri::Allocator<MeshType>::AddFace(outMesh,&(outMesh.vert[seedMap[v0]]), corner0, corner1);
-      tri::Allocator<MeshType>::AddFace(outMesh,&(outMesh.vert[seedMap[v1]]), corner0, corner1);
+      tri::Allocator<MeshType>::AddFace(outMesh,&(outMesh.vert[seedMap[s0]]), corner0, corner1);
+      tri::Allocator<MeshType>::AddFace(outMesh,&(outMesh.vert[seedMap[s1]]), corner0, corner1);
     }
   }
 
   // Final pass
-  // search for a boundary face
-  face::Pos<FaceType> pos,startPos;
-  for(int i=0;i<3;++i)
-    if(face::IsBorder(*(borderCornerVec[0]),i))
-    {
-      pos.Set(borderCornerVec[0],i,borderCornerVec[0]->V(i));
-    }
-  assert(pos.IsBorder());
-  startPos=pos;
-  bool foundBorderSeed=false;
-  FacePointer curBorderCorner = pos.F();
-  do
+  tri::UpdateFlags<MeshType>::FaceClearV(m);
+  bool AllFaceVisited = false;
+  while(!AllFaceVisited)
   {
-    pos.NextB();
-    if(sources[pos.V()]==pos.V())
-      foundBorderSeed=true;
-    assert(isBorderCorner(curBorderCorner,sources));
-    if(isBorderCorner(pos.F(),sources))
-      if(pos.F() != curBorderCorner)
+    // search for a unvisited boundary face
+    face::Pos<FaceType> pos,startPos;
+    AllFaceVisited=true;
+    for(size_t i=0; (AllFaceVisited) && (i<borderCornerVec.size()); ++i)
+      if(!borderCornerVec[i]->IsV())
       {
-        VertexPointer curReg = CommonSourceBetweenBorderCorner(curBorderCorner, pos.F(),sources);
-        VertexPointer curSeed = &(outMesh.vert[seedMap[curReg]]);
-        int otherCorner0 = vertexIndCornerMap[pos.F() ];
-        int otherCorner1 = vertexIndCornerMap[curBorderCorner];
-        VertexPointer corner0 = &(outMesh.vert[otherCorner0]);
-        VertexPointer corner1 = &(outMesh.vert[otherCorner1]);
-        if(!foundBorderSeed)
-          tri::Allocator<MeshType>::AddFace(outMesh,curSeed,corner0,corner1);
-        foundBorderSeed=false;
-        curBorderCorner=pos.F();
+        for(int j=0;j<3;++j)
+          if(face::IsBorder(*(borderCornerVec[i]),j))
+          {
+            pos.Set(borderCornerVec[i],j,borderCornerVec[i]->V(j));
+            AllFaceVisited =false;
+            printf("SearchForBorder\n");
+          }
       }
-
+    if(AllFaceVisited) break;
+    assert(pos.IsBorder());
+    startPos=pos;
+    bool foundBorderSeed=false;
+    FacePointer curBorderCorner = pos.F();
+    do
+    {
+      pos.F()->SetV();
+      pos.NextB();
+      if(sources[pos.V()]==pos.V())
+        foundBorderSeed=true;
+      assert(isBorderCorner(curBorderCorner,sources));
+      if(isBorderCorner(pos.F(),sources))
+        if(pos.F() != curBorderCorner)
+        {
+          VertexPointer curReg = CommonSourceBetweenBorderCorner(curBorderCorner, pos.F(),sources);
+          VertexPointer curSeed = &(outMesh.vert[seedMap[curReg]]);
+          int otherCorner0 = vertexIndCornerMap[pos.F() ];
+          int otherCorner1 = vertexIndCornerMap[curBorderCorner];
+          VertexPointer corner0 = &(outMesh.vert[otherCorner0]);
+          VertexPointer corner1 = &(outMesh.vert[otherCorner1]);
+          if(!foundBorderSeed)
+            tri::Allocator<MeshType>::AddFace(outMesh,curSeed,corner0,corner1);
+          foundBorderSeed=false;
+          curBorderCorner=pos.F();
+        }
+    }
+    while(pos!=startPos);
   }
-  while(pos!=startPos);
-
 
   //**************** CLEANING ***************
   // 1) reorient
@@ -539,7 +570,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
       for(int i=0;i<3;++i)
         if((Distance(fi->P0(i),fi->P1(i))<distThr) && !fi->IsF(i))
         {
-          printf("Collapsing face %i:%i e%i \n",tri::Index(outMesh,*fi),tri::Index(outMesh,fi->FFp(i)),i);
+//          printf("Collapsing face %i:%i e%i \n",tri::Index(outMesh,*fi),tri::Index(outMesh,fi->FFp(i)),i);
           if(!fi->V(i)->IsB())
             face::FFEdgeCollapse(outMesh, *fi,i);
           break;
@@ -585,7 +616,155 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   }
 }
 
+class VoronoiEdge
+{
+public:
+  VertexPointer r0,r1;
+  FacePointer f0,f1;
+  bool operator == (const VoronoiEdge &ve) const {return ve.r0==r0 && ve.r1==r1; }
+  bool operator < (const VoronoiEdge &ve) const { return (ve.r0==r0)?ve.r1<r1:ve.r0<r0; }
+  float Len() const { return Distance(vcg::Barycenter(*f0), vcg::Barycenter(*f1)); }
+};
 
+static void BuildVoronoiEdgeVec(MeshType &m, std::vector<VoronoiEdge> &edgeVec)
+{
+  PerVertexPointerHandle sources =  tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+
+  edgeVec.clear();
+  std::vector<FacePointer> cornerVec;
+  std::vector<FacePointer> borderCornerVec;
+  GetFaceCornerVec(m,sources,cornerVec,borderCornerVec);
+  // Now find all the voronoi edges: each edge (a *face pair) is identified by two voronoi regions
+  typedef std::map< std::pair<VertexPointer,VertexPointer>, std::pair<FacePointer,FacePointer> > EdgeMapType;
+  EdgeMapType EdgeMap;
+  printf("cornerVec.size() %i\n",cornerVec.size());
+
+  for(size_t i=0;i<cornerVec.size();++i)
+  {
+    for(int j=0;j<3;++j)
+    {
+      VertexPointer v0 = sources[cornerVec[i]->V0(j)];
+      VertexPointer v1 = sources[cornerVec[i]->V1(j)];
+      assert(v0!=v1);
+      if(v0>v1) std::swap(v1,v0);
+      std::pair<VertexPointer,VertexPointer> adjRegion = std::make_pair(v0,v1);
+      if(EdgeMap[adjRegion].first==0)
+        EdgeMap[adjRegion].first = cornerVec[i];
+      else
+        EdgeMap[adjRegion].second = cornerVec[i];
+    }
+  }
+  for(size_t i=0;i<borderCornerVec.size();++i)
+  {
+    VertexPointer v0 = sources[borderCornerVec[i]->V(0)];
+    VertexPointer v1 = sources[borderCornerVec[i]->V(1)];
+    if(v0==v1) v1 = sources[borderCornerVec[i]->V(2)];
+    assert(v0!=v1);
+    if(v0>v1) std::swap(v1,v0);
+    std::pair<VertexPointer,VertexPointer> adjRegion = std::make_pair(v0,v1);
+    if(EdgeMap[adjRegion].first==0)
+      EdgeMap[adjRegion].first = borderCornerVec[i];
+    else
+      EdgeMap[adjRegion].second = borderCornerVec[i];
+
+  }
+  typename EdgeMapType::iterator mi;
+  for(mi=EdgeMap.begin();mi!=EdgeMap.end();++mi)
+  {
+    if((*mi).second.first && (*mi).second.second)
+    {
+      assert((*mi).first.first && (*mi).first.second);
+    edgeVec.push_back(VoronoiEdge());
+    edgeVec.back().r0 = (*mi).first.first;
+    edgeVec.back().r1 = (*mi).first.second;
+    edgeVec.back().f0 = (*mi).second.first;
+    edgeVec.back().f1 = (*mi).second.second;
+    }
+  }
+}
+
+static void BuildBiasedSeedVec(MeshType &m,
+                               DistanceFunctor &df,
+                               std::vector<VertexPointer> &seedVec,
+                               std::vector<VertexPointer> &frontierVec,
+                               std::vector<VertDist> &biasedFrontierVec,
+                               VoronoiProcessingParameter &vpp)
+{
+  biasedFrontierVec.clear();
+  if(vpp.unbiasedSeedFlag)
+  {
+    for(size_t i=0;i<frontierVec.size();++i)
+      biasedFrontierVec.push_back(VertDist(frontierVec[i],0));
+    assert(biasedFrontierVec.size() == frontierVec.size());
+    return;
+  }
+
+  std::vector<VoronoiEdge> edgeVec;
+  BuildVoronoiEdgeVec(m,edgeVec);
+  printf("Found %lu edges on a diagram of %lu seeds\n",edgeVec.size(),seedVec.size());
+
+  std::map<VertexPointer,std::vector<VoronoiEdge *> > SeedToEdgeVecMap;
+  std::map< std::pair<VertexPointer,VertexPointer>, VoronoiEdge *> SeedPairToEdgeMap;
+  float totalLen=0;
+  for(size_t i=0;i<edgeVec.size();++i)
+  {
+    SeedToEdgeVecMap[edgeVec[i].r0].push_back(&(edgeVec[i]));
+    SeedToEdgeVecMap[edgeVec[i].r1].push_back(&(edgeVec[i]));
+    SeedPairToEdgeMap[std::make_pair(edgeVec[i].r0, edgeVec[i].r1)]=&(edgeVec[i]);
+    assert (edgeVec[i].r0 < edgeVec[i].r1);
+    totalLen +=edgeVec[i].Len();
+  }
+
+  // compute the perimeter of each region
+  std::map <VertexPointer, float> regionPerymeter;
+  for(size_t i=0;i<seedVec.size();++i)
+  {
+    for(size_t j=0;j<SeedToEdgeVecMap[seedVec[i]].size();++j)
+    {
+      VoronoiEdge *vep = SeedToEdgeVecMap[seedVec[i]][j];
+      regionPerymeter[seedVec[i]]+=vep->Len();
+    }
+    printf("perimeter of region %i is %f\n",i,regionPerymeter[seedVec[i]]);
+  }
+
+
+  PerVertexPointerHandle sources =  tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+  // The real bias for each edge is (perim)/(edge)
+  // each source can belong to two edges max. so the weight is
+  std::map<VertexPointer,float> weight;
+  std::map<VertexPointer,int> cnt;
+  float biasSum = totalLen/5.0f;
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+  {
+    for(int i=0;i<3;++i)
+    {
+      VertexPointer s0 = sources[(*fi).V0(i)];
+      VertexPointer s1 = sources[(*fi).V1(i)];
+      if(s0!=s1)
+      {
+        if(s0>s1) std::swap(s0,s1);
+        VoronoiEdge *ve = SeedPairToEdgeMap[std::make_pair(s0,s1)];
+        if(!ve) printf("v %i %i \n",tri::Index(m,s0),tri::Index(m,s1));
+        assert(ve);
+        float el = ve->Len();
+        weight[(*fi).V0(i)] += (regionPerymeter[s0]+biasSum)/(el+biasSum) ;
+        weight[(*fi).V1(i)] += (regionPerymeter[s1]+biasSum)/(el+biasSum) ;
+        cnt[(*fi).V0(i)]++;
+        cnt[(*fi).V1(i)]++;
+      }
+    }
+  }
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+  {
+    if(cnt[&*vi]>0)
+    {
+//      float bias = weight[&*vi]/float(cnt[&*vi]);
+      float bias = weight[&*vi]/float(cnt[&*vi]) + totalLen;
+      biasedFrontierVec.push_back(VertDist(&*vi, bias));
+    }
+  }
+  printf("Collected %i frontier vertexes\n",biasedFrontierVec.size());
+}
 
 
 static void DeleteUnreachedRegions(MeshType &m, PerVertexPointerHandle &sources)
@@ -603,6 +782,154 @@ static void DeleteUnreachedRegions(MeshType &m, PerVertexPointerHandle &sources)
   //		qDebug("Deleted faces not reached: %i -> %i",int(m.face.size()),m.fn);
   tri::Clean<MeshType>::RemoveUnreferencedVertex(m);
   tri::Allocator<MeshType>::CompactEveryVector(m);
+}
+
+/// Let f_p(q) be the squared distance of q from p
+/// f_p(q) = (p_x-q_x)^2 + (p_y-q_y)^2 + (p_z-q_z)^2
+/// f_p(q) = p_x^2 -2p_xq_x +q_x^2 + ... + p_z^2 -2p_zq_z +q_z^2
+///
+
+struct QuadricSumDistance
+{
+  ScalarType a;
+  ScalarType c;
+  CoordType b;
+  QuadricSumDistance() {a=0; c=0; b[0]=0; b[1]=0; b[2]=0;}
+  void AddPoint(CoordType p)
+  {
+    a+=1;
+    assert(c>=0);
+    c+=p*p;
+    b[0]+= -2.0f*p[0];
+    b[1]+= -2.0f*p[1];
+    b[2]+= -2.0f*p[2];
+  }
+
+  ScalarType Eval(CoordType p) const
+  {
+    ScalarType d = a*(p*p) + b*p + c;
+    assert(d>=0);
+    return d;
+  }
+
+  CoordType Min() const
+  {
+    return b * -0.5f;
+  }
+};
+
+/// Find the new position according to the geodesic rule.
+/// For each region, given the frontiers, it chooses the point with the highest distance from the frontier
+///
+static void QuadricRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::vector<VertexPointer> &frontierVec,
+                          std::vector<VertexType *> &newSeeds,
+              DistanceFunctor &df, VoronoiProcessingParameter &vpp)
+{
+  newSeeds.clear();
+  typename MeshType::template PerVertexAttributeHandle<VertexPointer> sources;
+  sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+  QuadricSumDistance dz;
+  std::vector<QuadricSumDistance> dVec(m.vert.size(),dz);
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+  {
+    assert(sources[vi]!=0);
+    int seedIndex = tri::Index(m,sources[vi]);
+    dVec[seedIndex].AddPoint(vi->P());
+  }
+  // Search the local maxima for each region and use them as new seeds
+  std::pair<float,VertexPointer> zz(std::numeric_limits<ScalarType>::max(), static_cast<VertexPointer>(0));
+  std::vector< std::pair<float,VertexPointer> > seedMaximaVec(m.vert.size(),zz);
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+  {
+    assert(sources[vi]!=0);
+    int seedIndex = tri::Index(m,sources[vi]);
+    ScalarType val = dVec[seedIndex].Eval(vi->P());
+    vi->Q()=val;
+    if(seedMaximaVec[seedIndex].first > val)
+    {
+      seedMaximaVec[seedIndex].first = val;
+      seedMaximaVec[seedIndex].second = &*vi;
+    }
+  }
+
+  tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
+  tri::io::ExporterPLY<MeshType>::Save(m,"last.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
+
+  // update the seedvector with the new maxima (For the vertex not selected)
+  for(size_t i=0;i<m.vert.size();++i)
+    if(seedMaximaVec[i].second) // only  seeds entries have a non zero pointer
+    {
+      if(vpp.fixSelectedSeed && sources[seedMaximaVec[i].second]->IsS())
+        newSeeds.push_back(sources[seedMaximaVec[i].second]);
+      else
+        newSeeds.push_back(seedMaximaVec[i].second);
+    }
+}
+
+/// Find the new position according to the geodesic rule.
+/// For each region, given the frontiers, it chooses the point with the highest distance from the frontier
+///
+static void GeodesicRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::vector<VertexPointer> &frontierVec,
+                          std::vector<VertexType *> &newSeeds,
+              DistanceFunctor &df, VoronoiProcessingParameter &vpp)
+{
+  newSeeds.clear();
+  typename MeshType::template PerVertexAttributeHandle<VertexPointer> sources;
+  sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+
+  std::vector<typename tri::Geodesic<MeshType>::VertDist> biasedFrontierVec;
+  BuildBiasedSeedVec(m,df,seedVec,frontierVec,biasedFrontierVec,vpp);
+  tri::Geodesic<MeshType>::Visit(m,biasedFrontierVec,df);
+  tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
+  //    tri::io::ExporterPLY<MeshType>::Save(m,"last.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
+
+  if(vpp.colorStrategy == VoronoiProcessingParameter::DistanceFromBorder)
+    tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
+
+  // Search the local maxima for each region and use them as new seeds
+  std::pair<float,VertexPointer> zz(0.0f,static_cast<VertexPointer>(NULL));
+  std::vector< std::pair<float,VertexPointer> > seedMaximaVec(m.vert.size(),zz);
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+  {
+    assert(sources[vi]!=0);
+    int seedIndex = tri::Index(m,sources[vi]);
+    if(seedMaximaVec[seedIndex].first < (*vi).Q())
+    {
+      seedMaximaVec[seedIndex].first=(*vi).Q();
+      seedMaximaVec[seedIndex].second=&*vi;
+    }
+  }
+
+  // update the seedvector with the new maxima (For the vertex not selected)
+  for(size_t i=0;i<seedMaximaVec.size();++i)
+    if(seedMaximaVec[i].second)
+    {
+      if(vpp.fixSelectedSeed && sources[seedMaximaVec[i].second]->IsS())
+        newSeeds.push_back(sources[seedMaximaVec[i].second]);
+      else
+        newSeeds.push_back(seedMaximaVec[i].second);
+    }
+}
+
+static void PruneSeedByRegionArea(std::vector<VertexType *> &seedVec,
+                                  std::vector< std::pair<float,VertexPointer> > &regionArea,
+                                  VoronoiProcessingParameter &vpp)
+{
+  // Smaller area region are discarded
+  Distribution<float> H;
+  for(size_t i=0;i<regionArea.size();++i)
+    if(regionArea[i].second) H.Add(regionArea[i].first);
+  float areaThreshold=0;
+  if(vpp.areaThresholdPerc != 0) areaThreshold = H.Percentile(vpp.areaThresholdPerc);
+  std::vector<VertexType *> newSeedVec;
+
+  // update the seedvector with the new maxima (For the vertex not selected)
+  for(size_t i=0;i<seedVec.size();++i)
+  {
+    if(regionArea[i].first >= areaThreshold)
+      newSeedVec.push_back(seedVec[i]);
+  }
+  swap(seedVec,newSeedVec);
 }
 
 /// \brief Perform a Lloyd relaxation cycle over a mesh
@@ -624,85 +951,43 @@ static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec, int
 
     // first run: find for each point what is the closest to one of the seeds.
     tri::Geodesic<MeshType>::Compute(m, seedVec, df,std::numeric_limits<ScalarType>::max(),0,&sources);
+
     if(vpp.colorStrategy == VoronoiProcessingParameter::DistanceFromSeed)
       tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
     // Delete all the (hopefully) small regions that have not been reached by the seeds;
 
-    if(vpp.deleteUnreachedRegionFlag)
-      DeleteUnreachedRegions(m,sources);
-    //static_cast<VertexPointer>(NULL) has been introduced just to avoid an error in the MSVS2010's compiler confusing pointer with int. You could use nullptr to avoid it, but it's not supported by all compilers.
-    //The error should have been removed from MSVS2012
+    if(vpp.deleteUnreachedRegionFlag)  DeleteUnreachedRegions(m,sources);
     std::pair<float,VertexPointer> zz(0.0f,static_cast<VertexPointer>(NULL));
     std::vector< std::pair<float,VertexPointer> > regionArea(m.vert.size(),zz);
     std::vector<VertexPointer> frontierVec;
 
     GetAreaAndFrontier(m, sources,  regionArea, frontierVec);
-    // Smaller area region are discarded
-    Distribution<float> H;
-    for(size_t i=0;i<regionArea.size();++i)
-      if(regionArea[i].second) H.Add(regionArea[i].first);
+    assert(frontierVec.size()>0);
 
-    if(vpp.colorStrategy == VoronoiProcessingParameter::RegionArea)
-    {
-      float meshArea = tri::Stat<MeshType>::ComputeMeshArea(m);
-      float expectedArea = meshArea/float(seedVec.size());
-      for(size_t i=0;i<m.vert.size();++i)
-          m.vert[i].C()=Color4b::ColorRamp(expectedArea *0.75f ,expectedArea*1.25f, regionArea[tri::Index(m,sources[i])].first);
-    }
+    if(vpp.colorStrategy == VoronoiProcessingParameter::RegionArea) VoronoiAreaColoring(m, seedVec, regionArea);
 
-    float areaThreshold=0;
-    if(vpp.areaThresholdPerc != 0) areaThreshold = H.Percentile(vpp.areaThresholdPerc);
-
-//    qDebug("We have found %i regions range (%f %f), avg area is %f, Variance is %f 10perc is %f",(int)seedVec.size(),H.Min(),H.Max(),H.Avg(),H.StandardDeviation(),areaThreshold);
+    //    qDebug("We have found %i regions range (%f %f), avg area is %f, Variance is %f 10perc is %f",(int)seedVec.size(),H.Min(),H.Max(),H.Avg(),H.StandardDeviation(),areaThreshold);
 
     if(cb) cb(iter*100/relaxIter,"Voronoi Lloyd Relaxation: Searching New Seeds");
+    std::vector<VertexPointer> newSeedVec;
 
-    tri::Geodesic<MeshType>::Compute(m,frontierVec,df);
+    if(vpp.geodesicRelaxFlag)
+      GeodesicRelax(m,seedVec, frontierVec, newSeedVec, df,vpp);
+    else
+      QuadricRelax(m,seedVec,frontierVec, newSeedVec, df,vpp);
 
-    if(vpp.colorStrategy == VoronoiProcessingParameter::DistanceFromBorder)
-      tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
-
-    // Search the local maxima for each region and use them as new seeds
-    std::vector< std::pair<float,VertexPointer> > seedMaxima(m.vert.size(),zz);
-
-    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-    {
-      assert(sources[vi]!=0);
-      int seedIndex = tri::Index(m,sources[vi]);
-      if(seedMaxima[seedIndex].first < (*vi).Q())
-      {
-        seedMaxima[seedIndex].first=(*vi).Q();
-        seedMaxima[seedIndex].second=&*vi;
-      }
-    }
-    // update the seedvector with the new maxima (For the vertex not selected)
-    std::vector<VertexPointer> newSeeds;
-    for(size_t i=0;i<seedMaxima.size();++i)
-      if(seedMaxima[i].second)
-      {
-        if(vpp.fixSelectedSeed && sources[seedMaxima[i].second]->IsS())
-        {
-          newSeeds.push_back(sources[seedMaxima[i].second]);
-        }
-        else
-        {
-        seedMaxima[i].second->C() = Color4b::Gray;
-        if(regionArea[i].first >= areaThreshold)
-          newSeeds.push_back(seedMaxima[i].second);
-        }
-      }
+    assert(newSeedVec.size() == seedVec.size());
+    PruneSeedByRegionArea(newSeedVec,regionArea,vpp);
 
     for(size_t i=0;i<frontierVec.size();++i)
       frontierVec[i]->C() = Color4b::Gray;
     for(size_t i=0;i<seedVec.size();++i)
       seedVec[i]->C() = Color4b::Black;
-    for(size_t i=0;i<newSeeds.size();++i)
-      newSeeds[i]->C() = Color4b::White;
+    for(size_t i=0;i<newSeedVec.size();++i)
+      newSeedVec[i]->C() = Color4b::White;
 
-    swap(newSeeds,seedVec);
+    swap(newSeedVec,seedVec);
   }
-
-//  tri::Allocator<MeshType>::DeletePerVertexAttribute (m,"sources");
 }
 
 
@@ -748,30 +1033,30 @@ static void TopologicalVertexColoring(MeshType &m, std::vector<VertexType *> &se
 
 static void VoronoiClustering(MeshType &mOld, MeshType &mNew, std::vector<VertexType *> &seedVec)
 {
-	std::set<Point3i> clusteredFace;
+    std::set<Point3i> clusteredFace;
 
-	FaceIterator fi;
-	for(fi=mOld.face.begin();fi!=mOld.face.end();++fi)
-	{
-		if( (fi->V(0)->Q() != fi->V(1)->Q() ) &&
-				(fi->V(0)->Q() != fi->V(2)->Q() ) &&
-				(fi->V(1)->Q() != fi->V(2)->Q() )  )
-				clusteredFace.insert( Point3i(int(fi->V(0)->Q()), int(fi->V(1)->Q()), int(fi->V(2)->Q())));
-	}
+    FaceIterator fi;
+    for(fi=mOld.face.begin();fi!=mOld.face.end();++fi)
+    {
+        if( (fi->V(0)->Q() != fi->V(1)->Q() ) &&
+                (fi->V(0)->Q() != fi->V(2)->Q() ) &&
+                (fi->V(1)->Q() != fi->V(2)->Q() )  )
+                clusteredFace.insert( Point3i(int(fi->V(0)->Q()), int(fi->V(1)->Q()), int(fi->V(2)->Q())));
+    }
 
-	tri::Allocator<MeshType>::AddVertices(mNew,seedVec.size());
-	for(size_t i=0;i< seedVec.size();++i)
-	mNew.vert[i].ImportData(*(seedVec[i]));
+    tri::Allocator<MeshType>::AddVertices(mNew,seedVec.size());
+    for(size_t i=0;i< seedVec.size();++i)
+    mNew.vert[i].ImportData(*(seedVec[i]));
 
-	tri::Allocator<MeshType>::AddFaces(mNew,clusteredFace.size());
-	std::set<Point3i>::iterator fsi; ;
+    tri::Allocator<MeshType>::AddFaces(mNew,clusteredFace.size());
+    std::set<Point3i>::iterator fsi; ;
 
-	for(fi=mNew.face.begin(),fsi=clusteredFace.begin(); fsi!=clusteredFace.end();++fsi,++fi)
-	{
-		(*fi).V(0) = & mNew.vert[(int)(fsi->V(0)-1)];
-		(*fi).V(1) = & mNew.vert[(int)(fsi->V(1)-1)];
-		(*fi).V(2) = & mNew.vert[(int)(fsi->V(2)-1)];
-	}
+    for(fi=mNew.face.begin(),fsi=clusteredFace.begin(); fsi!=clusteredFace.end();++fsi,++fi)
+    {
+        (*fi).V(0) = & mNew.vert[(int)(fsi->V(0)-1)];
+        (*fi).V(1) = & mNew.vert[(int)(fsi->V(1)-1)];
+        (*fi).V(2) = & mNew.vert[(int)(fsi->V(2)-1)];
+    }
 }
 
 }; // end class VoronoiProcessing
