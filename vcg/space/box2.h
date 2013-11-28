@@ -328,13 +328,13 @@ Point2<ScalarType> ClosestPoint2Box2(const Point2<ScalarType> &test,
 	Segs[0].P0() = bbox.min;
 	Segs[0].P1() = vcg::Point2<ScalarType>(bbox.max.X(), bbox.min.Y());
 
-	Segs[1].P0() = Segs[0].P(1);
+	Segs[1].P0() = Segs[0].P1();
 	Segs[1].P1() = bbox.max;
 
-	Segs[2].P0() = Segs[1].P(1);
+	Segs[2].P0() = Segs[1].P1();
 	Segs[2].P1() = vcg::Point2<ScalarType>(bbox.min.X(), bbox.max.Y());
 
-	Segs[3].P0() = Segs[2].P(1);
+	Segs[3].P0() = Segs[2].P1();
 	Segs[3].P1() = bbox.min;
 	
 	Point2<ScalarType> closest = ClosestPoint(Segs[0], test);
