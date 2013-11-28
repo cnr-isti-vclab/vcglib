@@ -35,7 +35,7 @@ Initial release.
 
 /// Opengl related imports
 #include <GL/glew.h>
-#include <QtOpenGL/QGLWidget>
+#include <QGLWidget>
 
 /// vcg imports
 #include <vcg/complex/complex.h>

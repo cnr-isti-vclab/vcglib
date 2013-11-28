@@ -30,8 +30,11 @@ Initial release.
 
 ****************************************************************************/
 
-#include <QtGui>
 #include "glarea.h"
+#include <QMessageBox>
+#include <QKeyEvent>
+#include <QKeyEvent>
+#include <QWheelEvent>
 #include <wrap/qt/trackball.h>
 
 GLArea::GLArea (QWidget * parent)

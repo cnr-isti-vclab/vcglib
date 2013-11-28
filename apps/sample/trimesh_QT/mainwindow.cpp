@@ -27,8 +27,9 @@ $Log: not supported by cvs2svn $
 
 ****************************************************************************/
 
-#include <QtGui>
+
 #include "mainwindow.h"
+#include <QFileDialog>
 
 MainWindow::MainWindow (QWidget * parent):QMainWindow (parent)
 {
