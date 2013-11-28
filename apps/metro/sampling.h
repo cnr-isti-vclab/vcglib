@@ -50,9 +50,9 @@ struct SamplingFlags{
 						NO_SAMPLING     			          = 0x0070,
 						SAVE_ERROR                      = 0x0100,
 						INCLUDE_UNREFERENCED_VERTICES		= 0x0200,
-            USE_STATIC_GRID                 = 0x0400,
-            USE_HASH_GRID                   = 0x0800,
-            USE_AABB_TREE                   = 0x1000,
+			USE_STATIC_GRID                 = 0x0400,
+			USE_HASH_GRID                   = 0x0800,
+			USE_AABB_TREE                   = 0x1000,
 						USE_OCTREE                      = 0x2000
 				};
 	};
@@ -63,21 +63,21 @@ class Sampling
 public:
 
 private:
-	  typedef typename MetroMesh::CoordType				CoordType;
+      typedef typename MetroMesh::CoordType				CoordType;
     typedef typename MetroMesh::ScalarType			ScalarType;
-		typedef typename MetroMesh::VertexType			VertexType;
+        typedef typename MetroMesh::VertexType			VertexType;
     typedef typename MetroMesh::VertexPointer		VertexPointer;
     typedef typename MetroMesh::VertexIterator	VertexIterator;
     typedef typename MetroMesh::FaceIterator		FaceIterator;
     typedef typename MetroMesh::FaceType				FaceType;
     typedef typename MetroMesh::FaceContainer		FaceContainer;
-	  
+
 		typedef GridStaticPtr				<FaceType, typename MetroMesh::ScalarType >									MetroMeshGrid;
 	  typedef SpatialHashTable		<FaceType, typename MetroMesh::ScalarType >									MetroMeshHash;
-    typedef AABBBinaryTreeIndex	<FaceType, typename MetroMesh::ScalarType, vcg::EmptyClass>	MetroMeshAABB;
+	typedef AABBBinaryTreeIndex	<FaceType, typename MetroMesh::ScalarType, vcg::EmptyClass>	MetroMeshAABB;
 		typedef Octree							<FaceType, typename MetroMesh::ScalarType >                 MetroMeshOctree;
 
-    typedef Point3<typename MetroMesh::ScalarType> Point3x;
+	typedef Point3<typename MetroMesh::ScalarType> Point3x;
 
 
 
@@ -88,7 +88,7 @@ private:
     MetroMeshGrid   gS2;
     MetroMeshHash   hS2;
     MetroMeshAABB   tS2;
-		MetroMeshOctree oS2;
+        MetroMeshOctree oS2;
 
 
 		unsigned int n_samples_per_face    ;
@@ -99,11 +99,11 @@ private:
 		int n_hist_bins                    ;
 		int print_every_n_elements         ;
 		int referredBit                    ;
-    // parameters
-    double          dist_upper_bound;
-    double					n_samples_per_area_unit;
-    unsigned long   n_samples_target;
-    int             Flags;
+	// parameters
+	double          dist_upper_bound;
+	double					n_samples_per_area_unit;
+	unsigned long   n_samples_target;
+	int             Flags;
 
     // results
     Histogram<double>            hist;
@@ -136,7 +136,7 @@ private:
 public :
     // public methods
     Sampling(MetroMesh &_s1, MetroMesh &_s2);
-		~Sampling();
+        ~Sampling();
     void            Hausdorff();
     double          GetArea()                   {return area_S1;}
     double          GetDistMax()                {return max_dist;}
@@ -165,14 +165,14 @@ Sampling<MetroMesh>::Sampling(MetroMesh &_s1, MetroMesh &_s2):S1(_s1),S2(_s2)
 {
     Flags = 0;
     area_S1 = ComputeMeshArea(_s1);
-		// set default numbers
-		n_samples_per_face             =	10;
-		n_samples_edge_to_face_ratio   = 0.1f;
-		bbox_factor                    = 0.1f;
-		inflate_percentage			       = 0.02f;
-		min_size					             = 125;		/* 125 = 5^3 */
-		n_hist_bins                    = 256;
-		print_every_n_elements         = S1.fn/100;
+        // set default numbers
+        n_samples_per_face             =	10;
+        n_samples_edge_to_face_ratio   = 0.1f;
+        bbox_factor                    = 0.1f;
+        inflate_percentage			       = 0.02f;
+        min_size					             = 125;		/* 125 = 5^3 */
+        n_hist_bins                    = 256;
+        print_every_n_elements         = S1.fn/100;
 
 		if(print_every_n_elements <= 1)
 		  print_every_n_elements = 2;
@@ -214,11 +214,11 @@ inline double Sampling<MetroMesh>::ComputeMeshArea(MetroMesh & mesh)
     FaceIterator    face;
     double                  area = 0.0;
 
-    for(face=mesh.face.begin(); face != mesh.face.end(); face++)
+	for(face=mesh.face.begin(); face != mesh.face.end(); face++)
 			if(!(*face).IsD())
-        area += DoubleArea(*face);
+		area += DoubleArea(*face);
 
-    return area/2.0;
+	return area/2.0;
 }
 
 template <class MetroMesh>
@@ -226,7 +226,7 @@ float Sampling<MetroMesh>::AddSample(const Point3x &p )
 {
     FaceType   *f=0;
     Point3x             normf, bestq, ip;
-		ScalarType              dist;
+        ScalarType              dist;
 
     dist = dist_upper_bound;
 
@@ -269,10 +269,10 @@ void Sampling<MetroMesh>::VertexSampling()
 
     printf("Vertex sampling\n");
     VertexIterator vi;
-		typename std::vector<VertexPointer>::iterator vif;
+        typename std::vector<VertexPointer>::iterator vif;
     for(vi=S1.vert.begin();vi!=S1.vert.end();++vi)
-			if(  (*vi).IsUserBit(referredBit) || // it is referred
-					((Flags&SamplingFlags::INCLUDE_UNREFERENCED_VERTICES) != 0) ) //include also unreferred
+            if(  (*vi).IsUserBit(referredBit) || // it is referred
+                    ((Flags&SamplingFlags::INCLUDE_UNREFERENCED_VERTICES) != 0) ) //include also unreferred
     {
         error = AddSample((*vi).cP());
 
@@ -310,40 +310,40 @@ inline void Sampling<MetroMesh>::SampleEdge(const Point3x & v0, const Point3x & 
 template <class MetroMesh>
 void Sampling<MetroMesh>::EdgeSampling()
 {
-    // Edge sampling.
+	// Edge sampling.
 		typedef std::pair<VertexPointer, VertexPointer> pvv;
 		std::vector< pvv > Edges;
 
-    printf("Edge sampling\n");
+	printf("Edge sampling\n");
 
     // compute edge list.
     FaceIterator fi;
     for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
         for(int i=0; i<3; ++i)
         {
-            Edges.push_back(make_pair((*fi).V0(i),(*fi).V1(i)));
+            Edges.push_back(std::make_pair((*fi).V0(i),(*fi).V1(i)));
             if(Edges.back().first > Edges.back().second)
-                swap(Edges.back().first, Edges.back().second);
+                std::swap(Edges.back().first, Edges.back().second);
         }
     sort(Edges.begin(), Edges.end());
-		typename std::vector< pvv>::iterator edgeend = unique(Edges.begin(), Edges.end());
+        typename std::vector< pvv>::iterator edgeend = unique(Edges.begin(), Edges.end());
     Edges.resize(edgeend-Edges.begin());
 
-    // sample edges.
+	// sample edges.
 		typename std::vector<pvv>::iterator   ei;
-    double                  n_samples_per_length_unit;
-    double                  n_samples_decimal = 0.0;
-    int                     cnt=0;
-    if(Flags & SamplingFlags::FACE_SAMPLING)
-        n_samples_per_length_unit = sqrt((double)n_samples_per_area_unit);
-    else
-        n_samples_per_length_unit = n_samples_per_area_unit;
-    for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
-    {
-        n_samples_decimal += Distance((*ei).first->cP(),(*ei).second->cP()) * n_samples_per_length_unit;
-        n_samples          = (int) n_samples_decimal;
-        SampleEdge((*ei).first->cP(), (*ei).second->cP(), (int) n_samples);
-        n_samples_decimal -= (double) n_samples;
+	double                  n_samples_per_length_unit;
+	double                  n_samples_decimal = 0.0;
+	int                     cnt=0;
+	if(Flags & SamplingFlags::FACE_SAMPLING)
+		n_samples_per_length_unit = sqrt((double)n_samples_per_area_unit);
+	else
+		n_samples_per_length_unit = n_samples_per_area_unit;
+	for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
+	{
+		n_samples_decimal += Distance((*ei).first->cP(),(*ei).second->cP()) * n_samples_per_length_unit;
+		n_samples          = (int) n_samples_decimal;
+		SampleEdge((*ei).first->cP(), (*ei).second->cP(), (int) n_samples);
+		n_samples_decimal -= (double) n_samples;
 
         // print progress information
         if(!(++cnt % print_every_n_elements))
@@ -395,7 +395,7 @@ void Sampling<MetroMesh>::MontecarloFaceSampling()
     srand(clock());
  //   printf("Montecarlo face sampling\n");
     for(fi=S1.face.begin(); fi != S1.face.end(); fi++)
-		if(!(*fi).IsD())
+        if(!(*fi).IsD())
     {
         // compute # samples in the current face.
         n_samples_decimal += 0.5*DoubleArea(*fi) * n_samples_per_area_unit;
@@ -546,35 +546,35 @@ void Sampling<MetroMesh>::SimilarFaceSampling()
 template <class MetroMesh>
 void Sampling<MetroMesh>::Hausdorff()
 {
-		Box3< ScalarType> bbox;
+        Box3< ScalarType> bbox;
 
     typedef typename std::vector<FaceType>::iterator  FaceVecIterator;
     // set grid meshes.
     if(Flags & SamplingFlags::USE_HASH_GRID)   hS2.Set(S2.face.begin(),S2.face.end());
     if(Flags & SamplingFlags::USE_AABB_TREE)   tS2.Set(S2.face.begin(),S2.face.end());
     if(Flags & SamplingFlags::USE_STATIC_GRID) gS2.Set(S2.face.begin(),S2.face.end());
-		if(Flags & SamplingFlags::USE_OCTREE)      oS2.Set(S2.face.begin(),S2.face.end());
+        if(Flags & SamplingFlags::USE_OCTREE)      oS2.Set(S2.face.begin(),S2.face.end());
 
     // set bounding box
     bbox = S2.bbox;
     dist_upper_bound = /*bbox_factor * */bbox.Diag();
     if(Flags &  SamplingFlags::HIST)
-    	hist.SetRange(0.0, dist_upper_bound/100.0, n_hist_bins);
+        hist.SetRange(0.0, dist_upper_bound/100.0, n_hist_bins);
 
     // initialize sampling statistics.
     n_total_area_samples = n_total_edge_samples = n_total_vertex_samples = n_total_samples = n_samples = 0;
-		max_dist             = -HUGE_VAL;
-		mean_dist = RMS_dist = 0;
+        max_dist             = -HUGE_VAL;
+        mean_dist = RMS_dist = 0;
 
     // Vertex sampling.
     if(Flags & SamplingFlags::VERTEX_SAMPLING)
         VertexSampling();
     // Edge sampling.
     if(n_samples_target > n_total_samples)
-			{		
-				n_samples_target -= (int) n_total_samples;
+            {
+                n_samples_target -= (int) n_total_samples;
         n_samples_per_area_unit  = n_samples_target / area_S1;
-				if(Flags & SamplingFlags::EDGE_SAMPLING)
+                if(Flags & SamplingFlags::EDGE_SAMPLING)
         {
             EdgeSampling();
            if(n_samples_target > n_total_samples) n_samples_target -= (int) n_total_samples;
