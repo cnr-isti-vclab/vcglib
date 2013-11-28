@@ -25,7 +25,8 @@
 
 #include <stddef.h>
 #include <stdio.h>
-#include <vcg/complex/allocate.h>
+#include <vcg/complex/complex.h>
+//#include <vcg/complex/allocate.h>
 #include <vcg/complex/algorithms/update/bounding.h>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>

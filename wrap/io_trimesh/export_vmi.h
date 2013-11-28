@@ -48,10 +48,11 @@
 	import_vmi must be updated to reflect changes in vcg/complex/trimesh/base.h
 	*/
 
-#include <vcg/simplex/face/component.h>
-#include <vcg/simplex/face/component_ocf.h>
-#include <vcg/simplex/vertex/component.h>
-#include <vcg/simplex/vertex/component_ocf.h>
+#include <vcg/complex/complex.h>
+//#include <vcg/simplex/face/component.h>
+//#include <vcg/simplex/face/component_ocf.h>
+//#include <vcg/simplex/vertex/component.h>
+//#include <vcg/simplex/vertex/component_ocf.h>
 
 namespace vcg {
 namespace tri {
