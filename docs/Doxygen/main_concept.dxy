@@ -22,7 +22,7 @@ In other words, to define a type of mesh you need only to derive from vcg::tri::
 \skip class
 \until MyMesh
 
-The face, the edge and the vertex type are the crucial bits to understand in order to be able to take the best from VCG Lib. A vertex, an edge, a face and a tetrahedron are just an user defined (possibly empty) collection of attribute. For example you will probably expect MyVertex to contain the (x,y,z) position of the vertex, but what about the surface normal at the vertex?.. and the color? VCG Lib gives you a pretty elegant way to define whichever attributes you want to store in each vertex, face, or edge. For example, the following example shows three valid definitions of MyVertex of increasing complexity :
+The face, the edge and the vertex type are the crucial bits to understand in order to be able to take the best from VCG Lib. A vertex, an edge, a face and a tetrahedron are just an user defined (possibly empty) collection of attributes. For example you will probably expect MyVertex to contain the (x,y,z) position of the vertex, but what about the surface normal at the vertex?.. and the color? VCG Lib gives you a pretty elegant way to define whichever attributes you want to store in each vertex, face, or edge. For example, the following example shows three valid definitions of MyVertex of increasing complexity :
 
 \dontinclude trimesh_base.cpp
 \skip MyVertex0
