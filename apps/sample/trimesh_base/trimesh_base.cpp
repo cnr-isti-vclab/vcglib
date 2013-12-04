@@ -68,6 +68,7 @@ int main( int argc, char **argv )
     exit(0);
   }
 
+  vcg::tri::RequirePerVertexNormal(m);
   vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalized(m);
   printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
   printf( "Mesh has %i vert and %i faces\n", m.VN(), m.FN() );

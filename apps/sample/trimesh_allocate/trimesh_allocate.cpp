@@ -49,7 +49,7 @@ int main()
   MyMesh::VertexIterator vi = vcg::tri::Allocator<MyMesh>::AddVertices(m,3);
   MyMesh::FaceIterator fi = vcg::tri::Allocator<MyMesh>::AddFaces(m,1);
 
-  MyMesh::VertexPointer ivp[3];
+  MyMesh::VertexPointer ivp[4];
   ivp[0]=&*vi; vi->P()=MyMesh::CoordType ( 0.0, 0.0, 0.0); ++vi;
   ivp[1]=&*vi; vi->P()=MyMesh::CoordType ( 1.0, 0.0, 0.0); ++vi;
   ivp[2]=&*vi; vi->P()=MyMesh::CoordType ( 0.0, 1.0, 0.0); ++vi;
@@ -57,6 +57,12 @@ int main()
   fi->V(0)=ivp[0];
   fi->V(1)=ivp[1];
   fi->V(2)=ivp[2];
+
+  // Alternative, more compact, method for adding a single vertex
+  ivp[3]=vcg::tri::Allocator<MyMesh>::AddVertex(m,MyMesh::CoordType ( 1.0, 1.0, 0.0));
+
+  // Alternative, more compact, method for adding a single face (once you have the vertex pointers)
+  vcg::tri::Allocator<MyMesh>::AddFace(m, ivp[1],ivp[0],ivp[3]);
 
   // a potentially dangerous pointer to a mesh element
   MyMesh::FacePointer fp = &m.face[0];
@@ -95,6 +101,9 @@ int main()
   // To remove the elements marked as deleted use
   vcg::tri::Allocator<MyMesh>::CompactFaceVector(m);
   vcg::tri::Allocator<MyMesh>::CompactVertexVector(m);
+
+  // To clean all the containers from deleted elements
+  vcg::tri::Allocator<MyMesh>::CompactEveryVector(m);
 
   // finally lets copy this mesh onto another one.
   MyMesh m2;
