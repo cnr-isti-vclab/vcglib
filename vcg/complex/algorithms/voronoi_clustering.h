@@ -853,7 +853,7 @@ static void QuadricRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::v
   }
 
   tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
-  tri::io::ExporterPLY<MeshType>::Save(m,"last.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
+//  tri::io::ExporterPLY<MeshType>::Save(m,"last.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
 
   // update the seedvector with the new maxima (For the vertex not selected)
   for(size_t i=0;i<m.vert.size();++i)
