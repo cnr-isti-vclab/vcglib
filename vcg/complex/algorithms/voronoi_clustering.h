@@ -292,6 +292,7 @@ static void GetAreaAndFrontier(MeshType &m, PerVertexPointerHandle &sources,
     VertexPointer s0 = sources[(*fi).V(0)];
     VertexPointer s1 = sources[(*fi).V(1)];
     VertexPointer s2 = sources[(*fi).V(2)];
+    assert(s0 && s1 && s2);
     if((s0 != s1) || (s0 != s2) )
     {
       for(int i=0;i<3;++i)
@@ -830,6 +831,7 @@ static void QuadricRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::v
   sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   QuadricSumDistance dz;
   std::vector<QuadricSumDistance> dVec(m.vert.size(),dz);
+  assert(m.vert.size()==m.vn);
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
   {
     assert(sources[vi]!=0);
