@@ -507,18 +507,18 @@ void Box(MeshType &in, const typename MeshType::BoxType & bb )
  ivp[7]=&*vi;(*vi).P()=CoordType (bb.max[0],bb.max[1],bb.max[2]);
 
  FaceIterator fi=in.face.begin();
- (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[2]; ++fi;
- (*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[1]; ++fi;
- (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[4]; ++fi;
- (*fi).V(0)=ivp[6];  (*fi).V(1)=ivp[4]; (*fi).V(2)=ivp[2]; ++fi;
- (*fi).V(0)=ivp[0];  (*fi).V(1)=ivp[4]; (*fi).V(2)=ivp[1]; ++fi;
- (*fi).V(0)=ivp[5];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[4]; ++fi;
- (*fi).V(0)=ivp[7];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[6]; ++fi;
- (*fi).V(0)=ivp[4];  (*fi).V(1)=ivp[6]; (*fi).V(2)=ivp[5]; ++fi;
- (*fi).V(0)=ivp[7];  (*fi).V(1)=ivp[6]; (*fi).V(2)=ivp[3]; ++fi;
- (*fi).V(0)=ivp[2];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[6]; ++fi;
- (*fi).V(0)=ivp[7];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[5]; ++fi;
- (*fi).V(0)=ivp[1];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[3];
+ (*fi).V(0)=ivp[2];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[0]; ++fi;
+ (*fi).V(0)=ivp[1];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[3]; ++fi;
+ (*fi).V(0)=ivp[4];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[0]; ++fi;
+ (*fi).V(0)=ivp[2];  (*fi).V(1)=ivp[4]; (*fi).V(2)=ivp[6]; ++fi;
+ (*fi).V(0)=ivp[1];  (*fi).V(1)=ivp[4]; (*fi).V(2)=ivp[0]; ++fi;
+ (*fi).V(0)=ivp[4];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[5]; ++fi;
+ (*fi).V(0)=ivp[6];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[7]; ++fi;
+ (*fi).V(0)=ivp[5];  (*fi).V(1)=ivp[6]; (*fi).V(2)=ivp[4]; ++fi;
+ (*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[6]; (*fi).V(2)=ivp[7]; ++fi;
+ (*fi).V(0)=ivp[6];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[2]; ++fi;
+ (*fi).V(0)=ivp[5];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[7]; ++fi;
+ (*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[1];
 
  if (HasPerFaceFlags(in)) {
     FaceIterator fi=in.face.begin();
