@@ -59,7 +59,7 @@ int main()
   fi->V(2)=ivp[2];
 
   // Alternative, more compact, method for adding a single vertex
-  ivp[3]=vcg::tri::Allocator<MyMesh>::AddVertex(m,MyMesh::CoordType ( 1.0, 1.0, 0.0));
+  ivp[3]= &*vcg::tri::Allocator<MyMesh>::AddVertex(m,MyMesh::CoordType ( 1.0, 1.0, 0.0));
 
   // Alternative, more compact, method for adding a single face (once you have the vertex pointers)
   vcg::tri::Allocator<MyMesh>::AddFace(m, ivp[1],ivp[0],ivp[3]);
