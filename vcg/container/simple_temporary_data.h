@@ -24,6 +24,8 @@
 #ifndef __VCGLIB_SIMPLE__
 #define __VCGLIB_SIMPLE__
 
+#include <string.h>
+
 namespace vcg {
 
 class SimpleTempDataBase{
