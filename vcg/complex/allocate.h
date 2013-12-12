@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004                                                \/)\/    *
+* Copyright(C) 2004-2014                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -28,43 +28,42 @@
 #define __VCGLIB_TRIALLOCATOR
 
 namespace vcg {
-
 namespace tri {
 /** \addtogroup trimesh
 @{
 */
 
-        template<class MeshType>
-        size_t Index(MeshType &m, const typename MeshType::VertexType &v) {return &v-&*m.vert.begin();}
-        template<class MeshType>
-        size_t Index(MeshType &m, const typename MeshType::FaceType &f) {return &f-&*m.face.begin();}
-        template<class MeshType>
-        size_t Index(MeshType &m, const typename MeshType::EdgeType &e) {return &e-&*m.edge.begin();}
-        template<class MeshType>
-        size_t Index(MeshType &m, const typename MeshType::HEdgeType &h) {return &h-&*m.hedge.begin();}
+template<class MeshType>
+size_t Index(MeshType &m, const typename MeshType::VertexType &v) {return &v-&*m.vert.begin();}
+template<class MeshType>
+size_t Index(MeshType &m, const typename MeshType::FaceType &f) {return &f-&*m.face.begin();}
+template<class MeshType>
+size_t Index(MeshType &m, const typename MeshType::EdgeType &e) {return &e-&*m.edge.begin();}
+template<class MeshType>
+size_t Index(MeshType &m, const typename MeshType::HEdgeType &h) {return &h-&*m.hedge.begin();}
 
-        template<class MeshType>
-        size_t Index(MeshType &m, const typename MeshType::VertexType *vp) {return vp-&*m.vert.begin();}
-        template<class MeshType>
-        size_t Index(MeshType &m, const typename MeshType::FaceType * fp) {return fp-&*m.face.begin();}
-        template<class MeshType>
-        size_t Index(MeshType &m, const typename MeshType::EdgeType*  e) {return e-&*m.edge.begin();}
-        template<class MeshType>
-        size_t Index(MeshType &m, const typename MeshType::HEdgeType*  h) {return h-&*m.hedge.begin();}
+template<class MeshType>
+size_t Index(MeshType &m, const typename MeshType::VertexType *vp) {return vp-&*m.vert.begin();}
+template<class MeshType>
+size_t Index(MeshType &m, const typename MeshType::FaceType * fp) {return fp-&*m.face.begin();}
+template<class MeshType>
+size_t Index(MeshType &m, const typename MeshType::EdgeType*  e) {return e-&*m.edge.begin();}
+template<class MeshType>
+size_t Index(MeshType &m, const typename MeshType::HEdgeType*  h) {return h-&*m.hedge.begin();}
 
-        template <class MeshType, class ATTR_CONT>
-        void ReorderAttribute(ATTR_CONT &c,std::vector<size_t> & newVertIndex, MeshType & /* m */){
-            typename std::set<typename MeshType::PointerToAttribute>::iterator ai;
-                for(ai = c.begin(); ai != c.end(); ++ai)
-                    ((typename MeshType::PointerToAttribute)(*ai)).Reorder(newVertIndex);
-        }
+template <class MeshType, class ATTR_CONT>
+void ReorderAttribute(ATTR_CONT &c,std::vector<size_t> & newVertIndex, MeshType & /* m */){
+  typename std::set<typename MeshType::PointerToAttribute>::iterator ai;
+  for(ai = c.begin(); ai != c.end(); ++ai)
+    ((typename MeshType::PointerToAttribute)(*ai)).Reorder(newVertIndex);
+}
 
-        template <class MeshType, class ATTR_CONT>
-        void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
-            typename std::set<typename MeshType::PointerToAttribute>::iterator ai;
-                for(ai =c.begin(); ai != c.end(); ++ai)
-                    ((typename MeshType::PointerToAttribute)(*ai)).Resize(sz);
-        }
+template <class MeshType, class ATTR_CONT>
+void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
+  typename std::set<typename MeshType::PointerToAttribute>::iterator ai;
+  for(ai =c.begin(); ai != c.end(); ++ai)
+    ((typename MeshType::PointerToAttribute)(*ai)).Resize(sz);
+}
 
         /*!
         \brief  Class to safely add and delete elements in a mesh.
@@ -109,10 +108,12 @@ namespace tri {
             /*!
             \brief Accessory class to update pointers after eventual reallocation caused by adding elements.
 
-            This class is used when allocating new vertexes and faces to update
-            the pointers that can be changed when resizing the involved vectors of vertex or faces.
-            It can also be used to prevent any update of the various mesh fields
-            (e.g. in case you are building all the connections by hand as in a importer);
+            This class is used whenever you trigger some allocation operation that can cause the invalidation of the pointers to mesh elements.
+            Typical situations are when you are allocating new vertexes, edges, halfedges of faces or when you compact
+            their containers to get rid of deleted elements.
+            This object allows you to update an invalidate pointer immediately after an action that invalidate it.
+            \note It can also be used to prevent any update of the various internal pointers caused by an invalidation.
+            This can be useful in case you are building all the internal connections by hand as it happens in a importer;
             \sa \ref allocation
             */
             template<class SimplexPointerType>
@@ -120,7 +121,7 @@ namespace tri {
             {
             public:
                 PointerUpdater(void) : newBase(0), oldBase(0), newEnd(0), oldEnd(0), preventUpdateFlag(false) { ; }
-        void Clear(){newBase=oldBase=newEnd=oldEnd=0;}
+                void Clear(){newBase=oldBase=newEnd=oldEnd=0; remap.clear();}
            /*! \brief Update a pointer to an element of a mesh after a reallocation
 
              The updating is correctly done only if this PointerUpdater have been passed to the corresponing allocation call. \sa \ref allocation
@@ -149,10 +150,12 @@ namespace tri {
                 bool preventUpdateFlag; /// when true no update is considered necessary.
             };
 
+            /* +++++++++++++++ Add Vertices ++++++++++++++++ */
 
             /** \brief Add n vertices to the mesh.
             Function to add n vertices to the mesh.
-            The elements are added always to the end of the vector. No attempt of reusing previously deleted element is done.
+            The elements are added always to the end of the vector.
+            No attempt of reusing previously deleted element is done.
             \sa PointerUpdater
             \param m the mesh to be modified
             \param n the number of elements to be added
@@ -241,6 +244,7 @@ namespace tri {
               v_ret->P()=p;
               return v_ret;
             }
+
             /** \brief Wrapper to AddVertices() to add a single vertex with given coords and color
             */
             static VertexIterator AddVertex(MeshType &m, const CoordType &p, const Color4b &c)
@@ -251,8 +255,8 @@ namespace tri {
               return v_ret;
             }
 
+            /* +++++++++++++++ Add Edges ++++++++++++++++ */
 
-      /* ++++++++++ edges +++++++++++++ */
             /** \brief Add n edges to the mesh.
             Function to add n edges to the mesh.
             The elements are added always to the end of the vector. No attempt of reusing previously deleted element is done.
@@ -319,7 +323,6 @@ namespace tri {
                 return ei;
             }
 
-
             /** Function to add n edges to the mesh.
             First wrapper, with no parameters
             */
@@ -329,7 +332,7 @@ namespace tri {
                 return AddEdges(m, n,pu);
             }
 
-      /** Function to add n edges to the mesh.
+            /** Function to add n edges to the mesh.
             Second Wrapper, with a vector of vertex pointers to be updated.
             */
             static EdgeIterator AddEdges(MeshType &m, int n, std::vector<EdgePointer*> &local_vec)
@@ -343,8 +346,8 @@ namespace tri {
                 return v_ret;
             }
 
+            /* +++++++++++++++ Add HalfEdges ++++++++++++++++ */
 
-      /* ++++++++++ hedges +++++++++++++ */
             /** Function to add n halfedges to the mesh. The second parameter hold a vector of
             pointers to pointer to elements of the mesh that should be updated after a
             possible vector realloc.
@@ -447,6 +450,7 @@ namespace tri {
                 return v_ret;
             }
 
+            /* +++++++++++++++ Add Faces ++++++++++++++++ */
 
             /** Function to add a face to the mesh and initializing it with the three given VertexPointers
             First wrapper, with no parameters
@@ -457,15 +461,15 @@ namespace tri {
               assert(v0>=&m.vert.front() && v0<=&m.vert.back());
               assert(v1>=&m.vert.front() && v1<=&m.vert.back());
               assert(v2>=&m.vert.front() && v2<=&m.vert.back());
-                PointerUpdater<FacePointer> pu;
-                FaceIterator fi = AddFaces(m,1,pu);
-                fi->V(0)=v0;
-                fi->V(1)=v1;
-                fi->V(2)=v2;
-                return fi;
+              PointerUpdater<FacePointer> pu;
+              FaceIterator fi = AddFaces(m,1,pu);
+              fi->V(0)=v0;
+              fi->V(1)=v1;
+              fi->V(2)=v2;
+              return fi;
             }
 
-            /** Function to add n faces to the mesh.
+            /** \brief Function to add n faces to the mesh.
             First wrapper, with no parameters
             */
             static FaceIterator AddFaces(MeshType &m, int n)
@@ -474,7 +478,7 @@ namespace tri {
                 return AddFaces(m,n,pu);
             }
 
-      /** Function to add n faces to the mesh.
+            /** \brief Function to add n faces to the mesh.
             Second Wrapper, with a vector of face pointer to be updated.
             */
             static FaceIterator AddFaces(MeshType &m, int n,std::vector<FacePointer *> &local_vec)
@@ -488,142 +492,128 @@ namespace tri {
                 return f_ret;
             }
 
-            /** Function to add n faces to the mesh.
-      This is the only full featured function that is able to manage correctly all the internal pointers of the mesh (ff and vf relations).
-            NOTE: THIS FUNCTION ALSO UPDATE FN
+            /** \brief Function to add n faces to the mesh.
+            This is the only full featured function that is able to manage correctly
+            all the official internal pointers of the mesh (like the VF and FF adjacency relations)
+            \warning Calling this function can cause the invalidation of any not-managed FacePointer
+            just because we resize the face vector.
+            If you have such pointers you need to update them by mean of the PointerUpdater object.
+            \sa PointerUpdater
+            \param m the mesh to be modified
+            \param n the number of elements to be added
+            \param pu  a PointerUpdater initialized so that it can be used to update pointers to edges that could have become invalid after this adding.
+            \retval the iterator to the first element added.
             */
             static FaceIterator AddFaces(MeshType &m, int n, PointerUpdater<FacePointer> &pu)
             {
-                FaceIterator  last, fi;
-                if(n == 0) return m.face.end();
-                pu.Clear();
-                if(m.face.empty()) {
-                    pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
-                }	else  {
-                    pu.oldBase=&*m.face.begin();
-                    pu.oldEnd=&m.face.back()+1;
-                    last=m.face.end();
+              pu.Clear();
+              if(n == 0) return m.face.end();
+              if(!m.face.empty()) // if the vector is empty we cannot find the last valid element
+              {
+                pu.oldBase=&*m.face.begin();
+                pu.oldEnd=&m.face.back()+1;
+              }
+              // The actual resize
+              m.face.resize(m.face.size()+n);
+              m.fn+=n;
+
+              unsigned int siz=(unsigned int)m.face.size()-n;
+              FaceIterator firstNewFace = m.face.begin();
+              advance(firstNewFace,siz);
+
+              typename std::set<PointerToAttribute>::iterator ai;
+              for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai)
+                ((PointerToAttribute)(*ai)).Resize(m.face.size());
+
+              pu.newBase = &*m.face.begin();
+              pu.newEnd  = &m.face.back()+1;
+
+              if(pu.NeedUpdate())
+              {
+                if(HasFFAdjacency(m))
+                {  // cycle on all the faces except the new ones
+                  for(FaceIterator fi=m.face.begin();fi!=firstNewFace;++fi)
+                    if(!(*fi).IsD())
+                      for(int i  = 0; i < (*fi).VN(); ++i)
+                        if ((*fi).cFFp(i)!=0) pu.Update((*fi).FFp(i));
                 }
 
-                m.face.resize(m.face.size()+n);
-                m.fn+=n;
+                if(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m))
+                {  // cycle on all the faces except the new ones
+                  for(FaceIterator fi=m.face.begin();fi!=firstNewFace;++fi)
+                    if(!(*fi).IsD())
+                      for(int i = 0; i < (*fi).VN(); ++i)
+                        if ((*fi).cVFp(i)!=0) pu.Update((*fi).VFp(i));
 
+                  for (VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+                    if(!(*vi).IsD() && (*vi).cVFp()!=0)
+                      pu.Update((*vi).VFp());
+                }
 
-                typename std::set<PointerToAttribute>::iterator ai;
-                for(ai = m.face_attr.begin(); ai != m.face_attr.end(); ++ai)
-                    ((PointerToAttribute)(*ai)).Resize(m.face.size());
-
-                pu.newBase = &*m.face.begin();
-                pu.newEnd  = &m.face.back()+1;
-
-                if(pu.NeedUpdate())
+                if(HasEFAdjacency(m))
                 {
-                    int ii = 0;
-                    FaceIterator fi = m.face.begin();
-                    while(ii<m.fn-n) // cycle on all the faces except the new ones
-                    {
-                        if(!(*fi).IsD())
-                        {
-                            if(HasFFAdjacency(m))
-                                for(int i  = 0; i < (*fi).VN(); ++i)
-                                    if ((*fi).cFFp(i)!=0) pu.Update((*fi).FFp(i));
-
-                            if(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m))
-                                for(int i = 0; i < (*fi).VN(); ++i)
-                                    if ((*fi).cVFp(i)!=0) pu.Update((*fi).VFp(i));
-                          ++ii;
-                        }
-                        ++fi;
-                        }
-                        VertexIterator vi;
-                        for (vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
-                            if(!(*vi).IsD())
-                            {
-                                if(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m))
-                                    if ((*vi).cVFp()!=0)
-                                        pu.Update((FaceType * &)(*vi).VFp());
-                                // Note the above cast is probably not useful if you have correctly defined
-                                // your vertex type with the correct name of the facetype as a template argument;
-                                //  pu.Update((FaceType*)(*vi).VFp()); compiles on old gcc and borland
-                                //  pu.Update((*vi).VFp());            compiles on .net and newer gcc
-                            }
-                        EdgeIterator ei;
-                        for (ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
-                            if(!(*ei).IsD())
-                            {
-                                if(HasEFAdjacency(m))
-                                    if ((*ei).cEFp()!=0)
-                                        pu.Update((FaceType * &)(*ei).EFp());
-                                // Note the above cast is probably not useful if you have correctly defined
-                                // your vertex type with the correct name of the facetype as a template argument;
-                                //  pu.Update((FaceType*)(*vi).VFp()); compiles on old gcc and borland
-                                //  pu.Update((*vi).VFp());            compiles on .net and newer gcc
-                            }
-
-                        HEdgeIterator hi;
-                        for (hi=m.hedge.begin(); hi!=m.hedge.end(); ++hi)
-                            if(!(*hi).IsD())
-                            {
-                                if(HasHFAdjacency(m))
-                                    if ((*hi).cHFp()!=0)
-                                        pu.Update((FaceType * &)(*hi).HFp());
-                                // Note the above cast is probably not useful if you have correctly defined
-                                // your vertex type with the correct name of the facetype as a template argument;
-                                //  pu.Update((FaceType*)(*vi).VFp()); compiles on old gcc and borland
-                                //  pu.Update((*vi).VFp());            compiles on .net and newer gcc
-                            }
-
+                  for (EdgeIterator ei=m.edge.begin(); ei!=m.edge.end(); ++ei)
+                    if(!(*ei).IsD() && (*ei).cEFp()!=0)
+                      pu.Update((*ei).EFp());
                 }
-                unsigned int siz=(unsigned int)m.face.size()-n;
-                last = m.face.begin();
-                advance(last,siz);
-                return last;
+
+                if(HasHFAdjacency(m))
+                {
+                  for (HEdgeIterator hi=m.hedge.begin(); hi!=m.hedge.end(); ++hi)
+                    if(!(*hi).IsD() && (*hi).cHFp()!=0)
+                      pu.Update((*hi).HFp());
+                }
+              }
+              return firstNewFace;
             }
 
-        /** Function to delete a face from the mesh.
+            /* +++++++++++++++ Deleting  ++++++++++++++++ */
+
+            /** Function to delete a face from the mesh.
             NOTE: THIS FUNCTION ALSO UPDATE FN
-        */
-        static void DeleteFace(MeshType &m, FaceType &f)
-        {
-            assert(&f >= &m.face.front() && &f <= &m.face.back());
-            assert(!f.IsD());
-            f.SetD();
-            --m.fn;
-        }
+            */
+            static void DeleteFace(MeshType &m, FaceType &f)
+            {
+              assert(&f >= &m.face.front() && &f <= &m.face.back());
+              assert(!f.IsD());
+              f.SetD();
+              --m.fn;
+            }
 
-        /** Function to delete a vertex from the mesh.
+            /** Function to delete a vertex from the mesh.
             NOTE: THIS FUNCTION ALSO UPDATE vn
-        */
-        static void DeleteVertex(MeshType &m, VertexType &v)
-        {
-            assert(&v >= &m.vert.front() && &v <= &m.vert.back());
-            assert(!v.IsD());
-            v.SetD();
-            --m.vn;
-        }
+            */
+            static void DeleteVertex(MeshType &m, VertexType &v)
+            {
+              assert(&v >= &m.vert.front() && &v <= &m.vert.back());
+              assert(!v.IsD());
+              v.SetD();
+              --m.vn;
+            }
 
-        /** Function to delete an edge from the mesh.
+            /** Function to delete an edge from the mesh.
             NOTE: THIS FUNCTION ALSO UPDATE en
-        */
-        static void DeleteEdge(MeshType &m, EdgeType &e)
-        {
-          assert(&e >= &m.edge.front() && &e <= &m.edge.back());
-          assert(!e.IsD());
-          e.SetD();
-          --m.en;
-        }
+            */
+            static void DeleteEdge(MeshType &m, EdgeType &e)
+            {
+              assert(&e >= &m.edge.front() && &e <= &m.edge.back());
+              assert(!e.IsD());
+              e.SetD();
+              --m.en;
+            }
 
-        /** Function to delete a hedge from the mesh.
+           /** Function to delete a hedge from the mesh.
             NOTE: THIS FUNCTION ALSO UPDATE en
-        */
-                static void DeleteHEdge(MeshType &m, HEdgeType &h)
-        {
-                        assert(!h.IsD());
-                        h.SetD();
-            --m.hn;
-        }
+           */
+            static void DeleteHEdge(MeshType &m, HEdgeType &h)
+            {
+              assert(&h >= &m.hedge.front() && &h <= &m.hedge.back());
+              assert(!h.IsD());
+              h.SetD();
+              --m.hn;
+            }
 
-        /*
+           /*
             Function to rearrange the vertex vector according to a given index permutation
             the permutation is vector such that after calling this function
 
@@ -631,64 +621,63 @@ namespace tri {
 
             e.g. newVertIndex[i] is the new index of the vertex i
 
-        */
-                static void PermutateVertexVector(MeshType &m, PointerUpdater<VertexPointer> &pu)
+           */
+            static void PermutateVertexVector(MeshType &m, PointerUpdater<VertexPointer> &pu)
+            {
+              if(m.vert.empty()) return;
+              for(unsigned int i=0;i<m.vert.size();++i)
+              {
+                if(pu.remap[i]<size_t(m.vn))
                 {
-                  if(m.vert.empty()) return;
-                  for(unsigned int i=0;i<m.vert.size();++i)
+                  assert(!m.vert[i].IsD());
+                  m.vert[ pu.remap [i] ].ImportData(m.vert[i]);
+                  if(HasVFAdjacency(m))
                   {
-                    if(pu.remap[i]<size_t(m.vn))
+                    if (m.vert[i].IsVFInitialized())
                     {
-                      assert(!m.vert[i].IsD());
-                      m.vert[ pu.remap [i] ].ImportData(m.vert[i]);
-                      if(HasVFAdjacency(m))
-                      {
-                        if (m.vert[i].IsVFInitialized())
-                        {
-                          m.vert[ pu.remap[i] ].VFp() = m.vert[i].cVFp();
-                          m.vert[ pu.remap[i] ].VFi() = m.vert[i].cVFi();
-                        }
-                        else m.vert [ pu.remap[i] ].VFClear();
-                      }
+                      m.vert[ pu.remap[i] ].VFp() = m.vert[i].cVFp();
+                      m.vert[ pu.remap[i] ].VFi() = m.vert[i].cVFi();
                     }
+                    else m.vert [ pu.remap[i] ].VFClear();
                   }
-
-                  // reorder the optional atttributes in m.vert_attr to reflect the changes
-                  ReorderAttribute(m.vert_attr,pu.remap,m);
-
-                  // setup the pointer updater
-                  pu.oldBase  = &m.vert[0];
-                  pu.oldEnd = &m.vert.back()+1;
-
-                  // resize
-                  m.vert.resize(m.vn);
-
-                  // setup the pointer updater
-                  pu.newBase  = (m.vert.empty())?0:&m.vert[0];
-                  pu.newEnd = (m.vert.empty())?0:&m.vert.back()+1;
-
-
-                  // resize the optional atttributes in m.vert_attr to reflect the changes
-                  ResizeAttribute(m.vert_attr,m.vn,m);
-
-                  // Loop on the face to update the pointers FV relation (vertex refs)
-                  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-                    if(!(*fi).IsD())
-                      for(unsigned int i=0;i<3;++i)
-                      {
-                        size_t oldIndex = (*fi).V(i) - pu.oldBase;
-                        assert(pu.oldBase <= (*fi).V(i) && oldIndex < pu.remap.size());
-                        (*fi).V(i) = pu.newBase+pu.remap[oldIndex];
-                      }
-                  // Loop on the edges to update the pointers EV relation
-                  if(HasEVAdjacency(m))
-                    for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
-                      if(!(*ei).IsD())
-                        for(unsigned int i=0;i<2;++i)
-                        {
-                          pu.Update((*ei).V(i));
-                        }
                 }
+              }
+
+              // reorder the optional atttributes in m.vert_attr to reflect the changes
+              ReorderAttribute(m.vert_attr,pu.remap,m);
+
+              // setup the pointer updater
+              pu.oldBase  = &m.vert[0];
+              pu.oldEnd = &m.vert.back()+1;
+
+              // resize
+              m.vert.resize(m.vn);
+
+              // setup the pointer updater
+              pu.newBase  = (m.vert.empty())?0:&m.vert[0];
+              pu.newEnd = (m.vert.empty())?0:&m.vert.back()+1;
+
+              // resize the optional atttributes in m.vert_attr to reflect the changes
+              ResizeAttribute(m.vert_attr,m.vn,m);
+
+              // Loop on the face to update the pointers FV relation (vertex refs)
+              for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+                if(!(*fi).IsD())
+                  for(int i=0;i<fi->VN();++i)
+                  {
+                    size_t oldIndex = (*fi).V(i) - pu.oldBase;
+                    assert(pu.oldBase <= (*fi).V(i) && oldIndex < pu.remap.size());
+                    (*fi).V(i) = pu.newBase+pu.remap[oldIndex];
+                  }
+              // Loop on the edges to update the pointers EV relation
+              if(HasEVAdjacency(m))
+                for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
+                  if(!(*ei).IsD())
+                    for(unsigned int i=0;i<2;++i)
+                    {
+                      pu.Update((*ei).V(i));
+                    }
+            }
 
         static void CompactEveryVector( MeshType &m)
         {
@@ -834,110 +823,111 @@ namespace tri {
       CompactEdgeVector(m,pu);
     }
 
-        /*!
-        \brief Compact vector of faces removing deleted elements.
+    /*!
+    \brief Compact face vector by removing deleted elements.
 
-        Deleted elements are put to the end of the vector and the vector is resized. Order between elements is preserved but not their position (hence the PointerUpdater)
-        Immediately after calling this function the \c IsD() test during the scanning a vector, is no more necessary.
-        \warning It should not be called when TemporaryData is active (but works correctly if attributes are present)
-        */
-        static void CompactFaceVector( MeshType &m, PointerUpdater<FacePointer> &pu )
+    Deleted elements are put to the end of the vector and the vector is resized.
+    Order between elements is preserved, but not their position (hence the PointerUpdater)
+    Immediately after calling this function the \c IsD() test during the scanning a vector, is no more necessary.
+    \warning It should not be called when some TemporaryData is active (but works correctly if attributes are present)
+    */
+    static void CompactFaceVector( MeshType &m, PointerUpdater<FacePointer> &pu )
+    {
+      // If already compacted fast return please!
+      if(m.fn==(int)m.face.size()) return;
+
+      // newFaceIndex [ <old_face_position> ] gives you the new position of the face in the vector;
+      pu.remap.resize( m.face.size(),std::numeric_limits<size_t>::max() );
+
+      size_t pos=0;
+      for(size_t i=0;i<m.face.size();++i)
+      {
+        if(!m.face[i].IsD())
         {
-          // If already compacted fast return please!
-            if(m.fn==(int)m.face.size()) return;
-
-            // newFaceIndex [ <old_face_position> ] gives you the new position of the face in the vector;
-            pu.remap.resize( m.face.size(),std::numeric_limits<size_t>::max() );
-
-            size_t pos=0;
-            for(size_t i=0;i<m.face.size();++i)
-            {
-                if(!m.face[i].IsD())
-                {
-                    if(pos!=i)
-                    {
-                      m.face[pos].ImportData(m.face[i]);
-                        m.face[pos].V(0) = m.face[i].V(0);
-                        m.face[pos].V(1) = m.face[i].V(1);
-                        m.face[pos].V(2) = m.face[i].V(2);
-                        if(HasVFAdjacency(m))
-                            for(int j=0;j<3;++j)
-                            {
-                              if (m.face[i].IsVFInitialized(j)) {
-                                        m.face[pos].VFp(j) = m.face[i].cVFp(j);
-                                        m.face[pos].VFi(j) = m.face[i].cVFi(j);
-                                    }
-                              else m.face[pos].VFClear(j);
-                            }
-                        if(HasFFAdjacency(m))
-                            for(int j=0;j<3;++j)
-                                 if (m.face[i].cFFp(j)!=0) {
-                                        m.face[pos].FFp(j) = m.face[i].cFFp(j);
-                                        m.face[pos].FFi(j) = m.face[i].cFFi(j);
-                                    }
-                    }
-                    pu.remap[i]=pos;
-                    ++pos;
-                }
-            }
-            assert((int)pos==m.fn);
-
-            // reorder the optional atttributes in m.face_attr to reflect the changes
-            ReorderAttribute(m.face_attr,pu.remap,m);
-
-            FacePointer fbase=&m.face[0];
-
-            // Loop on the vertices to correct VF relation
+          if(pos!=i)
+          {
+            m.face[pos].ImportData(m.face[i]);
+            m.face[pos].V(0) = m.face[i].V(0);
+            m.face[pos].V(1) = m.face[i].V(1);
+            m.face[pos].V(2) = m.face[i].V(2);
             if(HasVFAdjacency(m))
-            {
-              for (VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
-                if(!(*vi).IsD())
-                {
-                  if ((*vi).IsVFInitialized() && (*vi).VFp()!=0 )
-                  {
-                    size_t oldIndex = (*vi).cVFp() - fbase;
-                    assert(fbase <= (*vi).cVFp() && oldIndex < pu.remap.size());
-                    (*vi).VFp() = fbase+pu.remap[oldIndex];
-                  }
-                }
-            }
-
-            // Loop on the faces to correct VF and FF relations
-            pu.oldBase  = &m.face[0];
-            pu.oldEnd = &m.face.back()+1;
-            m.face.resize(m.fn);
-            pu.newBase  = (m.face.empty())?0:&m.face[0];
-            pu.newEnd = (m.face.empty())?0:&m.face.back()+1;
-
-
-            // resize the optional atttributes in m.face_attr to reflect the changes
-            ResizeAttribute(m.face_attr,m.fn,m);
-
-            // now we update the various (not null) face pointers (inside VF and FF relations)
-            for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-              if(!(*fi).IsD())
+              for(int j=0;j<3;++j)
               {
-                if(HasVFAdjacency(m))
-                  for(int i=0;i<3;++i)
-                    if ((*fi).IsVFInitialized(i) && (*fi).VFp(i)!=0 )
-                    {
-                      size_t oldIndex = (*fi).VFp(i) - fbase;
-                      assert(fbase <= (*fi).VFp(i) && oldIndex < pu.remap.size());
-                      (*fi).VFp(i) = fbase+pu.remap[oldIndex];
-                    }
-                if(HasFFAdjacency(m))
-                  for(int i=0;i<3;++i)
-                    if ((*fi).cFFp(i)!=0)
-                    {
-                      size_t oldIndex = (*fi).FFp(i) - fbase;
-                      assert(fbase <= (*fi).FFp(i) && oldIndex < pu.remap.size());
-                      (*fi).FFp(i) = fbase+pu.remap[oldIndex];
-                    }
+                if (m.face[i].IsVFInitialized(j)) {
+                  m.face[pos].VFp(j) = m.face[i].cVFp(j);
+                  m.face[pos].VFi(j) = m.face[i].cVFi(j);
+                }
+                else m.face[pos].VFClear(j);
               }
-
-
-
+            if(HasFFAdjacency(m))
+              for(int j=0;j<3;++j)
+                if (m.face[i].cFFp(j)!=0) {
+                  m.face[pos].FFp(j) = m.face[i].cFFp(j);
+                  m.face[pos].FFi(j) = m.face[i].cFFi(j);
+                }
+          }
+          pu.remap[i]=pos;
+          ++pos;
         }
+      }
+      assert((int)pos==m.fn);
+
+      // reorder the optional atttributes in m.face_attr to reflect the changes
+      ReorderAttribute(m.face_attr,pu.remap,m);
+
+      FacePointer fbase=&m.face[0];
+
+      // Loop on the vertices to correct VF relation
+      if(HasVFAdjacency(m))
+      {
+        for (VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
+          if(!(*vi).IsD())
+          {
+            if ((*vi).IsVFInitialized() && (*vi).VFp()!=0 )
+            {
+              size_t oldIndex = (*vi).cVFp() - fbase;
+              assert(fbase <= (*vi).cVFp() && oldIndex < pu.remap.size());
+              (*vi).VFp() = fbase+pu.remap[oldIndex];
+            }
+          }
+      }
+
+      // Loop on the faces to correct VF and FF relations
+      pu.oldBase  = &m.face[0];
+      pu.oldEnd = &m.face.back()+1;
+      m.face.resize(m.fn);
+      pu.newBase  = (m.face.empty())?0:&m.face[0];
+      pu.newEnd = (m.face.empty())?0:&m.face.back()+1;
+
+
+      // resize the optional atttributes in m.face_attr to reflect the changes
+      ResizeAttribute(m.face_attr,m.fn,m);
+
+      // now we update the various (not null) face pointers (inside VF and FF relations)
+      for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+        if(!(*fi).IsD())
+        {
+          if(HasVFAdjacency(m))
+            for(int i=0;i<3;++i)
+              if ((*fi).IsVFInitialized(i) && (*fi).VFp(i)!=0 )
+              {
+                size_t oldIndex = (*fi).VFp(i) - fbase;
+                assert(fbase <= (*fi).VFp(i) && oldIndex < pu.remap.size());
+                (*fi).VFp(i) = fbase+pu.remap[oldIndex];
+              }
+          if(HasFFAdjacency(m))
+            for(int i=0;i<3;++i)
+              if ((*fi).cFFp(i)!=0)
+              {
+                size_t oldIndex = (*fi).FFp(i) - fbase;
+                assert(fbase <= (*fi).FFp(i) && oldIndex < pu.remap.size());
+                (*fi).FFp(i) = fbase+pu.remap[oldIndex];
+              }
+        }
+
+
+
+    }
 
         /*! \brief Wrapper without the PointerUpdater. */
         static void CompactFaceVector( MeshType &m  ) {
@@ -1314,9 +1304,7 @@ public:
   /*! \brief If  the per-face attribute exists, delete it.
     */
     template <class ATTR_TYPE>
-    static
-        void
-    DeletePerFaceAttribute( MeshType & m,typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE> & h){
+    static void DeletePerFaceAttribute( MeshType & m,typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE> & h){
         typename std::set<PointerToAttribute > ::iterator i;
         for( i = m.face_attr.begin(); i !=  m.face_attr.end(); ++i)
             if( (*i)._handle == h._handle ){
@@ -1329,8 +1317,7 @@ public:
     // Generic DeleteAttribute.
     // It must not crash if you try to delete a non existing attribute,
     // because you do not have a way of asking for a handle of an attribute for which you do not know the type.
-    static
-        bool	 DeletePerFaceAttribute( MeshType & m,  std::string name){
+    static bool DeletePerFaceAttribute( MeshType & m,  std::string name){
         AttrIterator i;
         PointerToAttribute h1; h1._name = name;
         i = m.face_attr.find(h1);
@@ -1424,9 +1411,7 @@ public:
     /*! \brief If  the per-mesh attribute exists, delete it.
       */
     template <class ATTR_TYPE>
-    static
-        void
-    DeletePerMeshAttribute( MeshType & m,typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE> & h){
+    static void DeletePerMeshAttribute( MeshType & m,typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE> & h){
         typename std::set<PointerToAttribute > ::iterator i;
         for( i = m.mesh_attr.begin(); i !=  m.mesh_attr.end(); ++i)
             if( (*i)._handle == h._handle ){
@@ -1435,8 +1420,7 @@ public:
                 return;}
     }
 
-    static
-        void	 DeletePerMeshAttribute( MeshType & m,  std::string name){
+    static void DeletePerMeshAttribute( MeshType & m,  std::string name){
         AttrIterator i;
         PointerToAttribute h1; h1._name = name;
         i = m.mesh_attr.find(h1);
@@ -1446,8 +1430,7 @@ public:
     }
 
     template <class ATTR_TYPE>
-    static
-        void FixPaddedPerVertexAttribute (MeshType & m, PointerToAttribute & pa){
+    static void FixPaddedPerVertexAttribute (MeshType & m, PointerToAttribute & pa){
 
             // create the container of the right type
             SimpleTempData<VertContainer,ATTR_TYPE>* _handle =  new SimpleTempData<VertContainer,ATTR_TYPE>(m.vert);
@@ -1474,8 +1457,7 @@ public:
             pa._padding = 0;
     }
     template <class ATTR_TYPE>
-    static
-        void FixPaddedPerEdgeAttribute (MeshType & m, PointerToAttribute & pa){
+    static void FixPaddedPerEdgeAttribute (MeshType & m, PointerToAttribute & pa){
 
             // create the container of the right type
             SimpleTempData<EdgeContainer,ATTR_TYPE>* _handle =  new SimpleTempData<EdgeContainer,ATTR_TYPE>(m.edge);
@@ -1503,8 +1485,7 @@ public:
     }
 
     template <class ATTR_TYPE>
-    static
-        void FixPaddedPerFaceAttribute ( MeshType & m,PointerToAttribute & pa){
+    static void FixPaddedPerFaceAttribute ( MeshType & m,PointerToAttribute & pa){
 
             // create the container of the right type
             SimpleTempData<FaceContainer,ATTR_TYPE>* _handle =  new SimpleTempData<FaceContainer,ATTR_TYPE>(m.face);
@@ -1533,8 +1514,7 @@ public:
 
 
     template <class ATTR_TYPE>
-    static
-    void FixPaddedPerMeshAttribute ( MeshType & /* m */,PointerToAttribute & pa){
+    static void FixPaddedPerMeshAttribute ( MeshType & /* m */,PointerToAttribute & pa){
 
             // create the container of the right type
             Attribute<ATTR_TYPE> * _handle =  new Attribute<ATTR_TYPE>();
@@ -1556,13 +1536,11 @@ public:
             pa._padding = 0;
     }
 
+}; // end Allocator class
 
 
-}; // end class
-
-
-        /*@}*/
-    } // End Namespace TriMesh
-} // End Namespace vcg
+/** @} */ // end doxygen group trimesh
+} // end namespace tri
+} // end namespace vcg
 
 #endif
