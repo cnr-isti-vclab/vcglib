@@ -20,12 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: trackball.h,v $
-
-****************************************************************************/
 
 #ifndef QT_TRACKBALL_H
 #define QT_TRACKBALL_H
@@ -34,7 +28,7 @@ $Log: trackball.h,v $
 /// into the expected framebuffer coordinates (e.g.in opengl pixels)
 /// This is necessary because trackball works in the viewport coord systems.
 
-float QT2VCG_X( QWidget *qw, QMouseEvent *e)
+inline float QT2VCG_X( QWidget *qw, QMouseEvent *e)
 {
 #if QT_VERSION >= 0x050000
   return e->x ()*qw->devicePixelRatio() ;
@@ -48,7 +42,7 @@ float QT2VCG_X( QWidget *qw, QMouseEvent *e)
 /// into the expected framebuffer coordinates (e.g.in opengl pixels)
 /// This is necessary because trackball works in the viewport coord systems.
 
-float QT2VCG_Y( QWidget *qw, QMouseEvent *e)
+inline float QT2VCG_Y( QWidget *qw, QMouseEvent *e)
 {
 #if QT_VERSION >= 0x050000
   return (qw->height () - e->y ())*qw->devicePixelRatio() ;
@@ -58,7 +52,7 @@ float QT2VCG_Y( QWidget *qw, QMouseEvent *e)
 }
 
 /// Takes a QT MouseButton, some QT KeyboardModifiers and returns the equivalent Trackball::Button
- vcg::Trackball::Button QT2VCG (Qt::MouseButton qtbt, Qt::KeyboardModifiers modifiers)
+inline  vcg::Trackball::Button QT2VCG (Qt::MouseButton qtbt, Qt::KeyboardModifiers modifiers)
 {
   int vcgbt = vcg::Trackball::BUTTON_NONE;
 
