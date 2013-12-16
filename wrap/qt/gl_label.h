@@ -25,6 +25,7 @@
 
 #include <QMessageBox>
 #include <wrap/qt/col_qt_convert.h>
+#include <wrap/qt/device_to_logical.h>
 #include <wrap/qt/checkGLError.h>
 #include <QPainter>
 namespace vcg
@@ -33,7 +34,8 @@ namespace vcg
  */
   class glLabel
   {
-	public:
+
+    public:
     class Mode
     {
     public:
@@ -64,7 +66,7 @@ namespace vcg
   private:
     static void enter2D(QPainter *painter)
     {
-      glPushAttrib(GL_ENABLE_BIT);
+      glPushAttrib(GL_ENABLE_BIT|GL_VIEWPORT_BIT);
       glDisable(GL_DEPTH_TEST);
       glMatrixMode(GL_PROJECTION);
       glPushMatrix();
@@ -84,7 +86,6 @@ namespace vcg
       glMatrixMode(GL_MODELVIEW);
       glPopMatrix();
       glPopAttrib();
-      //checkGLError::qDebug("glLabel");
     }
 
   public:
@@ -134,6 +135,7 @@ namespace vcg
         base.setX(-textBox.width() -qfm.maxWidth());
       painter->drawText(base,text);
       glLabel::exit2D(painter);
+      glViewport(view[0],view[1],view[2],view[3]);
     }
 
     static void render(QPainter *painter, const vcg::Point3f &p, const QString &text)
@@ -162,7 +164,8 @@ namespace vcg
       painter->setRenderHint(QPainter::TextAntialiasing);
       painter->setPen(vcg::ColorConverter::ToQColor(m.color));
       painter->setFont(m.qFont);
-      painter->translate(QPointF(winx,view[3]-winy));
+      painter->translate(QPointF(QTDeviceToLogical(painter,winx),
+                                 QTDeviceToLogical(painter,view[3]-winy)));
       painter->rotate(m.angle);
       QPoint base(0,qfm.ascent()/2);
       if(m.rightAlign)

@@ -23,19 +23,14 @@
 
 #ifndef QT_TRACKBALL_H
 #define QT_TRACKBALL_H
+#include <wrap/qt/device_to_logical.h>
 
 /// Transforms the event coordintates (that are device independent)
 /// into the expected framebuffer coordinates (e.g.in opengl pixels)
 /// This is necessary because trackball works in the viewport coord systems.
-
 inline float QT2VCG_X( QWidget *qw, QMouseEvent *e)
 {
-#if QT_VERSION >= 0x050000
-  return e->x ()*qw->devicePixelRatio() ;
-#else
-  Q_UNUSED(qw);
-  return e->x ();
-#endif
+  return QTLogicalToDevice(qw,e->x());
 }
 
 /// Transforms the event coordintates (that are device independent)
@@ -44,11 +39,7 @@ inline float QT2VCG_X( QWidget *qw, QMouseEvent *e)
 
 inline float QT2VCG_Y( QWidget *qw, QMouseEvent *e)
 {
-#if QT_VERSION >= 0x050000
-  return (qw->height () - e->y ())*qw->devicePixelRatio() ;
-#else
-  return qw->height () - e->y ();
-#endif
+  return QTLogicalToDevice(qw,qw->height () - e->y ());
 }
 
 /// Takes a QT MouseButton, some QT KeyboardModifiers and returns the equivalent Trackball::Button
