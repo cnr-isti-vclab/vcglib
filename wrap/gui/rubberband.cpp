@@ -29,17 +29,16 @@ $Log: not supported by cvs2svn $
 #include <GL/glew.h>
 #include <wrap/gl/space.h>
 #include <wrap/gl/picking.h>
+#include <wrap/qt/device_to_logical.h>
 
 #include "rubberband.h"
 
 using namespace vcg;
 
 Rubberband::Rubberband(Color4b c)
-:color(c),currentphase(RUBBER_BEGIN),qt_cursor(),
-start(0,0,0),end(0,0,0),have_to_pick(false),font()
+:color(c)
 {
-  font.setFamily("Helvetica");
-  font.setPixelSize(13);
+  this->Reset();
 }
 
 void Rubberband::Render(QGLWidget* gla)
@@ -47,7 +46,7 @@ void Rubberband::Render(QGLWidget* gla)
   if(have_to_pick){
     assert(currentphase!=RUBBER_DRAGGED);
     Point3f pick_point;
-    bool picked = Pick(qt_cursor.x(), gla->height() - qt_cursor.y(), pick_point);
+    bool picked = Pick(QTLogicalToDevice(gla, qt_cursor.x()), QTLogicalToDevice(gla, gla->height() - qt_cursor.y()), pick_point);
     if(picked){ // we have not picked the background
       have_to_pick=false;
       switch(currentphase){
@@ -72,7 +71,7 @@ void Rubberband::Render(QGLWidget* gla)
   }
 
   if(currentphase==RUBBER_BEGIN) return;
-    
+
   // Drawing of the current line
   glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT | GL_LINE_BIT | GL_POINT_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT | GL_COLOR_BUFFER_BIT);
   glDisable(GL_LIGHTING);
@@ -81,27 +80,26 @@ void Rubberband::Render(QGLWidget* gla)
   glLineWidth(2.5);
   glPointSize(5.0);
   if(currentphase==RUBBER_DRAGGING ) {
-    Point3f qt_start_point;
-    qt_start_point = PixelConvert(start);
+    Point2f qt_start_point = DevicePixelConvert(start);
     glColor(color);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    gluOrtho2D(0,gla->width(),gla->height(),0);
+    gluOrtho2D(0,QTLogicalToDevice(gla,gla->width()),QTLogicalToDevice(gla,gla->height()),0);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
     glDisable(GL_DEPTH_TEST);
     glBegin(GL_LINES);
-      glVertex2f(qt_start_point[0],qt_start_point[1]);
-      glVertex2f(qt_cursor.x(),qt_cursor.y());
+      glVertex(qt_start_point);
+      glVertex2f(QTLogicalToDevice(gla, qt_cursor.x()),    QTLogicalToDevice(gla, qt_cursor.y()));
     glEnd();
     glEnable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
-  } else { 
+  } else {
     assert(currentphase == RUBBER_DRAGGED);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
@@ -115,7 +113,7 @@ void Rubberband::Render(QGLWidget* gla)
     glBegin(GL_POINTS);
       glVertex(start);
       glVertex(end);
-    glEnd();    
+    glEnd();
     glDisable(GL_DEPTH_TEST);
     glLineWidth(0.7);
     glPointSize(1.4);
@@ -167,68 +165,7 @@ void Rubberband::GetPoints(Point3f &s,Point3f &e)
   e=end;
 }
 
-void Rubberband::RenderLabel(QString text,QGLWidget* gla)
-{
-  if(currentphase==RUBBER_BEGIN) return;
-  
-  int x,y;  
-  if(currentphase==RUBBER_DRAGGING){
-  	x=qt_cursor.x()+16;
-  	y=qt_cursor.y()+16;
-  } else {
-    Point3f qt_start = PixelConvert(start);
-    Point3f qt_end   = PixelConvert(end);
-    if(qt_start[0]>qt_end[0]){
-      x=int(qt_start[0]+5);
-      y=int(qt_start[1]);
-    }else{
-      x=int(qt_end[0]+5);
-      y=int(qt_end[1]);
-    }
-  }
-
-  QFontMetrics fm(font);
-  QRect brec=fm.boundingRect(text);
-  glPushAttrib(GL_CURRENT_BIT | GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT | GL_LINE_BIT );
-  glDisable(GL_LIGHTING);
-  glDisable(GL_TEXTURE_2D);
-  glDisable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glLoadIdentity();
-  gluOrtho2D(0,gla->width(),gla->height(),0);
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
-  glColor4f(0,0,0,0.5);
-  glBegin(GL_QUADS);
-    glVertex2f(x+brec.left(),y+brec.bottom());
-    glVertex2f(x+brec.right(),y+brec.bottom());
-    glVertex2f(x+brec.right(),y+brec.top());
-    glVertex2f(x+brec.left(),y+brec.top());
-  glEnd();
-  int offset=2;
-  glColor4f(0,0,0,0.2);
-  glBegin(GL_QUADS);
-    glVertex2f(x+brec.left()-offset,y+brec.bottom()+offset);
-    glVertex2f(x+brec.right()+offset,y+brec.bottom()+offset);
-    glVertex2f(x+brec.right()+offset,y+brec.top()-offset);
-    glVertex2f(x+brec.left()-offset,y+brec.top()-offset);
-  glEnd();
-  glColor3f(1,1,1);
-  gla->renderText(x,y,0.99f,text,font);
-  glGetError();//Due to buggy glrenderText()
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-  glPopAttrib();
-}
-
-Point3f Rubberband::PixelConvert(const Point3f p)
+Point2f Rubberband::DevicePixelConvert(const Point3f p)
 {
   GLint vm[4];
   GLdouble mm[16];
@@ -238,5 +175,5 @@ Point3f Rubberband::PixelConvert(const Point3f p)
   glGetDoublev(GL_PROJECTION_MATRIX, pm);
   GLdouble wx,wy,wz;
   gluProject(p[0], p[1], p[2], mm, pm, vm, &wx, &wy, &wz);
-  return Point3f(wx,vm[3]-wy,wz);
+  return Point2f(wx,vm[3]-wy);
 }
