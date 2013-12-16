@@ -1,5 +1,6 @@
 #ifndef DEVICE_TO_LOGICAL_H
 #define DEVICE_TO_LOGICAL_H
+#include <QWidget>
 #include <QPainter>
 template < class ValueType>
 inline ValueType QTLogicalToDevice( QWidget *qw, const ValueType &value)
