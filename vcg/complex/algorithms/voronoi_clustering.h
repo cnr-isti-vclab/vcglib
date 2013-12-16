@@ -638,7 +638,7 @@ static void BuildVoronoiEdgeVec(MeshType &m, std::vector<VoronoiEdge> &edgeVec)
   // Now find all the voronoi edges: each edge (a *face pair) is identified by two voronoi regions
   typedef std::map< std::pair<VertexPointer,VertexPointer>, std::pair<FacePointer,FacePointer> > EdgeMapType;
   EdgeMapType EdgeMap;
-  printf("cornerVec.size() %i\n",cornerVec.size());
+  printf("cornerVec.size() %i\n",(int)cornerVec.size());
 
   for(size_t i=0;i<cornerVec.size();++i)
   {
@@ -725,7 +725,7 @@ static void BuildBiasedSeedVec(MeshType &m,
       VoronoiEdge *vep = SeedToEdgeVecMap[seedVec[i]][j];
       regionPerymeter[seedVec[i]]+=vep->Len();
     }
-    printf("perimeter of region %i is %f\n",i,regionPerymeter[seedVec[i]]);
+    printf("perimeter of region %i is %f\n",(int)i,regionPerymeter[seedVec[i]]);
   }
 
 
@@ -745,7 +745,7 @@ static void BuildBiasedSeedVec(MeshType &m,
       {
         if(s0>s1) std::swap(s0,s1);
         VoronoiEdge *ve = SeedPairToEdgeMap[std::make_pair(s0,s1)];
-        if(!ve) printf("v %i %i \n",tri::Index(m,s0),tri::Index(m,s1));
+        if(!ve) printf("v %i %i \n",(int)tri::Index(m,s0),(int)tri::Index(m,s1));
         assert(ve);
         float el = ve->Len();
         weight[(*fi).V0(i)] += (regionPerymeter[s0]+biasSum)/(el+biasSum) ;
@@ -764,7 +764,7 @@ static void BuildBiasedSeedVec(MeshType &m,
       biasedFrontierVec.push_back(VertDist(&*vi, bias));
     }
   }
-  printf("Collected %i frontier vertexes\n",biasedFrontierVec.size());
+  printf("Collected %i frontier vertexes\n",(int)biasedFrontierVec.size());
 }
 
 
@@ -831,7 +831,7 @@ static void QuadricRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::v
   sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   QuadricSumDistance dz;
   std::vector<QuadricSumDistance> dVec(m.vert.size(),dz);
-  assert(m.vert.size()==m.vn);
+  assert((int)m.vert.size()==m.vn);
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
   {
     assert(sources[vi]!=0);
