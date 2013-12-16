@@ -130,7 +130,7 @@ static void VertexFromFace( MeshType &m, bool areaWeighted=true)
       if(areaWeighted) weight = vcg::DoubleArea(*fi);
       for(int j=0;j<3;++j)
       {
-        TQ[(*fi).V(j)]+=(*fi).Q();
+        TQ[(*fi).V(j)]+=(*fi).Q()*weight;
         TCnt[(*fi).V(j)]+=weight;
       }
     }
@@ -232,7 +232,77 @@ static void VertexFromRMSCurvature(MeshType &m)
         (*vi).Q() = math::Sqrt(math::Abs( 4*(*vi).Kh()*(*vi).Kh() - 2*(*vi).Kg()));
 }
 
+/*
+  Saturate the Face quality so that for each vertex the gradient of the quality is lower than the given threshold value (in absolute value)
+  The saturation is done in a conservative way (quality is always decreased and never increased)
 
+  Note: requires FF adjacency.
+  */
+static void FaceSaturate(MeshType &m, ScalarType gradientThr=1.0)
+{
+  typedef typename MeshType::CoordType CoordType;
+  UpdateFlags<MeshType>::FaceClearV(m);
+  std::stack<FacePointer> st;
+
+  st.push(&*m.face.begin());
+
+  while(!st.empty())
+    {
+     FacePointer fc = st.top();  // the center
+     //printf("Stack size %i\n",st.size());
+     //printf("Pop elem %i %f\n",st.top() - &*m.vert.begin(), st.top()->Q());
+     st.pop();
+     fc->SetV();
+     std::vector<FacePointer> star;
+     typename std::vector<FacePointer>::iterator ffi;
+     for (int i=0;i<3;i++)
+     {
+         FacePointer fnext=fc->FFp(i);
+         if (fnext!=fc)star.push_back(fnext);
+     }
+     CoordType bary0=(fc->P(0)+fc->P(1)+fc->P(2))/3;
+     for(ffi=star.begin();ffi!=star.end();++ffi )
+     {
+       assert(fc!=(*ffi));
+       float &qi = (*ffi)->Q();
+       CoordType bary1=((*ffi)->P(0)+(*ffi)->P(1)+(*ffi)->P(2))/3;
+       float distGeom = Distance(bary0,bary1) / gradientThr;
+       // Main test if the quality varies more than the geometric displacement we have to lower something.
+       if( distGeom < fabs(qi - fc->Q()))
+       {
+         // center = 0  other=10 -> other =
+         // center = 10 other=0
+         if(fc->Q() > qi)  // first case: the center of the star has to be lowered (and re-inserted in the queue).
+         {
+           //printf("Reinserting center %i \n",vc - &*m.vert.begin());
+           fc->Q() = qi+distGeom-(ScalarType)0.00001;
+           assert( distGeom > fabs(qi - fc->Q()));
+           st.push(fc);
+           break;
+         }
+         else
+         {
+           // second case: you have to lower qi, the vertex under examination.
+           assert( distGeom < fabs(qi - fc->Q()));
+           assert(fc->Q() < qi);
+           float newQi = fc->Q() + distGeom -(ScalarType)0.00001;
+           assert(newQi <= qi);
+           assert(fc->Q() < newQi);
+           assert( distGeom > fabs(newQi - fc->Q()) );
+//             printf("distGeom %f, qi %f, vc->Q() %f, fabs(qi - vc->Q()) %f\n",distGeom,qi,vc->Q(),fabs(qi - vc->Q()));
+           qi = newQi;
+           (*ffi)->ClearV();
+         }
+       }
+       if(!(*ffi)->IsV())
+       {
+         st.push( *ffi);
+//         printf("Reinserting side %i \n",*vvi - &*m.vert.begin());
+         (*ffi)->SetV();
+       }
+     }
+    }
+  }
 
 /*
   Saturate the vertex quality so that for each vertex the gradient of the quality is lower than the given threshold value (in absolute value)
