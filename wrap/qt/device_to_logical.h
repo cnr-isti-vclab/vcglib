@@ -35,4 +35,12 @@ inline ValueType QTDeviceToLogical( QPainter *qp, const ValueType &value)
 #endif
 }
 
+inline vcg::Point2f QTLogicalToOpenGL( QWidget *qw, const QPoint &p)
+{
+  return vcg::Point2f(QTLogicalToDevice(qw,p.x()), QTLogicalToDevice(qw,qw->height()-p.y()));
+}
+
+
+inline int QTDeviceHeight(QWidget *qw) {return QTLogicalToDevice(qw,qw->height());}
+inline int QTDeviceWidth(QWidget *qw) {return QTLogicalToDevice(qw,qw->width());}
 #endif // DEVICE_TO_LOGICAL_H
