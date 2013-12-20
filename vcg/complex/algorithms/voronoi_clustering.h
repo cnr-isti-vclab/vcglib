@@ -65,7 +65,8 @@ struct VoronoiProcessingParameter
     colorStrategy = DistanceFromSeed;
     areaThresholdPerc=0;
     deleteUnreachedRegionFlag=false;
-    fixSelectedSeed=false;
+    constrainSelectedSeed=false;
+    preserveFixedSeed=false;
     collapseShortEdge=false;
     collapseShortEdgePerc = 0.01f;
     triangulateRegion=false;
@@ -76,9 +77,15 @@ struct VoronoiProcessingParameter
   float areaThresholdPerc;
   bool deleteUnreachedRegionFlag;
   bool unbiasedSeedFlag;
-  bool fixSelectedSeed;   /// the vertexes that are selected are used as fixed seeds:
-                          /// They will not move during relaxing
-                          /// and they will be always included in the final triangulation (if on a border).
+  bool constrainSelectedSeed;   /// If true the selected vertexes define a constraining domain:
+                                /// During relaxation all selected seeds are constrained to move
+                                /// only on other selected vertices.
+                                /// In this way you can constrain some seed to move only on certain
+                                /// domains, for example moving only along some linear features
+                                /// like border of creases.
+  bool preserveFixedSeed;       /// If true the 'fixed' seeds are not moved during relaxation.
+                                /// \see FixVertexVector function to see how to fix a set of seeds.
+
   bool triangulateRegion;
   bool collapseShortEdge;
   float collapseShortEdgePerc;
@@ -819,8 +826,11 @@ struct QuadricSumDistance
   }
 };
 
-/// Find the new position according to the geodesic rule.
-/// For each region, given the frontiers, it chooses the point with the highest distance from the frontier
+/// Find the new position
+/// For each region it search the vertex that minimize the sum of the squared distance
+/// from all the points of the region.
+/// It uses a vector of QuadricSumDistances
+/// (for simplicity of the size of the vertex but only the ones of the seed are used).
 ///
 static void QuadricRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::vector<VertexPointer> &frontierVec,
                           std::vector<VertexType *> &newSeeds,
@@ -829,15 +839,18 @@ static void QuadricRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::v
   newSeeds.clear();
   typename MeshType::template PerVertexAttributeHandle<VertexPointer> sources;
   sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+  typename MeshType::template PerVertexAttributeHandle<bool> fixed;
+  fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
+
   QuadricSumDistance dz;
   std::vector<QuadricSumDistance> dVec(m.vert.size(),dz);
-  assert((int)m.vert.size()==m.vn);
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
   {
     assert(sources[vi]!=0);
     int seedIndex = tri::Index(m,sources[vi]);
     dVec[seedIndex].AddPoint(vi->P());
   }
+
   // Search the local maxima for each region and use them as new seeds
   std::pair<float,VertexPointer> zz(std::numeric_limits<ScalarType>::max(), static_cast<VertexPointer>(0));
   std::vector< std::pair<float,VertexPointer> > seedMaximaVec(m.vert.size(),zz);
@@ -847,22 +860,27 @@ static void QuadricRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::v
     int seedIndex = tri::Index(m,sources[vi]);
     ScalarType val = dVec[seedIndex].Eval(vi->P());
     vi->Q()=val;
-    if(seedMaximaVec[seedIndex].first > val)
+    // if constrainSelectedSeed we search only among selected vertices
+    if(!vpp.constrainSelectedSeed || !sources[vi]->IsS() || vi->IsS())
     {
-      seedMaximaVec[seedIndex].first = val;
-      seedMaximaVec[seedIndex].second = &*vi;
+      if(seedMaximaVec[seedIndex].first > val)
+      {
+        seedMaximaVec[seedIndex].first = val;
+        seedMaximaVec[seedIndex].second = &*vi;
+      }
     }
   }
 
   tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
 //  tri::io::ExporterPLY<MeshType>::Save(m,"last.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
 
-  // update the seedvector with the new maxima (For the vertex not selected)
+  // update the seedvector with the new maxima (For the vertex not fixed)
   for(size_t i=0;i<m.vert.size();++i)
-    if(seedMaximaVec[i].second) // only  seeds entries have a non zero pointer
+    if(seedMaximaVec[i].second) // only updated entries have a non zero pointer
     {
-      if(vpp.fixSelectedSeed && sources[seedMaximaVec[i].second]->IsS())
-        newSeeds.push_back(sources[seedMaximaVec[i].second]);
+      VertexPointer curSrc = sources[seedMaximaVec[i].second];
+      if(vpp.preserveFixedSeed && fixed[curSrc])
+        newSeeds.push_back(curSrc);
       else
         newSeeds.push_back(seedMaximaVec[i].second);
     }
@@ -878,6 +896,8 @@ static void GeodesicRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::
   newSeeds.clear();
   typename MeshType::template PerVertexAttributeHandle<VertexPointer> sources;
   sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+  typename MeshType::template PerVertexAttributeHandle<bool> fixed;
+  fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
 
   std::vector<typename tri::Geodesic<MeshType>::VertDist> biasedFrontierVec;
   BuildBiasedSeedVec(m,df,seedVec,frontierVec,biasedFrontierVec,vpp);
@@ -895,21 +915,29 @@ static void GeodesicRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::
   {
     assert(sources[vi]!=0);
     int seedIndex = tri::Index(m,sources[vi]);
-    if(seedMaximaVec[seedIndex].first < (*vi).Q())
+    if(!vpp.constrainSelectedSeed || !sources[vi]->IsS() || vi->IsS())
     {
-      seedMaximaVec[seedIndex].first=(*vi).Q();
-      seedMaximaVec[seedIndex].second=&*vi;
+      if(seedMaximaVec[seedIndex].first < (*vi).Q())
+      {
+        seedMaximaVec[seedIndex].first=(*vi).Q();
+        seedMaximaVec[seedIndex].second=&*vi;
+      }
     }
   }
 
   // update the seedvector with the new maxima (For the vertex not selected)
   for(size_t i=0;i<seedMaximaVec.size();++i)
-    if(seedMaximaVec[i].second)
+    if(seedMaximaVec[i].second)// only updated entries have a non zero pointer
     {
-      if(vpp.fixSelectedSeed && sources[seedMaximaVec[i].second]->IsS())
-        newSeeds.push_back(sources[seedMaximaVec[i].second]);
+      VertexPointer curSrc = sources[seedMaximaVec[i].second];
+      if(vpp.preserveFixedSeed && fixed[curSrc])
+        newSeeds.push_back(curSrc);
       else
         newSeeds.push_back(seedMaximaVec[i].second);
+//      if(vpp.fixSelectedSeed && sources[seedMaximaVec[i].second]->IsS())
+//        newSeeds.push_back(sources[seedMaximaVec[i].second]);
+//      else
+//        newSeeds.push_back(seedMaximaVec[i].second);
     }
 }
 
@@ -934,18 +962,37 @@ static void PruneSeedByRegionArea(std::vector<VertexType *> &seedVec,
   swap(seedVec,newSeedVec);
 }
 
+/// Mark a vector of seeds to be fixed.
+static void FixVertexVector(MeshType &m, std::vector<VertexType *> &vertToFixVec)
+{
+  typename MeshType::template PerVertexAttributeHandle<bool> fixed;
+  fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+    fixed[vi]=false;
+  for(size_t i=0;i<vertToFixVec.size();++i)
+    fixed[vertToFixVec[i]]=true;
+}
+
 /// \brief Perform a Lloyd relaxation cycle over a mesh
 ///
 ///
 
-static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec, int relaxIter, DistanceFunctor &df,
-                            VoronoiProcessingParameter &vpp, vcg::CallBackPos *cb=0)
+static void VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
+                            int relaxIter, DistanceFunctor &df,
+                            VoronoiProcessingParameter &vpp,
+                            vcg::CallBackPos *cb=0)
 {
   tri::RequireVFAdjacency(m);
+  tri::RequireCompactness(m);
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+    assert(vi->VFp());
+
   tri::UpdateFlags<MeshType>::FaceBorderFromVF(m);
   tri::UpdateFlags<MeshType>::VertexBorderFromFace(m);
   typename MeshType::template PerVertexAttributeHandle<VertexPointer> sources;
   sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+  typename MeshType::template PerVertexAttributeHandle<bool> fixed;
+  fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
 
   for(int iter=0;iter<relaxIter;++iter)
   {
