@@ -89,7 +89,9 @@ struct VoronoiProcessingParameter
   bool preserveFixedSeed;       /// If true the 'fixed' seeds are not moved during relaxation.
                                 /// \see FixVertexVector function to see how to fix a set of seeds.
 
-  bool triangulateRegion;
+  bool triangulateRegion;       /// If true when building the voronoi diagram mesh each region is a
+                                /// triangulated polygon. Otherwise it each voronoi region is a star
+                                /// triangulation with the original seed in the center.
 
   bool collapseShortEdge;
   float collapseShortEdgePerc;
