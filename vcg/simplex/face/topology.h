@@ -431,6 +431,40 @@ void SwapEdge(FaceType &f, const int z)
 }
 
 /*! Perform a simple edge collapse
+ * Basic link conditions
+ *
+*/
+template <class MeshType>
+bool FFLinkCondition(MeshType &m, typename MeshType::FaceType &f, const int z)
+{
+  typedef typename MeshType::FaceType FaceType;
+  typedef typename MeshType::VertexType VertexType;
+  typedef typename vcg::face::Pos< FaceType > PosType;
+
+  VertexType *v0=f.V0(z);
+  VertexType *v1=f.V1(z);
+
+  PosType p0(&f,v0);
+  PosType p1(&f,v1);
+  std::vector<VertexType *>v0Vec;
+  std::vector<VertexType *>v1Vec;
+  VVOrderedStarFF(p0,v0Vec);
+  VVOrderedStarFF(p1,v1Vec);
+  std::set<VertexType *> v0set;
+  v0set.insert(v0Vec.begin(),v0Vec.end());
+  assert(v0set.size() == v0Vec.size());
+  int cnt =0;
+  for(size_t i=0;i<v1Vec.size();++i)
+    if(v0set.find(v1Vec[i]) != v0set.end())
+      cnt++;
+
+  if(face::IsBorder(f,z) && (cnt==1)) return true;
+  if(!face::IsBorder(f,z) && (cnt==2)) return true;
+  assert(0);
+  return false;
+}
+
+/*! Perform a simple edge collapse
  * The edge z is collapsed and the vertex V(z) is collapsed onto the vertex V1(Z)
  * It assumes that the mesh is Manifold.
  * If the mesh is not manifold it will crash (there will be faces with deleted vertexes around)
@@ -899,6 +933,24 @@ void VFExtendedStarVF(typename FaceType::VertexType* vp,
             faceVec.resize(dist);
         }
     }
+
+/*!
+ * \brief Compute the ordered set of vertices adjacent to a given vertex using FF adiacency
+ *
+ * \param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
+ * \param vertexVec a std::vector of VertexPtr filled vertices around the given vertex.
+ *
+*/
+template <class FaceType>
+void VVOrderedStarFF(Pos<FaceType> &startPos,
+                     std::vector<typename FaceType::VertexType *> &vertexVec)
+{
+  vertexVec.clear();
+  std::vector<Pos<FaceType> > posVec;
+  VFOrderedStarFF(startPos,posVec);
+  for(size_t i=0;i<posVec.size();++i)
+    vertexVec.push_back(posVec[i].VFlip());
+}
 
 /*!
  * \brief Compute the ordered set of faces adjacent to a given vertex using FF adiacency
