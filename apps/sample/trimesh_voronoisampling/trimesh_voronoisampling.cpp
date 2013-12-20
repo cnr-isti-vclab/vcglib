@@ -63,23 +63,26 @@ class EmMesh    : public tri::TriMesh< vector<EmVertex>, vector<EmEdge>, vector<
 
 int main( int argc, char **argv )
 {
-  MyMesh baseMesh, outMesh, polyMesh;
+  MyMesh baseMesh;
   if(argc < 4 )
   {
-    printf("Usage trimesh_voronoisampling mesh sampleNum iterNum edgeCollapsePerc \n");
+    printf("Usage trimesh_voronoisampling mesh sampleNum iterNum\n");
      return -1;
   }
   int sampleNum = atoi(argv[2]);
   int iterNum   = atoi(argv[3]);
-  float collapseShortEdgePerc = atof(argv[4]);
 
-  printf("Reading %s and sampling %i points with %i iteration and using %f variance\n",argv[1],sampleNum,iterNum,collapseShortEdgePerc);
+  bool fixCornerFlag=true;
+
+  printf("Reading %s and sampling %i points with %i iteration",argv[1],sampleNum,iterNum);
   int ret= tri::io::ImporterPLY<MyMesh>::Open(baseMesh,argv[1]);
   if(ret!=0)
   {
     printf("Unable to open %s for '%s'\n",argv[1],tri::io::ImporterPLY<MyMesh>::ErrorMsg(ret));
     return -1;
   }
+
+  tri::VoronoiProcessingParameter vpp;
 
   tri::Clean<MyMesh>::RemoveUnreferencedVertex(baseMesh);
   tri::Allocator<MyMesh>::CompactEveryVector(baseMesh);
@@ -95,18 +98,21 @@ int main( int argc, char **argv )
   MyMesh poissonCornerMesh;
   std::vector<Point3f> sampleVec;
   tri::TrivialSampler<MyMesh> mps(sampleVec);
-  tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::VertexBorderCorner(baseMesh,mps,math::ToRad(150.f));
-  tri::Build(poissonCornerMesh,sampleVec);
-  tri::io::ExporterPLY<MyMesh>::Save(poissonCornerMesh,"cornerMesh.ply");
-  sampleVec.clear();
-  tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, poissonCornerMesh, radius, pp);
-  tri::Build(poissonCornerMesh,sampleVec);
-  tri::io::ExporterPLY<MyMesh>::Save(poissonCornerMesh,"poissonCornerMesh.ply");
-
-  // Now save the corner as Fixed Seeds for later...
-  std::vector<MyVertex *> fixedSeedVec;
-  tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,sampleVec,fixedSeedVec);
-  tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::FixVertexVector(baseMesh,fixedSeedVec);
+  if(fixCornerFlag)
+  {
+    tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::VertexBorderCorner(baseMesh,mps,math::ToRad(150.f));
+    tri::Build(poissonCornerMesh,sampleVec);
+    tri::io::ExporterPLY<MyMesh>::Save(poissonCornerMesh,"cornerMesh.ply");
+    sampleVec.clear();
+    tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, poissonCornerMesh, radius, pp);
+    tri::Build(poissonCornerMesh,sampleVec);
+    tri::io::ExporterPLY<MyMesh>::Save(poissonCornerMesh,"poissonCornerMesh.ply");
+    // Now save the corner as Fixed Seeds for later...
+    std::vector<MyVertex *> fixedSeedVec;
+    tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,sampleVec,fixedSeedVec);
+    tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::FixVertexVector(baseMesh,fixedSeedVec);
+    vpp.preserveFixedSeed=true;
+  }
 
   // -- Build a sampling with points on the border
   MyMesh borderMesh,poissonBorderMesh;
@@ -119,7 +125,7 @@ int main( int argc, char **argv )
   pp.preGenMesh = &poissonCornerMesh;
   pp.preGenFlag=true;
   sampleVec.clear();
-  tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, borderMesh, radius, pp);
+  tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, borderMesh, radius*0.8f, pp);
   tri::Build(poissonBorderMesh,sampleVec);
   tri::io::ExporterPLY<MyMesh>::Save(poissonBorderMesh,"PoissonEdgeMesh.ply");
 
@@ -149,13 +155,9 @@ int main( int argc, char **argv )
         baseMesh.vert[i].SetS();
   }
 
-  tri::VoronoiProcessingParameter vpp;
   vpp.deleteUnreachedRegionFlag=true;
-  vpp.preserveFixedSeed=true;
-  vpp.collapseShortEdge=true;
-  vpp.collapseShortEdgePerc=collapseShortEdgePerc;
   vpp.triangulateRegion = true;
-  vpp.unbiasedSeedFlag =true;
+  vpp.triangulateRegion = false;
   vpp.geodesicRelaxFlag=false;
   vpp.constrainSelectedSeed=true;
 
@@ -165,11 +167,16 @@ int main( int argc, char **argv )
   tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::VoronoiRelaxing(baseMesh, seedVec, iterNum, dd, vpp);
   int t1=clock();
 
+  MyMesh voroMesh, voroPoly, delaMesh;
   // Get the result in some pleasant form converting it to a real voronoi diagram.
-  tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::ConvertVoronoiDiagramToMesh(baseMesh,outMesh,polyMesh, seedVec, dd, vpp);
+  tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::ConvertVoronoiDiagramToMesh(baseMesh,voroMesh,voroPoly, seedVec, dd, vpp);
   tri::io::ExporterPLY<MyMesh>::Save(baseMesh,"base.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
-  tri::io::ExporterPLY<MyMesh>::Save(outMesh,"out.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_FLAGS );
-  tri::io::ExporterPLY<MyMesh>::Save(polyMesh,"poly.ply",tri::io::Mask::IOM_VERTCOLOR| tri::io::Mask::IOM_EDGEINDEX ,false);
+  tri::io::ExporterPLY<MyMesh>::Save(voroMesh,"voroMesh.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_FLAGS );
+  tri::io::ExporterPLY<MyMesh>::Save(voroPoly,"voroPoly.ply",tri::io::Mask::IOM_VERTCOLOR| tri::io::Mask::IOM_EDGEINDEX ,false);
+
+  tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::ConvertDelaunayTriangulationToMesh(baseMesh,delaMesh, seedVec, dd, vpp);
+  tri::io::ExporterPLY<MyMesh>::Save(delaMesh,"delaMesh.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
+
 
 //  tri::io::ImporterPLY<MyMesh>::Open(baseMesh,argv[1]);
 //  tri::UpdateTopology<MyMesh>::VertexFace(baseMesh);
