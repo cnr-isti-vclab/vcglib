@@ -74,8 +74,10 @@ struct VoronoiProcessingParameter
     geodesicRelaxFlag = true;
   }
   int colorStrategy;
+
   float areaThresholdPerc;
   bool deleteUnreachedRegionFlag;
+
   bool unbiasedSeedFlag;
   bool constrainSelectedSeed;   /// If true the selected vertexes define a constraining domain:
                                 /// During relaxation all selected seeds are constrained to move
@@ -83,12 +85,15 @@ struct VoronoiProcessingParameter
                                 /// In this way you can constrain some seed to move only on certain
                                 /// domains, for example moving only along some linear features
                                 /// like border of creases.
+
   bool preserveFixedSeed;       /// If true the 'fixed' seeds are not moved during relaxation.
                                 /// \see FixVertexVector function to see how to fix a set of seeds.
 
   bool triangulateRegion;
+
   bool collapseShortEdge;
   float collapseShortEdgePerc;
+
   bool geodesicRelaxFlag;
 };
 
@@ -494,7 +499,6 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
           {
             pos.Set(borderCornerVec[i],j,borderCornerVec[i]->V(j));
             AllFaceVisited =false;
-            printf("SearchForBorder\n");
           }
       }
     if(AllFaceVisited) break;
@@ -592,6 +596,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   // ******************* star to tri conversion *********
   if(vpp.triangulateRegion)
   {
+    printf("Seedvec.size %i\n",seedVec.size());
     for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi) if(!fi->IsD())
     {
       for(int i=0;i<3;++i)
@@ -603,8 +608,14 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
         {
 //          if(b0==b1)
           if(!seedVec[tri::Index(outMesh,fi->V(i))]->IsS())
-            face::FFEdgeCollapse(outMesh, *fi,i);
-          break;
+            if(face::FFLinkCondition(outMesh, *fi, i))
+            {
+              printf("collapse %i\n",tri::Index(outMesh,fi->V(i)));
+              tri::io::ExporterPLY<MeshType>::Save(outMesh,"pre.ply");
+              face::FFEdgeCollapse(outMesh, *fi,i);
+              tri::io::ExporterPLY<MeshType>::Save(outMesh,"post.ply");
+              break;
+            }
         }
       }
     }
@@ -1073,41 +1084,43 @@ static void TopologicalVertexColoring(MeshType &m, std::vector<VertexType *> &se
 
 }
 
-// Drastic Simplification algorithm.
-// Similar in philosopy to the classic grid clustering but using a voronoi partition instead of the regular grid.
-//
-// This function assumes that in the mOld mesh,  for each vertex you have a quality that denotes the index of the cluster
-// mNew is created by collasping onto a single vertex all the vertices that lies in the same cluster.
-// Non degenerate triangles are preserved.
 
-static void VoronoiClustering(MeshType &mOld, MeshType &mNew, std::vector<VertexType *> &seedVec)
+static void ConvertDelaunayTriangulationToMesh(MeshType &m,
+                                               MeshType &outMesh,
+                                               std::vector<VertexType *> &seedVec,
+                                               DistanceFunctor &df, VoronoiProcessingParameter &vpp )
 {
-    std::set<Point3i> clusteredFace;
+  typename MeshType::template PerVertexAttributeHandle<VertexPointer> sources;
+  sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
 
-    FaceIterator fi;
-    for(fi=mOld.face.begin();fi!=mOld.face.end();++fi)
-    {
-        if( (fi->V(0)->Q() != fi->V(1)->Q() ) &&
-                (fi->V(0)->Q() != fi->V(2)->Q() ) &&
-                (fi->V(1)->Q() != fi->V(2)->Q() )  )
-                clusteredFace.insert( Point3i(int(fi->V(0)->Q()), int(fi->V(1)->Q()), int(fi->V(2)->Q())));
-    }
+  tri::Geodesic<MeshType>::Compute(m,seedVec, df,std::numeric_limits<ScalarType>::max(),0,&sources);
+  outMesh.Clear();
+  tri::UpdateTopology<MeshType>::FaceFace(m);
+  tri::UpdateFlags<MeshType>::FaceBorderFromFF(m);
 
-    tri::Allocator<MeshType>::AddVertices(mNew,seedVec.size());
-    for(size_t i=0;i< seedVec.size();++i)
-    mNew.vert[i].ImportData(*(seedVec[i]));
+  std::map<VertexPointer, int> seedMap;  // It says if a given vertex of m is a seed (and its index in seedVec)
+  for(size_t i=0;i<m.vert.size();++i)
+    seedMap[&(m.vert[i])]=-1;
+  for(size_t i=0;i<seedVec.size();++i)
+    seedMap[seedVec[i]]=i;
 
-    tri::Allocator<MeshType>::AddFaces(mNew,clusteredFace.size());
-    std::set<Point3i>::iterator fsi; ;
+  std::vector<FacePointer> innerCornerVec,   // Faces adjacent to three different regions
+      borderCornerVec;  // Faces that are on the border and adjacent to at least two regions.
+  GetFaceCornerVec(m, sources, innerCornerVec, borderCornerVec);
 
-    for(fi=mNew.face.begin(),fsi=clusteredFace.begin(); fsi!=clusteredFace.end();++fsi,++fi)
-    {
-        (*fi).V(0) = & mNew.vert[(int)(fsi->V(0)-1)];
-        (*fi).V(1) = & mNew.vert[(int)(fsi->V(1)-1)];
-        (*fi).V(2) = & mNew.vert[(int)(fsi->V(2)-1)];
-    }
+  // First add all the needed vertices: seeds and corners
+  for(size_t i=0;i<seedVec.size();++i)
+    tri::Allocator<MeshType>::AddVertex(outMesh, seedVec[i]->P(),Color4b::White);
+
+  // Now just add a face for each inner corner
+  for(size_t i=0;i<innerCornerVec.size();++i)
+  {
+    VertexPointer v0 = & outMesh.vert[seedMap[sources[innerCornerVec[i]->V(0)]]];
+    VertexPointer v1 = & outMesh.vert[seedMap[sources[innerCornerVec[i]->V(1)]]];
+    VertexPointer v2 = & outMesh.vert[seedMap[sources[innerCornerVec[i]->V(2)]]];
+    tri::Allocator<MeshType>::AddFace(outMesh,v0,v1,v2);
+  }
 }
-
 }; // end class VoronoiProcessing
 
 } // end namespace tri
