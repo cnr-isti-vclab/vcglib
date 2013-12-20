@@ -38,9 +38,9 @@ public:
 
     int n_attr;							// unique ID of the attribute
 
-	void Resize(const int & sz){((SimpleTempDataBase *)_handle)->Resize(sz);}
-	void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase *)_handle)->Reorder(newVertIndex);}
-	bool operator<(const  PointerToAttribute    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
+    void Resize(const int & sz){((SimpleTempDataBase *)_handle)->Resize(sz);}
+    void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase *)_handle)->Reorder(newVertIndex);}
+    bool operator<(const  PointerToAttribute    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
 };
 
 
@@ -52,89 +52,89 @@ namespace tri {
  /* MeshTypeHolder is a class which is used to define the types in the mesh
 */
 
-		template <class TYPESPOOL>
-		struct BaseMeshTypeHolder{
+        template <class TYPESPOOL>
+        struct BaseMeshTypeHolder{
 
-				typedef bool ScalarType;
-				typedef std::vector< typename TYPESPOOL::VertexType  >	CONTV;
-				typedef std::vector< typename TYPESPOOL::EdgeType  >		CONTE;
-				typedef std::vector< typename TYPESPOOL::FaceType >		CONTF;
-				typedef std::vector< typename TYPESPOOL::HEdgeType  >		CONTH;
+                typedef bool ScalarType;
+                typedef std::vector< typename TYPESPOOL::VertexType  >	CONTV;
+                typedef std::vector< typename TYPESPOOL::EdgeType  >		CONTE;
+                typedef std::vector< typename TYPESPOOL::FaceType >		CONTF;
+                typedef std::vector< typename TYPESPOOL::HEdgeType  >		CONTH;
 
-				typedef CONTV									VertContainer;
-				typedef _Vertex 								VertexType;
-				typedef typename TYPESPOOL::VertexPointer		VertexPointer;
-				typedef const typename TYPESPOOL::VertexPointer ConstVertexPointer;
-				typedef bool									CoordType;
-				typedef typename CONTV::iterator				VertexIterator;
-				typedef typename CONTV::const_iterator	ConstVertexIterator;
+                typedef CONTV									VertContainer;
+                typedef _Vertex 								VertexType;
+                typedef typename TYPESPOOL::VertexPointer		VertexPointer;
+                typedef const typename TYPESPOOL::VertexPointer ConstVertexPointer;
+                typedef bool									CoordType;
+                typedef typename CONTV::iterator				VertexIterator;
+                typedef typename CONTV::const_iterator	ConstVertexIterator;
 
-				typedef CONTE										EdgeContainer;
-				typedef typename CONTE::value_type					EdgeType;
-				typedef typename  TYPESPOOL::EdgePointer	EdgePointer;
-				typedef typename CONTE::iterator				EdgeIterator;
-				typedef typename CONTE::const_iterator	ConstEdgeIterator;
+                typedef CONTE										EdgeContainer;
+                typedef typename CONTE::value_type					EdgeType;
+                typedef typename  TYPESPOOL::EdgePointer	EdgePointer;
+                typedef typename CONTE::iterator				EdgeIterator;
+                typedef typename CONTE::const_iterator	ConstEdgeIterator;
 
-				typedef CONTF														FaceContainer;
-				typedef typename CONTF::value_type					FaceType;
-				typedef typename CONTF::const_iterator				ConstFaceIterator;
-				typedef typename CONTF::iterator					FaceIterator;
-				typedef typename TYPESPOOL::FacePointer	FacePointer;
-				typedef const typename TYPESPOOL::FacePointer		ConstFacePointer;
+                typedef CONTF														FaceContainer;
+                typedef typename CONTF::value_type					FaceType;
+                typedef typename CONTF::const_iterator				ConstFaceIterator;
+                typedef typename CONTF::iterator					FaceIterator;
+                typedef typename TYPESPOOL::FacePointer	FacePointer;
+                typedef const typename TYPESPOOL::FacePointer		ConstFacePointer;
 
-				typedef CONTH														HEdgeContainer;
-				typedef typename CONTH::value_type			HEdgeType;
-				typedef typename TYPESPOOL::HEdgePointer					HEdgePointer;
-				typedef typename CONTH::iterator				HEdgeIterator;
-				typedef typename CONTH::const_iterator	ConstHEdgeIterator;
-
-
-		};
+                typedef CONTH														HEdgeContainer;
+                typedef typename CONTH::value_type			HEdgeType;
+                typedef typename TYPESPOOL::HEdgePointer					HEdgePointer;
+                typedef typename CONTH::iterator				HEdgeIterator;
+                typedef typename CONTH::const_iterator	ConstHEdgeIterator;
 
 
-
-		template <class T, typename CONT, class TRAIT >
-						struct MeshTypeHolder: public T {};
-
-		template <class T, typename CONT>
-						struct MeshTypeHolder<T, CONT, AllTypes::AVertexType>: public T {
-								typedef CONT VertContainer;
-								typedef typename VertContainer::value_type VertexType;
-								typedef VertexType * VertexPointer;
-								typedef const VertexType * ConstVertexPointer;
-								typedef typename VertexType::ScalarType ScalarType;
-								typedef typename VertexType::CoordType CoordType;
-								typedef typename VertContainer::iterator VertexIterator;
-								typedef typename VertContainer::const_iterator ConstVertexIterator;
-		};
+        };
 
 
-	template <typename T, class CONT>
-					struct MeshTypeHolder< T, CONT, AllTypes::AEdgeType>: public T{
-								typedef CONT EdgeContainer;
-								typedef typename EdgeContainer::value_type EdgeType;
-								typedef typename EdgeContainer::value_type *  EdgePointer;
-								typedef typename EdgeContainer::iterator EdgeIterator;
-								typedef typename EdgeContainer::const_iterator ConstEdgeIterator;
+
+        template <class T, typename CONT, class TRAIT >
+                        struct MeshTypeHolder: public T {};
+
+        template <class T, typename CONT>
+                        struct MeshTypeHolder<T, CONT, AllTypes::AVertexType>: public T {
+                                typedef CONT VertContainer;
+                                typedef typename VertContainer::value_type VertexType;
+                                typedef VertexType * VertexPointer;
+                                typedef const VertexType * ConstVertexPointer;
+                                typedef typename VertexType::ScalarType ScalarType;
+                                typedef typename VertexType::CoordType CoordType;
+                                typedef typename VertContainer::iterator VertexIterator;
+                                typedef typename VertContainer::const_iterator ConstVertexIterator;
+        };
+
+
+    template <typename T, class CONT>
+                    struct MeshTypeHolder< T, CONT, AllTypes::AEdgeType>: public T{
+                                typedef CONT EdgeContainer;
+                                typedef typename EdgeContainer::value_type EdgeType;
+                                typedef typename EdgeContainer::value_type *  EdgePointer;
+                                typedef typename EdgeContainer::iterator EdgeIterator;
+                                typedef typename EdgeContainer::const_iterator ConstEdgeIterator;
 };
 
-	template <typename T, class CONT>
-					struct MeshTypeHolder< T, CONT,  AllTypes::AFaceType>:public T {
-								typedef CONT FaceContainer;
-								typedef typename FaceContainer::value_type FaceType;
-								typedef typename FaceContainer::const_iterator ConstFaceIterator;
-								typedef typename FaceContainer::iterator FaceIterator;
-								typedef FaceType * FacePointer;
-								typedef const FaceType * ConstFacePointer;
-				};
+    template <typename T, class CONT>
+                    struct MeshTypeHolder< T, CONT,  AllTypes::AFaceType>:public T {
+                                typedef CONT FaceContainer;
+                                typedef typename FaceContainer::value_type FaceType;
+                                typedef typename FaceContainer::const_iterator ConstFaceIterator;
+                                typedef typename FaceContainer::iterator FaceIterator;
+                                typedef FaceType * FacePointer;
+                                typedef const FaceType * ConstFacePointer;
+                };
 
-	template <typename T, class CONT>
-					struct MeshTypeHolder< T, CONT, AllTypes::AHEdgeType>: public T{
-								typedef CONT HEdgeContainer;
-								typedef typename HEdgeContainer::value_type			HEdgeType;
-								typedef typename HEdgeContainer::value_type *		HEdgePointer;
-								typedef typename HEdgeContainer::iterator				HEdgeIterator;
-								typedef typename HEdgeContainer::const_iterator ConstHEdgeIterator;
+    template <typename T, class CONT>
+                    struct MeshTypeHolder< T, CONT, AllTypes::AHEdgeType>: public T{
+                                typedef CONT HEdgeContainer;
+                                typedef typename HEdgeContainer::value_type			HEdgeType;
+                                typedef typename HEdgeContainer::value_type *		HEdgePointer;
+                                typedef typename HEdgeContainer::iterator				HEdgeIterator;
+                                typedef typename HEdgeContainer::const_iterator ConstHEdgeIterator;
 };
 
 template <typename T, typename CONT> struct Der: public MeshTypeHolder<T,CONT, typename CONT::value_type::IAm>{};
@@ -146,78 +146,78 @@ As explained in \ref basic_concepts, this class is templated over a list of cont
 
 template < class Container0 = DummyContainer, class Container1 = DummyContainer, class Container2 = DummyContainer, class Container3 = DummyContainer >
 class TriMesh
-	: public  MArity4<   BaseMeshTypeHolder<typename Container0::value_type::TypesPool>, Container0, Der ,Container1, Der, Container2, Der, Container3, Der>{
-	public:
+    : public  MArity4<   BaseMeshTypeHolder<typename Container0::value_type::TypesPool>, Container0, Der ,Container1, Der, Container2, Der, Container3, Der>{
+    public:
 
-		typedef typename TriMesh::ScalarType		ScalarType;
-		typedef typename TriMesh::VertContainer VertContainer;
-		typedef typename TriMesh::EdgeContainer EdgeContainer;
-		typedef typename TriMesh::FaceContainer FaceContainer;
+        typedef typename TriMesh::ScalarType		ScalarType;
+        typedef typename TriMesh::VertContainer VertContainer;
+        typedef typename TriMesh::EdgeContainer EdgeContainer;
+        typedef typename TriMesh::FaceContainer FaceContainer;
 
-		// types for vertex
-		typedef typename TriMesh::VertexType						VertexType;
-		typedef typename TriMesh::VertexPointer					VertexPointer;
-		typedef typename TriMesh::ConstVertexPointer		ConstVertexPointer;
-		typedef typename TriMesh::CoordType							CoordType;
-		typedef typename TriMesh::VertexIterator				VertexIterator;
-		typedef typename TriMesh::ConstVertexIterator		ConstVertexIterator;
+        // types for vertex
+        typedef typename TriMesh::VertexType						VertexType;
+        typedef typename TriMesh::VertexPointer					VertexPointer;
+        typedef typename TriMesh::ConstVertexPointer		ConstVertexPointer;
+        typedef typename TriMesh::CoordType							CoordType;
+        typedef typename TriMesh::VertexIterator				VertexIterator;
+        typedef typename TriMesh::ConstVertexIterator		ConstVertexIterator;
 
-		// types for edge
-		typedef typename TriMesh::EdgeType							EdgeType;
-		typedef typename TriMesh::EdgePointer						EdgePointer;
-		typedef typename TriMesh::EdgeIterator					EdgeIterator;
-		typedef typename TriMesh::ConstEdgeIterator			ConstEdgeIterator;
+        // types for edge
+        typedef typename TriMesh::EdgeType							EdgeType;
+        typedef typename TriMesh::EdgePointer						EdgePointer;
+        typedef typename TriMesh::EdgeIterator					EdgeIterator;
+        typedef typename TriMesh::ConstEdgeIterator			ConstEdgeIterator;
 
-		//types for face
-		typedef typename TriMesh::FaceType							FaceType;
-		typedef typename TriMesh::ConstFaceIterator			ConstFaceIterator;
-		typedef typename TriMesh::FaceIterator					FaceIterator;
-		typedef typename TriMesh::FacePointer						FacePointer;
-		typedef typename TriMesh::ConstFacePointer			ConstFacePointer;
+        //types for face
+        typedef typename TriMesh::FaceType							FaceType;
+        typedef typename TriMesh::ConstFaceIterator			ConstFaceIterator;
+        typedef typename TriMesh::FaceIterator					FaceIterator;
+        typedef typename TriMesh::FacePointer						FacePointer;
+        typedef typename TriMesh::ConstFacePointer			ConstFacePointer;
 
-		// types for hedge
-		typedef typename TriMesh::HEdgeType							HEdgeType;
-		typedef typename TriMesh::HEdgePointer					HEdgePointer;
-		typedef typename TriMesh::HEdgeIterator					HEdgeIterator;
-		typedef typename TriMesh::HEdgeContainer				HEdgeContainer;
-		typedef typename TriMesh::ConstHEdgeIterator		ConstHEdgeIterator;
+        // types for hedge
+        typedef typename TriMesh::HEdgeType							HEdgeType;
+        typedef typename TriMesh::HEdgePointer					HEdgePointer;
+        typedef typename TriMesh::HEdgeIterator					HEdgeIterator;
+        typedef typename TriMesh::HEdgeContainer				HEdgeContainer;
+        typedef typename TriMesh::ConstHEdgeIterator		ConstHEdgeIterator;
 
-		typedef vcg::PointerToAttribute PointerToAttribute;
+        typedef vcg::PointerToAttribute PointerToAttribute;
 
-	typedef TriMesh<Container0, Container1,Container2,Container3> MeshType;
+    typedef TriMesh<Container0, Container1,Container2,Container3> MeshType;
 
-	typedef Box3<ScalarType> BoxType;
+    typedef Box3<ScalarType> BoxType;
 
-	/// Container of vertices, usually a vector.
-	VertContainer vert;
-	/// Current number of vertices; this member is for internal use only. You should always use the VN() member
-	int vn;
-	/// Current number of vertices
-	inline int VN() const { return vn; }
+    /// Container of vertices, usually a vector.
+    VertContainer vert;
+    /// Current number of vertices; this member is for internal use only. You should always use the VN() member
+    int vn;
+    /// Current number of vertices
+    inline int VN() const { return vn; }
 
-	/// Container of edges, usually a vector.
-	EdgeContainer edge;
-	/// Current number of edges; this member is for internal use only. You should always use the EN() member
-	int en;
-	/// Current number of edges
-	inline int EN() const { return en; }
+    /// Container of edges, usually a vector.
+    EdgeContainer edge;
+    /// Current number of edges; this member is for internal use only. You should always use the EN() member
+    int en;
+    /// Current number of edges
+    inline int EN() const { return en; }
 
-	/// Container of faces, usually a vector.
-	FaceContainer face;
-	/// Current number of faces; this member is for internal use only. You should always use the FN() member
-	int fn;
-	/// Current number of faces
-	inline int FN() const { return fn; }
+    /// Container of faces, usually a vector.
+    FaceContainer face;
+    /// Current number of faces; this member is for internal use only. You should always use the FN() member
+    int fn;
+    /// Current number of faces
+    inline int FN() const { return fn; }
 
-	/// Container of half edges, usually a vector.
-	HEdgeContainer hedge;
-	/// Current number of halfedges; this member is for internal use only. You should always use the HN() member
-	int hn;
-	/// Current number of halfedges;
-	inline int HN() const { return hn; }
+    /// Container of half edges, usually a vector.
+    HEdgeContainer hedge;
+    /// Current number of halfedges; this member is for internal use only. You should always use the HN() member
+    int hn;
+    /// Current number of halfedges;
+    inline int HN() const { return hn; }
 
-	/// Bounding box of the mesh
-	Box3<ScalarType> bbox;
+    /// Bounding box of the mesh
+    Box3<ScalarType> bbox;
 
   /// Nomi di textures
     //
@@ -235,135 +235,135 @@ class TriMesh
 
 
 
-	template <class ATTR_TYPE, class CONT>
-	class AttributeHandle{
-	public:
-		AttributeHandle(){_handle=(SimpleTempData<CONT,ATTR_TYPE> *)NULL;}
-		AttributeHandle( void *ah,const int & n):_handle ( (SimpleTempData<CONT,ATTR_TYPE> *)ah ),n_attr(n){}
-				AttributeHandle operator = ( const PointerToAttribute & pva){
-			_handle = (SimpleTempData<CONT,ATTR_TYPE> *)pva._handle;
-			n_attr = pva.n_attr;
-			return (*this);
-		}
+    template <class ATTR_TYPE, class CONT>
+    class AttributeHandle{
+    public:
+        AttributeHandle(){_handle=(SimpleTempData<CONT,ATTR_TYPE> *)NULL;}
+        AttributeHandle( void *ah,const int & n):_handle ( (SimpleTempData<CONT,ATTR_TYPE> *)ah ),n_attr(n){}
+                AttributeHandle operator = ( const PointerToAttribute & pva){
+            _handle = (SimpleTempData<CONT,ATTR_TYPE> *)pva._handle;
+            n_attr = pva.n_attr;
+            return (*this);
+        }
 
-		//pointer to the SimpleTempData that stores the attribute
-		SimpleTempData<CONT,ATTR_TYPE> * _handle;
+        //pointer to the SimpleTempData that stores the attribute
+        SimpleTempData<CONT,ATTR_TYPE> * _handle;
 
-		// its attribute number
-		int n_attr;
+        // its attribute number
+        int n_attr;
 
-		// access function
-		template <class RefType>
-		ATTR_TYPE & operator [](const RefType  & i){return (*_handle)[i];}
-	};
+        // access function
+        template <class RefType>
+        ATTR_TYPE & operator [](const RefType  & i){return (*_handle)[i];}
+    };
 
-	template <class ATTR_TYPE>
-	class PerVertexAttributeHandle: public AttributeHandle<ATTR_TYPE,VertContainer>{
-	public:
-		PerVertexAttributeHandle():AttributeHandle<ATTR_TYPE,VertContainer>(){}
-				PerVertexAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,VertContainer>(ah,n){}
-	};
+    template <class ATTR_TYPE>
+    class PerVertexAttributeHandle: public AttributeHandle<ATTR_TYPE,VertContainer>{
+    public:
+        PerVertexAttributeHandle():AttributeHandle<ATTR_TYPE,VertContainer>(){}
+                PerVertexAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,VertContainer>(ah,n){}
+    };
 
-	template <class ATTR_TYPE>
-	class PerFaceAttributeHandle: public AttributeHandle<ATTR_TYPE,FaceContainer>{
-	public:
-		PerFaceAttributeHandle():AttributeHandle<ATTR_TYPE,FaceContainer>(){}
-				PerFaceAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,FaceContainer>(ah,n){}
-	};
+    template <class ATTR_TYPE>
+    class PerFaceAttributeHandle: public AttributeHandle<ATTR_TYPE,FaceContainer>{
+    public:
+        PerFaceAttributeHandle():AttributeHandle<ATTR_TYPE,FaceContainer>(){}
+                PerFaceAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,FaceContainer>(ah,n){}
+    };
 
-	template <class ATTR_TYPE>
-	class PerEdgeAttributeHandle:  public AttributeHandle<ATTR_TYPE,EdgeContainer>{
-	public:
-		PerEdgeAttributeHandle():AttributeHandle<ATTR_TYPE,EdgeContainer>(){}
-				PerEdgeAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,EdgeContainer>(ah,n){}
-	};
+    template <class ATTR_TYPE>
+    class PerEdgeAttributeHandle:  public AttributeHandle<ATTR_TYPE,EdgeContainer>{
+    public:
+        PerEdgeAttributeHandle():AttributeHandle<ATTR_TYPE,EdgeContainer>(){}
+                PerEdgeAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,EdgeContainer>(ah,n){}
+    };
 
-	template <class ATTR_TYPE>
-	class PerMeshAttributeHandle{
-	public:
-		PerMeshAttributeHandle(){_handle=NULL;}
-		PerMeshAttributeHandle(void *ah,const int & n):_handle ( (Attribute<ATTR_TYPE> *)ah ),n_attr(n){}
-		PerMeshAttributeHandle operator = ( const PerMeshAttributeHandle & pva){
-			_handle = (Attribute<ATTR_TYPE> *)pva._handle;
-			n_attr = pva.n_attr;
-			return (*this);
-		}
+    template <class ATTR_TYPE>
+    class PerMeshAttributeHandle{
+    public:
+        PerMeshAttributeHandle(){_handle=NULL;}
+        PerMeshAttributeHandle(void *ah,const int & n):_handle ( (Attribute<ATTR_TYPE> *)ah ),n_attr(n){}
+        PerMeshAttributeHandle operator = ( const PerMeshAttributeHandle & pva){
+            _handle = (Attribute<ATTR_TYPE> *)pva._handle;
+            n_attr = pva.n_attr;
+            return (*this);
+        }
 
-		Attribute<ATTR_TYPE> * _handle;
-		int n_attr;
-		ATTR_TYPE & operator ()(){ return *((Attribute<ATTR_TYPE> *)_handle)->attribute;}
-	};
+        Attribute<ATTR_TYPE> * _handle;
+        int n_attr;
+        ATTR_TYPE & operator ()(){ return *((Attribute<ATTR_TYPE> *)_handle)->attribute;}
+    };
 
 
-	// the camera member (that should keep the intrinsics) is no more needed since 2006, when intrisncs moved into the Shot structure
-	//Camera<ScalarType> camera; // intrinsic
-	Shot<ScalarType> shot;		// intrinsic && extrinsic
+    // the camera member (that should keep the intrinsics) is no more needed since 2006, when intrisncs moved into the Shot structure
+    //Camera<ScalarType> camera; // intrinsic
+    Shot<ScalarType> shot;		// intrinsic && extrinsic
 
 private:
-	/// The per-mesh color. Not very useful and meaningful...
-	Color4b c;
+    /// The per-mesh color. Not very useful and meaningful...
+    Color4b c;
 public:
 
     inline const Color4b &C() const	{ return c; }
     inline       Color4b &C()       { return c;  }
     inline       Color4b cC() const { return c;  }
 
-	/// Default constructor
-	TriMesh()
-	{
-	Clear();
-	}
+    /// Default constructor
+    TriMesh()
+    {
+    Clear();
+    }
 
-	/// destructor
-	~TriMesh()
-	{
-		typename std::set< PointerToAttribute>::iterator i;
-		for( i = vert_attr.begin(); i != vert_attr.end(); ++i)
-			delete ((SimpleTempDataBase*)(*i)._handle);
-		for( i = edge_attr.begin(); i != edge_attr.end(); ++i)
-			delete ((SimpleTempDataBase*)(*i)._handle);
-		for( i = face_attr.begin(); i != face_attr.end(); ++i)
-			delete ((SimpleTempDataBase*)(*i)._handle);
-		for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i)
-			delete ((SimpleTempDataBase*)(*i)._handle);
+    /// destructor
+    ~TriMesh()
+    {
+        typename std::set< PointerToAttribute>::iterator i;
+        for( i = vert_attr.begin(); i != vert_attr.end(); ++i)
+            delete ((SimpleTempDataBase*)(*i)._handle);
+        for( i = edge_attr.begin(); i != edge_attr.end(); ++i)
+            delete ((SimpleTempDataBase*)(*i)._handle);
+        for( i = face_attr.begin(); i != face_attr.end(); ++i)
+            delete ((SimpleTempDataBase*)(*i)._handle);
+        for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i)
+            delete ((SimpleTempDataBase*)(*i)._handle);
 
-		FaceIterator fi;
-		for(fi = face.begin(); fi != face.end(); ++fi) (*fi).Dealloc();
-	}
+        FaceIterator fi;
+        for(fi = face.begin(); fi != face.end(); ++fi) (*fi).Dealloc();
+    }
 
-	 int Mem(const int & nv, const int & nf) const  {
-		typename std::set< PointerToAttribute>::const_iterator i;
-		int size = 0;
-		size += sizeof(TriMesh)+sizeof(VertexType)*nv+sizeof(FaceType)*nf;
+     int Mem(const int & nv, const int & nf) const  {
+        typename std::set< PointerToAttribute>::const_iterator i;
+        int size = 0;
+        size += sizeof(TriMesh)+sizeof(VertexType)*nv+sizeof(FaceType)*nf;
 
-		for( i = vert_attr.begin(); i != vert_attr.end(); ++i)
-			size += ((SimpleTempDataBase*)(*i)._handle)->SizeOf()*nv;
-		for( i = edge_attr.begin(); i != edge_attr.end(); ++i)
-			size += ((SimpleTempDataBase*)(*i)._handle)->SizeOf()*en;
-		for( i = face_attr.begin(); i != face_attr.end(); ++i)
-			size +=  ((SimpleTempDataBase*)(*i)._handle)->SizeOf()*nf;
-		for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i)
-			size +=  ((SimpleTempDataBase*)(*i)._handle)->SizeOf();
+        for( i = vert_attr.begin(); i != vert_attr.end(); ++i)
+            size += ((SimpleTempDataBase*)(*i)._handle)->SizeOf()*nv;
+        for( i = edge_attr.begin(); i != edge_attr.end(); ++i)
+            size += ((SimpleTempDataBase*)(*i)._handle)->SizeOf()*en;
+        for( i = face_attr.begin(); i != face_attr.end(); ++i)
+            size +=  ((SimpleTempDataBase*)(*i)._handle)->SizeOf()*nf;
+        for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i)
+            size +=  ((SimpleTempDataBase*)(*i)._handle)->SizeOf();
 
-		return size;
-	}
-	int MemUsed() const  {return Mem(vert.size(),face.size());}
-	inline int MemNeeded() const {return Mem(vn,fn);}
+        return size;
+    }
+    int MemUsed() const  {return Mem(vert.size(),face.size());}
+    inline int MemNeeded() const {return Mem(vn,fn);}
 
 
 
 /// Function to destroy the mesh
 void Clear()
 {
-	vert.clear();
-	face.clear();
-	edge.clear();
+    vert.clear();
+    face.clear();
+    edge.clear();
 //	textures.clear();
 //	normalmaps.clear();
-	vn = 0;
-	en = 0;
-	fn = 0;
-	hn = 0;
+    vn = 0;
+    en = 0;
+    fn = 0;
+    hn = 0;
   imark = 0;
   attrn = 0;
   C()=Color4b::Gray;
@@ -386,21 +386,21 @@ private:
 /// Initialize the imark-system of the faces
 template <class MeshType> inline  void InitFaceIMark(MeshType & m)
 {
-	typename MeshType::FaceIterator f;
+    typename MeshType::FaceIterator f;
 
-	for(f=m.face.begin();f!=m.face.end();++f)
-		if( !(*f).IsD() && (*f).IsR() && (*f).IsW() )
-			(*f).InitIMark();
+    for(f=m.face.begin();f!=m.face.end();++f)
+        if( !(*f).IsD() && (*f).IsR() && (*f).IsW() )
+            (*f).InitIMark();
 }
 
 /// Initialize the imark-system of the vertices
 template <class MeshType> inline  void InitVertexIMark(MeshType & m)
 {
-	typename MeshType::VertexIterator vi;
+    typename MeshType::VertexIterator vi;
 
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-		if( !(*vi).IsD() && (*vi).IsRW() )
-			(*vi).InitIMark();
+    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+        if( !(*vi).IsD() && (*vi).IsRW() )
+            (*vi).InitIMark();
 }
 /** \brief Access function to the incremental mark.
   You should not use this member directly. In most of the case just use IsMarked() and Mark()
@@ -408,23 +408,23 @@ template <class MeshType> inline  void InitVertexIMark(MeshType & m)
 template <class MeshType> inline int & IMark(MeshType & m){return m.imark;}
 
 /** \brief Check if the vertex incremental mark matches the one of the mesh.
-	@param m the mesh containing the element
-	@param v Vertex pointer */
+    @param m the mesh containing the element
+    @param v Vertex pointer */
 template <class MeshType> inline bool IsMarked(MeshType & m, typename MeshType::ConstVertexPointer  v )  { return v->cIMark() == m.imark; }
 
 /** \brief Check if the face incremental mark matches the one of the mesh.
-	@param m the mesh containing the element
-	@param f Face pointer */
+    @param m the mesh containing the element
+    @param f Face pointer */
 template <class MeshType> inline bool IsMarked( MeshType & m,typename MeshType::ConstFacePointer f )  { return f->cIMark() == m.imark; }
 
 /** \brief Set the vertex incremental mark of the vertex to the one of the mesh.
-	@param m the mesh containing the element
-	@param v Vertex pointer */
+    @param m the mesh containing the element
+    @param v Vertex pointer */
 template <class MeshType> inline void Mark(MeshType & m, typename MeshType::VertexPointer v )  { v->IMark() = m.imark; }
 
 /** \brief Set the face incremental mark of the vertex to the one of the mesh.
-	@param m the mesh containing the element
-	@param f Vertex pointer */
+    @param m the mesh containing the element
+    @param f Vertex pointer */
 template <class MeshType> inline void Mark(MeshType & m, typename MeshType::FacePointer f )  { f->IMark() = m.imark; }
 
 
@@ -576,30 +576,35 @@ bool HasHOppAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) 
 
 template <class MESH_TYPE>
 bool HasPerVertexAttribute(const MESH_TYPE &m,   std::string   name){
-		typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
-		typename MESH_TYPE::PointerToAttribute h;
-		h._name = name;
-		ai = m.vert_attr.find(h);
-		return (ai!= m.vert_attr.end() ) ;
+        typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
+        typename MESH_TYPE::PointerToAttribute h;
+        h._name = name;
+        ai = m.vert_attr.find(h);
+        return (ai!= m.vert_attr.end() ) ;
 }
 template <class MESH_TYPE>
 bool HasPerFaceAttribute(const MESH_TYPE &m,   std::string   name){
-		typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
-		typename MESH_TYPE::PointerToAttribute h;
-		h._name = name;
-		ai = m.face_attr.find(h);
-		return (ai!= m.face_attr.end() ) ;
+        typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
+        typename MESH_TYPE::PointerToAttribute h;
+        h._name = name;
+        ai = m.face_attr.find(h);
+        return (ai!= m.face_attr.end() ) ;
 }
 
 template <class MESH_TYPE>
 bool HasPerMeshAttribute(const MESH_TYPE &m,   std::string   name){
-		typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
-		typename MESH_TYPE::PointerToAttribute h;
-		h._name = name;
-		ai = m.mesh_attr.find(h);
-		return (ai!= m.mesh_attr.end() ) ;
+        typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
+        typename MESH_TYPE::PointerToAttribute h;
+        h._name = name;
+        ai = m.mesh_attr.find(h);
+        return (ai!= m.mesh_attr.end() ) ;
 }
 
+template <class MeshType> void RequireCompactness    (MeshType &m) {
+  if(m.vert.size()!=m.vn) throw vcg::MissingCompactnessException("Vertex Vector Contains deleted elements");
+  if(m.edge.size()!=m.en) throw vcg::MissingCompactnessException("Edge Vector Contains deleted elements");
+  if(m.face.size()!=m.fn) throw vcg::MissingCompactnessException("Face Vector Contains deleted elements");
+}
 
 template <class MeshType> void RequireVFAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
 template <class MeshType> void RequireVEAdjacency    (MeshType &m) { if(!tri::HasVEAdjacency   (m)) throw vcg::MissingComponentException("VEAdjacency"); }
