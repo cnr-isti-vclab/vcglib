@@ -143,7 +143,9 @@ public:
         if(!a.trg->IsV())
         {
           a.trg->SetV();
-          if(a.src->cN()*a.trg->cN()<0) a.trg->N()=-a.trg->N();
+          if(a.src->cN()*a.trg->cN()<0.0f)
+            if(!p.useViewPoint || ( a.trg->N().dot(p.viewPoint- a.trg->P())<0.0f)) // test to prevent flipping according to viewpos
+              a.trg->N()=-a.trg->N();
           AddNeighboursToHeap(m,a.trg,tree,heap);
         }
       }
