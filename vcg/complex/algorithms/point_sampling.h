@@ -1328,9 +1328,10 @@ static void ComputePoissonSampleRadii(MetroMesh &sampleMesh, ScalarType diskRadi
     float deltaQ = minmax.second-minmax.first;
     float deltaRad = maxRad-minRad;
     for (vi = sampleMesh.vert.begin(); vi != sampleMesh.vert.end(); vi++)
-    {
-     (*vi).Q() = minRad + deltaRad*((invert ? minmax.second - (*vi).Q() : (*vi).Q() - minmax.first )/deltaQ);
-    }
+        if(!(*vi).IsD())
+        {
+         (*vi).Q() = minRad + deltaRad*((invert ? minmax.second - (*vi).Q() : (*vi).Q() - minmax.first )/deltaQ);
+        }
 }
 
 // initialize spatial hash table for searching
@@ -1358,7 +1359,11 @@ static void InitSpatialHashTable(MetroMesh &montecarloMesh, MontecarloSHT &monte
     montecarloSHT.InitEmpty(bb, gridsize);
 
     for (VertexIterator vi = montecarloMesh.vert.begin(); vi != montecarloMesh.vert.end(); vi++)
-      montecarloSHT.Add(&(*vi));
+        if(!(*vi).IsD())
+        {
+          montecarloSHT.Add(&(*vi));
+        }
+
     montecarloSHT.UpdateAllocatedCells();
     if(pp.pds)
     {
@@ -1397,10 +1402,11 @@ static void PoissonDiskPruning(VertexSampler &ps, MetroMesh &montecarloMesh,
     {
       // Initial pass for pruning the Hashed grid with the an eventual pre initialized set of samples
       for(VertexIterator vi =pp.preGenMesh->vert.begin(); vi!=pp.preGenMesh->vert.end();++vi)
-      {
-        ps.AddVert(*vi);
-        removedCnt += montecarloSHT.RemoveInSphere(vi->cP(),diskRadius);
-      }
+          if(!(*vi).IsD())
+          {
+            ps.AddVert(*vi);
+            removedCnt += montecarloSHT.RemoveInSphere(vi->cP(),diskRadius);
+          }
       montecarloSHT.UpdateAllocatedCells();
     }
     vertex::ApproximateGeodesicDistanceFunctor<VertexType> GDF;
