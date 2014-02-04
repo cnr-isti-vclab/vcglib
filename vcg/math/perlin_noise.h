@@ -37,7 +37,7 @@ class Perlin
 public:
 
   /// 3D Perlin noise
-  /// return a value in the 0..1 range with period 255
+  /// return a value in the -1..1 range with period 255
    static double Noise(double x, double y, double z) {
       int X = (int)floor(x) & 255,                  // FIND UNIT CUBE THAT
           Y = (int)floor(y) & 255,                  // CONTAINS POINT.
