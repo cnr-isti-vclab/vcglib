@@ -43,8 +43,6 @@
 #include <wrap/gl/picking.h>
 #include <wrap/qt/anttweakbarMapper.h>
 
-enum DrawMode{SMOOTH=vcg::GLW::DMSmooth, POINTS=vcg::GLW::DMPoints , WIRE, FLATWIRE,HIDDEN,FLAT};
-
 TwBar *bar;
 char * filename;/// filename of the mesh to load
 CMesh mesh;     /// the active mesh instance
