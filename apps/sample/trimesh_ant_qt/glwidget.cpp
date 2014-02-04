@@ -53,12 +53,12 @@ vcg::Trackball track;     /// the active manipulator
 GLW::DrawMode drawmode=GLW::DMFlatWire;     /// the current drawmode
 
 void  TW_CALL loadTetrahedron(void *){
-	vcg::tri::Tetrahedron(mesh);
-	vcg::tri::UpdateBounding<CMesh>::Box(mesh);
-	vcg::tri::UpdateNormals<CMesh>::PerVertexNormalizedPerFace(mesh);
-	vcg::tri::UpdateNormals<CMesh>::PerFaceNormalized(mesh);
-	glWrap.m = &mesh;
-  	glWrap.Update();
+    vcg::tri::Tetrahedron(mesh);
+    vcg::tri::UpdateBounding<CMesh>::Box(mesh);
+    vcg::tri::UpdateNormal<CMesh>::PerVertexNormalizedPerFace(mesh);
+    vcg::tri::UpdateNormal<CMesh>::PerFaceNormalized(mesh);
+    glWrap.m = &mesh;
+    glWrap.Update();
 }
 
 void TW_CALL loadMesh(void *)
@@ -68,8 +68,8 @@ void TW_CALL loadMesh(void *)
   if(err==ply::E_NOERROR)
   {
     vcg::tri::UpdateBounding<CMesh>::Box(mesh);
-    vcg::tri::UpdateNormals<CMesh>::PerVertexNormalizedPerFace(mesh);
-    vcg::tri::UpdateNormals<CMesh>::PerFaceNormalized(mesh);
+    vcg::tri::UpdateNormal<CMesh>::PerVertexNormalizedPerFace(mesh);
+    vcg::tri::UpdateNormal<CMesh>::PerFaceNormalized(mesh);
     glWrap.m = &mesh;
     glWrap.Update();
   }
