@@ -560,16 +560,16 @@ namespace vcg {
 				///check that is on border..
 				if (v.IsB())return false;
 
-                std::vector<face::Pos<FaceType>> posVec;
+                std::vector<face::Pos<FaceType> > posVec;
                 //SortedFaces(v,faces);
                 face::Pos<FaceType> pos(v.cVFp(), v.cVFi());
                 vcg::face::VFOrderedStarFF(pos, posVec);
 
                 missmatch=0;
-                for (unsigned int i=0;i<faces.size();i++)
+                for (unsigned int i=0;i<posVec.size();i++)
                 {
                   FaceType *curr_f=posVec[i].F();
-                  FaceType *next_f=posVec[(i+1)%faces.size()].F();
+                  FaceType *next_f=posVec[(i+1)%posVec.size()].F();
 
                     ///find the current missmatch
                     missmatch+=MissMatchByCross(*curr_f,*next_f);
