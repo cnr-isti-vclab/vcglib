@@ -224,8 +224,9 @@ public:
   /// return the face that it should have if we make FlipF;
     FaceType *FFlip() const
     {
-        assert( f->FFp(z)->FFp(f->FFi(z))==f );
-        assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z+0)%f->VN())==v));
+//        assert( f->FFp(z)->FFp(f->FFi(z))==f );
+//        assert(f->V(f->Prev(z))!=v);
+//        assert(f->V(f->Next(z))==v || f->V((z+0)%f->VN())==v);
         FaceType *nf=f->FFp(z);
         return nf;
   }
