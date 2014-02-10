@@ -574,27 +574,27 @@ bool HasHOppAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) 
 //						 vcg::tri::HasPerFaceVFAdjacency<   CType0,   CType1 ,   CType2,   CType3>(m) ;
 //}
 
-template <class MESH_TYPE>
-bool HasPerVertexAttribute(const MESH_TYPE &m,   std::string   name){
-        typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
-        typename MESH_TYPE::PointerToAttribute h;
+template <class MeshType>
+bool HasPerVertexAttribute(const MeshType &m,   std::string   name){
+        typename std::set< typename MeshType::PointerToAttribute>::const_iterator ai;
+        typename MeshType::PointerToAttribute h;
         h._name = name;
         ai = m.vert_attr.find(h);
         return (ai!= m.vert_attr.end() ) ;
 }
-template <class MESH_TYPE>
-bool HasPerFaceAttribute(const MESH_TYPE &m,   std::string   name){
-        typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
-        typename MESH_TYPE::PointerToAttribute h;
+template <class MeshType>
+bool HasPerFaceAttribute(const MeshType &m,   std::string   name){
+        typename std::set< typename MeshType::PointerToAttribute>::const_iterator ai;
+        typename MeshType::PointerToAttribute h;
         h._name = name;
         ai = m.face_attr.find(h);
         return (ai!= m.face_attr.end() ) ;
 }
 
-template <class MESH_TYPE>
-bool HasPerMeshAttribute(const MESH_TYPE &m,   std::string   name){
-        typename std::set< typename MESH_TYPE::PointerToAttribute>::const_iterator ai;
-        typename MESH_TYPE::PointerToAttribute h;
+template <class MeshType>
+bool HasPerMeshAttribute(const MeshType &m,   std::string   name){
+        typename std::set< typename MeshType::PointerToAttribute>::const_iterator ai;
+        typename MeshType::PointerToAttribute h;
         h._name = name;
         ai = m.mesh_attr.find(h);
         return (ai!= m.mesh_attr.end() ) ;
