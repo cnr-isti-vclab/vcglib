@@ -55,7 +55,7 @@ namespace vcg{
 
 
 	// hashing function
-	struct HashFunctor : public std::unary_function<Point2i, size_t>
+	struct HashFunctor2D : public std::unary_function<Point2i, size_t>
 	{
 		enum
 		{ // parameters for hash table
@@ -101,7 +101,7 @@ namespace vcg{
 		// the hash index directly the grid structure. 
 		// We use a MultiMap because we need to store many object (faces) inside each cell of the grid. 
 
-		typedef typename STDEXT::hash_multimap<Point2i, ObjType *, HashFunctor> HashType;
+		typedef typename STDEXT::hash_multimap<Point2i, ObjType *, HashFunctor2D> HashType;
 		typedef typename HashType::iterator HashIterator;
 		HashType hash_table; // The real HASH TABLE **************************************
 
