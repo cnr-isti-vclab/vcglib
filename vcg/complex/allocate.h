@@ -848,7 +848,7 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
           {
             m.face[pos].ImportData(m.face[i]);
             for(int j=0;j<m.face[i].VN();++j)
-              m.face[pos].V(i) = m.face[i].V(i);
+              m.face[pos].V(j) = m.face[i].V(j);
 
             if(HasVFAdjacency(m))
               for(int j=0;j<m.face[i].VN();++j)
