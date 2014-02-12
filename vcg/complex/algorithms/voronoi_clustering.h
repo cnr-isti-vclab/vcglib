@@ -610,7 +610,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
         {
 //          if(b0==b1)
           if(!seedVec[tri::Index(outMesh,fi->V(i))]->IsS())
-            if(face::FFLinkCondition(outMesh, *fi, i))
+            if(face::FFLinkCondition(*fi, i))
             {
               printf("collapse %i\n",tri::Index(outMesh,fi->V(i)));
               tri::io::ExporterPLY<MeshType>::Save(outMesh,"pre.ply");

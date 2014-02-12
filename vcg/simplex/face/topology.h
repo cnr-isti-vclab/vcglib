@@ -436,7 +436,7 @@ void SwapEdge(FaceType &f, const int z)
  *
 */
 template <class MeshType>
-bool FFLinkCondition(MeshType &m, typename MeshType::FaceType &f, const int z)
+bool FFLinkCondition(typename MeshType::FaceType &f, const int z)
 {
   typedef typename MeshType::FaceType FaceType;
   typedef typename MeshType::VertexType VertexType;
