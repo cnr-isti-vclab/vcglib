@@ -293,12 +293,11 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
     {
       FaceLeft &fl = ml.face[remap.face[Index(mr,*fi)]];
       if(WTFlag)
-        for(int i = 0; i < 3; ++i)
+        for(int i = 0; i < fl.VN(); ++i)
           fl.WT(i).n() +=textureOffset;
       if(HasFVAdjacency(ml) && HasFVAdjacency(mr)){
-        fl.V(0) = &ml.vert[remap.vert[Index(mr,fi->cV(0))]];
-        fl.V(1) = &ml.vert[remap.vert[Index(mr,fi->cV(1))]];
-        fl.V(2) = &ml.vert[remap.vert[Index(mr,fi->cV(2))]];
+        for(int i = 0; i < fl.VN(); ++i)
+          fl.V(i) = &ml.vert[remap.vert[Index(mr,fi->cV(i))]];
       }
       ml.face[remap.face[Index(mr,*fi)]].ImportData(*fi);
       if(adjFlag)  ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,*fi)]],*fi,remap);

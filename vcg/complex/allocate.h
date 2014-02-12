@@ -847,11 +847,11 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
           if(pos!=i)
           {
             m.face[pos].ImportData(m.face[i]);
-            m.face[pos].V(0) = m.face[i].V(0);
-            m.face[pos].V(1) = m.face[i].V(1);
-            m.face[pos].V(2) = m.face[i].V(2);
+            for(int j=0;j<m.face[i].VN();++j)
+              m.face[pos].V(i) = m.face[i].V(i);
+
             if(HasVFAdjacency(m))
-              for(int j=0;j<3;++j)
+              for(int j=0;j<m.face[i].VN();++j)
               {
                 if (m.face[i].IsVFInitialized(j)) {
                   m.face[pos].VFp(j) = m.face[i].cVFp(j);
@@ -860,7 +860,7 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
                 else m.face[pos].VFClear(j);
               }
             if(HasFFAdjacency(m))
-              for(int j=0;j<3;++j)
+              for(int j=0;j<m.face[i].VN();++j)
                 if (m.face[i].cFFp(j)!=0) {
                   m.face[pos].FFp(j) = m.face[i].cFFp(j);
                   m.face[pos].FFi(j) = m.face[i].cFFi(j);
@@ -908,7 +908,7 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
         if(!(*fi).IsD())
         {
           if(HasVFAdjacency(m))
-            for(int i=0;i<3;++i)
+            for(int i=0;i<(*fi).VN();++i)
               if ((*fi).IsVFInitialized(i) && (*fi).VFp(i)!=0 )
               {
                 size_t oldIndex = (*fi).VFp(i) - fbase;
@@ -916,7 +916,7 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
                 (*fi).VFp(i) = fbase+pu.remap[oldIndex];
               }
           if(HasFFAdjacency(m))
-            for(int i=0;i<3;++i)
+            for(int i=0;i<(*fi).VN();++i)
               if ((*fi).cFFp(i)!=0)
               {
                 size_t oldIndex = (*fi).FFp(i) - fbase;
