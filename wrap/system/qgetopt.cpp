@@ -69,12 +69,40 @@ void GetOpt::addOption(char s, const QString &name, const QString &description, 
   //add an argument
 void GetOpt::addArgument(const QString &name, const QString &description, QVariant *v) {
   Option option;
-  assert(!findArg(name, option));
-  option.type = Option::ARGUMENT;
-  option.name = name;
-  option.description = description;
   option.value = v;
-  options.push_back(option);
+  addArgument(name, description, option);
+}
+
+void GetOpt::addArgument(const QString &name, const QString &description, QString *v) {
+  Option option;
+  option.string_value = v;
+  addArgument(name, description, option);
+}
+
+void GetOpt::addArgument(const QString &name, const QString &description, double *v) {
+  Option option;
+  option.double_value = v;
+  addArgument(name, description, option);
+}
+
+void GetOpt::addArgument(const QString &name, const QString &description, int *v) {
+  Option option;
+  option.int_value = v;
+  addArgument(name, description, option);
+}
+
+void GetOpt::addArgument(const QString &name, const QString &description, bool *v) {
+  Option option;
+  option.boolean_value = v;
+  addArgument(name, description, option);
+}
+
+void GetOpt::addArgument(const QString &name, const QString &description, Option option) {
+    assert(!findArg(name, option));
+    option.type = Option::ARGUMENT;
+    option.name = name;
+    option.description = description;
+    options.push_back(option);
 }
 
 void GetOpt::addOption(char s, const QString &longname, const QString &description, QString *v) {
