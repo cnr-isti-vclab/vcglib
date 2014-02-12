@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -49,7 +49,7 @@ void ComputeCovarianceMatrix(const std::vector<Point3<S> > &pointVec, Point3<S> 
 
   // second cycle: compute the covariance matrix
   m.setZero();
-  Eigen::Vector3f p;
+  Eigen::Matrix<S,3,1> p;
   for(pit = pointVec.begin(); pit != pointVec.end(); ++pit) {
     ((*pit)-barycenter).ToEigenVector(p);
     m+= p*p.transpose(); // outer product
@@ -64,13 +64,13 @@ The algorithm used is the classical Covariance matrix eigenvector approach.
 template <class S>
 void FitPlaneToPointSet(const std::vector< Point3<S> > & pointVec, Plane3<S> & plane)
 {
-  Eigen::Matrix3f covMat=Eigen::Matrix3f::Zero();
+  Eigen::Matrix<S,3,3> covMat = Eigen::Matrix<S,3,3>::Zero();
   Point3<S> b;
   ComputeCovarianceMatrix(pointVec,b,covMat);
 
-  Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eig(covMat);
-  Eigen::Vector3f eval = eig.eigenvalues();
-  Eigen::Matrix3f evec = eig.eigenvectors();
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix<S,3,3> > eig(covMat);
+  Eigen::Matrix<S,3,1> eval = eig.eigenvalues();
+  Eigen::Matrix<S,3,3> evec = eig.eigenvectors();
   eval = eval.cwiseAbs();
   int minInd;
   eval.minCoeff(&minInd);
@@ -107,7 +107,7 @@ void ComputeWeightedCovarianceMatrix(const std::vector<Point3<S> > &pointVec, co
   // The weights are applied to the points transposed to the origin.
   m.setZero();
   Eigen::Matrix<S,3,3> A;
-  Eigen::Vector3f p;
+  Eigen::Matrix<S,3,1> p;
   for( pit = pointVec.begin(),wit=weightVec.begin(); pit != pointVec.end(); ++pit,++wit)
   {
     (((*pit)-bp)*(*wit)).ToEigenVector(p);
@@ -123,13 +123,13 @@ The algorithm used is the classical Covariance matrix eigenvector approach.
 template <class S>
 void WeightedFitPlaneToPointSet(const std::vector< Point3<S> > & pointVec, const std::vector<S> &weightVec, Plane3<S> & plane)
 {
-  Eigen::Matrix3f covMat=Eigen::Matrix3f::Zero();
+  Eigen::Matrix<S,3,3> covMat = Eigen::Matrix<S,3,3>::Zero();
   Point3<S> b;
   ComputeWeightedCovarianceMatrix(pointVec,weightVec, b,covMat);
 
-  Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eig(covMat);
-  Eigen::Vector3f eval = eig.eigenvalues();
-  Eigen::Matrix3f evec = eig.eigenvectors();
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix<S,3,3> > eig(covMat);
+  Eigen::Matrix<S,3,1> eval = eig.eigenvalues();
+  Eigen::Matrix<S,3,3> evec = eig.eigenvectors();
   eval = eval.cwiseAbs();
   int minInd;
   eval.minCoeff(&minInd);
