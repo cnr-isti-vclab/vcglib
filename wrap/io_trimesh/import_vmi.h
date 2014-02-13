@@ -128,6 +128,7 @@ namespace io {
                             m.vert_attr.erase(res);
                             pa._padding = padd;
                             std::pair<HWIte,bool > new_pa = m.vert_attr.insert(pa);
+                            (void)new_pa;
                             assert(new_pa.second);
                         }
                         else
@@ -155,6 +156,7 @@ namespace io {
                                 m.face_attr.erase(res);
                                 pa._padding = padd;
                                 std::pair<HWIte,bool > new_pa = m.face_attr.insert(pa);
+                                (void)new_pa;
                                 assert(new_pa.second);
                             }
                         else
@@ -180,6 +182,7 @@ namespace io {
                                 m.mesh_attr.erase(res);
                                 pa._padding = padd;
                                 std::pair<HWIte,bool > new_pa = m.mesh_attr.insert(pa);
+                                (void)new_pa;
                                 assert(new_pa.second);
                             }
                         else

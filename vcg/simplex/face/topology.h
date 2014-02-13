@@ -239,8 +239,9 @@ void FFDetach(FaceType & f, const int e)
 {
     assert(FFCorrectness<FaceType>(f,e));
     assert(!IsBorder<FaceType>(f,e));  // Never try to detach a border edge!
-    int complexity;
-    assert(complexity=ComplexSize(f,e));
+    int complexity=ComplexSize(f,e);
+    (void) complexity;
+    assert(complexity>0);
 
     Pos< FaceType > FirstFace(&f,e);  // Build the half edge
     Pos< FaceType > LastFace(&f,e);  // Build the half edge
@@ -343,13 +344,14 @@ void FFSetBorder(FaceType * &f1, int z1)
 template <class FaceType>
 void AssertAdj(FaceType & f)
 {
-    assert(f.FFp(0)->FFp(f.FFi(0))==&f);
-    assert(f.FFp(1)->FFp(f.FFi(1))==&f);
-    assert(f.FFp(2)->FFp(f.FFi(2))==&f);
+  (void)f;
+  assert(f.FFp(0)->FFp(f.FFi(0))==&f);
+  assert(f.FFp(1)->FFp(f.FFi(1))==&f);
+  assert(f.FFp(2)->FFp(f.FFi(2))==&f);
 
-    assert(f.FFp(0)->FFi(f.FFi(0))==0);
-    assert(f.FFp(1)->FFi(f.FFi(1))==1);
-    assert(f.FFp(2)->FFi(f.FFi(2))==2);
+  assert(f.FFp(0)->FFi(f.FFi(0))==0);
+  assert(f.FFp(1)->FFi(f.FFi(1))==1);
+  assert(f.FFp(2)->FFi(f.FFi(2))==2);
 }
 
 /**
@@ -435,11 +437,10 @@ void SwapEdge(FaceType &f, const int z)
  * Basic link conditions
  *
 */
-template <class MeshType>
-bool FFLinkCondition(typename MeshType::FaceType &f, const int z)
+template <class FaceType>
+bool FFLinkCondition(FaceType &f, const int z)
 {
-  typedef typename MeshType::FaceType FaceType;
-  typedef typename MeshType::VertexType VertexType;
+  typedef typename FaceType::VertexType VertexType;
   typedef typename vcg::face::Pos< FaceType > PosType;
 
   VertexType *v0=f.V0(z);
