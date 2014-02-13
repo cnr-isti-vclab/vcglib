@@ -245,25 +245,8 @@ bool GetOpt::parse(QString &error) {
           error = "Missing argument after option '" + arg + "'";
           return false;
         }
-        QVariant::Type type;
-        if(o.value) type = o.value->type();
-        if(o.string_value) type = QVariant::String;
-        if(o.double_value) type = QVariant::Double;
-        if(o.int_value) type = QVariant::Int;
-        if(o.boolean_value) type = QVariant::Bool;
-        QVariant v(arg);
-
-        if(!v.canConvert(type) || !v.convert(type)) {
-          error = "Error while parsing option " + o.name + ": cannot convert " +
-                  arg + " to: " + v.typeName();
-          return false;
-        }
-        if(o.value)
-          *(o.value) = v;
-        if(o.string_value) *(o.string_value) = v.toString();
-        if(o.double_value) *(o.double_value) = v.toDouble();
-        if(o.int_value) *(o.int_value) = v.toInt();
-        if(o.boolean_value) *(o.boolean_value) = v.toBool();
+        if(!parseOption(o, arg))
+            return false;
       }
 
     //option
@@ -311,7 +294,8 @@ bool GetOpt::parse(QString &error) {
       error = "Too few arguments, could not parse argument '" + o.name + "'";
       return false;
     }
-    *(o.value) = arguments.front();
+    if(!parseOption(o, arguments.front()))
+        return false;
     arguments.pop_front();
   }
    //test arguments
@@ -319,7 +303,8 @@ bool GetOpt::parse(QString &error) {
     Option &o = options[i];
     if(o.type != Option::OPTIONAL) continue;
     if(arguments.isEmpty()) break;
-    *(o.value) = arguments.front();
+    if(!parseOption(o, arguments.front()))
+        return false;
     arguments.pop_front();
   }
   //test arguments
@@ -327,7 +312,8 @@ bool GetOpt::parse(QString &error) {
     Option &o = options[i];
     if(o.type != Option::ARGUMENT) continue;
     if(arguments.isEmpty()) break;
-    *(o.value) = arguments.front();
+    if(!parseOption(o, arguments.front()))
+        return false;
     arguments.pop_front();
   }
   if(!arguments.isEmpty() && !unlimitedArgs) {
@@ -377,4 +363,27 @@ QString GetOpt::formatDesc(QString desc, int len) {
     desc = desc.mid(pos+1);
   }
   return output;
+}
+
+bool GetOpt::parseOption(GetOpt::Option &o, const QString &arg) {
+    QVariant::Type type;
+    if(o.value) type = o.value->type();
+    if(o.string_value) type = QVariant::String;
+    if(o.double_value) type = QVariant::Double;
+    if(o.int_value) type = QVariant::Int;
+    if(o.boolean_value) type = QVariant::Bool;
+    QVariant v(arg);
+
+    if(!v.canConvert(type) || !v.convert(type)) {
+      cerr << "Error while parsing option " << qPrintable(o.name) << ": cannot convert " <<
+              qPrintable(arg) << " to: " << qPrintable(v.typeName()) << endl;
+      return false;
+    }
+    if(o.value)
+      *(o.value) = v;
+    if(o.string_value) *(o.string_value) = v.toString();
+    if(o.double_value) *(o.double_value) = v.toDouble();
+    if(o.int_value) *(o.int_value) = v.toInt();
+    if(o.boolean_value) *(o.boolean_value) = v.toBool();
+    return true;
 }

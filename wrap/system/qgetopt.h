@@ -122,6 +122,8 @@ class GetOpt {
   bool findArg(const QString &name, Option &option);
   //split desc into n pieces of the right length TODO: check for newlines also
   QString formatDesc(QString desc, int len);
+
+  bool parseOption(Option &option, const QString &arg);
 };
 
 #endif
