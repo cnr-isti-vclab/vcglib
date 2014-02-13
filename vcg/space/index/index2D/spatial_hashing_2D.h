@@ -63,122 +63,122 @@ namespace vcg{
 			min_buckets = 8
 		};
 
-		size_t operator()(const Point2i &p) const
-		{
-			const size_t _HASH_P0 = 73856093u;
-			const size_t _HASH_P1 = 19349663u;
-			//const size_t _HASH_P2 = 83492791u;
+        size_t operator()(const Point2i &p) const
+        {
+            const size_t _HASH_P0 = 73856093u;
+            const size_t _HASH_P1 = 19349663u;
+            //const size_t _HASH_P2 = 83492791u;
 
-			return size_t(p.V(0))*_HASH_P0 ^  size_t(p.V(1))*_HASH_P1;// ^  size_t(p.V(2))*_HASH_P2;
-		}
+            return size_t(p.V(0))*_HASH_P0 ^  size_t(p.V(1))*_HASH_P1;// ^  size_t(p.V(2))*_HASH_P2;
+        }
 
-		bool operator()(const Point2i &s1, const Point2i &s2) const
-		{ // test if s1 ordered before s2
-			return (s1 < s2);
-		}
-	};
-
-
+        bool operator()(const Point2i &s1, const Point2i &s2) const
+        { // test if s1 ordered before s2
+            return (s1 < s2);
+        }
+    };
 
 
-	/** Spatial Hash Table
-	Spatial Hashing as described in
-	"Optimized Spatial Hashing for Coll	ision Detection of Deformable Objects",
-	Matthias Teschner and Bruno Heidelberger and Matthias Muller and Danat Pomeranets and Markus Gross
-	*/
-	template < typename ObjType,class FLT=double>
-	class SpatialHashTable2D:public BasicGrid2D<FLT>, public SpatialIndex2D<ObjType,FLT>
-	{
 
-	public:
-		typedef SpatialHashTable2D SpatialHashType;
-		typedef ObjType* ObjPtr;
-		typedef typename ObjType::ScalarType ScalarType;
-		typedef Point2<ScalarType> CoordType;
-		typedef typename BasicGrid2D<FLT>::Box2x Box2x;
 
-		// Hash table definition
-		// the hash index directly the grid structure. 
-		// We use a MultiMap because we need to store many object (faces) inside each cell of the grid. 
+    /** Spatial Hash Table
+    Spatial Hashing as described in
+    "Optimized Spatial Hashing for Coll	ision Detection of Deformable Objects",
+    Matthias Teschner and Bruno Heidelberger and Matthias Muller and Danat Pomeranets and Markus Gross
+    */
+    template < typename ObjType,class FLT=double>
+    class SpatialHashTable2D:public BasicGrid2D<FLT>, public SpatialIndex2D<ObjType,FLT>
+    {
+
+    public:
+        typedef SpatialHashTable2D SpatialHashType;
+        typedef ObjType* ObjPtr;
+        typedef typename ObjType::ScalarType ScalarType;
+        typedef Point2<ScalarType> CoordType;
+        typedef typename BasicGrid2D<FLT>::Box2x Box2x;
+
+        // Hash table definition
+        // the hash index directly the grid structure.
+        // We use a MultiMap because we need to store many object (faces) inside each cell of the grid.
 
 		typedef typename STDEXT::hash_multimap<Point2i, ObjType *, HashFunctor2D> HashType;
 		typedef typename HashType::iterator HashIterator;
 		HashType hash_table; // The real HASH TABLE **************************************
 
-		// This vector is just a handy reference to all the allocated cells,
-		// becouse hashed multimaps does not expose a direct list of all the different keys. 
-		std::vector<Point2i> AllocatedCells;
+        // This vector is just a handy reference to all the allocated cells,
+        // becouse hashed multimaps does not expose a direct list of all the different keys.
+        std::vector<Point2i> AllocatedCells;
 
         ///the size of the diagonal of each cell
         ScalarType cell_size;
 
-		// Class to abstract a HashIterator (that stores also the key, 
-		// while the interface of the generic spatial indexing need only simple object (face) pointers.
+        // Class to abstract a HashIterator (that stores also the key,
+        // while the interface of the generic spatial indexing need only simple object (face) pointers.
 
-		struct CellIterator
-		{
-			CellIterator(){}
-			HashIterator t;
-			ObjPtr &operator *(){return (t->second); }
-			ObjPtr operator *() const {return (t->second); }
-			bool operator != (const CellIterator & p) const {return t!=p.t;}
-			void operator ++() {t++;}
-		};
+        struct CellIterator
+        {
+            CellIterator(){}
+            HashIterator t;
+            ObjPtr &operator *(){return (t->second); }
+            ObjPtr operator *() const {return (t->second); }
+            bool operator != (const CellIterator & p) const {return t!=p.t;}
+            void operator ++() {t++;}
+        };
 
-		inline bool Empty() const
-		{
-			return hash_table.empty();
-		}
+        inline bool Empty() const
+        {
+            return hash_table.empty();
+        }
 
-		size_t CellSize(const Point3i &cell)
-		{
-			return hash_table.count(cell);
-		}
+        size_t CellSize(const Point3i &cell)
+        {
+            return hash_table.count(cell);
+        }
 
-		inline bool EmptyCell(const Point3i &cell) const
-		{
-			return hash_table.find(cell) == hash_table.end();
-		}
+        inline bool EmptyCell(const Point3i &cell) const
+        {
+            return hash_table.find(cell) == hash_table.end();
+        }
 
-		void UpdateAllocatedCells()
-		{
-			AllocatedCells.clear();
-			if(hash_table.empty()) return;
-			AllocatedCells.push_back(hash_table.begin()->first);
-			for(HashIterator fi=hash_table.begin();fi!=hash_table.end();++fi)
-			{
-				if(AllocatedCells.back()!=fi->first) AllocatedCells.push_back(fi->first);				
-			}
-		}
-	protected:
+        void UpdateAllocatedCells()
+        {
+            AllocatedCells.clear();
+            if(hash_table.empty()) return;
+            AllocatedCells.push_back(hash_table.begin()->first);
+            for(HashIterator fi=hash_table.begin();fi!=hash_table.end();++fi)
+            {
+                if(AllocatedCells.back()!=fi->first) AllocatedCells.push_back(fi->first);
+            }
+        }
+    protected:
 
-		///insert a new cell
-		void InsertObject(ObjType* s, const Point2i &cell)
-		{
-			hash_table.insert(typename HashType::value_type(cell, s));
-		}
+        ///insert a new cell
+        void InsertObject(ObjType* s, const Point2i &cell)
+        {
+            hash_table.insert(typename HashType::value_type(cell, s));
+        }
 
-		///remove all the objects in a cell
-		void RemoveCell(const Point3i &/*cell*/)
-		{
-		}
+        ///remove all the objects in a cell
+        void RemoveCell(const Point3i &/*cell*/)
+        {
+        }
 
 
-		bool RemoveObject(ObjType* s, const Point2i &cell)
-		{
-			std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(cell);
-			CellIterator first; first.t=CellRange.first;
-			CellIterator end; end.t=CellRange.second;
-			for(CellIterator ci = first; ci!=end;++ci)
-			{
-				if (*ci == s)
-				{
-					hash_table.erase(ci.t);
-					return true;
-				}
-			}
-			return false;
-		}
+        bool RemoveObject(ObjType* s, const Point2i &cell)
+        {
+            std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(cell);
+            CellIterator first; first.t=CellRange.first;
+            CellIterator end; end.t=CellRange.second;
+            for(CellIterator ci = first; ci!=end;++ci)
+            {
+                if (*ci == s)
+                {
+                    hash_table.erase(ci.t);
+                    return true;
+                }
+            }
+            return false;
+        }
 
         void AddBox(ObjType* s,
                     const Box2<ScalarType> &b)
@@ -212,10 +212,10 @@ namespace vcg{
                 InsertObject(s,Indexes[i]);
         }
 
-	public:
+    public:
 
         void Add( ObjType* s,bool subdivideBox=false)
-		{
+        {
 
             if (!subdivideBox)
             {
@@ -231,163 +231,163 @@ namespace vcg{
                 //    AddBox(s,Boxes[i]);
                 AddBoxes(s,Boxes);
             }
-		}
+        }
 
-		///Remove all the objects contained in the cell containing s
-		// it removes s too.
-		bool RemoveCell(ObjType* s)
-		{
-			Point3i pi;
-			PToIP(s->cP(),pi);
-			std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(pi);
-			hash_table.erase(CellRange.first,CellRange.second);
-			return true;
-		}    ///insert a new cell
+        ///Remove all the objects contained in the cell containing s
+        // it removes s too.
+        bool RemoveCell(ObjType* s)
+        {
+            Point3i pi;
+            PToIP(s->cP(),pi);
+            std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(pi);
+            hash_table.erase(CellRange.first,CellRange.second);
+            return true;
+        }    ///insert a new cell
 
-	/*	int RemoveInSphere(const Point3<ScalarType> &p, const ScalarType radius)
-		{
-			Box3x b(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
-			vcg::Box3i bb;
-			this->BoxToIBox(b,bb);
-			ScalarType r2=radius*radius;
-			int cnt=0;
-			std::vector<HashIterator> toDel;
+    /*	int RemoveInSphere(const Point3<ScalarType> &p, const ScalarType radius)
+        {
+            Box3x b(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
+            vcg::Box3i bb;
+            this->BoxToIBox(b,bb);
+            ScalarType r2=radius*radius;
+            int cnt=0;
+            std::vector<HashIterator> toDel;
 
-			for (int i=bb.min.X();i<=bb.max.X();i++)
-				for (int j=bb.min.Y();j<=bb.max.Y();j++)
-					for (int k=bb.min.Z();k<=bb.max.Z();k++)
-					{
-						std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(Point3i(i,j,k));
-						for(HashIterator hi = CellRange.first; hi!=CellRange.second;++hi)
-						{
-							if(SquaredDistance(p,hi->second->cP()) <= r2)
-							{
-								cnt++;
-								toDel.push_back(hi);
-							}
-						}
-					}
-					for(typename std::vector<HashIterator>::iterator vi=toDel.begin(); vi!=toDel.end();++vi)
-						hash_table.erase(*vi);
+            for (int i=bb.min.X();i<=bb.max.X();i++)
+                for (int j=bb.min.Y();j<=bb.max.Y();j++)
+                    for (int k=bb.min.Z();k<=bb.max.Z();k++)
+                    {
+                        std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(Point3i(i,j,k));
+                        for(HashIterator hi = CellRange.first; hi!=CellRange.second;++hi)
+                        {
+                            if(SquaredDistance(p,hi->second->cP()) <= r2)
+                            {
+                                cnt++;
+                                toDel.push_back(hi);
+                            }
+                        }
+                    }
+                    for(typename std::vector<HashIterator>::iterator vi=toDel.begin(); vi!=toDel.end();++vi)
+                        hash_table.erase(*vi);
 
-					return cnt;
-		}*/
-		//// Specialized version that is able to take in input a
-		//template<class DistanceFunctor>
-		//int RemoveInSphereNormal(const Point3<ScalarType> &p, const Point3<ScalarType> &n, DistanceFunctor &DF, const ScalarType radius)
-		//{
-		//	Box3x b(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
-		//	vcg::Box3i bb;
-		//	this->BoxToIBox(b,bb);
-		//	int cnt=0;
-		//	std::vector<HashIterator> toDel;
+                    return cnt;
+        }*/
+        //// Specialized version that is able to take in input a
+        //template<class DistanceFunctor>
+        //int RemoveInSphereNormal(const Point3<ScalarType> &p, const Point3<ScalarType> &n, DistanceFunctor &DF, const ScalarType radius)
+        //{
+        //	Box3x b(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
+        //	vcg::Box3i bb;
+        //	this->BoxToIBox(b,bb);
+        //	int cnt=0;
+        //	std::vector<HashIterator> toDel;
 
-		//	for (int i=bb.min.X();i<=bb.max.X();i++)
-		//		for (int j=bb.min.Y();j<=bb.max.Y();j++)
-		//			for (int k=bb.min.Z();k<=bb.max.Z();k++)
-		//			{
-		//				std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(Point3i(i,j,k));
-		//				for(HashIterator hi = CellRange.first; hi!=CellRange.second;++hi)
-		//				{
-		//					if(DF(p,n,hi->second->cP(),hi->second->cN()) <= radius)
-		//					{
-		//						cnt++;
-		//						toDel.push_back(hi);
-		//					}
-		//				}
-		//			}
-		//			for(typename std::vector<HashIterator>::iterator vi=toDel.begin(); vi!=toDel.end();++vi)
-		//				hash_table.erase(*vi);
+        //	for (int i=bb.min.X();i<=bb.max.X();i++)
+        //		for (int j=bb.min.Y();j<=bb.max.Y();j++)
+        //			for (int k=bb.min.Z();k<=bb.max.Z();k++)
+        //			{
+        //				std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(Point3i(i,j,k));
+        //				for(HashIterator hi = CellRange.first; hi!=CellRange.second;++hi)
+        //				{
+        //					if(DF(p,n,hi->second->cP(),hi->second->cN()) <= radius)
+        //					{
+        //						cnt++;
+        //						toDel.push_back(hi);
+        //					}
+        //				}
+        //			}
+        //			for(typename std::vector<HashIterator>::iterator vi=toDel.begin(); vi!=toDel.end();++vi)
+        //				hash_table.erase(*vi);
 
-		//			return cnt;
-		//}
+        //			return cnt;
+        //}
 
-		//// This version of the removal is specialized for the case where
-		//// an object has a pointshaped box and using the generic bbox interface is just a waste of time.
+        //// This version of the removal is specialized for the case where
+        //// an object has a pointshaped box and using the generic bbox interface is just a waste of time.
 
-		//void RemovePunctual( ObjType *s)
-		//{
-		//	Point3i pi;
-		//	PToIP(s->cP(),pi);
-		//	std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(pi);
-		//	for(HashIterator hi = CellRange.first; hi!=CellRange.second;++hi)
-		//	{
-		//		if (hi->second == s)
-		//		{
-		//			hash_table.erase(hi);
-		//			return;
-		//		}
-		//	}
-		//}
+        //void RemovePunctual( ObjType *s)
+        //{
+        //	Point3i pi;
+        //	PToIP(s->cP(),pi);
+        //	std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(pi);
+        //	for(HashIterator hi = CellRange.first; hi!=CellRange.second;++hi)
+        //	{
+        //		if (hi->second == s)
+        //		{
+        //			hash_table.erase(hi);
+        //			return;
+        //		}
+        //	}
+        //}
 
-		void Remove( ObjType* s)
-		{
-			Box2<ScalarType> b;
-			s->GetBBox(b);
-			vcg::Box2i bb;
-			BoxToIBox(b,bb);
-			//then remove the obj from all the cell of bb
-			for (int i=bb.min.X();i<=bb.max.X();i++)
-				for (int j=bb.min.Y();j<=bb.max.Y();j++)
-					//for (int k=bb.min.Z();k<=bb.max.Z();k++)
-						RemoveObject(s,vcg::Point2i(i,j));//,k));
-		}
+        void Remove( ObjType* s)
+        {
+            Box2<ScalarType> b;
+            s->GetBBox(b);
+            vcg::Box2i bb;
+            BoxToIBox(b,bb);
+            //then remove the obj from all the cell of bb
+            for (int i=bb.min.X();i<=bb.max.X();i++)
+                for (int j=bb.min.Y();j<=bb.max.Y();j++)
+                    //for (int k=bb.min.Z();k<=bb.max.Z();k++)
+                        RemoveObject(s,vcg::Point2i(i,j));//,k));
+        }
 
-		/// set an empty spatial hash table
-		void InitEmpty(const Box2x &_bbox, vcg::Point2i grid_size)
-		{
-			Box2x b;
-			Box2x &bbox = this->bbox;
-			CoordType &dim = this->dim;
-			Point2i &siz = this->siz;
-			CoordType &voxel = this->voxel;
+        /// set an empty spatial hash table
+        void InitEmpty(const Box2x &_bbox, vcg::Point2i grid_size)
+        {
+            Box2x b;
+            Box2x &bbox = this->bbox;
+            CoordType &dim = this->dim;
+            Point2i &siz = this->siz;
+            CoordType &voxel = this->voxel;
 
-			assert(!_bbox.IsNull());
-			bbox=_bbox;
-			dim  = bbox.max - bbox.min;
-			assert((grid_size.V(0)>0)&&(grid_size.V(1)>0));//&&(grid_size.V(2)>0));
-			siz=grid_size;
+            assert(!_bbox.IsNull());
+            bbox=_bbox;
+            dim  = bbox.max - bbox.min;
+            assert((grid_size.V(0)>0)&&(grid_size.V(1)>0));//&&(grid_size.V(2)>0));
+            siz=grid_size;
 
-			voxel[0] = dim[0]/siz[0];
-			voxel[1] = dim[1]/siz[1];
+            voxel[0] = dim[0]/siz[0];
+            voxel[1] = dim[1]/siz[1];
       cell_size=voxel.Norm();
-		
-			hash_table.clear();
-		}
 
-		/// Insert a mesh in the grid.
+            hash_table.clear();
+        }
+
+        /// Insert a mesh in the grid.
         /*template <class OBJITER>
         void Set(const OBJITER & _oBegin, const OBJITER & _oEnd, const Box2x &_bbox=Box2x() )
-		{
-			OBJITER i;
-			Box2x b;
-			Box2x &bbox = this->bbox;
-			CoordType &dim = this->dim;
-			Point2i &siz = this->siz;
-			CoordType &voxel = this->voxel;
+        {
+            OBJITER i;
+            Box2x b;
+            Box2x &bbox = this->bbox;
+            CoordType &dim = this->dim;
+            Point2i &siz = this->siz;
+            CoordType &voxel = this->voxel;
 
-			int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
-			if(!_bbox.IsNull()) this->bbox=_bbox;
-			else
-			{
-				for(i = _oBegin; i!= _oEnd; ++i)
-				{
-					(*i).GetBBox(b);
-					this->bbox.Add(b);
-				}
-				///inflate the bb calculated
-				bbox.Offset(bbox.Diag()/100.0) ;
-			}
+            int _size=(int)std::distance<OBJITER>(_oBegin,_oEnd);
+            if(!_bbox.IsNull()) this->bbox=_bbox;
+            else
+            {
+                for(i = _oBegin; i!= _oEnd; ++i)
+                {
+                    (*i).GetBBox(b);
+                    this->bbox.Add(b);
+                }
+                ///inflate the bb calculated
+                bbox.Offset(bbox.Diag()/100.0) ;
+            }
 
-			dim  = bbox.max - bbox.min;
-			BestDim2D( _size, dim, siz );
-			// find voxel size
-			voxel[0] = dim[0]/siz[0];
-			voxel[1] = dim[1]/siz[1];
-			//voxel[2] = dim[2]/siz[2];
+            dim  = bbox.max - bbox.min;
+            BestDim2D( _size, dim, siz );
+            // find voxel size
+            voxel[0] = dim[0]/siz[0];
+            voxel[1] = dim[1]/siz[1];
+            //voxel[2] = dim[2]/siz[2];
 
-			for(i = _oBegin; i!= _oEnd; ++i)
-				Add(&(*i));
+            for(i = _oBegin; i!= _oEnd; ++i)
+                Add(&(*i));
         }*/
 
 
@@ -429,10 +429,10 @@ namespace vcg{
             }
         }
 
-				/// Insert a mesh in the grid.
+                /// Insert a mesh in the grid.
         template <class OBJITER>
         void SetByPointers(const OBJITER & _oBegin, const OBJITER & _oEnd,
-                           Point2i & cellsize=Point2i(-1,-1), bool subdivideBox=false,const Box2x &_bbox=Box2x() )
+                           const Point2i & cellsize=Point2i(-1,-1), bool subdivideBox=false,const Box2x &_bbox=Box2x() )
         {
             OBJITER i;
             Box2x b;
@@ -455,19 +455,19 @@ namespace vcg{
             }
 
             if (cellsize[0] < 0 && cellsize[1] < 0)
-						{
-							// cell size estimation
-							dim  = bbox.max - bbox.min;							
-							BestDim2D( _size, dim, siz );
-							voxel[0] = dim[0]/siz[0];
-							voxel[1] = dim[1]/siz[1];
-						}
-						else
-						{
-							// cell size assignment
-							voxel[0] = cellsize[0];
-							voxel[1] = cellsize[1];
-						}
+                        {
+                            // cell size estimation
+                            dim  = bbox.max - bbox.min;
+                            BestDim2D( _size, dim, siz );
+                            voxel[0] = dim[0]/siz[0];
+                            voxel[1] = dim[1]/siz[1];
+                        }
+                        else
+                        {
+                            // cell size assignment
+                            voxel[0] = cellsize[0];
+                            voxel[1] = cellsize[1];
+                        }
 
             cell_size=voxel.Norm();
 
@@ -477,76 +477,76 @@ namespace vcg{
             }
         }
 
-		///return the simplexes of the cell that contain p
-		void GridReal( const Point2<ScalarType> & p, CellIterator & first, CellIterator & last )
-		{
-			vcg::Point2i _c;
-			this->PToIP(p,_c);
-			Grid(_c,first,last);
-		}
+        ///return the simplexes of the cell that contain p
+        void GridReal( const Point2<ScalarType> & p, CellIterator & first, CellIterator & last )
+        {
+            vcg::Point2i _c;
+            this->PToIP(p,_c);
+            Grid(_c,first,last);
+        }
 
-		///return the simplexes on a specified cell
-		void Grid( int x,int y, CellIterator & first, CellIterator & last )
-		{
-			this->Grid(vcg::Point2i(x,y),first,last);
-		}
+        ///return the simplexes on a specified cell
+        void Grid( int x,int y, CellIterator & first, CellIterator & last )
+        {
+            this->Grid(vcg::Point2i(x,y),first,last);
+        }
 
-		///return the simplexes on a specified cell
-		void Grid( const Point2i & _c, CellIterator & first, CellIterator & end )
-		{
-			std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(_c);
-			first.t=CellRange.first;
-			end.t=CellRange.second;
-		}
+        ///return the simplexes on a specified cell
+        void Grid( const Point2i & _c, CellIterator & first, CellIterator & end )
+        {
+            std::pair<HashIterator,HashIterator> CellRange = hash_table.equal_range(_c);
+            first.t=CellRange.first;
+            end.t=CellRange.second;
+        }
 
-		void Clear()
-		{
-			hash_table.clear();
-			AllocatedCells.clear();
-		}
-
-
-		/*template <class OBJPOINTDISTFUNCTOR, class OBJMARKER>
-		ObjPtr  GetClosest(OBJPOINTDISTFUNCTOR & _getPointDistance, OBJMARKER & _marker,
-			const CoordType & _p, const ScalarType & _maxDist,ScalarType & _minDist, CoordType & _closestPt)
-		{
-			return (vcg::GridClosest<SpatialHashType,OBJPOINTDISTFUNCTOR,OBJMARKER>(*this,_getPointDistance,_marker, _p,_maxDist,_minDist,_closestPt));
-		}
+        void Clear()
+        {
+            hash_table.clear();
+            AllocatedCells.clear();
+        }
 
 
-		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
-		unsigned int GetKClosest(OBJPOINTDISTFUNCTOR & _getPointDistance,OBJMARKER & _marker,
-			const unsigned int _k, const CoordType & _p, const ScalarType & _maxDist,OBJPTRCONTAINER & _objectPtrs,
-			DISTCONTAINER & _distances, POINTCONTAINER & _points)
-		{
-			return (vcg::GridGetKClosest<SpatialHashType,
-				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
-				(*this,_getPointDistance,_marker,_k,_p,_maxDist,_objectPtrs,_distances,_points));
-		}
+        /*template <class OBJPOINTDISTFUNCTOR, class OBJMARKER>
+        ObjPtr  GetClosest(OBJPOINTDISTFUNCTOR & _getPointDistance, OBJMARKER & _marker,
+            const CoordType & _p, const ScalarType & _maxDist,ScalarType & _minDist, CoordType & _closestPt)
+        {
+            return (vcg::GridClosest<SpatialHashType,OBJPOINTDISTFUNCTOR,OBJMARKER>(*this,_getPointDistance,_marker, _p,_maxDist,_minDist,_closestPt));
+        }
 
-		template <class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
-		unsigned int GetInSphere(OBJPOINTDISTFUNCTOR & _getPointDistance,
-			OBJMARKER & _marker,
-			const CoordType & _p,
-			const ScalarType & _r,
-			OBJPTRCONTAINER & _objectPtrs,
-			DISTCONTAINER & _distances,
-			POINTCONTAINER & _points)
-		{
-			return(vcg::GridGetInSphere<SpatialHashType,
-				OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
-				(*this,_getPointDistance,_marker,_p,_r,_objectPtrs,_distances,_points));
-		}*/
 
-		template <class OBJMARKER, class OBJPTRCONTAINER>
-		unsigned int GetInBox(OBJMARKER & _marker,
-							const Box2x _bbox,
-							OBJPTRCONTAINER & _objectPtrs)
-		{
+        template <class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER,class DISTCONTAINER, class POINTCONTAINER>
+        unsigned int GetKClosest(OBJPOINTDISTFUNCTOR & _getPointDistance,OBJMARKER & _marker,
+            const unsigned int _k, const CoordType & _p, const ScalarType & _maxDist,OBJPTRCONTAINER & _objectPtrs,
+            DISTCONTAINER & _distances, POINTCONTAINER & _points)
+        {
+            return (vcg::GridGetKClosest<SpatialHashType,
+                OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
+                (*this,_getPointDistance,_marker,_k,_p,_maxDist,_objectPtrs,_distances,_points));
+        }
+
+        template <class OBJPOINTDISTFUNCTOR, class OBJMARKER, class OBJPTRCONTAINER, class DISTCONTAINER, class POINTCONTAINER>
+        unsigned int GetInSphere(OBJPOINTDISTFUNCTOR & _getPointDistance,
+            OBJMARKER & _marker,
+            const CoordType & _p,
+            const ScalarType & _r,
+            OBJPTRCONTAINER & _objectPtrs,
+            DISTCONTAINER & _distances,
+            POINTCONTAINER & _points)
+        {
+            return(vcg::GridGetInSphere<SpatialHashType,
+                OBJPOINTDISTFUNCTOR,OBJMARKER,OBJPTRCONTAINER,DISTCONTAINER,POINTCONTAINER>
+                (*this,_getPointDistance,_marker,_p,_r,_objectPtrs,_distances,_points));
+        }*/
+
+        template <class OBJMARKER, class OBJPTRCONTAINER>
+        unsigned int GetInBox(OBJMARKER & _marker,
+                            const Box2x _bbox,
+                            OBJPTRCONTAINER & _objectPtrs)
+        {
             _objectPtrs.clear();
-			return(vcg::GridGetInBox2D<SpatialHashType,OBJMARKER,OBJPTRCONTAINER>
-				(*this,_marker,_bbox,_objectPtrs));
-		}
+            return(vcg::GridGetInBox2D<SpatialHashType,OBJMARKER,OBJPTRCONTAINER>
+                (*this,_marker,_bbox,_objectPtrs));
+        }
 
         template <class OBJMARKER, class OBJPTRCONTAINER>
         unsigned int GetInBoxes(OBJMARKER & _marker,
@@ -557,10 +557,10 @@ namespace vcg{
             return(vcg::GridGetInBoxes2D<SpatialHashType,OBJMARKER,OBJPTRCONTAINER>
                   (*this,_marker,_bbox,_objectPtrs));
         }
-	}; // end class
+    }; // end class
 
-	
 
-	} // end namespace
+
+    } // end namespace
 
 #endif
