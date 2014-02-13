@@ -613,9 +613,9 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
             if(face::FFLinkCondition(*fi, i))
             {
               printf("collapse %i\n",tri::Index(outMesh,fi->V(i)));
-              tri::io::ExporterPLY<MeshType>::Save(outMesh,"pre.ply");
+//              tri::io::ExporterPLY<MeshType>::Save(outMesh,"pre.ply");
               face::FFEdgeCollapse(outMesh, *fi,i);
-              tri::io::ExporterPLY<MeshType>::Save(outMesh,"post.ply");
+//              tri::io::ExporterPLY<MeshType>::Save(outMesh,"post.ply");
               break;
             }
         }
