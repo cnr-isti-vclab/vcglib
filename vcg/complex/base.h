@@ -601,9 +601,9 @@ bool HasPerMeshAttribute(const MeshType &m,   std::string   name){
 }
 
 template <class MeshType> void RequireCompactness    (MeshType &m) {
-  if(m.vert.size()!=m.vn) throw vcg::MissingCompactnessException("Vertex Vector Contains deleted elements");
-  if(m.edge.size()!=m.en) throw vcg::MissingCompactnessException("Edge Vector Contains deleted elements");
-  if(m.face.size()!=m.fn) throw vcg::MissingCompactnessException("Face Vector Contains deleted elements");
+  if(m.vert.size()!=size_t(m.vn)) throw vcg::MissingCompactnessException("Vertex Vector Contains deleted elements");
+  if(m.edge.size()!=size_t(m.en)) throw vcg::MissingCompactnessException("Edge Vector Contains deleted elements");
+  if(m.face.size()!=size_t(m.fn)) throw vcg::MissingCompactnessException("Face Vector Contains deleted elements");
 }
 
 template <class MeshType> void RequireVFAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
