@@ -120,11 +120,11 @@ public:
       _currentCoord = NULL;
 
       PC_Coord *coord = NULL;
-      long j = 0;
-      for (long i = 0; i < (long)_coords.size(); i++) {
+      long long j = 0;
+      for (size_t i = 0; i < _coords.size(); i++) {
         // set the prev
         coord = NULL;
-        if (i-1 >= 0) {
+        if ((long long)i-1 >= 0) {
           coord = &_coords[i-1];
           if (vcg::tri::HasPerFaceFlags(mesh)) {
             j = i-1;
@@ -140,13 +140,13 @@ public:
 
         // set the next
         coord = NULL;
-        if (i+1 < (long)_coords.size()) {
+        if (i+1 < _coords.size()) {
           coord = &_coords[i+1];
           if (vcg::tri::HasPerFaceFlags(mesh)) {
             j = i+1;
-            while (j < (long)_coords.size() && mesh.face[j/2].IsD())
+            while (j < (long long)_coords.size() && mesh.face[j/2].IsD())
               j++;
-            if (j < (long)_coords.size())
+            if (j < (long long)_coords.size())
               coord = &_coords[j];
             else
               coord = NULL;
@@ -155,7 +155,7 @@ public:
         _coords[i].next = coord;
       }
       if (mesh.face.size() > 0) {
-        // set he current coord (first - not deleted - face)
+        // set the current coord (first - not deleted - face)
         _currentCoord = &_coords[0];
         if (vcg::tri::HasPerFaceFlags(mesh) && mesh.face[0].IsD())
           _currentCoord = _currentCoord->next;
@@ -205,8 +205,8 @@ public:
         if (coord.next != NULL && &coord != _currentCoord)
           coord.next->prev = coord.prev;
         coord.mark = mark;
-        coord.q = resultCode;
       }
+      coord.q = resultCode;
     }
 
     /**
@@ -265,7 +265,7 @@ public:
      * @brief Resize just resets the size of the container.
      * @param size
      */
-    void Resize(const size_t size) {
+    inline void Resize(const size_t size) {
       _lcVertices.resize(size);
     }
 
@@ -299,7 +299,6 @@ public:
       for (typename std::list<LCEdge>::iterator eIt = lcEdges.begin(); eIt != lcEdges.end(); eIt++) {
         e = &*eIt;
         // compute the intersetion
-        intersection.clear();
         SetIntersection(e->v1->star, e->v2->star, intersection);
         // if intersection( star(v1) , star(v2) ) != star(e) then return false
         if (intersection != e->star)
@@ -405,6 +404,7 @@ public:
       vcg::face::JumpingPos<FaceType> vStarPos;
       vcg::face::Pos<FaceType> eStarPos;
 
+      lcEdges.clear();
       /// compute the star of all the vertices and edges seen from the polycoord
       runPos = startPos;
       do {
@@ -609,7 +609,9 @@ public:
     if (mesh.face.size() == 0)
       return PC_VOID;
 
-    assert(!pos.IsNull());
+    if (pos.IsNull())
+      return PC_VOID;
+
     vcg::face::Pos<FaceType> tempPos, startPos;
 
     // check if the sequence of facets is a polycoord and find the starting coord
@@ -675,15 +677,11 @@ public:
     typedef std::pair<FFpPair, FFiPair> FFPair;
     typedef std::queue<FFPair> FFQueue;
     FFQueue ffQueue;
-    typedef std::pair<FaceType *, char> BorderFaceEdgePair;
-    typedef std::queue<BorderFaceEdgePair> BorderFacesQueue;
-    BorderFacesQueue bfQueue;
     std::queue<VertexType *> verticesToDeleteQueue;
     std::queue<FaceType *> facesToDeleteQueue;
 
     if (checkSing) {
       do {
-        assert(runPos.F()->VN() == 4);
         runPos.FlipV();
         valenceB = runPos.NumberOfIncidentVertices();
         tmpPos.Set(runPos.F(), runPos.E(), runPos.V());
@@ -709,12 +707,10 @@ public:
         runPos.FlipE();
         runPos.FlipF();
       } while (runPos != startPos);
-      assert(runPos == startPos || vcg::face::IsBorder(*startPos.F(),startPos.E()));
     }
 
     runPos = startPos;
     do {
-      assert(runPos.F()->VN() == 4);
       // compute new vertex
       point = (runPos.V()->P() + runPos.VFlip()->P()) / 2.f;
       if (checkSing) {
@@ -729,18 +725,13 @@ public:
       vQueue.back().first = runPos.V();
       tmpPos.Set(runPos.F(), runPos.E(), runPos.V());
       tmpPos.FlipV();
-      tmpPos.NextFE();    // go to next face in counterclockwise order
+      tmpPos.NextFE();    // go to next face
       while (tmpPos.F() != runPos.F()) {
-        if (tmpPos.F() != runPos.F() && tmpPos.F() != runPos.FFlip())
+        if (tmpPos.F() != runPos.FFlip())
           vQueue.back().second.push(&tmpPos.F()->V(tmpPos.VInd()));
-        tmpPos.NextFE();    // go to next face in counterclockwise order
+        tmpPos.NextFE();    // go to next face
       }
 
-      // update border flag
-      tmpPos.Set(runPos.F(), runPos.E(), runPos.VFlip());
-      tmpPos.FlipE();
-      if (tmpPos.IsBorder())
-        tmpPos.V()->SetB();
       // enqueue to delete the other vertex
       verticesToDeleteQueue.push(runPos.VFlip());
 
@@ -763,10 +754,6 @@ public:
         } else {
           ffQueue.back().first.second = sideA.F();
           ffQueue.back().second.second = sideA.E();
-          // list borders
-          bfQueue.push(BorderFaceEdgePair());
-          bfQueue.back().first = sideA.F();
-          bfQueue.back().second = sideA.E();
         }
       }
       // second side
@@ -780,14 +767,9 @@ public:
         } else {
           ffQueue.back().first.second = sideB.F();
           ffQueue.back().second.second = sideB.E();
-          // list borders
-          bfQueue.push(BorderFaceEdgePair());
-          bfQueue.back().first = sideB.F();
-          bfQueue.back().second = sideB.E();
         }
       }
-      sideA.SetNull();
-      sideB.SetNull();
+
       // enqueue to delete the face
       facesToDeleteQueue.push(runPos.F());
 
@@ -800,25 +782,25 @@ public:
     assert(runPos == startPos || vcg::face::IsBorder(*startPos.F(),startPos.E()));
     if (runPos.IsBorder()) {
       // compute new vertex on the last (border) edge
-      runPos.V()->P() = (runPos.V()->P() + runPos.VFlip()->P()) / 2.f;
+      point = (runPos.V()->P() + runPos.VFlip()->P()) / 2.f;
+      if (checkSing) {
+        if (onSideA)
+          point = runPos.V()->P();
+        if (onSideB)
+          point = runPos.VFlip()->P();
+      }
+      runPos.V()->P() = point;
       // list the vertex pointer of the faces on the other side to be updated
       vQueue.push(FacesVertexPair());
       vQueue.back().first = runPos.V();
       tmpPos.Set(runPos.F(), runPos.E(), runPos.V());
       tmpPos.FlipV();
-      tmpPos.FlipE();
-      if (!tmpPos.IsBorder()) {
-        tmpPos.FlipF();
-        while (tmpPos.F() != runPos.FFlip()) {
-          vQueue.back().second.push(&tmpPos.F()->V(tmpPos.VInd()));
-          tmpPos.NextFE();
-        }
+      tmpPos.NextFE();    // go to next face
+      while (tmpPos.F() != runPos.F()) {
+        vQueue.back().second.push(&tmpPos.F()->V(tmpPos.VInd()));
+        tmpPos.NextFE();
       }
-      // update border flag
-      tmpPos.Set(runPos.F(), runPos.E(), runPos.VFlip());
-      tmpPos.FlipE();
-      if (tmpPos.IsBorder())
-        tmpPos.V()->SetB();
+
       // enqueue to delete the other vertex
       verticesToDeleteQueue.push(runPos.VFlip());
     }
@@ -837,12 +819,6 @@ public:
       *ffQueue.front().first.first = ffQueue.front().first.second;
       *ffQueue.front().second.first = ffQueue.front().second.second;
       ffQueue.pop();
-    }
-
-    // update borders
-    while (!bfQueue.empty()) {
-      bfQueue.front().first->SetB(bfQueue.front().second);
-      bfQueue.pop();
     }
 
     // delete faces
@@ -867,7 +843,6 @@ public:
    */
   static void CollapseAllPolycoords (PolyMeshType &mesh, const bool checkSing = true) {
     vcg::tri::RequireFFAdjacency(mesh);
-//    assert(vcg::tri::HasPerFaceVFAdjacency(mesh));
 
     if (mesh.FN() == 0)
       return;
@@ -891,6 +866,8 @@ public:
       resultCode = CollapsePolycoord(mesh, pos, mark, coords, linkConditions, checkSing);
       // go to the next coord
       coords.Next();
+
+      std::cout << resultCode << std::endl;
 
       // increment the mark
       mark++;
@@ -1011,9 +988,7 @@ private:
     } while (startPos != pos);
 
     // polycoord with singularities on both sides can not collapse
-    if ((singSideA && singSideB) ||
-        (singSideA && borderB) ||
-        (singSideB && borderA))
+    if (singSideA && singSideB)
       return PC_SINGBOTH;
 
     // polycoords that are rings and have borders on both sides can not collapse
@@ -1121,7 +1096,7 @@ private:
       face_edge.first = vcg::tri::Index(mesh, runPos.F());
       face_edge.second = runPos.E()%2;
       coords.UpdateCoord(coords[face_edge], mark, q);
-      // if the polycoord has to collapse, i.e. q == PC_SUCCESS, also skip the orthogonal coord
+      // if the polycoord has to collapse, i.e. q == PC_SUCCESS, also visit the orthogonal coord
       if (q == PC_SUCCESS) {
         face_edge.second = (runPos.E()+1)%2;
         coords.UpdateCoord(coords[face_edge], mark, q);
