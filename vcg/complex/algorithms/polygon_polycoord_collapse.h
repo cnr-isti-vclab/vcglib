@@ -251,6 +251,7 @@ public:
   private:
     struct LCEdge;
     struct LCVertex;
+
     typedef std::set<LCVertex *> LCVertexStar;  // define the star of a vertex
     typedef std::set<LCEdge *> LCEdgeStar;      // define the set of edges whose star involves a vertex
 
@@ -866,8 +867,6 @@ public:
       resultCode = CollapsePolycoord(mesh, pos, mark, coords, linkConditions, checkSing);
       // go to the next coord
       coords.Next();
-
-      std::cout << resultCode << std::endl;
 
       // increment the mark
       mark++;
