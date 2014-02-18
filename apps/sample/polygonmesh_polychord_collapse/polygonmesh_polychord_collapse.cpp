@@ -1,13 +1,10 @@
 #include <iostream>
 #include <vcg/complex/complex.h>
-#include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/clean.h>
-#include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/update/normal.h>
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export.h>
 #include <vcg/complex/algorithms/polygon_support.h>
-#include <vcg/complex/algorithms/polygon_polycoord_collapse.h>
+#include <vcg/complex/algorithms/polygon_polychord_collapse.h>
 
 using namespace vcg;
 

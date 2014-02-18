@@ -1,2 +1,3 @@
 include(../common.pri)
-SOURCES += $$VCGLIBDIR/wrap/ply/plylib.cpp
+SOURCES += polygonmesh_polychord_collapse.cpp ../../../wrap/ply/plylib.cpp
+TARGET = polygonmesh_polychord_collapse
