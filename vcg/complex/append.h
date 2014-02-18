@@ -182,7 +182,15 @@ public:
    \note  If the the selection of the vertexes is not consistent with the face selection
    the append could build faces referencing non existent vertices
    so it is mandatory that the selection of the vertices reflects the loose selection
-  from edges and faces (e.g. if a face is selected all its vertices must be selected).
+   from edges and faces (e.g. if a face is selected then all its vertices must be selected).
+
+   \note Attributes. This function will copy only those attributes that are present in both meshes.
+   Two attributes in different meshes are considered the same iff they have the same
+   name and the same type. This may be deceiving because they could in fact have
+   different semantic, but this is up to the developer.
+   If the left mesh has attributes that are not in the right mesh, their values for the elements
+   of the right mesh will be uninitialized
+
  */
 
 static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, const bool adjFlag = false)
@@ -206,13 +214,12 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
 
   // vertex
   remap.vert.resize(mr.vert.size(),-1);
-  VertexIteratorRight vi;
   VertexIteratorLeft vp;
   int svn = UpdateSelection<ConstMeshRight>::VertexCount(mr);
   if(selected) vp=Allocator<MeshLeft>::AddVertices(ml,svn);
           else vp=Allocator<MeshLeft>::AddVertices(ml,mr.vn);
 
-  for(vi=mr.vert.begin();vi!=mr.vert.end();++vi)
+  for(VertexIteratorRight vi=mr.vert.begin(); vi!=mr.vert.end(); ++vi)
     if(!(*vi).IsD() && (!selected || (*vi).IsS())){
       int ind=Index(mr,*vi);
       remap.vert[ind]=Index(ml,*vp);
@@ -221,13 +228,12 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
 
   // edge
   remap.edge.resize(mr.edge.size(),-1);
-  EdgeIteratorRight ei;
   EdgeIteratorLeft ep;
   int sen = UpdateSelection<ConstMeshRight>::EdgeCount(mr);
   if(selected) ep=Allocator<MeshLeft>::AddEdges(ml,sen);
           else ep=Allocator<MeshLeft>::AddEdges(ml,mr.en);
 
-  for(ei=mr.edge.begin(); ei!=mr.edge.end();++ei)
+  for(EdgeIteratorRight ei=mr.edge.begin(); ei!=mr.edge.end(); ++ei)
     if(!(*ei).IsD() && (!selected || (*ei).IsS())){
       int ind=Index(mr,*ei);
       remap.edge[ind]=Index(ml,*ep);
@@ -236,13 +242,12 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
 
   // face
   remap.face.resize(mr.face.size(),-1);
-  FaceIteratorRight fi;
   FaceIteratorLeft fp;
   int sfn = UpdateSelection<ConstMeshRight>::FaceCount(mr);
   if(selected) fp=Allocator<MeshLeft>::AddFaces(ml,sfn);
           else fp=Allocator<MeshLeft>::AddFaces(ml,mr.fn);
 
-  for(fi=mr.face.begin();fi!=mr.face.end();++fi)
+  for(FaceIteratorRight fi=mr.face.begin(); fi!=mr.face.end(); ++fi)
     if(!(*fi).IsD() && (!selected || (*fi).IsS())){
       int ind=Index(mr,*fi);
       remap.face[ind]=Index(ml,*fp);
@@ -251,13 +256,11 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
 
   // hedge
   remap.hedge.resize(mr.hedge.size(),-1);
-  HEdgeIteratorRight hi;
-  for(hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
+  for(HEdgeIteratorRight hi=mr.hedge.begin(); hi!=mr.hedge.end(); ++hi)
     if(!(*hi).IsD() && (!selected || (*hi).IsS())){
       int ind=Index(mr,*hi);
       assert(remap.hedge[ind]==-1);
-      HEdgeIteratorLeft hp;
-      hp=Allocator<MeshLeft>::AddHEdges(ml,1);
+      HEdgeIteratorLeft hp = Allocator<MeshLeft>::AddHEdges(ml,1);
       (*hp).ImportData(*(hi));
       remap.hedge[ind]=Index(ml,*hp);
     }
@@ -266,14 +269,14 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   // copy data from ml to its corresponding elements in ml and adjacencies
 
   // vertex
-  for(vi=mr.vert.begin();vi!=mr.vert.end();++vi)
+  for(VertexIteratorRight vi=mr.vert.begin();vi!=mr.vert.end();++vi)
     if( !(*vi).IsD() && (!selected || (*vi).IsS())){
       ml.vert[remap.vert[Index(mr,*vi)]].ImportData(*vi);
       if(adjFlag) ImportVertexAdj(ml,mr,ml.vert[remap.vert[Index(mr,*vi)]],*vi,remap);
     }
 
   // edge
-  for(ei=mr.edge.begin();ei!=mr.edge.end();++ei)
+  for(EdgeIteratorRight ei=mr.edge.begin();ei!=mr.edge.end();++ei)
     if(!(*ei).IsD() && (!selected || (*ei).IsS())){
       ml.edge[remap.edge[Index(mr,*ei)]].ImportData(*ei);
       // Edge to Vertex  Adj
@@ -288,24 +291,24 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   // face
   const int textureOffset =  ml.textures.size();
   bool WTFlag = HasPerWedgeTexCoord(mr) && (textureOffset>0);
-  for(fi=mr.face.begin();fi!=mr.face.end();++fi)
+  for(FaceIteratorRight fi=mr.face.begin();fi!=mr.face.end();++fi)
     if(!(*fi).IsD() && (!selected || (*fi).IsS()))
     {
       FaceLeft &fl = ml.face[remap.face[Index(mr,*fi)]];
-      if(WTFlag)
-        for(int i = 0; i < fl.VN(); ++i)
-          fl.WT(i).n() +=textureOffset;
       if(HasFVAdjacency(ml) && HasFVAdjacency(mr)){
         for(int i = 0; i < fl.VN(); ++i)
           fl.V(i) = &ml.vert[remap.vert[Index(mr,fi->cV(i))]];
       }
+      if(WTFlag)
+        for(int i = 0; i < fl.VN(); ++i)
+          fl.WT(i).n() +=textureOffset;
       ml.face[remap.face[Index(mr,*fi)]].ImportData(*fi);
       if(adjFlag)  ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,*fi)]],*fi,remap);
 
     }
 
   // hedge
-  for(hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
+  for(HEdgeIteratorRight hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
     if(!(*hi).IsD() && (!selected || (*hi).IsS())){
       ml.hedge[remap.hedge[Index(mr,*hi)]].ImportData(*hi);
       ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,*hi)]],*hi,remap,selected);
@@ -333,7 +336,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
                 ar =    mr.vert_attr.find(*al);
                 if(ar!= mr.vert_attr.end()){
                     id_r = 0;
-                    for(vi=mr.vert.begin();vi!=mr.vert.end();++vi,++id_r)
+                    for(VertexIteratorRight vi=mr.vert.begin();vi!=mr.vert.end();++vi,++id_r)
                         if( !(*vi).IsD() && (!selected || (*vi).IsS()))
                             memcpy((*al)._handle->At(remap.vert[Index(mr,*vi)]),(*ar)._handle->At(id_r),
                                 (*al)._handle->SizeOf());
@@ -346,7 +349,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
                 ar =    mr.edge_attr.find(*al);
                 if(ar!= mr.edge_attr.end()){
                     id_r = 0;
-                    for(ei=mr.edge.begin();ei!=mr.edge.end();++ei,++id_r)
+                    for(EdgeIteratorRight ei=mr.edge.begin();ei!=mr.edge.end();++ei,++id_r)
                         if( !(*ei).IsD() && (!selected || (*ei).IsS()))
                             memcpy((*al)._handle->At(remap.edge[Index(mr,*ei)]),(*ar)._handle->At(id_r),
                                 (*al)._handle->SizeOf());
@@ -359,7 +362,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
                 ar =    mr.face_attr.find(*al);
                 if(ar!= mr.face_attr.end()){
                     id_r = 0;
-                    for(fi=mr.face.begin();fi!=mr.face.end();++fi,++id_r)
+                    for(FaceIteratorRight fi=mr.face.begin();fi!=mr.face.end();++fi,++id_r)
                         if( !(*fi).IsD() && (!selected || (*fi).IsS()))
                             memcpy((*al)._handle->At(remap.face[Index(mr,*fi)]),(*ar)._handle->At(id_r),
                                 (*al)._handle->SizeOf());
