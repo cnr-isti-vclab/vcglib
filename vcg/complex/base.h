@@ -369,6 +369,10 @@ void Clear()
   C()=Color4b::Gray;
 }
 
+bool IsEmpty()
+{
+  return vert.empty() && edge.empty() && face.empty();
+}
 
 int & SimplexNumber(){ return fn;}
 int & VertexNumber(){ return vn;}
