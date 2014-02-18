@@ -115,28 +115,31 @@ public:
 
  static void ImportFaceAdj(MeshLeft &ml, ConstMeshRight &mr, FaceLeft &fl, const FaceRight &fr, Remap &remap )
  {
-     // Face to Edge  Adj
-     if(HasFEAdjacency(ml) && HasFEAdjacency(mr)){
-       assert(fl.VN() == fr.VN());
-       for( int vi = 0; vi < fl.VN(); ++vi ){
-         size_t idx = Index(mr,fr.cFEp(vi));
-         fl.FEp(vi) = (idx>ml.edge.size())? 0 : &ml.edge[remap.edge[idx]];
-       }
+   // Face to Edge  Adj
+   if(HasFEAdjacency(ml) && HasFEAdjacency(mr)){
+     assert(fl.VN() == fr.VN());
+     for( int vi = 0; vi < fl.VN(); ++vi ){
+       int idx = remap.edge[Index(mr,fr.cFEp(vi))];
+       if(idx>=0)
+         fl.FEp(vi) = &ml.edge[idx];
      }
+   }
 
-     // Face to Face  Adj
-     if(HasFFAdjacency(ml) && HasFFAdjacency(mr)){
-       assert(fl.VN() == fr.VN());
-       for( int vi = 0; vi < fl.VN(); ++vi ){
-         size_t idx = Index(mr,fr.cFFp(vi));
-         fl.FFp(vi) = (idx>ml.face.size()) ? 0 :&ml.face[remap.face[idx]];
+   // Face to Face  Adj
+   if(HasFFAdjacency(ml) && HasFFAdjacency(mr)){
+     assert(fl.VN() == fr.VN());
+     for( int vi = 0; vi < fl.VN(); ++vi ){
+       int idx = remap.face[Index(mr,fr.cFFp(vi))];
+       if(idx>=0){
+         fl.FFp(vi) = &ml.face[idx];
          fl.FFi(vi) = fr.cFFi(vi);
        }
      }
+   }
 
-     // Face to HEedge  Adj
-     if(HasFHAdjacency(ml) && HasFHAdjacency(mr))
-       fl.FHp() = &ml.hedge[remap.hedge[Index(mr,fr.cFHp())]];
+   // Face to HEedge  Adj
+   if(HasFHAdjacency(ml) && HasFHAdjacency(mr))
+     fl.FHp() = &ml.hedge[remap.hedge[Index(mr,fr.cFHp())]];
  }
 
  static void ImportHEdgeAdj(MeshLeft &ml, ConstMeshRight &mr, HEdgeLeft &hl, const HEdgeRight &hr, Remap &remap, bool /*sel*/ ){
@@ -202,7 +205,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   // note the use of the parameter for preserving existing vertex selection.
   if(selected)
   {
-    assert(adjFlag == false); // It is rather meaningless to partially copy adj relations.
+    assert(adjFlag == false || ml.IsEmpty()); // It is rather meaningless to partially copy adj relations.
     tri::UpdateSelection<ConstMeshRight>::VertexFromEdgeLoose(mr,true);
     tri::UpdateSelection<ConstMeshRight>::VertexFromFaceLoose(mr,true);
   }
