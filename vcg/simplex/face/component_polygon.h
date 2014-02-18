@@ -173,7 +173,6 @@ public:
   void ImportData(const LeftF & leftF){T::ImportData(leftF);}
   inline void Alloc(const int & ns) {
     if( _ffpP == NULL){
-      printf("Doing an alloc\n");
       this->__SetVN(ns);
       _ffpP = new  FaceType*[this->VN()];
       _ffiP = new  char[this->VN()];
