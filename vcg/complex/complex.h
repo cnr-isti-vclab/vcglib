@@ -36,6 +36,7 @@
 #include <stdexcept>
 #include <limits>
 #include <set>
+#include <wrap/callback.h>
 #include <vcg/complex/exception.h>
 #include <vcg/container/simple_temporary_data.h>
 #include <vcg/complex/used_types.h>
