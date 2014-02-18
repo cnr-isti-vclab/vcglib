@@ -142,7 +142,6 @@ public:
 
   static bool HasCurvatureDir()   { return false; }
 
-  inline void SetVN(const int & /*n*/) {assert(0);}
 
   static bool HasPolyInfo()   { return false; }
 
@@ -162,11 +161,11 @@ public:
 
 template <class T> class VertexRef: public T {
 public:
-	VertexRef(){
-		v[0]=0;
-		v[1]=0;
-		v[2]=0;
-	}
+    VertexRef(){
+        v[0]=0;
+        v[1]=0;
+        v[2]=0;
+    }
 
   typedef typename T::VertexType::CoordType CoordType;
   typedef typename T::VertexType::ScalarType ScalarType;
@@ -539,7 +538,7 @@ Note that for this component we have three class of values:
 - \b valid: a valid pointer in the range of the vector of faces
 - \b null: a null pointer, used to indicate the end of the list
 - \b uninitialized: a special value that you can test/set with the IsVFInitialized()/VFClear() functions;
-	 it is used to indicate when the VF Topology is not computed.
+     it is used to indicate when the VF Topology is not computed.
 
 \sa vcg::tri::UpdateTopology for functions that compute this relation
 \sa vcg::vertex::VFAdj
@@ -549,14 +548,14 @@ Note that for this component we have three class of values:
 
 template <class T> class VFAdj: public T {
 public:
-	VFAdj(){
-		_vfp[0]=0;
-		_vfp[1]=0;
-		_vfp[2]=0;
-		_vfi[0]=-1;
-		_vfi[1]=-1;
-		_vfi[2]=-1;
-	}
+    VFAdj(){
+        _vfp[0]=0;
+        _vfp[1]=0;
+        _vfp[2]=0;
+        _vfi[0]=-1;
+        _vfi[1]=-1;
+        _vfi[2]=-1;
+    }
   typename T::FacePointer &VFp(const int j)        { assert(j>=0 && j<3);  return _vfp[j]; }
   typename T::FacePointer cVFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
   char &VFi(const int j) {return _vfi[j]; }
