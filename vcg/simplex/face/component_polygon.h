@@ -88,7 +88,7 @@ public:
   inline        CoordType  cP2( const int j ) const { return cV((j+2)%this->VN())->P();}
 
   template <class LeftF>
-  void ImportData(const LeftF & leftF){  for(int i  =0; i < this->VN(); ++i) V(i) = NULL; T::ImportData(leftF);}
+  void ImportData(const LeftF & leftF){  T::ImportData(leftF);}
   inline void Alloc(const int & ns) {
     if(_vpoly == NULL){
       this->__SetVN(ns);
@@ -173,6 +173,7 @@ public:
   void ImportData(const LeftF & leftF){T::ImportData(leftF);}
   inline void Alloc(const int & ns) {
     if( _ffpP == NULL){
+      printf("Doing an alloc\n");
       this->__SetVN(ns);
       _ffpP = new  FaceType*[this->VN()];
       _ffiP = new  char[this->VN()];
