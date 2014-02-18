@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     return err;
 
   // collapse **********************************************************************************************
-  vcg::tri::PolycoordCollapse<PolyMesh>::CollapseAllPolycoords(mesh, true);
+  vcg::tri::PolychordCollapse<PolyMesh>::CollapseAllPolychords(mesh, true);
 
   // these don't work with polygonal meshes:
   vcg::tri::Allocator<PolyMesh>::CompactFaceVector(mesh);
