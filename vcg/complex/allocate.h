@@ -453,7 +453,6 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
             /* +++++++++++++++ Add Faces ++++++++++++++++ */
 
             /** Function to add a face to the mesh and initializing it with the three given VertexPointers
-            First wrapper, with no parameters
             */
             static FaceIterator AddFace(MeshType &m, VertexPointer v0, VertexPointer v1, VertexPointer v2)
             {
@@ -463,12 +462,44 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
               assert(v2>=&m.vert.front() && v2<=&m.vert.back());
               PointerUpdater<FacePointer> pu;
               FaceIterator fi = AddFaces(m,1,pu);
+              fi->Alloc(3);
               fi->V(0)=v0;
               fi->V(1)=v1;
               fi->V(2)=v2;
               return fi;
             }
 
+            /** Function to add a quad face to the mesh and initializing it with the four given VertexPointers
+             *
+             * Note that this function add a single polygonal face if the mesh has polygonal info or two tris with the corresponding faux bit set in the standard common case of a triangular mesh.
+            */
+            static FaceIterator AddQuadFace(MeshType &m, VertexPointer v0, VertexPointer v1, VertexPointer v2, VertexPointer v3)
+            {
+              assert(m.vert.size()>0);
+              assert(v0>=&m.vert.front() && v0<=&m.vert.back());
+              assert(v1>=&m.vert.front() && v1<=&m.vert.back());
+              assert(v2>=&m.vert.front() && v2<=&m.vert.back());
+              assert(v3>=&m.vert.front() && v3<=&m.vert.back());
+              PointerUpdater<FacePointer> pu;
+              if(FaceType::HasPolyInfo())
+              {
+                FaceIterator fi = AddFaces(m,1,pu);
+                fi->Alloc(4);
+                fi->V(0)=v0; fi->V(1)=v1;
+                fi->V(2)=v2; fi->V(3)=v3;
+                return fi;
+              }
+              else
+              {
+                FaceIterator fi = AddFaces(m,2,pu);
+                fi->Alloc(3); fi->V(0)=v0; fi->V(1)=v1; fi->V(2)=v2;
+                fi->SetF(2);
+                ++fi;
+                fi->Alloc(3); fi->V(0)=v0; fi->V(2)=v1; fi->V(3)=v2;
+                fi->SetF(0);
+                return fi;
+              }
+            }
             /** \brief Function to add n faces to the mesh.
             First wrapper, with no parameters
             */
@@ -847,6 +878,11 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
           if(pos!=i)
           {
             m.face[pos].ImportData(m.face[i]);
+            if(FaceType::HasPolyInfo())
+            {
+              m.face[pos].Dealloc();
+              m.face[pos].Alloc(m.face[i].VN());
+            }
             for(int j=0;j<m.face[i].VN();++j)
               m.face[pos].V(j) = m.face[i].V(j);
 
