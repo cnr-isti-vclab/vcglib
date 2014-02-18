@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -23,10 +23,7 @@
 #ifndef __VCG_TRI_UPDATE_HOLE
 #define __VCG_TRI_UPDATE_HOLE
 
-#include <wrap/callback.h>
-#include <vcg/math/base.h>
 #include <vcg/complex/algorithms/clean.h>
-#include <float.h>
 
 // This file contains three Ear Classes
 // - TrivialEar
@@ -37,30 +34,30 @@
 
 
 namespace vcg {
-	namespace tri {
+    namespace tri {
 
-	/*
-	An ear is identified by TWO pos.
-	The Three vertexes of an Ear are:
-	e0.VFlip().v
-	e0.v
-	e1.v
-	Invariants:
-	  e1 == e0.NextB();
-	  e1.FlipV() == e0;
+    /*
+    An ear is identified by TWO pos.
+    The Three vertexes of an Ear are:
+    e0.VFlip().v
+    e0.v
+    e1.v
+    Invariants:
+      e1 == e0.NextB();
+      e1.FlipV() == e0;
 
-	Situazioni ear non manifold, e degeneri (buco triangolare)
+    Situazioni ear non manifold, e degeneri (buco triangolare)
 
-	T  XXXXXXXXXXXXX    A        /XXXXX        B      en/XXXXX
-	/XXXXXXXXXXXXXXX            /XXXXXX                /XXXXXX
-	XXXXXXep==en XXX     ep\   /en XXXX               /e1 XXXX
-	XXXXXX ----/| XX   ------ ----/| XX       ------ ----/|XXX
-	XXXXXX|   /e1 XX   XXXXXX|   /e1 XX       XXXXXX|  o/e0 XX
-	XXXXXX|  /XXXXXX   XXXXXX|  /XXXXXX       XXXXXX|  /XXXXXX
-	XXX e0|o/XXXXXXX   XXX e0|o/XXXXXXX       XXX ep| /XXXXXXX
-	XXX  \|/XXXXXXXX   XXX  \|/XXXXXXXX       XXX  \|/XXXXXXXX
-	XXXXXXXXXXXXXXXX   XXXXXXXXXXXXXXXX       XXXXXXXXXXXXXXXX
-	*/
+    T  XXXXXXXXXXXXX    A        /XXXXX        B      en/XXXXX
+    /XXXXXXXXXXXXXXX            /XXXXXX                /XXXXXX
+    XXXXXXep==en XXX     ep\   /en XXXX               /e1 XXXX
+    XXXXXX ----/| XX   ------ ----/| XX       ------ ----/|XXX
+    XXXXXX|   /e1 XX   XXXXXX|   /e1 XX       XXXXXX|  o/e0 XX
+    XXXXXX|  /XXXXXX   XXXXXX|  /XXXXXX       XXXXXX|  /XXXXXX
+    XXX e0|o/XXXXXXX   XXX e0|o/XXXXXXX       XXX ep| /XXXXXXX
+    XXX  \|/XXXXXXXX   XXX  \|/XXXXXXXX       XXX  \|/XXXXXXXX
+    XXXXXXXXXXXXXXXX   XXXXXXXXXXXXXXXX       XXXXXXXXXXXXXXXX
+    */
 template<class MESH> class TrivialEar
 {
 public:
@@ -328,315 +325,315 @@ template <class MESH>
 class Hole
 {
 public:
-			typedef typename MESH::VertexType				VertexType;
-			typedef typename MESH::VertexPointer		VertexPointer;
-			typedef	typename MESH::ScalarType				ScalarType;
-			typedef typename MESH::FaceType					FaceType;
-			typedef typename MESH::FacePointer			FacePointer;
-			typedef typename MESH::FaceIterator			FaceIterator;
-			typedef typename MESH::CoordType				CoordType;
+            typedef typename MESH::VertexType				VertexType;
+            typedef typename MESH::VertexPointer		VertexPointer;
+            typedef	typename MESH::ScalarType				ScalarType;
+            typedef typename MESH::FaceType					FaceType;
+            typedef typename MESH::FacePointer			FacePointer;
+            typedef typename MESH::FaceIterator			FaceIterator;
+            typedef typename MESH::CoordType				CoordType;
       typedef typename vcg::Box3<ScalarType>  Box3Type;
-			typedef typename face::Pos<FaceType>    PosType;
+            typedef typename face::Pos<FaceType>    PosType;
 
 public:
 
-		class Info
-		{
-		public: 
-			Info(){}
-			Info(PosType const &pHole, int  const pHoleSize, Box3<ScalarType> &pHoleBB)
-			{
-				p=pHole;	
-				size=pHoleSize;
-				bb=pHoleBB;
-			}
+        class Info
+        {
+        public:
+            Info(){}
+            Info(PosType const &pHole, int  const pHoleSize, Box3<ScalarType> &pHoleBB)
+            {
+                p=pHole;
+                size=pHoleSize;
+                bb=pHoleBB;
+            }
 
-			PosType p;
-			int size;
-			Box3Type  bb;
-			
-			bool operator <  (const  Info & hh) const {return size <  hh.size;}
+            PosType p;
+            int size;
+            Box3Type  bb;
 
-			ScalarType Perimeter()
-			{
-				ScalarType sum=0;
-				PosType ip = p;
-				do
-				{
-					sum+=Distance(ip.v->cP(),ip.VFlip()->cP());
-					ip.NextB();
-				}
-				while (ip != p);
-				return sum;				
-			}
+            bool operator <  (const  Info & hh) const {return size <  hh.size;}
+
+            ScalarType Perimeter()
+            {
+                ScalarType sum=0;
+                PosType ip = p;
+                do
+                {
+                    sum+=Distance(ip.v->cP(),ip.VFlip()->cP());
+                    ip.NextB();
+                }
+                while (ip != p);
+                return sum;
+            }
 
       // Support function to test the validity of a single hole loop
       // for now it test only that all the edges are border;
-      // The real test should check if all non manifold vertices 
+      // The real test should check if all non manifold vertices
       // are touched only by edges belonging to this hole loop.
       bool CheckValidity()
       {
-       if(!p.IsBorder()) 
+       if(!p.IsBorder())
          return false;
        PosType ip=p;ip.NextB();
        for(;ip!=p;ip.NextB())
        {
-          if(!ip.IsBorder()) 
+          if(!ip.IsBorder())
             return false;
-       }       
+       }
        return true;
       }
-		};
+        };
 
 
-		class EdgeToBeAvoided
-		{
-		  VertexPointer v0,v1;
-		  EdgeToBeAvoided(VertexPointer _v0, VertexPointer _v1):v0(_v0),v1(_v1)
-		  {
-			if(v0>v1) swap(v0,v1);
-		  }
-		  bool operator < (const EdgeToBeAvoided &e)
-		  {
-			if(this->v0!=e.v0) return this->v0<e.v0;
-			return this->v1<e.v1;
-		  }
-		};
+        class EdgeToBeAvoided
+        {
+          VertexPointer v0,v1;
+          EdgeToBeAvoided(VertexPointer _v0, VertexPointer _v1):v0(_v0),v1(_v1)
+          {
+            if(v0>v1) swap(v0,v1);
+          }
+          bool operator < (const EdgeToBeAvoided &e)
+          {
+            if(this->v0!=e.v0) return this->v0<e.v0;
+            return this->v1<e.v1;
+          }
+        };
 /// Main Single Hole Filling Function
 /// Given a specific hole (identified by the Info h) it fills it
 /// It also update a vector of face pointers
 /// It uses an heap to choose the best ear to be closed
 
 template<class EAR>
-	static void FillHoleEar(MESH &m, // The mesh to be filled
-							Info &h, // the particular hole to be filled
-							std::vector<FacePointer *> &facePointersToBeUpdated)
-	{
-	  //Aggiungo le facce e aggiorno il puntatore alla faccia!
-	  FaceIterator f = tri::Allocator<MESH>::AddFaces(m, h.size-2, facePointersToBeUpdated);
+    static void FillHoleEar(MESH &m, // The mesh to be filled
+                            Info &h, // the particular hole to be filled
+                            std::vector<FacePointer *> &facePointersToBeUpdated)
+    {
+      //Aggiungo le facce e aggiorno il puntatore alla faccia!
+      FaceIterator f = tri::Allocator<MESH>::AddFaces(m, h.size-2, facePointersToBeUpdated);
 
-	  assert(h.p.f >= &*m.face.begin());
-	  assert(h.p.f <= &m.face.back());
-	  assert(h.p.IsBorder());
+      assert(h.p.f >= &*m.face.begin());
+      assert(h.p.f <= &m.face.back());
+      assert(h.p.IsBorder());
 
-	  std::vector< EAR > EarHeap;
-	  EarHeap.reserve(h.size);
-	  int nmBit= VertexType::NewBitFlag(); // non manifoldness bit
+      std::vector< EAR > EarHeap;
+      EarHeap.reserve(h.size);
+      int nmBit= VertexType::NewBitFlag(); // non manifoldness bit
 
-	  //First loops around the hole to mark non manifold vertices.
-	  PosType ip = h.p;   // Pos iterator
-	  do{
-		ip.V()->ClearUserBit(nmBit);
-		ip.V()->ClearV();
-		ip.NextB();
-	  } while(ip!=h.p);
+      //First loops around the hole to mark non manifold vertices.
+      PosType ip = h.p;   // Pos iterator
+      do{
+        ip.V()->ClearUserBit(nmBit);
+        ip.V()->ClearV();
+        ip.NextB();
+      } while(ip!=h.p);
 
-	  ip = h.p;   // Re init the pos iterator for another loop (useless if everithing is ok!!)
-	  do{
-		if(!ip.V()->IsV())
-		  ip.V()->SetV();   // All the vertexes that are visited more than once are non manifold
-		else ip.V()->SetUserBit(nmBit);
-		ip.NextB();
-	  } while(ip!=h.p);
+      ip = h.p;   // Re init the pos iterator for another loop (useless if everithing is ok!!)
+      do{
+        if(!ip.V()->IsV())
+          ip.V()->SetV();   // All the vertexes that are visited more than once are non manifold
+        else ip.V()->SetUserBit(nmBit);
+        ip.NextB();
+      } while(ip!=h.p);
 
-	  PosType fp = h.p;
-	  do{
-		EAR appEar = EAR(fp);
-		EarHeap.push_back( appEar );
-		//printf("Adding ear %s ",app.Dump());
-		fp.NextB();
-		assert(fp.IsBorder());
-	  }while(fp!=h.p);
+      PosType fp = h.p;
+      do{
+        EAR appEar = EAR(fp);
+        EarHeap.push_back( appEar );
+        //printf("Adding ear %s ",app.Dump());
+        fp.NextB();
+        assert(fp.IsBorder());
+      }while(fp!=h.p);
 
-	  int cnt=h.size;
+      int cnt=h.size;
 
-	  make_heap(EarHeap.begin(), EarHeap.end());
+      make_heap(EarHeap.begin(), EarHeap.end());
 
-	  //finche' il buco non e' chiuso o non ci sono piu' orecchie da analizzare.
-	  while( cnt > 2 && !EarHeap.empty() )
-	  {
-		//printf("Front of the heap is %s", H.front().Dump());
-		pop_heap(EarHeap.begin(), EarHeap.end());	 // retrieve the MAXIMUM value and put in the back;
-		EAR BestEar=EarHeap.back();
-		EarHeap.pop_back();
+      //finche' il buco non e' chiuso o non ci sono piu' orecchie da analizzare.
+      while( cnt > 2 && !EarHeap.empty() )
+      {
+        //printf("Front of the heap is %s", H.front().Dump());
+        pop_heap(EarHeap.begin(), EarHeap.end());	 // retrieve the MAXIMUM value and put in the back;
+        EAR BestEar=EarHeap.back();
+        EarHeap.pop_back();
 
-		if(BestEar.IsUpToDate() && !BestEar.IsDegen(nmBit))
-		{
-		  if((*f).HasPolyInfo()) (*f).Alloc(3);
-		  PosType ep0,ep1;
-		  if(BestEar.Close(ep0,ep1,&*f))
-		  {
-			if(!ep0.IsNull()){
-			  EarHeap.push_back(EAR(ep0));
-			  push_heap( EarHeap.begin(), EarHeap.end());
-			}
-			if(!ep1.IsNull()){
-			  EarHeap.push_back(EAR(ep1));
-			  push_heap( EarHeap.begin(), EarHeap.end());
-			}
-			--cnt;
-			++f;
-		  }
-		}//is update()
-	  }//fine del while principale.
+        if(BestEar.IsUpToDate() && !BestEar.IsDegen(nmBit))
+        {
+          if((*f).HasPolyInfo()) (*f).Alloc(3);
+          PosType ep0,ep1;
+          if(BestEar.Close(ep0,ep1,&*f))
+          {
+            if(!ep0.IsNull()){
+              EarHeap.push_back(EAR(ep0));
+              push_heap( EarHeap.begin(), EarHeap.end());
+            }
+            if(!ep1.IsNull()){
+              EarHeap.push_back(EAR(ep1));
+              push_heap( EarHeap.begin(), EarHeap.end());
+            }
+            --cnt;
+            ++f;
+          }
+        }//is update()
+      }//fine del while principale.
 
-	  while(f!=m.face.end()){
-		tri::Allocator<MESH>::DeleteFace(m,*f);
-		f++;
-	  }
+      while(f!=m.face.end()){
+        tri::Allocator<MESH>::DeleteFace(m,*f);
+        f++;
+      }
 
-	  VertexType::DeleteBitFlag(nmBit); // non manifoldness bit
-	}
+      VertexType::DeleteBitFlag(nmBit); // non manifoldness bit
+    }
 
-	template<class EAR>
-	static int EarCuttingFill(MESH &m, int sizeHole, bool Selected = false, CallBackPos *cb=0)
-	{
-	  std::vector< Info > vinfo;
-	  GetInfo(m, Selected,vinfo);
+    template<class EAR>
+    static int EarCuttingFill(MESH &m, int sizeHole, bool Selected = false, CallBackPos *cb=0)
+    {
+      std::vector< Info > vinfo;
+      GetInfo(m, Selected,vinfo);
 
-	  typename std::vector<Info >::iterator ith;
-	  int indCb=0;
-	  int holeCnt=0;
-	  std::vector<FacePointer *> facePtrToBeUpdated;
-	  for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
-		facePtrToBeUpdated.push_back( &(*ith).p.f );
+      typename std::vector<Info >::iterator ith;
+      int indCb=0;
+      int holeCnt=0;
+      std::vector<FacePointer *> facePtrToBeUpdated;
+      for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
+        facePtrToBeUpdated.push_back( &(*ith).p.f );
 
-	  for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
-	  {
-		indCb++;
-		if(cb) (*cb)(indCb*10/vinfo.size(),"Closing Holes");
-		if((*ith).size < sizeHole){
-		  holeCnt++;
-		  FillHoleEar< EAR >(m, *ith,facePtrToBeUpdated);
-		}
-	  }
-	  return holeCnt;
-	}
+      for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
+      {
+        indCb++;
+        if(cb) (*cb)(indCb*10/vinfo.size(),"Closing Holes");
+        if((*ith).size < sizeHole){
+          holeCnt++;
+          FillHoleEar< EAR >(m, *ith,facePtrToBeUpdated);
+        }
+      }
+      return holeCnt;
+    }
 
 /// Main Hole Filling function.
 /// Given a mesh search for all the holes smaller than a given size and fill them
 /// It returns the number of filled holes.
 
 template<class EAR>
-	static int EarCuttingIntersectionFill(MESH &m, const int maxSizeHole, bool Selected, CallBackPos *cb=0)
-	{
-	  std::vector<Info > vinfo;
-	  GetInfo(m, Selected,vinfo);
-	  typename std::vector<Info>::iterator ith;
+    static int EarCuttingIntersectionFill(MESH &m, const int maxSizeHole, bool Selected, CallBackPos *cb=0)
+    {
+      std::vector<Info > vinfo;
+      GetInfo(m, Selected,vinfo);
+      typename std::vector<Info>::iterator ith;
 
-	  // collect the face pointer that has to be updated by the various addfaces
-	  std::vector<FacePointer *> vfpOrig;
-	  for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
-		vfpOrig.push_back( &(*ith).p.f );
+      // collect the face pointer that has to be updated by the various addfaces
+      std::vector<FacePointer *> vfpOrig;
+      for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
+        vfpOrig.push_back( &(*ith).p.f );
 
-	  int indCb=0;
-	  int holeCnt=0;
-	  for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
-	  {
-		indCb++;
-		if(cb) (*cb)(indCb*10/vinfo.size(),"Closing Holes");
-		if((*ith).size < maxSizeHole){
-		  std::vector<FacePointer *> facePtrToBeUpdated;
-		  holeCnt++;
-		  facePtrToBeUpdated=vfpOrig;
-		  EAR::AdjacencyRing().clear();
-		  //Loops around the hole to collect the faces that have to be tested for intersection.
-		  PosType ip = (*ith).p;
-		  do
-		  {
-			PosType inp = ip;
-			do
-			{
-			  inp.FlipE();
-			  inp.FlipF();
-			  EAR::AdjacencyRing().push_back(inp.f);
-			} while(!inp.IsBorder());
-			ip.NextB();
-		  }while(ip != (*ith).p);
+      int indCb=0;
+      int holeCnt=0;
+      for(ith = vinfo.begin(); ith!= vinfo.end(); ++ith)
+      {
+        indCb++;
+        if(cb) (*cb)(indCb*10/vinfo.size(),"Closing Holes");
+        if((*ith).size < maxSizeHole){
+          std::vector<FacePointer *> facePtrToBeUpdated;
+          holeCnt++;
+          facePtrToBeUpdated=vfpOrig;
+          EAR::AdjacencyRing().clear();
+          //Loops around the hole to collect the faces that have to be tested for intersection.
+          PosType ip = (*ith).p;
+          do
+          {
+            PosType inp = ip;
+            do
+            {
+              inp.FlipE();
+              inp.FlipF();
+              EAR::AdjacencyRing().push_back(inp.f);
+            } while(!inp.IsBorder());
+            ip.NextB();
+          }while(ip != (*ith).p);
 
-		  typename std::vector<FacePointer>::iterator fpi;
-		  for(fpi=EAR::AdjacencyRing().begin();fpi!=EAR::AdjacencyRing().end();++fpi)
-			facePtrToBeUpdated.push_back( &*fpi );
+          typename std::vector<FacePointer>::iterator fpi;
+          for(fpi=EAR::AdjacencyRing().begin();fpi!=EAR::AdjacencyRing().end();++fpi)
+            facePtrToBeUpdated.push_back( &*fpi );
 
-		  FillHoleEar<EAR >(m, *ith,facePtrToBeUpdated);
-		  EAR::AdjacencyRing().clear();
-		}
-	  }
-	  return holeCnt;
-	}
+          FillHoleEar<EAR >(m, *ith,facePtrToBeUpdated);
+          EAR::AdjacencyRing().clear();
+        }
+      }
+      return holeCnt;
+    }
 
 
 
-	static void GetInfo(MESH &m, bool Selected ,std::vector<Info >& VHI)
-		{
-	  tri::UpdateFlags<MESH>::FaceClearV(m);
-			for(FaceIterator fi = m.face.begin(); fi!=m.face.end(); ++fi)
-			{
-				if(!(*fi).IsD())
-				{
-					if(Selected && !(*fi).IsS())
-					{
-						//se devo considerare solo i triangoli selezionati e 
-						//quello che sto considerando non lo e' lo marchio e vado avanti
-					  (*fi).SetV();
-					}
-					else
-					{
-							for(int j =0; j<3 ; ++j)
-							{
-							  if( face::IsBorder(*fi,j) && !(*fi).IsV() )
-								{//Trovato una faccia di bordo non ancora visitata.
-									(*fi).SetV();
-							    PosType sp(&*fi, j, (*fi).V(j));
-									PosType fp=sp;
-									int holesize=0;
+    static void GetInfo(MESH &m, bool Selected ,std::vector<Info >& VHI)
+        {
+      tri::UpdateFlags<MESH>::FaceClearV(m);
+            for(FaceIterator fi = m.face.begin(); fi!=m.face.end(); ++fi)
+            {
+                if(!(*fi).IsD())
+                {
+                    if(Selected && !(*fi).IsS())
+                    {
+                        //se devo considerare solo i triangoli selezionati e
+                        //quello che sto considerando non lo e' lo marchio e vado avanti
+                      (*fi).SetV();
+                    }
+                    else
+                    {
+                            for(int j =0; j<3 ; ++j)
+                            {
+                              if( face::IsBorder(*fi,j) && !(*fi).IsV() )
+                                {//Trovato una faccia di bordo non ancora visitata.
+                                    (*fi).SetV();
+                                PosType sp(&*fi, j, (*fi).V(j));
+                                    PosType fp=sp;
+                                    int holesize=0;
 
-									Box3Type hbox;
-									hbox.Add(sp.v->cP());
+                                    Box3Type hbox;
+                                    hbox.Add(sp.v->cP());
                   //printf("Looping %i : (face %i edge %i) \n", VHI.size(),sp.f-&*m.face.begin(),sp.z);
                                     sp.f->SetV();
-									do
-									{
-										sp.f->SetV();
-										hbox.Add(sp.v->cP());
-										++holesize;
-										sp.NextB();
-										sp.f->SetV();
-										assert(sp.IsBorder());
-									}while(sp != fp);
+                                    do
+                                    {
+                                        sp.f->SetV();
+                                        hbox.Add(sp.v->cP());
+                                        ++holesize;
+                                        sp.NextB();
+                                        sp.f->SetV();
+                                        assert(sp.IsBorder());
+                                    }while(sp != fp);
 
-									//ho recuperato l'inofrmazione su tutto il buco
-									VHI.push_back( Info(sp,holesize,hbox) );
-								}
-							}//for sugli edge del triangolo
-					}//S & !S
-				}//!IsD()
-			}//for principale!!!
-		}
+                                    //ho recuperato l'inofrmazione su tutto il buco
+                                    VHI.push_back( Info(sp,holesize,hbox) );
+                                }
+                            }//for sugli edge del triangolo
+                    }//S & !S
+                }//!IsD()
+            }//for principale!!!
+        }
 
-		//Minimum Weight Algorithm
-		class Weight
-		{
-		public:
+        //Minimum Weight Algorithm
+        class Weight
+        {
+        public:
 
-			Weight() { ang = 180; ar = FLT_MAX ;}
-			Weight( float An, float Ar ) { ang=An ; ar= Ar;}
-			~Weight() {}
+            Weight() { ang = 180; ar = FLT_MAX ;}
+            Weight( float An, float Ar ) { ang=An ; ar= Ar;}
+            ~Weight() {}
 
-			float angle() const { return ang; }
-			float area()  const { return ar; }
+            float angle() const { return ang; }
+            float area()  const { return ar; }
 
-			Weight operator+( const Weight & other ) const {return Weight( std::max( angle(), other.angle() ), area() + other.area());}
-			bool operator<( const Weight & rhs ) const {return ( angle() < rhs.angle() ||(angle() == rhs.angle() && area() < rhs.area()));	}
+            Weight operator+( const Weight & other ) const {return Weight( std::max( angle(), other.angle() ), area() + other.area());}
+            bool operator<( const Weight & rhs ) const {return ( angle() < rhs.angle() ||(angle() == rhs.angle() && area() < rhs.area()));	}
 
-		private:
-			float ang;
-			float ar;
-		};
+        private:
+            float ang;
+            float ar;
+        };
 
-		/*     
-    \ /        \/ 
-   v1*---------*v4 
+        /*
+    \ /        \/
+   v1*---------*v4
     / \       /
    /   \     /
   / 	  \   /
@@ -644,235 +641,235 @@ template<class EAR>
 *---------*-
 | v3      v2\
 */
-		
-	static float ComputeDihedralAngle(CoordType  p1,CoordType  p2,CoordType  p3,CoordType  p4)
-		{
-			CoordType  n1 = NormalizedNormal(p1,p3,p2);
-			CoordType	 n2 = NormalizedNormal(p1,p2,p4);
-			return  math::ToDeg(AngleN(n1,n2));
-		}
+
+    static float ComputeDihedralAngle(CoordType  p1,CoordType  p2,CoordType  p3,CoordType  p4)
+        {
+            CoordType  n1 = NormalizedNormal(p1,p3,p2);
+            CoordType	 n2 = NormalizedNormal(p1,p2,p4);
+            return  math::ToDeg(AngleN(n1,n2));
+        }
 
   static bool existEdge(PosType pi,PosType pf)
-		{
-			PosType app = pi;
-			PosType appF = pi;
-			PosType tmp;
-			assert(pi.IsBorder());
-			appF.NextB();
-			appF.FlipV();
-			do
-			{
-				tmp = app;
-				tmp.FlipV();
-				if(tmp.v == pf.v)
-					return true;
-				app.FlipE();
-				app.FlipF();
+        {
+            PosType app = pi;
+            PosType appF = pi;
+            PosType tmp;
+            assert(pi.IsBorder());
+            appF.NextB();
+            appF.FlipV();
+            do
+            {
+                tmp = app;
+                tmp.FlipV();
+                if(tmp.v == pf.v)
+                    return true;
+                app.FlipE();
+                app.FlipF();
 
-				if(app == pi)return false;
-			}while(app != appF);
-			return false;
-		}
+                if(app == pi)return false;
+            }while(app != appF);
+            return false;
+        }
 
-	static Weight computeWeight( int i, int j, int k,
-			std::vector<PosType > pv,
-			std::vector< std::vector< int > >  v)
-		{
-			PosType pi = pv[i];
-			PosType pj = pv[j];
-			PosType pk = pv[k];
+    static Weight computeWeight( int i, int j, int k,
+            std::vector<PosType > pv,
+            std::vector< std::vector< int > >  v)
+        {
+            PosType pi = pv[i];
+            PosType pj = pv[j];
+            PosType pk = pv[k];
 
-			//test complex edge
-			if(existEdge(pi,pj) || existEdge(pj,pk)|| existEdge(pk,pi)	)	
-			{
-				return Weight();
-			}
-			// Return an infinite weight, if one of the neighboring patches
-			// could not be created.
-			if(v[i][j] == -1){return Weight();}
-			if(v[j][k] == -1){return Weight();}
+            //test complex edge
+            if(existEdge(pi,pj) || existEdge(pj,pk)|| existEdge(pk,pi)	)
+            {
+                return Weight();
+            }
+            // Return an infinite weight, if one of the neighboring patches
+            // could not be created.
+            if(v[i][j] == -1){return Weight();}
+            if(v[j][k] == -1){return Weight();}
 
-			//calcolo il massimo angolo diedrale, se esiste.
-			float angle = 0.0f;
-			PosType px;
-			if(i + 1 == j)
-			{
-				px = pj; 
-				px.FlipE(); px.FlipV();
-				angle = std::max<float>(angle , ComputeDihedralAngle(pi.v->P(), pj.v->P(), pk.v->P(), px.v->P())	);
-			}
-			else
-			{
-				angle = std::max<float>( angle, ComputeDihedralAngle(pi.v->P(),pj.v->P(), pk.v->P(), pv[ v[i][j] ].v->P()));
-			}
+            //calcolo il massimo angolo diedrale, se esiste.
+            float angle = 0.0f;
+            PosType px;
+            if(i + 1 == j)
+            {
+                px = pj;
+                px.FlipE(); px.FlipV();
+                angle = std::max<float>(angle , ComputeDihedralAngle(pi.v->P(), pj.v->P(), pk.v->P(), px.v->P())	);
+            }
+            else
+            {
+                angle = std::max<float>( angle, ComputeDihedralAngle(pi.v->P(),pj.v->P(), pk.v->P(), pv[ v[i][j] ].v->P()));
+            }
 
-			if(j + 1 == k)
-			{
-				px = pk; 
-				px.FlipE(); px.FlipV();
-				angle = std::max<float>(angle , ComputeDihedralAngle(pj.v->P(), pk.v->P(), pi.v->P(), px.v->P())	);
-			}
-			else
-			{
-				angle = std::max<float>( angle, ComputeDihedralAngle(pj.v->P(),pk.v->P(), pi.v->P(), pv[ v[j][k] ].v->P()));
-			}
+            if(j + 1 == k)
+            {
+                px = pk;
+                px.FlipE(); px.FlipV();
+                angle = std::max<float>(angle , ComputeDihedralAngle(pj.v->P(), pk.v->P(), pi.v->P(), px.v->P())	);
+            }
+            else
+            {
+                angle = std::max<float>( angle, ComputeDihedralAngle(pj.v->P(),pk.v->P(), pi.v->P(), pv[ v[j][k] ].v->P()));
+            }
 
-			if( i == 0 && k == (int)v.size() - 1)
-			{
-				px = pi; 
-				px.FlipE(); px.FlipV();
-				angle = std::max<float>(angle , ComputeDihedralAngle(pk.v->P(), pi.v->P(),  pj.v->P(),px.v->P() )	);
-			}
+            if( i == 0 && k == (int)v.size() - 1)
+            {
+                px = pi;
+                px.FlipE(); px.FlipV();
+                angle = std::max<float>(angle , ComputeDihedralAngle(pk.v->P(), pi.v->P(),  pj.v->P(),px.v->P() )	);
+            }
 
-			ScalarType area = ( (pj.v->P() - pi.v->P()) ^ (pk.v->P() - pi.v->P()) ).Norm() * 0.5;
+            ScalarType area = ( (pj.v->P() - pi.v->P()) ^ (pk.v->P() - pi.v->P()) ).Norm() * 0.5;
 
-			return Weight(angle, area);
-		}
+            return Weight(angle, area);
+        }
 
-	static void calculateMinimumWeightTriangulation(MESH &m, FaceIterator f,std::vector<PosType > vv )
-		{
-			std::vector< std::vector< Weight > > w; //matrice dei pesi minimali di ogni orecchio preso in conzideraione
-			std::vector< std::vector< int    > > vi;//memorizza l'indice del terzo vertice del triangolo
+    static void calculateMinimumWeightTriangulation(MESH &m, FaceIterator f,std::vector<PosType > vv )
+        {
+            std::vector< std::vector< Weight > > w; //matrice dei pesi minimali di ogni orecchio preso in conzideraione
+            std::vector< std::vector< int    > > vi;//memorizza l'indice del terzo vertice del triangolo
 
-			//hole size
-			int nv = vv.size();
-			
-			w.clear();
-			w.resize( nv, std::vector<Weight>( nv, Weight() ) );
+            //hole size
+            int nv = vv.size();
 
-			vi.resize( nv, std::vector<int>( nv, 0 ) );
+            w.clear();
+            w.resize( nv, std::vector<Weight>( nv, Weight() ) );
 
-			//inizializzo tutti i pesi possibili del buco
-			for ( int i = 0; i < nv-1; ++i )
-				w[i][i+1] = Weight( 0, 0 );
+            vi.resize( nv, std::vector<int>( nv, 0 ) );
 
-			//doppio ciclo for per calcolare di tutti i possibili triangoli i loro pesi.
-			for ( int j = 2; j < nv; ++j )
-			{
-				for ( int i = 0; i + j < nv; ++i )
-				{
-					//per ogni triangolazione mi mantengo il minimo valore del peso tra i triangoli possibili
-					Weight minval;
+            //inizializzo tutti i pesi possibili del buco
+            for ( int i = 0; i < nv-1; ++i )
+                w[i][i+1] = Weight( 0, 0 );
 
-					//indice del vertice che da il peso minimo nella triangolazione corrente
-					int minIndex = -1;
+            //doppio ciclo for per calcolare di tutti i possibili triangoli i loro pesi.
+            for ( int j = 2; j < nv; ++j )
+            {
+                for ( int i = 0; i + j < nv; ++i )
+                {
+                    //per ogni triangolazione mi mantengo il minimo valore del peso tra i triangoli possibili
+                    Weight minval;
 
-					//ciclo tra i vertici in mezzo a i due prefissati
-					for ( int m = i + 1; m < i + j; ++m )
-					{
-						Weight a = w[i][m];
-						Weight b = w[m][i+j];
-						Weight newval =  a + b + computeWeight( i, m, i+j, vv, vi);
-						if ( newval < minval )
-						{
-							minval = newval;
-							minIndex = m;
-						}
-					}
-					w[i][i+j] = minval;
-					vi[i][i+j] = minIndex;
-				}
-			}
+                    //indice del vertice che da il peso minimo nella triangolazione corrente
+                    int minIndex = -1;
 
-			//Triangulate
-			int i, j;
-			i=0; j=nv-1;
-			
-			triangulate(m,f, i, j, vi, vv);
+                    //ciclo tra i vertici in mezzo a i due prefissati
+                    for ( int m = i + 1; m < i + j; ++m )
+                    {
+                        Weight a = w[i][m];
+                        Weight b = w[m][i+j];
+                        Weight newval =  a + b + computeWeight( i, m, i+j, vv, vi);
+                        if ( newval < minval )
+                        {
+                            minval = newval;
+                            minIndex = m;
+                        }
+                    }
+                    w[i][i+j] = minval;
+                    vi[i][i+j] = minIndex;
+                }
+            }
 
-			while(f!=m.face.end())
-			{
-				(*f).SetD();
-				++f;
-				m.fn--;
-			}
-		}
+            //Triangulate
+            int i, j;
+            i=0; j=nv-1;
+
+            triangulate(m,f, i, j, vi, vv);
+
+            while(f!=m.face.end())
+            {
+                (*f).SetD();
+                ++f;
+                m.fn--;
+            }
+        }
 
 
-	static void triangulate(MESH &m, FaceIterator &f,int i, int j,
+    static void triangulate(MESH &m, FaceIterator &f,int i, int j,
                           std::vector< std::vector<int> > vi, std::vector<PosType > vv)
-		{
-			if(i + 1 == j){return;}
-			if(i==j)return;
+        {
+            if(i + 1 == j){return;}
+            if(i==j)return;
 
-			int k = vi[i][j];
+            int k = vi[i][j];
 
-			if(k == -1)	return;
+            if(k == -1)	return;
 
-			//Setto i vertici
-			f->V(0) = vv[i].v;
-			f->V(1) = vv[k].v;
-			f->V(2) = vv[j].v;
-			
-			f++;
-			triangulate(m,f,i,k,vi,vv);
-			triangulate(m,f,k,j,vi,vv);
-		}
+            //Setto i vertici
+            f->V(0) = vv[i].v;
+            f->V(1) = vv[k].v;
+            f->V(2) = vv[j].v;
+
+            f++;
+            triangulate(m,f,i,k,vi,vv);
+            triangulate(m,f,k,j,vi,vv);
+        }
 
   static void MinimumWeightFill(MESH &m, int holeSize, bool Selected)
-		{
-			std::vector<PosType > vvi;
-			std::vector<FacePointer * > vfp;
+        {
+            std::vector<PosType > vvi;
+            std::vector<FacePointer * > vfp;
 
-			std::vector<Info > vinfo;
-			typename std::vector<Info >::iterator VIT;
-			GetInfo(m, Selected,vinfo);
+            std::vector<Info > vinfo;
+            typename std::vector<Info >::iterator VIT;
+            GetInfo(m, Selected,vinfo);
 
-			for(VIT = vinfo.begin(); VIT != vinfo.end();++VIT)
-			{
-				vvi.push_back(VIT->p);
-			}
+            for(VIT = vinfo.begin(); VIT != vinfo.end();++VIT)
+            {
+                vvi.push_back(VIT->p);
+            }
 
-			typename std::vector<PosType >::iterator ith;
-			typename std::vector<PosType >::iterator ithn;
-			typename std::vector<VertexPointer >::iterator itf;
+            typename std::vector<PosType >::iterator ith;
+            typename std::vector<PosType >::iterator ithn;
+            typename std::vector<VertexPointer >::iterator itf;
 
-			std::vector<PosType > app;
-			PosType ps;
-			std::vector<FaceType > tr;
-			std::vector<VertexPointer > vf;
+            std::vector<PosType > app;
+            PosType ps;
+            std::vector<FaceType > tr;
+            std::vector<VertexPointer > vf;
 
-			for(ith = vvi.begin(); ith!= vvi.end(); ++ith)
-			{
-				tr.clear();
-				vf.clear();
-				app.clear();
-				vfp.clear();
+            for(ith = vvi.begin(); ith!= vvi.end(); ++ith)
+            {
+                tr.clear();
+                vf.clear();
+                app.clear();
+                vfp.clear();
 
-				ps = *ith;
-				getBoundHole(ps,app);
+                ps = *ith;
+                getBoundHole(ps,app);
 
         if(app.size() <= size_t(holeSize) )
-				{
-					typename std::vector<PosType >::iterator itP;
-					std::vector<FacePointer *> vfp;
+                {
+                    typename std::vector<PosType >::iterator itP;
+                    std::vector<FacePointer *> vfp;
 
-					for(ithn = vvi.begin(); ithn!= vvi.end(); ++ithn)
-						vfp.push_back(&(ithn->f));
+                    for(ithn = vvi.begin(); ithn!= vvi.end(); ++ithn)
+                        vfp.push_back(&(ithn->f));
 
-					for(itP = app.begin (); itP != app.end ();++itP)
-						vfp.push_back( &(*itP).f );
+                    for(itP = app.begin (); itP != app.end ();++itP)
+                        vfp.push_back( &(*itP).f );
 
-					//aggiungo le facce
-					FaceIterator f = tri::Allocator<MESH>::AddFaces(m, (app.size()-2) , vfp);
+                    //aggiungo le facce
+                    FaceIterator f = tri::Allocator<MESH>::AddFaces(m, (app.size()-2) , vfp);
 
-					calculateMinimumWeightTriangulation(m,f, app);
-				}
-			}		
+                    calculateMinimumWeightTriangulation(m,f, app);
+                }
+            }
 
-		}
+        }
 
-	static void getBoundHole (PosType sp,std::vector<PosType >&ret)
-		{
-			PosType fp = sp;
-			//take vertex around the hole
-			do
-			{
-				assert(fp.IsBorder());
-				ret.push_back(fp);
-				fp.NextB();
-			}while(sp != fp);
-		}
+    static void getBoundHole (PosType sp,std::vector<PosType >&ret)
+        {
+            PosType fp = sp;
+            //take vertex around the hole
+            do
+            {
+                assert(fp.IsBorder());
+                ret.push_back(fp);
+                fp.NextB();
+            }while(sp != fp);
+        }
 
 };//close class Hole
 

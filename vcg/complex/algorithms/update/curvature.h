@@ -33,7 +33,6 @@
 #include <vcg/complex/algorithms/intersection.h>
 #include <vcg/complex/algorithms/inertia.h>
 #include <eigenlib/Eigen/Core>
-#include <wrap/callback.h>
 
 namespace vcg {
 namespace tri {
@@ -52,16 +51,16 @@ class UpdateCurvature
 {
 
 public:
-	typedef typename MeshType::FaceType FaceType;
-	typedef typename MeshType::FacePointer FacePointer;
-	typedef typename MeshType::FaceIterator FaceIterator;
-	typedef typename MeshType::VertexIterator VertexIterator;
-	typedef typename MeshType::VertContainer VertContainer;
-	typedef typename MeshType::VertexType VertexType;
-	typedef typename MeshType::VertexPointer VertexPointer;
-	typedef vcg::face::VFIterator<FaceType> VFIteratorType;
-	typedef typename MeshType::CoordType CoordType;
-	typedef typename CoordType::ScalarType ScalarType;
+    typedef typename MeshType::FaceType FaceType;
+    typedef typename MeshType::FacePointer FacePointer;
+    typedef typename MeshType::FaceIterator FaceIterator;
+    typedef typename MeshType::VertexIterator VertexIterator;
+    typedef typename MeshType::VertContainer VertContainer;
+    typedef typename MeshType::VertexType VertexType;
+    typedef typename MeshType::VertexPointer VertexPointer;
+    typedef vcg::face::VFIterator<FaceType> VFIteratorType;
+    typedef typename MeshType::CoordType CoordType;
+    typedef typename CoordType::ScalarType ScalarType;
 
 
 private:
@@ -74,11 +73,11 @@ private:
 
 
 public:
-	/// \brief Compute principal direction and magnitudo of curvature.
+    /// \brief Compute principal direction and magnitudo of curvature.
 
 /*
-	Compute principal direction and magniuto of curvature as describe in the paper:
-	@InProceedings{bb33922,
+    Compute principal direction and magniuto of curvature as describe in the paper:
+    @InProceedings{bb33922,
   author =	"G. Taubin",
   title =	"Estimating the Tensor of Curvature of a Surface from a
          Polyhedral Approximation",
@@ -336,13 +335,13 @@ If pointVSfaceInt==false the covariance is computed by (analytic)integration ove
 
 //      Jacobi(A,  eigenvalues , eigenvectors, nrot);
 
-	  Eigen::Matrix3d AA;
-	  A.ToEigenMatrix(AA);
-	  Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig(AA);
-	  Eigen::Vector3d c_val = eig.eigenvalues();
-	  Eigen::Matrix3d c_vec = eig.eigenvectors(); // eigenvector are stored as columns.
-	  eigenvectors.FromEigenMatrix(c_vec);
-	  eigenvalues.FromEigenVector(c_val);
+      Eigen::Matrix3d AA;
+      A.ToEigenMatrix(AA);
+      Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig(AA);
+      Eigen::Vector3d c_val = eig.eigenvalues();
+      Eigen::Matrix3d c_vec = eig.eigenvectors(); // eigenvector are stored as columns.
+      eigenvectors.FromEigenMatrix(c_vec);
+      eigenvalues.FromEigenVector(c_val);
 //	  EV.transposeInPlace();
 //	  ev.FromEigenVector(c_val);
 
@@ -520,174 +519,174 @@ static void MeanAndGaussian(MeshType & m)
 }
 
 
-	/// \brief Update the mean and the gaussian curvature of a vertex.
+    /// \brief Update the mean and the gaussian curvature of a vertex.
 
-	/**
-	The function uses the VF adiacency to walk around the vertex.
-	\return It will return the voronoi area around the vertex.  If (norm == true) the mean and the gaussian curvature are normalized.
-	 Based on the paper  <a href="http://www2.in.tu-clausthal.de/~hormann/papers/Dyn.2001.OTU.pdf">  <em> "Optimizing 3d triangulations using discrete curvature analysis" </em> </a>
-	  */
+    /**
+    The function uses the VF adiacency to walk around the vertex.
+    \return It will return the voronoi area around the vertex.  If (norm == true) the mean and the gaussian curvature are normalized.
+     Based on the paper  <a href="http://www2.in.tu-clausthal.de/~hormann/papers/Dyn.2001.OTU.pdf">  <em> "Optimizing 3d triangulations using discrete curvature analysis" </em> </a>
+      */
 
-	static float ComputeSingleVertexCurvature(VertexPointer v, bool norm = true)
-	{
-		VFIteratorType vfi(v);
-		float A = 0;
+    static float ComputeSingleVertexCurvature(VertexPointer v, bool norm = true)
+    {
+        VFIteratorType vfi(v);
+        float A = 0;
 
-		v->Kh() = 0;
-		v->Kg() = 2 * M_PI;
+        v->Kh() = 0;
+        v->Kg() = 2 * M_PI;
 
-		while (!vfi.End()) {
-			if (!vfi.F()->IsD()) {
-				FacePointer f = vfi.F();
-				int i = vfi.I();
-				VertexPointer v0 = f->V0(i), v1 = f->V1(i), v2 = f->V2(i);
+        while (!vfi.End()) {
+            if (!vfi.F()->IsD()) {
+                FacePointer f = vfi.F();
+                int i = vfi.I();
+                VertexPointer v0 = f->V0(i), v1 = f->V1(i), v2 = f->V2(i);
 
-				float ang0 = math::Abs(Angle(v1->P() - v0->P(), v2->P() - v0->P() ));
-				float ang1 = math::Abs(Angle(v0->P() - v1->P(), v2->P() - v1->P() ));
-				float ang2 = M_PI - ang0 - ang1;
+                float ang0 = math::Abs(Angle(v1->P() - v0->P(), v2->P() - v0->P() ));
+                float ang1 = math::Abs(Angle(v0->P() - v1->P(), v2->P() - v1->P() ));
+                float ang2 = M_PI - ang0 - ang1;
 
-				float s01 = SquaredDistance(v1->P(), v0->P());
-				float s02 = SquaredDistance(v2->P(), v0->P());
+                float s01 = SquaredDistance(v1->P(), v0->P());
+                float s02 = SquaredDistance(v2->P(), v0->P());
 
-				// voronoi cell of current vertex
-				if (ang0 >= M_PI/2)
-					A += (0.5f * DoubleArea(*f) - (s01 * tan(ang1) + s02 * tan(ang2)) / 8.0 );
-				else if (ang1 >= M_PI/2)
-					A += (s01 * tan(ang0)) / 8.0;
-				else if (ang2 >= M_PI/2)
-					A += (s02 * tan(ang0)) / 8.0;
-				else  // non obctuse triangle
-					A += ((s02 / tan(ang1)) + (s01 / tan(ang2))) / 8.0;
+                // voronoi cell of current vertex
+                if (ang0 >= M_PI/2)
+                    A += (0.5f * DoubleArea(*f) - (s01 * tan(ang1) + s02 * tan(ang2)) / 8.0 );
+                else if (ang1 >= M_PI/2)
+                    A += (s01 * tan(ang0)) / 8.0;
+                else if (ang2 >= M_PI/2)
+                    A += (s02 * tan(ang0)) / 8.0;
+                else  // non obctuse triangle
+                    A += ((s02 / tan(ang1)) + (s01 / tan(ang2))) / 8.0;
 
-				// gaussian curvature update
-				v->Kg() -= ang0;
+                // gaussian curvature update
+                v->Kg() -= ang0;
 
-				// mean curvature update
-				ang1 = math::Abs(Angle(f->N(), v1->N()));
-				ang2 = math::Abs(Angle(f->N(), v2->N()));
-				v->Kh() += ( (math::Sqrt(s01) / 2.0) * ang1 +
-							 (math::Sqrt(s02) / 2.0) * ang2 );
-			}
+                // mean curvature update
+                ang1 = math::Abs(Angle(f->N(), v1->N()));
+                ang2 = math::Abs(Angle(f->N(), v2->N()));
+                v->Kh() += ( (math::Sqrt(s01) / 2.0) * ang1 +
+                             (math::Sqrt(s02) / 2.0) * ang2 );
+            }
 
-			++vfi;
-		}
+            ++vfi;
+        }
 
-		v->Kh() /= 4.0f;
+        v->Kh() /= 4.0f;
 
-		if(norm) {
-			if(A <= std::numeric_limits<float>::epsilon()) {
-				v->Kh() = 0;
-				v->Kg() = 0;
-			}
-			else {
-				v->Kh() /= A;
-				v->Kg() /= A;
-			}
-		}
+        if(norm) {
+            if(A <= std::numeric_limits<float>::epsilon()) {
+                v->Kh() = 0;
+                v->Kg() = 0;
+            }
+            else {
+                v->Kh() /= A;
+                v->Kg() /= A;
+            }
+        }
 
-		return A;
-	}
+        return A;
+    }
 
-	static void PerVertex(MeshType & m)
-	{
-	  tri::RequireVFAdjacency(m);
+    static void PerVertex(MeshType & m)
+    {
+      tri::RequireVFAdjacency(m);
 
-	  for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-		ComputeSingleVertexCurvature(&*vi,false);
-	}
+      for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+        ComputeSingleVertexCurvature(&*vi,false);
+    }
 
 
 
 /*
-	Compute principal curvature directions and value with normal cycle:
-	@inproceedings{CohMor03,
-	author = {Cohen-Steiner, David   and Morvan, Jean-Marie  },
-	booktitle = {SCG '03: Proceedings of the nineteenth annual symposium on Computational geometry},
-	title - {Restricted delaunay triangulations and normal cycle}
-	year = {2003}
+    Compute principal curvature directions and value with normal cycle:
+    @inproceedings{CohMor03,
+    author = {Cohen-Steiner, David   and Morvan, Jean-Marie  },
+    booktitle = {SCG '03: Proceedings of the nineteenth annual symposium on Computational geometry},
+    title - {Restricted delaunay triangulations and normal cycle}
+    year = {2003}
 }
-	*/
+    */
 
-	static void PrincipalDirectionsNormalCycle(MeshType & m){
-	  tri::RequireVFAdjacency(m);
-	  tri::RequireFFAdjacency(m);
-	  tri::RequirePerFaceNormal(m);
+    static void PrincipalDirectionsNormalCycle(MeshType & m){
+      tri::RequireVFAdjacency(m);
+      tri::RequireFFAdjacency(m);
+      tri::RequirePerFaceNormal(m);
 
-		typename MeshType::VertexIterator vi;
+        typename MeshType::VertexIterator vi;
 
-		for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-		if(!((*vi).IsD())){
-			vcg::Matrix33<ScalarType> m33;m33.SetZero();
-			face::JumpingPos<typename MeshType::FaceType> p((*vi).VFp(),&(*vi));
-			p.FlipE();
-			typename MeshType::VertexType * firstv = p.VFlip();
-			assert(p.F()->V(p.VInd())==&(*vi));
+        for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+        if(!((*vi).IsD())){
+            vcg::Matrix33<ScalarType> m33;m33.SetZero();
+            face::JumpingPos<typename MeshType::FaceType> p((*vi).VFp(),&(*vi));
+            p.FlipE();
+            typename MeshType::VertexType * firstv = p.VFlip();
+            assert(p.F()->V(p.VInd())==&(*vi));
 
-			do{
-				if( p.F() != p.FFlip()){
-					Point3<ScalarType> normalized_edge = p.F()->V(p.F()->Next(p.VInd()))->cP() - (*vi).P();
-					ScalarType edge_length = normalized_edge.Norm();
-					normalized_edge/=edge_length;
-					Point3<ScalarType> n1 = p.F()->cN();n1.Normalize();
-					Point3<ScalarType> n2 = p.FFlip()->cN();n2.Normalize();
-					ScalarType n1n2 = (n1 ^ n2).dot(normalized_edge);
-					n1n2 = std::max(std::min( ScalarType(1.0),n1n2),ScalarType(-1.0));
-					ScalarType beta = math::Asin(n1n2);
-					m33[0][0] += beta*edge_length*normalized_edge[0]*normalized_edge[0];
-					m33[0][1] += beta*edge_length*normalized_edge[1]*normalized_edge[0];
-					m33[1][1] += beta*edge_length*normalized_edge[1]*normalized_edge[1];
-					m33[0][2] += beta*edge_length*normalized_edge[2]*normalized_edge[0];
-					m33[1][2] += beta*edge_length*normalized_edge[2]*normalized_edge[1];
-					m33[2][2] += beta*edge_length*normalized_edge[2]*normalized_edge[2];
-				}
-				p.NextFE();
-			}while(firstv != p.VFlip());
+            do{
+                if( p.F() != p.FFlip()){
+                    Point3<ScalarType> normalized_edge = p.F()->V(p.F()->Next(p.VInd()))->cP() - (*vi).P();
+                    ScalarType edge_length = normalized_edge.Norm();
+                    normalized_edge/=edge_length;
+                    Point3<ScalarType> n1 = p.F()->cN();n1.Normalize();
+                    Point3<ScalarType> n2 = p.FFlip()->cN();n2.Normalize();
+                    ScalarType n1n2 = (n1 ^ n2).dot(normalized_edge);
+                    n1n2 = std::max(std::min( ScalarType(1.0),n1n2),ScalarType(-1.0));
+                    ScalarType beta = math::Asin(n1n2);
+                    m33[0][0] += beta*edge_length*normalized_edge[0]*normalized_edge[0];
+                    m33[0][1] += beta*edge_length*normalized_edge[1]*normalized_edge[0];
+                    m33[1][1] += beta*edge_length*normalized_edge[1]*normalized_edge[1];
+                    m33[0][2] += beta*edge_length*normalized_edge[2]*normalized_edge[0];
+                    m33[1][2] += beta*edge_length*normalized_edge[2]*normalized_edge[1];
+                    m33[2][2] += beta*edge_length*normalized_edge[2]*normalized_edge[2];
+                }
+                p.NextFE();
+            }while(firstv != p.VFlip());
 
-			if(m33.Determinant()==0.0){ // degenerate case
-				(*vi).K1() = (*vi).K2() = 0.0; continue;}
+            if(m33.Determinant()==0.0){ // degenerate case
+                (*vi).K1() = (*vi).K2() = 0.0; continue;}
 
-			m33[1][0] = m33[0][1];
-			m33[2][0] = m33[0][2];
-			m33[2][1] = m33[1][2];
+            m33[1][0] = m33[0][1];
+            m33[2][0] = m33[0][2];
+            m33[2][1] = m33[1][2];
 
-			Eigen::Matrix3d it;
-			m33.ToEigenMatrix(it);
-			Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig(it);
-			Eigen::Vector3d c_val = eig.eigenvalues();
-			Eigen::Matrix3d c_vec = eig.eigenvectors();
+            Eigen::Matrix3d it;
+            m33.ToEigenMatrix(it);
+            Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig(it);
+            Eigen::Vector3d c_val = eig.eigenvalues();
+            Eigen::Matrix3d c_vec = eig.eigenvectors();
 
-			Point3<ScalarType> lambda;
-			Matrix33<ScalarType> vect;
-			vect.FromEigenMatrix(c_vec);
-			lambda.FromEigenVector(c_val);
+            Point3<ScalarType> lambda;
+            Matrix33<ScalarType> vect;
+            vect.FromEigenMatrix(c_vec);
+            lambda.FromEigenVector(c_val);
 
-			ScalarType bestNormal = 0;
-			int bestNormalIndex = -1;
-			for(int i = 0; i < 3; ++i)
-			{
-			  float agreeWithNormal =  fabs((*vi).N().Normalize().dot(vect.GetColumn(i)));
-				if( agreeWithNormal > bestNormal )
-				{
-					bestNormal= agreeWithNormal;
-					bestNormalIndex = i;
-				}
-			}
-			int maxI = (bestNormalIndex+2)%3;
-			int minI = (bestNormalIndex+1)%3;
-			if(fabs(lambda[maxI]) < fabs(lambda[minI])) std::swap(maxI,minI);
+            ScalarType bestNormal = 0;
+            int bestNormalIndex = -1;
+            for(int i = 0; i < 3; ++i)
+            {
+              float agreeWithNormal =  fabs((*vi).N().Normalize().dot(vect.GetColumn(i)));
+                if( agreeWithNormal > bestNormal )
+                {
+                    bestNormal= agreeWithNormal;
+                    bestNormalIndex = i;
+                }
+            }
+            int maxI = (bestNormalIndex+2)%3;
+            int minI = (bestNormalIndex+1)%3;
+            if(fabs(lambda[maxI]) < fabs(lambda[minI])) std::swap(maxI,minI);
 
-			(*vi).PD1() = *(Point3<ScalarType>*)(& vect[maxI][0]);
-			(*vi).PD2() = *(Point3<ScalarType>*)(& vect[minI][0]);
-			(*vi).K1() = lambda[2];
-			(*vi).K2() = lambda[1];
-		}
-	}
+            (*vi).PD1() = *(Point3<ScalarType>*)(& vect[maxI][0]);
+            (*vi).PD2() = *(Point3<ScalarType>*)(& vect[minI][0]);
+            (*vi).K1() = lambda[2];
+            (*vi).K2() = lambda[1];
+        }
+    }
 
-	static void PerVertexBasicRadialCrossField(MeshType &m, float anisotropyRatio = 1.0 )
-	{
-	  tri::RequirePerVertexCurvatureDir(m);
-	  CoordType c=m.bbox.Center();
-	  float maxRad = m.bbox.Diag()/2.0f;
+    static void PerVertexBasicRadialCrossField(MeshType &m, float anisotropyRatio = 1.0 )
+    {
+      tri::RequirePerVertexCurvatureDir(m);
+      CoordType c=m.bbox.Center();
+      float maxRad = m.bbox.Diag()/2.0f;
 
       for(int i=0;i<m.vert.size();++i) {
         CoordType dd = m.vert[i].P()-c;
