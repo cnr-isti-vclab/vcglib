@@ -20,15 +20,10 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#ifndef POLYGON_POLYCOORD_COLLAPSE_H
-#define POLYGON_POLYCOORD_COLLAPSE_H
+#ifndef POLYGON_POLYCHORD_COLLAPSE_H
+#define POLYGON_POLYCHORD_COLLAPSE_H
 
-#include <vector>
 #include <list>
-#include <set>
-#include <map>
-#include <queue>
-#include <utility>
 #include <vcg/complex/complex.h>
 #include <vcg/simplex/face/jumping_pos.h>
 
@@ -37,27 +32,27 @@ namespace tri {
 /** \addtogroup trimesh */
 
 /**
-* @brief The PolycoordCollapse class provides methods to semplify a quad mesh, by collapsing the polycoords.
+* @brief The PolychordCollapse class provides methods to semplify a quad mesh, by collapsing the polychords.
 *
 * This class is an implementation of a method very similar to that for mesh semplification proposed
 * by Daniels et al. in "Quadrilateral mesh simplification", see http://www.cs.utah.edu/~jdaniels/research/asia2008_qms.htm
-* The main function is PolycoordCollapse::CollapsePolycoord() which deletes all the quadrilateral faces in a polycoord.
-* The polycoords that can be collapsed in this case are those forming a closed loop (a ring) or that start and end to
+* The main function is PolychordCollapse::CollapsePolychord() which deletes all the quadrilateral faces in a polychord.
+* The polychords that can be collapsed in this case are those forming a closed loop (a ring) or that start and end to
 * mesh borders. A way to preserve the structure of the singularities is also provided.
-* The convenient method PolycoordCollapse::CollapseAllPolycoords() finds and collapses all the polycoords on a mesh.
+* The convenient method PolychordCollapse::CollapseAllPolychords() finds and collapses all the polychords on a mesh.
 * The input mesh should be polygonal, i.e. it should have the vcg::face::PolyInfo component. Even though a generic
 * triangle mesh can be given, actually the class does not perform any collapsing operation since it sees only triangles,
 * in fact it does not consider faux edges.
 */
 template < typename PolyMeshType >
-class PolycoordCollapse {
+class PolychordCollapse {
 public:
   typedef typename PolyMeshType::FaceType   FaceType;
   typedef typename PolyMeshType::VertexType VertexType;
   typedef typename PolyMeshType::CoordType  CoordType;
 
   /**
-  * @brief The PC_ResultCode enum codifies the result type of a polycoord collapse operation.
+  * @brief The PC_ResultCode enum codifies the result type of a polychord collapse operation.
   */
   enum PC_ResultCode {
     PC_SUCCESS = 0,
@@ -70,14 +65,14 @@ public:
   };
 
   /**
-  * @brief The PC_Coord struct identifies a coord of a polycoord passing through a quad.
+  * @brief The PC_Chord struct identifies a coord of a polychord passing through a quad.
   */
-  struct PC_Coord {
+  struct PC_Chord {
     unsigned long mark;
     PC_ResultCode q;
-    PC_Coord * prev;
-    PC_Coord * next;
-    PC_Coord() : mark(std::numeric_limits<unsigned long>::max()), q(PC_VOID), prev(NULL), next(NULL) { }
+    PC_Chord * prev;
+    PC_Chord * next;
+    PC_Chord() : mark(std::numeric_limits<unsigned long>::max()), q(PC_VOID), prev(NULL), next(NULL) { }
     inline void Reset() {
       mark = std::numeric_limits<unsigned long>::max();
       q = PC_VOID;
@@ -86,16 +81,16 @@ public:
   };
 
   /**
-  * @brief The PC_Coords class gives efficient access to each coord (relative to a face).
+  * @brief The PC_Chords class gives efficient access to each coord (relative to a face).
   */
-  class PC_Coords {
+  class PC_Chords {
   public:
     /**
-     * @brief PC_Coords constructor.
-     * @note Since each face corresponds to two coords, the actual size of the vector of coords is 2*mesh.face.size().
+     * @brief PC_Chords constructor.
+     * @note Since each face corresponds to two chords, the actual size of the vector of chords is 2*mesh.face.size().
      * @param mesh
      */
-    PC_Coords (const PolyMeshType &mesh) : _coords(2*mesh.face.size()), _currentCoord(NULL) {
+    PC_Chords (const PolyMeshType &mesh) : _Chords(2*mesh.face.size()), _currentChord(NULL) {
       Reset(mesh);
     }
 
@@ -103,82 +98,82 @@ public:
      * @brief ResetMarks
      */
     void ResetMarks() {
-      typename std::vector<PC_Coord>::iterator it = _coords.begin();
-      for (; it != _coords.end(); it++)
+      typename std::vector<PC_Chord>::iterator it = _Chords.begin();
+      for (; it != _Chords.end(); it++)
         (*it).mark = std::numeric_limits<unsigned long>::max();
     }
 
     /**
      * @brief Reset rearrages the container.
-     * @note Since each face corresponds to two coords, the actual size of the vector of coords is 2*mesh.face.size().
+     * @note Since each face corresponds to two chords, the actual size of the vector of chords is 2*mesh.face.size().
      * @param mesh
      */
     void Reset(const PolyMeshType &mesh) {
-      _coords.resize(2*mesh.face.size());
-      for (size_t j = 0; j < _coords.size(); j++)
-        _coords[j].Reset();
-      _currentCoord = NULL;
+      _Chords.resize(2*mesh.face.size());
+      for (size_t j = 0; j < _Chords.size(); j++)
+        _Chords[j].Reset();
+      _currentChord = NULL;
 
-      PC_Coord *coord = NULL;
+      PC_Chord *chord = NULL;
       long long j = 0;
-      for (size_t i = 0; i < _coords.size(); i++) {
+      for (size_t i = 0; i < _Chords.size(); i++) {
         // set the prev
-        coord = NULL;
+        chord = NULL;
         if ((long long)i-1 >= 0) {
-          coord = &_coords[i-1];
+          chord = &_Chords[i-1];
           if (vcg::tri::HasPerFaceFlags(mesh)) {
             j = i-1;
             while (j >= 0 && mesh.face[j/2].IsD())
               j--;
             if (j >= 0)
-              coord = &_coords[j];
+              chord = &_Chords[j];
             else
-              coord = NULL;
+              chord = NULL;
           }
         }
-        _coords[i].prev = coord;
+        _Chords[i].prev = chord;
 
         // set the next
-        coord = NULL;
-        if (i+1 < _coords.size()) {
-          coord = &_coords[i+1];
+        chord = NULL;
+        if (i+1 < _Chords.size()) {
+          chord = &_Chords[i+1];
           if (vcg::tri::HasPerFaceFlags(mesh)) {
             j = i+1;
-            while (j < (long long)_coords.size() && mesh.face[j/2].IsD())
+            while (j < (long long)_Chords.size() && mesh.face[j/2].IsD())
               j++;
-            if (j < (long long)_coords.size())
-              coord = &_coords[j];
+            if (j < (long long)_Chords.size())
+              chord = &_Chords[j];
             else
-              coord = NULL;
+              chord = NULL;
           }
         }
-        _coords[i].next = coord;
+        _Chords[i].next = chord;
       }
       if (mesh.face.size() > 0) {
         // set the current coord (first - not deleted - face)
-        _currentCoord = &_coords[0];
+        _currentChord = &_Chords[0];
         if (vcg::tri::HasPerFaceFlags(mesh) && mesh.face[0].IsD())
-          _currentCoord = _currentCoord->next;
+          _currentChord = _currentChord->next;
       }
     }
 
     /**
-     * @brief operator [], given a face index and an offset, it returns (a reference to) its corresponding PC_Coord.
+     * @brief operator [], given a face index and an offset, it returns (a reference to) its corresponding PC_Chord.
      * @param face_edge A std::pair<size_t, unsigned char>(face_index, offset). The offset should be 0 or 1.
-     * @return A reference to the corresponding PC_Coord.
+     * @return A reference to the corresponding PC_Chord.
      */
-    inline PC_Coord & operator[] (const std::pair<size_t, unsigned char> &face_edge) {
-      assert(face_edge.first >= 0 && 2*face_edge.first+face_edge.second < _coords.size());
-      return _coords[2*face_edge.first + face_edge.second];
+    inline PC_Chord & operator[] (const std::pair<size_t, unsigned char> &face_edge) {
+      assert(face_edge.first >= 0 && 2*face_edge.first+face_edge.second < _Chords.size());
+      return _Chords[2*face_edge.first + face_edge.second];
     }
     /**
-     * @brief operator [], given a face index and an offset, it returns (a const reference to) its corresponding PC_Coord.
+     * @brief operator [], given a face index and an offset, it returns (a const reference to) its corresponding PC_Chord.
      * @param face_edge A std::pair<size_t, unsigned char>(face_index, offset). The offset should be 0 or 1.
-     * @return A reference to the corresponding PC_Coord.
+     * @return A reference to the corresponding PC_Chord.
      */
-    inline const PC_Coord & operator[] (const std::pair<size_t, unsigned char> &face_edge) const {
-      assert(face_edge.first >= 0 && 2*face_edge.first+face_edge.second < _coords.size());
-      return _coords[2*face_edge.first + face_edge.second];
+    inline const PC_Chord & operator[] (const std::pair<size_t, unsigned char> &face_edge) const {
+      assert(face_edge.first >= 0 && 2*face_edge.first+face_edge.second < _Chords.size());
+      return _Chords[2*face_edge.first + face_edge.second];
     }
 
     /**
@@ -186,23 +181,23 @@ public:
      * @param coord The coord pointer.
      * @return A std::pair <size_t, unsigned char>(face_index, offset) with offset being 0 or 1.
      */
-    inline std::pair<size_t, unsigned char> operator[] (PC_Coord const * const coord) {
-      assert(coord >= &_coords[0] && coord < &_coords[0]+_coords.size());
-      return std::pair<size_t, unsigned char>((coord - &_coords[0])/2, (coord - &_coords[0])%2);
+    inline std::pair<size_t, unsigned char> operator[] (PC_Chord const * const coord) {
+      assert(coord >= &_Chords[0] && coord < &_Chords[0]+_Chords.size());
+      return std::pair<size_t, unsigned char>((coord - &_Chords[0])/2, (coord - &_Chords[0])%2);
     }
 
     /**
      * @brief UpdateCoord updates the coord information and links.
      * @param coord The coord to update.
-     * @param mark The mark of the polycoord.
-     * @param resultCode The code for the type of the polycoord.
+     * @param mark The mark of the polychord.
+     * @param resultCode The code for the type of the polychord.
      */
-    inline void UpdateCoord (PC_Coord &coord, const unsigned long mark, const PC_ResultCode resultCode) {
+    inline void UpdateCoord (PC_Chord &coord, const unsigned long mark, const PC_ResultCode resultCode) {
       // update prev and next
       if (coord.q == PC_VOID) {
-        if (coord.prev != NULL && &coord != _currentCoord)
+        if (coord.prev != NULL && &coord != _currentChord)
           coord.prev->next = coord.next;
-        if (coord.next != NULL && &coord != _currentCoord)
+        if (coord.next != NULL && &coord != _currentChord)
           coord.next->prev = coord.prev;
         coord.mark = mark;
       }
@@ -213,8 +208,8 @@ public:
      * @brief Next, if it's not at the end, it goes to the next coord.
      */
     inline void Next () {
-      if (_currentCoord != NULL)
-        _currentCoord = _currentCoord->next;
+      if (_currentChord != NULL)
+        _currentChord = _currentChord->next;
     }
 
     /**
@@ -222,9 +217,9 @@ public:
      * @param face_edge A std::pair where to store the FaceType pointer and the edge index.
      */
     inline void GetCurrent (std::pair<size_t, unsigned char> &face_edge) {
-      if (_currentCoord != NULL) {
-        face_edge.first = (_currentCoord - &_coords[0])/2;
-        face_edge.second = (_currentCoord - &_coords[0])%2;
+      if (_currentChord != NULL) {
+        face_edge.first = (_currentChord - &_Chords[0])/2;
+        face_edge.second = (_currentChord - &_Chords[0])%2;
       } else {
         face_edge.first = std::numeric_limits<size_t>::max();
         face_edge.second = 0;
@@ -236,16 +231,16 @@ public:
      * @return true if an end has been reached, false otherwise.
      */
     inline bool End () {
-      return _currentCoord == NULL;
+      return _currentChord == NULL;
     }
 
   private:
-    std::vector<PC_Coord>   _coords;
-    PC_Coord                *_currentCoord;
+    std::vector<PC_Chord>   _Chords;
+    PC_Chord                *_currentChord;
   };
 
   /**
-   * @brief The LinkCondition class provides a tool to check if a polycoord satisfies the link conditions.
+   * @brief The LinkCondition class provides a tool to check if a polychord satisfies the link conditions.
    */
   class LinkConditions {
   private:
@@ -271,12 +266,12 @@ public:
     }
 
     /**
-     * @brief CheckLinkConditions checks if collapsing the polycoord starting from startPos
+     * @brief CheckLinkConditions checks if collapsing the polychord starting from startPos
      * satisfies the link conditions.
-     * @warning The polycoord starts from startPos and ends to itself (if it's a loop) or to a border. In the latter case,
+     * @warning The polychord starts from startPos and ends to itself (if it's a loop) or to a border. In the latter case,
      * call this method starting from the opposite border of the strip of quads.
      * @param mesh The mesh for getting the vertex index.
-     * @param startPos The starting position of the polycoord.
+     * @param startPos The starting position of the polychord.
      * @return true if satisfied, false otherwise.
      */
     bool CheckLinkConditions (const PolyMeshType &mesh, const vcg::face::Pos<FaceType> &startPos) {
@@ -334,7 +329,7 @@ public:
     }
 
     /**
-     * @brief LC_ResetStars resets the stars on a polycoord.
+     * @brief LC_ResetStars resets the stars on a polychord.
      * @param mesh The mesh for getting the vertex index.
      * @param startPos
      */
@@ -390,7 +385,7 @@ public:
     }
 
     /**
-     * @brief LC_computeStars computes the stars of edges and vertices of the polycoord from the starting pos
+     * @brief LC_computeStars computes the stars of edges and vertices of the polychord from the starting pos
      * either to itself (if it's a loop) or to the border edge.
      * @param mesh The mesh for getting the vertex index.
      * @param startPos Starting position.
@@ -406,7 +401,7 @@ public:
       vcg::face::Pos<FaceType> eStarPos;
 
       lcEdges.clear();
-      /// compute the star of all the vertices and edges seen from the polycoord
+      /// compute the star of all the vertices and edges seen from the polychord
       runPos = startPos;
       do {
         // create a lcedge
@@ -566,24 +561,24 @@ public:
   };
 
 
-  // PolyCoordCollapse's methods begin here::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  // PolychordCollapse's methods begin here::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   /**
-   * @brief CollapsePolycoord performs all checks and then collapses the polycoord.
+   * @brief CollapsePolychord performs all checks and then collapses the polychord.
    *
    * @warning This function deletes faces and vertices by calling
    * vcg::tri::Allocator<PolyMeshType>::DeleteFace() and
    * vcg::tri::Allocator<PolyMeshType>::DeleteVertex().
-   * The object PC_Coords coords is used to track the polycoords, and it has got
+   * The object PC_Chords chords is used to track the polychords, and it has got
    * a size proportional to that of the mesh face container. If you actually
    * delete faces and vertices by calling vcg::tri::Allocator<PolyMeshType>::CompactFaceVector()
    * and vcg::tri::Allocator<PolyMeshType>::CompactVertexVector() after this function,
-   * object PC_Coords coords then is not valid any more, so you MUST rearrange it
-   * by calling PC_Coords.Reset(). For the same reason, you MUST rearrange LinkConditions linkConditions
+   * object PC_Chords chords then is not valid any more, so you MUST rearrange it
+   * by calling PC_Chords.Reset(). For the same reason, you MUST rearrange LinkConditions linkConditions
    * by calling LinkConditions.Resize().
    * However, for efficiency, you SHOULD compact vertex and face containers at the end of all your
-   * polycoord collapsing operations, without having to rearrange coords and linkConditions.
-   * The function CollapseAllPolycoords() does this for you.
+   * polychord collapsing operations, without having to rearrange chords and linkConditions.
+   * The function CollapseAllPolychords() does this for you.
    *
    * @note Vertex flags, face flags, FF adjacency and FV adjacency are required. Not anything else.
    * Such components are automatically updated here. If the mesh has other components that may be
@@ -591,17 +586,17 @@ public:
    *
    * @param mesh The polygonal mesh used for getting the face index and deleting the faces
    * (it SHOULD have the vcg::face::PolyInfo component).
-   * @param pos Position of the polycoord.
-   * @param mark Mark for the current polycoord.
-   * @param coords Vector of coords.
+   * @param pos Position of the polychord.
+   * @param mark Mark for the current polychord.
+   * @param chords Vector of chords.
    * @param linkConditions Link conditions checker.
    * @param checkSing true if singularities on both sides are not allowed.
    * @return A PC_ResultCode resulting from checks or PC_SUCCESS if the collapse has been performed.
    */
-  static PC_ResultCode CollapsePolycoord (PolyMeshType &mesh,
+  static PC_ResultCode CollapsePolychord (PolyMeshType &mesh,
                                           const vcg::face::Pos<FaceType> &pos,
                                           const unsigned long mark,
-                                          PC_Coords &coords,
+                                          PC_Chords &chords,
                                           LinkConditions &linkConditions,
                                           const bool checkSing = true) {
     vcg::tri::RequirePerVertexFlags(mesh);
@@ -615,52 +610,52 @@ public:
 
     vcg::face::Pos<FaceType> tempPos, startPos;
 
-    // check if the sequence of facets is a polycoord and find the starting coord
-    PC_ResultCode resultCode = CheckPolycoordFindStartPosition(pos, startPos, checkSing);
+    // check if the sequence of facets is a polychord and find the starting coord
+    PC_ResultCode resultCode = CheckPolychordFindStartPosition(pos, startPos, checkSing);
     // if not successful, visit the sequence for marking it and return
     if (resultCode != PC_SUCCESS) {
-      // if not manifold, visit the entire polycoord ending on the non-manifold edge
+      // if not manifold, visit the entire polychord ending on the non-manifold edge
       if (resultCode == PC_NOTMANIF) {
         tempPos = pos;
-        VisitPolycoord(mesh, tempPos, coords, mark, resultCode);
+        VisitPolychord(mesh, tempPos, chords, mark, resultCode);
         if (tempPos.IsManifold() && !tempPos.IsBorder()) {
           tempPos.FlipF();
-          VisitPolycoord(mesh, tempPos, coords, mark, resultCode);
+          VisitPolychord(mesh, tempPos, chords, mark, resultCode);
         }
         return resultCode;
       }
-      // if not quad, visit all the polycoords passing through this coord
+      // if not quad, visit all the polychords passing through this coord
       if (resultCode == PC_NOTQUAD) {
         tempPos = startPos;
         do {
           if (!tempPos.IsBorder()) {
             tempPos.FlipF();
-            VisitPolycoord(mesh, tempPos, coords, mark, resultCode);
+            VisitPolychord(mesh, tempPos, chords, mark, resultCode);
             tempPos.FlipF();
           }
           tempPos.FlipV();
           tempPos.FlipE();
         } while (tempPos != startPos);
       }
-      VisitPolycoord(mesh, startPos, coords, mark, resultCode);
+      VisitPolychord(mesh, startPos, chords, mark, resultCode);
       return resultCode;
     }
     // check if the link conditions are satisfied
     bool lc = linkConditions.CheckLinkConditions(mesh, startPos);
     // if not satisfied, visit the sequence for marking it and return
     if (!lc) {
-      VisitPolycoord(mesh, startPos, coords, mark, PC_NOLINKCOND);
+      VisitPolychord(mesh, startPos, chords, mark, PC_NOLINKCOND);
       return PC_NOLINKCOND;
     }
-    // check if the polycoord does not intersect itself
-    bool si = IsPolycoordSelfIntersecting(mesh, startPos, coords, mark);
-    // if it self-intersects, visit the polycoord for marking it and return
+    // check if the polychord does not intersect itself
+    bool si = IsPolychordSelfIntersecting(mesh, startPos, chords, mark);
+    // if it self-intersects, visit the polychord for marking it and return
     if (si) {
-      VisitPolycoord(mesh, startPos, coords, mark, PC_SELFINTERSECT);
+      VisitPolychord(mesh, startPos, chords, mark, PC_SELFINTERSECT);
       return PC_SELFINTERSECT;
     }
-    // at this point the polycoord is collapsable, visit it for marking
-    VisitPolycoord(mesh, startPos, coords, mark, PC_SUCCESS);
+    // at this point the polychord is collapsable, visit it for marking
+    VisitPolychord(mesh, startPos, chords, mark, PC_SUCCESS);
 
     // now collapse
     CoordType point;
@@ -838,11 +833,11 @@ public:
   }
 
   /**
-   * @brief CollapseAllPolycoords finds and collapses all the polycoords.
+   * @brief CollapseAllPolychords finds and collapses all the polychords.
    * @param mesh The input polygonal mesh (it SHOULD have the vcg::face::PolyInfo component).
-   * @param checkSing true if singularities on both sides of a polycoord are not allowed.
+   * @param checkSing true if singularities on both sides of a polychord are not allowed.
    */
-  static void CollapseAllPolycoords (PolyMeshType &mesh, const bool checkSing = true) {
+  static void CollapseAllPolychords (PolyMeshType &mesh, const bool checkSing = true) {
     vcg::tri::RequireFFAdjacency(mesh);
 
     if (mesh.FN() == 0)
@@ -853,25 +848,25 @@ public:
     std::pair<size_t, unsigned char> face_edge;
     // construct the link conditions checker
     LinkConditions linkConditions(mesh.vert.size());
-    // construct the vector of coords
-    PC_Coords coords(mesh);
+    // construct the vector of chords
+    PC_Chords chords(mesh);
     unsigned long mark = 0;
 
-    // iterate over all the coords
-    while (!coords.End()) {
+    // iterate over all the chords
+    while (!chords.End()) {
       // get the current coord
-      coords.GetCurrent(face_edge);
+      chords.GetCurrent(face_edge);
       // construct a pos on the face and edge of the current coord
       pos.Set(&mesh.face[face_edge.first], face_edge.second, mesh.face[face_edge.first].V(face_edge.second));
-      // (try to) collapse the polycoord
-      resultCode = CollapsePolycoord(mesh, pos, mark, coords, linkConditions, checkSing);
+      // (try to) collapse the polychord
+      resultCode = CollapsePolychord(mesh, pos, mark, chords, linkConditions, checkSing);
       // go to the next coord
-      coords.Next();
+      chords.Next();
 
       // increment the mark
       mark++;
       if (mark == std::numeric_limits<unsigned long>::max()) {
-        coords.ResetMarks();
+        chords.ResetMarks();
         mark = 0;
       }
     }
@@ -896,13 +891,13 @@ private:
   }
 
   /**
-   * @brief CheckPolycoordFindStartPosition checks if it's a collapsable polycoord.
+   * @brief CheckPolychordFindStartPosition checks if it's a collapsable polychord.
    * @param pos Input The starting position.
    * @param startPos Output the new starting position (in case of borders).
    * @param checkSing true if singularities on both sides are not allowed.
-   * @return PC_SUCCESS if it's a collapsable polycoord, otherwise the code for the cause (startPos is on it).
+   * @return PC_SUCCESS if it's a collapsable polychord, otherwise the code for the cause (startPos is on it).
    */
-  static PC_ResultCode CheckPolycoordFindStartPosition (const vcg::face::Pos<FaceType> &pos,
+  static PC_ResultCode CheckPolychordFindStartPosition (const vcg::face::Pos<FaceType> &pos,
                                                         vcg::face::Pos<FaceType> &startPos,
                                                         const bool checkSing = true) {
     assert(!pos.IsNull());
@@ -939,7 +934,7 @@ private:
         }
         if (valence != 4)
           singSideB = true;
-        // a 2-valence internl vertex cause a polycoord to touch itself, producing non-2manifoldness
+        // a 2-valence internl vertex cause a polychord to touch itself, producing non-2manifoldness
         // in that case, a 2-valence vertex is dealt as 2 singularities in both sides
         if (valence == 2 && !borderB)
           singSideA = true;
@@ -954,7 +949,7 @@ private:
         }
         if (valence != 4)
           singSideA = true;
-        // a 2-valence internal vertex cause a polycoord to touch itself, producing non-2manifoldness
+        // a 2-valence internal vertex cause a polychord to touch itself, producing non-2manifoldness
         // in that case, a 2-valence vertex is dealt as 2 singularities in both sides
         if (valence == 2 && !borderA)
           singSideB = true;
@@ -986,11 +981,11 @@ private:
       startPos.FlipF();
     } while (startPos != pos);
 
-    // polycoord with singularities on both sides can not collapse
+    // polychord with singularities on both sides can not collapse
     if (singSideA && singSideB)
       return PC_SINGBOTH;
 
-    // polycoords that are rings and have borders on both sides can not collapse
+    // polychords that are rings and have borders on both sides can not collapse
     if (!polyBorderFound && borderA && borderB)
       return PC_SINGBOTH;
 
@@ -998,18 +993,18 @@ private:
   }
 
   /**
-   * @brief IsPolycoordSelfIntersecting checks if the input polycoord intersects itself.
-   * @warning Don't call this function without being sure that it's a polycoord
-   * (i.e. call CheckPolycoordFindStartPoint() before calling IsPolycoordSelfIntersecting().
+   * @brief IsPolychordSelfIntersecting checks if the input polychord intersects itself.
+   * @warning Don't call this function without being sure that it's a polychord
+   * (i.e. call CheckPolychordFindStartPoint() before calling IsPolychordSelfIntersecting().
    * @param mesh The mesh used for getting the face index.
    * @param startPos The starting position.
-   * @param coords The vector of coords.
+   * @param chords The vector of chords.
    * @param mark The current mark, used to identify quads already visited.
    * @return true if it intersects itself, false otherwise.
    */
-  static bool IsPolycoordSelfIntersecting (const PolyMeshType &mesh,
+  static bool IsPolychordSelfIntersecting (const PolyMeshType &mesh,
                                            const vcg::face::Pos<FaceType> &startPos,
-                                           const PC_Coords &coords,
+                                           const PC_Chords &chords,
                                            const unsigned long mark) {
     assert(!startPos.IsNull());
     vcg::face::Pos<FaceType> runPos = startPos;
@@ -1020,10 +1015,10 @@ private:
       // check if we've already crossed this face
       face_edge.first = vcg::tri::Index(mesh, runPos.F());
       face_edge.second = (runPos.E()+1)%2;
-      if (coords[face_edge].mark == mark)
+      if (chords[face_edge].mark == mark)
         return true;
-      // if this coord is adjacent to another coord of the same polycoord
-      // i.e., this polycoord touches itself without intersecting
+      // if this coord is adjacent to another coord of the same polychord
+      // i.e., this polychord touches itself without intersecting
       // it might cause a wrong collapse, producing holes and non-2manifoldness
       tmpPos = runPos;
       tmpPos.FlipE();
@@ -1031,7 +1026,7 @@ private:
         tmpPos.FlipF();
         face_edge.first = vcg::tri::Index(mesh, tmpPos.F());
         face_edge.second = (tmpPos.E()+1)%2;
-        if (coords[face_edge].mark == mark)
+        if (chords[face_edge].mark == mark)
           return true;
       }
       tmpPos = runPos;
@@ -1041,7 +1036,7 @@ private:
         tmpPos.FlipF();
         face_edge.first = vcg::tri::Index(mesh, tmpPos.F());
         face_edge.second = (tmpPos.E()+1)%2;
-        if (coords[face_edge].mark == mark)
+        if (chords[face_edge].mark == mark)
           return true;
       }
       runPos.FlipE();
@@ -1054,16 +1049,16 @@ private:
   }
 
   /**
-   * @brief VisitPolycoord updates the information of a polycoord.
+   * @brief VisitPolychord updates the information of a polychord.
    * @param mesh The mesh used for getting the face index.
    * @param startPos The starting position.
-   * @param coords The vector of coords.
+   * @param chords The vector of chords.
    * @param mark The mark.
    * @param q The visiting type.
    */
-  static void VisitPolycoord (const PolyMeshType &mesh,
+  static void VisitPolychord (const PolyMeshType &mesh,
                               const vcg::face::Pos<FaceType> &startPos,
-                              PC_Coords &coords,
+                              PC_Chords &chords,
                               const unsigned long mark,
                               const PC_ResultCode q) {
     assert(!startPos.IsNull());
@@ -1082,9 +1077,9 @@ private:
           // update current coord
           face_edge.first = vcg::tri::Index(mesh, tmpPos.F());
           face_edge.second = tmpPos.E()%2;
-          coords.UpdateCoord(coords[face_edge], mark, q);
+          chords.UpdateCoord(chords[face_edge], mark, q);
           face_edge.second = (tmpPos.E()+1)%2;
-          coords.UpdateCoord(coords[face_edge], mark, q);
+          chords.UpdateCoord(chords[face_edge], mark, q);
           return;
         }
         tmpPos.FlipV();
@@ -1094,11 +1089,11 @@ private:
       // update current coord
       face_edge.first = vcg::tri::Index(mesh, runPos.F());
       face_edge.second = runPos.E()%2;
-      coords.UpdateCoord(coords[face_edge], mark, q);
-      // if the polycoord has to collapse, i.e. q == PC_SUCCESS, also visit the orthogonal coord
+      chords.UpdateCoord(chords[face_edge], mark, q);
+      // if the polychord has to collapse, i.e. q == PC_SUCCESS, also visit the orthogonal coord
       if (q == PC_SUCCESS) {
         face_edge.second = (runPos.E()+1)%2;
-        coords.UpdateCoord(coords[face_edge], mark, q);
+        chords.UpdateCoord(chords[face_edge], mark, q);
       }
 
       runPos.FlipE();
@@ -1114,4 +1109,4 @@ private:
 }
 }
 
-#endif // POLYGON_POLYCOORD_COLLAPSE_H
+#endif // POLYGON_Polychord_COLLAPSE_H
