@@ -21,18 +21,10 @@
  *                                                                           *
  ****************************************************************************/
 
-#include <vector>
 #include <stdio.h>
-
-#include <vcg/simplex/vertex/base.h>
-#include <vcg/simplex/face/base.h>
-#include <vcg/simplex/edge/base.h>
 #include <vcg/complex/complex.h>
-
 #include <vcg/complex/algorithms/create/zonohedron.h>
-
 #include <vcg/complex/algorithms/polygon_support.h>
-
 #include <wrap/io_trimesh/export_off.h>
 
 
@@ -48,10 +40,10 @@ class MyVertex : public vcg::Vertex< MyUsedTypes,vcg::vertex::Coord3f,vcg::verte
 class MyEdge : public vcg::Edge< MyUsedTypes > {};
 
 class MyFace : public vcg::Face< MyUsedTypes,
-	vcg::face::FFAdj,
-	vcg::face::VertexRef,
+    vcg::face::FFAdj,
+    vcg::face::VertexRef,
   vcg::face::Normal3f,
-	vcg::face::BitFlags > {};
+    vcg::face::BitFlags > {};
 
 // the main mesh class
 class MyMesh : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFace> > {};
@@ -61,61 +53,61 @@ class MyMesh : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFac
 // example 1: build a cube as a Zonohedron
 void example1(){
 
-	vcg::tri::Zonohedron<float> z;
-	z.addVector( 0,0,1 );
-	z.addVector( 0,1,0 );
-	z.addVector( 1,0,0 );
+    vcg::tri::Zonohedron<float> z;
+    z.addVector( 0,0,1 );
+    z.addVector( 0,1,0 );
+    z.addVector( 1,0,0 );
 
-	MyMesh m;
-	z.createMesh(m); // this will be a cube
+    MyMesh m;
+    z.createMesh(m); // this will be a cube
 
-	vcg::tri::UpdateTopology<MyMesh>::FaceFace(m); // needed by exporter
+    vcg::tri::UpdateTopology<MyMesh>::FaceFace(m); // needed by exporter
 
-	int savemask = vcg::tri::io::Mask::IOM_BITPOLYGONAL;
-	vcg::tri::io::ExporterOFF<MyMesh>::Save(m,"cube.off",savemask);
+    int savemask = vcg::tri::io::Mask::IOM_BITPOLYGONAL;
+    vcg::tri::io::ExporterOFF<MyMesh>::Save(m,"cube.off",savemask);
 }
 
 
 // example2: reads input file, builds zonohedra as described there
 void example2(){
 
-	FILE* f = fopen("input.txt","rt");
-	if (!f) return;
+    FILE* f = fopen("input.txt","rt");
+    if (!f) return;
 
-	while (1) {
+    while (1) {
 
-		// read mesh name
-		char meshFilename[1024], fullMeshFilename[1024];
-		if (fscanf(f,"%s",meshFilename)!=1) break;
-		sprintf(fullMeshFilename,"%s.off",meshFilename);
+        // read mesh name
+        char meshFilename[1024], fullMeshFilename[1024];
+        if (fscanf(f,"%s",meshFilename)!=1) break;
+        sprintf(fullMeshFilename,"%s.off",meshFilename);
 
-		// build input vector
-		vcg::tri::Zonohedron<float> z;
-		while (1) {
-			float a,b,c;
-			if (fscanf(f,"%f %f %f",&a, &b, &c)!=3) break;
-			z.addVector(a,b,c);
-		}
+        // build input vector
+        vcg::tri::Zonohedron<float> z;
+        while (1) {
+            float a,b,c;
+            if (fscanf(f,"%f %f %f",&a, &b, &c)!=3) break;
+            z.addVector(a,b,c);
+        }
 
-		printf("Building %s from %d vectors...\n",fullMeshFilename, z.vectors().size() );
+        printf("Building %s from %d vectors...\n",fullMeshFilename, z.vectors().size() );
 
-		MyMesh m;
-		z.createMesh(m);
+        MyMesh m;
+        z.createMesh(m);
 
-		vcg::tri::UpdateTopology<MyMesh>::FaceFace(m); // needed by exporter
+        vcg::tri::UpdateTopology<MyMesh>::FaceFace(m); // needed by exporter
 
-		// normally, faces with more than 4sides are split into parallelograms
-		// this merges them (optional, try removing it!)
-		vcg::tri::PolygonSupport<MyMesh,int>::MergeFlatFaces(m);
+        // normally, faces with more than 4sides are split into parallelograms
+        // this merges them (optional, try removing it!)
+        vcg::tri::PolygonSupport<MyMesh,int>::MergeFlatFaces(m);
 
-		int savemask = vcg::tri::io::Mask::IOM_BITPOLYGONAL;
-		vcg::tri::io::ExporterOFF<MyMesh>::Save(m,fullMeshFilename,savemask);
-	}
+        int savemask = vcg::tri::io::Mask::IOM_BITPOLYGONAL;
+        vcg::tri::io::ExporterOFF<MyMesh>::Save(m,fullMeshFilename,savemask);
+    }
 
 }
 
 int main(int argc, char *argv[]){
-	example1();
-	example2();
-	return 0;
+    example1();
+    example2();
+    return 0;
 }
