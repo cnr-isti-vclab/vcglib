@@ -610,6 +610,8 @@ template <class MeshType> void RequireCompactness    (MeshType &m) {
   if(m.face.size()!=size_t(m.fn)) throw vcg::MissingCompactnessException("Face Vector Contains deleted elements");
 }
 
+template <class MeshType> void RequireTriangularMesh (MeshType &m) { if(typename MeshType::FaceType::HasPolyInfo()) throw vcg::MissingTriangularRequirementException("");}
+
 template <class MeshType> void RequireVFAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
 template <class MeshType> void RequireVEAdjacency    (MeshType &m) { if(!tri::HasVEAdjacency   (m)) throw vcg::MissingComponentException("VEAdjacency"); }
 template <class MeshType> void RequireFFAdjacency    (MeshType &m) { if(!tri::HasFFAdjacency   (m)) throw vcg::MissingComponentException("FFAdjacency"); }
