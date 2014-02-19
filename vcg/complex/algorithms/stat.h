@@ -228,6 +228,7 @@ public:
 
   static void ComputeFaceEdgeLengthDistribution( MeshType & m, Distribution<float> &h)
   {
+    tri::RequireTriangularMesh(m);
     h.Clear();
     tri::UpdateFlags<MeshType>::FaceBorderFromNone(m);
     for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
