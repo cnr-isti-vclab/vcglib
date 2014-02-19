@@ -86,5 +86,3 @@ int TwKeyPressQt(QKeyEvent *e)
 
   return TwKeyPressed(k, kmod);
 }
-
-
