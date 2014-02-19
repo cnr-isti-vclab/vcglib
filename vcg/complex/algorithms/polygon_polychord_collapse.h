@@ -903,22 +903,34 @@ private:
     assert(!pos.IsNull());
     int valence = 0;
     bool singSideA = false, singSideB = false;
-    bool borderA = false, borderB = false;
+    bool borderSideA = false, borderSideB = false;
     bool polyBorderFound = false;
     vcg::face::JumpingPos<FaceType> jmpPos;
 
     startPos = pos;
-    // check if it is a quad
-    if (startPos.F()->VN() != 4)
-      return PC_NOTQUAD;
-
     do {
+      // check if it is a quad
+      if (startPos.F()->VN() != 4)
+        return PC_NOTQUAD;
       // check manifoldness
       if (IsVertexAdjacentToAnyNonManifoldEdge(startPos))
         return PC_NOTMANIF;
       startPos.FlipV();
       if (IsVertexAdjacentToAnyNonManifoldEdge(startPos))
         return PC_NOTMANIF;
+      startPos.FlipV();
+
+      // check if side A is on border
+      startPos.FlipE();
+      if (startPos.IsBorder())
+        borderSideA = true;
+      startPos.FlipE();
+      // check if side B is on border
+      startPos.FlipV();
+      startPos.FlipE();
+      if (startPos.IsBorder())
+        borderSideB = true;
+      startPos.FlipE();
       startPos.FlipV();
 
       // check if singularities are not in both sides
@@ -928,30 +940,26 @@ private:
         valence = startPos.NumberOfIncidentVertices();
         // if the vertex is on border increment its valence by 1 (virtually connect it to a dummy vertex)
         jmpPos.Set(startPos.F(), startPos.E(), startPos.V());
-        if (jmpPos.FindBorder()) {
-          borderB = true;
+        if (jmpPos.FindBorder())
           valence++;
-        }
         if (valence != 4)
           singSideB = true;
         // a 2-valence internl vertex cause a polychord to touch itself, producing non-2manifoldness
         // in that case, a 2-valence vertex is dealt as 2 singularities in both sides
-        if (valence == 2 && !borderB)
+        if (valence == 2 && !borderSideB)
           singSideA = true;
         // compute the valence of the vertex on side A
         startPos.FlipV();
         valence = startPos.NumberOfIncidentVertices();
         // if the vertex is on border increment its valence by 1 (virtually connect it to a dummy vertex)
         jmpPos.Set(startPos.F(), startPos.E(), startPos.V());
-        if (jmpPos.FindBorder()) {
-          borderA = true;
+        if (jmpPos.FindBorder())
           valence++;
-        }
         if (valence != 4)
           singSideA = true;
         // a 2-valence internal vertex cause a polychord to touch itself, producing non-2manifoldness
         // in that case, a 2-valence vertex is dealt as 2 singularities in both sides
-        if (valence == 2 && !borderA)
+        if (valence == 2 && !borderSideA)
           singSideB = true;
       }
 
@@ -982,11 +990,13 @@ private:
     } while (startPos != pos);
 
     // polychord with singularities on both sides can not collapse
-    if (singSideA && singSideB)
+    if ((singSideA && singSideB) ||
+        (singSideA && borderSideB) ||
+        (singSideB && borderSideA))
       return PC_SINGBOTH;
 
     // polychords that are rings and have borders on both sides can not collapse
-    if (!polyBorderFound && borderA && borderB)
+    if (!polyBorderFound && borderSideA && borderSideB)
       return PC_SINGBOTH;
 
     return PC_SUCCESS;
