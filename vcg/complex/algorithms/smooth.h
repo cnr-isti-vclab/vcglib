@@ -831,7 +831,9 @@ public:
 class PDFaceInfo
 {
 public:
-    CoordType m;
+  PDFaceInfo(){}
+  PDFaceInfo(const CoordType &_m):m(_m){}
+  CoordType m;
 };
 /***************************************************************************/
 // Paso Doble Step 1 compute the smoothed normals
@@ -896,59 +898,49 @@ void FaceNormalFuzzyVectorSB(MeshType &m,
 // Replace the normal of the face with the average of normals of the vertex adijacent faces.
 // Normals are weighted with face area.
 // It assumes that:
-// Normals are normalized:
 // VF adjacency is present.
 
 static void FaceNormalLaplacianVF(MeshType &m)
 {
-    SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face);
+  tri::RequireVFAdjacency(m);
+  PDFaceInfo lpzf(CoordType(0,0,0));
+  SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face,lpzf);
 
-    PDFaceInfo lpzf;
-    lpzf.m=CoordType(0,0,0);
+  tri::UpdateNormal<MeshType>::NormalizePerFaceByArea(m);
 
-    assert(tri::HasPerVertexVFAdjacency(m) && tri::HasPerFaceVFAdjacency(m) );
-    TDF.Start(lpzf);
-    int i;
-
-  FaceIterator fi;
-
-    tri::UpdateNormal<MeshType>::AreaNormalizeFace(m);
-
-    for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+  {
+    CoordType bc=Barycenter<FaceType>(*fi);
+    // 1) Clear all the visited flag of faces that are vertex-adjacent to fi
+    for(int i=0;i<3;++i)
     {
-                CoordType bc=Barycenter<FaceType>(*fi);
-                // 1) Clear all the visited flag of faces that are vertex-adjacent to fi
-                for(i=0;i<3;++i)
-                {
-                    VFLocalIterator ep(&*fi,i);
-                    for (;!ep.End();++ep)
-                        ep.f->ClearV();
-                }
-
-                // 2) Effectively average the normals
-                CoordType normalSum=(*fi).N();
-
-                for(i=0;i<3;++i)
-                {
-                    VFLocalIterator ep(&*fi,i);
-                    for (;!ep.End();++ep)
-                    {
-                        if(! (*ep.f).IsV() )
-                                {
-                                         normalSum += ep.f->N();
-                                         (*ep.f).SetV();
-                                }
-                    }
-                }
-                normalSum.Normalize();
-                TDF[*fi].m=normalSum;
+      VFLocalIterator ep(&*fi,i);
+      for (;!ep.End();++ep)
+        ep.f->ClearV();
     }
-    for(fi=m.face.begin();fi!=m.face.end();++fi)
-        (*fi).N()=TDF[*fi].m;
 
-    tri::UpdateNormal<MeshType>::NormalizePerFace(m);
+    // 2) Effectively average the normals
+    CoordType normalSum=(*fi).N();
 
-    TDF.Stop();
+    for(int i=0;i<3;++i)
+    {
+      VFLocalIterator ep(&*fi,i);
+      for (;!ep.End();++ep)
+      {
+        if(! (*ep.f).IsV() )
+        {
+          normalSum += ep.f->N();
+          (*ep.f).SetV();
+        }
+      }
+    }
+    normalSum.Normalize();
+    TDF[*fi].m=normalSum;
+  }
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+    (*fi).N()=TDF[*fi].m;
+
+  tri::UpdateNormal<MeshType>::NormalizePerFace(m);
 }
 
 // Replace the normal of the face with the average of normals of the face adijacent faces.
@@ -960,10 +952,9 @@ static void FaceNormalLaplacianVF(MeshType &m)
 
 static void FaceNormalLaplacianFF(MeshType &m, int step=1, bool SmoothSelected=false )
 {
-  PDFaceInfo lpzf;
-  lpzf.m=CoordType(0,0,0);
+  PDFaceInfo lpzf(CoordType(0,0,0));
   SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face,lpzf);
-  assert(tri::HasFFAdjacency(m));
+  tri::RequireFFAdjacency(m);
 
   FaceIterator fi;
   tri::UpdateNormal<MeshType>::NormalizePerFaceByArea(m);
@@ -1188,8 +1179,7 @@ static void VertexCoordPasoDoble(MeshType &m, int step, typename MeshType::Scala
     SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face);
     PDVertInfo lpzv;
     lpzv.np=CoordType(0,0,0);
-    PDFaceInfo lpzf;
-    lpzf.m=CoordType(0,0,0);
+    PDFaceInfo lpzf(CoordType(0,0,0));
 
     assert(m.HasVFTopology());
     m.HasVFTopology();
@@ -1215,8 +1205,7 @@ static void VertexCoordPasoDobleFast(MeshType &m, int NormalSmoothStep, typename
 {
     PDVertInfo lpzv;
     lpzv.np=CoordType(0,0,0);
-    PDFaceInfo lpzf;
-    lpzf.m=CoordType(0,0,0);
+    PDFaceInfo lpzf(CoordType(0,0,0));
 
     assert(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m));
     SimpleTempData< typename MeshType::VertContainer, PDVertInfo> TDV(m.vert,lpzv);
