@@ -263,7 +263,7 @@ namespace vcg {
 
                     int numVerticesPlusFaces = oi.numVertices + oi.numFaces;
                     int extraTriangles=0;
-                    // vertices and faces allocatetion
+                    // vertices and faces allocation
                     VertexIterator vi = vcg::tri::Allocator<OpenMeshType>::AddVertices(m,oi.numVertices);
                     //FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,oi.numFaces);
                     std::vector<Color4b> vertexColorVector;
