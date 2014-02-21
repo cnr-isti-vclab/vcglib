@@ -539,14 +539,14 @@ namespace vcg {
 
                                 }
                             }
-                            else if (header.compare("mtllib")==0)	// material library
+                            else if ((header.compare("mtllib")==0) && (tokens.size() > 1))	// material library
                             {
                                 // obtain the name of the file containing materials library
                                 std::string materialFileName = tokens[1];
                                 if (!LoadMaterials( materialFileName.c_str(), materials, m.textures))
                                     result = E_MATERIAL_FILE_NOT_FOUND;
                             }
-                            else if (header.compare("usemtl")==0)	// material usage
+                            else if ((header.compare("usemtl")==0) && (tokens.size() > 1))	// material usage
                             {
                                 std::string materialName = tokens[1];
                                 bool found = false;
