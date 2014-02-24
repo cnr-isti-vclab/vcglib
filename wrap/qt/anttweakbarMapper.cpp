@@ -1,6 +1,7 @@
 #include <QtGui>
 #include <QWidget>
 #include <AntTweakBar.h>
+#include <wrap/qt/device_to_logical.h>
 
 void TW_CALL CopyCDStringToClient(char **destPtr, const char *src)
 {
@@ -35,14 +36,26 @@ TwMouseButtonID Qt2TwMouseButtonId(QMouseEvent *e)
 
 int TwMousePressQt(QMouseEvent *e)
 {
- TwMouseMotion(e->x (), e->y ());
- return TwMouseButton(TW_MOUSE_PRESSED, Qt2TwMouseButtonId(e));
+	TwMouseMotion(e->x (), e->y ());
+	return TwMouseButton(TW_MOUSE_PRESSED, Qt2TwMouseButtonId(e));
+}
+
+int TwMousePressQt(QWidget *qw, QMouseEvent *e)
+{
+	TwMouseMotion(QTLogicalToDevice(qw, e->x()), QTLogicalToDevice(qw, e->y()));
+	return TwMouseButton(TW_MOUSE_PRESSED, Qt2TwMouseButtonId(e));
 }
 
 int TwMouseReleaseQt(QMouseEvent *e)
 {
- TwMouseMotion(e->x (), e->y ());
- return TwMouseButton(TW_MOUSE_RELEASED, Qt2TwMouseButtonId(e));
+	TwMouseMotion(e->x (), e->y ());
+	return TwMouseButton(TW_MOUSE_RELEASED, Qt2TwMouseButtonId(e));
+}
+
+int TwMouseReleaseQt(QWidget *qw, QMouseEvent *e)
+{
+	TwMouseMotion(QTLogicalToDevice(qw, e->x()), QTLogicalToDevice(qw, e->y()));
+	return TwMouseButton(TW_MOUSE_RELEASED, Qt2TwMouseButtonId(e));
 }
 
 int TwKeyPressQt(QKeyEvent *e)
