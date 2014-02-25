@@ -388,7 +388,7 @@ static size_t FaceOutOfRangeEdge(MeshType &m, ScalarType MinEdgeThr=0, ScalarTyp
   for(fi=m.face.begin(); fi!=m.face.end();++fi)
     if(!(*fi).IsD())
       {
-        for(unsigned int i=0;i<(*fi).VN();++i)
+        for(int i=0;i<(*fi).VN();++i)
         {
           const ScalarType squaredEdge=SquaredDistance((*fi).V0(i)->cP(),(*fi).V1(i)->cP());
           if((squaredEdge<=MinEdgeThr) || (squaredEdge>=MaxEdgeThr) )
