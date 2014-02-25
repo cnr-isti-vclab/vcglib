@@ -24,14 +24,9 @@
 #ifndef VCG_POISSON_SOLVER
 #define VCG_POISSON_SOLVER
 
-#define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
 #include <eigenlib/Eigen/Sparse>
-#include <eigenlib/unsupported/Eigen/SparseExtra>
 
-#include <time.h>
 #include <vcg/complex/algorithms/clean.h>
-#include <vcg/complex/algorithms/update/flag.h>
-#include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/parametrization/distortion.h>
 #include <vcg/complex/algorithms/parametrization/uv_utils.h>
 
@@ -60,7 +55,7 @@ class PoissonSolver
 
     ///unknown vector
 
-    Eigen::DynamicSparseMatrix<double> A; // A
+    Eigen::SparseMatrix<double> A; // A
     Eigen::VectorXd b,x;// x and b
 
     //number of variables
@@ -450,7 +445,7 @@ class PoissonSolver
     void AllocateSystem()
     {
         //--- Allocates the data for Ax=b
-        A=Eigen::DynamicSparseMatrix<double>(total_size, total_size); // A
+        A=Eigen::SparseMatrix<double>(total_size, total_size); // A
         b = Eigen::VectorXd::Zero(total_size);  // x and b
     }
 
