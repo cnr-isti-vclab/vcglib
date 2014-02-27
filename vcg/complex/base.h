@@ -646,6 +646,10 @@ template <class MeshType> void RequirePerFaceWedgeColor   (MeshType &m) { if(!tr
 template <class MeshType> void RequirePerFaceWedgeNormal  (MeshType &m) { if(!tri::HasPerWedgeNormal  (m)) throw vcg::MissingComponentException("PerFaceWedgeNormal  "); }
 template <class MeshType> void RequirePerFaceWedgeTexCoord(MeshType &m) { if(!tri::HasPerWedgeTexCoord(m)) throw vcg::MissingComponentException("PerFaceWedgeTexCoord"); }
 
+template <class MeshType> void RequirePerVertexAttribute(MeshType &m, const char *name) { if(!HasPerVertexAttribute(m,name)) throw vcg::MissingComponentException("PerVertex attribute"); }
+template <class MeshType> void RequirePerEdgeAttribute(MeshType &m, const char *name)   { if(!HasPerEdgeAttribute(m,name))   throw vcg::MissingComponentException("PerEdge attribute"); }
+template <class MeshType> void RequirePerFaceAttribute(MeshType &m, const char *name)   { if(!HasPerFaceAttribute(m,name))   throw vcg::MissingComponentException("PerFace attribute"); }
+template <class MeshType> void RequirePerMeshAttribute(MeshType &m, const char *name)   { if(!HasPerMeshAttribute(m,name))   throw vcg::MissingComponentException("PerMesh attribute"); }
 
 /*@}*/
 /*@}*/
