@@ -846,19 +846,20 @@ class EdgeSplSphere
     }
 };
 
-/*!
-* Triangle split
-*/
-
 template<class TRIMESH_TYPE>
-struct CenterPoint : public std::unary_function<typename TRIMESH_TYPE::FacePointer, typename TRIMESH_TYPE::CoordType>
+struct CenterPointBarycenter : public std::unary_function<typename TRIMESH_TYPE::FacePointer, typename TRIMESH_TYPE::CoordType>
 {
     typename TRIMESH_TYPE::CoordType operator()(typename TRIMESH_TYPE::FacePointer f){
         return vcg::Barycenter<typename TRIMESH_TYPE::FaceType>(*f);
     }
 };
 
-template<class TRIMESH_TYPE, class CenterPoint>
+/// \brief Triangle split
+/// Simple templated function for splitting a triangle with a internal point.
+///  It can be templated on a CenterPoint class that is used to generate the position of the internal point.
+
+
+template<class TRIMESH_TYPE, class CenterPoint=CenterPointBarycenter <TRIMESH_TYPE> >
 void TriSplit(typename TRIMESH_TYPE::FacePointer f,
                             typename TRIMESH_TYPE::FacePointer f1,typename TRIMESH_TYPE::FacePointer f2,
                             typename TRIMESH_TYPE::VertexPointer vB, CenterPoint	Center)
@@ -927,7 +928,6 @@ void TriSplit(typename TRIMESH_TYPE::FacePointer f,
         (*f2).FFi(2) = FFi2;
     }
 }
-
 
 } // namespace tri
 } // namespace vcg
