@@ -457,6 +457,7 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
             static FaceIterator AddFace(MeshType &m, VertexPointer v0, VertexPointer v1, VertexPointer v2)
             {
               assert(m.vert.size()>0);
+              assert((v0!=v1) && (v1!=v2) && (v0!=v2));
               assert(v0>=&m.vert.front() && v0<=&m.vert.back());
               assert(v1>=&m.vert.front() && v1<=&m.vert.back());
               assert(v2>=&m.vert.front() && v2<=&m.vert.back());
