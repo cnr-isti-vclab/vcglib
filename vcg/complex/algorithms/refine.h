@@ -107,18 +107,38 @@ const Split SplitTab[8]={
 /*  1   1   1 */	{4, {{3,4,5},{0,3,5},{3,1,4},{5,4,2}}, {{0,0},{0,0}},  {{3,3,3},{0,3,2},{0,1,3},{3,1,2}} },
 };
 
+
+template <class MeshType>
+struct BaseInterpolator
+{
+  typedef typename face::Pos<typename MeshType::FaceType> PosType;
+  typedef typename MeshType::VertexType VertexType;
+  void operator()(VertexType &, PosType  ){}
+};
+
 // Basic subdivision class
 // This class must provide methods for finding the position of the newly created vertices
 // In this implemenation we simply put the new vertex in the MidPoint position.
 // Color and TexCoords are interpolated accordingly.
-template<class MESH_TYPE>
+// This subdivision class allow also the correct interpolation of userdefined data by
+// providing, in the constructor, an interpolator functor that will be called for each new vertex to be created.
+
+template<class MESH_TYPE, class InterpolatorFunctorType = BaseInterpolator< MESH_TYPE> >
 struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::FaceType> ,  typename MESH_TYPE::CoordType >
 {
-     MidPoint(MESH_TYPE *_mp) { mp=_mp; }
+     typedef typename face::Pos<typename MESH_TYPE::FaceType> PosType;
+     typedef typename MESH_TYPE::VertexType VertexType;
+
+     MidPoint(MESH_TYPE *_mp,
+                InterpolatorFunctorType *_intFunc=0) {
+       mp=_mp;
+       intFunc =_intFunc;
+     }
 
      MESH_TYPE *mp;
+     InterpolatorFunctorType *intFunc; /// This callback is called to fill up
 
-    void operator()(typename MESH_TYPE::VertexType &nv, face::Pos<typename MESH_TYPE::FaceType>  ep){
+    void operator()(VertexType &nv, PosType  ep){
         assert(mp);
         nv.P()=   (ep.f->V(ep.z)->P()+ep.f->V1(ep.z)->P())/2.0;
 
@@ -133,6 +153,8 @@ struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::Fac
 
         if( tri::HasPerVertexTexCoord(*mp))
             nv.T().P() = ((ep.f->V(ep.z)->T().P()+ep.f->V1(ep.z)->T().P())) / 2.0;
+        if(intFunc)
+          (*intFunc)(nv,ep);
     }
 
     Color4<typename MESH_TYPE::ScalarType> WedgeInterp(Color4<typename MESH_TYPE::ScalarType> &c0, Color4<typename MESH_TYPE::ScalarType> &c1)
