@@ -882,14 +882,20 @@ struct CenterPointBarycenter : public std::unary_function<typename TRIMESH_TYPE:
 
 
 template<class TRIMESH_TYPE, class CenterPoint=CenterPointBarycenter <TRIMESH_TYPE> >
-void TriSplit(typename TRIMESH_TYPE::FacePointer f,
-                            typename TRIMESH_TYPE::FacePointer f1,typename TRIMESH_TYPE::FacePointer f2,
-                            typename TRIMESH_TYPE::VertexPointer vB, CenterPoint	Center)
+class TriSplit
 {
+public:
+  typedef typename TRIMESH_TYPE::FaceType FaceType;
+  typedef typename TRIMESH_TYPE::VertexType VertexType;
+
+  static void Apply(FaceType *f,
+                    FaceType * f1,FaceType * f2,
+                    VertexType * vB, CenterPoint	Center)
+  {
     vB->P() = Center(f);
 
     //i tre vertici della faccia da dividere
-    typename TRIMESH_TYPE::VertexType* V0,*V1,*V2;
+    VertexType *V0,*V1,*V2;
     V0 = f->V(0);
     V1 = f->V(1);
     V2 = f->V(2);
@@ -907,49 +913,50 @@ void TriSplit(typename TRIMESH_TYPE::FacePointer f,
 
     if(f->HasFFAdjacency())
     {
-        //adiacenza delle facce adiacenti a quelle aggiunte
-        f->FFp(1)->FFp(f->FFi(1)) = f1;
-        f->FFp(2)->FFp(f->FFi(2)) = f2;
+      //adiacenza delle facce adiacenti a quelle aggiunte
+      f->FFp(1)->FFp(f->FFi(1)) = f1;
+      f->FFp(2)->FFp(f->FFi(2)) = f2;
 
-        //adiacenza ff
-        typename TRIMESH_TYPE::FacePointer FF0,FF1,FF2;
-        FF0 = f->FFp(0);
-        FF1 = f->FFp(1);
-        FF2 = f->FFp(2);
+      //adiacenza ff
+      FaceType *  FF0,*FF1,*FF2;
+      FF0 = f->FFp(0);
+      FF1 = f->FFp(1);
+      FF2 = f->FFp(2);
 
-        //Indici di adiacenza ff
-        char FFi0,FFi1,FFi2;
-        FFi0 = f->FFi(0);
-        FFi1 = f->FFi(1);
-        FFi2 = f->FFi(2);
+      //Indici di adiacenza ff
+      char FFi0,FFi1,FFi2;
+      FFi0 = f->FFi(0);
+      FFi1 = f->FFi(1);
+      FFi2 = f->FFi(2);
 
-        //adiacenza della faccia di partenza
-        (*f).FFp(1) = &(*f1);
-        (*f).FFi(1) = 0;
-        (*f).FFp(2) = &(*f2);
-        (*f).FFi(2) = 0;
+      //adiacenza della faccia di partenza
+      (*f).FFp(1) = &(*f1);
+      (*f).FFi(1) = 0;
+      (*f).FFp(2) = &(*f2);
+      (*f).FFi(2) = 0;
 
-        //adiacenza della faccia #1
-        (*f1).FFp(0) = f;
-        (*f1).FFi(0) = 1;
+      //adiacenza della faccia #1
+      (*f1).FFp(0) = f;
+      (*f1).FFi(0) = 1;
 
-        (*f1).FFp(1) = FF1;
-        (*f1).FFi(1) = FFi1;
+      (*f1).FFp(1) = FF1;
+      (*f1).FFi(1) = FFi1;
 
-        (*f1).FFp(2) = &(*f2);
-        (*f1).FFi(2) = 1;
+      (*f1).FFp(2) = &(*f2);
+      (*f1).FFi(2) = 1;
 
-        //adiacenza della faccia #2
-        (*f2).FFp(0) = f;
-        (*f2).FFi(0) = 2;
+      //adiacenza della faccia #2
+      (*f2).FFp(0) = f;
+      (*f2).FFi(0) = 2;
 
-        (*f2).FFp(1) = &(*f1);
-        (*f2).FFi(1) = 2;
+      (*f2).FFp(1) = &(*f1);
+      (*f2).FFi(1) = 2;
 
-        (*f2).FFp(2) = FF2;
-        (*f2).FFi(2) = FFi2;
+      (*f2).FFp(2) = FF2;
+      (*f2).FFi(2) = FFi2;
     }
-}
+  }
+}; // end class TriSplit
 
 } // namespace tri
 } // namespace vcg
