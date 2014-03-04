@@ -55,7 +55,7 @@ namespace tri
 /// \headerfile point_sampling.h vcg/complex/algorithms/point_sampling.h
 
 /**
- \brief An basic sampler class that show the required interface used by the SurfaceSampling class.
+ \brief A basic sampler class that show the required interface used by the SurfaceSampling class.
 
  Most of the methods of sampling classes call the AddFace method of this class with the face containing the sample and its barycentric coord.
  Beside being an example of how to write a sampler it provides a simple way to use the various sampling classes.
@@ -1654,7 +1654,9 @@ static void SubdivideAndSample(MetroMesh & m, std::vector<Point3f> &pvec, const 
 
         }
 }
-}; // end class
+}; // end sampling class
+
+
 
 
 template <class MeshType>
@@ -1690,6 +1692,7 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
 {
   typedef tri::TrivialSampler<MeshType> BaseSampler;
   typedef tri::MeshSampler<MeshType> MontecarloSampler;
+  tri::RequireVFAdjacency(m);
 
   typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam pp;
   typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam::Stat stat;
@@ -1723,7 +1726,9 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
   int t2=clock();
   pp.pds->totalTime = t2-t0;
 }
-// simpler wrapper for the pruning
+/// \brief Very simple wrapping for the Poisson Disk Pruning
+///
+/// This function simply takes a mesh and a radius and returns a vector of points
 //
 template <class MeshType>
 void PoissonPruning(MeshType &m, // the mesh that has to be pruned
