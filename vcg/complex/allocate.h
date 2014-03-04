@@ -470,6 +470,22 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
               return fi;
             }
 
+            /** Function to add a face to the mesh and initializing it with the three given coords
+            */
+            static FaceIterator AddFace(MeshType &m, CoordType p0, CoordType p1, CoordType p2)
+            {
+              VertexIterator vi = AddVertices(m,3);
+              FaceIterator fi = AddFaces(m,1);
+              fi->Alloc(3);
+              vi->P()=p0;
+              fi->V(0)=&*vi++;
+              vi->P()=p1;
+              fi->V(1)=&*vi++;
+              vi->P()=p2;
+              fi->V(2)=&*vi;
+              return fi;
+            }
+
             /** Function to add a quad face to the mesh and initializing it with the four given VertexPointers
              *
              * Note that this function add a single polygonal face if the mesh has polygonal info or two tris with the corresponding faux bit set in the standard common case of a triangular mesh.
