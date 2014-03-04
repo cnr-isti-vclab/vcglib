@@ -26,7 +26,7 @@
 #include<wrap/io_trimesh/import_ply.h>
 #include<wrap/io_trimesh/export_ply.h>
 #include<vcg/complex/algorithms/point_sampling.h>
-#include<vcg/complex/algorithms/voronoi_clustering.h>
+#include<vcg/complex/algorithms/voronoi_processing.h>
 
 
 using namespace vcg;
@@ -67,12 +67,14 @@ int main( int argc, char **argv )
   int randSeed=time(0);
   tri::UpdateTopology<MyMesh>::VertexFace(baseMesh);
   std::vector<MyVertex *> seedVec;
-  vcg::tri::ClusteringSampler<MyMesh> cs(seedVec);
-  vcg::tri::SurfaceSampling<MyMesh, vcg::tri::ClusteringSampler<MyMesh> >::SamplingRandomGenerator().initialize(randSeed);
-  vcg::tri::SurfaceSampling<MyMesh, vcg::tri::ClusteringSampler<MyMesh> >::VertexUniform(baseMesh,cs,seed);
-  vcg::tri::VoronoiProcessing<MyMesh>::VoronoiRelaxing(baseMesh, seedVec, iterNum,0);
-  vcg::tri::VoronoiProcessing<MyMesh>::TopologicalVertexColoring(baseMesh, seedVec);
-  tri::VoronoiProcessing<MyMesh>::VoronoiClustering(baseMesh,clusteredMesh,seedVec);
+  tri::ClusteringSampler<MyMesh> cs(seedVec);
+  tri::SurfaceSampling<MyMesh, vcg::tri::ClusteringSampler<MyMesh> >::SamplingRandomGenerator().initialize(randSeed);
+  tri::SurfaceSampling<MyMesh, vcg::tri::ClusteringSampler<MyMesh> >::VertexUniform(baseMesh,cs,seed);
+  tri::VoronoiProcessingParameter vpp;
+  tri::EuclideanDistance<MyMesh> df;
+  tri::VoronoiProcessing<MyMesh>::VoronoiRelaxing(baseMesh, seedVec, iterNum, df, vpp);
+  tri::VoronoiProcessing<MyMesh>::TopologicalVertexColoring(baseMesh, seedVec);
+  tri::VoronoiProcessing<MyMesh>::ConvertDelaunayTriangulationToMesh(baseMesh,clusteredMesh,seedVec);
 
   tri::io::ExporterPLY<MyMesh>::Save(baseMesh,"base.ply",tri::io::Mask::IOM_VERTCOLOR );
   tri::io::ExporterPLY<MyMesh>::Save(clusteredMesh,"clustered.ply");

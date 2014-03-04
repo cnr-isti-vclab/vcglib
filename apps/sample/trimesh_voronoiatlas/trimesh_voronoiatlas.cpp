@@ -20,24 +20,13 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#include<QtGlobal>
-
-#include<vcg/simplex/vertex/base.h>
-#include<vcg/simplex/vertex/component.h>
-#include<vcg/simplex/vertex/component_ocf.h>
-
-#include<vcg/simplex/face/base.h>
-#include<vcg/simplex/face/component.h>
-#include<vcg/simplex/face/component_ocf.h>
-
 #include<vcg/complex/complex.h>
 #include<vcg/complex/algorithms/create/platonic.h>
-#include<vcg/complex/append.h>
 
 #include<wrap/io_trimesh/import_ply.h>
 #include<wrap/io_trimesh/export_ply.h>
 #include<vcg/complex/algorithms/parametrization/voronoi_atlas.h>
-#include<vcg/space/poly_packer.h>
+#include<vcg/space/outline2_packer.h>
 
 using namespace vcg;
 using namespace std;

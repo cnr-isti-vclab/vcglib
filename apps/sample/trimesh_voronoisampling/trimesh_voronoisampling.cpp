@@ -28,7 +28,7 @@
 #include<wrap/io_trimesh/export_ply.h>
 #include<wrap/io_trimesh/export_dxf.h>
 #include<vcg/complex/algorithms/point_sampling.h>
-#include<vcg/complex/algorithms/voronoi_clustering.h>
+#include<vcg/complex/algorithms/voronoi_processing.h>
 
 
 using namespace vcg;
@@ -43,7 +43,6 @@ struct MyUsedTypes : public UsedTypes<	Use<MyVertex>   ::AsVertexType,
 
 class MyVertex  : public Vertex<MyUsedTypes,  vertex::Coord3f, vertex::Normal3f, vertex::VFAdj, vertex::Qualityf, vertex::Color4b, vertex::BitFlags  >{};
 class MyFace    : public Face< MyUsedTypes,   face::VertexRef, face::Normal3f, face::BitFlags, face::VFAdj, face::FFAdj > {};
-//class MyEdge    : public Edge< MyUsedTypes> {};
 class MyEdge    : public Edge< MyUsedTypes, edge::VertexRef, edge::BitFlags>{};
 class MyMesh    : public tri::TriMesh< vector<MyVertex>, vector<MyEdge>, vector<MyFace>   > {};
 
@@ -57,7 +56,6 @@ struct EmUsedTypes : public UsedTypes<	Use<EmVertex>   ::AsVertexType,
 class EmVertex  : public Vertex<EmUsedTypes,  vertex::Coord3f, vertex::Normal3f, vertex::VFAdj , vertex::Qualityf, vertex::Color4b, vertex::BitFlags  >{};
 class EmFace    : public Face< EmUsedTypes,   face::VertexRef, face::BitFlags, face::VFAdj > {};
 class EmEdge    : public Edge< EmUsedTypes, edge::VertexRef> {};
-//class EmEdge    : public Edge< EmUsedTypes, edge::VertexRef, edge::BitFlags>{};
 class EmMesh    : public tri::TriMesh< vector<EmVertex>, vector<EmEdge>, vector<EmFace>   > {};
 
 
@@ -157,7 +155,6 @@ int main( int argc, char **argv )
 
   vpp.deleteUnreachedRegionFlag=true;
   vpp.triangulateRegion = true;
-  vpp.triangulateRegion = false;
   vpp.geodesicRelaxFlag=false;
   vpp.constrainSelectedSeed=true;
 
@@ -169,12 +166,12 @@ int main( int argc, char **argv )
 
   MyMesh voroMesh, voroPoly, delaMesh;
   // Get the result in some pleasant form converting it to a real voronoi diagram.
-  tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::ConvertVoronoiDiagramToMesh(baseMesh,voroMesh,voroPoly, seedVec, dd, vpp);
+  tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::ConvertVoronoiDiagramToMesh(baseMesh,voroMesh,voroPoly, seedVec, vpp);
   tri::io::ExporterPLY<MyMesh>::Save(baseMesh,"base.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
   tri::io::ExporterPLY<MyMesh>::Save(voroMesh,"voroMesh.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_FLAGS );
   tri::io::ExporterPLY<MyMesh>::Save(voroPoly,"voroPoly.ply",tri::io::Mask::IOM_VERTCOLOR| tri::io::Mask::IOM_EDGEINDEX ,false);
 
-  tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::ConvertDelaunayTriangulationToMesh(baseMesh,delaMesh, seedVec, dd, vpp);
+  tri::VoronoiProcessing<MyMesh>::ConvertDelaunayTriangulationToMesh(baseMesh,delaMesh, seedVec);
   tri::io::ExporterPLY<MyMesh>::Save(delaMesh,"delaMesh.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
 
 
