@@ -41,12 +41,13 @@ public:
 	{
 		typedef Eigen::SparseMatrix<CoeffScalar> SpMat;  // sparse matrix type
 		typedef Eigen::Triplet<CoeffScalar>      Triple; // triplet type to fill the matrix
-		std::vector<size_t> remap;
-
 
 		RequirePerVertexFlags(m);
 		RequireCompactness(m);
 		RequireFFAdjacency(m);
+
+		if (constraints.empty())
+			return false;
 
 		int n  = m.VN();
 
@@ -54,7 +55,7 @@ public:
 		std::vector<Triple>          coeffs;   // coefficients of the system
 		std::map<size_t,CoeffScalar> sums;     // row sum of the coefficient matrix
 
-		vcg::tri::UpdateFlags<CMeshO>::FaceClearV(m);
+		vcg::tri::UpdateFlags<MeshType>::FaceClearV(m);
 		for (size_t i = 0; i < m.face.size(); ++i)
 		{
 			FaceType & f = m.face[i];
@@ -110,7 +111,7 @@ public:
 		}
 
 		// Perform matrix decomposition
-		Eigen::SimplicialLDLT<Eigen::SparseMatrix<CoeffScalar> > solver;
+		Eigen::SimplicialLDLT<SpMat> solver;
 		solver.compute(laplaceMat);
 		// TODO eventually use another solver (e.g. CHOLMOD for dynamic setups)
 		if(solver.info() != Eigen::Success)
