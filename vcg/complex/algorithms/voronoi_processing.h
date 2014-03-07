@@ -619,7 +619,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
         if((Distance(fi->P0(i),fi->P1(i))<distThr) && !fi->IsF(i))
         {
 //          printf("Collapsing face %i:%i e%i \n",tri::Index(outMesh,*fi),tri::Index(outMesh,fi->FFp(i)),i);
-          if(!fi->V(i)->IsB())
+          if ((!fi->V(i)->IsB())&&(face::FFLinkCondition(*fi, i)))
             face::FFEdgeCollapse(outMesh, *fi,i);
           break;
         }
