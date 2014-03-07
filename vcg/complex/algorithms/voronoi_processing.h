@@ -1362,7 +1362,9 @@ static void ConvertDelaunayTriangulationToMesh(MeshType &m,
   tri::Allocator<MeshType>::CompactVertexVector(outMesh);
 }
 
-static void PreprocessForVoronoi(MeshType &m, float radius)
+template <class MidPointType >
+static void PreprocessForVoronoi(MeshType &m, float radius,
+                                 MidPointType mid)
 {
   const int maxSubDiv = 10;
   tri::RequireFFAdjacency(m);
@@ -1372,11 +1374,17 @@ static void PreprocessForVoronoi(MeshType &m, float radius)
 
   for(int i=0;i<maxSubDiv;++i)
   {
-    bool ret = tri::Refine<MeshType, tri::MidPoint<MeshType> >(m,tri::MidPoint<MeshType>(&m),min(edgeLen*2.0f,radius/5.0f));
+    bool ret = tri::Refine<MeshType, MidPointType >(m,mid,min(edgeLen*2.0f,radius/5.0f));
     if(!ret) break;
   }
   tri::Allocator<MeshType>::CompactEveryVector(m);
   tri::UpdateTopology<MeshType>::VertexFace(m);
+}
+
+static void PreprocessForVoronoi(MeshType &m, float radius)
+{
+  tri::MidPoint<MeshType> mid(m);
+  PreprocessForVoronoi<tri::MidPoint<MeshType> >(m, radius,mid);
 }
 
 static void RelaxRefineTriangulationSpring(MeshType &m, MeshType &delaMesh, int refineStep=3, int relaxStep=10 )
