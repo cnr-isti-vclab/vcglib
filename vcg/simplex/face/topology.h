@@ -462,7 +462,7 @@ bool FFLinkCondition(FaceType &f, const int z)
 
   if(face::IsBorder(f,z) && (cnt==1)) return true;
   if(!face::IsBorder(f,z) && (cnt==2)) return true;
-  assert(0);
+  //assert(0);
   return false;
 }
 
