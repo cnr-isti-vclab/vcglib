@@ -47,9 +47,13 @@ namespace tri {
 template < typename PolyMeshType >
 class PolychordCollapse {
 public:
-  typedef typename PolyMeshType::FaceType   FaceType;
-  typedef typename PolyMeshType::VertexType VertexType;
-  typedef typename PolyMeshType::CoordType  CoordType;
+  typedef typename PolyMeshType::CoordType      CoordType;
+  typedef typename PolyMeshType::VertexType     VertexType;
+  typedef typename PolyMeshType::VertexPointer  VertexPointer;
+  typedef typename PolyMeshType::VertexIterator VertexIterator;
+  typedef typename PolyMeshType::FaceType       FaceType;
+  typedef typename PolyMeshType::FacePointer    FacePointer;
+  typedef typename PolyMeshType::FaceIterator   FaceIterator;
 
   /**
   * @brief The PC_ResultCode enum codifies the result type of a polychord collapse operation.
@@ -664,17 +668,17 @@ public:
     vcg::face::JumpingPos<FaceType> tmpPos;
     bool onSideA = false, onSideB = false;
     vcg::face::Pos<FaceType> sideA, sideB;
-    typedef std::queue<VertexType **> FacesVertex;
-    typedef std::pair<VertexType *, FacesVertex> FacesVertexPair;
+    typedef std::queue<VertexPointer *> FacesVertex;
+    typedef std::pair<VertexPointer, FacesVertex> FacesVertexPair;
     typedef std::queue<FacesVertexPair> FacesVertexPairQueue;
     FacesVertexPairQueue vQueue;
-    typedef std::pair<FaceType **, FaceType *> FFpPair;
+    typedef std::pair<FacePointer *, FacePointer> FFpPair;
     typedef std::pair<char *, char> FFiPair;
     typedef std::pair<FFpPair, FFiPair> FFPair;
     typedef std::queue<FFPair> FFQueue;
     FFQueue ffQueue;
-    std::queue<VertexType *> verticesToDeleteQueue;
-    std::queue<FaceType *> facesToDeleteQueue;
+    std::queue<VertexPointer> verticesToDeleteQueue;
+    std::queue<FacePointer> facesToDeleteQueue;
 
     if (checkSing) {
       do {
@@ -869,6 +873,191 @@ public:
         chords.ResetMarks();
         mark = 0;
       }
+    }
+  }
+
+  /**
+   * @brief SplitPolychord splits a polychord into n polychords by inserting all the needed faces.
+   * @param mesh is the input polygonal mesh.
+   * @param pos is a position into the polychord (not necessarily the starting border).
+   * @param n is the number of polychords to replace the input one.
+   * @param facesToUpdate is a vector of face pointers to be updated after re-allocation.
+   * @param verticesToUpdate is a vector of vertex pointers to be updated after re-allocation.
+   */
+  static void SplitPolychord (PolyMeshType &mesh, const vcg::face::Pos<FaceType> &pos, const size_t n,
+                              std::vector<FacePointer *> &facesToUpdate = std::vector<FacePointer *>(),
+                              std::vector<VertexPointer *> &verticesToUpdate = std::vector<VertexPointer *>()) {
+    if (mesh.IsEmpty())
+      return;
+    if (pos.IsNull())
+      return;
+    if (n <= 1)
+      return;
+
+    // find the real starting position (is the polychord a strip or a ring?) and count how many faces there are
+    size_t fn = 0;
+    bool polyBorderFound = false;
+    vcg::face::Pos<FaceType> startPos = pos;
+    do {
+      // check if all faces are 4-sided
+      if (startPos.F()->VN() != 4)
+        return;
+      // check manifoldness
+      if (IsVertexAdjacentToAnyNonManifoldEdge(startPos))
+        return;
+
+      // increase the number of faces
+      fn++;
+
+      // go on the opposite edge
+      startPos.FlipE();
+      startPos.FlipV();
+      startPos.FlipE();
+
+      // if the first border has been reached, go on the other direction to find the other border
+      if (!polyBorderFound && startPos != pos && startPos.IsBorder()) {
+        // check manifoldness
+        if (IsVertexAdjacentToAnyNonManifoldEdge(startPos))
+          return;
+        startPos = pos;
+        polyBorderFound = true;
+      }
+
+      // if the other border has been reached, stop
+      if (polyBorderFound && startPos.IsBorder()) {
+        // check manifoldness
+        if (IsVertexAdjacentToAnyNonManifoldEdge(startPos))
+          return;
+        break;
+      }
+
+      // check manifoldness
+      if (!startPos.IsManifold())
+        return;
+      // go onto the next face
+      startPos.FlipF();
+    } while (startPos != pos);
+
+    // as every face has an orientation, ensure that the new polychords are inserted on the right of the starting pos
+    startPos.FlipE();
+    int e = startPos.E();
+    startPos.FlipE();
+    if (startPos.F()->Next(startPos.E()) != e)
+      startPos.FlipV();
+
+    // compute the number of faces and vertices that must be added to the mesh in order to insert the new polychords
+    size_t FN = fn * (n - 1);
+    size_t VN = FN;
+    if (startPos.IsBorder())
+      VN += n - 1;
+
+    // add the starting position's face and vertex pointers to the list of things to update after re-allocation
+    facesToUpdate.push_back(&startPos.F());
+    verticesToUpdate.push_back(&startPos.V());
+
+    // add faces to the mesh
+    FaceIterator firstAddedFaceIt = vcg::tri::Allocator<PolyMeshType>::AddFaces(mesh, FN, facesToUpdate);
+    // add vertices to the mesh
+    VertexIterator firstAddedVertexIt = vcg::tri::Allocator<PolyMeshType>::AddVertices(mesh, VN, verticesToUpdate);
+    // allocate and initialize 4 vertices and ffAdj for each new face
+    for (FaceIterator fIt = firstAddedFaceIt; fIt != mesh.face.end(); fIt++) {
+      fIt->Alloc(4);
+      for (size_t j = 0; j < 4; j++) {
+        fIt->FFp(j) = &*fIt;
+        fIt->FFi(j) = j;
+      }
+    }
+
+    // some variables
+    size_t ln = fn;
+    if (startPos.IsBorder())
+      ln++;
+    FacePointer lf = NULL;        // face on the left to the current one
+    int lfre = 0;                 // right edge of lf
+    VertexPointer * lfbrV = NULL; // address of the bottom-right vertex pointer of lf
+    VertexPointer * lftrV = NULL; // address of the top-right vertex pointer of lf
+    CoordType lvP;
+    CoordType svP;
+    typedef std::pair<FacePointer,int>    FaceEdge;
+    typedef std::pair<FaceEdge,FaceEdge>  FaceFaceAdj;
+    typedef std::pair<VertexPointer *,VertexPointer>  FaceVertexAdj;
+    std::queue<FaceFaceAdj>   ffAdjQueue;   // face-to-face adjacency queue
+    std::queue<FaceVertexAdj> fvAdjQueue;   // face-to-vertex adjacency queue
+    bool currentFaceBottomIsBorder = false;
+
+    // scan the polychord and add adj into queues
+    vcg::face::Pos<FaceType> runPos = startPos;
+    for (size_t i = 0; i < fn; i++) {
+      // store links to the current left face
+      lf = runPos.F();
+      currentFaceBottomIsBorder = runPos.IsBorder();
+      lvP = runPos.VFlip()->P();
+      svP = (runPos.V()->P() - lvP) / n;
+      runPos.FlipE();
+      lfre = runPos.E();
+      lfbrV = &runPos.F()->V(runPos.VInd());
+      runPos.FlipV();
+      lftrV = &runPos.F()->V(runPos.VInd());
+      // set the current line's last face's right ff adjacency
+      if (!runPos.IsBorder())
+        ffAdjQueue.push(FaceFaceAdj(FaceEdge(&*(firstAddedFaceIt + (i+1)*(n-1) - 1), 1), FaceEdge(runPos.FFlip(), runPos.F()->FFi(runPos.E()))));
+      // set the current line's last face's bottom right vertex's coords
+      (firstAddedVertexIt + (i+1)*(n-1) - 1)->P() = lvP + svP * (n - 1);
+      // set the current line's last face's bottom right vertex
+      fvAdjQueue.push(FaceVertexAdj(&(firstAddedFaceIt + (i+1)*(n-1) - 1)->V(1), runPos.VFlip()));
+      // set the current face's top left vertex
+      fvAdjQueue.push(FaceVertexAdj(&(firstAddedFaceIt + (i+1)*(n-1) - 1)->V(2), runPos.V()));
+      runPos.FlipE();
+      if (!runPos.IsBorder())
+        runPos.FlipF();
+      else
+        for (size_t j = 0; j < n-1; j++)
+          // set the current face's bottom right vertex's coords
+          (firstAddedVertexIt + (i+1)*(n-1) + j)->P() = runPos.VFlip()->P() +
+                                                        (runPos.V()->P() - runPos.VFlip()->P()) / n * (j+1);
+
+      // run horizontally on the current line of the grid
+      for (size_t j = 0; j < n-1; j++) {
+        // set the current face's left ff adj
+        ffAdjQueue.push(FaceFaceAdj(FaceEdge(lf, lfre), FaceEdge(&*(firstAddedFaceIt + i*(n-1) + j), 3)));
+        // set the current face's bottom ff adjacency
+        if (!currentFaceBottomIsBorder)
+          ffAdjQueue.push(FaceFaceAdj(FaceEdge(&*(firstAddedFaceIt + ((i+fn-1)%fn)*(n-1) + j), 2), FaceEdge(&*(firstAddedFaceIt + i*(n-1) + j), 0)));
+        // set the current face's bottom right vertex's coords
+        (firstAddedVertexIt + i*(n-1) + j)->P() = lvP + svP * (j+1);
+        // set the left face's bottom right vertex
+        fvAdjQueue.push(FaceVertexAdj(lfbrV, &*(firstAddedVertexIt + i*(n-1) + j)));
+        // set the current face's bottom left vertex
+        fvAdjQueue.push(FaceVertexAdj(&(firstAddedFaceIt + i*(n-1) + j)->V(0), &*(firstAddedVertexIt + i*(n-1) + j)));
+        // set the left face's top right vertex
+        fvAdjQueue.push(FaceVertexAdj(lftrV, &*(firstAddedVertexIt + ((i+1)%ln)*(n-1) + j)));
+        // set the current face's top left vertex
+        fvAdjQueue.push(FaceVertexAdj(&(firstAddedFaceIt + i*(n-1) + j)->V(3), &*(firstAddedVertexIt + ((i+1)%ln)*(n-1) + j)));
+
+        // update temporary variables
+        lf = &*(firstAddedFaceIt + i*(n-1) + j);
+        lfre = 1;
+        lfbrV = &(firstAddedFaceIt + i*(n-1) + j)->V(1);
+        lftrV = &(firstAddedFaceIt + i*(n-1) + j)->V(2);
+      }
+    }
+
+    // now apply ff adj changes
+    while (!ffAdjQueue.empty()) {
+      // the left/bottom face links to the right/top face
+      ffAdjQueue.front().first.first->FFp(ffAdjQueue.front().first.second) = ffAdjQueue.front().second.first;
+      ffAdjQueue.front().first.first->FFi(ffAdjQueue.front().first.second) = ffAdjQueue.front().second.second;
+      // the right/top face links to the left/bottom face
+      ffAdjQueue.front().second.first->FFp(ffAdjQueue.front().second.second) = ffAdjQueue.front().first.first;
+      ffAdjQueue.front().second.first->FFi(ffAdjQueue.front().second.second) = ffAdjQueue.front().first.second;
+      // pop from queue
+      ffAdjQueue.pop();
+    }
+
+    // and apply fv adj changes
+    while (!fvAdjQueue.empty()) {
+      *fvAdjQueue.front().first = fvAdjQueue.front().second;
+      fvAdjQueue.pop();
     }
   }
 
