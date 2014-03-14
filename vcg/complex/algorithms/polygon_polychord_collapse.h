@@ -959,6 +959,11 @@ public:
     FaceIterator firstAddedFaceIt = vcg::tri::Allocator<PolyMeshType>::AddFaces(mesh, FN, facesToUpdate);
     // add vertices to the mesh
     VertexIterator firstAddedVertexIt = vcg::tri::Allocator<PolyMeshType>::AddVertices(mesh, VN, verticesToUpdate);
+
+    // delete the added starting position's face and vertex pointers
+    facesToUpdate.pop_back();
+    verticesToUpdate.pop_back();
+
     // allocate and initialize 4 vertices and ffAdj for each new face
     for (FaceIterator fIt = firstAddedFaceIt; fIt != mesh.face.end(); fIt++) {
       fIt->Alloc(4);
