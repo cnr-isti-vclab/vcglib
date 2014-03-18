@@ -78,7 +78,7 @@ int main( int argc, char **argv )
   float radius;
   tri::PoissonSampling<MyMesh>(baseMesh,pointVec,sampleNum,radius);
   vector<MyVertex *> seedVec;
-  tri::VoronoiProcessing<MyMesh>::PreprocessForVoronoi(baseMesh,radius);
+  tri::VoronoiProcessing<MyMesh>::PreprocessForVoronoi(baseMesh,radius,vpp);
   tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,pointVec,seedVec);
 
   int t2=clock();
@@ -93,10 +93,6 @@ int main( int argc, char **argv )
   printf("relaxed %lu seeds for %i(up to %i) iterations in %f secs\n",
          seedVec.size(), actualIter, iterNum,float(t3-t2)/CLOCKS_PER_SEC);
 
-  MyMesh::PerVertexAttributeHandle<MyVertex *> sources;
-  sources= tri::Allocator<MyMesh>::GetPerVertexAttribute<MyVertex *> (baseMesh,"sources");
-  tri::Geodesic<MyMesh>::Compute(baseMesh, seedVec, df,std::numeric_limits<float>::max(),0,&sources);
-
   tri::io::ExporterPLY<MyMesh>::Save(baseMesh,"baseMesh.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_VERTQUALITY );
   if(tri::VoronoiProcessing<MyMesh>::CheckVoronoiTopology(baseMesh,seedVec))
   {
@@ -107,6 +103,7 @@ int main( int argc, char **argv )
     printf("WARNING some voronoi region are not disk like; the resulting delaunay triangulation is not manifold.\n");
     refineStep=1;
   }
+
   tri::VoronoiProcessing<MyMesh>::ConvertDelaunayTriangulationToMesh(baseMesh,delaunayMesh,seedVec,true);
   tri::io::ExporterPLY<MyMesh>::Save(delaunayMesh,"delaunayBaseMesh.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_VERTFLAGS,false );
   tri::VoronoiProcessing<MyMesh>::RelaxRefineTriangulationSpring(baseMesh,delaunayMesh,refineStep,relaxStep);
