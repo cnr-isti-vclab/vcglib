@@ -431,7 +431,7 @@ namespace vcg
                 };
 
                 return face * A * ( A*C - B*D ) >= 0  ;  // face and A invert signs
-            }; // end of TestFace
+            } // end of TestFace
 
 
             /*!
@@ -589,7 +589,7 @@ namespace vcg
                 case 15 : return s<0 ;
                 }
                 return s<0 ;
-            }; //end of TestInterior
+            } //end of TestInterior
 
             /*!
             *	Adds a vertex inside the current cube
@@ -688,18 +688,18 @@ namespace vcg
 
                         switch ( vertices_list[trig] )
                         {
-                        case  0: { _walker->GetXIntercept(_corners[0], _corners[1], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
-                        case  1: { _walker->GetYIntercept(_corners[1], _corners[2], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
-                        case  2: { _walker->GetXIntercept(_corners[3], _corners[2], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
-                        case  3: { _walker->GetYIntercept(_corners[0], _corners[3], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
-                        case  4: { _walker->GetXIntercept(_corners[4], _corners[5], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
-                        case  5: { _walker->GetYIntercept(_corners[5], _corners[6], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
-                        case  6: { _walker->GetXIntercept(_corners[7], _corners[6], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
-                        case  7: { _walker->GetYIntercept(_corners[4], _corners[7], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
-                        case  8: { _walker->GetZIntercept(_corners[0], _corners[4], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
-                        case  9: { _walker->GetZIntercept(_corners[1], _corners[5], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
-                        case 10: { _walker->GetZIntercept(_corners[2], _corners[6], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
-                        case 11: { _walker->GetZIntercept(_corners[3], _corners[7], vp); vertices_idx[vert] = vp - &_mesh->vert[0]; break; }
+                        case  0: { _walker->GetXIntercept(_corners[0], _corners[1], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
+                        case  1: { _walker->GetYIntercept(_corners[1], _corners[2], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
+                        case  2: { _walker->GetXIntercept(_corners[3], _corners[2], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
+                        case  3: { _walker->GetYIntercept(_corners[0], _corners[3], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
+                        case  4: { _walker->GetXIntercept(_corners[4], _corners[5], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
+                        case  5: { _walker->GetYIntercept(_corners[5], _corners[6], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
+                        case  6: { _walker->GetXIntercept(_corners[7], _corners[6], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
+                        case  7: { _walker->GetYIntercept(_corners[4], _corners[7], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
+                        case  8: { _walker->GetZIntercept(_corners[0], _corners[4], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
+                        case  9: { _walker->GetZIntercept(_corners[1], _corners[5], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
+                        case 10: { _walker->GetZIntercept(_corners[2], _corners[6], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
+                        case 11: { _walker->GetZIntercept(_corners[3], _corners[7], vp); vertices_idx[vert] = tri::Index(*_mesh,vp); break; }
                         case 12: { assert(v12 != NULL); vertices_idx[vert] = v12_idx; break; }
                         default: { assert(false); /* Invalid edge identifier */ }
                         } // end of switch
@@ -713,7 +713,7 @@ namespace vcg
                     _mesh->face[face_idx].V(1) = &_mesh->vert[vertices_idx[1]];
                     _mesh->face[face_idx].V(2) = &_mesh->vert[vertices_idx[2]];
                 } // end for (int trig=0...)
-            }; // end of AddTriangles
+            } // end of AddTriangles
 
 
         }; // end of class MarchingCubes
@@ -721,7 +721,7 @@ namespace vcg
         /*! @} */
         //end of Doxygen documentation
 
-    }; // end of namespace tri
-}; // end of namespace vcg
+    } // end of namespace tri
+} // end of namespace vcg
 
 #endif //__VCG_MARCHING_CUBES
