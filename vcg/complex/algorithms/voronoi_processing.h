@@ -1169,15 +1169,17 @@ static std::pair<genericType, genericType> ordered_pair(const genericType &a, co
   return std::make_pair(b,a);
 }
 
-/// For each edge of the delaunay triangulation it finds the middle point
-/// E.g the point that belongs on the corresponding edge of the voronoi diagram
+/// For each edge of the delaunay triangulation it search a 'good' middle point:
+/// E.g the point that belongs on the corresponding edge of the voronoi diagram (e.g. on a frontier face)
 /// and that has minimal distance from the two seeds.
+///
+///  Note: if the edge connects two "constrained" vertices (e.g. selected) we must search only among the constrained.
+///
 ///
 static void GenerateMidPointMap(MeshType &m,
                                 map<std::pair<VertexPointer,VertexPointer>, VertexPointer > &midMap)
 {
-  typename MeshType::template PerVertexAttributeHandle<VertexPointer> sources;
-  sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+  PerVertexPointerHandle sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
 
   for(FaceIterator fi = m.face.begin(); fi!=m.face.end(); ++fi)
   {
@@ -1185,21 +1187,43 @@ static void GenerateMidPointMap(MeshType &m,
     vp[0] =    (*fi).V(0);  vp[1] =    (*fi).V(1);  vp[2] =    (*fi).V(2);
     sp[0] = sources[vp[0]]; sp[1] = sources[vp[1]]; sp[2] = sources[vp[2]];
     if((sp[0] == sp[1]) && (sp[0] == sp[2])) continue; // skip internal faces
+//    if((sp[0] != sp[1]) && (sp[0] != sp[2]) && (sp[1] != sp[2])) continue; // skip corner faces
 
     for(int i=0;i<3;++i) // for each edge of a frontier face
     {
       int i0 = i;
       int i1 = (i+1)%3;
+//      if((sp[i0]->IsS() && sp[i1]->IsS()) && !( vp[i0]->IsS() || vp[i1]->IsS() ) ) continue;
 
-      VertexPointer closestVert = (*fi).V(i0);
-      if( (*fi).V(i1)->Q() <  closestVert->Q()) closestVert =  (*fi).V(i1);
+      VertexPointer closestVert = vp[i0];
+      if( vp[i1]->Q() <  closestVert->Q()) closestVert =  vp[i1];
+
+      if(sp[i0]->IsS() && sp[i1]->IsS())
+      {
+         if ( (vp[i0]->IsS()) && !(vp[i1]->IsS()) ) closestVert =  vp[i0];
+         if (!(vp[i0]->IsS()) &&  (vp[i1]->IsS()) ) closestVert =  vp[i1];
+         if ( (vp[i0]->IsS()) &&  (vp[i1]->IsS()) ) closestVert =  (vp[i0]->Q() < vp[i1]->Q()) ? vp[i0]:vp[i1];
+      }
 
       if(midMap[ordered_pair(sp[i0],sp[i1])] == 0 ) {
         midMap[ordered_pair(sp[i0],sp[i1])] = closestVert;
       }
       else {
+        if(sp[i0]->IsS() && sp[i1]->IsS()) // constrained edge
+        {
+          if(!(midMap[ordered_pair(sp[i0],sp[i1])]->IsS()) && closestVert->IsS())
+             midMap[ordered_pair(sp[i0],sp[i1])] = closestVert;
+          if( midMap[ordered_pair(sp[i0],sp[i1])]->IsS() && closestVert->IsS() &&
+            closestVert->Q() < midMap[ordered_pair(sp[i0],sp[i1])]->Q())
+          {
+            midMap[ordered_pair(sp[i0],sp[i1])] = closestVert;
+          }
+        }
+        else // UNCOSTRAINED EDGE
+        {
         if(closestVert->Q() < midMap[ordered_pair(sp[i0],sp[i1])]->Q())
           midMap[ordered_pair(sp[i0],sp[i1])] = closestVert;
+        }
       }
     }
   }
