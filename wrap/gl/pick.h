@@ -61,6 +61,7 @@ public:
     return false;
   }
 
+
    static Point3f Proj(const Eigen::Matrix4f &M, const float * viewport, Point3f &p)
    {
      const float vx=viewport[0];
@@ -80,11 +81,24 @@ public:
      return sc;
    }
 
+   static void FillProjectedVector(MESH_TYPE &m, std::vector<Point3f> &pVec, const Eigen::Matrix4f &M, const float * viewportF)
+   {
+     pVec.resize(m.vert.size());
+     for(size_t i=0;i<m.vert.size();++i) if(!m.vert[i].IsD())
+     {
+       pVec[i] = Proj(M, viewportF,m.vert[i].P());
+     }
+   }
+
    static int PickVertSW(int x, int y, MESH_TYPE &m, std::vector<VertexPointer> &result, int width=4, int height=4,bool sorted=true)
    {
      result.clear();
      Eigen::Matrix4d mp,mm;
      Eigen::Matrix4f M;
+     static Eigen::Matrix4f lastM;
+     static MESH_TYPE *lastm=0;
+     static std::vector<Point3f> pVec;
+
      GLint viewport[4];
      Box2f reg;
      reg.Add(Point2f(x-width/2.0f,y-height/2.0f));
@@ -93,17 +107,26 @@ public:
      float viewportF[4];
      for(int i=0;i<4;++i) viewportF[i]=viewport[i];
 
-     glGetDoublev(GL_PROJECTION_MATRIX ,mp.data());
-     glGetDoublev(GL_MODELVIEW_MATRIX,mm.data());
+     glGetDoublev(GL_PROJECTION_MATRIX, mp.data());
+     glGetDoublev(GL_MODELVIEW_MATRIX,  mm.data());
+
      M = (mp*mm).cast<float>();
-     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)if(!vi->IsD())
+
+     if(M!=lastM || &m != lastm)
      {
-       Point3f pp = Proj(M,viewportF,vi->P());
+       FillProjectedVector(m,pVec,M,viewportF);
+       lastM = M;
+       lastm = &m;
+     }
+
+     for(size_t i=0;i<m.vert.size();++i) if(!m.vert[i].IsD())
+     {
+       Point3f &pp = pVec[i];
        if(pp[0]<reg.min[0]) continue;
        if(pp[0]>reg.max[0]) continue;
        if(pp[1]<reg.min[1]) continue;
        if(pp[1]>reg.max[1]) continue;
-       result.push_back(&*vi);
+       result.push_back(&m.vert[i]);
      }
      return result.size();
    }
@@ -170,6 +193,45 @@ public:
       return result.size();
   }
 
+  static int PickFaceSW(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width=4, int height=4)
+  {
+    result.clear();
+    Eigen::Matrix4d mp,mm;
+    Eigen::Matrix4f M;
+    static Eigen::Matrix4f lastM;
+    static MESH_TYPE *lastm=0;
+    static std::vector<Point3f> pVec;
+
+    GLint viewport[4];
+    Box3f reg;
+    reg.Add(Point3f(x-width/2.0f,y-height/2.0f,-1.0f));
+    reg.Add(Point3f(x+width/2.0f,y+height/2.0f,1.0f));
+    glGetIntegerv(GL_VIEWPORT,viewport);
+    float viewportF[4];
+    for(int i=0;i<4;++i) viewportF[i]=viewport[i];
+
+    glGetDoublev(GL_PROJECTION_MATRIX, mp.data());
+    glGetDoublev(GL_MODELVIEW_MATRIX,  mm.data());
+
+    M = (mp*mm).cast<float>();
+
+    if(M!=lastM || &m != lastm)
+    {
+      FillProjectedVector(m,pVec,M,viewportF);
+      lastM = M;
+      lastm = &m;
+    }
+
+    for(size_t i=0;i<m.face.size();++i) if(!m.face[i].IsD())
+    {
+      const Point3f &p0 = pVec[tri::Index(m,m.face[i].V(0))];
+      const Point3f &p1 = pVec[tri::Index(m,m.face[i].V(1))];
+      const Point3f &p2 = pVec[tri::Index(m,m.face[i].V(2))];
+      if(IntersectionTriangleBox(reg,p0,p1,p2))
+        result.push_back(&m.face[i]);
+    }
+    return result.size();
+  }
     static int PickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width=4, int height=4,bool sorted=true)
     {
         result.clear();
