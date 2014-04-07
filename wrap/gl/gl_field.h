@@ -14,44 +14,40 @@ class GLField
 	
 	static void GLDrawField(CoordType dir[4],
 							CoordType center,
-							ScalarType &size)
+                            ScalarType &size,
+                            bool oneside=false)
 	{
+        ScalarType size1=size;
+        ScalarType size2=size;
+        if (oneside)size2=0;
 
         glLineWidth(2);
         vcg::glColor(vcg::Color4b(0,0,255,255));
         glBegin(GL_LINES);
-            glVertex(center-dir[0]*size);
-            glVertex(center+dir[0]*size);
+            glVertex(center+dir[0]*size1);
+            glVertex(center-dir[0]*size2);
         glEnd();
 
         glLineWidth(2);
         vcg::glColor(vcg::Color4b(0,255,0,255));
         glBegin(GL_LINES);
-            glVertex(center-dir[1]*size);
-            glVertex(center+dir[1]*size);
+            glVertex(center+dir[1]*size1);
+            glVertex(center-dir[1]*size2);
         glEnd();
-        /*glLineWidth(1);
-        vcg::glColor(vcg::Color4b(0,0,0,255));
 
-		glBegin(GL_LINES);
-        for (int i=1;i<4;i++)
-		{            
-            glVertex(center);
-            glVertex(center+dir[i]*size);
-		}
-        glEnd();*/
 	}
 
 
 	///draw the cross field of a given face
     static void GLDrawFaceField(const FaceType &f,
-							ScalarType &size)
+                                ScalarType &size,
+                                bool oneside=false)
 	{
         CoordType center=(f.cP0(0)+f.cP0(1)+f.cP0(2))/3;
 		CoordType normal=f.cN();
 		CoordType dir[4];
 		vcg::tri::CrossField<MeshType>::CrossVector(f,dir);
-		GLDrawField(dir,center,size);
+        GLDrawField(dir,center,size,oneside);
 	}
 	
 //    static void GLDrawFaceSeams(const FaceType &f,
@@ -85,7 +81,9 @@ class GLField
 public:
 
 
-	static void GLDrawFaceField(const MeshType &mesh)
+    static void GLDrawFaceField(const MeshType &mesh,
+                                ScalarType scale=0.002,
+                                bool oneside=false)
 	{
 
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -93,12 +91,12 @@ public:
 		glEnable(GL_COLOR_MATERIAL);
         glDisable(GL_LIGHTING);
         glDisable(GL_BLEND);
-        ScalarType size=mesh.bbox.Diag()/400.0;
+        ScalarType size=mesh.bbox.Diag()*scale;
         for (unsigned int i=0;i<mesh.face.size();i++)
 		{
 			if (mesh.face[i].IsD())continue;
 			//if (!mesh.face[i].leading)continue;
-            GLDrawFaceField(mesh.face[i],size);
+            GLDrawFaceField(mesh.face[i],size,oneside);
 		}
 		glPopAttrib();
 	}
