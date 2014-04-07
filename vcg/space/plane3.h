@@ -116,7 +116,14 @@ public:
 		ScalarType k = p.dot(_dir) - _offset;
 		return p - _dir * k;
 	}
-		
+
+  ///Mirror the point wrt the plane
+  PointType Mirror(const PointType &p) const	{
+     PointType mirr=Projection(p);
+     mirr+=mirr-p;
+     return mirr;
+  }
+
   /// Function to normalize direction
   void Normalize() {
 	  _dir.Normalize();
