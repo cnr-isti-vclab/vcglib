@@ -10,6 +10,24 @@
 namespace vcg {
 namespace tri {
 
+//class SphereEdge;
+class SphereFace;
+class SphereVertex;
+
+struct SphereUsedTypes : public vcg::UsedTypes<	vcg::Use<SphereVertex>::AsVertexType,
+                                                vcg::Use<SphereFace>::AsFaceType>{};
+
+class SphereVertex  : public vcg::Vertex< SphereUsedTypes,
+                                        vcg::vertex::Coord3f,
+                                        vcg::vertex::Normal3f,
+                                        vcg::vertex::BitFlags>{};
+
+class SphereFace    : public vcg::Face< SphereUsedTypes, vcg::face::VertexRef,
+                                        vcg::face::Normal3f,vcg::face::Mark,
+                                        vcg::face::BitFlags,vcg::face::FFAdj> {};
+
+class SphereMesh : public vcg::tri::TriMesh< std::vector<SphereVertex>, std::vector<SphereFace> > {};
+
 template <class TriMeshType>
 class ExtrinsicPlaneSymmetry
 {
@@ -28,8 +46,11 @@ class ExtrinsicPlaneSymmetry
 
     std::vector<ScalarType> Votes;
 
-    TriMeshType *sphere;
-    typename vcg::GridStaticPtr<FaceType> GridSph;
+
+
+    SphereMesh *sphere;
+
+    typename vcg::GridStaticPtr<SphereFace> GridSph;
 
     ScalarType RadiusInterval;
     ScalarType MaxRadius;
@@ -50,7 +71,7 @@ class ExtrinsicPlaneSymmetry
         ScalarType MaxD=sphere->bbox.Diag();
         ScalarType MinD;
         CoordType ClosePt;
-        FaceType *choosen=NULL;
+        SphereFace *choosen=NULL;
         choosen=vcg::tri::GetClosestFaceBase(*sphere,GridSph,Direction,MaxD,MinD,ClosePt);
         assert(choosen!=NULL);
         int IndexF=choosen-&(sphere->face[0]);
@@ -175,11 +196,11 @@ public:
         if (sphere!=NULL)
             sphere->Clear();
         else
-            sphere=new TriMeshType();
+            sphere=new SphereMesh();
 
         //create the sphere
-        vcg::tri::Sphere<TriMeshType>(*sphere,SubDirections);
-        sphere->UpdateAttributes();
+        vcg::tri::Sphere<SphereMesh>(*sphere,SubDirections);
+        vcg::tri::UpdateBounding<SphereMesh>::Box(*sphere);
 
         ///initialize grid
         GridSph.Set(sphere->face.begin(),sphere->face.end());
