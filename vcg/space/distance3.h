@@ -124,6 +124,41 @@ void SphereSphereDistance(const Sphere3<ScalarType> &sphere0,
   return dist;
 }
 
+/*
+* Computes the minimum squared distance between a between a point and a plane
+* @param[in] pl			The input line
+* @param[in] p          The input point
+* @param[out] closest	The closest point
+* @param[out] dist		The squared distance
+*/
+template <class ScalarType>
+void  PlanePointSquaredDistance(const vcg::Plane3<ScalarType> &Pl,
+                                const Point3<ScalarType> &p,
+                                Point3<ScalarType> &closest,
+                                ScalarType &dist)
+{
+    closest=Pl.Projection(p);
+    dist= (closest - p).SquaredNorm();
+}
+
+
+/*
+* Computes the minimum squared distance between a between a point and a plane
+* @param[in] pl			The input line
+* @param[in] p          The input point
+* @param[out] closest	The closest point
+* @param[out] dist		The squared distance
+*/
+template <class ScalarType>
+ScalarType  PlanePointSquaredDistance(const vcg::Plane3<ScalarType> &Pl,
+                                    const Point3<ScalarType> &p)
+{
+    ScalarType dist;
+    vcg::Point3<ScalarType> closest;
+    PlanePointSquaredDistance(Pl,p,closest,dist);
+    return (dist);
+}
+
 
 /*
 * Computes the minimum squared distance between a between a point and a line
