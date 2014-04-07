@@ -807,7 +807,8 @@ class QualityEdgePredicate
   typedef Point3<typename MESH_TYPE::ScalarType> Point3x;
   typedef typename MESH_TYPE::ScalarType ScalarType;
   ScalarType thr;
-  QualityEdgePredicate(const ScalarType &thr):thr(thr) {}
+  ScalarType tolerance;
+  QualityEdgePredicate(const ScalarType &thr,ScalarType _tolerance=0.02):thr(thr) {tolerance=_tolerance;}
   bool operator()(face::Pos<typename MESH_TYPE::FaceType> ep)
     {
     ScalarType q0=ep.f->V0(ep.z)->Q()-thr;
@@ -816,7 +817,7 @@ class QualityEdgePredicate
     if ( q0*q1 > 0) return false;
     // now a small check to be sure that we do not make too thin crossing.
     double pp= q0/(q0-q1);
-    if(fabs(pp)< 0.001) return false;
+    if ((fabs(pp)< tolerance)||(fabs(pp)> (1-tolerance))) return false;
     return true;
   }
 };
