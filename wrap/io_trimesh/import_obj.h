@@ -238,10 +238,13 @@ namespace vcg {
                     //if (oi.numFaces == 0)
                     //	return E_NO_FACE;
 
+
                     std::ifstream stream(filename);
                     if (stream.fail())
+                    {
+                        stream.close();
                         return E_CANTOPEN;
-
+                    }
                     std::vector<Material>	materials;  // materials vector
                     std::vector<ObjTexCoord>	texCoords;  // texture coordinates
                     std::vector<CoordType>  normals;		// vertex normals
@@ -282,13 +285,18 @@ namespace vcg {
 
                             // callback invocation, abort loading process if the call returns false
                             if ((cb !=NULL) && (((numTriangles + numVertices)%100)==0) && !(*cb)((100*(numTriangles + numVertices))/numVerticesPlusFaces, loadingStr))
+                            {
+                                stream.close();
                                 return E_ABORTED;
-
+                            }
                             if (header.compare("v")==0)	// vertex
                             {
                                 loadingStr="Vertex Loading";
-                                if (numTokens < 4) return E_BAD_VERTEX_STATEMENT;
-
+                                if (numTokens < 4)
+                                {
+                                    stream.close();
+                                    return E_BAD_VERTEX_STATEMENT;
+                                }
                                 (*vi).P()[0] = (ScalarType) atof(tokens[1].c_str());
                                 (*vi).P()[1] = (ScalarType) atof(tokens[2].c_str());
                                 (*vi).P()[2] = (ScalarType) atof(tokens[3].c_str());
@@ -321,8 +329,11 @@ namespace vcg {
                             {
                                 loadingStr="Vertex Texture Loading";
 
-                                if (numTokens < 3) return E_BAD_VERT_TEX_STATEMENT;
-
+                                if (numTokens < 3)
+                                {
+                                    stream.close();
+                                    return E_BAD_VERT_TEX_STATEMENT;
+                                }
                                 ObjTexCoord t;
                                 t.u = static_cast<float>(atof(tokens[1].c_str()));
                                 t.v = static_cast<float>(atof(tokens[2].c_str()));
@@ -334,8 +345,11 @@ namespace vcg {
                             {
                                 loadingStr="Vertex Normal Loading";
 
-                                if (numTokens != 4) return E_BAD_VERT_NORMAL_STATEMENT;
-
+                                if (numTokens != 4)
+                                {
+                                    stream.close();
+                                    return E_BAD_VERT_NORMAL_STATEMENT;
+                                }
                                 CoordType n;
                                 n[0] = (ScalarType) atof(tokens[1].c_str());
                                 n[1] = (ScalarType) atof(tokens[2].c_str());
@@ -354,6 +368,7 @@ namespace vcg {
                                 if(header.compare("q")==0) {
                                     QuadFlag=true;
                                     if (vertexesPerFace != 4) {
+                                        stream.close();
                                         return E_LESS_THAN_4_VERT_IN_QUAD;
                                     }
                                 }
@@ -380,8 +395,10 @@ namespace vcg {
                                         // verifying validity of texture coords indices
                                         for(int i=0;i<vertexesPerFace;i++)
                                             if(!GoodObjIndex(ff.t[i],oi.numTexCoords))
+                                            {
+                                                stream.close();
                                                 return E_BAD_VERT_TEX_INDEX;
-
+                                            }
                                         ff.tInd=materials[currentMaterialIdx].index;
                                     }
 
@@ -397,15 +414,21 @@ namespace vcg {
 
                                     for(int i=0;i<vertexesPerFace;i++)
                                         if(!GoodObjIndex(ff.v[i],numVertices))
+                                        {
+                                            stream.close();
                                             return E_BAD_VERT_INDEX;
-
+                                        }
 
                                     if(( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL ) ||
                                        ( oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL  ) )
                                     {
                                         // verifying validity of vertex normal indices
                                         for(int i=0;i<vertexesPerFace;i++)
-                                            if(!GoodObjIndex(ff.n[i],numVNormals)) return E_BAD_VERT_NORMAL_INDEX;
+                                            if(!GoodObjIndex(ff.n[i],numVNormals))
+                                            {
+                                                stream.close();
+                                                return E_BAD_VERT_NORMAL_INDEX;
+                                            }
                                     }
 
 
@@ -652,7 +675,7 @@ namespace vcg {
                             m.vert[i].C()=vertexColorVector[i];
                         }
                     }
-
+                    stream.close();
                     return result;
                 } // end of Open
 
@@ -885,9 +908,13 @@ namespace vcg {
 
                 static bool LoadMask(const char * filename, Info &oi)
                 {
-                    std::ifstream stream(filename);
-                    if (stream.fail()) return false;
 
+                    std::ifstream stream(filename);
+                    if (stream.fail())
+                    {
+                        stream.close();
+                        return false;
+                    }
                     // obtain length of file:
                     stream.seekg (0, std::ios::end);
                     int length = stream.tellg();
@@ -954,6 +981,8 @@ namespace vcg {
                         else
                             oi.mask |= vcg::tri::io::Mask::IOM_WEDGNORMAL;
                     }
+
+                    stream.close();
 
                     return true;
                 }
