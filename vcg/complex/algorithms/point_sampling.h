@@ -115,8 +115,28 @@ public:
   }
 }; // end class TrivialSampler
 
+template <class MeshType>
+class TrivialPointerSampler
+{
+public:
+  typedef typename MeshType::CoordType  CoordType;
+  typedef typename MeshType::VertexType VertexType;
+  typedef typename MeshType::FaceType   FaceType;
 
+  TrivialPointerSampler() {}
+  ~TrivialPointerSampler()  {}
 
+public:
+  std::vector<VertexType *> sampleVec;
+
+  void AddVert(const VertexType &p)
+  {
+    sampleVec->push_back(&p);
+  }
+  // This sampler should be used only for getting vertex pointers. Meaningless in other case.
+  void AddFace(const FaceType &, const CoordType &)   { assert(0); }
+  void AddTextureSample(const FaceType &, const CoordType &, const Point2i &, float ) { assert(0); }
+}; // end class TrivialSampler
 
 
 template <class MeshType>
@@ -1381,6 +1401,8 @@ static void InitSpatialHashTable(MetroMesh &montecarloMesh, MontecarloSHT &monte
 static void PoissonDiskPruning(VertexSampler &ps, MetroMesh &montecarloMesh,
                                ScalarType diskRadius, const struct PoissonDiskParam pp=PoissonDiskParam())
 {
+    if(pp.adaptiveRadiusFlag)
+      tri::RequirePerVertexQuality(montecarloMesh);
     int t0 = clock();
     // spatial index of montecarlo samples - used to choose a new sample to insert
     MontecarloSHT montecarloSHT;
@@ -1733,15 +1755,74 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
 template <class MeshType>
 void PoissonPruning(MeshType &m, // the mesh that has to be pruned
                     std::vector<Point3f> &poissonSamples, // the vector that will contain the chosen set of points
-                    float & radius)
+                    float & radius, int sampleNum=0)
 {
-    typedef tri::TrivialSampler<MeshType> BaseSampler;
-    typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam pp;
-    typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam::Stat stat;
-    pp.pds = &stat;
-    tri::UpdateBounding<MeshType>::Box(m);
-    BaseSampler pdSampler(poissonSamples);
-    tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(pdSampler, m, radius,pp);
+  typedef tri::TrivialSampler<MeshType> BaseSampler;
+  typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam pp;
+  if(sampleNum>0 && radius==0)
+    radius = tri::SurfaceSampling<MeshType,BaseSampler>::ComputePoissonDiskRadius(m,sampleNum);
+  tri::UpdateBounding<MeshType>::Box(m);
+  BaseSampler pdSampler(poissonSamples);
+  tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(pdSampler, m, radius,pp);
+}
+
+
+/// \brief Very simple wrapping for the Poisson Disk Pruning
+///
+/// This function simply takes a mesh and a radius and returns a vector of points
+//
+template <class MeshType>
+void PoissonPruning(MeshType &m, // the mesh that has to be pruned
+                    std::vector<typename MeshType::VertexPointer> &poissonSamples, // the vector that will contain the chosen set of points
+                    float & radius, int sampleNum=0)
+{
+  typedef tri::TrivialPointerSampler<MeshType> BaseSampler;
+  typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam pp;
+  if(sampleNum>0 && radius==0)
+    radius = tri::SurfaceSampling<MeshType,BaseSampler>::ComputePoissonDiskRadius(m,sampleNum);
+
+  tri::UpdateBounding<MeshType>::Box(m);
+  BaseSampler pdSampler;
+  tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(pdSampler, m, radius,pp);
+  std::swap(pdSampler.sampleVec,poissonSamples);
+}
+
+/// \brief Very simple wrapping for the Exact Poisson Disk Pruning
+///
+/// This function simply takes a mesh and an expected number of points and returns
+/// vector of points. It performs multiple attempts with varius radii to correctly get the expected number of samples.
+/// It is obviously much slower than the other versions...
+
+
+template <class MeshType>
+void PoissonPruningExact(MeshType &m, // the mesh that has to be pruned
+                         std::vector<Point3f> &poissonSamples, // the vector that will contain the chosen set of points
+                         float & radius,
+                         int sampleNum,
+                         float tolerance=0.04,
+                         int maxIter=20)
+{
+  int sampleNumMin = int(float(sampleNum)*(1.0f-tolerance));
+  int sampleNumMax = int(float(sampleNum)*(1.0f+tolerance));
+  float RadiusRangeMin = m.bbox.Diag()/100.0;
+  float RadiusRangeMax = m.bbox.Diag();
+  std::vector<Point3f> poissonSamplesTmp;
+  float curRadius;
+  int iterCnt=0;
+  while(iterCnt<maxIter &&
+        (poissonSamplesTmp.size() < sampleNumMin || poissonSamplesTmp.size() > sampleNumMax) )
+  {
+    curRadius=(RadiusRangeMax+RadiusRangeMin)/2.0f;
+    PoissonPruning(m,poissonSamplesTmp,curRadius);
+    //qDebug("(%f %f) Cur Radius %f -> %i sample instead of %i",RadiusRangeMin,RadiusRangeMax,curRadius,poissonSamplesTmp.size(),sampleNum);
+    if(poissonSamplesTmp.size() > sampleNum)
+      RadiusRangeMin = curRadius;
+    if(poissonSamplesTmp.size() < sampleNum)
+      RadiusRangeMax = curRadius;
+  }
+
+  swap(poissonSamples,poissonSamplesTmp);
+  radius = curRadius;
 }
 } // end namespace tri
 } // end namespace vcg
