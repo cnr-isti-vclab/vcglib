@@ -13,22 +13,31 @@ template<typename _DataType>
 class ConstDataWrapper
 {
 public:
-		typedef _DataType DataType;
-		inline ConstDataWrapper()
-			: mpData(0), mStride(0), mSize(0)
-		{}
-		inline ConstDataWrapper(const DataType* pData, int size, int stride = sizeof(DataType))
-			: mpData(reinterpret_cast<const unsigned char*>(pData)), mStride(stride), mSize(size)
-		{}
-		inline const DataType& operator[] (int i) const
-		{
-			return *reinterpret_cast<const DataType*>(mpData + i*mStride);
-		}
-		inline size_t size() const { return mSize; }
+        typedef _DataType DataType;
+        inline ConstDataWrapper()
+            : mpData(0), mStride(0), mSize(0)
+        {}
+        inline ConstDataWrapper(const DataType* pData, int size, int stride = sizeof(DataType))
+            : mpData(reinterpret_cast<const unsigned char*>(pData)), mStride(stride), mSize(size)
+        {}
+        inline const DataType& operator[] (int i) const
+        {
+            return *reinterpret_cast<const DataType*>(mpData + i*mStride);
+        }
+        inline size_t size() const { return mSize; }
 protected:
-		const unsigned char* mpData;
-		int mStride;
-		size_t mSize;
+        const unsigned char* mpData;
+        int mStride;
+        size_t mSize;
+};
+
+template<class StdVectorType>
+class VectorConstDataWrapper :public  ConstDataWrapper<typename StdVectorType::value_type>
+{
+public:
+  inline VectorConstDataWrapper(StdVectorType &vec):
+    ConstDataWrapper<typename StdVectorType::value_type> ( &(vec[0]), vec.size(), sizeof(typename StdVectorType::value_type))
+     {}
 };
 
 template<class MeshType>
@@ -48,64 +57,64 @@ class KdTree
 {
 public:
 
-	typedef _Scalar Scalar;
-	typedef vcg::Point3<Scalar> VectorType;
-	typedef vcg::Box3<Scalar> AxisAlignedBoxType;
+    typedef _Scalar Scalar;
+    typedef vcg::Point3<Scalar> VectorType;
+    typedef vcg::Box3<Scalar> AxisAlignedBoxType;
 
-	struct Node
-	{
-		union {
+    struct Node
+    {
+        union {
                         //standard node
-			struct {
-				Scalar splitValue;
-				unsigned int firstChildId:24;
-				unsigned int dim:2;
-				unsigned int leaf:1;
-			};
+            struct {
+                Scalar splitValue;
+                unsigned int firstChildId:24;
+                unsigned int dim:2;
+                unsigned int leaf:1;
+            };
                         //leaf
-			struct {
-				unsigned int start;
-				unsigned short size;
-			};
+            struct {
+                unsigned int start;
+                unsigned short size;
+            };
                 };
-	};
-	typedef std::vector<Node> NodeList;
+    };
+    typedef std::vector<Node> NodeList;
 
         // return the protected members which store the nodes and the points list
-	inline const NodeList& _getNodes(void) { return mNodes; }
-	inline const std::vector<VectorType>& _getPoints(void) { return mPoints; }
+    inline const NodeList& _getNodes(void) { return mNodes; }
+    inline const std::vector<VectorType>& _getPoints(void) { return mPoints; }
 
 
-	void setMaxNofNeighbors(unsigned int k);
-	inline int getNofFoundNeighbors(void) { return mNeighborQueue.getNofElements(); }
-	inline const VectorType& getNeighbor(int i) { return mPoints[ mNeighborQueue.getIndex(i) ]; }
-	inline unsigned int getNeighborId(int i) { return mIndices[mNeighborQueue.getIndex(i)]; }
-	inline float getNeighborSquaredDistance(int i) { return mNeighborQueue.getWeight(i); }
+    void setMaxNofNeighbors(unsigned int k);
+    inline int getNofFoundNeighbors(void) { return mNeighborQueue.getNofElements(); }
+    inline const VectorType& getNeighbor(int i) { return mPoints[ mNeighborQueue.getIndex(i) ]; }
+    inline unsigned int getNeighborId(int i) { return mIndices[mNeighborQueue.getIndex(i)]; }
+    inline float getNeighborSquaredDistance(int i) { return mNeighborQueue.getWeight(i); }
 
 public:
 
-	KdTree(const ConstDataWrapper<VectorType>& points, unsigned int nofPointsPerCell = 16, unsigned int maxDepth = 64);
+    KdTree(const ConstDataWrapper<VectorType>& points, unsigned int nofPointsPerCell = 16, unsigned int maxDepth = 64);
 
-	~KdTree();
+    ~KdTree();
 
-	void doQueryK(const VectorType& p);
+    void doQueryK(const VectorType& p);
 
 protected:
 
-	// element of the stack
-	struct QueryNode
-	{
-			QueryNode() {}
-			QueryNode(unsigned int id) : nodeId(id) {}
-			unsigned int nodeId;  // id of the next node
-			Scalar sq;            // squared distance to the next node
-	};
+    // element of the stack
+    struct QueryNode
+    {
+            QueryNode() {}
+            QueryNode(unsigned int id) : nodeId(id) {}
+            unsigned int nodeId;  // id of the next node
+            Scalar sq;            // squared distance to the next node
+    };
 
-	// used to build the tree: split the subset [start..end[ according to dim and splitValue,
-	// and returns the index of the first element of the second subset
-	unsigned int split(int start, int end, unsigned int dim, float splitValue);
+    // used to build the tree: split the subset [start..end[ according to dim and splitValue,
+    // and returns the index of the first element of the second subset
+    unsigned int split(int start, int end, unsigned int dim, float splitValue);
 
-	void createTree(unsigned int nodeId, unsigned int start, unsigned int end, unsigned int level, unsigned int targetCellsize, unsigned int targetMaxDepth);
+    void createTree(unsigned int nodeId, unsigned int start, unsigned int end, unsigned int level, unsigned int targetCellsize, unsigned int targetMaxDepth);
 
 protected:
 
@@ -203,7 +212,7 @@ void KdTree<Scalar>::doQueryK(const VectorType& queryPoint)
                         }
                         //otherwise, if we're not on a leaf
                         else
-                        {   
+                        {
                                 // the new offset is the distance between the searched point and the actual split coordinate
                                 float new_off = queryPoint[node.dim] - node.splitValue;
 
