@@ -129,9 +129,9 @@ public:
 public:
   std::vector<VertexType *> sampleVec;
 
-  void AddVert(const VertexType &p)
+  void AddVert(VertexType &p)
   {
-    sampleVec->push_back(&p);
+    sampleVec.push_back(&p);
   }
   // This sampler should be used only for getting vertex pointers. Meaningless in other case.
   void AddFace(const FaceType &, const CoordType &)   { assert(0); }
