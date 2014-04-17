@@ -212,7 +212,7 @@ static math::MarsenneTwisterRNG &SamplingRandomGenerator()
 // Returns an integer random number in the [0,i-1] interval using the improve Marsenne-Twister method.
 static unsigned int RandomInt(unsigned int i)
 {
-    return (SamplingRandomGenerator().generate(0) % i);
+    return (SamplingRandomGenerator().generate(i));
 }
 
 // Returns a random number in the [0,1) real interval using the improved Marsenne-Twister method.
