@@ -29,20 +29,20 @@ namespace vcg {
 // just an example of the interface that the trivial walker expects
 
 template <class VOX_TYPE>
-class SimpleVolume
+class SimpleVolume : public BasicGrid<float>
 {
 public:
   typedef VOX_TYPE VoxelType;
   std::vector<VoxelType> Vol;
 
-  Point3i sz;   /// Dimensioni griglia come numero di celle per lato
+//  Point3i siz;   /// Dimensioni griglia come numero di celle per lato
 
-  const Point3i &ISize() {return sz;}   /// Dimensioni griglia come numero di celle per lato
+  const Point3i &ISize() {return siz;}   /// Dimensioni griglia come numero di celle per lato
 
   void Init(Point3i _sz)
   {
-    sz=_sz;
-    Vol.resize(sz[0]*sz[1]*sz[2]);
+    siz=_sz;
+    Vol.resize(siz[0]*siz[1]*siz[2]);
   }
 
   float Val(const int &x,const int &y,const int &z) const {
@@ -56,15 +56,15 @@ public:
   }
 
     VOX_TYPE &V(const int &x,const int &y,const int &z) {
-        return Vol[x+y*sz[0]+z*sz[0]*sz[1]];
+        return Vol[x+y*siz[0]+z*siz[0]*siz[1]];
     }
 
     VOX_TYPE &V(const Point3i &pi) {
-        return Vol[ pi[0] + pi[1]*sz[0] + pi[2]*sz[0]*sz[1] ];
+        return Vol[ pi[0] + pi[1]*siz[0] + pi[2]*siz[0]*siz[1] ];
     }
 
     const VOX_TYPE &cV(const int &x,const int &y,const int &z) const {
-        return Vol[x+y*sz[0]+z*sz[0]*sz[1]];
+        return Vol[x+y*siz[0]+z*siz[0]*siz[1]];
     }
 
 
@@ -82,7 +82,7 @@ public:
                     else v->P().Y() = (float) p1.Y();
       if(AxisVal==ZAxis) v->P().Z() = (float) p1.Z()*(1-u) + u*p2.Z();
                     else v->P().Z() = (float) p1.Z();
-
+      this->IPfToPf(v->P(),v->P());
       if(VoxelType::HasNormal()) v->N() = V(p1).N()*(1-u) + V(p2).N()*u;
     }
 
