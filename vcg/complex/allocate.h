@@ -245,6 +245,16 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
               return v_ret;
             }
 
+            /** \brief Wrapper to AddVertices() to add a single vertex with given coords and normal
+            */
+            static VertexIterator AddVertex(MeshType &m, const CoordType &p,  const CoordType &n)
+            {
+              VertexIterator v_ret =  AddVertices(m, 1);
+              v_ret->P()=p;
+              v_ret->N()=n;
+              return v_ret;
+            }
+
             /** \brief Wrapper to AddVertices() to add a single vertex with given coords and color
             */
             static VertexIterator AddVertex(MeshType &m, const CoordType &p, const Color4b &c)
