@@ -323,10 +323,12 @@ return true;
 template <class MeshType>
 bool FourPCS<MeshType>::IsTransfCongruent(FourPoints fp, vcg::Matrix44<ScalarType> & mat, float &  trerr)
 {
-  std::vector<vcg::Point3<ScalarType> > fix;
-  std::vector<vcg::Point3<ScalarType> > mov;
-  for(int i = 0 ; i < 4; ++i) mov.push_back(B[i]);
-  for(int i = 0 ; i < 4; ++i) fix.push_back(fp[i]);
+  std::vector<vcg::Point3<ScalarType> > fix(4);
+  std::vector<vcg::Point3<ScalarType> > mov(4);
+  for(int i = 0 ; i < 4; ++i) {
+    mov[i]=B[i];
+    fix[i]=fp[i];
+  }
 
   if(fabs( Distance(fix[0],fix[1]) - Distance(mov[0],mov[1]) ) > par.delta) return false;
   if(fabs( Distance(fix[0],fix[2]) - Distance(mov[0],mov[2]) ) > par.delta) return false;
