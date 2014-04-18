@@ -210,6 +210,7 @@ static math::MarsenneTwisterRNG &SamplingRandomGenerator()
 }
 
 // Returns an integer random number in the [0,i-1] interval using the improve Marsenne-Twister method.
+// this functor is needed for passing it to the std functions.
 static unsigned int RandomInt(unsigned int i)
 {
     return (SamplingRandomGenerator().generate(i));
@@ -1774,10 +1775,12 @@ void PoissonPruning(MeshType &m, // the mesh that has to be pruned
 template <class MeshType>
 void PoissonPruning(MeshType &m, // the mesh that has to be pruned
                     std::vector<typename MeshType::VertexPointer> &poissonSamples, // the vector that will contain the chosen set of points
-                    float & radius, int sampleNum=0)
+                    float & radius, int sampleNum=0, unsigned int randSeed=0)
 {
   typedef tri::TrivialPointerSampler<MeshType> BaseSampler;
   typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam pp;
+  if(randSeed !=0)
+    tri::SurfaceSampling<MeshType,BaseSampler>::SamplingRandomGenerator().initialize(randSeed);
   if(sampleNum>0 && radius==0)
     radius = tri::SurfaceSampling<MeshType,BaseSampler>::ComputePoissonDiskRadius(m,sampleNum);
 
