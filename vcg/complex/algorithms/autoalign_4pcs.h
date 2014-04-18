@@ -34,6 +34,7 @@ used in the paper pseudocode.
 #include <vcg/complex/complex.h>
 #include <vcg/space/point_matching.h>
 #include <vcg/complex/algorithms/closest.h>
+#include <vcg/complex/algorithms/point_sampling.h>
 #include <vcg/math/random_generator.h>
 namespace vcg{
 namespace tri{
@@ -55,6 +56,7 @@ public:
   typedef typename MeshType::ScalarType ScalarType;
   typedef typename MeshType::CoordType CoordType;
   typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::VertexPointer VertexPointer;
   typedef typename MeshType::VertexType VertexType;
   typedef vcg::Point4< vcg::Point3<ScalarType> > FourPoints;
   typedef vcg::GridStaticPtr<typename PMesh::VertexType, ScalarType > GridType;
@@ -80,13 +82,13 @@ public:
     }
   };
 
-  struct Couple: public std::pair<int,int>
+  struct Couple: public std::pair<VertexPointer,VertexPointer>
   {
-    Couple(const int & i, const int & j, float d):std::pair<int,int>(i,j),dist(d){}
-    Couple(float d):std::pair<int,int>(0,0),dist(d){}
+    Couple(VertexPointer i, VertexPointer j, float d) : std::pair<VertexPointer,VertexPointer>(i,j),dist(d){}
+    Couple(float d):std::pair<VertexPointer,VertexPointer>(0,0),dist(d){}
     float dist;
     const bool operator < (const   Couple & o) const {return dist < o.dist;}
-    int & operator[](const int &i){return (i==0)? first : second;}
+    VertexPointer operator[](const int &i){return (i==0)? this->first : this->second;}
   };
 
   struct Candidate
@@ -105,7 +107,10 @@ public:
 
   MeshType  *P;    // mesh from which the coplanar base is selected
   MeshType  *Q;    // mesh where to find the correspondences
-  std::vector<int> mapsub;  // subset of index to the vertices in Q
+
+  std::vector<VertexPointer> subsetQ;  // subset of the vertices in Q
+  std::vector<VertexPointer> subsetP; // random selection on P
+
   PMesh     Invr;           // invariants
   math::MarsenneTwisterRNG rnd;
 
@@ -116,7 +121,6 @@ public:
   std::vector<FourPoints> bases;        // used bases
   ScalarType side;                                    // side
   std::vector<VertexType*> ExtB[4]; // selection of vertices "close" to the four point
-  std::vector<VertexType*> subsetP; // random selection on P
   ScalarType radius;
 
   std::vector<Couple > R1;
@@ -185,16 +189,10 @@ void FourPCS<MeshType>:: Init(MeshType &_movP,MeshType &_fixQ)
         ugridQ.Set(Q->vert.begin(),Q->vert.end());
         ugridP.Set(P->vert.begin(),P->vert.end());
 
+        float radius=0;
+        tri::PoissonPruning(*Q,subsetQ,radius,par.n_samples_on_Q);
+        tri::PoissonPruning(*P,subsetP,radius,par.n_samples_on_Q);
         float ratio = std::min<int>(Q->vert.size(),par.n_samples_on_Q) / (float) Q->vert.size();
-        for(int vi = 0; vi < Q->vert.size(); ++vi)
-          if(rnd.generate01() < ratio)
-            mapsub.push_back(vi);
-
-
-
-        for(int vi = 0; vi < P->vert.size(); ++vi)
-        if(rnd.generate01() < ratio)
-            subsetP.push_back(&P->vert[vi]);
 
         // estimate neigh distance
         float avD = 0.0;
@@ -353,13 +351,14 @@ void
 FourPCS<MeshType>::ComputeR1()
 {
     R1.clear();
-    for(int vi = 0; vi  < mapsub.size(); ++vi)
-      for(int vj = vi; vj < mapsub.size(); ++vj){
-            ScalarType d = ((Q->vert[mapsub[vi]]).P()-(Q->vert[mapsub[vj]]).P()).Norm();
+    for(int vi = 0; vi  < subsetQ.size(); ++vi)
+      for(int vj = vi; vj < subsetQ.size(); ++vj){
+//          ScalarType d = ((Q->vert[subsetQ[vi]]).P()-(Q->vert[subsetQ[vj]]).P()).Norm();
+            ScalarType d = (subsetQ[vi]->P()- subsetQ[vj]->P()).Norm();
               if( (d < side+par.delta))
             {
-                R1.push_back(Couple(mapsub[vi],mapsub[vj],d ));
-                R1.push_back(Couple(mapsub[vj],mapsub[vi],d));
+                R1.push_back(Couple(subsetQ[vi],subsetQ[vj],d ));
+                R1.push_back(Couple(subsetQ[vj],subsetQ[vi],d));
             }
     }
 
@@ -375,9 +374,6 @@ bool FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation
     ScalarType d1,d2;
     d1 = (B[1]-B[0]).Norm();
     d2 = (B[3]-B[2]).Norm();
-
-    int start = clock();
-    //int vi,vj;
 
     typename PMesh::VertexIterator vii;
     typename std::vector<Couple>::iterator bR1,eR1,bR2,eR2,ite,cite;
@@ -397,7 +393,8 @@ bool FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation
     int i = &(*bR1)-&(*R1.begin());
     for(ite = bR1; ite != eR1;++ite){
         vii = vcg::tri::Allocator<PMesh>::AddVertices(Invr,1);
-        (*vii).P() = Q->vert[R1[i][0]].P() + (Q->vert[R1[i][1]].P()-Q->vert[R1[i][0]].P()) * r1;
+//      (*vii).P() = Q->vert[R1[i][0]].P() + (Q->vert[R1[i][1]].P()-Q->vert[R1[i][0]].P()) * r1;
+        (*vii).P() =         R1[i][0]->P() + (        R1[i][1]->P() -       R1[i][0]->P()) * r1;
         ++i;
     }
     if(Invr.vert.empty() ) return false;
@@ -416,7 +413,8 @@ bool FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation
     i = &(*bR2)-&(*R1.begin());
     // R2inv contains all the points generated by the couples in R2 (with the reference to remap into R2)
     for(ite = bR2; ite != eR2;++ite){
-        R2inv.push_back( EPoint( Q->vert[R1[i][0]].P() + (Q->vert[R1[i][1]].P()-Q->vert[R1[i][0]].P()) * r2,i));
+//        R2inv.push_back( EPoint( Q->vert[R1[i][0]].P() + (Q->vert[R1[i][1]].P()-Q->vert[R1[i][0]].P()) * r2,i));
+        R2inv.push_back( EPoint( R1[i][0]->P() + (R1[i][1]->P() - R1[i][0]->P()) * r2,i));
         ++i;
     }
 
@@ -441,10 +439,10 @@ bool FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation
          n_closests+=closests.size();
          for(uint ip = 0; ip < closests.size(); ++ip){
                 FourPoints p;
-                p[0] = Q->vert[R1[id[closests[ip]]][0]].P();
-                p[1] = Q->vert[R1[id[closests[ip]]][1]].P();
-                p[2] = Q->vert[R1[ R2inv[i].pi][0]].P();
-                p[3] = Q->vert[R1[ R2inv[i].pi][1]].P();
+                p[0] = R1[id[closests[ip]]][0]->P();
+                p[1] = R1[id[closests[ip]]][1]->P();
+                p[2] = R1[ R2inv[i].pi][0]->P();
+                p[3] = R1[ R2inv[i].pi][1]->P();
 
                 float trerr;
               n_base++;
@@ -599,7 +597,7 @@ bool FourPCS<MeshType>::     Align(  int L, vcg::Matrix44f & result, vcg::CallBa
         return false;
       }
       bases.push_back(B);
-      if(cb) cb(t*100/L,"trying bases");
+      if(cb) cb(t*100/L,"Trying bases");
       if(FindCongruent())
         break;
     }
@@ -607,7 +605,7 @@ bool FourPCS<MeshType>::     Align(  int L, vcg::Matrix44f & result, vcg::CallBa
     if(U.empty()) return false;
 
 //    std::sort(U.begin(),U.end());
-
+    if(cb) cb(90,"TestAlignment");
     bestv  = -std::numeric_limits<float>::max();
     iwinner = 0;
 
