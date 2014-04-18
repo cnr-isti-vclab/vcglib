@@ -68,27 +68,29 @@ public:
     int feetSize;       // how many points in the neighborhood of each of the 4 points
     ScalarType overlap; // overlap estimation as a percentage
     int scoreFeet;      // how many of the feetsize points must match (max feetsize*4) to try an early interrupt
-    int scoreAln;       // how good must be the alignement    to end the process successfully
     int n_samples_on_Q; // number of samples on P
     int seed;
+    ScalarType cosAngle; // max admittable angle that can be admitted between matching points in alignments (expressed as cos(ang) )
+
     void Default(){
       delta = 0.5;
       feetSize = 25;
       overlap = 0.5;
       scoreFeet = 50;
       n_samples_on_Q=500;
-      scoreAln = n_samples_on_Q/8;
       seed =0;
+      cosAngle = 0; // normals must differ more than 90 degree to be considered bad.
     }
   };
 
-  struct Couple: public std::pair<VertexPointer,VertexPointer>
+  class Couple
   {
-    Couple(VertexPointer i, VertexPointer j, float d) : std::pair<VertexPointer,VertexPointer>(i,j),dist(d){}
-    Couple(float d):std::pair<VertexPointer,VertexPointer>(0,0),dist(d){}
+  public:
+    VertexPointer p0,p1;
+    Couple(VertexPointer i, VertexPointer j, float d) : p0(i),p1(j),dist(d){}
     float dist;
     const bool operator < (const   Couple & o) const {return dist < o.dist;}
-    VertexPointer operator[](const int &i){return (i==0)? this->first : this->second;}
+    VertexPointer operator[](const int &i){return (i==0)? this->p0 : this->p1;}
   };
 
   struct Candidate
@@ -103,29 +105,6 @@ public:
   };
 
 
-  Param par;    /// parameters
-
-  MeshType  *P;    // mesh from which the coplanar base is selected
-  MeshType  *Q;    // mesh where to find the correspondences
-
-  std::vector<VertexPointer> subsetQ;  // subset of the vertices in Q
-  std::vector<VertexPointer> subsetP; // random selection on P
-
-  PMesh     Invr;           // invariants
-  math::MarsenneTwisterRNG rnd;
-
-  std::vector< Candidate > U;
-  int iwinner;                                            // winner == U[iwinner]
-
-  FourPoints B;                                            // coplanar base
-  std::vector<FourPoints> bases;        // used bases
-  ScalarType side;                                    // side
-  std::vector<VertexType*> ExtB[4]; // selection of vertices "close" to the four point
-  ScalarType radius;
-
-  std::vector<Couple > R1;
-  ScalarType r1,r2;
-
   // class for the point  'ei'
   struct EPoint{
     EPoint(vcg::Point3<ScalarType> _p, int _i):pos(_p),pi(_i){}
@@ -134,21 +113,43 @@ public:
     void GetBBox(vcg::Box3<ScalarType> & b){b.Add(pos);}
   };
 
+
+  Param par;    /// parameters
+
+  MeshType  *P;    // mesh from which the coplanar base is selected
+  MeshType  *Q;    // mesh where to find the correspondences
+
+  std::vector<VertexPointer> subsetQ;  // subset of the vertices in Q
+  std::vector<VertexPointer> subsetP; // random selection on P
+
+  ScalarType side;               // side
+
+  PMesh     Invr;                // invariants
+  math::MarsenneTwisterRNG rnd;
+  std::vector< Candidate > U;    // the
+  int iwinner;                   // winner == U[iwinner]
+  FourPoints B;                  // coplanar base
+  std::vector<FourPoints> bases; // used bases
+  std::vector<VertexType*> ExtB[4]; // selection of vertices "close" to the four point
+  ScalarType radius;
+
+  std::vector<Couple > R1;
+  ScalarType r1,r2;
+
     GridType *ugrid; // griglia
     vcg::GridStaticPtr<typename MeshType::VertexType, ScalarType > ugridQ;
     vcg::GridStaticPtr<typename MeshType::VertexType, ScalarType > ugridP;
 
-
+ // the two main functions to be used
   void Init(MeshType &Mov, MeshType &Fix);
-  bool Align( int   L, vcg::Matrix44f & result, vcg::CallBackPos * cb = NULL );        // main function
+  bool Align( int   L, vcg::Matrix44f & result, vcg::CallBackPos * cb = NULL );
 
-
+// ---- auxiliary functions
     bool SelectCoplanarBase(); // on P
-    bool FindCongruent(); // of base B, on Q, with approximation delta
+    bool FindCongruent();      // of base B, on Q, with approximation delta
     void ComputeR1();
-
     bool IsTransfCongruent(FourPoints fp,vcg::Matrix44<ScalarType> & mat, float &  trerr);
-    int EvaluateSample(Candidate & fp, CoordType & tp, CoordType & np, const float &  angle);
+    int EvaluateSample(Candidate & fp, CoordType & tp, CoordType & np);
     void EvaluateAlignment(Candidate & fp);
     void TestAlignment(Candidate & fp);
 
@@ -190,8 +191,8 @@ void FourPCS<MeshType>:: Init(MeshType &_movP,MeshType &_fixQ)
         ugridP.Set(P->vert.begin(),P->vert.end());
 
         float radius=0;
-        tri::PoissonPruning(*Q,subsetQ,radius,par.n_samples_on_Q);
-        tri::PoissonPruning(*P,subsetP,radius,par.n_samples_on_Q);
+        tri::PoissonPruning(*Q,subsetQ,radius,par.n_samples_on_Q,par.seed);
+        tri::PoissonPruning(*P,subsetP,radius,par.n_samples_on_Q,par.seed);
         float ratio = std::min<int>(Q->vert.size(),par.n_samples_on_Q) / (float) Q->vert.size();
 
         // estimate neigh distance
@@ -320,12 +321,19 @@ return true;
 
 
 template <class MeshType>
-bool FourPCS<MeshType>::IsTransfCongruent(FourPoints fp, vcg::Matrix44<ScalarType> & mat, float &  trerr){
-
+bool FourPCS<MeshType>::IsTransfCongruent(FourPoints fp, vcg::Matrix44<ScalarType> & mat, float &  trerr)
+{
   std::vector<vcg::Point3<ScalarType> > fix;
   std::vector<vcg::Point3<ScalarType> > mov;
   for(int i = 0 ; i < 4; ++i) mov.push_back(B[i]);
   for(int i = 0 ; i < 4; ++i) fix.push_back(fp[i]);
+
+  if(fabs( Distance(fix[0],fix[1]) - Distance(mov[0],mov[1]) ) > par.delta) return false;
+  if(fabs( Distance(fix[0],fix[2]) - Distance(mov[0],mov[2]) ) > par.delta) return false;
+  if(fabs( Distance(fix[0],fix[3]) - Distance(mov[0],mov[3]) ) > par.delta) return false;
+  if(fabs( Distance(fix[1],fix[2]) - Distance(mov[1],mov[2]) ) > par.delta) return false;
+  if(fabs( Distance(fix[1],fix[3]) - Distance(mov[1],mov[3]) ) > par.delta) return false;
+  if(fabs( Distance(fix[2],fix[3]) - Distance(mov[2],mov[3]) ) > par.delta) return false;
 
   /*
   vcg::Point3<ScalarType> n,p;
@@ -376,11 +384,11 @@ bool FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation
     d2 = (B[3]-B[2]).Norm();
 
     typename PMesh::VertexIterator vii;
-    typename std::vector<Couple>::iterator bR1,eR1,bR2,eR2,ite,cite;
-    bR1 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d1-par.delta));
-    eR1 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d1+par.delta));
-    bR2 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d2-par.delta));
-    eR2 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(d2+par.delta));
+    typename std::vector<Couple>::iterator bR1,eR1,bR2,eR2,ite;
+    bR1 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(0,0,d1-par.delta));
+    eR1 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(0,0,d1+par.delta));
+    bR2 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(0,0,d2-par.delta));
+    eR2 = std::lower_bound<typename std::vector<Couple>::iterator,Couple>(R1.begin(),R1.end(),Couple(0,0,d2+par.delta));
 
     // in  [bR1,eR1) there are all the pairs ad a distance d1 +- par.delta
     // in  [bR1,eR1) there are all the pairs ad a distance d2 +- par.delta
@@ -394,7 +402,7 @@ bool FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation
     for(ite = bR1; ite != eR1;++ite){
         vii = vcg::tri::Allocator<PMesh>::AddVertices(Invr,1);
 //      (*vii).P() = Q->vert[R1[i][0]].P() + (Q->vert[R1[i][1]].P()-Q->vert[R1[i][0]].P()) * r1;
-        (*vii).P() =         R1[i][0]->P() + (        R1[i][1]->P() -       R1[i][0]->P()) * r1;
+        (*vii).P() =         R1[i].p0->P() + (        R1[i].p1->P() -       R1[i].p0->P()) * r1;
         ++i;
     }
     if(Invr.vert.empty() ) return false;
@@ -414,7 +422,7 @@ bool FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation
     // R2inv contains all the points generated by the couples in R2 (with the reference to remap into R2)
     for(ite = bR2; ite != eR2;++ite){
 //        R2inv.push_back( EPoint( Q->vert[R1[i][0]].P() + (Q->vert[R1[i][1]].P()-Q->vert[R1[i][0]].P()) * r2,i));
-        R2inv.push_back( EPoint( R1[i][0]->P() + (R1[i][1]->P() - R1[i][0]->P()) * r2,i));
+        R2inv.push_back( EPoint( R1[i].p0->P() + (R1[i].p1->P() - R1[i].p0->P()) * r2,i));
         ++i;
     }
 
@@ -494,9 +502,9 @@ bool FourPCS<MeshType>::FindCongruent() { // of base B, on Q, with approximation
 
 
 template <class MeshType>
-int FourPCS<MeshType>::EvaluateSample(Candidate & fp, CoordType & tp, CoordType & np, const float &  cosAngle)
+int FourPCS<MeshType>::EvaluateSample(Candidate & fp, CoordType & tp, CoordType & np)
 {
-  VertexType*   v;
+  VertexType*   v=0;
   ScalarType   dist ;
   radius = par.delta;
   tp = fp.T * tp;
@@ -505,25 +513,12 @@ int FourPCS<MeshType>::EvaluateSample(Candidate & fp, CoordType & tp, CoordType 
   np4 = fp.T * vcg::Point4<ScalarType>(np[0],np[1],np[2],0.0);
   np[0] = np4[0]; np[1] = np4[1];     np[2] = np4[2];
 
-  v = 0;
   if(ugridQ.bbox.IsIn(tp))
-   v = vcg::tri::GetClosestVertex<
-    MeshType,
-    vcg::GridStaticPtr<typename MeshType::VertexType, ScalarType >
-     >(*Q,ugridQ,tp,radius,  dist  );
-/*
-  typename MeshType::VertexType vq;
-  vq.P() = tp;
-  vq.N() = np;
-  v = vcg::tri::GetClosestVertexNormal<
-      MeshType,
-      vcg::GridStaticPtr<typename MeshType::VertexType, ScalarType >
-      >(*Q,ugridQ,vq,radius,  dist  );
-*/
+   v = vcg::tri::GetClosestVertex(*Q, ugridQ, tp, radius,  dist  );
 
   if(v!=0)
   {
-    if( v->N().dot(np) - cosAngle >0)  return 1;
+    if( v->N().dot(np) > par.cosAngle )  return 1;
     else return -1;
   }
   else return 0;
@@ -537,8 +532,8 @@ FourPCS<MeshType>::EvaluateAlignment(Candidate  & fp){
         for(int i  = 0 ; i< 4; ++i) {
             for(uint j = 0; j < ExtB[i].size();++j){
                 CoordType np = ExtB[i][j]->cN();;
-                CoordType tp  = ExtB[i][j]->P();
-                n_delta_close+=EvaluateSample(fp,tp,np,0.9);
+                CoordType tp = ExtB[i][j]->P();
+                n_delta_close+=EvaluateSample(fp,tp,np);
             }
         }
         fp.score = n_delta_close;
@@ -550,10 +545,9 @@ void FourPCS<MeshType>::TestAlignment(Candidate  & fp){
         int n_delta_close = 0;
          for(uint j = 0; j < subsetP.size();++j){
                 CoordType np = subsetP[j]->N();
-                CoordType tp  = subsetP[j]->P();
-                n_delta_close+=EvaluateSample(fp,tp,np,0.6);
+                CoordType tp = subsetP[j]->P();
+                n_delta_close+=EvaluateSample(fp,tp,np);
              }
-
         fp.score =  n_delta_close;
 }
 
