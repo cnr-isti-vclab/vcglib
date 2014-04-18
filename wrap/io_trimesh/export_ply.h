@@ -727,7 +727,7 @@ static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &p
 		  {
 			eauxvv[0]=indices[ei->cV(0)];
 			eauxvv[1]=indices[ei->cV(1)];
-			fwrite(vv,sizeof(int),2,fpout);
+			fwrite(eauxvv,sizeof(int),2,fpout);
 		  }
 		  else // ***** ASCII *****
 			fprintf(fpout,"%d %d \n", indices[ei->cV(0)],	indices[ei->cV(1)]);
