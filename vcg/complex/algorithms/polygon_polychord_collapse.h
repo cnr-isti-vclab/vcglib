@@ -990,8 +990,20 @@ public:
     std::queue<FaceVertexAdj> fvAdjQueue;   // face-to-vertex adjacency queue
     bool currentFaceBottomIsBorder = false;
 
-    // scan the polychord and add adj into queues
+    // map faces to lines' number
     vcg::face::Pos<FaceType> runPos = startPos;
+    std::map<FacePointer,size_t> faceLineMap;
+    typename std::map<FacePointer,size_t>::iterator faceLineIt;
+    for (size_t i = 0; i < fn; i++) {
+      faceLineMap.insert(std::pair<FacePointer,size_t>(runPos.F(), i));
+      runPos.FlipE();
+      runPos.FlipV();
+      runPos.FlipE();
+      runPos.FlipF();
+    }
+
+    // scan the polychord and add adj into queues
+    runPos = startPos;
     for (size_t i = 0; i < fn; i++) {
       // store links to the current left face
       lf = runPos.F();
@@ -1004,8 +1016,13 @@ public:
       runPos.FlipV();
       lftrV = &runPos.F()->V(runPos.VInd());
       // set the current line's last face's right ff adjacency
-      if (!runPos.IsBorder())
-        ffAdjQueue.push(FaceFaceAdj(FaceEdge(&*(firstAddedFaceIt + (i+1)*(n-1) - 1), 1), FaceEdge(runPos.FFlip(), runPos.F()->FFi(runPos.E()))));
+      if (!runPos.IsBorder()) {
+        faceLineIt = faceLineMap.find(runPos.FFlip());
+        if (faceLineIt != faceLineMap.end())  // a 2-valence vertex caused the polychord to blend and touch itself
+          ffAdjQueue.push(FaceFaceAdj(FaceEdge(&*(firstAddedFaceIt + (i+1)*(n-1) - 1), 1), FaceEdge(&*(firstAddedFaceIt + (faceLineIt->second+1)*(n-1) - 1), 1)));
+        else
+          ffAdjQueue.push(FaceFaceAdj(FaceEdge(&*(firstAddedFaceIt + (i+1)*(n-1) - 1), 1), FaceEdge(runPos.FFlip(), runPos.F()->FFi(runPos.E()))));
+      }
       // set the current line's last face's bottom right vertex's coords
       (firstAddedVertexIt + (i+1)*(n-1) - 1)->P() = lvP + svP * (n - 1);
       // set the current line's last face's bottom right vertex
