@@ -370,14 +370,11 @@ void Histogram<ScalarType>::Add(ScalarType v, ScalarType increment)
 	int pos=BinIndex(v);
   if(v<minElem) minElem=v;
   if(v>maxElem) maxElem=v;
-  if(pos>=0 && pos<=n)
-	{
-
-    H[pos]+=increment;
-    cnt+=increment;
-    avg+=v*increment;
-    rms += (v*v)*increment;
-	}
+  assert((pos>=0)&&(pos<=n+1));
+  H[pos]+=increment;
+  cnt+=increment;
+  avg+=v*increment;
+  rms += (v*v)*increment;
 }
 
 template <class ScalarType> 
