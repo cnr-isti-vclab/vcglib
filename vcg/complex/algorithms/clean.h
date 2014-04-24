@@ -182,7 +182,7 @@ public:
 
         for(FaceIterator fi = m.face.begin(); fi!=m.face.end(); ++fi)
                     if( !(*fi).IsD() )
-                        for(k = 0; k < 3; ++k)
+                        for(k = 0; k < (*fi).VN(); ++k)
                             if( mp.find( (typename MeshType::VertexPointer)(*fi).V(k) ) != mp.end() )
                             {
                                 (*fi).V(k) = &*mp[ (*fi).V(k) ];
@@ -343,7 +343,7 @@ public:
 
                 for(fi=m.face.begin();fi!=m.face.end();++fi)
                     if( !(*fi).IsD() )
-                        for(j=0;j<3;++j)
+                        for(j=0;j<(*fi).VN();++j)
                             (*fi).V(j)->SetUserBit(referredBit);
 
                 for(ei=m.edge.begin();ei!=m.edge.end();++ei)
