@@ -253,7 +253,7 @@ template<class S>
 vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S> & p) const
 {
     vcg::Point2<S> q =  Point2<S>(p[0],p[1]);
-    vcg::Point2<S> d =  Point2<S>(p[0],p[1]);
+//    vcg::Point2<S> d =  Point2<S>(p[0],p[1]);
 
     if(!IsOrtho())
     {
