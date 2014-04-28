@@ -27,6 +27,17 @@ inline ValueType QTLogicalToDevice( QPainter *qp, const ValueType &value)
 }
 
 template < class ValueType>
+inline ValueType QTDeviceToLogical( QWidget *qw, const ValueType &value)
+{
+#if QT_VERSION >= 0x050000
+  return value/qw->devicePixelRatio() ;
+#else
+  Q_UNUSED(qw);
+  return value;
+#endif
+}
+
+template < class ValueType>
 inline ValueType QTDeviceToLogical( QPainter *qp, const ValueType &value)
 {
 #if QT_VERSION >= 0x050000
