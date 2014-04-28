@@ -188,46 +188,46 @@ public:
 // this function is called by the specialized Reorder function, that is called whenever someone call the allocator::CompactVertVector
 void ReorderFace(std::vector<size_t> &newFaceIndex )
 {
-	size_t i=0;
-	if (QualityEnabled)     assert( QV.size() == newFaceIndex.size() );
-	if (_ColorEnabled)       assert( CV.size() == newFaceIndex.size() );
-	if (MarkEnabled)        assert( MV.size() == newFaceIndex.size() );
-	if (NormalEnabled)      assert( NV.size() == newFaceIndex.size() );
-	if (CurvatureDirEnabled)assert(CDV.size() == newFaceIndex.size() );
-	if (VFAdjacencyEnabled) assert( AV.size() == newFaceIndex.size() );
-	if (FFAdjacencyEnabled) assert( AF.size() == newFaceIndex.size() );
-	if (WedgeTexEnabled)    assert(WTV.size() == newFaceIndex.size() );
-	if (WedgeColorEnabled)  assert(WCV.size() == newFaceIndex.size() );
-	if (WedgeNormalEnabled) assert(WNV.size() == newFaceIndex.size() );
+    size_t i=0;
+    if (QualityEnabled)     assert( QV.size() == newFaceIndex.size() );
+    if (_ColorEnabled)       assert( CV.size() == newFaceIndex.size() );
+    if (MarkEnabled)        assert( MV.size() == newFaceIndex.size() );
+    if (NormalEnabled)      assert( NV.size() == newFaceIndex.size() );
+    if (CurvatureDirEnabled)assert(CDV.size() == newFaceIndex.size() );
+    if (VFAdjacencyEnabled) assert( AV.size() == newFaceIndex.size() );
+    if (FFAdjacencyEnabled) assert( AF.size() == newFaceIndex.size() );
+    if (WedgeTexEnabled)    assert(WTV.size() == newFaceIndex.size() );
+    if (WedgeColorEnabled)  assert(WCV.size() == newFaceIndex.size() );
+    if (WedgeNormalEnabled) assert(WNV.size() == newFaceIndex.size() );
 
-	for(i=0;i<newFaceIndex.size();++i)
-		{
-			if(newFaceIndex[i] != std::numeric_limits<size_t>::max() )
-				{
-					assert(newFaceIndex[i] <= i);
-					if (QualityEnabled)      QV[newFaceIndex[i]] =  QV[i];
-					if (_ColorEnabled)        CV[newFaceIndex[i]] =  CV[i];
-					if (MarkEnabled)         MV[newFaceIndex[i]] =  MV[i];
-					if (NormalEnabled)       NV[newFaceIndex[i]] =  NV[i];
-					if (CurvatureDirEnabled) CDV[newFaceIndex[i]] =  CDV[i];
-					if (VFAdjacencyEnabled)  AV[newFaceIndex[i]] =  AV[i];
-					if (FFAdjacencyEnabled)  AF[newFaceIndex[i]] =  AF[i];
-					if (WedgeTexEnabled)    WTV[newFaceIndex[i]] = WTV[i];
-					if (WedgeColorEnabled)  WCV[newFaceIndex[i]] = WCV[i];
-					if (WedgeNormalEnabled) WNV[newFaceIndex[i]] = WNV[i];
-				}
-		}
+    for(i=0;i<newFaceIndex.size();++i)
+        {
+            if(newFaceIndex[i] != std::numeric_limits<size_t>::max() )
+                {
+                    assert(newFaceIndex[i] <= i);
+                    if (QualityEnabled)      QV[newFaceIndex[i]] =  QV[i];
+                    if (_ColorEnabled)        CV[newFaceIndex[i]] =  CV[i];
+                    if (MarkEnabled)         MV[newFaceIndex[i]] =  MV[i];
+                    if (NormalEnabled)       NV[newFaceIndex[i]] =  NV[i];
+                    if (CurvatureDirEnabled) CDV[newFaceIndex[i]] =  CDV[i];
+                    if (VFAdjacencyEnabled)  AV[newFaceIndex[i]] =  AV[i];
+                    if (FFAdjacencyEnabled)  AF[newFaceIndex[i]] =  AF[i];
+                    if (WedgeTexEnabled)    WTV[newFaceIndex[i]] = WTV[i];
+                    if (WedgeColorEnabled)  WCV[newFaceIndex[i]] = WCV[i];
+                    if (WedgeNormalEnabled) WNV[newFaceIndex[i]] = WNV[i];
+                }
+        }
 
-	if (QualityEnabled)      QV.resize(BaseType::size(),0);
-	if (_ColorEnabled)       CV.resize(BaseType::size());
-	if (MarkEnabled)         MV.resize(BaseType::size());
-	if (NormalEnabled)       NV.resize(BaseType::size());
-	if (CurvatureDirEnabled) CDV.resize(BaseType::size());
-	if (VFAdjacencyEnabled)  AV.resize(BaseType::size());
-	if (FFAdjacencyEnabled)  AF.resize(BaseType::size());
-	if (WedgeTexEnabled)    WTV.resize(BaseType::size());
-	if (WedgeColorEnabled)  WCV.resize(BaseType::size());
-	if (WedgeNormalEnabled) WNV.resize(BaseType::size());
+    if (QualityEnabled)      QV.resize(BaseType::size(),0);
+    if (_ColorEnabled)       CV.resize(BaseType::size());
+    if (MarkEnabled)         MV.resize(BaseType::size());
+    if (NormalEnabled)       NV.resize(BaseType::size());
+    if (CurvatureDirEnabled) CDV.resize(BaseType::size());
+    if (VFAdjacencyEnabled)  AV.resize(BaseType::size());
+    if (FFAdjacencyEnabled)  AF.resize(BaseType::size());
+    if (WedgeTexEnabled)    WTV.resize(BaseType::size());
+    if (WedgeColorEnabled)  WCV.resize(BaseType::size());
+    if (WedgeNormalEnabled) WNV.resize(BaseType::size());
 }
 
 ////////////////////////////////////////
@@ -235,22 +235,22 @@ void ReorderFace(std::vector<size_t> &newFaceIndex )
 
 bool IsQualityEnabled() const {return QualityEnabled;}
 void EnableQuality() {
-	assert(VALUE_TYPE::HasQualityOcf());
-	QualityEnabled=true;
-	QV.resize((*this).size(),0);
+    assert(VALUE_TYPE::HasQualityOcf());
+    QualityEnabled=true;
+    QV.resize((*this).size(),0);
 }
 
 void DisableQuality() {
-	assert(VALUE_TYPE::HasQualityOcf());
-	QualityEnabled=false;
-	QV.clear();
+    assert(VALUE_TYPE::HasQualityOcf());
+    QualityEnabled=false;
+    QV.clear();
 }
 
 bool IsColorEnabled() const {return _ColorEnabled;}
 void EnableColor() {
   assert(VALUE_TYPE::HasColorOcf());
   _ColorEnabled=true;
-  CV.resize((*this).size());
+  CV.resize((*this).size(),vcg::Color4b::White);
 }
 
 void DisableColor() {
@@ -413,10 +413,10 @@ public:
     return (*this).Base().AV[(*this).Index()]._zp[j];
   }
 
-	template <class RightFaceType>
-	void ImportData(const RightFaceType & rightF){
-		T::ImportData(rightF);
-	}
+    template <class RightFaceType>
+    void ImportData(const RightFaceType & rightF){
+        T::ImportData(rightF);
+    }
   static bool HasVFAdjacency()   {   return true; }
   static bool HasVFAdjacencyOcf()   { return true; }
 
