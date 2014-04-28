@@ -69,20 +69,17 @@ typedef typename OpenMeshType::FaceIterator FaceIterator;
 typedef typename OpenMeshType::EdgeIterator EdgeIterator;
 
 static void readline(FILE *fp, char *line, int max=100){
-    int i=0;
-    char c;
-    fscanf(fp, "%c", &c);
-    while( (c!=10) && (c!=13) && (i<max-1) ){
-        line[i++] = c;
-        fscanf(fp, "%c", &c);
-    }
-    line[i] = '\0'; //end of string
+    fgets ( line, max, fp);
 }
 
 static bool ReadHeader(FILE *fp,unsigned int &num_cams, unsigned int &num_points){
     char line[100];
-    readline(fp, line); if( (line[0]=='\0') || (0!=strcmp("# Bundle file v0.3", line)) ) return false;
-    readline(fp, line); if(line[0]=='\0') return false;
+    readline(fp, line);
+    if( (line[0]=='\0') ) return false;
+    line[18]='\0';
+    if(0!=strcmp("# Bundle file v0.3", line))  return false;
+    readline(fp, line);
+    if(line[0]=='\0') return false;
     sscanf(line, "%d %d", &num_cams, &num_points);
     return true;
 }
