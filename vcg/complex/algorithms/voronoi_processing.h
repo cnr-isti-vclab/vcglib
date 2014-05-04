@@ -750,6 +750,7 @@ static void BuildBiasedSeedVec(MeshType &m,
                                std::vector<VertDist> &biasedFrontierVec,
                                VoronoiProcessingParameter &vpp)
 {
+    (void)df;
   biasedFrontierVec.clear();
   if(vpp.unbiasedSeedFlag)
   {
@@ -889,10 +890,15 @@ struct QuadricSumDistance
 ///
 /// It return true if at least one seed changed position.
 ///
-static bool QuadricRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::vector<VertexPointer> &frontierVec,
-                          std::vector<VertexType *> &newSeeds,
-              DistanceFunctor &df, VoronoiProcessingParameter &vpp)
+static bool QuadricRelax(MeshType &m, std::vector<VertexType *> &seedVec,
+                         std::vector<VertexPointer> &frontierVec,
+                         std::vector<VertexType *> &newSeeds,
+                         DistanceFunctor &df,
+                         VoronoiProcessingParameter &vpp)
 {
+    (void)seedVec;
+    (void)frontierVec;
+    (void)df;
   newSeeds.clear();
   PerVertexPointerHandle sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   PerVertexBoolHandle fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
