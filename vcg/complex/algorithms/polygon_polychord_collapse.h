@@ -23,7 +23,11 @@
 #ifndef POLYGON_POLYCHORD_COLLAPSE_H
 #define POLYGON_POLYCHORD_COLLAPSE_H
 
+#include <vector>
 #include <list>
+#include <set>
+#include <algorithm>
+#include <iterator>
 #include <vcg/complex/complex.h>
 #include <vcg/simplex/face/jumping_pos.h>
 
@@ -248,11 +252,54 @@ public:
    */
   class LinkConditions {
   private:
-    struct LCEdge;
-    struct LCVertex;
+    typedef long int LCVertexIndex;
+    typedef std::set<LCVertexIndex> LCVertexStar;   // define the star of a vertex
+    typedef long int LCEdgeIndex;
+    typedef std::set<LCEdgeIndex> LCEdgeStar;       // define the set of edges whose star involves a vertex
 
-    typedef std::set<LCVertex *> LCVertexStar;  // define the star of a vertex
-    typedef std::set<LCEdge *> LCEdgeStar;      // define the set of edges whose star involves a vertex
+    /**
+     * @brief The LCVertex struct represents a vertex for the Link Conditions.
+     */
+    struct LCVertex {
+      LCVertexStar star;  // vertex star
+      LCEdgeStar edges;   // list of edges whose star involves this vertex
+      LCVertex(){}        // default constructor
+      LCVertex(const LCVertex &lcVertex) {  // copy constructor
+        star = lcVertex.star;
+        edges = lcVertex.edges;
+      }
+      LCVertex & operator=(const LCVertex &lcVertex) { // assignment operator
+        star = lcVertex.star;
+        edges = lcVertex.edges;
+        return *this;
+      }
+      void reset() { star.clear(); edges.clear(); } // reset
+    };
+
+    /**
+     * @brief The LCEdge struct represents an edge for the Link Conditions.
+     */
+    struct LCEdge {
+      LCVertexIndex v1, v2;       // endpoints
+      LCVertexStar star;          // edge star
+      LCEdge() {v1 = v2 = -1;}    // default contructor
+      LCEdge(const LCEdge &lcEdge) {  // copy constructor
+        v1 = lcEdge.v1;
+        v2 = lcEdge.v2;
+        star = lcEdge.star;
+      }
+      LCEdge & operator=(const LCEdge &lcEdge) {  // assignment operator
+        v1 = lcEdge.v1;
+        v2 = lcEdge.v2;
+        star = lcEdge.star;
+        return *this;
+      }
+      void reset() {  // reset
+        v1 = -1;
+        v2 = -1;
+        star.clear();
+      }
+    };
 
   public:
     /**
@@ -267,6 +314,7 @@ public:
      */
     inline void Resize(const size_t size) {
       _lcVertices.resize(size);
+      LC_ResetStars();
     }
 
     /**
@@ -281,12 +329,11 @@ public:
     bool CheckLinkConditions (const PolyMeshType &mesh, const vcg::face::Pos<FaceType> &startPos) {
       assert(!startPos.IsNull());
       assert(mesh.vert.size() == _lcVertices.size());
-      std::list<LCEdge> lcEdges;
-      LCEdge *e = NULL;
+      std::vector<LCEdge> lcEdges;
       LCVertexStar intersection;
 
       // reset the stars
-      LC_ResetStars(mesh, startPos);
+      LC_ResetStars();
 
       // compute the stars
       LC_computeStars(mesh, startPos, lcEdges);
@@ -296,15 +343,19 @@ public:
       //      then collapse e
       // else
       //      return false (i.e. link conditions not satisfied)
-      for (typename std::list<LCEdge>::iterator eIt = lcEdges.begin(); eIt != lcEdges.end(); eIt++) {
-        e = &*eIt;
+      for (size_t e = 0; e < lcEdges.size(); e++) {
         // compute the intersetion
-        SetIntersection(e->v1->star, e->v2->star, intersection);
+        intersection.clear();
+        std::set_intersection(_lcVertices[lcEdges[e].v1].star.begin(), _lcVertices[lcEdges[e].v1].star.end(),
+                              _lcVertices[lcEdges[e].v2].star.begin(), _lcVertices[lcEdges[e].v2].star.end(),
+                              std::inserter(intersection, intersection.end()));
+
         // if intersection( star(v1) , star(v2) ) != star(e) then return false
-        if (intersection != e->star)
+        if (intersection != lcEdges[e].star)
             return false;
+
         // else simulate the collapse
-        LC_SimulateEdgeCollapse(*e);
+        LC_SimulateEdgeCollapse(lcEdges, e);
       }
       // at this point all collapses are possible, thus return true
       return true;
@@ -312,80 +363,11 @@ public:
 
   private:
     /**
-     * @brief SetIntersection computes the set intersection between two sets.
-     * @param set1
-     * @param set2
-     * @param result The set resulting from the intersection.
-     */
-    static void SetIntersection (const LCVertexStar &set1, const LCVertexStar &set2, LCVertexStar &result) {
-      typename LCVertexStar::const_iterator set1It = set1.begin();
-      typename LCVertexStar::const_iterator set2It = set2.begin();
-      result.clear();
-      while (set1It != set1.end() && set2It != set2.end()) {
-        if (*set1It < *set2It) ++set1It;
-        else if (*set2It < *set1It) ++set2It;
-        else {
-          result.insert(*set1It);
-          ++set1It;
-          ++set2It;
-        }
-      }
-    }
-
-    /**
      * @brief LC_ResetStars resets the stars on a polychord.
-     * @param mesh The mesh for getting the vertex index.
-     * @param startPos
      */
-    void LC_ResetStars (const PolyMeshType &mesh, const vcg::face::Pos<FaceType> &startPos) {
-      assert(!startPos.IsNull());
-      assert(mesh.vert.size() == _lcVertices.size());
-      vcg::face::Pos<FaceType> runPos = startPos;
-      vcg::face::JumpingPos<FaceType> vStarPos;
-      // reset the stars
-      do {
-        // reset the star of this edge endpoints
-        _lcVertices[vcg::tri::Index(mesh, runPos.V())].edges.clear();
-        _lcVertices[vcg::tri::Index(mesh, runPos.V())].star.clear();
-        _lcVertices[vcg::tri::Index(mesh, runPos.VFlip())].edges.clear();
-        _lcVertices[vcg::tri::Index(mesh, runPos.VFlip())].star.clear();
-        // reset the stars of the vertices in the star of the second vertex
-        runPos.FlipV();
-        vStarPos.Set(runPos.F(), runPos.E(), runPos.V());
-        do {
-          vStarPos.FlipV();
-          vStarPos.FlipE();
-          while (vStarPos.V() != runPos.V()) {
-            _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].edges.clear();
-            _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].star.clear();
-            vStarPos.FlipV();
-            vStarPos.FlipE();
-          }
-          vStarPos.NextFE();
-        } while (vStarPos != runPos);
-        // reset the stars of the vertices in the star of the first vertex
-        runPos.FlipV();
-        vStarPos.Set(runPos.F(), runPos.E(), runPos.V());
-        do {
-          vStarPos.FlipV();
-          vStarPos.FlipE();
-          while (vStarPos.V() != runPos.V()) {
-            _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].edges.clear();
-            _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].star.clear();
-            vStarPos.FlipV();
-            vStarPos.FlipE();
-          }
-          vStarPos.NextFE();
-        } while (vStarPos != runPos);
-        // when arrive to a border, return
-        if (runPos != startPos && runPos.IsBorder())
-          break;
-        // go on the next edge
-        runPos.FlipE();
-        runPos.FlipV();
-        runPos.FlipE();
-        runPos.FlipF();
-      } while (runPos != startPos);
+    void LC_ResetStars() {
+      for (size_t v = 0; v < _lcVertices.size(); v++)
+        _lcVertices[v].reset();
     }
 
     /**
@@ -393,42 +375,57 @@ public:
      * either to itself (if it's a loop) or to the border edge.
      * @param mesh The mesh for getting the vertex index.
      * @param startPos Starting position.
-     * @param lcEdges List of edge stars.
+     * @param lcEdges Vector of edge stars.
      */
-    void LC_computeStars (const PolyMeshType &mesh, const vcg::face::Pos<FaceType> &startPos, std::list<LCEdge> &lcEdges)
-    {
+    void LC_computeStars (const PolyMeshType &mesh, const vcg::face::Pos<FaceType> &startPos, std::vector<LCEdge> &lcEdges) {
       assert(!startPos.IsNull());
       assert(mesh.vert.size() == _lcVertices.size());
-      LCEdge *lcedgeP = NULL;
       vcg::face::Pos<FaceType> runPos = startPos;
       vcg::face::JumpingPos<FaceType> vStarPos;
       vcg::face::Pos<FaceType> eStarPos;
+      LCEdgeIndex edgeInd = -1;
+      size_t nEdges = 0;
 
-      lcEdges.clear();
+      // count how many edges
+      do {
+        nEdges++;
+        // go on the next edge
+        runPos.FlipE();
+        runPos.FlipV();
+        runPos.FlipE();
+        runPos.FlipF();
+      } while (runPos != startPos && !runPos.IsBorder());
+      if (runPos.IsBorder())
+        nEdges++;
+
+      // resize the vector of edges
+      lcEdges.resize(nEdges);
+      for (size_t e = 0; e < nEdges; e++)
+        lcEdges[e].reset();
+
       /// compute the star of all the vertices and edges seen from the polychord
       runPos = startPos;
       do {
-        // create a lcedge
-        lcEdges.push_back(LCEdge());
-        lcedgeP = &lcEdges.back();
+        // access the next lcedge
+        edgeInd++;
         // set lcvertices references
-        lcedgeP->v1 = &_lcVertices[vcg::tri::Index(mesh, runPos.V())];
-        lcedgeP->v2 = &_lcVertices[vcg::tri::Index(mesh, runPos.VFlip())];
+        lcEdges[edgeInd].v1 = vcg::tri::Index(mesh, runPos.V());
+        lcEdges[edgeInd].v2 = vcg::tri::Index(mesh, runPos.VFlip());
         // add this edge to its vertices edge-stars
-        lcedgeP->v1->edges.insert(lcedgeP);
-        lcedgeP->v2->edges.insert(lcedgeP);
+        _lcVertices[lcEdges[edgeInd].v1].edges.insert(edgeInd);
+        _lcVertices[lcEdges[edgeInd].v2].edges.insert(edgeInd);
         // compute the star of this edge
-        lcedgeP->star.insert(lcedgeP->v1);  // its endpoints, clearly
-        lcedgeP->star.insert(lcedgeP->v2);  // its endpoints, clearly
+        lcEdges[edgeInd].star.insert(lcEdges[edgeInd].v1);  // its endpoints, clearly
+        lcEdges[edgeInd].star.insert(lcEdges[edgeInd].v2);  // its endpoints, clearly
         // navigate over the other vertices of this facet
         eStarPos = runPos;
         eStarPos.FlipE();
         eStarPos.FlipV();
         while (eStarPos.V() != runPos.VFlip()) {
           // add current vertex to the star of this edge
-          lcedgeP->star.insert(&_lcVertices[vcg::tri::Index(mesh, eStarPos.V())]);
+          lcEdges[edgeInd].star.insert(vcg::tri::Index(mesh, eStarPos.V()));
           // add this edge to the edge-star of the current vertex
-          _lcVertices[vcg::tri::Index(mesh, eStarPos.V())].edges.insert(lcedgeP);
+          _lcVertices[vcg::tri::Index(mesh, eStarPos.V())].edges.insert(edgeInd);
           // go on
           eStarPos.FlipE();
           eStarPos.FlipV();
@@ -441,9 +438,9 @@ public:
           eStarPos.FlipV();
           while (eStarPos.V() != runPos.VFlip()) {
             // add current vertex to the star of this edge
-            lcedgeP->star.insert(&_lcVertices[vcg::tri::Index(mesh, eStarPos.V())]);
+            lcEdges[edgeInd].star.insert(vcg::tri::Index(mesh, eStarPos.V()));
             // add this edge to the edge-star of the current vertex
-            _lcVertices[vcg::tri::Index(mesh, eStarPos.V())].edges.insert(lcedgeP);
+            _lcVertices[vcg::tri::Index(mesh, eStarPos.V())].edges.insert(edgeInd);
             // go on
             eStarPos.FlipE();
             eStarPos.FlipV();
@@ -454,15 +451,15 @@ public:
         runPos.FlipV();
         vStarPos.Set(runPos.F(), runPos.E(), runPos.V());
         // v2 is in its star
-        _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].star.insert(&_lcVertices[vcg::tri::Index(mesh, vStarPos.V())]);
+        _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].star.insert(vcg::tri::Index(mesh, vStarPos.V()));
         do {
           vStarPos.FlipV();
           vStarPos.FlipE();
           while (vStarPos.V() != runPos.V()) {
             // add the current vertex to the v2 star
-            _lcVertices[vcg::tri::Index(mesh, runPos.V())].star.insert(&_lcVertices[vcg::tri::Index(mesh, vStarPos.V())]);
+            _lcVertices[vcg::tri::Index(mesh, runPos.V())].star.insert(vcg::tri::Index(mesh, vStarPos.V()));
             // add v2 to the star of the current vertex
-            _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].star.insert(&_lcVertices[vcg::tri::Index(mesh, runPos.V())]);
+            _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].star.insert(vcg::tri::Index(mesh, runPos.V()));
             vStarPos.FlipV();
             vStarPos.FlipE();
           }
@@ -473,15 +470,15 @@ public:
         runPos.FlipV();
         vStarPos.Set(runPos.F(), runPos.E(), runPos.V());
         // v1 is in its star
-        _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].star.insert(&_lcVertices[vcg::tri::Index(mesh, vStarPos.V())]);
+        _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].star.insert(vcg::tri::Index(mesh, vStarPos.V()));
         do {
           vStarPos.FlipV();
           vStarPos.FlipE();
           while (vStarPos.V() != runPos.V()) {
             // add the current vertex to the v2 star
-            _lcVertices[vcg::tri::Index(mesh, runPos.V())].star.insert(&_lcVertices[vcg::tri::Index(mesh, vStarPos.V())]);
+            _lcVertices[vcg::tri::Index(mesh, runPos.V())].star.insert(vcg::tri::Index(mesh, vStarPos.V()));
             // add v2 to the star of the current vertex
-            _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].star.insert(&_lcVertices[vcg::tri::Index(mesh, runPos.V())]);
+            _lcVertices[vcg::tri::Index(mesh, vStarPos.V())].star.insert(vcg::tri::Index(mesh, runPos.V()));
             vStarPos.FlipV();
             vStarPos.FlipE();
           }
@@ -505,58 +502,39 @@ public:
 
     /**
      * @brief LC_SimulateEdgeCollapse simulates an edge collapse by updating the stars involved.
-     * @param edge The edge to collapse.
+     * @param lcEdges The vector of edges.
+     * @param edgeInd The in dex of the edge to collapse.
      */
-    void LC_SimulateEdgeCollapse (LCEdge &edge) {
+    void LC_SimulateEdgeCollapse (std::vector<LCEdge> &lcEdges, const LCEdgeIndex edgeInd) {
       // let v1 and v2 be the two end points
-      LCVertex *v1 = edge.v1;
-      LCVertex *v2 = edge.v2;
-      assert(v1 && v2);
-      LCVertex *v = NULL;
-      LCEdge *e = NULL;
+      LCVertexIndex v1 = lcEdges[edgeInd].v1;
+      LCVertexIndex v2 = lcEdges[edgeInd].v2;
+      LCVertexIndex v = -1;
 
       /// v2 merges into v1:
       // star(v1) = star(v1) U star(v2)
-      v1->star.insert(v2->star.begin(), v2->star.end());
-      v1->star.erase(v2);     // remove v2 from v1-star
-      v2->star.erase(v1);     // remove v1 from v2-star
+      _lcVertices[v1].star.insert(_lcVertices[v2].star.begin(), _lcVertices[v2].star.end());
+      _lcVertices[v1].star.erase(v2);     // remove v2 from v1-star
+      _lcVertices[v2].star.erase(v1);     // remove v1 from v2-star
       // foreach v | v2 \in star(v) [i.e. v \in star(v2)]
       //      star(v) = star(v) U {v1} \ {v2}
-      for (typename LCVertexStar::iterator vIt = v2->star.begin(); vIt != v2->star.end(); vIt++) {
+      for (typename LCVertexStar::iterator vIt = _lcVertices[v2].star.begin(); vIt != _lcVertices[v2].star.end(); vIt++) {
         v = *vIt;
-        v->star.insert(v1);
-        v->star.erase(v2);
+        if (v == v2)  // skip v2 itself
+          continue;
+        _lcVertices[v].star.insert(v1);
+        _lcVertices[v].star.erase(v2);
       }
       /// update the star of the edges which include v1 and v2 in their star
       // foreach e | v1 \in star(e) ^ v2 \in star(e)
       //      star(e) = star(e) \ {v1,v2} U {v1}
-      for (typename LCEdgeStar::iterator eIt = v1->edges.begin(); eIt != v1->edges.end(); eIt++) {
-        e = *eIt;
-        e->star.erase(v2);
-      }
-      for (typename LCEdgeStar::iterator eIt = v2->edges.begin(); eIt != v2->edges.end(); eIt++) {
-        e = *eIt;
-        e->star.erase(v2);
-        e->star.insert(v1);
+      for (typename LCEdgeStar::iterator eIt = _lcVertices[v1].edges.begin(); eIt != _lcVertices[v1].edges.end(); eIt++)
+        lcEdges[*eIt].star.erase(v2);
+      for (typename LCEdgeStar::iterator eIt = _lcVertices[v2].edges.begin(); eIt != _lcVertices[v2].edges.end(); eIt++) {
+        lcEdges[*eIt].star.erase(v2);
+        lcEdges[*eIt].star.insert(v1);
       }
     }
-
-    /**
-     * @brief The LCVertex struct represents a vertex for the Link Conditions.
-     */
-    struct LCVertex {
-      LCVertexStar star;  // vertex star
-      LCEdgeStar edges;   // list of edges whose star involves this vertex
-    };
-
-    /**
-     * @brief The LCEdge struct represents an edge for the Link Conditions.
-     */
-    struct LCEdge {
-      LCVertex *v1, *v2;          // endpoints
-      LCVertexStar star;          // edge star
-      LCEdge() {v1 = v2 = NULL;}  // default contructor
-    };
 
     /**
      * @brief _lcVertices is a vector of vertex stars for the link conditions.
@@ -606,7 +584,7 @@ public:
     vcg::tri::RequirePerVertexFlags(mesh);
     vcg::tri::RequirePerFaceFlags(mesh);
 
-    if (mesh.face.size() == 0)
+    if (mesh.IsEmpty())
       return PC_VOID;
 
     if (pos.IsNull())
@@ -844,7 +822,7 @@ public:
   static void CollapseAllPolychords (PolyMeshType &mesh, const bool checkSing = true) {
     vcg::tri::RequireFFAdjacency(mesh);
 
-    if (mesh.FN() == 0)
+    if (mesh.IsEmpty())
       return;
 
     vcg::face::Pos<FaceType> pos;
