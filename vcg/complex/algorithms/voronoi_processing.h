@@ -468,6 +468,9 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   } // end for each seed.
   tri::Clean<MeshType>::RemoveDuplicateVertex(outMesh);
   tri::UpdateTopology<MeshType>::FaceFace(outMesh);
+  bool oriented,orientable;
+  tri::Clean<MeshType>::OrientCoherentlyMesh(outMesh,oriented,orientable);
+  tri::UpdateTopology<MeshType>::FaceFace(outMesh);
 
   // last loop to remove faux edges bit that are now on the boundary.
   for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi)
@@ -490,12 +493,12 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
         bool b0 = fi->V0(i)->IsB();
         bool b1 = fi->V1(i)->IsB();
         if( ((b0  && b1) || (fi->IsF(i) && !b0) ) &&
-            tri::Index(outMesh,fi->V(i))<seedVec.size())
+            tri::Index(outMesh,fi->V0(i))<seedVec.size())
         {
-          if(!seedVec[tri::Index(outMesh,fi->V(i))]->IsS())
+          if(!seedVec[tri::Index(outMesh,fi->V0(i))]->IsS())
             if(face::FFLinkCondition(*fi, i))
             {
-              face::FFEdgeCollapse(outMesh, *fi,i);
+              face::FFEdgeCollapse(outMesh, *fi,i); // we delete vertex fi->V0(i)
               break;
             }
         }
