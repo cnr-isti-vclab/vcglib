@@ -8,7 +8,7 @@
 #include <QMutex>
 #include <QSemaphore>
 
-namespace mt{
+namespace mt {
   typedef QThread thread;
   typedef QMutex mutex;
   typedef QMutexLocker mutexlocker;

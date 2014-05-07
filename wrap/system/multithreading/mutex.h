@@ -12,38 +12,43 @@ class condition;
 
 class mutex
 {
-	MT_PREVENT_COPY(mutex)
+    MT_PREVENT_COPY(mutex)
 
-	public:
+    public:
 
-		typedef mutex this_type;
-		typedef void  base_type;
+        typedef mutex this_type;
+        typedef void  base_type;
 
-		mutex(void)
-		{
-			pthread_mutex_init(&(this->m), 0);
-		}
+        mutex(void)
+        {
+            pthread_mutex_init(&(this->m), 0);
+        }
 
-		~mutex(void)
-		{
-			pthread_mutex_destroy(&(this->m));
-		}
+        ~mutex(void)
+        {
+            pthread_mutex_destroy(&(this->m));
+        }
 
-		void lock(void)
-		{
-			pthread_mutex_lock(&(this->m));
-		}
+        void lock(void)
+        {
+            pthread_mutex_lock(&(this->m));
+        }
 
-		void unlock(void)
-		{
-			pthread_mutex_unlock(&(this->m));
-		}
+        void unlock(void)
+        {
+            pthread_mutex_unlock(&(this->m));
+        }
+        bool tryLock(void)
+        {
+            int a = pthread_mutex_trylock(&(this->m));
+            return a == 0;
+        }
 
-	private:
+    private:
 
-		friend class condition;
+        friend class condition;
 
-		pthread_mutex_t m;
+        pthread_mutex_t m;
 };
 
 }

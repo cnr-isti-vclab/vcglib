@@ -113,7 +113,7 @@ class GetOpt {
   //return argv[0]
   QString &applicationName();
 
- protected:
+protected:
   //parses and return true on success
   bool parse(QString &error);
   //return options or switch
@@ -122,8 +122,9 @@ class GetOpt {
   bool findArg(const QString &name, Option &option);
   //split desc into n pieces of the right length TODO: check for newlines also
   QString formatDesc(QString desc, int len);
+  //manage conversion from string to option value
+  bool assignOption(Option &option, QString arg, QString &error);
 
-  bool parseOption(Option &option, const QString &arg);
 };
 
 #endif
