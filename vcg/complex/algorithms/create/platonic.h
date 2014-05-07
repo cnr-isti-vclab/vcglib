@@ -573,10 +573,6 @@ void Build( MeshType & in, const V & v, const F & f)
   Allocator<MeshType>::AddVertices(in,v.size());
   Allocator<MeshType>::AddFaces(in,f.size());
 
-  typename V::const_iterator vi;
-
-  typename MeshType::VertexType tv;
-
   for(size_t i=0;i<v.size();++i)
   {
     float *vv=(float *)(&v[i]);
@@ -588,10 +584,6 @@ void Build( MeshType & in, const V & v, const F & f)
   int k;
   for(k=0,j=in.vert.begin();j!=in.vert.end();++j,++k)
     index[k] = &*j;
-
-  typename F::const_iterator fi;
-
-  typename MeshType::FaceType ft;
 
   for(size_t i=0;i<f.size();++i)
   {
