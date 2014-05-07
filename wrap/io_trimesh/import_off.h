@@ -493,7 +493,7 @@ public:
               // Consecutivity is in the space of the index of the polygon.
               for(int qq=0;qq<3;++qq)
               {
-                if( (indexTriangulatedVect[j+qq]+1)%int(indexTriangulatedVect.size()) == indexTriangulatedVect[j+(qq+1)%3])
+                if( (indexTriangulatedVect[j+qq]+1)%vert_per_face == indexTriangulatedVect[j+(qq+1)%3])
                   mesh.face[f+j/3].ClearF(qq);
                 else mesh.face[f+j/3].SetF(qq);
               }
