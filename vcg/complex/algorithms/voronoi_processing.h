@@ -455,7 +455,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
 
     for(int j=0;j<pt.size();++j){
       float curAngle = angleVec[(j+1)%pt.size()].first - angleVec[j].first;
-      printf("seed %4i (%i) - face %i angle %5.1f %5.1f %5.1f\n",i,curRegionStart,j,angleVec[j].first,angleVec[(j+1)%pt.size()].first,curAngle);
+//      printf("seed %4i (%i) - face %i angle %5.1f %5.1f %5.1f\n",i,curRegionStart,j,angleVec[j].first,angleVec[(j+1)%pt.size()].first,curAngle);
       if(curAngle < 0) curAngle += 360.0;
       if(curAngle < 170.0)
         tri::Allocator<MeshType>::AddFace(outMesh,
