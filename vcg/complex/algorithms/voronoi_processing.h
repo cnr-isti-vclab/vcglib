@@ -428,7 +428,10 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
       for(int qq=0;qq<3;qq++)
         if(sources[borderCornerVec[j]->V(qq)] == curSeed)
         {
-          pt.push_back(Barycenter(*borderCornerVec[j]));
+          Point3f edgeCenter;
+          for(int jj=0;jj<3;++jj) if(face::IsBorder(*(borderCornerVec[j]),jj))
+            edgeCenter=(borderCornerVec[j]->P0(jj)+borderCornerVec[j]->P1(jj))/2.0f;
+          pt.push_back(edgeCenter);
           break;
         }
     Plane3f pl;
