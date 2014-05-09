@@ -57,6 +57,7 @@ struct VoronoiProcessingParameter
     triangulateRegion=false;
     unbiasedSeedFlag = true;
     geodesicRelaxFlag = true;
+    relaxOnlyConstrainedFlag=false;
     refinementRatio = 5.0f;
   }
   int colorStrategy;
@@ -71,6 +72,8 @@ struct VoronoiProcessingParameter
                                 /// In this way you can constrain some seed to move only on certain
                                 /// domains, for example moving only along some linear features
                                 /// like border of creases.
+
+  bool relaxOnlyConstrainedFlag;
 
   bool preserveFixedSeed;       /// If true the 'fixed' seeds are not moved during relaxation.
                                 /// \see FixVertexVector function to see how to fix a set of seeds.
@@ -1176,7 +1179,9 @@ static void FixVertexVector(MeshType &m, std::vector<VertexType *> &vertToFixVec
 }
 
 /// \brief Perform a Lloyd relaxation cycle over a mesh
-///
+///  It uses two conventions:
+///  1) a few vertexes can remain fixed, you have to set a per vertex bool attribute named 'fixed'
+///  2)
 ///
 
 static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
@@ -1188,6 +1193,14 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
   tri::RequireCompactness(m);
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     assert(vi->VFp() && "Require mesh without unreferenced vertexes\n");
+  std::vector<VertexType *> selectedVec;
+  if(vpp.relaxOnlyConstrainedFlag)
+  {
+    for(size_t i=0;i<seedVec.size();++i)
+      if(seedVec[i]->IsS())
+        selectedVec.push_back(seedVec[i]);
+    std::swap(seedVec,selectedVec);
+  }
 
   tri::UpdateFlags<MeshType>::FaceBorderFromVF(m);
   tri::UpdateFlags<MeshType>::VertexBorderFromFace(m);
@@ -1246,6 +1259,18 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
   if(iter==relaxIter)
     tri::Geodesic<MeshType>::Compute(m, seedVec, df,std::numeric_limits<ScalarType>::max(),0,&sources);
 
+  if(vpp.relaxOnlyConstrainedFlag)
+  {
+    std::swap(seedVec,selectedVec);
+    int i=0,j=0;
+    for(i=0,j=0;i<seedVec.size();++i){
+      if(seedVec[i]->IsS())
+      {
+        seedVec[i]=selectedVec[j];
+        ++j;
+      }
+    }
+  }
   return iter;
 }
 
