@@ -534,8 +534,6 @@ void Box(MeshType &in, const typename MeshType::BoxType & bb )
 
  in.Clear();
  Allocator<MeshType>::AddVertices(in,8);
- Allocator<MeshType>::AddFaces(in,12);
-
  VertexPointer ivp[8];
 
  VertexIterator vi=in.vert.begin();
@@ -548,24 +546,23 @@ void Box(MeshType &in, const typename MeshType::BoxType & bb )
  ivp[6]=&*vi;(*vi).P()=CoordType (bb.min[0],bb.max[1],bb.max[2]); ++vi;
  ivp[7]=&*vi;(*vi).P()=CoordType (bb.max[0],bb.max[1],bb.max[2]);
 
- FaceIterator fi=in.face.begin();
- (*fi).V(0)=ivp[2];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[0]; ++fi;
- (*fi).V(0)=ivp[1];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[3]; ++fi;
- (*fi).V(0)=ivp[4];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[0]; ++fi;
- (*fi).V(0)=ivp[2];  (*fi).V(1)=ivp[4]; (*fi).V(2)=ivp[6]; ++fi;
- (*fi).V(0)=ivp[1];  (*fi).V(1)=ivp[4]; (*fi).V(2)=ivp[0]; ++fi;
- (*fi).V(0)=ivp[4];  (*fi).V(1)=ivp[1]; (*fi).V(2)=ivp[5]; ++fi;
- (*fi).V(0)=ivp[6];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[7]; ++fi;
- (*fi).V(0)=ivp[5];  (*fi).V(1)=ivp[6]; (*fi).V(2)=ivp[4]; ++fi;
- (*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[6]; (*fi).V(2)=ivp[7]; ++fi;
- (*fi).V(0)=ivp[6];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[2]; ++fi;
- (*fi).V(0)=ivp[5];  (*fi).V(1)=ivp[3]; (*fi).V(2)=ivp[7]; ++fi;
- (*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[5]; (*fi).V(2)=ivp[1];
+ Allocator<MeshType>::AddFace(in,ivp[2],ivp[1],ivp[0]);
+ Allocator<MeshType>::AddFace(in,ivp[1],ivp[2],ivp[3]);
+ Allocator<MeshType>::AddFace(in,ivp[4],ivp[2],ivp[0]);
+ Allocator<MeshType>::AddFace(in,ivp[2],ivp[4],ivp[6]);
+ Allocator<MeshType>::AddFace(in,ivp[1],ivp[4],ivp[0]);
+ Allocator<MeshType>::AddFace(in,ivp[4],ivp[1],ivp[5]);
+ Allocator<MeshType>::AddFace(in,ivp[6],ivp[5],ivp[7]);
+ Allocator<MeshType>::AddFace(in,ivp[5],ivp[6],ivp[4]);
+ Allocator<MeshType>::AddFace(in,ivp[3],ivp[6],ivp[7]);
+ Allocator<MeshType>::AddFace(in,ivp[6],ivp[3],ivp[2]);
+ Allocator<MeshType>::AddFace(in,ivp[5],ivp[3],ivp[7]);
+ Allocator<MeshType>::AddFace(in,ivp[3],ivp[5],ivp[1]);
 
  if (HasPerFaceFlags(in)) {
     FaceIterator fi=in.face.begin();
     for (int k=0; k<12; k++) {
-      (*fi).SetF(1); fi++;
+      (*fi).SetF(0); fi++;
     }
   }
 
