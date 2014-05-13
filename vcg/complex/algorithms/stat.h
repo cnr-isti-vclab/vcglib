@@ -32,6 +32,7 @@
 #include <vcg/simplex/face/topology.h>
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
+#include <vcg/complex/algorithms/update/topology.h>
 
 
 namespace vcg {
@@ -226,23 +227,14 @@ public:
     return h.Avg();
   }
 
-  static void ComputeFaceEdgeLengthDistribution( MeshType & m, Distribution<float> &h)
+  static void ComputeFaceEdgeLengthDistribution( MeshType & m, Distribution<float> &h, bool includeFauxEdge=false)
   {
-    tri::RequireTriangularMesh(m);
+    std::vector< typename tri::UpdateTopology<MeshType>::PEdge > edgeVec;
+    tri::UpdateTopology<MeshType>::FillUniqueEdgeVector(m,edgeVec,includeFauxEdge);
     h.Clear();
     tri::UpdateFlags<MeshType>::FaceBorderFromNone(m);
-    for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-    {
-      if(!(*fi).IsD())
-      {
-        for(int i=0;i<3;++i)
-        {
-          h.Add(Distance<float>(fi->P0(i),fi->P1(i)));
-          if(fi->IsB(i)) // to be uniform border edges must be added twice...
-            h.Add(Distance<float>(fi->P0(i),fi->P1(i)));
-        }
-      }
-    }
+    for(size_t i=0;i<edgeVec.size();++i)
+      h.Add(Distance(edgeVec[i].v[0]->P(),edgeVec[i].v[1]->P()));
   }
 
   static ScalarType ComputeFaceEdgeLengthAverage(MeshType & m)
