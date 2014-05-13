@@ -1262,11 +1262,12 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
   if(vpp.relaxOnlyConstrainedFlag)
   {
     std::swap(seedVec,selectedVec);
-    int i=0,j=0;
+    int i,j;
     for(i=0,j=0;i<seedVec.size();++i){
       if(seedVec[i]->IsS())
       {
         seedVec[i]=selectedVec[j];
+        fixed[seedVec[i]]=true;
         ++j;
       }
     }
