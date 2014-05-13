@@ -69,7 +69,7 @@ public:
   int            z;     // index in [0..2] of the edge of the face
 
   PEdge() {}
-
+  PEdge(FacePointer  pf, const int nz) { this->Set(pf,nz); }
   void Set( FacePointer  pf, const int nz )
   {
     assert(pf!=0);
@@ -107,44 +107,28 @@ public:
   }
 };
 
-// Fill a vector with all the edges of the mesh.
-// each edge is stored in the vector the number of times that it appears in the mesh, with the referring face.
-// optionally it can skip the faux edges (to retrieve only the real edges of a triangulated polygonal mesh)
+/// Fill a vector with all the edges of the mesh.
+/// each edge is stored in the vector the number of times that it appears in the mesh, with the referring face.
+/// optionally it can skip the faux edges (to retrieve only the real edges of a triangulated polygonal mesh)
 
-static void FillEdgeVector(MeshType &m, std::vector<PEdge> &e, bool includeFauxEdge=true)
+static void FillEdgeVector(MeshType &m, std::vector<PEdge> &edgeVec, bool includeFauxEdge=true)
 {
-    FaceIterator pf;
-    typename std::vector<PEdge>::iterator p;
-
-    // Alloco il vettore ausiliario
-    //e.resize(m.fn*3);
-    FaceIterator fi;
-    int n_edges = 0;
-    for(fi = m.face.begin(); fi != m.face.end(); ++fi) if(! (*fi).IsD()) n_edges+=(*fi).VN();
-    e.resize(n_edges);
-
-    p = e.begin();
-    for(pf=m.face.begin();pf!=m.face.end();++pf)
-        if( ! (*pf).IsD() )
-            for(int j=0;j<(*pf).VN();++j)
-            if(includeFauxEdge || !(*pf).IsF(j))
-                {
-                    (*p).Set(&(*pf),j);
-                    ++p;
-                }
-
-    if(includeFauxEdge) assert(p==e.end());
-    else e.resize(p-e.begin());
+  edgeVec.reserve(m.fn*3);
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+    if( ! (*fi).IsD() )
+      for(int j=0;j<(*fi).VN();++j)
+        if(includeFauxEdge || !(*fi).IsF(j))
+          edgeVec.push_back(PEdge(&*fi,j));
 }
 
-static void FillUniqueEdgeVector(MeshType &m, std::vector<PEdge> &Edges, bool includeFauxEdge=true)
+static void FillUniqueEdgeVector(MeshType &m, std::vector<PEdge> &edgeVec, bool includeFauxEdge=true)
 {
-    FillEdgeVector(m,Edges,includeFauxEdge);
-    sort(Edges.begin(), Edges.end());		// Lo ordino per vertici
+    FillEdgeVector(m,edgeVec,includeFauxEdge);
+    sort(edgeVec.begin(), edgeVec.end());		// Lo ordino per vertici
 
-    typename std::vector< PEdge>::iterator newEnd = std::unique(Edges.begin(), Edges.end());
+    typename std::vector< PEdge>::iterator newEnd = std::unique(edgeVec.begin(), edgeVec.end());
 
-    Edges.resize(newEnd-Edges.begin());
+    edgeVec.resize(newEnd-edgeVec.begin());
 }
 
 /*! \brief Initialize the edge vector all the edges that can be inferred from current face vector, setting up all the current adjacency relations
