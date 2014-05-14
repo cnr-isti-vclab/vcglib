@@ -2,10 +2,6 @@
 // for linear algebra.
 //
 // Copyright (C) 2008 Gael Guennebaud <gael.guennebaud@inria.fr>
-//
-// This Source Code Form is subject to the terms of the Mozilla
-// Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /* NOTE The functions of this file have been adapted from the GMM++ library */
 
@@ -62,7 +58,9 @@ void pseudo_inverse(const CMatrix &C, CINVMatrix &CINV)
   Scalar rho, rho_1, alpha;
   d.setZero();
 
-  CINV.startFill(); // FIXME estimate the number of non-zeros
+  typedef Triplet<double> T;
+  std::vector<T> tripletList;
+    
   for (Index i = 0; i < rows; ++i)
   {
     d[i] = 1.0;
@@ -88,11 +86,12 @@ void pseudo_inverse(const CMatrix &C, CINVMatrix &CINV)
     // FIXME add a generic "prune/filter" expression for both dense and sparse object to sparse
     for (Index j=0; j<l.size(); ++j)
       if (l[j]<1e-15)
-        CINV.fill(i,j) = l[j];
+	tripletList.push_back(T(i,j,l(j)));
 
+	
     d[i] = 0.0;
   }
-  CINV.endFill();
+  CINV.setFromTriplets(tripletList.begin(), tripletList.end());
 }
 
 
@@ -107,6 +106,7 @@ template<typename TMatrix, typename CMatrix,
 void constrained_cg(const TMatrix& A, const CMatrix& C, VectorX& x,
                        const VectorB& b, const VectorF& f, IterationController &iter)
 {
+  using std::sqrt;
   typedef typename TMatrix::Scalar Scalar;
   typedef typename TMatrix::Index Index;
   typedef Matrix<Scalar,Dynamic,1>  TmpVec;
