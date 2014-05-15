@@ -480,6 +480,16 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
               return fi;
             }
 
+            /** Function to add a face to the mesh and initializing it with three indexes
+            */
+            static FaceIterator AddFace(MeshType &m, size_t v0, size_t v1, size_t v2)
+            {
+              assert((v0!=v1) && (v1!=v2) && (v0!=v2));
+              assert(v0>=0 && v0<=m.vert.size());
+              assert(v1>=0 && v1<=m.vert.size());
+              assert(v2>=0 && v2<=m.vert.size());
+              return AddFace(m,&(m.vert[v0]),&(m.vert[v1]),&(m.vert[v2]));
+            }
             /** Function to add a face to the mesh and initializing it with the three given coords
             */
             static FaceIterator AddFace(MeshType &m, CoordType p0, CoordType p1, CoordType p2)
