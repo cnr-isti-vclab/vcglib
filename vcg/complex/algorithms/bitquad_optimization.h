@@ -5,7 +5,7 @@ namespace vcg{namespace tri{
 
 template <class BQ>
 class BitQuadOptimization{
-  
+
 typedef typename BQ::MeshType MeshType;
 typedef typename BQ::Pos Pos;
 
@@ -23,11 +23,11 @@ public:
 
 // helper function: mark a quadface, setting Q at 0, and neight at .75, 0.5...
 static void MarkFace(FaceType* f, MeshType &m){
-  
+
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
-     fi->Q() = 1; 
+     fi->Q() = 1;
   }
-  
+
   for (int i=0; i<3; i++) {
     for (int j=0; j<3; j++) f->FFp(i)->FFp(j)->Q() = 0.75;
   }
@@ -35,42 +35,42 @@ static void MarkFace(FaceType* f, MeshType &m){
     f->FFp(i)->Q() = 0.50;
   }
   f->Q() = 0;
-  
+
 }
 
 // helper function: mark a quadface, setting Q at 0, and neight at .75, 0.5...
 static void MarkVertex(FaceType* f, int wedge, MeshType &m){
 
   VertexType *v = f->V(wedge);
-  
+
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
-     if (fi->V0(0)==v || fi->V1(0)==v ||fi->V2(0)==v ) fi->Q() = 0; 
-     // else fi->Q() = 1; 
+     if (fi->V0(0)==v || fi->V1(0)==v ||fi->V2(0)==v ) fi->Q() = 0;
+     // else fi->Q() = 1;
   }
-  
+
 }
 
 static bool MarkSmallestEdge(MeshType &m, bool perform)
 {
   ScalarType min = std::numeric_limits<ScalarType>::max();
-  
+
   FaceType *fa=NULL; int w=0;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD())
   for (int k=0; k<3; k++) {
     FaceType *f=&*fi;
-    
+
     if (f->IsF(k)) continue;
     if (f->FFp(k) == f ) continue; // skip borders
-    
+
     ScalarType score;
 
     score = (f->P0(k) - f->P1(k)).Norm();
     if (score<min) {
-      min=score; 
+      min=score;
       fa = f;
       w = k;
     }
-        
+
   }
   if (fa) {
     if (perform) {
@@ -84,56 +84,56 @@ static bool MarkSmallestEdge(MeshType &m, bool perform)
   return false;
 }
 
-static ScalarType Importance(const CoordType  &p){
+static ScalarType Importance(const CoordType  &/*p*/){
   //return ::proceduralImportance(p);
-	return 1;
+    return 1;
 }
 
 // returns: 0 if fail. 1 if edge. 2 if diag.
 static int MarkSmallestEdgeOrDiag(MeshType &m, ScalarType edgeMult, bool perform, Pos* affected=NULL)
 {
   ScalarType min = std::numeric_limits<ScalarType>::max();
-  
+
   FaceType *fa=NULL; int w=0; bool counterDiag = false;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD())
   for (int k=0; k<3; k++) {
     FaceType *f=&*fi;
-    
+
     if (f->FFp(k) >= f ) continue; // skip borders (==), and do it one per edge
-    
+
     ScalarType score;
 
     score = (f->P0(k) - f->P1(k)).Norm();
-    
+
     ScalarType imp = Importance( (f->P0(k) + f->P1(k))/2 );
-    
+
     score /= imp;
-    
+
     if (!f->IsF(k)) score*=edgeMult; // edges are supposed to be smaller!
-    
-    
-    
+
+
+
     if (score<min) {
-      min=score; 
+      min=score;
       fa = f;
       w = k;
       counterDiag=false;
     }
-    
+
     if (f->IsF(k)) { // for diag faces, test counterdiag too
       score = BQ::CounterDiag(f).Norm();
       score /= imp;
 
       if (score<min) {
-        min=score; 
+        min=score;
         fa = f;
         w = k;
         counterDiag=true;
       }
     }
-    
 
-        
+
+
   }
   if (fa) {
     if (perform) {
@@ -159,25 +159,25 @@ static int MarkSmallestEdgeOrDiag(MeshType &m, ScalarType edgeMult, bool perform
 static void MarkSmallestDiag(MeshType &m)
 {
   ScalarType min = std::numeric_limits<ScalarType>::max();
-  
-  FaceType *fa=NULL; 
+
+  FaceType *fa=NULL;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     FaceType *f=&*fi;
-    
+
     ScalarType score;
 
     score = BQ::Diag(f).Norm();
     if (score<min) {
-      min=score; 
+      min=score;
       fa = f;
     }
-    
+
     score = BQ::CounterDiag(f).Norm();
     if (score<min) {
-      min=score; 
+      min=score;
       fa = f;
     }
-    
+
   }
   if (fa) {
     fa->Q()=0.0;
@@ -190,30 +190,30 @@ static void MarkSmallestDiag(MeshType &m)
 
 static bool IdentifyAndCollapseSmallestDiag(MeshType &m){
   ScalarType min = std::numeric_limits<ScalarType>::max();
-  
+
   FaceType *fa=NULL; bool flip;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     FaceType *f=&*fi;
-    
+
     ScalarType score;
-    
+
     score = BQ::Diag(f).Norm();
     if (score<min) {
-      min=score; 
+      min=score;
       fa = f;
       flip = false;
     }
-    
+
     score = BQ::CounterDiag(f).Norm();
     if (score<min) {
-      min=score; 
+      min=score;
       fa = f;
       flip = true;
     }
-    
+
   }
   if (!fa) return false;
-  
+
   if (BQ::TestAndRemoveDoublet(*fa,0,m)) { return true; }
   if (BQ::TestAndRemoveDoublet(*fa,1,m)) { return true; }
   if (BQ::TestAndRemoveDoublet(*fa,2,m)) { return true; }
@@ -225,7 +225,7 @@ static bool IdentifyAndCollapseSmallestDiag(MeshType &m){
       // I can't collapse (why?)
       MarkFace(fa,m);
       return false;
-    } else 
+    } else
     BQ::CollapseCounterDiag(*fa, BQ::PosOnDiag(*fa,true), m );
   }
   else  {
@@ -271,7 +271,7 @@ static int MarkVertexRotations(MeshType &m, Pos *affected=NULL)
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) fi->Q()=1.0;
 
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
-    
+
     for (int k=0; k<3; k++) {
       if (fi->V(k)->IsV()) continue;
       if (BQ::TestVertexRotation(*fi,k)) {
@@ -296,9 +296,9 @@ template <bool perform>
 static int MarkEdgeRotations(MeshType &m, Pos *p=NULL)
 {
   int count = 0;
-  
+
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) fi->Q()=1;
-  
+
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     //if (count>0) break;
     for (int k=0; k<3; k++) {
@@ -387,9 +387,9 @@ static ScalarType MeasureQuality(MeshType &m)
   int div = 0;
   for (FaceIterator fi = m.face.begin();  fi!=m.face.end(); fi++) if (!fi->IsD()) {
     if (fi->IsAnyF()) {
-      
+
       ScalarType q = BQ::quadQuality( &*fi, BQ::FauxIndex(&*fi) );
-      
+
       if (MeshType::HasPerFaceQuality()) fi->Q() = q;
       res += q;
       div++;
