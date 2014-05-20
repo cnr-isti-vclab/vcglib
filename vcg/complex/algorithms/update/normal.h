@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -25,6 +25,7 @@
 #define __VCG_TRI_UPDATE_NORMALS
 
 #include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/polygon_support.h>
 #include <vcg/math/matrix44.h>
 #include <vcg/complex/exception.h>
 
@@ -47,7 +48,7 @@ template <class ComputeMeshType>
 class   UpdateNormal
 {
 public:
-typedef ComputeMeshType MeshType; 	
+typedef ComputeMeshType MeshType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::CoordType     CoordType;
 typedef typename VertexType::NormalType     NormalType;
@@ -103,10 +104,10 @@ static void PerVertexClear(ComputeMeshType &m, bool ClearAllVertNormal=false)
 
 ///  \brief Calculates the vertex normal as an angle weighted average. It does not need or exploit current face normals.
 /**
- The normal of a vertex v computed as a weighted sum f the incident face normals. 
+ The normal of a vertex v computed as a weighted sum f the incident face normals.
  The weight is simlply the angle of the involved wedge.  Described in:
- 
-G. Thurmer, C. A. Wuthrich 
+
+G. Thurmer, C. A. Wuthrich
 "Computing vertex normals from polygonal facets"
 Journal of Graphics Tools, 1998
  */
@@ -118,22 +119,22 @@ Journal of Graphics Tools, 1998
    if( !(*f).IsD() && (*f).IsR() )
    {
     typename FaceType::NormalType t = vcg::NormalizedNormal(*f);
-		NormalType e0 = ((*f).V1(0)->cP()-(*f).V0(0)->cP()).Normalize();
-		NormalType e1 = ((*f).V1(1)->cP()-(*f).V0(1)->cP()).Normalize();
-		NormalType e2 = ((*f).V1(2)->cP()-(*f).V0(2)->cP()).Normalize();
-		
-		(*f).V(0)->N() += t*AngleN(e0,-e2);
-		(*f).V(1)->N() += t*AngleN(-e0,e1);
-		(*f).V(2)->N() += t*AngleN(-e1,e2);
+        NormalType e0 = ((*f).V1(0)->cP()-(*f).V0(0)->cP()).Normalize();
+        NormalType e1 = ((*f).V1(1)->cP()-(*f).V0(1)->cP()).Normalize();
+        NormalType e2 = ((*f).V1(2)->cP()-(*f).V0(2)->cP()).Normalize();
+
+        (*f).V(0)->N() += t*AngleN(e0,-e2);
+        (*f).V(1)->N() += t*AngleN(-e0,e1);
+        (*f).V(2)->N() += t*AngleN(-e1,e2);
    }
 }
 
 ///  \brief Calculates the vertex normal using the Max et al. weighting scheme. It does not need or exploit current face normals.
 /**
- The normal of a vertex v is computed according to the formula described by Nelson Max in 
+ The normal of a vertex v is computed according to the formula described by Nelson Max in
  Max, N., "Weights for Computing Vertex Normals from Facet Normals", Journal of Graphics Tools, 4(2) (1999)
- 
- The weight for each wedge is the cross product of the two edge over the product of the square of the two edge lengths. 
+
+ The weight for each wedge is the cross product of the two edge over the product of the square of the two edge lengths.
  According to the original paper it is perfect only for spherical surface, but it should perform well...
  */
 static void PerVertexNelsonMaxWeighted(ComputeMeshType &m)
@@ -144,13 +145,13 @@ static void PerVertexNelsonMaxWeighted(ComputeMeshType &m)
    if( !(*f).IsD() && (*f).IsR() )
    {
     typename FaceType::NormalType t = vcg::Normal(*f);
-		ScalarType e0 = SquaredDistance((*f).V0(0)->cP(),(*f).V1(0)->cP());
-		ScalarType e1 = SquaredDistance((*f).V0(1)->cP(),(*f).V1(1)->cP());
-		ScalarType e2 = SquaredDistance((*f).V0(2)->cP(),(*f).V1(2)->cP());
-		
-		(*f).V(0)->N() += t/(e0*e2);
-		(*f).V(1)->N() += t/(e0*e1);
-		(*f).V(2)->N() += t/(e1*e2);
+        ScalarType e0 = SquaredDistance((*f).V0(0)->cP(),(*f).V1(0)->cP());
+        ScalarType e1 = SquaredDistance((*f).V0(1)->cP(),(*f).V1(1)->cP());
+        ScalarType e2 = SquaredDistance((*f).V0(2)->cP(),(*f).V1(2)->cP());
+
+        (*f).V(0)->N() += t/(e0*e2);
+        (*f).V(1)->N() += t/(e0*e1);
+        (*f).V(2)->N() += t/(e1*e2);
    }
 }
 
@@ -170,15 +171,13 @@ static void PerFace(ComputeMeshType &m)
 ///
 /// Not normalized. Use PerPolygonalFaceNormalized() or call NormalizePerFace() if you need unit length per face normals.
 static void PerPolygonalFace(ComputeMeshType &m) {
-  // check input type mesh
-  if (!HasPerFaceNormal(m))
-    throw vcg::MissingComponentException("PerFaceNormal");
-  // for each face
-  for(FaceIterator f = m.face.begin(); f != m.face.end(); f++)
-    if (!f->IsD()) {
-      f->N().SetZero();
-      for (int v = 0; v < f->VN(); v++)
-        f->N() += f->V(v)->P() ^ f->V((v+1)%f->VN())->P();
+  tri::RequirePerFaceNormal(m);
+  tri::RequirePolygonalMesh(m);
+  for(FaceIterator fi = m.face.begin(); fi != m.face.end(); fi++)
+    if (!fi->IsD()) {
+      fi->N().SetZero();
+      for (int i = 0; i < fi->VN(); i++)
+        fi->N() += fi->V0(i)->P() ^ fi->V1(i)->P();
     }
 }
 
@@ -231,8 +230,8 @@ static void NormalizePerVertex(ComputeMeshType &m)
 {
   tri::RequirePerVertexNormal(m);
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-		if( !(*vi).IsD() && (*vi).IsRW() ) 
-			(*vi).N().Normalize();
+        if( !(*vi).IsD() && (*vi).IsRW() )
+            (*vi).N().Normalize();
 }
 
 /// \brief Normalize the length of the face normals.
@@ -250,10 +249,10 @@ static void NormalizePerFaceByArea(ComputeMeshType &m)
   FaceIterator fi;
   for(fi=m.face.begin();fi!=m.face.end();++fi)
     if( !(*fi).IsD() )
-			{
-				(*fi).N().Normalize();
-				(*fi).N() = (*fi).N() * DoubleArea(*fi);
-			}
+            {
+                (*fi).N().Normalize();
+                (*fi).N() = (*fi).N() * DoubleArea(*fi);
+            }
 }
 
 /// \brief Equivalent to PerVertex() and NormalizePerVertex()
@@ -272,9 +271,7 @@ static void PerFaceNormalized(ComputeMeshType &m)
 
 /// \brief Equivalent to PerPolygonalFace() and NormalizePerFace()
 static void PerPolygonalFaceNormalized(ComputeMeshType &m) {
-  // compute normals
   PerPolygonalFace(m);
-  // normalize them
   NormalizePerFace(m);
 }
 
@@ -288,25 +285,24 @@ static void PerVertexPerFace(ComputeMeshType &m)
 /// \brief Equivalent to PerVertexNormalized() and PerFace().
 static void PerVertexNormalizedPerFace(ComputeMeshType &m)
 {
-	PerVertexPerFace(m);
-	NormalizePerVertex(m);
+    PerVertexPerFace(m);
+    NormalizePerVertex(m);
 }
 
 /// \brief Equivalent to PerVertexNormalizedPerFace() and NormalizePerFace().
 static void PerVertexNormalizedPerFaceNormalized(ComputeMeshType &m)
 {
-	PerVertexNormalizedPerFace(m);
-	NormalizePerFace(m);
+    PerVertexNormalizedPerFace(m);
+    NormalizePerFace(m);
 }
 
 /// \brief Exploit bitquads to compute a per-polygon face normal
 static void PerBitQuadFaceNormalized(ComputeMeshType &m)
 {
-	PerFace(m);
-	FaceIterator f;
-	for(f=m.face.begin();f!=m.face.end();++f) {
+    PerFace(m);
+    for(FaceIterator f=m.face.begin();f!=m.face.end();++f) {
       if( !(*f).IsD() )	{
-        for (int k=0; k<3; k++) if (f->IsF(k)) 
+        for (int k=0; k<3; k++) if (f->IsF(k))
         if (&*f < f->FFp(k)) {
           f->N() = f->FFp(k)->N() = (f->FFp(k)->N() + f->N()).Normalize();
         }
@@ -314,22 +310,46 @@ static void PerBitQuadFaceNormalized(ComputeMeshType &m)
   }
 }
 
+
+/// \brief Exploit bitquads to compute a per-polygon face normal
+static void PerBitPolygonFaceNormalized(ComputeMeshType &m)
+{
+  PerFace(m);
+  tri::RequireCompactness(m);
+  tri::RequireTriangularMesh(m);
+  tri::UpdateFlags<ComputeMeshType>::FaceClearV(m);
+  std::vector<VertexPointer> vertVec;
+  std::vector<FacePointer> faceVec;
+  for(size_t i=0;i<m.face.size();++i)
+    if(!m.face[i].IsV())
+    {
+      tri::PolygonSupport<MeshType,MeshType>::ExtractPolygon(&(m.face[i]),vertVec,faceVec);
+      CoordType nf(0,0,0);
+      for(size_t j=0;j<faceVec.size();++j)
+        nf+=faceVec[j]->N().Normalize() * DoubleArea(*faceVec[j]);
+
+      nf.Normalize();
+
+      for(size_t j=0;j<faceVec.size();++j)
+        faceVec[j]->N()=nf;
+    }
+}
 /// \brief Multiply the vertex normals by the matrix passed. By default, the scale component is removed.
 static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true)
 {
   tri::RequirePerVertexNormal(m);
     float scale;
 
-	Matrix33<ScalarType> mat33(mat,3);
-	
+    Matrix33<ScalarType> mat33(mat,3);
 
-	if(remove_scaling){
-		scale = pow(mat33.Determinant(),(ScalarType)(1.0/3.0));
-		mat33[0][0]/=scale;
-		mat33[1][1]/=scale;
-		mat33[2][2]/=scale;
-	}
-	
+
+    if(remove_scaling){
+        scale = pow(mat33.Determinant(),(ScalarType)(1.0/3.0));
+        mat33[0][0]/=scale;
+        mat33[1][1]/=scale;
+        mat33[2][2]/=scale;
+    }
+
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
    if( !(*vi).IsD() && (*vi).IsRW() )
      (*vi).N()  = mat33*(*vi).N();
@@ -341,17 +361,17 @@ static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, b
   tri::RequirePerFaceNormal(m);
   float scale;
 
-	Matrix33<ScalarType> mat33(mat,3);
+    Matrix33<ScalarType> mat33(mat,3);
 
-	if( !HasPerFaceNormal(m)) return;
+    if( !HasPerFaceNormal(m)) return;
 
-	if(remove_scaling){
-		scale = pow(mat33.Determinant(),ScalarType(1.0/3.0));
-		mat33[0][0]/=scale;
-		mat33[1][1]/=scale;
-		mat33[2][2]/=scale;
-	}
-	
+    if(remove_scaling){
+        scale = pow(mat33.Determinant(),ScalarType(1.0/3.0));
+        mat33[0][0]/=scale;
+        mat33[1][1]/=scale;
+        mat33[2][2]/=scale;
+    }
+
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
    if( !(*fi).IsD() && (*fi).IsRW() )
      (*fi).N() = mat33* (*fi).N();
@@ -396,32 +416,32 @@ static void PerFaceRW(ComputeMeshType &m, bool normalize=false)
 {
   tri::RequirePerFaceNormal(m);
     FaceIterator f;
-	bool cn = true;
+    bool cn = true;
 
-	if(normalize)
-	{
-		for(f=m.m.face.begin();f!=m.m.face.end();++f)
-		if( !(*f).IsD() && (*f).IsRW() )
-		{
-			for(int j=0; j<3; ++j)
-				if( !(*f).V(j)->IsR()) 	cn = false;
-	  if( cn ) face::ComputeNormalizedNormal(*f);
-			cn = true;
-		}
-	}
-	else
-	{
-		for(f=m.m.face.begin();f!=m.m.face.end();++f)
-			if( !(*f).IsD() && (*f).IsRW() )
-			{
-				for(int j=0; j<3; ++j)
-					if( !(*f).V(j)->IsR()) 	cn = false;
+    if(normalize)
+    {
+        for(f=m.m.face.begin();f!=m.m.face.end();++f)
+        if( !(*f).IsD() && (*f).IsRW() )
+        {
+            for(int j=0; j<3; ++j)
+                if( !(*f).V(j)->IsR()) 	cn = false;
+      if( cn ) face::ComputeNormalizedNormal(*f);
+            cn = true;
+        }
+    }
+    else
+    {
+        for(f=m.m.face.begin();f!=m.m.face.end();++f)
+            if( !(*f).IsD() && (*f).IsRW() )
+            {
+                for(int j=0; j<3; ++j)
+                    if( !(*f).V(j)->IsR()) 	cn = false;
 
-				if( cn )
-					(*f).ComputeNormal();
-				cn = true;
-			}
-	}
+                if( cn )
+                    (*f).ComputeNormal();
+                cn = true;
+            }
+    }
 }
 
 
