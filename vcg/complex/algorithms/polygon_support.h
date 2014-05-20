@@ -148,9 +148,12 @@ namespace tri {
     // around the polygonal face determined by the current FAUX-EDGE markings
     // It assumes that the mesh is 2Manifold and has FF adjacency already computed
     // NOTE: All the faces touched are marked as visited. (so for example you can avoid to get twice the same polygon)
-    static void ExtractPolygon(typename TriMeshType::FacePointer tfp, std::vector<typename TriMeshType::VertexPointer> &vs)
+    static void ExtractPolygon(typename TriMeshType::FacePointer tfp,
+                               std::vector<typename TriMeshType::VertexPointer> &vs,
+                               std::vector<typename TriMeshType::FacePointer> &fs)
     {
         vs.clear();
+        fs.clear();
         // find a non tagged edge
         int se = -1;
         for(int i=0; i<3; i++) if (!( tfp->IsF(i))) { se = i; break;}
@@ -172,6 +175,7 @@ namespace tri {
 
             while( p.F()->IsF(p.E()) )
             {
+                if(!p.F()->IsV()) fs.push_back(p.F());
                 p.F()->SetV();
                 p.FlipF();
                 p.FlipE();
@@ -179,7 +183,11 @@ namespace tri {
             p.FlipV();
         } while(p!=start);
     }
-
+    static void ExtractPolygon(typename TriMeshType::FacePointer tfp, std::vector<typename TriMeshType::VertexPointer> &vs)
+    {
+      std::vector<typename TriMeshType::FacePointer> fs;
+      ExtractPolygon(tfp,vs,fs);
+    }
 }; // end of struct
 }} // end namespace vcg::tri
 
