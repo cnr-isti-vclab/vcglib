@@ -165,6 +165,24 @@ static void PerFace(ComputeMeshType &m)
                 face::ComputeNormal(*f);
 }
 
+
+/// \brief computePerPolygonalFace computes the normal of each polygonal face.
+///
+/// Not normalized. Use PerPolygonalFaceNormalized() or call NormalizePerFace() if you need unit length per face normals.
+static void PerPolygonalFace(ComputeMeshType &m) {
+  // check input type mesh
+  if (!HasPerFaceNormal(m))
+    throw vcg::MissingComponentException("PerFaceNormal");
+  // for each face
+  for(FaceIterator f = m.face.begin(); f != m.face.end(); f++)
+    if (!f->IsD()) {
+      f->N().SetZero();
+      for (int v = 0; v < f->VN(); v++)
+        f->N() += f->V(v)->P() ^ f->V((v+1)%f->VN())->P();
+    }
+}
+
+
 /// \brief Calculates the vertex normal by averaging the current per-face normals.
 /**
     The normal of a vertex v is the average of the un-normalized normals of the faces incident on v.
@@ -249,6 +267,14 @@ static void PerVertexNormalized(ComputeMeshType &m)
 static void PerFaceNormalized(ComputeMeshType &m)
 {
   PerFace(m);
+  NormalizePerFace(m);
+}
+
+/// \brief Equivalent to PerPolygonalFace() and NormalizePerFace()
+static void PerPolygonalFaceNormalized(ComputeMeshType &m) {
+  // compute normals
+  PerPolygonalFace(m);
+  // normalize them
   NormalizePerFace(m);
 }
 
