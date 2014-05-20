@@ -611,6 +611,7 @@ template <class MeshType> void RequireCompactness    (MeshType &m) {
 }
 
 template <class MeshType> void RequireTriangularMesh (MeshType &m ) { if( tri::HasPolyInfo( m ) ) throw vcg::MissingTriangularRequirementException("");}
+template <class MeshType> void RequirePolygonalMesh (MeshType &m )  { if(!tri::HasPolyInfo( m ) ) throw vcg::MissingPolygonalRequirementException("");}
 
 template <class MeshType> void RequireVFAdjacency    (MeshType &m) { if(!tri::HasVFAdjacency   (m)) throw vcg::MissingComponentException("VFAdjacency"); }
 template <class MeshType> void RequireVEAdjacency    (MeshType &m) { if(!tri::HasVEAdjacency   (m)) throw vcg::MissingComponentException("VEAdjacency"); }

@@ -67,6 +67,21 @@ public:
       return buf;
     }
 };
+
+class MissingPolygonalRequirementException : public std::runtime_error
+{
+public:
+  MissingPolygonalRequirementException(const std::string &err):std::runtime_error(err)
+  {
+    std::cout << "Mesh has to be composed by polygonal faces (not plain triangles) -" << err << "- \n";
+  }
+
+    virtual const char *what() const throw ()
+    {
+      static char buf[128]="Mesh has to be composed by polygonal faces (not plain triangles) ";
+      return buf;
+    }
+};
 }
 
 #endif // EXCEPTION_H
