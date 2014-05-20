@@ -71,6 +71,8 @@ namespace tri {
     **/
     static void ImportFromPolyMesh(TriMeshType & tm,  PolyMeshType & pm)
     {
+      tri::RequirePolygonalMesh(pm);
+      tri::RequireTriangularMesh(tm);
         std::vector<typename PolyMeshType::CoordType> points;
         std::vector<int> faces;
 
@@ -80,7 +82,7 @@ namespace tri {
         typename TriMeshType ::VertexIterator tvi = Allocator<TriMeshType>::AddVertices(tm,pm.vert.size());
         int cnt = 0;
         for(tvi = tm.vert.begin(),vi = pm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt)
-            if(!(*vi).IsD()) (*tvi).ImportData(*vi); else vcg::tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
+            if(!(*vi).IsD()) (*tvi).ImportData(*vi); else tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
 
         typename PolyMeshType::FaceIterator fi;
         for(fi = pm.face.begin(); fi != pm.face.end(); ++fi)
@@ -115,19 +117,22 @@ namespace tri {
     **/
     static void ImportFromTriMesh( PolyMeshType & pm,  TriMeshType & tm)
     {
-      vcg::tri::RequireCompactness(tm);
-      vcg::tri::RequireFFAdjacency(tm);
-      vcg::tri::UpdateFlags<TriMeshType>::FaceClearV(tm);
+      tri::RequirePolygonalMesh(pm);
+      tri::RequireTriangularMesh(tm);
+
+      tri::RequireCompactness(tm);
+      tri::RequireFFAdjacency(tm);
+      tri::UpdateFlags<TriMeshType>::FaceClearV(tm);
       // the vertices are the same, simply import them
         int cnt = 0;
         typename TriMeshType ::ConstVertexIterator tvi;
-        typename PolyMeshType::VertexIterator vi  = vcg::tri::Allocator<PolyMeshType>::AddVertices(pm,tm.vert.size());
+        typename PolyMeshType::VertexIterator vi  = tri::Allocator<PolyMeshType>::AddVertices(pm,tm.vert.size());
         for(tvi = tm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt)
             (*vi).ImportData(*tvi);
 
         // convert the faces
         typename TriMeshType::FaceIterator tfi;
-        vcg::face::JumpingPos<typename TriMeshType::FaceType> p;
+        face::JumpingPos<typename TriMeshType::FaceType> p;
 
         for( tfi = tm.face.begin(); tfi != tm.face.end(); ++tfi) if(!(*tfi).IsV())
         {
@@ -135,7 +140,7 @@ namespace tri {
             ExtractPolygon(&*tfi,vs);
             std::reverse(vs.begin(),vs.end());
             //now vs  contains all the vertices of the polygon (still in the trimesh)
-            typename PolyMeshType::FaceIterator pfi =  vcg::tri::Allocator<PolyMeshType>::AddFaces(pm,1);
+            typename PolyMeshType::FaceIterator pfi =  tri::Allocator<PolyMeshType>::AddFaces(pm,1);
             (*pfi).Alloc(vs.size());
             for(size_t i  = 0 ; i < vs.size(); ++i)
                 (*pfi).V(i) = ( typename PolyMeshType::VertexType*)  & pm.vert[vs[i]-&(*tm.vert.begin())];
@@ -164,8 +169,8 @@ namespace tri {
         // initialize a pos on the first non faux edge
         typename TriMeshType::VertexPointer v0 = tfp->V(se);
 
-        vcg::face::Pos<typename TriMeshType::FaceType> p(tfp,se,v0);
-        vcg::face::Pos<typename TriMeshType::FaceType> start(p);
+        face::Pos<typename TriMeshType::FaceType> p(tfp,se,v0);
+        face::Pos<typename TriMeshType::FaceType> start(p);
 
         do
         {
@@ -189,6 +194,6 @@ namespace tri {
       ExtractPolygon(tfp,vs,fs);
     }
 }; // end of struct
-}} // end namespace vcg::tri
+}} // end namespace tri
 
 #endif // __VCGLIB_TRI_CLIP
