@@ -148,45 +148,52 @@ namespace tri {
             if(tri::HasPerFaceQuality(tm) && tri::HasPerFaceQuality(pm)) pfi->Q()=tfi->Q();
         }
     }
-
-    // Given a facepointer, it build a vector with all the vertex pointer
-    // around the polygonal face determined by the current FAUX-EDGE markings
-    // It assumes that the mesh is 2Manifold and has FF adjacency already computed
-    // NOTE: All the faces touched are marked as visited. (so for example you can avoid to get twice the same polygon)
+    /// \brief Collect tris and verts of a polygonal face marked by FauxEdges
+    ///
+    /// Given a face pointer, it builds a vector with all the face and vertex pointers
+    /// around the polygonal face determined by the current FAUX-EDGE markings.
+    /// It assumes that the mesh is 2Manifold and has FF adjacency already computed
+    /// per face visited flag cleared.
+    /// NOTE: All the faces touched are marked as visited and it assumes that you
+    /// do not call this function on a visited face.
     static void ExtractPolygon(typename TriMeshType::FacePointer tfp,
                                std::vector<typename TriMeshType::VertexPointer> &vs,
                                std::vector<typename TriMeshType::FacePointer> &fs)
     {
         vs.clear();
         fs.clear();
-        // find a non tagged edge
+        // find a non faux edge
         int se = -1;
         for(int i=0; i<3; i++) if (!( tfp->IsF(i))) { se = i; break;}
 
         // all faux edges return an empty vertex vector!
         if(se==-1) return;
+        if(tfp->IsV()) return;
 
         // initialize a pos on the first non faux edge
-        typename TriMeshType::VertexPointer v0 = tfp->V(se);
+        face::Pos<typename TriMeshType::FaceType> start(tfp,se,tfp->V(se));
+        face::Pos<typename TriMeshType::FaceType> p(start);
 
-        face::Pos<typename TriMeshType::FaceType> p(tfp,se,v0);
-        face::Pos<typename TriMeshType::FaceType> start(p);
+        fs.push_back(p.F());
+        p.F()->SetV();
 
         do
         {
             assert(!p.F()->IsF(p.E()));
-            vs.push_back(p.F()->V(p.E()));
+            vs.push_back(p.V());
             p.FlipE();
-
             while( p.F()->IsF(p.E()) )
             {
-                if(!p.F()->IsV()) fs.push_back(p.F());
-                p.F()->SetV();
                 p.FlipF();
+                if(!p.F()->IsV()) {
+                  fs.push_back(p.F());
+                  p.F()->SetV();
+                }
                 p.FlipE();
             }
             p.FlipV();
         } while(p!=start);
+        assert(vs.size() == fs.size()+2);
     }
     static void ExtractPolygon(typename TriMeshType::FacePointer tfp, std::vector<typename TriMeshType::VertexPointer> &vs)
     {
