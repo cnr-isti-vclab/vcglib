@@ -413,21 +413,21 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   GetFaceCornerVec(m, sources, innerCornerVec, borderCornerVec);
 
   // For each seed collect all the vertices and build
-  for(int i=0;i<seedVec.size();++i)
+  for(size_t i=0;i<seedVec.size();++i)
     tri::Allocator<MeshType>::AddVertex(outMesh,seedVec[i]->P(),Color4b::DarkGray);
 
-  for(int i=0;i<seedVec.size();++i)
+  for(size_t i=0;i<seedVec.size();++i)
   {
     VertexPointer curSeed=seedVec[i];
     vector<Point3f> pt;
-    for(int j=0;j<innerCornerVec.size();++j)
+    for(size_t j=0;j<innerCornerVec.size();++j)
       for(int qq=0;qq<3;qq++)
         if(sources[innerCornerVec[j]->V(qq)] == curSeed)
         {
           pt.push_back(Barycenter(*innerCornerVec[j]));
           break;
         }
-    for(int j=0;j<borderCornerVec.size();++j)
+    for(size_t j=0;j<borderCornerVec.size();++j)
       for(int qq=0;qq<3;qq++)
         if(sources[borderCornerVec[j]->V(qq)] == curSeed)
         {
@@ -445,7 +445,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
     Point3f nX = (pt[0]-curSeed->P()).Normalize();
     Point3f nY = (nX^nZ).Normalize();
     vector<std::pair<float,int> > angleVec(pt.size());
-    for(int j=0;j<pt.size();++j)
+    for(size_t j=0;j<pt.size();++j)
     {
       Point3f p = (pt[j]-curSeed->P()).Normalize();
       float angle = 180.0f+math::ToDeg(atan2(p*nY,p*nX));
@@ -456,10 +456,10 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
     int curRegionStart=outMesh.vert.size();
 
 
-    for(int j=0;j<pt.size();++j)
+    for(size_t j=0;j<pt.size();++j)
       tri::Allocator<MeshType>::AddVertex(outMesh,pt[angleVec[j].second],Color4b::LightGray);
 
-    for(int j=0;j<pt.size();++j){
+    for(size_t j=0;j<pt.size();++j){
       float curAngle = angleVec[(j+1)%pt.size()].first - angleVec[j].first;
 //      printf("seed %4i (%i) - face %i angle %5.1f %5.1f %5.1f\n",i,curRegionStart,j,angleVec[j].first,angleVec[(j+1)%pt.size()].first,curAngle);
       if(curAngle < 0) curAngle += 360.0;
@@ -1262,7 +1262,7 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
   if(vpp.relaxOnlyConstrainedFlag)
   {
     std::swap(seedVec,selectedVec);
-    int i,j;
+    size_t i,j;
     for(i=0,j=0;i<seedVec.size();++i){
       if(seedVec[i]->IsS())
       {
