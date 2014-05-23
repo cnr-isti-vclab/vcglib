@@ -1908,27 +1908,27 @@ void PoissonPruningExact(MeshType &m, /// the mesh that has to be pruned
                          float tolerance=0.04,
                          int maxIter=20)
 {
-  size_t sampleNumMin = int(float(sampleNum)*(1.0f-tolerance));
-  size_t sampleNumMax = int(float(sampleNum)*(1.0f+tolerance));
+  size_t sampleNumMin = int(float(sampleNum)*(1.0f-tolerance));  // the expected values range.
+  size_t sampleNumMax = int(float(sampleNum)*(1.0f+tolerance));  // e.g. any sampling in [sampleNumMin, sampleNumMax] is OK
   float RangeMinRad = m.bbox.Diag()/10.0f;
   float RangeMaxRad = m.bbox.Diag()/10.0f;
-  size_t RangeMinNum;
-  size_t RangeMaxNum;
+  size_t RangeMinSampleNum;
+  size_t RangeMaxSampleNum;
   std::vector<typename MeshType::VertexPointer> poissonSamplesTmp;
 
   do
   {
     RangeMinRad/=2.0f;
     PoissonPruning(m,poissonSamplesTmp,RangeMinRad);
-    RangeMinNum = poissonSamplesTmp.size();
-  } while(RangeMinNum > sampleNumMin);
+    RangeMinSampleNum = poissonSamplesTmp.size();
+  } while(RangeMinSampleNum < sampleNumMin);
 
   do
   {
     RangeMaxRad*=2.0f;
     PoissonPruning(m,poissonSamplesTmp,RangeMaxRad);
-    RangeMaxNum = poissonSamplesTmp.size();
-  } while(RangeMaxNum < sampleNumMax);
+    RangeMaxSampleNum = poissonSamplesTmp.size();
+  } while(RangeMaxSampleNum > sampleNumMax);
 
   float curRadius;
   int iterCnt=0;
@@ -1937,7 +1937,7 @@ void PoissonPruningExact(MeshType &m, /// the mesh that has to be pruned
   {
     curRadius=(RangeMaxRad+RangeMinRad)/2.0f;
     PoissonPruning(m,poissonSamplesTmp,curRadius);
-    qDebug("(%6.3f:%5i %6.3f:%5i) Cur Radius %f -> %i sample instead of %i",RangeMinRad,RangeMinNum,RangeMaxRad,RangeMaxNum,curRadius,poissonSamplesTmp.size(),sampleNum);
+    //qDebug("(%6.3f:%5i %6.3f:%5i) Cur Radius %f -> %i sample instead of %i",RangeMinRad,RangeMinSampleNum,RangeMaxRad,RangeMaxSampleNum,curRadius,poissonSamplesTmp.size(),sampleNum);
     if(poissonSamplesTmp.size() > sampleNum)
       RangeMinRad = curRadius;
     if(poissonSamplesTmp.size() < sampleNum)
