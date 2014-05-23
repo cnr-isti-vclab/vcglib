@@ -911,55 +911,34 @@ public:
                 return nonManifoldCnt;
             }
 
-      static void CountEdges( MeshType & m, int &count_e, int &boundary_e )
+      static void CountEdgeNum( MeshType & m, int &total_e, int &boundary_e, int &non_manif_e )
       {
-        tri::RequireFFAdjacency(m);
-        count_e=0;
+        std::vector< typename tri::UpdateTopology<MeshType>::PEdge > edgeVec;
+        tri::UpdateTopology<MeshType>::FillEdgeVector(m,edgeVec,true);
+        sort(edgeVec.begin(), edgeVec.end());		// Lo ordino per vertici
+        total_e=0;
         boundary_e=0;
-        UpdateFlags<MeshType>::FaceClearV(m);
-        bool counted =false;
-        for(FaceIterator fi=m.face.begin();fi!=m.face.end();fi++)
+        non_manif_e=0;
+
+        size_t f_on_cur_edge =1;
+        for(size_t i=0;i<edgeVec.size();++i)
         {
-          if(!((*fi).IsD()))
+          if(( (i+1) == edgeVec.size()) ||  !(edgeVec[i] == edgeVec[i+1]))
           {
-            (*fi).SetV();
-            count_e +=3; //assume that we have to increase the number of edges with three
-            for(int j=0; j<3; j++)
-            {
-              if (face::IsBorder(*fi,j)) //If this edge is a border edge
-                boundary_e++; // then increase the number of boundary edges
-              else if (IsManifold(*fi,j))//If this edge is manifold
-              {
-                if((*fi).FFp(j)->IsV()) //If the face on the other side of the edge is already selected
-                  count_e--; // we counted one edge twice
-              }
-              else//We have a non-manifold edge
-              {
-                vcg::face::Pos<FaceType> hei(&(*fi), j , fi->V(j));
-                vcg::face::Pos<FaceType> he=hei;
-                he.NextF();
-                while (he.f!=hei.f)// so we have to iterate all faces that are connected to this edge
-                {
-                  if (he.f->IsV())// if one of the other faces was already visited than this edge was counted already.
-                  {
-                    counted=true;
-                    break;
-                  }
-                  else
-                  {
-                    he.NextF();
-                  }
-                }
-                if (counted)
-                {
-                  count_e--;
-                  counted=false;
-                }
-              }
-            }
+            ++total_e;
+            if(f_on_cur_edge==1)
+              ++boundary_e;
+            if(f_on_cur_edge>2)
+              ++non_manif_e;
+            f_on_cur_edge=1;
           }
-        }
+          else
+          {
+            ++f_on_cur_edge;
+          }
+        } // end for
       }
+
 
 
   static int CountHoles( MeshType & m)
@@ -1113,11 +1092,11 @@ public:
             {
                 int nvert=m.vn;
                 int nfaces=m.fn;
-                int boundary_e,nedges;
-                CountEdges(m,nedges,boundary_e);
+                int boundary_e,total_e,nonmanif_e;
+                CountEdgeNum(m,total_e,boundary_e,nonmanif_e);
                 int numholes=CountHoles(m);
                 int numcomponents=CountConnectedComponents(m);
-                int G=MeshGenus(nvert,nedges,nfaces,numholes,numcomponents);
+                int G=MeshGenus(nvert,total_e,nfaces,numholes,numcomponents);
                 return G;
             }
 
