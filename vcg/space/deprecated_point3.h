@@ -203,6 +203,11 @@ public:
     return b;
   }
 
+  static inline Point3 Zero(void)
+  {
+    return Point3(0,0,0);
+  }
+
 //@}
 
 //@{
