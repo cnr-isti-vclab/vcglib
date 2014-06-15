@@ -71,7 +71,7 @@ public:
 	VertexType *v;
 
 	/// Default constructor
-	Pos(){}
+  Pos() : f(0), z(-1), v(0) {}
 	/// Constructor which associates the half-edge element with a face, its edge and its vertex
 	/// \note that the input must be consistent, e.g. it should hold that \c vp==fp->V0(zp) or \c vp==fp->V1(zp)
 	Pos(FaceType * const fp, int const zp, VertexType * const vp)
@@ -414,7 +414,7 @@ public:
 	int z;
 
 	/// Default constructor
-	VFIterator(){}
+  VFIterator() : f(0), z(-1) {}
 	/// Constructor which associates the half-edge elementet with a face and its vertex
 	VFIterator(FaceType * _f,  const int &  _z){f = _f; z = _z;  assert(z>=0 && "VFAdj must be initialized");}
 

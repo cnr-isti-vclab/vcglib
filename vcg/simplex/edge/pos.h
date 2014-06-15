@@ -60,7 +60,7 @@ public:
 	/// Local index of the vertex
 	int z;
 	/// Default Constructor
-	VertexStar() {}
+  VertexStar() : e(0), z(0) {}
 	/// Constructor which associates the EdgePos elementet with a face and its edge
 	VertexStar(EDGETYPE  * const ep, int const zp)
 	{

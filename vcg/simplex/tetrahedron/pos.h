@@ -54,7 +54,7 @@ private:
 	int _vi;
 	/// Default Constructor
 public:
-	VTIterator(){}
+  VTIterator() : _vt(0), _vi(-1){}
 	/// Constructor which associates the EdgePos elementet with a face and its edge
 	VTIterator(TetraType  * const tp, int const zp)
 	{	
