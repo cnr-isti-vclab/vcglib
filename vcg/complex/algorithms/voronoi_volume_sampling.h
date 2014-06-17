@@ -359,7 +359,7 @@ float DistanceFromVoronoiFace(Point3f p_point)
     std::vector<CoordType> seedPts(pruningVec.size());
     for(size_t i=0;i<pruningVec.size();++i)
       seedPts[i]=pruningVec[i]->P();
-    tri::Build(this->seedMesh,pruningVec);
+    tri::Build(this->seedMesh,seedPts);
     // Kdtree must be rebuilt at the end of each step;
     VertexConstDataWrapper<MeshType> vdw(seedMesh);
     if(seedTree) delete seedTree;
