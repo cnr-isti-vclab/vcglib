@@ -468,6 +468,8 @@ namespace vcg {
 #ifdef __gl_h_
                                         //qDebug("OK: using opengl tessellation for a polygon of %i verteces",vertexesPerFace);
                                         vcg::glu_tesselator::tesselate<vcg::Point3f>(polygonVect, indexTriangulatedVect);
+                                        if(indexTriangulatedVect.size()==0)
+                                          FanTessellator(polygonVect, indexTriangulatedVect);
 #else
                                         //qDebug("Warning: using fan tessellation for a polygon of %i verteces",vertexesPerFace);
                                         FanTessellator(polygonVect, indexTriangulatedVect);
