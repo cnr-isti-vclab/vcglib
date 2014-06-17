@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -34,7 +34,7 @@ $Log: gen_normal.h,v $
 namespace vcg {
 
 template <class ScalarType>
-class GenNormal 
+class GenNormal
 {
 public:
 typedef Point3<ScalarType> Point3x;
@@ -45,8 +45,8 @@ static void  Random(int vn, std::vector<Point3<ScalarType > > &NN)
   while(NN.size()<vn)
   {
     Point3x pp(((float)rand())/RAND_MAX,
-	       ((float)rand())/RAND_MAX,
-	       ((float)rand())/RAND_MAX);
+           ((float)rand())/RAND_MAX,
+           ((float)rand())/RAND_MAX);
     pp=pp*2.0-Point3x(1,1,1);
     if(pp.SquaredNorm()<1)
     {
@@ -69,7 +69,7 @@ static void UniformCone(int vn, std::vector<Point3<ScalarType > > &NN, ScalarTyp
   Uniform(vn/Ratio,NNT);
   printf("asked %i got %i (expecting %i instead of %i)\n", int(vn/Ratio), NNT.size(), int(NNT.size()*Ratio), vn);
   typename std::vector<Point3<ScalarType> >::iterator vi;
-  
+
   ScalarType DotProd = cos(AngleRad);
   for(vi=NNT.begin();vi!=NNT.end();++vi)
   {
@@ -77,6 +77,51 @@ static void UniformCone(int vn, std::vector<Point3<ScalarType > > &NN, ScalarTyp
   }
  }
 
+// This is an Implementation of the Dave Rusin’s Disco Ball algorithm
+// You can spread the points as follows:
+// Put  N+1  points on the meridian from north to south poles, equally spaced.
+// If you swing this meridian around the sphere, you'll sweep out the entire
+// surface; in the process, each of the points will sweep out a circle. You
+// can show that the  ith  point will sweep out a circle of radius sin(pi i/N).
+// If you space points equally far apart on this circle, keeping the
+// displacement roughly the same as on that original meridian, you'll be
+// able to fit about  2N sin(pi i/N) points here. This process will put points
+// pretty evenly spaced on the sphere; the number of such points is about
+//     2+ 2N*Sum(i=1 to N-1) sin(pi i/N).
+// The closed form of this summation
+//     2.0 - ( (2.0*N * sin (M_PI/N))/(cos(M_PI/N) - 1.0));
+static void Regular(int vn, std::vector<Point3<ScalarType > > &NN)
+{
+  // Guess the right N
+  ScalarType N=0;
+
+  for(N=1;N<vn;++N)
+  {
+    ScalarType expectedPoints = 2.0 - ( (2.0*N * sin (M_PI/N))/(cos(M_PI/N) - 1.0));
+    qDebug("N %f -> %f",N,expectedPoints);
+    if(expectedPoints >= vn) break;
+  }
+
+
+  ScalarType VerticalAngle = M_PI / N;
+  NN.push_back(Point3<ScalarType>(0,0,1.0));
+  for (int i =1; i<N; ++i)
+  {
+    // Z is the north/south axis
+    ScalarType HorizRadius = sin(i*VerticalAngle);
+    ScalarType CircleLength = 2.0 * M_PI * HorizRadius;
+    ScalarType Z = cos(i*VerticalAngle);
+    ScalarType PointNumPerCircle = floor( CircleLength / VerticalAngle);
+    ScalarType HorizontalAngle = 2.0*M_PI/PointNumPerCircle;
+    for(ScalarType j=0;j<PointNumPerCircle;++j)
+    {
+      ScalarType X = cos(j*HorizontalAngle)*HorizRadius;
+      ScalarType Y = sin(j*HorizontalAngle)*HorizRadius;
+      NN.push_back(Point3<ScalarType>(X,Y,Z));
+    }
+  }
+  NN.push_back(Point3<ScalarType>(0,0,-1.0));
+}
 
 static void Uniform(int vn, std::vector<Point3<ScalarType > > &NN)
 {
@@ -99,11 +144,11 @@ static void Perturb(std::vector<Point3<ScalarType > > &NN)
   float width=0.2f/sqrt(float(NN.size()));
 
   typename std::vector<Point3<ScalarType> >::iterator vi;
-  for(vi=NN.begin(); vi!=NN.end();++vi) 
+  for(vi=NN.begin(); vi!=NN.end();++vi)
   {
     Point3x pp(((float)rand())/RAND_MAX,
-	       ((float)rand())/RAND_MAX,
-	       ((float)rand())/RAND_MAX);
+           ((float)rand())/RAND_MAX,
+           ((float)rand())/RAND_MAX);
     pp=pp*2.0-Point3x(1,1,1);
     pp*=width;
     (*vi)+=pp;
@@ -118,20 +163,20 @@ Assume che tutte normale in ingresso sia normalizzata;
 */
 static int BestMatchingNormal(const Point3x &n, std::vector<Point3x> &nv)
 {
-	int ret=-1;
-	ScalarType bestang=-1;
-	ScalarType cosang;
-	typename std::vector<Point3x>::iterator ni;
-	for(ni=nv.begin();ni!=nv.end();++ni)
-		{
-			cosang=(*ni).dot(n);
-			if(cosang>bestang) {
-				bestang=cosang;
-				ret=ni-nv.begin();
-			}
-		}
+    int ret=-1;
+    ScalarType bestang=-1;
+    ScalarType cosang;
+    typename std::vector<Point3x>::iterator ni;
+    for(ni=nv.begin();ni!=nv.end();++ni)
+        {
+            cosang=(*ni).dot(n);
+            if(cosang>bestang) {
+                bestang=cosang;
+                ret=ni-nv.begin();
+            }
+        }
   assert(ret>=0 && ret <int(nv.size()));
-	return ret;
+    return ret;
 }
 
 
@@ -156,7 +201,7 @@ class OctaLevel
       if(lev==0)
       {
         Val(0,0)=Point3x( 0, 0,-1); Val(0,1)=Point3x( 0, 1, 0);  Val(0,2)=Point3x( 0, 0,-1);
-        
+
         Val(1,0)=Point3x(-1, 0, 0); Val(1,1)=Point3x( 0, 0, 1);   Val(1,2)=Point3x( 1, 0, 0);
 
         Val(2,0)=Point3x( 0, 0,-1); Val(2,1)=Point3x( 0,-1, 0);   Val(2,2)=Point3x( 0, 0,-1);
@@ -169,19 +214,19 @@ class OctaLevel
         for(i=0;i<sz;++i)
           for(j=0;j<sz;++j)
           {
-            if((i%2)==0 && (j%2)==0) 
+            if((i%2)==0 && (j%2)==0)
               Val(i,j)=tmp.Val(i/2,j/2);
-            if((i%2)!=0 && (j%2)==0) 
+            if((i%2)!=0 && (j%2)==0)
                 Val(i,j)=(tmp.Val(i/2+0,j/2)+tmp.Val(i/2+1,j/2))/2.0;
-            if((i%2)==0 && (j%2)!=0) 
+            if((i%2)==0 && (j%2)!=0)
                 Val(i,j)=(tmp.Val(i/2,j/2+0)+tmp.Val(i/2,j/2+1))/2.0;
-            if((i%2)!=0 && (j%2)!=0) 
+            if((i%2)!=0 && (j%2)!=0)
                 Val(i,j)=(tmp.Val(i/2+0,j/2+0)+tmp.Val(i/2+0,j/2+1)+tmp.Val(i/2+1,j/2+0)+tmp.Val(i/2+1,j/2+1))/4.0;
           }
-	typename std::vector<Point3<ScalarType> >::iterator vi;
-        for(vi=v.begin(); vi!=v.end();++vi) 
+    typename std::vector<Point3<ScalarType> >::iterator vi;
+        for(vi=v.begin(); vi!=v.end();++vi)
             (*vi).Normalize();
-  
+
       }
     }
   };
