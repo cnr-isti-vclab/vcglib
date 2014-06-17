@@ -31,6 +31,7 @@
 #include<vcg/complex/algorithms/update/topology.h>
 #include<vcg/complex/algorithms/update/bounding.h>
 #include<vcg/complex/algorithms/clean.h>
+#include<vcg/complex/algorithms/polygon_support.h>
 #include<vcg/complex/algorithms/smooth.h>
 
 
@@ -875,11 +876,12 @@ void OrientedDisk(MeshType &m, int slices, Point3f center, Point3f norm, float r
 }
 
 template <class MeshType>
-void OrientedCylinder(MeshType & m, const Point3f origin, const Point3f end, float radius, bool capped, int slices=32, int stacks=4 )
+void OrientedEllipticPrism(MeshType & m, const Point3f origin, const Point3f end, float radius, float xScale, float yScale,bool capped, int slices=32, int stacks=4 )
 {
   Cylinder(slices,stacks,m,capped);
   tri::UpdatePosition<MeshType>::Translate(m,Point3f(0,1,0));
   tri::UpdatePosition<MeshType>::Scale(m,Point3f(1,0.5f,1));
+  tri::UpdatePosition<MeshType>::Scale(m,Point3f(xScale,1.0f,yScale));
 
   float height = Distance(origin,end);
   tri::UpdatePosition<MeshType>::Scale(m,Point3f(radius,height,radius));
@@ -890,7 +892,15 @@ void OrientedCylinder(MeshType & m, const Point3f origin, const Point3f end, flo
   rotM.SetRotateRad(angleRad,axis);
   tri::UpdatePosition<MeshType>::Matrix(m,rotM);
   tri::UpdatePosition<MeshType>::Translate(m,origin);
+
 }
+
+template <class MeshType>
+void OrientedCylinder(MeshType & m, const Point3f origin, const Point3f end, float radius, bool capped, int slices=32, int stacks=4 )
+{
+  OrientedEllipticPrism(m,origin,end,radius,1.0f,1.0f,capped,slices,stacks);
+}
+
 
 template <class MeshType>
 void Cylinder(int slices, int stacks, MeshType & m, bool capped=false)
@@ -945,6 +955,87 @@ void Cylinder(int slices, int stacks, MeshType & m, bool capped=false)
   }
 }
 
+
+
+class _SphFace;
+class _SphVertex;
+struct _SphUsedTypes : public UsedTypes<	Use<_SphVertex>   ::AsVertexType,
+                                        Use<_SphFace>     ::AsFaceType>{};
+
+class _SphVertex  : public Vertex<_SphUsedTypes,  vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
+class _SphFace    : public Face< _SphUsedTypes,   face::VertexRef, face::Normal3f, face::BitFlags, face::FFAdj > {};
+class _SphMesh    : public tri::TriMesh< vector<_SphVertex>, vector<_SphFace>   > {};
+
+
+template <class MeshType>
+void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float inset=0, bool smoothFlag=true  )
+{
+  typedef typename MeshType::VertexPointer VertexPointer;
+  typedef typename MeshType::FacePointer FacePointer;
+  typedef typename MeshType::CoordType CoordType;
+  if(height==0) height = mIn.bbox.Diag()/100.0f;
+  if(inset==0) inset = mIn.bbox.Diag()/200.0f;
+  tri::UpdateFlags<MeshType>::FaceClearV(mIn);
+  for(size_t i=0;i<mIn.face.size();++i) if(!mIn.face[i].IsV())
+  {
+    _SphMesh faceM;
+    std::vector<VertexPointer> vertVec;
+    std::vector<FacePointer> faceVec;
+    tri::PolygonSupport<MeshType,MeshType>::ExtractPolygon(&(mIn.face[i]),vertVec,faceVec);
+    size_t vn = vertVec.size();
+
+    CoordType nf(0,0,0);
+    for(size_t j=0;j<faceVec.size();++j)
+      nf+=faceVec[j]->N().Normalize() * DoubleArea(*faceVec[j]);
+    nf.Normalize();
+    nf = nf*height/2.0f;
+
+    CoordType bary(0,0,0);
+    for(size_t j=0;j<faceVec.size();++j)
+      bary+= Barycenter(*faceVec[j]);
+    bary/=float(faceVec.size());
+
+    // Add vertices (alternated top and bottom)
+    tri::Allocator<_SphMesh>::AddVertex(faceM, bary-nf);
+    tri::Allocator<_SphMesh>::AddVertex(faceM, bary+nf);
+    for(size_t j=0;j<vn;++j){
+      CoordType delta = (vertVec[j]->P() - bary);
+      delta.Normalize();
+      delta = delta*inset;
+      tri::Allocator<_SphMesh>::AddVertex(faceM, vertVec[j]->P()-delta-nf);
+      tri::Allocator<_SphMesh>::AddVertex(faceM, vertVec[j]->P()-delta+nf);
+    }
+
+    // Build top and bottom faces
+    for(size_t j=0;j<vn;++j)
+      tri::Allocator<_SphMesh>::AddFace(faceM, 0, 2+(j+0)*2, 2+((j+1)%vn)*2 );
+    for(size_t j=0;j<vn;++j)
+      tri::Allocator<_SphMesh>::AddFace(faceM, 1, 3+((j+1)%vn)*2, 3+(j+0)*2 );
+
+    // Build side strip
+    for(size_t j=0;j<vn;++j){
+      size_t j0=j;
+      size_t j1=(j+1)%vn;
+      tri::Allocator<_SphMesh>::AddFace(faceM, 2+ j0*2 + 0 , 2+ j0*2+1, 2+j1*2+0);
+      tri::Allocator<_SphMesh>::AddFace(faceM, 2+ j0*2 + 1 , 2+ j1*2+1, 2+j1*2+0);
+    }
+
+    for(size_t j=0;j<2*vn;++j)
+      faceM.face[j].SetS();
+
+    tri::UpdateTopology<_SphMesh>::FaceFace(faceM);
+    tri::UpdateFlags<_SphMesh>::FaceBorderFromFF(faceM);
+    tri::Refine(faceM, MidPoint<_SphMesh>(&faceM),0,true);
+    tri::Refine(faceM, MidPoint<_SphMesh>(&faceM),0,true);
+    tri::UpdateSelection<_SphMesh>::VertexFromFaceStrict(faceM);
+    tri::Smooth<_SphMesh>::VertexCoordLaplacian(faceM,2,true,true);
+
+    tri::Append<MeshType,_SphMesh>::Mesh(mOut,faceM);
+
+  } // end main loop for each face;
+}
+
+
 template <class MeshType>
 void BuildCylinderEdgeShell(MeshType &mIn, MeshType &mOut, float radius=0, int slices=16, int stacks=1 )
 {
@@ -959,16 +1050,6 @@ void BuildCylinderEdgeShell(MeshType &mIn, MeshType &mOut, float radius=0, int s
     tri::Append<MeshType,MeshType>::Mesh(mOut,mCyl);
   }
 }
-
-
-class _SphFace;
-class _SphVertex;
-struct _SphUsedTypes : public UsedTypes<	Use<_SphVertex>   ::AsVertexType,
-                                        Use<_SphFace>     ::AsFaceType>{};
-
-class _SphVertex  : public Vertex<_SphUsedTypes,  vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
-class _SphFace    : public Face< _SphUsedTypes,   face::VertexRef, face::Normal3f, face::BitFlags, face::FFAdj > {};
-class _SphMesh    : public tri::TriMesh< vector<_SphVertex>, vector<_SphFace>   > {};
 
 template <class MeshType>
 void BuildSphereVertexShell(MeshType &mIn, MeshType &mOut, float radius=0, int recDiv=2 )
