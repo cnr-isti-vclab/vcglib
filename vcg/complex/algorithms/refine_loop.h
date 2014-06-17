@@ -337,8 +337,8 @@ struct LS3Projection {
             normal.Normalize();
         }
 
-        nv.first = Coord(position.X(), position.Y(), position.Z());
-        nv.second = Coord(normal.X(), normal.Y(), normal.Z());
+        nv.first = CoordType(position.X(), position.Y(), position.Z());
+        nv.second = CoordType(normal.X(), normal.Y(), normal.Z());
     }
 };
 
