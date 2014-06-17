@@ -333,6 +333,19 @@ void ResizeAttribute(ATTR_CONT &c,const int &   sz  , MeshType &/*m*/){
                 return ei;
             }
 
+            /** Function to add a face to the mesh and initializing it with the three given coords
+            */
+            static EdgeIterator AddEdge(MeshType &m, CoordType p0, CoordType p1)
+            {
+              VertexIterator vi = AddVertices(m,2);
+              EdgeIterator ei = AddEdges(m,1);
+              vi->P()=p0;
+              ei->V(0)=&*vi++;
+              vi->P()=p1;
+              ei->V(1)=&*vi++;
+              return ei;
+            }
+
             /** Function to add n edges to the mesh.
             First wrapper, with no parameters
             */
