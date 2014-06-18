@@ -360,10 +360,11 @@ void Square(MeshType &in)
 template <class MeshType>
 void SphericalCap(MeshType &in, float angleRad, const int subdiv = 3 )
 {
+  typedef typename MeshType::CoordType CoordType;
   in.Clear();
-  tri::Allocator<MeshType>::AddVertex(in,Point3f(0,0,0));
+  tri::Allocator<MeshType>::AddVertex(in,CoordType(0,0,0));
   for(int i=0;i<6;++i)
-    tri::Allocator<MeshType>::AddVertex(in,Point3f(cos(math::ToRad(i*60.0)),sin(math::ToRad(i*60.0)),0));
+    tri::Allocator<MeshType>::AddVertex(in,CoordType(cos(math::ToRad(i*60.0)),sin(math::ToRad(i*60.0)),0));
 
   for(int i=0;i<6;++i)
     tri::Allocator<MeshType>::AddFace(in,&(in.vert[0]),&(in.vert[1+i]),&(in.vert[1+(i+1)%6]));
@@ -573,17 +574,20 @@ void Box(MeshType &in, const typename MeshType::BoxType & bb )
 template <class MeshType>
 void Torus(MeshType &m, float hRingRadius, float vRingRadius, int hRingDiv=24, int vRingDiv=12 )
 {
+  typedef typename MeshType::CoordType CoordType;
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef Matrix44<ScalarType> Matrix44x;
   m.Clear();
-  float angleStepV = (2.0f*M_PI)/vRingDiv;
-  float angleStepH = (2.0f*M_PI)/hRingDiv;
+  ScalarType angleStepV = (2.0f*M_PI)/vRingDiv;
+  ScalarType angleStepH = (2.0f*M_PI)/hRingDiv;
 
   Allocator<MeshType>::AddVertices(m,(vRingDiv+1)*(hRingDiv+1));
   for(int i=0;i<hRingDiv+1;++i)
   {
-    Matrix44f RotM; RotM.SetRotateRad(float(i%hRingDiv)*angleStepH,Point3f(0,1,0));
+    Matrix44x RotM; RotM.SetRotateRad(float(i%hRingDiv)*angleStepH,CoordType(0,1,0));
     for(int j=0;j<vRingDiv+1;++j)
     {
-      Point3f p;
+      CoordType p;
       p[0]= vRingRadius*cos(float(j%vRingDiv)*angleStepV) + hRingRadius;
       p[1]= vRingRadius*sin(float(j%vRingDiv)*angleStepV);
       p[2] = 0;
