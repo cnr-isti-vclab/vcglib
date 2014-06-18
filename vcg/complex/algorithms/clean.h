@@ -1567,7 +1567,7 @@ public:
     {
       int i0,i1; ScalarType a,b;
       face::FindSharedVertex(f0,f1,i0,i1);
-      Point3f shP = f0->V(i0)->P()*0.5;
+      CoordType shP = f0->V(i0)->P()*0.5;
       if(vcg::IntersectionSegmentTriangle(Segment3<ScalarType>((*f0).V1(i0)->P()*0.5+shP,(*f0).V2(i0)->P()*0.5+shP), *f1, a, b) )
       {
         // a,b are the param coords of the intersection point of the segment.
