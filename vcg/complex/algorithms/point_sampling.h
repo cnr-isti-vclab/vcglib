@@ -1395,9 +1395,9 @@ static void InitSpatialHashTable(MeshType &montecarloMesh, MontecarloSHT &montec
     assert(!bb.IsNull());
     bb.Offset(cellsize);
 
-    int sizeX = std::max(1.0f,bb.DimX() / cellsize);
-    int sizeY = std::max(1.0f,bb.DimY() / cellsize);
-    int sizeZ = std::max(1.0f,bb.DimZ() / cellsize);
+    int sizeX = std::max(1,int(bb.DimX() / cellsize));
+    int sizeY = std::max(1,int(bb.DimY() / cellsize));
+    int sizeZ = std::max(1,int(bb.DimZ() / cellsize));
     Point3i gridsize(sizeX, sizeY, sizeZ);
 
     montecarloSHT.InitEmpty(bb, gridsize);
