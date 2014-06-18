@@ -38,6 +38,7 @@ This class encapsulate a filter for save dxf meshes.
 */
 class ExporterDXF
 {
+  typedef typename SaveMeshType::CoordType CoordType;
 public:
   ///Standard call for saving a mesh
   static int Save(SaveMeshType &m, const char * filename)
@@ -113,8 +114,8 @@ public:
     typename SaveMeshType::EdgeIterator ei;
     for(ei=mp.edge.begin(); ei!=mp.edge.end();++ei)
     {
-      Point3f p1 = (*ei).V(0)->P();
-      Point3f p2 = (*ei).V(1)->P();
+      CoordType p1 = (*ei).V(0)->P();
+      CoordType p2 = (*ei).V(1)->P();
 
       fprintf(o,"0\n");
       fprintf(o,"LINE\n");
