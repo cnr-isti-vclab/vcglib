@@ -62,17 +62,17 @@ class UpdateCurvatureFitting
 {
 
 public:
-	typedef typename MeshType::FaceType FaceType;
-	typedef typename MeshType::FacePointer FacePointer;
-	typedef typename MeshType::FaceIterator FaceIterator;
-	typedef typename MeshType::VertexIterator VertexIterator;
-	typedef typename MeshType::VertContainer VertContainer;
-	typedef typename MeshType::VertexType VertexType;
-	typedef typename MeshType::VertexPointer VertexPointer;
+    typedef typename MeshType::FaceType FaceType;
+    typedef typename MeshType::FacePointer FacePointer;
+    typedef typename MeshType::FaceIterator FaceIterator;
+    typedef typename MeshType::VertexIterator VertexIterator;
+    typedef typename MeshType::VertContainer VertContainer;
+    typedef typename MeshType::VertexType VertexType;
+    typedef typename MeshType::VertexPointer VertexPointer;
         typedef typename MeshType::VertexPointer VertexTypeP;
-	typedef vcg::face::VFIterator<FaceType> VFIteratorType;
-	typedef typename MeshType::CoordType CoordType;
-	typedef typename CoordType::ScalarType ScalarType;
+    typedef vcg::face::VFIterator<FaceType> VFIteratorType;
+    typedef typename MeshType::CoordType CoordType;
+    typedef typename CoordType::ScalarType ScalarType;
 
 class Quadric
 {
@@ -191,7 +191,7 @@ class Quadric
                 ris.insert(vvi2.F()->V((vvi2.I()+1)%3));
             }
         }
-				typename std::set<VertexTypeP>::iterator it;
+                typename std::set<VertexTypeP>::iterator it;
         for(it = ris.begin(); it != ris.end(); ++it)
             coords.insert((*it)->P());
 
@@ -293,15 +293,15 @@ class Quadric
 
             if (c_val[0] > c_val[1])
             {
-                (*vi).PD1() = v1global;
-                (*vi).PD2() = v2global;
+                (*vi).PD1().Import(v1global);
+                (*vi).PD2().Import(v2global);
                 (*vi).K1()  = c_val[0];
                 (*vi).K2()  = c_val[1];
             }
             else
             {
-                (*vi).PD1() = v2global;
-                (*vi).PD2() = v1global;
+                (*vi).PD1().Import(v2global);
+                (*vi).PD2().Import(v1global);
                 (*vi).K1()  = c_val[1];
                 (*vi).K2()  = c_val[0];
             }
@@ -430,68 +430,68 @@ class Quadric
 
     static void expandMaxLocal (MeshType & mesh, VertexType *v, int max, std::vector<VertexType*> *vv)
     {
-	Nring<MeshType> rw = Nring<MeshType> (v, &mesh);
-	do rw.expand (); while (rw.allV.size() < max+1);
-	if (rw.allV[0] != v)
-	    printf ("rw.allV[0] != *v\n");
-	vv->reserve ((size_t)max);
-	for (int i = 1; i < max+1; i++)
-	    vv->push_back(rw.allV[i]);
+    Nring<MeshType> rw = Nring<MeshType> (v, &mesh);
+    do rw.expand (); while (rw.allV.size() < max+1);
+    if (rw.allV[0] != v)
+        printf ("rw.allV[0] != *v\n");
+    vv->reserve ((size_t)max);
+    for (int i = 1; i < max+1; i++)
+        vv->push_back(rw.allV[i]);
 
-	rw.clear();
+    rw.clear();
     }
 
 
     static void expandSphereLocal (MeshType & mesh, VertexType *v, float r, int min, std::vector<VertexType*> *vv)
     {
-	Nring<MeshType> rw = Nring<MeshType> (v, &mesh);
+    Nring<MeshType> rw = Nring<MeshType> (v, &mesh);
 
-	bool isInside = true;
-	while (isInside)
-	{
-	    rw.expand();
-	    vv->reserve(rw.allV.size());
+    bool isInside = true;
+    while (isInside)
+    {
+        rw.expand();
+        vv->reserve(rw.allV.size());
 
-	    typename std::vector<VertexType*>::iterator b = rw.lastV.begin();
-	    typename std::vector<VertexType*>::iterator e = rw.lastV.end();
-	    isInside = false;
-	    while(b != e)
-	    {
-		if (((*b)->P() - v->P()).Norm() < r)
-		{
-		    vv->push_back(*b);;
-		    isInside = true;
-		}
-		++b;
-	    }
-	}
-	//printf ("%d\n", vv->size());
-	rw.clear();
+        typename std::vector<VertexType*>::iterator b = rw.lastV.begin();
+        typename std::vector<VertexType*>::iterator e = rw.lastV.end();
+        isInside = false;
+        while(b != e)
+        {
+        if (((*b)->P() - v->P()).Norm() < r)
+        {
+            vv->push_back(*b);;
+            isInside = true;
+        }
+        ++b;
+        }
+    }
+    //printf ("%d\n", vv->size());
+    rw.clear();
 
-	if (vv->size() < min)
-	{
-	    vv->clear();
-	    expandMaxLocal (mesh, v, min, vv);
-	}
+    if (vv->size() < min)
+    {
+        vv->clear();
+        expandMaxLocal (mesh, v, min, vv);
+    }
     }
 
 
     static void getAverageNormal (VertexType *vp, std::vector<VertexType*> &vv, CoordType *ppn)
     {
-	*ppn = CoordType (0,0,0);
-	for (typename std::vector<VertexType*>::iterator vpi = vv.begin(); vpi != vv.end(); ++vpi)
-	    *ppn += (*vpi)->N();
-	*ppn += (*vp).N();
-	*ppn /= vv.size() + 1;
-	ppn->Normalize();
+    *ppn = CoordType (0,0,0);
+    for (typename std::vector<VertexType*>::iterator vpi = vv.begin(); vpi != vv.end(); ++vpi)
+        *ppn += (*vpi)->N();
+    *ppn += (*vp).N();
+    *ppn /= vv.size() + 1;
+    ppn->Normalize();
     }
 
 
     static void applyProjOnPlane (CoordType ppn, std::vector<VertexType*> &vin, std::vector<VertexType*> *vout)
     {
-	for (typename std::vector<VertexType*>::iterator vpi = vin.begin(); vpi != vin.end(); ++vpi)
-	    if ((*vpi)->N() * ppn > 0.0f)
-		vout->push_back (*vpi);
+    for (typename std::vector<VertexType*>::iterator vpi = vin.begin(); vpi != vin.end(); ++vpi)
+        if ((*vpi)->N() * ppn > 0.0f)
+        vout->push_back (*vpi);
     }
 
     static CoordType projectLocal(VertexType* v, VertexType* vp, CoordType ppn)
@@ -502,202 +502,202 @@ class Quadric
 
     static void computeReferenceFramesLocal (VertexType *v, CoordType ppn, std::vector<CoordType> *ref)
     {
-	vcg::face::VFIterator<FaceType> vfi (v);
+    vcg::face::VFIterator<FaceType> vfi (v);
 
-	int i = (vfi.I() + 1) % 3;
-	VertexTypeP vp = vfi.F()->V(i);
+    int i = (vfi.I() + 1) % 3;
+    VertexTypeP vp = vfi.F()->V(i);
 
-	CoordType x = (projectLocal (v, vp, ppn) - v->P()).Normalize();
+    CoordType x = (projectLocal (v, vp, ppn) - v->P()).Normalize();
 
-	assert(fabs(x * ppn) < 0.1);
+    assert(fabs(x * ppn) < 0.1);
 
-	*ref = std::vector<CoordType>(3);
+    *ref = std::vector<CoordType>(3);
 
-	(*ref)[0] = x;
-	(*ref)[1] = (ppn ^ (*ref)[0]).Normalize();
-	(*ref)[2] = ppn.Normalize(); //ppn / ppn.Norm();
+    (*ref)[0] = x;
+    (*ref)[1] = (ppn ^ (*ref)[0]).Normalize();
+    (*ref)[2] = ppn.Normalize(); //ppn / ppn.Norm();
     }
 
 
     static void fitQuadricLocal (VertexType *v, std::vector<CoordType> ref, std::vector<VertexType*> &vv, QuadricLocal *q)
     {
-	bool svdResolution = false;
-	bool zeroDeterminantCheck = false;
-	
-	std::vector<CoordType> points;
-	points.reserve (vv.size());
+    bool svdResolution = false;
+    bool zeroDeterminantCheck = false;
 
-	typename std::vector<VertexType*>::iterator b = vv.begin();
-	typename std::vector<VertexType*>::iterator e = vv.end();
+    std::vector<CoordType> points;
+    points.reserve (vv.size());
 
-	while(b != e)
-	{
-	    CoordType cp = (*b)->P();
+    typename std::vector<VertexType*>::iterator b = vv.begin();
+    typename std::vector<VertexType*>::iterator e = vv.end();
 
-	    // vtang non e` il v tangente!!!
-	    CoordType vTang = cp - v->P();
+    while(b != e)
+    {
+        CoordType cp = (*b)->P();
 
-	    double x = vTang * ref[0];
-	    double y = vTang * ref[1];
-	    double z = vTang * ref[2];
-	    points.push_back(CoordType(x,y,z));
-	    ++b;
-	}
-	
-	*q = QuadricLocal::fit (points, svdResolution, zeroDeterminantCheck);
+        // vtang non e` il v tangente!!!
+        CoordType vTang = cp - v->P();
+
+        double x = vTang * ref[0];
+        double y = vTang * ref[1];
+        double z = vTang * ref[2];
+        points.push_back(CoordType(x,y,z));
+        ++b;
+    }
+
+    *q = QuadricLocal::fit (points, svdResolution, zeroDeterminantCheck);
     }
 
 
     static void finalEigenStuff (VertexType *v, std::vector<CoordType> ref, QuadricLocal q)
     {
-	double a = q.a();
-	double b = q.b();
-	double c = q.c();
-	double d = q.d();
-	double e = q.e();
+    double a = q.a();
+    double b = q.b();
+    double c = q.c();
+    double d = q.d();
+    double e = q.e();
 
-	double E = 1.0 + d*d;
-	double F = d*e;
-	double G = 1.0 + e*e;
+    double E = 1.0 + d*d;
+    double F = d*e;
+    double G = 1.0 + e*e;
 
-	CoordType n = CoordType(-d,-e,1.0).Normalize();
+    CoordType n = CoordType(-d,-e,1.0).Normalize();
 
-	v->N() = ref[0] * n[0] + ref[1] * n[1] + ref[2] * n[2];
+    v->N() = ref[0] * n[0] + ref[1] * n[1] + ref[2] * n[2];
 
-	double L = 2.0 * a * n.Z();
-	double M = b * n.Z();
-	double N = 2 * c * n.Z();
+    double L = 2.0 * a * n.Z();
+    double M = b * n.Z();
+    double N = 2 * c * n.Z();
 
-	// ----------------- Eigen stuff
-	Eigen::Matrix2d m;
-	m << L*G - M*F, M*E-L*F, M*E-L*F, N*E-M*F;
-	m = m / (E*G-F*F);
-	Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> eig(m);
+    // ----------------- Eigen stuff
+    Eigen::Matrix2d m;
+    m << L*G - M*F, M*E-L*F, M*E-L*F, N*E-M*F;
+    m = m / (E*G-F*F);
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> eig(m);
 
-	Eigen::Vector2d c_val = eig.eigenvalues();
-	Eigen::Matrix2d c_vec = eig.eigenvectors();
+    Eigen::Vector2d c_val = eig.eigenvalues();
+    Eigen::Matrix2d c_vec = eig.eigenvectors();
 
-	c_val = -c_val;
+    c_val = -c_val;
 
-	CoordType v1, v2;
-	v1[0] = c_vec[0];
-	v1[1] = c_vec[1];
-	v1[2] = d * v1[0] + e * v1[1];
+    CoordType v1, v2;
+    v1[0] = c_vec[0];
+    v1[1] = c_vec[1];
+    v1[2] = d * v1[0] + e * v1[1];
 
-	v2[0] = c_vec[2];
-	v2[1] = c_vec[3];
-	v2[2] = d * v2[0] + e * v2[1];
+    v2[0] = c_vec[2];
+    v2[1] = c_vec[3];
+    v2[2] = d * v2[0] + e * v2[1];
 
-	v1 = v1.Normalize();
-	v2 = v2.Normalize();
+    v1 = v1.Normalize();
+    v2 = v2.Normalize();
 
-	CoordType v1global = ref[0] * v1[0] + ref[1] * v1[1] + ref[2] * v1[2];
-	CoordType v2global = ref[0] * v2[0] + ref[1] * v2[1] + ref[2] * v2[2];
+    CoordType v1global = ref[0] * v1[0] + ref[1] * v1[1] + ref[2] * v1[2];
+    CoordType v2global = ref[0] * v2[0] + ref[1] * v2[1] + ref[2] * v2[2];
 
-	v1global.Normalize();
-	v2global.Normalize();
+    v1global.Normalize();
+    v2global.Normalize();
 
-	v1global *= c_val[0];
-	v2global *= c_val[1];
+    v1global *= c_val[0];
+    v2global *= c_val[1];
 
-	if (c_val[0] > c_val[1])
-	{
-	    (*v).PD1() = v1global;
-	    (*v).PD2() = v2global;
-	    (*v).K1()  = c_val[0];
-	    (*v).K2()  = c_val[1];
-	}
-	else
-	{
-	    (*v).PD1() = v2global;
-	    (*v).PD2() = v1global;
-	    (*v).K1()  = c_val[1];
-	    (*v).K2()  = c_val[0];
-	}
-	// ---- end Eigen stuff
+    if (c_val[0] > c_val[1])
+    {
+        (*v).PD1() = v1global;
+        (*v).PD2() = v2global;
+        (*v).K1()  = c_val[0];
+        (*v).K2()  = c_val[1];
+    }
+    else
+    {
+        (*v).PD1() = v2global;
+        (*v).PD2() = v1global;
+        (*v).K1()  = c_val[1];
+        (*v).K2()  = c_val[0];
+    }
+    // ---- end Eigen stuff
     }
 
 
 
     static void updateCurvatureLocal (MeshType & mesh, float radiusSphere)
     {
-	bool verbose = false;
-	bool projectionPlaneCheck = true;
-	int vertexesPerFit = 0;
+    bool verbose = false;
+    bool projectionPlaneCheck = true;
+    int vertexesPerFit = 0;
 
-	int i = 0;
-	VertexIterator vi;
-	for(vi = mesh.vert.begin(); vi != mesh.vert.end(); ++vi, i++)
-	{
-	    std::vector<VertexType*> vv;
-	    std::vector<VertexType*> vvtmp;
+    int i = 0;
+    VertexIterator vi;
+    for(vi = mesh.vert.begin(); vi != mesh.vert.end(); ++vi, i++)
+    {
+        std::vector<VertexType*> vv;
+        std::vector<VertexType*> vvtmp;
 
-	    int count;
-	    if (verbose && !((count = (vi - mesh.vert.begin())) % 1000))
-		printf ("vertex %d of %d\n",count,mesh.vert.size());
+        int count;
+        if (verbose && !((count = (vi - mesh.vert.begin())) % 1000))
+        printf ("vertex %d of %d\n",count,mesh.vert.size());
 
-	    // if (kRing != 0)
-	    // 	expandRing (&*vi, kRing, 5, &vv);
-	    // else
-	    expandSphereLocal (mesh, &*vi, radiusSphere, 5, &vv);
+        // if (kRing != 0)
+        // 	expandRing (&*vi, kRing, 5, &vv);
+        // else
+        expandSphereLocal (mesh, &*vi, radiusSphere, 5, &vv);
 
-	    assert (vv.size() >= 5);
+        assert (vv.size() >= 5);
 
-	    CoordType ppn;
-	    // if (averageNormalMode)
-	    // 	//ppn = (*vi).N();
-	    getAverageNormal (&*vi, vv, &ppn);
-	    // else
-	    // 	getProjPlaneNormal (&*vi, vv, &ppn);
+        CoordType ppn;
+        // if (averageNormalMode)
+        // 	//ppn = (*vi).N();
+        getAverageNormal (&*vi, vv, &ppn);
+        // else
+        // 	getProjPlaneNormal (&*vi, vv, &ppn);
 
-	    if (projectionPlaneCheck)
-	    {
-		vvtmp.reserve (vv.size ());
-		applyProjOnPlane (ppn, vv, &vvtmp);
-		if (vvtmp.size() >= 5)
-		    vv = vvtmp;
-	    }
+        if (projectionPlaneCheck)
+        {
+        vvtmp.reserve (vv.size ());
+        applyProjOnPlane (ppn, vv, &vvtmp);
+        if (vvtmp.size() >= 5)
+            vv = vvtmp;
+        }
 
-	    vvtmp.clear();
+        vvtmp.clear();
 
-	    // if (montecarloMaxVertexNum)
-	    // {
-	    // 	//printf ("P: %d\n", vv.size());
-	    // 	vvtmp.reserve (vv.size ());
-	    // 	//printf ("TP: %d\n", vvtmp.size());
-	    // 	applyMontecarlo (montecarloMaxVertexNum, vv, &vvtmp);
-	    // 	//printf ("TD: %d\n", vvtmp.size());
-	    // 	vv = vvtmp;
-	    // 	//printf ("D: %d\n", vv.size());
-	    // 	//printf ("\n");
-	    // }
+        // if (montecarloMaxVertexNum)
+        // {
+        // 	//printf ("P: %d\n", vv.size());
+        // 	vvtmp.reserve (vv.size ());
+        // 	//printf ("TP: %d\n", vvtmp.size());
+        // 	applyMontecarlo (montecarloMaxVertexNum, vv, &vvtmp);
+        // 	//printf ("TD: %d\n", vvtmp.size());
+        // 	vv = vvtmp;
+        // 	//printf ("D: %d\n", vv.size());
+        // 	//printf ("\n");
+        // }
 
-	    assert (vv.size() >= 5);
+        assert (vv.size() >= 5);
 
-	    std::vector<CoordType> ref;
-	    computeReferenceFramesLocal (&*vi, ppn, &ref);
+        std::vector<CoordType> ref;
+        computeReferenceFramesLocal (&*vi, ppn, &ref);
 
-	    /*
-	      printf ("%lf %lf %lf - %lf %lf %lf - %lf %lf %lf\n",
-	      ref[0][0], ref[0][1], ref[0][2],
-	      ref[1][0], ref[1][1], ref[1][2],
-	      ref[2][0], ref[2][1], ref[2][2]);
-	    */
+        /*
+          printf ("%lf %lf %lf - %lf %lf %lf - %lf %lf %lf\n",
+          ref[0][0], ref[0][1], ref[0][2],
+          ref[1][0], ref[1][1], ref[1][2],
+          ref[2][0], ref[2][1], ref[2][2]);
+        */
 
-	    vertexesPerFit += vv.size();
-	    //printf ("size: %d\n", vv.size());
+        vertexesPerFit += vv.size();
+        //printf ("size: %d\n", vv.size());
 
-	    QuadricLocal q;
-	    fitQuadricLocal (&*vi, ref, vv, &q);
+        QuadricLocal q;
+        fitQuadricLocal (&*vi, ref, vv, &q);
 
-	    finalEigenStuff (&*vi, ref, q);
+        finalEigenStuff (&*vi, ref, q);
 
-	}
+    }
 
-	//if (verbose)
+    //if (verbose)
         //printf ("average vertex num in each fit: %f, total %d, vn %d\n", ((float) vertexesPerFit) / mesh.vn, vertexesPerFit, mesh.vn);
-	if (verbose)
-	    printf ("average vertex num in each fit: %f\n", ((float) vertexesPerFit) / mesh.vn);
+    if (verbose)
+        printf ("average vertex num in each fit: %f\n", ((float) vertexesPerFit) / mesh.vn);
     }
 
 };
