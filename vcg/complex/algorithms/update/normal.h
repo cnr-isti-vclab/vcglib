@@ -118,7 +118,7 @@ Journal of Graphics Tools, 1998
   for(f=m.face.begin();f!=m.face.end();++f)
    if( !(*f).IsD() && (*f).IsR() )
    {
-    typename FaceType::NormalType t = vcg::NormalizedNormal(*f);
+        NormalType t = vcg::NormalizedNormal(*f);
         NormalType e0 = ((*f).V1(0)->cP()-(*f).V0(0)->cP()).Normalize();
         NormalType e1 = ((*f).V1(1)->cP()-(*f).V0(1)->cP()).Normalize();
         NormalType e2 = ((*f).V1(2)->cP()-(*f).V0(2)->cP()).Normalize();
