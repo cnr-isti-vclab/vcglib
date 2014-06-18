@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -340,7 +340,7 @@ class TriEdgeCollapseQuadricTex: public vcg::tri::TriEdgeCollapse< TriMeshType, 
           qt= QualityFace(*x.F());
           if(qt<MinQual) MinQual=qt;
           if(pp->NormalCheck){
-              Point3f nn=NormalizedNormal(*x.F());
+              CoordType nn=NormalizedNormal(*x.F());
               ndiff=nn.dot(x.F()->N()) / x.F()->N().Norm();
               if(ndiff<MinCos) MinCos=ndiff;
               assert(!math::IsNAN(ndiff));
@@ -352,7 +352,7 @@ class TriEdgeCollapseQuadricTex: public vcg::tri::TriEdgeCollapse< TriMeshType, 
           qt= QualityFace(*x.F());
           if(qt<MinQual) MinQual=qt;
           if(pp->NormalCheck){
-              Point3f nn=NormalizedNormal(*x.F());
+              CoordType nn=NormalizedNormal(*x.F());
               ndiff=nn.dot(x.F()->N() / x.F()->N().Norm());
               if(ndiff<MinCos) MinCos=ndiff;
               assert(!math::IsNAN(ndiff));
@@ -459,7 +459,7 @@ class TriEdgeCollapseQuadricTex: public vcg::tri::TriEdgeCollapse< TriMeshType, 
       }
 
 
-	  this->_priority = std::max(priority1, priority2)*(1 + (pp->ExtraTCoordWeight)*(QH::Vd(this->pos.V(0)).size()+QH::Vd(this->pos.V(1)).size() - 2));
+      this->_priority = std::max(priority1, priority2)*(1 + (pp->ExtraTCoordWeight)*(QH::Vd(this->pos.V(0)).size()+QH::Vd(this->pos.V(1)).size() - 2));
 
       return this->_priority;
     }
@@ -797,5 +797,5 @@ class TriEdgeCollapseQuadricTex: public vcg::tri::TriEdgeCollapse< TriMeshType, 
 
 
   } // namespace tri
-	} // namespace vcg
+    } // namespace vcg
 #endif
