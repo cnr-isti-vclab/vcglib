@@ -483,8 +483,8 @@ private:
 /*-------------------------- Curvature Direction ----------------------------------*/
 template <class S>
 struct CurvatureDirBaseType{
-        typedef Point3<S> VecType;
-        typedef  S   ScalarType;
+        typedef Point3<S> CurVecType;
+        typedef  S   CurScalarType;
         CurvatureDirBaseType () {}
         Point3<S>max_dir,min_dir; // max and min curvature direction
         S k1,k2;// max and min curvature values
@@ -493,18 +493,18 @@ struct CurvatureDirBaseType{
 template <class A, class TT> class CurvatureDir: public TT {
 public:
   typedef A CurvatureDirType;
-  typedef typename CurvatureDirType::VecType VecType;
-  typedef typename CurvatureDirType::ScalarType ScalarType;
+  typedef typename CurvatureDirType::VecType CurVecType;
+  typedef typename CurvatureDirType::ScalarType CurScalarType;
 
-  VecType &PD1()       { return _curv.max_dir;}
-  VecType &PD2()       { return _curv.min_dir;}
-  VecType cPD1() const { return _curv.max_dir;}
-  VecType cPD2() const { return _curv.min_dir;}
+  CurVecType &PD1()       { return _curv.max_dir;}
+  CurVecType &PD2()       { return _curv.min_dir;}
+  CurVecType cPD1() const { return _curv.max_dir;}
+  CurVecType cPD2() const { return _curv.min_dir;}
 
-  ScalarType &K1()       { return _curv.k1;}
-  ScalarType &K2()       { return _curv.k2;}
-  ScalarType cK1() const {return _curv.k1;}
-  ScalarType cK2() const {return _curv.k2;}
+  CurScalarType &K1()       { return _curv.k1;}
+  CurScalarType &K2()       { return _curv.k2;}
+  CurScalarType cK1() const {return _curv.k1;}
+  CurScalarType cK2() const {return _curv.k2;}
   template < class RightValueType>
   void ImportData(const RightValueType  & rightF ) {
     if(rightF.IsCurvatureDirEnabled()) {

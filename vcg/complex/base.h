@@ -217,7 +217,7 @@ class TriMesh
     inline int HN() const { return hn; }
 
     /// Bounding box of the mesh
-    Box3<ScalarType> bbox;
+    Box3<typename TriMesh::VertexType::CoordType::ScalarType> bbox;
 
   /// Nomi di textures
     //

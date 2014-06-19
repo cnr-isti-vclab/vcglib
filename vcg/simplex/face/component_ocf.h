@@ -494,59 +494,59 @@ template <class T> class Normal3dOcf: public NormalOcf<vcg::Point3d, T> {};
 /*------------------------- CurvatureDir -----------------------------------------*/
 template <class S>
 struct CurvatureDirOcfBaseType{
-        typedef Point3<S> VecType;
-        typedef  S   ScalarType;
+        typedef Point3<S> CurVecType;
+        typedef  S   CurScalarType;
         CurvatureDirOcfBaseType () {}
-        Point3<S>max_dir,min_dir; // max and min curvature direction
-        S k1,k2;// max and min curvature values
+        CurVecType max_dir,min_dir; // max and min curvature direction
+        CurScalarType k1,k2;// max and min curvature values
 };
 
 template <class A, class T> class CurvatureDirOcf: public T {
 public:
   typedef A CurvatureDirType;
-  typedef typename CurvatureDirType::VecType VecType;
-  typedef typename CurvatureDirType::ScalarType ScalarType;
+  typedef typename CurvatureDirType::VecType CurVecType;
+  typedef typename CurvatureDirType::ScalarType CurScalarType;
 
   inline bool IsCurvatureDirEnabled( )  const  { return this->Base().IsCurvatureDirEnabled(); }
   static bool HasCurvatureDir()   { return true; }
   static bool HasCurvatureDirOcf()   { return true; }
 
-  VecType &PD1()       {
+  CurVecType &PD1()       {
     assert((*this).Base().CurvatureDirEnabled);
     return (*this).Base().CDV[(*this).Index()].max_dir;
   }
 
-  VecType &PD2()       {
+  CurVecType &PD2()       {
     assert((*this).Base().CurvatureDirEnabled);
     return (*this).Base().CDV[(*this).Index()].min_dir;
   }
 
-  VecType cPD1() const {
+  CurVecType cPD1() const {
     assert((*this).Base().CurvatureDirEnabled);
     return (*this).Base().CDV[(*this).Index()].max_dir;
   }
 
-  VecType cPD2() const {
+  CurVecType cPD2() const {
     assert((*this).Base().CurvatureDirEnabled);
     return (*this).Base().CDV[(*this).Index()].min_dir;
   }
 
-  ScalarType &K1()       {
+  CurScalarType &K1()       {
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
     assert((*this).Base().NormalEnabled);
     return (*this).Base().CDV[(*this).Index()].k1;
   }
-  ScalarType &K2()       {
+  CurScalarType &K2()       {
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
     assert((*this).Base().NormalEnabled);
     return (*this).Base().CDV[(*this).Index()].k2;
   }
-  ScalarType cK1() const {
+  CurScalarType cK1() const {
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
     assert((*this).Base().NormalEnabled);
     return (*this).Base().CDV[(*this).Index()].k1;
   }
-  ScalarType cK2() const {
+  CurScalarType cK2() const {
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
     assert((*this).Base().NormalEnabled);
     return (*this).Base().CDV[(*this).Index()].k2;
