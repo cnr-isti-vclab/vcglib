@@ -60,6 +60,7 @@ public:
   typedef typename MeshType::FacePointer    FacePointer;
   typedef typename MeshType::FaceIterator   FaceIterator;
   typedef typename MeshType::ScalarType     ScalarType;
+  typedef typename MeshType::CoordType      CoordType;
 
   class ColorAvgInfo
   {
@@ -329,10 +330,10 @@ Note: The faux bit is used to color polygonal faces uniformly
   Period is expressed in absolute terms.
   So as period it is meaningful could be to use something in the range of 1/10 of the bbox diag.
   */
-  static void PerVertexPerlinNoise(MeshType& m, Point3f period, Point3f offset=Point3f(0,0,0))
+  static void PerVertexPerlinNoise(MeshType& m, CoordType period, CoordType offset=CoordType(0,0,0))
   {
     if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
-    Point3<ScalarType> p[3];
+    CoordType p[3];
     for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
     {
       if(!(*vi).IsD()){
@@ -407,12 +408,12 @@ static int PerVertexBrightness(MeshType &m, float amount, const bool ProcessSele
 {
   if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
     int counter=0;
-	VertexIterator vi;
-	for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
-	{
-		if(!(*vi).IsD()) //if it has not been deleted...
-		{
-			if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+    VertexIterator vi;
+    for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+    {
+        if(!(*vi).IsD()) //if it has not been deleted...
+        {
+            if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
       {
         (*vi).C() = Color4b(
                             math::Clamp(int((*vi).C()[0]+amount),0,255),
@@ -423,7 +424,7 @@ static int PerVertexBrightness(MeshType &m, float amount, const bool ProcessSele
       }
     }
   }
-	return counter;
+    return counter;
 }
 
 /*! \brief Apply Contrast filter to the mesh with the given contrast factor.
@@ -489,17 +490,17 @@ static int PerVertexBrightnessContrast(MeshType &m, float brightness, float cont
 static Color4b ColorBrightnessContrast(Color4b c, float brightness, float contrast)
 {
   return Color4b( ValueBrightnessContrast(c[0], brightness, contrast),
-									ValueBrightnessContrast(c[1], brightness, contrast),
-									ValueBrightnessContrast(c[2], brightness, contrast), 1 );
+                                    ValueBrightnessContrast(c[1], brightness, contrast),
+                                    ValueBrightnessContrast(c[2], brightness, contrast), 1 );
 }
 
 static int ValueBrightnessContrast(unsigned char ivalue, float brightness, float contrast)
 {
-	float value = float(ivalue)/255.0f;
+    float value = float(ivalue)/255.0f;
   if (brightness < 0.0)  value = value * ( 1.0 + brightness);
                     else value = value + ((1.0 - value) * brightness);
-	value = (value - 0.5) * (tan ((contrast + 1) * M_PI/4) ) + 0.5;
-	return math::Clamp<int>(255.0*value, 0, 255);
+    value = (value - 0.5) * (tan ((contrast + 1) * M_PI/4) ) + 0.5;
+    return math::Clamp<int>(255.0*value, 0, 255);
 }
 
 /*! \brief Invert the colors of the mesh.
@@ -749,9 +750,9 @@ static int PerVertexEqualize(MeshType &m, unsigned int rgbMask, const bool Proce
   }
 
   //for each histogram, compute the cumulative distribution function, and build a lookup table
-	int cdf_l[256], cdf_r[256], cdf_g[256], cdf_b[256];
-	cdf_l[0] = Hl.BinCount(0); cdf_r[0] = Hr.BinCount(0); cdf_g[0] = Hg.BinCount(0); cdf_b[0] = Hb.BinCount(0);
-	for(int i=1; i<256; i++){
+    int cdf_l[256], cdf_r[256], cdf_g[256], cdf_b[256];
+    cdf_l[0] = Hl.BinCount(0); cdf_r[0] = Hr.BinCount(0); cdf_g[0] = Hg.BinCount(0); cdf_b[0] = Hb.BinCount(0);
+    for(int i=1; i<256; i++){
     cdf_l[i] = Hl.BinCount(float(i)) + cdf_l[i-1];
     cdf_r[i] = Hr.BinCount(float(i)) + cdf_r[i-1];
     cdf_g[i] = Hg.BinCount(float(i)) + cdf_g[i-1];
