@@ -1029,7 +1029,7 @@ static void FaceNormalAngleThreshold(MeshType &m,
           ScalarType cosang=ep.f->N().dot((*fi).N());
                     // Note that if two faces form an angle larger than 90 deg, their contribution should be very very small.
                     // Without this clamping
-                    cosang = math::Clamp(cosang,0.0001f,1.f);
+                    cosang = math::Clamp(cosang,ScalarType(0.0001),ScalarType(1.f));
           if(cosang >= sigma)
           {
             ScalarType w = cosang-sigma;
@@ -1219,12 +1219,12 @@ static void VertexCoordPasoDobleFast(MeshType &m, int NormalSmoothStep, typename
 }
 
 
-static void VertexNormalPointCloud(MeshType &m, int neighborNum, int iterNum, KdTree<float> *tp=0)
+static void VertexNormalPointCloud(MeshType &m, int neighborNum, int iterNum, KdTree<ScalarType> *tp=0)
 {
-  SimpleTempData<typename MeshType::VertContainer,Point3f > TD(m.vert,Point3f(0,0,0));
+  SimpleTempData<typename MeshType::VertContainer,CoordType > TD(m.vert,CoordType(0,0,0));
   VertexConstDataWrapper<MeshType> ww(m);
-  KdTree<float> *tree=0;
-  if(tp==0) tree = new KdTree<float>(ww);
+  KdTree<ScalarType> *tree=0;
+  if(tp==0) tree = new KdTree<ScalarType>(ww);
   else tree=tp;
 
   tree->setMaxNofNeighbors(neighborNum);
@@ -1246,7 +1246,7 @@ static void VertexNormalPointCloud(MeshType &m, int neighborNum, int iterNum, Kd
     for (VertexIterator vi = m.vert.begin();vi!=m.vert.end();++vi)
     {
       vi->N()=TD[vi];
-      TD[vi]=Point3f(0,0,0);
+      TD[vi]=CoordType(0,0,0);
     }
     tri::UpdateNormal<MeshType>::NormalizePerVertex(m);
   }
@@ -1259,8 +1259,7 @@ static void VertexNormalPointCloud(MeshType &m, int neighborNum, int iterNum, Kd
 template<class GRID, class MeshTypeTri>
 static void VertexCoordLaplacianReproject(MeshType& m, GRID& grid, MeshTypeTri& gridmesh)
 {
-    typename MeshType::VertexIterator vi;
-    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     {
         if(! (*vi).IsD())
             VertexCoordLaplacianReproject(m,grid,gridmesh,&*vi);
