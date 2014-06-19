@@ -83,15 +83,15 @@ public:
         HNPPointSize = 2		// the point size used in point rendering
     };
 
-    template<class MESH_TYPE>
+    template<class MeshType>
     class VertToSplit
     {
     public:
-        typename MESH_TYPE::face_base_pointer f;
+        typename MeshType::face_base_pointer f;
         char z;
         char edge;
         bool newp;
-        typename MESH_TYPE::vertex_pointer v;
+        typename MeshType::vertex_pointer v;
     };
 
     // GL Array Elemet
@@ -105,12 +105,19 @@ public:
 
 };
 
-template <class MESH_TYPE,  bool partial = false , class FACE_POINTER_CONTAINER = std::vector<typename MESH_TYPE::FacePointer> >
+template <class MeshType,  bool partial = false , class FACE_POINTER_CONTAINER = std::vector<typename MeshType::FacePointer> >
 class GlTrimesh : public GLW
 {
 public:
 
-    typedef MESH_TYPE mesh_type;
+  typedef typename MeshType::VertexType VertexType;
+  typedef typename MeshType::FaceType FaceType;
+  typedef typename MeshType::VertexType::CoordType CoordType;
+  typedef typename MeshType::VertexType::ScalarType ScalarType;
+  typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::EdgeIterator EdgeIterator;
+  typedef typename MeshType::FaceIterator FaceIterator;
+
     FACE_POINTER_CONTAINER face_pointers;
 
 
@@ -123,7 +130,7 @@ public:
     int   HNParami[8];
     float HNParamf[8];
 
-    MESH_TYPE *m;
+    MeshType *m;
     GlTrimesh()
     {
         m=0;
@@ -189,9 +196,8 @@ void Update(/*Change c=CHAll*/)
 
     if(curr_hints&HNUseVArray || curr_hints&HNUseVBO)
     {
-        typename MESH_TYPE::FaceIterator fi;
         indices.clear();
-        for(fi = m->face.begin(); fi != m->face.end(); ++fi)
+        for(FaceIterator fi = m->face.begin(); fi != m->face.end(); ++fi)
         {
             indices.push_back((unsigned int)((*fi).V(0) - &(*m->vert.begin())));
             indices.push_back((unsigned int)((*fi).V(1) - &(*m->vert.begin())));
@@ -203,16 +209,16 @@ void Update(/*Change c=CHAll*/)
             if(!glIsBuffer(array_buffers[1]))
                 glGenBuffers(2,(GLuint*)array_buffers);
             glBindBuffer(GL_ARRAY_BUFFER,array_buffers[0]);
-            glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(typename MESH_TYPE::VertexType),
+            glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(VertexType),
                 (char *)&(m->vert[0].P()), GL_STATIC_DRAW_ARB);
 
             glBindBuffer(GL_ARRAY_BUFFER,array_buffers[1]);
-            glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(typename MESH_TYPE::VertexType),
+            glBufferData(GL_ARRAY_BUFFER_ARB, m->vn * sizeof(VertexType),
                 (char *)&(m->vert[0].N()), GL_STATIC_DRAW_ARB);
         }
 
-        glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
-        glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
+        glVertexPointer(3,GL_FLOAT,sizeof(VertexType),0);
+        glNormalPointer(GL_FLOAT,sizeof(VertexType),0);
     }
 
     //int C=c;
@@ -224,14 +230,14 @@ void Update(/*Change c=CHAll*/)
     //}
     //if((C&CHFace) && (curr_hints&HNUseEdgeStrip)) 		 ComputeEdges();
     //if((C&CHFace) && (curr_hints&HNUseLazyEdgeStrip)) ClearEdges();
-    //if(MESH_TYPE::HasFFTopology())
+    //if(MeshType::HasFFTopology())
     //	if((C&CHFace) && (curr_hints&HNUseTriStrip)) 		{
     //			if(!(curr_hints&HNHasFFTopology)) m->FFTopology();
     //			ComputeTriStrip();
     //		}
     //if((C&CHFaceNormal) && (curr_hints&HNUsePerWedgeNormal))		{
     //	  if(!(curr_hints&HNHasVFTopology)) m->VFTopology();
-    //		CreaseWN(*m,MESH_TYPE::scalar_type(GetHintParamf(HNPCreaseAngle)));
+    //		CreaseWN(*m,MeshType::scalar_type(GetHintParamf(HNPCreaseAngle)));
     //}
     //if(C!=0) { // force the recomputation of display list
     //	cdm=DMNone;
@@ -240,7 +246,7 @@ void Update(/*Change c=CHAll*/)
     //}
     //if((curr_hints&HNUseVArray) && (curr_hints&HNUseTriStrip))
     //	{
-    //	 ConvertTriStrip<MESH_TYPE>(*m,TStrip,TStripF,TStripVED,TStripVEI);
+    //	 ConvertTriStrip<MeshType>(*m,TStrip,TStripF,TStripVED,TStripVEI);
     //	}
 }
 
@@ -336,11 +342,6 @@ template <NormalMode nm, ColorMode cm, TextureMode tm>
 void DrawFill()
 {
   if(m->fn==0) return;
-    typename FACE_POINTER_CONTAINER::iterator fp;
-
-    typename MESH_TYPE::FaceIterator fi;
-
-    typename std::vector<typename MESH_TYPE::FaceType*>::iterator fip;
 
     if(cm == CMPerMesh)
         glColor(m->C());
@@ -359,10 +360,10 @@ void DrawFill()
             if (nm==NMPerVert)
             {
                 glBindBuffer(GL_ARRAY_BUFFER,array_buffers[1]);
-                glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
+                glNormalPointer(GL_FLOAT,sizeof(typename MeshType::VertexType),0);
             }
             glBindBuffer(GL_ARRAY_BUFFER,array_buffers[0]);
-            glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),0);
+            glVertexPointer(3,GL_FLOAT,sizeof(typename MeshType::VertexType),0);
 
             glDrawElements(GL_TRIANGLES ,m->fn*3,GL_UNSIGNED_INT, &(*indices.begin()) );
             glDisableClientState (GL_VERTEX_ARRAY);
@@ -385,8 +386,8 @@ void DrawFill()
             glEnableClientState (GL_VERTEX_ARRAY);
 
             if (nm==NMPerVert)
-                glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
-            glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->P()[0]));
+                glNormalPointer(GL_FLOAT,sizeof(typename MeshType::VertexType),&(m->vert.begin()->N()[0]));
+            glVertexPointer(3,GL_FLOAT,sizeof(typename MeshType::VertexType),&(m->vert.begin()->P()[0]));
 
             glDrawElements(GL_TRIANGLES ,m->fn*3,GL_UNSIGNED_INT, &(*indices.begin()) );
             glDisableClientState (GL_VERTEX_ARRAY);
@@ -403,9 +404,9 @@ void DrawFill()
         //if( (nm==NMPerVert) && ((cm==CMNone) || (cm==CMPerMesh)))
         //	if(curr_hints&HNUseVArray){
         //		glEnableClientState (GL_NORMAL_ARRAY  );
-        //		glNormalPointer(GL_FLOAT,sizeof(MESH_TYPE::VertexType),&(m->vert[0].cN()));
+        //		glNormalPointer(GL_FLOAT,sizeof(MeshType::VertexType),&(m->vert[0].cN()));
         //		glEnableClientState (GL_VERTEX_ARRAY);
-        //		glVertexPointer(3,GL_FLOAT,sizeof(MESH_TYPE::VertexType),&(m->vert[0].cP()));
+        //		glVertexPointer(3,GL_FLOAT,sizeof(MeshType::VertexType),&(m->vert[0].cP()));
         //		std::vector<GLAElem>::iterator vi;
         //		for(vi=TStripVED.begin();vi!=TStripVED.end();++vi)
         //					glDrawElements(vi->glmode ,vi->len,GL_UNSIGNED_SHORT,&TStripVEI[vi->start] );
@@ -415,7 +416,7 @@ void DrawFill()
         //		return;
         //	}
 
-        //std::vector< MESH_TYPE::VertexType *>::iterator vi;
+        //std::vector< MeshType::VertexType *>::iterator vi;
         //glBegin(GL_TRIANGLE_STRIP);
         //if(nm == NMPerFace) fip=TStripF.begin();
 
@@ -436,6 +437,9 @@ void DrawFill()
     }
     else
     {
+      typename FACE_POINTER_CONTAINER::iterator fp;
+      FaceIterator fi;
+
       short curtexname=-1;
         if(partial)
             fp = face_pointers.begin();
@@ -469,7 +473,7 @@ void DrawFill()
 
         while( (partial)?(fp!=face_pointers.end()):(fi!=m->face.end()))
         {
-            typename MESH_TYPE::FaceType & f = (partial)?(*(*fp)): *fi;
+            FaceType & f = (partial)?(*(*fp)): *fi;
 
             if(!f.IsD())
             {
@@ -533,82 +537,72 @@ void DrawFill()
 template <NormalMode nm, ColorMode cm>
 void DrawWirePolygonal()
 {
-
-    typename MESH_TYPE::FaceIterator fi;
-
-
+  if(cm == CMPerMesh)   glColor(m->C());
+  FaceIterator fi;
   typename FACE_POINTER_CONTAINER::iterator fp;
 
-    typename std::vector<typename MESH_TYPE::FaceType*>::iterator fip;
+  if(partial)
+    fp = face_pointers.begin();
+  else
+    fi = m->face.begin();
 
-    if(cm == CMPerMesh)
-        glColor(m->C());
+  glBegin(GL_LINES);
 
+  while( (partial)?(fp!=face_pointers.end()):(fi!=m->face.end()))
+  {
+    typename MeshType::FaceType & f = (partial)?(*(*fp)): *fi;
+
+    if(!f.IsD())
     {
-        if(partial)
-            fp = face_pointers.begin();
-        else
-            fi = m->face.begin();
 
-        glBegin(GL_LINES);
+      if(nm == NMPerFace)	glNormal(f.cN());
+      if(cm == CMPerFace)	glColor(f.C());
 
-        while( (partial)?(fp!=face_pointers.end()):(fi!=m->face.end()))
-        {
-            typename MESH_TYPE::FaceType & f = (partial)?(*(*fp)): *fi;
+      if (!f.IsF(0)) {
+        if(nm == NMPerVert)	glNormal(f.V(0)->cN());
+        if(nm == NMPerWedge)glNormal(f.WN(0));
+        if(cm == CMPerVert)	glColor(f.V(0)->C());
+        glVertex(f.V(0)->P());
 
-            if(!f.IsD())
-            {
+        if(nm == NMPerVert)	glNormal(f.V(1)->cN());
+        if(nm == NMPerWedge)glNormal(f.WN(1));
+        if(cm == CMPerVert)	glColor(f.V(1)->C());
+        glVertex(f.V(1)->P());
+      }
 
-                if(nm == NMPerFace)	glNormal(f.cN());
-                if(cm == CMPerFace)	glColor(f.C());
+      if (!f.IsF(1)) {
+        if(nm == NMPerVert)	glNormal(f.V(1)->cN());
+        if(nm == NMPerWedge)glNormal(f.WN(1));
+        if(cm == CMPerVert)	glColor(f.V(1)->C());
+        glVertex(f.V(1)->P());
 
-                if (!f.IsF(0)) {
-                  if(nm == NMPerVert)	glNormal(f.V(0)->cN());
-          if(nm == NMPerWedge)glNormal(f.WN(0));
-                  if(cm == CMPerVert)	glColor(f.V(0)->C());
-                  glVertex(f.V(0)->P());
+        if(nm == NMPerVert)	glNormal(f.V(2)->cN());
+        if(nm == NMPerWedge)glNormal(f.WN(2));
+        if(cm == CMPerVert)	glColor(f.V(2)->C());
+        glVertex(f.V(2)->P());
+      }
 
-                  if(nm == NMPerVert)	glNormal(f.V(1)->cN());
-                  if(nm == NMPerWedge)glNormal(f.WN(1));
-                  if(cm == CMPerVert)	glColor(f.V(1)->C());
-                  glVertex(f.V(1)->P());
-        }
+      if (!f.IsF(2)) {
+        if(nm == NMPerVert)	glNormal(f.V(2)->cN());
+        if(nm == NMPerWedge)glNormal(f.WN(2));
+        if(cm == CMPerVert)	glColor(f.V(2)->C());
+        glVertex(f.V(2)->P());
 
-                if (!f.IsF(1)) {
-                  if(nm == NMPerVert)	glNormal(f.V(1)->cN());
-          if(nm == NMPerWedge)glNormal(f.WN(1));
-                  if(cm == CMPerVert)	glColor(f.V(1)->C());
-                  glVertex(f.V(1)->P());
-
-                  if(nm == NMPerVert)	glNormal(f.V(2)->cN());
-                  if(nm == NMPerWedge)glNormal(f.WN(2));
-                  if(cm == CMPerVert)	glColor(f.V(2)->C());
-                  glVertex(f.V(2)->P());
-        }
-
-                if (!f.IsF(2)) {
-                  if(nm == NMPerVert)	glNormal(f.V(2)->cN());
-          if(nm == NMPerWedge)glNormal(f.WN(2));
-                  if(cm == CMPerVert)	glColor(f.V(2)->C());
-                  glVertex(f.V(2)->P());
-
-                  if(nm == NMPerVert)	glNormal(f.V(0)->cN());
-                  if(nm == NMPerWedge)glNormal(f.WN(0));
-                  if(cm == CMPerVert)	glColor(f.V(0)->C());
-                  glVertex(f.V(0)->P());
-        }
-
-            }
-
-            if(partial)
-                ++fp;
-            else
-                ++fi;
-        }
-
-        glEnd();
+        if(nm == NMPerVert)	glNormal(f.V(0)->cN());
+        if(nm == NMPerWedge)glNormal(f.WN(0));
+        if(cm == CMPerVert)	glColor(f.V(0)->C());
+        glVertex(f.V(0)->P());
+      }
 
     }
+
+    if(partial)
+      ++fp;
+    else
+      ++fi;
+  }
+
+  glEnd();
 }
 
 /// Basic Point drawing fucntion
@@ -616,11 +610,10 @@ void DrawWirePolygonal()
 template<NormalMode nm, ColorMode cm>
 void DrawPointsBase()
 {
-    typename MESH_TYPE::VertexIterator vi;
     glBegin(GL_POINTS);
     if(cm==CMPerMesh) glColor(m->C());
 
-    for(vi=m->vert.begin();vi!=m->vert.end();++vi)if(!(*vi).IsD())
+    for(VertexIterator vi=m->vert.begin();vi!=m->vert.end();++vi)if(!(*vi).IsD())
     {
             if(nm==NMPerVert) glNormal((*vi).cN());
             if(cm==CMPerVert) glColor((*vi).C());
@@ -631,13 +624,14 @@ void DrawPointsBase()
 
 /// Utility function that computes in eyespace the current distance between the camera and the center of the bbox of the mesh
 double CameraDistance(){
-    Point3<typename MESH_TYPE::ScalarType> res;
-    Matrix44<typename MESH_TYPE::ScalarType> mm;
+    CoordType res;
+    Matrix44<ScalarType> mm;
     glGetv(GL_MODELVIEW_MATRIX,mm);
-    Point3<typename MESH_TYPE::ScalarType>  c=m->bbox.Center();
+    CoordType  c=m->bbox.Center();
     res=mm*c;
     return Norm(res);
 }
+
 template<NormalMode nm, ColorMode cm>
 void DrawPoints()
 {
@@ -646,56 +640,62 @@ void DrawPoints()
   else glDisable(GL_POINT_SMOOTH);
   glPointSize(GetHintParamf(HNPPointSize));
   if(GetHintParami(HNPPointDistanceAttenuation)>0)
-    {
-      float camDist = (float)CameraDistance();
-      float quadratic[] = { 0.0f, 0.0f, 1.0f/(camDist*camDist) , 0.0f };
-      glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
-      glPointParameterf( GL_POINT_SIZE_MAX, 16.0f );
-      glPointParameterf( GL_POINT_SIZE_MIN, 1.0f );
-    }
-    else
-    {
-      float quadratic[] = { 1.0f, 0.0f, 0.0f};
-      glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
-      glPointSize(GetHintParamf(HNPPointSize));
-    }
+  {
+    float camDist = (float)CameraDistance();
+    float quadratic[] = { 0.0f, 0.0f, 1.0f/(camDist*camDist) , 0.0f };
+    glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
+    glPointParameterf( GL_POINT_SIZE_MAX, 16.0f );
+    glPointParameterf( GL_POINT_SIZE_MIN, 1.0f );
+  }
+  else
+  {
+    float quadratic[] = { 1.0f, 0.0f, 0.0f};
+    glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, quadratic );
+    glPointSize(GetHintParamf(HNPPointSize));
+  }
 
-    if(m->vn!=(int)m->vert.size())
-        {
-            DrawPointsBase<nm,cm>();
-        }
+  if(m->vn!=(int)m->vert.size())
+  {
+    DrawPointsBase<nm,cm>();
+  }
   else
   {
     if(cm==CMPerMesh)
       glColor(m->C());
-
-    // Perfect case, no deleted stuff,
-    // draw the vertices using vertex arrays
-    if (nm==NMPerVert)
+    if (m->vert.size() != 0)
+    {
+      // Perfect case, no deleted stuff,
+      // draw the vertices using vertex arrays
+      if (nm==NMPerVert)
       {
         glEnableClientState (GL_NORMAL_ARRAY);
-        if (m->vert.size() != 0)
-            glNormalPointer(GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->N()[0]));
+
+        if(sizeof(CoordType)==sizeof(float)*3)
+          glNormalPointer(GL_FLOAT,sizeof(VertexType),&(m->vert.begin()->N()[0]));
+        else
+          glNormalPointer(GL_DOUBLE,sizeof(VertexType),&(m->vert.begin()->N()[0]));
       }
-    if (cm==CMPerVert)
+      if (cm==CMPerVert)
       {
         glEnableClientState (GL_COLOR_ARRAY);
-        if (m->vert.size() != 0)
-            glColorPointer(4,GL_UNSIGNED_BYTE,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->C()[0]));
+        glColorPointer(4,GL_UNSIGNED_BYTE,sizeof(typename MeshType::VertexType),&(m->vert.begin()->C()[0]));
       }
 
-    glEnableClientState (GL_VERTEX_ARRAY);
-    if (m->vert.size() != 0)
-        glVertexPointer(3,GL_FLOAT,sizeof(typename MESH_TYPE::VertexType),&(m->vert.begin()->P()[0]));
+      glEnableClientState (GL_VERTEX_ARRAY);
+      if(sizeof(CoordType)==sizeof(float)*3)
+        glVertexPointer(3,GL_FLOAT,sizeof(VertexType),&(m->vert.begin()->P()[0]));
+      else
+        glVertexPointer(3,GL_DOUBLE,sizeof(VertexType),&(m->vert.begin()->P()[0]));
 
-    glDrawArrays(GL_POINTS,0,m->vn);
+      glDrawArrays(GL_POINTS,0,m->vn);
 
-    glDisableClientState (GL_VERTEX_ARRAY);
-    if (nm==NMPerVert)  glDisableClientState (GL_NORMAL_ARRAY);
-    if (cm==CMPerVert)  glDisableClientState (GL_COLOR_ARRAY);
+      glDisableClientState (GL_VERTEX_ARRAY);
+      if (nm==NMPerVert)  glDisableClientState (GL_NORMAL_ARRAY);
+      if (cm==CMPerVert)  glDisableClientState (GL_COLOR_ARRAY);
+    }
   }
   glPopAttrib();
-    return;
+  return;
 }
 
 void DrawHidden()
@@ -773,7 +773,7 @@ void DrawTexture_NPV_TPW2()
 {
     unsigned int texname=(*(m->face.begin())).WT(0).n(0);
     glBindTexture(GL_TEXTURE_2D,TMId[texname]);
-    typename MESH_TYPE::FaceIterator fi;
+    typename MeshType::FaceIterator fi;
     glBegin(GL_TRIANGLES);
     for(fi=m->face.begin();fi!=m->face.end();++fi)if(!(*fi).IsD()){
           if(texname!=(*fi).WT(0).n(0))	{
@@ -807,9 +807,9 @@ void DrawTexture_NPV_TPW2()
 {
     int tot=sizeof(GlTrimesh);
     tot+=sizeof(mesh_type::edge_type)*edge.size();
-    tot+=sizeof(MESH_TYPE::VertexType *) * EStrip.size();
-    tot+=sizeof(MESH_TYPE::VertexType *) * TStrip.size();
-    tot+=sizeof(MESH_TYPE::FaceType *)   * TStripF.size();
+    tot+=sizeof(MeshType::VertexType *) * EStrip.size();
+    tot+=sizeof(MeshType::VertexType *) * TStrip.size();
+    tot+=sizeof(MeshType::FaceType *)   * TStripF.size();
     return tot;
 }*/
 
@@ -835,7 +835,7 @@ void DrawWire()
     glPushAttrib(GL_ENABLE_BIT);
     glDisable(GL_LIGHTING);
     glBegin(GL_LINES);
-    for(typename mesh_type::EdgeIterator ei=m->edge.begin();ei!=m->edge.end(); ++ei)
+    for(EdgeIterator ei=m->edge.begin();ei!=m->edge.end(); ++ei)
     {
       glVertex((*ei).V(0)->P());
       glVertex((*ei).V(1)->P());
@@ -847,7 +847,7 @@ void DrawWire()
 //			if(!HasEdges()) ComputeEdges();
 
             //if(cm==CMPerMesh)	glColor(m->C());
-            //std::vector< MESH_TYPE::VertexType *>::iterator vi;
+            //std::vector< MeshType::VertexType *>::iterator vi;
             //glBegin(GL_LINE_STRIP);
             //for(vi=EStrip.begin();vi!=EStrip.end(); ++vi){
             //	if((*vi)){
