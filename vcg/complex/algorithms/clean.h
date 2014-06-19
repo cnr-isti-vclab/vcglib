@@ -1369,7 +1369,7 @@ public:
             //detection stage
             for(unsigned int index = 0 ; index < m.face.size(); ++index )
             {
-                FacePointer f = &(m.face[index]);    float sides[3]; Point3<float> dummy;
+                FacePointer f = &(m.face[index]);    float sides[3]; CoordType dummy;
                 sides[0] = Distance(f->P(0), f->P(1));
                 sides[1] = Distance(f->P(1), f->P(2));
                 sides[2] = Distance(f->P(2), f->P(0));
@@ -1383,7 +1383,7 @@ public:
                     if(face::CheckFlipEdge<FaceType>( *f, i ))  {
                         // Check if EdgeFlipping improves quality
                         FacePointer g = f->FFp(i); int k = f->FFi(i);
-                        Triangle3<float> t1(f->P(i), f->P1(i), f->P2(i)), t2(g->P(k), g->P1(k), g->P2(k)),
+                        Triangle3<ScalarType> t1(f->P(i), f->P1(i), f->P2(i)), t2(g->P(k), g->P1(k), g->P2(k)),
                                          t3(f->P(i), g->P2(k), f->P2(i)), t4(g->P(k), f->P2(i), g->P2(k));
 
                         if ( std::min( QualityFace(t1), QualityFace(t2) ) < std::min( QualityFace(t3), QualityFace(t4) ))
@@ -1415,8 +1415,13 @@ public:
             //detection stage
             for(unsigned int index = 0 ; index < m.face.size(); ++index )
             {
-                FacePointer f = &(m.face[index]);    float sides[3]; Point3<float> dummy;
-                sides[0] = Distance(f->P(0), f->P(1)); sides[1] = Distance(f->P(1), f->P(2)); sides[2] = Distance(f->P(2), f->P(0));
+                FacePointer f = &(m.face[index]);
+                float sides[3];
+                CoordType dummy;
+
+                sides[0] = Distance(f->P(0), f->P(1));
+                sides[1] = Distance(f->P(1), f->P(2));
+                sides[2] = Distance(f->P(2), f->P(0));
                 int i = std::find(sides, sides+3, std::max( std::max(sides[0],sides[1]), sides[2])) - (sides);
                 if( tri::IsMarked(m,f->V2(i) )) continue;
 
@@ -1670,7 +1675,7 @@ static std::pair<int,int> RemoveSmallConnectedComponentsDiameter(MeshType &m, Sc
       tri::ConnectedComponentIterator<MeshType> ci;
       for(unsigned int i=0;i<CCV.size();++i)
       {
-        Box3f bb;
+        Box3<ScalarType> bb;
         std::vector<typename MeshType::FacePointer> FPV;
         for(ci.start(m,CCV[i].second);!ci.completed();++ci)
         {
