@@ -35,7 +35,7 @@ public:
     bool operator< (const WArc &a) const {return w<a.w;}
   };
 
-  static void ComputeUndirectedNormal(MeshType &m, int nn, float maxDist, KdTree<float> &tree,vcg::CallBackPos * cb=0)
+  static void ComputeUndirectedNormal(MeshType &m, int nn, float maxDist, KdTree<ScalarType> &tree,vcg::CallBackPos * cb=0)
   {
     tree.setMaxNofNeighbors(nn);
     int cnt=0;
@@ -54,13 +54,13 @@ public:
             if(Distance(vi->cP(),m.vert[neightId].cP())<maxDist)
             ptVec.push_back(m.vert[neightId].cP());
         }
-        Plane3f plane;
+        Plane3<ScalarType> plane;
         FitPlaneToPointSet(ptVec,plane);
         vi->N()=plane.Direction();
     }
   }
 
-  static void AddNeighboursToHeap( MeshType &m, VertexPointer vp, KdTree<float> &tree, std::vector<WArc> &heap)
+  static void AddNeighboursToHeap( MeshType &m, VertexPointer vp, KdTree<ScalarType> &tree, std::vector<WArc> &heap)
   {
     tree.doQueryK(vp->cP());
 
@@ -74,10 +74,10 @@ public:
           {
             heap.push_back(WArc(vp,&(m.vert[neightId])));
             //std::push_heap(heap.begin(),heap.end());
-            if(heap.back().w < 0.3f) 
-				heap.pop_back();
-			else
-				std::push_heap(heap.begin(),heap.end());
+            if(heap.back().w < 0.3f)
+                heap.pop_back();
+            else
+                std::push_heap(heap.begin(),heap.end());
           }
         }
     }
@@ -98,7 +98,7 @@ public:
     int fittingAdjNum; /// number of adjacent nodes used for computing the fitting plane
     int smoothingIterNum; /// number of itaration of a simple normal smoothing (use the same number of ajdacent of fittingAdjNjm)
     int coherentAdjNum; /// number of nodes used in the coherency pass
-    Point3f viewPoint;  /// position of a viewpoint used to disambiguate direction
+    CoordType viewPoint;  /// position of a viewpoint used to disambiguate direction
     bool useViewPoint;  /// if the position of the viewpoint has to be used.
   };
 
@@ -107,7 +107,7 @@ public:
     tri::Allocator<MeshType>::CompactVertexVector(m);
     if(cb) cb(1,"Building KdTree...");
     VertexConstDataWrapper<MeshType> DW(m);
-    KdTree<float> tree(DW);
+    KdTree<ScalarType> tree(DW);
 
     ComputeUndirectedNormal(m, p.fittingAdjNum, std::numeric_limits<ScalarType>::max(), tree,cb);
 
