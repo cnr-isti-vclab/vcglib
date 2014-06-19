@@ -61,6 +61,8 @@ public:
     typedef vcg::face::VFIterator<FaceType> VFIteratorType;
     typedef typename MeshType::CoordType CoordType;
     typedef typename CoordType::ScalarType ScalarType;
+    typedef typename MeshType::VertexType::CurScalarType CurScalarType;
+  typedef typename MeshType::VertexType::CurVecType CurVecType;
 
 
 private:
@@ -246,8 +248,8 @@ public:
         CoordType Principal_Direction1 = T1 * c - T2 * s;
         CoordType Principal_Direction2 = T1 * s + T2 * c;
 
-        (*vi).PD1() = Principal_Direction1;
-        (*vi).PD2() = Principal_Direction2;
+        (*vi).PD1().Import(Principal_Direction1);
+        (*vi).PD2().Import(Principal_Direction2);
         (*vi).K1() =  Principal_Curvature1;
         (*vi).K2() =  Principal_Curvature2;
       }
@@ -353,16 +355,18 @@ If pointVSfaceInt==false the covariance is computed by (analytic)integration ove
         if( prod > bestv){bestv = prod; best = i;}
       }
 
-      (*vi).PD1()  = eigenvectors.GetColumn( (best+1)%3).normalized();
-      (*vi).PD2()  = eigenvectors.GetColumn( (best+2)%3).normalized();
+      (*vi).PD1().Import(eigenvectors.GetColumn( (best+1)%3).normalized());
+      (*vi).PD2().Import(eigenvectors.GetColumn( (best+2)%3).normalized());
 
       // project them to the plane identified by the normal
-      vcg::Matrix33<ScalarType> rot;
-      ScalarType angle = acos((*vi).PD1().dot((*vi).N()));
-      rot.SetRotateRad(  - (M_PI*0.5 - angle),(*vi).PD1()^(*vi).N());
+      vcg::Matrix33<CurScalarType> rot;
+      CurVecType NN = CurVecType::Construct((*vi).N());
+      CurScalarType angle;
+      angle = acos((*vi).PD1().dot(NN));
+      rot.SetRotateRad(  - (M_PI*0.5 - angle),(*vi).PD1()^NN);
       (*vi).PD1() = rot*(*vi).PD1();
-      angle = acos((*vi).PD2().dot((*vi).N()));
-      rot.SetRotateRad(  - (M_PI*0.5 - angle),(*vi).PD2()^(*vi).N());
+      angle = acos((*vi).PD2().dot(NN));
+      rot.SetRotateRad(  - (M_PI*0.5 - angle),(*vi).PD2()^NN);
       (*vi).PD2() = rot*(*vi).PD2();
 
 
@@ -675,8 +679,8 @@ static void MeanAndGaussian(MeshType & m)
             int minI = (bestNormalIndex+1)%3;
             if(fabs(lambda[maxI]) < fabs(lambda[minI])) std::swap(maxI,minI);
 
-            (*vi).PD1() = *(Point3<ScalarType>*)(& vect[maxI][0]);
-            (*vi).PD2() = *(Point3<ScalarType>*)(& vect[minI][0]);
+            (*vi).PD1().Import(vect.GetColumn(maxI));
+            (*vi).PD2().Import(vect.GetColumn(minI));
             (*vi).K1() = lambda[2];
             (*vi).K2() = lambda[1];
         }
