@@ -15,8 +15,9 @@ template <class MeshType>
 void CapEdgeMesh(MeshType &em, MeshType &cm, bool revertFlag=false)
 {
   typedef typename MeshType::EdgeType EdgeType;
-  std::vector< std::vector<Point3f> > outlines;
-  std::vector<Point3f> outline;
+  typedef typename MeshType::CoordType CoordType;
+  std::vector< std::vector<CoordType> > outlines;
+  std::vector<CoordType> outline;
   UpdateFlags<MeshType>::EdgeClearV(em);
   UpdateTopology<MeshType>::EdgeEdge(em);
   int nv=0;
@@ -51,7 +52,7 @@ void CapEdgeMesh(MeshType &em, MeshType &cm, bool revertFlag=false)
 
   std::vector<int> indices;
   glu_tesselator::tesselate(outlines, indices);
-  std::vector<Point3f> points;
+  std::vector<CoordType> points;
   glu_tesselator::unroll(outlines, points);
   //typename MeshType::FaceIterator fi=tri::Allocator<MeshType>::AddFaces(cm,nv-2);
   typename MeshType::FaceIterator fi=tri::Allocator<MeshType>::AddFaces(cm,indices.size()/3);
