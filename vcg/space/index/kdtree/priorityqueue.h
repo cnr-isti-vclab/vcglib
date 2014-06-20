@@ -43,6 +43,13 @@ public:
 		mMaxSize = 0;
 	}
 
+	~HeapMaxPriorityQueue()
+	{
+		if (mElements)
+			delete[] mElements;
+	}
+	
+
 	inline void setMaxSize(int maxSize)
 	{
 		if (mMaxSize!=maxSize)
