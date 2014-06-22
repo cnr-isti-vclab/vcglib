@@ -439,7 +439,8 @@ namespace vcg {
 				vcg::Matrix33<ScalarType> rotation=vcg::RotationMatrix(N0,NRef);
 				DirRef=rotation*DirRef;
 
-				CoordType tF1=InterpolateCrossField(TangVect,Weights,Norms,NRef,DirRef);
+
+                CoordType tF1=vcg::tri::CrossField<MeshType>::InterpolateCrossField(TangVect,Weights,Norms,NRef);
 				tF1.Normalize();
 				CoordType tF2=NRef^tF1;
 				tF2.Normalize();
@@ -519,7 +520,8 @@ namespace vcg {
                 W.push_back(bary.X());
                 W.push_back(bary.Y());
                 W.push_back(bary.Z());
-                CoordType sum=InterpolateNRosy3D(V,Norm,&W,4,target_n);
+
+                CoordType sum=vcg::tri::InterpolateNRosy3D(V,Norm,W,4,target_n);
                 return sum;
 //				vcg::Matrix33<ScalarType> R0=vcg::RotationMatrix(n0,target_n);
 //				vcg::Matrix33<ScalarType> R1=vcg::RotationMatrix(n1,target_n);
