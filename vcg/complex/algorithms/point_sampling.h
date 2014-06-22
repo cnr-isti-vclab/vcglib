@@ -491,7 +491,8 @@ static void VertexBorderCorner(MeshType & m, VertexSampler &ps, float angleRad)
 
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
   {
-    if(angleSumH[vi]<angleRad && vi->IsB())
+    if((angleSumH[vi]<angleRad && vi->IsB())||
+       (angleSumH[vi]>(360-angleRad) && vi->IsB()))
         ps.AddVert(*vi);
   }
 
