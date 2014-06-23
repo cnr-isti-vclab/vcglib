@@ -493,8 +493,8 @@ struct CurvatureDirBaseType{
 template <class A, class TT> class CurvatureDir: public TT {
 public:
   typedef A CurvatureDirType;
-  typedef typename CurvatureDirType::VecType CurVecType;
-  typedef typename CurvatureDirType::ScalarType CurScalarType;
+  typedef typename CurvatureDirType::CurVecType CurVecType;
+  typedef typename CurvatureDirType::CurScalarType CurScalarType;
 
   CurVecType &PD1()       { return _curv.max_dir;}
   CurVecType &PD2()       { return _curv.min_dir;}
