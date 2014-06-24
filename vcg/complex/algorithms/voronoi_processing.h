@@ -131,7 +131,7 @@ static void SeedToVertexConversion(MeshType &m,std::vector<CoordType> &seedPVec,
     typename std::vector<CoordType>::iterator pi;
     for(pi=seedPVec.begin();pi!=seedPVec.end();++pi)
         {
-            float dist;
+            ScalarType dist;
             VertexPointer vp;
             vp=tri::GetClosestVertex<MeshType,HashVertexGrid>(m, HG, *pi, dist_upper_bound, dist);
             if(vp)
