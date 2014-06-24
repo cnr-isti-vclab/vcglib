@@ -104,11 +104,12 @@ public:
      * @param integer coordinates pi of the cell
      * @return p is a 3D point representing the lower corner of the cell
      */
-    inline void IPiToPf(const Point3i & pi, CoordType &p ) const
+    template <class OtherScalarType>
+    inline void IPiToPf(const Point3i & pi,  Point3<OtherScalarType> &p ) const
     {
-        p[0] = ((ScalarType)pi[0])*voxel[0];
-        p[1] = ((ScalarType)pi[1])*voxel[1];
-        p[2] = ((ScalarType)pi[2])*voxel[2];
+        p[0] = ((OtherScalarType)pi[0])*voxel[0];
+        p[1] = ((OtherScalarType)pi[1])*voxel[1];
+        p[2] = ((OtherScalarType)pi[2])*voxel[2];
         p += bbox.min;
     }
     /* Returns the matrix that applied to a point in grid space
@@ -147,12 +148,12 @@ public:
 
     // Same of IPiToPf but for the case that you just want to transform
     // from a space to the other.
-    inline void IPfToPf(const CoordType & pi, CoordType &p ) const
+    template <class OtherScalarType>
+    void IPfToPf(const Point3<OtherScalarType> & pi, Point3<OtherScalarType> &p ) const
     {
-        p[0] = ((ScalarType)pi[0])*voxel[0];
-        p[1] = ((ScalarType)pi[1])*voxel[1];
-        p[2] = ((ScalarType)pi[2])*voxel[2];
-        p += bbox.min;
+        p[0] = ((OtherScalarType)pi[0])*voxel[0] + bbox.min[0];
+        p[1] = ((OtherScalarType)pi[1])*voxel[1] + bbox.min[1];
+        p[2] = ((OtherScalarType)pi[2])*voxel[2] + bbox.min[2];
     }
 
     /* Given a cell in <ScalarType> coordinates, compute the corresponding cell in integer coordinates
