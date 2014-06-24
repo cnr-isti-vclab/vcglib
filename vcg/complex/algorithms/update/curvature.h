@@ -62,7 +62,7 @@ public:
     typedef typename MeshType::CoordType CoordType;
     typedef typename CoordType::ScalarType ScalarType;
     typedef typename MeshType::VertexType::CurScalarType CurScalarType;
-  typedef typename MeshType::VertexType::CurVecType CurVecType;
+    typedef typename MeshType::VertexType::CurVecType CurVecType;
 
 
 private:

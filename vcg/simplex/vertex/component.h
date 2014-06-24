@@ -124,7 +124,8 @@ public:
   int cVHi() const { static int z=0; return z;}
   static bool HasVHAdjacency()   {   return false; }
 
-  typedef Point3f VecType;
+  typedef float   CurScalarType;
+  typedef Point3f CurVecType;
   typedef Point2f CurvatureType;
   float &Kh()       { static float dummy = 0.f; assert(0);return dummy;}
   float &Kg()       { static float dummy = 0.f; assert(0);return dummy;}
@@ -132,15 +133,15 @@ public:
   float cKg() const { static float dummy = 0.f; assert(0); return dummy;}
 
   typedef CurvatureDirBaseType<float> CurvatureDirType;
-  VecType &PD1()       {static VecType v(0,0,0); assert(0);return v;}
-  VecType &PD2()       {static VecType v(0,0,0); assert(0);return v;}
-  VecType cPD1() const {static VecType v(0,0,0); assert(0);return v;}
-  VecType cPD2() const {static VecType v(0,0,0); assert(0);return v;}
+  CurVecType &PD1()       {static CurVecType v(0,0,0); assert(0);return v;}
+  CurVecType &PD2()       {static CurVecType v(0,0,0); assert(0);return v;}
+  CurVecType cPD1() const {static CurVecType v(0,0,0); assert(0);return v;}
+  CurVecType cPD2() const {static CurVecType v(0,0,0); assert(0);return v;}
 
-  ScalarType &K1()       { static ScalarType v = 0.0;assert(0);return v;}
-  ScalarType &K2()       { static ScalarType v = 0.0;assert(0);return v;}
-  ScalarType cK1() const {static ScalarType v = 0.0;assert(0);return v;}
-  ScalarType cK2() const  {static ScalarType v = 0.0;assert(0);return v;}
+  CurScalarType &K1()       { static ScalarType v = 0.0;assert(0);return v;}
+  CurScalarType &K2()       { static ScalarType v = 0.0;assert(0);return v;}
+  CurScalarType cK1() const {static ScalarType v = 0.0;assert(0);return v;}
+  CurScalarType cK2() const  {static ScalarType v = 0.0;assert(0);return v;}
 
   static bool HasCurvature()			{ return false; }
   static bool HasCurvatureDir()			{ return false; }
@@ -408,26 +409,26 @@ public:
     typedef typename CurvatureDirType::VecType VecType;
     typedef typename CurvatureDirType::ScalarType ScalarType;
 
-	VecType &PD1(){ return _curv.max_dir;}
-	VecType &PD2(){ return _curv.min_dir;}
-	const VecType &cPD1() const {return _curv.max_dir;}
-	const VecType &cPD2() const {return _curv.min_dir;}
+    VecType &PD1(){ return _curv.max_dir;}
+    VecType &PD2(){ return _curv.min_dir;}
+    const VecType &cPD1() const {return _curv.max_dir;}
+    const VecType &cPD2() const {return _curv.min_dir;}
 
-	ScalarType &K1(){ return _curv.k1;}
-	ScalarType &K2(){ return _curv.k2;}
-	const ScalarType &cK1() const {return _curv.k1;}
-	const ScalarType &cK2() const {return _curv.k2;}
-	template < class RightValueType>
-	void ImportData(const RightValueType  & rVert ) {
-	  if(rVert.IsCurvatureDirEnabled()) {
-		PD1() = rVert.cPD1(); PD2() = rVert.cPD2();
-		K1()  = rVert.cK1();  K2()  = rVert.cK2();
-	  }
-	  TT::ImportData( rVert);
-	}
+    ScalarType &K1(){ return _curv.k1;}
+    ScalarType &K2(){ return _curv.k2;}
+    const ScalarType &cK1() const {return _curv.k1;}
+    const ScalarType &cK2() const {return _curv.k2;}
+    template < class RightValueType>
+    void ImportData(const RightValueType  & rVert ) {
+      if(rVert.IsCurvatureDirEnabled()) {
+        PD1() = rVert.cPD1(); PD2() = rVert.cPD2();
+        K1()  = rVert.cK1();  K2()  = rVert.cK2();
+      }
+      TT::ImportData( rVert);
+    }
 
-	static bool HasCurvatureDir()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDir"));TT::Name(name);}
+    static bool HasCurvatureDir()   { return true; }
+    static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvatureDir"));TT::Name(name);}
 
 private:
   CurvatureDirType _curv;
@@ -523,34 +524,34 @@ Note that if you use this component it is expected that on the Face you use also
 
 template <class T> class VHAdj: public T {
 public:
-	VHAdj(){_hp=0;_zp=-1;}
-	typename T::HEdgePointer &VHp()       {return _hp; }
-	typename T::HEdgePointer cVHp() const {return _hp; }
-	int &VHi() {return _zp; }
-	template < class RightValueType>
-	void ImportData(const RightValueType  & rVert ) {  T::ImportData( rVert); }
-	static bool HasVHAdjacency()   {   return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("VHAdj"));T::Name(name);}
+    VHAdj(){_hp=0;_zp=-1;}
+    typename T::HEdgePointer &VHp()       {return _hp; }
+    typename T::HEdgePointer cVHp() const {return _hp; }
+    int &VHi() {return _zp; }
+    template < class RightValueType>
+    void ImportData(const RightValueType  & rVert ) {  T::ImportData( rVert); }
+    static bool HasVHAdjacency()   {   return true; }
+    static void Name(std::vector<std::string> & name){name.push_back(std::string("VHAdj"));T::Name(name);}
 
 private:
-	typename T::HEdgePointer _hp ;
-	int _zp ;
+    typename T::HEdgePointer _hp ;
+    int _zp ;
 };
 
 /*----------------------------- VTADJ ------------------------------*/
 
 template <class T> class VTAdj: public T {
 public:
-	VTAdj() { _tp = 0; _zp=-1;}
-	typename T::TetraPointer &VTp()       { return _tp; }
-	typename T::TetraPointer cVTp() const { return _tp; }
-	int &VTi() {return _zp; }
-	static bool HasVTAdjacency() { return true; }
-	static void Name( std::vector< std::string > & name ) { name.push_back( std::string("VTAdj") ); T::Name(name); }
+    VTAdj() { _tp = 0; _zp=-1;}
+    typename T::TetraPointer &VTp()       { return _tp; }
+    typename T::TetraPointer cVTp() const { return _tp; }
+    int &VTi() {return _zp; }
+    static bool HasVTAdjacency() { return true; }
+    static void Name( std::vector< std::string > & name ) { name.push_back( std::string("VTAdj") ); T::Name(name); }
 
 private:
-	typename T::TetraPointer _tp ;
-	int _zp ;
+    typename T::TetraPointer _tp ;
+    int _zp ;
 };
 
   /** @} */   // End Doxygen VertexComponentGroup
