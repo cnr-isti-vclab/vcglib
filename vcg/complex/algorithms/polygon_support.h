@@ -96,16 +96,17 @@ namespace tri {
             TessellatePlanarPolygon3(points,faces);
             tfib = tfi  = Allocator<TriMeshType>::AddFaces(tm,faces.size()/3);
             for(size_t i = 0; tfi !=  tm.face.end();++tfi){
-                (*tfi).V(0) = &tm.vert[ (*fi).V( faces[i]  ) - &(*pm.vert.begin())];
-                (*tfi).V(1) = &tm.vert[ (*fi).V( faces[i+1]) - &(*pm.vert.begin())];
-                (*tfi).V(2) = &tm.vert[ (*fi).V( faces[i+2]) - &(*pm.vert.begin())];
+                tfi->ImportData(*fi);
+                (*tfi).V(0) = &tm.vert[ tri::Index(pm,(*fi).V( faces[i+0] )) ];
+                (*tfi).V(1) = &tm.vert[ tri::Index(pm,(*fi).V( faces[i+1] )) ];
+                (*tfi).V(2) = &tm.vert[ tri::Index(pm,(*fi).V( faces[i+2] )) ];
+
                 // set the F flags
                 if( (faces[i  ]+1)%points.size() != size_t(faces[i+1])) (*tfi).SetF(0);
                 if( (faces[i+1]+1)%points.size() != size_t(faces[i+2])) (*tfi).SetF(1);
                 if( (faces[i+2]+1)%points.size() != size_t(faces[i  ])) (*tfi).SetF(2);
                 i+=3;
             }
-
         }
     }
 
