@@ -199,6 +199,7 @@ template <class MeshType, class VertexSampler = TrivialSampler< MeshType> >
 class SurfaceSampling
 {
   typedef typename MeshType::CoordType       CoordType;
+  typedef typename MeshType::BoxType         BoxType;
   typedef typename MeshType::ScalarType      ScalarType;
   typedef typename MeshType::VertexType      VertexType;
   typedef typename MeshType::VertexPointer   VertexPointer;
@@ -207,7 +208,6 @@ class SurfaceSampling
   typedef typename MeshType::FaceIterator    FaceIterator;
   typedef typename MeshType::FaceType        FaceType;
   typedef typename MeshType::FaceContainer   FaceContainer;
-  typedef typename vcg::Box3<ScalarType>      BoxType;
 
   typedef typename vcg::SpatialHashTable<FaceType, ScalarType> MeshSHT;
   typedef typename vcg::SpatialHashTable<FaceType, ScalarType>::CellIterator MeshSHTIterator;
@@ -581,31 +581,32 @@ static void AllEdge(MeshType & m, VertexSampler &ps)
 
 static void EdgeUniform(MeshType & m, VertexSampler &ps,int sampleNum, bool sampleFauxEdge=true)
 {
-        typedef typename UpdateTopology<MeshType>::PEdge SimpleEdge;
-        std::vector< SimpleEdge > Edges;
-    UpdateTopology<MeshType>::FillUniqueEdgeVector(m,Edges,sampleFauxEdge);
-        // First loop compute total edge length;
-        float edgeSum=0;
-        typename std::vector< SimpleEdge >::iterator ei;
-        for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
-                    edgeSum+=Distance((*ei).v[0]->P(),(*ei).v[1]->P());
+  typedef typename UpdateTopology<MeshType>::PEdge SimpleEdge;
 
-        float sampleLen = edgeSum/sampleNum;
-        float rest=0;
-        for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
-                {
-                    float len = Distance((*ei).v[0]->P(),(*ei).v[1]->P());
-                    float samplePerEdge = floor((len+rest)/sampleLen);
-                    rest = (len+rest) - samplePerEdge * sampleLen;
-                    float step = 1.0/(samplePerEdge+1);
-                    for(int i=0;i<samplePerEdge;++i)
-                    {
-                        Point3f interp(0,0,0);
-                        interp[ (*ei).z     ]=step*(i+1);
-                        interp[((*ei).z+1)%3]=1.0-step*(i+1);
-                        ps.AddFace(*(*ei).f,interp);
-                    }
-                }
+  std::vector< SimpleEdge > Edges;
+  UpdateTopology<MeshType>::FillUniqueEdgeVector(m,Edges,sampleFauxEdge);
+  // First loop compute total edge length;
+  float edgeSum=0;
+  typename std::vector< SimpleEdge >::iterator ei;
+  for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
+    edgeSum+=Distance((*ei).v[0]->P(),(*ei).v[1]->P());
+
+  float sampleLen = edgeSum/sampleNum;
+  float rest=0;
+  for(ei=Edges.begin(); ei!=Edges.end(); ++ei)
+  {
+    float len = Distance((*ei).v[0]->P(),(*ei).v[1]->P());
+    float samplePerEdge = floor((len+rest)/sampleLen);
+    rest = (len+rest) - samplePerEdge * sampleLen;
+    float step = 1.0/(samplePerEdge+1);
+    for(int i=0;i<samplePerEdge;++i)
+    {
+      CoordType interp(0,0,0);
+      interp[ (*ei).z     ]=step*(i+1);
+      interp[((*ei).z+1)%3]=1.0-step*(i+1);
+      ps.AddFace(*(*ei).f,interp);
+    }
+  }
 }
 
 // Generate the barycentric coords of a random point over a single face,
@@ -1688,15 +1689,14 @@ static void HierarchicalPoissonDisk(MeshType &origMesh, VertexSampler &ps, MeshT
 // vcg::tri::UpdateFlags<Mesh>::FaceBorderFromFF(m);
 static void Texture(MeshType & m, VertexSampler &ps, int textureWidth, int textureHeight, bool correctSafePointsBaryCoords=true)
 {
-        FaceIterator fi;
-
+typedef Point2<ScalarType> Point2x;
         printf("Similar Triangles face sampling\n");
-        for(fi=m.face.begin(); fi != m.face.end(); fi++)
+        for(FaceIterator fi=m.face.begin(); fi != m.face.end(); fi++)
             if (!fi->IsD())
             {
-                Point2f ti[3];
+                Point2x ti[3];
                 for(int i=0;i<3;++i)
-                    ti[i]=Point2f((*fi).WT(i).U() * textureWidth - 0.5, (*fi).WT(i).V() * textureHeight - 0.5);
+                    ti[i]=Point2x((*fi).WT(i).U() * textureWidth - 0.5, (*fi).WT(i).V() * textureHeight - 0.5);
                     // - 0.5 constants are used to obtain correct texture mapping
 
                 SingleFaceRaster(*fi,  ps, ti[0],ti[1],ti[2], correctSafePointsBaryCoords);
@@ -1714,7 +1714,7 @@ tri::FaceTmark<MeshType> markerFunctor;
 TriMeshGrid gM;
 };
 
-static void RegularRecursiveOffset(MeshType & m, std::vector<Point3f> &pvec, ScalarType offset, float minDiag)
+static void RegularRecursiveOffset(MeshType & m, std::vector<CoordType> &pvec, ScalarType offset, float minDiag)
 {
     Box3<ScalarType> bb=m.bbox;
     bb.Offset(offset*2.0);
@@ -1731,44 +1731,46 @@ static void RegularRecursiveOffset(MeshType & m, std::vector<Point3f> &pvec, Sca
     SubdivideAndSample(m, pvec, bb, rrp, bb.Diag());
 }
 
-static void SubdivideAndSample(MeshType & m, std::vector<Point3f> &pvec, const Box3<ScalarType> bb, RRParam &rrp, float curDiag)
+static void SubdivideAndSample(MeshType & m, std::vector<CoordType> &pvec, const Box3<ScalarType> bb, RRParam &rrp, float curDiag)
 {
-    Point3f startPt = bb.Center();
+  CoordType startPt = bb.Center();
 
-    ScalarType dist;
-    // Compute mesh point nearest to bb center
-    FaceType   *nearestF=0;
-    float dist_upper_bound = curDiag+rrp.offset;
-    Point3f closestPt;
-    vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
-    dist=dist_upper_bound;
-    nearestF =  rrp.gM.GetClosest(PDistFunct,rrp.markerFunctor,startPt,dist_upper_bound,dist,closestPt);
+  ScalarType dist;
+  // Compute mesh point nearest to bb center
+  FaceType   *nearestF=0;
+  ScalarType dist_upper_bound = curDiag+rrp.offset;
+  CoordType closestPt;
+  vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
+  dist=dist_upper_bound;
+  nearestF =  rrp.gM.GetClosest(PDistFunct,rrp.markerFunctor,startPt,dist_upper_bound,dist,closestPt);
   curDiag /=2;
-    if(dist < dist_upper_bound)
+  if(dist < dist_upper_bound)
+  {
+    if(curDiag/3 < rrp.minDiag) //store points only for the last level of recursion (?)
+    {
+      if(rrp.offset==0)
+        pvec.push_back(closestPt);
+      else
+      {
+        if(dist>rrp.offset) // points below the offset threshold cannot be displaced at the right offset distance, we can only make points nearer.
         {
-            if(curDiag/3 < rrp.minDiag) //store points only for the last level of recursion (?)
-                {
-                    if(rrp.offset==0)
-                            pvec.push_back(closestPt);
-                    else
-                        {
-                            if(dist>rrp.offset) // points below the offset threshold cannot be displaced at the right offset distance, we can only make points nearer.
-                            {
-                                Point3f delta = startPt-closestPt;
-                                pvec.push_back(closestPt+delta*(rrp.offset/dist));
-                            }
-                        }
-                }
-            if(curDiag < rrp.minDiag) return;
-            Point3f hs = (bb.max-bb.min)/2;
-            for(int i=0;i<2;i++)
-                for(int j=0;j<2;j++)
-                    for(int k=0;k<2;k++)
-                        SubdivideAndSample(m,pvec,
-                                                                            Box3f(Point3f( bb.min[0]+i*hs[0], bb.min[1]+j*hs[1], bb.min[2]+k*hs[2]),
-                                                                                        Point3f(startPt[0]+i*hs[0],startPt[1]+j*hs[1],startPt[2]+k*hs[2])),rrp,curDiag);
-
+          CoordType delta = startPt-closestPt;
+          pvec.push_back(closestPt+delta*(rrp.offset/dist));
         }
+      }
+    }
+    if(curDiag < rrp.minDiag) return;
+    CoordType hs = (bb.max-bb.min)/2;
+    for(int i=0;i<2;i++)
+      for(int j=0;j<2;j++)
+        for(int k=0;k<2;k++)
+          SubdivideAndSample(m, pvec,
+                             BoxType(CoordType( bb.min[0]+i*hs[0],  bb.min[1]+j*hs[1],  bb.min[2]+k*hs[2]),
+                                     CoordType(startPt[0]+i*hs[0], startPt[1]+j*hs[1], startPt[2]+k*hs[2]) ),
+                             rrp,curDiag
+              );
+
+  }
 }
 }; // end sampling class
 
