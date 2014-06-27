@@ -44,6 +44,7 @@ class ImporterCTM
 {
 public:
 
+typedef typename OpenMeshType::CoordType CoordType;
 typedef typename OpenMeshType::VertexPointer VertexPointer;
 typedef typename OpenMeshType::ScalarType ScalarType;
 typedef typename OpenMeshType::VertexType VertexType;
@@ -107,7 +108,7 @@ static int Open( OpenMeshType &m, const char * filename, int &loadmask, CallBack
     m.Clear();
     Allocator<OpenMeshType>::AddVertices(m, vertCount);
     for(unsigned int i=0;i<vertCount;++i)
-        m.vert[i].P()=Point3f(vertices[i*3+0],vertices[i*3+1],vertices[i*3+2]);
+        m.vert[i].P()=CoordType(vertices[i*3+0],vertices[i*3+1],vertices[i*3+2]);
 
     CTMenum colorAttrib = ctmGetNamedAttribMap(context,"Color");
     if(colorAttrib != CTM_NONE)
