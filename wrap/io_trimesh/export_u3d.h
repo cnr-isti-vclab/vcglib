@@ -53,8 +53,11 @@ namespace u3dparametersclasses
 		}
 	};
 
+	template<typename SaveMeshType>
 	struct Movie15Parameters
 	{
+		typedef typename SaveMeshType::ScalarType ScalarType;
+
 		Movie15Parameters()
 		{
 			_campar = NULL;
@@ -65,32 +68,32 @@ namespace u3dparametersclasses
 		{ 
 		public:
 			CameraParameters()
-				:_cam_fov_angle(0.0f),_cam_roll_angle(0.0f),_obj_to_cam_dir(vcg::Point3f(0.0f,0.0f,0.0f)),_obj_to_cam_dist(0.0f),_obj_bbox_diag(0.0f),_obj_pos(vcg::Point3f(0.0f,0.0f,0.0f))
+				:_cam_fov_angle(0.0),_cam_roll_angle(0.0),_obj_to_cam_dir(vcg::Point3<ScalarType>(0.0,0.0,0.0)),_obj_to_cam_dist(0.0),_obj_bbox_diag(0.0),_obj_pos(vcg::Point3<ScalarType>(0.0,0.0,0.0))
 			{
 
 			}
 
-			CameraParameters(const vcg::Point3f& mesh_center,const float mesh_bbox_diag)
-				:_cam_fov_angle(0.0f),_cam_roll_angle(0.0f),_obj_to_cam_dir(vcg::Point3f(0.0f,0.0f,mesh_bbox_diag)),_obj_to_cam_dist(0.0),_obj_pos(mesh_center),_obj_bbox_diag(mesh_bbox_diag)
+			CameraParameters(const vcg::Point3<ScalarType>& mesh_center,const ScalarType mesh_bbox_diag)
+				:_cam_fov_angle(0.0),_cam_roll_angle(0.0),_obj_to_cam_dir(vcg::Point3<ScalarType>(0.0,0.0,mesh_bbox_diag)),_obj_to_cam_dist(0.0),_obj_pos(mesh_center),_obj_bbox_diag(mesh_bbox_diag)
 			{
 
 			}
 
-			CameraParameters(const float cam_fov_angle,const float cam_roll_angle,
-				const vcg::Point3f& obj_to_cam_dir,const float obj_to_cam_dist,
-				const float obj_bbox_diag,
-				const vcg::Point3f& obj_pos = vcg::Point3f(0.0f,0.0f,0.0f))
+			CameraParameters(const ScalarType cam_fov_angle,const ScalarType cam_roll_angle,
+				const vcg::Point3<ScalarType>& obj_to_cam_dir,const ScalarType obj_to_cam_dist,
+				const ScalarType obj_bbox_diag,
+				const vcg::Point3<ScalarType>& obj_pos = vcg::Point3<ScalarType>(0.0,0.0,0.0))
 				:_cam_fov_angle(cam_fov_angle),_cam_roll_angle(cam_roll_angle),_obj_to_cam_dir(obj_to_cam_dir),_obj_to_cam_dist(obj_to_cam_dist),_obj_pos(obj_pos),_obj_bbox_diag(obj_bbox_diag)
 			{
 
 			}
 
-			float _cam_fov_angle;
-			float _cam_roll_angle;
-			vcg::Point3f _obj_to_cam_dir;
-			float _obj_to_cam_dist;
-			vcg::Point3f _obj_pos;
-			float _obj_bbox_diag;
+			ScalarType _cam_fov_angle;
+			ScalarType _cam_roll_angle;
+			vcg::Point3<ScalarType> _obj_to_cam_dir;
+			ScalarType _obj_to_cam_dist;
+			vcg::Point3<ScalarType> _obj_pos;
+			ScalarType _obj_bbox_diag;
 
 		};
 		CameraParameters* _campar;
@@ -153,7 +156,7 @@ private:
 		return (int) t;
 	}
 
-	static void SaveLatex(SaveMeshType& /*m*/,const QString& file,const u3dparametersclasses::Movie15Parameters& mov_par)
+	static void SaveLatex(SaveMeshType& /*m*/,const QString& file,const u3dparametersclasses::Movie15Parameters<SaveMeshType>& mov_par)
 	{
 		Output_File latex(file.toStdString() + ".tex");
 		QString u3df = file + ".u3d";
@@ -175,7 +178,7 @@ private:
 		latex.write(1,"label=" + u3d_text.toStdString() + ",");
 		latex.write(1,"text=(" + u3d_text.toStdString() + "),");
 		std::string cam_string;
-		u3dparametersclasses::Movie15Parameters::CameraParameters* cam = mov_par._campar;
+		u3dparametersclasses::Movie15Parameters<SaveMeshType>::CameraParameters* cam = mov_par._campar;
 		if (cam != NULL)
 		{
 			cam_string = cam_string + "3Daac=" + TextUtility::nmbToStr(cam->_cam_fov_angle) + 
@@ -192,7 +195,7 @@ private:
 
 public:
 
-	static int Save(SaveMeshType& m,const char* output_file,const char* conv_loc,const u3dparametersclasses::Movie15Parameters& mov_par,const int mask)
+	static int Save(SaveMeshType& m,const char* output_file,const char* conv_loc,const u3dparametersclasses::Movie15Parameters<SaveMeshType>& mov_par,const int mask)
 	{
 		QString curr = QDir::currentPath();
 		QString out(output_file);
