@@ -42,19 +42,23 @@ namespace tri {
     */
 
     template <class TriMeshType,class PolyMeshType >
-    struct PolygonSupport{
+    class PolygonSupport{
+      typedef typename TriMeshType::FaceIterator  TriFaceIterator;
+      typedef typename PolyMeshType::FaceIterator PolyFaceIterator;
+      typedef typename TriMeshType::VertexIterator  TriVertexIterator;
+      typedef typename PolyMeshType::VertexIterator PolyVertexIterator;
+      typedef typename TriMeshType::CoordType::ScalarType Scalar;
 
+    public:
     /**
     Given a tri mesh (with per-face normals and FF connectivity),
     merges flat faces into larger polygons.
     **/
     static void MergeFlatFaces(TriMeshType & tm, double tolerance = 0.1E-4)
     {
-        typedef typename TriMeshType::CoordType::ScalarType Scalar;
-        typedef typename TriMeshType::FaceIterator FaceIterator;
         typedef typename TriMeshType::FaceType FaceType;
         Scalar minDist = 1 - Scalar(tolerance);
-        for (FaceIterator fi=tm.face.begin(); fi!=tm.face.end(); fi++) {
+        for (TriFaceIterator fi=tm.face.begin(); fi!=tm.face.end(); fi++) {
             FaceType *fa = &*fi;
             for (int w=0; w<3; w++) {
                 FaceType *fb = fa->FFp(w);
@@ -72,42 +76,39 @@ namespace tri {
     static void ImportFromPolyMesh(TriMeshType & tm,  PolyMeshType & pm)
     {
       tri::RequirePolygonalMesh(pm);
-      tri::RequireTriangularMesh(tm);
-        std::vector<typename PolyMeshType::CoordType> points;
-        std::vector<int> faces;
+      std::vector<typename PolyMeshType::CoordType> points;
 
-        // the vertices are the same, simply import them
-        typename PolyMeshType::VertexIterator vi;
-        typename TriMeshType::FaceIterator tfi,tfib ;
-        typename TriMeshType ::VertexIterator tvi = Allocator<TriMeshType>::AddVertices(tm,pm.vert.size());
-        int cnt = 0;
-        for(tvi = tm.vert.begin(),vi = pm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt)
-            if(!(*vi).IsD()) (*tvi).ImportData(*vi); else tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
+      // the vertices are the same, simply import them
+      PolyVertexIterator vi;
+      TriVertexIterator tvi = Allocator<TriMeshType>::AddVertices(tm,pm.vert.size());
+      int cnt = 0;
+      for(tvi = tm.vert.begin(),vi = pm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt)
+        if(!(*vi).IsD()) (*tvi).ImportData(*vi); else tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
 
-        typename PolyMeshType::FaceIterator fi;
-        for(fi = pm.face.begin(); fi != pm.face.end(); ++fi)
+      for(PolyFaceIterator fi = pm.face.begin(); fi != pm.face.end(); ++fi)
+      {
         if(!((*fi).IsD())){
-        points.clear();
-            for(int i  = 0; i < (*fi).VN(); ++i) {
-                typename	PolyMeshType::VertexType * v = (*fi).V(i);
-                points.push_back(v->P());
-            }
-            faces.clear();
-            TessellatePlanarPolygon3(points,faces);
-            tfib = tfi  = Allocator<TriMeshType>::AddFaces(tm,faces.size()/3);
-            for(size_t i = 0; tfi !=  tm.face.end();++tfi){
-                tfi->ImportData(*fi);
-                (*tfi).V(0) = &tm.vert[ tri::Index(pm,(*fi).V( faces[i+0] )) ];
-                (*tfi).V(1) = &tm.vert[ tri::Index(pm,(*fi).V( faces[i+1] )) ];
-                (*tfi).V(2) = &tm.vert[ tri::Index(pm,(*fi).V( faces[i+2] )) ];
+          points.clear();
+          for(int i  = 0; i < (*fi).VN(); ++i) {
+            typename	PolyMeshType::VertexType * v = (*fi).V(i);
+            points.push_back(v->P());
+          }
+          std::vector<int> faces;
+          TessellatePlanarPolygon3(points,faces);
+          for(size_t i = 0; i<faces.size()/3;i+=3){
+            TriFaceIterator tfi = Allocator<TriMeshType>::AddFace(tm,
+                  tri::Index(pm,(*fi).V( faces[i+0] )),
+                  tri::Index(pm,(*fi).V( faces[i+1] )),
+                  tri::Index(pm,(*fi).V( faces[i+2] )) );
 
-                // set the F flags
-                if( (faces[i  ]+1)%points.size() != size_t(faces[i+1])) (*tfi).SetF(0);
-                if( (faces[i+1]+1)%points.size() != size_t(faces[i+2])) (*tfi).SetF(1);
-                if( (faces[i+2]+1)%points.size() != size_t(faces[i  ])) (*tfi).SetF(2);
-                i+=3;
-            }
+            tfi->ImportData(*fi);
+            // set the F flags
+            if( (faces[i  ]+1)%points.size() != size_t(faces[i+1])) (*tfi).SetF(0);
+            if( (faces[i+1]+1)%points.size() != size_t(faces[i+2])) (*tfi).SetF(1);
+            if( (faces[i+2]+1)%points.size() != size_t(faces[i  ])) (*tfi).SetF(2);
+          }
         }
+      }
     }
 
 
