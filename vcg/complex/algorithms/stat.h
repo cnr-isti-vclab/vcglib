@@ -84,10 +84,10 @@ public:
     minV=pp.first; maxV=pp.second;
   }
 
-  static std::pair<float,float> ComputePerFaceQualityMinMax( MeshType & m)
+  static std::pair<ScalarType,ScalarType> ComputePerFaceQualityMinMax( MeshType & m)
   {
     tri::RequirePerFaceQuality(m);
-    std::pair<float,float> minmax = std::make_pair(std::numeric_limits<float>::max(),-std::numeric_limits<float>::max());
+    std::pair<ScalarType,ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(),-std::numeric_limits<ScalarType>::max());
 
     FaceIterator fi;
     for(fi = m.face.begin(); fi != m.face.end(); ++fi)
