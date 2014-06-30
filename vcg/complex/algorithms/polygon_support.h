@@ -95,7 +95,7 @@ namespace tri {
           }
           std::vector<int> faces;
           TessellatePlanarPolygon3(points,faces);
-          for(size_t i = 0; i<faces.size()/3;i+=3){
+          for(size_t i = 0; i<faces.size();i+=3){
             TriFaceIterator tfi = Allocator<TriMeshType>::AddFace(tm,
                   tri::Index(pm,(*fi).V( faces[i+0] )),
                   tri::Index(pm,(*fi).V( faces[i+1] )),
