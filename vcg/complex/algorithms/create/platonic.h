@@ -866,7 +866,7 @@ void Disk(MeshType & m, int slices)
 }
 
 template <class MeshType>
-void OrientedDisk(MeshType &m, int slices, Point3f center, Point3f norm, float radius)
+void OrientedDisk(MeshType &m, int slices, typename MeshType::CoordType center, typename MeshType::CoordType norm, float radius)
 {
   Disk(m,slices);
   tri::UpdatePosition<MeshType>::Scale(m,radius);
@@ -880,19 +880,22 @@ void OrientedDisk(MeshType &m, int slices, Point3f center, Point3f norm, float r
 }
 
 template <class MeshType>
-void OrientedEllipticPrism(MeshType & m, const Point3f origin, const Point3f end, float radius, float xScale, float yScale,bool capped, int slices=32, int stacks=4 )
+void OrientedEllipticPrism(MeshType & m, const typename MeshType::CoordType origin, const typename MeshType::CoordType end, float radius, float xScale, float yScale,bool capped, int slices=32, int stacks=4 )
 {
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef typename MeshType::CoordType CoordType;
+  typedef Matrix44<typename MeshType::ScalarType> Matrix44x;
   Cylinder(slices,stacks,m,capped);
-  tri::UpdatePosition<MeshType>::Translate(m,Point3f(0,1,0));
-  tri::UpdatePosition<MeshType>::Scale(m,Point3f(1,0.5f,1));
-  tri::UpdatePosition<MeshType>::Scale(m,Point3f(xScale,1.0f,yScale));
+  tri::UpdatePosition<MeshType>::Translate(m,CoordType(0,1,0));
+  tri::UpdatePosition<MeshType>::Scale(m,CoordType(1,0.5f,1));
+  tri::UpdatePosition<MeshType>::Scale(m,CoordType(xScale,1.0f,yScale));
 
   float height = Distance(origin,end);
-  tri::UpdatePosition<MeshType>::Scale(m,Point3f(radius,height,radius));
-  Point3f norm = end-origin;
-  float angleRad = Angle(Point3f(0,1,0),norm);
-  Point3f axis = Point3f(0,1,0)^norm;
-  Matrix44f rotM;
+  tri::UpdatePosition<MeshType>::Scale(m,CoordType(radius,height,radius));
+  CoordType norm = end-origin;
+  ScalarType angleRad = Angle(CoordType(0,1,0),norm);
+  CoordType axis = CoordType(0,1,0)^norm;
+  Matrix44x rotM;
   rotM.SetRotateRad(angleRad,axis);
   tri::UpdatePosition<MeshType>::Matrix(m,rotM);
   tri::UpdatePosition<MeshType>::Translate(m,origin);
@@ -900,7 +903,7 @@ void OrientedEllipticPrism(MeshType & m, const Point3f origin, const Point3f end
 }
 
 template <class MeshType>
-void OrientedCylinder(MeshType & m, const Point3f origin, const Point3f end, float radius, bool capped, int slices=32, int stacks=4 )
+void OrientedCylinder(MeshType & m, const typename MeshType::CoordType origin, const typename MeshType::CoordType end, float radius, bool capped, int slices=32, int stacks=4 )
 {
   OrientedEllipticPrism(m,origin,end,radius,1.0f,1.0f,capped,slices,stacks);
 }
@@ -982,7 +985,7 @@ void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float in
   tri::UpdateFlags<MeshType>::FaceClearV(mIn);
   for(size_t i=0;i<mIn.face.size();++i) if(!mIn.face[i].IsV())
   {
-    _SphMesh faceM;
+    MeshType faceM;
     std::vector<VertexPointer> vertVec;
     std::vector<FacePointer> faceVec;
     tri::PolygonSupport<MeshType,MeshType>::ExtractPolygon(&(mIn.face[i]),vertVec,faceVec);
@@ -1000,41 +1003,44 @@ void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float in
     bary/=float(faceVec.size());
 
     // Add vertices (alternated top and bottom)
-    tri::Allocator<_SphMesh>::AddVertex(faceM, bary-nf);
-    tri::Allocator<_SphMesh>::AddVertex(faceM, bary+nf);
+    tri::Allocator<MeshType>::AddVertex(faceM, bary-nf);
+    tri::Allocator<MeshType>::AddVertex(faceM, bary+nf);
     for(size_t j=0;j<vn;++j){
       CoordType delta = (vertVec[j]->P() - bary);
       delta.Normalize();
       delta = delta*inset;
-      tri::Allocator<_SphMesh>::AddVertex(faceM, vertVec[j]->P()-delta-nf);
-      tri::Allocator<_SphMesh>::AddVertex(faceM, vertVec[j]->P()-delta+nf);
+      tri::Allocator<MeshType>::AddVertex(faceM, vertVec[j]->P()-delta-nf);
+      tri::Allocator<MeshType>::AddVertex(faceM, vertVec[j]->P()-delta+nf);
     }
 
     // Build top and bottom faces
     for(size_t j=0;j<vn;++j)
-      tri::Allocator<_SphMesh>::AddFace(faceM, 0, 2+(j+0)*2, 2+((j+1)%vn)*2 );
+      tri::Allocator<MeshType>::AddFace(faceM, 0, 2+(j+0)*2, 2+((j+1)%vn)*2 );
     for(size_t j=0;j<vn;++j)
-      tri::Allocator<_SphMesh>::AddFace(faceM, 1, 3+((j+1)%vn)*2, 3+(j+0)*2 );
+      tri::Allocator<MeshType>::AddFace(faceM, 1, 3+((j+1)%vn)*2, 3+(j+0)*2 );
 
     // Build side strip
     for(size_t j=0;j<vn;++j){
       size_t j0=j;
       size_t j1=(j+1)%vn;
-      tri::Allocator<_SphMesh>::AddFace(faceM, 2+ j0*2 + 0 , 2+ j0*2+1, 2+j1*2+0);
-      tri::Allocator<_SphMesh>::AddFace(faceM, 2+ j0*2 + 1 , 2+ j1*2+1, 2+j1*2+0);
+      tri::Allocator<MeshType>::AddFace(faceM, 2+ j0*2 + 0 , 2+ j0*2+1, 2+j1*2+0);
+      tri::Allocator<MeshType>::AddFace(faceM, 2+ j0*2 + 1 , 2+ j1*2+1, 2+j1*2+0);
     }
 
     for(size_t j=0;j<2*vn;++j)
       faceM.face[j].SetS();
 
-    tri::UpdateTopology<_SphMesh>::FaceFace(faceM);
-    tri::UpdateFlags<_SphMesh>::FaceBorderFromFF(faceM);
-    tri::Refine(faceM, MidPoint<_SphMesh>(&faceM),0,true);
-    tri::Refine(faceM, MidPoint<_SphMesh>(&faceM),0,true);
-    tri::UpdateSelection<_SphMesh>::VertexFromFaceStrict(faceM);
-    tri::Smooth<_SphMesh>::VertexCoordLaplacian(faceM,2,true,true);
+    if(smoothFlag)
+    {
+      tri::UpdateTopology<MeshType>::FaceFace(faceM);
+      tri::UpdateFlags<MeshType>::FaceBorderFromFF(faceM);
+      tri::Refine(faceM, MidPoint<MeshType>(&faceM),0,true);
+      tri::Refine(faceM, MidPoint<MeshType>(&faceM),0,true);
+      tri::UpdateSelection<MeshType>::VertexFromFaceStrict(faceM);
+      tri::Smooth<MeshType>::VertexCoordLaplacian(faceM,2,true,true);
+    }
 
-    tri::Append<MeshType,_SphMesh>::Mesh(mOut,faceM);
+    tri::Append<MeshType,MeshType>::Mesh(mOut,faceM);
 
   } // end main loop for each face;
 }
@@ -1061,23 +1067,24 @@ void BuildSphereVertexShell(MeshType &mIn, MeshType &mOut, float radius=0, int r
   if(radius==0) radius = mIn.bbox.Diag()/100.0f;
   for(size_t i=0;i<mIn.vert.size();++i)
   {
-    _SphMesh mSph;
+    MeshType mSph;
     tri::Sphere(mSph,recDiv);
-    tri::UpdatePosition<_SphMesh>::Scale(mSph,radius);
-    tri::UpdatePosition<_SphMesh>::Translate(mSph,mIn.vert[i].P());
-    tri::Append<MeshType,_SphMesh>::Mesh(mOut,mSph);
+    tri::UpdatePosition<MeshType>::Scale(mSph,radius);
+    tri::UpdatePosition<MeshType>::Translate(mSph,mIn.vert[i].P());
+    tri::Append<MeshType,MeshType>::Mesh(mOut,mSph);
   }
 }
 
 template <class MeshType>
 void BuildCylinderVertexShell(MeshType &mIn, MeshType &mOut, float radius=0, float height=0 )
 {
+  typedef typename MeshType::CoordType CoordType;
   if(radius==0) radius = mIn.bbox.Diag()/100.0f;
   if(height==0) height = mIn.bbox.Diag()/200.0f;
   for(size_t i=0;i<mIn.vert.size();++i)
   {
-    Point3f p = mIn.vert[i].P();
-    Point3f n = mIn.vert[i].N().Normalize();
+    CoordType p = mIn.vert[i].P();
+    CoordType n = mIn.vert[i].N().Normalize();
 
     MeshType mCyl;
     tri::OrientedCylinder(mCyl,p-n*height,p+n*height,radius,true);
