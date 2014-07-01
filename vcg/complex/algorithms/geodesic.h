@@ -72,7 +72,7 @@ public:
     float qrange = qmax-qmin;
     std::pair<float,float> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
     float range = minmax.second-minmax.first;
-    for(int i=0;i<m.vert.size();++i)
+    for(size_t i=0;i<m.vert.size();++i)
       wH[i]=qmin+((m.vert[i].Q()-minmax.first)/range)*qrange;
 
 //    qDebug("Range %f %f %f",minmax.first,minmax.second,range);
@@ -108,6 +108,7 @@ template <class MeshType>
 class AnisotropicDistance{
   typedef typename MeshType::VertexType VertexType;
   typedef typename MeshType::ScalarType  ScalarType;
+  typedef typename MeshType::CoordType  CoordType;
   typedef typename MeshType::VertexIterator VertexIterator;
 
   typename MeshType::template PerVertexAttributeHandle<Point3f> wxH,wyH;
@@ -126,7 +127,7 @@ public:
 
   ScalarType operator()( VertexType * v0,  VertexType * v1)
   {
-    Point3f dd = v0->cP()-v1->cP();
+    Point3f dd = Point3f::Construct(v0->cP()-v1->cP());
     float x = (fabs(dd * wxH[v0])+fabs(dd *wxH[v1]))/2.0f;
     float y = (fabs(dd * wyH[v0])+fabs(dd *wyH[v1]))/2.0f;
 
