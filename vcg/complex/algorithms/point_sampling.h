@@ -1818,10 +1818,10 @@ void MontecarloSampling(MeshType &m, // the mesh that has to be sampled
 //
 template <class MeshType>
 void PoissonSampling(MeshType &m, // the mesh that has to be sampled
-                     std::vector<Point3f> &poissonSamples, // the vector that will contain the set of points
+                     std::vector<typename MeshType::CoordType> &poissonSamples, // the vector that will contain the set of points
                      int sampleNum, // the desired number sample, if zero you must set the radius to the wanted value
-                     float &radius,  // the Poisson Disk Radius (used if sampleNum==0, setted if sampleNum!=0)
-                     float radiusVariance=1)
+                     typename MeshType::ScalarType &radius,  // the Poisson Disk Radius (used if sampleNum==0, setted if sampleNum!=0)
+                     typename MeshType::ScalarType radiusVariance=1)
 
 {
   typedef tri::TrivialSampler<MeshType> BaseSampler;
@@ -1906,7 +1906,7 @@ void PoissonPruning(MeshType &m, // the mesh that has to be pruned
 template <class MeshType>
 void PoissonPruningExact(MeshType &m, /// the mesh that has to be pruned
                          std::vector<typename MeshType::VertexPointer> &poissonSamples, /// the vector that will contain the chosen set of points
-                         float & radius,
+                         typename MeshType::ScalarType & radius,
                          int sampleNum,
                          float tolerance=0.04,
                          int maxIter=20)
