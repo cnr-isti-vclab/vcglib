@@ -107,10 +107,9 @@ public:
     template <class OtherScalarType>
     inline void IPiToPf(const Point3i & pi,  Point3<OtherScalarType> &p ) const
     {
-        p[0] = ((OtherScalarType)pi[0])*voxel[0];
-        p[1] = ((OtherScalarType)pi[1])*voxel[1];
-        p[2] = ((OtherScalarType)pi[2])*voxel[2];
-        p += bbox.min;
+        p[0] = bbox.min[0] + ((OtherScalarType)pi[0])*voxel[0];
+        p[1] = bbox.min[1] + ((OtherScalarType)pi[1])*voxel[1];
+        p[2] = bbox.min[2] + ((OtherScalarType)pi[2])*voxel[2];
     }
     /* Returns the matrix that applied to a point in grid space
      * transforms it in the original space.

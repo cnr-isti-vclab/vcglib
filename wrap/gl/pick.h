@@ -217,7 +217,7 @@ public:
     float LocalEpsilon = 0.001f;
     for(size_t i =0;i<result.size();++i)
     {
-      Point3f p = Proj(M,vp,Point3f::Construct(Barycenter(*(result[i]))));
+      Point3f p = Proj(M,vp,Point3f::Construct(Barycenter(*(result[i])))) ;
       if(p[0] >=0 && p[0]<screenW && p[1] >=0 && p[1]<screenH)
       {
         float bufZ = buffer[int(p[0])+int(p[1])*screenW];
