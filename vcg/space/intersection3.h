@@ -662,7 +662,7 @@ bool IntersectionTriangleBox(const vcg::Box3<ScalarType>   &bbox,
     diag[1]=Segment3<ScalarType>(bbox.P(1),bbox.P(6));
     diag[2]=Segment3<ScalarType>(bbox.P(2),bbox.P(5));
     diag[3]=Segment3<ScalarType>(bbox.P(3),bbox.P(4));
-    ScalarType a,b,dist;
+    ScalarType a,b;
     for (int i=0;i<3;i++)
     if (IntersectionSegmentTriangle<ScalarType>(diag[i],p0,p1,p2,a,b))
             return true;
