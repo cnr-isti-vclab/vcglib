@@ -25,7 +25,6 @@
 #ifndef __VCGLIB__SMOOTH
 #define __VCGLIB__SMOOTH
 
-#include <cmath>
 #include <vcg/space/ray3.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/halfedge_topology.h>
@@ -985,7 +984,7 @@ static void FaceNormalLaplacianFF(MeshType &m, int step=1, bool SmoothSelected=f
 // VF Topology
 // Normalized Face Normals
 //
-// This is the Normal Smoothing approach bsased on a angle thresholded weighting
+// This is the Normal Smoothing approach based on a angle thresholded weighting
 // sigma is in the 0 .. 1 range, it represent the cosine of a threshold angle.
 // sigma == 0 All the normals are averaged
 // sigma == 1 Nothing is averaged.
@@ -993,57 +992,51 @@ static void FaceNormalLaplacianFF(MeshType &m, int step=1, bool SmoothSelected=f
 
 
 static void FaceNormalAngleThreshold(MeshType &m,
-                  SimpleTempData<typename MeshType::FaceContainer,PDFaceInfo> &TD,
-                  ScalarType sigma)
+                                     SimpleTempData<typename MeshType::FaceContainer,PDFaceInfo> &TD,
+                                     ScalarType sigma)
 {
-    int i;
-
-
-  FaceIterator fi;
-
-    for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-    {
-        CoordType bc=Barycenter<FaceType>(*fi);
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+  {
     // 1) Clear all the visited flag of faces that are vertex-adjacent to fi
-        for(i=0;i<3;++i)
-        {
-        VFLocalIterator ep(&*fi,i);
-          for (;!ep.End();++ep)
-                ep.f->ClearV();
-        }
+    for(int i=0;i<3;++i)
+    {
+      VFLocalIterator ep(&*fi,i);
+      for (;!ep.End();++ep)
+        ep.f->ClearV();
+    }
 
     // 1) Effectively average the normals weighting them with the squared difference of the angle similarity
-        // sigma is the cosine of a threshold angle. sigma \in 0..1
-        // sigma == 0 All the normals are averaged
-        // sigma == 1 Nothing is averaged.
-        // The averaging is weighted with the difference between normals. more similar the normal more important they are.
+    // sigma is the cosine of a threshold angle. sigma \in 0..1
+    // sigma == 0 All the normals are averaged
+    // sigma == 1 Nothing is averaged.
+    // The averaging is weighted with the difference between normals. more similar the normal more important they are.
 
     CoordType normalSum=CoordType(0,0,0);
-        for(i=0;i<3;++i)
+    for(int i=0;i<3;++i)
+    {
+      VFLocalIterator ep(&*fi,i);
+      for (;!ep.End();++ep)
+      {
+        if(! (*ep.f).IsV() )
         {
-        VFLocalIterator ep(&*fi,i);
-          for (;!ep.End();++ep)
-            {
-                if(! (*ep.f).IsV() )
-                {
           ScalarType cosang=ep.f->N().dot((*fi).N());
-                    // Note that if two faces form an angle larger than 90 deg, their contribution should be very very small.
-                    // Without this clamping
-                    cosang = math::Clamp(cosang,ScalarType(0.0001),ScalarType(1.f));
+          // Note that if two faces form an angle larger than 90 deg, their contribution should be very very small.
+          // Without this clamping
+          cosang = math::Clamp(cosang,ScalarType(0.0001),ScalarType(1.f));
           if(cosang >= sigma)
           {
             ScalarType w = cosang-sigma;
-                        normalSum += ep.f->N()*(w*w);   // similar normals have a cosang very close to 1 so cosang - sigma is maximized
+            normalSum += ep.f->N()*(w*w);   // similar normals have a cosang very close to 1 so cosang - sigma is maximized
           }
-                    (*ep.f).SetV();
-                }
-            }
+          (*ep.f).SetV();
         }
-        normalSum.Normalize();
-        TD[*fi].m=normalSum;
+      }
     }
+    normalSum.Normalize();
+    TD[*fi].m=normalSum;
+  }
 
-  for(fi=m.face.begin();fi!=m.face.end();++fi)
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
     (*fi).N()=TD[*fi].m;
 }
 
@@ -1111,7 +1104,6 @@ static void FitMesh(MeshType &m,
              SimpleTempData<typename MeshType::FaceContainer, PDFaceInfo> &TDF,
              float lambda)
 {
-    //vcg::face::Pos<FaceType> ep;
     vcg::face::VFIterator<FaceType> ep;
     VertexIterator vi;
     for(vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -1173,46 +1165,22 @@ static void FastFitMesh(MeshType &m,
 
 
 
-static void VertexCoordPasoDoble(MeshType &m, int step, typename MeshType::ScalarType Sigma=0, int FitStep=10, typename MeshType::ScalarType FitLambda=0.05)
-{
-    SimpleTempData< typename MeshType::VertContainer, PDVertInfo> TDV(m.vert);
-    SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face);
-    PDVertInfo lpzv;
-    lpzv.np=CoordType(0,0,0);
-    PDFaceInfo lpzf(CoordType(0,0,0));
-
-    assert(m.HasVFTopology());
-    m.HasVFTopology();
-    TDV.Start(lpzv);
-    TDF.Start(lpzf);
-    for(int j=0;j<step;++j)
-    {
-
-        vcg::tri::UpdateNormal<MeshType>::PerFace(m);
-        FaceNormalAngleThreshold(m,TDF,Sigma);
-        for(int k=0;k<FitStep;k++)
-            FitMesh(m,TDV,TDF,FitLambda);
-    }
-
-    TDF.Stop();
-    TDV.Stop();
-
-}
-
 // The sigma parameter affect the normal smoothing step
 
-static void VertexCoordPasoDobleFast(MeshType &m, int NormalSmoothStep, typename MeshType::ScalarType Sigma=0, int FitStep=50, bool SmoothSelected =false)
+static void VertexCoordPasoDoble(MeshType &m, int NormalSmoothStep, typename MeshType::ScalarType Sigma=0, int FitStep=50, bool SmoothSelected =false)
 {
-    PDVertInfo lpzv;
-    lpzv.np=CoordType(0,0,0);
-    PDFaceInfo lpzf(CoordType(0,0,0));
+  tri::RequireCompactness(m);
+  tri::RequireVFAdjacency(m);
+  PDVertInfo lpzv;
+  lpzv.np=CoordType(0,0,0);
+  PDFaceInfo lpzf(CoordType(0,0,0));
 
-    assert(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m));
-    SimpleTempData< typename MeshType::VertContainer, PDVertInfo> TDV(m.vert,lpzv);
-    SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face,lpzf);
+  assert(HasPerVertexVFAdjacency(m) && HasPerFaceVFAdjacency(m));
+  SimpleTempData< typename MeshType::VertContainer, PDVertInfo> TDV(m.vert,lpzv);
+  SimpleTempData< typename MeshType::FaceContainer, PDFaceInfo> TDF(m.face,lpzf);
 
   for(int j=0;j<NormalSmoothStep;++j)
-       FaceNormalAngleThreshold(m,TDF,Sigma);
+    FaceNormalAngleThreshold(m,TDF,Sigma);
 
   for(int j=0;j<FitStep;++j)
     FastFitMesh(m,TDV,SmoothSelected);
