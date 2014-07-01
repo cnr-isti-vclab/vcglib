@@ -419,7 +419,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   for(size_t i=0;i<seedVec.size();++i)
   {
     VertexPointer curSeed=seedVec[i];
-    vector<Point3f> pt;
+    vector<CoordType> pt;
     for(size_t j=0;j<innerCornerVec.size();++j)
       for(int qq=0;qq<3;qq++)
         if(sources[innerCornerVec[j]->V(qq)] == curSeed)
@@ -431,23 +431,23 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
       for(int qq=0;qq<3;qq++)
         if(sources[borderCornerVec[j]->V(qq)] == curSeed)
         {
-          Point3f edgeCenter;
+          CoordType edgeCenter;
           for(int jj=0;jj<3;++jj) if(face::IsBorder(*(borderCornerVec[j]),jj))
             edgeCenter=(borderCornerVec[j]->P0(jj)+borderCornerVec[j]->P1(jj))/2.0f;
           pt.push_back(edgeCenter);
           break;
         }
-    Plane3f pl;
+    Plane3<ScalarType> pl;
     pt.push_back(curSeed->P());
     FitPlaneToPointSet(pt,pl);
     pt.pop_back();
-    Point3f nZ = pl.Direction();
-    Point3f nX = (pt[0]-curSeed->P()).Normalize();
-    Point3f nY = (nX^nZ).Normalize();
+    CoordType nZ = pl.Direction();
+    CoordType nX = (pt[0]-curSeed->P()).Normalize();
+    CoordType nY = (nX^nZ).Normalize();
     vector<std::pair<float,int> > angleVec(pt.size());
     for(size_t j=0;j<pt.size();++j)
     {
-      Point3f p = (pt[j]-curSeed->P()).Normalize();
+      CoordType p = (pt[j]-curSeed->P()).Normalize();
       float angle = 180.0f+math::ToDeg(atan2(p*nY,p*nX));
       angleVec[j] = make_pair(angle,j);
     }
@@ -1564,7 +1564,7 @@ static void ConvertDelaunayTriangulationToMesh(MeshType &m,
 }
 
 template <class MidPointType >
-static void PreprocessForVoronoi(MeshType &m, float radius,
+static void PreprocessForVoronoi(MeshType &m, ScalarType radius,
                                  MidPointType mid,
                                  VoronoiProcessingParameter &vpp)
 {
