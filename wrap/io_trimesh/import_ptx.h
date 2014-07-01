@@ -272,9 +272,9 @@ public:
 
       // read the stream
       if(hascolor)
-        fscanf(fp,"%f %f %f %f %f %f %f", &xx, &yy, &zz, &rf, &rr, &gg, &bb);
+        fscanf(fp,"%lf %lf %lf %f %f %f %f", &xx, &yy, &zz, &rf, &rr, &gg, &bb);
       else
-        fscanf(fp,"%f %f %f %f", &xx, &yy, &zz, &rf);
+        fscanf(fp,"%lf %lf %lf %f", &xx, &yy, &zz, &rf);
 
       // add the point
       (*vi).P()[0]=xx;

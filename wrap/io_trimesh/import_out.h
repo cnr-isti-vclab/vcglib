@@ -76,7 +76,7 @@ static void readline(FILE *fp, char *line, int max=100){
 static bool ReadHeader(FILE *fp,unsigned int &num_cams, unsigned int &num_points){
     char line[100];
     readline(fp, line);
-    if( (line[0]=='\0') ) return false;
+    if( line[0]=='\0' ) return false;
     line[18]='\0';
     if(0!=strcmp("# Bundle file v0.3", line))  return false;
     readline(fp, line);
@@ -168,7 +168,7 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
 
     fscanf(fp,"%d ",&n_corr);
     for(uint j = 0; j < n_corr; ++j){
-      fscanf(fp,"%d %d %f %f ",&i_cam,&key_sift,&x,&y);
+      fscanf(fp,"%d %d %lf %lf ",&i_cam,&key_sift,&x,&y);
       Correspondence corr(i_cam,key_sift,x,y);
       ch[i].push_back(corr);
     }
