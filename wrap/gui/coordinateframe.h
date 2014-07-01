@@ -148,7 +148,7 @@ public:
 
     @param glw the GL widget.
   */
-  virtual void Render(QGLWidget* glw);
+  virtual void Render(QGLWidget* glw,QPainter* p = NULL);
 
   /*!
     @brief Reset the position and/or the rotation of the coordinate frame.
@@ -222,7 +222,7 @@ protected:
   Point3f position;
   Quaternionf rotation;
 
-  // functions: 
+  // functions:
   virtual void Move(const Similarityf);
   void RotateToAlign(const Point3f, const Point3f);
 

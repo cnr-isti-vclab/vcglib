@@ -156,7 +156,7 @@ void CoordinateFrame::Render(QGLWidget* glw,QPainter* p)
   }
   glGetError(); // Patch to buggy qt rendertext;
   glPopAttrib();
-  assert(!glGetError());  
+  assert(!glGetError());
 }
 
 void CoordinateFrame::drawTickedLine(const Point3d &a,const Point3d &b, float dim,float tickDist,float linewidth)
@@ -171,7 +171,7 @@ void CoordinateFrame::drawTickedLine(const Point3d &a,const Point3d &b, float di
   glEnd();
 
   glPushAttrib(GL_POINT_BIT);
-  glPointSize(linewidth*3);  
+  glPointSize(linewidth*3);
   glBegin(GL_POINTS);
        glVertex3f(a[0] + dim*v[0],a[1] + dim*v[1],a[2] + dim*v[2]);
   glEnd();
@@ -205,18 +205,18 @@ MovableCoordinateFrame::MovableCoordinateFrame(float size)
   // nothing here
 }
 
-void MovableCoordinateFrame::Render(QGLWidget* gla)
+void MovableCoordinateFrame::Render(QGLWidget* gla, QPainter *p)
 {
   glPushMatrix();
-  
-  glTranslate(position);  
-  Matrix44f mrot; 
+
+  glTranslate(position);
+  Matrix44f mrot;
   rotation.ToMatrix(mrot);
 
   glMultMatrix(Inverse(mrot));
-  
-  CoordinateFrame::Render(gla);
-  
+
+  CoordinateFrame::Render(gla,p);
+
   glPopMatrix();
 }
 
@@ -232,13 +232,13 @@ void MovableCoordinateFrame::GetTransform(Matrix44f & transform)
   rotation.ToMatrix(rot);
 
   transform = Inverse(rot) * transform ;
-  
+
   // apply translation
   Matrix44f pos;
   pos.SetTranslate(position);
-  
+
   transform = pos * transform;
-  
+
 }
 
 void MovableCoordinateFrame::Reset(bool reset_position,bool reset_alignment)
@@ -272,7 +272,7 @@ Quaternionf MovableCoordinateFrame::GetRotation()
 void MovableCoordinateFrame::Rot(float angle_deg,const Point3f axis)
 {
   Similarityf s;
-	s.SetRotate(math::ToRad(angle_deg),(rotation).Rotate(axis));
+    s.SetRotate(math::ToRad(angle_deg),(rotation).Rotate(axis));
   Move(s);
 }
 
@@ -286,22 +286,22 @@ void MovableCoordinateFrame::AlignWith(const Point3f pri,const Point3f secondary
 
   primary.Normalize();
   Plane3f plane(0,primary); // projection plane for the second rotation
-   
+
   Point3f x(1,0,0),y(0,1,0),z(0,0,1);
   Point3f first(0,0,0),second(0,0,0),third(0,0,0);
 
   if(c1=='X'){ first = x;
-    if((c2=='Y')||(c2==' ')){ second = y; third = z; } 
-    else if(c2=='Z'){ second = z; third = y; } 
+    if((c2=='Y')||(c2==' ')){ second = y; third = z; }
+    else if(c2=='Z'){ second = z; third = y; }
     else assert (0);
   } else if(c1=='Y'){ first = y;
-    if((c2=='Z')||(c2==' ')){ second = z; third = x; } 
+    if((c2=='Z')||(c2==' ')){ second = z; third = x; }
     else if(c2=='X'){ second = x; third = z; }
     else assert (0);
   } else if(c1=='Z'){ first = z;
     if((c2=='X')||(c2==' ')){ second = x; third = y; }
     else if(c2=='Y'){ second = y; third = x; }
-    else assert (0);   
+    else assert (0);
   } else assert (0);
 
   Point3f old_first = Inverse(rotation).Rotate(first); // axis 1
@@ -352,19 +352,19 @@ void MovableCoordinateFrame::RotateToAlign(const Point3f source, const Point3f d
   Point3f axis = dest ^ source;
   float sinangle = axis.Norm();
   float cosangle = dest.dot(source);
-  float angle = math::Atan2(sinangle,cosangle);  
+  float angle = math::Atan2(sinangle,cosangle);
 
-  if( math::Abs(angle) < EPSILON )    
+  if( math::Abs(angle) < EPSILON )
     return; // angle ~ 0, aborting
 
   if( math::Abs(math::Abs(angle)-M_PI) < EPSILON){
     // must find a axis to flip on
     Plane3f plane(0,source);
     axis=plane.Projection(Point3f(1,0,0)); // project a "random" point on source's normal plane
-  	if(axis.Norm() < EPSILON){ // source was ~ [1,0,0]...
-  	  axis=plane.Projection(Point3f(0,1,0)); 
+    if(axis.Norm() < EPSILON){ // source was ~ [1,0,0]...
+      axis=plane.Projection(Point3f(0,1,0));
       assert(axis.Norm() > EPSILON); // this point must be good
-  	}
+    }
   }
   rotation = rotation * Quaternionf(angle,axis);
 }
