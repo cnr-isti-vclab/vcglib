@@ -105,6 +105,7 @@ public:
             {
                 return false;
             }
+            while (fscanf(f,"%c",&c)!=EOF) if (c=='\n') break;
             int nnv = -1;
             if (fscanf(f,"%d",&nnv)!=1)
             {
