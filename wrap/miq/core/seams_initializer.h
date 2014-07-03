@@ -46,7 +46,7 @@ private:
         vcg::face::VFOrderedStarFF(pos, posVec);
 
         missmatch=0;
-        for (unsigned int i=0;i<faces.size();i++)
+        for (unsigned int i=0;i<posVec.size();i++)
         {
           FaceType *curr_f=posVec[i].F();
           int currMM=Handle_MMatch[curr_f][posVec[i].E()];
