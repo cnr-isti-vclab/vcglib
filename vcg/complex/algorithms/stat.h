@@ -244,7 +244,7 @@ public:
       if(!(*fi).IsD())
       {
         for(int i=0;i<3;++i)
-          sum+=double(Distance<float>(fi->P0(i),fi->P1(i)));
+          sum+=double(Distance(fi->P0(i),fi->P1(i)));
       }
     return sum/(m.fn*3.0);
   }

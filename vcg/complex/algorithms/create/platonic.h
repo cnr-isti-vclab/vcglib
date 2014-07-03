@@ -361,6 +361,7 @@ template <class MeshType>
 void SphericalCap(MeshType &in, float angleRad, const int subdiv = 3 )
 {
   typedef typename MeshType::CoordType CoordType;
+  typedef typename MeshType::VertexIterator VertexIterator;
   in.Clear();
   tri::Allocator<MeshType>::AddVertex(in,CoordType(0,0,0));
   for(int i=0;i<6;++i)
@@ -389,12 +390,12 @@ void SphericalCap(MeshType &in, float angleRad, const int subdiv = 3 )
   float angleHalfRad = angleRad /2.0f;
   float width = sin(angleHalfRad);
   tri::UpdatePosition<MeshType>::Scale(in,width);
-
-  for(size_t i=0;i<in.vn;++i)
+  tri::Allocator<MeshType>::CompactEveryVector(in);
+  for(VertexIterator vi=in.vert.begin(); vi!=in.vert.end();++vi)
   {
-    float cosVi =  in.vert[i].P().Norm();
+    float cosVi =  vi->P().Norm();
     float angVi = asin (cosVi);
-    in.vert[i].P()[2] = cos(angVi) -  cos(angleHalfRad);
+    vi->P()[2] = cos(angVi) -  cos(angleHalfRad);
   }
 }
 
