@@ -5,8 +5,13 @@
 #include <list>
 #include <utility>
 #include "mesh_to_matrix.h"
+#include <Eigen/Core>
 #include <Eigen/Dense>
-#include "NRosyField.h"
+#include <Eigen/Sparse>
+#include <vcg/complex/algorithms/update/color.h>
+#include <vcg/complex/algorithms/update/curvature_fitting.h>
+
+//#include "NRosyField.h"
 
 using namespace std;
 #define Delta 10e-6
@@ -831,7 +836,7 @@ public:
 
 
 template <class MeshType>
-class FieldSmoother0
+class FieldSmoother
 {
     typedef typename MeshType::FaceType FaceType;
     typedef typename MeshType::VertexType VertexType;
@@ -952,7 +957,6 @@ public:
 
     static void InitByCurvature(MeshType & mesh)
     {
-
         vcg::tri::UpdateCurvatureFitting<MeshType>::computeCurvature(mesh);
         vcg::tri::CrossField<MeshType>::SetFaceCrossVectorFromVert(mesh);
         InitQualityByAnisotropyDir(mesh);
