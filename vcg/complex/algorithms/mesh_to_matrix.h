@@ -129,7 +129,7 @@ public:
         for (int i = 0; i < mesh.FN(); i++)
             for (int j = 0; j < 3; j++)
             {
-                faces(i,j) = (int)(mesh.face[i].V(j) - v0);
+                faces(i,j) = (int)(mesh.face[i].cV(j) - v0);
                 assert(faces(i,j) >= 0 && faces(i,j) < mesh.VN());
             }
     }
