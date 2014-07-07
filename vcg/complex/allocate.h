@@ -27,6 +27,8 @@
 #ifndef __VCGLIB_TRIALLOCATOR
 #define __VCGLIB_TRIALLOCATOR
 
+#include<climits>
+
 namespace vcg {
 namespace tri {
 /** \addtogroup trimesh
@@ -174,7 +176,7 @@ public:
     }
 
     m.vert.resize(m.vert.size()+n);
-    m.vn+=n;
+    m.vn+=int(n);
 
     typename std::set<PointerToAttribute>::iterator ai;
     for(ai = m.vert_attr.begin(); ai != m.vert_attr.end(); ++ai)
@@ -288,7 +290,7 @@ public:
     }
 
     m.edge.resize(m.edge.size()+n);
-    m.en+=n;
+    m.en+=int(n);
 
     typename std::set<typename MeshType::PointerToAttribute>::iterator ai;
     for(ai = m.edge_attr.begin(); ai != m.edge_attr.end(); ++ai)
@@ -392,7 +394,7 @@ public:
     }
 
     m.hedge.resize(m.hedge.size()+n);
-    m.hn+=n;
+    m.hn+=int(n);
 
     pu.newBase = &*m.hedge.begin();
     pu.newEnd =  &m.hedge.back()+1;
@@ -585,7 +587,7 @@ public:
     }
     // The actual resize
     m.face.resize(m.face.size()+n);
-    m.fn+=n;
+    m.fn+=int(n);
 
     size_t siz=(size_t)(m.face.size()-n);
     FaceIterator firstNewFace = m.face.begin();
