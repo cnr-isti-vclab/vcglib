@@ -64,7 +64,7 @@ public:
  typedef typename ConstMeshRight::FacePointer    FacePointerRight;
 
  struct Remap{
-        std::vector<int> vert,face,edge, hedge;
+        std::vector<size_t> vert,face,edge, hedge;
  };
 
  static void ImportVertexAdj(MeshLeft &ml, ConstMeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap ){
@@ -119,7 +119,7 @@ public:
    if(HasFEAdjacency(ml) && HasFEAdjacency(mr)){
      assert(fl.VN() == fr.VN());
      for( int vi = 0; vi < fl.VN(); ++vi ){
-       int idx = remap.edge[Index(mr,fr.cFEp(vi))];
+       size_t idx = remap.edge[Index(mr,fr.cFEp(vi))];
        if(idx>=0)
          fl.FEp(vi) = &ml.edge[idx];
      }
@@ -129,7 +129,7 @@ public:
    if(HasFFAdjacency(ml) && HasFFAdjacency(mr)){
      assert(fl.VN() == fr.VN());
      for( int vi = 0; vi < fl.VN(); ++vi ){
-       int idx = remap.face[Index(mr,fr.cFFp(vi))];
+       size_t idx = remap.face[Index(mr,fr.cFFp(vi))];
        if(idx>=0){
          fl.FFp(vi) = &ml.face[idx];
          fl.FFi(vi) = fr.cFFi(vi);
@@ -218,27 +218,31 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   // vertex
   remap.vert.resize(mr.vert.size(),-1);
   VertexIteratorLeft vp;
-  int svn = UpdateSelection<ConstMeshRight>::VertexCount(mr);
-  if(selected) vp=Allocator<MeshLeft>::AddVertices(ml,svn);
-          else vp=Allocator<MeshLeft>::AddVertices(ml,mr.vn);
+  size_t svn = UpdateSelection<ConstMeshRight>::VertexCount(mr);
+  if(selected) 
+      vp=Allocator<MeshLeft>::AddVertices(ml,int(svn));
+  else 
+      vp=Allocator<MeshLeft>::AddVertices(ml,mr.vn);
 
   for(VertexIteratorRight vi=mr.vert.begin(); vi!=mr.vert.end(); ++vi)
-    if(!(*vi).IsD() && (!selected || (*vi).IsS())){
-      int ind=Index(mr,*vi);
-      remap.vert[ind]=Index(ml,*vp);
+  {
+    if(!(*vi).IsD() && (!selected || (*vi).IsS()))
+    {
+      size_t ind=Index(mr,*vi);
+      remap.vert[ind]=int(Index(ml,*vp));
       ++vp;
     }
-
+  } 
   // edge
   remap.edge.resize(mr.edge.size(),-1);
   EdgeIteratorLeft ep;
-  int sen = UpdateSelection<ConstMeshRight>::EdgeCount(mr);
+  size_t sen = UpdateSelection<ConstMeshRight>::EdgeCount(mr);
   if(selected) ep=Allocator<MeshLeft>::AddEdges(ml,sen);
           else ep=Allocator<MeshLeft>::AddEdges(ml,mr.en);
 
   for(EdgeIteratorRight ei=mr.edge.begin(); ei!=mr.edge.end(); ++ei)
     if(!(*ei).IsD() && (!selected || (*ei).IsS())){
-      int ind=Index(mr,*ei);
+      size_t ind=Index(mr,*ei);
       remap.edge[ind]=Index(ml,*ep);
       ++ep;
     }
@@ -246,13 +250,13 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   // face
   remap.face.resize(mr.face.size(),-1);
   FaceIteratorLeft fp;
-  int sfn = UpdateSelection<ConstMeshRight>::FaceCount(mr);
+  size_t sfn = UpdateSelection<ConstMeshRight>::FaceCount(mr);
   if(selected) fp=Allocator<MeshLeft>::AddFaces(ml,sfn);
           else fp=Allocator<MeshLeft>::AddFaces(ml,mr.fn);
 
   for(FaceIteratorRight fi=mr.face.begin(); fi!=mr.face.end(); ++fi)
     if(!(*fi).IsD() && (!selected || (*fi).IsS())){
-      int ind=Index(mr,*fi);
+      size_t ind=Index(mr,*fi);
       remap.face[ind]=Index(ml,*fp);
       ++fp;
     }
@@ -261,7 +265,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   remap.hedge.resize(mr.hedge.size(),-1);
   for(HEdgeIteratorRight hi=mr.hedge.begin(); hi!=mr.hedge.end(); ++hi)
     if(!(*hi).IsD() && (!selected || (*hi).IsS())){
-      int ind=Index(mr,*hi);
+      size_t ind=Index(mr,*hi);
       assert(remap.hedge[ind]==-1);
       HEdgeIteratorLeft hp = Allocator<MeshLeft>::AddHEdges(ml,1);
       (*hp).ImportData(*(hi));
@@ -292,7 +296,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
     }
 
   // face
-  const int textureOffset =  ml.textures.size();
+  const size_t textureOffset =  ml.textures.size();
   bool WTFlag = HasPerWedgeTexCoord(mr) && (textureOffset>0);
   for(FaceIteratorRight fi=mr.face.begin();fi!=mr.face.end();++fi)
     if(!(*fi).IsD() && (!selected || (*fi).IsS()))
@@ -305,7 +309,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
       }
       if(WTFlag)
         for(int i = 0; i < fl.VN(); ++i)
-          fl.WT(i).n() +=textureOffset;
+          fl.WT(i).n() += short(textureOffset);
       fl.ImportData(*fi);
       if(adjFlag)  ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,*fi)]],*fi,remap);
 
