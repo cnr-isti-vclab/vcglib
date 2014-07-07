@@ -20,9 +20,12 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-
 #ifndef __VCGLIB_APPEND
 #define __VCGLIB_APPEND
+
+#ifndef __VCG_MESH
+#error "This file should not be included alone. It is automatically included by complex.h"
+#endif
 
 namespace vcg {
 namespace tri {
@@ -64,7 +67,7 @@ public:
  typedef typename ConstMeshRight::FacePointer    FacePointerRight;
 
  struct Remap{
-        std::vector<size_t> vert,face,edge, hedge;
+        std::vector<int> vert,face,edge, hedge;
  };
 
  static void ImportVertexAdj(MeshLeft &ml, ConstMeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap ){
@@ -119,7 +122,7 @@ public:
    if(HasFEAdjacency(ml) && HasFEAdjacency(mr)){
      assert(fl.VN() == fr.VN());
      for( int vi = 0; vi < fl.VN(); ++vi ){
-       size_t idx = remap.edge[Index(mr,fr.cFEp(vi))];
+       int idx = remap.edge[Index(mr,fr.cFEp(vi))];
        if(idx>=0)
          fl.FEp(vi) = &ml.edge[idx];
      }
@@ -129,7 +132,7 @@ public:
    if(HasFFAdjacency(ml) && HasFFAdjacency(mr)){
      assert(fl.VN() == fr.VN());
      for( int vi = 0; vi < fl.VN(); ++vi ){
-       size_t idx = remap.face[Index(mr,fr.cFFp(vi))];
+       int idx = remap.face[Index(mr,fr.cFFp(vi))];
        if(idx>=0){
          fl.FFp(vi) = &ml.face[idx];
          fl.FFi(vi) = fr.cFFi(vi);
@@ -219,9 +222,9 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   remap.vert.resize(mr.vert.size(),-1);
   VertexIteratorLeft vp;
   size_t svn = UpdateSelection<ConstMeshRight>::VertexCount(mr);
-  if(selected) 
+  if(selected)
       vp=Allocator<MeshLeft>::AddVertices(ml,int(svn));
-  else 
+  else
       vp=Allocator<MeshLeft>::AddVertices(ml,mr.vn);
 
   for(VertexIteratorRight vi=mr.vert.begin(); vi!=mr.vert.end(); ++vi)
@@ -232,7 +235,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
       remap.vert[ind]=int(Index(ml,*vp));
       ++vp;
     }
-  } 
+  }
   // edge
   remap.edge.resize(mr.edge.size(),-1);
   EdgeIteratorLeft ep;
