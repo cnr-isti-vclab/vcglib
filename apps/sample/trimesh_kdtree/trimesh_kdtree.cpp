@@ -68,14 +68,15 @@ int main( int argc, char **argv )
   VertexConstDataWrapper<MyMesh> ww(m);
 
   KdTree<float> tree(ww);
-  tree.setMaxNofNeighbors(3);
+  KdTree<float>::PriorityQueue queue;
+ 
   for (int j = 0; j < m.VN(); j++) {
-      tree.doQueryK(m.vert[j].cP());
-      int neighbours = tree.getNofFoundNeighbors();
+      tree.doQueryK(m.vert[j].cP(), 3, queue);
+	  int neighbours = queue.getNofElements();
       float avgDist=0;
       for (int i = 0; i < neighbours; i++) {
-          int neightId = tree.getNeighborId(i);
-          avgDist+=Distance(m.vert[j].cP(),m.vert[neightId].cP());
+		  int neightId = queue.getIndex(i);
+          avgDist += Distance(m.vert[j].cP(),m.vert[neightId].cP());
       }
       m.vert[j].Q() = avgDist/=neighbours;
   }
