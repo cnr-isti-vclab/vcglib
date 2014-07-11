@@ -464,7 +464,7 @@ OBJECT_RETRIEVER:
             std::vector< Neighbour	 > neighbors;
 
             IncrementMark();
-            ContainedLeaves(query_bb, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
+            TemplatedOctree::ContainedLeaves(query_bb, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
 
             int	leaves_count = int(leaves.size());
             if (leaves_count==0)
