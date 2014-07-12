@@ -1194,17 +1194,18 @@ static void VertexNormalPointCloud(MeshType &m, int neighborNum, int iterNum, Kd
   KdTree<ScalarType> *tree=0;
   if(tp==0) tree = new KdTree<ScalarType>(ww);
   else tree=tp;
+  typename KdTree<ScalarType>::PriorityQueue nq;
 
-  tree->setMaxNofNeighbors(neighborNum);
+//  tree->setMaxNofNeighbors(neighborNum);
   for(int ii=0;ii<iterNum;++ii)
   {
     for (VertexIterator vi = m.vert.begin();vi!=m.vert.end();++vi)
     {
-      tree->doQueryK(vi->cP());
-      int neighbours = tree->getNofFoundNeighbors();
+      tree->doQueryK(vi->cP(),neighborNum,nq);
+      int neighbours = nq.getNofElements();
       for (int i = 0; i < neighbours; i++)
       {
-        int neightId = tree->getNeighborId(i);
+        int neightId = nq.getIndex(i);
         if(m.vert[neightId].cN()*vi->cN()>0)
           TD[vi]+= m.vert[neightId].cN();
         else
