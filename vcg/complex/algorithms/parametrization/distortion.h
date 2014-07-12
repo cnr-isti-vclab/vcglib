@@ -190,7 +190,7 @@ namespace vcg {
                 ScalarType SumArea2D=0;
                 ScalarType SumEdge3D=0;
                 ScalarType SumEdge2D=0;
-                for (int i=0;i<m.face.size();i++)
+                for (size_t i=0;i<m.face.size();i++)
                 {
                     SumArea3D+=Area3D(&m.face[i]);
                     SumArea2D+=AreaUV(&m.face[i]);
