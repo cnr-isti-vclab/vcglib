@@ -486,10 +486,10 @@ public:
   void ImportData(const RightVertexType & rightV){
     if((*this).IsCurvatureDirEnabled() && rightV.IsCurvatureDirEnabled())
     {
-      (*this).PD1() = rightV.cPD1();
-      (*this).PD2() = rightV.cPD2();
-      (*this).K1() = rightV.cK1();
-      (*this).K2() = rightV.cK2();
+      (*this).PD1().Import(rightV.cPD1());
+      (*this).PD2().Import(rightV.cPD2());
+      (*this).K1()=rightV.cK1();
+      (*this).K2()=rightV.cK2();
     }
     TT::ImportData(rightV);
   }

@@ -524,8 +524,8 @@ public:
   template <class RightFaceType>
   void ImportData(const RightFaceType & rightF){
     if((*this).IsCurvatureDirEnabled() && rightF.IsCurvatureDirEnabled()) {
-      PD1() = rightF.cPD1();
-      PD2() = rightF.cPD2();
+      PD1().Import(rightF.cPD1());
+      PD2().Import(rightF.cPD2());
       K1() = rightF.cK1();
       K2() = rightF.cK2();
     }
