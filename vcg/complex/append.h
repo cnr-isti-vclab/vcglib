@@ -67,7 +67,8 @@ public:
  typedef typename ConstMeshRight::FacePointer    FacePointerRight;
 
  struct Remap{
-        std::vector<int> vert,face,edge, hedge;
+   static size_t InvalidIndex() { return std::numeric_limits<size_t>::max(); }
+        std::vector<size_t> vert,face,edge, hedge;
  };
 
  static void ImportVertexAdj(MeshLeft &ml, ConstMeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap ){
@@ -123,7 +124,7 @@ public:
      assert(fl.VN() == fr.VN());
      for( int vi = 0; vi < fl.VN(); ++vi ){
        int idx = remap.edge[Index(mr,fr.cFEp(vi))];
-       if(idx>=0)
+       if(idx!=Remap::InvalidIndex())
          fl.FEp(vi) = &ml.edge[idx];
      }
    }
@@ -133,7 +134,7 @@ public:
      assert(fl.VN() == fr.VN());
      for( int vi = 0; vi < fl.VN(); ++vi ){
        int idx = remap.face[Index(mr,fr.cFFp(vi))];
-       if(idx>=0){
+       if(idx!=Remap::InvalidIndex()){
          fl.FFp(vi) = &ml.face[idx];
          fl.FFi(vi) = fr.cFFi(vi);
        }
@@ -219,7 +220,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   Remap remap;
 
   // vertex
-  remap.vert.resize(mr.vert.size(),-1);
+  remap.vert.resize(mr.vert.size(), Remap::InvalidIndex());
   VertexIteratorLeft vp;
   size_t svn = UpdateSelection<ConstMeshRight>::VertexCount(mr);
   if(selected)
@@ -237,7 +238,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
     }
   }
   // edge
-  remap.edge.resize(mr.edge.size(),-1);
+  remap.edge.resize(mr.edge.size(), Remap::InvalidIndex());
   EdgeIteratorLeft ep;
   size_t sen = UpdateSelection<ConstMeshRight>::EdgeCount(mr);
   if(selected) ep=Allocator<MeshLeft>::AddEdges(ml,sen);
@@ -251,7 +252,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
     }
 
   // face
-  remap.face.resize(mr.face.size(),-1);
+  remap.face.resize(mr.face.size(), Remap::InvalidIndex());
   FaceIteratorLeft fp;
   size_t sfn = UpdateSelection<ConstMeshRight>::FaceCount(mr);
   if(selected) fp=Allocator<MeshLeft>::AddFaces(ml,sfn);
@@ -265,11 +266,11 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
     }
 
   // hedge
-  remap.hedge.resize(mr.hedge.size(),-1);
+  remap.hedge.resize(mr.hedge.size(),Remap::InvalidIndex());
   for(HEdgeIteratorRight hi=mr.hedge.begin(); hi!=mr.hedge.end(); ++hi)
     if(!(*hi).IsD() && (!selected || (*hi).IsS())){
       size_t ind=Index(mr,*hi);
-      assert(remap.hedge[ind]==-1);
+      assert(remap.hedge[ind]==Remap::InvalidIndex());
       HEdgeIteratorLeft hp = Allocator<MeshLeft>::AddHEdges(ml,1);
       (*hp).ImportData(*(hi));
       remap.hedge[ind]=Index(ml,*hp);
