@@ -504,62 +504,31 @@ struct CurvatureDirOcfBaseType{
 template <class A, class T> class CurvatureDirOcf: public T {
 public:
   typedef A CurvatureDirType;
-  typedef typename CurvatureDirType::VecType CurVecType;
-  typedef typename CurvatureDirType::ScalarType CurScalarType;
+  typedef typename CurvatureDirType::CurVecType CurVecType;
+  typedef typename CurvatureDirType::CurScalarType CurScalarType;
 
   inline bool IsCurvatureDirEnabled( )  const  { return this->Base().IsCurvatureDirEnabled(); }
   static bool HasCurvatureDir()   { return true; }
   static bool HasCurvatureDirOcf()   { return true; }
 
-  CurVecType &PD1()       {
-    assert((*this).Base().CurvatureDirEnabled);
-    return (*this).Base().CDV[(*this).Index()].max_dir;
-  }
+  CurVecType &PD1()       { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].max_dir; }
+  CurVecType &PD2()       { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].min_dir; }
+  CurVecType cPD1() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].max_dir; }
+  CurVecType cPD2() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].min_dir; }
 
-  CurVecType &PD2()       {
-    assert((*this).Base().CurvatureDirEnabled);
-    return (*this).Base().CDV[(*this).Index()].min_dir;
-  }
-
-  CurVecType cPD1() const {
-    assert((*this).Base().CurvatureDirEnabled);
-    return (*this).Base().CDV[(*this).Index()].max_dir;
-  }
-
-  CurVecType cPD2() const {
-    assert((*this).Base().CurvatureDirEnabled);
-    return (*this).Base().CDV[(*this).Index()].min_dir;
-  }
-
-  CurScalarType &K1()       {
-    // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-    assert((*this).Base().NormalEnabled);
-    return (*this).Base().CDV[(*this).Index()].k1;
-  }
-  CurScalarType &K2()       {
-    // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-    assert((*this).Base().NormalEnabled);
-    return (*this).Base().CDV[(*this).Index()].k2;
-  }
-  CurScalarType cK1() const {
-    // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-    assert((*this).Base().NormalEnabled);
-    return (*this).Base().CDV[(*this).Index()].k1;
-  }
-  CurScalarType cK2() const {
-    // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
-    assert((*this).Base().NormalEnabled);
-    return (*this).Base().CDV[(*this).Index()].k2;
-  }
-
+  CurScalarType &K1()       { assert((*this).Base().NormalEnabled); return (*this).Base().CDV[(*this).Index()].k1; }
+  CurScalarType &K2()       { assert((*this).Base().NormalEnabled); return (*this).Base().CDV[(*this).Index()].k2; }
+  CurScalarType cK1() const { assert((*this).Base().NormalEnabled); return (*this).Base().CDV[(*this).Index()].k1; }
+  CurScalarType cK2() const { assert((*this).Base().NormalEnabled); return (*this).Base().CDV[(*this).Index()].k2; }
 
   template <class RightFaceType>
   void ImportData(const RightFaceType & rightF){
-    if((*this).IsCurvatureDirEnabled() && rightF.IsCurvatureDirEnabled())
+    if((*this).IsCurvatureDirEnabled() && rightF.IsCurvatureDirEnabled()) {
       PD1() = rightF.cPD1();
-    PD2() = rightF.cPD2();
-    K1() = rightF.cK1();
-    K2() = rightF.cK2();
+      PD2() = rightF.cPD2();
+      K1() = rightF.cK1();
+      K2() = rightF.cK2();
+    }
     T::ImportData(rightF);
   }
 
