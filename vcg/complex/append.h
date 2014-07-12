@@ -123,7 +123,7 @@ public:
    if(HasFEAdjacency(ml) && HasFEAdjacency(mr)){
      assert(fl.VN() == fr.VN());
      for( int vi = 0; vi < fl.VN(); ++vi ){
-       int idx = remap.edge[Index(mr,fr.cFEp(vi))];
+       size_t idx = remap.edge[Index(mr,fr.cFEp(vi))];
        if(idx!=Remap::InvalidIndex())
          fl.FEp(vi) = &ml.edge[idx];
      }
@@ -133,7 +133,7 @@ public:
    if(HasFFAdjacency(ml) && HasFFAdjacency(mr)){
      assert(fl.VN() == fr.VN());
      for( int vi = 0; vi < fl.VN(); ++vi ){
-       int idx = remap.face[Index(mr,fr.cFFp(vi))];
+       size_t idx = remap.face[Index(mr,fr.cFFp(vi))];
        if(idx!=Remap::InvalidIndex()){
          fl.FFp(vi) = &ml.face[idx];
          fl.FFi(vi) = fr.cFFi(vi);
