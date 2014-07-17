@@ -546,7 +546,7 @@ Matrix33<S> RotationMatrix(const vcg::Point3<S> &axis,
     {
         vcg::Matrix44<S> matr44;
         vcg::Matrix33<S> matr33;
-        matr44.SetRotate(angleRad,axis);
+        matr44.SetRotateRad(angleRad,axis);
         for (int i=0;i<3;i++)
             for (int j=0;j<3;j++)
                 matr33[i][j]=matr44[i][j];
