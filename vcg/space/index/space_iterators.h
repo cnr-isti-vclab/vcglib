@@ -187,7 +187,7 @@ namespace vcg{
 
 		///contructor
 		RayIterator(Spatial_Idexing &_Si,
-					INTFUNCTOR _int_funct
+					INTFUNCTOR & _int_funct
 					,const ScalarType &_max_dist)
 					:Si(_Si),int_funct(_int_funct)
 		{

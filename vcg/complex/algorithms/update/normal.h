@@ -262,7 +262,7 @@ static void PerVertexNormalized(ComputeMeshType &m)
   NormalizePerVertex(m);
 }
 
-/// \brief Equivalent to PerFace() and NormalizePerVertex()
+/// \brief Equivalent to PerFace() and NormalizePerFace()
 static void PerFaceNormalized(ComputeMeshType &m)
 {
   PerFace(m);
