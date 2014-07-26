@@ -195,7 +195,7 @@ namespace tri {
             }
             p.FlipV();
         } while(p!=start);
-        assert(vs.size() == fs.size()+2);
+        //assert(vs.size() == fs.size()+2);
     }
     static void ExtractPolygon(typename TriMeshType::FacePointer tfp, std::vector<typename TriMeshType::VertexPointer> &vs)
     {
