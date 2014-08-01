@@ -22,56 +22,32 @@
 ****************************************************************************/
 #include <stdio.h>
 #include <time.h>
-#include <vcg/complex/used_types.h>
 #include <vcg/space/distance2.h>
-#include<vcg/space/index/index2D/spatial_hashing_2D.h>
+#include<vcg/space/segment2.h>
+#include<vcg/space/index/index2D/grid_static_ptr_2D.h>
+#include<vcg/space/index/index2D/grid_closest_2D.h>
 #include<vcg/space/intersection2.h>
 
 typedef double MyScalarType;
+typedef vcg::Point2<MyScalarType> MyCoordType;
+typedef vcg::Ray2<MyScalarType> MyRayType;
 
+//**BASIC SEGMENT CLASS
 class MySegmentType:public vcg::Segment2<MyScalarType>
 {
 public:
 	int mark;
-    bool deleted;
-	bool IsD(){return deleted;}
-    typedef vcg::Point2<ScalarType> CoordType;
+    bool IsD(){return false;}
 
-	MySegmentType(const vcg::Point2<MyScalarType> &_P0,
-				  const vcg::Point2<MyScalarType> &_P1)
-	{
-		P0()=_P0;
-		P1()=_P1;
+    MySegmentType(const vcg::Point2<MyScalarType> &_P0,
+                  const vcg::Point2<MyScalarType> &_P1)
+    {
+        P0()=_P0;
+        P1()=_P1;
         mark=0;
     }
 
-	void GetBBox(vcg::Box2<ScalarType> &BB2)
-	{
-		//BB2.SetNull();
-		BB2.Set(P0());
-        BB2.Add(P1());
-	}
-
-    void GetSubBBox(const ScalarType &step_size,
-                   std::vector<vcg::Box2<ScalarType> > &RasterBox)
-    {
-        //RasterBox.clear();
-        ScalarType lenght=(P1()-P0()).Norm();
-        CoordType dir=(P1()-P0());
-        dir.Normalize();
-        int steps= (int)ceil(lenght/(ScalarType)step_size);
-        RasterBox.resize(steps);
-
-        CoordType currP0=P0();
-        CoordType currP1;
-        for (int i=0;i<steps-1;i++)
-        {
-            currP1=currP0+dir*step_size;
-            RasterBox[i]=(vcg::Box2<ScalarType>(currP0,currP1));
-            currP0=currP1;
-        }
-        RasterBox[steps-1]=(vcg::Box2<ScalarType>(currP0,P1()));
-    }
+    int &TMark(){return mark;}
 
 	MySegmentType(){}
 
@@ -80,9 +56,56 @@ public:
 		P0()=s1.P0();
 		P1()=s1.P1();
 		mark=s1.mark;
-        deleted=s1.deleted;
 	}
 };
+
+
+//**ALLOCATED SEGMENTS**//
+std::vector<MySegmentType> AllocatedSeg;
+
+//**GENERATION OF RANDOM SEGMENTS
+
+vcg::Point2<MyScalarType> RandomPoint(MyScalarType SpaceSize=100)
+{
+    int dimension=RAND_MAX;
+    int X=rand();
+    int Y=rand();
+    vcg::Point2<MyScalarType> P0=vcg::Point2<MyScalarType>((MyScalarType)X/dimension,(MyScalarType)Y/dimension);
+    P0*=SpaceSize;
+    return P0;
+}
+
+
+void RandomSeg(vcg::Point2<MyScalarType> &P0,
+                vcg::Point2<MyScalarType> &P1,
+                MyScalarType SpaceSize=100,
+                MyScalarType maxdim=1)
+{
+
+    P0=RandomPoint(SpaceSize);
+    vcg::Point2<MyScalarType> D=RandomPoint(SpaceSize);
+    D.Normalize();
+    D*=maxdim;
+    P1=P0+D;
+}
+
+void InitRandom(int num,
+                MyScalarType SpaceSize=100,
+                MyScalarType maxdim=1)
+{
+    AllocatedSeg.clear();
+    AllocatedSeg.resize(num);
+    srand(clock());
+    for (int i=0;i<num;i++)
+    {
+        vcg::Point2<MyScalarType> P0,P1;
+        RandomSeg(P0,P1,SpaceSize,maxdim);
+        AllocatedSeg[i]=MySegmentType(P0,P1);
+        //AllocatedSeg[i].deleted=false;
+    }
+
+}
+
 
 //**MARKER CLASSES**//
 class MyMarker
@@ -92,245 +115,212 @@ public:
 	int mark;
 
 	MyMarker(){mark=0;}
-	//MyMarker(	MESH_TYPE *m) {SetMesh(m);}
-	void UnMarkAll(){mark++;}
+
+    void UnMarkAll(){mark++;}
 
 	bool IsMarked(MySegmentType* obj)
-	{return(obj->mark==mark);}
+    {
+        int markObj=obj->TMark();
+        return(markObj==mark);
+    }
 
 	void Mark(MySegmentType* obj)
-	{obj->mark=mark;}
-	/*void SetMesh(MESH_TYPE *_m)
-	{m=_m;}*/
+    {obj->TMark()=mark;}
+
 };
 
+//**GRID-RELATED STUFF**//
+MyMarker mf;
+vcg::GridStaticPtr2D<MySegmentType,MyScalarType> Grid2D;
 
-vcg::SpatialHashTable2D<MySegmentType,MyScalarType> Hash2D;
-std::vector<MySegmentType> Allocated;
-MyMarker MyMark;
-
-void RandomSeg(vcg::Point2<MyScalarType> &P0,
-				vcg::Point2<MyScalarType> &P1,
-				MyScalarType SpaceSize=100,
-				MyScalarType maxdim=0.01)
+//**QUERIES
+MySegmentType * GetClosestSegment(MyCoordType & _p,
+                                  MyCoordType &_closestPt)
 {
-	MyScalarType dimAbs=SpaceSize*maxdim;
-	int dimension=RAND_MAX;
+    vcg::PointSegment2DEPFunctor<MyScalarType> PDistFunct;
 
-	int X=rand();
-	int Y=rand();
-	int dX=rand();
-	int dY=rand();
-	MyScalarType size=((MyScalarType)(rand()))/(MyScalarType)dimension;
-
-	P0=vcg::Point2<MyScalarType>((MyScalarType)X/dimension,(MyScalarType)Y/dimension);
-	P0*=SpaceSize;
-
-	vcg::Point2<MyScalarType> D=vcg::Point2<MyScalarType>((MyScalarType)dX/dimension,(MyScalarType)dY/dimension);
-	D.Normalize();
-	D*=size*dimAbs;
-	P1=P0+D;
+    MyScalarType _minDist;
+    MyScalarType _maxDist=std::numeric_limits<MyScalarType>::max();
+    return (Grid2D.GetClosest(PDistFunct,mf,_p,_maxDist,_minDist,_closestPt));
 }
 
-void InitRandom(int num,
-				MyScalarType SpaceSize=100,
-				MyScalarType maxdim=0.01)
+void GetInBoxSegments(vcg::Box2<MyScalarType> bbox,std::vector<MySegmentType*> &result)
 {
-	Allocated.clear();
-	Allocated.resize(num);
-	srand(clock());
-	for (int i=0;i<num;i++)
-	{
-		vcg::Point2<MyScalarType> P0,P1;
-		RandomSeg(P0,P1,SpaceSize,maxdim);
-		Allocated[i]=MySegmentType(P0,P1);
-		Allocated[i].deleted=false;
-	}
-
+    Grid2D.GetInBox(mf,bbox,result);
 }
 
-
-MyScalarType TestBox(int num_test=100000,
-				 MyScalarType SpaceSize=100,
-				MyScalarType maxdim=0.02)
+MySegmentType * DoRay(MyRayType & _r,
+                      MyCoordType &_closestPt)
 {
-	//GetInBox(OBJMARKER & _marker,const Box2x _bbox,OBJPTRCONTAINER & _objectPtrs)
-	MyMark.UnMarkAll();
-    //int t0=clock();
-	int num=0;
-	for (int i=0;i<num_test;i++)
-	{
-		vcg::Point2<MyScalarType> P0,P1;
-		RandomSeg(P0,P1,SpaceSize,maxdim);
-		vcg::Box2<MyScalarType> bbox;
-		bbox.Add(P0);
-		bbox.Add(P1);
-		std::vector<MySegmentType*> result;
-		num+=Hash2D.GetInBox<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,result);
-	}
-    //int t1=clock();
-	MyScalarType numd=(double)num/(double)num_test;
-	return numd;
+    MyRayType _ray1=_r;
+    _ray1.Normalize();
+    typedef vcg::RaySegmentIntersectionFunctor SintFunct;
+    SintFunct rs;
+    MyScalarType _maxDist=std::numeric_limits<MyScalarType>::max();
+    MyScalarType _t;
+    MySegmentType *seg=Grid2D.DoRay(rs,mf,_ray1,_maxDist,_t);
+
+    if (seg==NULL)return NULL;
+        _closestPt=_ray1.Origin()+_ray1.Direction()*_t;
+    return seg;
 }
 
-MyScalarType GetIntersectingSegments(MySegmentType *S,
-                            std::vector<MySegmentType*> &result,
-                            bool subdivide=false)
+//**BRUTE FORCE QUERIES
+void GetInBoxSegmentsBruteF( vcg::Box2<MyScalarType> bbox,
+                             std::vector<MySegmentType*> &result)
 {
-	///get the bbox
-	result.clear();
-    ///then get into the grid
-    std::vector<MySegmentType*> inbox;
-    int num=0;
-    if (!subdivide)
+    for (int i=0;i<AllocatedSeg.size();i++)
     {
+        if (!AllocatedSeg[i].BBox().Collide(bbox))continue;
+        result.push_back(&AllocatedSeg[i]);
+    }
+}
+
+MySegmentType* GetClosesestSegmentBruteF(MyCoordType & _p,
+                                        MyCoordType &_closestPt)
+{
+    MyScalarType _minDist=std::numeric_limits<MyScalarType>::max();
+    MySegmentType *ret=NULL;
+    for (int i=0;i<AllocatedSeg.size();i++)
+    {
+        vcg::Point2<MyScalarType> test;
+        test=vcg::ClosestPoint(AllocatedSeg[i],_p);
+        MyScalarType currD=(test-_p).Norm();
+        if (currD<_minDist)
+        {
+            _closestPt=test;
+            _minDist=currD;
+            ret=&AllocatedSeg[i];
+        }
+    }
+    return ret;
+}
+
+MySegmentType * DoRayBruteF(MyRayType & _r,
+                            MyCoordType &_closestPt)
+{
+    MyScalarType _minDist=std::numeric_limits<MyScalarType>::max();
+    MySegmentType *ret=NULL;
+    for (int i=0;i<AllocatedSeg.size();i++)
+    {
+        vcg::Point2<MyScalarType> test;
+        bool inters=vcg::RaySegmentIntersection(_r,AllocatedSeg[i],test);
+        if (!inters)continue;
+        MyScalarType currD=(test-_r.Origin()).Norm();
+        if (currD<_minDist)
+        {
+            _closestPt=test;
+            _minDist=currD;
+            ret=&AllocatedSeg[i];
+        }
+    }
+    return ret;
+}
+
+
+void TestBox(int num_test=100000,
+             MyScalarType SpaceSize=100)
+{
+    int numWrong=0;
+
+    for (int i=0;i<num_test;i++)
+    {
+        vcg::Point2<MyScalarType> P0=RandomPoint(SpaceSize);
+        vcg::Point2<MyScalarType> P1=RandomPoint(SpaceSize);
         vcg::Box2<MyScalarType> bbox;
-        S->GetBBox(bbox);
-        num=Hash2D.GetInBox<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,inbox);
+        bbox.Add(P0);
+        bbox.Add(P1);
+        std::vector<MySegmentType*> result0;
+        GetInBoxSegments(bbox,result0);
+
+        std::vector<MySegmentType*> result1;
+        GetInBoxSegmentsBruteF(bbox,result1);
+
+        std::sort(result0.begin(),result0.end());
+        std::sort(result1.begin(),result1.end());
+
+        std::vector<MySegmentType*>::iterator new_end=std::unique(result1.begin(),result1.end());
+        int dist=distance(result1.begin(),new_end);
+        result1.resize(dist);
+
+        if (result0.size()!=result1.size())numWrong++;
+
+        for (int j = 0; j < result0.size(); j++)
+            if (result0[j] != result1[j])
+            {
+                numWrong++;
+            }
     }
-    else
-    {
-        std::vector<vcg::Box2<MyScalarType> > bbox;
-        MyScalarType size_cell=Hash2D.cell_size;
+    printf("WRONG TESTS BBOX %d ON %d \n",numWrong,num_test);
+    fflush(stdout);
+}
 
-        S->GetSubBBox(size_cell,bbox);
-        num=Hash2D.GetInBoxes<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,inbox);
+void TestClosest(int num_test=100000,
+                  MyScalarType SpaceSize=100)
+{
+
+    int numWrong=0;
+    for (int i=0;i<num_test;i++)
+    {
+        vcg::Point2<MyScalarType> P0=RandomPoint(SpaceSize);
+
+        vcg::Point2<MyScalarType> closest0;
+        MySegmentType* result0=GetClosestSegment(P0,closest0);
+
+        vcg::Point2<MyScalarType> closest1;
+        MySegmentType* result1=GetClosesestSegmentBruteF(P0,closest1);
+
+
+        if (result0!=result1)
+        {
+            numWrong++;
+            printf("D0 %5.5f  \n",(closest0-P0).Norm());
+            printf("D1 %5.5f  \n",(closest1-P0).Norm());
+            fflush(stdout);
+        }
     }
-	///then test intersection
-	for (int j=0;j<num;j++)
-	{
-		if (inbox[j]==S)continue;
-        vcg::Point2<MyScalarType> p_inters;
-        if (vcg::SegmentSegmentIntersection<MyScalarType>(*S,*inbox[j],p_inters))
-			result.push_back(inbox[j]);
-	}
-    return (((MyScalarType)num-result.size())/(MyScalarType)num);
+    printf("WRONG TESTS CLOSEST %d ON %d \n",numWrong,num_test);
+    fflush(stdout);
 }
 
-MyScalarType GetCloseSegments(MySegmentType *S,
-					const MyScalarType &radius,
-                    std::vector<MySegmentType*> &result,
-                    bool use_sub=false)
+void TestRay(int num_test=100000,
+             MyScalarType SpaceSize=100)
 {
-	///get the bbox
-	result.clear();
-    std::vector<MySegmentType*> inbox;
-    int num=0;
-    if (!use_sub)
+    int numWrong=0;
+    int NUll0=0;
+    int NUll1=0;
+    for (int i=0;i<num_test;i++)
     {
-        vcg::Box2<MyScalarType> bbox;
-        S->GetBBox(bbox);
-        bbox.Offset(radius);//*1.02);
-        ///then get into the grid
-        num=Hash2D.GetInBox<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,inbox);
+        vcg::Point2<MyScalarType> P0=RandomPoint(SpaceSize);
+        vcg::Point2<MyScalarType> P1=RandomPoint(SpaceSize);
+        vcg::Point2<MyScalarType> Orig=P0;
+        vcg::Point2<MyScalarType> Dir=P1-P0;
+        Dir.Normalize();
+
+        MyRayType r(Orig,Dir);
+
+        vcg::Point2<MyScalarType> closest0;
+        MySegmentType* result0=DoRay(r,closest0);
+
+        vcg::Point2<MyScalarType> closest1;
+        MySegmentType* result1=DoRayBruteF(r,closest1);
+
+
+        if (result0!=result1)
+        {
+            numWrong++;
+//            printf("D0 %5.5f  \n",(closest0-P0).Norm());
+//            printf("D1 %5.5f  \n",(closest1-P0).Norm());
+//            fflush(stdout);
+        }
+        if (result0==NULL) NUll0++;
+        if (result1==NULL) NUll1++;
     }
-    else
-    {
-        std::vector<vcg::Box2<MyScalarType> > bbox;
-        MyScalarType size_cell=Hash2D.cell_size;
-        S->GetSubBBox(size_cell,bbox);
-        for (int i=0;i<bbox.size();i++)
-            bbox[i].Offset(radius);//*1.02);
-        ///then get into the grid
-        num=Hash2D.GetInBoxes<MyMarker,std::vector<MySegmentType*> >(MyMark,bbox,inbox);
-    }
-	///then test intersection
-	for (int j=0;j<num;j++)
-    {
-		if (inbox[j]==S)continue;
-		vcg::Point2<MyScalarType> p_clos;
-        MyScalarType dist=vcg::Segment2DSegment2DDistance<MyScalarType>(*S,*inbox[j],p_clos);
-        if (dist<radius)
-            result.push_back(inbox[j]);
-	}
-    return (((MyScalarType)num-result.size())/(MyScalarType)num);
+    printf("WRONG TESTS DORAY %d ON %d \n",numWrong,num_test);
+    printf("NULL0 %d \n",NUll0);
+    printf("NULL1 %d \n",NUll1);
+    fflush(stdout);
 }
-
-MyScalarType TestIntersection(unsigned int num_test=1000000,bool use_sub=false)
-{
-    MyScalarType false_pos=0;
-    for (unsigned int i=0;i<num_test;i++)
-	{
-		assert(i<Allocated.size());
-		std::vector<MySegmentType*> result;
-        MyScalarType false_pos_t=GetIntersectingSegments(&Allocated[i],result,use_sub);
-        false_pos+=false_pos_t;
-	}
-    return (false_pos/(MyScalarType)num_test);
-}
-
-MyScalarType TestClosest(unsigned int num_test=1000000,
-                        MyScalarType radius=0.1,
-                        bool use_sub=false)
-{
-    MyScalarType false_pos=0;
-    for (unsigned int i=0;i<num_test;i++)
-	{
-		assert(i<Allocated.size());
-
-		//get the segment
-		MySegmentType *S=&Allocated[i];
-		
-		MyScalarType absRadius=S->Length()*radius;
-		
-		///get the segments closer than a radius
-		std::vector<MySegmentType*> closer;
-        MyScalarType false_pos_t=GetCloseSegments(S,absRadius,closer,use_sub);
-        false_pos+=false_pos_t;
-	}
-    return (false_pos/(MyScalarType)num_test);
-}
-
-int TestCorrectIntersect(int num_test=1000,bool use_sub=false)
-{
-	int num=0;
-	for (int i=0;i<num_test;i++)
-	{
-		MySegmentType S0=Allocated[i];
-		std::vector<MySegmentType*> result0,result1;
-		for (int j=0;j<num_test;j++)
-		{
-			if (j==i) continue;
-			MySegmentType *S1=&Allocated[j];
-			vcg::Point2<MyScalarType> p_inters;
-			if (vcg::SegmentSegmentIntersection<MyScalarType>(S0,*S1,p_inters))
-				result0.push_back(S1);
-			/*num+=result0.size();*/
-		}
-        GetIntersectingSegments(&Allocated[i],result1,use_sub);
-		///then see if equal number
-		if (result1.size()==result0.size())num++;
-	}
-	return (num);
-}
-
-int TestCorrectClosest(int num_test=1000,
-                        MyScalarType radius=0.1,
-                       bool use_sub=false)
-{
-	int num=0;
-	for (int i=0;i<num_test;i++)
-	{
-		MySegmentType *S0=&Allocated[i];
-		std::vector<MySegmentType*> result0,result1;
-		MyScalarType absRadius=S0->Length()*radius;
-		for (int j=0;j<num_test;j++)
-		{
-			if (j==i) continue;
-			MySegmentType *S1=&Allocated[j];
-			vcg::Point2<MyScalarType> p_clos;
-			MyScalarType dist=vcg::Segment2DSegment2DDistance<MyScalarType>(*S0,*S1,p_clos);
-			if (dist<absRadius)
-				result0.push_back(S1);
-			/*num+=result0.size();*/
-		}
-        GetCloseSegments(S0,absRadius,result1,use_sub);
-		///then see if equal number
-		if (result1.size()==result0.size())num++;
-	}
-	return (num);
-}
-
 
 int main( int argc, char **argv )
 {
@@ -339,44 +329,21 @@ int main( int argc, char **argv )
   (void) argv;
   int num_sample=20000;
   int t0=clock();
+
+  printf("** Random Initialization ** \n");
+  fflush(stdout);
   InitRandom(num_sample,100,0.3);
   int t1=clock();
 
   ///Initialization performance
   printf("** Time elapsed for initialization of %d sample is %d\n \n",num_sample,t1-t0);
-  Hash2D.Set(Allocated.begin(),Allocated.end(),use_sub);
+  Grid2D.Set(AllocatedSeg.begin(),AllocatedSeg.end());
+  fflush(stdout);
 
-  ///Box Query performance
-  t0=clock();
-  MyScalarType avg_test=TestBox(num_sample);
-  t1=clock();
-  printf("** Time elapsed for %d BOX queries is %d\n, average found %5.5f \n \n",num_sample,t1-t0,avg_test);
-  
-
-  ///Intersecting segment performance
-  t0=clock();
-  MyScalarType perc_int=TestIntersection(num_sample,use_sub);
-  t1=clock();
-  printf("** Time elapsed for %d INTERSECTION queries is %d\n, false positive perc found %5.5f \n \n",num_sample,t1-t0,perc_int);
-	
-  ///closest test
-  t0=clock();
-  MyScalarType perc_clos=TestClosest(num_sample,0.1,use_sub);
-  t1=clock();
-  printf("** Time elapsed for %d CLOSEST queries is %d\n, false positive perc found %5.5f \n \n",num_sample,t1-t0,perc_clos);
-	
- ///reinitialize structure
-  MyMark.mark=0;
-  Hash2D.Clear();
-  int n_test=1000;
-  InitRandom(n_test,100,0.1);
-  Hash2D.Set(Allocated.begin(),Allocated.end(),use_sub);
-
-  int tested_int=TestCorrectIntersect(n_test,use_sub);
-  printf("** Correct Intersect on %d test are %d \n",n_test,tested_int);
-	
-  int tested_clos=TestCorrectClosest(n_test,0.1,use_sub);
-  printf("** Correct Closest on %d test are %d \n",n_test,tested_clos);
+  //Box Query correctness
+  TestBox(num_sample);
+  TestClosest(num_sample);
+  TestRay(num_sample);
 
   return 0;
 }

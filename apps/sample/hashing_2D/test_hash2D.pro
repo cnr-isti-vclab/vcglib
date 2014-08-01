@@ -7,6 +7,9 @@ DEPENDPATH += .
 INCLUDEPATH += . ../../..
 CONFIG += console stl
 TEMPLATE = app
-HEADERS += ../../../vcg/space/index/index2D/spatial_hashing_2D.h
+HEADERS += ../../../vcg/space/index/index2D/grid_static_ptr_2D.h\
+           ../../../vcg/space/index/index2D/closest_2D.h\
+           ../../../vcg/space/index/index2D/space_iterators_2D.h\
+           ../../../vcg/space/index/index2D/grid_closest_2D.h
 
 SOURCES += test_hash2D.cpp
