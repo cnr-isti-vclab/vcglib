@@ -28,7 +28,6 @@
 
 #include<vcg/space/index/index2D/base_2D.h>
 #include<vcg/space/box2.h>
-//#include <vcg/space/index/space_iterators.h>
 
 
 #ifndef WIN32
