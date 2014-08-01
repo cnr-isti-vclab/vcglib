@@ -169,7 +169,7 @@ MySegmentType * DoRay(MyRayType & _r,
 void GetInBoxSegmentsBruteF( vcg::Box2<MyScalarType> bbox,
                              std::vector<MySegmentType*> &result)
 {
-    for (int i=0;i<AllocatedSeg.size();i++)
+    for (size_t i=0;i<AllocatedSeg.size();i++)
     {
         if (!AllocatedSeg[i].BBox().Collide(bbox))continue;
         result.push_back(&AllocatedSeg[i]);
@@ -181,7 +181,7 @@ MySegmentType* GetClosesestSegmentBruteF(MyCoordType & _p,
 {
     MyScalarType _minDist=std::numeric_limits<MyScalarType>::max();
     MySegmentType *ret=NULL;
-    for (int i=0;i<AllocatedSeg.size();i++)
+    for (size_t i=0;i<AllocatedSeg.size();i++)
     {
         vcg::Point2<MyScalarType> test;
         test=vcg::ClosestPoint(AllocatedSeg[i],_p);
@@ -201,7 +201,7 @@ MySegmentType * DoRayBruteF(MyRayType & _r,
 {
     MyScalarType _minDist=std::numeric_limits<MyScalarType>::max();
     MySegmentType *ret=NULL;
-    for (int i=0;i<AllocatedSeg.size();i++)
+    for (size_t i=0;i<AllocatedSeg.size();i++)
     {
         vcg::Point2<MyScalarType> test;
         bool inters=vcg::RaySegmentIntersection(_r,AllocatedSeg[i],test);
@@ -245,7 +245,7 @@ void TestBox(int num_test=100000,
 
         if (result0.size()!=result1.size())numWrong++;
 
-        for (int j = 0; j < result0.size(); j++)
+        for (size_t j = 0; j < result0.size(); j++)
             if (result0[j] != result1[j])
             {
                 numWrong++;
@@ -324,7 +324,6 @@ void TestRay(int num_test=100000,
 
 int main( int argc, char **argv )
 {
-  bool use_sub=true;
   (void) argc;
   (void) argv;
   int num_sample=20000;
