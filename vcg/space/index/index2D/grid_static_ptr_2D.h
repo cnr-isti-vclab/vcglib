@@ -56,8 +56,8 @@ private:
               const int y,
               ObjType *elem)
     {
-        assert((x>=0)&&(x<data.size()));
-        assert((y>=0)&&(y<data[x].size()));
+        assert((x>=0)&&(x<(int)data.size()));
+        assert((y>=0)&&(y<(int)data[x].size()));
         data[x][y].push_back(elem);
     }
 
@@ -78,7 +78,7 @@ private:
 
         ///allocate space
         data.resize(this->siz.X());
-        for (int x=0;x<data.size();x++)
+        for (size_t x=0;x<data.size();x++)
             data[x].resize(this->siz.Y());
 
 
