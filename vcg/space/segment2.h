@@ -172,8 +172,6 @@ public:
     {
         const Point2<typename EdgeType::ScalarType> fp = Point2<typename EdgeType::ScalarType>::Construct(p);
         Point2<typename EdgeType::ScalarType> fq;
-        typename EdgeType::ScalarType md = (typename EdgeType::ScalarType)(minDist);
-        //const bool ret = PointDistanceEP(f, fp, md, fq);
         fq=ClosestPoint(e,fp);
         ScalarType currD = (ScalarType)(fp-fq).Norm();
 
