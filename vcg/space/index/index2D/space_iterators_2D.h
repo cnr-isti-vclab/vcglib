@@ -57,7 +57,7 @@ protected:
     }
 
 
-    bool _NextCell()
+    void _NextCell()
     {
         currBox.min+=step;
         currBox.max+=step;
@@ -72,7 +72,7 @@ protected:
         std::vector<ObjType*> objectPtrs;
         GridGetInBox2D(Si,tm,currBox,objectPtrs,false);
         //printf(" size %d \n",objectPtrs.size());
-        for(int i=0;i<objectPtrs.size();i++)
+        for(size_t i=0;i<objectPtrs.size();i++)
         {
             ObjType* elem=objectPtrs[i];
             if (elem->IsD())continue;
@@ -101,9 +101,9 @@ public:
 
     //contructor
     RayIterator2D(Spatial_Idexing &_Si,
-                  INTFUNCTOR _int_funct,
+                  INTFUNCTOR &_int_funct,
                   const ScalarType &_max_dist,
-                  TMARKER  _tm)
+                  TMARKER  &_tm)
         :Si(_Si),int_funct(_int_funct),tm(_tm)
     {
         max_dist=_max_dist;
