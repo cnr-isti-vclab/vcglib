@@ -186,7 +186,7 @@ typedef Ray2<double,true> Ray2dN;
 
 	  /// returns closest point
 template <class ScalarType, bool NORM> 
-Point2<ScalarType> ClosestPoint( Ray2<ScalarType,NORM> r, const Point3<ScalarType> & p) 
+Point2<ScalarType> ClosestPoint( Ray2<ScalarType,NORM> r, const Point2<ScalarType> & p)
 {
 	ScalarType t = r.Projection(p); 
 	if (t<0) return r.Origin();
