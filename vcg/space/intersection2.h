@@ -40,7 +40,7 @@ added circle-line intersection
 #include <vcg/space/point2.h>
 #include <vcg/space/triangle2.h>
 #include <vcg/space/box2.h>
-
+#include <vector>
 
 
 
@@ -136,6 +136,34 @@ namespace vcg {
 		SCALAR_TYPE length=(seg.P0()-seg.P1()).Norm();
 		return ((d0<length)&&(d1<length));
 	}
+
+    /// interseciton between point and triangle
+    template<class SCALAR_TYPE>
+    inline bool RayBoxIntersection(const vcg::Ray2<SCALAR_TYPE> & r,
+                                   const vcg::Box2<SCALAR_TYPE> &bbox,
+                                    Point2<SCALAR_TYPE> &p_inters)
+    {
+        ///first create the 4 segments
+        vcg::Segment2<SCALAR_TYPE> S[4];
+        for (int i=0;i<4;i++)
+            S[i]=vcg::Segment2<SCALAR_TYPE>(bbox.P(i),bbox.P((i+1)%4));
+
+        SCALAR_TYPE mind=std::numeric_limits<SCALAR_TYPE>::max();
+        bool found=false;
+        for (int i=0;i<4;i++)
+        {
+             Point2<SCALAR_TYPE> p_inters_test;
+            if (!RaySegmentIntersection(r,S[i],p_inters_test))continue;
+            SCALAR_TYPE Norm=(p_inters_test-r.Origin()).Norm();
+            if (Norm<mind)
+            {
+                mind=Norm;
+                p_inters=p_inters_test;
+                found=true;
+            }
+        }
+        return found;
+    }
 
 	/// interseciton between point and triangle
 	template<class SCALAR_TYPE>
@@ -333,6 +361,28 @@ namespace vcg {
 			return true;
 		}
 	}
+
+
+    // Ray-Segment Functor
+    class RaySegmentIntersectionFunctor {
+    public:
+
+        template <class SEGMENTTYPE, class SCALARTYPE>
+        inline bool operator () (const SEGMENTTYPE & S,
+                                 const Ray2<SCALARTYPE> & ray,
+                                 SCALARTYPE & t)
+        {
+            typedef SCALARTYPE ScalarType;
+            typedef vcg::Point2<ScalarType> CoordType;
+
+            CoordType inters_test;
+            bool bret = RaySegmentIntersection(ray,S, inters_test);
+            if (bret)
+                t=(inters_test-ray.Origin()).Norm();
+            return (bret);
+        }
+    };
+
 	/*@}*/
 } // end namespace
 #endif
