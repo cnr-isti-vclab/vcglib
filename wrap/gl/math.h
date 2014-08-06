@@ -74,18 +74,23 @@ Revision 1.1  2004/03/31 15:27:17  ponchio
 
 namespace vcg {
 
+template<typename T>
+inline void glLoadMatrix(const vcg::Matrix44<T> &m) { assert(0); }
+template<> inline void glLoadMatrix(const vcg::Matrix44f &m) {glLoadMatrixf(m.V()); }
+template<> inline void glLoadMatrix(const vcg::Matrix44d &m) {glLoadMatrixd(m.V()); }
+
 template<typename T,int StorageOrder>
 inline void glLoadMatrix(const Eigen::Matrix<T,4,4,StorageOrder>& matrix) { assert(0); }
 
 template<> inline void glLoadMatrix(const Eigen::Matrix<float,4,4>& matrix) { glLoadMatrixf(matrix.data()); }
 template<> inline void glLoadMatrix(const Eigen::Matrix<float,4,4,Eigen::RowMajor>& matrix) {
-	Eigen::Matrix4f tmp(matrix);
-	glLoadMatrixf(tmp.data());
+    Eigen::Matrix4f tmp(matrix);
+    glLoadMatrixf(tmp.data());
 }
 inline void glLoadMatrix(const Eigen::Matrix<double,4,4>& matrix) { glLoadMatrixd(matrix.data()); }
 inline void glLoadMatrix(const Eigen::Matrix<double,4,4,Eigen::RowMajor>& matrix) {
-	Eigen::Matrix4d tmp(matrix);
-	glLoadMatrixd(tmp.data());
+    Eigen::Matrix4d tmp(matrix);
+    glLoadMatrixd(tmp.data());
 }
 template<typename Scalar>
 inline void glLoadMatrix(const Eigen::Transform<Scalar,3>& t) { glLoadMatrix(t.matrix()); }
@@ -96,13 +101,13 @@ inline void glMultMatrix(const Eigen::Matrix<T,4,4,StorageOrder>& matrix) { asse
 
 template<> inline void glMultMatrix(const Eigen::Matrix<float,4,4>& matrix) { glMultMatrixf(matrix.data()); }
 inline void glMultMatrix(const Eigen::Matrix<float,4,4,Eigen::RowMajor>& matrix) {
-	Eigen::Matrix<float,4,4> tmp(matrix);
-	glMultMatrixf(tmp.data());
+    Eigen::Matrix<float,4,4> tmp(matrix);
+    glMultMatrixf(tmp.data());
 }
 template<> inline void glMultMatrix(const Eigen::Matrix<double,4,4>& matrix) { glMultMatrixd(matrix.data()); }
 template<> inline void glMultMatrix(const Eigen::Matrix<double,4,4,Eigen::RowMajor>& matrix) {
-	Eigen::Matrix<double,4,4> tmp(matrix);
-	glMultMatrixd(tmp.data());
+    Eigen::Matrix<double,4,4> tmp(matrix);
+    glMultMatrixd(tmp.data());
 }
 template<typename Scalar>
 inline void glMultMatrix(const Eigen::Transform<Scalar,3>& t) { glMultMatrix(t.matrix()); }
@@ -127,18 +132,18 @@ inline void glMultMatrix(const Similarityd &s) {
 }
 
 inline void glGetv(const GLenum  pname, Eigen::Matrix<float,4,4>& matrix){
-	glGetFloatv(pname,matrix.data());
+    glGetFloatv(pname,matrix.data());
 }
 inline void glGetv(const GLenum pname, Eigen::Matrix<double,4,4>& matrix){
-	glGetDoublev(pname,matrix.data());
+    glGetDoublev(pname,matrix.data());
 }
 inline void glGetv(const GLenum pname, Eigen::Matrix<float,4,4,Eigen::RowMajor>& matrix){
-	glGetFloatv(pname,matrix.data());
-	matrix.transposeInPlace();
+    glGetFloatv(pname,matrix.data());
+    matrix.transposeInPlace();
 }
 inline void glGetv(const GLenum pname, Eigen::Matrix<double,4,4,Eigen::RowMajor>& matrix){
-	glGetDoublev(pname,matrix.data());
-	matrix.transposeInPlace();
+    glGetDoublev(pname,matrix.data());
+    matrix.transposeInPlace();
 }
 template<typename Scalar>
 inline void glGetv(const GLenum pname, const Eigen::Transform<Scalar,3>& t)
