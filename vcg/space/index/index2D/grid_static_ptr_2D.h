@@ -171,7 +171,7 @@ public:
                  const Ray2<ScalarType> & _ray, const ScalarType & _maxDist,
                  ScalarType & _t)
     {
-        return(vcg::GridDoRay<MyGridType,OBJRAYISECTFUNCTOR,OBJMARKER>(*this,_rayIntersector,_marker,_ray,_maxDist,_t));
+        return(vcg::GridDoRay2D<MyGridType,OBJRAYISECTFUNCTOR,OBJMARKER>(*this,_rayIntersector,_marker,_ray,_maxDist,_t));
     }
 
 

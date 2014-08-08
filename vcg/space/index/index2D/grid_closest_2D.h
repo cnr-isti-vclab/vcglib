@@ -21,8 +21,8 @@
 *                                                                           *
 ****************************************************************************/
 
-#ifndef __VCGLIB_GRID_CLOSEST
-#define __VCGLIB_GRID_CLOSEST
+#ifndef __VCGLIB_GRID_CLOSEST_2D
+#define __VCGLIB_GRID_CLOSEST_2D
 
 #include <vcg/space/index/index2D/space_iterators_2D.h>
 #include <vcg/space/intersection2.h>
@@ -175,7 +175,7 @@ typename SPATIAL_INDEX::ObjPtr  GridClosest2D(SPATIAL_INDEX &Si,
 }
 
 template <class SPATIALINDEXING,class OBJRAYISECTFUNCTOR, class OBJMARKER>
-typename SPATIALINDEXING::ObjPtr GridDoRay(SPATIALINDEXING &_Si,
+typename SPATIALINDEXING::ObjPtr GridDoRay2D(SPATIALINDEXING &_Si,
                                            OBJRAYISECTFUNCTOR &_rayIntersector,
                                            OBJMARKER &_marker,
                                            const Ray2<typename SPATIALINDEXING::ScalarType> & _ray,
