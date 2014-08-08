@@ -909,7 +909,6 @@ static void FaceNormalLaplacianVF(MeshType &m)
 
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
   {
-    CoordType bc=Barycenter<FaceType>(*fi);
     // 1) Clear all the visited flag of faces that are vertex-adjacent to fi
     for(int i=0;i<3;++i)
     {
