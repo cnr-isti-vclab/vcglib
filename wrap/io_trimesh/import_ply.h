@@ -320,9 +320,9 @@ static const char *ErrorMsg(int error)
 
 // to check if a given error is critical or not.
 static bool ErrorCritical(int err)
-{
-    if(err == PlyInfo::E_NO_FACE) return false;
-    return true;
+{ 
+	if ((err == ply::E_NOERROR) || (err == PlyInfo::E_NO_FACE)) return false;
+	return true;
 }
 
 
