@@ -669,7 +669,7 @@ void AreaMode::Undo(){
   delta_mouse=undo_delta_mouse;
   old_status=undo_old_status;
   rubberband_handle=undo_rubberband_handle;
-  for(unsigned int i=path.size() - 1; i > undo_path_index; --i)
+  for(size_t i=path.size() - 1; i > undo_path_index; --i)
      path.pop_back();
 }
 
