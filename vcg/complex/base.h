@@ -38,7 +38,7 @@ public:
 
     int n_attr;							// unique ID of the attribute
 
-    void Resize(const int & sz){((SimpleTempDataBase *)_handle)->Resize(sz);}
+    void Resize(size_t sz){((SimpleTempDataBase *)_handle)->Resize(sz);}
     void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase *)_handle)->Reorder(newVertIndex);}
     bool operator<(const  PointerToAttribute    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
 };

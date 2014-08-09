@@ -871,10 +871,10 @@ void OrientedDisk(MeshType &m, int slices, typename MeshType::CoordType center, 
 {
   Disk(m,slices);
   tri::UpdatePosition<MeshType>::Scale(m,radius);
-  float angleRad = Angle(Point3f(0,0,1),norm);
-  Point3f axis = Point3f(0,0,1)^norm;
+  MeshType::ScalarType angleRad = Angle(MeshType::CoordType(0,0,1),norm);
+  MeshType::CoordType axis = MeshType::CoordType(0,0,1)^norm;
 
-  Matrix44f rotM;
+  Matrix44<MeshType::ScalarType> rotM;
   rotM.SetRotateRad(angleRad,axis);
   tri::UpdatePosition<MeshType>::Matrix(m,rotM);
   tri::UpdatePosition<MeshType>::Translate(m,center);

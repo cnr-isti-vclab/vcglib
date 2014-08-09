@@ -32,6 +32,7 @@
 #include <vcg/simplex/face/topology.h>
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/space/texcoord2.h>
 #include <vcg/space/triangle3.h>
 
 namespace vcg{

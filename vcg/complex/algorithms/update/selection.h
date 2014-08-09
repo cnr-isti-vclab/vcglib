@@ -330,7 +330,8 @@ static size_t FaceFromVertexLoose(MeshType &m)
     {
       bool selVert=false;
       for(int i = 0; i < (*fi).VN(); ++i)
-        if((*fi).V(i)->IsS()) selVert=true;
+        if((*fi).V(i)->IsS()) 
+            selVert=true;
 
       if(selVert) {
         (*fi).SetS();

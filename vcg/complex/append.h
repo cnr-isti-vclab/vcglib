@@ -247,7 +247,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   for(EdgeIteratorRight ei=mr.edge.begin(); ei!=mr.edge.end(); ++ei)
     if(!(*ei).IsD() && (!selected || (*ei).IsS())){
       size_t ind=Index(mr,*ei);
-      remap.edge[ind]=Index(ml,*ep);
+      remap.edge[ind]=int(Index(ml,*ep));
       ++ep;
     }
 
@@ -261,7 +261,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   for(FaceIteratorRight fi=mr.face.begin(); fi!=mr.face.end(); ++fi)
     if(!(*fi).IsD() && (!selected || (*fi).IsS())){
       size_t ind=Index(mr,*fi);
-      remap.face[ind]=Index(ml,*fp);
+      remap.face[ind]=int(Index(ml,*fp));
       ++fp;
     }
 
