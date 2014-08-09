@@ -434,8 +434,9 @@ public:
         tri::Clean<OpenMeshType>::RemoveUnreferencedVertex(m);
       }
     }
-    Matrix44x tr; tr.Import(currtrasf);
-    tri::UpdatePosition<OpenMeshType>::Matrix(m,currtrasf,true);
+    Matrix44x tr; 
+    tr.Import(currtrasf);
+    tri::UpdatePosition<OpenMeshType>::Matrix(m,tr,true);
     tri::Allocator<OpenMeshType>::CompactVertexVector(m);
     tri::UpdateBounding<OpenMeshType>::Box(m);
     if(cb) cb(100,"PTX Mesh Loading finished!");
