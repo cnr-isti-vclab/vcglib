@@ -226,8 +226,8 @@ class Quadric
     static void computeCurvature(MeshType & m)
     {
       Allocator<MeshType>::CompactVertexVector(m);
-
-      if(!HasFVAdjacency(m)) throw vcg::MissingComponentException("FVAdjacency");
+      tri::RequireCompactness(m);
+      tri::RequireVFAdjacency(m);
 
         vcg::tri::UpdateTopology<MeshType>::VertexFace(m);
 
