@@ -134,9 +134,9 @@ public:
     if (WedgeNormalEnabled) WNV.push_back(WedgeNormalTypePack());
   }
     void pop_back();
-  void resize(const unsigned int & _size)
+  void resize(size_t _size)
   {
-      unsigned int oldsize = BaseType::size();
+      size_t oldsize = BaseType::size();
     BaseType::resize(_size);
       if(oldsize<_size){
           ThisTypeIterator firstnew = BaseType::begin();
@@ -154,7 +154,7 @@ public:
     if (WedgeColorEnabled)  WCV.resize(_size);
     if (WedgeNormalEnabled) WNV.resize(_size);
    }
-  void reserve(const unsigned int & _size)
+  void reserve(size_t _size)
   {
     BaseType::reserve(_size);
 
@@ -711,9 +711,9 @@ public:
 
 
 
-  inline int Index() const {
+  inline size_t Index() const {
     typename T::FaceType const *tp=static_cast<typename T::FaceType const *>(this);
-    int tt2=tp- &*(_ovp->begin());
+    size_t tt2=tp- &*(_ovp->begin());
     return tt2;
   }
 public:
