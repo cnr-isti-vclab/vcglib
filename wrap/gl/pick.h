@@ -31,6 +31,8 @@ namespace vcg{
 template <class MESH_TYPE>
 class GLPickTri
 {
+  typedef typename MESH_TYPE::ScalarType ScalarType;
+  typedef typename MESH_TYPE::CoordType CoordType;
   typedef typename MESH_TYPE::FaceIterator FaceIterator;
   typedef typename MESH_TYPE::VertexIterator VertexIterator;
   typedef typename MESH_TYPE::FacePointer  FacePointer;
@@ -39,17 +41,17 @@ class GLPickTri
 
 private:
 
-  static Point3f Proj(const Eigen::Matrix4f &M, const float * viewport, const Point3f &p)
+ static CoordType Proj(const Eigen::Matrix<ScalarType,4,4> &M, const ScalarType * viewport, const CoordType &p)
   {
-    const float vx=viewport[0];
-    const float vy=viewport[1];
-    const float vw2=viewport[2]/2.0f;
-    const float vh2=viewport[3]/2.0f;
-    Eigen::Vector4f vp(p[0],p[1],p[2],1.0f);
-    Eigen::Vector4f vpp = M*vp;
-    Eigen::Vector4f ndc = vpp/vpp[3];
+    const ScalarType vx=viewport[0];
+    const ScalarType vy=viewport[1];
+    const ScalarType vw2=viewport[2]/ScalarType(2.0);
+    const ScalarType vh2=viewport[3]/ScalarType(2.0);
+    Eigen::Matrix<ScalarType,4,1> vp(p[0],p[1],p[2],ScalarType(1.0));
+    Eigen::Matrix<ScalarType,4,1> vpp = M*vp;
+    Eigen::Matrix<ScalarType,4,1> ndc = vpp/vpp[3];
 
-    Point3f sc(
+    CoordType sc(
         vw2*ndc[0] + vx+vw2,
         vh2*ndc[1] + vy+vh2,
         ndc[2]
@@ -58,16 +60,16 @@ private:
     return sc;
   }
 
-  static void FillProjectedVector(MESH_TYPE &m, std::vector<Point3f> &pVec, const Eigen::Matrix4f &M, const float * viewportF)
+  static void FillProjectedVector(MESH_TYPE &m, std::vector<CoordType> &pVec, const Eigen::Matrix<ScalarType,4,4> &M, const ScalarType * viewportF)
   {
     pVec.resize(m.vert.size());
     for(size_t i=0;i<m.vert.size();++i) if(!m.vert[i].IsD())
     {
-      pVec[i] = Proj(M, viewportF,Point3f::Construct(m.vert[i].P()));
+      pVec[i] = Proj(M, viewportF,CoordType::Construct(m.vert[i].P()));
     }
   }
 
-  static void glGetMatrixAndViewport(Eigen::Matrix4f &M, float *viewportF)
+  static void glGetMatrixAndViewport(Eigen::Matrix<ScalarType,4,4> &M, ScalarType *viewportF)
   {
     Eigen::Matrix4d mp,mm;
 
@@ -78,16 +80,16 @@ private:
     glGetDoublev(GL_PROJECTION_MATRIX, mp.data());
     glGetDoublev(GL_MODELVIEW_MATRIX,  mm.data());
 
-    M = (mp*mm).cast<float>();
+    M = (mp*mm).cast<ScalarType>();
   }
 
   // compute a bbox in Device Coordinate (with the z without the near far normalization and ranged in -1 1)
-  static Box3f ComputeDCBox(int x, int y, int width, int height)
+  static Box3<ScalarType> ComputeDCBox(int x, int y, int width, int height)
   {
-    Box3f bb;
+    Box3<ScalarType> bb;
     bb.SetNull();
-    bb.Add(Point3f(x-width/2.0f,y-height/2.0f,-1.0f));
-    bb.Add(Point3f(x+width/2.0f,y+height/2.0f, 1.0f));
+    bb.Add(CoordType(x-width/ScalarType(2.0),y-height/ScalarType(2.0),ScalarType(-1.0)));
+    bb.Add(CoordType(x+width/ScalarType(2.0),y+height/ScalarType(2.0), ScalarType(1.0)));
     return bb;
   }
 
@@ -95,17 +97,17 @@ public:
 
   static bool PickClosestFace(int x, int y, MESH_TYPE &m, FacePointer &fp,int width=4, int height=4)
   {
-    Eigen::Matrix4f M;
-    float viewportF[4];
+    Eigen::Matrix<ScalarType,4,4> M;
+    ScalarType viewportF[4];
     glGetMatrixAndViewport(M,viewportF);
-    Box3f reg=ComputeDCBox(x,y,width,height);
+    Box3<ScalarType> reg=ComputeDCBox(x,y,width,height);
 
-    float bzmin = std::numeric_limits<float>::max();
+    ScalarType bzmin = std::numeric_limits<ScalarType>::max();
     fp=0;
     for(size_t i=0;i<m.face.size();++i) if(!m.face[i].IsD())
     {
-      Point3f bary = vcg::Barycenter(m.face[i]);
-      Point3f bz = Proj(M, viewportF,bary);
+      CoordType bary = vcg::Barycenter(m.face[i]);
+      CoordType bz = Proj(M, viewportF,bary);
 
       if(bz[2]<bzmin && reg.IsIn(bz))
       {
@@ -118,17 +120,17 @@ public:
 
   static bool PickClosestVert(int x, int y, MESH_TYPE &m, VertexPointer &vp,int width=4, int height=4)
   {
-    Eigen::Matrix4f M;
-    float viewportF[4];
+    Eigen::Matrix<ScalarType,4,4> M;
+    ScalarType viewportF[4];
     glGetMatrixAndViewport(M,viewportF);
-    float bzmin = std::numeric_limits<float>::max();
+    ScalarType bzmin = std::numeric_limits<ScalarType>::max();
     vp=0;
 
-    Box3f reg=ComputeDCBox(x,y,width,height);
+    Box3<ScalarType> reg=ComputeDCBox(x,y,width,height);
 
     for(size_t i=0;i<m.vert.size();++i) if(!m.vert[i].IsD())
     {
-      Point3f bz = Proj(M, viewportF,m.vert[i].P());
+      CoordType bz = Proj(M, viewportF,m.vert[i].P());
       if(bz[2]<bzmin && reg.IsIn(bz))
       {
         bzmin=bz[2];
@@ -141,15 +143,15 @@ public:
   static int PickVert(int x, int y, MESH_TYPE &m, std::vector<VertexPointer> &result, int width=4, int height=4)
    {
      result.clear();
-     static Eigen::Matrix4f lastM;
+     static Eigen::Matrix<ScalarType,4,4> lastM;
      static MESH_TYPE *lastm=0;
-     static std::vector<Point3f> pVec;
+     static std::vector<CoordType> pVec;
 
-     Eigen::Matrix4f M;
-     float viewportF[4];
+     Eigen::Matrix<ScalarType,4,4> M;
+     ScalarType viewportF[4];
      glGetMatrixAndViewport(M,viewportF);
 
-     Box3f reg =ComputeDCBox(x,y,width,height);
+     Box3<ScalarType> reg =ComputeDCBox(x,y,width,height);
 
      if(M!=lastM || &m != lastm)
      {
@@ -168,17 +170,17 @@ public:
 
   static int PickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width=4, int height=4)
   {
-    static Eigen::Matrix4f lastM;
+    static Eigen::Matrix<ScalarType,4,4> lastM;
     static MESH_TYPE *lastm=0;
-    static std::vector<Point3f> pVec;
+    static std::vector<CoordType> pVec;
 
-    float viewportF[4];
-    Eigen::Matrix4f M;
+    ScalarType viewportF[4];
+    Eigen::Matrix<ScalarType,4,4> M;
     glGetMatrixAndViewport(M,viewportF);
     result.clear();
-    Box3f reg;
-    reg.Add(Point3f(x-width/2.0f,y-height/2.0f,-1.0f));
-    reg.Add(Point3f(x+width/2.0f,y+height/2.0f,1.0f));
+    Box3<ScalarType> reg;
+    reg.Add(CoordType(x-width/ScalarType(2.0),y-height/ScalarType(2.0),ScalarType(-1.0)));
+    reg.Add(CoordType(x+width/ScalarType(2.0),y+height/ScalarType(2.0),ScalarType(1.0)));
 
     if(M!=lastM || &m != lastm)
     {
@@ -189,9 +191,9 @@ public:
 
     for(size_t i=0;i<m.face.size();++i) if(!m.face[i].IsD())
     {
-      const Point3f &p0 = pVec[tri::Index(m,m.face[i].V(0))];
-      const Point3f &p1 = pVec[tri::Index(m,m.face[i].V(1))];
-      const Point3f &p2 = pVec[tri::Index(m,m.face[i].V(2))];
+      const CoordType &p0 = pVec[tri::Index(m,m.face[i].V(0))];
+      const CoordType &p1 = pVec[tri::Index(m,m.face[i].V(1))];
+      const CoordType &p2 = pVec[tri::Index(m,m.face[i].V(2))];
       if( (p0[2]>-1.0f) && (p1[2]>-1.0f) && (p2[2]>-1.0f) && IntersectionTriangleBox(reg,p0,p1,p2))
         result.push_back(&m.face[i]);
     }
@@ -202,27 +204,30 @@ public:
   // Visibility is computed according to the current depth buffer.
   static int PickVisibleFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &resultZ, int width=4, int height=4)
   {
-    float vp[4];
-    Eigen::Matrix4f M;
+    ScalarType vp[4];
+    Eigen::Matrix<ScalarType,4,4> M;
     glGetMatrixAndViewport(M,vp);
 
     int screenW = (int)(vp[2]-vp[0]);
     int screenH = (int)(vp[3]-vp[1]);
 
-    GLfloat *buffer = new GLfloat[screenW*screenH];
-    glReadPixels(vp[0],vp[1],vp[2],vp[3],GL_DEPTH_COMPONENT,GL_FLOAT,buffer);
-
+    GL_TYPE<Scalarm>::ScalarType *buffer = new GL_TYPE<Scalarm>::ScalarType[screenW*screenH];
+    
+    //I'm not sure glReadPixels can accept GL_DOUBLE tag
+    //GLenum err = glGetError();
+    glReadPixels(vp[0],vp[1],vp[2],vp[3],GL_DEPTH_COMPONENT,GL_TYPE<Scalarm>::SCALAR(),buffer);
+    //err = glGetError();
     std::vector<FacePointer> result;
     PickFace(x,y,m,result,width,height);
-    float LocalEpsilon = 0.001f;
+    ScalarType LocalEpsilon(0.001);
     for(size_t i =0;i<result.size();++i)
     {
-      Point3f p = Proj(M,vp,Point3f::Construct(Barycenter(*(result[i])))) ;
+      CoordType p = Proj(M,vp,CoordType::Construct(Barycenter(*(result[i])))) ;
       if(p[0] >=0 && p[0]<screenW && p[1] >=0 && p[1]<screenH)
       {
-        float bufZ = buffer[int(p[0])+int(p[1])*screenW];
+        ScalarType bufZ(buffer[int(p[0])+int(p[1])*screenW]);
         //qDebug("face %i txyz (%f %f %f)  bufz %f",i,tx,ty,tz,bufZ);
-        if(bufZ + LocalEpsilon >= (p[2]+1.0)/2.0f)
+        if(bufZ + LocalEpsilon >= ScalarType(p[2]+1.0)/2.0)
           resultZ.push_back(result[i]);
       }
     }
@@ -248,20 +253,25 @@ public:
         int screenW = 		vp[2]-vp[0];
         int screenH = 		vp[3]-vp[1];
 
-        GLfloat *buffer = new GLfloat[screenW*screenH];
-        glReadPixels(vp[0],vp[1],vp[2],vp[3],GL_DEPTH_COMPONENT,GL_FLOAT,buffer);
+
+        GL_TYPE<Scalarm>::ScalarType *buffer = new GL_TYPE<Scalarm>::ScalarType[screenW*screenH];
+
+        //I'm not sure glReadPixels can accept GL_DOUBLE tag
+        //GLenum err = glGetError();
+        glReadPixels(vp[0],vp[1],vp[2],vp[3],GL_DEPTH_COMPONENT,GL_TYPE<Scalarm>::SCALAR(),buffer);
+        //err = glGetError();
 
         std::vector<FacePointer> result;
         OldPickFace(x,y,m,result,width,height,sorted);
-        float LocalEpsilon = 0.001f;
-    for(size_t i =0;i<result.size();++i)
+        ScalarType LocalEpsilon(0.001);
+        for(size_t i =0;i<result.size();++i)
         {
-            typename VertexType::CoordType v=Barycenter(*(result[i]));
+            CoordType v=Barycenter(*(result[i]));
             GLdouble tx,ty,tz;
             gluProject(v.X(),v.Y(),v.Z(), mm,mp,vp, &tx,&ty,&tz);
             if(tx >=0 && tx<screenW && ty >=0 && ty<screenH)
             {
-                    float bufZ = buffer[int(tx)+int(ty)*screenW];
+                    ScalarType bufZ(buffer[int(tx)+int(ty)*screenW]);
                     //qDebug("face %i txyz (%f %f %f)  bufz %f",i,tx,ty,tz,bufZ);
                     if(bufZ + LocalEpsilon >= tz)
                                 resultZ.push_back(result[i]);
