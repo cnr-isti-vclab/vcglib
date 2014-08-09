@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004                                                \/)\/    *
+* Copyright(C) 2014                                                \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -20,12 +20,9 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#include <vcg/math/matrix33.h>
 #include <vcg/math/histogram.h>
 #include <vcg/complex/algorithms/update/curvature.h>
 #include <vcg/complex/algorithms/update/flag.h>
-#include <vcg/simplex/face/topology.h>
-#include <vcg/complex/algorithms/update/bounding.h>
 #include <algorithm>
 
 #ifndef VCG_TANGENT_FIELD_OPERATORS
