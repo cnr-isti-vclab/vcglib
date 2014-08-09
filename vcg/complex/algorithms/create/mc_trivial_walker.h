@@ -33,15 +33,16 @@ class SimpleVolume : public BasicGrid<float>
 {
 public:
   typedef VOX_TYPE VoxelType;
+  typedef typename VoxelType::ScalarType ScalarType;
 
   const Point3i &ISize() {return siz;}   /// Dimensioni griglia come numero di celle per lato
 
-  float Val(const int &x,const int &y,const int &z) const {
+  ScalarType Val(const int &x,const int &y,const int &z) const {
     return cV(x,y,z).V();
     //else return numeric_limits<float>::quiet_NaN( );
   }
 
-  float &Val(const int &x,const int &y,const int &z) {
+  ScalarType &Val(const int &x,const int &y,const int &z) {
     return V(x,y,z).V();
     //else return numeric_limits<float>::quiet_NaN( );
   }
@@ -91,7 +92,7 @@ public:
     if(AxisVal==ZAxis) v->P().Z() = (float) p1.Z()*(1-u) + u*p2.Z();
     else v->P().Z() = (float) p1.Z();
     this->IPfToPf(v->P(),v->P());
-    if(VoxelType::HasNormal()) v->N() = V(p1).N()*(1-u) + V(p2).N()*u;
+    if(VoxelType::HasNormal()) v->N().Import(V(p1).N()*(1-u) + V(p2).N()*u);
   }
 
 
@@ -105,17 +106,18 @@ public:
 
 
 };
-
+template <class _ScalarType=float>
 class SimpleVoxel
 {
 private:
-  float _v;
+  _ScalarType _v;
 public:
-  float &V() {return _v;}
-  float V() const {return _v;}
+  typedef _ScalarType ScalarType;
+  ScalarType &V() {return _v;}
+  ScalarType V() const {return _v;}
   static bool HasNormal() {return false;}
-  vcg::Point3f N() const {return Point3f(0,0,0);}
-  vcg::Point3f &N()  { static Point3f _p(0,0,0); return _p;}
+  vcg::Point3<ScalarType> N() const {return Point3<ScalarType>(0,0,0);}
+  vcg::Point3<ScalarType> &N()  { static Point3<ScalarType> _p(0,0,0); return _p;}
 };
 
 class SimpleVoxelWithNormal
