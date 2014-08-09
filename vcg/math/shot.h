@@ -20,78 +20,7 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-$Log: not supported by cvs2svn $
-Revision 1.24  2008/02/22 17:41:48  ponchio
-Changed to reflect quaternion toMatrix inversion.
 
-Revision 1.23  2007/02/06 08:54:07  corsini
-fix names
-
-Revision 1.22  2007/02/05 14:17:21  corsini
-add extrinsic parameters accessors
-
-Revision 1.21  2006/12/18 16:02:55  matteodelle
-minor eroor correction on variable names
-
-Revision 1.20  2006/12/18 09:46:39  callieri
-camera+shot revamp: changed field names to something with more sense, cleaning of various functions, correction of minor bugs/incongruences, removal of the infamous reference in shot.
-
-Revision 1.19  2006/01/22 17:01:40  cignoni
-Corrected intialization of flag, must be zero.
-
-Revision 1.18  2005/12/12 16:53:43  callieri
-corrected UnProject, it's necessary also a ZDepth value to perform inverse projection
-
-Revision 1.17  2005/12/07 10:57:52  callieri
-added commodity function ProjectWorldtoViewport() to obtain directly pixel indices without calling two separate function of two different objects
-
-Revision 1.16  2005/12/02 16:14:35  callieri
-in Shot<S>::Axis changed Row3  to  GetRow3 . row3 was the old method name of Matrix44
-
-Revision 1.15  2005/12/01 01:03:37  cignoni
-Removed excess ';' from end of template functions, for gcc compiling
-
-Revision 1.14  2005/11/23 14:18:35  ganovelli
-added access to similarity (just for symmetry with Camera() )
-
-Revision 1.13  2005/11/23 11:58:52  ganovelli
-Empty constructor added, untemplated class Shotf and Shotd added
-usage: Shotf myShot;
-corrected member access rights
-
-Revision 1.12  2005/07/11 13:12:35  cignoni
-small gcc-related compiling issues (typenames,ending cr, initialization order)
-
-Revision 1.11  2005/01/22 11:20:20  ponchio
-<...Point3.h> -> <...point3.h>
-
-Revision 1.10  2005/01/05 13:26:15  ganovelli
-corretto cambiamento di sistema di rif.
-
-Revision 1.9  2004/12/15 18:45:50  tommyfranken
-*** empty log message ***
-
-Revision 1.4  2004/10/07 14:41:31  fasano
-Little fix on ViewPoint() method
-
-Revision 1.3  2004/10/07 14:24:53  ganovelli
-added LookAt,LookToward
-
-Revision 1.2  2004/10/05 19:04:25  ganovelli
-version 5-10-2004 in progress
-
-Revision 1.1  2004/09/15 22:58:05  ganovelli
-re-creation
-
-Revision 1.2  2004/09/06 21:41:30  ganovelli
-*** empty log message ***
-
-Revision 1.1  2004/09/03 13:01:51  ganovelli
-creation
-
-****************************************************************************/
 
 /** class Shot
 
@@ -193,16 +122,16 @@ public:
   /// look towards (dir+up)
   void LookTowards(const vcg::Point3<S> & z_dir,const vcg::Point3<S> & up);
 
-	/* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters
-	 * given the CCD width (in mm). This method should be moved in vcg::Camera().
-	 * Equivalent focal length is obtained by setting the ccd width to 35 mm.
+    /* Sometimes the focal is given in pixels. In this case, this function can be used to convert it in millimiters
+     * given the CCD width (in mm). This method should be moved in vcg::Camera().
+     * Equivalent focal length is obtained by setting the ccd width to 35 mm.
    */
   void ConvertFocalToMM(S ccdwidth);
 
-	/* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
-	 * to account for the re-scaling of the World. If the intrisic parameters are just reasonable values 
-	 * the cameras need only a re-positioning.
-	 */
+    /* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
+     * to account for the re-scaling of the World. If the intrisic parameters are just reasonable values
+     * the cameras need only a re-positioning.
+     */
   void RescalingWorld(S scalefactor, bool adjustIntrinsics);
 
   /// Given a pure roto-translation (4-by-4) modifies the reference frame accordingly.
@@ -451,7 +380,7 @@ void Shot<S, RotationType>::ConvertFocalToMM(S ccdwidth)
 }
 
 /* Sometimes the 3D World coordinates are known up to a scale factor. This method adjust the camera/shot parameters
- * to account for the re-scaling of the World. If the intrisic parameters are just reasonable values 
+ * to account for the re-scaling of the World. If the intrisic parameters are just reasonable values
  * the cameras need only a re-positioning.
  */
 template <class S, class RotationType>
@@ -459,15 +388,15 @@ void Shot<S, RotationType>::RescalingWorld(S scalefactor, bool adjustIntrinsics)
 {
     // adjust INTRINSICS (if required)
 
-		if (adjustIntrinsics)
-		{
-			Intrinsics.FocalMm = Intrinsics.FocalMm * scalefactor;
-			double ccdwidth = static_cast<double>(Intrinsics.ViewportPx[0] * Intrinsics.PixelSizeMm[0]);
-			double ccdheight = static_cast<double>(Intrinsics.ViewportPx[1] * Intrinsics.PixelSizeMm[1]);
+        if (adjustIntrinsics)
+        {
+            Intrinsics.FocalMm = Intrinsics.FocalMm * scalefactor;
+            double ccdwidth = static_cast<double>(Intrinsics.ViewportPx[0] * Intrinsics.PixelSizeMm[0]);
+            double ccdheight = static_cast<double>(Intrinsics.ViewportPx[1] * Intrinsics.PixelSizeMm[1]);
 
-			Intrinsics.PixelSizeMm[0] = (ccdwidth * scalefactor) / Intrinsics.ViewportPx[0];
-			Intrinsics.PixelSizeMm[1] = (ccdheight * scalefactor) / Intrinsics.ViewportPx[1];
-		}
+            Intrinsics.PixelSizeMm[0] = (ccdwidth * scalefactor) / Intrinsics.ViewportPx[0];
+            Intrinsics.PixelSizeMm[1] = (ccdheight * scalefactor) / Intrinsics.ViewportPx[1];
+        }
 
     // adjust EXTRINSICS
 
@@ -512,7 +441,7 @@ void Shot<S, RotationType>::ApplySimilarity( Matrix44<S>   M)
   vcg::Matrix44<S> M2 = M;
 
   M2 = M2 * scalefactor;				// remove the scaling
-  M2[3][3] = 1.0;						 
+  M2[3][3] = 1.0;
   M2[0][3] = M2[1][3] = M2[2][3] = 0;	// remove the translation
 
   rotM = rotM * M2.transpose();
