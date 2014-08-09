@@ -1014,7 +1014,7 @@ private:
   /// rubberband_handle after an Undo() call.
   Point3f undo_rubberband_handle;
   /// path endpoint after an Undo() call.
-  unsigned int undo_path_index;
+  size_t undo_path_index;
 
 };
 
