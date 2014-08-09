@@ -360,7 +360,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 				idtf.write(2,"SHADER_MATERIAL_NAME \"Mat01\"");
 
 
-				int texcount = 0;
+				size_t texcount = 0;
 				if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD)
 					texcount = m.textures.size();
 
@@ -429,7 +429,7 @@ typedef typename SaveMeshType::CoordType CoordType;
 		if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) idtf.write(3,"MODEL_TEXTURE_COORD_COUNT " + TextUtility::nmbToStr(m.face.size() * 3));
 		else idtf.write(3,"MODEL_TEXTURE_COORD_COUNT 0");
 		idtf.write(3,"MODEL_BONE_COUNT 0");
-		unsigned int mod_sha;
+		size_t mod_sha;
 		if (m.textures.size() == 0)
 			mod_sha = 1;
 		else
