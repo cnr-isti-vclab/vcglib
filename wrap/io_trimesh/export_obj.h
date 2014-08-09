@@ -144,7 +144,7 @@ public:
     fprintf(fp,"# Object %s\n#\n# Vertices: %d\n# Faces: %d\n#\n####\n",fn.substr(LastSlash+1).c_str(),m.vn,m.fn);
 
     //library materialVec
-    if( (mask & vcg::tri::io::Mask::IOM_FACECOLOR)  || (mask & Mask::IOM_WEDGTEXCOORD) )
+    if( (mask & vcg::tri::io::Mask::IOM_FACECOLOR)  || (mask & Mask::IOM_WEDGTEXCOORD) || (mask & Mask::IOM_VERTTEXCOORD) )
       fprintf(fp,"mtllib ./%s.mtl\n\n",fn.substr(LastSlash+1).c_str());
 
     //vertexs + normal
@@ -203,7 +203,7 @@ public:
     int curTexCoordIndex = 1;
     for(FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
     {
-      if((mask & Mask::IOM_FACECOLOR) || (mask & Mask::IOM_WEDGTEXCOORD) )
+      if((mask & Mask::IOM_FACECOLOR) || (mask & Mask::IOM_WEDGTEXCOORD) || (mask & Mask::IOM_VERTTEXCOORD))
       {
         int index = Materials<SaveMeshType>::CreateNewMaterial(m,materialVec,material_num,fi);
 
@@ -280,7 +280,7 @@ public:
     fclose(fp);
 
     int errCode = E_NOERROR;
-    if((mask & Mask::IOM_WEDGTEXCOORD) || (mask & Mask::IOM_FACECOLOR) )
+    if((mask & Mask::IOM_WEDGTEXCOORD) || (mask & Mask::IOM_FACECOLOR) || (mask & Mask::IOM_VERTTEXCOORD) )
       errCode = WriteMaterials(materialVec, filename,cb);//write material
 
     if(errCode!= E_NOERROR)
