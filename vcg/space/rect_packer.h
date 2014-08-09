@@ -82,7 +82,7 @@ public:
       bestOccupancy = currOccupancy;
       trVec=currTrVec;
       coveredContainer=currCovered;
-      currOccupancy = (2.0*currOccupancy+1.0)/3.0;
+      currOccupancy = (2.0f*currOccupancy+1.0f)/3.0f;
     }
   }
   stat().pack_total_time=float(clock()-start_t)/float(CLOCKS_PER_SEC);;
