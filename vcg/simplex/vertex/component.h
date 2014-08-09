@@ -421,7 +421,8 @@ public:
     template < class RightValueType>
     void ImportData(const RightValueType  & rVert ) {
       if(rVert.IsCurvatureDirEnabled()) {
-        PD1() = rVert.cPD1(); PD2() = rVert.cPD2();
+        PD1().Import(rVert.cPD1());
+        PD2().Import(rVert.cPD2());
         K1()  = rVert.cK1();  K2()  = rVert.cK2();
       }
       TT::ImportData( rVert);
