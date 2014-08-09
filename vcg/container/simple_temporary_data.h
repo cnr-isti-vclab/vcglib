@@ -32,11 +32,11 @@ class SimpleTempDataBase{
 public:
   virtual ~SimpleTempDataBase() {}
   SimpleTempDataBase() {}
-    virtual void Resize(const int & sz) = 0;
+    virtual void Resize(size_t sz) = 0;
     virtual void Reorder(std::vector<size_t> & newVertIndex)=0;
-    virtual int SizeOf() const  = 0;
+    virtual size_t SizeOf() const  = 0;
     virtual void * DataBegin() = 0;
-    virtual void * At(unsigned int i ) = 0;
+    virtual void * At(size_t i ) = 0;
 };
 
 template <class TYPE>
@@ -109,9 +109,9 @@ class SimpleTempData:public SimpleTempDataBase{
     ATTR_TYPE & operator[](const typename STL_CONT::value_type & v){return data[&v-&*c.begin()];}
     ATTR_TYPE & operator[](const typename STL_CONT::value_type * v){return data[v-&*c.begin()];}
     ATTR_TYPE & operator[](const typename STL_CONT::iterator & cont){return data[&(*cont)-&*c.begin()];}
-    ATTR_TYPE & operator[](const int & i){return data[i];}
+    ATTR_TYPE & operator[](size_t i){return data[i];}
 
-    void * At(unsigned int i ) {return &(*this)[i];};
+    void * At(size_t i ) {return &(*this)[i];};
 
     // update temporary data size
     bool UpdateSize(){
@@ -123,7 +123,7 @@ class SimpleTempData:public SimpleTempDataBase{
             return true;
         }
 
-    void Resize(const int & sz){
+    void Resize(size_t sz){
         data.resize(sz);
     }
 
@@ -134,7 +134,7 @@ class SimpleTempData:public SimpleTempDataBase{
         }
     }
 
-    int SizeOf() const {return sizeof(ATTR_TYPE);}
+    size_t SizeOf() const {return sizeof(ATTR_TYPE);}
     void * DataBegin() {return data.empty()?NULL:&(*data.begin());}
 };
 
@@ -145,12 +145,12 @@ public:
     AttrType * attribute;
     Attribute(){attribute = new ATTR_TYPE();}
     ~Attribute(){delete attribute;}
-    int SizeOf()const {return sizeof(ATTR_TYPE);}
+    size_t SizeOf()const {return sizeof(ATTR_TYPE);}
     void * DataBegin(){return attribute;}
 
-    void Resize(const int &  ) {assert(0);}
+    void Resize(size_t  ) {assert(0);}
     void Reorder(std::vector<size_t> &  ){assert(0);}
-    void * At(unsigned int ) {assert(0);return (void*)0;}
+    void * At(size_t ) {assert(0);return (void*)0;}
 };
 
 } // end namespace vcg
