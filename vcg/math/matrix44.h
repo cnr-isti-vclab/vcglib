@@ -156,7 +156,7 @@ public:
     void FromEigenMatrix(const EigenMatrix44Type & m){
         for(int i = 0; i < 4; i++)
             for(int j = 0; j < 4; j++)
-                ElementAt(i,j)=m(i,j);
+                ElementAt(i,j)=T(m(i,j));
     }
 
     void FromEulerAngles(T alpha, T beta, T gamma);
