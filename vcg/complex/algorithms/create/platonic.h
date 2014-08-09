@@ -869,15 +869,18 @@ void Disk(MeshType & m, int slices)
 template <class MeshType>
 void OrientedDisk(MeshType &m, int slices, typename MeshType::CoordType center, typename MeshType::CoordType norm, float radius)
 {
-  Disk(m,slices);
-  tri::UpdatePosition<MeshType>::Scale(m,radius);
-  MeshType::ScalarType angleRad = Angle(MeshType::CoordType(0,0,1),norm);
-  MeshType::CoordType axis = MeshType::CoordType(0,0,1)^norm;
+	typedef typename MeshType::ScalarType ScalarType;
+	typedef typename MeshType::CoordType  CoordType;
 
-  Matrix44<MeshType::ScalarType> rotM;
-  rotM.SetRotateRad(angleRad,axis);
-  tri::UpdatePosition<MeshType>::Matrix(m,rotM);
-  tri::UpdatePosition<MeshType>::Translate(m,center);
+	Disk(m,slices);
+	tri::UpdatePosition<MeshType>::Scale(m,radius);
+	ScalarType angleRad = Angle(CoordType(0,0,1),norm);
+	CoordType axis = CoordType(0,0,1)^norm;
+
+	Matrix44<ScalarType> rotM;
+	rotM.SetRotateRad(angleRad,axis);
+	tri::UpdatePosition<MeshType>::Matrix(m,rotM);
+	tri::UpdatePosition<MeshType>::Translate(m,center);
 }
 
 template <class MeshType>
