@@ -37,15 +37,17 @@ namespace vcg {
 template <typename T>
 class GL_TYPE
 {public:
-   static GLenum SCALAR() { assert(0); return 0;}
+static GLenum SCALAR() { assert(0); return 0;}
 };
 template <> class GL_TYPE<float>
 { public:
-  static GLenum SCALAR() { return GL_FLOAT; }
+typedef GLfloat ScalarType;
+static GLenum SCALAR() { return GL_FLOAT; }
 };
 template <> class GL_TYPE<double>
 {public:
-  static GLenum SCALAR() { return GL_DOUBLE; }
+typedef GLdouble ScalarType;
+static GLenum SCALAR() { return GL_DOUBLE; }
 };
 
 //template <> GL_TYPE::SCALAR<double>() { return GL_DOUBLE; }
