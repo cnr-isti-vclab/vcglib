@@ -115,8 +115,8 @@ void Rubberband::Render(QGLWidget* gla)
       glVertex(end);
     glEnd();
     glDisable(GL_DEPTH_TEST);
-    glLineWidth(0.7);
-    glPointSize(1.4);
+    glLineWidth(0.7f);
+    glPointSize(1.4f);
     glBegin(GL_LINES);
       glVertex(start);
       glVertex(end);
