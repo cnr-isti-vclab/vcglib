@@ -1283,7 +1283,7 @@ struct PoissonDiskParam
     int totalTime;
     Point3i gridSize;
     int gridCellNum;
-    int sampleNum;
+    size_t sampleNum;
     int montecarloSampleNum;
   };
 
@@ -1421,7 +1421,7 @@ static void InitSpatialHashTable(MeshType &montecarloMesh, MontecarloSHT &montec
 }
 
 static void PoissonDiskPruningByNumber(VertexSampler &ps, MeshType &m,
-                                       int sampleNum, ScalarType &diskRadius,
+                                       size_t sampleNum, ScalarType &diskRadius,
                                        PoissonDiskParam &pp,
                                        float tolerance=0.04,
                                        int maxIter=20)
@@ -1461,7 +1461,7 @@ static void PoissonDiskPruningByNumber(VertexSampler &ps, MeshType &m,
     ps.reset();
     curRadius=(RangeMaxRad+RangeMinRad)/2.0f;
     PoissonDiskPruning(ps, m ,curRadius,pp);
-    qDebug("PoissonDiskPruning Iteratin (%6.3f:%5i %6.3f:%5i) Cur Radius %f -> %i sample instead of %i",RangeMinRad,RangeMinRadNum,RangeMaxRad,RangeMaxRadNum,curRadius,pp.pds.sampleNum,sampleNum);
+    qDebug("PoissonDiskPruning Iteratin (%6.3f:%5lu %6.3f:%5lu) Cur Radius %f -> %lu sample instead of %lu",RangeMinRad,RangeMinRadNum,RangeMaxRad,RangeMaxRadNum,curRadius,pp.pds.sampleNum,sampleNum);
     if(pp.pds.sampleNum > sampleNum){
       RangeMinRad = curRadius;
       RangeMinRadNum = pp.pds.sampleNum;
