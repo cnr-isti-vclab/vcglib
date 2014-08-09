@@ -34,6 +34,21 @@
 
 namespace vcg {
 
+template <typename T>
+class GL_TYPE
+{public:
+   static GLenum SCALAR() { assert(0); return 0;}
+};
+template <> class GL_TYPE<float>
+{ public:
+  static GLenum SCALAR() { return GL_FLOAT; }
+};
+template <> class GL_TYPE<double>
+{public:
+  static GLenum SCALAR() { return GL_DOUBLE; }
+};
+
+//template <> GL_TYPE::SCALAR<double>() { return GL_DOUBLE; }
 
 // classe base di glwrap usata solo per poter usare i vari drawmode, normalmode senza dover
 // specificare tutto il tipo (a volte lunghissimo)
@@ -217,8 +232,8 @@ void Update(/*Change c=CHAll*/)
                 (char *)&(m->vert[0].N()), GL_STATIC_DRAW_ARB);
         }
 
-        glVertexPointer(3,GL_FLOAT,sizeof(VertexType),0);
-        glNormalPointer(GL_FLOAT,sizeof(VertexType),0);
+        glVertexPointer(3,GL_TYPE<ScalarType>::SCALAR(),sizeof(VertexType),0);
+        glNormalPointer(GL_TYPE<ScalarType>::SCALAR(),sizeof(VertexType),0);
     }
 
     //int C=c;
@@ -360,10 +375,10 @@ void DrawFill()
             if (nm==NMPerVert)
             {
                 glBindBuffer(GL_ARRAY_BUFFER,array_buffers[1]);
-                glNormalPointer(GL_FLOAT,sizeof(typename MeshType::VertexType),0);
+                glNormalPointer(GL_TYPE<ScalarType>::SCALAR(),sizeof(typename MeshType::VertexType),0);
             }
             glBindBuffer(GL_ARRAY_BUFFER,array_buffers[0]);
-            glVertexPointer(3,GL_FLOAT,sizeof(typename MeshType::VertexType),0);
+            glVertexPointer(3,GL_TYPE<ScalarType>::SCALAR(),sizeof(typename MeshType::VertexType),0);
 
             glDrawElements(GL_TRIANGLES ,m->fn*3,GL_UNSIGNED_INT, &(*indices.begin()) );
             glDisableClientState (GL_VERTEX_ARRAY);
@@ -386,8 +401,8 @@ void DrawFill()
             glEnableClientState (GL_VERTEX_ARRAY);
 
             if (nm==NMPerVert)
-                glNormalPointer(GL_FLOAT,sizeof(typename MeshType::VertexType),&(m->vert.begin()->N()[0]));
-            glVertexPointer(3,GL_FLOAT,sizeof(typename MeshType::VertexType),&(m->vert.begin()->P()[0]));
+                glNormalPointer(GL_TYPE<ScalarType>::SCALAR(),sizeof(typename MeshType::VertexType),&(m->vert.begin()->N()[0]));
+            glVertexPointer(3,GL_TYPE<ScalarType>::SCALAR(),sizeof(typename MeshType::VertexType),&(m->vert.begin()->P()[0]));
 
             glDrawElements(GL_TRIANGLES ,m->fn*3,GL_UNSIGNED_INT, &(*indices.begin()) );
             glDisableClientState (GL_VERTEX_ARRAY);
@@ -669,11 +684,7 @@ void DrawPoints()
       if (nm==NMPerVert)
       {
         glEnableClientState (GL_NORMAL_ARRAY);
-
-        if(sizeof(CoordType)==sizeof(float)*3)
-          glNormalPointer(GL_FLOAT,sizeof(VertexType),&(m->vert.begin()->N()[0]));
-        else
-          glNormalPointer(GL_DOUBLE,sizeof(VertexType),&(m->vert.begin()->N()[0]));
+        glNormalPointer(GL_TYPE<ScalarType>::SCALAR(),sizeof(VertexType),&(m->vert.begin()->N()[0]));
       }
       if (cm==CMPerVert)
       {
@@ -682,10 +693,7 @@ void DrawPoints()
       }
 
       glEnableClientState (GL_VERTEX_ARRAY);
-      if(sizeof(CoordType)==sizeof(float)*3)
-        glVertexPointer(3,GL_FLOAT,sizeof(VertexType),&(m->vert.begin()->P()[0]));
-      else
-        glVertexPointer(3,GL_DOUBLE,sizeof(VertexType),&(m->vert.begin()->P()[0]));
+      glVertexPointer(3,GL_TYPE<ScalarType>::SCALAR(),sizeof(VertexType),&(m->vert.begin()->P()[0]));
 
       glDrawArrays(GL_POINTS,0,m->vn);
 
