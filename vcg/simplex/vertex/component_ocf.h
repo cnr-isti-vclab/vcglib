@@ -79,9 +79,9 @@ public:
 
     void pop_back();
 
-    void resize(const unsigned int & _size)
+    void resize(size_t _size)
     {
-        const unsigned int oldsize = BaseType::size();
+        const size_t oldsize = BaseType::size();
             BaseType::resize(_size);
         if(oldsize<_size){
             ThisTypeIterator firstnew = BaseType::begin();
@@ -99,7 +99,7 @@ public:
         if (RadiusEnabled)        RadiusV.resize(_size);
     }
 
-    void reserve(const unsigned int & _size)
+    void reserve(size_t _size)
     {
         BaseType::reserve(_size);
         if (ColorEnabled)        CV.reserve(_size);
