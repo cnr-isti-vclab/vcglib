@@ -172,6 +172,25 @@ public:
 
     int cameraType;					/// Type of camera: PERSPECTIVE,ORTHO,ISOMETRIC,CAVALIERI
 
+
+
+    template <class Q>
+    static inline Camera Construct( const Camera<Q> &t)
+    {
+      Camera n;
+      n.FocalMm = t.FocalMm;
+      n.ViewportPx.Import(t.ViewportPx);
+      n.PixelSizeMm.Import(t.PixelSizeMm);
+      n.CenterPx.Import(t.CenterPx);
+      n.DistorCenterPx.Import(t.DistorCenterPx);
+      n.cameraType =t.cameraType;
+      n.k[0] = t.k[0];
+      n.k[1] = t.k[1];
+      n.k[2] = t.k[2];
+      n.k[3] = t.k[3];
+      return n;
+    }
+
     void SetOrtho( S l,S r, S b, S t,  vcg::Point2<int> viewport)
     {
         cameraType = ORTHO;

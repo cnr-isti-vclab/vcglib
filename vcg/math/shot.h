@@ -75,6 +75,8 @@ public:
       RotoType rot;	 // rotation
       Point3<S> tra; // viewpoint
   public:
+      ReferenceFrame(){}
+
       void SetIdentity(){ rot.SetIdentity(); tra = Point3<S>(0.0,0.0,0.0);}
       void SetTra(const Point3<S> & tr) {tra = tr;}
       void SetRot(const  RotoType & rt) {rot = rt;}
@@ -82,11 +84,15 @@ public:
       RotoType Rot() const  { return rot;}
   };
 
-  Camera<S>												Intrinsics;		// the camera that made the shot
-  ReferenceFrame<S,RotationType>	Extrinsics;		// the position and orientation of the camera
+  Camera<S>	                       Intrinsics;		// the camera that made the shot
+  ReferenceFrame<S,RotationType>   Extrinsics;		// the position and orientation of the camera
+  Shot(const Camera<S> &i, const ReferenceFrame<S,RotationType> &e)
+  {
+    Intrinsics = i;
+    Extrinsics = e;
+  }
 
-
-  Shot(Camera<S> c)
+  Shot(const Camera<S> &c)
   {
     Intrinsics = c;
     Extrinsics.SetIdentity();
@@ -96,6 +102,15 @@ public:
   {
     Extrinsics.SetIdentity();
   }
+
+   template <class Q>
+   static inline Shot Construct( const Shot<Q> & b )
+   {
+     ReferenceFrame<S,RotationType> r;
+     r.SetRot(Matrix44<S>::Construct(b.Extrinsics.Rot()));
+     r.SetTra(Point3<S>::Construct(b.Extrinsics.Tra()));
+     return Shot(Camera<S>::Construct(b.Intrinsics), r);
+   }
 
 
   /// GET the i-th axis of the coordinate system of the camera
