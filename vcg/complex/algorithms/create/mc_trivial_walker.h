@@ -97,10 +97,12 @@ public:
 
 
 
-  void Init(Point3i _sz)
+  void Init(Point3i _sz, Box3x bb)
   {
     siz=_sz;
+    this->bbox = bb;
     Vol.resize(siz[0]*siz[1]*siz[2]);
+    this->ComputeDimAndVoxel();
   }
 
 
@@ -178,36 +180,36 @@ private:
 
     template<class EXTRACTOR_TYPE>
   void BuildMesh(MeshType &mesh, VolumeType &volume, EXTRACTOR_TYPE &extractor, const float threshold, vcg::CallBackPos * cb=0)
-    {
+  {
     Init(volume);
-        _volume = &volume;
-        _mesh		= &mesh;
-        _mesh->Clear();
+    _volume = &volume;
+    _mesh		= &mesh;
+    _mesh->Clear();
     _thr=threshold;
-        vcg::Point3i p1, p2;
+    vcg::Point3i p1, p2;
 
-        Begin();
-        extractor.Initialize();
-        for (int j=_bbox.min.Y(); j<(_bbox.max.Y()-1)-1; j+=1)
+    Begin();
+    extractor.Initialize();
+    for (int j=_bbox.min.Y(); j<(_bbox.max.Y()-1)-1; j+=1)
     {
 
       if(cb && ((j%10)==0) ) 	cb(j*_bbox.DimY()/100.0,"Marching volume");
 
-            for (int i=_bbox.min.X(); i<(_bbox.max.X()-1)-1; i+=1)
-            {
-                for (int k=_bbox.min.Z(); k<(_bbox.max.Z()-1)-1; k+=1)
-                {
-                    p1.X()=i;									p1.Y()=j;									p1.Z()=k;
-                    p2.X()=i+1;	p2.Y()=j+1;	p2.Z()=k+1;
+      for (int i=_bbox.min.X(); i<(_bbox.max.X()-1)-1; i+=1)
+      {
+        for (int k=_bbox.min.Z(); k<(_bbox.max.Z()-1)-1; k+=1)
+        {
+          p1.X()=i;	  p1.Y()=j;     p1.Z()=k;
+          p2.X()=i+1; p2.Y()=j+1;	p2.Z()=k+1;
           extractor.ProcessCell(p1, p2);
-                }
-            }
-            NextSlice();
         }
-        extractor.Finalize();
-        _volume = NULL;
-        _mesh		= NULL;
-    };
+      }
+      NextSlice();
+    }
+    extractor.Finalize();
+    _volume = NULL;
+    _mesh		= NULL;
+  }
 
     float V(int pi, int pj, int pk)
     {
@@ -354,6 +356,6 @@ protected:
 
     }
 };
-} // end namespace
-} // end namespace
+} // end namespace tri
+} // end namespace vcg
 #endif // __VCGTEST_WALKER
