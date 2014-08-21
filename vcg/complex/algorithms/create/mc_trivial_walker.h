@@ -29,7 +29,7 @@ namespace vcg {
 // just an example of the interface that the trivial walker expects
 
 template <class VOX_TYPE>
-class SimpleVolume : public BasicGrid<float>
+class SimpleVolume : public BasicGrid<typename VOX_TYPE::ScalarType>
 {
 public:
   typedef VOX_TYPE VoxelType;
