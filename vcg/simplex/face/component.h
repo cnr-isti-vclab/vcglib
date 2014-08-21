@@ -130,15 +130,15 @@ public:
 
   typedef int CurvatureDirType;
 
-  Point3f &PD1()       { static Point3f dummy(0,0,0); assert(0); return dummy;}
-  Point3f &PD2()       { static Point3f dummy(0,0,0); assert(0); return dummy;}
-  Point3f cPD1() const { static Point3f dummy(0,0,0); assert(0); return dummy;}
-  Point3f cPD2() const { static Point3f dummy(0,0,0); assert(0); return dummy;}
+  typename T::CoordType &PD1()       { static typename T::CoordType dummy(0,0,0); assert(0); return dummy;}
+  typename T::CoordType &PD2()       { static typename T::CoordType dummy(0,0,0); assert(0); return dummy;}
+  typename T::CoordType cPD1() const { static typename T::CoordType dummy(0,0,0); assert(0); return dummy;}
+  typename T::CoordType cPD2() const { static typename T::CoordType dummy(0,0,0); assert(0); return dummy;}
 
-  float &K1()      { static float dummy(0); assert(0); return dummy;}
-  float &K2()      { static float dummy(0); assert(0); return dummy;}
-  float cK1() const { static float dummy(0); assert(0); return dummy;}
-  float cK2() const { static float dummy(0); assert(0); return dummy;}
+  typename T::ScalarType &K1()      { static typename T::ScalarType dummy(0); assert(0); return dummy;}
+  typename T::ScalarType &K2()      { static typename T::ScalarType dummy(0); assert(0); return dummy;}
+  typename T::ScalarType cK1() const { static typename T::ScalarType dummy(0); assert(0); return dummy;}
+  typename T::ScalarType cK2() const { static typename T::ScalarType dummy(0); assert(0); return dummy;}
 
   static bool HasCurvatureDir()   { return false; }
 
