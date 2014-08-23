@@ -92,8 +92,8 @@ struct BasicCrossFunctor
   BasicCrossFunctor(MeshType &m) { tri::RequirePerVertexCurvatureDir(m); }
   typedef typename MeshType::VertexType VertexType;
 
-  Point3f D1(VertexType &v) { return v.PD1(); }
-  Point3f D2(VertexType &v) { return v.PD1(); }
+  typename MeshType::CoordType D1(VertexType &v) { return v.PD1(); }
+  typename MeshType::CoordType D2(VertexType &v) { return v.PD2(); }
 };
 
 /**
@@ -111,12 +111,12 @@ class AnisotropicDistance{
   typedef typename MeshType::CoordType  CoordType;
   typedef typename MeshType::VertexIterator VertexIterator;
 
-  typename MeshType::template PerVertexAttributeHandle<Point3f> wxH,wyH;
+  typename MeshType::template PerVertexAttributeHandle<CoordType> wxH,wyH;
 public:
   template <class CrossFunctor > AnisotropicDistance(MeshType &m, CrossFunctor &cf)
   {
-    wxH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<Point3f> (m,"distDirX");
-    wyH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<Point3f> (m,"distDirY");
+    wxH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<CoordType> (m,"distDirX");
+    wyH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<CoordType> (m,"distDirY");
 
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     {
@@ -127,7 +127,7 @@ public:
 
   ScalarType operator()( VertexType * v0,  VertexType * v1)
   {
-    Point3f dd = Point3f::Construct(v0->cP()-v1->cP());
+    CoordType dd = v0->cP()-v1->cP();
     float x = (fabs(dd * wxH[v0])+fabs(dd *wxH[v1]))/2.0f;
     float y = (fabs(dd * wyH[v0])+fabs(dd *wyH[v1]))/2.0f;
 
