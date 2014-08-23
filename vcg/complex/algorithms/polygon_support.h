@@ -37,8 +37,8 @@ namespace tri {
 
     /**
     This class contains two members that allow to build a triangular mesh from a polygonal mesh
-    and viceversa. In a trimesh, the generic polygons with n sides are codified represented by tagging the internal edge of the face
-    with the SetF.
+    and viceversa. In a trimesh, the generic polygons with n sides are codified represented by
+    tagging the internal edge of the face as 'faux' with the SetF.
     */
 
     template <class TriMeshType,class PolyMeshType >
@@ -53,6 +53,7 @@ namespace tri {
     /**
     Given a tri mesh (with per-face normals and FF connectivity),
     merges flat faces into larger polygons.
+    The merging is done only by setting the faux bit
     **/
     static void MergeFlatFaces(TriMeshType & tm, double tolerance = 0.1E-4)
     {
