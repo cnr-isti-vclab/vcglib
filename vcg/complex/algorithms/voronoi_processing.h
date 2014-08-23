@@ -154,7 +154,7 @@ static void ComputePerVertexSources(MeshType &m, std::vector<VertexType *> &seed
   PerVertexPointerHandle vertexSources =  tri::Allocator<MeshType>:: template AddPerVertexAttribute<VertexPointer> (m,"sources");
 
   tri::Allocator<MeshType>::DeletePerFaceAttribute(m,"sources"); // delete any conflicting handle regardless of the type...
-  PerFacePointerHandle faceSources =  tri::Allocator<MeshType>:: template AddPerFaceAttribute<VertexPointer> (m,"sources");
+  tri::Allocator<MeshType>::template AddPerFaceAttribute<VertexPointer> (m,"sources");
 
   assert(tri::Allocator<MeshType>::IsValidHandle(m,vertexSources));
 

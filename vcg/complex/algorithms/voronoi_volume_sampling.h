@@ -36,41 +36,45 @@ class VoronoiVolumeSampling
 {
 public:
   typedef typename tri::VoronoiProcessing<MeshType>::QuadricSumDistance QuadricSumDistance;
-  typedef SimpleVolume<SimpleVoxel>                              MyVolume;
-  typedef typename vcg::tri::TrivialWalker<MeshType,MyVolume>               MyWalker;
-  typedef typename vcg::tri::MarchingCubes<MeshType, MyWalker>              MyMarchingCubes;
-  typedef typename vcg::GridStaticPtr<typename MeshType::FaceType> GridType;
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef typename MeshType::BoxType BoxType;
   typedef typename MeshType::VertexIterator VertexIterator;
   typedef typename MeshType::VertexPointer VertexPointer;
   typedef typename MeshType::CoordType CoordType;
   typedef typename MeshType::FacePointer FacePointer;
+  typedef typename vcg::GridStaticPtr<typename MeshType::FaceType, ScalarType> GridType;
+
+  typedef SimpleVolume<SimpleVoxel<ScalarType> >                              MyVolume;
+  typedef typename vcg::tri::TrivialWalker<MeshType,MyVolume>               MyWalker;
+  typedef typename vcg::tri::MarchingCubes<MeshType, MyWalker>              MyMarchingCubes;
 
   VoronoiVolumeSampling(MeshType &_baseMesh, MeshType &_seedMesh)
-    :baseMesh(_baseMesh),seedMesh(_seedMesh),seedTree(0),surfTree(0)
+    :seedTree(0),surfTree(0),baseMesh(_baseMesh),seedMesh(_seedMesh)
   {
 
   }
 
-  KdTree<float>  *seedTree;
-  KdTree<float>  *surfTree;
+  KdTree<ScalarType>  *seedTree;
+  KdTree<ScalarType>  *surfTree;
+  typename KdTree<ScalarType>::PriorityQueue pq;
   GridType surfGrid;
   typedef FaceTmark<MeshType> MarkerFace;
   MarkerFace mf;
-  vcg::face::PointDistanceBaseFunctor<float> PDistFunct;
+  vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
 
   MeshType &baseMesh;
   MeshType &seedMesh;
   MeshType poissonSurfaceMesh;
-  float poissonRadiusSurface;
+  ScalarType poissonRadiusSurface;
   MeshType montecarloVolumeMesh;
 
-  void Init(float radius=0)
+  void Init(ScalarType radius=0)
   {
     MeshType montecarloSurfaceMesh;
 
     if(radius==0) poissonRadiusSurface = baseMesh.bbox.Diag()/50.0f;
     else poissonRadiusSurface = radius;
-    float meshArea = Stat<MeshType>::ComputeMeshArea(baseMesh);
+    ScalarType meshArea = Stat<MeshType>::ComputeMeshArea(baseMesh);
     int MontecarloSampleNum = 10 * meshArea / (radius*radius);
     tri::MeshSampler<MeshType> sampler(montecarloSurfaceMesh);
     tri::SurfaceSampling<MeshType,tri::MeshSampler<CMeshO> >::Montecarlo(baseMesh, sampler, MontecarloSampleNum);
@@ -85,61 +89,58 @@ public:
     qDebug("Surface Sampling radius %f - montecarlo %ivn - Poisson %ivn",poissonRadiusSurface,montecarloSurfaceMesh.vn,poissonSurfaceMesh.vn);
     VertexConstDataWrapper<MeshType> ww(poissonSurfaceMesh);
     if(surfTree) delete surfTree;
-    surfTree = new  KdTree<float>(ww);
-    surfTree->setMaxNofNeighbors(1);
+    surfTree = new  KdTree<ScalarType>(ww);
 
     surfGrid.SetWithRadius(baseMesh.face.begin(),baseMesh.face.end(),poissonRadiusSurface);
     mf.SetMesh(&baseMesh);
   }
 
 // Compute the signed distance from the surface
-float DistanceFromSurface(Point3f &p)
+ScalarType DistanceFromSurface(CoordType &p)
 {
-  surfTree->doQueryK(p);
-  float dist = sqrtf(surfTree->getNeighborSquaredDistance(0));
+  ScalarType squaredDist;
+  unsigned int ind;
+  surfTree->doQueryClosest(p,ind,squaredDist);
+  ScalarType dist = sqrt(squaredDist);
   if( dist > 3.0f*poissonRadiusSurface)
   {
-    Point3f dir = surfTree->getNeighbor(0) - p;
-    const Point3f &surfN = this->poissonSurfaceMesh.vert[surfTree->getNeighborId(0)].N();
+//    CoordType dir = surfTree->getNeighbor(0) - p;
+    CoordType dir = this->poissonSurfaceMesh.vert[ind].P() - p;
+    const CoordType &surfN = this->poissonSurfaceMesh.vert[ind].N();
     if(dir* surfN > 0) dist= -dist;
     return dist;
   }
 
-  float _maxDist = this->poissonRadiusSurface*3.0f;
+  ScalarType _maxDist = this->poissonRadiusSurface*3.0f;
   dist=_maxDist;
-  Point3f _closestPt;
+  CoordType _closestPt;
   FacePointer f=surfGrid.GetClosest(PDistFunct,mf,p,_maxDist,dist,_closestPt);
   assert(f);
   assert (dist >=0);
-  Point3f dir = _closestPt - p;
+  CoordType dir = _closestPt - p;
   if(dir*f->cN() > 0) dist = -dist;
 
   return dist;
 }
 
 
-float DistanceFromVoronoiSeed(Point3f p_point)
+ScalarType DistanceFromVoronoiSeed(CoordType p_point)
 {
-  // Calculating the closest point to p_point
-  seedTree->doQueryK(p_point);
-  float minD = seedTree->getNeighborSquaredDistance(0);
-  for(int i=1;i<seedTree->getNofFoundNeighbors();++i)
-    minD=std::min(minD,seedTree->getNeighborSquaredDistance(i));
-  return sqrtf(minD);
+  ScalarType squaredDist;
+  unsigned int ind;
+  surfTree->doQueryClosest(p_point,ind,squaredDist);
+  return math::Sqrt(squaredDist);
 }
 
-float DistanceFromVoronoiFace(Point3f p_point)
+ScalarType DistanceFromVoronoiFace(CoordType p_point)
 {
-  seedTree->doQueryK(p_point);
 
-  std::vector<std::pair<float, Point3f> > closeSeedVec;
-  for(int i=0;i<seedTree->getNofFoundNeighbors();++i)
-     closeSeedVec.push_back(std::make_pair(seedTree->getNeighborSquaredDistance(i),seedTree->getNeighbor(i)));
+  seedTree->doQueryK(p_point,2,pq);
 
-  std::sort(closeSeedVec.begin(),closeSeedVec.end());
-  Point3f p0=closeSeedVec[0].second;
-  Point3f p1=closeSeedVec[1].second;
-  Plane3f pl; pl.Init((p0+p1)/2.0f,p0-p1);
+  std::vector<std::pair<ScalarType, CoordType> > closeSeedVec;
+  CoordType p0= this->seedMesh.vert[pq.getIndex(0)].P();
+  CoordType p1= this->seedMesh.vert[pq.getIndex(1)].P();
+  Plane3<ScalarType> pl; pl.Init((p0+p1)/2.0f,p0-p1);
   return fabs(SignedDistancePlanePoint(pl,p_point));
 }
 
@@ -156,29 +157,24 @@ float DistanceFromVoronoiFace(Point3f p_point)
  *   returns: distance between the point P and the line R
  */
 
- float DistanceFromVoronoiEdge(Point3f p_point)
+ ScalarType DistanceFromVoronoiEdge(CoordType p_point)
 {
 
-  seedTree->doQueryK(p_point);
-  std::vector<std::pair<float, Point3f> > closeSeedVec;
-  for(int i=0;i<seedTree->getNofFoundNeighbors();++i)
-     closeSeedVec.push_back(std::make_pair(seedTree->getNeighborSquaredDistance(i),seedTree->getNeighbor(i)));
+  seedTree->doQueryK(p_point,3,pq);
+  std::vector<std::pair<ScalarType, CoordType> > closeSeedVec;
+  CoordType p0= this->seedMesh.vert[pq.getIndex(0)].P();
+  CoordType p1= this->seedMesh.vert[pq.getIndex(1)].P();
+  CoordType p2= this->seedMesh.vert[pq.getIndex(2)].P();
 
-  std::sort(closeSeedVec.begin(),closeSeedVec.end());
-  Point3f p0=closeSeedVec[0].second;
-  Point3f p1=closeSeedVec[1].second;
-  Point3f p2=closeSeedVec[2].second;
+    Plane3<ScalarType>  pl01; pl01.Init((p0+p1)/2.0f,p0-p1);
+    Plane3<ScalarType>  pl02; pl02.Init((p0+p2)/2.0f,p0-p2);
+    Line3<ScalarType>   voroLine;
 
-
-    Plane3f          pl01; pl01.Init((p0+p1)/2.0f,p0-p1);
-    Plane3f          pl02; pl02.Init((p0+p2)/2.0f,p0-p2);
-    Line3f           voroLine;
-
-    // Calculating the line R that intersect the planes po1 and p02
+    // Calculating the line R that intersect the planes pl01 and pl02
     vcg::IntersectionPlanePlane(pl01,pl02,voroLine);
     // Calculating the distance k between the point p_point and the line R.
-    Point3f closestPt;
-    float closestDist;
+    CoordType closestPt;
+    ScalarType closestDist;
     vcg::LinePointDistance(voroLine,p_point,closestPt, closestDist);
 
     return closestDist;
@@ -192,43 +188,47 @@ float DistanceFromVoronoiFace(Point3f p_point)
   int i;
   for(i=0;i<relaxStep;++i)
   {
-    seedTree->setMaxNofNeighbors(1);
     QuadricSumDistance dz;
     std::vector<QuadricSumDistance> dVec(montecarloVolumeMesh.vert.size(),dz);
 
     for(typename MeshType::VertexIterator vi=montecarloVolumeMesh.vert.begin();vi!=montecarloVolumeMesh.vert.end();++vi)
     {
-      seedTree->doQueryK(vi->P());
-      int seedIndex = seedTree->getNeighborId(0);
-      dVec[seedIndex].AddPoint(vi->P());
+      unsigned int seedInd;
+      ScalarType sqdist;
+      seedTree->doQueryClosest(vi->P(),seedInd,sqdist);
+      dVec[seedInd].AddPoint(vi->P());
     }
 
     // Search the local maxima for each region and use them as new seeds
-    std::vector< std::pair<float,int> > seedMaximaVec(seedMesh.vert.size(),std::make_pair(std::numeric_limits<float>::max(),-1 ));
+    std::vector< std::pair<ScalarType,int> > seedMaximaVec(seedMesh.vert.size(),std::make_pair(std::numeric_limits<ScalarType>::max(),-1 ));
 
     for(typename MeshType::VertexIterator vi=montecarloVolumeMesh.vert.begin();vi!=montecarloVolumeMesh.vert.end();++vi)
     {
-      seedTree->doQueryK(vi->P());
-      int seedIndex = seedTree->getNeighborId(0);
-      float val = dVec[seedIndex].Eval(vi->P());
-      if(val < seedMaximaVec[seedIndex].first)
+      unsigned int seedInd;
+      ScalarType sqdist;
+      seedTree->doQueryClosest(vi->P(),seedInd,sqdist);
+
+      ScalarType val = dVec[seedInd].Eval(vi->P());
+      if(val < seedMaximaVec[seedInd].first)
       {
-        seedMaximaVec[seedIndex].first = val;
-        seedMaximaVec[seedIndex].second = tri::Index(montecarloVolumeMesh,*vi);
+        seedMaximaVec[seedInd].first = val;
+        seedMaximaVec[seedInd].second = tri::Index(montecarloVolumeMesh,*vi);
       }
     }
     changed=false;
     for(int i=0;i<seedMesh.vert.size();++i)
     {
-      Point3f prevP = seedMesh.vert[i].P() ;
+      CoordType prevP = seedMesh.vert[i].P() ;
+      if(seedMaximaVec[i].second == -1) tri::Allocator<MeshType>::DeleteVertex(seedMesh,seedMesh.vert[i]);
       seedMesh.vert[i].P() = montecarloVolumeMesh.vert[seedMaximaVec[i].second].P();
       if(prevP != seedMesh.vert[i].P()) changed = true;
     }
+    tri::Allocator<MeshType>::CompactVertexVector(seedMesh);
 
-    // Kdtree must be rebuilt at the end of each step;
+    // Kdtree for the seeds must be rebuilt at the end of each step;
     VertexConstDataWrapper<MeshType> vdw(seedMesh);
     delete seedTree;
-    seedTree = new KdTree<float>(vdw);
+    seedTree = new KdTree<ScalarType>(vdw);
     if(!changed)
       break;
   }
@@ -247,38 +247,36 @@ float DistanceFromVoronoiFace(Point3f p_point)
  *   PruningPoisson: mesh of inside and surface points, it's the voronoi3d diagram
  *   n_voxel: number of voxels for the greater side
  */
- void BuildScaffoldingMesh(MeshType &scaffoldingMesh, int volumeSide, float isoThr,int elemEnum, bool surfFlag)
+ void BuildScaffoldingMesh(MeshType &scaffoldingMesh, int volumeSide, ScalarType isoThr,int elemEnum, bool surfFlag)
 {
    printf("Scaffolding of the mesh \n");
     MyVolume    volume;
-    float       max = math::Max(baseMesh.bbox.DimX(),baseMesh.bbox.DimY(),baseMesh.bbox.DimZ());
-    float       voxel = max / volumeSide;
+    ScalarType       max = math::Max(baseMesh.bbox.DimX(),baseMesh.bbox.DimY(),baseMesh.bbox.DimZ());
+    ScalarType       voxel = max / volumeSide;
     int         sizeX = (baseMesh.bbox.DimX() / voxel)+1;
     int         sizeY = (baseMesh.bbox.DimY() / voxel)+1;
     int         sizeZ = (baseMesh.bbox.DimZ() / voxel)+1;
 
     // Kdtree
-    seedTree->setMaxNofNeighbors(4);
+//    seedTree->setMaxNofNeighbors(4);
 
-    volume.bbox=baseMesh.bbox;
-    volume.bbox.Offset(baseMesh.bbox.Diag()*0.04f);
-    volume.siz = Point3i(sizeX,sizeY,sizeZ);
-    volume.ComputeDimAndVoxel();
-    volume.Init(Point3i(sizeX,sizeY,sizeZ));
+    BoxType bb = BoxType::Construct(baseMesh.bbox);
+    bb.Offset(baseMesh.bbox.Diag()*0.04f);
+    volume.Init(Point3i(sizeX,sizeY,sizeZ),bb);
 
     qDebug("Init Volume of %i %i %i",sizeX,sizeY,sizeZ);
    int cnt=0;
-   float offset= volume.voxel.Norm()*isoThr;
-    for(float i=0;i<sizeX;i++)
-        for(float j=0;j<sizeY;j++)
-          for(float k=0;k<sizeZ;k++)
+   ScalarType offset= volume.voxel.Norm()*isoThr;
+    for(ScalarType i=0;i<sizeX;i++)
+        for(ScalarType j=0;j<sizeY;j++)
+          for(ScalarType k=0;k<sizeZ;k++)
           {
             // check if the point is inside the mesh
-            Point3f p;
+            CoordType p;
             volume.IPiToPf(Point3i(i,j,k),p);
-            float surfDist = this->DistanceFromSurface(p);
+            ScalarType surfDist = this->DistanceFromSurface(p);
 
-            float elemDist;
+            ScalarType elemDist;
             switch(elemEnum)
             {
             case 0: elemDist = DistanceFromVoronoiSeed(p) - offset; break;
@@ -287,7 +285,7 @@ float DistanceFromVoronoiFace(Point3f p_point)
             default: assert(0);
             }
 
-            float val;
+            ScalarType val;
             if(surfFlag)
               val = std::max(-elemDist,surfDist);
             else
@@ -311,13 +309,15 @@ float DistanceFromVoronoiFace(Point3f p_point)
   */
  void ThicknessEvaluator()
  {
-   surfTree->setMaxNofNeighbors(1);
+//   surfTree->setMaxNofNeighbors(1);
    tri::UpdateQuality<MeshType>::VertexConstant(poissonSurfaceMesh,0);
    for(VertexIterator vi=montecarloVolumeMesh.vert.begin(); vi!=montecarloVolumeMesh.vert.end(); ++vi)
     {
-     this->surfTree->doQueryK(vi->P());
-     VertexPointer vp = &poissonSurfaceMesh.vert[surfTree->getNeighborId(0)];
-     float dist = sqrt(surfTree->getNeighborSquaredDistance(0));
+     unsigned int ind;
+     ScalarType sqdist;
+     this->surfTree->doQueryClosest(vi->P(),ind,sqdist);
+     VertexPointer vp = &poissonSurfaceMesh.vert[ind];
+     ScalarType dist = math::Sqrt(sqdist);
      if(vp->Q() < dist) vp->Q()=dist;
    }
    tri::UpdateColor<MeshType>::PerVertexQualityRamp(poissonSurfaceMesh);
@@ -331,16 +331,16 @@ float DistanceFromVoronoiFace(Point3f p_point)
  * Build a Poisson-Disk Point cloud that cover all the space of the original mesh m
  *
  */
- void BuildVolumeSampling(int montecarloSampleNum, int seedNum, float &poissonRadius, vcg::CallBackPos *cb=0)
+ void BuildVolumeSampling(int montecarloSampleNum, int seedNum, ScalarType &poissonRadius, vcg::CallBackPos *cb=0)
  {
    montecarloVolumeMesh.Clear();
     math::SubtractiveRingRNG rng;
-    surfTree->setMaxNofNeighbors(1);
+//    surfTree->setMaxNofNeighbors(1);
 
     while(montecarloVolumeMesh.vn < montecarloSampleNum)
     {
-        Point3f point = math::GeneratePointInBox3Uniform(rng,baseMesh.bbox);
-        float d = this->DistanceFromSurface(point);
+        CoordType point = math::GeneratePointInBox3Uniform(rng,baseMesh.bbox);
+        ScalarType d = this->DistanceFromSurface(point);
         if(d<0){
           vcg::tri::Allocator<MeshType>::AddVertex(montecarloVolumeMesh,point);
           montecarloVolumeMesh.vert.back().Q() = fabs(d);
@@ -363,7 +363,7 @@ float DistanceFromVoronoiFace(Point3f p_point)
     // Kdtree must be rebuilt at the end of each step;
     VertexConstDataWrapper<MeshType> vdw(seedMesh);
     if(seedTree) delete seedTree;
-    seedTree = new KdTree<float>(vdw);
+    seedTree = new KdTree<ScalarType>(vdw);
 }
 
 }; // end class
