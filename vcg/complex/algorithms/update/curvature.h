@@ -692,12 +692,12 @@ static void MeanAndGaussian(MeshType & m)
       CoordType c=m.bbox.Center();
       float maxRad = m.bbox.Diag()/2.0f;
 
-      for(int i=0;i<m.vert.size();++i) {
+      for(size_t i=0;i<m.vert.size();++i) {
         CoordType dd = m.vert[i].P()-c;
         dd.Normalize();
-        m.vert[i].PD1()=dd^m.vert[i].N();
+        m.vert[i].PD1().Import(dd^m.vert[i].N());
         m.vert[i].PD1().Normalize();
-        m.vert[i].PD2()=m.vert[i].N()^m.vert[i].PD1();
+        m.vert[i].PD2().Import(m.vert[i].N()^CoordType::Construct(m.vert[i].PD1()));
         m.vert[i].PD2().Normalize();
         // Now the anisotropy
         // the idea is that the ratio between the two direction is at most <anisotropyRatio>
@@ -710,8 +710,8 @@ static void MeanAndGaussian(MeshType & m)
         const float curRatio = minRatio + (maxRatio-minRatio)*q;
         float pd1Len = sqrt(1.0/(1+curRatio*curRatio));
         float pd2Len = curRatio * pd1Len;
-        assert(fabs(curRatio - pd2Len/pd1Len)<0.0000001);
-        assert(fabs(pd1Len*pd1Len + pd2Len*pd2Len - 1.0f)<0.0001);
+//        assert(fabs(curRatio - pd2Len/pd1Len)<0.0000001);
+//        assert(fabs(pd1Len*pd1Len + pd2Len*pd2Len - 1.0f)<0.0001);
         m.vert[i].PD1() *= pd1Len;
         m.vert[i].PD2() *= pd2Len;
       }
