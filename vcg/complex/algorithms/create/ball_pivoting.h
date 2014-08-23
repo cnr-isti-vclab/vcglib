@@ -59,7 +59,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
 
     VertexConstDataWrapper<MESH> ww(this->mesh);
     tree = new KdTree<ScalarType>(ww);
-    tree->setMaxNofNeighbors(16);
+//    tree->setMaxNofNeighbors(16);
 
     usedBit = VertexType::NewBitFlag();
     UpdateFlags<MESH>::VertexClear(this->mesh,usedBit);
@@ -88,11 +88,12 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
 
       seed.SetUserBit(usedBit);
 
-      tree->doQueryK(seed.P());
-      int nn = tree->getNofFoundNeighbors();
+      typename KdTree<ScalarType>::PriorityQueue pq;
+      tree->doQueryK(seed.P(),16,pq);
+      int nn = pq.getNofElements();
       for(int i=0;i<nn;++i)
       {
-        VertexType *vp = &this->mesh.vert[tree->getNeighborId(i)];
+        VertexType *vp = &this->mesh.vert[pq.getIndex(i)];
         if(Distance(seed.P(),vp->cP()) > 2*radius) continue;
         targets.push_back(vp);
       }
@@ -223,8 +224,9 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     ScalarType r = sqrt(radius*radius - axis_len/4);
 
 
-    tree->doQueryK(middle);
-    int nn = tree->getNofFoundNeighbors();
+    typename KdTree<ScalarType>::PriorityQueue pq;
+    tree->doQueryK(middle,16,pq);
+    int nn = pq.getNofElements();
     if(nn==0) return -1;
 
     VertexType *candidate = NULL;
@@ -233,7 +235,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     // Loop over all the nearest vertexes and choose the best one according the ball pivoting strategy.
     //
     for (int i = 0; i < nn; i++) {
-      int vInd = tree->getNeighborId(i);
+      int vInd = pq.getIndex(i);
       VertexType *v = &this->mesh.vert[vInd];
       if(Distance(middle,v->cP()) > r + radius) continue;
 
@@ -391,10 +393,11 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   }
 
   void Mark(VertexType *v) {
-    tree->doQueryK(v->cP());
-    int n = tree->getNofFoundNeighbors();
+    typename KdTree<ScalarType>::PriorityQueue pq;
+    tree->doQueryK(v->cP(),16,pq);
+    int n = pq.getNofElements();
     for (int i = 0; i < n; i++) {
-      VertexType *vp = &this->mesh.vert[tree->getNeighborId(i)];
+      VertexType *vp = &this->mesh.vert[pq.getIndex(i)];
       if(Distance(v->cP(),vp->cP())<min_edge)
         vp->SetUserBit(usedBit);
     }
