@@ -34,8 +34,9 @@ class SimpleVolume : public BasicGrid<typename VOX_TYPE::ScalarType>
 public:
   typedef VOX_TYPE VoxelType;
   typedef typename VoxelType::ScalarType ScalarType;
+  typedef typename BasicGrid<typename VOX_TYPE::ScalarType>::Box3x Box3x;
 
-  const Point3i &ISize() {return siz;}   /// Dimensioni griglia come numero di celle per lato
+  const Point3i &ISize() {return this->siz;}   /// Dimensioni griglia come numero di celle per lato
 
   ScalarType Val(const int &x,const int &y,const int &z) const {
     return cV(x,y,z).V();
@@ -48,17 +49,18 @@ public:
   }
 
   VOX_TYPE &V(const int &x,const int &y,const int &z) {
-    return Vol[x+y*siz[0]+z*siz[0]*siz[1]];
+    return Vol[x+y*this->siz[0]+z*this->siz[0]*this->siz[1]];
   }
 
   VOX_TYPE &V(const Point3i &pi) {
-    return Vol[ pi[0] + pi[1]*siz[0] + pi[2]*siz[0]*siz[1] ];
+    return Vol[ pi[0] + pi[1]*this->siz[0] + pi[2]*this->siz[0]*this->siz[1] ];
   }
 
   const VOX_TYPE &cV(const int &x,const int &y,const int &z) const {
-    return Vol[x+y*siz[0]+z*siz[0]*siz[1]];
+    return Vol[x+y*this->siz[0]+z*this->siz[0]*this->siz[1]];
   }
 
+  bool ValidCell(const Point3i & /*p0*/, const Point3i & /*p1*/) const { return true;}
 
   template < class VertexPointerType >
   void GetXIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointerType &v, const float thr)
@@ -99,9 +101,9 @@ public:
 
   void Init(Point3i _sz, Box3x bb)
   {
-    siz=_sz;
+    this->siz=_sz;
     this->bbox = bb;
-    Vol.resize(siz[0]*siz[1]*siz[2]);
+    Vol.resize(this->siz[0]*this->siz[1]*this->siz[2]);
     this->ComputeDimAndVoxel();
   }
 
@@ -157,14 +159,18 @@ private:
   typedef typename MeshType::VertexPointer VertexPointer;
     public:
 
-  // bbox is the portion of the volume to be computed
+  // subbox is the portion of the volume to be computed
   // resolution determine the sampling step:
   // should be a divisor of bbox size (e.g. if bbox size is 256^3 resolution could be 128,64, etc)
 
-
   void Init(VolumeType &volume)
+  {
+    Init(volume,Box3i(Point3i(0,0,0),volume.ISize()));
+  }
+
+  void Init(VolumeType &volume, Box3i subbox)
     {
-        _bbox				= Box3i(Point3i(0,0,0),volume.ISize());
+        _bbox				= subbox;
         _slice_dimension = _bbox.DimX()*_bbox.DimZ();
 
         _x_cs = new VertexIndex[ _slice_dimension ];
@@ -173,7 +179,7 @@ private:
         _x_ns = new VertexIndex[ _slice_dimension ];
         _z_ns = new VertexIndex[ _slice_dimension ];
 
-    };
+    }
 
     ~TrivialWalker()
     {_thr=0;}
@@ -201,7 +207,8 @@ private:
         {
           p1.X()=i;	  p1.Y()=j;     p1.Z()=k;
           p2.X()=i+1; p2.Y()=j+1;	p2.Z()=k+1;
-          extractor.ProcessCell(p1, p2);
+          if(volume.ValidCell(p1,p2))
+            extractor.ProcessCell(p1, p2);
         }
       }
       NextSlice();
