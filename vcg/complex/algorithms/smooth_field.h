@@ -1,21 +1,40 @@
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2014                                                \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
+
 #ifndef SMOOTHER_FIELD_H
 #define SMOOTHER_FIELD_H
 
-#include <vector>
-#include <list>
-#include <utility>
-#include "mesh_to_matrix.h"
-#include <Eigen/Core>
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
+#include <eigenlib/Eigen/Sparse>
 #include <vcg/complex/algorithms/update/color.h>
+#include <vcg/complex/algorithms/update/quality.h>
 #include <vcg/complex/algorithms/update/curvature_fitting.h>
+#include <vcg/complex/algorithms/parametrization/tangent_field_operators.h>
+#include "mesh_to_matrix.h"
 
-//#include "NRosyField.h"
+#define __Delta 10e-6
 
-using namespace std;
-#define Delta 10e-6
-
+namespace vcg {
+namespace tri {
 template < typename TriMeshType >
 class ImplicitSmoother
 {
@@ -117,9 +136,9 @@ class ImplicitSmoother
 
                 V0 = (P*V0.transpose()).transpose();
 
-                assert(V0(0,2) < Delta);
-                assert(V0(1,2) < Delta);
-                assert(V0(2,2) < Delta);
+                assert(V0(0,2) < __Delta);
+                assert(V0(1,2) < __Delta);
+                assert(V0(2,2) < __Delta);
 
                 Eigen::MatrixXd V1(3,3);
 
@@ -129,8 +148,8 @@ class ImplicitSmoother
 
                 V1 = (P*V1.transpose()).transpose();
 
-                assert(V1(fid1_vc,2) < Delta);
-                assert(V1((fid1_vc+1)%3,2) < Delta);
+                assert(V1(fid1_vc,2) < __Delta);
+                assert(V1((fid1_vc+1)%3,2) < __Delta);
 
                 // compute rotation R such that R * N1 = N0
                 // i.e. map both triangles to the same plane
@@ -142,9 +161,9 @@ class ImplicitSmoother
                         0, sin(alpha),  cos(alpha);
                 V1 = (R*V1.transpose()).transpose();
 
-                assert(V1(0,2) < Delta);
-                assert(V1(1,2) < Delta);
-                assert(V1(2,2) < Delta);
+                assert(V1(0,2) < __Delta);
+                assert(V1(1,2) < __Delta);
+                assert(V1(2,2) < __Delta);
 
                 // measure the angle between the reference frames
                 // k_ij is the angle between the triangle on the left and the one on the right
@@ -162,8 +181,8 @@ class ImplicitSmoother
 
                 tmp = R2*ref0.head<2>();
 
-                assert(tmp(0) - ref1(0) < 10^10);
-                assert(tmp(1) - ref1(1) < 10^10);
+                assert(tmp(0) - ref1(0) < 1e10);
+                assert(tmp(1) - ref1(1) < 1e10);
 
                 k[eid] = ktemp;
             }
@@ -185,9 +204,9 @@ class ImplicitSmoother
     {
 
         // Generate topological relations
-        vcg::MeshToMatrix<TriMeshType>::GetTriMeshData(mesh,F,V);
-        vcg::MeshToMatrix<TriMeshType>::GetTriFFAdjacency(mesh,TT,TTi);
-        vcg::MeshToMatrix<TriMeshType>::GetTriEdgeAdjacency(mesh,EV,FE,EF);
+        MeshToMatrix<TriMeshType>::GetTriMeshData(mesh,F,V);
+        MeshToMatrix<TriMeshType>::GetTriFFAdjacency(mesh,TT,TTi);
+        MeshToMatrix<TriMeshType>::GetTriEdgeAdjacency(mesh,EV,FE,EF);
 
         // Flag border edges
         isBorderEdge.resize(EV.rows());
@@ -197,7 +216,7 @@ class ImplicitSmoother
         // Generate normals per face
         //igl::per_face_normals(V, F, N);
         Eigen::MatrixXd NV;
-        vcg::MeshToMatrix<TriMeshType>::GetNormalData(mesh,NV,N);
+        MeshToMatrix<TriMeshType>::GetNormalData(mesh,NV,N);
 
         // Generate reference frames
         for(unsigned fid=0; fid<F.rows(); ++fid)
@@ -687,11 +706,8 @@ public:
     void setConstraintSoft(const int fid, const double w, const CoordType &v)
     {
         // create eigen vector
-        Eigen::Vector3d c=vcg::MeshToMatrix<TriMeshType>::VectorFromCoord(v);
-
-        //        // copy coordinates
-        //        for (int i = 0; i < 3; i++)
-        //            c(i) = v[i];
+        Eigen::Vector3d c;
+        v.ToEigenVector(c);
 
         //        // set smoother soft constraint
         //        smoother->setConstraintSoft(fid, w, c);
@@ -703,8 +719,8 @@ public:
 
     void setConstraintHard(const int fid, const CoordType &v)
     {
-        Eigen::Vector3d c=vcg::MeshToMatrix<TriMeshType>::VectorFromCoord(v);
-
+        Eigen::Vector3d c;
+        v.ToEigenVector(c);
         isHard[fid] = true;
         hard(fid) = convert3DtoLocal(fid, c);
     }
@@ -816,7 +832,7 @@ public:
     }
 
 
-    void getSingularitiesIndexPerVertexList(list<int> &sIndexes, const ScalarType t = ScalarType(0))
+    void getSingularitiesIndexPerVertexList(vector<int> &sIndexes, const ScalarType t = ScalarType(0))
     {
 
         // get singularities vector
@@ -957,6 +973,7 @@ public:
 
     static void InitByCurvature(MeshType & mesh)
     {
+        tri::RequirePerVertexCurvatureDir(mesh);
         vcg::tri::UpdateCurvatureFitting<MeshType>::computeCurvature(mesh);
         vcg::tri::CrossField<MeshType>::SetFaceCrossVectorFromVert(mesh);
         InitQualityByAnisotropyDir(mesh);
@@ -1066,4 +1083,6 @@ public:
 
 };
 
+} // end namespace tri
+} // end namespace vcg
 #endif // SMOOTHER_FIELD_H
