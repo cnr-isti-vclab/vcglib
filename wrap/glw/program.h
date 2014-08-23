@@ -274,13 +274,13 @@ class Program : public Object
         _GLW_IMPLEMENT_SCALAR_UNIFORM_(int,          i )
         _GLW_IMPLEMENT_SCALAR_UNIFORM_(unsigned int, ui)
         _GLW_IMPLEMENT_SCALAR_UNIFORM_(float,        f )
-        _GLW_IMPLEMENT_SCALAR_UNIFORM_(double,       d )
+//        _GLW_IMPLEMENT_SCALAR_UNIFORM_(double,       d )
         _GLW_IMPLEMENT_VECTOR_UNIFORM_(int,          i )
         _GLW_IMPLEMENT_VECTOR_UNIFORM_(unsigned int, ui)
         _GLW_IMPLEMENT_VECTOR_UNIFORM_(float,        f )
-        _GLW_IMPLEMENT_VECTOR_UNIFORM_(double,       d )
+//        _GLW_IMPLEMENT_VECTOR_UNIFORM_(double,       d )
         _GLW_IMPLEMENT_MATRIX_UNIFORM_(float,        f )
-        _GLW_IMPLEMENT_MATRIX_UNIFORM_(double,       d )
+//        _GLW_IMPLEMENT_MATRIX_UNIFORM_(double,       d )
 
         GLW_IMPLEMENT_CUSTOM_UNIFORMS;
 
@@ -613,13 +613,13 @@ class BoundProgram : public BoundObject
         _GLW_FORWARD_SCALAR_UNIFORM_(int)
         _GLW_FORWARD_SCALAR_UNIFORM_(unsigned int)
         _GLW_FORWARD_SCALAR_UNIFORM_(float)
-        _GLW_FORWARD_SCALAR_UNIFORM_(double)
+//        _GLW_FORWARD_SCALAR_UNIFORM_(double)
         _GLW_FORWARD_VECTOR_UNIFORM_(int)
         _GLW_FORWARD_VECTOR_UNIFORM_(unsigned int)
         _GLW_FORWARD_VECTOR_UNIFORM_(float)
-        _GLW_FORWARD_VECTOR_UNIFORM_(double)
+//        _GLW_FORWARD_VECTOR_UNIFORM_(double)
         _GLW_FORWARD_MATRIX_UNIFORM_(float)
-        _GLW_FORWARD_MATRIX_UNIFORM_(double)
+//        _GLW_FORWARD_MATRIX_UNIFORM_(double)
 
 #undef _GLW_FORWARD_SCALAR_UNIFORM_
 #undef _GLW_FORWARD_VECTOR_UNIFORM_
