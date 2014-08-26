@@ -28,6 +28,7 @@
 #include <vcg/complex/complex.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
+#include <vcg/simplex/edge/topology.h>
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/space/index/spatial_hashing.h>
@@ -457,6 +458,60 @@ public:
                     return count_removed;
             }
 
+       static int SplitSelectedVertexOnEdgeMesh(MeshType& m)
+       {
+         tri::RequireCompactness(m);
+         tri::UpdateFlags<MeshType>::VertexClearV(m);
+         for(size_t i=0;i<m.edge.size();++i)
+         {
+           for(int j=0;j<2;++j)
+           {
+             VertexPointer vp = m.edge[i].V(j);
+             if(vp->IsS())
+             {
+               if(!vp->IsV())
+                 m.edge[i].V(j) = &*(tri::Allocator<MeshType>::AddVertex(m,vp->P()));
+               else vp->SetV();
+             }
+           }
+         }
+       }
+
+
+       static void SelectNonManifoldVertexOnEdgeMesh(MeshType &m)
+       {
+         tri::RequireCompactness(m);
+         tri::UpdateSelection<MeshType>::VertexClear(m);
+         std::vector<int> cnt(m.vn,0);
+
+         for(size_t i=0;i<m.edge.size();++i)
+         {
+           cnt[tri::Index(m,m.edge[i].V(0))]++;
+           cnt[tri::Index(m,m.edge[i].V(1))]++;
+         }
+         for(size_t i=0;i<m.vert.size();++i)
+           if(cnt[i]>2) m.vert[i].SetS();
+       }
+
+       static void SelectCreaseVertexOnEdgeMesh(MeshType &m, ScalarType AngleRadThr)
+       {
+         tri::RequireCompactness(m);
+         tri::RequireVEAdjacency(m);
+         tri::UpdateTopology<MeshType>::VertexEdge(m);
+         for(size_t i=0;i<m.vert.size();++i)
+         {
+           std::vector<VertexPointer> VVStarVec;
+           edge::VVStarVE<typename MeshType::EdgeType>(&(m.vert[i]),VVStarVec);
+           if(VVStarVec.size()==2)
+           {
+             CoordType v0 = m.vert[i].P() - VVStarVec[0]->P();
+             CoordType v1 = m.vert[i].P() - VVStarVec[1]->P();
+             float angle = M_PI-vcg::Angle(v0,v1);
+             if(angle > AngleRadThr) m.vert[i].SetS();
+           }
+         }
+       }
+
 
       /// Removal of faces that were incident on a non manifold edge.
 
@@ -622,6 +677,22 @@ public:
         return true;
       }
 
+
+            static bool IsFaceFauxConsistent(MeshType &m)
+            {
+              RequirePerFaceFlags(m);
+              RequireFFAdjacency(m);
+              for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+              {
+                for(int z=0;z<(*fi).VN();++z)
+                {
+                  FacePointer fp = fi->FFp(z);
+                  int zp = fi->FFi(z);
+                  if(fi->IsF(z) != fp->IsF(zp)) return false;
+                }
+              }
+              return true;
+            }
 
   /**
 * Is the mesh only composed by triangles? (non polygonal faces)
