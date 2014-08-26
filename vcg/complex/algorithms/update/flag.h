@@ -365,7 +365,10 @@ public:
   /// e.g. the edge such that the signed dihedral angle between the normal of two faces sharing it, is between the two given thresholds.
   /// In this way all the near planar edges are marked as Faux Edges (e.g. edges to be ignored)
   /// Note that it uses the signed dihedral angle convention (negative for concave edges and positive for convex ones);
-  static void FaceFauxSignedCrease(MeshType &m, float AngleRadNeg, float AngleRadPos )
+  ///
+  /// Optionally it can also mark as feature edges also the boundary edges.
+  ///
+  static void FaceFauxSignedCrease(MeshType &m, float AngleRadNeg, float AngleRadPos, bool MarkBorderFlag = false )
   {
     RequirePerFaceFlags(m);
     RequireFFAdjacency(m);
@@ -382,6 +385,10 @@ public:
           if(angle>AngleRadNeg && angle<AngleRadPos)
             (*fi).SetF(z);
         }
+        else
+        {
+          if(MarkBorderFlag) (*fi).SetF(z);
+        }
       }
     }
   }
@@ -393,29 +400,7 @@ public:
   /// In this way all the near planar edges are marked as Faux Edges (e.g. edges to be ignored)
   static void FaceFauxCrease(MeshType &m,float AngleRad)
   {
-    RequirePerFaceFlags(m);
-    RequireFFAdjacency(m);
-    RequirePerFaceNormal(m);
-
-    typename MeshType::FaceIterator f;
-
-    //initially everything is faux (e.g all internal)
-    FaceSetF(m);
-    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-    {
-      if(!(*fi).IsD())
-      {
-        for(int z=0;z<(*fi).VN();++z)
-        {
-          if( face::IsBorder(*fi,z) )  (*fi).ClearF(z);
-          else
-          {
-            if(Angle((*fi).N(), (*fi).FFp(z)->N()) > AngleRad)
-              (*fi).ClearF(z);
-          }
-        }
-      }
-    }
+    FaceFauxSignedCrease(m,-AngleRad,AngleRad);
   }
 
 }; // end class
