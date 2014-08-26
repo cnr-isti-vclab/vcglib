@@ -72,8 +72,10 @@ template <class MeshType>
 class TrivialSampler
 {
 public:
+  typedef typename MeshType::ScalarType  ScalarType;
   typedef typename MeshType::CoordType  CoordType;
   typedef typename MeshType::VertexType VertexType;
+  typedef typename MeshType::EdgeType   EdgeType;
   typedef typename MeshType::FaceType   FaceType;
 
   void reset()
@@ -108,6 +110,11 @@ public:
   {
     sampleVec->push_back(p.cP());
   }
+  void AddEdge(const EdgeType& e, ScalarType u ) // u==0 -> v(0) u==1 -> v(1);
+  {
+    sampleVec->push_back(e.cV(0)->cP()*(1.0-u)+e.cV(1)->cP()*u);
+  }
+
   void AddFace(const FaceType &f, const CoordType &p)
   {
     sampleVec->push_back(f.cP(0)*p[0] + f.cP(1)*p[1] +f.cP(2)*p[2] );
@@ -204,9 +211,11 @@ class SurfaceSampling
   typedef typename MeshType::VertexType      VertexType;
   typedef typename MeshType::VertexPointer   VertexPointer;
   typedef typename MeshType::VertexIterator  VertexIterator;
+  typedef typename MeshType::EdgeType        EdgeType;
+  typedef typename MeshType::EdgeIterator    EdgeIterator;
+  typedef typename MeshType::FaceType        FaceType;
   typedef typename MeshType::FacePointer     FacePointer;
   typedef typename MeshType::FaceIterator    FaceIterator;
-  typedef typename MeshType::FaceType        FaceType;
   typedef typename MeshType::FaceContainer   FaceContainer;
 
   typedef typename vcg::SpatialHashTable<FaceType, ScalarType> MeshSHT;
@@ -468,6 +477,72 @@ static void VertexUniform(MeshType & m, VertexSampler &ps, int sampleNum)
     for(int i =0; i< sampleNum; ++i)
         ps.AddVert(*vertVec[i]);
 }
+
+
+///
+static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius)
+{
+  tri::RequireEEAdjacency(m);
+  tri::RequireCompactness(m);
+  tri::UpdateTopology<MeshType>::EdgeEdge(m);
+  tri::UpdateFlags<MeshType>::EdgeClearV(m);
+
+  for(EdgeIterator ei = m.edge.begin();ei!=m.edge.end();++ei)
+  {
+    if(!ei->IsV())
+    {
+      edge::Pos<EdgeType> ep(&*ei,0);
+      edge::Pos<EdgeType> startep =ep;
+
+      do // first loop to search a boundary.
+      {
+        ep.NextE();
+        if(ep.IsBorder()) break;
+      } while(startep!=ep);
+      assert(ep.IsBorder());
+
+      ScalarType totalLen=0;
+      ep.FlipV();
+      do // second loop to compute len of the chain.
+      {
+        ep.E()->SetV();
+        totalLen+=Distance(ep.V()->P(),ep.VFlip()->P());
+        ep.NextE();
+      } while(!ep.IsBorder());
+      totalLen+=Distance(ep.V()->P(),ep.VFlip()->P());
+
+      // Third loop actually perform the sampling.
+      int sampleNum = floor(totalLen / radius);
+      ScalarType sampleDist = totalLen/sampleNum;
+      printf("Found a chain of %f with %i samples every %f (%f)\n",totalLen,sampleNum,sampleDist,radius);
+
+      ScalarType curLen=0;
+      int sampleCnt=1;
+      assert(ep.IsBorder());
+      ps.AddEdge(*(ep.E()),ep.VInd()==0?0.0:1.0);
+      ep.FlipV();
+      do
+      {
+        ScalarType edgeLen = Distance(ep.V()->P(),ep.VFlip()->P());
+        ScalarType d0 = curLen;
+        ScalarType d1 = d0+edgeLen;
+
+        while(d1>sampleCnt*sampleDist)
+        {
+          ScalarType off = (sampleCnt*sampleDist-d0) /edgeLen;
+          printf("edgeLen %f off %f samplecnt %i\n",edgeLen,off,sampleCnt);
+          ps.AddEdge(*(ep.E()),ep.VInd()==0?1.0-off:off);
+          sampleCnt++;
+        }
+        curLen+=edgeLen;
+        ep.NextE();
+      } while(!ep.IsBorder());
+      assert(ep.IsBorder());
+      ps.AddEdge(*(ep.E()),ep.VInd()==0?0.0:1.0);
+    }
+  }
+}
+
 
 /// \brief Sample all the border corner vertices
 ///
