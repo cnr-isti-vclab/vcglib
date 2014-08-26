@@ -655,6 +655,35 @@ void Build( MeshType & in, const V & v)
   Build(in,v,dummyfaceVec);
 }
 
+
+template <class TriMeshType,class EdgeMeshType >
+void BuildFromNonFaux(TriMeshType &in, EdgeMeshType &out)
+{
+  tri::RequireCompactness(in);
+  std::vector<typename tri::UpdateTopology<TriMeshType>::PEdge> edgevec;
+  tri::UpdateTopology<TriMeshType>::FillUniqueEdgeVector(in, edgevec, false);
+  out.Clear();
+  for(size_t i=0;i<in.vert.size();++i)
+    tri::Allocator<EdgeMeshType>::AddVertex(out, in.vert[i].P());
+  tri::UpdateFlags<EdgeMeshType>::VertexClearV(out);
+
+  for(size_t i=0;i<edgevec.size();++i)
+  {
+    int i0 = tri::Index(in,edgevec[i].v[0]);
+    int i1 = tri::Index(in,edgevec[i].v[1]);
+    out.vert[i0].SetV();
+    out.vert[i1].SetV();
+    tri::Allocator<EdgeMeshType>::AddEdge(out,&out.vert[i0],&out.vert[i1]);
+    if(in.vert[i0].IsS()) out.vert[i0].SetS();
+    if(in.vert[i1].IsS()) out.vert[i1].SetS();
+  }
+
+  for(size_t i=0;i<out.vert.size();++i)
+    if(!out.vert[i].IsV()) tri::Allocator<EdgeMeshType>::DeleteVertex(out,out.vert[i]);
+
+  tri::Allocator<EdgeMeshType>::CompactEveryVector(out);
+}
+
 // Build a regular grid mesh as a typical height field mesh
 // x y are the position on the grid scaled by wl and hl (at the end x is in the range 0..wl and y is in 0..hl)
 // z is taken from the <data> array
@@ -869,18 +898,18 @@ void Disk(MeshType & m, int slices)
 template <class MeshType>
 void OrientedDisk(MeshType &m, int slices, typename MeshType::CoordType center, typename MeshType::CoordType norm, float radius)
 {
-	typedef typename MeshType::ScalarType ScalarType;
-	typedef typename MeshType::CoordType  CoordType;
+    typedef typename MeshType::ScalarType ScalarType;
+    typedef typename MeshType::CoordType  CoordType;
 
-	Disk(m,slices);
-	tri::UpdatePosition<MeshType>::Scale(m,radius);
-	ScalarType angleRad = Angle(CoordType(0,0,1),norm);
-	CoordType axis = CoordType(0,0,1)^norm;
+    Disk(m,slices);
+    tri::UpdatePosition<MeshType>::Scale(m,radius);
+    ScalarType angleRad = Angle(CoordType(0,0,1),norm);
+    CoordType axis = CoordType(0,0,1)^norm;
 
-	Matrix44<ScalarType> rotM;
-	rotM.SetRotateRad(angleRad,axis);
-	tri::UpdatePosition<MeshType>::Matrix(m,rotM);
-	tri::UpdatePosition<MeshType>::Translate(m,center);
+    Matrix44<ScalarType> rotM;
+    rotM.SetRotateRad(angleRad,axis);
+    tri::UpdatePosition<MeshType>::Matrix(m,rotM);
+    tri::UpdatePosition<MeshType>::Translate(m,center);
 }
 
 template <class MeshType>
