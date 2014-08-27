@@ -143,7 +143,7 @@ namespace vcg
 					int nofVertices, nofFaces, nofEdges;
 					int id0, id1, id2;
 					int eid0, eid1, eid2;
-					MESH_TYPE::CoordType v;
+                    typename MESH_TYPE::CoordType v;
 
 					QString line;
 					QStringList sa;
