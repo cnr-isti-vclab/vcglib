@@ -1186,12 +1186,13 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<VertexType *> &see
 {
   PerVertexPointerHandle sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   PerVertexBoolHandle fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
-
+  std::vector<bool> fixedVec;
   std::vector<CoordType> seedPosVec;
-  for(size_t i=0;i<seedVec.size();++i)
+  for(size_t i=0;i<seedVec.size();++i){
     seedPosVec.push_back(seedVec[i]->P());
+    fixedVec.push_back(fixed[seedVec[i]]);
+  }
 
-  bool changed=false;
   assert(m.vn > seedPosVec.size()*20);
   int i;
 
@@ -1214,16 +1215,27 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<VertexType *> &see
     }
 
     vector<CoordType> newseedVec;
+    vector<bool> newfixedVec;
 
     for(int i=0;i<seedPosVec.size();++i)
     {
-      if(sumVec[i].first != 0)
-        newseedVec.push_back(sumVec[i].second /ScalarType(sumVec[i].first));
+      if(fixedVec[i])
+      {
+        newseedVec.push_back(seedPosVec[i]);
+        newfixedVec.push_back(true);
+      }
+      else
+      {
+        if(sumVec[i].first != 0)
+        {
+          newseedVec.push_back(sumVec[i].second /ScalarType(sumVec[i].first));
+          newfixedVec.push_back(false);
+        }
+      }
     }
     std::swap(seedPosVec,newseedVec);
+    std::swap(fixedVec,newfixedVec);
     tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
-
-    qDebug("performed %i relax step on %i",i,relaxStep);
   }
 
   SeedToVertexConversion(m,seedPosVec,seedVec);
