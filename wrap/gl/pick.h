@@ -211,11 +211,11 @@ public:
     int screenW = (int)(vp[2]-vp[0]);
     int screenH = (int)(vp[3]-vp[1]);
 
-    GL_TYPE<Scalarm>::ScalarType *buffer = new GL_TYPE<Scalarm>::ScalarType[screenW*screenH];
+    GL_TYPE_NM<Scalarm>::ScalarType *buffer = new GL_TYPE_NM<Scalarm>::ScalarType[screenW*screenH];
     
     //I'm not sure glReadPixels can accept GL_DOUBLE tag
     //GLenum err = glGetError();
-    glReadPixels(vp[0],vp[1],vp[2],vp[3],GL_DEPTH_COMPONENT,GL_TYPE<Scalarm>::SCALAR(),buffer);
+    glReadPixels(vp[0],vp[1],vp[2],vp[3],GL_DEPTH_COMPONENT,GL_TYPE_NM<Scalarm>::SCALAR(),buffer);
     //err = glGetError();
     std::vector<FacePointer> result;
     PickFace(x,y,m,result,width,height);
