@@ -1178,6 +1178,57 @@ static void FixVertexVector(MeshType &m, std::vector<VertexType *> &vertToFixVec
     fixed[vertToFixVec[i]]=true;
 }
 
+
+static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
+                                     int relaxStep,
+                                     VoronoiProcessingParameter &vpp,
+                                     vcg::CallBackPos *cb=0)
+{
+  PerVertexPointerHandle sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+  PerVertexBoolHandle fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
+
+  std::vector<CoordType> seedPosVec;
+  for(size_t i=0;i<seedVec.size();++i)
+    seedPosVec.push_back(seedVec[i]->P());
+
+  bool changed=false;
+  assert(m.vn > seedPosVec.size()*20);
+  int i;
+
+  for(i=0;i<relaxStep;++i)
+  {
+    // Kdtree for the seeds must be rebuilt at each step;
+    VectorConstDataWrapper<std::vector<CoordType> > vdw(seedPosVec);
+    KdTree<ScalarType> seedTree(vdw);
+
+    std::vector<std::pair<int,CoordType> > sumVec(seedPosVec.size(),std::make_pair(0,CoordType(0,0,0)));
+    for(typename MeshType::VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+    {
+      unsigned int seedInd;
+      ScalarType sqdist;
+      seedTree.doQueryClosest(vi->P(),seedInd,sqdist);
+      vi->Q()=sqrt(sqdist);
+      sources[vi]=seedVec[seedInd];
+      sumVec[seedInd].first++;
+      sumVec[seedInd].second+=vi->cP();
+    }
+
+    vector<CoordType> newseedVec;
+
+    for(int i=0;i<seedPosVec.size();++i)
+    {
+      if(sumVec[i].first != 0)
+        newseedVec.push_back(sumVec[i].second /ScalarType(sumVec[i].first));
+    }
+    std::swap(seedPosVec,newseedVec);
+    tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
+
+    qDebug("performed %i relax step on %i",i,relaxStep);
+  }
+
+  SeedToVertexConversion(m,seedPosVec,seedVec);
+}
+
 /// \brief Perform a Lloyd relaxation cycle over a mesh
 ///  It uses two conventions:
 ///  1) a few vertexes can remain fixed, you have to set a per vertex bool attribute named 'fixed'
@@ -1204,10 +1255,8 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
 
   tri::UpdateFlags<MeshType>::FaceBorderFromVF(m);
   tri::UpdateFlags<MeshType>::VertexBorderFromFace(m);
-  typename MeshType::template PerVertexAttributeHandle<VertexPointer> sources;
-  sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
-  typename MeshType::template PerVertexAttributeHandle<bool> fixed;
-  fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
+  PerVertexPointerHandle sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
+  PerVertexBoolHandle fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
   int iter;
   for(iter=0;iter<relaxIter;++iter)
   {
