@@ -1896,7 +1896,8 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
                      std::vector<typename MeshType::CoordType> &poissonSamples, // the vector that will contain the set of points
                      int sampleNum, // the desired number sample, if zero you must set the radius to the wanted value
                      typename MeshType::ScalarType &radius,  // the Poisson Disk Radius (used if sampleNum==0, setted if sampleNum!=0)
-                     typename MeshType::ScalarType radiusVariance=1)
+                     typename MeshType::ScalarType radiusVariance=1,
+                     typename MeshType::ScalarType PruningByNumberTolerance=0.04f)
 
 {
   typedef tri::TrivialSampler<MeshType> BaseSampler;
@@ -1929,7 +1930,7 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
     pp.radiusVariance=radiusVariance;
   }
   if(sampleNum==0) tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(pdSampler, MontecarloMesh, radius,pp);
-  else tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruningByNumber(pdSampler, MontecarloMesh, sampleNum, radius,pp);
+  else tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruningByNumber(pdSampler, MontecarloMesh, sampleNum, radius,pp,PruningByNumberTolerance);
   int t2=clock();
   pp.pds.totalTime = t2-t0;
 }
