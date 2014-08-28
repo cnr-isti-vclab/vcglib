@@ -207,6 +207,12 @@ public:
     GetTriMeshData(mesh,faces,vert);
     GetTriEdgeAdjacency(vert,faces,EV,FE,EF);
   }
+
+  static Eigen::Vector3d VectorFromCoord(CoordType v)
+  {
+      Eigen::Vector3d ret(v[0],v[1],v[2]);
+      return ret;
+  }
 };
 
 } // end namespace tri
