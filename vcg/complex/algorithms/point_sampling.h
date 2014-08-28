@@ -1527,7 +1527,7 @@ static void PoissonDiskPruningByNumber(VertexSampler &ps, MeshType &m,
   } while(RangeMaxRadNum > sampleNum);
 
 
-  float curRadius;
+  float curRadius=RangeMaxRad;
   int iterCnt=0;
   while(iterCnt<maxIter &&
         (pp.pds.sampleNum < sampleNumMin || pp.pds.sampleNum  > sampleNumMax) )
@@ -1905,7 +1905,7 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
   typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam pp;
   int t0=clock();
 
-  if(sampleNum>0) radius = tri::SurfaceSampling<MeshType,BaseSampler>::ComputePoissonDiskRadius(m,sampleNum);
+//  if(sampleNum>0) radius = tri::SurfaceSampling<MeshType,BaseSampler>::ComputePoissonDiskRadius(m,sampleNum);
   if(radius>0 && sampleNum==0) sampleNum = tri::SurfaceSampling<MeshType,BaseSampler>::ComputePoissonSampleNum(m,radius);
 
   pp.pds.sampleNum = sampleNum;
@@ -1928,7 +1928,8 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
     pp.adaptiveRadiusFlag=true;
     pp.radiusVariance=radiusVariance;
   }
-  tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(pdSampler, MontecarloMesh, radius,pp);
+  if(sampleNum==0) tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(pdSampler, MontecarloMesh, radius,pp);
+  else tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruningByNumber(pdSampler, MontecarloMesh, sampleNum, radius,pp);
   int t2=clock();
   pp.pds.totalTime = t2-t0;
 }
