@@ -121,7 +121,7 @@ public:
         ///find distance to each segment and take minimum
         for (int i=0;i<3;i++)
         {
-            vcg::Segment2<float> s=vcg::Segment2<float>(P(i),P((i+1)%3));
+            vcg::Segment2<ScalarType> s=vcg::Segment2<ScalarType>(P(i),P((i+1)%3));
             CoordType clos=ClosestPoint<ScalarType>(s,q);
             ScalarType dis_test=(clos-q).Norm();
             if (dis_test<dist)

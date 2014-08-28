@@ -11,22 +11,8 @@ namespace vcg {
 namespace tri {
 
 //class SphereEdge;
-class SphereFace;
-class SphereVertex;
-
-struct SphereUsedTypes : public vcg::UsedTypes<	vcg::Use<SphereVertex>::AsVertexType,
-                                                vcg::Use<SphereFace>::AsFaceType>{};
-
-class SphereVertex  : public vcg::Vertex< SphereUsedTypes,
-                                        vcg::vertex::Coord3f,
-                                        vcg::vertex::Normal3f,
-                                        vcg::vertex::BitFlags>{};
-
-class SphereFace    : public vcg::Face< SphereUsedTypes, vcg::face::VertexRef,
-                                        vcg::face::Normal3f,vcg::face::Mark,
-                                        vcg::face::BitFlags,vcg::face::FFAdj> {};
-
-class SphereMesh : public vcg::tri::TriMesh< std::vector<SphereVertex>, std::vector<SphereFace> > {};
+//class SphereFace;
+//class SphereVertex;
 
 template <class TriMeshType>
 class ExtrinsicPlaneSymmetry
@@ -35,6 +21,23 @@ class ExtrinsicPlaneSymmetry
     typedef typename TriMeshType::FaceType FaceType;
     typedef typename TriMeshType::CoordType CoordType;
     typedef typename TriMeshType::ScalarType ScalarType;
+
+//    struct SphereUsedTypes : public vcg::UsedTypes<	vcg::Use<SphereVertex>::AsVertexType,
+//                                                    vcg::Use<SphereFace>::AsFaceType>{};
+
+//    class SphereVertex  : public vcg::Vertex< SphereUsedTypes,
+//                                             vcg::vertex::Coord<CoordType,ScalarType>,
+//                                             vcg::vertex::Normal<CoordType,ScalarType>,
+//                                            vcg::vertex::BitFlags>{};
+
+//    class SphereFace    : public vcg::Face< SphereUsedTypes, vcg::face::VertexRef,
+//                                            vcg::vertex::Normal<vcg::Point3<ScalarType>,ScalarType>,
+//                                            vcg::face::Mark,
+//                                            vcg::face::BitFlags,vcg::face::FFAdj> {};
+
+//    class SphereMesh : public vcg::tri::TriMesh< std::vector<SphereVertex>, std::vector<SphereFace> > {};
+
+
 
     TriMeshType &tri_mesh;
 
@@ -48,9 +51,9 @@ class ExtrinsicPlaneSymmetry
 
 
 
-    SphereMesh *sphere;
+    TriMeshType *sphere;
 
-    typename vcg::GridStaticPtr<SphereFace> GridSph;
+    typename vcg::GridStaticPtr<FaceType,ScalarType> GridSph;
 
     ScalarType RadiusInterval;
     ScalarType MaxRadius;
@@ -71,7 +74,7 @@ class ExtrinsicPlaneSymmetry
         ScalarType MaxD=sphere->bbox.Diag();
         ScalarType MinD;
         CoordType ClosePt;
-        SphereFace *choosen=NULL;
+        FaceType *choosen=NULL;
         choosen=vcg::tri::GetClosestFaceBase(*sphere,GridSph,Direction,MaxD,MinD,ClosePt);
         assert(choosen!=NULL);
         int IndexF=choosen-&(sphere->face[0]);
@@ -196,11 +199,11 @@ public:
         if (sphere!=NULL)
             sphere->Clear();
         else
-            sphere=new SphereMesh();
+            sphere=new TriMeshType();
 
         //create the sphere
-        vcg::tri::Sphere<SphereMesh>(*sphere,SubDirections);
-        vcg::tri::UpdateBounding<SphereMesh>::Box(*sphere);
+        vcg::tri::Sphere<TriMeshType>(*sphere,SubDirections);
+        vcg::tri::UpdateBounding<TriMeshType>::Box(*sphere);
 
         ///initialize grid
         GridSph.Set(sphere->face.begin(),sphere->face.end());
