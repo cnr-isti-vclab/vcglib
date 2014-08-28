@@ -168,7 +168,7 @@ private:
     Init(volume,Box3i(Point3i(0,0,0),volume.ISize()));
   }
 
-  void Init(VolumeType &volume, Box3i subbox)
+  void Init(VolumeType &/*volume*/, Box3i subbox)
     {
         _bbox				= subbox;
         _slice_dimension = _bbox.DimX()*_bbox.DimZ();
