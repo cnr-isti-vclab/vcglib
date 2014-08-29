@@ -1348,6 +1348,7 @@ struct PoissonDiskParam
     preGenFlag = false;
     preGenMesh = NULL;
     geodesicDistanceFlag = false;
+    randomSeed = 0;
   }
 
   struct Stat
@@ -1373,6 +1374,7 @@ struct PoissonDiskParam
   MeshType *preGenMesh;      // There are two ways of passing the pregen vertexes to the pruning, 1) is with a mesh pointer
                               // 2) with a per vertex attribute.
   int MAXLEVELS;
+  int randomSeed;
 
   Stat pds;
 };
@@ -1558,6 +1560,7 @@ static void PoissonDiskPruning(VertexSampler &ps, MeshType &montecarloMesh,
                                ScalarType diskRadius, PoissonDiskParam &pp)
 {
   tri::RequireCompactness(montecarloMesh);
+  if(pp.randomSeed) SamplingRandomGenerator().initialize(pp.randomSeed);
   if(pp.adaptiveRadiusFlag)
     tri::RequirePerVertexQuality(montecarloMesh);
   int t0 = clock();
@@ -1897,7 +1900,8 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
                      int sampleNum, // the desired number sample, if zero you must set the radius to the wanted value
                      typename MeshType::ScalarType &radius,  // the Poisson Disk Radius (used if sampleNum==0, setted if sampleNum!=0)
                      typename MeshType::ScalarType radiusVariance=1,
-                     typename MeshType::ScalarType PruningByNumberTolerance=0.04f)
+                     typename MeshType::ScalarType PruningByNumberTolerance=0.04f,
+                     unsigned int randSeed=0)
 
 {
   typedef tri::TrivialSampler<MeshType> BaseSampler;
@@ -1910,6 +1914,7 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
   if(radius>0 && sampleNum==0) sampleNum = tri::SurfaceSampling<MeshType,BaseSampler>::ComputePoissonSampleNum(m,radius);
 
   pp.pds.sampleNum = sampleNum;
+  pp.randomSeed = randSeed;
   poissonSamples.clear();
 //  std::vector<Point3f> MontecarloSamples;
   MeshType MontecarloMesh;
@@ -1918,6 +1923,7 @@ void PoissonSampling(MeshType &m, // the mesh that has to be sampled
   MontecarloSampler mcSampler(MontecarloMesh);
   BaseSampler pdSampler(poissonSamples);
 
+  if(randSeed) tri::SurfaceSampling<MeshType,MontecarloSampler>::SamplingRandomGenerator().initialize(randSeed);
   tri::SurfaceSampling<MeshType,MontecarloSampler>::Montecarlo(m, mcSampler, std::max(10000,sampleNum*40));
   tri::UpdateBounding<MeshType>::Box(MontecarloMesh);
 //  tri::Build(MontecarloMesh, MontecarloSamples);
@@ -1946,8 +1952,7 @@ void PoissonPruning(MeshType &m, // the mesh that has to be pruned
 {
   typedef tri::TrivialPointerSampler<MeshType> BaseSampler;
   typename tri::SurfaceSampling<MeshType, BaseSampler>::PoissonDiskParam pp;
-  if(randSeed !=0)
-    tri::SurfaceSampling<MeshType,BaseSampler>::SamplingRandomGenerator().initialize(randSeed);
+  pp.randomSeed = randSeed;
 
   tri::UpdateBounding<MeshType>::Box(m);
   BaseSampler pdSampler;
@@ -1986,7 +1991,8 @@ void PoissonPruningExact(MeshType &m, /// the mesh that has to be pruned
                          typename MeshType::ScalarType & radius,
                          int sampleNum,
                          float tolerance=0.04,
-                         int maxIter=20)
+                         int maxIter=20,
+                         unsigned int randSeed=0)
 {
   size_t sampleNumMin = int(float(sampleNum)*(1.0f-tolerance));  // the expected values range.
   size_t sampleNumMax = int(float(sampleNum)*(1.0f+tolerance));  // e.g. any sampling in [sampleNumMin, sampleNumMax] is OK
@@ -1999,14 +2005,14 @@ void PoissonPruningExact(MeshType &m, /// the mesh that has to be pruned
   do
   {
     RangeMinRad/=2.0f;
-    PoissonPruning(m,poissonSamplesTmp,RangeMinRad);
+    PoissonPruning(m,poissonSamplesTmp,RangeMinRad,randSeed);
     RangeMinSampleNum = poissonSamplesTmp.size();
   } while(RangeMinSampleNum < sampleNumMin);
 
   do
   {
     RangeMaxRad*=2.0f;
-    PoissonPruning(m,poissonSamplesTmp,RangeMaxRad);
+    PoissonPruning(m,poissonSamplesTmp,RangeMaxRad,randSeed);
     RangeMaxSampleNum = poissonSamplesTmp.size();
   } while(RangeMaxSampleNum > sampleNumMax);
 
@@ -2016,7 +2022,7 @@ void PoissonPruningExact(MeshType &m, /// the mesh that has to be pruned
         (poissonSamplesTmp.size() < sampleNumMin || poissonSamplesTmp.size() > sampleNumMax) )
   {
     curRadius=(RangeMaxRad+RangeMinRad)/2.0f;
-    PoissonPruning(m,poissonSamplesTmp,curRadius);
+    PoissonPruning(m,poissonSamplesTmp,curRadius,randSeed);
     //qDebug("(%6.3f:%5i %6.3f:%5i) Cur Radius %f -> %i sample instead of %i",RangeMinRad,RangeMinSampleNum,RangeMaxRad,RangeMaxSampleNum,curRadius,poissonSamplesTmp.size(),sampleNum);
     if(poissonSamplesTmp.size() > sampleNum)
       RangeMinRad = curRadius;
