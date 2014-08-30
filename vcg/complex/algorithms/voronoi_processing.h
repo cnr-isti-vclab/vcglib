@@ -113,6 +113,7 @@ public:
 
   typedef typename MeshType::template PerVertexAttributeHandle<VertexPointer> PerVertexPointerHandle;
   typedef typename MeshType::template PerVertexAttributeHandle<bool> PerVertexBoolHandle;
+  typedef typename MeshType::template PerVertexAttributeHandle<float> PerVertexFloatHandle;
   typedef typename MeshType::template PerFaceAttributeHandle<VertexPointer> PerFacePointerHandle;
 
 
@@ -1186,11 +1187,22 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<VertexType *> &see
 {
   PerVertexPointerHandle sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   PerVertexBoolHandle fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
+  PerVertexFloatHandle area = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m,"area");
   std::vector<bool> fixedVec;
   std::vector<CoordType> seedPosVec;
   for(size_t i=0;i<seedVec.size();++i){
     seedPosVec.push_back(seedVec[i]->P());
     fixedVec.push_back(fixed[seedVec[i]]);
+  }
+
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+    area[vi]=0;
+
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+  {
+    ScalarType a3 = DoubleArea(*fi)/6.0;
+    for(int i=0;i<3;++i)
+      area[fi->V(i)]+=a3;
   }
 
   assert(m.vn > seedPosVec.size()*20);
@@ -1202,16 +1214,16 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<VertexType *> &see
     VectorConstDataWrapper<std::vector<CoordType> > vdw(seedPosVec);
     KdTree<ScalarType> seedTree(vdw);
 
-    std::vector<std::pair<int,CoordType> > sumVec(seedPosVec.size(),std::make_pair(0,CoordType(0,0,0)));
-    for(typename MeshType::VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+    std::vector<std::pair<ScalarType,CoordType> > sumVec(seedPosVec.size(),std::make_pair(0,CoordType(0,0,0)));
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     {
       unsigned int seedInd;
       ScalarType sqdist;
       seedTree.doQueryClosest(vi->P(),seedInd,sqdist);
       vi->Q()=sqrt(sqdist);
       sources[vi]=seedVec[seedInd];
-      sumVec[seedInd].first++;
-      sumVec[seedInd].second+=vi->cP();
+      sumVec[seedInd].first+=area[vi];
+      sumVec[seedInd].second+=vi->cP()*area[vi];
     }
 
     vector<CoordType> newseedVec;
