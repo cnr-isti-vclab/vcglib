@@ -90,7 +90,7 @@ Point3Type Normal( Point3Type const &p0, Point3Type const & p1,  Point3Type cons
 
 /// Like the above, it returns the normal to the plane passing through p0,p1,p2, but normalized.
 template<class TriangleType>
-Point3<typename TriangleType::ScalarType> NormalizedNormal(const TriangleType &t)
+typename TriangleType::CoordType NormalizedNormal(const TriangleType &t)
 {
   return (( t.cP(1) - t.cP(0)) ^ (t.cP(2) - t.cP(0))).Normalize();
 }

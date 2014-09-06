@@ -57,6 +57,7 @@ namespace vcg {
                 typedef typename OpenMeshType::VertexPointer VertexPointer;
                 typedef typename OpenMeshType::ScalarType ScalarType;
                 typedef typename OpenMeshType::VertexType VertexType;
+				typedef typename OpenMeshType::EdgeType   EdgeType;
                 typedef typename OpenMeshType::FaceType FaceType;
                 typedef typename OpenMeshType::VertexIterator VertexIterator;
                 typedef typename OpenMeshType::FaceIterator FaceIterator;
@@ -82,6 +83,8 @@ namespace vcg {
 
                     /// number of vertices
                     int numVertices;
+					/// number of edges
+					int numEdges;
                     /// number of faces (the number of triangles could be
                     /// larger in presence of polygonal faces
                     int numFaces;
@@ -111,6 +114,12 @@ namespace vcg {
                     bool  edge[3];// useless if the face is a polygon, no need to have variable length array
                     Color4b c;
                 };
+
+				struct ObjEdge
+				{
+					int v0;
+					int v1;
+				};
 
                 struct ObjTexCoord
                 {
@@ -260,6 +269,7 @@ namespace vcg {
                     materials.push_back(defaultMaterial);
 
                     int numVertices  = 0;  // stores the number of vertices been read till now
+					int numEdges     = 0;  // stores the number of edges read till now
                     int numTriangles = 0;  // stores the number of faces been read till now
                     int numTexCoords = 0;  // stores the number of texture coordinates been read till now
                     int numVNormals	 = 0;  // stores the number of vertex normals been read till now
@@ -269,6 +279,8 @@ namespace vcg {
                     // vertices and faces allocation
                     VertexIterator vi = vcg::tri::Allocator<OpenMeshType>::AddVertices(m,oi.numVertices);
                     //FaceIterator   fi = Allocator<OpenMeshType>::AddFaces(m,oi.numFaces);
+					// edges found
+					std::vector<ObjEdge> ev;
                     std::vector<Color4b> vertexColorVector;
                     ObjIndexedFace	ff;
                     const char *loadingStr = "Loading";
@@ -358,6 +370,22 @@ namespace vcg {
 
                                 numVNormals++;
                             }
+							else if ( header.compare("l")==0 )
+							{
+								loadingStr = "Edge Loading";
+
+								if (numTokens < 3)
+								{
+									result = E_LESS_THAN_3_VERT_IN_FACE; // TODO add proper/handling error code
+									continue;
+								}
+
+								ObjEdge e = { (atoi(tokens[1].c_str()) - 1),
+								              (atoi(tokens[2].c_str()) - 1) };
+								ev.push_back(e);
+
+								numEdges++;
+							}
                             else if( (header.compare("f")==0) || (header.compare("q")==0) )  // face
                             {
                                 loadingStr="Face Loading";
@@ -605,6 +633,27 @@ namespace vcg {
                     } // end while stream not eof
                     assert((numTriangles +numVertices) == numVerticesPlusFaces+extraTriangles);
                     vcg::tri::Allocator<OpenMeshType>::AddFaces(m,numTriangles);
+
+					// Add found edges
+					if (numEdges > 0)
+					{
+						vcg::tri::Allocator<OpenMeshType>::AddEdges(m,numEdges);
+
+						assert(m.edge.size() == size_t(m.en));
+
+						for(int i=0; i<numEdges; ++i)
+						{
+							ObjEdge &  e    = ev[i];
+							EdgeType & edge = m.edge[i];
+
+							assert(e.v0 >= 0 && size_t(e.v0) < m.vert.size() &&
+							       e.v1 >= 0 && size_t(e.v1) < m.vert.size());
+							// TODO add proper handling of bad indices
+
+							edge.V(0) = &(m.vert[e.v0]);
+							edge.V(1) = &(m.vert[e.v1]);
+						}
+					}
                     //-------------------------------------------------------------------------------
 
                     // Now the final passes:
@@ -929,6 +978,7 @@ namespace vcg {
                     bool bHasPerVertexColor = false;
 
                     oi.numVertices=0;
+					oi.numEdges=0;
                     oi.numFaces=0;
                     oi.numTexCoords=0;
                     oi.numNormals=0;
@@ -961,6 +1011,8 @@ namespace vcg {
                             else {
                                 if((line[0]=='f') || (line[0]=='q')) oi.numFaces++;
                                 else
+									if (line[0]=='l') oi.numEdges++;
+								else
                                     if(line[0]=='u' && line[1]=='s') bHasPerFaceColor = true; // there is a usematerial so add per face color
                             }
                         }
@@ -983,6 +1035,8 @@ namespace vcg {
                         else
                             oi.mask |= vcg::tri::io::Mask::IOM_WEDGNORMAL;
                     }
+					if (oi.numEdges)
+						oi.mask |= vcg::tri::io::Mask::IOM_EDGEINDEX;
 
                     stream.close();
 
