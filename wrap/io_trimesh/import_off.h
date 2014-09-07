@@ -114,6 +114,7 @@ public:
 
     std::vector< std::string > tokens;
     TokenizeNextLine(stream, tokens);
+    if(tokens.empty()) return InvalidFile_MissingOFF;
 
     bool isNormalDefined   = false;
     bool isColorDefined    = false;
@@ -597,7 +598,7 @@ protected:
     std::string line;
     do
       std::getline(stream, line, '\n');
-    while (line[0] == '#' || line.length()==0 || line[0]=='\r');
+    while ((line[0] == '#' || line.length()==0 || line[0]=='\r' ) && (!stream.eof()));
 
     size_t from = 0;
     size_t to = 0;
