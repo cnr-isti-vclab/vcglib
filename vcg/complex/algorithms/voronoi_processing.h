@@ -59,6 +59,9 @@ struct VoronoiProcessingParameter
     geodesicRelaxFlag = true;
     relaxOnlyConstrainedFlag=false;
     refinementRatio = 5.0f;
+    seedPerturbationProbability=0;
+    seedPerturbationAmount = 0.001f;
+
   }
   int colorStrategy;
 
@@ -82,6 +85,8 @@ struct VoronoiProcessingParameter
                                 /// triangulation that is dense enough to well approximate the voronoi diagram.
                                 /// reasonable values are in the range 4..10. It is used by PreprocessForVoronoi and this value
                                 /// says how many triangles you should expect in a voronoi region of a given radius.
+  float seedPerturbationProbability;      /// if true at each iteration step each seed has the given probability to be perturbed a little.
+  float seedPerturbationAmount;      /// As a bbox diag fraction (e.g. in the 0..1 range).
 
   // Convertion to Voronoi Diagram Parameters
 
@@ -108,6 +113,12 @@ class VoronoiProcessing
   typedef typename MeshType::FaceType					FaceType;
   typedef typename MeshType::FaceContainer		FaceContainer;
   typedef typename tri::Geodesic<MeshType>::VertDist VertDist;
+
+  static math::MarsenneTwisterRNG &RandomGenerator()
+  {
+      static math::MarsenneTwisterRNG rnd;
+      return rnd;
+  }
 
 public:
 
@@ -1180,20 +1191,13 @@ static void FixVertexVector(MeshType &m, std::vector<VertexType *> &vertToFixVec
 }
 
 
-static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
+static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<CoordType> &seedPosVec,
+                                     std::vector<bool> &fixedVec,
                                      int relaxStep,
                                      VoronoiProcessingParameter &vpp,
                                      vcg::CallBackPos *cb=0)
 {
-  PerVertexPointerHandle sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
-  PerVertexBoolHandle fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
   PerVertexFloatHandle area = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m,"area");
-  std::vector<bool> fixedVec;
-  std::vector<CoordType> seedPosVec;
-  for(size_t i=0;i<seedVec.size();++i){
-    seedPosVec.push_back(seedVec[i]->P());
-    fixedVec.push_back(fixed[seedVec[i]]);
-  }
 
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     area[vi]=0;
@@ -1207,7 +1211,7 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<VertexType *> &see
 
   assert(m.vn > seedPosVec.size()*20);
   int i;
-
+  ScalarType perturb = m.bbox.Diag()*vpp.seedPerturbationAmount;
   for(i=0;i<relaxStep;++i)
   {
     // Kdtree for the seeds must be rebuilt at each step;
@@ -1221,7 +1225,6 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<VertexType *> &see
       ScalarType sqdist;
       seedTree.doQueryClosest(vi->P(),seedInd,sqdist);
       vi->Q()=sqrt(sqdist);
-      sources[vi]=seedVec[seedInd];
       sumVec[seedInd].first+=area[vi];
       sumVec[seedInd].second+=vi->cP()*area[vi];
     }
@@ -1229,7 +1232,7 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<VertexType *> &see
     vector<CoordType> newseedVec;
     vector<bool> newfixedVec;
 
-    for(int i=0;i<seedPosVec.size();++i)
+    for(size_t i=0;i<seedPosVec.size();++i)
     {
       if(fixedVec[i])
       {
@@ -1241,6 +1244,8 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<VertexType *> &see
         if(sumVec[i].first != 0)
         {
           newseedVec.push_back(sumVec[i].second /ScalarType(sumVec[i].first));
+          if(vpp.seedPerturbationProbability > RandomGenerator().generate01())
+            newseedVec.back()+=math::GeneratePointInUnitBallUniform<ScalarType,math::MarsenneTwisterRNG>( RandomGenerator())*perturb;
           newfixedVec.push_back(false);
         }
       }
@@ -1249,8 +1254,7 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<VertexType *> &see
     std::swap(fixedVec,newfixedVec);
     tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
   }
-
-  SeedToVertexConversion(m,seedPosVec,seedVec);
+  return relaxStep;
 }
 
 /// \brief Perform a Lloyd relaxation cycle over a mesh
