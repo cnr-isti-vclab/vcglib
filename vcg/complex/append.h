@@ -395,10 +395,10 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
 /*! \brief Copy the second mesh over the first one.
   The first mesh is destroyed. If requested only the selected elements are copied.
 */
-static void MeshCopy(MeshLeft& ml, ConstMeshRight& mr, bool selected=false)
+static void MeshCopy(MeshLeft& ml, ConstMeshRight& mr, bool selected=false, const bool adjFlag = false)
 {
   ml.Clear();
-  Mesh(ml,mr,selected);
+  Mesh(ml,mr,selected,adjFlag);
   ml.bbox.Import(mr.bbox);
 }
 /*! \brief %Append only the selected elements of second mesh to the first one.
