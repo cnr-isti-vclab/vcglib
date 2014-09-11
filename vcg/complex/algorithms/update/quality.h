@@ -68,11 +68,13 @@ static void VertexConstant(MeshType &m, float q)
 
 /** Clamp each vertex of the mesh with a range of values.
 */
-static void VertexClamp(MeshType &m, float qmin, float qmax)
+static void VertexClamp(MeshType &m,
+                        typename MeshType::ScalarType qmin,
+                        typename MeshType::ScalarType qmax)
 {
   tri::RequirePerVertexQuality(m);
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-    (*vi).Q()=std::min(qmax, std::max(qmin,(*vi).Q()));
+    (*vi).Q()=min(qmax, max(qmin,(*vi).Q()));
 }
 
 /** Normalize the vertex quality so that it fits in the specified range.
