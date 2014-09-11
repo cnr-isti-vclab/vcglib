@@ -133,7 +133,7 @@ public:
 
             for (unsigned int i = 0; i < mesh.face.size(); ++i)
             {
-                ScalarType dist=Distortion(mesh.face[i],grad_size);
+                ScalarType dist=LamdaDistortion<FaceType>(mesh.face[i],grad_size);
                 if (dist>maxD)maxD=dist;
                 ScalarType absLap=fabs(LaplaceDistortion(mesh.face[i], grad_size));
                 if (absLap>maxL)maxL=absLap;
