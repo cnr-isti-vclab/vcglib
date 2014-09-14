@@ -143,6 +143,7 @@ namespace tri {
             ExtractPolygon(&*tfi,vs);
             std::reverse(vs.begin(),vs.end());
             //now vs  contains all the vertices of the polygon (still in the trimesh)
+            if (vs.size()==0)continue;
             typename PolyMeshType::FaceIterator pfi =  tri::Allocator<PolyMeshType>::AddFaces(pm,1);
             (*pfi).Alloc(vs.size());
             for(size_t i  = 0 ; i < vs.size(); ++i)
