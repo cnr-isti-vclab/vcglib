@@ -27,7 +27,7 @@ public:
                              bool DirectRound = false,int iter = 5,
                              int localIter = 5, bool DoRound = true)
   {
-      PoissonSolver<MeshType> PSolver(mesh);
+      vcg::PoissonSolver<MeshType> PSolver(mesh);
       if (mesh.fn==0)return;
       StiffeningInitializer<MeshType>::InitDefaultStiffening(mesh);
       if (stiffMode==GAUSSIAN)
