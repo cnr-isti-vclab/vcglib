@@ -67,7 +67,7 @@ void SelectFlippedFaces(MeshType &Tmesh)
 //  h   scaling factor applied to cross field
 //  return the  triangle's distortion
 template< class FaceType>
-typename FaceType::ScalarType Distortion(FaceType &f,typename FaceType::ScalarType h)
+typename FaceType::ScalarType LamdaDistortion(FaceType &f,typename FaceType::ScalarType h)
 {
     typedef typename FaceType::CoordType CoordType3D;
     typedef typename FaceType::ScalarType ScalarType;
@@ -115,14 +115,15 @@ typename FaceType::ScalarType Distortion(FaceType &f,typename FaceType::ScalarTy
         // 1/2 * [ (a00 + a11) +/- sqrt((a00 - a11)^2 + 4 a01 a10) ]
         ScalarType trI = I00 + I11;                     // guaranteed non-neg
         ScalarType diffDiag = I00 - I11;                // guaranteed non-neg
-        ScalarType sqrtDet = sqrt(std::max(0.0, diffDiag*diffDiag +
-                                 4 * I01 * I01)); // guaranteed non-neg
+        ScalarType sqrtDet = sqrt(std::max((ScalarType)0.0, (ScalarType)(diffDiag*diffDiag + 4 * I01 * I01))); // guaranteed non-neg
         ScalarType sig1 = 0.5 * (trI + sqrtDet); // higher singular value
         ScalarType sig2 = 0.5 * (trI - sqrtDet); // lower singular value
 
         // Avoid sig2 < 0 due to numerical error
-        if (fabs(sig2) < 1.0e-8) sig2 = 0;
-            assert(sig1 >= 0);
+        //if (fabs(sig2) < 1.0e-8) sig2 = 0;
+        if ((sig2) < 1.0e-8) sig2 = 0;
+
+        assert(sig1 >= 0);
         assert(sig2 >= 0);
 
         if (sig2 < 0) {
@@ -164,10 +165,10 @@ template< class FaceType>
 typename FaceType::ScalarType LaplaceDistortion(FaceType &f ,typename FaceType::ScalarType h)
 {
     typedef typename FaceType::ScalarType ScalarType;
-    ScalarType mydist = Distortion(f, h);
+    ScalarType mydist = LamdaDistortion<FaceType>(f, h);
     ScalarType lapl=0;
     for (int i=0;i<3;i++)
-        lapl += (mydist- Distortion(*f.FFp(i), h));
+        lapl += (mydist- LamdaDistortion(*f.FFp(i), h));
     return lapl;
 }
 
@@ -201,7 +202,7 @@ void SetFaceQualityByDistortion(MeshType &Tmesh,
     ///evaluate min and max
     for (unsigned int i=0;i<Tmesh.face.size();i++)
     {
-        ScalarType dist=Distortion<FaceType>(Tmesh.face[i],h);
+        ScalarType dist=LamdaDistortion<FaceType>(Tmesh.face[i],h);
         if (dist>maxD)maxD=dist;
         if (dist<minD)minD=dist;
         Tmesh.face[i].Q()= dist;
