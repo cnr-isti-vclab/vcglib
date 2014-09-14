@@ -10,6 +10,8 @@
 #include "sparsesystemdata.h"
 #include "vertex_indexing.h"
 
+namespace vcg
+{
 template <class MeshType>
 class PoissonSolver
 {
@@ -613,19 +615,19 @@ class PoissonSolver
              }
         }
         ///initialize the vector of integer variables to return their values
-        Handle_SystemInfo().IntegerValues.resize(n_integer_vars*2);
-        int baseIndex=(n_vert_vars)*2;
-        int endIndex=baseIndex+n_integer_vars*2;
-        int index=0;
-        for (int i=baseIndex;i<endIndex;i++)
-        {
-            ///assert that the value is an integer value
-            ScalarType value=X[i];
-            ScalarType diff=value-(int)floor(value+0.5);
-            assert(diff<0.00000001);
-            Handle_SystemInfo().IntegerValues[index]=value;
-            index++;
-        }
+//        Handle_SystemInfo().IntegerValues.resize(n_integer_vars*2);
+//        int baseIndex=(n_vert_vars)*2;
+//        int endIndex=baseIndex+n_integer_vars*2;
+//        int index=0;
+//        for (int i=baseIndex;i<endIndex;i++)
+//        {
+//            ///assert that the value is an integer value
+//            ScalarType value=X[i];
+//            ScalarType diff=value-(int)floor(value+0.5);
+//            assert(diff<0.00000001);
+//            Handle_SystemInfo().IntegerValues[index]=value;
+//            index++;
+//        }
      }
 
     ///END GENERIC SYSTEM FUNCTIONS
@@ -856,5 +858,6 @@ public:
     PoissonSolver(MeshType &_mesh):mesh(_mesh)
     {}
 
+};
 };
 #endif
