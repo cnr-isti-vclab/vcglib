@@ -49,7 +49,7 @@ public:
   class PUsedTypes: public vcg::UsedTypes < vcg::Use<PVertex>::template AsVertexType,
                                             vcg::Use<PFace  >::template AsFaceType >{};
 
-  class PVertex : public vcg::Vertex< PUsedTypes,vcg::vertex::BitFlags,vcg::vertex::Coord3d ,vcg::vertex::Mark>{};
+  class PVertex : public vcg::Vertex< PUsedTypes,vcg::vertex::BitFlags,vcg::vertex::Coord3m ,vcg::vertex::Mark>{};
   class PFace   : public vcg::Face<   PUsedTypes> {};
   class PMesh   : public vcg::tri::TriMesh< std::vector<PVertex>, std::vector<PFace> > {};
 
