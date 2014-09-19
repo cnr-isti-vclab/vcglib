@@ -147,7 +147,7 @@ public:
     RequireFFAdjacency(m);
 
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)if(!(*fi).IsD())
-      for(int j=0;j<3;++j)
+      for(int j=0;j<fi->VN();++j)
       {
         if(face::IsBorder(*fi,j)) (*fi).SetB(j);
         else (*fi).ClearB(j);
