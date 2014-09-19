@@ -479,6 +479,11 @@ static void VertexUniform(MeshType & m, VertexSampler &ps, int sampleNum)
 }
 
 
+/// Perform an uniform sampling over an EdgeMesh.
+///
+/// It assumes that the mesh is 1-manifold.
+/// each connected component is sampled in a independent way.
+/// For each component of lenght <L> we place on it floor(L/radius) samples.
 ///
 static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius)
 {
@@ -493,13 +498,14 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius)
     {
       edge::Pos<EdgeType> ep(&*ei,0);
       edge::Pos<EdgeType> startep =ep;
-
-      do // first loop to search a boundary.
+      VertexPointer startVertex=0;
+      do // first loop to search a boundary component.
       {
         ep.NextE();
         if(ep.IsBorder()) break;
       } while(startep!=ep);
-      assert(ep.IsBorder());
+      if(!ep.IsBorder())
+        startVertex=ep.V();
 
       ScalarType totalLen=0;
       ep.FlipV();
@@ -508,7 +514,8 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius)
         ep.E()->SetV();
         totalLen+=Distance(ep.V()->P(),ep.VFlip()->P());
         ep.NextE();
-      } while(!ep.IsBorder());
+      } while(!ep.IsBorder() && ep.V()!=startVertex);
+      ep.E()->SetV();
       totalLen+=Distance(ep.V()->P(),ep.VFlip()->P());
 
       // Third loop actually perform the sampling.
@@ -518,7 +525,6 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius)
 
       ScalarType curLen=0;
       int sampleCnt=1;
-      assert(ep.IsBorder());
       ps.AddEdge(*(ep.E()),ep.VInd()==0?0.0:1.0);
       ep.FlipV();
       do
@@ -536,9 +542,10 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius)
         }
         curLen+=edgeLen;
         ep.NextE();
-      } while(!ep.IsBorder());
-      assert(ep.IsBorder());
-      ps.AddEdge(*(ep.E()),ep.VInd()==0?0.0:1.0);
+      } while(!ep.IsBorder() && ep.V()!=startVertex);
+
+      if(ep.V()!=startVertex)
+          ps.AddEdge(*(ep.E()),ep.VInd()==0?0.0:1.0);
     }
   }
 }
@@ -1538,7 +1545,7 @@ static void PoissonDiskPruningByNumber(VertexSampler &ps, MeshType &m,
     ps.reset();
     curRadius=(RangeMaxRad+RangeMinRad)/2.0f;
     PoissonDiskPruning(ps, m ,curRadius,pp);
-    qDebug("PoissonDiskPruning Iteratin (%6.3f:%5lu %6.3f:%5lu) Cur Radius %f -> %lu sample instead of %lu",RangeMinRad,RangeMinRadNum,RangeMaxRad,RangeMaxRadNum,curRadius,pp.pds.sampleNum,sampleNum);
+//    qDebug("PoissonDiskPruning Iteratin (%6.3f:%5lu %6.3f:%5lu) Cur Radius %f -> %lu sample instead of %lu",RangeMinRad,RangeMinRadNum,RangeMaxRad,RangeMaxRadNum,curRadius,pp.pds.sampleNum,sampleNum);
     if(pp.pds.sampleNum > sampleNum){
       RangeMinRad = curRadius;
       RangeMinRadNum = pp.pds.sampleNum;
