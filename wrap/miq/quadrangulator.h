@@ -677,10 +677,6 @@ public:
 
         InitIntegerEdgesVert(Tmesh);
 
-//        int E3=vcg::tri::io::ExporterPLY<TriMesh>::Save(Tmesh,"./maremma_hane.ply",
-//                                                        vcg::tri::io::Mask::IOM_FACEFLAGS|
-//                                                        vcg::tri::io::Mask::IOM_VERTFLAGS);
-
         for (int i=0;i<Tmesh.face.size();i++)
             Tmesh.face[i].C()=vcg::Color4b(255,255,255,255);
 
@@ -726,7 +722,6 @@ public:
             }
         }
 
-        //E3=vcg::tri::io::ExporterOBJ<PolyMesh>::Save(Pmesh,"./maremma_hane.obj",0);
     }
 };
 
