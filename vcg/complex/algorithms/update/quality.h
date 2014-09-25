@@ -73,8 +73,9 @@ static void VertexClamp(MeshType &m,
                         typename MeshType::ScalarType qmax)
 {
   tri::RequirePerVertexQuality(m);
-  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-    (*vi).Q()=min(qmax, max(qmin,(*vi).Q()));
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) 
+      if(!(*vi).IsD())
+        (*vi).Q()=std::min(qmax, std::max(qmin,typename MeshType::ScalarType((*vi).Q())));
 }
 
 /** Normalize the vertex quality so that it fits in the specified range.
