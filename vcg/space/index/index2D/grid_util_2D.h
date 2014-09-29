@@ -26,7 +26,7 @@
 #ifndef __VCGLIB_GRID_UTIL_2D
 #define __VCGLIB_GRID_UTIL_2D
 
-#include<vcg/space/index/index2D/base_2D.h>
+#include<vcg/space/index/index2D/base_2d.h>
 #include<vcg/space/box2.h>
 
 
