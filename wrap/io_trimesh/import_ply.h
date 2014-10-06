@@ -152,7 +152,7 @@ struct LoadPly_Camera
     float k4;
 };
 
-#define _VERTDESC_LAST_  29
+#define _VERTDESC_LAST_  30
 static const  PropDescriptor &VertDesc(int i)
 {
     static const PropDescriptor pv[_VERTDESC_LAST_]={
@@ -186,7 +186,7 @@ static const  PropDescriptor &VertDesc(int i)
 /*26*/ {"vertex", "ny",        ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 1*sizeof(ScalarType),0,0,0,0,0  ,0},
 /*27*/ {"vertex", "nz",        ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
 /*28*/ {"vertex", "radius",    ply::T_DOUBLE, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,radius),0,0,0,0,0  ,0},
-
+/*29*/ {"vertex", "quality",   ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0}
     };
     return pv[i];
 }
@@ -453,6 +453,9 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
         if( pf.AddToRead(VertDesc(4))!=-1 ||
                 pf.AddToRead(VertDesc(11))!=-1 )
             pi.mask |= Mask::IOM_VERTQUALITY;
+        else
+            if (pf.AddToRead(VertDesc(29))!=-1)
+                pi.mask |= Mask::IOM_VERTQUALITY;
     }
 
     if(vcg::tri::HasPerVertexColor(m) )
@@ -1118,6 +1121,7 @@ static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
     if( pf.AddToRead(VertDesc(11))!=-1 )   mask |= Mask::IOM_VERTQUALITY;
     if( pf.AddToRead(VertDesc(15))!=-1 )   mask |= Mask::IOM_VERTRADIUS;
     if( pf.AddToRead(VertDesc(28))!=-1 )   mask |= Mask::IOM_VERTRADIUS;
+    if( pf.AddToRead(VertDesc(29))!=-1 )   mask |= Mask::IOM_VERTQUALITY;
     if( pf.AddToRead(VertDesc( 5))!=-1 &&
         pf.AddToRead(VertDesc( 6))!=-1 &&
         pf.AddToRead(VertDesc( 7))!=-1  )  mask |= Mask::IOM_VERTCOLOR;
