@@ -78,7 +78,7 @@ namespace vcg {
                 typedef typename SaveMeshType::VertexIterator VertexIterator;
                 typedef typename SaveMeshType::FaceIterator FaceIterator;
                 typedef typename SaveMeshType::EdgeIterator EdgeIterator;
-                typedef typename SaveMeshType::ShotType::ScalarType ShotScalarType;
+                typedef typename vcg::Shot<ScalarType>::ScalarType ShotScalarType;
 
                 static int Save(SaveMeshType &m, const char * filename, bool binary=true)
                 {
@@ -135,7 +135,7 @@ namespace vcg {
 
                     if((pi.mask & Mask::IOM_CAMERA))
                     {
-                        const char* cmtp = vcg::tri::io::Precision<typename SaveMeshType::ShotType::ScalarType>::typeName();    
+                        const char* cmtp = vcg::tri::io::Precision<ShotScalarType>::typeName();
                         fprintf(fpout,"element camera 1\n");
                         fprintf(fpout,"property %s view_px\n",cmtp);
                         fprintf(fpout,"property %s view_py\n",cmtp);
@@ -415,7 +415,7 @@ namespace vcg {
 
                                 if( HasPerVertexQuality(m) && (pi.mask & Mask::IOM_VERTQUALITY) )
                                     fprintf(fpout,"%.*g ",DGTVQ,vp->Q());
-                         
+
                                 if( HasPerVertexRadius(m) && (pi.mask & Mask::IOM_VERTRADIUS) )
                                     fprintf(fpout,"%.*g ",DGTVR,vp->R());
 
