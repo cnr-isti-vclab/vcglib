@@ -202,7 +202,7 @@ namespace vcg {
                     if( tri::HasPerVertexRadius(m) && (pi.mask & Mask::IOM_VERTRADIUS) )
                     {
                         const char* rdtp = vcg::tri::io::Precision<typename VertexType::RadiusType>::typeName();
-                        fprintf(fpout,"property float radius\n",rdtp);
+                        fprintf(fpout,"property %s radius\n",rdtp);
                     }
                     if( ( HasPerVertexTexCoord(m) && pi.mask & Mask::IOM_VERTTEXCOORD ) )
                     {
