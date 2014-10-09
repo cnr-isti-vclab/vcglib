@@ -24,8 +24,8 @@
 #include <time.h>
 #include <vcg/space/distance2.h>
 #include<vcg/space/segment2.h>
-#include<vcg/space/index/index2D/grid_static_ptr_2D.h>
-#include<vcg/space/index/index2D/grid_closest_2D.h>
+#include<vcg/space/index/index2D/grid_static_ptr_2d.h>
+#include<vcg/space/index/index2D/grid_closest_2d.h>
 #include<vcg/space/intersection2.h>
 
 typedef double MyScalarType;

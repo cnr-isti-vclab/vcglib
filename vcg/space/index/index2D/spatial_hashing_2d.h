@@ -24,8 +24,8 @@
 #ifndef VCGLIB_SPATIAL_HASHING_2D
 #define VCGLIB_SPATIAL_HASHING_2D
 
-#include <vcg/space/index/index2D/grid_util_2D.h>
-#include <vcg/space/index/index2D/grid_closest_2D.h>
+#include <vcg/space/index/index2D/grid_util_2d.h>
+#include <vcg/space/index/index2D/grid_closest_2d.h>
 //#include <map>
 #include <vector>
 #include <algorithm>
