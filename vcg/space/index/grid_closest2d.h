@@ -24,7 +24,7 @@
 #ifndef __VCGLIB_GRID_CLOSEST_2D
 #define __VCGLIB_GRID_CLOSEST_2D
 
-#include <vcg/space/index/index2d/space_iterators_2d.h>
+#include <vcg/space/index/space_iterators2d.h>
 #include <vcg/space/intersection2.h>
 
 namespace vcg{
