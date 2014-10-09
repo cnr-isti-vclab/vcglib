@@ -494,6 +494,23 @@ namespace vcg {
 
         };
 
+        /// this is for meshes with 2D coordinates
+        template <class MESH, class GRID>
+            typename MESH::FaceType * GetClosestEdgeBase( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p,
+                                                          const typename GRID::ScalarType _maxDist,typename GRID::ScalarType & _minDist,
+                                                          typename GRID::CoordType &_closestPt)
+        {
+            typedef typename GRID::ScalarType ScalarType;
+            typedef Point3<ScalarType> Point3x;
+            typedef FaceTmark<MESH> MarkerFace;
+            MarkerFace mf;
+            mf.SetMesh(&mesh);
+            vcg::PointSegment2DEPFunctor<ScalarType> PDistFunct;
+            _minDist=_maxDist;
+            return (gr.GetClosest(PDistFunct,mf,_p,_maxDist,_minDist,_closestPt));
+        }
+
+
     }	 // end namespace tri
 }	 // end namespace vcg
 
