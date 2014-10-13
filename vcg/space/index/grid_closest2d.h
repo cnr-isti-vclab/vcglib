@@ -61,7 +61,7 @@ unsigned int GridGetInBox2D(SPATIALINDEXING &_Si,
                     {
                         typename SPATIALINDEXING::ObjPtr elem=&(**l);
                         vcg::Box2<typename SPATIALINDEXING::ScalarType> box_elem;
-                        box_elem=elem->BBox();
+												elem->GetBBox(box_elem);
                         if (update_global_mark)
                         {
                             if(( ! _marker.IsMarked(elem))&&(box_elem.Collide(_bbox)))
