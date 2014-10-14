@@ -9,13 +9,17 @@ namespace vcg
 		{
 			template<typename SCALAR>
 			struct Precision
-			{};
+			{
+				static int digits() {return 0;}
+                static const char* typeName() {return "";}
+			};
 			
 			template<>
 			struct Precision<float>
 			{
 				static int digits() {return 7;}
                 static const char* typeName() {return "float";}
+
 			};
 			
 			template<>
