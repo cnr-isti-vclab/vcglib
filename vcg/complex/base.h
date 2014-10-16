@@ -369,7 +369,7 @@ void Clear()
   C()=Color4b::Gray;
 }
 
-bool IsEmpty()
+bool IsEmpty() const
 {
   return vert.empty() && edge.empty() && face.empty();
 }
