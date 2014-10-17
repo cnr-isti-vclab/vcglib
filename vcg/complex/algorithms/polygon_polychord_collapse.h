@@ -69,7 +69,8 @@ public:
     PC_NOLINKCOND = 4,
     PC_SINGBOTH = 8,
     PC_SELFINTERSECT = 16,
-    PC_VOID = 32
+    PC_VOID = 32,
+    PC_OTHER = 64
   };
 
   /**
@@ -1061,24 +1062,6 @@ public:
     }
   }
 
-private:
-  /**
-   * @brief IsVertexAdjacentToAnyNonManifoldEdge checks if a vertex is adjacent to any non-manifold edge.
-   * @param pos The starting position.
-   * @return true if adjacent to non-manifold edges, false otherwise.
-   */
-  static bool IsVertexAdjacentToAnyNonManifoldEdge (const vcg::face::Pos<FaceType> &pos) {
-    assert(!pos.IsNull());
-    vcg::face::JumpingPos<FaceType> jmpPos;
-    jmpPos.Set(pos.F(), pos.E(), pos.V());
-    do {
-      if (!jmpPos.IsManifold())
-        return true;
-      jmpPos.NextFE();
-    } while (jmpPos != pos);
-    return false;
-  }
-
   /**
    * @brief CheckPolychordFindStartPosition checks if it's a collapsable polychord.
    * @param pos Input The starting position.
@@ -1192,62 +1175,6 @@ private:
   }
 
   /**
-   * @brief IsPolychordSelfIntersecting checks if the input polychord intersects itself.
-   * @warning Don't call this function without being sure that it's a polychord
-   * (i.e. call CheckPolychordFindStartPoint() before calling IsPolychordSelfIntersecting().
-   * @param mesh The mesh used for getting the face index.
-   * @param startPos The starting position.
-   * @param chords The vector of chords.
-   * @param mark The current mark, used to identify quads already visited.
-   * @return true if it intersects itself, false otherwise.
-   */
-  static bool IsPolychordSelfIntersecting (const PolyMeshType &mesh,
-                                           const vcg::face::Pos<FaceType> &startPos,
-                                           const PC_Chords &chords,
-                                           const unsigned long mark) {
-    assert(!startPos.IsNull());
-    vcg::face::Pos<FaceType> runPos = startPos;
-    vcg::face::Pos<FaceType> tmpPos;
-    std::pair<size_t, unsigned char> face_edge(std::numeric_limits<size_t>::max(), 0);
-    do {
-      assert(runPos.F()->VN() == 4);
-      // check if we've already crossed this face
-      face_edge.first = vcg::tri::Index(mesh, runPos.F());
-      face_edge.second = (runPos.E()+1)%2;
-      if (chords[face_edge].mark == mark)
-        return true;
-      // if this coord is adjacent to another coord of the same polychord
-      // i.e., this polychord touches itself without intersecting
-      // it might cause a wrong collapse, producing holes and non-2manifoldness
-      tmpPos = runPos;
-      tmpPos.FlipE();
-      if (!tmpPos.IsBorder()) {
-        tmpPos.FlipF();
-        face_edge.first = vcg::tri::Index(mesh, tmpPos.F());
-        face_edge.second = (tmpPos.E()+1)%2;
-        if (chords[face_edge].mark == mark)
-          return true;
-      }
-      tmpPos = runPos;
-      tmpPos.FlipV();
-      tmpPos.FlipE();
-      if (!tmpPos.IsBorder()) {
-        tmpPos.FlipF();
-        face_edge.first = vcg::tri::Index(mesh, tmpPos.F());
-        face_edge.second = (tmpPos.E()+1)%2;
-        if (chords[face_edge].mark == mark)
-          return true;
-      }
-      runPos.FlipE();
-      runPos.FlipV();
-      runPos.FlipE();
-      runPos.FlipF();
-    } while (runPos != startPos && !runPos.IsBorder());
-
-    return false;
-  }
-
-  /**
    * @brief VisitPolychord updates the information of a polychord.
    * @param mesh The mesh used for getting the face index.
    * @param startPos The starting position.
@@ -1302,6 +1229,79 @@ private:
     } while (runPos != startPos && !runPos.IsBorder() && runPos.F()->VN() == 4);
     assert(runPos == startPos || vcg::face::IsBorder(*startPos.F(),startPos.E())
            || runPos.F()->VN() != 4 || startPos.FFlip()->VN() != 4);
+  }
+
+  /**
+   * @brief IsVertexAdjacentToAnyNonManifoldEdge checks if a vertex is adjacent to any non-manifold edge.
+   * @param pos The starting position.
+   * @return true if adjacent to non-manifold edges, false otherwise.
+   */
+  static bool IsVertexAdjacentToAnyNonManifoldEdge (const vcg::face::Pos<FaceType> &pos) {
+    assert(!pos.IsNull());
+    vcg::face::JumpingPos<FaceType> jmpPos;
+    jmpPos.Set(pos.F(), pos.E(), pos.V());
+    do {
+      if (!jmpPos.IsManifold())
+        return true;
+      jmpPos.NextFE();
+    } while (jmpPos != pos);
+    return false;
+  }
+
+  /**
+   * @brief IsPolychordSelfIntersecting checks if the input polychord intersects itself.
+   * @warning Don't call this function without being sure that it's a polychord
+   * (i.e. call CheckPolychordFindStartPoint() before calling IsPolychordSelfIntersecting().
+   * @param mesh The mesh used for getting the face index.
+   * @param startPos The starting position.
+   * @param chords The vector of chords.
+   * @param mark The current mark, used to identify quads already visited.
+   * @return true if it intersects itself, false otherwise.
+   */
+  static bool IsPolychordSelfIntersecting (const PolyMeshType &mesh,
+                                           const vcg::face::Pos<FaceType> &startPos,
+                                           const PC_Chords &chords,
+                                           const unsigned long mark) {
+    assert(!startPos.IsNull());
+    vcg::face::Pos<FaceType> runPos = startPos;
+    vcg::face::Pos<FaceType> tmpPos;
+    std::pair<size_t, unsigned char> face_edge(std::numeric_limits<size_t>::max(), 0);
+    do {
+      assert(runPos.F()->VN() == 4);
+      // check if we've already crossed this face
+      face_edge.first = vcg::tri::Index(mesh, runPos.F());
+      face_edge.second = (runPos.E()+1)%2;
+      if (chords[face_edge].mark == mark)
+        return true;
+      // if this coord is adjacent to another coord of the same polychord
+      // i.e., this polychord touches itself without intersecting
+      // it might cause a wrong collapse, producing holes and non-2manifoldness
+      tmpPos = runPos;
+      tmpPos.FlipE();
+      if (!tmpPos.IsBorder()) {
+        tmpPos.FlipF();
+        face_edge.first = vcg::tri::Index(mesh, tmpPos.F());
+        face_edge.second = (tmpPos.E()+1)%2;
+        if (chords[face_edge].mark == mark)
+          return true;
+      }
+      tmpPos = runPos;
+      tmpPos.FlipV();
+      tmpPos.FlipE();
+      if (!tmpPos.IsBorder()) {
+        tmpPos.FlipF();
+        face_edge.first = vcg::tri::Index(mesh, tmpPos.F());
+        face_edge.second = (tmpPos.E()+1)%2;
+        if (chords[face_edge].mark == mark)
+          return true;
+      }
+      runPos.FlipE();
+      runPos.FlipV();
+      runPos.FlipE();
+      runPos.FlipF();
+    } while (runPos != startPos && !runPos.IsBorder());
+
+    return false;
   }
 };
 
