@@ -36,145 +36,146 @@
 
 
 namespace vcg {
-    namespace tri {
-        namespace io {
-            template <class SaveMeshType>
-            class ExporterOFF
-            {
+namespace tri {
+namespace io {
+template <class SaveMeshType>
+class ExporterOFF
+{
 
-            public:
-                typedef typename SaveMeshType::VertexPointer VertexPointer;
-                typedef typename SaveMeshType::ScalarType ScalarType;
-                typedef typename SaveMeshType::VertexType VertexType;
-                typedef typename SaveMeshType::FaceType FaceType;
-                typedef typename SaveMeshType::FacePointer FacePointer;
-                typedef typename SaveMeshType::VertexIterator VertexIterator;
-                typedef typename SaveMeshType::FaceIterator FaceIterator;
+public:
+  typedef typename SaveMeshType::VertexPointer VertexPointer;
+  typedef typename SaveMeshType::ScalarType ScalarType;
+  typedef typename SaveMeshType::VertexType VertexType;
+  typedef typename SaveMeshType::FaceType FaceType;
+  typedef typename SaveMeshType::FacePointer FacePointer;
+  typedef typename SaveMeshType::VertexIterator VertexIterator;
+  typedef typename SaveMeshType::FaceIterator FaceIterator;
 
-                static int Save(SaveMeshType &m, const char * filename, int mask=0 )
-                {
-                    vcg::face::Pos<FaceType> he;
-                    vcg::face::Pos<FaceType> hei;
-                    FILE * fpout = fopen(filename,"w");
-                    if(fpout==NULL)	return 1; // 1 is the error code for cant'open, see the ErrorMsg function
-
-
-
-                    if( tri::HasPerVertexColor(m)  && (mask & io::Mask::IOM_VERTNORMAL))
-                        fprintf(fpout,"N");
-                    if( tri::HasPerVertexColor(m)   && (mask & io::Mask::IOM_VERTCOLOR))
-                        fprintf(fpout,"C");
-                    if( tri::HasPerVertexTexCoord(m) && (mask & io::Mask::IOM_VERTTEXCOORD))
-                        fprintf(fpout,"ST");
-                    fprintf(fpout,"OFF\n");
-
-                    int polynumber;
-                    if (mask &io::Mask::IOM_BITPOLYGONAL)
-                            polynumber = tri::Clean<SaveMeshType>::CountBitLargePolygons(m);
-                        else
-                            polynumber = m.fn;
-
-                    fprintf(fpout,"%d %d 0\n", m.vn, polynumber); // note that as edge number we simply write zero
-          typename SaveMeshType::FaceIterator fi;
-
-                            //vertices
-                    int j;
-                    std::vector<int> FlagV;
-                    VertexPointer  vp;
-                    VertexIterator vi;
-                    for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
-                    {
-                        vp=&(*vi);
-            FlagV.push_back(vp->Flags()); // Save vertex flags
-            if( ! vp->IsD() )
-            {	// ***** ASCII *****
-
-              fprintf(fpout,"%g %g %g " ,vp->P()[0],vp->P()[1],vp->P()[2]);
-              if( tri::HasPerVertexColor(m)  && (mask & io::Mask::IOM_VERTCOLOR) )
-                fprintf(fpout,"%d %d %d %d ",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
-
-              if( tri::HasPerVertexColor(m)  && (mask & io::Mask::IOM_VERTNORMAL) )
-                fprintf(fpout,"%g %g %g ", vp->N()[0],vp->N()[1],vp->N()[2]);
-
-              if( tri::HasPerVertexTexCoord(m)  && (mask & io::Mask::IOM_VERTTEXCOORD) )
-                fprintf(fpout,"%g %g ",vp->T().u(),vp->T().v());
-
-                                fprintf(fpout,"\n");
+  static int Save(SaveMeshType &m, const char * filename, int mask=0 )
+  {
+    vcg::face::Pos<FaceType> he;
+    vcg::face::Pos<FaceType> hei;
+    FILE * fpout = fopen(filename,"w");
+    if(fpout==NULL)	return 1; // 1 is the error code for cant'open, see the ErrorMsg function
 
 
-              vp->Flags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
-              j++;
-            }
-                    }
+    if( tri::HasPerVertexColor(m)  && (mask & io::Mask::IOM_VERTNORMAL))
+      fprintf(fpout,"N");
+    if( tri::HasPerVertexColor(m)   && (mask & io::Mask::IOM_VERTCOLOR))
+      fprintf(fpout,"C");
+    if( tri::HasPerVertexTexCoord(m) && (mask & io::Mask::IOM_VERTTEXCOORD))
+      fprintf(fpout,"ST");
+    fprintf(fpout,"OFF\n");
 
-          assert(j==m.vn);
+    int polynumber;
+    if (mask &io::Mask::IOM_BITPOLYGONAL)
+      polynumber = tri::Clean<SaveMeshType>::CountBitLargePolygons(m);
+    else
+      polynumber = m.fn;
+
+    fprintf(fpout,"%d %d 0\n", m.vn, polynumber); // note that as edge number we simply write zero
+
+    //vertices
+    int j;
+    std::vector<int> FlagV;
+    VertexPointer  vp;
+    VertexIterator vi;
+    for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
+    {
+      vp=&(*vi);
+      FlagV.push_back(vp->Flags()); // Save vertex flags
+      if( ! vp->IsD() )
+      {	// ***** ASCII *****
+
+        fprintf(fpout,"%g %g %g " ,vp->P()[0],vp->P()[1],vp->P()[2]);
+        if( tri::HasPerVertexColor(m)  && (mask & io::Mask::IOM_VERTCOLOR) )
+          fprintf(fpout,"%d %d %d %d ",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
+
+        if( tri::HasPerVertexNormal(m)  && (mask & io::Mask::IOM_VERTNORMAL) )
+          fprintf(fpout,"%g %g %g ", vp->N()[0],vp->N()[1],vp->N()[2]);
+
+        if( tri::HasPerVertexTexCoord(m)  && (mask & io::Mask::IOM_VERTTEXCOORD) )
+          fprintf(fpout,"%g %g ",vp->T().u(),vp->T().v());
+
+        fprintf(fpout,"\n");
 
 
-          if (mask &io::Mask::IOM_BITPOLYGONAL) {
-            tri::RequireFFAdjacency(m);
-            std::vector<VertexPointer> polygon;
-            tri::UpdateFlags<SaveMeshType>::FaceClearV(m);
-            for(fi=m.face.begin();fi!=m.face.end();++fi) if (!fi->IsD()) if (!fi->IsV()) {
-              vcg::tri::PolygonSupport<SaveMeshType,SaveMeshType>::ExtractPolygon(&*fi,polygon);
-              if(!polygon.empty())
-              {
-                fprintf(fpout,"%d ", int(polygon.size()) );
-                for (size_t i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->Flags() );
-                fprintf(fpout,"\n");
-              }
-            }
-          }
-          else {
-                      for(fi=m.face.begin();fi!=m.face.end();++fi)
-                    {
-                          FacePointer fp=&(*fi);
-                          if( ! fp->IsD() )
-                          { fprintf(fpout,"3 %d %d %d\n",
-                              fp->cV(0)->Flags(),	fp->cV(1)->Flags(), fp->cV(2)->Flags() );
-                          }
-                      }
-          }
+        vp->Flags()=j; // Trucco! Nascondi nei flags l'indice del vertice non deletato!
+        j++;
+      }
+    }
+
+    assert(j==m.vn);
 
 
-                    fclose(fpout);
-                    // Recupera i flag originali
-                    j=0;
-                    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-                        (*vi).Flags()=FlagV[j++];
-
-                    return 0;
-                }
-
-        static const char *ErrorMsg(int error)
+    if (mask &io::Mask::IOM_BITPOLYGONAL) {
+      tri::RequireFFAdjacency(m);
+      std::vector<VertexPointer> polygon;
+      tri::UpdateFlags<SaveMeshType>::FaceClearV(m);
+      for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if (!fi->IsD()) if (!fi->IsV()) {
+        vcg::tri::PolygonSupport<SaveMeshType,SaveMeshType>::ExtractPolygon(&*fi,polygon);
+        if(!polygon.empty())
         {
-          static std::vector<std::string> off_error_msg;
-          if(off_error_msg.empty())
-          {
-            off_error_msg.resize(2 );
-            off_error_msg[0]="No errors";
-              off_error_msg[1]="Can't open file";
-            }
-
-          if(error>1 || error<0) return "Unknown error";
-          else return off_error_msg[error].c_str();
+          fprintf(fpout,"%d ", int(polygon.size()) );
+          for (size_t i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->Flags() );
+          fprintf(fpout,"\n");
         }
-        /*
+      }
+    }
+    else {
+      for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+      {
+        if( ! fi->IsD() )
+        {
+          if( tri::HasPerFaceColor(m)  && (mask & io::Mask::IOM_FACECOLOR) )
+            fprintf(fpout,"3 %d %d %d %i %i %i\n", fi->cV(0)->Flags(),	fi->cV(1)->Flags(), fi->cV(2)->Flags(), fi->C()[0],fi->C()[1],fi->C()[2] );
+            else
+          fprintf(fpout,"3 %d %d %d\n", fi->cV(0)->Flags(),	fi->cV(1)->Flags(), fi->cV(2)->Flags() );
+        }
+      }
+    }
+
+
+    fclose(fpout);
+    // Recupera i flag originali
+    j=0;
+    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+      (*vi).Flags()=FlagV[j++];
+
+    return 0;
+  }
+
+  static const char *ErrorMsg(int error)
+  {
+    static std::vector<std::string> off_error_msg;
+    if(off_error_msg.empty())
+    {
+      off_error_msg.resize(2 );
+      off_error_msg[0]="No errors";
+      off_error_msg[1]="Can't open file";
+    }
+
+    if(error>1 || error<0) return "Unknown error";
+    else return off_error_msg[error].c_str();
+  }
+  /*
             returns mask of capability one define with what are the saveable information of the format.
         */
-        static int GetExportMaskCapability()
-        {
-            int capability = 0;
-            capability |= vcg::tri::io::Mask::IOM_VERTCOORD;
-          capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
-          capability |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
-          capability |= vcg::tri::io::Mask::IOM_FACEINDEX;
-          capability |= vcg::tri::io::Mask::IOM_BITPOLYGONAL;
-            return capability;
-        }
+  static int GetExportMaskCapability()
+  {
+    int capability = 0;
+    capability |= vcg::tri::io::Mask::IOM_VERTCOORD;
+    capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
+    capability |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
+    capability |= vcg::tri::io::Mask::IOM_FACEINDEX;
+    capability |= vcg::tri::io::Mask::IOM_FACECOLOR;
+    capability |= vcg::tri::io::Mask::IOM_BITPOLYGONAL;
+    return capability;
+  }
 
-            }; // end class
-        } // end namespace tri
-    } // end namespace io
+}; // end class
+} // end namespace tri
+} // end namespace io
 } // end namespace vcg
 //@}
 #endif
