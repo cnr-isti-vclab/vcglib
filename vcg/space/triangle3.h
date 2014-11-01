@@ -72,6 +72,7 @@ public:
   inline const CoordType & cP1( const int j ) const { return _v[(j+1)%3];}
   inline const CoordType & cP2( const int j ) const { return _v[(j+2)%3];}
 
+  inline int VN() const { return 3;}
 }; //end Class
 
 /********************** Normal **********************/
