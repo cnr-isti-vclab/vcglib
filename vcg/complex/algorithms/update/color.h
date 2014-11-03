@@ -76,7 +76,7 @@ public:
     */
   static int PerVertexConstant(MeshType &m, Color4b vs=Color4b::White,bool selected=false)
   {
-    if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+    RequirePerVertexColor(m);
 
     int cnt=0;
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -94,7 +94,7 @@ public:
   */
   static int PerFaceConstant(MeshType &m, Color4b vs=Color4b::White,bool selected=false)
   {
-    if(!HasPerFaceColor(m)) throw MissingComponentException("PerFaceColor");
+    RequirePerFaceColor(m);
     int cnt=0;
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
       if(!(*fi).IsD()){
@@ -114,8 +114,8 @@ public:
   */
   static void PerVertexFromFace( MeshType &m)
   {
-    if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
-    if(!HasPerFaceColor(m)) throw MissingComponentException("PerFaceColor");
+    RequirePerFaceColor(m);
+    RequirePerVertexColor(m);
 
     ColorAvgInfo csi;
     csi.r=0; csi.g=0; csi.b=0; csi.cnt=0;
@@ -149,8 +149,8 @@ public:
   */
   static void PerFaceFromVertex( MeshType &m)
   {
-    if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
-    if(!HasPerFaceColor(m)) throw MissingComponentException("PerFaceColor");
+    RequirePerFaceColor(m);
+    RequirePerVertexColor(m);
 
     FaceIterator fi;
     for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
@@ -168,8 +168,8 @@ public:
   */
   static void PerVertexQualityRamp(MeshType &m, float minq=0, float maxq=0)
   {
-    if(!HasPerVertexQuality(m)) throw MissingComponentException("PerVertexQuality");
-    if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+    RequirePerVertexQuality(m);
+    RequirePerVertexColor(m);
 
     if(minq==maxq)
     {
@@ -188,8 +188,8 @@ public:
   */
   static void PerFaceQualityRamp(MeshType &m, float minq=0, float maxq=0, bool selected=false)
   {
-    if(!HasPerFaceColor(m)) throw MissingComponentException("PerFaceColor");
-    if(!HasPerFaceQuality(m)) throw MissingComponentException("PerFaceQuality");
+    RequirePerFaceColor(m);
+    RequirePerFaceQuality(m);
 
     if(minq==maxq)
     {
@@ -208,8 +208,8 @@ public:
   */
   static void PerVertexQualityGray(MeshType &m,  float minq,  float maxq)
   {
-    if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
-    if(!HasPerVertexQuality(m)) throw MissingComponentException("PerVertexQuality");
+    RequirePerVertexColor(m);
+    RequirePerVertexQuality(m);
     if(minq==maxq)
     {
       std::pair<float,float> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
@@ -227,8 +227,8 @@ public:
   */
   static void PerFaceQualityGray(MeshType &m, float minq=0, float maxq=0)
   {
-    if(!HasPerFaceColor(m)) throw MissingComponentException("PerFaceColor");
-    if(!HasPerFaceQuality(m)) throw MissingComponentException("PerFaceQuality");
+    RequirePerFaceColor(m);
+    RequirePerFaceQuality(m);
 
     if(minq==maxq)
     {
@@ -253,7 +253,8 @@ vcg::tri::UpdateColor<Mesh>::PerVertexBorderFlag(m.cm);
 */
   static void PerVertexBorderFlag( MeshType &m, Color4b BorderColor=Color4b::Blue, Color4b InternalColor=Color4b::White, Color4b MixColor=Color4b::Cyan)
   {
-    if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+    RequirePerVertexColor(m);
+
     Color4b BaseColor = Color4b::Green;
 
     VertexConstant(m,BaseColor);
@@ -282,8 +283,8 @@ It require FaceFace Adjacency becouse it relies on the output of the ConnecteCom
 */
   static void PerFaceRandomConnectedComponent( MeshType &m)
   {
-    if(!HasPerFaceColor(m)) throw MissingComponentException("PerFaceColor");
-    if(!HasFFAdjacency(m)) throw MissingComponentException("FFAdjacency");
+    RequirePerFaceColor(m);
+    RequireFFAdjacency(m);
 
     std::vector< std::pair<int, typename MeshType::FacePointer> > CCV;
     int ScatterSize= std::min (100,tri::Clean<MeshType>::ConnectedComponents(m, CCV)); // number of random color to be used. Never use too many.
@@ -304,7 +305,7 @@ Note: The faux bit is used to color polygonal faces uniformly
 */
   static void PerFaceRandom(MeshType &m)
   {
-    if(!HasPerFaceColor(m)) throw MissingComponentException("PerFaceColor");
+    RequirePerFaceColor(m);
     FaceIterator fi;
     Color4b BaseColor = Color4b::Black;
     PerFaceConstant(m,BaseColor);
@@ -332,7 +333,8 @@ Note: The faux bit is used to color polygonal faces uniformly
   */
   static void PerVertexPerlinNoise(MeshType& m, CoordType period, CoordType offset=CoordType(0,0,0))
   {
-    if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+    RequirePerVertexColor(m);
+
     CoordType p[3];
     for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
     {
@@ -354,7 +356,8 @@ Note: The faux bit is used to color polygonal faces uniformly
   */
   static void PerVertexAddNoise(MeshType& m, int noiseBits)
   {
-    if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+    RequirePerVertexColor(m);
+
     if(noiseBits>8) noiseBits = 8;
     if(noiseBits<1) return;
 
@@ -374,7 +377,8 @@ Note: The faux bit is used to color polygonal faces uniformly
   */
 static int PerVertexThresholding(MeshType &m, float threshold, Color4b c1 = Color4<unsigned char>::Black, Color4b c2 = Color4<unsigned char>::White, const bool ProcessSelected=false)
 {
-  if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+  RequirePerVertexColor(m);
+
   int counter=0;
   VertexIterator vi;
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
@@ -406,8 +410,9 @@ static float ComputeLightness(Color4b c)
   */
 static int PerVertexBrightness(MeshType &m, float amount, const bool ProcessSelected=false)
 {
-  if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
-    int counter=0;
+  RequirePerVertexColor(m);
+
+  int counter=0;
     VertexIterator vi;
     for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
     {
@@ -431,7 +436,8 @@ static int PerVertexBrightness(MeshType &m, float amount, const bool ProcessSele
   */
 static int PerVertexContrast(MeshType &m, float factor, const bool ProcessSelected=false)
 {
-  if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+      RequirePerVertexColor(m);
+
   int counter=0;
   VertexIterator vi;
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
@@ -470,7 +476,8 @@ The formula used here is the one of GIMP.
   */
 static int PerVertexBrightnessContrast(MeshType &m, float brightness, float contrast, const bool ProcessSelected=false)
 {
-  if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+      RequirePerVertexColor(m);
+
   int counter=0;
   VertexIterator vi;
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
@@ -509,7 +516,8 @@ static int ValueBrightnessContrast(unsigned char ivalue, float brightness, float
   */
 static int PerVertexInvert(MeshType &m, const bool ProcessSelected=false)
 {
-  if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+      RequirePerVertexColor(m);
+
   int counter=0;
   for(VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi) //scan all the vertex...
   {
@@ -531,7 +539,8 @@ static int PerVertexInvert(MeshType &m, const bool ProcessSelected=false)
   */
 static int PerVertexGamma(MeshType &m, float gamma, const bool ProcessSelected=false)
 {
-  if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+      RequirePerVertexColor(m);
+
   int counter=0;
 
   VertexIterator vi;
@@ -577,7 +586,8 @@ out_min and out_max are the output level for black and white respectively.
 */
 static int PerVertexLevels(MeshType &m, float gamma, float in_min, float in_max, float out_min, float out_max, unsigned char rgbMask, const bool ProcessSelected=false)
 {
-  if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+      RequirePerVertexColor(m);
+
   int counter=0;
   VertexIterator vi;
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
@@ -625,7 +635,8 @@ Colors the mesh. Color is blended to the mesh with the given intensity (0..1 ran
   */
 static int PerVertexColourisation(MeshType &m, Color4b c, float intensity, const bool ProcessSelected=false)
 {
-  if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+      RequirePerVertexColor(m);
+
   int counter=0;
   VertexIterator vi;
   for(vi=m.vert.begin();vi!=m.vert.end();++vi)
@@ -671,7 +682,8 @@ There are three possibilities
   */
 static int PerVertexDesaturation(MeshType &m, int method, const bool ProcessSelected=false)
 {
-  if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+      RequirePerVertexColor(m);
+
   int counter=0;
   VertexIterator vi;
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
@@ -727,7 +739,8 @@ Equalize the histogram of colors. It can equalize any combination of rgb channel
   */
 static int PerVertexEqualize(MeshType &m, unsigned int rgbMask, const bool ProcessSelected=false)
 {
-  if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+      RequirePerVertexColor(m);
+
   //declares , resets and set up 4 histograms, for Red, Green, Blue and Lightness
   Histogramf Hl, Hr, Hg, Hb;
   Hl.Clear(); Hr.Clear(); Hg.Clear(); Hb.Clear();
@@ -802,7 +815,8 @@ static int ValueEqualize(int cdfValue, int cdfMin, int cdfMax)
   */
 static int PerVertexWhiteBalance(MeshType &m, Color4b userColor, const bool ProcessSelected=false)
 {
-  if(!HasPerVertexColor(m)) throw MissingComponentException("PerVertexColor");
+      RequirePerVertexColor(m);
+
   Color4b unbalancedWhite= userColor;
   int counter=0;
   VertexIterator vi;
