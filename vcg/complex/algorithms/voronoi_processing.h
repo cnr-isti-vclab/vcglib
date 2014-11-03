@@ -29,7 +29,7 @@
 #include<vcg/complex/algorithms/refine.h>
 #include<vcg/complex/algorithms/smooth.h>
 #include<vcg/space/fitting3.h>
-
+#include<wrap/callback.h>
 
 namespace vcg
 {
