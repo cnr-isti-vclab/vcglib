@@ -31,9 +31,16 @@ namespace vcg {
 /*@{*/
 
 /**
-    Templated class for a set of 2D texture coord. It for each is templated over two parameters:
-  the type of the tex coord and the number of texcoord to be stored. This class is intended to be used when many textures
-  id are shared over the same surface, so for each coord the id of the texture is stored. If no id is needed see the vcg::TexCoord2Simple class.
+   \brief Templated class for a storing a set of 2D texture coord plus their texture id.
+
+  This class is templated over two parameters:
+  - the type of the texture coord and
+  - the number of texcoord to be stored. This is useful when you have multiple
+ coordinate set for the same entity (e.g. when you have two completely different
+ parametrizations over the same surface);
+
+This class is intended to be used when multiple textures id are shared over the same surface.
+so for each coord the id of the texture is stored. If no texture id is needed see the vcg::TexCoord2Simple class.
 */
 
 template<class T = float, int NMAX = 1>
@@ -49,29 +56,35 @@ private:
     short     _n[NMAX];
 public:
 
-  TexCoord2(T u, T v) { if(NMAX>0) _n[0]=0; _t[0][0]=u; _t[0][1]=v; };
-  TexCoord2() {  };
+  TexCoord2(T u, T v) { if(NMAX>0) _n[0]=0; _t[0][0]=u; _t[0][1]=v; }
+  TexCoord2() {  }
 
-  inline const PointType &P() const { return _t[0]; };
-  inline PointType &P() { return _t[0]; };
+  inline const PointType &P() const { return _t[0]; }
+  inline PointType &P() { return _t[0]; }
 
-  inline const PointType &P(const int i) const { assert(i>0 && i<NMAX); return _t[i]; };
-  inline PointType &P(const int i) { assert(i>0 && i<NMAX); return _t[i]; };
+  inline const PointType &P(const int i) const { assert(i>0 && i<NMAX); return _t[i]; }
+  inline PointType &P(const int i) { assert(i>0 && i<NMAX); return _t[i]; }
 
-    inline T & U() { return _t[0][0]; }
-    inline T & V() { return _t[0][1]; }
+  /// Return a  reference to the u texture coordinate of the vertex
+  inline T       & U() { return _t[0][0]; }
+  /// Return a  reference to the v texture coordinate of the vertex
+    inline T       & V() { return _t[0][1]; }
+    /// Return a const reference to the u texture coordinate of the vertex
     inline const T & U() const { return _t[0][0]; }
+    /// Return a const reference to the v texture coordinate of the vertex
     inline const T & V() const { return _t[0][1]; }
-    inline T & U(const int i) { assert(i>0 && i<NMAX);  return _t[i][0]; }
-    inline T & V(const int i) { assert(i>0 && i<NMAX);  return _t[i][1]; }
-    inline const T & U(const int i) const { assert(i>0 && i<NMAX); return _t[i][0]; }
-    inline const T & V(const int i) const { assert(i>0 && i<NMAX); return _t[i][1]; }
+    inline T & U( int i) { assert(i>0 && i<NMAX);  return _t[i][0]; }
+    inline T & V( int i) { assert(i>0 && i<NMAX);  return _t[i][1]; }
+    inline const T & U( int i) const { assert(i>0 && i<NMAX); return _t[i][0]; }
+    inline const T & V( int i) const { assert(i>0 && i<NMAX); return _t[i][1]; }
 
-    inline short     & N() { return _n[0]; }
-        inline short N() const { return _n[0]; }
+    /// Return a reference to the texture id of the vertex
+    inline short & N()       { return _n[0]; }
+    /// Return a const reference to the texture id of the vertex
+    inline short   N() const { return _n[0]; }
 
-    inline short     & N(const int i) { assert(i>0 && i<NMAX); return _n[i]; }
-        inline short N(const int i) const { assert(i>0 && i<NMAX); return _n[i]; }
+    inline short     & N(int i)       { assert(i>0 && i<NMAX); return _n[i]; }
+    inline short       N(int i) const { assert(i>0 && i<NMAX); return _n[i]; }
 
 
   /* <OLD_METHODS> (lowercase ones). DEPRECATED. TO BE REMOVED SOON.*/
@@ -79,39 +92,39 @@ public:
     /**/inline T & v() { return _t[0][1]; }
     /**/inline const T & u() const { return _t[0][0]; }
     /**/inline const T & v() const { return _t[0][1]; }
-    /**/inline T & u(const int i) { return _t[i][0]; }
-    /**/inline T & v(const int i) { return _t[i][1]; }
-    /**/inline const T & u(const int i) const { return _t[i][0]; }
-    /**/inline const T & v(const int i) const { return _t[i][1]; }
+    /**/inline T & u( int i) { return _t[i][0]; }
+    /**/inline T & v( int i) { return _t[i][1]; }
+    /**/inline const T & u( int i) const { return _t[i][0]; }
+    /**/inline const T & v( int i) const { return _t[i][1]; }
   /**/
     /**/inline short     & n() { return _n[0]; }
         /**/inline short n() const { return _n[0]; }
   /**/
-    /**/inline short     & n(const int i) { return _n[i]; }
-        /**/inline short n(const int i) const { return _n[i]; }
+    /**/inline short     & n( int i) { return _n[i]; }
+        /**/inline short n( int i) const { return _n[i]; }
     /**/
-    /**/inline Point2<T> & t(const int i) { return _t[i]; }
-    /**/inline Point2<T> t(const int i) const { return _t[i]; }
+    /**/inline Point2<T> & t( int i) { return _t[i]; }
+    /**/inline Point2<T> t( int i) const { return _t[i]; }
   /**/
     /**/inline Point2<T> & t() { return _t[0]; }
     /**/inline Point2<T> t() const { return _t[0]; }
   /* </OLD_METHODS> */
 
-    inline bool operator == ( TexCoord2 const & p ) const
+    inline bool operator == ( const TexCoord2  & p ) const
         {
          for(int i=0;i<NMAX;++i)
              if(p._t[i] != _t[i] || p._n[i] != _n[i]) return false;
          return true;
         }
 
-  inline bool operator != ( TexCoord2 const & p ) const
+  inline bool operator != ( const TexCoord2 & p ) const
         {
          for(int i=0;i<NMAX;++i)
              if(p._t[i] != _t[i] || p._n[i] != _n[i]) return true;
          return false;
         }
 
-    inline bool operator < ( TexCoord2 const & p ) const
+    inline bool operator < ( const TexCoord2  & p ) const
         {
          for(int i=0;i<NMAX;++i)
              if(p._t[i] != _t[i]) return p._t[i] < _t[i];
