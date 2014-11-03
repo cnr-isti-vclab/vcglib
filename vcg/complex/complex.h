@@ -44,6 +44,7 @@
 #include <vcg/complex/allocate.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/update/selection.h>
+#include <vcg/complex/algorithms/mesh_assert.h>
 #include <vcg/complex/append.h>
 
 #undef __VCG_MESH

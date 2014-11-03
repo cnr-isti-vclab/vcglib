@@ -82,6 +82,21 @@ public:
       return buf;
     }
 };
-}
 
+class MissingPreconditionException : public std::runtime_error
+{
+public:
+  MissingPreconditionException(const std::string &err):std::runtime_error(err)
+  {
+    std::cout << "Mesh does not satisfy the following precondition:" << err << "- \n";
+  }
+
+    virtual const char *what() const throw ()
+    {
+      static char buf[128]="Mesh does not satisfy precondition";
+      return buf;
+    }
+};
+
+} // end namespace vcg
 #endif // EXCEPTION_H
