@@ -93,7 +93,7 @@ public:
         if (MarkEnabled)          MV.resize(_size);
         if (NormalEnabled)        NV.resize(_size);
         if (TexCoordEnabled)      TV.resize(_size);
-        if (VFAdjacencyEnabled)   AV.resize(_size);
+        if (VFAdjacencyEnabled)   AV.resize(_size,VFAdjType::Zero());
         if (CurvatureEnabled)     CuV.resize(_size);
         if (CurvatureDirEnabled)  CuDV.resize(_size);
         if (RadiusEnabled)        RadiusV.resize(_size);
@@ -107,7 +107,7 @@ public:
         if (MarkEnabled)         MV.reserve(_size);
         if (NormalEnabled)       NV.reserve(_size);
         if (TexCoordEnabled)     TV.reserve(_size);
-        if (VFAdjacencyEnabled)  AV.reserve(_size);
+        if (VFAdjacencyEnabled)  AV.reserve(_size,VFAdjType::Zero());
         if (CurvatureEnabled)    CuV.reserve(_size);
         if (CurvatureDirEnabled) CuDV.reserve(_size);
         if (RadiusEnabled)       RadiusV.reserve(_size);
@@ -175,8 +175,7 @@ bool IsVFAdjacencyEnabled() const {return VFAdjacencyEnabled;}
 void EnableVFAdjacency() {
     assert(VALUE_TYPE::HasVFAdjacencyOcf());
     VFAdjacencyEnabled=true;
-    VFAdjType zero; zero._fp=0; zero._zp=-1;
-    AV.resize((*this).size(),zero);
+    AV.resize((*this).size(),VFAdjType::Zero());
 }
 void DisableVFAdjacency() {
     assert(VALUE_TYPE::HasVFAdjacencyOcf());
@@ -234,8 +233,11 @@ void DisableTexCoord() {
 }
 
 struct VFAdjType {
+  VFAdjType(typename VALUE_TYPE::FacePointer fp, int zp):_fp(fp),_zp(zp){}
     typename VALUE_TYPE::FacePointer _fp ;
     int _zp ;
+    static VFAdjType Zero() { return VFAdjType(0,-1); }
+    bool IsNull() const { return (_zp ==-1); }
     };
 
 public:

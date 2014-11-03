@@ -25,10 +25,12 @@
 #endif
 #ifndef __VCG_VERTEX_PLUS_COMPONENT
 #define __VCG_VERTEX_PLUS_COMPONENT
+
 namespace vcg {
 namespace vertex {
 /** \addtogroup VertexComponentGroup
   @{
+
 */
 /*------------------------- Base Classes  -----------------------------------------*/
 
@@ -103,6 +105,7 @@ public:
   typename TT::FacePointer cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
   int &VFi()       { static int z=-1; assert(0); return z;}
   int cVFi() const { static int z=-1; assert(0); return z;}
+  bool IsNull() const { return true; }
   static bool HasVFAdjacency()   { return false; }
   bool IsVFInitialized() const {return static_cast<const typename TT::VertexType *>(this)->cVFi()!=-1;}
   void VFClear() {
@@ -156,16 +159,19 @@ public:
 };
 
 /*-------------------------- COORD ----------------------------------------*/
-/*! \brief \em Component: \b Geometric \b Position of the vertex
-
-  Stored as a templated Point3.
+/*! \brief \em Generic Component: \b Geometric \b Position of the vertex
+  Templated on the coordinate class. In practice you use one of the two specialized class Coord3f and Coord3d
+  You can access to the coordinate of a vertex by mean of the P(),cP() member functions.
   */
 template <class A, class T> class Coord: public T {
 public:
   typedef A CoordType;
   typedef typename A::ScalarType      ScalarType;
+  /// Return a const reference to the coordinate of the vertex
   inline const CoordType &P() const { return _coord; }
+  /// Return a reference to the coordinate of the vertex
   inline       CoordType &P()       { return _coord; }
+  /// Return a const reference to the coordinate of the vertex
   inline       CoordType cP() const { return _coord; }
 
   template < class RightValueType>
@@ -176,24 +182,35 @@ public:
 private:
   CoordType _coord;
 };
+/// Specialized Coord Component in floating point precision.
 template <class T> class Coord3f: public Coord<vcg::Point3f, T> {
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord3f"));T::Name(name);}
 };
+/// Specialized Coord Component in double point precision.
 template <class T> class Coord3d: public Coord<vcg::Point3d, T> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Coord3d"));T::Name(name);}
 };
 
 /*-------------------------- NORMAL ----------------------------------------*/
-  /*! \brief \em Component: \b %Normal of the vertex
+  /*! \brief \em Generic Component: \b %Normal of the vertex
 
-    Stored as a templated Point3. The type of the normal can be different type  with respect to the Coord component
+    Templated on the Point3 class used to store the normal.
+    In practice you use one of the two specialized class Normal3f and Normal3d.
+
+    You can access to the normal of a vertex by mean of the N(),cN() member functions.
+
+    \note Many algorithms assume that, for sake of precision coherence,
+    the type of the normal is the same with respect to the type coord component.
     */
 
 template <class A, class T> class Normal: public T {
 public:
   typedef A NormalType;
+  /// Return a const reference to the normal of the vertex
   inline const NormalType &N() const { return _norm; }
+  /// Return a  reference to the normal of the vertex
   inline       NormalType &N()       { return _norm; }
+  /// Return a const reference to the normal of the vertex
   inline       NormalType cN() const { return _norm; }
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ){
@@ -210,9 +227,11 @@ private:
 template <class T> class Normal3s: public Normal<vcg::Point3s, T> {
 public:static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3s"));T::Name(name);}
 };
+/// Specialized Normal component in floating point precision.
 template <class T> class Normal3f: public Normal<vcg::Point3f, T> {
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3f"));T::Name(name);}
 };
+/// Specialized Normal component in double point precision.
 template <class T> class Normal3d: public Normal<vcg::Point3d, T> {
 public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Normal3d"));T::Name(name);}
 };
@@ -226,9 +245,12 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
 
 template <class T> class Mark: public T {
 public:
-    Mark():_imark(0){}
+  Mark():_imark(0){}
+  /// Return a const reference to the incremental mark value
   inline const int &IMark() const { return _imark;}
+  /// Return a reference to the incremental mark value
   inline       int &IMark()       { return _imark;}
+  /// Return a const reference to the incremental mark value
   inline       int cIMark() const { return _imark;}
   static bool HasMark()      { return true; }
   inline void InitIMark()    { _imark = 0; }
@@ -241,16 +263,24 @@ public:
 };
 
 /*-------------------------- TEXCOORD ----------------------------------------*/
-  /*! \brief \em Component: Per vertex \b Texture Coords
+  /*! \brief \em Generic Component: Per vertex \b Texture Coords
 
-      Note that to have multiple different TexCoord for a single vertex (as it happens on atlas where a vertex can belong to two triangles mapped on different portionof the texture) you have two options:
-      - duplicate vertexes
+      Note that to have multiple different TexCoord for a single vertex
+      (as it happens on atlas where a vertex can belong to two triangles
+       mapped on different portionof the texture) you have two options:
+      - explicit duplication of vertexes
       - use PerWedge Texture coords
+
+      It is templated on the TextureCoord type. Usually you use the specialized classes TexCoord2f or TexCoord2d;
+      See the TexCoord2 class to see how to access to texture coordinate values.
+
       */
 
 template <class A, class TT> class TexCoord: public TT {
 public:
   typedef A TexCoordType;
+
+  /// Return a const reference to the Texture Coordinate
   const TexCoordType &T() const { return _t; }
         TexCoordType &T()       { return _t; }
         TexCoordType cT() const { return _t; }
@@ -263,12 +293,15 @@ private:
   TexCoordType _t;
 };
 
+
 template <class TT> class TexCoord2s: public TexCoord<TexCoord2<short,1>, TT> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2s"));TT::Name(name);}
 };
+/// Specialized Texture component in floating point precision.
 template <class TT> class TexCoord2f: public TexCoord<TexCoord2<float,1>, TT> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2f"));TT::Name(name);}
 };
+/// Specialized Texture component in double precision.
 template <class TT> class TexCoord2d: public TexCoord<TexCoord2<double,1>, TT> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord2d"));TT::Name(name);}
 };
@@ -276,7 +309,8 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 /*------------------------- FLAGS -----------------------------------------*/
   /*! \brief \em Component: Per vertex \b Flags
 
-      This component stores a 32 bit array of bit flags. These bit flags are used for keeping track of selection, deletion, visiting etc. \sa \ref flags for more details on common uses of flags.
+      This component stores a 32 bit array of bit flags.
+      These bit flags are used for keeping track of selection, deletion, visiting etc. \sa \ref flags for more details on common uses of flags.
       */
 
 template <class T> class BitFlags:  public T {
@@ -511,6 +545,7 @@ Note that if you use this component it is expected that on the Face you use also
     typename T::FacePointer cVFp() const  { return _fp; }
     int &VFi()       { return _zp; }
     int cVFi() const { return _zp; }
+    bool IsNull() const { return _zp==-1;}
     template < class RightValueType>
     void ImportData(const RightValueType  & rVert ) { T::ImportData( rVert); }
     static bool HasVFAdjacency()   {   return true; }
