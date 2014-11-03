@@ -66,7 +66,7 @@ typedef typename MeshType::FaceIterator   FaceIterator;
  */
 static void PerVertexClear(ComputeMeshType &m, bool ClearAllVertNormal=false)
 {
-  if(!HasPerVertexNormal(m)) throw vcg::MissingComponentException("PerVertexNormal");
+  RequirePerVertexNormal(m);
   if(ClearAllVertNormal)
     UpdateFlags<ComputeMeshType>::VertexClearV(m);
   else
@@ -160,7 +160,7 @@ static void PerVertexNelsonMaxWeighted(ComputeMeshType &m)
 /// Not normalized. Use PerFaceNormalized() or call NormalizePerVertex() if you need unit length per face normals.
 static void PerFace(ComputeMeshType &m)
 {
-  if(!HasPerFaceNormal(m)) throw vcg::MissingComponentException("PerFaceNormal");
+  RequirePerFaceNormal(m);
   for(FaceIterator f=m.face.begin();f!=m.face.end();++f)
             if( !(*f).IsD() )
                 face::ComputeNormal(*f);
