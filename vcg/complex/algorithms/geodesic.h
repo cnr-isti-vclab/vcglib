@@ -308,8 +308,9 @@ wrapping function.
     VertexPointer farthest=0;
 //    int t0=clock();
     //Requirements
-    if(!HasVFAdjacency(m)) throw vcg::MissingComponentException("VFAdjacency");
-    if(!HasPerVertexQuality(m)) throw vcg::MissingComponentException("VertexQuality");
+    tri::RequireVEAdjacency(m);
+    tri::RequirePerVertexQuality(m);
+
     assert(!seedVec.empty());
 
     TempDataType TD(m.vert, std::numeric_limits<ScalarType>::max());
