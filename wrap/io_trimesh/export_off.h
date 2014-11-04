@@ -80,6 +80,8 @@ public:
     std::vector<int> FlagV;
     VertexPointer  vp;
     VertexIterator vi;
+    const int DGT = vcg::tri::io::Precision<ScalarType>::digits();
+
     for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
     {
       vp=&(*vi);
@@ -87,7 +89,7 @@ public:
       if( ! vp->IsD() )
       {	// ***** ASCII *****
 
-        fprintf(fpout,"%g %g %g " ,vp->P()[0],vp->P()[1],vp->P()[2]);
+        fprintf(fpout,"%.*g %.*g %.*g " ,DGT,vp->P()[0],DGT,vp->P()[1],DGT,vp->P()[2]);
         if( tri::HasPerVertexColor(m)  && (mask & io::Mask::IOM_VERTCOLOR) )
           fprintf(fpout,"%d %d %d %d ",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
 
