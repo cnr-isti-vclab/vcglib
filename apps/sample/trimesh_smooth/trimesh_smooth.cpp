@@ -82,7 +82,7 @@ int main(int argc,char ** argv)
   for(int i=0;i<Step;++i)
   {
     tri::UpdateNormal<MyMesh>::PerFaceNormalized(m);
-    tri::Smooth<MyMesh>::VertexCoordPasoDobleFast(m,atoi(argv[3]),atof(argv[4]),atoi(argv[5]));
+    tri::Smooth<MyMesh>::VertexCoordPasoDoble(m,atoi(argv[3]),atof(argv[4]),atoi(argv[5]));
   }
 
   //LaplacianSmooth(m,atoi(argv[2]));
