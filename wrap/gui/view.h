@@ -108,6 +108,7 @@ Note: mainly it is used only by the TrackBall.
 
 template <class T> class View {
 public:
+  View();
   void GetView();
   void SetView(const float *_proj, const float *_modelview, const int *_viewport);
   Point3<T> Project(const Point3<T> &p) const;
@@ -134,15 +135,23 @@ public:
   Matrix44<T> matrix;
   Matrix44<T> inverse;
   int viewport[4];
+  bool isOrtho;
 };
 
-template <class T> void View<T>::GetView() {
-	glGetv(GL_PROJECTION_MATRIX,proj);
-	glGetv(GL_MODELVIEW_MATRIX,model);
-	glGetIntegerv(GL_VIEWPORT, (GLint*)viewport);
+template <class T>   View<T>::View() {
+  isOrtho=false;
+}
 
-	matrix = proj*model;
-	inverse = vcg::Inverse(matrix);
+template <class T> void View<T>::GetView() {
+    glGetv(GL_PROJECTION_MATRIX,proj);
+    glGetv(GL_MODELVIEW_MATRIX,model);
+    glGetIntegerv(GL_VIEWPORT, (GLint*)viewport);
+
+    if(proj[3][3]==0) isOrtho = false;
+    else isOrtho = true;
+
+    matrix = proj*model;
+    inverse = vcg::Inverse(matrix);
 }
 
 template <class T> void View<T>::SetView(const float *_proj,
@@ -161,6 +170,7 @@ template <class T> void View<T>::SetView(const float *_proj,
 }
 
 template <class T> Point3<T> View<T>::ViewPoint() const {
+  if(isOrtho) return vcg::Inverse(model)* Point3<T>(0, 0, 3);
   return vcg::Inverse(model)* Point3<T>(0, 0, 0);
 }
 // Note that p it is assumed to be in model coordinate.
@@ -179,22 +189,33 @@ template <class T> Plane3<T> View<T>::ViewPlaneFromModel(const Point3<T> &p)
 // Note that p it is assumed to be in model coordinate.
 template <class T> Line3<T> View<T>::ViewLineFromModel(const Point3<T> &p)
 {
-  Point3<T> vp=ViewPoint();
   Line3<T> line;
-  line.SetOrigin(vp);
-  line.SetDirection(p - vp);
+  Point3<T> vp=ViewPoint();
+  if(isOrtho){
+    line.SetOrigin(p);
+    line.SetDirection(- vp );
+  }  else {
+    line.SetOrigin(vp);
+    line.SetDirection(p - vp);
+  }
   return line;
 }
 
 // Note that p it is assumed to be in window coordinate.
 template <class T> Line3<T> View<T>::ViewLineFromWindow(const Point3<T> &p)
 {
-	Line3<T> ln;  // plane perpedicular to view direction and passing through manip center
-	Point3<T> vp=ViewPoint();
-	Point3<T> pp=UnProject(p);
-	ln.SetOrigin(vp);
-	ln.SetDirection(pp-vp);
-	return ln;
+  Line3<T> line;  // plane perpedicular to view direction and passing through manip center
+  Point3<T> vp=ViewPoint();
+  Point3<T> pp=UnProject(p);
+
+  if(isOrtho){
+    line.SetOrigin(pp);
+    line.SetDirection(- vp );
+  }  else {
+    line.SetOrigin(vp);
+    line.SetDirection(pp-vp);
+  }
+  return line;
 }
 
 template <class T> Point3<T> View<T>::Project(const Point3<T> &p) const {
