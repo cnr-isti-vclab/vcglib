@@ -90,7 +90,7 @@ int main( )
       ExactVec.push_back(p);
       vcg::Point3f off = vcg::math::GeneratePointInUnitBallUniform<float>(rnd);
       p+=off*scaleFac;
-      float w =  std::max(0.0, 1.0f-fabs(vcg::SignedDistancePlanePoint(pl,p))/scaleFac);
+      float w =  std::max(0.0f, 1.0f-fabs(vcg::SignedDistancePlanePoint(pl,p))/scaleFac);
       PerturbVec.push_back(p);
       WeightVec.push_back(w*w); // as weight we use the square of  (1-distance)
     }
