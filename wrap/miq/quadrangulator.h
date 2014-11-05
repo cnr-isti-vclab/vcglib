@@ -14,6 +14,8 @@
 
 #define precisionQ 0.0000000001
 
+namespace vcg {
+namespace tri {
 template <class TriMesh,class PolyMesh>
 class Quadrangulator
 {
@@ -138,7 +140,7 @@ private:
     {
         ScalarType minTolerance=precisionQ;
         //first add all eddge
-        for (int i=0;i<to_split.face.size();i++)
+        for (size_t i=0;i<to_split.face.size();i++)
         {
             TriFaceType *f=&to_split.face[i];
             for (int j =0;j<3;j++)
@@ -193,7 +195,7 @@ private:
        }
 
        //then set the ones to be splitted
-       for (int i=0;i<to_split.face.size();i++)
+       for (size_t i=0;i<to_split.face.size();i++)
        {
            TriFaceType *f=&to_split.face[i];
            for (int j =0;j<3;j++)
@@ -216,7 +218,7 @@ private:
        }
 
        //then make them coherent
-       for (int i=0;i<to_split.face.size();i++)
+       for (size_t i=0;i<to_split.face.size();i++)
        {
            TriFaceType *f=&to_split.face[i];
            for (int j =0;j<3;j++)
@@ -542,14 +544,19 @@ private:
 
                 if (poly.size()>2)
                 {
-                    assert(poly.size()==UVpoly.size());
+                   assert(poly.size()==UVpoly.size());
+                   std::reverse(poly.begin(),poly.end());
+//                    std::reverse(UVpoly.begin(),UVpoly.end());
+
                     polygons.push_back(poly);
                     UV.push_back(UVpoly);
+
                 }
                 //only one polygon per initial face
                 break;
             }
         }
+
     }
 
     //FUNCTIONS NEEDED BY "UV WEDGE TO VERTEX" FILTER
@@ -644,6 +651,9 @@ public:
                        PolyMesh &Pmesh,
                        std::vector< std::vector< short int> > &UV)
     {
+        UV.clear();
+        Pmesh.Clear();
+
         TestIsProper(Tmesh);
 
         RoundInitial(Tmesh);
@@ -722,7 +732,9 @@ public:
             }
         }
 
+
     }
 };
-
+}
+}
 #endif
