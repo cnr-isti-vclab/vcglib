@@ -42,7 +42,6 @@ class ImplicitSmoother
     typedef typename MeshType::ScalarType ScalarType;
     typedef typename Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic> MatrixXm;
 
-    MeshType &to_smooth_mesh;
 
 public:
 
@@ -69,7 +68,7 @@ public:
         }
     };
 
-    struct SmoothParam
+    struct Parameter
     {
         //the amount of smoothness, useful only if we set the mass matrix
         ScalarType lambda;
@@ -85,7 +84,7 @@ public:
         //the set of faces for barycentric constraints
         std::vector<FaceConstraint> ConstrainedF;
 
-        SmoothParam()
+        Parameter()
         {
             lambda=0.2;
             useMassMatrix=true;
@@ -124,13 +123,12 @@ private:
     //        }
     //    }
 
-    void InitSparse(const std::vector<std::pair<int,int> > &Index,
+    static void InitSparse(const std::vector<std::pair<int,int> > &Index,
                     const std::vector<ScalarType> &Values,
                     const size_t m,
                     const size_t n,
                     Eigen::SparseMatrix<ScalarType>& X)
     {
-
         assert(Index.size()==Values.size());
 
         std::vector<Eigen::Triplet<ScalarType> > IJV;
@@ -151,14 +149,14 @@ private:
         X.setFromTriplets(IJV.begin(),IJV.end());
     }
 
-    int SystemSize(SmoothParam & SParam)
+    int SystemSize(MeshType &mesh, Parameter & SParam)
     {
-        int basic_size=to_smooth_mesh.vert.size();
+        int basic_size=mesh.vert.size();
         int constr_size=SParam.ConstrainedF.size();
         return (basic_size+constr_size);
     }
 
-    void CollectHardConstraints(const SmoothParam &SParam,
+    void CollectHardConstraints(MeshType &mesh,const Parameter &SParam,
                                 std::vector<std::pair<int,int> > &IndexC,
                                 std::vector<ScalarType> &WeightC)
     {
@@ -168,9 +166,9 @@ private:
         if (SParam.fixBorder)
         {
             //add penalization constra
-            for (int i=0;i<to_smooth_mesh.vert.size();i++)
+            for (int i=0;i<mesh.vert.size();i++)
             {
-                if (!to_smooth_mesh.vert[i].IsB())continue;
+                if (!mesh.vert[i].IsB())continue;
                 To_Fix.push_back(i);
             }
         }
@@ -237,7 +235,7 @@ public:
     //        }
     //    }
 
-    void Smooth(SmoothParam &SParam)
+static void Compute(MeshType &mesh, Parameter &SParam)
     {
 
         //the laplacian and the mass matrix
@@ -248,21 +246,21 @@ public:
         std::vector<ScalarType> ValuesM;
 
         //add the entries for mass matrix
-        if (SParam.useMassMatrix) MeshToMatrix<MeshType>::MassMatrixEntry(to_smooth_mesh,IndexM,ValuesM);
+        if (SParam.useMassMatrix) MeshToMatrix<MeshType>::MassMatrixEntry(mesh,IndexM,ValuesM);
 
         //then also collect hard constraints
-        //CollectHardConstraints(SParam,IndexM,ValuesM);
+        //CollectHardConstraints(mesh,SParam,IndexM,ValuesM);
 
         //initialize sparse mass matrix
-        InitSparse(IndexM,ValuesM,to_smooth_mesh.vert.size()*3,to_smooth_mesh.vert.size()*3,M);
+        InitSparse(IndexM,ValuesM,mesh.vert.size()*3,mesh.vert.size()*3,M);
 
         //get the entries for laplacian matrix
         std::vector<std::pair<int,int> > IndexL;
         std::vector<ScalarType> ValuesL;
-        MeshToMatrix<MeshType>::GetLaplacianMatrix(to_smooth_mesh,IndexL,ValuesL,false);//SParam.useCotWeight);
+        MeshToMatrix<MeshType>::GetLaplacianMatrix(mesh,IndexL,ValuesL,false);//SParam.useCotWeight);
 
         //initialize sparse laplacian matrix
-        InitSparse(IndexL,ValuesL,to_smooth_mesh.vert.size()*3,to_smooth_mesh.vert.size()*3,L);
+        InitSparse(IndexL,ValuesL,mesh.vert.size()*3,mesh.vert.size()*3,L);
 
         //then solve the system
         Eigen::SparseMatrix<ScalarType> S = (M + SParam.lambda*L);
@@ -273,30 +271,28 @@ public:
         fflush(stdout);
         assert(solver.info() == Eigen::Success);
 
-        int size=to_smooth_mesh.vert.size()*3;
+        int size=mesh.vert.size()*3;
         MatrixXm V(size,1);
 
-        for (size_t i=0;i<to_smooth_mesh.vert.size();i++)
+        for (size_t i=0;i<mesh.vert.size();i++)
         {
             int index=i*3;
             assert(index<size);
-            V(index,0)=to_smooth_mesh.vert[i].P().X();
-            V(index+1,0)=to_smooth_mesh.vert[i].P().Y();
-            V(index+2,0)=to_smooth_mesh.vert[i].P().Z();
+            V(index,0)=mesh.vert[i].P().X();
+            V(index+1,0)=mesh.vert[i].P().Y();
+            V(index+2,0)=mesh.vert[i].P().Z();
         }
 
         V = solver.solve(M*V).eval();
 
-        for (size_t i=0;i<to_smooth_mesh.vert.size();i++)
+        for (size_t i=0;i<mesh.vert.size();i++)
         {
             int index=i*3;
-            to_smooth_mesh.vert[i].P().X()=V(index,0);
-            to_smooth_mesh.vert[i].P().Y()=V(index+1,0);
-            to_smooth_mesh.vert[i].P().Z()=V(index+2,0);
+            mesh.vert[i].P().X()=V(index,0);
+            mesh.vert[i].P().Y()=V(index+1,0);
+            mesh.vert[i].P().Z()=V(index+2,0);
         }
     }
-
-    ImplicitSmoother(MeshType &_to_smooth_mesh):to_smooth_mesh(_to_smooth_mesh){}
 };
 
 }//end namespace vcg
