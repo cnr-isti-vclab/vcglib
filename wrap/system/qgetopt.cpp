@@ -79,6 +79,12 @@ void GetOpt::addArgument(const QString &name, const QString &description, QStrin
   addArgument(name, description, option);
 }
 
+void GetOpt::addArgument(const QString &name, const QString &description, float *v) {
+  Option option;
+  option.float_value = v;
+  addArgument(name, description, option);
+}
+
 void GetOpt::addArgument(const QString &name, const QString &description, double *v) {
   Option option;
   option.double_value = v;
@@ -109,6 +115,11 @@ void GetOpt::addOption(char s, const QString &longname, const QString &descripti
     Option option(Option::OPTION, s, longname, description);
     option.string_value = v;
     options.push_back(option);
+}
+void GetOpt::addOption(char s, const QString &longname, const QString &description, float *v) {
+	Option option(Option::OPTION, s, longname, description);
+	option.float_value = v;
+	options.push_back(option);
 }
 void GetOpt::addOption(char s, const QString &longname, const QString &description, double *v) {
     Option option(Option::OPTION, s, longname, description);
@@ -217,6 +228,7 @@ bool GetOpt::assignOption(Option &o, QString arg, QString &error) {
     QVariant::Type type;
     if(o.value) type = o.value->type();
     if(o.string_value) type = QVariant::String;
+	if(o.float_value) type = QVariant::Double;
     if(o.double_value) type = QVariant::Double;
     if(o.int_value) type = QVariant::Int;
     if(o.boolean_value) type = QVariant::Bool;
@@ -229,7 +241,8 @@ bool GetOpt::assignOption(Option &o, QString arg, QString &error) {
     }
     if(o.value)         *(o.value)         = v;
     if(o.string_value)  *(o.string_value)  = v.toString();
-    if(o.double_value)  *(o.double_value)  = v.toDouble();
+	if(o.float_value)   *(o.float_value)   = v.toFloat();
+	if(o.double_value)  *(o.double_value)  = v.toDouble();
     if(o.int_value)     *(o.int_value)     = v.toInt();
     if(o.boolean_value) *(o.boolean_value) = v.toBool();
     return true;
