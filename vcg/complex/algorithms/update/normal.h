@@ -96,7 +96,7 @@ static void PerVertexClear(ComputeMeshType &m, bool ClearAllVertNormal=false)
     //typename FaceType::NormalType t = (*f).Normal();
     typename FaceType::NormalType t = vcg::Normal(*f);
 
-    for(int j=0; j<3; ++j)
+    for(int j=0; j<(*f).VN(); ++j)
      if( !(*f).V(j)->IsD() && (*f).V(j)->IsRW() )
       (*f).V(j)->N() += t;
    }
