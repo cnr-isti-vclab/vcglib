@@ -39,7 +39,9 @@ class MeshToMatrix
   // define types
 
   typedef typename MeshType::FaceType FaceType;
+  typedef typename MeshType::FaceIterator FaceIterator;
   typedef typename MeshType::VertexType VertexType;
+  typedef typename MeshType::VertexIterator VertexIterator;
   typedef typename MeshType::CoordType CoordType;
   typedef typename MeshType::ScalarType ScalarType;
   typedef typename Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic> MatrixXm;
@@ -218,27 +220,37 @@ public:
   }
 
 
-  static void MassMatrixEntry(MeshType &mesh,
+  static void MassMatrixEntry(MeshType &m,
                               std::vector<std::pair<int,int> > &index,
                               std::vector<ScalarType> &entry)
   {
-      //calculate area
-      UpdateQuality<MeshType>::FaceArea(mesh);
-      //then distribute per vertex
-      UpdateQuality<MeshType>::VertexFromFace(mesh);
+    tri::RequireCompactness(m);
 
-      std::pair<float,float> minmax=Stat<MeshType>::ComputePerVertexQualityMinMax(mesh);
+    typename MeshType::template PerVertexAttributeHandle<ScalarType> h =
+        tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType>(m, "area");
+    for(size_t i=0;i<m.vn;++i) h[i]=0;
+
+    for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi)
+    {
+      ScalarType a = DoubleArea(*fi);
+      for(int j=0;j<fi->VN();++j)
+        h[tri::Index(m,fi->V(j))] += a;
+    }
+    ScalarType maxA=0;
+    for(size_t i=0;i<m.vn;++i)
+      maxA = max(maxA,h[i]);
 
       //store the index and the scalar for the sparse matrix
-      for (size_t i=0;i<mesh.vert.size();i++)
+      for (size_t i=0;i<m.vert.size();i++)
       {
           for (size_t j=0;j<3;j++)
           {
               int currI=(i*3)+j;
               index.push_back(std::pair<int,int>(currI,currI));
-              entry.push_back(mesh.vert[i].Q()/(ScalarType)minmax.second);
+              entry.push_back(h[i]);
           }
       }
+      tri::Allocator<MeshType>::template DeletePerVertexAttribute<ScalarType>(m,h);
   }
 
 
