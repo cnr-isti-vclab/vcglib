@@ -562,7 +562,7 @@ public:
     static int MissMatchByCross(const FaceType &f0,
                                 const FaceType &f1)
     {
-        CoordType dir0=CrossVector(f0,0);
+        //CoordType dir0=CrossVector(f0,0);
         CoordType dir1=CrossVector(f1,0);
 
         CoordType dir1Rot=Rotate(f1,f0,dir1);
@@ -609,19 +609,40 @@ public:
     }
 
     ///select singular vertices
-    static void SelectSingularByCross(MeshType &mesh)
+    static void UpdateSingularByCross(MeshType &mesh)
     {
-        for (unsigned int i=0;i<mesh.vert.size();i++)
+        bool hasSingular = vcg::tri::HasPerVertexAttribute(mesh,std::string("Singular"));
+        bool hasSingularIndex = vcg::tri::HasPerVertexAttribute(mesh,std::string("SingularIndex"));
+
+        typename MeshType::template PerVertexAttributeHandle<bool> Handle_Singular;
+        typename MeshType::template PerVertexAttributeHandle<int> Handle_SingularIndex;
+
+        if (hasSingular)
+            Handle_Singular=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<bool>(mesh,std::string("Singular"));
+        else
+            Handle_Singular=vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<bool>(mesh,std::string("Singular"));
+
+        if (hasSingularIndex)
+            Handle_SingularIndex=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<int>(mesh,std::string("SingularIndex"));
+        else
+            Handle_SingularIndex=vcg::tri::Allocator<MeshType>::template AddPerVertexAttribute<int>(mesh,std::string("SingularIndex"));
+
+        for (size_t i=0;i<mesh.vert.size();i++)
         {
             if (mesh.vert[i].IsD())continue;
             if (mesh.vert[i].IsB())continue;
 
             int missmatch;
             if (IsSingularByCross(mesh.vert[i],missmatch))
-                mesh.vert[i].SetS();
+            {
+                Handle_Singular[i]=true;
+                Handle_SingularIndex[i]=missmatch;
+            }
             else
-                mesh.vert[i].ClearS();
-
+            {
+                Handle_Singular[i]=false;
+                Handle_SingularIndex[i]=0;
+            }
         }
     }
 
