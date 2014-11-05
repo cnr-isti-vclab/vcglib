@@ -2,6 +2,7 @@
 #define GL_FIELD
 
 #include <vcg/complex/algorithms/parametrization/tangent_field_operators.h>
+#include <vcg/complex/allocate.h>
 
 namespace vcg{
 template <class MeshType>
@@ -15,6 +16,7 @@ class GLField
 	static void GLDrawField(CoordType dir[4],
 							CoordType center,
                             ScalarType &size,
+                            bool onlyPD1=false,
                             bool oneside=false)
 	{
         ScalarType size1=size;
@@ -28,6 +30,7 @@ class GLField
             glVertex(center-dir[0]*size2);
         glEnd();
 
+        if (onlyPD1)return;
         glLineWidth(2);
         vcg::glColor(vcg::Color4b(0,255,0,255));
         glBegin(GL_LINES);
@@ -41,13 +44,14 @@ class GLField
 	///draw the cross field of a given face
     static void GLDrawFaceField(const FaceType &f,
                                 ScalarType &size,
+                                bool onlyPD1=false,
                                 bool oneside=false)
 	{
-        CoordType center=(f.cP0(0)+f.cP0(1)+f.cP0(2))/3;
+        CoordType center=(f.cP(0)+f.cP(1)+f.cP(2))/3;
 		CoordType normal=f.cN();
 		CoordType dir[4];
 		vcg::tri::CrossField<MeshType>::CrossVector(f,dir);
-        GLDrawField(dir,center,size,oneside);
+        GLDrawField(dir,center,size,onlyPD1,oneside);
 	}
 	
 //    static void GLDrawFaceSeams(const FaceType &f,
@@ -67,36 +71,36 @@ class GLField
 //        glEnd();
 //    }
 
-	static void GLDrawVertField(const MeshType &mesh,
-								const VertexType &v,
-								ScalarType &size)
-	{
-		CoordType center=v.cP();
-		CoordType normal=v.cN();
-		CoordType dir[4];
-		vcg::tri::CrossField<MeshType>::CrossVector(v,dir);
-		GLDrawField(dir,center,size);
-	}
+//	static void GLDrawVertField(const MeshType &mesh,
+//								const VertexType &v,
+//								ScalarType &size)
+//	{
+//		CoordType center=v.cP();
+//		CoordType normal=v.cN();
+//		CoordType dir[4];
+//		vcg::tri::CrossField<MeshType>::CrossVector(v,dir);
+//		GLDrawField(dir,center,size);
+//	}
 
 public:
 
 
     static void GLDrawFaceField(const MeshType &mesh,
-                                ScalarType scale=0.002,
-                                bool oneside=false)
+                                bool onlyPD1=false,
+                                bool oneside=false,
+                                ScalarType scale=0.002)
 	{
 
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
-        glDepthRange(0.0,0.9999);
+        glDepthRange(0.0,0.999);
 		glEnable(GL_COLOR_MATERIAL);
         glDisable(GL_LIGHTING);
         glDisable(GL_BLEND);
         ScalarType size=mesh.bbox.Diag()*scale;
         for (unsigned int i=0;i<mesh.face.size();i++)
 		{
-			if (mesh.face[i].IsD())continue;
-			//if (!mesh.face[i].leading)continue;
-            GLDrawFaceField(mesh.face[i],size,oneside);
+            if (mesh.face[i].IsD())continue;
+            GLDrawFaceField(mesh.face[i],size,onlyPD1,oneside);
 		}
 		glPopAttrib();
 	}
@@ -111,12 +115,60 @@ public:
         ScalarType size=mesh.bbox.Diag()/400.0;
         for (int i=0;i<mesh.vert.size();i++)
 		{
-			if (mesh.vert[i].IsD())continue;
-			//if (!mesh.face[i].leading)continue;
+            if (mesh.vert[i].IsD())continue;
 			GLDrawVertField(mesh,mesh.vert[i],size);
 		}
 		glPopAttrib();
 	}
+
+    static void GLDrawSingularity(MeshType &mesh)
+    {
+        // query if an attribute is present or not
+       bool hasSingular = vcg::tri::HasPerVertexAttribute(mesh,std::string("Singular"));
+       bool hasSingularIndex = vcg::tri::HasPerVertexAttribute(mesh,std::string("SingularIndex"));
+
+       if (!hasSingular)return;
+       if(!hasSingularIndex)return;
+
+       typename MeshType::template PerVertexAttributeHandle<bool> Handle_Singular;
+       Handle_Singular=vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<bool>(mesh,std::string("Singular"));
+       typename MeshType::template PerVertexAttributeHandle<int> Handle_SingularIndex;
+       Handle_SingularIndex =vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<int>(mesh,std::string("SingularIndex"));
+
+       glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+       glDepthRange(0.0,0.999);
+       glEnable(GL_COLOR_MATERIAL);
+       glDisable(GL_LIGHTING);
+       glDisable(GL_BLEND);
+       glPointSize(10);
+       glBegin(GL_POINTS);
+       for (size_t i=0;i<mesh.vert.size();i++)
+       {
+           if (mesh.vert[i].IsD())continue;
+           if (!Handle_Singular[i])continue;
+
+
+           int SingIndex=Handle_SingularIndex[i];
+
+           vcg::Color4b colSing;
+
+           switch (SingIndex)
+           {
+             case 1:colSing=vcg::Color4b(0,0,255,255);      break;
+             case 2:colSing=vcg::Color4b(0,255,0,255);    break;
+             case 3:colSing=vcg::Color4b(255,0,0,255);      break;
+             case 4:colSing=vcg::Color4b(255,255,0,255);      break;
+             default:colSing=vcg::Color4b(255,0,255,255);
+           }
+
+
+           vcg::glColor(colSing);
+           vcg::glVertex(mesh.vert[i].P());
+       }
+       glEnd();
+       glPopAttrib();
+    }
 };
 
 }
