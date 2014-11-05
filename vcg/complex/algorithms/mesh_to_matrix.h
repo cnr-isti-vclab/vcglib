@@ -25,23 +25,26 @@
 
 #include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/quality.h>
+#include <vcg/complex/algorithms/harmonic.h>
 
 using namespace std;
 
 namespace vcg {
 namespace tri {
-template < typename TriMeshType >
+template < typename MeshType >
 class MeshToMatrix
 {
 
   // define types
 
-  typedef typename TriMeshType::FaceType FaceType;
-  typedef typename TriMeshType::VertexType VertexType;
-  typedef typename TriMeshType::CoordType CoordType;
-  typedef typename TriMeshType::ScalarType ScalarType;
+  typedef typename MeshType::FaceType FaceType;
+  typedef typename MeshType::VertexType VertexType;
+  typedef typename MeshType::CoordType CoordType;
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef typename Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic> MatrixXm;
 
-  static void GetTriEdgeAdjacency(const Eigen::MatrixXd& V,
+  static void GetTriEdgeAdjacency(const MatrixXm& V,
                                   const Eigen::MatrixXi& F,
                                   Eigen::MatrixXi& EV,
                                   Eigen::MatrixXi& FE,
@@ -128,13 +131,13 @@ class MeshToMatrix
 public:
 
   // return mesh as vector of vertices and faces
-  static void GetTriMeshData(const TriMeshType &mesh,
+  static void GetTriMeshData(const MeshType &mesh,
                              Eigen::MatrixXi &faces,
-                             Eigen::MatrixXd &vert)
+                             MatrixXm &vert)
   {
     tri::RequireCompactness(mesh);
     // create eigen matrix of vertices
-    vert=Eigen::MatrixXd(mesh.VN(), 3);
+    vert=MatrixXm(mesh.VN(), 3);
 
     // copy vertices
     for (int i = 0; i < mesh.VN(); i++)
@@ -151,13 +154,13 @@ public:
   }
 
   // return normals of the mesh
-  static void GetNormalData(const TriMeshType &mesh,
-                            Eigen::MatrixXd &Nvert,
-                            Eigen::MatrixXd &Nface)
+  static void GetNormalData(const MeshType &mesh,
+                            MatrixXm &Nvert,
+                            MatrixXm &Nface)
   {
     // create eigen matrix of vertices
-    Nvert=Eigen::MatrixXd(mesh.VN(), 3);
-    Nface=Eigen::MatrixXd(mesh.FN(), 3);
+    Nvert=MatrixXm(mesh.VN(), 3);
+    Nface=MatrixXm(mesh.FN(), 3);
 
     // per vertices normals
     for (int i = 0; i < mesh.VN(); i++)
@@ -171,11 +174,11 @@ public:
   }
 
   // get face to face adjacency
-  static void GetTriFFAdjacency(TriMeshType &mesh,
+  static void GetTriFFAdjacency(MeshType &mesh,
                                 Eigen::MatrixXi &FFp,
                                 Eigen::MatrixXi &FFi)
   {
-    tri::UpdateTopology<TriMeshType>::FaceFace(mesh);
+    tri::UpdateTopology<MeshType>::FaceFace(mesh);
     FFp = Eigen::MatrixXi(mesh.FN(),3);
     FFi = Eigen::MatrixXi(mesh.FN(),3);
 
@@ -197,13 +200,13 @@ public:
   }
 
   // get edge to face and edge to vertex adjacency
-  static void GetTriEdgeAdjacency(const TriMeshType &mesh,
+  static void GetTriEdgeAdjacency(const MeshType &mesh,
                                   Eigen::MatrixXi& EV,
                                   Eigen::MatrixXi& FE,
                                   Eigen::MatrixXi& EF)
   {
     Eigen::MatrixXi faces;
-    Eigen::MatrixXd vert;
+    MatrixXm vert;
     GetTriMeshData(mesh,faces,vert);
     GetTriEdgeAdjacency(vert,faces,EV,FE,EF);
   }
@@ -213,6 +216,85 @@ public:
       Eigen::Vector3d ret(v[0],v[1],v[2]);
       return ret;
   }
+
+
+  static void MassMatrixEntry(MeshType &mesh,
+                              std::vector<std::pair<int,int> > &index,
+                              std::vector<ScalarType> &entry)
+  {
+      //calculate area
+      UpdateQuality<MeshType>::FaceArea(mesh);
+      //then distribute per vertex
+      UpdateQuality<MeshType>::VertexFromFace(mesh);
+
+      std::pair<float,float> minmax=Stat<MeshType>::ComputePerVertexQualityMinMax(mesh);
+
+      //store the index and the scalar for the sparse matrix
+      for (size_t i=0;i<mesh.vert.size();i++)
+      {
+          for (size_t j=0;j<3;j++)
+          {
+              int currI=(i*3)+j;
+              index.push_back(std::pair<int,int>(currI,currI));
+              entry.push_back(mesh.vert[i].Q()/(ScalarType)minmax.second);
+          }
+      }
+  }
+
+
+  static void GetLaplacianEntry(MeshType &mesh,
+                                 FaceType &f,
+                                 std::vector<std::pair<int,int> > &index,
+                                 std::vector<ScalarType> &entry,
+                                 bool cotangent)
+  {
+      for (int i=0;i<3;i++)
+      {
+
+          ScalarType weight = 1;
+          if (cotangent)
+          {
+              weight=Harmonic<MeshType>::template CotangentWeight<ScalarType>(f,i);
+          }
+
+          //get the index of the vertices
+          int indexV0=Index(mesh,f.V0(i));
+          int indexV1=Index(mesh,f.V1(i));
+
+          //then assemble the matrix
+          for (int j=0;j<3;j++)
+          {
+              //multiply by 3 and add the component
+              int currI0=(indexV0*3)+j;
+              int currI1=(indexV1*3)+j;
+
+              index.push_back(std::pair<int,int>(currI0,currI0));
+              entry.push_back(weight);
+              index.push_back(std::pair<int,int>(currI0,currI1));
+              entry.push_back(-weight);
+
+              index.push_back(std::pair<int,int>(currI1,currI1));
+              entry.push_back(weight);
+              index.push_back(std::pair<int,int>(currI1,currI0));
+              entry.push_back(-weight);
+
+          }
+      }
+  }
+
+
+  static void GetLaplacianMatrix(MeshType &mesh,
+                          std::vector<std::pair<int,int> > &index,
+                          std::vector<ScalarType> &entry,
+                          bool cotangent)
+  {
+      //store the index and the scalar for the sparse matrix
+      for (size_t i=0;i<mesh.face.size();i++)
+          GetLaplacianEntry(mesh,mesh.face[i],index,entry,cotangent);
+  }
+
+
+
 };
 
 } // end namespace tri
