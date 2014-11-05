@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include<wrap/io_trimesh/precision.h>
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/polygon_support.h>
 
