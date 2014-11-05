@@ -132,10 +132,10 @@ y = --- * (r^2 /2.0)
   @param hit the projection of hitplane on the rotational hyperboloid relative to the manipulator.
   @return true if and only if hit is valid.
 */
-bool HitHyper (Point3f center, float radius, Point3f viewpoint, Plane3f vp,
-                           Point3f hitplane, Point3f & hit)
+bool HitHyper (Point3f center, float radius, Point3f viewpoint, Plane3f viewplane,
+                           Point3f hitOnViewplane, Point3f & hit)
 {
-  float hitplaney = Distance (center, hitplane);
+  float hitplaney = Distance (center, hitOnViewplane);
   float viewpointx = Distance (center, viewpoint);
 
   float a = hitplaney / viewpointx;
@@ -155,11 +155,41 @@ bool HitHyper (Point3f center, float radius, Point3f viewpoint, Plane3f vp,
     return false;
   }
   // Computing the result in 3d space;
-  Point3f dirRadial = hitplane - center;
+  Point3f dirRadial = hitOnViewplane - center;
   dirRadial.Normalize ();
-  Point3f dirView = vp.Direction ();
+  Point3f dirView = viewplane.Direction ();
   dirView.Normalize ();
   hit = center + dirRadial * yval + dirView * xval;
+  return true;
+}
+/**
+ * @brief HitHyperOrtho
+ * @param center
+ * @param radius
+ * @param viewpoint
+ * @param viewplane
+ * @param hitOnViewplane
+ * @param hit
+ * @return true if the hit is valid
+ *
+ * Specialized version of the HitHyper();
+ * in the simple ortho case, the hit point is just the value of
+ * y = 1/x * (r^2 /2 ) on the hitOnViewPlane
+ */
+bool HitHyperOrtho(Point3f center, float radius, Point3f viewpoint, Plane3f viewplane,
+                   Point3f hitOnViewplane, Point3f & hit)
+{
+  float xval = Distance (center, hitOnViewplane);
+
+  float yval = (1.0 / xval ) *  radius * radius / 2.0f;
+
+  // Computing the result in 3d space;
+  Point3f dirRadial = hitOnViewplane - center;
+  dirRadial.Normalize ();
+  Point3f dirView = viewplane.Direction ();
+  dirView.Normalize ();
+  hit = center + dirRadial * xval + dirView * yval;
+
   return true;
 }
 
@@ -198,8 +228,7 @@ Point3f HitSphere (Trackball * tb, const Point3f & p)
           hitSphere1(0,0,0),
           hitSphere2(0,0,0),
           hitHyper(0,0,0);
-  IntersectionPlaneLine < float >(vp, ln, hitPlane);
-  
+
   Sphere3f sphere (center, tb->radius);//trackball sphere
   bool resSp = IntersectionLineSphere < float >(sphere, ln, hitSphere1, hitSphere2);
 
@@ -212,7 +241,12 @@ Point3f HitSphere (Trackball * tb, const Point3f & p)
   }
 
   /*float dl= */ Distance (ln, center);
-  bool resHp = HitHyper (center, tb->radius, viewpoint, vp, hitPlane, hitHyper);
+  bool resHp;
+  IntersectionPlaneLine < float >(vp, ln, hitPlane);
+  if(tb->camera.isOrtho)
+    resHp= HitHyperOrtho (center, tb->radius, viewpoint, vp, hitPlane, hitHyper);
+  else
+    resHp= HitHyper (center, tb->radius, viewpoint, vp, hitPlane, hitHyper);
 
   // four cases
 
@@ -230,7 +264,7 @@ Point3f HitSphere (Trackball * tb, const Point3f & p)
   // 4) line cross both sphere and hyperboloid: choose according angle.
   float angleDeg = math::ToDeg (Angle ((viewpoint - center), (hitSphere - center)));
 
-  //printf("Angle %f (%5.2f %5.2f %5.2f) (%5.2f %5.2f %5.2f)\n",angleDeg,hitSphere[0],hitSphere[1],hitSphere[2],hitHyper[0],hitHyper[1],hitHyper[2]);
+//  qDebug("Angle %f (%5.2f %5.2f %5.2f) (%5.2f %5.2f %5.2f)",angleDeg,hitSphere[0],hitSphere[1],hitSphere[2],hitHyper[0],hitHyper[1],hitHyper[2]);
   if (angleDeg < 45)
     return hitSphere;
   else
