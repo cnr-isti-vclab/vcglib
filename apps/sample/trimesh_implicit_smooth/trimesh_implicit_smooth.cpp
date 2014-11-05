@@ -71,9 +71,9 @@ int main( int argc, char **argv )
 
   tri::UpdateTopology<MyMesh>::FaceFace(m);
 
-  ImplicitSmoother<MyMesh>::SmoothParam SP;
-  ImplicitSmoother<MyMesh> ISmooth(m);
-  ISmooth.Smooth(SP);
+  ImplicitSmoother<MyMesh>::Parameter par;
+  par.lambda = 0.5f;
+  ImplicitSmoother<MyMesh>::Compute(m,par);
 
   tri::io::ExporterPLY<MyMesh>::Save(m,"smooth.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_VERTQUALITY);
 
