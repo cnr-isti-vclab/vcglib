@@ -856,6 +856,52 @@ public:
   }
 
   /**
+   * @brief FindPolychords lists all the valid polychords starting position of a mesh.
+   * @param mesh The input mesh.
+   * @param polychords The container of results.
+   */
+  static void FindPolychords(PolyMeshType &mesh, std::deque< vcg::face::Pos<FaceType> > &polychords) {
+    polychords.clear();
+
+    if (mesh.IsEmpty())
+      return;
+
+    vcg::face::Pos<FaceType> pos, startPos;
+    PC_ResultCode resultCode;
+    std::pair<size_t, unsigned char> face_edge;
+    // construct the vector of chords
+    PC_Chords chords(mesh);
+    unsigned long mark = 0;
+
+    // iterate over all the chords
+    while (!chords.End()) {
+      // get the current coord
+      chords.GetCurrent(face_edge);
+      // construct a pos on the face and edge of the current coord
+      pos.Set(&mesh.face[face_edge.first], face_edge.second, mesh.face[face_edge.first].V(face_edge.second));
+
+      // check and find start pos
+      resultCode = CheckPolychordFindStartPosition(pos, startPos, false);
+      // visit the polychord
+      if (resultCode == PC_SUCCESS)
+        VisitPolychord(mesh, startPos, chords, mark, PC_OTHER);
+      else
+        VisitPolychord(mesh, startPos, chords, mark, resultCode);
+      // store a new polychord
+      polychords.push_back(startPos);
+
+      // go to the next coord
+      chords.Next();
+      // increment the mark
+      ++mark;
+      if (mark == std::numeric_limits<unsigned long>::max()) {
+        chords.ResetMarks();
+        mark = 0;
+      }
+    }
+  }
+
+  /**
    * @brief SplitPolychord splits a polychord into n polychords by inserting all the needed faces.
    * @param mesh is the input polygonal mesh.
    * @param pos is a position into the polychord (not necessarily the starting border).
