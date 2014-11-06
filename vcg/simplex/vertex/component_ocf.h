@@ -107,7 +107,7 @@ public:
         if (MarkEnabled)         MV.reserve(_size);
         if (NormalEnabled)       NV.reserve(_size);
         if (TexCoordEnabled)     TV.reserve(_size);
-        if (VFAdjacencyEnabled)  AV.reserve(_size,VFAdjType::Zero());
+        if (VFAdjacencyEnabled)  AV.reserve(_size);
         if (CurvatureEnabled)    CuV.reserve(_size);
         if (CurvatureDirEnabled) CuDV.reserve(_size);
         if (RadiusEnabled)       RadiusV.reserve(_size);
@@ -233,6 +233,7 @@ void DisableTexCoord() {
 }
 
 struct VFAdjType {
+	VFAdjType():_fp(0),_zp(-1) {}
   VFAdjType(typename VALUE_TYPE::FacePointer fp, int zp):_fp(fp),_zp(zp){}
     typename VALUE_TYPE::FacePointer _fp ;
     int _zp ;
