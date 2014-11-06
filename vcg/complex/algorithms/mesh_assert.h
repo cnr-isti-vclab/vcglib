@@ -86,6 +86,24 @@ public:
       }
   }
 
+  static void OnlyTriFace(MeshType &m)
+  {
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
+    {
+      if(fi->VN()!=3)
+        throw vcg::MissingPreconditionException("There are faces with more than three vertices");
+    }
+  }
+
+  static void OnlyQuadFace(MeshType &m)
+  {
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
+    {
+      if(fi->VN()!=4)
+        throw vcg::MissingPreconditionException("There are non quadrilateral faces");
+    }
+  }
+
 };
 
 } // end namespace tri
