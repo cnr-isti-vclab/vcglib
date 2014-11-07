@@ -226,19 +226,19 @@ public:
         ScalarT cotB = 0;
 
         // Get the edge (a pair of vertices)
-        VertexType * v0 = f.cV0(edge);
-        VertexType * v1 = f.cV1(edge);
+        VertexType * v0 = f.cV(edge);
+        VertexType * v1 = f.cV((edge+1)%f.VN());
 
         if (fp != NULL &&
             fp != &f)
         {
             // not a border edge
-            VertexType * vb = fp->cV2(f.cFFi(edge));
+            VertexType * vb = fp->cV((f.cFFi(edge)+2)%fp->VN());
             ScalarT angleB = ComputeAngle<ScalarT>(v0, vb, v1);
             cotB = vcg::math::Cos(angleB) / vcg::math::Sin(angleB);
         }
 
-        VertexType * va = f.cV2(edge);
+        VertexType * va = f.cV((edge+2)%f.VN());
         ScalarT angleA = ComputeAngle<ScalarT>(v0, va, v1);
         cotA = vcg::math::Cos(angleA) / vcg::math::Sin(angleA);
 
