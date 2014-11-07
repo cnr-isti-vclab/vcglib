@@ -859,8 +859,9 @@ public:
    * @brief FindPolychords lists all the valid polychords starting position of a mesh.
    * @param mesh The input mesh.
    * @param polychords The container of results.
+   * @param loopsOnly true if closed polychords only must be listed, false for all polychords.
    */
-  static void FindPolychords(PolyMeshType &mesh, std::deque< vcg::face::Pos<FaceType> > &polychords) {
+  static void FindPolychords(PolyMeshType &mesh, std::deque< vcg::face::Pos<FaceType> > &polychords, const bool loopsOnly = false) {
     polychords.clear();
 
     if (mesh.IsEmpty())
@@ -883,12 +884,16 @@ public:
       // check and find start pos
       resultCode = CheckPolychordFindStartPosition(pos, startPos, false);
       // visit the polychord
-      if (resultCode == PC_SUCCESS)
+      if (resultCode == PC_SUCCESS) {
         VisitPolychord(mesh, startPos, chords, mark, PC_OTHER);
-      else
+        // store a new polychord
+        if (!loopsOnly)
+          polychords.push_back(startPos);
+        else if (!startPos.IsBorder())
+          polychords.push_back(startPos);
+      } else {
         VisitPolychord(mesh, startPos, chords, mark, resultCode);
-      // store a new polychord
-      polychords.push_back(startPos);
+      }
 
       // go to the next coord
       chords.Next();
