@@ -48,23 +48,21 @@ public:
     struct FaceConstraint
     {
         int numF;
-        std::vector<std::vector<ScalarType> > BarycentricW;
+        std::vector<ScalarType > BarycentricW;
         CoordType TargetPos;
-        ScalarType Weight;
 
         FaceConstraint()
         {
             numF=-1;
-            Weight=0;
         }
 
-        FaceConstraint(int _numF,const std::vector<std::vector<ScalarType> > &_BarycentricW,
-                       const CoordType &_TargetPos,ScalarType _Weight)
+        FaceConstraint(int _numF,
+                       const std::vector<ScalarType > &_BarycentricW,
+                       const CoordType &_TargetPos)
         {
             numF=_numF;
-            BarycentricW= std::vector<std::vector<ScalarType> > (_BarycentricW.begin(),_BarycentricW.end());
+            BarycentricW= std::vector<ScalarType > (_BarycentricW.begin(),_BarycentricW.end());
             TargetPos=_TargetPos;
-            Weight=_Weight;
         }
     };
 
@@ -83,9 +81,12 @@ public:
         std::vector<int> FixedV;
         //the set of faces for barycentric constraints
         std::vector<FaceConstraint> ConstrainedF;
+        //the degree of laplacian
+        int degree;
 
         Parameter()
         {
+            degree=1;
             lambda=0.2;
             useMassMatrix=true;
             fixBorder=false;
@@ -95,39 +96,12 @@ public:
 
 private:
 
-    //    void GetMassMatrix(MeshType &mesh,
-    //                       std::vector<std::pair<int,int> > &index,
-    //                       std::vector<ScalarType> &entry)
-    //    {
-    //        entry.clear();
-    //        index.clear();
-
-    //        //calculate area
-    //        vcg::tri::UpdateQuality<MeshType>::FaceArea(mesh);
-    //        //then distribute per vertex
-    //        vcg::tri::UpdateQuality<MeshType>::VertexFromFace(mesh);
-
-    //        //3, one per coordinate
-    //        index.resize(mesh.vert.size()*3,-1);
-    //        entry.resize(mesh.vert.size()*3,0);
-
-    //        //store the index and the scalar for the sparse matrix
-    //        for (size_t i=0;i<mesh.vert.size();i++)
-    //        {
-    //            for (size_t j=0;j<3;j++)
-    //            {
-    //                int currI=(i*3)+j;
-    //                index[currI]=currI;
-    //                entry[currI]=mesh.vert[i].Q();
-    //            }
-    //        }
-    //    }
 
     static void InitSparse(const std::vector<std::pair<int,int> > &Index,
-                    const std::vector<ScalarType> &Values,
-                    const size_t m,
-                    const size_t n,
-                    Eigen::SparseMatrix<ScalarType>& X)
+                           const std::vector<ScalarType> &Values,
+                           const size_t m,
+                           const size_t n,
+                           Eigen::SparseMatrix<ScalarType>& X)
     {
         assert(Index.size()==Values.size());
 
@@ -149,16 +123,10 @@ private:
         X.setFromTriplets(IJV.begin(),IJV.end());
     }
 
-    int SystemSize(MeshType &mesh, Parameter & SParam)
-    {
-        int basic_size=mesh.vert.size();
-        int constr_size=SParam.ConstrainedF.size();
-        return (basic_size+constr_size);
-    }
 
-    void CollectHardConstraints(MeshType &mesh,const Parameter &SParam,
-                                std::vector<std::pair<int,int> > &IndexC,
-                                std::vector<ScalarType> &WeightC)
+    static void CollectHardConstraints(MeshType &mesh,const Parameter &SParam,
+                                       std::vector<std::pair<int,int> > &IndexC,
+                                       std::vector<ScalarType> &WeightC)
     {
         std::vector<int> To_Fix;
 
@@ -184,62 +152,88 @@ private:
         {
             for (int j=0;j<3;j++)
             {
-                int IndexV=(i*3)+j;
+                int IndexV=(To_Fix[i]*3)+j;
                 IndexC.push_back(std::pair<int,int>(IndexV,IndexV));
                 WeightC.push_back((ScalarType)PENALTY);
             }
         }
     }
 
+    static void CollectBarycentricConstraints(MeshType &mesh,
+                                              const Parameter &SParam,
+                                              std::vector<std::pair<int,int> > &IndexC,
+                                              std::vector<ScalarType> &WeightC,
+                                              std::vector<int> &IndexRhs,
+                                              std::vector<ScalarType> &ValueRhs)
+    {
+        int baseIndex=mesh.vert.size();
+        for (size_t i=0;i<SParam.ConstrainedF.size();i++)
+        {
+            //get the index of the current constraint
+            int IndexConstraint=baseIndex+i;
+
+            //add one hard constraint
+            int FaceN=SParam.ConstrainedF[i].numF;
+            assert(FaceN>=0);
+            assert(FaceN<mesh.face.size());
+            assert(mesh.face[FaceN].VN()==SParam.ConstrainedF[i].BarycentricW.size());
+
+            //then add all the weights to impose the constraint
+            for (size_t j=0;j<mesh.face[FaceN].VN();j++)
+            {
+                //get the current weight
+                ScalarType currW=SParam.ConstrainedF[i].BarycentricW[j];
+
+                //get the index of the current vertex
+                int FaceVert=vcg::tri::Index(mesh,mesh.face[FaceN].V(j));
+
+                //then add the constraints componentwise
+                for (int k=0;k<3;k++)
+                {
+                    //multiply times 3 per component
+                    int IndexV=(FaceVert*3)+k;
+
+                    //get the index of the current constraint
+                    int ComponentConstraint=(IndexConstraint*3)+k;
+                    IndexC.push_back(std::pair<int,int>(ComponentConstraint,IndexV));
+
+                    WeightC.push_back(currW*PENALTY);
+
+                    IndexC.push_back(std::pair<int,int>(IndexV,ComponentConstraint));
+                    WeightC.push_back(currW*PENALTY);
+
+                    //this to avoid the 1 on diagonal last entry of mass matrix
+                    IndexC.push_back(std::pair<int,int>(ComponentConstraint,ComponentConstraint));
+                    WeightC.push_back(-1);
+                }
+            }
+
+            for (int j=0;j<3;j++)
+            {
+                //get the index of the current constraint
+                int ComponentConstraint=(IndexConstraint*3)+j;
+
+                //get per component value
+                ScalarType ComponentV=SParam.ConstrainedF[i].TargetPos.V(j);
+
+                //add the diagonal value
+                IndexRhs.push_back(ComponentConstraint);
+                ValueRhs.push_back(ComponentV*PENALTY);
+            }
+
+        }
+    }
+
 public:
 
 
-
-    //static void Smooth
-    //    static void SmoothLIbIGL(MeshType &mesh,
-    //                             ScalarType lambda=0.5)//0.0001)
-    //    {
-    //        Eigen::MatrixXi F;
-    //        Eigen::MatrixXd V,U;
-    //        vcg::tri::MeshToMatrix<MeshType>::GetTriMeshData(mesh,F,V);
-    //        U=V;
-
-    //        Eigen::SparseMatrix<ScalarType> L,M;
-    //        igl::cotmatrix(V,F,L);
-
-    //        //compute the mass matrix
-    //        static bool computed=false;
-    //        igl::massmatrix(V,F,igl::MASSMATRIX_TYPE_BARYCENTRIC,M);
-    //        M.setIdentity();
-    //        computed=true;
-
-    //        //const auto & S = (M - 0.001*L);
-    //        Eigen::SparseMatrix<double> S = (M - lambda*L);
-
-
-    //        Eigen::SimplicialLLT<Eigen::SparseMatrix<double > > solver(S);
-    //        assert(solver.info() == Eigen::Success);
-
-    //        U = solver.solve(M*U).eval();
-    //        // Normalize to unit surface area (important for numerics)
-    //        U.array() /= sqrt(M.diagonal().array().sum());
-
-    //        //then assing per vertex positions
-    //        printf("smoothed \n");
-    //        fflush(stdout);
-    //        for (size_t i=0;i<mesh.vert.size();i++)
-    //        {
-    //            mesh.vert[i].P().X()=U(i,0);
-    //            mesh.vert[i].P().Y()=U(i,1);
-    //            mesh.vert[i].P().Z()=U(i,2);
-    //        }
-    //    }
-
-static void Compute(MeshType &mesh, Parameter &SParam)
+    static void Compute(MeshType &mesh, Parameter &SParam)
     {
+        //calculate the size of the system
+        int matr_size=mesh.vert.size()+SParam.ConstrainedF.size();
 
         //the laplacian and the mass matrix
-        Eigen::SparseMatrix<ScalarType> L,M;
+        Eigen::SparseMatrix<ScalarType> L,M,B;
 
         //initialize the mass matrix
         std::vector<std::pair<int,int> > IndexM;
@@ -247,44 +241,73 @@ static void Compute(MeshType &mesh, Parameter &SParam)
 
         //add the entries for mass matrix
         if (SParam.useMassMatrix) MeshToMatrix<MeshType>::MassMatrixEntry(mesh,IndexM,ValuesM);
+        //then add entries for lagrange mult due to barycentric constraints
+        for (int i=0;i<SParam.ConstrainedF.size();i++)
+        {
+            int baseIndex=(mesh.vert.size()+i)*3;
+            for (int j=0;j<3;j++)
+            {
+                IndexM.push_back(std::pair<int,int>(baseIndex+j,baseIndex+j));
+                ValuesM.push_back(1);
+            }
+        }
+        //add the hard constraints
+        CollectHardConstraints(mesh,SParam,IndexM,ValuesM);
+        //initialize sparse mass matrix
+        InitSparse(IndexM,ValuesM,matr_size*3,matr_size*3,M);
+
+        //initialize the barycentric matrix
+        std::vector<std::pair<int,int> > IndexB;
+        std::vector<ScalarType> ValuesB;
+
+        std::vector<int> IndexRhs;
+        std::vector<ScalarType> ValuesRhs;
 
         //then also collect hard constraints
-        //CollectHardConstraints(mesh,SParam,IndexM,ValuesM);
-
-        //initialize sparse mass matrix
-        InitSparse(IndexM,ValuesM,mesh.vert.size()*3,mesh.vert.size()*3,M);
+        CollectBarycentricConstraints(mesh,SParam,IndexB,ValuesB,IndexRhs,ValuesRhs);
+        //initialize sparse constraint matrix
+        InitSparse(IndexB,ValuesB,matr_size*3,matr_size*3,B);
 
         //get the entries for laplacian matrix
         std::vector<std::pair<int,int> > IndexL;
         std::vector<ScalarType> ValuesL;
-        MeshToMatrix<MeshType>::GetLaplacianMatrix(mesh,IndexL,ValuesL,false);//SParam.useCotWeight);
+        MeshToMatrix<MeshType>::GetLaplacianMatrix(mesh,IndexL,ValuesL,SParam.useCotWeight);
 
         //initialize sparse laplacian matrix
-        InitSparse(IndexL,ValuesL,mesh.vert.size()*3,mesh.vert.size()*3,L);
+        InitSparse(IndexL,ValuesL,matr_size*3,matr_size*3,L);
+
+        for (int i=0;i<(SParam.degree-1);i++)L=L*L;
 
         //then solve the system
-        Eigen::SparseMatrix<ScalarType> S = (M + SParam.lambda*L);
+        Eigen::SparseMatrix<ScalarType> S = (M + B + SParam.lambda*L);
 
         //SimplicialLDLT
-        Eigen::SimplicialLDLT<Eigen::SparseMatrix<ScalarType > > solver(S);
-        printf("output %d \n",solver.info());
-        fflush(stdout);
+        Eigen::SimplicialCholesky<Eigen::SparseMatrix<ScalarType > > solver(S);
         assert(solver.info() == Eigen::Success);
 
-        int size=mesh.vert.size()*3;
-        MatrixXm V(size,1);
+        MatrixXm V(matr_size*3,1);
 
+        //set the first part of the matrix with vertex values
         for (size_t i=0;i<mesh.vert.size();i++)
         {
             int index=i*3;
-            assert(index<size);
             V(index,0)=mesh.vert[i].P().X();
             V(index+1,0)=mesh.vert[i].P().Y();
             V(index+2,0)=mesh.vert[i].P().Z();
         }
 
+        //then set the second part by considering RHS gien by barycentric constraint
+        for (size_t i=0;i<IndexRhs.size();i++)
+        {
+            int index=IndexRhs[i];
+            ScalarType val=ValuesRhs[i];
+            V(index,0)=val;
+        }
+
+        //solve the system
         V = solver.solve(M*V).eval();
 
+        //then copy back values
         for (size_t i=0;i<mesh.vert.size();i++)
         {
             int index=i*3;
