@@ -248,7 +248,7 @@ public:
           {
               int currI=(i*3)+j;
               index.push_back(std::pair<int,int>(currI,currI));
-              entry.push_back(h[i]);
+              entry.push_back(h[i]/maxA);
           }
       }
       tri::Allocator<MeshType>::template DeletePerVertexAttribute<ScalarType>(m,h);
@@ -261,7 +261,9 @@ public:
                                  std::vector<ScalarType> &entry,
                                  bool cotangent)
   {
-      for (int i=0;i<3;i++)
+      if (cotangent) vcg::tri::MeshAssert<MeshType>::OnlyTriFace(mesh);
+
+      for (int i=0;i<f.VN();i++)
       {
 
           ScalarType weight = 1;
