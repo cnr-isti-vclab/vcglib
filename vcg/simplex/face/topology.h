@@ -93,8 +93,8 @@ inline typename FaceType::ScalarType DihedralAngleRad(FaceType & f,  const int i
   VertexType *vf0 = f0->V2(i0);
   VertexType *vf1 = f1->V2(i1);
 
-  CoordType n0 = NormalizedNormal(*f0);
-  CoordType n1 = NormalizedNormal(*f1);
+  CoordType n0 = TriangleNormal(*f0).Normalize();
+  CoordType n1 = TriangleNormal(*f1).Normalize();
   ScalarType off0 = n0*vf0->P();
   ScalarType off1 = n1*vf1->P();
 
