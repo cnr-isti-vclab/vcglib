@@ -608,7 +608,7 @@ private:
         //set flags
         vcg::tri::UpdateFlags<TriMesh>::VertexClearV(Tmesh);
         vcg::tri::UpdateFlags<TriMesh>::FaceBorderFromFF(Tmesh);
-        vcg::tri::UpdateFlags<TriMesh>::VertexBorderFromFace(Tmesh);
+        vcg::tri::UpdateFlags<TriMesh>::VertexBorderFromFaceBorder(Tmesh);
     }
 
 public:
