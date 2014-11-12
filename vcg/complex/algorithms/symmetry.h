@@ -191,7 +191,7 @@ public:
         {
             vcg::tri::UpdateTopology<TriMeshType>::FaceFace(tri_mesh);
             vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromFF(tri_mesh);
-            vcg::tri::UpdateFlags<TriMeshType>::VertexBorderFromFace(tri_mesh);
+            vcg::tri::UpdateFlags<TriMeshType>::VertexBorderFromFaceBorder(tri_mesh);
         }
         AlignZeroTr=tri_mesh.bbox.Center();
 
