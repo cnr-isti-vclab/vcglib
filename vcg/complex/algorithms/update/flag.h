@@ -340,13 +340,31 @@ public:
   }
 
   /// Compute the PerVertex Border flag deriving it from the border flag of faces
-  static void VertexBorderFromFace(MeshType &m)
+  static void VertexBorderFromFaceAdj(MeshType &m)
+{
+    RequirePerFaceFlags(m);
+    RequirePerVertexFlags(m);
+    RequirePerFaceAdjacency(m);
+//    tri::MeshAssert<MeshType>::FFAdjacencyIsInitialized(m);
+    VertexClearB(m);
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+      if(!(*fi).IsD())
+      {
+
+        for(int z=0;z<(*fi).VN();++z)
+          if( face::IsBorder(*fi,z))
+          {
+            (*fi).V0(z)->SetB();
+            (*fi).V1(z)->SetB();
+          }
+      }
+  }
+
+  /// Compute the PerVertex Border flag deriving it from the border flag of faces
+  static void VertexBorderFromFaceBorder(MeshType &m)
   {
     RequirePerFaceFlags(m);
     RequirePerVertexFlags(m);
-    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-      (*vi).ClearB();
-
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
       if(!(*fi).IsD())
       {
