@@ -110,7 +110,7 @@ class PoissonSolver
 
         tri::UpdateTopology<MeshType>::FaceFace(mesh);
         tri::UpdateFlags<MeshType>::FaceBorderFromFF(mesh);
-        tri::UpdateFlags<MeshType>::VertexBorderFromFace(mesh);
+        tri::UpdateFlags<MeshType>::VertexBorderFromFaceBorder(mesh);
 
         ScalarType dmax=0;
         v0=NULL;
