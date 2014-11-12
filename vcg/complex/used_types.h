@@ -7,6 +7,7 @@
 #include <vcg/math/shot.h>
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/triangle3.h>
+#include <vcg/space/polygon3.h>
 
 #include <vcg/container/derivation_chain.h>
 #include <vcg/complex/all_types.h>

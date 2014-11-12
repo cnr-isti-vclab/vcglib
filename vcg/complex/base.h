@@ -264,6 +264,7 @@ class TriMesh
                 PerVertexAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,VertContainer>(ah,n){}
     };
 
+
     template <class ATTR_TYPE>
     class PerFaceAttributeHandle: public AttributeHandle<ATTR_TYPE,FaceContainer>{
     public:
@@ -293,6 +294,17 @@ class TriMesh
         int n_attr;
         ATTR_TYPE & operator ()(){ return *((Attribute<ATTR_TYPE> *)_handle)->attribute;}
     };
+
+    // Some common Handle typedefs to simplify use
+    typedef typename MeshType::template PerVertexAttributeHandle<ScalarType> PerVertexScalarHandle;
+    typedef typename MeshType::template PerVertexAttributeHandle<int>        PerVertexIntHandle;
+    typedef typename MeshType::template PerVertexAttributeHandle<bool>       PerVertexBoolHandle;
+    typedef typename MeshType::template PerVertexAttributeHandle<CoordType>  PerVertexCoordHandle;
+
+    typedef typename MeshType::template PerFaceAttributeHandle<ScalarType> PerFaceScalarHandle;
+    typedef typename MeshType::template PerFaceAttributeHandle<int>        PerFaceIntHandle;
+    typedef typename MeshType::template PerFaceAttributeHandle<bool>       PerFaceBoolHandle;
+    typedef typename MeshType::template PerFaceAttributeHandle<CoordType>  PerFaceCoordHandle;
 
 
     // the camera member (that should keep the intrinsics) is no more needed since 2006, when intrisncs moved into the Shot structure
