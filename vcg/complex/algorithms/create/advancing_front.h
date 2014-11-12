@@ -66,7 +66,7 @@ template <class MESH> class AdvancingFront {
 
 
     UpdateFlags<MESH>::FaceBorderFromNone(mesh);
-    UpdateFlags<MESH>::VertexBorderFromFace(mesh);
+    UpdateFlags<MESH>::VertexBorderFromFaceBorder(mesh);
 
     nb.clear();
     nb.resize(mesh.vert.size(), 0);
@@ -343,7 +343,7 @@ public:
 protected:
   void AddFace(int v0, int v1, int v2) {
     FaceIterator fi = vcg::tri::Allocator<MESH>::AddFace(mesh,v0,v1,v2);
-    ComputeNormalizedNormal(*fi);
+    fi->N() = TriangleNormal(*fi).Normalize();
     if(tri::HasVFAdjacency(mesh))
     {
       for(int j=0;j<3;++j)

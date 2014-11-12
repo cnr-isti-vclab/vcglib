@@ -503,7 +503,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   if(vpp.triangulateRegion)
   {
     tri::UpdateFlags<MeshType>::FaceBorderFromFF(outMesh);
-    tri::UpdateFlags<MeshType>::VertexBorderFromFace(outMesh);
+    tri::UpdateFlags<MeshType>::VertexBorderFromFaceBorder(outMesh);
     for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi) if(!fi->IsD())
     {
       for(int i=0;i<3;++i)
@@ -734,7 +734,7 @@ static void ConvertVoronoiDiagramToMeshOld(MeshType &m,
   tri::Allocator<MeshType>::CompactEveryVector(outMesh);
   tri::UpdateTopology<MeshType>::FaceFace(outMesh);
   tri::UpdateFlags<MeshType>::FaceBorderFromFF(outMesh);
-  tri::UpdateFlags<MeshType>::VertexBorderFromFace(outMesh);
+  tri::UpdateFlags<MeshType>::VertexBorderFromFaceBorder(outMesh);
 
   // 3) set up faux bits
   for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi)
@@ -1282,7 +1282,7 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
   }
 
   tri::UpdateFlags<MeshType>::FaceBorderFromVF(m);
-  tri::UpdateFlags<MeshType>::VertexBorderFromFace(m);
+  tri::UpdateFlags<MeshType>::VertexBorderFromFaceBorder(m);
   PerVertexPointerHandle sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   PerVertexBoolHandle fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
   int iter;

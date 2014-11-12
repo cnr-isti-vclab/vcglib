@@ -247,7 +247,7 @@ So it just require that you have correctly computed the flags; one way could be 
 \code
 vcg::tri::UpdateTopology<Mesh>::FaceFace(m.cm);
 vcg::tri::UpdateFlags<Mesh>::FaceBorderFromFF(m.cm);
-vcg::tri::UpdateFlags<Mesh>::VertexBorderFromFace (m.cm);
+vcg::tri::UpdateFlags<Mesh>::VertexBorderFromFaceBorder (m.cm);
 vcg::tri::UpdateColor<Mesh>::PerVertexBorderFlag(m.cm);
 \endcode
 */

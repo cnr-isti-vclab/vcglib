@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -89,40 +89,40 @@ namespace tri{
 
 
 
-/** 
+/**
   This class describe Quadric based collapse operation.
 
-	Requirements:
+    Requirements:
 
-	Vertex 
-	must have:
+    Vertex
+    must have:
    incremental mark
    VF topology
-  
-	must have:
-		members
-      
+
+    must have:
+        members
+
       QuadricType Qd();
-		 
-			ScalarType W() const;
-				A per-vertex Weight that can be used in simplification 
-				lower weight means that error is lowered, 
-				standard: return W==1.0
-				
-			void Merge(MESH_TYPE::vertex_type const & v);
-				Merges the attributes of the current vertex with the ones of v
-				(e.g. its weight with the one of the given vertex, the color ect).
-				Standard: void function;
+
+            ScalarType W() const;
+                A per-vertex Weight that can be used in simplification
+                lower weight means that error is lowered,
+                standard: return W==1.0
+
+            void Merge(MESH_TYPE::vertex_type const & v);
+                Merges the attributes of the current vertex with the ones of v
+                (e.g. its weight with the one of the given vertex, the color ect).
+                Standard: void function;
 
       OtherWise the class should be templated with a static helper class that helps to retrieve these functions.
       If the vertex class exposes these functions a default static helper class is provided.
 
 */
-		//**Helper CLASSES**//
-		template <class VERTEX_TYPE>
-		class QInfoStandard
-		{
-		public:
+        //**Helper CLASSES**//
+        template <class VERTEX_TYPE>
+        class QInfoStandard
+        {
+        public:
       QInfoStandard(){}
       static void Init(){}
       static math::Quadric<double> &Qd(VERTEX_TYPE &v) {return v.Qd();}
@@ -130,7 +130,7 @@ namespace tri{
       static typename VERTEX_TYPE::ScalarType W(VERTEX_TYPE */*v*/) {return 1.0;}
       static typename VERTEX_TYPE::ScalarType W(VERTEX_TYPE &/*v*/) {return 1.0;}
       static void Merge(VERTEX_TYPE & /*v_dest*/, VERTEX_TYPE const & /*v_del*/){}
-		};
+        };
 
 
 class TriEdgeCollapseQuadricParameter : public BaseParameterClass
@@ -189,11 +189,11 @@ public:
 //		typedef typename TEC::EdgeType EdgeType;
     typedef typename TriEdgeCollapse<TriMeshType, VertexPair, MYTYPE>::HeapType HeapType;
     typedef typename TriEdgeCollapse<TriMeshType, VertexPair, MYTYPE>::HeapElem HeapElem;
-		typedef typename TriMeshType::CoordType CoordType;
-		typedef typename TriMeshType::ScalarType ScalarType;
-		typedef  math::Quadric< double > QuadricType;
-		typedef typename TriMeshType::FaceType FaceType;
-		typedef typename TriMeshType::VertexType VertexType;
+        typedef typename TriMeshType::CoordType CoordType;
+        typedef typename TriMeshType::ScalarType ScalarType;
+        typedef  math::Quadric< double > QuadricType;
+        typedef typename TriMeshType::FaceType FaceType;
+        typedef typename TriMeshType::VertexType VertexType;
     typedef TriEdgeCollapseQuadricParameter QParameter;
     typedef HelperType QH;
 
@@ -203,19 +203,19 @@ public:
 //		}
 
 
-		// puntatori ai vertici che sono stati messi non-w per preservare il boundary
-		static std::vector<typename TriMeshType::VertexPointer>  & WV(){
+        // puntatori ai vertici che sono stati messi non-w per preservare il boundary
+        static std::vector<typename TriMeshType::VertexPointer>  & WV(){
       static std::vector<typename TriMeshType::VertexPointer> _WV; return _WV;
-    }; 
+    };
 
-	inline TriEdgeCollapseQuadric(){}
+    inline TriEdgeCollapseQuadric(){}
 
     inline TriEdgeCollapseQuadric(const VertexPair &p, int i, BaseParameterClass *pp)
-		{
-				this->localMark = i;
-				this->pos=p;
+        {
+                this->localMark = i;
+                this->pos=p;
         this->_priority = ComputePriority(pp);
-		}
+        }
 
 
     inline bool IsFeasible(BaseParameterClass *_pp){
@@ -238,8 +238,8 @@ public:
     EdgeCollapser<TriMeshType,VertexPair>::Do(m, this->pos, newPos); // v0 is deleted and v1 take the new position
   }
 
-  
-    
+
+
     // Final Clean up after the end of the simplification process
     static void Finalize(TriMeshType &m, HeapType& /*h_ret*/, BaseParameterClass *_pp)
     {
@@ -249,7 +249,7 @@ public:
       if(pp->FastPreserveBoundary)
       {
         typename 	TriMeshType::VertexIterator  vi;
-    	  for(vi=m.vert.begin();vi!=m.vert.end();++vi) 
+          for(vi=m.vert.begin();vi!=m.vert.end();++vi)
           if(!(*vi).IsD()) (*vi).SetW();
       }
       if(pp->PreserveBoundary)
@@ -324,31 +324,31 @@ public:
                 }
             }
     }
-		else 
-    { // if the collapse is A-symmetric (e.g. u->v != v->u) 
-			for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-				if(!(*vi).IsD() && (*vi).IsRW())
-					{
-						vcg::face::VFIterator<FaceType> x;
-						UnMarkAll(m);
-						for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x)
-						{
-							assert(x.F()->V(x.I())==&(*vi));
-							if(x.V()->IsRW() && x.V1()->IsRW() && !IsMarked(m,x.F()->V1(x.I()))){
+        else
+    { // if the collapse is A-symmetric (e.g. u->v != v->u)
+            for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+                if(!(*vi).IsD() && (*vi).IsRW())
+                    {
+                        vcg::face::VFIterator<FaceType> x;
+                        UnMarkAll(m);
+                        for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x)
+                        {
+                            assert(x.F()->V(x.I())==&(*vi));
+                            if(x.V()->IsRW() && x.V1()->IsRW() && !IsMarked(m,x.F()->V1(x.I()))){
                     h_ret.push_back( HeapElem( new MYTYPE( VertexPair (x.V(),x.V1()),TriEdgeCollapse< TriMeshType,VertexPair,MYTYPE>::GlobalMark(),_pp)));
-										}
-							if(x.V()->IsRW() && x.V2()->IsRW() && !IsMarked(m,x.F()->V2(x.I()))){
+                                        }
+                            if(x.V()->IsRW() && x.V2()->IsRW() && !IsMarked(m,x.F()->V2(x.I()))){
                     h_ret.push_back( HeapElem( new MYTYPE( VertexPair (x.V(),x.V2()),TriEdgeCollapse< TriMeshType,VertexPair,MYTYPE>::GlobalMark(),_pp)));
-									}
-						}
-					}	
-	  }
+                                    }
+                        }
+                    }
+      }
 }
   static float HeapSimplexRatio(BaseParameterClass *_pp) {return IsSymmetric(_pp)?5.0f:9.0f;}
   static bool IsSymmetric(BaseParameterClass *_pp) {return ((QParameter *)_pp)->OptimalPlacement;}
   static bool IsVertexStable(BaseParameterClass *_pp) {return !((QParameter *)_pp)->OptimalPlacement;}
 
-	
+
 ///*
 //	Funzione principale di valutazione dell'errore del collasso.
 //	In pratica simula il collasso vero e proprio.
@@ -358,96 +358,96 @@ public:
   ScalarType ComputePriority(BaseParameterClass *_pp)
   {
     QParameter *pp=(QParameter *)_pp;
-		ScalarType error;
-		typename vcg::face::VFIterator<FaceType> x;
-		std::vector<CoordType> on; // original normals
-		typename TriMeshType::VertexType * v[2];
-		v[0] = this->pos.V(0);
-		v[1] = this->pos.V(1);
+        ScalarType error;
+        typename vcg::face::VFIterator<FaceType> x;
+        std::vector<CoordType> on; // original normals
+        typename TriMeshType::VertexType * v[2];
+        v[0] = this->pos.V(0);
+        v[1] = this->pos.V(1);
 
     if(pp->NormalCheck){ // Compute maximal normal variation
-			// store the old normals for non-collapsed face in v0
-			for(x.F() = v[0]->VFp(), x.I() = v[0]->VFi(); x.F()!=0; ++x )	 // for all faces in v0		
-				if(x.F()->V(0)!=v[1] && x.F()->V(1)!=v[1] && x.F()->V(2)!=v[1] ) // skip faces with v1
-					on.push_back(NormalizedNormal(*x.F()));
-				// store the old normals for non-collapsed face in v1
-				for(x.F() = v[1]->VFp(), x.I() = v[1]->VFi(); x.F()!=0; ++x )	 // for all faces in v1	
-					if(x.F()->V(0)!=v[0] && x.F()->V(1)!=v[0] && x.F()->V(2)!=v[0] ) // skip faces with v0
-						on.push_back(NormalizedNormal(*x.F()));
-			}
+            // store the old normals for non-collapsed face in v0
+            for(x.F() = v[0]->VFp(), x.I() = v[0]->VFi(); x.F()!=0; ++x )	 // for all faces in v0
+                if(x.F()->V(0)!=v[1] && x.F()->V(1)!=v[1] && x.F()->V(2)!=v[1] ) // skip faces with v1
+                    on.push_back(TriangleNormal(*x.F()).Normalize());
+                // store the old normals for non-collapsed face in v1
+                for(x.F() = v[1]->VFp(), x.I() = v[1]->VFi(); x.F()!=0; ++x )	 // for all faces in v1
+                    if(x.F()->V(0)!=v[0] && x.F()->V(1)!=v[0] && x.F()->V(2)!=v[0] ) // skip faces with v0
+                        on.push_back(TriangleNormal(*x.F()).Normalize());
+            }
 
-		//// Move the two vertexe  into new position (storing the old ones)
-		CoordType OldPos0=v[0]->P();
-		CoordType OldPos1=v[1]->P();
+        //// Move the two vertexe  into new position (storing the old ones)
+        CoordType OldPos0=v[0]->P();
+        CoordType OldPos1=v[1]->P();
     if(pp->OptimalPlacement)	 { v[0]->P() = ComputeMinimal(); v[1]->P()=v[0]->P();}
-				else  v[0]->P() = v[1]->P();
+                else  v[0]->P() = v[1]->P();
 
-		//// Rescan faces and compute quality and difference between normals
-		int i;
-		double ndiff,MinCos  = 1e100; // minimo coseno di variazione di una normale della faccia 
-																	// (e.g. max angle) Mincos varia da 1 (normali coincidenti) a
-																	// -1 (normali opposte);
-		double qt,   MinQual = 1e100;
-		CoordType nn;
-		for(x.F() = v[0]->VFp(), x.I() = v[0]->VFi(),i=0; x.F()!=0; ++x )	// for all faces in v0		
-			if(x.F()->V(0)!=v[1] && x.F()->V(1)!=v[1] && x.F()->V(2)!=v[1] )		// skip faces with v1
-			{
+        //// Rescan faces and compute quality and difference between normals
+        int i;
+        double ndiff,MinCos  = 1e100; // minimo coseno di variazione di una normale della faccia
+                                                                    // (e.g. max angle) Mincos varia da 1 (normali coincidenti) a
+                                                                    // -1 (normali opposte);
+        double qt,   MinQual = 1e100;
+        CoordType nn;
+        for(x.F() = v[0]->VFp(), x.I() = v[0]->VFi(),i=0; x.F()!=0; ++x )	// for all faces in v0
+            if(x.F()->V(0)!=v[1] && x.F()->V(1)!=v[1] && x.F()->V(2)!=v[1] )		// skip faces with v1
+            {
         if(pp->NormalCheck){
-					nn=NormalizedNormal(*x.F());
-					ndiff=nn.dot(on[i++]);
-					if(ndiff<MinCos) MinCos=ndiff;
-				}
+                    nn=TriangleNormal(*x.F()).Normalize();
+                    ndiff=nn.dot(on[i++]);
+                    if(ndiff<MinCos) MinCos=ndiff;
+                }
         if(pp->QualityCheck){
-					qt= QualityFace(*x.F());
-					if(qt<MinQual) MinQual=qt;
-				}
-			}
-		for(x.F() = v[1]->VFp(), x.I() = v[1]->VFi(),i=0; x.F()!=0; ++x )		// for all faces in v1	
-			if(x.F()->V(0)!=v[0] && x.F()->V(1)!=v[0] && x.F()->V(2)!=v[0] )			// skip faces with v0
-			{
+                    qt= QualityFace(*x.F());
+                    if(qt<MinQual) MinQual=qt;
+                }
+            }
+        for(x.F() = v[1]->VFp(), x.I() = v[1]->VFi(),i=0; x.F()!=0; ++x )		// for all faces in v1
+            if(x.F()->V(0)!=v[0] && x.F()->V(1)!=v[0] && x.F()->V(2)!=v[0] )			// skip faces with v0
+            {
         if(pp->NormalCheck){
-					nn=NormalizedNormal(*x.F());
-					ndiff=nn.dot(on[i++]);
-					if(ndiff<MinCos) MinCos=ndiff;
-				}
+                    nn=TriangleNormal(*x.F()).Normalize();
+                    ndiff=nn.dot(on[i++]);
+                    if(ndiff<MinCos) MinCos=ndiff;
+                }
         if(pp->QualityCheck){
-					qt= QualityFace(*x.F());
-					if(qt<MinQual) MinQual=qt;
-				}
-			}
+                    qt= QualityFace(*x.F());
+                    if(qt<MinQual) MinQual=qt;
+                }
+            }
 
     QuadricType qq=QH::Qd(v[0]);
     qq+=QH::Qd(v[1]);
-		Point3d tpd=Point3d::Construct(v[1]->P());
+        Point3d tpd=Point3d::Construct(v[1]->P());
     double QuadErr = pp->ScaleFactor*qq.Apply(tpd);
 
-		// All collapses involving triangles with quality larger than <QualityThr> has no penalty;
+        // All collapses involving triangles with quality larger than <QualityThr> has no penalty;
     if(MinQual>pp->QualityThr) MinQual=pp->QualityThr;
-				
+
     if(pp->NormalCheck){
-			// All collapses where the normal vary less  than <NormalThr> (e.g. more than CosineThr)
-			// have no penalty
+            // All collapses where the normal vary less  than <NormalThr> (e.g. more than CosineThr)
+            // have no penalty
       if(MinCos>pp->CosineThr) MinCos=pp->CosineThr;
-			MinCos=(MinCos+1)/2.0; // Now it is in the range 0..1 with 0 very dangerous!
-		}
-		
+            MinCos=(MinCos+1)/2.0; // Now it is in the range 0..1 with 0 very dangerous!
+        }
+
     if(QuadErr<pp->QuadricEpsilon) QuadErr=pp->QuadricEpsilon;
-		
+
     if( pp->UseVertexWeight ) QuadErr *= (QH::W(v[1])+QH::W(v[0]))/2;
-		
+
     if(!pp->QualityCheck && !pp->NormalCheck) error = (ScalarType)(QuadErr);
     if( pp->QualityCheck && !pp->NormalCheck) error = (ScalarType)(QuadErr / MinQual);
     if(!pp->QualityCheck &&  pp->NormalCheck) error = (ScalarType)(QuadErr / MinCos);
     if( pp->QualityCheck &&  pp->NormalCheck) error = (ScalarType)(QuadErr / (MinQual*MinCos));
-																							           
-		//Rrestore old position of v0 and v1
-		v[0]->P()=OldPos0;
-		v[1]->P()=OldPos1;
-		this->_priority = error;
-		return this->_priority;
-	}
 
-//	
+        //Rrestore old position of v0 and v1
+        v[0]->P()=OldPos0;
+        v[1]->P()=OldPos1;
+        this->_priority = error;
+        return this->_priority;
+    }
+
+//
 //static double MaxError() {return 1e100;}
 //
   inline  void UpdateHeap(HeapType & h_ret,BaseParameterClass *_pp)
@@ -510,72 +510,72 @@ public:
   static void InitQuadric(TriMeshType &m,BaseParameterClass *_pp)
 {
   QParameter *pp=(QParameter *)_pp;
-	typename TriMeshType::FaceIterator pf;
-	typename TriMeshType::VertexIterator pv;
-	int j;
+    typename TriMeshType::FaceIterator pf;
+    typename TriMeshType::VertexIterator pv;
+    int j;
   QH::Init();
-	//	m.ClearFlags();
-	for(pv=m.vert.begin();pv!=m.vert.end();++pv)		// Azzero le quadriche
-		if( ! (*pv).IsD() && (*pv).IsW()) 	
+    //	m.ClearFlags();
+    for(pv=m.vert.begin();pv!=m.vert.end();++pv)		// Azzero le quadriche
+        if( ! (*pv).IsD() && (*pv).IsW())
       QH::Qd(*pv).SetZero();
 
-		
-	for(pf=m.face.begin();pf!=m.face.end();++pf)
-		if( !(*pf).IsD() && (*pf).IsR() )
-			if((*pf).V(0)->IsR() &&(*pf).V(1)->IsR() &&(*pf).V(2)->IsR())
-					{
-						QuadricType q;
-						Plane3<ScalarType,false> p;
-							// Calcolo piano
-						p.SetDirection( ( (*pf).V(1)->cP() - (*pf).V(0)->cP() ) ^  ( (*pf).V(2)->cP() - (*pf).V(0)->cP() ));
-							// Se normalizzo non dipende dall'area
+
+    for(pf=m.face.begin();pf!=m.face.end();++pf)
+        if( !(*pf).IsD() && (*pf).IsR() )
+            if((*pf).V(0)->IsR() &&(*pf).V(1)->IsR() &&(*pf).V(2)->IsR())
+                    {
+                        QuadricType q;
+                        Plane3<ScalarType,false> p;
+                            // Calcolo piano
+                        p.SetDirection( ( (*pf).V(1)->cP() - (*pf).V(0)->cP() ) ^  ( (*pf).V(2)->cP() - (*pf).V(0)->cP() ));
+                            // Se normalizzo non dipende dall'area
 
             if(!pp->UseArea)
-							p.Normalize();
+                            p.Normalize();
 
-						p.SetOffset( p.Direction().dot((*pf).V(0)->cP()));
+                        p.SetOffset( p.Direction().dot((*pf).V(0)->cP()));
 
-							// Calcolo quadrica	delle facce
-						q.ByPlane(p);
+                            // Calcolo quadrica	delle facce
+                        q.ByPlane(p);
 
-						for(j=0;j<3;++j)
-              if( (*pf).V(j)->IsW() )	
-								{
+                        for(j=0;j<3;++j)
+              if( (*pf).V(j)->IsW() )
+                                {
                   if(pp->QualityWeight)
-												q*=(*pf).V(j)->Q();
-									QH::Qd((*pf).V(j)) += q;				// Sommo la quadrica ai vertici
-								}
-						
-						for(j=0;j<3;++j)
-              if( (*pf).IsB(j) || pp->QualityQuadric )				// Bordo!
-							{
-								Plane3<ScalarType,false> pb;						// Piano di bordo
+                                                q*=(*pf).V(j)->Q();
+                                    QH::Qd((*pf).V(j)) += q;				// Sommo la quadrica ai vertici
+                                }
 
-								// Calcolo la normale al piano di bordo e la sua distanza
-								// Nota che la lunghezza dell'edge DEVE essere Normalizzata 
-								// poiche' la pesatura in funzione dell'area e'gia fatta in p.Direction() 
-								// Senza la normalize il bordo e' pesato in funzione della grandezza della mesh (mesh grandi non decimano sul bordo)
-								pb.SetDirection(p.Direction() ^ ( (*pf).V1(j)->cP() - (*pf).V(j)->cP() ).normalized());
+                        for(j=0;j<3;++j)
+              if( (*pf).IsB(j) || pp->QualityQuadric )				// Bordo!
+                            {
+                                Plane3<ScalarType,false> pb;						// Piano di bordo
+
+                                // Calcolo la normale al piano di bordo e la sua distanza
+                                // Nota che la lunghezza dell'edge DEVE essere Normalizzata
+                                // poiche' la pesatura in funzione dell'area e'gia fatta in p.Direction()
+                                // Senza la normalize il bordo e' pesato in funzione della grandezza della mesh (mesh grandi non decimano sul bordo)
+                                pb.SetDirection(p.Direction() ^ ( (*pf).V1(j)->cP() - (*pf).V(j)->cP() ).normalized());
                 if(  (*pf).IsB(j) ) pb.SetDirection(pb.Direction()* (ScalarType)pp->BoundaryWeight);        // amplify border planes
                                else pb.SetDirection(pb.Direction()* (ScalarType)(pp->BoundaryWeight/100.0)); // and consider much less quadric for quality
-								pb.SetOffset(pb.Direction().dot((*pf).V(j)->cP()));
-								q.ByPlane(pb);
+                                pb.SetOffset(pb.Direction().dot((*pf).V(j)->cP()));
+                                q.ByPlane(pb);
 
-								if( (*pf).V (j)->IsW() )	QH::Qd((*pf).V (j)) += q;			// Sommo le quadriche
-								if( (*pf).V1(j)->IsW() )	QH::Qd((*pf).V1(j)) += q;
-							}
-					}
-   
+                                if( (*pf).V (j)->IsW() )	QH::Qd((*pf).V (j)) += q;			// Sommo le quadriche
+                                if( (*pf).V1(j)->IsW() )	QH::Qd((*pf).V1(j)) += q;
+                            }
+                    }
+
   if(pp->ScaleIndependent)
-	{
-		vcg::tri::UpdateBounding<TriMeshType>::Box(m);
-		//Make all quadric independent from mesh size
+    {
+        vcg::tri::UpdateBounding<TriMeshType>::Box(m);
+        //Make all quadric independent from mesh size
     pp->ScaleFactor = 1e8*pow(1.0/m.bbox.Diag(),6); // scaling factor
     //pp->ScaleFactor *=pp->ScaleFactor ;
     //pp->ScaleFactor *=pp->ScaleFactor ;
     //printf("Scale factor =%f\n",pp->ScaleFactor );
-		//printf("bb (%5.2f %5.2f %5.2f)-(%5.2f %5.2f %5.2f) Diag %f\n",m.bbox.min[0],m.bbox.min[1],m.bbox.min[2],m.bbox.max[0],m.bbox.max[1],m.bbox.max[2],m.bbox.Diag());
-	}				
+        //printf("bb (%5.2f %5.2f %5.2f)-(%5.2f %5.2f %5.2f) Diag %f\n",m.bbox.min[0],m.bbox.min[1],m.bbox.min[2],m.bbox.max[0],m.bbox.max[1],m.bbox.max[2],m.bbox.Diag());
+    }
 }
 
 
@@ -594,33 +594,33 @@ public:
 //	}
 //
  CoordType ComputeMinimal()
-{	
-		typename TriMeshType::VertexType * v[2];
-		v[0] = this->pos.V(0);
-		v[1] = this->pos.V(1);
-		QuadricType q=QH::Qd(v[0]);
-		q+=QH::Qd(v[1]);
-		
+{
+        typename TriMeshType::VertexType * v[2];
+        v[0] = this->pos.V(0);
+        v[1] = this->pos.V(1);
+        QuadricType q=QH::Qd(v[0]);
+        q+=QH::Qd(v[1]);
+
     Point3<QuadricType::ScalarType> x;
-		
+
     bool rt=q.Minimum(x);
-		if(!rt) { // if the computation of the minimum fails we choose between the two edge points and the middle one.
-			Point3<QuadricType::ScalarType> x0=Point3d::Construct(v[0]->P());
-		  Point3<QuadricType::ScalarType> x1=Point3d::Construct(v[1]->P());
+        if(!rt) { // if the computation of the minimum fails we choose between the two edge points and the middle one.
+            Point3<QuadricType::ScalarType> x0=Point3d::Construct(v[0]->P());
+          Point3<QuadricType::ScalarType> x1=Point3d::Construct(v[1]->P());
       x.Import((v[0]->P()+v[1]->P())/2);
-			double qvx=q.Apply(x);
-			double qv0=q.Apply(x0);
-			double qv1=q.Apply(x1);
+            double qvx=q.Apply(x);
+            double qv0=q.Apply(x0);
+            double qv1=q.Apply(x1);
       if(qv0<qvx) x=x0;
-			if(qv1<qvx && qv1<qv0) x=x1;
-		}
-		
+            if(qv1<qvx && qv1<qv0) x=x1;
+        }
+
     return CoordType::Construct(x);
 }
 //
 //
 
 };
-		} // namespace tri
-	} // namespace vcg
+        } // namespace tri
+    } // namespace vcg
 #endif

@@ -376,7 +376,7 @@ void SphericalCap(MeshType &in, float angleRad, const int subdiv = 3 )
     tri::Refine(in, MidPoint<MeshType>(&in));
 
     tri::UpdateFlags<MeshType>::FaceBorderFromFF(in);
-    tri::UpdateFlags<MeshType>::VertexBorderFromFace(in);
+    tri::UpdateFlags<MeshType>::VertexBorderFromFaceBorder(in);
 
     for(int i=0;i<in.vn;++i)
       if(in.vert[i].IsB())
@@ -1015,6 +1015,7 @@ void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float in
   typedef typename MeshType::CoordType CoordType;
   if(height==0) height = mIn.bbox.Diag()/100.0f;
   if(inset==0) inset = mIn.bbox.Diag()/200.0f;
+  tri::UpdateTopology<MeshType>::FaceFace(mIn);
   tri::UpdateFlags<MeshType>::FaceClearV(mIn);
   for(size_t i=0;i<mIn.face.size();++i) if(!mIn.face[i].IsV())
   {
@@ -1065,6 +1066,7 @@ void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float in
 
     if(smoothFlag)
     {
+      faceM.face.EnableFFAdjacency();
       tri::UpdateTopology<MeshType>::FaceFace(faceM);
       tri::UpdateFlags<MeshType>::FaceBorderFromFF(faceM);
       tri::Refine(faceM, MidPoint<MeshType>(&faceM),0,true);

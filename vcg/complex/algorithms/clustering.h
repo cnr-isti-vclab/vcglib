@@ -255,10 +255,10 @@ class Clustering
     else
       Grid.siz = Point3i::Construct(Grid.dim / _cellsize);
 
-				// find voxel size
-		Grid.voxel[0] = Grid.dim[0]/Grid.siz[0];
-		Grid.voxel[1] = Grid.dim[1]/Grid.siz[1];
-		Grid.voxel[2] = Grid.dim[2]/Grid.siz[2];
+                // find voxel size
+        Grid.voxel[0] = Grid.dim[0]/Grid.siz[0];
+        Grid.voxel[1] = Grid.dim[1]/Grid.siz[1];
+        Grid.voxel[2] = Grid.dim[2]/Grid.siz[2];
   }
 
   BasicGrid<ScalarType> Grid;
@@ -277,18 +277,18 @@ class Clustering
   STDEXT::hash_map<HashedPoint3i,CellType> GridCell;
 
 
-	void AddPointSet(MeshType &m, bool UseOnlySelected=false)
-	{
-		VertexIterator vi;
-		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-			if(!(*vi).IsD())
-				if(!UseOnlySelected || (*vi).IsS())
-					{
-						HashedPoint3i pi;
-						Grid.PToIP((*vi).cP(), pi );
-						GridCell[pi].AddVertex(m,Grid,pi,*(vi));
-					}
-	}
+    void AddPointSet(MeshType &m, bool UseOnlySelected=false)
+    {
+        VertexIterator vi;
+        for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+            if(!(*vi).IsD())
+                if(!UseOnlySelected || (*vi).IsS())
+                    {
+                        HashedPoint3i pi;
+                        Grid.PToIP((*vi).cP(), pi );
+                        GridCell[pi].AddVertex(m,Grid,pi,*(vi));
+                    }
+    }
 
   void AddMesh(MeshType &m)
   {
@@ -377,7 +377,7 @@ class Clustering
       // the best orientation according to the averaged normal
       if(!DuplicateFaceParam)
       {
-          CoordType N=vcg::Normal(m.face[i]);
+          CoordType N=TriangleNormal(m.face[i]);
       int badOrient=0;
       if( N.dot((*ti).v[0]->N()) <0) ++badOrient;
       if( N.dot((*ti).v[1]->N()) <0) ++badOrient;

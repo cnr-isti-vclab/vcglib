@@ -94,7 +94,7 @@ public:
     assert(e0.IsBorder());
     e1=e0;
     e1.NextB();
-    n=vcg::Normal<TrivialEar>(*this);
+    n=TriangleNormal<TrivialEar>(*this);
     ComputeQuality();
     ComputeAngle();
   }
@@ -159,7 +159,7 @@ public:
     (*f).V(0) = e0.VFlip();
     (*f).V(1) = e0.v;
     (*f).V(2) = e1.v;
-    face::ComputeNormalizedNormal(*f);
+    f->N() = TriangleNormal(*f).Normalize();
 
     face::FFAttachManifold(f,0,e0.f,e0.z);
     face::FFAttachManifold(f,1,e1.f,e1.z);
@@ -644,8 +644,8 @@ template<class EAR>
 
     static float ComputeDihedralAngle(CoordType  p1,CoordType  p2,CoordType  p3,CoordType  p4)
         {
-            CoordType  n1 = NormalizedNormal(p1,p3,p2);
-            CoordType	 n2 = NormalizedNormal(p1,p2,p4);
+            CoordType  n1 = Normal(p1,p3,p2);
+            CoordType  n2 = Normal(p1,p2,p4);
             return  math::ToDeg(AngleN(n1,n2));
         }
 
