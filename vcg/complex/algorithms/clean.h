@@ -1112,6 +1112,18 @@ public:
     return int(CCV.size());
   }
 
+  static void ComputeValence( MeshType &m, typename MeshType::PerVertexIntHandle &h)
+  {
+    for(VertexIterator vi=m.vert.begin(); vi!= m.vert.end();++vi)
+      h[vi]=0;
+
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+    {
+      if(!((*fi).IsD()))
+        for(int j=0;j<fi->VN();j++)
+          ++h[tri::Index(m,fi->V(j))];
+    }
+  }
 
   /**
             GENUS.
@@ -1385,10 +1397,10 @@ public:
       ScalarType eps = 0.0001; // this epsilon value is in absolute value. It is a distance from edge in baricentric coords.
       //detection stage
       for(FaceIterator fi=m.face.begin();fi!= m.face.end();++fi ) if(!(*fi).IsV())
-      { Point3<ScalarType> NN = vcg::NormalizedNormal((*fi));
-        if( vcg::Angle(NN,vcg::NormalizedNormal(*(*fi).FFp(0))) > NormalThrRad &&
-            vcg::Angle(NN,vcg::NormalizedNormal(*(*fi).FFp(1))) > NormalThrRad &&
-            vcg::Angle(NN,vcg::NormalizedNormal(*(*fi).FFp(2))) > NormalThrRad )
+      { Point3<ScalarType> NN = vcg::TriangleNormal((*fi)).Normalize();
+        if( vcg::AngleN(NN,TriangleNormal(*(*fi).FFp(0)).Normalize()) > NormalThrRad &&
+            vcg::AngleN(NN,TriangleNormal(*(*fi).FFp(1)).Normalize()) > NormalThrRad &&
+            vcg::AngleN(NN,TriangleNormal(*(*fi).FFp(2)).Normalize()) > NormalThrRad )
         {
           (*fi).SetS();
           //(*fi).C()=Color4b(Color4b::Red);
@@ -1397,7 +1409,7 @@ public:
           {
             Point3<ScalarType> &p=(*fi).P2(i);
             Point3<ScalarType> L;
-            bool ret = vcg::InterpolationParameters((*(*fi).FFp(i)),vcg::Normal(*(*fi).FFp(i)),p,L);
+            bool ret = vcg::InterpolationParameters((*(*fi).FFp(i)),TriangleNormal(*(*fi).FFp(i)),p,L);
             if(ret && L[0]>eps && L[1]>eps && L[2]>eps)
             {
               (*fi).FFp(i)->SetS();
