@@ -220,6 +220,29 @@ public:
       return ret;
   }
 
+  template< class VecType >
+  static void PerVertexArea(MeshType &m, VecType &h)
+  {
+    tri::RequireCompactness(m);
+    h.resize(m.vn);
+    for(int i=0;i<m.vn;++i) h[i]=0;
+    for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi)
+    {
+      ScalarType a = DoubleArea(*fi)/6.0;
+      for(int j=0;j<fi->VN();++j)
+        h[tri::Index(m,fi->V(j))] += a;
+    }
+  }
+
+  template< class VecType >
+  static void PerFaceArea(MeshType &m, VecType &h)
+  {
+    tri::RequireCompactness(m);
+    h.resize(m.fn);
+    for(int i=0;i<m.fn;++i)
+        h[i] =DoubleArea(m.face[i])/2.0;
+  }
+
 
   static void MassMatrixEntry(MeshType &m,
                               std::vector<std::pair<int,int> > &index,
