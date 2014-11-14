@@ -297,8 +297,8 @@ static void VertexCoordPlanarLaplacian(MeshType &m, int step, float AngleThrRad 
         for(fi=m.face.begin();fi!=m.face.end();++fi){
                 if(!(*fi).IsD()){
                     for (int j = 0; j < 3; ++j) {
-                        if(Angle( NormalizedNormal(TD[(*fi).V0(j)].sum, (*fi).P1(j), (*fi).P2(j) ),
-                                            NormalizedNormal(   (*fi).P0(j)     , (*fi).P1(j), (*fi).P2(j) ) ) > AngleThrRad )
+                        if(Angle( Normal(TD[(*fi).V0(j)].sum, (*fi).P1(j), (*fi).P2(j) ),
+                                            Normal(   (*fi).P0(j)     , (*fi).P1(j), (*fi).P2(j) ) ) > AngleThrRad )
                             TD[(*fi).V0(j)].sum = (*fi).P0(j);
                     }
                 }
@@ -306,8 +306,8 @@ static void VertexCoordPlanarLaplacian(MeshType &m, int step, float AngleThrRad 
             for(fi=m.face.begin();fi!=m.face.end();++fi){
                 if(!(*fi).IsD()){
                     for (int j = 0; j < 3; ++j) {
-                        if(Angle( NormalizedNormal(TD[(*fi).V0(j)].sum, TD[(*fi).V1(j)].sum, (*fi).P2(j) ),
-                                            NormalizedNormal(   (*fi).P0(j)     ,    (*fi).P1(j),      (*fi).P2(j) ) ) > AngleThrRad )
+                        if(Angle( Normal(TD[(*fi).V0(j)].sum, TD[(*fi).V1(j)].sum, (*fi).P2(j) ),
+                                            Normal(   (*fi).P0(j)     ,    (*fi).P1(j),      (*fi).P2(j) ) ) > AngleThrRad )
                         {
                             TD[(*fi).V0(j)].sum = (*fi).P0(j);
                             TD[(*fi).V1(j)].sum = (*fi).P1(j);
