@@ -95,7 +95,7 @@ public:
           fprintf(fpout,"%d %d %d %d ",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
 
         if( tri::HasPerVertexNormal(m)  && (mask & io::Mask::IOM_VERTNORMAL) )
-          fprintf(fpout,"%g %g %g ", vp->N()[0],vp->N()[1],vp->N()[2]);
+          fprintf(fpout,"%g %g %g ", double(vp->N()[0]),double(vp->N()[1]),double(vp->N()[2]));
 
         if( tri::HasPerVertexTexCoord(m)  && (mask & io::Mask::IOM_VERTTEXCOORD) )
           fprintf(fpout,"%g %g ",vp->T().u(),vp->T().v());
