@@ -83,6 +83,12 @@ Point3<typename TriangleType::ScalarType> TriangleNormal(const TriangleType &t)
 {
   return (( t.cP(1) - t.cP(0)) ^ (t.cP(2) - t.cP(0)));
 }
+/// Returns the normal to the plane passing through p0,p1,p2
+template<class TriangleType>
+Point3<typename TriangleType::ScalarType> NormalizedTriangleNormal(const TriangleType &t)
+{
+  return (( t.cP(1) - t.cP(0)) ^ (t.cP(2) - t.cP(0))).Normalize();
+}
 template<class Point3Type>
 Point3Type Normal( Point3Type const &p0, Point3Type const & p1,  Point3Type const & p2)
 {
@@ -147,7 +153,7 @@ bool InterpolationParameters2(const Point2<ScalarType> &V1,
 template<class TriangleType, class ScalarType>
 bool InterpolationParameters(const TriangleType t, const Point3<ScalarType> & P,  Point3<ScalarType> & L)
 {
-  vcg::Point3<ScalarType> N=vcg::Normal<TriangleType>(t);
+  vcg::Point3<ScalarType> N=vcg::TriangleNormal<TriangleType>(t);
   return (InterpolationParameters<TriangleType,ScalarType>(t,N,P,L));
 }
 
