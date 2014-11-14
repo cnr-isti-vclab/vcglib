@@ -255,6 +255,7 @@ class TriMesh
         // access function
         template <class RefType>
         ATTR_TYPE & operator [](const RefType  & i){return (*_handle)[i];}
+        void resize(size_t size) { };
     };
 
     template <class ATTR_TYPE>
