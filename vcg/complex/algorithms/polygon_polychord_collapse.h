@@ -25,6 +25,11 @@
 
 #include <vector>
 #include <list>
+#if __cplusplus >= 201103L
+  #include <unordered_map>
+#else
+  #include <map>
+#endif
 #include <set>
 #include <algorithm>
 #include <iterator>
@@ -253,10 +258,10 @@ public:
    */
   class LinkConditions {
   private:
-    typedef long int LCVertexIndex;
-    typedef std::set<LCVertexIndex> LCVertexStar;   // define the star of a vertex
-    typedef long int LCEdgeIndex;
-    typedef std::set<LCEdgeIndex> LCEdgeStar;       // define the set of edges whose star involves a vertex
+    typedef long int                LCVertexIndex;
+    typedef std::set<LCVertexIndex> LCVertexStar;   ///< define the star of a vertex
+    typedef long int                LCEdgeIndex;
+    typedef std::set<LCEdgeIndex>   LCEdgeStar;     ///< define the set of edges whose star involves a vertex
 
     /**
      * @brief The LCVertex struct represents a vertex for the Link Conditions.
@@ -582,8 +587,7 @@ public:
                                           PC_Chords &chords,
                                           LinkConditions &linkConditions,
                                           const bool checkSing = true) {
-    vcg::tri::RequirePerVertexFlags(mesh);
-    vcg::tri::RequirePerFaceFlags(mesh);
+    vcg::tri::RequireFFAdjacency(mesh);
 
     if (mesh.IsEmpty())
       return PC_VOID;
@@ -861,7 +865,9 @@ public:
    * @param polychords The container of results.
    * @param loopsOnly true if closed polychords only must be listed, false for all polychords.
    */
-  static void FindPolychords(PolyMeshType &mesh, std::deque< vcg::face::Pos<FaceType> > &polychords, const bool loopsOnly = false) {
+  static void FindPolychords (PolyMeshType &mesh, std::deque< vcg::face::Pos<FaceType> > &polychords, const bool loopsOnly = false) {
+    vcg::tri::RequireFFAdjacency(mesh);
+
     polychords.clear();
 
     if (mesh.IsEmpty())
@@ -884,7 +890,7 @@ public:
       // check and find start pos
       resultCode = CheckPolychordFindStartPosition(pos, startPos, false);
       // visit the polychord
-      if (resultCode == PC_SUCCESS) {
+      if (resultCode == PC_SUCCESS || resultCode == PC_SINGBOTH) {
         VisitPolychord(mesh, startPos, chords, mark, PC_OTHER);
         // store a new polychord
         if (!loopsOnly)
@@ -909,14 +915,16 @@ public:
   /**
    * @brief SplitPolychord splits a polychord into n polychords by inserting all the needed faces.
    * @param mesh is the input polygonal mesh.
-   * @param pos is a position into the polychord (not necessarily the starting border).
+   * @param pos is a position into the polychord (not necessarily the starting border). It will be updated with changes.
    * @param n is the number of polychords to replace the input one.
    * @param facesToUpdate is a vector of face pointers to be updated after re-allocation.
    * @param verticesToUpdate is a vector of vertex pointers to be updated after re-allocation.
    */
-  static void SplitPolychord (PolyMeshType &mesh, const vcg::face::Pos<FaceType> &pos, const size_t n,
-                              std::vector<FacePointer *> &facesToUpdate = std::vector<FacePointer *>(),
-                              std::vector<VertexPointer *> &verticesToUpdate = std::vector<VertexPointer *>()) {
+  static void SplitPolychord (PolyMeshType &mesh, vcg::face::Pos<FaceType> &pos, const size_t n,
+                              std::vector<FacePointer *> &facesToUpdate, std::vector<VertexPointer *> &verticesToUpdate) {
+    vcg::tri::RequireFFAdjacency(mesh);
+    vcg::tri::RequirePerFaceFlags(mesh);
+
     if (mesh.IsEmpty())
       return;
     if (pos.IsNull())
@@ -924,67 +932,72 @@ public:
     if (n <= 1)
       return;
 
-    // find the real starting position (is the polychord a strip or a ring?) and count how many faces there are
-    size_t fn = 0;
-    bool polyBorderFound = false;
-    vcg::face::Pos<FaceType> startPos = pos;
-    do {
-      // check if all faces are 4-sided
-      if (startPos.F()->VN() != 4)
-        return;
-      // check manifoldness
-      if (IsVertexAdjacentToAnyNonManifoldEdge(startPos))
-        return;
+    // remember which face vertex has pos, for later updating
+    int posVInd = pos.VInd();
 
-      // increase the number of faces
-      fn++;
+    vcg::face::Pos<FaceType> startPos, runPos;
+    PC_ResultCode result = CheckPolychordFindStartPosition(pos, startPos, false);
+    if (result != PC_SUCCESS && result != PC_SINGBOTH)
+      return;
 
-      // go on the opposite edge
-      startPos.FlipE();
-      startPos.FlipV();
-      startPos.FlipE();
-
-      // if the first border has been reached, go on the other direction to find the other border
-      if (!polyBorderFound && startPos != pos && startPos.IsBorder()) {
-        // check manifoldness
-        if (IsVertexAdjacentToAnyNonManifoldEdge(startPos))
-          return;
-        startPos = pos;
-        polyBorderFound = true;
-      }
-
-      // if the other border has been reached, stop
-      if (polyBorderFound && startPos.IsBorder()) {
-        // check manifoldness
-        if (IsVertexAdjacentToAnyNonManifoldEdge(startPos))
-          return;
-        break;
-      }
-
-      // check manifoldness
-      if (!startPos.IsManifold())
-        return;
-      // go onto the next face
-      startPos.FlipF();
-    } while (startPos != pos);
-
-    // as every face has an orientation, ensure that the new polychords are inserted on the right of the starting pos
+    // since every face has an orientation, ensure that the new polychords are inserted on the right of the starting pos
     startPos.FlipE();
     int e = startPos.E();
     startPos.FlipE();
-    if (startPos.F()->Next(startPos.E()) != e)
+    if (startPos.F()->Next(startPos.E()) == e)
       startPos.FlipV();
 
+    // clear flags
+    vcg::tri::UpdateFlags<PolyMeshType>::FaceClearV(mesh);
+    vcg::tri::UpdateFlags<PolyMeshType>::FaceClearS(mesh);
+
+    // count how many faces there are
+    size_t fn1 = 0, fn2 = 0;
+    runPos = startPos;
+    do {
+      // increase the number of faces
+      if (runPos.F()->IsV()) {
+        ++fn2;
+        --fn1;
+        runPos.F()->SetS();
+      } else {
+        ++fn1;
+        runPos.F()->SetV();
+      }
+
+      // go onto the next face
+      runPos.FlipE();
+      runPos.FlipV();
+      runPos.FlipE();
+      runPos.FlipF();
+    } while (!runPos.IsBorder() && runPos != startPos);
+
+    // clear flags
+    runPos = startPos;
+    do {
+      // clear visited
+      runPos.F()->ClearV();
+      // go onto the next face
+      runPos.FlipE();
+      runPos.FlipV();
+      runPos.FlipE();
+      runPos.FlipF();
+    } while (!runPos.IsBorder() && runPos != startPos);
+
     // compute the number of faces and vertices that must be added to the mesh in order to insert the new polychords
-    size_t FN = fn * (n - 1);
-    size_t VN = FN;
+    size_t FN = fn1 * (n - 1) + fn2 * (n * n - 1);
+    size_t VN = fn1 * (n - 1) + fn2 * (n + 1) * (n - 1);
     if (startPos.IsBorder())
       VN += n - 1;
 
+    // add the pos to update face and vertex pointer to the list of things to update after re-allocation
+    facesToUpdate.push_back(&pos.F());
+    verticesToUpdate.push_back(&pos.V());
     // add the starting position's face and vertex pointers to the list of things to update after re-allocation
     facesToUpdate.push_back(&startPos.F());
     verticesToUpdate.push_back(&startPos.V());
 
+    runPos.SetNull();
     // add faces to the mesh
     FaceIterator firstAddedFaceIt = vcg::tri::Allocator<PolyMeshType>::AddFaces(mesh, FN, facesToUpdate);
     // add vertices to the mesh
@@ -993,9 +1006,12 @@ public:
     // delete the added starting position's face and vertex pointers
     facesToUpdate.pop_back();
     verticesToUpdate.pop_back();
+    // delete the added pos to update face and vertex pointers
+    facesToUpdate.pop_back();
+    verticesToUpdate.pop_back();
 
     // allocate and initialize 4 vertices and ffAdj for each new face
-    for (FaceIterator fIt = firstAddedFaceIt; fIt != mesh.face.end(); fIt++) {
+    for (FaceIterator fIt = firstAddedFaceIt; fIt != mesh.face.end(); ++fIt) {
       fIt->Alloc(4);
       for (size_t j = 0; j < 4; j++) {
         fIt->FFp(j) = &*fIt;
@@ -1003,114 +1019,511 @@ public:
       }
     }
 
-    // some variables
-    size_t ln = fn;
-    if (startPos.IsBorder())
-      ln++;
-    FacePointer lf = NULL;        // face on the left to the current one
-    int lfre = 0;                 // right edge of lf
-    VertexPointer * lfbrV = NULL; // address of the bottom-right vertex pointer of lf
-    VertexPointer * lftrV = NULL; // address of the top-right vertex pointer of lf
-    CoordType lvP;
-    CoordType svP;
-    typedef std::pair<FacePointer,int>    FaceEdge;
-    typedef std::pair<FaceEdge,FaceEdge>  FaceFaceAdj;
-    typedef std::pair<VertexPointer *,VertexPointer>  FaceVertexAdj;
-    std::queue<FaceFaceAdj>   ffAdjQueue;   // face-to-face adjacency queue
-    std::queue<FaceVertexAdj> fvAdjQueue;   // face-to-vertex adjacency queue
-    bool currentFaceBottomIsBorder = false;
+    // two structures to store temporary face data and splitting information
+    struct FaceData {
+      FacePointer                 faceP;
+      std::vector<FacePointer>    ffpAdj;
+      std::vector<int>            ffiAdj;
+      std::vector<VertexPointer>  fvpAdj;
+      FaceData() : faceP(0), ffpAdj(4, 0), ffiAdj(4, 0), fvpAdj(4, 0) { }
+    };
+    struct FaceSubdivision {
+      int                                   firstEdge;
+      int                                   firstVertex;
+      std::vector< std::vector<FaceData> >  subfaces;
+    };
+#if __cplusplus >= 201103L
+    std::unordered_map<FacePointer,FaceSubdivision>                     faceSubdivisions;
+    typename std::unordered_map<FacePointer,FaceSubdivision>::iterator  faceSubdivisionsIt;
+    typename std::unordered_map<FacePointer,FaceSubdivision>::iterator  faceSubdivisionsPrevIt;
+    typename std::unordered_map<FacePointer,FaceSubdivision>::iterator  faceSubdivisionsNeighbourIt;
+#else
+    std::map<FacePointer,FaceSubdivision                                faceSubdivisions;
+    typename std::map<FacePointer,FaceSubdivision>::iterator            faceSubdivisionsIt;
+    typename std::map<FacePointer,FaceSubdivision>::iterator            faceSubdivisionsPrevIt;
+    typename std::map<FacePointer,FaceSubdivision>::iterator            faceSubdivisionsNeighbourIt;
+#endif
+    // structure to store temporary data to assign at external faces (close to polychord)
+    struct ExternalFaceData {
+      FacePointer faceTo;
+      FacePointer faceFrom;
+      int         edgeTo;
+      int         edgeFrom;
+      ExternalFaceData() : faceTo(0), faceFrom(0), edgeTo(0), edgeFrom(0) { }
+      ExternalFaceData(const FacePointer &ft,
+                       const FacePointer &ff,
+                       const int et,
+                       const int ef) : faceTo(ft), faceFrom(ff), edgeTo(et), edgeFrom(ef) { }
+    };
+    std::list<ExternalFaceData>                                         externalFaces;
+    typename std::list<ExternalFaceData>::iterator                      externalFacesIt;
 
-    // map faces to lines' number
-    vcg::face::Pos<FaceType> runPos = startPos;
-    std::map<FacePointer,size_t> faceLineMap;
-    typename std::map<FacePointer,size_t>::iterator faceLineIt;
-    for (size_t i = 0; i < fn; i++) {
-      faceLineMap.insert(std::pair<FacePointer,size_t>(runPos.F(), i));
+    int leftEdge, rightEdge, topEdge, bottomEdge, blVInd, brVInd, tlVInd, trVInd;
+    int pleftEdge, prightEdge, ptopEdge, pbottomEdge, pblVInd, pbrVInd, ptlVInd, ptrVInd;
+    CoordType fromPoint, toPoint;
+    FacePointer faceP;
+    // first pass: make subdivisions
+    runPos = startPos;
+    do {
+      // create temporary data
+      if (!runPos.F()->IsV()) {
+        runPos.F()->SetV();
+        faceSubdivisionsIt = faceSubdivisions.insert(std::make_pair(runPos.F(), FaceSubdivision())).first;
+        assert(faceSubdivisionsIt != faceSubdivisions.end());
+        faceSubdivisionsIt->second.firstEdge = runPos.E();
+        faceSubdivisionsIt->second.firstVertex = runPos.VInd();
+        if (runPos.F()->IsS())
+          faceSubdivisionsIt->second.subfaces.resize(n, std::vector<FaceData>(n));
+        else
+          faceSubdivisionsIt->second.subfaces.resize(1, std::vector<FaceData>(n));
+        // assign face pointers
+        faceSubdivisionsIt->second.subfaces.at(0).at(0).faceP = runPos.F();
+        for (size_t j = 1; j < n; ++j, ++firstAddedFaceIt)
+          faceSubdivisionsIt->second.subfaces.at(0).at(j).faceP = &*firstAddedFaceIt;
+        for (size_t i = 1; i < faceSubdivisionsIt->second.subfaces.size(); ++i)
+          for (size_t j = 0; j < n; ++j, ++firstAddedFaceIt)
+            faceSubdivisionsIt->second.subfaces.at(i).at(j).faceP = &*firstAddedFaceIt;
+        // internal face pointers adj
+        rightEdge = runPos.F()->Next(runPos.E());
+        leftEdge = runPos.F()->Prev(runPos.E());
+        for (size_t i = 0; i < faceSubdivisionsIt->second.subfaces.size(); ++i)
+          for (size_t j = 0; j < n - 1; ++j) {
+            faceSubdivisionsIt->second.subfaces.at(i).at(j).ffpAdj[rightEdge] = faceSubdivisionsIt->second.subfaces.at(i).at(j+1).faceP;
+            faceSubdivisionsIt->second.subfaces.at(i).at(j).ffiAdj[rightEdge] = leftEdge;
+            faceSubdivisionsIt->second.subfaces.at(i).at(j+1).ffpAdj[leftEdge] = faceSubdivisionsIt->second.subfaces.at(i).at(j).faceP;
+            faceSubdivisionsIt->second.subfaces.at(i).at(j+1).ffiAdj[leftEdge] = rightEdge;
+          }
+        topEdge = runPos.F()->Next(rightEdge);
+        bottomEdge = runPos.E();
+        for (size_t i = 0; i < faceSubdivisionsIt->second.subfaces.size() - 1; ++i)
+          for (size_t j = 0; j < n; ++j) {
+            faceSubdivisionsIt->second.subfaces.at(i).at(j).ffpAdj[topEdge] = faceSubdivisionsIt->second.subfaces.at(i+1).at(j).faceP;
+            faceSubdivisionsIt->second.subfaces.at(i).at(j).ffiAdj[topEdge] = bottomEdge;
+            faceSubdivisionsIt->second.subfaces.at(i+1).at(j).ffpAdj[bottomEdge] = faceSubdivisionsIt->second.subfaces.at(i).at(j).faceP;
+            faceSubdivisionsIt->second.subfaces.at(i+1).at(j).ffiAdj[bottomEdge] = topEdge;
+          }
+        // assign old vertex pointers
+        blVInd = runPos.VInd();
+        brVInd = runPos.F()->Next(blVInd);
+        trVInd = runPos.F()->Next(brVInd);
+        tlVInd = runPos.F()->Next(trVInd);
+        faceSubdivisionsIt->second.subfaces.front().front().fvpAdj.at(blVInd) = runPos.F()->V(blVInd);
+        faceSubdivisionsIt->second.subfaces.front().back().fvpAdj.at(brVInd) = runPos.F()->V(brVInd);
+        faceSubdivisionsIt->second.subfaces.back().back().fvpAdj.at(trVInd) = runPos.F()->V(trVInd);
+        faceSubdivisionsIt->second.subfaces.back().front().fvpAdj.at(tlVInd) = runPos.F()->V(tlVInd);
+        // assign new internal vertex pointers
+        for (size_t i = 0; i < faceSubdivisionsIt->second.subfaces.size() - 1; ++i)
+          for (size_t j = 0; j < n - 1; ++j, ++firstAddedVertexIt) {
+            faceSubdivisionsIt->second.subfaces.at(i).at(j).fvpAdj.at(trVInd) = &*firstAddedVertexIt;
+            faceSubdivisionsIt->second.subfaces.at(i).at(j+1).fvpAdj.at(tlVInd) = &*firstAddedVertexIt;
+            faceSubdivisionsIt->second.subfaces.at(i+1).at(j).fvpAdj.at(brVInd) = &*firstAddedVertexIt;
+            faceSubdivisionsIt->second.subfaces.at(i+1).at(j+1).fvpAdj.at(blVInd) = &*firstAddedVertexIt;
+          }
+      }
+
       runPos.FlipE();
       runPos.FlipV();
       runPos.FlipE();
       runPos.FlipF();
-    }
+    } while (!runPos.IsBorder() && runPos != startPos);
 
-    // scan the polychord and add adj into queues
+    // update subdivision iterator
+    if (runPos.IsBorder())
+      faceSubdivisionsIt = faceSubdivisions.end();
+
+    // second pass: assign edge vertices and subdivisions-to-subdivisions face-face adjacency
     runPos = startPos;
-    for (size_t i = 0; i < fn; i++) {
-      // store links to the current left face
-      lf = runPos.F();
-      currentFaceBottomIsBorder = runPos.IsBorder();
-      lvP = runPos.VFlip()->P();
-      svP = (runPos.V()->P() - lvP) / n;
+    do {
+      // get current and previous subdivision
+      faceSubdivisionsPrevIt = faceSubdivisionsIt;
+      faceSubdivisionsIt = faceSubdivisions.find(runPos.F());
+      assert(faceSubdivisionsIt != faceSubdivisions.end());
+
+      // get original indices
+      bottomEdge = faceSubdivisionsIt->second.firstEdge;
+      rightEdge = runPos.F()->Next(bottomEdge);
+      topEdge = runPos.F()->Next(rightEdge);
+      leftEdge = runPos.F()->Next(topEdge);
+      assert(runPos.F()->Prev(bottomEdge) == leftEdge);
+      blVInd = faceSubdivisionsIt->second.firstVertex;
+      brVInd = runPos.F()->Next(blVInd);
+      trVInd = runPos.F()->Next(brVInd);
+      tlVInd = runPos.F()->Next(trVInd);
+      if (faceSubdivisionsPrevIt != faceSubdivisions.end()) {
+        assert(!runPos.IsBorder());
+        pbottomEdge = faceSubdivisionsPrevIt->second.firstEdge;
+        prightEdge = runPos.FFlip()->Next(pbottomEdge);
+        ptopEdge = runPos.FFlip()->Next(prightEdge);
+        pleftEdge = runPos.FFlip()->Next(ptopEdge);
+        pblVInd = faceSubdivisionsPrevIt->second.firstVertex;
+        pbrVInd = runPos.F()->Next(pblVInd);
+        ptrVInd = runPos.F()->Next(pbrVInd);
+        ptlVInd = runPos.F()->Next(ptrVInd);
+      }
+
+      // assign bottom edge vertices (and vertex adjacency with the previous subdivision) and face-to-face adjacency
+      if (runPos.E() == bottomEdge) {
+        // get pre-existing coords
+        fromPoint = faceSubdivisionsIt->second.subfaces.front().front().fvpAdj.at(blVInd)->P();
+        toPoint = faceSubdivisionsIt->second.subfaces.front().back().fvpAdj.at(brVInd)->P();
+        // assign new vertices
+        for (size_t j = 0; j < n - 1; ++j, ++firstAddedVertexIt) {
+          firstAddedVertexIt->P() = fromPoint + (toPoint - fromPoint) * (j + 1) / n;
+          faceSubdivisionsIt->second.subfaces.front().at(j).fvpAdj.at(brVInd) = &*firstAddedVertexIt;
+          faceSubdivisionsIt->second.subfaces.front().at(j+1).fvpAdj.at(blVInd) = &*firstAddedVertexIt;
+        }
+        if (faceSubdivisionsPrevIt != faceSubdivisions.end()) {
+          if (runPos.F()->FFi(bottomEdge) == ptopEdge) {
+            // update face-to-vertex adjacency
+            for (size_t j = 0; j < n - 1; ++j) {
+              faceSubdivisionsPrevIt->second.subfaces.back().at(j).fvpAdj.at(ptrVInd) = faceSubdivisionsIt->second.subfaces.front().at(j).fvpAdj.at(brVInd);
+              faceSubdivisionsPrevIt->second.subfaces.back().at(j+1).fvpAdj.at(ptlVInd) = faceSubdivisionsIt->second.subfaces.front().at(j+1).fvpAdj.at(blVInd);
+            }
+            // update face-to-face adjacency
+            for (size_t j = 0; j < n; ++j) {
+              faceSubdivisionsIt->second.subfaces.front().at(j).ffpAdj.at(bottomEdge) = faceSubdivisionsPrevIt->second.subfaces.back().at(j).faceP;
+              faceSubdivisionsIt->second.subfaces.front().at(j).ffiAdj.at(bottomEdge) = ptopEdge;
+              faceSubdivisionsPrevIt->second.subfaces.back().at(j).ffpAdj.at(ptopEdge) = faceSubdivisionsIt->second.subfaces.front().at(j).faceP;
+              faceSubdivisionsPrevIt->second.subfaces.back().at(j).ffiAdj.at(ptopEdge) = bottomEdge;
+            }
+          } else if (runPos.F()->FFi(bottomEdge) == prightEdge) {
+            // update face-to-vertex adjacency
+            for (size_t i = 0; i < n - 1; ++i) {
+              faceSubdivisionsPrevIt->second.subfaces.at(i).back().fvpAdj.at(ptrVInd) = faceSubdivisionsIt->second.subfaces.front().at(n-i-1).fvpAdj.at(blVInd);
+              faceSubdivisionsPrevIt->second.subfaces.at(i+1).back().fvpAdj.at(pbrVInd) = faceSubdivisionsIt->second.subfaces.front().at(n-i-2).fvpAdj.at(brVInd);
+            }
+            // update face-to-face adjacency
+            for (size_t j = 0; j < n; ++j) {
+              faceSubdivisionsIt->second.subfaces.front().at(j).ffpAdj.at(bottomEdge) = faceSubdivisionsPrevIt->second.subfaces.at(n-j-1).back().faceP;
+              faceSubdivisionsIt->second.subfaces.front().at(j).ffiAdj.at(bottomEdge) = prightEdge;
+              faceSubdivisionsPrevIt->second.subfaces.at(n-j-1).back().ffpAdj.at(prightEdge) = faceSubdivisionsIt->second.subfaces.front().at(j).faceP;
+              faceSubdivisionsPrevIt->second.subfaces.at(n-j-1).back().ffiAdj.at(prightEdge) = bottomEdge;
+            }
+          } else {
+            assert(runPos.F()->FFi(bottomEdge) == pleftEdge);
+            // update face-to-vertex adjacency
+            for (size_t i = 0; i < n - 1; ++i) {
+              faceSubdivisionsPrevIt->second.subfaces.at(i).front().fvpAdj.at(ptlVInd) = faceSubdivisionsIt->second.subfaces.front().at(i).fvpAdj.at(brVInd);
+              faceSubdivisionsPrevIt->second.subfaces.at(i+1).front().fvpAdj.at(pblVInd) = faceSubdivisionsIt->second.subfaces.front().at(i+1).fvpAdj.at(blVInd);
+            }
+            // update face-to-face adjacency
+            for (size_t j = 0; j < n; ++j) {
+              faceSubdivisionsIt->second.subfaces.front().at(j).ffpAdj.at(bottomEdge) = faceSubdivisionsPrevIt->second.subfaces.at(j).front().faceP;
+              faceSubdivisionsIt->second.subfaces.front().at(j).ffiAdj.at(bottomEdge) = pleftEdge;
+              faceSubdivisionsPrevIt->second.subfaces.at(j).front().ffpAdj.at(pleftEdge) = faceSubdivisionsIt->second.subfaces.front().at(j).faceP;
+              faceSubdivisionsPrevIt->second.subfaces.at(j).front().ffiAdj.at(pleftEdge) = bottomEdge;
+            }
+          }
+        } else {
+          assert(runPos.IsBorder());
+          // update face-to-face adjacency
+          for (size_t j = 0; j < n; ++j) {
+            faceSubdivisionsIt->second.subfaces.front().at(j).ffpAdj.at(bottomEdge) = faceSubdivisionsIt->second.subfaces.front().at(j).faceP;
+            faceSubdivisionsIt->second.subfaces.front().at(j).ffiAdj.at(bottomEdge) = bottomEdge;
+          }
+        }
+      } else if (runPos.E() == leftEdge) {
+        // get pre-existing coords
+        fromPoint = faceSubdivisionsIt->second.subfaces.front().front().fvpAdj.at(blVInd)->P();
+        toPoint = faceSubdivisionsIt->second.subfaces.back().front().fvpAdj.at(tlVInd)->P();
+        // assign new vertices
+        for (size_t i = 0; i < n - 1; ++i, ++firstAddedVertexIt) {
+          firstAddedVertexIt->P() = fromPoint + (toPoint - fromPoint) * (i + 1) / n;
+          faceSubdivisionsIt->second.subfaces.at(i).front().fvpAdj.at(tlVInd) = &*firstAddedVertexIt;
+          faceSubdivisionsIt->second.subfaces.at(i+1).front().fvpAdj.at(blVInd) = &*firstAddedVertexIt;
+        }
+        assert(!runPos.IsBorder());
+        if (runPos.F()->FFi(leftEdge) == ptopEdge) {
+          // update face-to-vertex adjacency
+          for (size_t j = 0; j < n - 1; ++j) {
+            faceSubdivisionsPrevIt->second.subfaces.back().at(j).fvpAdj.at(ptrVInd) = faceSubdivisionsIt->second.subfaces.at(n-j-1).front().fvpAdj.at(blVInd);
+            faceSubdivisionsPrevIt->second.subfaces.back().at(j+1).fvpAdj.at(ptlVInd) = faceSubdivisionsIt->second.subfaces.at(n-j-2).front().fvpAdj.at(tlVInd);
+          }
+          // update face-to-face adjacency
+          for (size_t i = 0; i < n; ++i) {
+            faceSubdivisionsIt->second.subfaces.at(i).front().ffpAdj.at(leftEdge) = faceSubdivisionsPrevIt->second.subfaces.back().at(n-i-1).faceP;
+            faceSubdivisionsIt->second.subfaces.at(i).front().ffiAdj.at(leftEdge) = ptopEdge;
+            faceSubdivisionsPrevIt->second.subfaces.back().at(n-i-1).ffpAdj.at(ptopEdge) = faceSubdivisionsIt->second.subfaces.at(i).front().faceP;
+            faceSubdivisionsPrevIt->second.subfaces.back().at(n-i-1).ffiAdj.at(ptopEdge) = leftEdge;
+          }
+        } else if (runPos.F()->FFi(leftEdge) == prightEdge) {
+          // update face-to-vertex adjacency
+          for (size_t i = 0; i < n - 1; ++i) {
+            faceSubdivisionsPrevIt->second.subfaces.at(i).back().fvpAdj.at(ptrVInd) = faceSubdivisionsIt->second.subfaces.at(i).front().fvpAdj.at(tlVInd);
+            faceSubdivisionsPrevIt->second.subfaces.at(i+1).back().fvpAdj.at(pbrVInd) = faceSubdivisionsIt->second.subfaces.at(i+1).front().fvpAdj.at(blVInd);
+          }
+          // update face-to-face adjacency
+          for (size_t i = 0; i < n; ++i) {
+            faceSubdivisionsIt->second.subfaces.at(i).front().ffpAdj.at(leftEdge) = faceSubdivisionsPrevIt->second.subfaces.at(i).back().faceP;
+            faceSubdivisionsIt->second.subfaces.at(i).front().ffiAdj.at(leftEdge) = prightEdge;
+            faceSubdivisionsPrevIt->second.subfaces.at(i).back().ffpAdj.at(prightEdge) = faceSubdivisionsIt->second.subfaces.at(i).front().faceP;
+            faceSubdivisionsPrevIt->second.subfaces.at(i).back().ffiAdj.at(prightEdge) = leftEdge;
+          }
+        } else {
+          assert(runPos.F()->FFi(leftEdge) == pleftEdge);
+          // update face-to-vertex adjacency
+          for (size_t i = 0; i < n - 1; ++i) {
+            faceSubdivisionsPrevIt->second.subfaces.at(i).front().fvpAdj.at(ptlVInd) = faceSubdivisionsIt->second.subfaces.front().at(n-i-1).fvpAdj.at(blVInd);
+            faceSubdivisionsPrevIt->second.subfaces.at(i+1).front().fvpAdj.at(pblVInd) = faceSubdivisionsIt->second.subfaces.front().at(n-i-2).fvpAdj.at(tlVInd);
+          }
+          // update face-to-face adjacency
+          for (size_t i = 0; i < n; ++i) {
+            faceSubdivisionsIt->second.subfaces.at(i).front().ffpAdj.at(leftEdge) = faceSubdivisionsPrevIt->second.subfaces.at(n-i-1).front().faceP;
+            faceSubdivisionsIt->second.subfaces.at(i).front().ffiAdj.at(leftEdge) = pleftEdge;
+            faceSubdivisionsPrevIt->second.subfaces.at(n-i-1).front().ffpAdj.at(pleftEdge) = faceSubdivisionsIt->second.subfaces.at(i).front().faceP;
+            faceSubdivisionsPrevIt->second.subfaces.at(n-i-1).front().ffiAdj.at(pleftEdge) = leftEdge;
+          }
+        }
+      } else {
+        assert(runPos.E() == rightEdge);
+        // get pre-existing coords
+        fromPoint = faceSubdivisionsIt->second.subfaces.front().back().fvpAdj.at(brVInd)->P();
+        toPoint = faceSubdivisionsIt->second.subfaces.back().back().fvpAdj.at(trVInd)->P();
+        // assign new vertices
+        for (size_t i = 0; i < n - 1; ++i, ++firstAddedVertexIt) {
+          firstAddedVertexIt->P() = fromPoint + (toPoint - fromPoint) * (i + 1) / n;
+          faceSubdivisionsIt->second.subfaces.at(i).back().fvpAdj.at(trVInd) = &*firstAddedVertexIt;
+          faceSubdivisionsIt->second.subfaces.at(i+1).back().fvpAdj.at(brVInd) = &*firstAddedVertexIt;
+        }
+        assert(!runPos.IsBorder());
+        if (runPos.F()->FFi(rightEdge) == ptopEdge) {
+          // update face-to-vertex adjacency
+          for (size_t j = 0; j < n - 1; ++j) {
+            faceSubdivisionsPrevIt->second.subfaces.back().at(j).fvpAdj.at(ptrVInd) = faceSubdivisionsIt->second.subfaces.at(j).back().fvpAdj.at(trVInd);
+            faceSubdivisionsPrevIt->second.subfaces.back().at(j+1).fvpAdj.at(ptlVInd) = faceSubdivisionsIt->second.subfaces.at(j+1).back().fvpAdj.at(brVInd);
+          }
+          // update face-to-face adjacency
+          for (size_t i = 0; i < n; ++i) {
+            faceSubdivisionsIt->second.subfaces.at(i).back().ffpAdj.at(rightEdge) = faceSubdivisionsPrevIt->second.subfaces.back().at(i).faceP;
+            faceSubdivisionsIt->second.subfaces.at(i).back().ffiAdj.at(rightEdge) = ptopEdge;
+            faceSubdivisionsPrevIt->second.subfaces.back().at(i).ffpAdj.at(ptopEdge) = faceSubdivisionsIt->second.subfaces.at(i).back().faceP;
+            faceSubdivisionsPrevIt->second.subfaces.back().at(i).ffiAdj.at(ptopEdge) = rightEdge;
+          }
+        } else if (runPos.F()->FFi(rightEdge) == prightEdge) {
+          // update face-to-vertex adjacency
+          for (size_t i = 0; i < n - 1; ++i) {
+            faceSubdivisionsPrevIt->second.subfaces.at(i).back().fvpAdj.at(ptrVInd) = faceSubdivisionsIt->second.subfaces.at(n-i-1).back().fvpAdj.at(brVInd);
+            faceSubdivisionsPrevIt->second.subfaces.at(i+1).back().fvpAdj.at(pbrVInd) = faceSubdivisionsIt->second.subfaces.at(n-i-2).back().fvpAdj.at(trVInd);
+          }
+          // update face-to-face adjacency
+          for (size_t i = 0; i < n; ++i) {
+            faceSubdivisionsIt->second.subfaces.at(i).back().ffpAdj.at(rightEdge) = faceSubdivisionsPrevIt->second.subfaces.at(n-i-1).back().faceP;
+            faceSubdivisionsIt->second.subfaces.at(i).back().ffiAdj.at(rightEdge) = prightEdge;
+            faceSubdivisionsPrevIt->second.subfaces.at(n-i-1).back().ffpAdj.at(prightEdge) = faceSubdivisionsIt->second.subfaces.at(i).back().faceP;
+            faceSubdivisionsPrevIt->second.subfaces.at(n-i-1).back().ffiAdj.at(prightEdge) = rightEdge;
+          }
+        } else {
+          assert(runPos.F()->FFi(rightEdge) == pleftEdge);
+          // update face-to-vertex adjacency
+          for (size_t i = 0; i < n - 1; ++i) {
+            faceSubdivisionsPrevIt->second.subfaces.at(i).front().fvpAdj.at(ptlVInd) = faceSubdivisionsIt->second.subfaces.at(i).back().fvpAdj.at(trVInd);
+            faceSubdivisionsPrevIt->second.subfaces.at(i+1).front().fvpAdj.at(pblVInd) = faceSubdivisionsIt->second.subfaces.at(i+1).back().fvpAdj.at(brVInd);
+          }
+          // update face-to-face adjacency
+          for (size_t i = 0; i < n; ++i) {
+            faceSubdivisionsIt->second.subfaces.at(i).back().ffpAdj.at(rightEdge) = faceSubdivisionsPrevIt->second.subfaces.at(i).front().faceP;
+            faceSubdivisionsIt->second.subfaces.at(i).back().ffiAdj.at(rightEdge) = pleftEdge;
+            faceSubdivisionsPrevIt->second.subfaces.at(i).front().ffpAdj.at(pleftEdge) = faceSubdivisionsIt->second.subfaces.at(i).back().faceP;
+            faceSubdivisionsPrevIt->second.subfaces.at(i).front().ffiAdj.at(pleftEdge) = rightEdge;
+          }
+        }
+      }
+
+      // update subdivision's left and right sides face-to-face adjacency
+      // go on left edge
       runPos.FlipE();
-      lfre = runPos.E();
-      lfbrV = &runPos.F()->V(runPos.VInd());
       runPos.FlipV();
-      lftrV = &runPos.F()->V(runPos.VInd());
-      // set the current line's last face's right ff adjacency
-      if (!runPos.IsBorder()) {
-        faceLineIt = faceLineMap.find(runPos.FFlip());
-        if (faceLineIt != faceLineMap.end())  // a 2-valence vertex caused the polychord to blend and touch itself
-          ffAdjQueue.push(FaceFaceAdj(FaceEdge(&*(firstAddedFaceIt + (i+1)*(n-1) - 1), 1), FaceEdge(&*(firstAddedFaceIt + (faceLineIt->second+1)*(n-1) - 1), 1)));
-        else
-          ffAdjQueue.push(FaceFaceAdj(FaceEdge(&*(firstAddedFaceIt + (i+1)*(n-1) - 1), 1), FaceEdge(runPos.FFlip(), runPos.F()->FFi(runPos.E()))));
+      if (runPos.IsBorder()) {
+        if (!runPos.F()->IsS()) {
+          assert(runPos.E() == leftEdge);
+          assert(faceSubdivisionsIt->second.subfaces.size() == 1);
+          faceSubdivisionsIt->second.subfaces.front().front().ffpAdj.at(leftEdge) = faceSubdivisionsIt->second.subfaces.front().front().faceP;
+          faceSubdivisionsIt->second.subfaces.front().front().ffiAdj.at(leftEdge) = leftEdge;
+        }
+      } else if (!runPos.FFlip()->IsV()) {
+        assert(runPos.E() == leftEdge);
+        assert(faceSubdivisionsIt->second.subfaces.size() == 1);
+        faceSubdivisionsIt->second.subfaces.front().front().ffpAdj.at(leftEdge) = runPos.FFlip();
+        faceSubdivisionsIt->second.subfaces.front().front().ffiAdj.at(leftEdge) = runPos.F()->FFi(leftEdge);
+        externalFaces.push_back(ExternalFaceData(runPos.FFlip(),
+                                                 faceSubdivisionsIt->second.subfaces.front().front().faceP,
+                                                 runPos.F()->FFi(leftEdge),
+                                                 leftEdge));
+      } else if (!runPos.FFlip()->IsS() && !runPos.F()->IsS()) {
+        assert(runPos.E() == leftEdge);
+        assert(faceSubdivisionsIt->second.subfaces.size() == 1);
+        faceSubdivisionsNeighbourIt = faceSubdivisions.find(runPos.FFlip());
+        assert(faceSubdivisionsNeighbourIt != faceSubdivisions.end());
+        assert(faceSubdivisionsNeighbourIt->second.subfaces.size() == 1);
+        pbottomEdge = faceSubdivisionsNeighbourIt->second.firstEdge;
+        prightEdge = runPos.FFlip()->Next(pbottomEdge);
+        ptopEdge = runPos.FFlip()->Next(prightEdge);
+        pleftEdge = runPos.FFlip()->Next(ptopEdge);
+        if (runPos.F()->FFi(leftEdge) == pleftEdge) {
+          faceSubdivisionsIt->second.subfaces.front().front().ffpAdj.at(leftEdge) = faceSubdivisionsNeighbourIt->second.subfaces.front().front().faceP;
+          faceSubdivisionsIt->second.subfaces.front().front().ffiAdj.at(leftEdge) = pleftEdge;
+          faceSubdivisionsNeighbourIt->second.subfaces.front().front().ffpAdj.at(pleftEdge) = faceSubdivisionsIt->second.subfaces.front().front().faceP;
+          faceSubdivisionsNeighbourIt->second.subfaces.front().front().ffiAdj.at(pleftEdge) = leftEdge;
+        } else {
+          assert(runPos.F()->FFi(leftEdge) == prightEdge);
+          faceSubdivisionsIt->second.subfaces.front().front().ffpAdj.at(leftEdge) = faceSubdivisionsNeighbourIt->second.subfaces.front().back().faceP;
+          faceSubdivisionsIt->second.subfaces.front().front().ffiAdj.at(leftEdge) = prightEdge;
+          faceSubdivisionsNeighbourIt->second.subfaces.front().back().ffpAdj.at(prightEdge) = faceSubdivisionsIt->second.subfaces.front().front().faceP;
+          faceSubdivisionsNeighbourIt->second.subfaces.front().back().ffiAdj.at(prightEdge) = leftEdge;
+        }
       }
-      // set the current line's last face's bottom right vertex's coords
-      (firstAddedVertexIt + (i+1)*(n-1) - 1)->P() = lvP + svP * (n - 1);
-      // set the current line's last face's bottom right vertex
-      fvAdjQueue.push(FaceVertexAdj(&(firstAddedFaceIt + (i+1)*(n-1) - 1)->V(1), runPos.VFlip()));
-      // set the current face's top left vertex
-      fvAdjQueue.push(FaceVertexAdj(&(firstAddedFaceIt + (i+1)*(n-1) - 1)->V(2), runPos.V()));
+      // go on right edge
       runPos.FlipE();
-      if (!runPos.IsBorder())
-        runPos.FlipF();
-      else
-        for (size_t j = 0; j < n-1; j++)
-          // set the current face's bottom right vertex's coords
-          (firstAddedVertexIt + (i+1)*(n-1) + j)->P() = runPos.VFlip()->P() +
-                                                        (runPos.V()->P() - runPos.VFlip()->P()) / n * (j+1);
-
-      // run horizontally on the current line of the grid
-      for (size_t j = 0; j < n-1; j++) {
-        // set the current face's left ff adj
-        ffAdjQueue.push(FaceFaceAdj(FaceEdge(lf, lfre), FaceEdge(&*(firstAddedFaceIt + i*(n-1) + j), 3)));
-        // set the current face's bottom ff adjacency
-        if (!currentFaceBottomIsBorder)
-          ffAdjQueue.push(FaceFaceAdj(FaceEdge(&*(firstAddedFaceIt + ((i+fn-1)%fn)*(n-1) + j), 2), FaceEdge(&*(firstAddedFaceIt + i*(n-1) + j), 0)));
-        // set the current face's bottom right vertex's coords
-        (firstAddedVertexIt + i*(n-1) + j)->P() = lvP + svP * (j+1);
-        // set the left face's bottom right vertex
-        fvAdjQueue.push(FaceVertexAdj(lfbrV, &*(firstAddedVertexIt + i*(n-1) + j)));
-        // set the current face's bottom left vertex
-        fvAdjQueue.push(FaceVertexAdj(&(firstAddedFaceIt + i*(n-1) + j)->V(0), &*(firstAddedVertexIt + i*(n-1) + j)));
-        // set the left face's top right vertex
-        fvAdjQueue.push(FaceVertexAdj(lftrV, &*(firstAddedVertexIt + ((i+1)%ln)*(n-1) + j)));
-        // set the current face's top left vertex
-        fvAdjQueue.push(FaceVertexAdj(&(firstAddedFaceIt + i*(n-1) + j)->V(3), &*(firstAddedVertexIt + ((i+1)%ln)*(n-1) + j)));
-
-        // update temporary variables
-        lf = &*(firstAddedFaceIt + i*(n-1) + j);
-        lfre = 1;
-        lfbrV = &(firstAddedFaceIt + i*(n-1) + j)->V(1);
-        lftrV = &(firstAddedFaceIt + i*(n-1) + j)->V(2);
+      runPos.FlipV();
+      runPos.FlipE();
+      if (runPos.IsBorder()) {
+        if (!runPos.F()->IsS()) {
+          assert(runPos.E() == rightEdge);
+          assert(faceSubdivisionsIt->second.subfaces.size() == 1);
+          faceSubdivisionsIt->second.subfaces.front().back().ffpAdj.at(rightEdge) = faceSubdivisionsIt->second.subfaces.front().back().faceP;
+          faceSubdivisionsIt->second.subfaces.front().back().ffiAdj.at(rightEdge) = rightEdge;
+        }
+      } else if (!runPos.FFlip()->IsV()) {
+        assert(runPos.E() == rightEdge);
+        assert(faceSubdivisionsIt->second.subfaces.size() == 1);
+        faceSubdivisionsIt->second.subfaces.front().back().ffpAdj.at(rightEdge) = runPos.FFlip();
+        faceSubdivisionsIt->second.subfaces.front().back().ffiAdj.at(rightEdge) = runPos.F()->FFi(rightEdge);
+        externalFaces.push_back(ExternalFaceData(runPos.FFlip(),
+                                                 faceSubdivisionsIt->second.subfaces.front().back().faceP,
+                                                 runPos.F()->FFi(rightEdge),
+                                                 rightEdge));
+      } else if (!runPos.FFlip()->IsS() && !runPos.F()->IsS()) {
+        assert(runPos.E() == rightEdge);
+        assert(faceSubdivisionsIt->second.subfaces.size() == 1);
+        faceSubdivisionsNeighbourIt = faceSubdivisions.find(runPos.FFlip());
+        assert(faceSubdivisionsNeighbourIt != faceSubdivisions.end());
+        assert(faceSubdivisionsNeighbourIt->second.subfaces.size() == 1);
+        pbottomEdge = faceSubdivisionsNeighbourIt->second.firstEdge;
+        prightEdge = runPos.FFlip()->Next(pbottomEdge);
+        ptopEdge = runPos.FFlip()->Next(prightEdge);
+        pleftEdge = runPos.FFlip()->Next(ptopEdge);
+        if (runPos.F()->FFi(rightEdge) == pleftEdge) {
+          faceSubdivisionsIt->second.subfaces.front().back().ffpAdj.at(rightEdge) = faceSubdivisionsNeighbourIt->second.subfaces.front().front().faceP;
+          faceSubdivisionsIt->second.subfaces.front().back().ffiAdj.at(rightEdge) = pleftEdge;
+          faceSubdivisionsNeighbourIt->second.subfaces.front().front().ffpAdj.at(pleftEdge) = faceSubdivisionsIt->second.subfaces.front().back().faceP;
+          faceSubdivisionsNeighbourIt->second.subfaces.front().front().ffiAdj.at(pleftEdge) = rightEdge;
+        } else {
+          assert(runPos.F()->FFi(rightEdge) == prightEdge);
+          faceSubdivisionsIt->second.subfaces.front().back().ffpAdj.at(rightEdge) = faceSubdivisionsNeighbourIt->second.subfaces.front().back().faceP;
+          faceSubdivisionsIt->second.subfaces.front().back().ffiAdj.at(rightEdge) = prightEdge;
+          faceSubdivisionsNeighbourIt->second.subfaces.front().back().ffpAdj.at(prightEdge) = faceSubdivisionsIt->second.subfaces.front().back().faceP;
+          faceSubdivisionsNeighbourIt->second.subfaces.front().back().ffiAdj.at(prightEdge) = rightEdge;
+        }
       }
-    }
 
-    // now apply ff adj changes
-    while (!ffAdjQueue.empty()) {
-      // the left/bottom face links to the right/top face
-      ffAdjQueue.front().first.first->FFp(ffAdjQueue.front().first.second) = ffAdjQueue.front().second.first;
-      ffAdjQueue.front().first.first->FFi(ffAdjQueue.front().first.second) = ffAdjQueue.front().second.second;
-      // the right/top face links to the left/bottom face
-      ffAdjQueue.front().second.first->FFp(ffAdjQueue.front().second.second) = ffAdjQueue.front().first.first;
-      ffAdjQueue.front().second.first->FFi(ffAdjQueue.front().second.second) = ffAdjQueue.front().first.second;
-      // pop from queue
-      ffAdjQueue.pop();
-    }
+      // go on top edge
+      runPos.FlipE();
+      runPos.FlipV();
+      if (runPos.IsBorder()) {
+        // assign top edge vertices and face-to-border adjacency
+        if (runPos.E() == topEdge) {
+          // get pre-existing coords
+          fromPoint = faceSubdivisionsIt->second.subfaces.back().front().fvpAdj.at(tlVInd)->P();
+          toPoint = faceSubdivisionsIt->second.subfaces.back().back().fvpAdj.at(trVInd)->P();
+          // assign new vertices
+          for (size_t j = 0; j < n - 1; ++j, ++firstAddedVertexIt) {
+            firstAddedVertexIt->P() = fromPoint + (toPoint - fromPoint) * (j + 1) / n;
+            faceSubdivisionsIt->second.subfaces.back().at(j).fvpAdj.at(trVInd) = &*firstAddedVertexIt;
+            faceSubdivisionsIt->second.subfaces.back().at(j+1).fvpAdj.at(tlVInd) = &*firstAddedVertexIt;
+          }
+          // update face-to-face adjacency
+          for (size_t j = 0; j < n; ++j) {
+            faceSubdivisionsIt->second.subfaces.back().at(j).ffpAdj.at(topEdge) = faceSubdivisionsIt->second.subfaces.back().at(j).faceP;
+            faceSubdivisionsIt->second.subfaces.back().at(j).ffiAdj.at(topEdge) = topEdge;
+          }
+        } else if (runPos.E() == leftEdge) {
+          // get pre-existing coords
+          fromPoint = faceSubdivisionsIt->second.subfaces.front().front().fvpAdj.at(blVInd)->P();
+          toPoint = faceSubdivisionsIt->second.subfaces.back().front().fvpAdj.at(tlVInd)->P();
+          // assign new vertices
+          for (size_t i = 0; i < n - 1; ++i, ++firstAddedVertexIt) {
+            firstAddedVertexIt->P() = fromPoint + (toPoint - fromPoint) * (i + 1) / n;
+            faceSubdivisionsIt->second.subfaces.at(i).front().fvpAdj.at(tlVInd) = &*firstAddedVertexIt;
+            faceSubdivisionsIt->second.subfaces.at(i+1).front().fvpAdj.at(blVInd) = &*firstAddedVertexIt;
+          }
+          // update face-to-face adjacency
+          for (size_t i = 0; i < n; ++i) {
+            faceSubdivisionsIt->second.subfaces.at(i).front().ffpAdj.at(leftEdge) = faceSubdivisionsIt->second.subfaces.at(i).front().faceP;
+            faceSubdivisionsIt->second.subfaces.at(i).front().ffiAdj.at(leftEdge) = leftEdge;
+          }
+        } else {
+          assert(runPos.E() == rightEdge);
+          // get pre-existing coords
+          fromPoint = faceSubdivisionsIt->second.subfaces.front().back().fvpAdj.at(brVInd)->P();
+          toPoint = faceSubdivisionsIt->second.subfaces.back().back().fvpAdj.at(trVInd)->P();
+          // assign new vertices
+          for (size_t i = 0; i < n - 1; ++i, ++firstAddedVertexIt) {
+            firstAddedVertexIt->P() = fromPoint + (toPoint - fromPoint) * (i + 1) / n;
+            faceSubdivisionsIt->second.subfaces.at(i).back().fvpAdj.at(trVInd) = &*firstAddedVertexIt;
+            faceSubdivisionsIt->second.subfaces.at(i+1).back().fvpAdj.at(brVInd) = &*firstAddedVertexIt;
+          }
+          // update face-to-face adjacency
+          for (size_t i = 0; i < n; ++i) {
+            faceSubdivisionsIt->second.subfaces.at(i).back().ffpAdj.at(rightEdge) = faceSubdivisionsIt->second.subfaces.at(i).back().faceP;
+            faceSubdivisionsIt->second.subfaces.at(i).back().ffiAdj.at(rightEdge) = rightEdge;
+          }
+        }
+      } else {
+        // go onto the next face
+        runPos.FlipF();
+      }
+    } while (!runPos.IsBorder() && runPos != startPos);
 
-    // and apply fv adj changes
-    while (!fvAdjQueue.empty()) {
-      *fvAdjQueue.front().first = fvAdjQueue.front().second;
-      fvAdjQueue.pop();
+    // final pass: compute coords of new internal vertices, copy all data into mesh and clear flags
+    for (faceSubdivisionsIt = faceSubdivisions.begin(); faceSubdivisionsIt != faceSubdivisions.end(); ++faceSubdivisionsIt) {
+      // clear flags
+      faceSubdivisionsIt->first->ClearV();
+      if (faceSubdivisionsIt->first->IsS())
+        faceSubdivisionsIt->first->ClearS();
+
+      // get vertex indices
+      blVInd = faceSubdivisionsIt->second.firstVertex;
+      brVInd = faceSubdivisionsIt->first->Next(blVInd);
+
+      // compute coords on bottom side and internal, horizontally
+      for (size_t i = 1; i < faceSubdivisionsIt->second.subfaces.size(); ++i) {
+        fromPoint = faceSubdivisionsIt->second.subfaces.at(i).front().fvpAdj.at(blVInd)->P();
+        toPoint = faceSubdivisionsIt->second.subfaces.at(i).back().fvpAdj.at(brVInd)->P();
+        for (size_t j = 1; j < n; ++j)
+          faceSubdivisionsIt->second.subfaces.at(i).at(j).fvpAdj.at(blVInd)->P() = fromPoint + (toPoint - fromPoint) * j / n;
+      }
+
+      // finally, copy data into mesh
+      for (size_t i = 0; i < faceSubdivisionsIt->second.subfaces.size(); ++i)
+        for (size_t j = 0; j < n; ++j) {
+          faceP = faceSubdivisionsIt->second.subfaces.at(i).at(j).faceP;
+          for (size_t k = 0; k < faceSubdivisionsIt->second.subfaces.at(i).at(j).ffpAdj.size(); ++k)
+            faceP->FFp(k) = faceSubdivisionsIt->second.subfaces.at(i).at(j).ffpAdj.at(k);
+          for (size_t k = 0; k < faceSubdivisionsIt->second.subfaces.at(i).at(j).ffiAdj.size(); ++k)
+            faceP->FFi(k) = faceSubdivisionsIt->second.subfaces.at(i).at(j).ffiAdj.at(k);
+          for (size_t k = 0; k < faceSubdivisionsIt->second.subfaces.at(i).at(j).fvpAdj.size(); ++k)
+            faceP->V(k) = faceSubdivisionsIt->second.subfaces.at(i).at(j).fvpAdj.at(k);
+        }
     }
+    // very last step: update external faces adjacency
+    for (externalFacesIt = externalFaces.begin(); externalFacesIt != externalFaces.end(); ++externalFacesIt) {
+      externalFacesIt->faceTo->FFp(externalFacesIt->edgeTo) = externalFacesIt->faceFrom;
+      externalFacesIt->faceTo->FFi(externalFacesIt->edgeTo) = externalFacesIt->edgeFrom;
+    }
+    // very very last step: update pos
+    pos.V() = pos.F()->V(posVInd);
+  }
+
+  /**
+   * @brief SplitPolychord splits a polychord into n polychords by inserting all the needed faces.
+   * @param mesh is the input polygonal mesh.
+   * @param pos is a position into the polychord (not necessarily the starting border). It will be updated with changes.
+   * @param n is the number of polychords to replace the input one.
+   */
+  static void SplitPolychord (PolyMeshType &mesh, vcg::face::Pos<FaceType> &pos, const size_t n) {
+    std::vector<FacePointer *> facesToUpdate;
+    std::vector<VertexPointer *> verticesToUpdate;
+    SplitPolychord(mesh, pos, n, facesToUpdate, verticesToUpdate);
   }
 
   /**
