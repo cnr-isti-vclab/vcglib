@@ -100,7 +100,7 @@ public:
     // Returns the face index of the vertex inside the face.
     // Note that this is DIFFERENT from using the z member that denotes the edge index inside the face.
     // It should holds that Vind != (z+1)%3   &&   Vind == z || Vind = z+2%3
-    int VInd()
+    int VInd() const
     {
         for(int i = 0; i < f->VN(); ++i) if(v==f->V(i)) return i;
         assert(0);
