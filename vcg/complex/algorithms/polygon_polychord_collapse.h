@@ -1069,7 +1069,6 @@ public:
       if (!runPos.F()->IsV()) {
         runPos.F()->SetV();
         faceSubdivisionsIt = faceSubdivisions.insert(std::make_pair(runPos.F(), FaceSubdivision())).first;
-        assert(faceSubdivisionsIt != faceSubdivisions.end());
         faceSubdivisionsIt->second.firstEdge = runPos.E();
         faceSubdivisionsIt->second.firstVertex = runPos.VInd();
         if (runPos.F()->IsS())
@@ -1137,20 +1136,17 @@ public:
       // get current and previous subdivision
       faceSubdivisionsPrevIt = faceSubdivisionsIt;
       faceSubdivisionsIt = faceSubdivisions.find(runPos.F());
-      assert(faceSubdivisionsIt != faceSubdivisions.end());
 
       // get original indices
       bottomEdge = faceSubdivisionsIt->second.firstEdge;
       rightEdge = runPos.F()->Next(bottomEdge);
       topEdge = runPos.F()->Next(rightEdge);
       leftEdge = runPos.F()->Next(topEdge);
-      assert(runPos.F()->Prev(bottomEdge) == leftEdge);
       blVInd = faceSubdivisionsIt->second.firstVertex;
       brVInd = runPos.F()->Next(blVInd);
       trVInd = runPos.F()->Next(brVInd);
       tlVInd = runPos.F()->Next(trVInd);
       if (faceSubdivisionsPrevIt != faceSubdivisions.end()) {
-        assert(!runPos.IsBorder());
         pbottomEdge = faceSubdivisionsPrevIt->second.firstEdge;
         prightEdge = runPos.FFlip()->Next(pbottomEdge);
         ptopEdge = runPos.FFlip()->Next(prightEdge);
@@ -1200,7 +1196,7 @@ public:
               faceSubdivisionsPrevIt->second.subfaces.at(n-j-1).back().ffiAdj.at(prightEdge) = bottomEdge;
             }
           } else {
-            assert(runPos.F()->FFi(bottomEdge) == pleftEdge);
+            // must be pleftEdge
             // update face-to-vertex adjacency
             for (size_t i = 0; i < n - 1; ++i) {
               faceSubdivisionsPrevIt->second.subfaces.at(i).front().fvpAdj.at(ptlVInd) = faceSubdivisionsIt->second.subfaces.front().at(i).fvpAdj.at(brVInd);
@@ -1215,7 +1211,7 @@ public:
             }
           }
         } else {
-          assert(runPos.IsBorder());
+          // must be on border
           // update face-to-face adjacency
           for (size_t j = 0; j < n; ++j) {
             faceSubdivisionsIt->second.subfaces.front().at(j).ffpAdj.at(bottomEdge) = faceSubdivisionsIt->second.subfaces.front().at(j).faceP;
@@ -1232,7 +1228,7 @@ public:
           faceSubdivisionsIt->second.subfaces.at(i).front().fvpAdj.at(tlVInd) = &*firstAddedVertexIt;
           faceSubdivisionsIt->second.subfaces.at(i+1).front().fvpAdj.at(blVInd) = &*firstAddedVertexIt;
         }
-        assert(!runPos.IsBorder());
+        // can't be on border
         if (runPos.F()->FFi(leftEdge) == ptopEdge) {
           // update face-to-vertex adjacency
           for (size_t j = 0; j < n - 1; ++j) {
@@ -1260,7 +1256,7 @@ public:
             faceSubdivisionsPrevIt->second.subfaces.at(i).back().ffiAdj.at(prightEdge) = leftEdge;
           }
         } else {
-          assert(runPos.F()->FFi(leftEdge) == pleftEdge);
+          // must be runPos.F()->FFi(leftEdge) == pleftEdge
           // update face-to-vertex adjacency
           for (size_t i = 0; i < n - 1; ++i) {
             faceSubdivisionsPrevIt->second.subfaces.at(i).front().fvpAdj.at(ptlVInd) = faceSubdivisionsIt->second.subfaces.front().at(n-i-1).fvpAdj.at(blVInd);
@@ -1275,7 +1271,7 @@ public:
           }
         }
       } else {
-        assert(runPos.E() == rightEdge);
+        // must be runPos.E() == rightEdge
         // get pre-existing coords
         fromPoint = faceSubdivisionsIt->second.subfaces.front().back().fvpAdj.at(brVInd)->P();
         toPoint = faceSubdivisionsIt->second.subfaces.back().back().fvpAdj.at(trVInd)->P();
@@ -1285,7 +1281,7 @@ public:
           faceSubdivisionsIt->second.subfaces.at(i).back().fvpAdj.at(trVInd) = &*firstAddedVertexIt;
           faceSubdivisionsIt->second.subfaces.at(i+1).back().fvpAdj.at(brVInd) = &*firstAddedVertexIt;
         }
-        assert(!runPos.IsBorder());
+        // can't be on border
         if (runPos.F()->FFi(rightEdge) == ptopEdge) {
           // update face-to-vertex adjacency
           for (size_t j = 0; j < n - 1; ++j) {
@@ -1313,7 +1309,7 @@ public:
             faceSubdivisionsPrevIt->second.subfaces.at(n-i-1).back().ffiAdj.at(prightEdge) = rightEdge;
           }
         } else {
-          assert(runPos.F()->FFi(rightEdge) == pleftEdge);
+          // must be runPos.F()->FFi(rightEdge) == pleftEdge
           // update face-to-vertex adjacency
           for (size_t i = 0; i < n - 1; ++i) {
             faceSubdivisionsPrevIt->second.subfaces.at(i).front().fvpAdj.at(ptlVInd) = faceSubdivisionsIt->second.subfaces.at(i).back().fvpAdj.at(trVInd);
@@ -1335,13 +1331,12 @@ public:
       runPos.FlipV();
       if (runPos.IsBorder()) {
         if (!runPos.F()->IsS()) {
-          assert(runPos.E() == leftEdge);
-          assert(faceSubdivisionsIt->second.subfaces.size() == 1);
+          // must be runPos.E() == leftEdge and faceSubdivisionsIt->second.subfaces.size() == 1
           faceSubdivisionsIt->second.subfaces.front().front().ffpAdj.at(leftEdge) = faceSubdivisionsIt->second.subfaces.front().front().faceP;
           faceSubdivisionsIt->second.subfaces.front().front().ffiAdj.at(leftEdge) = leftEdge;
         }
       } else if (!runPos.FFlip()->IsV()) {
-        assert(runPos.E() == leftEdge);
+        // must be runPos.E() == leftEdge and faceSubdivisionsIt->second.subfaces.size() == 1
         assert(faceSubdivisionsIt->second.subfaces.size() == 1);
         faceSubdivisionsIt->second.subfaces.front().front().ffpAdj.at(leftEdge) = runPos.FFlip();
         faceSubdivisionsIt->second.subfaces.front().front().ffiAdj.at(leftEdge) = runPos.F()->FFi(leftEdge);
@@ -1350,11 +1345,9 @@ public:
                                                  runPos.F()->FFi(leftEdge),
                                                  leftEdge));
       } else if (!runPos.FFlip()->IsS() && !runPos.F()->IsS()) {
-        assert(runPos.E() == leftEdge);
-        assert(faceSubdivisionsIt->second.subfaces.size() == 1);
+        // must be runPos.E() == leftEdge and faceSubdivisionsIt->second.subfaces.size() == 1
         faceSubdivisionsNeighbourIt = faceSubdivisions.find(runPos.FFlip());
-        assert(faceSubdivisionsNeighbourIt != faceSubdivisions.end());
-        assert(faceSubdivisionsNeighbourIt->second.subfaces.size() == 1);
+        // must be faceSubdivisionsNeighbourIt != faceSubdivisions.end() and faceSubdivisionsNeighbourIt->second.subfaces.size() == 1
         pbottomEdge = faceSubdivisionsNeighbourIt->second.firstEdge;
         prightEdge = runPos.FFlip()->Next(pbottomEdge);
         ptopEdge = runPos.FFlip()->Next(prightEdge);
@@ -1365,7 +1358,7 @@ public:
           faceSubdivisionsNeighbourIt->second.subfaces.front().front().ffpAdj.at(pleftEdge) = faceSubdivisionsIt->second.subfaces.front().front().faceP;
           faceSubdivisionsNeighbourIt->second.subfaces.front().front().ffiAdj.at(pleftEdge) = leftEdge;
         } else {
-          assert(runPos.F()->FFi(leftEdge) == prightEdge);
+          // must be runPos.F()->FFi(leftEdge) == prightEdge
           faceSubdivisionsIt->second.subfaces.front().front().ffpAdj.at(leftEdge) = faceSubdivisionsNeighbourIt->second.subfaces.front().back().faceP;
           faceSubdivisionsIt->second.subfaces.front().front().ffiAdj.at(leftEdge) = prightEdge;
           faceSubdivisionsNeighbourIt->second.subfaces.front().back().ffpAdj.at(prightEdge) = faceSubdivisionsIt->second.subfaces.front().front().faceP;
@@ -1378,14 +1371,12 @@ public:
       runPos.FlipE();
       if (runPos.IsBorder()) {
         if (!runPos.F()->IsS()) {
-          assert(runPos.E() == rightEdge);
-          assert(faceSubdivisionsIt->second.subfaces.size() == 1);
+          // must be runPos.E() == rightEdge and faceSubdivisionsIt->second.subfaces.size() == 1
           faceSubdivisionsIt->second.subfaces.front().back().ffpAdj.at(rightEdge) = faceSubdivisionsIt->second.subfaces.front().back().faceP;
           faceSubdivisionsIt->second.subfaces.front().back().ffiAdj.at(rightEdge) = rightEdge;
         }
       } else if (!runPos.FFlip()->IsV()) {
-        assert(runPos.E() == rightEdge);
-        assert(faceSubdivisionsIt->second.subfaces.size() == 1);
+        // must be runPos.E() == rightEdge and faceSubdivisionsIt->second.subfaces.size() == 1
         faceSubdivisionsIt->second.subfaces.front().back().ffpAdj.at(rightEdge) = runPos.FFlip();
         faceSubdivisionsIt->second.subfaces.front().back().ffiAdj.at(rightEdge) = runPos.F()->FFi(rightEdge);
         externalFaces.push_back(ExternalFaceData(runPos.FFlip(),
@@ -1393,11 +1384,9 @@ public:
                                                  runPos.F()->FFi(rightEdge),
                                                  rightEdge));
       } else if (!runPos.FFlip()->IsS() && !runPos.F()->IsS()) {
-        assert(runPos.E() == rightEdge);
-        assert(faceSubdivisionsIt->second.subfaces.size() == 1);
+        // must be runPos.E() == rightEdge and faceSubdivisionsIt->second.subfaces.size() == 1
         faceSubdivisionsNeighbourIt = faceSubdivisions.find(runPos.FFlip());
-        assert(faceSubdivisionsNeighbourIt != faceSubdivisions.end());
-        assert(faceSubdivisionsNeighbourIt->second.subfaces.size() == 1);
+        // must be faceSubdivisionsNeighbourIt != faceSubdivisions.end() and faceSubdivisionsNeighbourIt->second.subfaces.size() == 1
         pbottomEdge = faceSubdivisionsNeighbourIt->second.firstEdge;
         prightEdge = runPos.FFlip()->Next(pbottomEdge);
         ptopEdge = runPos.FFlip()->Next(prightEdge);
@@ -1408,7 +1397,7 @@ public:
           faceSubdivisionsNeighbourIt->second.subfaces.front().front().ffpAdj.at(pleftEdge) = faceSubdivisionsIt->second.subfaces.front().back().faceP;
           faceSubdivisionsNeighbourIt->second.subfaces.front().front().ffiAdj.at(pleftEdge) = rightEdge;
         } else {
-          assert(runPos.F()->FFi(rightEdge) == prightEdge);
+          // must be runPos.F()->FFi(rightEdge) == prightEdge
           faceSubdivisionsIt->second.subfaces.front().back().ffpAdj.at(rightEdge) = faceSubdivisionsNeighbourIt->second.subfaces.front().back().faceP;
           faceSubdivisionsIt->second.subfaces.front().back().ffiAdj.at(rightEdge) = prightEdge;
           faceSubdivisionsNeighbourIt->second.subfaces.front().back().ffpAdj.at(prightEdge) = faceSubdivisionsIt->second.subfaces.front().back().faceP;
@@ -1452,7 +1441,7 @@ public:
             faceSubdivisionsIt->second.subfaces.at(i).front().ffiAdj.at(leftEdge) = leftEdge;
           }
         } else {
-          assert(runPos.E() == rightEdge);
+          // must be runPos.E() == rightEdge
           // get pre-existing coords
           fromPoint = faceSubdivisionsIt->second.subfaces.front().back().fvpAdj.at(brVInd)->P();
           toPoint = faceSubdivisionsIt->second.subfaces.back().back().fvpAdj.at(trVInd)->P();
