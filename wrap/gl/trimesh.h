@@ -118,8 +118,6 @@ public:
         int len;
         int start;
     };
-
-
 };
 
 template <class MeshType,  bool partial = false , class FACE_POINTER_CONTAINER = std::vector<typename MeshType::FacePointer> >
@@ -137,9 +135,10 @@ public:
 
     FACE_POINTER_CONTAINER face_pointers;
 
+    MeshType *m;
+    unsigned int array_buffers[3];
 
     std::vector<unsigned int> TMId;
-    unsigned int array_buffers[3];
 
     int curr_hints;      // the current hints
 
@@ -147,7 +146,28 @@ public:
     int   HNParami[8];
     float HNParamf[8];
 
-    MeshType *m;
+    DrawMode cdm; // Current DrawMode
+    NormalMode cnm; // Current NormalMode
+    ColorMode ccm; // Current ColorMode
+
+    static NormalMode convertDrawModeToNormalMode(DrawMode dm)
+    {
+        switch(dm)
+        {
+        case(DMFlat):
+        case(DMFlatWire):
+        case(DMRadar):
+            return NMPerFace;
+        case(DMPoints):
+        case(DMWire):
+        case(DMSmooth):
+            return NMPerVert;
+        default:
+            return NMNone;
+        }
+        return NMNone;
+    }
+
     GlTrimesh()
     {
         m=0;
@@ -175,6 +195,9 @@ public:
         }
     }
 
+    unsigned int dl;
+    std::vector<unsigned int> indices;
+
     void SetHintParami(const HintParami hip, const int value)
     {
         HNParami[hip]=value;
@@ -199,13 +222,6 @@ public:
     {
         curr_hints&=(~hn);
     }
-
-    unsigned int dl;
-    std::vector<unsigned int> indices;
-
-    DrawMode cdm; // Current DrawMode
-    NormalMode cnm; // Current NormalMode
-    ColorMode ccm; // Current ColorMode
 
 void Update(/*Change c=CHAll*/)
 {
@@ -308,8 +324,6 @@ void Draw(TextureMode tm)
         default : break;
     }
 }
-
-
 
 template< DrawMode dm, ColorMode cm, TextureMode tm>
 void Draw()
