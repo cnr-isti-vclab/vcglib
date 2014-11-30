@@ -252,7 +252,7 @@ public:
 
     typename MeshType::template PerVertexAttributeHandle<ScalarType> h =
         tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType>(m, "area");
-    for(size_t i=0;i<m.vn;++i) h[i]=0;
+    for(int i=0;i<m.vn;++i) h[i]=0;
 
     for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi)
     {
@@ -261,7 +261,7 @@ public:
         h[tri::Index(m,fi->V(j))] += a;
     }
     ScalarType maxA=0;
-    for(size_t i=0;i<m.vn;++i)
+    for(int i=0;i<m.vn;++i)
       maxA = max(maxA,h[i]);
 
       //store the index and the scalar for the sparse matrix
