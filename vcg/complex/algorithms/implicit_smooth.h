@@ -50,19 +50,23 @@ public:
         int numF;
         std::vector<ScalarType > BarycentricW;
         CoordType TargetPos;
+        ScalarType facePenalty;
 
         FaceConstraint()
         {
             numF=-1;
+            facePenalty=ScalarType(PENALTY);
         }
 
         FaceConstraint(int _numF,
                        const std::vector<ScalarType > &_BarycentricW,
-                       const CoordType &_TargetPos)
+                       const CoordType &_TargetPos,
+                       const ScalarType fPenalty = ScalarType(PENALTY))
         {
             numF=_numF;
             BarycentricW= std::vector<ScalarType > (_BarycentricW.begin(),_BarycentricW.end());
             TargetPos=_TargetPos;
+            facePenalty=fPenalty;
         }
     };
 
@@ -99,8 +103,8 @@ private:
 
     static void InitSparse(const std::vector<std::pair<int,int> > &Index,
                            const std::vector<ScalarType> &Values,
-                           const size_t m,
-                           const size_t n,
+                           const int m,
+                           const int n,
                            Eigen::SparseMatrix<ScalarType>& X)
     {
         assert(Index.size()==Values.size());
@@ -134,7 +138,7 @@ private:
         if (SParam.fixBorder)
         {
             //add penalization constra
-            for (int i=0;i<mesh.vert.size();i++)
+            for (size_t i=0;i<mesh.vert.size();i++)
             {
                 if (!mesh.vert[i].IsB())continue;
                 To_Fix.push_back(i);
@@ -166,6 +170,7 @@ private:
                                               std::vector<int> &IndexRhs,
                                               std::vector<ScalarType> &ValueRhs)
     {
+        ScalarType penalty;
         int baseIndex=mesh.vert.size();
         for (size_t i=0;i<SParam.ConstrainedF.size();i++)
         {
@@ -175,11 +180,12 @@ private:
             //add one hard constraint
             int FaceN=SParam.ConstrainedF[i].numF;
             assert(FaceN>=0);
-            assert(FaceN<mesh.face.size());
-            assert(mesh.face[FaceN].VN()==SParam.ConstrainedF[i].BarycentricW.size());
+            assert(FaceN<(int)mesh.face.size());
+            assert(mesh.face[FaceN].VN()==(int)SParam.ConstrainedF[i].BarycentricW.size());
+            penalty=SParam.ConstrainedF[i].facePenalty;
 
             //then add all the weights to impose the constraint
-            for (size_t j=0;j<mesh.face[FaceN].VN();j++)
+            for (int j=0;j<mesh.face[FaceN].VN();j++)
             {
                 //get the current weight
                 ScalarType currW=SParam.ConstrainedF[i].BarycentricW[j];
@@ -197,10 +203,10 @@ private:
                     int ComponentConstraint=(IndexConstraint*3)+k;
                     IndexC.push_back(std::pair<int,int>(ComponentConstraint,IndexV));
 
-                    WeightC.push_back(currW*PENALTY);
+                    WeightC.push_back(currW*penalty);
 
                     IndexC.push_back(std::pair<int,int>(IndexV,ComponentConstraint));
-                    WeightC.push_back(currW*PENALTY);
+                    WeightC.push_back(currW*penalty);
 
                     //this to avoid the 1 on diagonal last entry of mass matrix
                     IndexC.push_back(std::pair<int,int>(ComponentConstraint,ComponentConstraint));
@@ -218,7 +224,7 @@ private:
 
                 //add the diagonal value
                 IndexRhs.push_back(ComponentConstraint);
-                ValueRhs.push_back(ComponentV*PENALTY);
+                ValueRhs.push_back(ComponentV*penalty);
             }
 
         }
@@ -242,7 +248,7 @@ public:
         //add the entries for mass matrix
         if (SParam.useMassMatrix) MeshToMatrix<MeshType>::MassMatrixEntry(mesh,IndexM,ValuesM);
         //then add entries for lagrange mult due to barycentric constraints
-        for (int i=0;i<SParam.ConstrainedF.size();i++)
+        for (size_t i=0;i<SParam.ConstrainedF.size();i++)
         {
             int baseIndex=(mesh.vert.size()+i)*3;
             for (int j=0;j<3;j++)
