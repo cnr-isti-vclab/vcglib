@@ -180,8 +180,48 @@ ScalarType DistanceFromVoronoiFace(CoordType p_point)
     return closestDist;
 }
 
+void BarycentricRelaxVoronoiSamples(int relaxStep)
+{
+  bool changed=false;
+  assert(montecarloVolumeMesh.vn > seedMesh.vn*20);
+  int i;
+  for(i=0;i<relaxStep;++i)
+  {
+    std::vector<std::pair<int,CoordType> > sumVec(seedMesh.vn,std::make_pair(0,CoordType(0,0,0)));
+    for(typename MeshType::VertexIterator vi=montecarloVolumeMesh.vert.begin();vi!=montecarloVolumeMesh.vert.end();++vi)
+    {
+      unsigned int seedInd;
+      ScalarType sqdist;
+      seedTree->doQueryClosest(vi->P(),seedInd,sqdist);
+      sumVec[seedInd].first++;
+      sumVec[seedInd].second+=vi->cP();
+    }
 
- void RelaxVoronoiSamples(int relaxStep)
+    changed=false;
+    for(int i=0;i<seedMesh.vert.size();++i)
+    {
+      if(sumVec[i].first == 0) tri::Allocator<MeshType>::DeleteVertex(seedMesh,seedMesh.vert[i]);
+      else
+      {
+        CoordType prevP = seedMesh.vert[i].P();
+        seedMesh.vert[i].P() = sumVec[i].second /ScalarType(sumVec[i].first);
+        if(prevP != seedMesh.vert[i].P()) changed = true;
+      }
+    }
+    tri::Allocator<MeshType>::CompactVertexVector(seedMesh);
+
+    // Kdtree for the seeds must be rebuilt at the end of each step;
+    VertexConstDataWrapper<MeshType> vdw(seedMesh);
+    delete seedTree;
+    seedTree = new KdTree<ScalarType>(vdw);
+    if(!changed)
+      break;
+  }
+  qDebug("performed %i relax step on %i",i,relaxStep);
+}
+
+// Given a volumetric sampling of the mesh, and a set of seeds
+void QuadricRelaxVoronoiSamples(int relaxStep)
 {
   bool changed=false;
   assert(montecarloVolumeMesh.vn > seedMesh.vn*20);
@@ -191,6 +231,9 @@ ScalarType DistanceFromVoronoiFace(CoordType p_point)
     QuadricSumDistance dz;
     std::vector<QuadricSumDistance> dVec(montecarloVolumeMesh.vert.size(),dz);
 
+    // Each region has a quadric representing the sum of the squared distances of all the points of its region.
+    // First Loop:
+    // For each point of the volume add its distance to the quadric of its region.
     for(typename MeshType::VertexIterator vi=montecarloVolumeMesh.vert.begin();vi!=montecarloVolumeMesh.vert.end();++vi)
     {
       unsigned int seedInd;
@@ -199,8 +242,9 @@ ScalarType DistanceFromVoronoiFace(CoordType p_point)
       dVec[seedInd].AddPoint(vi->P());
     }
 
-    // Search the local maxima for each region and use them as new seeds
-    std::vector< std::pair<ScalarType,int> > seedMaximaVec(seedMesh.vert.size(),std::make_pair(std::numeric_limits<ScalarType>::max(),-1 ));
+    // Second Loop: Search for each region the point that has minimal squared distance from all other points in that region.
+    // We do that evaluating the quadric in each point
+    std::vector< std::pair<ScalarType,int> > seedMinimaVec(seedMesh.vert.size(),std::make_pair(std::numeric_limits<ScalarType>::max(),-1 ));
 
     for(typename MeshType::VertexIterator vi=montecarloVolumeMesh.vert.begin();vi!=montecarloVolumeMesh.vert.end();++vi)
     {
@@ -209,18 +253,18 @@ ScalarType DistanceFromVoronoiFace(CoordType p_point)
       seedTree->doQueryClosest(vi->P(),seedInd,sqdist);
 
       ScalarType val = dVec[seedInd].Eval(vi->P());
-      if(val < seedMaximaVec[seedInd].first)
+      if(val < seedMinimaVec[seedInd].first)
       {
-        seedMaximaVec[seedInd].first = val;
-        seedMaximaVec[seedInd].second = tri::Index(montecarloVolumeMesh,*vi);
+        seedMinimaVec[seedInd].first = val;
+        seedMinimaVec[seedInd].second = tri::Index(montecarloVolumeMesh,*vi);
       }
     }
     changed=false;
     for(int i=0;i<seedMesh.vert.size();++i)
     {
       CoordType prevP = seedMesh.vert[i].P() ;
-      if(seedMaximaVec[i].second == -1) tri::Allocator<MeshType>::DeleteVertex(seedMesh,seedMesh.vert[i]);
-      seedMesh.vert[i].P() = montecarloVolumeMesh.vert[seedMaximaVec[i].second].P();
+      if(seedMinimaVec[i].second == -1) tri::Allocator<MeshType>::DeleteVertex(seedMesh,seedMesh.vert[i]);
+      seedMesh.vert[i].P() = montecarloVolumeMesh.vert[seedMinimaVec[i].second].P();
       if(prevP != seedMesh.vert[i].P()) changed = true;
     }
     tri::Allocator<MeshType>::CompactVertexVector(seedMesh);
