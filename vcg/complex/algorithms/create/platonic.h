@@ -1091,7 +1091,7 @@ void BuildCylinderEdgeShell(MeshType &mIn, MeshType &mOut, float radius=0, int s
   for(size_t i=0;i<edgeVec.size();++i)
   {
     MeshType mCyl;
-    tri::OrientedCylinder(mCyl,edgeVec[i].v[0]->P(),edgeVec[i].v[1]->P(),radius,false,slices,stacks);
+    tri::OrientedCylinder(mCyl,edgeVec[i].v[0]->P(),edgeVec[i].v[1]->P(),radius,true,slices,stacks);
     tri::Append<MeshType,MeshType>::Mesh(mOut,mCyl);
   }
 }
@@ -1111,7 +1111,7 @@ void BuildSphereVertexShell(MeshType &mIn, MeshType &mOut, float radius=0, int r
 }
 
 template <class MeshType>
-void BuildCylinderVertexShell(MeshType &mIn, MeshType &mOut, float radius=0, float height=0 )
+void BuildCylinderVertexShell(MeshType &mIn, MeshType &mOut, float radius=0, float height=0, int slices=16, int stacks=1 )
 {
   typedef typename MeshType::CoordType CoordType;
   if(radius==0) radius = mIn.bbox.Diag()/100.0f;
@@ -1122,7 +1122,7 @@ void BuildCylinderVertexShell(MeshType &mIn, MeshType &mOut, float radius=0, flo
     CoordType n = mIn.vert[i].N().Normalize();
 
     MeshType mCyl;
-    tri::OrientedCylinder(mCyl,p-n*height,p+n*height,radius,true);
+    tri::OrientedCylinder(mCyl,p-n*height,p+n*height,radius,true,slices,stacks);
     tri::Append<MeshType,MeshType>::Mesh(mOut,mCyl);
   }
 }
