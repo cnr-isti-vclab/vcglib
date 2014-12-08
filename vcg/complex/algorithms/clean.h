@@ -130,7 +130,7 @@ public:
   public:
     inline bool operator()(VertexPointer const &a, VertexPointer const &b)
     {
-      return (*a).cP() < (*b).cP();
+        return ((*a).cP() == (*b).cP()) ? (a<b): ((*a).cP() < (*b).cP());
     }
   };
 
