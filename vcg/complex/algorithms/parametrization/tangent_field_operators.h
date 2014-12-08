@@ -581,6 +581,34 @@ public:
     }
 
 
+//    ///return true if a given vertex is singular,
+//    ///return also the missmatch
+//    static bool IsSingularByCross(const VertexType &v,int &missmatch)
+//    {
+//        typedef typename VertexType::FaceType FaceType;
+//        ///check that is on border..
+//        if (v.IsB())return false;
+
+//        std::vector<face::Pos<FaceType> > posVec;
+//        //SortedFaces(v,faces);
+//        face::Pos<FaceType> pos(v.cVFp(), v.cVFi());
+//        vcg::face::VFOrderedStarFF(pos, posVec);
+
+//        missmatch=0;
+//        for (unsigned int i=0;i<posVec.size();i++)
+//        {
+//            FaceType *curr_f=posVec[i].F();
+//            FaceType *next_f=posVec[(i+1)%posVec.size()].F();
+
+//            ///find the current missmatch
+//            missmatch+=MissMatchByCross(*curr_f,*next_f);
+
+//            missmatch=missmatch%4;
+//        }
+////        missmatch=missmatch%4;
+//        return(missmatch!=0);
+//    }
+
     ///return true if a given vertex is singular,
     ///return also the missmatch
     static bool IsSingularByCross(const VertexType &v,int &missmatch)
@@ -594,18 +622,19 @@ public:
         face::Pos<FaceType> pos(v.cVFp(), v.cVFi());
         vcg::face::VFOrderedStarFF(pos, posVec);
 
-        missmatch=0;
+        int curr_dir=0;
         for (unsigned int i=0;i<posVec.size();i++)
         {
             FaceType *curr_f=posVec[i].F();
             FaceType *next_f=posVec[(i+1)%posVec.size()].F();
 
-            ///find the current missmatch
-            missmatch+=MissMatchByCross(*curr_f,*next_f);
-
+            //find the current missmatch
+            //missmatch+=MissMatchByCross(*curr_f,*next_f);
+            curr_dir=FollowDirection(*curr_f,*next_f,curr_dir);
+            //missmatch=missmatch%4;
         }
-        missmatch=missmatch%4;
-        return(missmatch!=0);
+        missmatch=curr_dir;
+        return(curr_dir!=0);
     }
 
     ///select singular vertices
@@ -684,6 +713,17 @@ public:
         f1->PD1()=targD;
         f1->PD2()=f1->N()^targD;
         f1->PD2().Normalize();
+    }
+
+    static void OrientDirectionFaceCoherently(MeshType &mesh)
+    {
+        for (size_t i=0;i<mesh.face.size();i++)
+        {
+            FaceType *f=&mesh.face[i];
+            if (f->IsD())continue;
+            CoordType Ntest=mesh.face[i].PD1()^mesh.face[i].PD2();
+            if ((Ntest*vcg::Normal(f->P(0),f->P(1),f->P(2)))<0)mesh.face[i].PD2()=-mesh.face[i].PD2();
+        }
     }
 
     static void MakeDirectionFaceCoherent(MeshType &mesh,
