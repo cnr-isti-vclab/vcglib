@@ -379,7 +379,7 @@ ScalarType ComputeAspectRatio()
 		double a1=SolidAngle(1);
 		double a2=SolidAngle(2);
 		double a3=SolidAngle(3);
-		return (ScalarType)math::Min(a0,math::Min(a1,math::Min(a2,a3)));
+        return (ScalarType)std::min(a0,std::min(a1,std::min(a2,a3)));
 	}
 
 	///return true of p is inside tetrahedron's volume
