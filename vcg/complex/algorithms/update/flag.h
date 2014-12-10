@@ -339,7 +339,7 @@ public:
     //	TRACE("found %i border (%i complex) on %i edges\n",nborder,ncomplex,ne);
   }
 
-  /// Compute the PerVertex Border flag deriving it from the border flag of faces
+  /// Compute the PerVertex Border flag deriving it from the face-face adjacency
   static void VertexBorderFromFaceAdj(MeshType &m)
 {
     RequirePerFaceFlags(m);
@@ -365,6 +365,7 @@ public:
   {
     RequirePerFaceFlags(m);
     RequirePerVertexFlags(m);
+    VertexClearB(m);
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
       if(!(*fi).IsD())
       {
