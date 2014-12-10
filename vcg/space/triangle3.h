@@ -79,13 +79,13 @@ public:
 
 /// Returns the normal to the plane passing through p0,p1,p2
 template<class TriangleType>
-Point3<typename TriangleType::ScalarType> TriangleNormal(const TriangleType &t)
+typename TriangleType::CoordType TriangleNormal(const TriangleType &t)
 {
   return (( t.cP(1) - t.cP(0)) ^ (t.cP(2) - t.cP(0)));
 }
 /// Returns the normal to the plane passing through p0,p1,p2
 template<class TriangleType>
-Point3<typename TriangleType::ScalarType> NormalizedTriangleNormal(const TriangleType &t)
+typename TriangleType::CoordType NormalizedTriangleNormal(const TriangleType &t)
 {
   return (( t.cP(1) - t.cP(0)) ^ (t.cP(2) - t.cP(0))).Normalize();
 }
