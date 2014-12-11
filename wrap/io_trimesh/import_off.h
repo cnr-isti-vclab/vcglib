@@ -98,6 +98,15 @@ public:
     return Open(mesh,filename,loadmask,cb);
   }
 
+  static int OpenMem(MESH_TYPE &mesh, const char *mem, size_t sz, int &loadmask,
+                  CallBackPos *cb=0)
+  {
+    std::string str;
+    str.append(mem,sz);
+    std::istringstream strm(str);
+    return OpenStream(mesh,strm,loadmask,cb);
+  }
+
   /*!
                  *  Standard call for reading a mesh.
                  *
@@ -111,7 +120,12 @@ public:
     std::ifstream stream(filename);
     if (stream.fail())
       return CantOpen;
+    return OpenStream(mesh,stream,loadmask,cb);
+  }
 
+    static int OpenStream(MESH_TYPE &mesh, std::istream &stream, int &loadmask,
+                    CallBackPos *cb=0)
+    {
     std::vector< std::string > tokens;
     TokenizeNextLine(stream, tokens);
     if(tokens.empty()) return InvalidFile_MissingOFF;
@@ -593,7 +607,7 @@ protected:
                 * \param stream	The object providing the input stream
                 *	\param tokens	The "tokens" in the next line
                 */
-  inline static void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens)
+  inline static void TokenizeNextLine(std::istream &stream, std::vector< std::string > &tokens)
   {
     std::string line;
     do
