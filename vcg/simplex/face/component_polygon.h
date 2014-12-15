@@ -37,16 +37,18 @@ protected:
   }
 public:
   PolyInfo(){ _ns = -1; }
-  /* Note: the destructor will not be called in general because there are no virtual destructors.
-        Instead, the job of deallocating the memory will be done by the face allocator.
-        This destructor is only done for those who istance a face alone (outside a mesh)
-    */
   static bool HasPolyInfo()   { return true; }
   inline const int &  VN() const { return _ns;}
   inline int Prev(const int & i){ return (i+(VN()-1))%VN();}
   inline int Next(const int & i){ return (i+1)%VN();}
-  inline void Alloc(const int & /*ns*/){}
-  inline void Dealloc(){}
+  inline void Alloc(const int & ns){
+    T::Alloc(ns);
+    __SetVN(ns);
+  }
+  inline void Dealloc(){
+    T::Dealloc();
+    __SetVN(-1);
+  }
 
 private:
   int _ns;
@@ -58,7 +60,13 @@ public:
   typedef typename  T::VertexType::ScalarType ScalarType;
   typedef typename  T::VertexType VertexType;
 
-  PFVAdj(){_vpoly = NULL;}
+  PFVAdj(){ _vpoly = NULL; }
+  /* Note: the destructor will not be called in general because there are no virtual destructors.
+   * Instead, the job of deallocating the memory will be done by the face allocator.
+   * This destructor is only done for those who istance a face alone (outside a mesh)
+   */
+//  ~PFVAdj(){ __Dealloc(); }
+
   inline typename T::VertexType *       & V( const int j )       { assert(j>=0 && j<this->VN()); return _vpoly[j]; }
   inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<this->VN()); return _vpoly[j]; }
   inline typename T::VertexType *        cV( const int j ) const { assert(j>=0 && j<this->VN()); return _vpoly[j]; }
@@ -90,37 +98,37 @@ public:
   template <class LeftF>
   void ImportData(const LeftF & leftF){  T::ImportData(leftF);}
   inline void Alloc(const int & ns) {
-    if(_vpoly == NULL){
-      this->__SetVN(ns);
-      _vpoly = new   typename T::VertexType*[this->VN()];
-      for(int i = 0; i < this->VN(); ++i) _vpoly[i] = 0;
-    }
+    __Dealloc();
+    _vpoly = new   typename T::VertexType*[ns];
+    for(int i = 0; i < ns; ++i) _vpoly[i] = 0;
     T::Alloc(ns);
   }
   inline void Dealloc() {
-    if(_vpoly!=NULL){
-      delete [] _vpoly;
-      _vpoly = NULL;
-      this->__SetVN(-1);
-    }
+    __Dealloc();
     T::Dealloc();
-                        }
+  }
 
   static bool HasFVAdjacency()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("PFVAdj"));T::Name(name);}
 
 private:
+  inline void __Dealloc(){
+    delete [] _vpoly;
+    _vpoly = NULL;
+  }
+
   typename T::VertexPointer *_vpoly;
 };
 
 template <class T> class PVFAdj: public T {
 public:
 
-  PVFAdj(){_vfiP = NULL; _vfiP = NULL;}
+  PVFAdj(){ _vfiP = NULL; _vfiP = NULL; }
   /* Note: the destructor will not be called in general because there are no virtual destructors.
-        Instead, the job of deallocating the memory will be done bu the edge allocator.
-        This destructor is only done for those who istance a face alone (outside a mesh)
-    */
+   * Instead, the job of deallocating the memory will be done by the face allocator.
+   * This destructor is only done for those who istance a face alone (outside a mesh)
+   */
+//  ~PVFAdj(){ __Dealloc(); }
   typedef typename T::VertexType VertexType;
   typedef typename T::FaceType FaceType;
   typename T::FacePointer       &VFp(const int j)        { assert(j>=0 && j<this->VN());  return _vfpP[j]; }
@@ -130,22 +138,14 @@ public:
   template <class LeftF>
   void ImportData(const LeftF & leftF){T::ImportData(leftF);}
   inline void Alloc(const int & ns) {
-    if(_vfpP == NULL){
-      this->__SetVN(ns);
-      _vfpP = new  FaceType*[this->VN()];
-      _vfiP = new  char[this->VN()];
-      for(int i = 0; i < this->VN(); ++i) {_vfpP[i] = 0;_vfiP[i] = -1;}
-    }
+    _vfpP = new  FaceType*[ns];
+    _vfiP = new  char[ns];
+    for(int i = 0; i < ns; ++i) {_vfpP[i] = 0;_vfiP[i] = -1;}
     T::Alloc(ns);
-
   }
   unsigned int SizeNeigh(){ return this->VN();}
-
   inline void Dealloc() {
-    if(_vfpP!=NULL){
-      delete [] _vfpP; _vfpP = NULL;
-      delete [] _vfiP; _vfiP = NULL;
-    }
+    __Dealloc();
     T::Dealloc();
   }
 
@@ -153,6 +153,11 @@ public:
   static void Name(std::vector<std::string> & name){name.push_back(std::string("PVFAdj"));T::Name(name);}
 
 private:
+  inline void __Dealloc(){
+    delete [] _vfpP; _vfpP = NULL;
+    delete [] _vfiP; _vfiP = NULL;
+  }
+
   typename T::FacePointer *_vfpP ;
   char *_vfiP ;
 };
@@ -162,7 +167,12 @@ private:
 template <class T> class PFFAdj: public T {
 public:
   typedef typename T::FaceType FaceType;
-  PFFAdj(){_ffpP = NULL; _ffiP = NULL; }
+  PFFAdj(){ _ffpP = NULL; _ffiP = NULL; }
+  /* Note: the destructor will not be called in general because there are no virtual destructors.
+   * Instead, the job of deallocating the memory will be done by the face allocator.
+   * This destructor is only done for those who istance a face alone (outside a mesh)
+   */
+//  ~PFFAdj(){ __Dealloc(); }
   typename T::FacePointer  &FFp(const int j)        { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
   typename T::FacePointer   FFp(const int j) const  { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
   typename T::FacePointer  cFFp(const int j) const  { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
@@ -172,19 +182,13 @@ public:
   template <class LeftF>
   void ImportData(const LeftF & leftF){T::ImportData(leftF);}
   inline void Alloc(const int & ns) {
-    if( _ffpP == NULL){
-      this->__SetVN(ns);
-      _ffpP = new  FaceType*[this->VN()];
-      _ffiP = new  char[this->VN()];
-      for(int i = 0; i < this->VN(); ++i) {_ffpP[i] = 0;_ffiP[i] = 0;}
-    }
+    _ffpP = new  FaceType*[ns];
+    _ffiP = new  char[ns];
+    for(int i = 0; i < ns; ++i) {_ffpP[i] = 0;_ffiP[i] = 0;}
     T::Alloc(ns);
   }
   inline void Dealloc() {
-    if(_ffpP!=NULL){
-      delete [] _ffpP; _ffpP = NULL;
-      delete [] _ffiP; _ffiP = NULL;
-    }
+    __Dealloc();
     T::Dealloc();
   }
 
@@ -192,6 +196,11 @@ public:
   static void Name(std::vector<std::string> & name){name.push_back(std::string("PFFAdj"));T::Name(name);}
 
 private:
+  inline void __Dealloc(){
+    delete [] _ffpP; _ffpP = NULL;
+    delete [] _ffiP; _ffiP = NULL;
+  }
+
   typename T::FacePointer *_ffpP ;
   char *_ffiP ;
 };
@@ -201,7 +210,12 @@ private:
 template <class T> class PFEAdj: public T {
 public:
   typedef typename T::EdgeType EdgeType;
-  PFEAdj(){_fepP = NULL;  }
+  PFEAdj(){ _fepP = NULL; }
+  /* Note: the destructor will not be called in general because there are no virtual destructors.
+   * Instead, the job of deallocating the memory will be done by the face allocator.
+   * This destructor is only done for those who istance a face alone (outside a mesh)
+   */
+//  ~PFEAdj(){ __Dealloc(); }
   typename T::EdgePointer       &FEp(const int j)        { assert(j>=0 && j<this->VN());  return _fepP[j]; }
   typename T::EdgePointer const  FEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
   typename T::EdgePointer const cFEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
@@ -209,19 +223,22 @@ public:
   template <class LeftF>
   void ImportData(const LeftF & leftF){T::ImportData(leftF);}
   inline void Alloc(const int & ns) {
-    if( _fepP == NULL){
-      this->__SetVN(ns);
-      _fepP = new  EdgeType *[this->VN()];
-      for(int i = 0; i < this->VN(); ++i) {_fepP[i] = 0;}
-    }
+    _fepP = new  EdgeType *[ns];
+    for(int i = 0; i < ns; ++i) {_fepP[i] = 0;}
     T::Alloc(ns);
   }
-  inline void Dealloc() {	if(_fepP!=NULL) {delete [] _fepP; _fepP = NULL;} T::Dealloc();}
+  inline void Dealloc() {
+    T::Dealloc();
+  }
 
   static bool HasFEAdjacency()      {   return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("PFEAdj"));T::Name(name);}
 
 private:
+  inline void __Dealloc(){
+    delete [] _fepP; _fepP = NULL;
+  }
+
   typename T::EdgePointer *_fepP ;
 };
 
@@ -233,7 +250,7 @@ public:
   typedef typename T::HEdgeType HEdgeType;
   typedef typename T::HEdgePointer HEdgePointer;
 
-  PFHAdj(){_fhP = NULL;  }
+  PFHAdj(){ _fhP = NULL;  }
   typename T::HEdgePointer       &FHp()        {  return _fhP; }
   typename T::HEdgePointer const cFHp() const  {  return _fhP; }
 

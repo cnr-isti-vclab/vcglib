@@ -324,24 +324,13 @@ public:
     /// Default constructor
     TriMesh()
     {
-    Clear();
+      Clear();
     }
 
     /// destructor
     ~TriMesh()
     {
-        typename std::set< PointerToAttribute>::iterator i;
-        for( i = vert_attr.begin(); i != vert_attr.end(); ++i)
-            delete ((SimpleTempDataBase*)(*i)._handle);
-        for( i = edge_attr.begin(); i != edge_attr.end(); ++i)
-            delete ((SimpleTempDataBase*)(*i)._handle);
-        for( i = face_attr.begin(); i != face_attr.end(); ++i)
-            delete ((SimpleTempDataBase*)(*i)._handle);
-        for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i)
-            delete ((SimpleTempDataBase*)(*i)._handle);
-
-        FaceIterator fi;
-        for(fi = face.begin(); fi != face.end(); ++fi) (*fi).Dealloc();
+      Clear();
     }
 
      int Mem(const int & nv, const int & nf) const  {
@@ -365,38 +354,50 @@ public:
 
 
 
-/// Function to destroy the mesh
-void Clear()
-{
+  /// Function to destroy the mesh
+  void Clear()
+  {
+    typename std::set< PointerToAttribute>::iterator i;
+    for( i = vert_attr.begin(); i != vert_attr.end(); ++i)
+        delete ((SimpleTempDataBase*)(*i)._handle);
+    for( i = edge_attr.begin(); i != edge_attr.end(); ++i)
+        delete ((SimpleTempDataBase*)(*i)._handle);
+    for( i = face_attr.begin(); i != face_attr.end(); ++i)
+        delete ((SimpleTempDataBase*)(*i)._handle);
+    for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i)
+        delete ((SimpleTempDataBase*)(*i)._handle);
+
+    for(FaceIterator fi = face.begin(); fi != face.end(); ++fi)
+      (*fi).Dealloc();
     vert.clear();
     face.clear();
     edge.clear();
-//	textures.clear();
-//	normalmaps.clear();
+//    textures.clear();
+//    normalmaps.clear();
     vn = 0;
     en = 0;
     fn = 0;
     hn = 0;
-  imark = 0;
-  attrn = 0;
-  C()=Color4b::Gray;
-}
+    imark = 0;
+    attrn = 0;
+    C()=Color4b::Gray;
+  }
 
-bool IsEmpty() const
-{
-  return vert.empty() && edge.empty() && face.empty();
-}
+  bool IsEmpty() const
+  {
+    return vert.empty() && edge.empty() && face.empty();
+  }
 
-int & SimplexNumber(){ return fn;}
-int & VertexNumber(){ return vn;}
+  int & SimplexNumber(){ return fn;}
+  int & VertexNumber(){ return vn;}
 
-/// The incremental mark
-int imark;
+  /// The incremental mark
+  int imark;
 
 private:
     // TriMesh cannot be copied. Use Append (see vcg/complex/append.h)
   TriMesh operator =(const TriMesh &  /*m*/){assert(0);return TriMesh();}
-    TriMesh(const TriMesh & ){}
+  TriMesh(const TriMesh & ){}
 
 };	// end class Mesh
 

@@ -646,6 +646,7 @@ public:
   {
     assert(&f >= &m.face.front() && &f <= &m.face.back());
     assert(!f.IsD());
+    f.Dealloc();
     f.SetD();
     --m.fn;
   }
@@ -970,6 +971,8 @@ public:
     // Loop on the faces to correct VF and FF relations
     pu.oldBase  = &m.face[0];
     pu.oldEnd = &m.face.back()+1;
+    for(size_t i=m.fn;i<m.face.size();++i)
+      m.face[i].Dealloc();
     m.face.resize(m.fn);
     pu.newBase  = (m.face.empty())?0:&m.face[0];
     pu.newEnd = (m.face.empty())?0:&m.face.back()+1;
