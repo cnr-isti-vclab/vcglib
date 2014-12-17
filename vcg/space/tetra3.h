@@ -479,8 +479,8 @@ ScalarType ComputeAspectRatio()
 
 		a=Barycentric.V(0);
 		b=Barycentric.V(1);
-		c=Barycentric.V(2);
-		d=1-(a+b+c);
+        d=Barycentric.V(2);
+        c=1-(a+b+d);
 
 	}
 
