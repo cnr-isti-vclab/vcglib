@@ -68,14 +68,15 @@ public:
   * @brief The PC_ResultCode enum codifies the result type of a polychord collapse operation.
   */
   enum PC_ResultCode {
-    PC_SUCCESS = 0,
-    PC_NOTMANIF = 1,
-    PC_NOTQUAD = 2,
-    PC_NOLINKCOND = 4,
-    PC_SINGBOTH = 8,
-    PC_SELFINTERSECT = 16,
-    PC_VOID = 32,
-    PC_OTHER = 64
+    PC_SUCCESS          = 0x00,
+    PC_NOTMANIF         = 0x01,
+    PC_NOTQUAD          = 0x02,
+    PC_NOLINKCOND       = 0x04,
+    PC_SINGBOTH         = 0x08,
+    PC_SELFINTERSECT    = 0x10,
+    PC_NOMOREMANIF      = 0x20,
+    PC_VOID             = 0x30,
+    PC_OTHER            = 0x40
   };
 
   /**
@@ -112,9 +113,8 @@ public:
      * @brief ResetMarks
      */
     void ResetMarks() {
-      typename std::vector<PC_Chord>::iterator it = _Chords.begin();
-      for (; it != _Chords.end(); it++)
-        (*it).mark = std::numeric_limits<unsigned long>::max();
+      for (size_t i = 0; i < _Chords.size(); ++i)
+        _Chords.at(i).mark = std::numeric_limits<unsigned long>::max();
     }
 
     /**
@@ -124,13 +124,13 @@ public:
      */
     void Reset(const PolyMeshType &mesh) {
       _Chords.resize(2*mesh.face.size());
-      for (size_t j = 0; j < _Chords.size(); j++)
+      for (size_t j = 0; j < _Chords.size(); ++j)
         _Chords[j].Reset();
       _currentChord = NULL;
 
       PC_Chord *chord = NULL;
       long long j = 0;
-      for (size_t i = 0; i < _Chords.size(); i++) {
+      for (size_t i = 0; i < _Chords.size(); ++i) {
         // set the prev
         chord = NULL;
         if ((long long)i-1 >= 0) {
@@ -138,7 +138,7 @@ public:
           if (vcg::tri::HasPerFaceFlags(mesh)) {
             j = i-1;
             while (j >= 0 && mesh.face[j/2].IsD())
-              j--;
+              --j;
             if (j >= 0)
               chord = &_Chords[j];
             else
@@ -154,7 +154,7 @@ public:
           if (vcg::tri::HasPerFaceFlags(mesh)) {
             j = i+1;
             while (j < (long long)_Chords.size() && mesh.face[j/2].IsD())
-              j++;
+              ++j;
             if (j < (long long)_Chords.size())
               chord = &_Chords[j];
             else
@@ -213,8 +213,8 @@ public:
           coord.prev->next = coord.next;
         if (coord.next != NULL && &coord != _currentChord)
           coord.next->prev = coord.prev;
-        coord.mark = mark;
       }
+      coord.mark = mark;
       coord.q = resultCode;
     }
 
@@ -372,7 +372,7 @@ public:
      * @brief LC_ResetStars resets the stars on a polychord.
      */
     void LC_ResetStars() {
-      for (size_t v = 0; v < _lcVertices.size(); v++)
+      for (size_t v = 0; v < _lcVertices.size(); ++v)
         _lcVertices[v].reset();
     }
 
@@ -394,7 +394,7 @@ public:
 
       // count how many edges
       do {
-        nEdges++;
+        ++nEdges;
         // go on the next edge
         runPos.FlipE();
         runPos.FlipV();
@@ -402,11 +402,11 @@ public:
         runPos.FlipF();
       } while (runPos != startPos && !runPos.IsBorder());
       if (runPos.IsBorder())
-        nEdges++;
+        ++nEdges;
 
       // resize the vector of edges
       lcEdges.resize(nEdges);
-      for (size_t e = 0; e < nEdges; e++)
+      for (size_t e = 0; e < nEdges; ++e)
         lcEdges[e].reset();
 
       /// compute the star of all the vertices and edges seen from the polychord
@@ -524,7 +524,7 @@ public:
       _lcVertices[v2].star.erase(v1);     // remove v1 from v2-star
       // foreach v | v2 \in star(v) [i.e. v \in star(v2)]
       //      star(v) = star(v) U {v1} \ {v2}
-      for (typename LCVertexStar::iterator vIt = _lcVertices[v2].star.begin(); vIt != _lcVertices[v2].star.end(); vIt++) {
+      for (typename LCVertexStar::iterator vIt = _lcVertices[v2].star.begin(); vIt != _lcVertices[v2].star.end(); ++vIt) {
         v = *vIt;
         if (v == v2)  // skip v2 itself
           continue;
@@ -534,9 +534,9 @@ public:
       /// update the star of the edges which include v1 and v2 in their star
       // foreach e | v1 \in star(e) ^ v2 \in star(e)
       //      star(e) = star(e) \ {v1,v2} U {v1}
-      for (typename LCEdgeStar::iterator eIt = _lcVertices[v1].edges.begin(); eIt != _lcVertices[v1].edges.end(); eIt++)
+      for (typename LCEdgeStar::iterator eIt = _lcVertices[v1].edges.begin(); eIt != _lcVertices[v1].edges.end(); ++eIt)
         lcEdges[*eIt].star.erase(v2);
-      for (typename LCEdgeStar::iterator eIt = _lcVertices[v2].edges.begin(); eIt != _lcVertices[v2].edges.end(); eIt++) {
+      for (typename LCEdgeStar::iterator eIt = _lcVertices[v2].edges.begin(); eIt != _lcVertices[v2].edges.end(); ++eIt) {
         lcEdges[*eIt].star.erase(v2);
         lcEdges[*eIt].star.insert(v1);
       }
@@ -550,6 +550,58 @@ public:
 
 
   // PolychordCollapse's methods begin here::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+//  /**
+//   * @brief CheckConsistent checks for consistency. ONLY FOR DEBUG.
+//   * @param mesh
+//   * @return
+//   */
+//  static bool CheckConsistent(PolyMeshType &mesh) {
+//    vcg::tri::RequirePerFaceFlags(mesh);
+//    vcg::tri::RequirePerFaceColor(mesh);
+//    for (size_t f = 0; f < mesh.face.size(); ++f) {
+//      if (!mesh.face[f].IsD()) {
+//        for (int v = 0; v < mesh.face[f].VN(); ++v) {
+//          if (!vcg::face::IsBorder(mesh.face[f], v)) {
+//            if (mesh.face[f].FFp(v)->IsD()) {
+//              mesh.face[f].C() = vcg::Color4b(vcg::Color4b::Magenta);
+//              return false;
+//            }
+//            if (mesh.face[f].FFp(v)->FFp(mesh.face[f].FFi(v)) != &mesh.face[f]) {
+//              mesh.face[f].C() = vcg::Color4b(vcg::Color4b::Yellow);
+//              return false;
+//            }
+//          }
+//        }
+//      }
+//    }
+//    return true;
+//  }
+
+  /**
+   * @brief MarkPolychords marks the chords of the polychord starting at startPos.
+   * @param mesh The input mesh.
+   * @param startPos The starting position.
+   * @param chords The vector of chords.
+   * @param mark The current mark, used to identify quads already visited.
+   */
+  static void MarkPolychords(const PolyMeshType &mesh,
+                             const vcg::face::Pos<FaceType> &startPos,
+                             PC_Chords &chords,
+                             const unsigned long mark) {
+    vcg::face::Pos<FaceType> runPos = startPos;
+    std::pair<size_t, unsigned char> face_edge(std::numeric_limits<size_t>::max(), 0);
+    do {
+      assert(runPos.F()->VN() == 4);
+      face_edge.first = vcg::tri::Index(mesh, runPos.F());
+      face_edge.second = runPos.E() % 2;
+      chords[face_edge].mark = mark;
+      runPos.FlipE();
+      runPos.FlipV();
+      runPos.FlipE();
+      runPos.FlipF();
+    } while (runPos != startPos && !runPos.IsBorder());
+  }
 
   /**
    * @brief CollapsePolychord performs all checks and then collapses the polychord.
@@ -595,6 +647,8 @@ public:
     if (pos.IsNull())
       return PC_VOID;
 
+//    vcg::tri::io::Exporter<PolyMeshType>::Save(mesh, "current_step.obj");
+
     vcg::face::Pos<FaceType> tempPos, startPos;
 
     // check if the sequence of facets is a polychord and find the starting coord
@@ -623,23 +677,31 @@ public:
           tempPos.FlipV();
           tempPos.FlipE();
         } while (tempPos != startPos);
+        VisitPolychord(mesh, startPos, chords, mark, resultCode);
+        return resultCode;
       }
       VisitPolychord(mesh, startPos, chords, mark, resultCode);
       return resultCode;
     }
     // check if the link conditions are satisfied
-    bool lc = linkConditions.CheckLinkConditions(mesh, startPos);
     // if not satisfied, visit the sequence for marking it and return
-    if (!lc) {
+    if (!linkConditions.CheckLinkConditions(mesh, startPos)) {
       VisitPolychord(mesh, startPos, chords, mark, PC_NOLINKCOND);
       return PC_NOLINKCOND;
     }
+    // mark the polychord's chords
+    MarkPolychords(mesh, startPos, chords, mark);
     // check if the polychord does not intersect itself
-    bool si = IsPolychordSelfIntersecting(mesh, startPos, chords, mark);
     // if it self-intersects, visit the polychord for marking it and return
-    if (si) {
+    if (IsPolychordSelfIntersecting(mesh, startPos, chords, mark)) {
       VisitPolychord(mesh, startPos, chords, mark, PC_SELFINTERSECT);
       return PC_SELFINTERSECT;
+    }
+    // check if manifoldness remains
+    // if it will loose manifoldness, visit the sequence for marking it and return
+    if (!WillPolychordBeManifold(mesh, startPos, chords, mark)) {
+      VisitPolychord(mesh, startPos, chords, mark, PC_NOMOREMANIF);
+      return PC_NOMOREMANIF;
     }
     // at this point the polychord is collapsable, visit it for marking
     VisitPolychord(mesh, startPos, chords, mark, PC_SUCCESS);
@@ -669,12 +731,12 @@ public:
         valenceB = runPos.NumberOfIncidentVertices();
         tmpPos.Set(runPos.F(), runPos.E(), runPos.V());
         if (tmpPos.FindBorder())
-          valenceB++;
+          ++valenceB;
         runPos.FlipV();
         valenceA = runPos.NumberOfIncidentVertices();
         tmpPos.Set(runPos.F(), runPos.E(), runPos.V());
         if (tmpPos.FindBorder())
-          valenceA++;
+          ++valenceA;
         if (valenceA != 4)
           onSideA = true;
         if (valenceB != 4)
@@ -816,6 +878,12 @@ public:
       verticesToDeleteQueue.pop();
     }
 
+//    if (!CheckConsistent(mesh)) {
+//      int mask = vcg::tri::io::Mask::IOM_FACECOLOR;
+//      vcg::tri::io::Exporter<PolyMeshType>::Save(mesh, "current_step_failed.obj", mask);
+//      assert(false);
+//    }
+
     return PC_SUCCESS;
   }
 
@@ -843,6 +911,8 @@ public:
     while (!chords.End()) {
       // get the current coord
       chords.GetCurrent(face_edge);
+      resultCode = chords[face_edge].q;
+      assert(resultCode == PC_VOID);
       // construct a pos on the face and edge of the current coord
       pos.Set(&mesh.face[face_edge.first], face_edge.second, mesh.face[face_edge.first].V(face_edge.second));
       // (try to) collapse the polychord
@@ -851,7 +921,7 @@ public:
       chords.Next();
 
       // increment the mark
-      mark++;
+      ++mark;
       if (mark == std::numeric_limits<unsigned long>::max()) {
         chords.ResetMarks();
         mark = 0;
@@ -1013,7 +1083,7 @@ public:
     // allocate and initialize 4 vertices and ffAdj for each new face
     for (FaceIterator fIt = firstAddedFaceIt; fIt != mesh.face.end(); ++fIt) {
       fIt->Alloc(4);
-      for (size_t j = 0; j < 4; j++) {
+      for (size_t j = 0; j < 4; ++j) {
         fIt->FFp(j) = &*fIt;
         fIt->FFi(j) = j;
       }
@@ -1566,7 +1636,7 @@ public:
         // if the vertex is on border increment its valence by 1 (virtually connect it to a dummy vertex)
         jmpPos.Set(startPos.F(), startPos.E(), startPos.V());
         if (jmpPos.FindBorder())
-          valence++;
+          ++valence;
         if (valence != 4)
           singSideB = true;
         // a 2-valence internl vertex cause a polychord to touch itself, producing non-2manifoldness
@@ -1579,7 +1649,7 @@ public:
         // if the vertex is on border increment its valence by 1 (virtually connect it to a dummy vertex)
         jmpPos.Set(startPos.F(), startPos.E(), startPos.V());
         if (jmpPos.FindBorder())
-          valence++;
+          ++valence;
         if (valence != 4)
           singSideA = true;
         // a 2-valence internal vertex cause a polychord to touch itself, producing non-2manifoldness
@@ -1644,14 +1714,13 @@ public:
     vcg::face::Pos<FaceType> tmpPos, runPos = startPos;
     std::pair<size_t, unsigned char> face_edge(std::numeric_limits<size_t>::max(), 0);
 
-    if (runPos.F()->VN() != 4)  // non-quads are not visited
-      return;
-
     // follow the sequence of quads
     do {
       // check manifoldness
       tmpPos = runPos;
       do {
+        if (runPos.F()->VN() != 4)  // non-quads are not visited
+          return;
         if (!tmpPos.IsManifold()) {
           // update current coord
           face_edge.first = vcg::tri::Index(mesh, tmpPos.F());
@@ -1694,6 +1763,7 @@ public:
     vcg::face::JumpingPos<FaceType> jmpPos;
     jmpPos.Set(pos.F(), pos.E(), pos.V());
     do {
+      assert(!jmpPos.FFlip()->IsD());
       if (!jmpPos.IsManifold())
         return true;
       jmpPos.NextFE();
@@ -1737,6 +1807,10 @@ public:
         face_edge.second = (tmpPos.E()+1)%2;
         if (chords[face_edge].mark == mark)
           return true;
+        // this should never hapen:
+        face_edge.second = tmpPos.E()%2;
+        if (chords[face_edge].mark == mark)
+          return true;
       }
       tmpPos = runPos;
       tmpPos.FlipV();
@@ -1747,6 +1821,10 @@ public:
         face_edge.second = (tmpPos.E()+1)%2;
         if (chords[face_edge].mark == mark)
           return true;
+        // this should never hapen:
+        face_edge.second = tmpPos.E()%2;
+        if (chords[face_edge].mark == mark)
+          return true;
       }
       runPos.FlipE();
       runPos.FlipV();
@@ -1755,6 +1833,164 @@ public:
     } while (runPos != startPos && !runPos.IsBorder());
 
     return false;
+  }
+
+  /**
+   * @brief WillPolychordBeManifold checks whether a polychord starting at startPos would cause non-manifoldness
+   * if it was collapsed.
+   * @note VisitPolychord() should be called before this method.
+   * @param mesh The input mesh.
+   * @param startPos The starting Pos.
+   * @param chords The vector of chords.
+   * @param mark The current mark, used to identify quads already visited.
+   * @return true if manifoldness remains, false otherwise.
+   */
+  static bool WillPolychordBeManifold(const PolyMeshType &mesh,
+                                      const vcg::face::Pos<FaceType> &startPos,
+                                      PC_Chords &chords,
+                                      const unsigned long mark) {
+    assert(!startPos.IsNull());
+    vcg::face::Pos<FaceType> runPos = startPos;
+    vcg::face::JumpingPos<FaceType> tmpPos;
+    std::pair<size_t, unsigned char> face_edge1(std::numeric_limits<size_t>::max(), 0);
+    std::pair<size_t, unsigned char> face_edge2(std::numeric_limits<size_t>::max(), 0);
+    bool in = true;
+    unsigned int nTraversal = 0;
+
+    // second step: check
+    runPos = startPos;
+    do {
+      face_edge1.first = vcg::tri::Index(mesh, runPos.F());
+      face_edge1.second = runPos.E() % 2;
+      assert(chords[face_edge1].mark == mark);
+      // check one vertex
+      runPos.FlipV();
+      in = true;
+      nTraversal = 0;
+      tmpPos.Set(runPos.F(), runPos.E(), runPos.V());
+      do {
+        if (tmpPos.IsBorder() && in) {
+          in = false;
+          nTraversal++;
+        }
+        // go to next edge
+        tmpPos.NextFE();
+        // check if this face is already visited
+        face_edge1.first = vcg::tri::Index(mesh, tmpPos.F());
+        face_edge1.second = tmpPos.E() % 2;
+        face_edge2.first = vcg::tri::Index(mesh, tmpPos.F());
+        face_edge2.second = (tmpPos.E() + 1) % 2;
+        if (in && chords[face_edge1].mark != mark && chords[face_edge2].mark != mark) {
+          in = false;
+          ++nTraversal;
+        } else if (!in && (chords[face_edge1].mark == mark || chords[face_edge2].mark == mark)) {
+          in = true;
+          ++nTraversal;
+        }
+      } while (tmpPos != runPos);
+      assert(in);
+      assert(nTraversal % 2 == 0);
+      if (nTraversal > 2)
+        return false;
+
+      // check other vertex
+      runPos.FlipV();
+      in = true;
+      nTraversal = 0;
+      tmpPos.Set(runPos.F(), runPos.E(), runPos.V());
+      do {
+        if (tmpPos.IsBorder() && in) {
+          in = false;
+          ++nTraversal;
+        }
+        // go to next edge
+        tmpPos.NextFE();
+        // check if this face is already visited
+        face_edge1.first = vcg::tri::Index(mesh, tmpPos.F());
+        face_edge1.second = tmpPos.E() % 2;
+        face_edge2.first = vcg::tri::Index(mesh, tmpPos.F());
+        face_edge2.second = (tmpPos.E() + 1) % 2;
+        if (in && chords[face_edge1].mark != mark && chords[face_edge2].mark != mark) {
+          in = false;
+          nTraversal++;
+        } else if (!in && (chords[face_edge1].mark == mark || chords[face_edge2].mark == mark)) {
+          in = true;
+          ++nTraversal;
+        }
+      } while (tmpPos != runPos);
+      assert(in);
+      assert(nTraversal % 2 == 0);
+      if (nTraversal > 2)
+        return false;
+
+      runPos.FlipE();
+      runPos.FlipV();
+      runPos.FlipE();
+      runPos.FlipF();
+    } while (runPos != startPos && !runPos.IsBorder());
+    if (runPos.IsBorder()) {
+      // check one vertex
+      runPos.FlipV();
+      in = true;
+      nTraversal = 0;
+      tmpPos.Set(runPos.F(), runPos.E(), runPos.V());
+      do {
+        if (tmpPos.IsBorder() && in) {
+          in = false;
+          ++nTraversal;
+        }
+        // go to next edge
+        tmpPos.NextFE();
+        // check if this face is already visited
+        face_edge1.first = vcg::tri::Index(mesh, tmpPos.F());
+        face_edge1.second = tmpPos.E() % 2;
+        face_edge2.first = vcg::tri::Index(mesh, tmpPos.F());
+        face_edge2.second = (tmpPos.E() + 1) % 2;
+        if (in && chords[face_edge1].mark != mark && chords[face_edge2].mark != mark) {
+          in = false;
+          ++nTraversal;
+        } else if (!in && (chords[face_edge1].mark == mark || chords[face_edge2].mark == mark)) {
+          in = true;
+          ++nTraversal;
+        }
+      } while (tmpPos != runPos);
+      assert(in);
+      assert(nTraversal % 2 == 0);
+      if (nTraversal > 2)
+        return false;
+
+      // check other vertex
+      runPos.FlipV();
+      in = true;
+      nTraversal = 0;
+      tmpPos.Set(runPos.F(), runPos.E(), runPos.V());
+      do {
+        if (tmpPos.IsBorder() && in) {
+          in = false;
+          ++nTraversal;
+        }
+        // go to next edge
+        tmpPos.NextFE();
+        // check if this face is already visited
+        face_edge1.first = vcg::tri::Index(mesh, tmpPos.F());
+        face_edge1.second = tmpPos.E() % 2;
+        face_edge2.first = vcg::tri::Index(mesh, tmpPos.F());
+        face_edge2.second = (tmpPos.E() + 1) % 2;
+        if (in && chords[face_edge1].mark != mark && chords[face_edge2].mark != mark) {
+          in = false;
+          ++nTraversal;
+        } else if (!in && (chords[face_edge1].mark == mark || chords[face_edge2].mark == mark)) {
+          in = true;
+          ++nTraversal;
+        }
+      } while (tmpPos != runPos);
+      assert(in);
+      assert(nTraversal % 2 == 0);
+      if (nTraversal > 2)
+        return false;
+    }
+
+    return true;
   }
 };
 
