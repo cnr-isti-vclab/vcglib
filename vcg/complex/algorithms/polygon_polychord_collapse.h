@@ -75,8 +75,8 @@ public:
     PC_SINGBOTH         = 0x08,
     PC_SELFINTERSECT    = 0x10,
     PC_NOMOREMANIF      = 0x20,
-    PC_VOID             = 0x30,
-    PC_OTHER            = 0x40
+    PC_VOID             = 0x40,
+    PC_OTHER            = 0x80
   };
 
   /**
