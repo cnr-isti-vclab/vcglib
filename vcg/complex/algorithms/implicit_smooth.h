@@ -81,6 +81,8 @@ public:
         bool fixBorder;
         //this bool is used to set if cotangent weight is used, this flag to false means uniform laplacian
         bool useCotWeight;
+        //use this weight for the laplacian when the cotangent one is not used
+        ScalarType lapWeight;
         //the set of fixed vertices
         std::vector<int> FixedV;
         //the set of faces for barycentric constraints
@@ -95,6 +97,7 @@ public:
             useMassMatrix=true;
             fixBorder=false;
             useCotWeight=false;
+            lapWeight=1;
         }
     };
 
@@ -277,7 +280,7 @@ public:
         //get the entries for laplacian matrix
         std::vector<std::pair<int,int> > IndexL;
         std::vector<ScalarType> ValuesL;
-        MeshToMatrix<MeshType>::GetLaplacianMatrix(mesh,IndexL,ValuesL,SParam.useCotWeight);
+        MeshToMatrix<MeshType>::GetLaplacianMatrix(mesh,IndexL,ValuesL,SParam.useCotWeight,SParam.lapWeight);
 
         //initialize sparse laplacian matrix
         InitSparse(IndexL,ValuesL,matr_size*3,matr_size*3,L);

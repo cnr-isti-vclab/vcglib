@@ -279,17 +279,17 @@ public:
 
 
   static void GetLaplacianEntry(MeshType &mesh,
-                                 FaceType &f,
-                                 std::vector<std::pair<int,int> > &index,
-                                 std::vector<ScalarType> &entry,
-                                 bool cotangent)
+                                FaceType &f,
+                                std::vector<std::pair<int,int> > &index,
+                                std::vector<ScalarType> &entry,
+                                bool cotangent,
+                                ScalarType weight = 1)
   {
       if (cotangent) vcg::tri::MeshAssert<MeshType>::OnlyTriFace(mesh);
 
       for (int i=0;i<f.VN();i++)
       {
 
-          ScalarType weight = 1;
           if (cotangent)
           {
               weight=Harmonic<MeshType>::template CotangentWeight<ScalarType>(f,i);
@@ -322,13 +322,14 @@ public:
 
 
   static void GetLaplacianMatrix(MeshType &mesh,
-                          std::vector<std::pair<int,int> > &index,
-                          std::vector<ScalarType> &entry,
-                          bool cotangent)
+                                 std::vector<std::pair<int,int> > &index,
+                                 std::vector<ScalarType> &entry,
+                                 bool cotangent,
+                                 ScalarType weight = 1)
   {
       //store the index and the scalar for the sparse matrix
       for (size_t i=0;i<mesh.face.size();i++)
-          GetLaplacianEntry(mesh,mesh.face[i],index,entry,cotangent);
+          GetLaplacianEntry(mesh,mesh.face[i],index,entry,cotangent,weight);
   }
 
 
