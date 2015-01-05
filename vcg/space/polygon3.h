@@ -97,7 +97,7 @@ typename CoordType::ScalarType Area(const std::vector<CoordType> &Pos)
 
 //return per vertex Normals of a polygonal face
 template<class PolygonType>
-void PolyNormals(PolygonType &F,
+void PolyNormals(const PolygonType &F,
                  std::vector<typename PolygonType::CoordType> &Norms)
 {
     typedef typename PolygonType::FaceType FaceType;
@@ -107,16 +107,16 @@ void PolyNormals(PolygonType &F,
     Norms.clear();
     if (F.VN()<=2) return;
     for (int i=0;i<F.VN();i++)
-        Norms.push_back(Normal(F.P0(i),F.P1(i),F.P2(i)).Normalize());
+        Norms.push_back(Normal(F.cP0(i),F.cP1(i),F.cP2(i)).Normalize());
 }
 
 //return the barycenter of a polygonal face
 template<class PolygonType>
-typename PolygonType::CoordType PolyBarycenter(PolygonType &F)
+typename PolygonType::CoordType PolyBarycenter(const PolygonType &F)
 {
     typename PolygonType::CoordType bary(0,0,0);
     for (int i=0;i<F.VN();i++)
-        bary+=F.V(i)->P();
+        bary+=F.cP(i);
 
     bary/=(typename PolygonType::ScalarType)F.VN();
     return bary;
@@ -124,7 +124,7 @@ typename PolygonType::CoordType PolyBarycenter(PolygonType &F)
 
 //return the area of a polygonal face
 template<class PolygonType>
-typename PolygonType::ScalarType PolyArea(PolygonType &F)
+typename PolygonType::ScalarType PolyArea(const PolygonType &F)
 {
     typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
@@ -134,8 +134,8 @@ typename PolygonType::ScalarType PolyArea(PolygonType &F)
     ScalarType Area=0;
     for (size_t i=0;i<F.VN();i++)
     {
-        CoordType p0=F.P0(i);
-        CoordType p1=F.P1(i);
+        CoordType p0=F.cP0(i);
+        CoordType p1=F.cP1(i);
         CoordType p2=bary;
         vcg::Triangle3<ScalarType> T(p0,p1,p2);
         Area+=(vcg::DoubleArea(T)/2);
@@ -145,19 +145,19 @@ typename PolygonType::ScalarType PolyArea(PolygonType &F)
 
 //return the normal of a polygonal face
 template<class PolygonType>
-typename PolygonType::CoordType PolygonNormal(PolygonType &F)
+typename PolygonType::CoordType PolygonNormal(const PolygonType &F)
 {
     typename PolygonType::CoordType n(0,0,0);
 
     for (int i=0;i<F.VN();i++)
-        n+=Normal(F.P0(i),F.P1(i),F.P2(i)).Normalize();
+        n+=Normal(F.cP0(i),F.cP1(i),F.cP2(i)).Normalize();
 
     return n.Normalize();
 }
 
 //return the perimeter of a polygonal face
 template<class PolygonType>
-typename PolygonType::ScalarType PolyPerimeter(PolygonType &F)
+typename PolygonType::ScalarType PolyPerimeter(const PolygonType &F)
 {
     typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
@@ -166,7 +166,7 @@ typename PolygonType::ScalarType PolyPerimeter(PolygonType &F)
     ScalarType SumL=0;
     for (int i=0;i<F.VN();i++)
     {
-        ScalarType L=(F.P0(i)-F.P1(i)).Norm();
+        ScalarType L=(F.cP0(i)-F.cP1(i)).Norm();
         SumL+=L;
     }
     return (SumL);
@@ -175,7 +175,7 @@ typename PolygonType::ScalarType PolyPerimeter(PolygonType &F)
 //return a Scalar value that encode the variance of the normals
 //wrt the average one (1 means hight variance, 0 no variance)
 template<class PolygonType>
-typename PolygonType::ScalarType PolyNormDeviation(PolygonType &F)
+typename PolygonType::ScalarType PolyNormDeviation(const PolygonType &F)
 {
     typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
@@ -205,7 +205,7 @@ typename PolygonType::ScalarType PolyNormDeviation(PolygonType &F)
 //return a Scalar value that encode the distance wrt ideal angle for each
 //wrt the average one (1 correspond to hight variance, 0 no variance)
 template<class PolygonType>
-void PolyAngleDeviation(PolygonType &F,
+void PolyAngleDeviation(const PolygonType &F,
                         typename PolygonType::ScalarType &AvgDev,
                         typename PolygonType::ScalarType &MaxDev)
 {
@@ -222,8 +222,8 @@ void PolyAngleDeviation(PolygonType &F,
 
     for (int i=0;i<F.VN();i++)
     {
-        CoordType dir0=F.P0(i)-F.P1(i);
-        CoordType dir1=F.P2(i)-F.P1(i);
+        CoordType dir0=F.cP0(i)-F.cP1(i);
+        CoordType dir1=F.cP2(i)-F.cP1(i);
 
         ScalarType VAngle=vcg::Angle(dir0,dir1);
         assert(VAngle>=0);
@@ -244,7 +244,7 @@ void PolyAngleDeviation(PolygonType &F,
 
 //return the fitting plane of a polygonal face
 template<class PolygonType>
-vcg::Plane3<typename PolygonType::ScalarType> PolyFittingPlane(PolygonType &F)
+vcg::Plane3<typename PolygonType::ScalarType> PolyFittingPlane(const PolygonType &F)
 {
     typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
@@ -253,7 +253,7 @@ vcg::Plane3<typename PolygonType::ScalarType> PolyFittingPlane(PolygonType &F)
     assert(F.VN()>=3);
     std::vector<CoordType> pointVec;
     for (int i=0;i<F.VN();i++)
-        pointVec.push_back(F.P(i));
+        pointVec.push_back(F.cP(i));
 
     vcg::FitPlaneToPointSet(pointVec,BestPL);
     return BestPL;
@@ -261,7 +261,7 @@ vcg::Plane3<typename PolygonType::ScalarType> PolyFittingPlane(PolygonType &F)
 
 //return the flatness of a polygonal face as avg distance to the best fitting plane divided by half perimeter
 template<class PolygonType>
-typename PolygonType::ScalarType PolyFlatness(PolygonType &F)
+typename PolygonType::ScalarType PolyFlatness(const PolygonType &F)
 {
     typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
@@ -280,7 +280,7 @@ typename PolygonType::ScalarType PolyFlatness(PolygonType &F)
     ScalarType Flatness=0;
     for (int i=0;i<F.VN();i++)
     {
-        CoordType pos=F.P(i);
+        CoordType pos=F.cP(i);
         CoordType proj=BestPL.Projection(pos);
         Flatness+=(pos-proj).Norm();
     }
@@ -290,7 +290,7 @@ typename PolygonType::ScalarType PolyFlatness(PolygonType &F)
 
 //evaluate the PCA directions of a polygonal face
 template<class PolygonType>
-void PolyPCA(PolygonType &F,
+void PolyPCA(const PolygonType &F,
              typename PolygonType::CoordType PCA[])
 {
     typedef typename PolygonType::FaceType FaceType;
@@ -309,7 +309,7 @@ void PolyPCA(PolygonType &F,
     Eigen::Vector3d p;
     for (int i=0;i<F.VN();i++)
     {
-        (F.V(i)->P()-Barycenter).ToEigenVector(p);
+        (F.cP(i)-Barycenter).ToEigenVector(p);
         EigenCovMat+= p*p.transpose(); // outer product
     }
 
@@ -358,7 +358,7 @@ void PolyPCA(PolygonType &F,
 //evaluate the PCA directions of a polygonal face
 //scaled by the area of the face
 template<class PolygonType>
-void PolyScaledPCA(PolygonType &F,
+void PolyScaledPCA(const PolygonType &F,
                    typename PolygonType::CoordType PCA[])
 {
     typedef typename PolygonType::FaceType FaceType;
@@ -411,7 +411,7 @@ void getBaseTemplatePolygon(int N,
 //return the rigidly aligned template polygon as
 //described by "Static Aware Grid Shells" by Pietroni et Al.
 template<class PolygonType>
-void GetPolyTemplatePos(PolygonType &F,
+void GetPolyTemplatePos(const PolygonType &F,
                         std::vector<typename PolygonType::CoordType> &TemplatePos)
 {
     typedef typename PolygonType::FaceType FaceType;
@@ -444,7 +444,7 @@ void GetPolyTemplatePos(PolygonType &F,
     for (int i=0;i<F.VN();i++)
     {
         ///translate
-        CoordType Pos=F.V(i)->P()-Barycenter;
+        CoordType Pos=F.cP(i)-Barycenter;
         ///rotate
         Pos=ToPCA*Pos;
         //retranslate
@@ -515,7 +515,7 @@ void GetPolyTemplatePos(PolygonType &F,
 //compute the aspect ratio using the rigidly aligned template polygon as
 //described by "Static Aware Grid Shells" by Pietroni et Al.
 template<class PolygonType>
-typename PolygonType::ScalarType PolyAspectRatio(PolygonType &F)
+typename PolygonType::ScalarType PolyAspectRatio(const PolygonType &F)
 {
     typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
@@ -529,7 +529,7 @@ typename PolygonType::ScalarType PolyAspectRatio(PolygonType &F)
 
     ScalarType AreaP=PolyArea(F);
     for (size_t i=0;i<TemplatePos.size();i++)
-        diff+=pow((TemplatePos[i]-F.P(i)).Norm(),2)/AreaP;
+        diff+=pow((TemplatePos[i]-F.cP(i)).Norm(),2)/AreaP;
 
     return(diff);
 }
