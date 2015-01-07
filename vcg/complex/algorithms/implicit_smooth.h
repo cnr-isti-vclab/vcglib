@@ -50,23 +50,19 @@ public:
         int numF;
         std::vector<ScalarType > BarycentricW;
         CoordType TargetPos;
-        ScalarType facePenalty;
 
         FaceConstraint()
         {
             numF=-1;
-            facePenalty=ScalarType(PENALTY);
         }
 
         FaceConstraint(int _numF,
                        const std::vector<ScalarType > &_BarycentricW,
-                       const CoordType &_TargetPos,
-                       const ScalarType fPenalty = ScalarType(PENALTY))
+                       const CoordType &_TargetPos)
         {
             numF=_numF;
             BarycentricW= std::vector<ScalarType > (_BarycentricW.begin(),_BarycentricW.end());
             TargetPos=_TargetPos;
-            facePenalty=fPenalty;
         }
     };
 
@@ -185,7 +181,8 @@ private:
             assert(FaceN>=0);
             assert(FaceN<(int)mesh.face.size());
             assert(mesh.face[FaceN].VN()==(int)SParam.ConstrainedF[i].BarycentricW.size());
-            penalty=SParam.ConstrainedF[i].facePenalty;
+            penalty=ScalarType(1) - SParam.lapWeight;
+            assert(penalty>ScalarType(0) && penalty<ScalarType(1));
 
             //then add all the weights to impose the constraint
             for (int j=0;j<mesh.face[FaceN].VN();j++)
