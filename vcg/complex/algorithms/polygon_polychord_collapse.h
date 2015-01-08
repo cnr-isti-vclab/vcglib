@@ -68,15 +68,17 @@ public:
   * @brief The PC_ResultCode enum codifies the result type of a polychord collapse operation.
   */
   enum PC_ResultCode {
-    PC_SUCCESS          = 0x00,
-    PC_NOTMANIF         = 0x01,
-    PC_NOTQUAD          = 0x02,
-    PC_NOLINKCOND       = 0x04,
-    PC_SINGBOTH         = 0x08,
-    PC_SELFINTERSECT    = 0x10,
-    PC_NOMOREMANIF      = 0x20,
-    PC_VOID             = 0x40,
-    PC_OTHER            = 0x80
+    PC_SUCCESS          = 0x000,
+    PC_NOTMANIF         = 0x001,
+    PC_NOTQUAD          = 0x002,
+    PC_NOLINKCOND       = 0x004,
+    PC_SINGSIDEA        = 0x008,
+    PC_SINGSIDEB        = 0x010,
+    PC_SINGBOTH         = 0x020,
+    PC_SELFINTERSECT    = 0x040,
+    PC_NOMOREMANIF      = 0x080,
+    PC_VOID             = 0x100,
+    PC_OTHER            = 0x100
   };
 
   /**
@@ -647,14 +649,12 @@ public:
     if (pos.IsNull())
       return PC_VOID;
 
-//    vcg::tri::io::Exporter<PolyMeshType>::Save(mesh, "current_step.obj");
-
     vcg::face::Pos<FaceType> tempPos, startPos;
 
     // check if the sequence of facets is a polychord and find the starting coord
     PC_ResultCode resultCode = CheckPolychordFindStartPosition(pos, startPos, checkSing);
     // if not successful, visit the sequence for marking it and return
-    if (resultCode != PC_SUCCESS) {
+    if (resultCode != PC_SUCCESS && resultCode != PC_SINGSIDEA && resultCode != PC_SINGSIDEB) {
       // if not manifold, visit the entire polychord ending on the non-manifold edge
       if (resultCode == PC_NOTMANIF) {
         tempPos = pos;
@@ -708,10 +708,10 @@ public:
 
     // now collapse
     CoordType point;
-    int valenceA = 0, valenceB = 0;
+//    int valenceA = 0, valenceB = 0;
     vcg::face::Pos<FaceType> runPos = startPos;
     vcg::face::JumpingPos<FaceType> tmpPos;
-    bool onSideA = false, onSideB = false;
+//    bool onSideA = false, onSideB = false;
     vcg::face::Pos<FaceType> sideA, sideB;
     typedef std::queue<VertexPointer *> FacesVertex;
     typedef std::pair<VertexPointer, FacesVertex> FacesVertexPair;
@@ -725,43 +725,14 @@ public:
     std::queue<VertexPointer> verticesToDeleteQueue;
     std::queue<FacePointer> facesToDeleteQueue;
 
-    if (checkSing) {
-      do {
-        runPos.FlipV();
-        valenceB = runPos.NumberOfIncidentVertices();
-        tmpPos.Set(runPos.F(), runPos.E(), runPos.V());
-        if (tmpPos.FindBorder())
-          ++valenceB;
-        runPos.FlipV();
-        valenceA = runPos.NumberOfIncidentVertices();
-        tmpPos.Set(runPos.F(), runPos.E(), runPos.V());
-        if (tmpPos.FindBorder())
-          ++valenceA;
-        if (valenceA != 4)
-          onSideA = true;
-        if (valenceB != 4)
-          onSideB = true;
-        assert(!onSideA || !onSideB);
-
-        if (runPos != startPos && runPos.IsBorder())
-          break;
-
-        // go on next edge/face
-        runPos.FlipE();
-        runPos.FlipV();
-        runPos.FlipE();
-        runPos.FlipF();
-      } while (runPos != startPos);
-    }
-
     runPos = startPos;
     do {
       // compute new vertex
       point = (runPos.V()->P() + runPos.VFlip()->P()) / 2.f;
       if (checkSing) {
-        if (onSideA)
+        if (resultCode == PC_SINGSIDEA)
           point = runPos.V()->P();
-        if (onSideB)
+        else if (resultCode == PC_SINGSIDEB)
           point = runPos.VFlip()->P();
       }
       runPos.V()->P() = point;
@@ -829,9 +800,9 @@ public:
       // compute new vertex on the last (border) edge
       point = (runPos.V()->P() + runPos.VFlip()->P()) / 2.f;
       if (checkSing) {
-        if (onSideA)
+        if (resultCode == PC_SINGSIDEA)
           point = runPos.V()->P();
-        if (onSideB)
+        else if (resultCode == PC_SINGSIDEB)
           point = runPos.VFlip()->P();
       }
       runPos.V()->P() = point;
@@ -877,12 +848,6 @@ public:
       vcg::tri::Allocator<PolyMeshType>::DeleteVertex(mesh, *verticesToDeleteQueue.front());
       verticesToDeleteQueue.pop();
     }
-
-//    if (!CheckConsistent(mesh)) {
-//      int mask = vcg::tri::io::Mask::IOM_FACECOLOR;
-//      vcg::tri::io::Exporter<PolyMeshType>::Save(mesh, "current_step_failed.obj", mask);
-//      assert(false);
-//    }
 
     return PC_SUCCESS;
   }
@@ -960,7 +925,7 @@ public:
       // check and find start pos
       resultCode = CheckPolychordFindStartPosition(pos, startPos, false);
       // visit the polychord
-      if (resultCode == PC_SUCCESS || resultCode == PC_SINGBOTH) {
+      if (resultCode == PC_SUCCESS || resultCode == PC_SINGBOTH || resultCode == PC_SINGSIDEA || resultCode == PC_SINGSIDEB) {
         VisitPolychord(mesh, startPos, chords, mark, PC_OTHER);
         // store a new polychord
         if (!loopsOnly)
@@ -968,6 +933,27 @@ public:
         else if (!startPos.IsBorder())
           polychords.push_back(startPos);
       } else {
+        if (resultCode == PC_NOTMANIF) {
+          pos = startPos;
+          VisitPolychord(mesh, pos, chords, mark, resultCode);
+          if (pos.IsManifold() && !pos.IsBorder()) {
+            pos.FlipF();
+            VisitPolychord(mesh, pos, chords, mark, resultCode);
+          }
+        } else if (resultCode == PC_NOTQUAD) {
+          // if not quad, visit all the polychords passing through this coord
+          pos = startPos;
+          do {
+            if (!pos.IsBorder()) {
+              pos.FlipF();
+              VisitPolychord(mesh, pos, chords, mark, resultCode);
+              pos.FlipF();
+            }
+            pos.FlipV();
+            pos.FlipE();
+          } while (pos != startPos);
+          VisitPolychord(mesh, startPos, chords, mark, resultCode);
+        }
         VisitPolychord(mesh, startPos, chords, mark, resultCode);
       }
 
@@ -1007,7 +993,7 @@ public:
 
     vcg::face::Pos<FaceType> startPos, runPos;
     PC_ResultCode result = CheckPolychordFindStartPosition(pos, startPos, false);
-    if (result != PC_SUCCESS && result != PC_SINGBOTH)
+    if (result != PC_SUCCESS && result != PC_SINGBOTH && result != PC_SINGSIDEA && result != PC_SINGSIDEB)
       return;
 
     // since every face has an orientation, ensure that the new polychords are inserted on the right of the starting pos
@@ -1693,6 +1679,13 @@ public:
     // polychords that are rings and have borders on both sides can not collapse
     if (!polyBorderFound && borderSideA && borderSideB)
       return PC_SINGBOTH;
+
+    // if there are singularities or borders on the side A, remember to keep coordinates on it
+    if (singSideA || borderSideA)
+      return PC_SINGSIDEA;
+    // if there are singularities or borders on the side B, remember to keep coordinates on it
+    if (singSideB || borderSideB)
+      return PC_SINGSIDEB;
 
     return PC_SUCCESS;
   }
