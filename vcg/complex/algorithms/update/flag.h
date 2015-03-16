@@ -344,8 +344,9 @@ public:
 {
     RequirePerFaceFlags(m);
     RequirePerVertexFlags(m);
-    RequirePerFaceAdjacency(m);
-//    tri::MeshAssert<MeshType>::FFAdjacencyIsInitialized(m);
+    RequireFFAdjacency(m);
+    // MeshAssert<MeshType>::FFAdjacencyIsInitialized(m);
+
     VertexClearB(m);
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
       if(!(*fi).IsD())
