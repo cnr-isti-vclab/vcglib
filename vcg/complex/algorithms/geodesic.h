@@ -308,7 +308,7 @@ wrapping function.
     VertexPointer farthest=0;
 //    int t0=clock();
     //Requirements
-    tri::RequireVEAdjacency(m);
+    tri::RequireVFAdjacency(m);
     tri::RequirePerVertexQuality(m);
 
     assert(!seedVec.empty());
