@@ -357,15 +357,24 @@ public:
   /// Function to destroy the mesh
   void Clear()
   {
+    // Clear attributes
     typename std::set< PointerToAttribute>::iterator i;
     for( i = vert_attr.begin(); i != vert_attr.end(); ++i)
         delete ((SimpleTempDataBase*)(*i)._handle);
+    vert_attr.clear();
+
     for( i = edge_attr.begin(); i != edge_attr.end(); ++i)
         delete ((SimpleTempDataBase*)(*i)._handle);
+    edge_attr.clear();
+
     for( i = face_attr.begin(); i != face_attr.end(); ++i)
         delete ((SimpleTempDataBase*)(*i)._handle);
+    face_attr.clear();
+
     for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i)
         delete ((SimpleTempDataBase*)(*i)._handle);
+    mesh_attr.clear();
+
 
     for(FaceIterator fi = face.begin(); fi != face.end(); ++fi)
       (*fi).Dealloc();
