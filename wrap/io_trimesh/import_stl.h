@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -24,14 +24,13 @@
 #ifndef __VCGLIB_IMPORT_STL
 #define __VCGLIB_IMPORT_STL
 #include <stdio.h>
-#include <wrap/callback.h>
-#include <vcg/space/color4.h>
+#include <wrap/io_trimesh/io_mask.h>
 
 namespace vcg {
 namespace tri {
 namespace io {
 
-/** 
+/**
 This class encapsulate a filter for importing stl (stereolitograpy) meshes.
 The stl format is quite simple and rather un-flexible. It just stores, in ascii or binary the, unindexed, geometry of the faces.
 Warning: this code assume little endian (PC) architecture!!!
@@ -61,20 +60,20 @@ public:
 };
 
 enum STLError {
-	E_NOERROR,				// 0
-		// Errori di open
-	E_CANTOPEN,				// 1
-	E_UNESPECTEDEOF       		        // 2
+    E_NOERROR,				// 0
+        // Errori di open
+    E_CANTOPEN,				// 1
+    E_UNESPECTEDEOF       		        // 2
 };
 
 static const char *ErrorMsg(int error)
 {
   static const char * stl_error_msg[] =
   {
-	"No errors",
-	"Can't open file",
-	"Premature End of file",
-	};
+    "No errors",
+    "Can't open file",
+    "Premature End of file",
+    };
 
   if(error>2 || error<0) return "Unknown error";
   else return stl_error_msg[error];
@@ -124,7 +123,7 @@ static bool IsSTLColored(const char * filename, bool &magicsMode)
      if(attr!=0)
      {
       if(Color4b::FromUnsignedR5G5B5(attr) != Color4b(Color4b::White))
-	return true;
+    return true;
      }
    }
 
@@ -179,7 +178,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, int &loadMask, Ca
   {
     return E_CANTOPEN;
   }
-   
+
   bool magicsMode;
   if(!IsSTLColored(filename,magicsMode))
     loadMask = loadMask & (~Mask::IOM_FACECOLOR);
@@ -187,12 +186,12 @@ static int OpenBinary( OpenMeshType &m, const char * filename, int &loadMask, Ca
   int facenum;
   fseek(fp, STL_LABEL_SIZE, SEEK_SET);
   fread(&facenum, sizeof(int), 1, fp);
-  
+
   m.Clear();
   FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,facenum);
   VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,facenum*3);
   // For each triangle read the normal, the three coords and a short set to zero
-	for(int i=0;i<facenum;++i)
+    for(int i=0;i<facenum;++i)
     {
       unsigned short attr;
       Point3f norm;
@@ -207,12 +206,12 @@ static int OpenBinary( OpenMeshType &m, const char * filename, int &loadMask, Ca
       }
       for(int k=0;k<3;++k)
       {
-        (*vi).P().Import(tri[k]); 
-        (*fi).V(k)=&*vi; 
+        (*vi).P().Import(tri[k]);
+        (*fi).V(k)=&*vi;
         ++vi;
       }
       ++fi;
-      if(cb && (i%1000)==0) cb((i*100)/facenum,"STL Mesh Loading");	
+      if(cb && (i%1000)==0) cb((i*100)/facenum,"STL Mesh Loading");
     }
     fclose(fp);
     return E_NOERROR;
@@ -227,58 +226,58 @@ static int OpenBinary( OpenMeshType &m, const char * filename, int &loadMask, Ca
     {
       return E_CANTOPEN;
     }
-		long currentPos = ftell(fp);
-		fseek(fp,0L,SEEK_END);
-		long fileLen = ftell(fp);
-		fseek(fp,currentPos,SEEK_SET);
+        long currentPos = ftell(fp);
+        fseek(fp,0L,SEEK_END);
+        long fileLen = ftell(fp);
+        fseek(fp,currentPos,SEEK_SET);
 
     m.Clear();
-  
+
     /* Skip the first line of the file */
     while(getc(fp) != '\n') { }
 
     STLFacet f;
     int cnt=0;
-		int lineCnt=0;
-		int ret;
+        int lineCnt=0;
+        int ret;
     /* Read a single facet from an ASCII .STL file */
     while(!feof(fp))
     {
-      if(cb && (++cnt)%1000)   cb( int(double(ftell(fp))*100.0/fileLen), "STL Mesh Loading");	
-	    ret=fscanf(fp, "%*s %*s %f %f %f\n", &f.n.X(), &f.n.Y(), &f.n.Z()); // --> "facet normal 0 0 0"
-			if(ret!=3) 
-			{
-				// we could be in the case of a multiple solid object, where after a endfaced instead of another facet we have to skip two lines:
-				//     endloop
-				//	 endfacet
-				//endsolid     <- continue on ret==0 will skip this line
-				//solid ascii  <- and this one.
-				//   facet normal 0.000000e+000 7.700727e-001 -6.379562e-001
-				lineCnt++;
-				continue; 
-			}
+      if(cb && (++cnt)%1000)   cb( int(double(ftell(fp))*100.0/fileLen), "STL Mesh Loading");
+        ret=fscanf(fp, "%*s %*s %f %f %f\n", &f.n.X(), &f.n.Y(), &f.n.Z()); // --> "facet normal 0 0 0"
+            if(ret!=3)
+            {
+                // we could be in the case of a multiple solid object, where after a endfaced instead of another facet we have to skip two lines:
+                //     endloop
+                //	 endfacet
+                //endsolid     <- continue on ret==0 will skip this line
+                //solid ascii  <- and this one.
+                //   facet normal 0.000000e+000 7.700727e-001 -6.379562e-001
+                lineCnt++;
+                continue;
+            }
       ret=fscanf(fp, "%*s %*s"); // --> "outer loop"
       ret=fscanf(fp, "%*s %f %f %f\n", &f.v[0].X(),  &f.v[0].Y(),  &f.v[0].Z()); // --> "vertex x y z"
-			if(ret!=3) 
-				return E_UNESPECTEDEOF;
+            if(ret!=3)
+                return E_UNESPECTEDEOF;
       ret=fscanf(fp, "%*s %f %f %f\n", &f.v[1].X(),  &f.v[1].Y(),  &f.v[1].Z()); // --> "vertex x y z"
-			if(ret!=3) 
-				return E_UNESPECTEDEOF;
+            if(ret!=3)
+                return E_UNESPECTEDEOF;
       ret=fscanf(fp, "%*s %f %f %f\n", &f.v[2].X(),  &f.v[2].Y(),  &f.v[2].Z()); // --> "vertex x y z"
-			if(ret!=3) 
-				return E_UNESPECTEDEOF;
+            if(ret!=3)
+                return E_UNESPECTEDEOF;
       ret=fscanf(fp, "%*s"); // --> "endloop"
       ret=fscanf(fp, "%*s"); // --> "endfacet"
-			lineCnt+=7;
+            lineCnt+=7;
       if(feof(fp)) break;
       FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,1);
       VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,3);
       for(int k=0;k<3;++k)
       {
-        (*vi).P().Import(f.v[k]); 
-        (*fi).V(k)=&*vi; 
+        (*vi).P().Import(f.v[k]);
+        (*fi).V(k)=&*vi;
         ++vi;
-      }    
+      }
     }
     fclose(fp);
     return E_NOERROR;
