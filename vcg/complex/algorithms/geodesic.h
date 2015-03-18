@@ -420,7 +420,7 @@ public:
 \param maxDistanceThr max distance that we travel on the mesh starting from the sources
 \param withinDistanceVec a pointer to a vector for storing the vertexes reached within the passed maxDistanceThr
 \param sourceSeed pointer to the handle to keep for each vertex its seed
-\param parentSeed pointer to the handle to keep for each vertex its parent in the closest tree
+\param parentSeed pointer to the handle to keep for each vertex its parent in the closest tree (UNRELIABLE)
 
 Given a mesh and a vector of pointers to seed vertices, this function compute the approximated geodesic
 distance from the given sources to all the mesh vertices within the given maximum distance threshold.
@@ -442,6 +442,7 @@ It requires per vertex Quality (e.g. vertex::Quality component)
 
 \warning that this function has ALWAYS at least a linear cost (it use additional attributes that have a linear initialization)
 \todo make it O(output) by using incremental mark and persistent attributes.
+\todo fix sourceSeed output
             */
   static bool Compute( MeshType & m,
                        const std::vector<VertexPointer> & seedVec)
@@ -509,6 +510,9 @@ It is just a simple wrapper of the basic Compute()
     return true;
   }
 
+  static inline std::string sourcesAttributeName(void) { return "sources"; }
+  static inline std::string parentsAttributeName(void) { return "parent"; }
+
   template <class DistanceFunctor>
   static void PerFaceDijsktraCompute(MeshType &m, const std::vector<FacePointer> &seedVec,
                                      DistanceFunctor &distFunc,
@@ -522,10 +526,10 @@ It is just a simple wrapper of the basic Compute()
     tri::RequirePerFaceQuality(m);
 
     typename MeshType::template PerFaceAttributeHandle<FacePointer> sourceHandle
-        = tri::Allocator<MeshType>::template GetPerFaceAttribute<FacePointer> (m,"sources");
+        = tri::Allocator<MeshType>::template GetPerFaceAttribute<FacePointer>(m, sourcesAttributeName());
 
     typename MeshType::template PerFaceAttributeHandle<FacePointer> parentHandle
-        = tri::Allocator<MeshType>::template GetPerFaceAttribute<FacePointer> (m,"parent");
+        = tri::Allocator<MeshType>::template GetPerFaceAttribute<FacePointer>(m, parentsAttributeName());
 
     std::vector<FaceDist> Heap;
     tri::UnMarkAll(m);
@@ -586,10 +590,10 @@ It is just a simple wrapper of the basic Compute()
     tri::RequirePerVertexQuality(m);
 
     typename MeshType::template PerVertexAttributeHandle<VertexPointer> sourceHandle
-        = tri::Allocator<MeshType>::template GetPerVertexAttribute<VertexPointer> (m,"sources");
+        = tri::Allocator<MeshType>::template GetPerVertexAttribute<VertexPointer>(m, sourcesAttributeName());
 
     typename MeshType::template PerVertexAttributeHandle<VertexPointer> parentHandle
-        = tri::Allocator<MeshType>::template GetPerVertexAttribute<VertexPointer> (m,"parent");
+        = tri::Allocator<MeshType>::template GetPerVertexAttribute<VertexPointer> (m, parentsAttributeName());
 
     std::vector<DIJKDist> Heap;
     tri::UnMarkAll(m);
