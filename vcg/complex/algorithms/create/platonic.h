@@ -412,22 +412,27 @@ void Sphere(MeshType &in, const int subdiv = 3 )
  typedef typename MeshType::FaceIterator   FaceIterator;
     if(in.vn==0 && in.fn==0) Icosahedron(in);
 
-    VertexIterator vi;
-    for(vi = in.vert.begin(); vi!=in.vert.end();++vi)
+    for(VertexIterator vi = in.vert.begin(); vi!=in.vert.end();++vi)
         vi->P().Normalize();
 
-    tri::UpdateFlags<MeshType>::FaceBorderFromNone(in);
-    tri::UpdateTopology<MeshType>::FaceFace(in);
-
-    size_t lastsize = 0;
     for(int i = 0 ; i < subdiv; ++i)
     {
-        Refine< MeshType, MidPoint<MeshType> >(in, MidPoint<MeshType>(&in), 0);
+      MeshType newM;
+      for(FaceIterator fi=in.face.begin();fi!=in.face.end();++fi)
+      {
+        CoordType me01 =  (fi->P(0)+fi->P(1))/2.0;
+        CoordType me12 =  (fi->P(1)+fi->P(2))/2.0;
+        CoordType me20 =  (fi->P(2)+fi->P(0))/2.0;
+        tri::Allocator<MeshType>::AddFace(newM,me01,me12,me20);
+        tri::Allocator<MeshType>::AddFace(newM,fi->P(0),me01,me20);
+        tri::Allocator<MeshType>::AddFace(newM,fi->P(1),me12,me01);
+        tri::Allocator<MeshType>::AddFace(newM,fi->P(2),me20,me12);
+      }
+      tri::Clean<MeshType>::RemoveDuplicateVertex(newM);
+      tri::Append<MeshType,MeshType>::MeshCopy(in,newM);
 
-        for(vi = in.vert.begin() + lastsize; vi != in.vert.end(); ++vi)
+        for(VertexIterator vi = in.vert.begin(); vi != in.vert.end(); ++vi)
             vi->P().Normalize();
-
-        lastsize = in.vert.size();
     }
 }
 
