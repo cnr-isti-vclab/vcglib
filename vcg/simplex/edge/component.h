@@ -113,13 +113,15 @@ public:
         v[1]=0;
     }
 
-  inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<2); return v[j]; }
-  inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<2); return v[j]; }
-        inline typename T::VertexType *  cV( const int j ) const { assert(j>=0 && j<2);	return v[j]; }
+    typedef typename T::VertexType::CoordType CoordType;
+
+    inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<2); return v[j]; }
+    inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<2); return v[j]; }
+    inline typename T::VertexType *  cV( const int j ) const { assert(j>=0 && j<2);	return v[j]; }
 
     // Shortcut per accedere ai punti delle facce
-    inline       typename T::CoordType & P( const int j ) 	    {	assert(j>=0 && j<2);		return v[j]->P();	}
-    inline const typename T::CoordType &cP( const int j ) const	{	assert(j>=0 && j<2);		return v[j]->cP(); }
+    inline       CoordType & P( const int j ) 	    {	assert(j>=0 && j<2);		return v[j]->P();	}
+    inline const CoordType &cP( const int j ) const	{	assert(j>=0 && j<2);		return v[j]->P(); }
 
     /** Return the pointer to the ((j+1)%3)-th vertex of the face.
         @param j Index of the face vertex.
@@ -132,12 +134,12 @@ public:
     inline const typename T::VertexType * const & cV1( const int j ) const { return cV((j+1)%2);}
 
     /// Shortcut per accedere ai punti delle facce
-    inline       typename T::CoordType &  P0( const int j )       { return V(j)->P();}
-    inline       typename T::CoordType &  P1( const int j )       { return V((j+1)%2)->P();}
-    inline const typename T::CoordType &  P0( const int j ) const { return V(j)->P();}
-    inline const typename T::CoordType &  P1( const int j ) const { return V((j+1)%2)->P();}
-    inline const typename T::CoordType & cP0( const int j ) const { return cV(j)->P();}
-    inline const typename T::CoordType & cP1( const int j ) const { return cV((j+1)%2)->P();}
+    inline       CoordType &  P0( const int j )       { return V(j)->P();}
+    inline       CoordType &  P1( const int j )       { return V((j+1)%2)->P();}
+    inline const CoordType &  P0( const int j ) const { return V(j)->P();}
+    inline const CoordType &  P1( const int j ) const { return V((j+1)%2)->P();}
+    inline const CoordType & cP0( const int j ) const { return cV(j)->P();}
+    inline const CoordType & cP1( const int j ) const { return cV((j+1)%2)->P();}
 
     template <class LeftF>
     void ImportData(const LeftF & leftF){ T::ImportData(leftF);}
