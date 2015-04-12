@@ -71,16 +71,15 @@ class GLField
 //        glEnd();
 //    }
 
-//	static void GLDrawVertField(const MeshType &mesh,
-//								const VertexType &v,
-//								ScalarType &size)
-//	{
-//		CoordType center=v.cP();
-//		CoordType normal=v.cN();
-//		CoordType dir[4];
-//		vcg::tri::CrossField<MeshType>::CrossVector(v,dir);
-//		GLDrawField(dir,center,size);
-//	}
+    static void GLDrawVertField(const VertexType &v,
+                                ScalarType &size)
+    {
+        CoordType center=v.cP();
+        CoordType normal=v.cN();
+        CoordType dir[4];
+        vcg::tri::CrossField<MeshType>::CrossVector(v,dir);
+        GLDrawField(dir,center,size);
+    }
 
 public:
 
@@ -105,18 +104,18 @@ public:
 		glPopAttrib();
 	}
 
-	static void GLDrawVertField(const MeshType &mesh)
+    static void GLDrawVertField(const MeshType &mesh,ScalarType sizeF=0.01)
 	{
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
         glDepthRange(0.0,0.9999);
 		glEnable(GL_COLOR_MATERIAL);
 		glDisable(GL_LIGHTING);
         glDisable(GL_BLEND);
-        ScalarType size=mesh.bbox.Diag()/400.0;
+        ScalarType size=mesh.bbox.Diag()*sizeF;
         for (int i=0;i<mesh.vert.size();i++)
 		{
             if (mesh.vert[i].IsD())continue;
-			GLDrawVertField(mesh,mesh.vert[i],size);
+            GLDrawVertField(mesh.vert[i],size);
 		}
 		glPopAttrib();
 	}
