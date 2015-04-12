@@ -359,6 +359,29 @@ public:
         tF0.Normalize();
         tF1.Normalize();
         SetCrossVector(f,tF0,tF1);
+
+        //then set the magnitudo
+        ScalarType mag1,mag2;
+        for (int i=0;i<3;i++)
+        {
+           vcg::Matrix33<ScalarType> rotN=vcg::RotationMatrix(f.V(i)->N(),f.N());
+           CoordType rotatedDir=rotN*f.V(i)->PD1();
+
+           if (fabs(rotatedDir*tF0)>fabs(rotatedDir*tF1))
+           {
+               mag1+=fabs(f.V(i)->K1());
+               mag2+=fabs(f.V(i)->K2());
+           }
+           else
+           {
+               mag1+=fabs(f.V(i)->K2());
+               mag2+=fabs(f.V(i)->K1());
+           }
+        }
+
+        f.K1()=mag1/(ScalarType)3;
+        f.K2()=mag2/(ScalarType)3;
+
     }
 
     static void SetFaceCrossVectorFromVert(MeshType &mesh)
