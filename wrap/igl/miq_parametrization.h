@@ -72,6 +72,8 @@ public:
         bool round_singularities;
         //use the crease edges as feature or not
         bool crease_as_feature;
+        //true if roound selected vert
+        bool round_selected;
 
         MIQParameters()
         {
@@ -80,6 +82,7 @@ public:
             directRound=true;
             round_singularities=true;
             crease_as_feature=false;
+            round_selected=true;
             stiffness=5;
             stiffness_iter=10;
             local_iter=5;
@@ -150,6 +153,15 @@ private:
             GetFeatureLines(trimesh,hard_features);
 
         std::vector<int> extra_round;
+
+        if (MiqP.round_selected)
+        {
+            for (int i=0;i<trimesh.vert.size();i++)
+            {
+                if (!trimesh.vert[i].IsS())continue;
+                extra_round.push_back(i);
+            }
+        }
 
         igl::miq(V,F,X1,X2,UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
                  MiqP.stiffness_iter,MiqP.local_iter,MiqP.doRound,MiqP.round_singularities,
@@ -243,7 +255,15 @@ private:
 
 
         std::vector<int> extra_round;
-
+        //collect extra vertex selected that need to be rounded
+        if (MiqP.round_selected)
+        {
+            for (int i=0;i<trimesh.vert.size();i++)
+            {
+                if (!trimesh.vert[i].IsS())continue;
+                extra_round.push_back(i);
+            }
+        }
         if (MiqP.crease_as_feature)
             GetFeatureLines(trimesh,hard_features);
 
