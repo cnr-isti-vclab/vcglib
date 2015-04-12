@@ -257,6 +257,8 @@ static void VertexFromRMSCurvature(MeshType &m)
 static void FaceSaturate(MeshType &m, ScalarType gradientThr=1.0)
 {
   typedef typename MeshType::CoordType CoordType;
+  typedef typename MeshType::ScalarType ScalarType;
+
   UpdateFlags<MeshType>::FaceClearV(m);
   std::stack<FacePointer> st;
 
@@ -280,9 +282,9 @@ static void FaceSaturate(MeshType &m, ScalarType gradientThr=1.0)
      for(ffi=star.begin();ffi!=star.end();++ffi )
      {
        assert(fc!=(*ffi));
-       float &qi = (*ffi)->Q();
+       ScalarType &qi = (*ffi)->Q();
        CoordType bary1=((*ffi)->P(0)+(*ffi)->P(1)+(*ffi)->P(2))/3;
-       float distGeom = Distance(bary0,bary1) / gradientThr;
+       ScalarType distGeom = Distance(bary0,bary1) / gradientThr;
        // Main test if the quality varies more than the geometric displacement we have to lower something.
        if( distGeom < fabs(qi - fc->Q()))
        {
