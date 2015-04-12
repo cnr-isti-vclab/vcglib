@@ -333,6 +333,8 @@ public:
         SmoothMethod SmoothM;
         //the number of faces of the ring used ot esteem the curvature
         int curvRing;
+        //this are additional hard constraints
+        std::vector<std::pair<int,CoordType> > AddConstr;
 
         SmoothParam()
         {
@@ -353,7 +355,7 @@ public:
     static void SelectConstraints(MeshType &mesh,SmoothParam &SParam)
     {
         //clear all selected faces
-        vcg::tri::UpdateFlags<MeshType>::FaceClearS(mesh);
+        vcg::tri::UpdateFlags<MeshType>::FaceClear(mesh);
 
         //add curvature hard constraints
         //ScalarType Ratio=mesh.bbox.Diag()*0.01;
@@ -368,6 +370,18 @@ public:
         //add border constraints
         if (SParam.align_borders)
             AddBorderConstraints(mesh);
+
+        //aff final constraints
+        for (int i=0;i<SParam.AddConstr.size();i++)
+        {
+            int indexF=SParam.AddConstr[i].first;
+            CoordType dir=SParam.AddConstr[i].second;
+            mesh.face[indexF].PD1()=dir;
+            mesh.face[indexF].PD2()=mesh.face[indexF].N()^dir;
+            mesh.face[indexF].PD1().Normalize();
+            mesh.face[indexF].PD2().Normalize();
+            mesh.face[indexF].SetS();
+        }
     }
 
     static void GloballyOrient(MeshType &mesh)
