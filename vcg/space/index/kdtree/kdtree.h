@@ -31,6 +31,7 @@
 #include <vector>
 #include <limits>
 #include <iostream>
+#include <cstdint>
 
 namespace vcg {
 
@@ -42,7 +43,7 @@ namespace vcg {
         inline ConstDataWrapper()
             : mpData(0), mStride(0), mSize(0)
         {}
-        inline ConstDataWrapper(const DataType* pData, int size, int stride = sizeof(DataType))
+        inline ConstDataWrapper(const DataType* pData, int size, int64_t stride = sizeof(DataType))
             : mpData(reinterpret_cast<const unsigned char*>(pData)), mStride(stride), mSize(size)
         {}
         inline const DataType& operator[] (int i) const
@@ -52,7 +53,7 @@ namespace vcg {
         inline size_t size() const { return mSize; }
     protected:
         const unsigned char* mpData;
-        int mStride;
+        int64_t mStride;
         size_t mSize;
     };
 
@@ -139,7 +140,7 @@ namespace vcg {
         // and returns the index of the first element of the second subset
         unsigned int split(int start, int end, unsigned int dim, float splitValue);
 
-        void createTree(unsigned int nodeId, unsigned int start, unsigned int end, unsigned int level, unsigned int targetCellsize, unsigned int targetMaxDepth);
+        int createTree(unsigned int nodeId, unsigned int start, unsigned int end, unsigned int level, unsigned int targetCellsize, unsigned int targetMaxDepth);
 
     protected:
 
@@ -156,7 +157,7 @@ namespace vcg {
         // compute the AABB of the input
         mPoints[0] = points[0];
         mAABB.Set(mPoints[0]);
-        for (unsigned int i=1 ; i<mPoints.size() ; ++i)
+		for (unsigned int i=1 ; i<mPoints.size() ; ++i)
         {
             mPoints[i] = points[i];
             mIndices[i] = i;
@@ -164,11 +165,10 @@ namespace vcg {
         }
 
         mNodes.reserve(4*mPoints.size()/nofPointsPerCell);
-
-        //first node inserted (no leaf). The others are made by the createTree function (recursively)
+		//first node inserted (no leaf). The others are made by the createTree function (recursively)
         mNodes.resize(1);
         mNodes.back().leaf = 0;
-        createTree(0, 0, mPoints.size(), 1, nofPointsPerCell, maxDepth);
+        int numLevel = createTree(0, 0, mPoints.size(), 1, nofPointsPerCell, maxDepth);
     }
 
     template<typename Scalar>
@@ -438,7 +438,7 @@ namespace vcg {
     *  is more expensive than the gain it provides and the memory consumption is x4 higher !
     */
     template<typename Scalar>
-    void KdTree<Scalar>::createTree(unsigned int nodeId, unsigned int start, unsigned int end, unsigned int level, unsigned int targetCellSize, unsigned int targetMaxDepth)
+    int KdTree<Scalar>::createTree(unsigned int nodeId, unsigned int start, unsigned int end, unsigned int level, unsigned int targetCellSize, unsigned int targetMaxDepth)
     {
         //select the first node
         Node& node = mNodes[nodeId];
@@ -469,6 +469,7 @@ namespace vcg {
 
         node.firstChildId = mNodes.size();
         mNodes.resize(mNodes.size()+2);
+		int leftLevel, rightLevel;
 
         {
             // left child
@@ -479,11 +480,12 @@ namespace vcg {
                 child.leaf = 1;
                 child.start = start;
                 child.size = midId - start;
+				leftLevel = level;
             }
             else
             {
                 child.leaf = 0;
-                createTree(childId, start, midId, level+1, targetCellSize, targetMaxDepth);
+                leftLevel = createTree(childId, start, midId, level+1, targetCellSize, targetMaxDepth);
             }
         }
 
@@ -496,13 +498,17 @@ namespace vcg {
                 child.leaf = 1;
                 child.start = midId;
                 child.size = end - midId;
+				rightLevel = level;
             }
             else
             {
                 child.leaf = 0;
-                createTree(childId, midId, end, level+1, targetCellSize, targetMaxDepth);
+                rightLevel = createTree(childId, midId, end, level+1, targetCellSize, targetMaxDepth);
             }
         }
+		if (leftLevel > rightLevel)
+			return leftLevel;
+		return rightLevel;
     }
 }
 
