@@ -58,7 +58,7 @@ public:
 
 /** Assign to each vertex of the mesh a constant quality value. Useful for initialization.
 */
-static void VertexConstant(MeshType &m, float q)
+static void VertexConstant(MeshType &m, ScalarType q)
 {
   tri::RequirePerVertexQuality(m);
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
