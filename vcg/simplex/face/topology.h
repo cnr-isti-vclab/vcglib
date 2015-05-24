@@ -962,7 +962,7 @@ void VVOrderedStarFF(Pos<FaceType> &startPos,
  *
 */
 template <class FaceType>
-void VFOrderedStarFF(Pos<FaceType> &startPos,
+void VFOrderedStarFF(const Pos<FaceType> &startPos,
                      std::vector<Pos<FaceType> > &posVec)
 {
   posVec.clear();
@@ -1002,7 +1002,7 @@ void VFOrderedStarFF(Pos<FaceType> &startPos,
 */
 
 template <class FaceType>
-void VFOrderedStarFF(Pos<FaceType> &startPos,
+void VFOrderedStarFF(const Pos<FaceType> &startPos,
                         std::vector<FaceType*> &faceVec,
                         std::vector<int> &edgeVec)
 {
