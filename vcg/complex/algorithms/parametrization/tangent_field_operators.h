@@ -32,6 +32,8 @@ namespace vcg {
 namespace tri{
 
 
+
+
 template < typename ScalarType >
 vcg::Point2<ScalarType> InterpolateNRosy2D(const std::vector<vcg::Point2<ScalarType> > &V,
                                            const std::vector<ScalarType>  &W,
@@ -108,17 +110,25 @@ vcg::Point3<ScalarType> InterpolateNRosy3D(const std::vector<vcg::Point3<ScalarT
         CoordType Vect=V[i];
         Vect.Normalize();
         //ScalarType Dot=fabs(Vect*NF);
+        //std::cout << "V[i] " << V[i].X() << " " << V[i].Y() << std::endl << std::flush;
 
         ///rotate the vector to become tangent to the reference plane
         vcg::Matrix33<ScalarType> RotNorm=vcg::RotationMatrix(Norm[i],TargetN);
+        //std::cout << "Norm[i] " << Norm[i].X() << " " << Norm[i].Y() << " " << Norm[i].Z()<< std::endl;
+        //std::cout << "TargetN " << TargetN.X() << " " << TargetN.Y() << " " << TargetN.Z()<< std::endl<< std::flush;
+
         CoordType rotV=RotNorm*V[i];
         //assert(fabs(rotV*TargetN)<0.000001);
         rotV.Normalize();
+        //std::cout << "rotV " << rotV.X() << " " << rotV.Y() << " " << rotV.Z()<< std::endl<< std::flush;
+
         ///trassform to the reference frame
         rotV=RotFrame*rotV;
         //it's 2D from now on
         Cross2D.push_back(vcg::Point2<ScalarType>(rotV.X(),rotV.Y()));
+
     }
+
     vcg::Point2<ScalarType> AvDir2D=InterpolateNRosy2D(Cross2D,W,N);
     CoordType AvDir3D=CoordType(AvDir2D.X(),AvDir2D.Y(),0);
     //transform back to 3D
@@ -133,11 +143,511 @@ class CrossField
     typedef typename MeshType::VertexType VertexType;
     typedef typename MeshType::CoordType CoordType;
     typedef typename MeshType::ScalarType ScalarType;
+    typedef typename vcg::face::Pos<FaceType> PosType;
+    typedef typename vcg::Triangle3<ScalarType> TriangleType;
 
 private:
+
+    static void SubDivideDir(const CoordType &Edge0,
+                             const CoordType &Edge1,
+                             std::vector<CoordType> &SubDEdges,
+                             int Nsub)
+    {
+        CoordType Dir0=Edge0;
+        CoordType Dir1=Edge1;
+        ScalarType a=Edge0.Norm();
+        Dir0.Normalize();
+        Dir1.Normalize();
+        /*
+         *
+         *
+         *                     A
+         *                   /  |
+         *    Dir1         /    |
+         *     ^         /      |
+         *     |    c  /        |
+         *    /      /          |b
+         *   |     /            |
+         *  /    /              |
+         *     /                |
+         *   /                  |
+         * B____________________C       ->Dir0
+         *          a
+         *
+         * */
+        ScalarType BTotal=vcg::Angle(Dir0,Dir1);
+        //get angle step
+        ScalarType StepAngle=BTotal/(ScalarType)Nsub;
+        //get the other edge
+        CoordType Edge2=Edge1-Edge0;
+
+        //and its direction
+        CoordType Dir2=Edge2;
+        Dir2.Normalize();
+        //find angle C
+        ScalarType C=vcg::Angle(Dir2,-Dir0);
+        //safety checks
+        assert(BTotal<=(M_PI));
+        assert(BTotal>=0);
+        assert(C<=(M_PI));
+        assert(C>=0);
+
+        //push the first one
+        SubDEdges.push_back(Edge0);
+        for (size_t i=1;i<Nsub;i++)
+        {
+            //find angle interval
+            ScalarType B=StepAngle*(ScalarType)i;
+            ScalarType A=(M_PI-C-B);
+            assert(A<=(M_PI));
+            assert(A>=0);
+            //find current lenght
+            ScalarType b=a*sin(B)/sin(A);
+            //then move along the direction of edge b
+            CoordType intervB=Dir2*b;
+            //finally find absolute position summing edge 0
+            intervB+=Edge0;
+            SubDEdges.push_back(intervB);
+        }
+        //push the last one
+        SubDEdges.push_back(Edge1);
+    }
+
+    static void FindSubDir(vcg::Triangle3<ScalarType> T3,
+                             size_t Nvert,
+                             std::vector<CoordType> &SubDEdges,
+                             int Nsub)
+    {
+        CoordType P0=T3.P0(Nvert);
+        CoordType P1=T3.P1(Nvert);
+        CoordType P2=T3.P2(Nvert);
+        P1-=P0;
+        P2-=P0;
+        SubDivideDir(P1,P2,SubDEdges,Nsub);
+        for (size_t j=0;j<SubDEdges.size();j++)
+            SubDEdges[j]+=P0;
+    }
+
+    static void SubdivideTris(vcg::Triangle3<ScalarType> T3,
+                             size_t Nvert,
+                             std::vector<vcg::Triangle3<ScalarType> > &SubTris,
+                             int Nsub)
+    {
+        std::vector<CoordType> SplittedPos;
+        FindSubDir(T3,Nvert,SplittedPos,Nsub);
+        CoordType P0=T3.P(Nvert);
+        //then create the triangles
+        for (size_t j=0;j<SplittedPos.size()-1;j++)
+        {
+           TriangleType T(P0,SplittedPos[j+1],SplittedPos[j]);
+           SubTris.push_back(T);
+        }
+    }
+
     static ScalarType Sign(ScalarType a){return (ScalarType)((a>0)?+1:-1);}
 
+    static void FindSubTriangles(const typename vcg::face::Pos<FaceType> &vPos,
+                                 std::vector<TriangleType> &SubFaces,
+                                 std::vector<FaceType*> &OriginalFace,
+                                 int numSub=3)
+    {
+        SubFaces.clear();
+        OriginalFace.clear();
+
+        //not ct on border
+        assert(!vPos.IsBorder());
+        //the vertex should be the one on the pos
+        assert(vPos.F()->V(vPos.E())==vPos.V());
+
+        // collect all faces around the star of the vertex
+        std::vector<PosType> StarPos;
+        vcg::face::VFOrderedStarFF(vPos, StarPos);
+
+        //all the infos for the strip of triangles
+
+        VertexType* v0=vPos.V();
+        CoordType P0=v0->P();
+        //create the strip of triangles
+        for (size_t i = 0; i < StarPos.size(); ++i)
+        {
+            PosType currPos=StarPos[i];
+            FaceType *CurrF=currPos.F();
+            OriginalFace.push_back(CurrF);
+
+            VertexType *v1=CurrF->V2(currPos.E());
+            VertexType *v2=CurrF->V1(currPos.E());
+            CoordType P1=v1->P();
+            CoordType P2=v2->P();
+            assert(v1!=v2);
+            assert(v0!=v1);
+            assert(v0!=v2);
+
+            SubdivideTris(vcg::Triangle3<ScalarType>(P0,P1,P2),0,SubFaces,numSub);
+        }
+    }
+
+    static void InterpolateCrossSubTriangles(const std::vector<TriangleType> &SubFaces,
+                                             const std::vector<FaceType*> &OriginalFace,
+                                             std::vector<CoordType> &Dir,
+                                             std::vector<CoordType> &NormSubF)
+    {
+        Dir.clear();
+        //check
+        assert(SubFaces.size()>OriginalFace.size());
+
+        int SubDivisionSize=SubFaces.size()/OriginalFace.size();
+        assert(SubDivisionSize>=3);
+        assert(SubDivisionSize%2==1);//should be odd
+        int MiddlePos=SubDivisionSize/2+1;//the one in the middle that should preserve face's cross field
+
+        //calculate the interpolation weights and intervals
+        std::vector<std::pair<FaceType*,FaceType*> > InterpFaces;
+        std::vector<ScalarType> InterpWeights;
+
+        //the one in the middle should spond to one of the
+        //two faces the rest is interpolated
+        for (size_t i=0;i<SubFaces.size();i++)
+        {
+            //find the interval and get the index in the sub_interval
+            int interval=i/SubDivisionSize;
+            int sub_int=i%SubDivisionSize;
+
+            int IndexF0=-1,IndexF1=-1;
+            ScalarType alpha;
+
+            //get the index of the two faces upon which to interpolate
+            if (sub_int<MiddlePos)
+            {
+                IndexF0=(interval+(OriginalFace.size()-1)) % OriginalFace.size();
+                IndexF1=interval;
+                alpha=1-(ScalarType)(sub_int+MiddlePos)/(ScalarType)SubDivisionSize;
+            }
+            else
+            if (sub_int>MiddlePos)
+            {
+                IndexF0=interval;
+                IndexF1=(interval+1) % OriginalFace.size();
+                alpha=1-(sub_int-MiddlePos)/(ScalarType)SubDivisionSize;
+            }
+            else //sub_int==MiddlePos
+            {
+                IndexF0=interval;
+                IndexF1=(interval+1) % OriginalFace.size();
+                alpha=1;
+            }
+            assert((IndexF0>=0)&&(IndexF0<OriginalFace.size()));
+            assert((IndexF1>=0)&&(IndexF1<OriginalFace.size()));
+
+            FaceType* F0=OriginalFace[IndexF0];
+            FaceType* F1=OriginalFace[IndexF1];
+
+            InterpFaces.push_back(std::pair<FaceType*,FaceType*>(F0,F1));
+            InterpWeights.push_back(alpha);
+        }
+        assert(InterpFaces.size()==InterpWeights.size());
+        //then calculate the interpolated cross field
+        for (size_t i=0;i<InterpFaces.size();i++)
+        {
+            std::vector<vcg::Point3<ScalarType> > TangVect;
+            std::vector<vcg::Point3<ScalarType> > Norms;
+            std::vector<ScalarType>  W;
+            Norms.push_back(InterpFaces[i].first->N());
+            Norms.push_back(InterpFaces[i].second->N());
+            CoordType Dir0=InterpFaces[i].first->PD1();
+            CoordType Dir1=InterpFaces[i].second->PD1();
+            TangVect.push_back(Dir0);
+            TangVect.push_back(Dir1);
+            ScalarType CurrW=InterpWeights[i];
+            W.push_back(CurrW);
+            W.push_back(1-CurrW);
+
+            CoordType TargetN=InterpFaces[i].first->N();
+            if (CurrW<0.5)
+                TargetN=InterpFaces[i].second->N();
+
+            NormSubF.push_back(TargetN);
+            //CoordType TargetN=vcg::Normal(SubFaces[i].P(0),SubFaces[i].P(1),SubFaces[i].P(2));
+            TargetN.Normalize();
+            CoordType InterpD0=InterpolateNRosy3D(TangVect,Norms,W,4,TargetN);
+            //CoordType InterpD0=Dir1;
+            //if (CurrW>0.5)InterpD0=Dir0;
+
+            Dir.push_back(InterpD0);
+        }
+    }
+
+    static ScalarType turn (const CoordType &norm, const CoordType &d0, const CoordType &d1)
+    {
+        //first check if they are coplanar up to a certain delta
+        return ((d0 ^ d1).normalized() * norm);
+    }
+
+    static void InterpolateDir(const CoordType &Dir0,
+                               const CoordType &Dir1,
+                               const CoordType &Sep0,
+                               const CoordType &Sep1,
+                               const TriangleType &t0,
+                               const TriangleType &t1,
+                               CoordType &Interpolated,
+                               size_t &Face)
+    {
+       //find smallest edge
+       ScalarType smallestE=std::numeric_limits<ScalarType>::max();
+       for (int j=0;j<3;j++)
+       {
+          ScalarType L0=(t0.P0(j)-t0.P1(j)).Norm();
+          ScalarType L1=(t1.P0(j)-t1.P1(j)).Norm();
+          if (L0<smallestE) smallestE=L0;
+          if (L1<smallestE) smallestE=L1;
+       }
+
+       //safety check
+       assert(t0.P(0)==t1.P(0));
+
+       CoordType Origin=t0.P(0);
+       TriangleType T0Rot(CoordType(0,0,0),t0.P(1)-Origin,t0.P(2)-Origin);
+       TriangleType T1Rot(CoordType(0,0,0),t1.P(1)-Origin,t1.P(2)-Origin);
+
+       //then rotate normal of T0 to match with normal of T1
+       CoordType N0=vcg::Normal(T0Rot.cP(0),T0Rot.cP(1),T0Rot.P(2));
+       CoordType N1=vcg::Normal(T1Rot.cP(0),T1Rot.cP(1),T1Rot.cP(2));
+       N0.Normalize();
+       N1.Normalize();
+       vcg::Matrix33<ScalarType> rotation=vcg::RotationMatrix(N0,N1);
+
+       //transform the first triangle
+       T0Rot.P(1)=rotation*T0Rot.P(1);
+       T0Rot.P(2)=rotation*T0Rot.P(2);
+
+       //also rotate the directions
+       CoordType Dir0Rot=rotation*Dir0;
+       CoordType Dir1Rot=Dir1;
+       CoordType Sep0Rot=rotation*Sep0;
+       CoordType Sep1Rot=Sep1;
+
+       //find the interpolation angles
+       ScalarType Angle0=vcg::Angle(Dir0Rot,Sep0Rot);
+       ScalarType Angle1=vcg::Angle(Dir1Rot,Sep1Rot);
+       assert(Angle0>=0);
+       assert(Angle1>=0);
+       assert(Angle0<=(M_PI/2));
+       assert(Angle1<=(M_PI/2));
+       ScalarType alpha=0.5;//Angle0/(Angle0+Angle1);
+
+       //then interpolate the direction
+       //CoordType Interp=Dir0Rot*(1-alpha)+Dir1Rot*alpha;
+       Interpolated=Sep0Rot*(1-alpha)+Sep1Rot*alpha;
+       Interpolated.Normalize();
+       Interpolated*=smallestE;
+
+       //then find the triangle which falls into
+       CoordType bary0,bary1;
+       bool Inside0=vcg::InterpolationParameters(T0Rot,Interpolated,bary0);
+       bool Inside1=vcg::InterpolationParameters(T1Rot,Interpolated,bary1);
+       //assert(Inside0 || Inside1);
+       if (!(Inside0 || Inside1))
+       {
+           std::cout << "Not Inside " << Interpolated.X() << "," << Interpolated.Y() << "," << Interpolated.Z() << std::endl;
+           std::cout << "bary0 " << bary0.X() << "," << bary0.Y() << "," << bary0.Z() << std::endl;
+           std::cout << "bary1 " << bary1.X() << "," << bary1.Y() << "," << bary1.Z() << std::endl;
+           std::cout << "Diff0 " << fabs(bary0.Norm() - 1) << std::endl;
+           std::cout << "Diff1 " << fabs(bary1.Norm() - 1) << std::endl;
+       }
+
+       if (Inside0)
+       {
+           Interpolated=t0.P(0)*bary0.X()+t0.P(1)*bary0.Y()+t0.P(2)*bary0.Z();
+           Interpolated-=Origin;
+           Face=0;
+       }
+       else
+           Face=1;
+
+       //otherwise is already in the tangent space of t0
+       Interpolated.Normalize();
+    }
+
+    static void ReduceOneDirectionField(std::vector<CoordType> &directions,
+                                        std::vector<FaceType*> &faces)
+    {
+        //compute distribution and find closest pait
+        std::vector<ScalarType> DirProd;
+        ScalarType MaxProd=-1;
+        int MaxInd0=-1,MaxInd1=-1;
+        for (size_t i=0;i<directions.size();i++)
+        {
+            ScalarType prod=0;
+            for (size_t j=1;j<directions.size();j++)
+            {
+                int Index0=i;
+                int Index1=(i+j)%directions.size();
+                CoordType Dir0=directions[Index0];
+                CoordType Dir1=directions[Index1];
+                ScalarType currP=(Dir0*Dir1);
+                if (currP>MaxProd)
+                {
+                    MaxProd=currP;
+                    MaxInd0=Index0;
+                    MaxInd1=Index1;
+                }
+                prod+=currP;
+            }
+            DirProd.push_back(prod);
+        }
+        assert(MaxInd0!=MaxInd1);
+
+        //then find the one to be deleted
+        int IndexDel=MaxInd0;
+        if (DirProd[MaxInd1]>DirProd[MaxInd0])IndexDel=MaxInd1;
+
+        std::vector<CoordType> SwapV(directions.begin(),directions.end());
+        std::vector<FaceType*> SwapF(faces.begin(),faces.end());
+
+        directions.clear();
+        for (size_t i=0;i<SwapV.size();i++)
+        {
+            if (i==IndexDel)continue;
+            directions.push_back(SwapV[i]);
+            faces.push_back(SwapF[i]);
+        }
+    }
+
 public:
+
+    static bool FindSeparatrices(const typename vcg::face::Pos<FaceType> &vPos,
+                                std::vector<CoordType> &directions,
+                                std::vector<FaceType*> &faces,
+                                std::vector<TriangleType> &WrongTris,
+                                int expVal=-1,
+                                int numSub=3)
+    {
+
+        directions.clear();
+
+        //not ct on border
+        assert(!vPos.IsBorder());
+        //the vertex should be the one on the pos
+        assert(vPos.F()->V(vPos.E())==vPos.V());
+
+        std::vector<TriangleType> SubFaces;
+        std::vector<CoordType> Dir1,Dir2;
+        std::vector<CoordType> Norms;
+        std::vector<FaceType*> OriginalFaces;
+
+        //find subfaces
+        FindSubTriangles(vPos,SubFaces,OriginalFaces,numSub);
+
+        //interpolate the cross field
+        InterpolateCrossSubTriangles(SubFaces,OriginalFaces,Dir1,Norms);
+
+        //then calculate the orthogonal
+        for (size_t i=0;i<Dir1.size();i++)
+        {
+            CoordType TargetN=Norms[i];//vcg::Normal(SubFaces[i].P(0),SubFaces[i].P(1),SubFaces[i].P(2));
+            CoordType CrossDir2=Dir1[i]^TargetN;
+            CrossDir2.Normalize();
+            Dir2.push_back(CrossDir2);
+        }
+
+        //then check the triangles
+        CoordType CenterStar=vPos.V()->P();
+        for (size_t i = 0; i < SubFaces.size(); ++i)
+        {
+            TriangleType t0=SubFaces[i];
+            TriangleType t1=SubFaces[(i+1)%SubFaces.size()];
+            CoordType N0=Norms[i];//vcg::Normal(t0.P(0),t0.P(1),t0.P(2));
+            CoordType N1=Norms[(i+1)%Norms.size()];//vcg::Normal(t1.P(0),t1.P(1),t1.P(2));
+            N0.Normalize();
+            N1.Normalize();
+
+            std::vector<CoordType> SubDEdges0;
+            std::vector<CoordType> SubDEdges1;
+            FindSubDir(t0,0,SubDEdges0,2);
+            FindSubDir(t1,0,SubDEdges1,2);
+            CoordType Bary0=SubDEdges0[1];
+            CoordType Bary1=SubDEdges1[1];
+            //then get the directions to the barycenter
+            Bary0-=CenterStar;
+            Bary1-=CenterStar;
+            Bary0.Normalize();
+            Bary1.Normalize();
+
+            //then get the cross field of the 2 faces
+            CoordType Dir1F0=Dir1[i];
+            CoordType Dir2F0=Dir2[i];
+
+            assert(fabs(Dir1F0*N0)<0.001);
+            assert(fabs(Dir1F0*Dir2F0)<0.001);
+
+            if ((Dir1F0*Bary0)<0)Dir1F0=-Dir1F0;
+            if ((Dir2F0*Bary0)<0)Dir2F0=-Dir2F0;
+
+            CoordType Dir1F1=Dir1[(i+1)%Dir1.size()];
+            CoordType Dir2F1=Dir2[(i+1)%Dir2.size()];
+
+            assert(fabs(Dir1F1*N1)<0.001);
+            assert(fabs(Dir1F1*Dir2F1)<0.01);
+
+            //find the most similar rotation of the cross field
+            vcg::Matrix33<ScalarType> rotation=vcg::RotationMatrix(N0,N1);
+            CoordType Dir1F0R=rotation*Dir1F0;
+            CoordType Dir2F0R=rotation*Dir2F0;
+
+            //then get the closest upf to K*PI/2 rotations
+            Dir1F1=vcg::tri::CrossField<MeshType>::K_PI(Dir1F1,Dir1F0R,N1);
+            Dir2F1=vcg::tri::CrossField<MeshType>::K_PI(Dir2F1,Dir2F0R,N1);
+
+            //then check if cross the direction of the barycenter
+            ScalarType versef0D1 = turn(N0, Bary0, Dir1F0);
+            ScalarType versef1D1 = turn(N1, Bary1, Dir1F1);
+            ScalarType versef0D2 = turn(N0, Bary0, Dir2F0);
+            ScalarType versef1D2 = turn(N1, Bary1, Dir2F1);
+
+            if ((Bary0*Bary1)<0)
+            {
+
+                WrongTris.push_back(t0);
+                WrongTris.push_back(t1);
+            }
+
+
+            CoordType InterpDir;
+            size_t tri_Index;
+            if ((versef0D1 * versef1D1) < ScalarType(0))
+            {
+
+                InterpolateDir(Dir1F0,Dir1F1,Bary0,Bary1,t0,t1,InterpDir,tri_Index);
+
+            }
+            else
+            if ((versef0D2 * versef1D2 )< ScalarType(0))
+            {
+                directions.push_back(InterpolateDir(Dir2F0,Dir2F1,Bary0,Bary1,t0,t1));
+            }
+
+            //retrieve original face
+            assert((tri_Index==0)||(tri_Index==1));
+            int OrigFIndex=((i+tri_Index)%SubFaces.size())/numSub;
+            assert(OrigFIndex>=0);
+            assert(OrigFIndex<OriginalFaces.size());
+
+            FaceType* currF=OriginalFaces[OrigFIndex];
+            //add the data
+            directions.push_back(InterpDir);
+            faces.push_back(currF);
+        }
+        if (expVal==-1)return true;
+        if (directions.size()<=expVal)return true;
+
+
+        int to_erase=directions.size()-expVal;
+        do
+        {
+            ReduceOneDirectionField(directions,faces);
+            to_erase--;
+        }while (to_erase!=0);
+        return false;
+    }
 
     static CoordType FollowDirection(const FaceType &f0,
                                      const  FaceType &f1,
@@ -213,7 +723,7 @@ public:
 
 
     ///transform a given angle in tangent space wrt X axis of
-    ///tangest space will return the corresponding 3D vector
+    ///tangest space will return the sponding 3D vector
     static CoordType TangentAngleToVect(const FaceType &f,const ScalarType &angle)
     {
         ///find 2D vector
@@ -824,12 +1334,12 @@ public:
     }
 
     ///transform curvature to UV space
-    static vcg::Point2<ScalarType> CrossToUV(FaceType &f)
+    static vcg::Point2<ScalarType> CrossToUV(FaceType &f,int numD=0)
     {
         typedef typename FaceType::ScalarType ScalarType;
         typedef typename FaceType::CoordType CoordType;
 
-        CoordType Curv=CrossVector(f,0);
+        CoordType Curv=CrossVector(f,numD);
         Curv.Normalize();
 
         CoordType bary3d=(f.P(0)+f.P(1)+f.P(2))/3.0;
