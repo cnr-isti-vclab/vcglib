@@ -444,15 +444,15 @@ private:
        CoordType bary0,bary1;
        bool Inside0=vcg::InterpolationParameters(T0Rot,Interpolated,bary0);
        bool Inside1=vcg::InterpolationParameters(T1Rot,Interpolated,bary1);
-       //assert(Inside0 || Inside1);
-       if (!(Inside0 || Inside1))
-       {
-           std::cout << "Not Inside " << Interpolated.X() << "," << Interpolated.Y() << "," << Interpolated.Z() << std::endl;
-           std::cout << "bary0 " << bary0.X() << "," << bary0.Y() << "," << bary0.Z() << std::endl;
-           std::cout << "bary1 " << bary1.X() << "," << bary1.Y() << "," << bary1.Z() << std::endl;
-           std::cout << "Diff0 " << fabs(bary0.Norm() - 1) << std::endl;
-           std::cout << "Diff1 " << fabs(bary1.Norm() - 1) << std::endl;
-       }
+       assert(Inside0 || Inside1);
+//       if (!(Inside0 || Inside1))
+//       {
+//           std::cout << "Not Inside " << Interpolated.X() << "," << Interpolated.Y() << "," << Interpolated.Z() << std::endl;
+//           std::cout << "bary0 " << bary0.X() << "," << bary0.Y() << "," << bary0.Z() << std::endl;
+//           std::cout << "bary1 " << bary1.X() << "," << bary1.Y() << "," << bary1.Z() << std::endl;
+//           std::cout << "Diff0 " << fabs(bary0.Norm() - 1) << std::endl;
+//           std::cout << "Diff1 " << fabs(bary1.Norm() - 1) << std::endl;
+//       }
 
        if (Inside0)
        {
@@ -504,6 +504,8 @@ private:
         std::vector<FaceType*> SwapF(faces.begin(),faces.end());
 
         directions.clear();
+        faces.clear();
+
         for (size_t i=0;i<SwapV.size();i++)
         {
             if (i==IndexDel)continue;
@@ -612,18 +614,18 @@ public:
 
 
             CoordType InterpDir;
-            size_t tri_Index;
+            size_t tri_Index=-1;
             if ((versef0D1 * versef1D1) < ScalarType(0))
             {
-
                 InterpolateDir(Dir1F0,Dir1F1,Bary0,Bary1,t0,t1,InterpDir,tri_Index);
-
             }
             else
-            if ((versef0D2 * versef1D2 )< ScalarType(0))
             {
-                directions.push_back(InterpolateDir(Dir2F0,Dir2F1,Bary0,Bary1,t0,t1));
+                if ((versef0D2 * versef1D2 )< ScalarType(0))
+                InterpolateDir(Dir2F0,Dir2F1,Bary0,Bary1,t0,t1,InterpDir,tri_Index);
             }
+            //no separatrix found continue
+            if (tri_Index==-1)continue;
 
             //retrieve original face
             assert((tri_Index==0)||(tri_Index==1));
@@ -658,6 +660,30 @@ public:
         ///then get the closest upf to K*PI/2 rotations
         CoordType dir1=f1.cPD1();
         CoordType ret=vcg::tri::CrossField<MeshType>::K_PI(dir1,dirR,f1.cN());
+        return ret;
+    }
+
+    static int FollowDirectionI(const FaceType &f0,
+                                const  FaceType &f1,
+                                const  CoordType &dir0)
+    {
+        ///first it rotate dir to match with f1
+        CoordType dirTarget=FollowDirection(f0,f1,dir0);
+        CoordType dir[4];
+        CrossVector(f1,dir);
+        ScalarType best=-1;
+        int ret=-1;
+        for (int i=0;i<4;i++)
+        {
+            ScalarType dot=dir[i]*dirTarget;
+            if (dot>best)
+            {
+                best=dot;
+                ret=i;
+            }
+        }
+        assert(ret!=-1);
+
         return ret;
     }
 
