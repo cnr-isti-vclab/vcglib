@@ -1278,6 +1278,8 @@ namespace vcg {
 
 		bool buffersAllocationFunction(NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<bool>& importattribute,std::vector<bool>& attributestobeupdated)
 		{
+			if (_vaohandle == NULL)
+				glGenVertexArrays(1,&_vaohandle);
 			bool replicated = (importattribute[FACENORMALBO] || importattribute[FACECOLORBO] || importattribute[WEDGETEXTUREBO]);
 			attributestobeupdated.clear();
 			attributestobeupdated.resize(importattribute.size());
