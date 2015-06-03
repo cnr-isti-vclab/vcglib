@@ -1030,7 +1030,7 @@ namespace vcg {
 	{
 	public:
 		GLMeshAttributesFeeder(/*const*/ MESHTYPE& mesh,MemoryInfo& meminfo, size_t perbatchtriangles = 100)
-			:_mesh(mesh),_gpumeminfo(meminfo),_bo(8,0),_vaohandle(0),_lastfeedingusedreplicatedpipeline(false),_perbatchsimplex(perbatchtriangles),_chunkmap(),_borendering(false)
+            :_mesh(mesh),_gpumeminfo(meminfo),_bo(8,NULL),_vaohandle(0),_lastfeedingusedreplicatedpipeline(false),_perbatchsimplex(perbatchtriangles),_chunkmap(),_borendering(false)
 		{
 			_bo[VERTPOSITIONBO] = new GLBufferObject(3,GL_FLOAT);
 			_bo[VERTNORMALBO] = new GLBufferObject(3,GL_FLOAT);    
@@ -2090,21 +2090,21 @@ namespace vcg {
 
 		void remove(MESHTYPE* mesh)
 		{
-			std::map< MESHTYPE*, MatrixedFeeder >::iterator it = _scene.find(mesh);
+            typename std::map< MESHTYPE*, MatrixedFeeder >::iterator it = _scene.find(mesh);
 			if (it != _scene.end())
 				_scene.erase(it);
 		}
 
 		void update(MESHTYPE* mesh,int mask)
 		{
-			std::map< MESHTYPE*, MatrixedFeeder >::iterator it = _scene.find(mesh);
+            typename std::map< MESHTYPE*, MatrixedFeeder >::iterator it = _scene.find(mesh);
 			if (it != _scene.end())
 				it->second._feeder.update(mask);
 		}
 
 		void passTrianglesToOpenGL(MESHTYPE* mesh,GLFeedEnum::NORMAL_MODALITY nm,GLFeedEnum::COLOR_MODALITY cm,GLFeedEnum::TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex = std::vector<GLuint>())
 		{
-			std::map<MESHTYPE*,MatrixedFeeder>::iterator it = _scene.find(mesh);
+            typename std::map<MESHTYPE*,MatrixedFeeder>::iterator it = _scene.find(mesh);
 			if(it == _scene.end())
 				return;
 			glPushAttrib(GL_TRANSFORM_BIT);
@@ -2117,12 +2117,12 @@ namespace vcg {
 			}
 			it->second._feeder.passTrianglesToOpenGL(nm,cm,tm,textureindex);
 			glPopMatrix();
-			glPushAttrib();
+            glPopAttrib();
 		}
 
 		void passPointsToOpenGL(MESHTYPE* mesh,GLFeedEnum::NORMAL_MODALITY nm,GLFeedEnum::COLOR_MODALITY cm)
 		{
-			std::map<MESHTYPE*,MatrixedFeeder>::iterator it = _scene.find(mesh);
+            typename std::map<MESHTYPE*,MatrixedFeeder>::iterator it = _scene.find(mesh);
 			if(it == _scene.end())
 				return;
 			glPushAttrib(GL_TRANSFORM_BIT);
@@ -2135,7 +2135,7 @@ namespace vcg {
 			}
 			it->second._feeder.passPointsToOpenGL(nm,cm);
 			glPopMatrix();
-			glPushAttrib();
+            glPopAttrib();
 		}
 
 	private:
@@ -2144,7 +2144,7 @@ namespace vcg {
 			vcg::Matrix44<typename MESHTYPE::ScalarType> _localmeshmatrix;
 			GLMeshAttributesFeeder<MESHTYPE> _feeder;
 
-			MatrixedFeeder(const vcg::Matrix44<typename MESHTYPE::ScalarType>& localmeshmatrix,GLMeshAttributesFeeder& feeder)
+            MatrixedFeeder(const vcg::Matrix44<typename MESHTYPE::ScalarType>& localmeshmatrix,GLMeshAttributesFeeder<MESHTYPE>& feeder)
 				:_localmeshmatrix(localmeshmatrix),_feeder(feeder)
 			{
 			}
@@ -2153,7 +2153,7 @@ namespace vcg {
 		void computeSceneGlobalCenter()
 		{
 			vcg::Box3<typename MESHTYPE::ScalarType> scenebbox;
-			for(std::map<MESHTYPE*,MatrixedFeeder >::const_iterator it = _scene.begin();it != _scene.end();++it)
+            for(typename std::map<MESHTYPE*,MatrixedFeeder >::const_iterator it = _scene.begin();it != _scene.end();++it)
 				scenebbox.Add(it->first->bbox,it->second._localmeshmatrix);
 
 			_globalscenecenter = -scenebbox.Center();
