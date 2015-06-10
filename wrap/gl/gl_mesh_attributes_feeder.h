@@ -165,8 +165,8 @@ namespace vcg
 	class GLMeshAttributesFeeder : public GLFeedEnum
 	{
 	public:
-		GLMeshAttributesFeeder(/*const*/ MESHTYPE& mesh,MemoryInfo& meminfo, size_t perbatchtriangles = 100)
-            :_mesh(mesh),_gpumeminfo(meminfo),_bo(8,NULL),_vaohandle(0),_lastfeedingusedreplicatedpipeline(false),_perbatchsimplex(perbatchtriangles),_chunkmap(),_borendering(false)
+		GLMeshAttributesFeeder(/*const*/ MESHTYPE& mesh,MemoryInfo& meminfo, size_t perbatchtriangles)
+            :_mesh(mesh),_gpumeminfo(meminfo),_bo(8,NULL)/*,vaohandle(0)*/,_lastfeedingusedreplicatedpipeline(false),_perbatchsimplex(perbatchtriangles),_chunkmap(),_borendering(false)
 		{
 			_bo[VERTPOSITIONBO] = new GLBufferObject(3,GL_FLOAT);
 			_bo[VERTNORMALBO] = new GLBufferObject(3,GL_FLOAT);    
@@ -192,7 +192,7 @@ namespace vcg
 				++ii;
 			}
 			_bo.clear();
-			glDeleteVertexArrays(1,&_vaohandle);
+			//glDeleteVertexArrays(1,&vaohandle);
 		}
 
 		void setPerBatchTriangles(size_t perbatchtriangles)
@@ -240,13 +240,13 @@ namespace vcg
 		/*WARNING: the passTrianglesToOpenGL & the passPointsToOpenGL functions should be invoked with a reading mutex, 
 		in order to be sure that the referenced mesh would not been changed when the mesh attributes are updated into the buffer objects.
 		textureindex contained the texture OpenGL ids loaded in the gpu memory by the main application*/ 
-		void passTrianglesToOpenGL(NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex = std::vector<GLuint>())
+		void passTrianglesToOpenGL(GLuint& vaohandlespecificperopenglcontext,NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex = std::vector<GLuint>())
 		{
 			std::vector<bool> importattribute(_bo.size());
 			std::vector<bool> attributestobeupdated;
 			attributesToBeImportedInTriangleBasedPipeline(importattribute, nm, cm, tm);
 			bool replicated = !importattribute[VERTINDEXBO];
-			bool immediatemode = !(buffersAllocationFunction(nm,cm,tm,importattribute,attributestobeupdated));
+			bool immediatemode = !(buffersAllocationFunction(vaohandlespecificperopenglcontext,nm,cm,tm,importattribute,attributestobeupdated));
 			if (immediatemode)
 				immediateMode(nm,cm,tm,textureindex);
 			else
@@ -271,19 +271,19 @@ namespace vcg
 					else
 						updateBuffersIndexedPipeline(attributestobeupdated);
 				}
-				drawTriangles(nm,cm,tm,textureindex);
+				drawTriangles(vaohandlespecificperopenglcontext,nm,cm,tm,textureindex);
 			}
 
 		}
 
-		void passPointsToOpenGL(NORMAL_MODALITY nm,COLOR_MODALITY cm)
+		void passPointsToOpenGL(GLuint& vaohandlespecificperopenglcontext,NORMAL_MODALITY nm,COLOR_MODALITY cm)
 		{
 			std::vector<bool> importattribute(_bo.size());
 			std::vector<bool> attributestobeupdated;
 			attributesToBeImportedInPointBasedPipeline(importattribute, nm, cm);
 			GLenum err = glGetError();
 			assert(err == GL_NO_ERROR);
-			bool immediatemode = !(buffersAllocationFunction(nm,cm,TX_NONE,importattribute,attributestobeupdated));
+			bool immediatemode = !(buffersAllocationFunction(vaohandlespecificperopenglcontext,nm,cm,TX_NONE,importattribute,attributestobeupdated));
 			err = glGetError();
 			assert(err == GL_NO_ERROR);
 			std::vector<GLuint> textureindex;
@@ -304,7 +304,7 @@ namespace vcg
 				}
 				err = glGetError();
 				assert(err == GL_NO_ERROR);
-				drawPoints(nm,cm);
+				drawPoints(vaohandlespecificperopenglcontext);
 				err = glGetError();
 				assert(err == GL_NO_ERROR);
 			}
@@ -412,10 +412,11 @@ namespace vcg
 			importattribute[VERTINDEXBO] = false; 
 		}
 
-		bool buffersAllocationFunction(NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<bool>& importattribute,std::vector<bool>& attributestobeupdated)
+		bool buffersAllocationFunction(GLuint& vaohandlespecificperopenglcontext,NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<bool>& importattribute,std::vector<bool>& attributestobeupdated)
 		{
-            if (_vaohandle == 0)
-				glGenVertexArrays(1,&_vaohandle);
+            if (vaohandlespecificperopenglcontext == 0)
+				//glGenVertexArrays(1,&vaohandle);
+				return false;
 			bool replicated = (importattribute[FACENORMALBO] || importattribute[FACECOLORBO] || importattribute[WEDGETEXTUREBO]);
 			attributestobeupdated.clear();
 			attributestobeupdated.resize(importattribute.size());
@@ -504,7 +505,7 @@ namespace vcg
 					if (boname == VERTINDEXBO)
 						target = GL_ELEMENT_ARRAY_BUFFER;
 
-					glBindVertexArray(_vaohandle);
+					glBindVertexArray(vaohandlespecificperopenglcontext);
 					bool notvalidbuttoberegenerated = (cbo != NULL) && (!cbo->_isvalid) && (importatt);
 					if (notvalidbuttoberegenerated)
 					{
@@ -651,7 +652,6 @@ namespace vcg
 
 		bool updateBuffersReplicatedPipeline(const std::vector<bool>& attributestobeupdated,GLFeedEnum::TEXTURE_MODALITY currtextmod)
 		{
-			size_t vn = _mesh.vn;
 			size_t tn = _mesh.fn;
 
 			size_t facechunk = std::min(size_t(tn),_perbatchsimplex);
@@ -920,12 +920,12 @@ namespace vcg
 			return true;
 		}
 
-		bool drawTriangles(NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex)
+		bool drawTriangles(GLuint& vaohandlespecificperopenglcontext,NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex)
 		{
 			std::vector<bool> att(_bo.size(),false);
 			attributesToBeImportedInTriangleBasedPipeline(att,nm,cm,tm);
 			bool replicated = !att[VERTINDEXBO];
-			glBindVertexArray(_vaohandle);
+			glBindVertexArray(vaohandlespecificperopenglcontext);
 
 			if (replicated)
 			{
@@ -984,11 +984,11 @@ namespace vcg
 			return true;
 		}
 
-		void drawPoints(NORMAL_MODALITY nm,COLOR_MODALITY cm)
+		void drawPoints(GLuint& vaohandlespecificperopenglcontext)
 		{
 			glDisable(GL_TEXTURE_2D);
 
-			glBindVertexArray(_vaohandle);
+			glBindVertexArray(vaohandlespecificperopenglcontext);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[VERTINDEXBO]->_bohandle);
 			glDrawArrays(GL_POINTS,0,_mesh.vn);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);	
@@ -1195,7 +1195,8 @@ namespace vcg
 		MemoryInfo& _gpumeminfo;
 
 		std::vector<GLBufferObject*> _bo;
-		GLuint _vaohandle;
+		//GLuint vaohandle;
+		
 		std::vector< std::pair<short,GLuint> > _texindnumtriangles;
 
 		bool _lastfeedingusedreplicatedpipeline;
@@ -1203,106 +1204,6 @@ namespace vcg
 		size_t _perbatchsimplex;
 		ChunkMap  _chunkmap;
 	};
-
-	template<typename MESHTYPE>
-	class SceneToBeRendered
-	{
-	public:
-		SceneToBeRendered(MemoryInfo& gpumeminfo,bool highprecision,size_t perbatchtriangles = 100)
-			:_scene(),_gpumeminfo(gpumeminfo),_perbatchtriangles(perbatchtriangles),_globalscenecenter(),_highprecision(highprecision)
-		{
-		}
-
-		~SceneToBeRendered()
-		{
-			_scene.clear();
-		}
-
-		void insert(MESHTYPE* mesh,const vcg::Matrix44<typename MESHTYPE::ScalarType>& transfmat)
-		{
-			MatrixedFeeder matfeed = std::make_pair(transfmat,GLMeshAttributesFeeder<MESHTYPE>(*mesh,_gpumeminfo,_perbatchtriangles));
-			_scene[mesh] = matfeed;
-			if (_highprecision)
-				computeSceneGlobalCenter();
-		}
-
-		void remove(MESHTYPE* mesh)
-		{
-            typename std::map< MESHTYPE*, MatrixedFeeder >::iterator it = _scene.find(mesh);
-			if (it != _scene.end())
-				_scene.erase(it);
-		}
-
-		void update(MESHTYPE* mesh,int mask)
-		{
-            typename std::map< MESHTYPE*, MatrixedFeeder >::iterator it = _scene.find(mesh);
-			if (it != _scene.end())
-				it->second._feeder.update(mask);
-		}
-
-		void passTrianglesToOpenGL(MESHTYPE* mesh,GLFeedEnum::NORMAL_MODALITY nm,GLFeedEnum::COLOR_MODALITY cm,GLFeedEnum::TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex = std::vector<GLuint>())
-		{
-            typename std::map<MESHTYPE*,MatrixedFeeder>::iterator it = _scene.find(mesh);
-			if(it == _scene.end())
-				return;
-			glPushAttrib(GL_TRANSFORM_BIT);
-			glMatrixMode(GL_MODELVIEW);
-			glPushMatrix();
-			if (_highprecision)
-			{
-				vcg::glMultMatrix(it->second._localmeshmatrix);
-				vcg::glTranslate(_globalscenecenter);
-			}
-			it->second._feeder.passTrianglesToOpenGL(nm,cm,tm,textureindex);
-			glPopMatrix();
-            glPopAttrib();
-		}
-
-		void passPointsToOpenGL(MESHTYPE* mesh,GLFeedEnum::NORMAL_MODALITY nm,GLFeedEnum::COLOR_MODALITY cm)
-		{
-            typename std::map<MESHTYPE*,MatrixedFeeder>::iterator it = _scene.find(mesh);
-			if(it == _scene.end())
-				return;
-			glPushAttrib(GL_TRANSFORM_BIT);
-			glMatrixMode(GL_MODELVIEW);
-			glPushMatrix();
-			if (_highprecision)
-			{
-				vcg::glMultMatrix(it->second._localmeshmatrix);
-				vcg::glTranslate(_globalscenecenter);
-			}
-			it->second._feeder.passPointsToOpenGL(nm,cm);
-			glPopMatrix();
-            glPopAttrib();
-		}
-
-	private:
-		struct MatrixedFeeder
-		{
-			vcg::Matrix44<typename MESHTYPE::ScalarType> _localmeshmatrix;
-			GLMeshAttributesFeeder<MESHTYPE> _feeder;
-
-            MatrixedFeeder(const vcg::Matrix44<typename MESHTYPE::ScalarType>& localmeshmatrix,GLMeshAttributesFeeder<MESHTYPE>& feeder)
-				:_localmeshmatrix(localmeshmatrix),_feeder(feeder)
-			{
-			}
-		};
-
-		void computeSceneGlobalCenter()
-		{
-			vcg::Box3<typename MESHTYPE::ScalarType> scenebbox;
-            for(typename std::map<MESHTYPE*,MatrixedFeeder >::const_iterator it = _scene.begin();it != _scene.end();++it)
-				scenebbox.Add(it->first->bbox,it->second._localmeshmatrix);
-
-			_globalscenecenter = -scenebbox.Center();
-		}
-
-		std::map< MESHTYPE*, MatrixedFeeder > _scene;
-		MemoryInfo& _gpumeminfo;
-		size_t _perbatchtriangles;
-		vcg::Point3<typename MESHTYPE::ScalarType> _globalscenecenter;
-		bool _highprecision;
-	}; 
 }
 
 #endif
