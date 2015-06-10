@@ -29,6 +29,7 @@
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <stdexcept>
 
 //#include <GL/glew.h>
 #include <wrap/gl/space.h>
