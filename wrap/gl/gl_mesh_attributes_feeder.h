@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
+#include<cstdio>
 
 //#include <GL/glew.h>
 #include <wrap/gl/space.h>
@@ -176,7 +177,7 @@ namespace vcg
 			_bo[FACECOLORBO] = new GLBufferObject(4,GL_UNSIGNED_BYTE);
 			_bo[VERTTEXTUREBO] = new GLBufferObject(2,GL_FLOAT);
 			_bo[WEDGETEXTUREBO] = new GLBufferObject(2,GL_FLOAT);
-			_bo[VERTINDEXBO] = new GLBufferObject(3,GL_INT);
+                        _bo[VERTINDEXBO] = new GLBufferObject(3,GL_UNSIGNED_INT);
 		}
 
 		~GLMeshAttributesFeeder() 
@@ -282,11 +283,7 @@ namespace vcg
 			std::vector<bool> importattribute(_bo.size());
 			std::vector<bool> attributestobeupdated;
 			attributesToBeImportedInPointBasedPipeline(importattribute, nm, cm);
-			GLenum err = glGetError();
-			assert(err == GL_NO_ERROR);
 			bool immediatemode = !(buffersAllocationFunction(vaohandlespecificperopenglcontext,nm,cm,TX_NONE,importattribute,attributestobeupdated));
-			err = glGetError();
-			assert(err == GL_NO_ERROR);
 			std::vector<GLuint> textureindex;
 			if (immediatemode)
 				immediateMode(nm,cm,TX_NONE,textureindex);
@@ -296,18 +293,8 @@ namespace vcg
 				for(size_t hh = 0;hh < attributestobeupdated.size();++hh)
 					somethingtoupdate = somethingtoupdate || attributestobeupdated[hh];
 				if (somethingtoupdate) 
-				{
-					GLenum err = glGetError();
-					assert(err == GL_NO_ERROR);
 					updateBuffersIndexedPipeline(attributestobeupdated);
-					err = glGetError();
-					assert(err == GL_NO_ERROR);
-				}
-				err = glGetError();
-				assert(err == GL_NO_ERROR);
 				drawPoints(vaohandlespecificperopenglcontext);
-				err = glGetError();
-				assert(err == GL_NO_ERROR);
 			}
 		}
 
@@ -415,7 +402,7 @@ namespace vcg
 
 		bool buffersAllocationFunction(GLuint& vaohandlespecificperopenglcontext,NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<bool>& importattribute,std::vector<bool>& attributestobeupdated)
 		{
-            if (vaohandlespecificperopenglcontext == 0)
+                        if (vaohandlespecificperopenglcontext == 0)
 				//glGenVertexArrays(1,&vaohandle);
 				return false;
 			bool replicated = (importattribute[FACENORMALBO] || importattribute[FACECOLORBO] || importattribute[WEDGETEXTUREBO]);
@@ -493,7 +480,7 @@ namespace vcg
 				return false;
 			}
 			else
-			{
+                        {
 				unsigned int ii = 0;
 				//I have to update the invalid buffers requested to be imported
 				attributestobeupdated = importattribute;
@@ -505,7 +492,6 @@ namespace vcg
 					GLenum target = GL_ARRAY_BUFFER;
 					if (boname == VERTINDEXBO)
 						target = GL_ELEMENT_ARRAY_BUFFER;
-
 					glBindVertexArray(vaohandlespecificperopenglcontext);
 					bool notvalidbuttoberegenerated = (cbo != NULL) && (!cbo->_isvalid) && (importatt);
 					if (notvalidbuttoberegenerated)
@@ -516,8 +502,8 @@ namespace vcg
 						glBindBuffer(target, cbo->_bohandle);
 						glBufferData(target, dim, NULL, GL_STATIC_DRAW);
 						setBufferPointerEnableClientState(boname);
-						glBindBuffer(target, 0);
-						_gpumeminfo.acquiredMemory(dim);
+                                                glBindBuffer(target, 0);
+                                                _gpumeminfo.acquiredMemory(dim);
 						attributestobeupdated[boname] = true;
 						cbo->_isvalid = true;
 					}
@@ -971,8 +957,8 @@ namespace vcg
 				if  (_bo[VERTINDEXBO]->_isvalid)
 				{
 					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_bo[VERTINDEXBO]->_bohandle);
-					glDrawElements( GL_TRIANGLES, _mesh.fn * _bo[VERTINDEXBO]->_components,GL_UNSIGNED_INT ,NULL);
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+                                        glDrawElements( GL_TRIANGLES, _mesh.fn * _bo[VERTINDEXBO]->_components,GL_UNSIGNED_INT ,NULL);
+                                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 				}
 
 				glBindTexture(GL_TEXTURE_2D,0);
@@ -1035,9 +1021,7 @@ namespace vcg
 				}
 			case(VERTINDEXBO):
 				{
-					glIndexPointer(cbo->_gltype, 0, 0);
-					glEnableClientState(GL_INDEX_ARRAY);
-					break;
+                                        break;
 				}
 			}
 		}
@@ -1077,7 +1061,6 @@ namespace vcg
 				}
 			case(VERTINDEXBO):
 				{
-					glDisableClientState(GL_INDEX_ARRAY);
 					break;
 				}
 			}
