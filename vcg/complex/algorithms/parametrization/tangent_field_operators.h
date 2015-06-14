@@ -516,7 +516,7 @@ private:
 
 public:
 
-    static bool FindSeparatrices(const typename vcg::face::Pos<FaceType> &vPos,
+    static size_t FindSeparatrices(const typename vcg::face::Pos<FaceType> &vPos,
                                 std::vector<CoordType> &directions,
                                 std::vector<FaceType*> &faces,
                                 std::vector<TriangleType> &WrongTris,
@@ -638,17 +638,17 @@ public:
             directions.push_back(InterpDir);
             faces.push_back(currF);
         }
-        if (expVal==-1)return true;
-        if (directions.size()<=expVal)return true;
+        if (expVal==-1)return directions.size();
+        if (directions.size()<=expVal)return directions.size();
 
-
+        size_t sampledDir=directions.size();
         int to_erase=directions.size()-expVal;
         do
         {
             ReduceOneDirectionField(directions,faces);
             to_erase--;
         }while (to_erase!=0);
-        return false;
+        return sampledDir;
     }
 
     static CoordType FollowDirection(const FaceType &f0,
@@ -1218,7 +1218,7 @@ public:
         for (size_t i=0;i<mesh.vert.size();i++)
         {
             if (mesh.vert[i].IsD())continue;
-            if (mesh.vert[i].IsB())continue;
+            //if (mesh.vert[i].IsB())continue;
 
             int missmatch;
             if (IsSingularByCross(mesh.vert[i],missmatch))
@@ -1272,6 +1272,24 @@ public:
         f1->PD1()=targD;
         f1->PD2()=f1->N()^targD;
         f1->PD2().Normalize();
+    }
+
+    static void AdjustDirectionsOnTangentspace(MeshType &mesh)
+    {
+        for (size_t i=0;i<mesh.face.size();i++)
+        {
+            FaceType *f=&mesh.face[i];
+            if (f->IsD())continue;
+            CoordType Ntest=mesh.face[i].PD1()^mesh.face[i].PD2();
+            Ntest.Normalize();
+            CoordType Ntarget=mesh.face[i].N();
+            if ((Ntest*Ntarget)>0.999)continue;
+
+            //find the rotation matrix that maps between normals
+            vcg::Matrix33<ScalarType> rotation=vcg::RotationMatrix(Ntest,Ntarget);
+            mesh.face[i].PD1()=rotation*mesh.face[i].PD1();
+            mesh.face[i].PD2()=rotation*mesh.face[i].PD2();
+        }
     }
 
     static void OrientDirectionFaceCoherently(MeshType &mesh)
