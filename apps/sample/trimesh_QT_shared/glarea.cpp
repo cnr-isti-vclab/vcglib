@@ -30,6 +30,7 @@ Initial release.
 
 ****************************************************************************/
 
+
 #include "glarea.h"
 #include <QKeyEvent>
 #include <QKeyEvent>
@@ -39,14 +40,14 @@ Initial release.
 
 #ifdef Q_OS_MAC
 #define glGenVertexArrays glGenVertexArraysAPPLE
-#define glBindVertexArrays glBindVertexArraysAPPLE
+#define glBindVertexArray glBindVertexArrayAPPLE
 #define glDeleteVertexArrays glDeleteVertexArraysAPPLE
 #endif
 
-GLArea::GLArea (CMesh& m,MLThreadSafeGLMeshAttributesFeeder& feed,QWidget * parent)
-	:QGLWidget (parent),vaohandlespecificicforglcontext(0),mesh(m),feeder(feed)
+GLArea::GLArea (CMesh& m, MLThreadSafeGLMeshAttributesFeeder& feed,QWidget* parent,QGLWidget* sharedcont)
+    :QGLWidget (parent,sharedcont),vaohandlespecificicforglcontext(0),mesh(m),feeder(feed),sem(0)
 {
-	drawmode= SMOOTH;
+	drawmode= MDM_SMOOTH;
 }
 
 GLArea::~GLArea()
@@ -54,21 +55,11 @@ GLArea::~GLArea()
 	glDeleteVertexArrays(1,&vaohandlespecificicforglcontext);
 }
 
-
-void GLArea::selectDrawMode(int mode)
-{
-	feeder.update(vcg::GLMeshAttributesFeeder<CMesh>::ATT_ALL);
-	drawmode=DrawMode(mode);
-	updateGL();
-}
-
-void GLArea::initializeGL ()
+void GLArea::initializeGL()
 {
 	makeCurrent();
 	glewExperimental=GL_TRUE;
 	glewInit();
-	if (vaohandlespecificicforglcontext == 0)
-		glGenVertexArrays(1,&vaohandlespecificicforglcontext);
 	glClearColor(0, 0, 0, 0);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -76,18 +67,21 @@ void GLArea::initializeGL ()
 	glEnable(GL_COLOR_MATERIAL);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+	glGenVertexArrays(1,&vaohandlespecificicforglcontext);
 }
 
 void GLArea::resizeGL (int w, int h)
 {
 	makeCurrent();
 	glViewport (0, 0, (GLsizei) w, (GLsizei) h);
-	initializeGL();
+    //initializeGL();
 }
 
 void GLArea::paintGL ()
 {
 	makeCurrent();
+    //GLenum err = glGetError();
+    //assert(err == GL_NO_ERROR);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -102,34 +96,38 @@ void GLArea::paintGL ()
 	glPushMatrix();
 	float d=2.0f/mesh.bbox.Diag();
 	vcg::glScale(d);
-	glTranslate(mesh.bbox.Center());
-	// the trimesh drawing calls
+	glTranslate(-mesh.bbox.Center());
 
-	switch(drawmode)
+	if (sem == true)
 	{
-	case SMOOTH:
-        feeder.drawTriangles(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
-		break;
-	case POINTS:
-		feeder.drawPoints(vaohandlespecificicforglcontext,vcg::GLFeedEnum::CL_NONE);
-		break;
-	case WIRE:
-		feeder.drawWire(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE);
-		break;
-	case FLATWIRE:
-		feeder.drawFlatWire(vaohandlespecificicforglcontext,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
-		break;
-	case FLAT:
-		feeder.drawTriangles(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERFACE,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
-		break;
-	default:
-		break;
+		glBindVertexArray(vaohandlespecificicforglcontext);
+		switch(drawmode)
+		{
+		case MDM_SMOOTH:
+			feeder.drawTriangles(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
+			break;
+		case MDM_POINTS:
+			feeder.drawPoints(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE);
+			break;
+		case MDM_WIRE:
+			feeder.drawWire(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE);
+			break;
+		case MDM_FLATWIRE:
+			feeder.drawFlatWire(vaohandlespecificicforglcontext,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
+			break;
+		case MDM_FLAT:
+			feeder.drawTriangles(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERFACE,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
+			break;
+		default:
+			break;
+		}
+		glBindVertexArray(0);
 	}
 
 	glPopMatrix();
 	track.DrawPostApply();
-    GLenum err = glGetError();
-	assert(err == GL_NO_ERROR);
+   GLenum err = glGetError();
+   assert(err == GL_NO_ERROR);
 }
 
 void GLArea::keyReleaseEvent (QKeyEvent * e)
@@ -183,4 +181,74 @@ void GLArea::wheelEvent (QWheelEvent * e)
 	const int WHEEL_STEP = 120;
 	track.MouseWheel (e->delta () / float (WHEEL_STEP), QTWheel2VCG (e->modifiers ()));
 	updateGL ();
+}
+
+void GLArea::setupEnvironment(MyDrawMode mode)
+{
+	sem = false;
+	drawmode=mode;
+	makeCurrent();
+	std::vector<bool> import(8,false);
+
+	switch(drawmode)
+	{
+	case MDM_SMOOTH:
+	case MDM_WIRE:
+		feeder.attributesToBeImportedInTriangleBasedPipeline(import,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
+		break;
+	case MDM_POINTS:
+		feeder.attributesToBeImportedInPointBasedPipeline(import,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE);
+		break;
+	case MDM_FLAT:
+	case MDM_FLATWIRE:
+		feeder.attributesToBeImportedInTriangleBasedPipeline(import,vcg::GLFeedEnum::NR_PERFACE,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
+		break;
+	default:
+		break;
+	}
+	feeder.updateClientSideEnvironmentVAO(vaohandlespecificicforglcontext,import);
+	sem = true;
+	updateGL();
+}
+
+
+SharedDataOpenGLContext::SharedDataOpenGLContext( CMesh& mesh,MLThreadSafeMemoryInfo& mi,QWidget* parent /*= 0*/ )
+	:QGLWidget(parent),feeder(mesh,mi,100000),vaohandlespecificicforglcontext(0),drawmode(MDM_SMOOTH)
+{
+}
+
+SharedDataOpenGLContext::~SharedDataOpenGLContext()
+{
+	makeCurrent();
+}
+
+void SharedDataOpenGLContext::myInitGL()
+{
+    makeCurrent();
+    glewInit();
+    glGenVertexArrays(1,&vaohandlespecificicforglcontext);
+}
+
+void SharedDataOpenGLContext::passInfoToOpenGL(int mode)
+{
+	makeCurrent();
+	drawmode = static_cast<MyDrawMode>(mode);
+    //_tsbm.setUpBuffers();
+	switch(drawmode)
+	{
+	case MDM_SMOOTH:
+	case MDM_WIRE:
+		feeder.tryToAllocatePerTriangleAttributesInBO(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
+		break;
+	case MDM_POINTS:
+		feeder.tryToAllocatePerPointAttributesInBO(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE);
+		break;
+	case MDM_FLAT:
+	case MDM_FLATWIRE:
+		feeder.tryToAllocatePerTriangleAttributesInBO(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERFACE,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
+		break;
+	default:
+		break;
+	}
+	emit dataReadyToBeRead(drawmode);
 }

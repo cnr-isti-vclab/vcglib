@@ -38,12 +38,12 @@ void MLThreadSafeGLMeshAttributesFeeder::drawWire(GLuint& vaohandlespecificperop
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void MLThreadSafeGLMeshAttributesFeeder::drawFlatWire(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm )
+void MLThreadSafeGLMeshAttributesFeeder::drawFlatWire(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex )
 {
 	glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT );
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glPolygonOffset(1.0, 1);
-	drawTriangles(vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NR_PERFACE,cm,tm);
+	drawTriangles(vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NR_PERFACE,cm,tm,textureindex);
 
 	glDisable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_COLOR_MATERIAL);
@@ -54,16 +54,73 @@ void MLThreadSafeGLMeshAttributesFeeder::drawFlatWire(GLuint& vaohandlespecificp
 	glPopAttrib();
 }
 
-void MLThreadSafeGLMeshAttributesFeeder::drawPoints(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::COLOR_MODALITY cm )
+void MLThreadSafeGLMeshAttributesFeeder::drawPoints(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm )
+{
+	passPointsToOpenGL(vaohandlespecificperopenglcontext,cm);
+}
+
+void MLThreadSafeGLMeshAttributesFeeder::passPointsToOpenGL(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::COLOR_MODALITY cm )
 {
 	QWriteLocker locker(&_lock);
 	GLMeshAttributesFeeder<CMesh>::passPointsToOpenGL(vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NR_PERVERT,cm);
 }
 
-void MLThreadSafeGLMeshAttributesFeeder::drawTriangles(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm )
+void MLThreadSafeGLMeshAttributesFeeder::drawTriangles(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex )
+{
+	QReadLocker locker(&_lock);
+	GLMeshAttributesFeeder<CMesh>::drawTriangles(vaohandlespecificperopenglcontext,nm,cm,tm,textureindex);
+}
+
+void MLThreadSafeGLMeshAttributesFeeder::passTrianglesToOpenGL(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm )
 {
 	QWriteLocker locker(&_lock);
 	GLMeshAttributesFeeder<CMesh>::passTrianglesToOpenGL(vaohandlespecificperopenglcontext,nm,cm,tm);
 }
 
+bool MLThreadSafeGLMeshAttributesFeeder::tryToAllocatePerTriangleAttributesInBO( GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm )
+{
+	QWriteLocker locker(&_lock);
+	return GLMeshAttributesFeeder<CMesh>::tryToAllocatePerTriangleAttributesInBO(vaohandlespecificperopenglcontext,nm,cm,tm);
+}
 
+bool MLThreadSafeGLMeshAttributesFeeder::tryToAllocatePerPointAttributesInBO( GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm )
+{
+	QWriteLocker locker(&_lock);
+	return GLMeshAttributesFeeder<CMesh>::tryToAllocatePerPointAttributesInBO(vaohandlespecificperopenglcontext,nm,cm);
+}
+
+bool MLThreadSafeGLMeshAttributesFeeder::updateClientSideEnvironmentVAO( GLuint& vaohandle,const std::vector<bool>& importattribute) const
+{
+	QReadLocker locker(&_lock);
+
+	glBindVertexArray(vaohandle);
+	int ii = 0;
+	for(std::vector<GLBufferObject*>::const_iterator it = _bo.begin();it != _bo.end();++it)
+	{  
+		BO_NAMES boname = static_cast<BO_NAMES>(ii);
+		GLBufferObject* cbo = _bo.at(boname);
+		if (!cbo->_isvalid)
+			disableClientState(boname,importattribute);
+		else
+		{
+			glBindBuffer(cbo->_target, cbo->_bohandle);
+			setBufferPointerEnableClientState(boname);
+			glBindBuffer(cbo->_target, 0);
+		}
+		++ii;
+	}
+	glBindVertexArray(0);
+	return true;
+}
+
+void MLThreadSafeGLMeshAttributesFeeder::attributesToBeImportedInPointBasedPipeline( std::vector<bool> &importattribute, NORMAL_MODALITY nm, COLOR_MODALITY cm ) const
+{
+	QReadLocker locker(&_lock);
+	GLMeshAttributesFeeder<CMesh>::attributesToBeImportedInPointBasedPipeline(importattribute,nm,cm);
+}
+
+void MLThreadSafeGLMeshAttributesFeeder::attributesToBeImportedInTriangleBasedPipeline( std::vector<bool> &importattribute, NORMAL_MODALITY nm, COLOR_MODALITY cm, TEXTURE_MODALITY tm ) const
+{
+	QReadLocker locker(&_lock);
+	GLMeshAttributesFeeder<CMesh>::attributesToBeImportedInTriangleBasedPipeline(importattribute,nm,cm,tm);
+}

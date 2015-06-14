@@ -31,22 +31,29 @@ $Log: not supported by cvs2svn $
 #include "mainwindow.h"
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QDebug>
 
 MainWindow::MainWindow (QWidget * parent)
-	:QMainWindow (parent),mi(1000000000),mesh(),feeder(mesh,mi,100000)
+	:QMainWindow (parent),mi(1000000000),mesh()
 {
 	ui.setupUi (this);
 	QLayout* tmp = ui.glFrame->layout();
 
+    //parent is set to NULL in order to avoid QT bug on MAC (business as usual...).
+    //The QGLWidget are destroyed by hand in the MainWindow destructor...
+    shared = new SharedDataOpenGLContext(mesh,mi,NULL);
+	shared->setHidden(true);
+	shared->myInitGL();
+	connect (ui.drawModeComboBox, SIGNAL (currentIndexChanged(int)),shared, SLOT (passInfoToOpenGL(int)));
+
 	for(int ii = 0;ii < 2;++ii)
 	{
-		glar[ii] = new GLArea(mesh,feeder,this);
-
-		connect (ui.drawModeComboBox, SIGNAL (currentIndexChanged(int)),
-			glar[ii], SLOT (selectDrawMode(int)));
-
+        glar[ii] = new GLArea(mesh,shared->feeder,NULL,shared);
+		connect (shared,SIGNAL(dataReadyToBeRead(MyDrawMode)),glar[ii], SLOT (setupEnvironment(MyDrawMode)));
 		tmp->addWidget(glar[ii]);
 	}
+
+	
 
 	connect (ui.loadMeshPushButton, SIGNAL (clicked()),this, SLOT (chooseMesh()));
 	connect (ui.loadTetrahedronPushButton, SIGNAL (clicked()),this, SLOT (loadTetrahedron()));
@@ -87,15 +94,18 @@ void MainWindow::loadDodecahedron()
 
 void MainWindow::initMesh(QString message)
 {
-	//feeder.update(vcg::GLMeshAttributesFeeder<CMesh>::ATT_ALL);
+	ui.statusbar->showMessage(message);
 	// update bounding box
 	vcg::tri::UpdateBounding<CMesh>::Box(mesh);
 	// update Normals
 	vcg::tri::UpdateNormal<CMesh>::PerVertexNormalizedPerFaceNormalized(mesh);
+	shared->feeder.update(vcg::GLMeshAttributesFeeder<CMesh>::ATT_ALL);
+	shared->passInfoToOpenGL(ui.drawModeComboBox->currentIndex());
+}
+
+MainWindow::~MainWindow()
+{
 	for(int ii = 0;ii < 2;++ii)
-	{
-		feeder.update(vcg::GLMeshAttributesFeeder<CMesh>::ATT_ALL);
-		glar[ii]->updateGL();
-	}
-	ui.statusbar->showMessage(message);
+		delete glar[ii];
+	delete shared;
 }

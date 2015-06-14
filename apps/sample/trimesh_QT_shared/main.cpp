@@ -42,7 +42,7 @@ $Log: not supported by cvs2svn $
 int main(int argc, char *argv[])
 {
   QApplication app(argc, argv);
-  MainWindow *mw = new MainWindow;
-  mw->show();
+  MainWindow mw;
+  mw.show();
   return app.exec();
 }

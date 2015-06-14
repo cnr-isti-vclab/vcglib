@@ -47,13 +47,33 @@ public:
 	size_t perBatchTriangles() const;
 	bool renderedWithBO() const;
 	void update(int mask);
+
+	void passTrianglesToOpenGL(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm );
+
+	void passPointsToOpenGL(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::COLOR_MODALITY cm );
+
+	bool tryToAllocatePerTriangleAttributesInBO( GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm );
+
+	bool tryToAllocatePerPointAttributesInBO( GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm );
+
+	GLuint bufferObjectHandle() const;
+
 	void drawWire(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm);
 
-	void drawFlatWire(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm);
+	void drawFlatWire(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex = std::vector<GLuint>());
 
-	void drawPoints(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::COLOR_MODALITY cm);
+	void drawPoints(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm);
 
-	void drawTriangles(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm);
+	void drawTriangles(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex = std::vector<GLuint>() );
+	
+	bool enableClientSideEnvironmentVAO(GLuint& vaohandle) const;
+
+	bool updateClientSideEnvironmentVAO(GLuint& vaohandle,const std::vector<bool>& importattribute) const;
+
+	void attributesToBeImportedInPointBasedPipeline( std::vector<bool> &importattribute, NORMAL_MODALITY nm, COLOR_MODALITY cm) const;
+
+	void attributesToBeImportedInTriangleBasedPipeline( std::vector<bool> &importattribute, NORMAL_MODALITY nm, COLOR_MODALITY cm, TEXTURE_MODALITY tm ) const;
+
 private:
 	mutable QReadWriteLock _lock;
 };

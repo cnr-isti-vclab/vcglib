@@ -35,38 +35,31 @@ MLThreadSafeMemoryInfo::~MLThreadSafeMemoryInfo()
 
 void MLThreadSafeMemoryInfo::acquiredMemory(long long unsigned int mem)
 {
-	lock.lockForWrite();
+	QWriteLocker locker(&lock);
 	vcg::NotThreadSafeMemoryInfo::acquiredMemory(mem);
-	lock.unlock();
 }
 
 long long unsigned int MLThreadSafeMemoryInfo::usedMemory() const
 {
-	lock.lockForRead();
-	long long unsigned int tmp = vcg::NotThreadSafeMemoryInfo::usedMemory();
-	lock.unlock();
-	return tmp;
+	QReadLocker locker(&lock);
+	return vcg::NotThreadSafeMemoryInfo::usedMemory();
+	
 }
 
 long long unsigned int MLThreadSafeMemoryInfo::currentFreeMemory() const
 {
-	lock.lockForRead();
-	long long unsigned int tmp = vcg::NotThreadSafeMemoryInfo::currentFreeMemory();
-	lock.unlock();
-	return tmp;
+	QReadLocker locker(&lock);
+	return vcg::NotThreadSafeMemoryInfo::currentFreeMemory();
 }
 
 void MLThreadSafeMemoryInfo::releasedMemory(long long unsigned int mem)
 {
-	lock.lockForWrite();
+	QWriteLocker locker(&lock);
 	vcg::NotThreadSafeMemoryInfo::releasedMemory(mem);
-	lock.unlock();
 }
 
 bool MLThreadSafeMemoryInfo::isAdditionalMemoryAvailable( long long unsigned int mem )
 {
-	lock.lockForRead();
-	bool tmp = vcg::NotThreadSafeMemoryInfo::isAdditionalMemoryAvailable(mem);
-	lock.unlock();
-	return tmp;
+	QReadLocker locker(&lock);
+	return vcg::NotThreadSafeMemoryInfo::isAdditionalMemoryAvailable(mem);
 }

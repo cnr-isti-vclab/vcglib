@@ -33,11 +33,13 @@ $Log: not supported by cvs2svn $
 #include "glarea.h"
 #include "ml_thread_safe_memory_info.h"
 
+
 class MainWindow:public QMainWindow
 {
 Q_OBJECT 
 public:
   MainWindow(QWidget * parent = 0);
+  ~MainWindow();
 public slots:
   void chooseMesh();
   void loadTetrahedron();
@@ -50,11 +52,10 @@ private:
   Ui::mainWindow ui;
   GLArea* glar[2];
 
-  GLArea* shared;
+  SharedDataOpenGLContext* shared;
   MLThreadSafeMemoryInfo mi;
   /// the active mesh instance
   CMesh mesh;
-  MLThreadSafeGLMeshAttributesFeeder feeder;
 };
 
 #endif /*MAINWINDOW_H_ */
