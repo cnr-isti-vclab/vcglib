@@ -40,7 +40,7 @@
 
 namespace vcg 
 {
-//WARNING: All the classes derived from MemoryInfo has been intended to be instantiated as a singleton in the host application 
+	//WARNING: All the classes derived from MemoryInfo has been intended to be instantiated as a singleton in the host application 
 	//(i.e. in every application using it just an instance of a class derived from MemoryInfo should be declared).
 
 	class MemoryInfo
@@ -168,16 +168,16 @@ namespace vcg
 	{
 	public:
 		GLMeshAttributesFeeder(/*const*/ MESHTYPE& mesh,MemoryInfo& meminfo, size_t perbatchtriangles)
-            :_mesh(mesh),_gpumeminfo(meminfo),_bo(8,NULL)/*,vaohandle(0)*/,_lastfeedingusedreplicatedpipeline(false),_perbatchsimplex(perbatchtriangles),_chunkmap(),_borendering(false)
+			:_mesh(mesh),_gpumeminfo(meminfo),_bo(8,NULL)/*,vaohandle(0)*/,_lastfeedingusedreplicatedpipeline(false),_perbatchsimplex(perbatchtriangles),_chunkmap(),_borendering(false)
 		{
-			_bo[VERTPOSITIONBO] = new GLBufferObject(3,GL_FLOAT);
-			_bo[VERTNORMALBO] = new GLBufferObject(3,GL_FLOAT);    
-			_bo[FACENORMALBO] = new GLBufferObject(3,GL_FLOAT);
-			_bo[VERTCOLORBO] = new GLBufferObject(4,GL_UNSIGNED_BYTE);
-			_bo[FACECOLORBO] = new GLBufferObject(4,GL_UNSIGNED_BYTE);
-			_bo[VERTTEXTUREBO] = new GLBufferObject(2,GL_FLOAT);
-			_bo[WEDGETEXTUREBO] = new GLBufferObject(2,GL_FLOAT);
-                        _bo[VERTINDEXBO] = new GLBufferObject(3,GL_UNSIGNED_INT);
+			_bo[VERTPOSITIONBO] = new GLBufferObject(3,GL_FLOAT,GL_ARRAY_BUFFER);
+			_bo[VERTNORMALBO] = new GLBufferObject(3,GL_FLOAT,GL_ARRAY_BUFFER);    
+			_bo[FACENORMALBO] = new GLBufferObject(3,GL_FLOAT,GL_ARRAY_BUFFER);
+			_bo[VERTCOLORBO] = new GLBufferObject(4,GL_UNSIGNED_BYTE,GL_ARRAY_BUFFER);
+			_bo[FACECOLORBO] = new GLBufferObject(4,GL_UNSIGNED_BYTE,GL_ARRAY_BUFFER);
+			_bo[VERTTEXTUREBO] = new GLBufferObject(2,GL_FLOAT,GL_ARRAY_BUFFER);
+			_bo[WEDGETEXTUREBO] = new GLBufferObject(2,GL_FLOAT,GL_ARRAY_BUFFER);
+			_bo[VERTINDEXBO] = new GLBufferObject(3,GL_UNSIGNED_INT,GL_ELEMENT_ARRAY_BUFFER);
 		}
 
 		~GLMeshAttributesFeeder() 
@@ -244,65 +244,37 @@ namespace vcg
 		textureindex contained the texture OpenGL ids loaded in the gpu memory by the main application*/ 
 		void passTrianglesToOpenGL(GLuint& vaohandlespecificperopenglcontext,NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex = std::vector<GLuint>())
 		{
-			std::vector<bool> importattribute(_bo.size());
-			std::vector<bool> attributestobeupdated;
-			attributesToBeImportedInTriangleBasedPipeline(importattribute, nm, cm, tm);
-			bool replicated = !importattribute[VERTINDEXBO];
-			bool immediatemode = !(buffersAllocationFunction(vaohandlespecificperopenglcontext,nm,cm,tm,importattribute,attributestobeupdated));
-			if (immediatemode)
-				immediateMode(nm,cm,tm,textureindex);
-			else
-			{
-				bool somethingtoupdate = false;
-				for(size_t hh = 0;hh < attributestobeupdated.size();++hh)
-					somethingtoupdate = somethingtoupdate || attributestobeupdated[hh];
-				if (somethingtoupdate) 
-				{
-					if (replicated)
-					{
-						//WARNING!In case we have to update the wedgetexture bo maybe (not always!) we must update also the other buffer already in memory
-						//cause the wedgetexture pipeline force a change in the order of the triangles in GPU. 
-						//they are now ordered by the texture seam and not more by the triangle index!
-						if (attributestobeupdated[WEDGETEXTUREBO])
-						{
-							for(size_t jj = 0;jj < attributestobeupdated.size();++jj)
-								attributestobeupdated[jj] = importattribute[jj] || attributestobeupdated[jj];
-						}
-						updateBuffersReplicatedPipeline(attributestobeupdated,tm);
-					}
-					else
-						updateBuffersIndexedPipeline(attributestobeupdated);
-				}
+			if (tryToAllocatePerTriangleAttributesInBO(vaohandlespecificperopenglcontext,nm,cm,tm))
 				drawTriangles(vaohandlespecificperopenglcontext,nm,cm,tm,textureindex);
-			}
-
+			else
+				immediateMode(nm,cm,tm,textureindex);
 		}
 
 		void passPointsToOpenGL(GLuint& vaohandlespecificperopenglcontext,NORMAL_MODALITY nm,COLOR_MODALITY cm)
 		{
-			std::vector<bool> importattribute(_bo.size());
-			std::vector<bool> attributestobeupdated;
-			attributesToBeImportedInPointBasedPipeline(importattribute, nm, cm);
-			bool immediatemode = !(buffersAllocationFunction(vaohandlespecificperopenglcontext,nm,cm,TX_NONE,importattribute,attributestobeupdated));
-			std::vector<GLuint> textureindex;
-			if (immediatemode)
-				immediateMode(nm,cm,TX_NONE,textureindex);
-			else
-			{
-				bool somethingtoupdate = false;
-				for(size_t hh = 0;hh < attributestobeupdated.size();++hh)
-					somethingtoupdate = somethingtoupdate || attributestobeupdated[hh];
-				if (somethingtoupdate) 
-					updateBuffersIndexedPipeline(attributestobeupdated);
+			if (tryToAllocatePerPointAttributesInBO(vaohandlespecificperopenglcontext,nm,cm))
 				drawPoints(vaohandlespecificperopenglcontext);
-			}
+			else
+				immediateMode(nm,cm,TX_NONE);
 		}
 
-	private:
+		enum BO_NAMES
+		{
+			VERTPOSITIONBO = 0,
+			VERTNORMALBO = 1,
+			FACENORMALBO = 2,
+			VERTCOLORBO = 3,
+			FACECOLORBO = 4,
+			VERTTEXTUREBO = 5,
+			WEDGETEXTUREBO = 6,
+			VERTINDEXBO = 7
+		};
+
+	protected:
 		struct GLBufferObject
 		{
-			GLBufferObject(size_t components,GLenum gltype)
-				:_size(0),_components(components),_isvalid(false),_gltype(gltype),_bohandle(0)
+			GLBufferObject(size_t components,GLenum gltype,GLenum target)
+				:_size(0),_components(components),_isvalid(false),_gltype(gltype),_target(target),_bohandle(0)
 			{
 			}
 
@@ -326,20 +298,14 @@ namespace vcg
 			const size_t _components;
 			bool _isvalid;
 			const GLenum _gltype;
+			const GLenum _target;
 			GLuint _bohandle;
 		};
 
-		enum BO_NAMES
+		const GLBufferObject& getBufferObjectInfo(BO_NAMES boname) const
 		{
-			VERTPOSITIONBO = 0,
-			VERTNORMALBO = 1,
-			FACENORMALBO = 2,
-			VERTCOLORBO = 3,
-			FACECOLORBO = 4,
-			VERTTEXTUREBO = 5,
-			WEDGETEXTUREBO = 6,
-			VERTINDEXBO = 7
-		};
+			return _bo[boname]; 
+		}
 
 		long long unsigned int bufferObjectsMemoryRequired(NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,bool generateindex) const
 		{
@@ -363,7 +329,7 @@ namespace vcg
 			return result;
 		}
 
-		void attributesToBeImportedInTriangleBasedPipeline( std::vector<bool> &importattribute, NORMAL_MODALITY nm, COLOR_MODALITY cm, TEXTURE_MODALITY tm )
+		void attributesToBeImportedInTriangleBasedPipeline( std::vector<bool> &importattribute, NORMAL_MODALITY nm, COLOR_MODALITY cm, TEXTURE_MODALITY tm ) const
 		{
 			importattribute[VERTPOSITIONBO] = true;
 			importattribute[VERTNORMALBO] = vcg::tri::HasPerVertexNormal(_mesh) && (nm == NR_PERVERT);
@@ -388,7 +354,7 @@ namespace vcg
 			importattribute[VERTINDEXBO] = !replicated; 
 		}
 
-		void attributesToBeImportedInPointBasedPipeline( std::vector<bool> &importattribute, NORMAL_MODALITY nm, COLOR_MODALITY cm)
+		void attributesToBeImportedInPointBasedPipeline( std::vector<bool> &importattribute, NORMAL_MODALITY nm, COLOR_MODALITY cm) const
 		{
 			importattribute[VERTPOSITIONBO] = true;
 			importattribute[VERTNORMALBO] = vcg::tri::HasPerVertexNormal(_mesh) && (nm == NR_PERVERT);
@@ -402,7 +368,7 @@ namespace vcg
 
 		bool buffersAllocationFunction(GLuint& vaohandlespecificperopenglcontext,NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<bool>& importattribute,std::vector<bool>& attributestobeupdated)
 		{
-                        if (vaohandlespecificperopenglcontext == 0)
+			if (vaohandlespecificperopenglcontext == 0)
 				//glGenVertexArrays(1,&vaohandle);
 				return false;
 			bool replicated = (importattribute[FACENORMALBO] || importattribute[FACECOLORBO] || importattribute[WEDGETEXTUREBO]);
@@ -480,7 +446,7 @@ namespace vcg
 				return false;
 			}
 			else
-                        {
+			{
 				unsigned int ii = 0;
 				//I have to update the invalid buffers requested to be imported
 				attributestobeupdated = importattribute;
@@ -489,9 +455,6 @@ namespace vcg
 					BO_NAMES boname = static_cast<BO_NAMES>(ii);
 					GLBufferObject* cbo = _bo.at(boname);
 					bool importatt = importattribute.at(boname);
-					GLenum target = GL_ARRAY_BUFFER;
-					if (boname == VERTINDEXBO)
-						target = GL_ELEMENT_ARRAY_BUFFER;
 					glBindVertexArray(vaohandlespecificperopenglcontext);
 					bool notvalidbuttoberegenerated = (cbo != NULL) && (!cbo->_isvalid) && (importatt);
 					if (notvalidbuttoberegenerated)
@@ -499,11 +462,11 @@ namespace vcg
 						cbo->_size = boExpectedSize(boname,replicated,importattribute[VERTINDEXBO]);
 						long long unsigned int dim = boExpectedDimension(boname,replicated,importattribute[VERTINDEXBO]);
 						glGenBuffers(1, &cbo->_bohandle);
-						glBindBuffer(target, cbo->_bohandle);
-						glBufferData(target, dim, NULL, GL_STATIC_DRAW);
+						glBindBuffer(cbo->_target, cbo->_bohandle);
+						glBufferData(cbo->_target, dim, NULL, GL_STATIC_DRAW);
 						setBufferPointerEnableClientState(boname);
-                                                glBindBuffer(target, 0);
-                                                _gpumeminfo.acquiredMemory(dim);
+						glBindBuffer(cbo->_target, 0);
+						_gpumeminfo.acquiredMemory(dim);
 						attributestobeupdated[boname] = true;
 						cbo->_isvalid = true;
 					}
@@ -527,6 +490,57 @@ namespace vcg
 				_lastfeedingusedreplicatedpipeline = replicated;
 				return true;	
 			}
+		}
+
+		bool tryToAllocatePerTriangleAttributesInBO(GLuint& vaohandlespecificperopenglcontext,NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm)
+		{
+			std::vector<bool> importattribute(_bo.size());
+			std::vector<bool> attributestobeupdated;
+			attributesToBeImportedInTriangleBasedPipeline(importattribute, nm, cm, tm);
+			bool replicated = !importattribute[VERTINDEXBO];
+			bool immediatemode = !(buffersAllocationFunction(vaohandlespecificperopenglcontext,nm,cm,tm,importattribute,attributestobeupdated));
+			
+			if (immediatemode)
+				return false;
+
+			bool somethingtoupdate = false;
+			for(size_t hh = 0;hh < attributestobeupdated.size();++hh)
+				somethingtoupdate = somethingtoupdate || attributestobeupdated[hh];
+			if (somethingtoupdate) 
+			{
+				if (replicated)
+				{
+					//WARNING!In case we have to update the wedgetexture bo maybe (not always!) we must update also the other buffer already in memory
+					//cause the wedgetexture pipeline force a change in the order of the triangles in GPU. 
+					//they are now ordered by the texture seam and not more by the triangle index!
+					if (attributestobeupdated[WEDGETEXTUREBO])
+					{
+						for(size_t jj = 0;jj < attributestobeupdated.size();++jj)
+							attributestobeupdated[jj] = importattribute[jj] || attributestobeupdated[jj];
+					}
+					updateBuffersReplicatedPipeline(attributestobeupdated,tm);
+				}
+				else
+					updateBuffersIndexedPipeline(attributestobeupdated);
+			}
+			return true;
+		}
+
+		bool tryToAllocatePerPointAttributesInBO(GLuint& vaohandlespecificperopenglcontext,NORMAL_MODALITY nm,COLOR_MODALITY cm)
+		{
+			std::vector<bool> importattribute(_bo.size());
+			std::vector<bool> attributestobeupdated;
+			attributesToBeImportedInPointBasedPipeline(importattribute, nm, cm);
+			bool immediatemode = !(buffersAllocationFunction(vaohandlespecificperopenglcontext,nm,cm,TX_NONE,importattribute,attributestobeupdated));
+			if (immediatemode)
+				return false;
+			
+			bool somethingtoupdate = false;
+			for(size_t hh = 0;hh < attributestobeupdated.size();++hh)
+				somethingtoupdate = somethingtoupdate || attributestobeupdated[hh];
+			if (somethingtoupdate) 
+				updateBuffersIndexedPipeline(attributestobeupdated);
+			return true;
 		}
 
 		bool updateBuffersIndexedPipeline(const std::vector<bool>& attributestobeupdated)
@@ -813,7 +827,7 @@ namespace vcg
 			return true;
 		}
 
-		bool immediateMode(NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex)
+		bool immediateMode(NORMAL_MODALITY nm,COLOR_MODALITY cm,TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex = std::vector<GLuint>())
 		{
 			glPushAttrib(GL_ALL_ATTRIB_BITS);
 			if(_mesh.fn==0) 
@@ -912,7 +926,11 @@ namespace vcg
 			std::vector<bool> att(_bo.size(),false);
 			attributesToBeImportedInTriangleBasedPipeline(att,nm,cm,tm);
 			bool replicated = !att[VERTINDEXBO];
+			GLenum err = glGetError();
+			assert(err == GL_NO_ERROR);
 			glBindVertexArray(vaohandlespecificperopenglcontext);
+			err = glGetError();
+			assert(err == GL_NO_ERROR);
 
 			if (replicated)
 			{
@@ -956,9 +974,18 @@ namespace vcg
 
 				if  (_bo[VERTINDEXBO]->_isvalid)
 				{
+					err = glGetError();
+					assert(err == GL_NO_ERROR);
 					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_bo[VERTINDEXBO]->_bohandle);
-                                        glDrawElements( GL_TRIANGLES, _mesh.fn * _bo[VERTINDEXBO]->_components,GL_UNSIGNED_INT ,NULL);
-                                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+					err = glGetError();
+					assert(err == GL_NO_ERROR);
+					glDrawElements( GL_TRIANGLES, _mesh.fn * _bo[VERTINDEXBO]->_components,GL_UNSIGNED_INT ,NULL);
+					err = glGetError();
+					printf("errore (%s)\n",gluErrorString(err));
+					assert(err == GL_NO_ERROR);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+					err = glGetError();
+					assert(err == GL_NO_ERROR);
 				}
 
 				glBindTexture(GL_TEXTURE_2D,0);
@@ -982,7 +1009,7 @@ namespace vcg
 			glBindVertexArray(0);
 		}
 
-		void setBufferPointerEnableClientState( BO_NAMES boname)
+		void setBufferPointerEnableClientState( BO_NAMES boname) const
 		{
 			if ((boname < VERTPOSITIONBO) || (boname > VERTINDEXBO))
 				return; 
@@ -1021,12 +1048,12 @@ namespace vcg
 				}
 			case(VERTINDEXBO):
 				{
-                                        break;
+					break;
 				}
 			}
 		}
 
-		void disableClientState( BO_NAMES boname,const std::vector<bool>& importatt)
+		void disableClientState( BO_NAMES boname,const std::vector<bool>& importatt) const
 		{
 			if ((boname < VERTPOSITIONBO) || (boname > VERTINDEXBO))
 				return; 
@@ -1180,7 +1207,7 @@ namespace vcg
 
 		std::vector<GLBufferObject*> _bo;
 		//GLuint vaohandle;
-		
+
 		std::vector< std::pair<short,GLuint> > _texindnumtriangles;
 
 		bool _lastfeedingusedreplicatedpipeline;
