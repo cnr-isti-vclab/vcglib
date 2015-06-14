@@ -246,7 +246,8 @@ private:
         igl::find_cross_field_singularities(V, F, MMatch, isSingularity, singularityIndex);
 
         // Cut the mesh, duplicating all vertices on the seams
-        igl::cut_mesh_from_singularities(V, F, MMatch, isSingularity, singularityIndex, Seams);
+        //igl::cut_mesh_from_singularities(V, F, MMatch, isSingularity, singularityIndex, Seams);
+        igl::cut_mesh_from_singularities(V, F, MMatch,Seams);
 
         // Comb the frame-field accordingly
         igl::comb_frame_field(V, F, X1, X2, BIS1_combed, BIS2_combed, X1_combed, X2_combed);
@@ -282,8 +283,11 @@ private:
             }
         }
 
-        igl::miq(V,F,X1_combed,X2_combed,BIS1_combed,BIS2_combed,
-                 MMatch,isSingularity,singularityIndex,Seams,
+//        igl::miq(V,F,X1_combed,X2_combed,BIS1_combed,BIS2_combed,
+//                 MMatch,isSingularity,singularityIndex,Seams,
+//                 UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
+//                 MiqP.stiffness_iter,MiqP.local_iter,MiqP.doRound,MiqP.round_singularities,extra_round,hard_features);
+        igl::miq(V,F,X1_combed,X2_combed,
                  UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
                  MiqP.stiffness_iter,MiqP.local_iter,MiqP.doRound,MiqP.round_singularities,extra_round,hard_features);
 
