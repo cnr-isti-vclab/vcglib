@@ -146,6 +146,14 @@ namespace vcg {
 					}
 				}
 			}
+
+            static void CopyVertUVWedge(MeshType &m)
+            {
+                for (size_t i=0;i<m.face.size();i++)
+                    for (size_t j=0;j<3;j++)
+                        m.face[i].WT(j).P()=m.face[i].V(j)->T().P();
+            }
+
 		};
 	} //End Namespace Tri
 } // End Namespace vcg
