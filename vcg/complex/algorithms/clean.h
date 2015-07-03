@@ -1807,6 +1807,68 @@ public:
     return std::make_pair(TotalCC,DeletedCC);
   }
 
+
+
+  /**
+	Select the folded faces using an angle threshold on the face normal.
+	The face is selected if the dot product between the face normal and the normal of the plane fitted
+	using the vertices of the one ring faces is below the cosThreshold. 
+	The cosThreshold requires a negative cosine value (a positive value is clamp to zero). 
+  */
+  static void SelectFoldedFaceFromOneRingFaces(MeshType &m, ScalarType cosThreshold)
+  {
+	  tri::RequireVFAdjacency(m);
+	  tri::RequirePerFaceNormal(m);
+	  tri::RequirePerVertexNormal(m);
+	  vcg::tri::UpdateSelection<MeshType>::FaceClear(m);
+	  vcg::tri::UpdateNormal<MeshType>::PerFaceNormalized(m);
+	  vcg::tri::UpdateNormal<MeshType>::PerVertexNormalized(m);
+	  vcg::tri::UpdateTopology<MeshType>::VertexFace(m);
+	  if (cosThreshold > 0)
+		  cosThreshold = 0;
+
+#pragma omp parallel for schedule(dynamic, 10)
+	  for (int i = 0; i < m.face.size(); i++)
+	  {
+		  std::vector<typename MeshType::VertexPointer> nearVertex;
+		  std::vector<typename MeshType::CoordType> point;
+		  typename MeshType::FacePointer f = &m.face[i];
+		  for (int j = 0; j < 3; j++)
+		  {
+			  std::vector<typename MeshType::VertexPointer> temp;
+			  vcg::face::VVStarVF<typename MeshType::FaceType>(f->V(j), temp);
+			  std::vector<typename MeshType::VertexPointer>::iterator iter = temp.begin();
+			  for (; iter != temp.end(); iter++)
+			  {
+				  if ((*iter) != f->V1(j) && (*iter) != f->V2(j))
+				  {
+					  nearVertex.push_back((*iter));
+					  point.push_back((*iter)->P());
+				  }
+			  }
+			  nearVertex.push_back(f->V(j));
+			  point.push_back(f->P(j));
+		  }
+
+		  if (point.size() > 3)
+		  {
+			  vcg::Plane3<typename MeshType::ScalarType> plane;
+			  vcg::FitPlaneToPointSet(point, plane);
+			  float avgDot = 0;
+			  for (int j = 0; j < nearVertex.size(); j++)
+				  avgDot += plane.Direction().dot(nearVertex[j]->N());
+			  avgDot /= nearVertex.size();
+			  typename MeshType::VertexType::NormalType normal;
+			  if (avgDot < 0)
+				  normal = -plane.Direction();
+			  else
+				  normal = plane.Direction();
+			  if (normal.dot(f->N()) < cosThreshold)
+				  f->SetS();
+		  }
+	  }
+  }
+
 }; // end class
 /*@}*/
 
