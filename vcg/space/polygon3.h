@@ -412,7 +412,9 @@ void getBaseTemplatePolygon(int N,
 //described by "Static Aware Grid Shells" by Pietroni et Al.
 template<class PolygonType>
 void GetPolyTemplatePos(const PolygonType &F,
-                        std::vector<typename PolygonType::CoordType> &TemplatePos)
+                        std::vector<typename PolygonType::CoordType> &TemplatePos,
+                        typename PolygonType::ScalarType TargetArea=-1,
+                        bool force_isotropy=false)
 {
     typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
@@ -432,6 +434,13 @@ void GetPolyTemplatePos(const PolygonType &F,
     CoordType dirX=PCA[0];
     CoordType dirY=PCA[1];
     CoordType dirZ=PCA[2];
+
+    if (force_isotropy)
+    {
+        dirX.Normalize();
+        dirY.Normalize();
+        dirZ.Normalize();
+    }
 
     ///set the Rotation matrix
     ToPCA.SetColumn(0,dirX);
@@ -454,6 +463,11 @@ void GetPolyTemplatePos(const PolygonType &F,
     ///calculate the Area
     ScalarType AreaTemplate=Area(TemplatePos);
     ScalarType AreaUniform=Area(UniformPos);
+
+//    if (TargetArea>0)
+//    {
+//        AreaUniform*=(AreaUniform/TargetArea);
+//    }
 
     ScalarType Scale=sqrt(AreaTemplate/AreaUniform);
 
