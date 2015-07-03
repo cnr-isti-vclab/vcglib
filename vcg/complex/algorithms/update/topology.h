@@ -339,67 +339,38 @@ In other words F1->FFp(i) == F2 iff F1 and F2 have the same tex coords along edg
 
 static void FaceFaceFromTexCoord(MeshType &m)
 {
-  RequireFFAdjacency(m);
-  RequirePerFaceWedgeTexCoord(m);
+	RequireFFAdjacency(m);
+	RequirePerFaceWedgeTexCoord(m);
+	vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
+	for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+	{
+		if (!(*fi).IsD())
+		{
+			for (int i = 0; i < (*fi).VN(); i++)
+			{
+				bool isBorder = false;
+				if (!vcg::face::IsBorder((*fi), i))
+				{
+					MeshType::FacePointer nextFace = (*fi).FFp(i);
+					int nextEdgeIndex = (*fi).FFi(i);
+					bool border = false;
+					if ((*fi).cV(i) == nextFace->cV(nextEdgeIndex))
+					{
+						if ((*fi).WT(i) != nextFace->WT(nextEdgeIndex) || (*fi).WT((*fi).Next(i)) != nextFace->WT(nextFace->Next(nextEdgeIndex)))
+							border = true;
+					}
+					else
+					{
+						if ((*fi).WT(i) != nextFace->WT(nextFace->Next(nextEdgeIndex)) || (*fi).WT((*fi).Next(i)) != nextFace->WT(nextEdgeIndex))
+							border = true;
+					}
+					if (border)
+						vcg::face::FFDetach((*fi), i);
 
-  std::vector<PEdgeTex> e;
-    FaceIterator pf;
-    typename std::vector<PEdgeTex>::iterator p;
-
-    if( m.fn == 0 ) return;
-
-//	e.resize(m.fn*3);								// Alloco il vettore ausiliario
-    FaceIterator fi;
-    int n_edges = 0;
-    for(fi = m.face.begin(); fi != m.face.end(); ++fi) if(! (*fi).IsD()) n_edges+=(*fi).VN();
-    e.resize(n_edges);
-
-    p = e.begin();
-    for(pf=m.face.begin();pf!=m.face.end();++pf)			// Lo riempio con i dati delle facce
-        if( ! (*pf).IsD() )
-            for(int j=0;j<(*pf).VN();++j)
-            {
-                if( (*pf).WT(j) != (*pf).WT((*pf).Next(j)))
-                     {
-                        (*p).Set(&(*pf),j);
-                        ++p;
-                     }
-            }
-
-    e.resize(p-e.begin());   // remove from the end of the edge vector the unitiailized ones
-    //assert(p==e.end()); // this formulation of the assert argument is not really correct, will crash on visual studio
-    sort(e.begin(), e.end());
-
-    int ne = 0;											// number of real edges
-    typename std::vector<PEdgeTex>::iterator pe,ps;
-    ps = e.begin();pe=e.begin();
-    //for(ps = e.begin(),pe=e.begin();pe<=e.end();++pe)	// Scansione vettore ausiliario
-    do
-    {
-        if( pe==e.end() || (*pe) != (*ps) )					// Trovo blocco di edge uguali
-        {
-            typename std::vector<PEdgeTex>::iterator q,q_next;
-            for (q=ps;q<pe-1;++q)						// Scansione facce associate
-            {
-                assert((*q).z>=0);
-                assert((*q).z< 3);
-                q_next = q;
-                ++q_next;
-                assert((*q_next).z>=0);
-                assert((*q_next).z< (*q_next).f->VN());
-                (*q).f->FFp(q->z) = (*q_next).f;				// Collegamento in lista delle facce
-                (*q).f->FFi(q->z) = (*q_next).z;
-            }
-            assert((*q).z>=0);
-            assert((*q).z< (*q).f->VN());
-            (*q).f->FFp((*q).z) = ps->f;
-            (*q).f->FFi((*q).z) = ps->z;
-            ps = pe;
-            ++ne;										// Aggiorno il numero di edge
-        }
-        if(pe==e.end()) break;
-        ++pe;
-    } while(true);
+				}
+			}
+		}
+	}
 }
 
 
