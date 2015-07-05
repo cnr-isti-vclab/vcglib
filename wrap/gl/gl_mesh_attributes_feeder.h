@@ -142,6 +142,10 @@ namespace vcg
 				return _pm;
 			}
 
+			inline static size_t possibleAttributesNumber()
+			{
+				return _size;
+			}
 		private:
 			static const size_t _size = ATT_NAMES_ARITY;
 			bool _atts[_size];
@@ -250,9 +254,15 @@ namespace vcg
 				_rendermodinitialized = true;
 			try
 			{
-				std::map<unsigned int,ReqAtts>::iterator it = _allreqattsmap.insert(std::make_pair(viewid,rq));
-				computeARequestedAttributesSetCompatibleWithMesh(_mesh,it->second);
-				mergeReqAtts(*it,_currboatt);
+				/*if there is not already an entry for this viewid insert it*/
+				std::pair< std::map<unsigned int,ReqAtts>::iterator,bool>  inserted = _allreqattsmap.insert(std::make_pair(viewid,rq));
+				
+				/*there is already an entry. update it*/
+				if (!inserted.second)
+					inserted.first->second = rq;
+				ReqAtts& tmp = inserted.first->second;
+				computeARequestedAttributesSetCompatibleWithMesh(tmp,_mesh);
+				mergeReqAtts(tmp,_currboatt);
 				return tryToAllocateAttributesInBO();
 			}
 			catch (GLFeederException& e)
@@ -355,14 +365,14 @@ namespace vcg
 
 		static void mergeReqAtts(const ReqAtts& newone,ReqAtts& tomerge)
 		{
-			for(size_t ii = 0; ii < ReqAtts::_size;++ii)
+			for(size_t ii = 0; ii < ReqAtts::possibleAttributesNumber();++ii)
 			{
 				ATT_NAMES name = static_cast<ATT_NAMES>(ii);
 				tomerge[name] = tomerge[name] || newone[name];
 			}
 
-			if (unsigned int(tomerge._pm) <= unsigned int(newone._pm))
-				tomerge._pm = newone._pm;
+			if (unsigned int(tomerge.primitiveModality()) <= unsigned int(newone.primitiveModality()))
+				tomerge.primitiveModality() = newone.primitiveModality();
 
 		}
 
@@ -404,7 +414,8 @@ namespace vcg
 				ATT_NAMES boname = static_cast<ATT_NAMES>(ii);
 				size_t sz = boExpectedSize(boname,replicated,generateindex);
 				size_t dim = boExpectedDimension(boname,replicated,generateindex); 
-				if ((*it != NULL) && (
+             
+                if (((*it) != NULL) && (
 					/*a mesh attributes has been updated and the number of already allocated bo cells to contain the attribute values doesn't suit anymore 
 					(i.e. if i change just the vertex positions without changing the vertex numbers i have not to reallocate the previous vertposition bo, it's just sufficient to update the vertex coordinates)*/  
 					((!(*it)->_isvalid) && (sz != (*it)->_size)) || 
@@ -413,9 +424,9 @@ namespace vcg
 					/*we switched back from the replicated pipeline to the normal one. All the bos have to be regenerated*/
 					(!replicated && _lastfeedingusedreplicatedpipeline) ||
 					/*the buffer object is valid but for same reason the number of cells of the bo don't suit anymore the required size. we have to reallocate the buffer object*/
-					(((*it)->_isvalid) && (sz != (*it)->_size))) ||
+					(((*it)->_isvalid) && (sz != (*it)->_size)) ||
 					//the buffer is valid, but the attribute is not required to be displayed
-					(((*it)->_isvalid) && !isAttributeRequiredToBeDisplayed(boname)))
+					(((*it)->_isvalid) && !isAttributeRequiredToBeDisplayed(boname))))
 				{
 
 					//disableClientState(boname,importattribute);
@@ -559,7 +570,7 @@ namespace vcg
 		bool tryToAllocateAttributesInBO()
 		{
 			std::vector<bool> attributestobeupdated;
-			bool replicated = !(isReplicatedPipeline(_currboatt));
+			bool replicated = isReplicatedPipeline(_currboatt);
 			bool immediatemode = !(buffersAllocationFunction(attributestobeupdated));
 			
 			if (immediatemode)
