@@ -351,7 +351,7 @@ static void FaceFaceFromTexCoord(MeshType &m)
 				bool isBorder = false;
 				if (!vcg::face::IsBorder((*fi), i))
 				{
-					MeshType::FacePointer nextFace = (*fi).FFp(i);
+                                        typename MeshType::FacePointer nextFace = (*fi).FFp(i);
 					int nextEdgeIndex = (*fi).FFi(i);
 					bool border = false;
 					if ((*fi).cV(i) == nextFace->cV(nextEdgeIndex))

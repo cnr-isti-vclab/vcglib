@@ -1837,7 +1837,7 @@ public:
 		  {
 			  std::vector<typename MeshType::VertexPointer> temp;
 			  vcg::face::VVStarVF<typename MeshType::FaceType>(f->V(j), temp);
-			  std::vector<typename MeshType::VertexPointer>::iterator iter = temp.begin();
+              typename std::vector<typename MeshType::VertexPointer>::iterator iter = temp.begin();
 			  for (; iter != temp.end(); iter++)
 			  {
 				  if ((*iter) != f->V1(j) && (*iter) != f->V2(j))
