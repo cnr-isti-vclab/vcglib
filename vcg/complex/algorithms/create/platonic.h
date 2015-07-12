@@ -603,7 +603,7 @@ void Torus(MeshType &m, float hRingRadius, float vRingRadius, int hRingDiv=24, i
   }
   FaceGrid(m,vRingDiv+1,hRingDiv+1);
   tri::Clean<MeshType>::RemoveDuplicateVertex(m);
-  tri::Allocator<MeshType>::CompactVertexVector(m);
+  tri::Allocator<MeshType>::CompactEveryVector(m);
 
 }
 
@@ -764,7 +764,7 @@ void FaceGrid(MeshType & in, int w, int h)
 template <class MeshType>
 void FaceGrid(MeshType & in, const std::vector<int> &grid, int w, int h)
 {
-    assert(in.vn == (int)in.vert.size()); // require a compact vertex vector
+    tri::RequireCompactness(in);
     assert(in.vn <= w*h); // the number of vertices should match the number of expected grid vertices
 
 //	    V0       V1
