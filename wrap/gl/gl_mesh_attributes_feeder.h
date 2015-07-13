@@ -159,7 +159,7 @@ class GLMeshAttributesFeeder : public GLFeederInfo
 {
 public:
     GLMeshAttributesFeeder(/*const*/ MESHTYPE& mesh,MemoryInfo& meminfo, size_t perbatchprimitives)
-        :_mesh(mesh),_gpumeminfo(meminfo),_bo(ATT_NAMES_ARITY,NULL),_currboatt(),_allreqattsmap(),_lastfeedingusedreplicatedpipeline(false),_perbatchprim(perbatchprimitives),_chunkmap(),_borendering(false),_rendermodinitialized(false)
+        :_mesh(mesh),_gpumeminfo(meminfo),_bo(ATT_NAMES_ARITY,NULL),_currallocatedboatt(),_lastfeedingusedreplicatedpipeline(false),_perbatchprim(perbatchprimitives),_chunkmap(),_borendering(false),_rendermodinitialized(false)
     {
         _bo[GLFeederInfo::ATT_VERTPOSITION] = new GLBufferObject(3,GL_FLOAT,GL_VERTEX_ARRAY,GL_ARRAY_BUFFER);
         _bo[GLFeederInfo::ATT_VERTNORMAL] = new GLBufferObject(3,GL_FLOAT,GL_NORMAL_ARRAY,GL_ARRAY_BUFFER);
@@ -195,44 +195,44 @@ public:
         }
 
         bool boupdatedrequired = false;
-        if (((mask & attBitMask(GLFeederInfo::ATT_VERTPOSITION)) || (mask & attBitMask(ATT_ALL))) && (_currboatt[ATT_VERTPOSITION]))
+        if (((mask & attBitMask(GLFeederInfo::ATT_VERTPOSITION)) || (mask & attBitMask(ATT_ALL))) && (_currallocatedboatt[ATT_VERTPOSITION]))
         {
             boupdatedrequired = true;
             _bo[GLFeederInfo::ATT_VERTPOSITION]->_isvalid = false;
         }
 
-        if (((mask & attBitMask(GLFeederInfo::ATT_VERTNORMAL)) || (mask & attBitMask(ATT_ALL))) &&  (_currboatt[ATT_VERTNORMAL] && vcg::tri::HasPerVertexNormal(_mesh)))
+        if (((mask & attBitMask(GLFeederInfo::ATT_VERTNORMAL)) || (mask & attBitMask(ATT_ALL))) &&  (_currallocatedboatt[ATT_VERTNORMAL] && vcg::tri::HasPerVertexNormal(_mesh)))
         {
             boupdatedrequired = true;
             _bo[GLFeederInfo::ATT_VERTNORMAL]->_isvalid = false;
         }
 
-        if (((mask & attBitMask(GLFeederInfo::ATT_FACENORMAL)) || (mask & attBitMask(ATT_ALL))) && (_currboatt[ATT_FACENORMAL] && vcg::tri::HasPerFaceNormal(_mesh)))
+        if (((mask & attBitMask(GLFeederInfo::ATT_FACENORMAL)) || (mask & attBitMask(ATT_ALL))) && (_currallocatedboatt[ATT_FACENORMAL] && vcg::tri::HasPerFaceNormal(_mesh)))
         {
             boupdatedrequired = true;
             _bo[GLFeederInfo::ATT_FACENORMAL]->_isvalid = false;
         }
 
-        if (((mask & attBitMask(GLFeederInfo::ATT_VERTCOLOR)) || (mask & attBitMask(ATT_ALL))) && (_currboatt[ATT_VERTCOLOR] && vcg::tri::HasPerVertexColor(_mesh)))
+        if (((mask & attBitMask(GLFeederInfo::ATT_VERTCOLOR)) || (mask & attBitMask(ATT_ALL))) && (_currallocatedboatt[ATT_VERTCOLOR] && vcg::tri::HasPerVertexColor(_mesh)))
         {
             boupdatedrequired = true;
             _bo[GLFeederInfo::ATT_VERTCOLOR]->_isvalid = false;
         }
 
-        if (((mask & attBitMask(GLFeederInfo::ATT_FACECOLOR)) || (mask & attBitMask(ATT_ALL))) && (_currboatt[ATT_FACECOLOR] && vcg::tri::HasPerFaceColor(_mesh)))
+        if (((mask & attBitMask(GLFeederInfo::ATT_FACECOLOR)) || (mask & attBitMask(ATT_ALL))) && (_currallocatedboatt[ATT_FACECOLOR] && vcg::tri::HasPerFaceColor(_mesh)))
         {
             boupdatedrequired = true;
             _bo[GLFeederInfo::ATT_FACECOLOR]->_isvalid = false;
         }
 
 
-        if (((mask & attBitMask(GLFeederInfo::ATT_VERTTEXTURE)) || (mask & attBitMask(ATT_ALL))) && (_currboatt[ATT_VERTTEXTURE] && vcg::tri::HasPerVertexTexCoord(_mesh)))
+        if (((mask & attBitMask(GLFeederInfo::ATT_VERTTEXTURE)) || (mask & attBitMask(ATT_ALL))) && (_currallocatedboatt[ATT_VERTTEXTURE] && vcg::tri::HasPerVertexTexCoord(_mesh)))
         {
             boupdatedrequired = true;
             _bo[GLFeederInfo::ATT_VERTTEXTURE]->_isvalid = false;
         }
 
-        if (((mask & attBitMask(GLFeederInfo::ATT_WEDGETEXTURE)) || (mask & attBitMask(ATT_ALL))) && (_currboatt[ATT_WEDGETEXTURE] && vcg::tri::HasPerWedgeTexCoord(_mesh)))
+        if (((mask & attBitMask(GLFeederInfo::ATT_WEDGETEXTURE)) || (mask & attBitMask(ATT_ALL))) && (_currallocatedboatt[ATT_WEDGETEXTURE] && vcg::tri::HasPerWedgeTexCoord(_mesh)))
         {
             boupdatedrequired = true;
             _bo[GLFeederInfo::ATT_WEDGETEXTURE]->_isvalid = false;
@@ -248,37 +248,27 @@ public:
             tryToAllocateAttributesInBO();
     }
 
-    bool setupRequestedAttributes(unsigned int viewid,const ReqAtts& rq)
+    ReqAtts setupRequestedAttributes(const ReqAtts& rq,bool& allocated)
     {
         if (!_rendermodinitialized)
             _rendermodinitialized = true;
+
         try
         {
-            /*if there is not already an entry for this viewid insert it*/
-            std::pair< std::map<unsigned int,ReqAtts>::iterator,bool>  inserted = _allreqattsmap.insert(std::make_pair(viewid,rq));
-
-            /*there is already an entry. update it*/
-            if (!inserted.second)
-                inserted.first->second = rq;
-            ReqAtts& tmp = inserted.first->second;
+			ReqAtts tmp = rq;
             computeARequestedAttributesSetCompatibleWithMesh(tmp,_mesh);
-            mergeReqAtts(tmp,_currboatt);
-            return tryToAllocateAttributesInBO();
+            mergeReqAtts(tmp,_currallocatedboatt);
+            allocated = tryToAllocateAttributesInBO();
+			if (allocated)
+				return tmp;
+			else 
+				return ReqAtts();
         }
         catch (GLFeederException& e)
         {
-            return false;
+            return ReqAtts();
         }
-        return false;
-    }
-
-    bool getRequestedAttributes(unsigned int viewid,ReqAtts& rq)
-    {
-        std::map<unsigned int,ReqAtts>::iterator it = _allreqattsmap.find(viewid);
-        if (it == _allreqattsmap.end())
-            return false;
-        rq = it->second;
-        return true;
+        return ReqAtts();
     }
 
     void buffersDeAllocationRequested()
@@ -294,14 +284,28 @@ public:
         }
     }
 
-    void draw(unsigned int viewid,const std::vector<GLuint> textid = std::vector<GLuint>())
-    {
+	void draw(const ReqAtts& rq,const std::vector<GLuint> textid = std::vector<GLuint>())
+	{
 
-        std::map<unsigned int,ReqAtts>::iterator viewiter = _allreqattsmap.find(viewid);
-        if (viewiter == _allreqattsmap.end())
-            return;
-        draw(viewiter->second,textid);
-    }
+		if (isPossibleToUseBORendering())
+		{
+			switch(rq.primitiveModality())
+			{
+			case(PR_TRIANGLES):
+				drawTriangles(rq,textid);
+				break;
+			case(PR_POINTS):
+				drawPoints(rq);
+				break;
+			case (PR_QUADS):
+				break;
+			default:
+				break;
+			}
+		}
+		else
+			immediateModeRendering(rq,textid);
+	}
 
     void setPerBatchPrimitives(size_t perbatchprimitives)
     {
@@ -411,11 +415,11 @@ protected:
 
     bool buffersAllocationFunction(std::vector<bool>& attributestobeupdated)
     {
-        bool replicated = isReplicatedPipeline(_currboatt);
+        bool replicated = isReplicatedPipeline(_currallocatedboatt);
         attributestobeupdated.clear();
         attributestobeupdated.resize(_bo.size());
-        long long unsigned int bomemoryrequiredbymesh = bufferObjectsMemoryRequired(_currboatt);
-        bool generateindex = isVertexIndexingRequired(_currboatt);
+        long long unsigned int bomemoryrequiredbymesh = bufferObjectsMemoryRequired(_currallocatedboatt);
+        bool generateindex = isVertexIndexingRequired(_currallocatedboatt);
         unsigned int ii = 0;
 
         for(typename std::vector<GLBufferObject*>::iterator it = _bo.begin();it != _bo.end();++it)
@@ -433,9 +437,11 @@ protected:
                         /*we switched back from the replicated pipeline to the normal one. All the bos have to be regenerated*/
                         (!replicated && _lastfeedingusedreplicatedpipeline) ||
                         /*the buffer object is valid but for same reason the number of cells of the bo don't suit anymore the required size. we have to reallocate the buffer object*/
-                        (((*it)->_isvalid) && (sz != (*it)->_size)) ||
+                        (((*it)->_isvalid) && (sz != (*it)->_size)) 
+						//||
                         //the buffer is valid, but the attribute is not required to be displayed
-                        (((*it)->_isvalid) && !isAttributeRequiredToBeDisplayed(boname))))
+                        /*(((*it)->_isvalid) && !isAttributeRequiredToBeDisplayed(boname)))*/
+						))
             {
 
                 //disableClientState(boname,importattribute);
@@ -470,7 +476,7 @@ protected:
                 //we have to deallocate the previously allocated mesh attributes
                 if ((*it != NULL) && ((sz == (*it)->_size)))
                 {
-                    long long unsigned int dim(boExpectedDimension(boname,replicated,_currboatt[GLFeederInfo::ATT_VERTINDEX]));
+                    long long unsigned int dim(boExpectedDimension(boname,replicated,_currallocatedboatt[GLFeederInfo::ATT_VERTINDEX]));
                     //disableClientState(boname,importattribute);
                     if ((*it)->_size > 0)
                     {
@@ -497,26 +503,25 @@ protected:
             unsigned int ii = 0;
             //I have to update the invalid buffers requested to be imported
             for(size_t kk = 0;kk < attributestobeupdated.size();++kk)
-                attributestobeupdated[kk] = _currboatt[static_cast<ATT_NAMES>(kk)];
+                attributestobeupdated[kk] = _currallocatedboatt[static_cast<ATT_NAMES>(kk)];
             bool failedallocation = false;
             typename std::vector<GLBufferObject*>::iterator it = _bo.begin();
             while((it != _bo.end()) && (!failedallocation))
             {
                 ATT_NAMES boname = static_cast<ATT_NAMES>(ii);
                 GLBufferObject* cbo = _bo.at(boname);
-                bool importatt = _currboatt[boname];
+                bool importatt = _currallocatedboatt[boname];
                 //glBindVertexArray(vaohandlespecificperopenglcontext);
 
                 /*if a bo is not valid but at this point has a valid handle means that attribute values have been updated but the arity of the vertices/faces didn't change. i can use the already allocated space*/
                 bool notvalidbuttoberegenerated = (cbo != NULL) && (!cbo->_isvalid) && (cbo->_bohandle == 0) && (importatt);
                 if (notvalidbuttoberegenerated)
                 {
-                    cbo->_size = boExpectedSize(boname,replicated,_currboatt[GLFeederInfo::ATT_VERTINDEX]);
-                    long long unsigned int dim = boExpectedDimension(boname,replicated,_currboatt[GLFeederInfo::ATT_VERTINDEX]);
+                    cbo->_size = boExpectedSize(boname,replicated,_currallocatedboatt[GLFeederInfo::ATT_VERTINDEX]);
+                    long long unsigned int dim = boExpectedDimension(boname,replicated,_currallocatedboatt[GLFeederInfo::ATT_VERTINDEX]);
 
                     glGenBuffers(1, &cbo->_bohandle);
                     glBindBuffer(cbo->_target, cbo->_bohandle);
-
                     //we call glGetError BEFORE the glBufferData function in order to clean the error flag
                     GLenum err = glGetError();
                     glBufferData(cbo->_target, dim, NULL, GL_STATIC_DRAW);
@@ -579,7 +584,7 @@ protected:
     bool tryToAllocateAttributesInBO()
     {
         std::vector<bool> attributestobeupdated;
-        bool replicated = isReplicatedPipeline(_currboatt);
+        bool replicated = isReplicatedPipeline(_currallocatedboatt);
         bool immediatemode = !(buffersAllocationFunction(attributestobeupdated));
 
         if (immediatemode)
@@ -600,7 +605,7 @@ protected:
                     for(size_t jj = 0;jj < attributestobeupdated.size();++jj)
                     {
                         ATT_NAMES att = static_cast<ATT_NAMES>(jj);
-                        attributestobeupdated[jj] = _currboatt[att] || attributestobeupdated[jj];
+                        attributestobeupdated[jj] = _currallocatedboatt[att] || attributestobeupdated[jj];
                     }
                 }
                 updateBuffersReplicatedPipeline(attributestobeupdated);
@@ -728,7 +733,7 @@ protected:
                 {
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[GLFeederInfo::ATT_VERTINDEX]->_bohandle);
                     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,chunckingpu * facechunk *  _bo[GLFeederInfo::ATT_VERTINDEX]->_components *  _bo[GLFeederInfo::ATT_VERTINDEX]->getSizeOfGLType(),_bo[GLFeederInfo::ATT_VERTINDEX]->_components *  _bo[GLFeederInfo::ATT_VERTINDEX]->getSizeOfGLType() * chunksize,&ti[0]);
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
                 }
                 ++chunckingpu;
             }
@@ -772,7 +777,7 @@ protected:
 
         //default case: no texture is required to be rendered but a non texture attribute has to be updated
         //we have to init the _chunkmap with just one entry (-1...that means no texture) referring all the triangles in the mesh
-        if ((!_currboatt[ATT_VERTTEXTURE] && !_currboatt[ATT_WEDGETEXTURE]) &&
+        if ((!_currallocatedboatt[ATT_VERTTEXTURE] && !_currallocatedboatt[ATT_WEDGETEXTURE]) &&
                 (attributestobeupdated[GLFeederInfo::ATT_VERTPOSITION] ||
                  attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL] || attributestobeupdated[GLFeederInfo::ATT_FACENORMAL] ||
                  attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR] || attributestobeupdated[GLFeederInfo::ATT_FACECOLOR]))
@@ -912,28 +917,6 @@ protected:
         return true;
     }
 
-    void draw(const ReqAtts& req,const std::vector<GLuint> textid = std::vector<GLuint>())
-    {
-        if (isPossibleToUseBORendering())
-        {
-            switch(req.primitiveModality())
-            {
-            case(PR_TRIANGLES):
-                drawTriangles(req,textid);
-                break;
-            case(PR_POINTS):
-                drawPoints(req);
-                break;
-            case (PR_QUADS):
-                break;
-            default:
-                break;
-            }
-        }
-        else
-            immediateModeRendering(req,textid);
-    }
-
     bool immediateModeRendering(const ReqAtts& req,const std::vector<GLuint>& textureindex = std::vector<GLuint>())
     {
         glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -1030,10 +1013,10 @@ protected:
     void drawTriangles(const ReqAtts& req,const std::vector<GLuint>& textureindex = std::vector<GLuint>())
     {
         //isBORenderingPossible(
-        if(!isPossibleToUseBORendering())
+        if((!isPossibleToUseBORendering()) || (_mesh.VN() == 0))
             return;
         updateClientState(req);
-        bool replicated = isReplicatedPipeline(_currboatt);
+        bool replicated = isReplicatedPipeline(_currallocatedboatt);
 
         if (replicated)
         {
@@ -1087,17 +1070,33 @@ protected:
         }
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
         glBindBuffer(GL_ARRAY_BUFFER,0);
+		int ii = 0;
+		for(typename std::vector<GLBufferObject*>::const_iterator it = _bo.begin();it != _bo.end();++it)
+		{
+			ATT_NAMES boname = static_cast<ATT_NAMES>(ii);
+			if ((boname != GLFeederInfo::ATT_VERTINDEX) && (boname != GLFeederInfo::ATT_MESHCOLOR))
+					disableClientState(boname,req);
+			++ii;
+		}
+		
+		/*disable all client state buffers*/
+		ReqAtts tmp;
+		updateClientState(tmp);
     }
 
     void drawPoints(const ReqAtts& req)
     {
-        if(!isPossibleToUseBORendering())
+        if ((!isPossibleToUseBORendering()) || (_mesh.VN() == 0))
             return;
         updateClientState(req);
         glDisable(GL_TEXTURE_2D);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[GLFeederInfo::ATT_VERTINDEX]->_bohandle);
         glDrawArrays(GL_POINTS,0,_mesh.vn);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		/*disable all client state buffers*/
+		ReqAtts tmp;
+		updateClientState(tmp);
     }
 
     void updateClientState(const ReqAtts& req)
@@ -1106,10 +1105,15 @@ protected:
         for(typename std::vector<GLBufferObject*>::const_iterator it = _bo.begin();it != _bo.end();++it)
         {
             ATT_NAMES boname = static_cast<ATT_NAMES>(ii);
-            if(boname != GLFeederInfo::ATT_VERTINDEX)
+            if ((boname != GLFeederInfo::ATT_VERTINDEX) && (boname != GLFeederInfo::ATT_MESHCOLOR))
             {
-                if (req[boname] && _currboatt[boname] && (*it != NULL))
-                    glEnableClientState((*it)->_clientstatetag);
+                if (req[boname] && _currallocatedboatt[boname] && (*it != NULL))
+				{
+					glBindBuffer((*it)->_target, (*it)->_bohandle);
+					setBufferPointer(boname);
+					glEnableClientState((*it)->_clientstatetag);
+					glBindBuffer((*it)->_target, 0);
+				}
                 else
                     disableClientState(boname,req);
             }
@@ -1117,13 +1121,13 @@ protected:
         }
     }
 
-    bool isAttributeRequiredToBeDisplayed(ATT_NAMES att)
-    {
-        bool res = false;
-        for(std::map<unsigned int,ReqAtts>::const_iterator it = _allreqattsmap.begin();it != _allreqattsmap.end();++it)
-            res |= it->second[att];
-        return res;
-    }
+    //bool isAttributeRequiredToBeDisplayed(ATT_NAMES att)
+    //{
+    //    bool res = false;
+    //    for(std::map<unsigned int,ReqAtts>::const_iterator it = _allreqattsmap.begin();it != _allreqattsmap.end();++it)
+    //        res |= it->second[att];
+    //    return res;
+    //}
 
     void setBufferPointer( ATT_NAMES boname) const
     {
@@ -1339,9 +1343,9 @@ protected:
     std::vector<GLBufferObject*> _bo;
 
     /*_currboatt contains the union of all the requested attributes by each single view on the scene. At the end it represents the BOs allocated in the GPU memory*/
-    ReqAtts _currboatt;
-    /*_allreqattmap contains a map of the requested atts by each single view. it's maintained for the actual rendering step*/
-    std::map<unsigned int,ReqAtts> _allreqattsmap;
+    ReqAtts _currallocatedboatt;
+    ///*_allreqattmap contains a map of the requested atts by each single view. it's maintained for the actual rendering step*/
+    //std::map<unsigned int,ReqAtts> _allreqattsmap;
 
     std::vector< std::pair<short,GLuint> > _texindnumtriangles;
 
