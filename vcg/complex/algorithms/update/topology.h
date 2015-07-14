@@ -205,6 +205,24 @@ static void AllocateEdge(MeshType &m)
 
 }
 
+/// \brief Clear the Face-Face topological relation setting each involved pointer to null.
+/// useful when you passed a mesh with ff adjacency to an algorithm that does not use it and could have messed it.
+static void ClearFaceFace(MeshType &m)
+{
+  RequireFFAdjacency(m);
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+  {
+    if( ! (*fi).IsD() )
+    {
+      for(int j=0;j<fi->VN();++j)
+      {
+        fi->FFp(j)=0;
+        fi->FFi(j)=-1;
+      }
+    }
+  }
+}
+
 /// \brief Update the Face-Face topological relation by allowing to retrieve for each face what other faces shares their edges.
 static void FaceFace(MeshType &m)
 {
@@ -339,38 +357,37 @@ In other words F1->FFp(i) == F2 iff F1 and F2 have the same tex coords along edg
 
 static void FaceFaceFromTexCoord(MeshType &m)
 {
-	RequireFFAdjacency(m);
-	RequirePerFaceWedgeTexCoord(m);
-	vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
-	for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-	{
-		if (!(*fi).IsD())
-		{
-			for (int i = 0; i < (*fi).VN(); i++)
-			{
-				bool isBorder = false;
-				if (!vcg::face::IsBorder((*fi), i))
-				{
-                                        typename MeshType::FacePointer nextFace = (*fi).FFp(i);
-					int nextEdgeIndex = (*fi).FFi(i);
-					bool border = false;
-					if ((*fi).cV(i) == nextFace->cV(nextEdgeIndex))
-					{
-						if ((*fi).WT(i) != nextFace->WT(nextEdgeIndex) || (*fi).WT((*fi).Next(i)) != nextFace->WT(nextFace->Next(nextEdgeIndex)))
-							border = true;
-					}
-					else
-					{
-						if ((*fi).WT(i) != nextFace->WT(nextFace->Next(nextEdgeIndex)) || (*fi).WT((*fi).Next(i)) != nextFace->WT(nextEdgeIndex))
-							border = true;
-					}
-					if (border)
-						vcg::face::FFDetach((*fi), i);
+  RequireFFAdjacency(m);
+  RequirePerFaceWedgeTexCoord(m);
+  vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
+  for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+  {
+    if (!(*fi).IsD())
+    {
+      for (int i = 0; i < (*fi).VN(); i++)
+      {
+        if (!vcg::face::IsBorder((*fi), i))
+        {
+          typename MeshType::FacePointer nextFace = (*fi).FFp(i);
+          int nextEdgeIndex = (*fi).FFi(i);
+          bool border = false;
+          if ((*fi).cV(i) == nextFace->cV(nextEdgeIndex))
+          {
+            if ((*fi).WT(i) != nextFace->WT(nextEdgeIndex) || (*fi).WT((*fi).Next(i)) != nextFace->WT(nextFace->Next(nextEdgeIndex)))
+              border = true;
+          }
+          else
+          {
+            if ((*fi).WT(i) != nextFace->WT(nextFace->Next(nextEdgeIndex)) || (*fi).WT((*fi).Next(i)) != nextFace->WT(nextEdgeIndex))
+              border = true;
+          }
+          if (border)
+            vcg::face::FFDetach((*fi), i);
 
-				}
-			}
-		}
-	}
+        }
+      }
+    }
+  }
 }
 
 
