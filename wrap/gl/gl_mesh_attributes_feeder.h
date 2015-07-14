@@ -642,10 +642,21 @@ protected:
         size_t facechunk = std::min(size_t(tn),_perbatchprim);
         size_t vertexchunk = std::min(size_t(vn),_perbatchprim);
 
-        std::vector<vcg::Point3f> pv(vertexchunk);
-        std::vector<vcg::Point3f> nv(vertexchunk);
-        std::vector<vcg::Color4b> cv(vertexchunk); // Per vertex Colors
-        std::vector<float> tv(vertexchunk * 2);
+        std::vector<vcg::Point3f> pv; //position vector
+		if (attributestobeupdated[GLFeederInfo::ATT_VERTPOSITION])
+			pv.resize(vertexchunk);
+
+        std::vector<vcg::Point3f> nv; //per vertex normal vector
+		if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL])
+			nv.resize(vertexchunk);
+
+		std::vector<vcg::Color4b> cv; // Per vertex color vector
+		if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR])
+			cv.resize(vertexchunk); 
+
+        std::vector<float> tv; // per vertex texture coord vector
+		if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
+			tv.resize(vertexchunk * 2);
 
         size_t chunckingpu = 0;
 
@@ -747,10 +758,33 @@ protected:
 
         size_t facechunk = std::min(size_t(tn),_perbatchprim);
 
-        std::vector<vcg::Point3f> rpv(facechunk * 3);
-        std::vector<vcg::Point3f> rnv(facechunk * 3);
-        std::vector<vcg::Color4b> rcv(facechunk * 3);
-        std::vector<float> rtv(facechunk * 3 * 2);
+		std::vector<vcg::Point3f> rpv; //position vector
+		if (attributestobeupdated[GLFeederInfo::ATT_VERTPOSITION])
+			rpv.resize(facechunk * 3);
+
+		std::vector<vcg::Point3f> rnv; //per vertex normal vector
+		if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL])
+			rnv.resize(facechunk * 3);
+
+		std::vector<vcg::Point3f> rfnv; //per face normal vector
+		if (attributestobeupdated[GLFeederInfo::ATT_FACENORMAL])
+			rfnv.resize(facechunk * 3);
+
+		std::vector<vcg::Color4b> rcv; // Per vertex color vector
+		if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR])
+			rcv.resize(facechunk * 3); 
+
+		std::vector<vcg::Color4b> rfcv; // Per vertex color vector
+		if (attributestobeupdated[GLFeederInfo::ATT_FACECOLOR])
+			rfcv.resize(facechunk * 3); 
+
+		std::vector<float> rtv; // per vertex texture coord vector
+		if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
+			rtv.resize(facechunk * 3 * 2);
+
+		std::vector<float> rwtv; // per wedge texture coord vector
+		if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
+			rwtv.resize(facechunk * 3 * 2);
 
         size_t chunckingpu = 0;
 
@@ -814,11 +848,12 @@ protected:
                         rnv[chunkindex*3+1].Import(_mesh.face[indf].V(1)->N().Normalize());
                         rnv[chunkindex*3+2].Import(_mesh.face[indf].V(2)->N().Normalize());
                     }
-                    else if (attributestobeupdated[GLFeederInfo::ATT_FACENORMAL])
+                    
+					if (attributestobeupdated[GLFeederInfo::ATT_FACENORMAL])
                     {
-                        rnv[chunkindex*3+0].Import(_mesh.face[indf].N().Normalize());
-                        rnv[chunkindex*3+1].Import(_mesh.face[indf].N().Normalize());
-                        rnv[chunkindex*3+2].Import(_mesh.face[indf].N().Normalize());
+                        rfnv[chunkindex*3+0].Import(_mesh.face[indf].N().Normalize());
+                        rfnv[chunkindex*3+1].Import(_mesh.face[indf].N().Normalize());
+                        rfnv[chunkindex*3+2].Import(_mesh.face[indf].N().Normalize());
                     }
 
                     if ((attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR]))
@@ -827,23 +862,15 @@ protected:
                         rcv[chunkindex*3+1] = _mesh.face[indf].V(1)->C();
                         rcv[chunkindex*3+2] = _mesh.face[indf].V(2)->C();
                     }
-                    else if ((attributestobeupdated[GLFeederInfo::ATT_FACECOLOR]))
+                    
+					if ((attributestobeupdated[GLFeederInfo::ATT_FACECOLOR]))
                     {
-                        rcv[chunkindex*3+0] = _mesh.face[indf].C();
-                        rcv[chunkindex*3+1] = _mesh.face[indf].C();
-                        rcv[chunkindex*3+2] = _mesh.face[indf].C();
+                        rfcv[chunkindex*3+0] = _mesh.face[indf].C();
+                        rfcv[chunkindex*3+1] = _mesh.face[indf].C();
+                        rfcv[chunkindex*3+2] = _mesh.face[indf].C();
                     }
-
-                    if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
-                    {
-                        rtv[chunkindex*6+0]=float(_mesh.face[indf].WT(0).U());
-                        rtv[chunkindex*6+1]=float(_mesh.face[indf].WT(0).V());
-                        rtv[chunkindex*6+2]=float(_mesh.face[indf].WT(1).U());
-                        rtv[chunkindex*6+3]=float(_mesh.face[indf].WT(1).V());
-                        rtv[chunkindex*6+4]=float(_mesh.face[indf].WT(2).U());
-                        rtv[chunkindex*6+5]=float(_mesh.face[indf].WT(2).V());
-                    }
-                    else if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
+                    
+					if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
                     {
                         rtv[chunkindex*6+0]=float(_mesh.face[indf].V(0)->T().U());
                         rtv[chunkindex*6+1]=float(_mesh.face[indf].V(0)->T().V());
@@ -852,6 +879,16 @@ protected:
                         rtv[chunkindex*6+4]=float(_mesh.face[indf].V(2)->T().U());
                         rtv[chunkindex*6+5]=float(_mesh.face[indf].V(2)->T().V());
                     }
+
+					if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
+					{
+						rwtv[chunkindex*6+0]=float(_mesh.face[indf].WT(0).U());
+						rwtv[chunkindex*6+1]=float(_mesh.face[indf].WT(0).V());
+						rwtv[chunkindex*6+2]=float(_mesh.face[indf].WT(1).U());
+						rwtv[chunkindex*6+3]=float(_mesh.face[indf].WT(1).V());
+						rwtv[chunkindex*6+4]=float(_mesh.face[indf].WT(2).U());
+						rwtv[chunkindex*6+5]=float(_mesh.face[indf].WT(2).V());
+					}
 
                     if((i == tn - 1) || (chunkindex == facechunk - 1))
                     {
@@ -866,39 +903,54 @@ protected:
                             glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 * buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rpv[0]);
                             glBindBuffer(GL_ARRAY_BUFFER, 0);
                         }
-                        if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL] || attributestobeupdated[GLFeederInfo::ATT_FACENORMAL])
+
+                        if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL])
                         {
-                            GLBufferObject* buffobj;
-                            if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL])
-                                buffobj = _bo[GLFeederInfo::ATT_VERTNORMAL];
-                            else
-                                buffobj = _bo[GLFeederInfo::ATT_FACENORMAL];
+                            GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTNORMAL];
                             glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
                             glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 * buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rnv[0]);
                             glBindBuffer(GL_ARRAY_BUFFER, 0);
                         }
-                        if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR] || attributestobeupdated[GLFeederInfo::ATT_FACECOLOR])
+
+						if (attributestobeupdated[GLFeederInfo::ATT_FACENORMAL])
+						{
+							GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_FACENORMAL];
+							glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
+							glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 * buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rfnv[0]);
+							glBindBuffer(GL_ARRAY_BUFFER, 0);
+						}
+
+                        if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR])
                         {
-                            GLBufferObject* buffobj;
-                            if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR])
-                                buffobj = _bo[GLFeederInfo::ATT_VERTCOLOR];
-                            else
-                                buffobj = _bo[GLFeederInfo::ATT_FACECOLOR];
+                            GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTCOLOR];
                             glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
                             glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rcv[0]);
                             glBindBuffer(GL_ARRAY_BUFFER, 0);
                         }
-                        if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE] || attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
+
+						if (attributestobeupdated[GLFeederInfo::ATT_FACECOLOR])
+						{
+							GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_FACECOLOR];
+							glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
+							glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rfcv[0]);
+							glBindBuffer(GL_ARRAY_BUFFER, 0);
+						}
+
+                        if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
                         {
-                            GLBufferObject* buffobj;
-                            if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
-                                buffobj = _bo[GLFeederInfo::ATT_VERTTEXTURE];
-                            else
-                                buffobj = _bo[GLFeederInfo::ATT_WEDGETEXTURE];
+                            GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTTEXTURE];
                             glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
                             glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rtv[0]);
                             glBindBuffer(GL_ARRAY_BUFFER, 0);
                         }
+
+						if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
+						{
+							GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_WEDGETEXTURE];
+							glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
+							glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rwtv[0]);
+							glBindBuffer(GL_ARRAY_BUFFER, 0);
+						}
 
                         ++chunckingpu;
                     }
@@ -1090,9 +1142,13 @@ protected:
             return;
         updateClientState(req);
         glDisable(GL_TEXTURE_2D);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[GLFeederInfo::ATT_VERTINDEX]->_bohandle);
-        glDrawArrays(GL_POINTS,0,_mesh.vn);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[GLFeederInfo::ATT_VERTINDEX]->_bohandle);
+        size_t pointsnum = _mesh.vn;
+		if (isReplicatedPipeline(_currallocatedboatt))
+			pointsnum = _mesh.fn * 3;
+		
+		glDrawArrays(GL_POINTS,0,pointsnum);
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 		/*disable all client state buffers*/
 		ReqAtts tmp;
