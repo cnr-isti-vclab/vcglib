@@ -112,7 +112,7 @@ struct GLFeederInfo
         const bool& operator[](ATT_NAMES att) const
         {
             size_t ii = static_cast<size_t>(att);
-            if ((ii < ATT_VERTPOSITION) && (ii > ATT_VERTINDEX))
+            if (ii > ATT_VERTINDEX)
                 throw GLFeederException("Out of range value\n");
             return _atts[ii];
         }
@@ -120,7 +120,7 @@ struct GLFeederInfo
         bool& operator[](ATT_NAMES att)
         {
             size_t ii = static_cast<size_t>(att);
-            if ((ii < ATT_VERTPOSITION) && (ii > ATT_VERTINDEX))
+            if (ii > ATT_VERTINDEX)
                 throw GLFeederException("Out of range value\n");
             return _atts[ii];
         }
@@ -418,7 +418,7 @@ protected:
         bool replicated = isReplicatedPipeline(_currallocatedboatt);
         attributestobeupdated.clear();
         attributestobeupdated.resize(_bo.size());
-        long long unsigned int bomemoryrequiredbymesh = bufferObjectsMemoryRequired(_currallocatedboatt);
+        std::ptrdiff_t bomemoryrequiredbymesh = bufferObjectsMemoryRequired(_currallocatedboatt);
         bool generateindex = isVertexIndexingRequired(_currallocatedboatt);
         unsigned int ii = 0;
 
@@ -476,7 +476,7 @@ protected:
                 //we have to deallocate the previously allocated mesh attributes
                 if ((*it != NULL) && ((sz == (*it)->_size)))
                 {
-                    long long unsigned int dim(boExpectedDimension(boname,replicated,_currallocatedboatt[GLFeederInfo::ATT_VERTINDEX]));
+                    std::ptrdiff_t dim(boExpectedDimension(boname,replicated,_currallocatedboatt[GLFeederInfo::ATT_VERTINDEX]));
                     //disableClientState(boname,importattribute);
                     if ((*it)->_size > 0)
                     {
@@ -518,7 +518,7 @@ protected:
                 if (notvalidbuttoberegenerated)
                 {
                     cbo->_size = boExpectedSize(boname,replicated,_currallocatedboatt[GLFeederInfo::ATT_VERTINDEX]);
-                    long long unsigned int dim = boExpectedDimension(boname,replicated,_currallocatedboatt[GLFeederInfo::ATT_VERTINDEX]);
+                    std::ptrdiff_t dim = boExpectedDimension(boname,replicated,_currallocatedboatt[GLFeederInfo::ATT_VERTINDEX]);
 
                     glGenBuffers(1, &cbo->_bohandle);
                     glBindBuffer(cbo->_target, cbo->_bohandle);
@@ -658,64 +658,64 @@ protected:
 		if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
 			tv.resize(vertexchunk * 2);
 
-        size_t chunckingpu = 0;
+        size_t chunkingpu = 0;
 
         for(size_t i=0;i<vn;++i)
         {
-            size_t chunckindex = i % vertexchunk;
+            size_t chunkindex = i % vertexchunk;
             if (attributestobeupdated[GLFeederInfo::ATT_VERTPOSITION])
-                pv[chunckindex].Import(_mesh.vert[i].cP());
+                pv[chunkindex].Import(_mesh.vert[i].cP());
 
             if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL])
             {
-                nv[chunckindex].Import(_mesh.vert[i].cN());
-                nv[chunckindex].Normalize();
+                nv[chunkindex].Import(_mesh.vert[i].cN());
+                nv[chunkindex].Normalize();
             }
 
             if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR])
-                cv[chunckindex] = _mesh.vert[i].cC();
+                cv[chunkindex] = _mesh.vert[i].cC();
             if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
             {
-                tv[chunckindex*2+0] = _mesh.vert[i].cT().U();
-                tv[chunckindex*2+1] = _mesh.vert[i].cT().V();
+                tv[chunkindex*2+0] = _mesh.vert[i].cT().U();
+                tv[chunkindex*2+1] = _mesh.vert[i].cT().V();
             }
 
-            if((i == vn - 1) || (chunckindex == vertexchunk - 1))
+            if((i == vn - 1) || (chunkindex == vertexchunk - 1))
             {
-                size_t chuncksize = vertexchunk;
+                size_t chunksize = vertexchunk;
                 if (i == vn - 1)
-                    chuncksize = chunckindex + 1;
+                    chunksize = chunkindex + 1;
 
                 if (attributestobeupdated[GLFeederInfo::ATT_VERTPOSITION])
                 {
                     GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTPOSITION];
                     glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-                    glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * vertexchunk * buffobj->_components * buffobj->getSizeOfGLType(),buffobj->_components * buffobj->getSizeOfGLType() * chuncksize,&pv[0]);
+                    glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * vertexchunk * buffobj->_components * buffobj->getSizeOfGLType(),buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&pv[0]);
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
                 }
                 if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL])
                 {
                     GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTNORMAL];
                     glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-                    glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * vertexchunk * buffobj->_components * buffobj->getSizeOfGLType(),buffobj->_components * buffobj->getSizeOfGLType() * chuncksize,&nv[0]);
+                    glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * vertexchunk * buffobj->_components * buffobj->getSizeOfGLType(),buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&nv[0]);
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
                 }
                 if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR])
                 {
                     GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTCOLOR];
                     glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-                    glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * vertexchunk * buffobj->_components * buffobj->getSizeOfGLType(),buffobj->_components * buffobj->getSizeOfGLType() * chuncksize,&cv[0]);
+                    glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * vertexchunk * buffobj->_components * buffobj->getSizeOfGLType(),buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&cv[0]);
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
                 }
                 if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
                 {
                     GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTTEXTURE];
                     glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-                    glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * vertexchunk * buffobj->_components * buffobj->getSizeOfGLType(),buffobj->_components * buffobj->getSizeOfGLType() * chuncksize,&tv[0]);
+                    glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * vertexchunk * buffobj->_components * buffobj->getSizeOfGLType(),buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&tv[0]);
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
                 }
 
-                ++chunckingpu;
+                ++chunkingpu;
             }
         }
 
@@ -724,29 +724,29 @@ protected:
         cv.clear();
         tv.clear();
 
-        chunckingpu = 0;
+        chunkingpu = 0;
         std::vector<GLuint> ti(facechunk * 3);
         for(size_t i=0;i<tn;++i)
         {
-            size_t chunckindex = i % facechunk;
+            size_t chunkindex = i % facechunk;
 
-            ti[chunckindex * 3 + 0] = GLuint(vcg::tri::Index(_mesh,_mesh.face[i].V(0)));
-            ti[chunckindex * 3 + 1] = GLuint(vcg::tri::Index(_mesh,_mesh.face[i].V(1)));
-            ti[chunckindex * 3 + 2] = GLuint(vcg::tri::Index(_mesh,_mesh.face[i].V(2)));
+            ti[chunkindex * 3 + 0] = GLuint(vcg::tri::Index(_mesh,_mesh.face[i].V(0)));
+            ti[chunkindex * 3 + 1] = GLuint(vcg::tri::Index(_mesh,_mesh.face[i].V(1)));
+            ti[chunkindex * 3 + 2] = GLuint(vcg::tri::Index(_mesh,_mesh.face[i].V(2)));
 
-            if((i == tn - 1) || (chunckindex == facechunk - 1))
+            if((i == tn - 1) || (chunkindex == facechunk - 1))
             {
                 size_t chunksize = facechunk;
                 if (i == tn - 1)
-                    chunksize = chunckindex + 1;
+                    chunksize = chunkindex + 1;
 
                 if (attributestobeupdated[GLFeederInfo::ATT_VERTINDEX])
                 {
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[GLFeederInfo::ATT_VERTINDEX]->_bohandle);
-                    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,chunckingpu * facechunk *  _bo[GLFeederInfo::ATT_VERTINDEX]->_components *  _bo[GLFeederInfo::ATT_VERTINDEX]->getSizeOfGLType(),_bo[GLFeederInfo::ATT_VERTINDEX]->_components *  _bo[GLFeederInfo::ATT_VERTINDEX]->getSizeOfGLType() * chunksize,&ti[0]);
+                    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,chunkingpu * facechunk *  _bo[GLFeederInfo::ATT_VERTINDEX]->_components *  _bo[GLFeederInfo::ATT_VERTINDEX]->getSizeOfGLType(),_bo[GLFeederInfo::ATT_VERTINDEX]->_components *  _bo[GLFeederInfo::ATT_VERTINDEX]->getSizeOfGLType() * chunksize,&ti[0]);
 					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
                 }
-                ++chunckingpu;
+                ++chunkingpu;
             }
         }
         return true;
@@ -786,7 +786,7 @@ protected:
 		if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
 			rwtv.resize(facechunk * 3 * 2);
 
-        size_t chunckingpu = 0;
+        size_t chunkingpu = 0;
 
         //it's a map containing for each texture seams n a vector of all the triangle index ranges having n has texture seam
         //Suppose that in a mesh we have
@@ -803,7 +803,7 @@ protected:
         {
             _chunkmap.clear();
             if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
-                fillChunckMap(_chunkmap);
+                fillchunkMap(_chunkmap);
             else
                 if(attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
                     _chunkmap[0].push_back(std::make_pair(0,tn-1));
@@ -900,7 +900,7 @@ protected:
                         {
                             GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTPOSITION];
                             glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-                            glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 * buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rpv[0]);
+                            glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 * buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rpv[0]);
                             glBindBuffer(GL_ARRAY_BUFFER, 0);
                         }
 
@@ -908,7 +908,7 @@ protected:
                         {
                             GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTNORMAL];
                             glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-                            glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 * buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rnv[0]);
+                            glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 * buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rnv[0]);
                             glBindBuffer(GL_ARRAY_BUFFER, 0);
                         }
 
@@ -916,7 +916,7 @@ protected:
 						{
 							GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_FACENORMAL];
 							glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-							glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 * buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rfnv[0]);
+							glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 * buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rfnv[0]);
 							glBindBuffer(GL_ARRAY_BUFFER, 0);
 						}
 
@@ -924,7 +924,7 @@ protected:
                         {
                             GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTCOLOR];
                             glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-                            glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rcv[0]);
+                            glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rcv[0]);
                             glBindBuffer(GL_ARRAY_BUFFER, 0);
                         }
 
@@ -932,7 +932,7 @@ protected:
 						{
 							GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_FACECOLOR];
 							glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-							glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rfcv[0]);
+							glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rfcv[0]);
 							glBindBuffer(GL_ARRAY_BUFFER, 0);
 						}
 
@@ -940,7 +940,7 @@ protected:
                         {
                             GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTTEXTURE];
                             glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-                            glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rtv[0]);
+                            glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rtv[0]);
                             glBindBuffer(GL_ARRAY_BUFFER, 0);
                         }
 
@@ -948,11 +948,11 @@ protected:
 						{
 							GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_WEDGETEXTURE];
 							glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-							glBufferSubData(GL_ARRAY_BUFFER,chunckingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rwtv[0]);
+							glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rwtv[0]);
 							glBindBuffer(GL_ARRAY_BUFFER, 0);
 						}
 
-                        ++chunckingpu;
+                        ++chunkingpu;
                     }
                     ++i;
                 }
@@ -1266,17 +1266,17 @@ protected:
         }
     }
 
-    long long unsigned int bufferObjectsMemoryRequired(ReqAtts& rqatt) const
+    std::ptrdiff_t bufferObjectsMemoryRequired(ReqAtts& rqatt) const
     {
         bool replicated = isReplicatedPipeline(rqatt);
-        long long unsigned int result(0);
+        std::ptrdiff_t result(0);
         bool generateindex = isVertexIndexingRequired(rqatt);
 
         for(unsigned int ii = 0;ii < (unsigned int)ATT_NAMES_ARITY;++ii)
         {
             ATT_NAMES nm = static_cast<ATT_NAMES>(ii);
             if (rqatt[nm])
-                result += (long long unsigned int) boExpectedDimension(nm,replicated,generateindex);
+                result += (std::ptrdiff_t) boExpectedDimension(nm,replicated,generateindex);
         }
         return result;
     }
@@ -1366,7 +1366,7 @@ protected:
     typedef std::vector< std::pair< GLuint,GLuint > > ChunkVector;
     typedef std::map< short, ChunkVector > ChunkMap;
 
-    void fillChunckMap(ChunkMap& cmap)
+    void fillchunkMap(ChunkMap& cmap)
     {
         if (!vcg::tri::HasPerWedgeTexCoord(_mesh))
             return;
