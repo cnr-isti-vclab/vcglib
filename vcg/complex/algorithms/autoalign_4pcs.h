@@ -36,6 +36,7 @@ used in the paper pseudocode.
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/complex/algorithms/point_sampling.h>
 #include <vcg/math/random_generator.h>
+#include <ctime>
 namespace vcg{
 namespace tri{
 
@@ -49,7 +50,7 @@ public:
   class PUsedTypes: public vcg::UsedTypes < vcg::Use<PVertex>::template AsVertexType,
                                             vcg::Use<PFace  >::template AsFaceType >{};
 
-  class PVertex : public vcg::Vertex< PUsedTypes,vcg::vertex::BitFlags,vcg::vertex::Coord3m ,vcg::vertex::Mark>{};
+  class PVertex : public vcg::Vertex< PUsedTypes,vcg::vertex::BitFlags,vcg::vertex::Coord3f,vcg::vertex::Mark>{};
   class PFace   : public vcg::Face<   PUsedTypes> {};
   class PMesh   : public vcg::tri::TriMesh< std::vector<PVertex>, std::vector<PFace> > {};
 
@@ -284,7 +285,7 @@ bool SelectCoplanarBase(FourPoints &B, ScalarType &r1, ScalarType &r2)
         std::vector< CoordType > >(*P,ugridP, par.feetSize ,B[i],radius, ExtB[i], dists, samples);
   }
 
-  qDebug("ExtB %i",ExtB[0].size()+ExtB[1].size()+ExtB[2].size()+ExtB[3].size());
+  //qDebug("ExtB %i",ExtB[0].size()+ExtB[1].size()+ExtB[2].size()+ExtB[3].size());
   stat.selectCoplanarBaseTime+=clock()-t0;
   return true;
 }
@@ -389,7 +390,7 @@ bool FindCongruent(const std::vector<Couple > &R1, const FourPoints &B, const Sc
   ugrid.Set(Invr.vert.begin(),Invr.vert.end());
   n_closests = 0; n_congr = 0; ac =0 ; acf = 0; tr = 0; trf = 0;
   printf("R2Inv.size  = %d \n",R2inv.size());
-  for(uint i = 0 ; i < R2inv.size() ; ++i)
+  for(unsigned int i = 0 ; i < R2inv.size() ; ++i)
   {
     std::vector<typename PMesh::VertexType*> closests;
 
@@ -406,7 +407,7 @@ bool FindCongruent(const std::vector<Couple > &R1, const FourPoints &B, const Sc
       closests.resize(5);
 
     n_closests+=closests.size();
-    for(uint ip = 0; ip < closests.size(); ++ip)
+    for(unsigned int ip = 0; ip < closests.size(); ++ip)
     {
       FourPoints p;
       p[0] = R1[id[closests[ip]]][0]->cP();
@@ -459,7 +460,7 @@ int EvaluateSample(Candidate & fp, const CoordType & tp, const CoordType & np)
 void EvaluateAlignment(Candidate  & fp){
         int n_delta_close = 0;
         for(int i  = 0 ; i< 4; ++i) {
-            for(uint j = 0; j < ExtB[i].size();++j){
+            for(unsigned int j = 0; j < ExtB[i].size();++j){
                 n_delta_close+=EvaluateSample(fp, ExtB[i][j]->P(), ExtB[i][j]->cN());
             }
         }
@@ -470,7 +471,7 @@ void TestAlignment(Candidate  & fp)
 {
   clock_t t0 = clock();
   int n_delta_close = 0;
-  for(uint j = 0; j < subsetP.size();++j){
+  for(unsigned int j = 0; j < subsetP.size();++j){
     CoordType np = subsetP[j]->N();
     CoordType tp = subsetP[j]->P();
     n_delta_close+=EvaluateSample(fp,tp,np);
