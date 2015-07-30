@@ -86,7 +86,8 @@ public:
     for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
     {
       vp=&(*vi);
-      FlagV.push_back(vp->Flags()); // Save vertex flags
+      if (vcg::tri::HasPerVertexFlags(m))
+        FlagV.push_back(vp->Flags()); // Save vertex flags
       if( ! vp->IsD() )
       {	// ***** ASCII *****
 
