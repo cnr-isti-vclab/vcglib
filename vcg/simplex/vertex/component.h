@@ -49,7 +49,7 @@ template <class TT> class EmptyCore: public TT {
 public:
   typedef int FlagType;
   int &Flags()       { assert(0); static int dummyflags(0);  return dummyflags; }
-  int cFlags() const { assert(0); return 0; }
+  int cFlags() const { return 0; }
   static bool HasFlags()   { return false; }
 
   typedef vcg::Point3f CoordType;
