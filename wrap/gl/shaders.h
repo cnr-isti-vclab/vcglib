@@ -32,6 +32,8 @@
 #include "../../vcg/space/point2.h"
 #include "../../vcg/space/point3.h"
 #include "../../vcg/space/point4.h"
+#include "../../vcg/math/matrix33.h"
+#include "../../vcg/math/matrix44.h"
 
 class Shader : public GLObject, public Bindable
 {
@@ -480,69 +482,123 @@ public:
 	void Uniform(const char * name, GLint x)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
-		glUniform1i(loc, x);
+        if (loc <0)
+            return;
+        glUniform1i(loc, x);
 	}
 
 	void Uniform(const char * name, GLint x, GLint y)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
-		glUniform2i(loc, x, y);
+        if (loc <0)
+            return;
+        glUniform2i(loc, x, y);
 	}
 
 	void Uniform(const char * name, GLint x, GLint y, GLint z)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
-		glUniform3i(loc, x, y, z);
+        if (loc <0)
+            return;
+        glUniform3i(loc, x, y, z);
 	}
 
 	void Uniform(const char * name, GLint x, GLint y, GLint z, GLint w)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
-		glUniform4i(loc, x, y, z, w);
+        if (loc <0)
+            return;
+        glUniform4i(loc, x, y, z, w);
 	}
 
 	void Uniform(const char * name, GLfloat x)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
-		glUniform1f(loc, x);
+        if (loc <0)
+            return;
+        glUniform1f(loc, x);
 	}
 
 	void Uniform(const char * name, GLfloat x, GLfloat y)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
-		glUniform2f(loc, x, y);
+        if (loc <0)
+            return;
+        glUniform2f(loc, x, y);
 	}
 
 	void Uniform(const char * name, GLfloat x, GLfloat y, GLfloat z)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
-		glUniform3f(loc, x, y, z);
+        if (loc <0)
+            return;
+        glUniform3f(loc, x, y, z);
 	}
 
 	void Uniform(const char * name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
-		glUniform4f(loc, x, y, z, w);
+        if (loc <0)
+            return;
+        glUniform4f(loc, x, y, z, w);
 	}
+
+    void Uniform(const char * name, const vcg::Point2i& p)
+    {
+        const GLint loc = glGetUniformLocation(this->objectID, name);
+        if (loc <0)
+            return;
+        glUniform2iv(loc, 1, p.V());
+    }
 
 	void Uniform(const char * name, const vcg::Point2f& p)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
-		glUniform2fv(loc, 1, p.V());
+        if (loc <0)
+            return;
+        glUniform2fv(loc, 1, p.V());
 	}
 
 	void Uniform(const char * name, const vcg::Point3f& p)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
-		glUniform3fv(loc, 1, p.V());
+        if (loc <0)
+            return;
+        glUniform3fv(loc, 1, p.V());
 	}
 
 	void Uniform(const char * name, const vcg::Point4f& p)
 	{
 		const GLint loc = glGetUniformLocation(this->objectID, name);
+        if (loc <0)
+            return;
 		glUniform4fv(loc, 1, p.V());
-	}
+	}	
+	
+    void Uniform(const char * name, const vcg::Matrix33f& m,bool traspose = true)
+    {
+        const GLint loc = glGetUniformLocation(this->objectID, name);
+        if (loc <0)
+            return;
+        if (traspose)
+            glUniformMatrix3fv(loc, 1, GL_TRUE,m.V());
+        else
+            glUniformMatrix3fv(loc, 1, GL_FALSE,m.V());
+    }
 
+	void Uniform(const char * name, const vcg::Matrix44f& m,bool traspose = true)
+    {
+        const GLint loc = glGetUniformLocation(this->objectID, name);
+		if (loc <0)
+            return;
+        if (traspose)
+	        glUniformMatrix4fv(loc, 1, GL_TRUE,m.V());
+        else
+            glUniformMatrix4fv(loc, 1, GL_FALSE,m.V());
+    }
+
+
+	
 	void Parameter(GLenum pname, int value)
 	{
 		glProgramParameteriEXT(this->objectID, pname, value);
@@ -561,12 +617,12 @@ public:
 protected:
 	std::set<Shader *> shaders;
 	bool linked;
-
+public:
 	void DoBind(void)
 	{
 		if (!this->IsLinked())
 		{
-			this->Link();
+            this->Link();
 		}
 		glUseProgram(this->objectID);
 	}
