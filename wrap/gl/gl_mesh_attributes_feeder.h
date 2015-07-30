@@ -71,9 +71,10 @@ struct GLFeederInfo
     enum PRIMITIVE_MODALITY
     {
         PR_NONE = 0,
-        PR_TRIANGLES,
-        PR_POINTS,
-        PR_QUADS
+        PR_POINTS = 1,
+        PR_TRIANGLES = 2,
+        PR_QUADS = 3,
+        PR_NAMES_ARITY = 4
     };
 
     typedef unsigned int ATT_BIT_MASK;
@@ -125,9 +126,9 @@ struct GLFeederInfo
             return _atts[ii];
         }
 
-        void reset()
+        virtual void reset()
         {
-            for(size_t ii = 0;ii < _size;++ii)
+            for(size_t ii = 0;ii < _attssize;++ii)
                 _atts[ii] = false;
             _pm = PR_NONE;
         }
@@ -144,11 +145,48 @@ struct GLFeederInfo
 
         inline static size_t possibleAttributesNumber()
         {
-            return _size;
+            return _attssize;
         }
-    private:
-        static const size_t _size = ATT_NAMES_ARITY;
-        bool _atts[_size];
+
+        static ReqAtts setUnion(const ReqAtts& a,const ReqAtts& b)
+        {
+            ReqAtts res;
+            for(size_t ii = 0; ii < ReqAtts::possibleAttributesNumber();++ii)
+            {
+                ATT_NAMES name = static_cast<ATT_NAMES>(ii);
+                res[name] = a[name] || b[name];
+            }
+
+            res.primitiveModality() = a.primitiveModality();
+            if ((unsigned int) res.primitiveModality() <= (unsigned int) b.primitiveModality())
+                res.primitiveModality() = b.primitiveModality();
+            return res;
+        }
+
+        static ReqAtts setComplement(const ReqAtts& a,const ReqAtts& b)
+        {
+            /*TRUTH TABLE*/
+            //this[ATT_NAMES] | rq[ATT_NAMES] | res  
+            //    true        |     true      | false
+            //    true        |     false     | true
+            //    false       |     true      | false
+            //    false       |     false     | false
+
+            ReqAtts res = a;
+            for(size_t ii = 0; ii < ReqAtts::possibleAttributesNumber();++ii)
+            {
+                ATT_NAMES name = static_cast<ATT_NAMES>(ii);
+                if (res[name]) 
+                    res[name] = !(b[name]);
+            }
+            
+            res.primitiveModality() = b.primitiveModality();
+            return res;
+        }
+
+    protected:
+        static const size_t _attssize = ATT_NAMES_ARITY;
+        bool _atts[_attssize];
         PRIMITIVE_MODALITY _pm;
     };
 };
@@ -257,18 +295,20 @@ public:
         {
 			ReqAtts tmp = rq;
             computeARequestedAttributesSetCompatibleWithMesh(tmp,_mesh);
-            mergeReqAtts(tmp,_currallocatedboatt);
+            _currallocatedboatt = ReqAtts::setUnion(_currallocatedboatt,tmp);
             allocated = tryToAllocateAttributesInBO();
-			if (allocated)
-				return tmp;
-			else 
-				return ReqAtts();
+		    return tmp;
         }
         catch (GLFeederException& e)
         {
             return ReqAtts();
         }
         return ReqAtts();
+    }
+
+    ReqAtts removeRequestedAttributes(const ReqAtts& rq)
+    {
+        return _currallocatedboatt = ReqAtts::setComplement(rq,_currallocatedboatt);
     }
 
     void buffersDeAllocationRequested()
@@ -328,6 +368,19 @@ public:
         return (!isReplicatedPipeline(rqatt) && (pm != PR_POINTS) && (pm != PR_NONE));
     }
 
+    void invalidateRequestedAttributes(ReqAtts& rq)
+    {
+        size_t ii = 0;
+        for(typename std::vector<GLBufferObject*>::iterator it = _bo.begin();it != _bo.end();++it)
+        {
+            ATT_NAMES boname = static_cast<ATT_NAMES>(ii);
+            if (((*it) != NULL) && (rq[boname]))
+                (*it)->_isvalid = false;
+            ++ii;
+        }
+        _currallocatedboatt = vcg::GLFeederInfo::ReqAtts::setComplement(_currallocatedboatt,rq);
+    }
+
 protected:
     struct GLBufferObject
     {
@@ -374,19 +427,6 @@ protected:
     const GLBufferObject& getBufferObjectInfo(ATT_NAMES boname) const
     {
         return _bo[boname];
-    }
-
-    static void mergeReqAtts(const ReqAtts& newone,ReqAtts& tomerge)
-    {
-        for(size_t ii = 0; ii < ReqAtts::possibleAttributesNumber();++ii)
-        {
-            ATT_NAMES name = static_cast<ATT_NAMES>(ii);
-            tomerge[name] = tomerge[name] || newone[name];
-        }
-
-        if ((unsigned int) tomerge.primitiveModality() <= (unsigned int) newone.primitiveModality())
-            tomerge.primitiveModality() = newone.primitiveModality();
-
     }
 
     static void computeARequestedAttributesSetCompatibleWithMesh(ReqAtts& rqatt,const MESHTYPE& mesh)
@@ -612,6 +652,7 @@ protected:
             }
             else
                 updateBuffersIndexedPipeline(attributestobeupdated);
+            glFinish();
         }
         return true;
     }
@@ -1003,7 +1044,10 @@ protected:
             glBindTexture(GL_TEXTURE_2D,textureindex[curtexname]);
         }
 
-        glBegin(GL_TRIANGLES);
+        GLenum primitive = GL_TRIANGLES;
+        if (req.primitiveModality() == vcg::GLFeederInfo::PR_POINTS)
+            primitive = GL_POINTS;
+        glBegin(primitive);
 
         while(fi!=_mesh.face.end())
         {
@@ -1030,28 +1074,39 @@ protected:
                         glBegin(GL_TRIANGLES);
                     }
 
-                if(req[ATT_FACENORMAL])	glNormal(f.cN());
-                if(req[ATT_VERTNORMAL])	glNormal(f.V(0)->cN());
-                //if(nm == NMPerWedge)glNormal(f.WN(0));
+                if(req[ATT_FACENORMAL])	
+                    glNormal(f.cN());
+                if(req[ATT_VERTNORMAL])	
+                    glNormal(f.V(0)->cN());
 
-                if(req[ATT_FACECOLOR])	glColor(f.C());
-                if(req[ATT_VERTCOLOR])	glColor(f.V(0)->C());
-                if(req[ATT_VERTTEXTURE]) glTexCoord(f.V(0)->T().P());
-                if(req[ATT_WEDGETEXTURE]) glTexCoord(f.WT(0).t(0));
+                if(req[ATT_FACECOLOR])	
+                    glColor(f.C());
+                if(req[ATT_VERTCOLOR])	
+                    glColor(f.V(0)->C());
+                if(req[ATT_VERTTEXTURE]) 
+                    glTexCoord(f.V(0)->T().P());
+                if(req[ATT_WEDGETEXTURE]) 
+                    glTexCoord(f.WT(0).t(0));
                 glVertex(f.V(0)->P());
 
-                if(req[ATT_VERTNORMAL])	glNormal(f.V(1)->cN());
-                //if(nm == NMPerWedge)glNormal(f.WN(1));
-                if(req[ATT_VERTCOLOR])	glColor(f.V(1)->C());
-                if(req[ATT_VERTTEXTURE]) glTexCoord(f.V(1)->T().P());
-                if(req[ATT_WEDGETEXTURE]) glTexCoord(f.WT(1).t(0));
+                if(req[ATT_VERTNORMAL])	
+                    glNormal(f.V(1)->cN());
+                if(req[ATT_VERTCOLOR])	
+                    glColor(f.V(1)->C());
+                if(req[ATT_VERTTEXTURE]) 
+                    glTexCoord(f.V(1)->T().P());
+                if(req[ATT_WEDGETEXTURE]) 
+                    glTexCoord(f.WT(1).t(0));
                 glVertex(f.V(1)->P());
 
-                if(req[ATT_VERTNORMAL])	glNormal(f.V(2)->cN());
-                //if(nm == NMPerWedge)glNormal(f.WN(2));
-                if(req[ATT_VERTCOLOR]) glColor(f.V(2)->C());
-                if(req[ATT_VERTTEXTURE]) glTexCoord(f.V(2)->T().P());
-                if(req[ATT_WEDGETEXTURE]) glTexCoord(f.WT(2).t(0));
+                if(req[ATT_VERTNORMAL])	
+                    glNormal(f.V(2)->cN());
+                if(req[ATT_VERTCOLOR]) 
+                    glColor(f.V(2)->C());
+                if(req[ATT_VERTTEXTURE]) 
+                    glTexCoord(f.V(2)->T().P());
+                if(req[ATT_WEDGETEXTURE]) 
+                    glTexCoord(f.WT(2).t(0));
                 glVertex(f.V(2)->P());
             }
             ++fi;
@@ -1072,6 +1127,7 @@ protected:
 
         if (replicated)
         {
+            qDebug("Replicated drawing");
             int firsttriangleoffset = 0;
             if(!req[ATT_VERTTEXTURE] && !req[ATT_WEDGETEXTURE])
             {
@@ -1112,6 +1168,7 @@ protected:
 
             if  (_bo[ATT_VERTINDEX]->_isvalid)
             {
+                qDebug("Indexed drawing");
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_bo[ATT_VERTINDEX]->_bohandle);
                 glDrawElements( GL_TRIANGLES, _mesh.fn * _bo[ATT_VERTINDEX]->_components,GL_UNSIGNED_INT ,NULL);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
