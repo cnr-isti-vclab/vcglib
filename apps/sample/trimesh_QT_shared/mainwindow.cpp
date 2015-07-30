@@ -49,11 +49,9 @@ MainWindow::MainWindow (QWidget * parent)
 	for(int ii = 0;ii < 2;++ii)
 	{
         glar[ii] = new GLArea(mesh,shared->feeder,NULL,shared);
-		connect (shared,SIGNAL(dataReadyToBeRead(MyDrawMode)),glar[ii], SLOT (setupEnvironment(MyDrawMode)));
+		connect (shared,SIGNAL(dataReadyToBeRead(MyDrawMode,vcg::GLFeederInfo::ReqAtts&)),glar[ii], SLOT (updateRequested(MyDrawMode,vcg::GLFeederInfo::ReqAtts&)));
 		tmp->addWidget(glar[ii]);
 	}
-
-	
 
 	connect (ui.loadMeshPushButton, SIGNAL (clicked()),this, SLOT (chooseMesh()));
 	connect (ui.loadTetrahedronPushButton, SIGNAL (clicked()),this, SLOT (loadTetrahedron()));
@@ -69,10 +67,10 @@ void MainWindow::chooseMesh()
 	QString fileName = QFileDialog::getOpenFileName(this,
 		tr("Open Mesh"), QDir::currentPath(),
 		tr("Poly Model (*.ply)"));
-	int err=vcg::tri::io::ImporterPLY<CMesh>::Open(mesh,(fileName.toStdString()).c_str());
+	int err=vcg::tri::io::ImporterPLY<CMeshO>::Open(mesh,(fileName.toStdString()).c_str());
 	if(err!=0)
 	{
-		const char* errmsg=vcg::tri::io::ImporterPLY<CMesh>::ErrorMsg(err);
+		const char* errmsg=vcg::tri::io::ImporterPLY<CMeshO>::ErrorMsg(err);
 		QMessageBox::warning(this,tr("Error Loading Mesh"),QString(errmsg));
 	}
 	initMesh(fileName);
@@ -94,13 +92,17 @@ void MainWindow::loadDodecahedron()
 
 void MainWindow::initMesh(QString message)
 {
-	ui.statusbar->showMessage(message);
+	if (shared != NULL)
+		shared->deAllocateBO();
 	// update bounding box
-	vcg::tri::UpdateBounding<CMesh>::Box(mesh);
+	vcg::tri::UpdateBounding<CMeshO>::Box(mesh);
 	// update Normals
-	vcg::tri::UpdateNormal<CMesh>::PerVertexNormalizedPerFaceNormalized(mesh);
-	shared->feeder.update(vcg::GLMeshAttributesFeeder<CMesh>::ATT_ALL);
+	vcg::tri::UpdateNormal<CMeshO>::PerVertexNormalizedPerFaceNormalized(mesh);
 	shared->passInfoToOpenGL(ui.drawModeComboBox->currentIndex());
+	for(size_t ii = 0;ii < 2;++ii)
+		if (glar[ii] != NULL)
+			glar[ii]->resetTrackBall();
+    ui.statusbar->showMessage(message);
 }
 
 MainWindow::~MainWindow()

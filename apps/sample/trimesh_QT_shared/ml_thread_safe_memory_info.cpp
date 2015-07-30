@@ -23,7 +23,7 @@
 
 #include "ml_thread_safe_memory_info.h"
 
-MLThreadSafeMemoryInfo::MLThreadSafeMemoryInfo( long long unsigned int originalmem ) 
+MLThreadSafeMemoryInfo::MLThreadSafeMemoryInfo( std::ptrdiff_t originalmem ) 
 	:vcg::NotThreadSafeMemoryInfo(originalmem),lock(QReadWriteLock::Recursive)
 {
 
@@ -33,32 +33,32 @@ MLThreadSafeMemoryInfo::~MLThreadSafeMemoryInfo()
 {
 }
 
-void MLThreadSafeMemoryInfo::acquiredMemory(long long unsigned int mem)
+void MLThreadSafeMemoryInfo::acquiredMemory(std::ptrdiff_t mem)
 {
 	QWriteLocker locker(&lock);
 	vcg::NotThreadSafeMemoryInfo::acquiredMemory(mem);
 }
 
-long long unsigned int MLThreadSafeMemoryInfo::usedMemory() const
+std::ptrdiff_t MLThreadSafeMemoryInfo::usedMemory() const
 {
 	QReadLocker locker(&lock);
 	return vcg::NotThreadSafeMemoryInfo::usedMemory();
 	
 }
 
-long long unsigned int MLThreadSafeMemoryInfo::currentFreeMemory() const
+std::ptrdiff_t MLThreadSafeMemoryInfo::currentFreeMemory() const
 {
 	QReadLocker locker(&lock);
 	return vcg::NotThreadSafeMemoryInfo::currentFreeMemory();
 }
 
-void MLThreadSafeMemoryInfo::releasedMemory(long long unsigned int mem)
+void MLThreadSafeMemoryInfo::releasedMemory(std::ptrdiff_t mem)
 {
 	QWriteLocker locker(&lock);
 	vcg::NotThreadSafeMemoryInfo::releasedMemory(mem);
 }
 
-bool MLThreadSafeMemoryInfo::isAdditionalMemoryAvailable( long long unsigned int mem )
+bool MLThreadSafeMemoryInfo::isAdditionalMemoryAvailable( std::ptrdiff_t mem )
 {
 	QReadLocker locker(&lock);
 	return vcg::NotThreadSafeMemoryInfo::isAdditionalMemoryAvailable(mem);

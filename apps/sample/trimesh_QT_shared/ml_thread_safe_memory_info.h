@@ -26,28 +26,25 @@
 
 #include <QReadWriteLock>
 
-#include "mesh.h"
-
-#include <GL/glew.h>
-#include <wrap/gl/gl_mesh_attributes_feeder.h>
+#include <wrap/system/memory_info.h>
 
 
 class MLThreadSafeMemoryInfo : public vcg::NotThreadSafeMemoryInfo
 {
 public:
-	MLThreadSafeMemoryInfo(long long unsigned int originalmem);
+	MLThreadSafeMemoryInfo(std::ptrdiff_t originalmem);
 
 	~MLThreadSafeMemoryInfo();
 
-	void acquiredMemory(long long unsigned int mem);
+	void acquiredMemory(std::ptrdiff_t mem);
 
-	long long unsigned int usedMemory() const;
+	std::ptrdiff_t usedMemory() const;
 
-	long long unsigned int currentFreeMemory() const;
+	std::ptrdiff_t currentFreeMemory() const;
 
-	void releasedMemory(long long unsigned int mem = 0);
+	void releasedMemory(std::ptrdiff_t mem = 0);
 	
-	bool isAdditionalMemoryAvailable(long long unsigned int mem);
+	bool isAdditionalMemoryAvailable(std::ptrdiff_t mem);
 private:
 	//mutable objects can be modified from the declared const functions
 	//in this way we have not to modified the basic vcg::MemoryInfo interface for the logically const functions

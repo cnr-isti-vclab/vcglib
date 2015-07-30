@@ -10,15 +10,19 @@
 #include <wrap/io_trimesh/import.h>
 
 using namespace vcg;
-class CFace;
-class CVertex;
+class CFaceO;
+class CVertexO;
 
-struct MyUsedTypes : public UsedTypes<	Use<CVertex>		::AsVertexType,
-	Use<CFace>			::AsFaceType>{};
+struct MyUsedTypes : public UsedTypes<	Use<CVertexO>		::AsVertexType,
+	Use<CFaceO>			::AsFaceType>{};
 
 /// compositing wanted proprieties
-class CVertex : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags>{};
-class CFace   : public vcg::Face<  MyUsedTypes, vcg::face::VertexRef, vcg::face::Normal3f, vcg::face::BitFlags > {};
-class CMesh   : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};
+class CVertexO : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags>{};
+class CFaceO   : public vcg::Face<  MyUsedTypes, vcg::face::VertexRef, vcg::face::Normal3f, vcg::face::BitFlags > {};
+class CMeshO   : public vcg::tri::TriMesh< std::vector<CVertexO>, std::vector<CFaceO> > 
+{
+public:
+	vcg::Box3f bbox;
+};
 
 #endif

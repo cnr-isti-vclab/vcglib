@@ -55,7 +55,7 @@ private:
   SharedDataOpenGLContext* shared;
   MLThreadSafeMemoryInfo mi;
   /// the active mesh instance
-  CMesh mesh;
+  CMeshO mesh;
 };
 
 #endif /*MAINWINDOW_H_ */

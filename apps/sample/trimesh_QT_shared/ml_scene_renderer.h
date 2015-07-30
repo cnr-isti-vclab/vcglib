@@ -24,58 +24,74 @@
 #ifndef __ML_SCENE_RENDERER_H
 #define __ML_SCENE_RENDERER_H
 
+#include <GL/glew.h>
+#include "mesh.h"
+#include <wrap/gl/gl_mesh_attributes_feeder.h>
+
 #include <QObject>
 #include <QMap>
 #include <QReadWriteLock>
-
-#include "mesh.h"
-
-#include <GL/glew.h>
-#include <wrap/gl/gl_mesh_attributes_feeder.h>
 
 
 
 class MLThreadSafeMemoryInfo;
 
 
-class MLThreadSafeGLMeshAttributesFeeder : public vcg::GLMeshAttributesFeeder<CMesh>
+class MLThreadSafeGLMeshAttributesFeeder : public vcg::GLMeshAttributesFeeder<CMeshO>
 {
 public:
-	MLThreadSafeGLMeshAttributesFeeder(CMesh& mesh,MLThreadSafeMemoryInfo& gpumeminfo,size_t perbatchtriangles);
+	struct MLThreadSafeTextureNamesContainer
+	{
+		MLThreadSafeTextureNamesContainer();
+		~MLThreadSafeTextureNamesContainer();
+
+		void push_back(GLuint textid);
+		size_t size() const;
+		bool empty() const;
+		void clear();
+		GLuint& operator[](size_t ii) {return _tmid[ii];};
+		inline std::vector<GLuint>& textId() {return _tmid;};
+	private:
+		std::vector<GLuint> _tmid;
+		mutable QReadWriteLock _lock;
+	};
+
+
+	MLThreadSafeGLMeshAttributesFeeder(CMeshO& mesh,MLThreadSafeMemoryInfo& gpumeminfo,size_t perbatchtriangles);
 	~MLThreadSafeGLMeshAttributesFeeder() {};
+
 	void setPerBatchTriangles(size_t perbatchtriangles);
+	
 	size_t perBatchTriangles() const;
+	
 	bool renderedWithBO() const;
-	void update(int mask);
-
-	void passTrianglesToOpenGL(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm );
-
-	void passPointsToOpenGL(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::COLOR_MODALITY cm );
-
-	bool tryToAllocatePerTriangleAttributesInBO( GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm );
-
-	bool tryToAllocatePerPointAttributesInBO( GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm );
-
+	
 	GLuint bufferObjectHandle() const;
 
-	void drawWire(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm);
+	void meshAttributesUpdated(int mask);
 
-	void drawFlatWire(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex = std::vector<GLuint>());
+	vcg::GLFeederInfo::ReqAtts setupRequestedAttributes(const vcg::GLFeederInfo::ReqAtts& rq,bool& allocated);
 
-	void drawPoints(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm);
-
-	void drawTriangles(GLuint& vaohandlespecificperopenglcontext,vcg::GLFeedEnum::NORMAL_MODALITY nm,vcg::GLFeedEnum::COLOR_MODALITY cm,vcg::GLFeedEnum::TEXTURE_MODALITY tm,const std::vector<GLuint>& textureindex = std::vector<GLuint>() );
+	void deAllocateBO();
 	
-	bool enableClientSideEnvironmentVAO(GLuint& vaohandle) const;
+	void drawWire(vcg::GLFeederInfo::ReqAtts& rq);
 
-	bool updateClientSideEnvironmentVAO(GLuint& vaohandle,const std::vector<bool>& importattribute) const;
+	void drawFlatWire(vcg::GLFeederInfo::ReqAtts& rq);
 
-	void attributesToBeImportedInPointBasedPipeline( std::vector<bool> &importattribute, NORMAL_MODALITY nm, COLOR_MODALITY cm) const;
+	void drawPoints(vcg::GLFeederInfo::ReqAtts& rq);
 
-	void attributesToBeImportedInTriangleBasedPipeline( std::vector<bool> &importattribute, NORMAL_MODALITY nm, COLOR_MODALITY cm, TEXTURE_MODALITY tm ) const;
+	void drawTriangles(vcg::GLFeederInfo::ReqAtts& rq);
 
+	void drawBBox(vcg::GLFeederInfo::ReqAtts& rq);
+
+	inline CMeshO& mesh() {return _mesh;}
+
+	inline MLThreadSafeTextureNamesContainer& textureIDContainer() {return _textids;}
+
+	void buffersDeAllocationRequested();
 private:
 	mutable QReadWriteLock _lock;
+	MLThreadSafeTextureNamesContainer _textids;
 };
 
 #endif

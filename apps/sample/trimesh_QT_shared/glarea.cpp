@@ -44,15 +44,13 @@ Initial release.
 #define glDeleteVertexArrays glDeleteVertexArraysAPPLE
 #endif
 
-GLArea::GLArea (CMesh& m, MLThreadSafeGLMeshAttributesFeeder& feed,QWidget* parent,QGLWidget* sharedcont)
-    :QGLWidget (parent,sharedcont),vaohandlespecificicforglcontext(0),mesh(m),feeder(feed),sem(0)
+GLArea::GLArea (CMeshO& m, MLThreadSafeGLMeshAttributesFeeder& feed,QWidget* parent,QGLWidget* sharedcont)
+    :QGLWidget (parent,sharedcont),mesh(m),feeder(feed),rq(),drawmode(MDM_SMOOTH)
 {
-	drawmode= MDM_SMOOTH;
 }
 
 GLArea::~GLArea()
 {
-	glDeleteVertexArrays(1,&vaohandlespecificicforglcontext);
 }
 
 void GLArea::initializeGL()
@@ -67,7 +65,6 @@ void GLArea::initializeGL()
 	glEnable(GL_COLOR_MATERIAL);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
-	glGenVertexArrays(1,&vaohandlespecificicforglcontext);
 }
 
 void GLArea::resizeGL (int w, int h)
@@ -80,13 +77,16 @@ void GLArea::resizeGL (int w, int h)
 void GLArea::paintGL ()
 {
 	makeCurrent();
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
     //GLenum err = glGetError();
     //assert(err == GL_NO_ERROR);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
 	glLoadIdentity();
 	gluPerspective(25, GLArea::width()/(float)GLArea::height(), 0.1, 100);
 	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
 	glLoadIdentity();
 	gluLookAt(0,0,5,   0,0,0,   0,1,0);
 	track.center=vcg::Point3f(0, 0, 0);
@@ -98,36 +98,36 @@ void GLArea::paintGL ()
 	vcg::glScale(d);
 	glTranslate(-mesh.bbox.Center());
 
-	if (sem == true)
+	if (mesh.VN() > 0)
 	{
-		glBindVertexArray(vaohandlespecificicforglcontext);
 		switch(drawmode)
 		{
 		case MDM_SMOOTH:
-			feeder.drawTriangles(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
+		case MDM_FLAT:
+			feeder.drawTriangles(rq);
+		case MDM_WIRE:
+			feeder.drawWire(rq);
 			break;
 		case MDM_POINTS:
-			feeder.drawPoints(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE);
-			break;
-		case MDM_WIRE:
-			feeder.drawWire(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE);
+			feeder.drawPoints(rq);
 			break;
 		case MDM_FLATWIRE:
-			feeder.drawFlatWire(vaohandlespecificicforglcontext,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
-			break;
-		case MDM_FLAT:
-			feeder.drawTriangles(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERFACE,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
+			feeder.drawFlatWire(rq);
 			break;
 		default:
 			break;
 		}
-		glBindVertexArray(0);
 	}
-
 	glPopMatrix();
+	
 	track.DrawPostApply();
-   GLenum err = glGetError();
-   assert(err == GL_NO_ERROR);
+	glPopMatrix();
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glPopAttrib();
+	//doneCurrent();
+	GLenum err = glGetError();
+	assert(err == GL_NO_ERROR);
 }
 
 void GLArea::keyReleaseEvent (QKeyEvent * e)
@@ -183,72 +183,79 @@ void GLArea::wheelEvent (QWheelEvent * e)
 	updateGL ();
 }
 
-void GLArea::setupEnvironment(MyDrawMode mode)
+void GLArea::updateRequested(MyDrawMode md,vcg::GLFeederInfo::ReqAtts& reqatts)
 {
-	sem = false;
-	drawmode=mode;
-	makeCurrent();
-	std::vector<bool> import(8,false);
-
-	switch(drawmode)
-	{
-	case MDM_SMOOTH:
-	case MDM_WIRE:
-		feeder.attributesToBeImportedInTriangleBasedPipeline(import,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
-		break;
-	case MDM_POINTS:
-		feeder.attributesToBeImportedInPointBasedPipeline(import,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE);
-		break;
-	case MDM_FLAT:
-	case MDM_FLATWIRE:
-		feeder.attributesToBeImportedInTriangleBasedPipeline(import,vcg::GLFeedEnum::NR_PERFACE,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
-		break;
-	default:
-		break;
-	}
-	feeder.updateClientSideEnvironmentVAO(vaohandlespecificicforglcontext,import);
-	sem = true;
+	drawmode = md;
+	rq = reqatts;
 	updateGL();
 }
 
+void GLArea::resetTrackBall()
+{
+    makeCurrent();
+	track.Reset();
+	updateGL();
+    doneCurrent();
+}
 
-SharedDataOpenGLContext::SharedDataOpenGLContext( CMesh& mesh,MLThreadSafeMemoryInfo& mi,QWidget* parent /*= 0*/ )
-	:QGLWidget(parent),feeder(mesh,mi,100000),vaohandlespecificicforglcontext(0),drawmode(MDM_SMOOTH)
+
+
+SharedDataOpenGLContext::SharedDataOpenGLContext( CMeshO& mesh,MLThreadSafeMemoryInfo& mi,QWidget* parent /*= 0*/ )
+	:QGLWidget(parent),feeder(mesh,mi,100000)
 {
 }
 
 SharedDataOpenGLContext::~SharedDataOpenGLContext()
 {
-	makeCurrent();
+	deAllocateBO();
 }
 
 void SharedDataOpenGLContext::myInitGL()
 {
     makeCurrent();
     glewInit();
-    glGenVertexArrays(1,&vaohandlespecificicforglcontext);
+	doneCurrent();
 }
 
 void SharedDataOpenGLContext::passInfoToOpenGL(int mode)
 {
 	makeCurrent();
-	drawmode = static_cast<MyDrawMode>(mode);
+	MyDrawMode drawmode = static_cast<MyDrawMode>(mode);
     //_tsbm.setUpBuffers();
+	vcg::GLFeederInfo::ReqAtts req;
+	bool allocated = false;
 	switch(drawmode)
 	{
 	case MDM_SMOOTH:
 	case MDM_WIRE:
-		feeder.tryToAllocatePerTriangleAttributesInBO(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
+		req[vcg::GLFeederInfo::ATT_VERTPOSITION] = true;
+		req[vcg::GLFeederInfo::ATT_VERTNORMAL] = true;
+		req[vcg::GLFeederInfo::ATT_VERTINDEX] = true;
+		req.primitiveModality() = vcg::GLFeederInfo::PR_TRIANGLES;
 		break;
 	case MDM_POINTS:
-		feeder.tryToAllocatePerPointAttributesInBO(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERVERT,vcg::GLFeedEnum::CL_NONE);
+		req[vcg::GLFeederInfo::ATT_VERTPOSITION] = true;
+		req[vcg::GLFeederInfo::ATT_VERTNORMAL] = true;
+		req.primitiveModality() = vcg::GLFeederInfo::PR_POINTS;
 		break;
 	case MDM_FLAT:
 	case MDM_FLATWIRE:
-		feeder.tryToAllocatePerTriangleAttributesInBO(vaohandlespecificicforglcontext,vcg::GLFeedEnum::NR_PERFACE,vcg::GLFeedEnum::CL_NONE,vcg::GLFeedEnum::TX_NONE);
+		req[vcg::GLFeederInfo::ATT_VERTPOSITION] = true;
+		req[vcg::GLFeederInfo::ATT_FACENORMAL] = true;
+		req.primitiveModality() = vcg::GLFeederInfo::PR_TRIANGLES;
 		break;
 	default:
 		break;
 	}
-	emit dataReadyToBeRead(drawmode);
+	vcg::GLFeederInfo::ReqAtts rq = feeder.setupRequestedAttributes(req,allocated);
+	doneCurrent();
+	emit dataReadyToBeRead(drawmode,rq);
+
+}
+
+void SharedDataOpenGLContext::deAllocateBO()
+{
+	makeCurrent();
+	feeder.deAllocateBO();
+	doneCurrent();
 }

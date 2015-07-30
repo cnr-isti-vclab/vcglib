@@ -43,7 +43,6 @@ Initial release.
 
 #include "mesh.h"
 #include "ml_scene_renderer.h"
-#include "ml_atomic_guard.h"
 /// declaring edge and face type
 
 
@@ -53,10 +52,11 @@ class SharedDataOpenGLContext : public QGLWidget
 {
 	Q_OBJECT
 public:
-	SharedDataOpenGLContext(CMesh& mesh,MLThreadSafeMemoryInfo& mi,QWidget* parent = 0);
+	SharedDataOpenGLContext(CMeshO& mesh,MLThreadSafeMemoryInfo& mi,QWidget* parent = 0);
 	~SharedDataOpenGLContext();
 
     void myInitGL();
+	void deAllocateBO();
 
 	MLThreadSafeGLMeshAttributesFeeder feeder;
 
@@ -65,25 +65,21 @@ public slots:
 	void passInfoToOpenGL(int mode);
 
 signals:
-	void dataReadyToBeRead(MyDrawMode mode);
-private:
-	GLuint vaohandlespecificicforglcontext;
-	MyDrawMode drawmode;
+	void dataReadyToBeRead(MyDrawMode,vcg::GLFeederInfo::ReqAtts&);
 };
 
 class GLArea:public QGLWidget
 {
 	Q_OBJECT 
 public:
-    GLArea (CMesh& m,MLThreadSafeGLMeshAttributesFeeder& feed,QWidget* parent = NULL,QGLWidget* sharedcont = NULL);
+    GLArea (CMeshO& m,MLThreadSafeGLMeshAttributesFeeder& feed,QWidget* parent = NULL,QGLWidget* sharedcont = NULL);
 	~GLArea();
+	void resetTrackBall();
 	/// we choosed a subset of the avaible drawing modes
-public slots:
-	void setupEnvironment(MyDrawMode mode);
 
 signals:
 		/// signal for setting the statusbar message
-		void setStatusBar(QString message);
+	void setStatusBar(QString message);
 protected:
 	/// opengl initialization and drawing calls
 	void initializeGL ();
@@ -96,30 +92,18 @@ protected:
 	void mouseMoveEvent(QMouseEvent*e);
 	void mouseReleaseEvent(QMouseEvent*e);
 	void wheelEvent(QWheelEvent*e); 
+public slots:
+	void updateRequested(MyDrawMode,vcg::GLFeederInfo::ReqAtts&);
 private:
-	MLAtomicGuard sem;
-
-	GLuint vaohandlespecificicforglcontext;
 	/// the active mesh instance
-	CMesh& mesh;
+	CMeshO& mesh;
 	/// the active manipulator
 	vcg::Trackball track;
 	/// mesh data structure initializer
 	void initMesh(QString message);
-	//MLThreadSafeMemoryInfo& mi;
-	MLThreadSafeGLMeshAttributesFeeder& feeder;
-
 	MyDrawMode drawmode;
+	MLThreadSafeGLMeshAttributesFeeder& feeder;
+	vcg::GLFeederInfo::ReqAtts rq;
 };
-
-//class GLAreaEXT:public GLArea
-//{
-//	Q_OBJECT 
-//public:
-//	GLAreaEXT (CMesh& m,MLThreadSafeGLMeshAttributesFeeder& feed,QWidget * parent = NULL,QGLWidget* shared = NULL);
-//	~GLAreaEXT();
-//
-//	void paintGL ();
-//};
 
 #endif /*GLAREA_H_ */
