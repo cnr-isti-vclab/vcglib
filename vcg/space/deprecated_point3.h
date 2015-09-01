@@ -96,7 +96,6 @@ Edited doxygen comments
 
 #include <assert.h>
 #include <algorithm>
-#include <cmath>
 #include <vcg/math/base.h>
 
 namespace vcg {
