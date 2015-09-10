@@ -46,21 +46,21 @@ namespace vcg
 			const char* _exctext;
 		};
 
-		MemoryInfo(long long unsigned int originalmem)
+		MemoryInfo(std::ptrdiff_t originalmem)
 			:_originaltotalmemory(originalmem),_currentfreememory(_originaltotalmemory)
 		{       
 		}
 
 		virtual ~MemoryInfo() {}
-		virtual void acquiredMemory(long long unsigned int mem) = 0;
-		virtual long long unsigned int usedMemory() const = 0;
-		virtual long long unsigned int currentFreeMemory() const = 0;
-		virtual void releasedMemory(long long unsigned int mem = 0) = 0;
-		virtual bool isAdditionalMemoryAvailable(long long unsigned int mem) = 0;
+		virtual void acquiredMemory(std::ptrdiff_t mem) = 0;
+		virtual std::ptrdiff_t usedMemory() const = 0;
+		virtual std::ptrdiff_t currentFreeMemory() const = 0;
+		virtual void releasedMemory(std::ptrdiff_t mem = 0) = 0;
+		virtual bool isAdditionalMemoryAvailable(std::ptrdiff_t mem) = 0;
 
 	protected:
-		const long long unsigned int _originaltotalmemory;
-		long long unsigned int _currentfreememory;
+		const std::ptrdiff_t _originaltotalmemory;
+		std::ptrdiff_t _currentfreememory;
 	};
 
 	//WARNING: this is not a thread safe class. The object derived from MemoryInfo are intended to be used inside GLMeshAttributeFeeder as static variable in order to manage the available GPUMemory.
@@ -71,14 +71,14 @@ namespace vcg
 	class NotThreadSafeMemoryInfo : public MemoryInfo
 	{
 	public:
-		NotThreadSafeMemoryInfo(long long unsigned int originalmem)
+		NotThreadSafeMemoryInfo(std::ptrdiff_t originalmem)
 			:MemoryInfo(originalmem)
 		{
 		}
 
 		~NotThreadSafeMemoryInfo() {}
 
-		void acquiredMemory(long long unsigned int mem)
+		void acquiredMemory(std::ptrdiff_t mem)
 		{
 			if (mem > _originaltotalmemory)
 				throw MemoryInfo::MemoryInfoException("It has been requested more memory than the total one.\\n");
@@ -89,17 +89,17 @@ namespace vcg
 					_currentfreememory -= mem;
 		}
 
-		long long unsigned int usedMemory() const
+		std::ptrdiff_t usedMemory() const
 		{
 			return _originaltotalmemory - _currentfreememory;
 		}
 
-		long long unsigned int currentFreeMemory() const
+		std::ptrdiff_t currentFreeMemory() const
 		{
 			return _currentfreememory;
 		}
 
-		void releasedMemory(long long unsigned int mem = 0)
+		void releasedMemory(std::ptrdiff_t mem = 0)
 		{
 			if (mem > _originaltotalmemory)
 				throw MemoryInfo::MemoryInfoException("It has been released more memory than the total one. Something strange happened!\\n");
@@ -107,7 +107,7 @@ namespace vcg
 				_currentfreememory += mem;
 		}
 
-		bool isAdditionalMemoryAvailable(long long unsigned int mem)
+		bool isAdditionalMemoryAvailable(std::ptrdiff_t mem)
 		{
 			return (_currentfreememory >= mem);
 		}
