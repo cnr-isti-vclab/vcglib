@@ -1421,7 +1421,8 @@ static VertexPointer getBestPrecomputedMontecarloSample(Point3i &cell, Montecarl
   return bestSample;
 }
 
-
+/// \brief Estimate the radius r that you should give to get a certain number of samples in a Poissson Disk Distribution of radius r.
+///
 static ScalarType ComputePoissonDiskRadius(MeshType &origMesh, int sampleNum)
 {
     ScalarType meshArea = Stat<MeshType>::ComputeMeshArea(origMesh);
