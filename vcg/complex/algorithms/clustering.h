@@ -33,55 +33,26 @@
 #include <iostream>
 #include <math.h>
 #include <limits>
+#include <unordered_set>
+#include <unordered_map>
 
-// some stuff for portable hashes...
-#ifdef WIN32
- #ifndef __MINGW32__
-  #include <hash_map>
-  #include <hash_set>
-  #define STDEXT stdext
- #else
-  #include <ext/hash_map>
-  #include <ext/hash_set>
-  #define STDEXT __gnu_cxx
- #endif
-#else
- #include <ext/hash_map>
- #include <ext/hash_set>
- #define STDEXT __gnu_cxx
-#endif
+namespace std
+{
+    template<>
+    struct hash<vcg::Point3i>
+    {
+        typedef vcg::Point3i argument_type;
 
-
+        std::size_t operator()(const vcg::Point3i & s) const
+        {
+            return std::hash<int>()(s[0]) ^ std::hash<int>()(s[1]) ^ std::hash<int>()(s[2]);
+        }
+    };
+}
 
 namespace vcg{
 namespace tri{
-#define HASH_P0 73856093
-#define HASH_P1 19349663
-#define HASH_P2 83492791
 
-class HashedPoint3i : public Point3i
-{
-public:
-
-  size_t Hash() const
-  {
-    return (V(0)*HASH_P0 ^ V(1)*HASH_P1 ^ V(2)*HASH_P2);
-  }
-
-  operator size_t () const
-  {return Hash();}
-};
-
-// needed for gcc compilation
-#ifndef _MSC_VER
-}} namespace STDEXT {
-  template <> struct hash<vcg::tri::HashedPoint3i>{
-  inline	size_t	operator ()(const vcg::tri::HashedPoint3i &p) const {return size_t(p);}
-};
-} namespace vcg{ namespace tri{
-#endif
-
-//
 template<class MeshType  >
 class  NearestToCenter
 {
@@ -220,13 +191,19 @@ class Clustering
       if(v[0] > v[2] ) std::swap(v[0],v[2]); // now v0 is the minimum
       if(v[1] > v[2] ) std::swap(v[1],v[2]); // sorted!
     }
-    // Hashing Function;
-    operator size_t () const
+    bool operator ==(const SimpleTri &pt) const
     {
-      return (ii(0)*HASH_P0 ^ ii(1)*HASH_P1 ^ ii(2)*HASH_P2);
+      return (pt.v[0] == v[0])
+          && (pt.v[1] == v[1])
+          && (pt.v[2] == v[2]);
+    }
+    // Hashing Function;
+    size_t operator () (const SimpleTri &pt) const
+    {
+     // return (ii(0)*HASH_P0 ^ ii(1)*HASH_P1 ^ ii(2)*HASH_P2);
+      return std::hash<CellType*>()(pt.v[0]) ^ std::hash<CellType*>()(pt.v[1]) ^ std::hash<CellType*>()(pt.v[2]);
     }
   };
-
 
   // The init function Take two parameters
   // _size is the approximate total number of cells composing the grid surrounding the objects (usually a large number)
@@ -263,28 +240,18 @@ class Clustering
 
   BasicGrid<ScalarType> Grid;
 
-#ifdef _MSC_VER
-  STDEXT::hash_set<SimpleTri> TriSet;
-  typedef typename STDEXT::hash_set<SimpleTri>::iterator TriHashSetIterator;
-#else
-  struct SimpleTriHashFunc{
-    inline	size_t	operator ()(const SimpleTri &p) const {return size_t(p);}
-  };
-  STDEXT::hash_set<SimpleTri,SimpleTriHashFunc> TriSet;
-  typedef typename STDEXT::hash_set<SimpleTri,SimpleTriHashFunc>::iterator TriHashSetIterator;
-#endif
-
-  STDEXT::hash_map<HashedPoint3i,CellType> GridCell;
+  std::unordered_set<SimpleTri,SimpleTri> TriSet;
+  typedef typename std::unordered_set<SimpleTri,SimpleTri>::iterator TriHashSetIterator;
+  std::unordered_map<Point3i,CellType> GridCell;
 
 
     void AddPointSet(MeshType &m, bool UseOnlySelected=false)
     {
-        VertexIterator vi;
-        for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+        for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
             if(!(*vi).IsD())
                 if(!UseOnlySelected || (*vi).IsS())
                     {
-                        HashedPoint3i pi;
+                        Point3i pi;
                         Grid.PToIP((*vi).cP(), pi );
                         GridCell[pi].AddVertex(m,Grid,pi,*(vi));
                     }
@@ -295,7 +262,7 @@ class Clustering
     FaceIterator fi;
     for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
             {
-                HashedPoint3i pi;
+                Point3i pi;
                 SimpleTri st;
                 for(int i=0;i<3;++i)
                 {
@@ -317,7 +284,7 @@ class Clustering
 
   void SelectPointSet(MeshType &m)
   {
-        typename STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
+        typename std::unordered_map<Point3i,CellType>::iterator gi;
                 UpdateSelection<MeshType>::VertexClear(m);
         for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
@@ -333,7 +300,7 @@ class Clustering
         if (GridCell.empty()) return;
 
     Allocator<MeshType>::AddVertices(m,GridCell.size());
-    typename STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
+    typename std::unordered_map<Point3i,CellType>::iterator gi;
     int i=0;
     for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
@@ -353,7 +320,7 @@ class Clustering
     if (GridCell.empty())  return;
 
     Allocator<MeshType>::AddVertices(m,GridCell.size());
-    typename STDEXT::hash_map<HashedPoint3i,CellType>::iterator gi;
+    typename std::unordered_map<Point3i,CellType>::iterator gi;
     int i=0;
     for(gi=GridCell.begin();gi!=GridCell.end();++gi)
     {
