@@ -206,7 +206,7 @@ static void PerVertexFromCurrentFaceNormal(ComputeMeshType &m)
  for(fi=m.face.begin();fi!=m.face.end();++fi)
    if( !(*fi).IsD())
    {
-    for(int j=0; j<3; ++j)
+    for(int j=0; j<(*fi).VN(); ++j)
             if( !(*fi).V(j)->IsD())
                     (*fi).V(j)->N() += (*fi).cN();
    }
