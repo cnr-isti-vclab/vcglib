@@ -39,6 +39,8 @@
  *
  */
 
+#ifndef __VCG_IGL_LEAST_SQUARES_CONFORMAL_MAPS
+#define __VCG_IGL_LEAST_SQUARES_CONFORMAL_MAPS
 
 #include <igl/lscm.h>
 #include <vcg/complex/algorithms/mesh_to_matrix.h>
@@ -97,3 +99,4 @@ void OptimizeUV_LSCM( MeshType& m ,
 }
 
 }} // namespaces
+#endif
