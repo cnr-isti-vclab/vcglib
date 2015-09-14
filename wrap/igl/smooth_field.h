@@ -389,7 +389,10 @@ public:
         vcg::tri::CrossField<MeshType>::MakeDirectionFaceCoherent(mesh,true);
     }
 
-    static void InitByCurvature(MeshType & mesh,int Nring)
+
+    static void InitByCurvature(MeshType & mesh,
+                                int Nring,
+                                bool UpdateFaces=true)
     {
 
         tri::RequirePerVertexCurvatureDir(mesh);
@@ -409,6 +412,7 @@ public:
             mesh.vert[i].K1()=PV1(i,0);
             mesh.vert[i].K2()=PV2(i,0);
         }
+        if (!UpdateFaces)return;
         vcg::tri::CrossField<MeshType>::SetFaceCrossVectorFromVert(mesh);
         InitQualityByAnisotropyDir(mesh);
     }
