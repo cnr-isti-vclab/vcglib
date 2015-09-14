@@ -27,6 +27,7 @@
 #include <eigenlib/Eigen/Sparse>
 
 #include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/parametrization/distortion.h>
 #include <vcg/complex/algorithms/parametrization/uv_utils.h>
 
@@ -69,8 +70,8 @@ class PoissonSolver
     bool use_direction_field,fix_selected,correct_fixed;
     ///size of the scalar field
     ScalarType fieldScale;
-    ///handle per direction field
-    PerFaceCoordHandle Fh0,Fh1;
+//    ///handle per direction field
+//    PerFaceCoordHandle Fh0,Fh1;
 
     int VertexIndex(VertexType* v)
     {
@@ -274,7 +275,7 @@ class PoissonSolver
 
         ///then consider area but also considering scale factor dur to overlaps
         ScalarType areaT=((f->P(1)-f->P(0))^(f->P(2)-f->P(0))).Norm()/2.0;
-        for (int x=0;x<3;x++)
+         for (int x=0;x<3;x++)
             for (int y=0;y<3;y++)
                 if (x!=y)
                 {
@@ -315,10 +316,10 @@ class PoissonSolver
                 assert(CrossDir1);*/
 
         //K1=f->Q3();
-        K1=Fh0[f];
+        K1=f->PD1();
         K1.Normalize();
         //K2=fNorm^K1;
-        K2=Fh1[f];
+        K2=f->PD2();
         K2.Normalize();
 
         scaled_Kreal = K1*(vector_field_scale);///2);
@@ -348,7 +349,7 @@ class PoissonSolver
 
     void FixPointLSquares()
     {
-        ScalarType penalization=1000;
+        ScalarType penalization=1000000;
         int offset_row=n_vert_vars;
         assert(to_fix.size()>0);
         for (size_t i=0;i<to_fix.size();i++)
@@ -481,7 +482,7 @@ class PoissonSolver
     ///map back values to vertex
     ///if normalize==true then set the
     ///coordinates between 0 and 1
-    void MapCoords(bool normalize=false,
+    void MapCoords(bool normalize=true,
                    ScalarType /*fieldScale*/=1.0)
     {
         ///clear Visited Flag
@@ -546,19 +547,23 @@ public:
         int NNmanifoldE=tri::Clean<MeshType>::CountNonManifoldEdgeFF(mesh);
         if (NNmanifoldE!=0)
         {
-            printf("Non Manifold");
+            printf("Non Manifold Edges \n");
             return false;
         }
-        /*int NNmanifoldV=tri::Clean<MeshType>::CountNonManifoldVertexFF(mesh);
-        if (NNmanifoldV!=0)return false;*/
-        int G=tri::Clean<MeshType>::MeshGenus(mesh);
-        int numholes=tri::Clean<MeshType>::CountHoles(mesh);
-        if (numholes==0)
+        int NNmanifoldV=tri::Clean<MeshType>::CountNonManifoldVertexFF(mesh);
+        if (NNmanifoldV!=0)
         {
-            printf("Non omeomorph to a disc");
+            printf("Non Manifold Vertices \n");
             return false;
         }
-        return (G==0);
+        int G=tri::Clean<MeshType>::MeshGenus(mesh);
+        if (G!=0)
+        {
+            printf("Genus %d\n",G);
+            return false;
+        }
+
+        return (true);
     }
 
     ///set the border as fixed
@@ -635,15 +640,15 @@ public:
     {
         use_direction_field=_use_direction_field;
         //query if an attribute is present or not
-        if (use_direction_field)
-        {
-            bool CrossDir0 = tri::HasPerFaceAttribute(mesh,"CrossDir0");
-            bool CrossDir1 = tri::HasPerFaceAttribute(mesh,"CrossDir1");
-            assert(CrossDir0);
-            assert(CrossDir1);
-            Fh0= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir0"));
-            Fh1= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir1"));
-        }
+//        if (use_direction_field)
+//        {
+//            bool CrossDir0 = tri::HasPerFaceAttribute(mesh,"CrossDir0");
+//            bool CrossDir1 = tri::HasPerFaceAttribute(mesh,"CrossDir1");
+//            assert(CrossDir0);
+//            assert(CrossDir1);
+//            Fh0= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir0"));
+//            Fh1= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir1"));
+//        }
         correct_fixed=_correct_fixed;
         fieldScale=_fieldScale;
         to_fix.clear();
@@ -717,7 +722,7 @@ public:
             printf("\n ASSIGNING COORDS \n");
         }
 
-        MapCoords(false,fieldScale);
+        MapCoords(true,fieldScale);
         if (_write_messages)
         {
             t3=clock();
