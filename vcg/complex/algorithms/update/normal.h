@@ -352,7 +352,7 @@ static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat,
 
     if(remove_scaling){
         scale = pow(mat33.Determinant(),(ScalarType)(1.0/3.0));
-        Point3f scaleV(scale,scale,scale);
+        Point3<ScalarType> scaleV(scale,scale,scale);
         Matrix33<ScalarType> S;
         S.SetDiagonal(scaleV.V());
         mat33*=S;
