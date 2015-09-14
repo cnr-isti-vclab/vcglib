@@ -1242,20 +1242,64 @@ public:
                                 CoordType &dirU,
                                 CoordType &dirV)
     {
-        ///compute non normalized normal
-        CoordType n  =  f.cN();
+        vcg::Point2<ScalarType> Origin2D=(UV0+UV1+UV2)/3;
+        CoordType Origin3D=(f.cP(0)+f.cP(1)+f.cP(2))/3;
 
-        CoordType p0 =f.cP(1) - f.cP(0);
-        CoordType p1 =f.cP(2) - f.cP(1);
-        CoordType p2 =f.cP(0) - f.cP(2);
+        vcg::Point2<ScalarType> UvT0=UV0-Origin2D;
+        vcg::Point2<ScalarType> UvT1=UV1-Origin2D;
+        vcg::Point2<ScalarType> UvT2=UV2-Origin2D;
 
-        CoordType t[3];
-        t[0] =  -(p0 ^ n);
-        t[1] =  -(p1 ^ n);
-        t[2] =  -(p2 ^ n);
+        CoordType PosT0=f.cP(0)-Origin3D;
+        CoordType PosT1=f.cP(1)-Origin3D;
+        CoordType PosT2=f.cP(2)-Origin3D;
 
-        dirU = t[1]*UV0.X() + t[2]*UV1.X() + t[0]*UV2.X();
-        dirV = t[1]*UV0.Y() + t[2]*UV1.Y() + t[0]*UV2.Y();
+        CoordType Bary0,Bary1;
+        vcg::InterpolationParameters2(UvT0,UvT1,UvT2,vcg::Point2<ScalarType>(1,0),Bary0);
+        vcg::InterpolationParameters2(UvT0,UvT1,UvT2,vcg::Point2<ScalarType>(0,1),Bary1);
+
+        //then transport to 3D
+        dirU=PosT0*Bary0.X()+PosT1*Bary0.Y()+PosT2*Bary0.Z();
+        dirV=PosT0*Bary1.X()+PosT1*Bary1.Y()+PosT2*Bary1.Z();
+
+//        dirU-=Origin3D;
+//        dirV-=Origin3D;
+        dirU.Normalize();
+        dirV.Normalize();
+        //orient coherently
+        CoordType Ntest=dirU^dirV;
+        CoordType NTarget=vcg::Normal(f.cP(0),f.cP(1),f.cP(2));
+        if ((Ntest*NTarget)<0)dirV=-dirV;
+
+//        //then make them orthogonal
+//        CoordType dirAvg=dirU^dirV;
+        CoordType dirVTarget=NTarget^dirU;
+        CoordType dirUTarget=NTarget^dirV;
+
+         dirUTarget.Normalize();
+         dirVTarget.Normalize();
+         if ((dirUTarget*dirU)<0)dirUTarget=-dirUTarget;
+         if ((dirVTarget*dirV)<0)dirVTarget=-dirVTarget;
+
+         dirU=(dirU+dirUTarget)/2;
+         dirV=(dirV+dirVTarget)/2;
+
+         dirU.Normalize();
+         dirV.Normalize();
+
+//        ///compute non normalized normal
+//        CoordType n  =  f.cN();
+
+//        CoordType p0 =f.cP(1) - f.cP(0);
+//        CoordType p1 =f.cP(2) - f.cP(1);
+//        CoordType p2 =f.cP(0) - f.cP(2);
+
+//        CoordType t[3];
+//        t[0] =  -(p0 ^ n);
+//        t[1] =  -(p1 ^ n);
+//        t[2] =  -(p2 ^ n);
+
+//        dirU = t[1]*UV0.X() + t[2]*UV1.X() + t[0]*UV2.X();
+//        dirV = t[1]*UV0.Y() + t[2]*UV1.Y() + t[0]*UV2.Y();
     }
 
     static void MakeDirectionFaceCoherent(FaceType *f0,
@@ -1399,6 +1443,18 @@ public:
                 baryCoordsUV.Z()*Uv2-baryUV;
         curvUV.Normalize();
         return curvUV;
+    }
+
+    static void InitDirFromWEdgeUV(MeshType &mesh)
+    {
+        for (size_t i=0;i<mesh.face.size();i++)
+        {
+            vcg::Point2<ScalarType> UV0=mesh.face[i].WT(0).P();
+            vcg::Point2<ScalarType> UV1=mesh.face[i].WT(1).P();
+            vcg::Point2<ScalarType> UV2=mesh.face[i].WT(2).P();
+            GradientToCross(mesh.face[i],UV0,UV1,UV2,mesh.face[i].PD1(),mesh.face[i].PD2());
+        }
+        OrientDirectionFaceCoherently(mesh);
     }
 
 };///end class
