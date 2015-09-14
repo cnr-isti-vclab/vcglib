@@ -191,7 +191,7 @@ typename PolygonType::ScalarType PolyNormDeviation(const PolygonType &F)
 
     AvgNorm.Normalize();
 
-    if (!CheckNormalizedCoords(AvgNorm))return 1;
+    //if (!CheckNormalizedCoords(AvgNorm))return 1;
 
     ScalarType Dev=0;
     for (int i=0;i<Norms.size();i++)
@@ -413,7 +413,6 @@ void getBaseTemplatePolygon(int N,
 template<class PolygonType>
 void GetPolyTemplatePos(const PolygonType &F,
                         std::vector<typename PolygonType::CoordType> &TemplatePos,
-                        typename PolygonType::ScalarType TargetArea=-1,
                         bool force_isotropy=false)
 {
     typedef typename PolygonType::FaceType FaceType;
@@ -440,6 +439,13 @@ void GetPolyTemplatePos(const PolygonType &F,
         dirX.Normalize();
         dirY.Normalize();
         dirZ.Normalize();
+//        CoordType dirXN=dirX;dirXN.Normalize();
+//        CoordType dirYN=dirY;dirYN.Normalize();
+//        CoordType dirZN=dirZ;dirZN.Normalize();
+
+//        dirX=dirX*0.8+dirXN*0.2;
+//        dirY=dirY*0.8+dirYN*0.2;
+//        dirZ=dirZ*0.8+dirZN*0.2;
     }
 
     ///set the Rotation matrix
@@ -486,8 +492,8 @@ void GetPolyTemplatePos(const PolygonType &F,
     ///add displacement along Z
     for (size_t i=0;i<FixPoints.size();i++)
     {
-        FixPoints[i]+=CoordType(0,0,0.01);
-        MovPoints[i]+=CoordType(0,0,0.01);
+        FixPoints[i]+=CoordType(0,0,0.1);
+        MovPoints[i]+=CoordType(0,0,0.1);
     }
     ///add original points
     FixPoints.insert(FixPoints.end(),UniformPos.begin(),UniformPos.end());
@@ -511,16 +517,6 @@ void GetPolyTemplatePos(const PolygonType &F,
         TemplatePos[i]=ToPCAInv*TemplatePos[i];
     }
 
-    //        if (use_fixed_area)
-    //        {
-    //            ScalarType A0=Area(TemplatePos);
-    //            ScalarType A1=FixedArea;
-    //            //ScalarType Scale1=A1/A0;
-    //            for (size_t i=0;i<TemplatePos.size();i++)
-    //                TemplatePos[i]*=A1/A0;
-    //        }
-
-
     for (size_t i=0;i<TemplatePos.size();i++)
         TemplatePos[i]+=Barycenter;
 
@@ -529,14 +525,15 @@ void GetPolyTemplatePos(const PolygonType &F,
 //compute the aspect ratio using the rigidly aligned template polygon as
 //described by "Static Aware Grid Shells" by Pietroni et Al.
 template<class PolygonType>
-typename PolygonType::ScalarType PolyAspectRatio(const PolygonType &F)
+typename PolygonType::ScalarType PolyAspectRatio(const PolygonType &F,
+                                                 bool isotropic=false)
 {
     typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
     std::vector<CoordType> TemplatePos;
 
-    GetPolyTemplatePos(F,TemplatePos);
+    GetPolyTemplatePos(F,TemplatePos,isotropic);
 
     ScalarType diff=0;
     assert((int)TemplatePos.size()==F.VN());
