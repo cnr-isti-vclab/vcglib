@@ -13,6 +13,8 @@ class GLField
     typedef typename MeshType::CoordType CoordType;
 	typedef typename MeshType::ScalarType ScalarType;
 	
+public:
+
 	static void GLDrawField(CoordType dir[4],
 							CoordType center,
                             ScalarType &size,
@@ -24,7 +26,8 @@ class GLField
         if (oneside)size2=0;
 
         glLineWidth(2);
-        vcg::glColor(vcg::Color4b(0,0,255,255));
+        //vcg::glColor(vcg::Color4b(0,0,255,255));
+        vcg::glColor(vcg::Color4b(0,0,0,255));
         glBegin(GL_LINES);
             glVertex(center+dir[0]*size1);
             glVertex(center-dir[0]*size2);
@@ -32,7 +35,8 @@ class GLField
 
         if (onlyPD1)return;
         glLineWidth(2);
-        vcg::glColor(vcg::Color4b(0,255,0,255));
+        //vcg::glColor(vcg::Color4b(0,255,0,255));
+        vcg::glColor(vcg::Color4b(0,0,0,255));
         glBegin(GL_LINES);
             glVertex(center+dir[1]*size1);
             glVertex(center-dir[1]*size2);
@@ -40,9 +44,22 @@ class GLField
 
 	}
 
+    ///draw the cross field of a given face in a given position
+    static void GLDrawSingleFaceField(const FaceType &f,
+                                CoordType pos,
+                                ScalarType &size,
+                                bool onlyPD1=false,
+                                bool oneside=false)
+    {
+        CoordType center=pos;
+        CoordType normal=f.cN();
+        CoordType dir[4];
+        vcg::tri::CrossField<MeshType>::CrossVector(f,dir);
+        GLDrawField(dir,center,size,onlyPD1,oneside);
+    }
 
 	///draw the cross field of a given face
-    static void GLDrawFaceField(const FaceType &f,
+    static void GLDrawSingleFaceField(const FaceType &f,
                                 ScalarType &size,
                                 bool onlyPD1=false,
                                 bool oneside=false)
@@ -81,8 +98,6 @@ class GLField
         GLDrawField(dir,center,size);
     }
 
-public:
-
 
     static void GLDrawFaceField(const MeshType &mesh,
                                 bool onlyPD1=false,
@@ -99,7 +114,7 @@ public:
         for (unsigned int i=0;i<mesh.face.size();i++)
 		{
             if (mesh.face[i].IsD())continue;
-            GLDrawFaceField(mesh.face[i],size,onlyPD1,oneside);
+            GLDrawSingleFaceField(mesh.face[i],size,onlyPD1,oneside);
 		}
 		glPopAttrib();
 	}
@@ -136,7 +151,7 @@ public:
 
        glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-       glDepthRange(0.0,0.999);
+       glDepthRange(0.0,0.9999);
        glEnable(GL_COLOR_MATERIAL);
        glDisable(GL_LIGHTING);
        glDisable(GL_BLEND);
