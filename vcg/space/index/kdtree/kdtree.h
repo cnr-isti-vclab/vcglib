@@ -157,7 +157,7 @@ namespace vcg {
         // compute the AABB of the input
         mPoints[0] = points[0];
         mAABB.Set(mPoints[0]);
-		for (unsigned int i=1 ; i<mPoints.size() ; ++i)
+    for (unsigned int i=1 ; i<mPoints.size() ; ++i)
         {
             mPoints[i] = points[i];
             mIndices[i] = i;
@@ -165,10 +165,11 @@ namespace vcg {
         }
 
         mNodes.reserve(4*mPoints.size()/nofPointsPerCell);
-		//first node inserted (no leaf). The others are made by the createTree function (recursively)
+    //first node inserted (no leaf). The others are made by the createTree function (recursively)
         mNodes.resize(1);
         mNodes.back().leaf = 0;
-        int numLevel = createTree(0, 0, mPoints.size(), 1, nofPointsPerCell, maxDepth);
+        /*int numLevel = */
+        createTree(0, 0, mPoints.size(), 1, nofPointsPerCell, maxDepth);
     }
 
     template<typename Scalar>
@@ -469,7 +470,7 @@ namespace vcg {
 
         node.firstChildId = mNodes.size();
         mNodes.resize(mNodes.size()+2);
-		int leftLevel, rightLevel;
+    int leftLevel, rightLevel;
 
         {
             // left child
@@ -480,7 +481,7 @@ namespace vcg {
                 child.leaf = 1;
                 child.start = start;
                 child.size = midId - start;
-				leftLevel = level;
+        leftLevel = level;
             }
             else
             {
@@ -498,7 +499,7 @@ namespace vcg {
                 child.leaf = 1;
                 child.start = midId;
                 child.size = end - midId;
-				rightLevel = level;
+        rightLevel = level;
             }
             else
             {
@@ -506,9 +507,9 @@ namespace vcg {
                 rightLevel = createTree(childId, midId, end, level+1, targetCellSize, targetMaxDepth);
             }
         }
-		if (leftLevel > rightLevel)
-			return leftLevel;
-		return rightLevel;
+    if (leftLevel > rightLevel)
+      return leftLevel;
+    return rightLevel;
     }
 }
 
