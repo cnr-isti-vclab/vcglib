@@ -100,10 +100,6 @@ template<class PolygonType>
 void PolyNormals(const PolygonType &F,
                  std::vector<typename PolygonType::CoordType> &Norms)
 {
-    typedef typename PolygonType::FaceType FaceType;
-    typedef typename PolygonType::CoordType CoordType;
-    typedef typename PolygonType::ScalarType ScalarType;
-
     Norms.clear();
     if (F.VN()<=2) return;
     for (int i=0;i<F.VN();i++)
@@ -126,7 +122,6 @@ typename PolygonType::CoordType PolyBarycenter(const PolygonType &F)
 template<class PolygonType>
 typename PolygonType::ScalarType PolyArea(const PolygonType &F)
 {
-    typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
 
@@ -159,8 +154,6 @@ typename PolygonType::CoordType PolygonNormal(const PolygonType &F)
 template<class PolygonType>
 typename PolygonType::ScalarType PolyPerimeter(const PolygonType &F)
 {
-    typedef typename PolygonType::FaceType FaceType;
-    typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
 
     ScalarType SumL=0;
@@ -177,11 +170,10 @@ typename PolygonType::ScalarType PolyPerimeter(const PolygonType &F)
 template<class PolygonType>
 typename PolygonType::ScalarType PolyNormDeviation(const PolygonType &F)
 {
-    typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
 
-    std::vector<typename PolygonType::CoordType> Norms;
+    std::vector<CoordType> Norms;
     PolyNormals(F,Norms);
 
     //calculate the Avg Normal
@@ -209,7 +201,6 @@ void PolyAngleDeviation(const PolygonType &F,
                         typename PolygonType::ScalarType &AvgDev,
                         typename PolygonType::ScalarType &MaxDev)
 {
-    typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
     assert(F.VN()>2);
@@ -246,7 +237,6 @@ void PolyAngleDeviation(const PolygonType &F,
 template<class PolygonType>
 vcg::Plane3<typename PolygonType::ScalarType> PolyFittingPlane(const PolygonType &F)
 {
-    typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
     vcg::Plane3<ScalarType> BestPL;
@@ -263,7 +253,6 @@ vcg::Plane3<typename PolygonType::ScalarType> PolyFittingPlane(const PolygonType
 template<class PolygonType>
 typename PolygonType::ScalarType PolyFlatness(const PolygonType &F)
 {
-    typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
 
@@ -293,7 +282,6 @@ template<class PolygonType>
 void PolyPCA(const PolygonType &F,
              typename PolygonType::CoordType PCA[])
 {
-    typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
 
@@ -361,7 +349,6 @@ template<class PolygonType>
 void PolyScaledPCA(const PolygonType &F,
                    typename PolygonType::CoordType PCA[])
 {
-    typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
 
@@ -415,7 +402,6 @@ void GetPolyTemplatePos(const PolygonType &F,
                         std::vector<typename PolygonType::CoordType> &TemplatePos,
                         bool force_isotropy=false)
 {
-    typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
     std::vector<CoordType>  UniformPos,UniformTempl;
@@ -528,7 +514,6 @@ template<class PolygonType>
 typename PolygonType::ScalarType PolyAspectRatio(const PolygonType &F,
                                                  bool isotropic=false)
 {
-    typedef typename PolygonType::FaceType FaceType;
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
     std::vector<CoordType> TemplatePos;

@@ -555,7 +555,6 @@ bool CheckFlipEdgeNormal(FaceType &f, const int z, const float angleRad)
 {
   typedef typename FaceType::VertexType VertexType;
   typedef typename VertexType::CoordType CoordType;
-  typedef typename VertexType::ScalarType ScalarType;
 
   VertexType *OldDiag0 = f.V0(z);
   VertexType *OldDiag1 = f.V1(z);
@@ -817,7 +816,6 @@ void VFStarVF( typename FaceType::VertexType* vp,
                std::vector<FaceType *> &faceVec,
                std::vector<int> &indexes)
 {
-    typedef typename FaceType::VertexType* VertexPointer;
     faceVec.clear();
     indexes.clear();
     face::VFIterator<FaceType> vfi(vp);

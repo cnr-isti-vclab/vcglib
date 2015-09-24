@@ -38,13 +38,13 @@ inline bool IsEdgeManifold( EdgeType const & e, const int j )
 
   if(EdgeType::HasFFAdjacency())
     return ( e.cFFp(j) == &e || &e == e.cFFp(j)->cFFp(e.cFFi(j)) );
-  else 
+  else
     return true;
 }
 
 /** Return a boolean that indicate if the j-th edge of the face is a border.
-	@param j Index of the edge
-	@return true if j is an edge of border, false otherwise
+  @param j Index of the edge
+  @return true if j is an edge of border, false otherwise
 */
 template <class EdgeType>
 inline bool IsEdgeBorder(EdgeType const & e,  const int j )
@@ -59,7 +59,6 @@ inline bool IsEdgeBorder(EdgeType const & e,  const int j )
 template <class EdgeType>
 void VVStarVE(typename EdgeType::VertexType* vp, std::vector<typename EdgeType::VertexType *> &starVec)
 {
-  typedef typename EdgeType::VertexType* VertexPointer;
   starVec.clear();
   edge::VEIterator<EdgeType> vei(vp);
   while(!vei.End())
