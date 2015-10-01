@@ -38,7 +38,7 @@
 #include<wrap/system/memory_info.h>
 
 
-namespace vcg 
+namespace vcg
 {
 struct GLFeederInfo
 {
@@ -166,7 +166,7 @@ struct GLFeederInfo
         static ReqAtts setComplement(const ReqAtts& a,const ReqAtts& b)
         {
             /*TRUTH TABLE*/
-            //this[ATT_NAMES] | rq[ATT_NAMES] | res  
+            //this[ATT_NAMES] | rq[ATT_NAMES] | res
             //    true        |     true      | false
             //    true        |     false     | true
             //    false       |     true      | false
@@ -176,10 +176,10 @@ struct GLFeederInfo
             for(size_t ii = 0; ii < ReqAtts::possibleAttributesNumber();++ii)
             {
                 ATT_NAMES name = static_cast<ATT_NAMES>(ii);
-                if (res[name]) 
+                if (res[name])
                     res[name] = !(b[name]);
             }
-            
+
             res.primitiveModality() = b.primitiveModality();
             return res;
         }
@@ -293,11 +293,11 @@ public:
 
         try
         {
-			ReqAtts tmp = rq;
+      ReqAtts tmp = rq;
             computeARequestedAttributesSetCompatibleWithMesh(tmp,_mesh);
             _currallocatedboatt = ReqAtts::setUnion(_currallocatedboatt,tmp);
             allocated = tryToAllocateAttributesInBO();
-		    return tmp;
+        return tmp;
         }
         catch (GLFeederException& e)
         {
@@ -324,28 +324,28 @@ public:
         }
     }
 
-	void draw(const ReqAtts& rq,const std::vector<GLuint> textid = std::vector<GLuint>())
-	{
+  void draw(const ReqAtts& rq,const std::vector<GLuint> textid = std::vector<GLuint>())
+  {
 
-		if (isPossibleToUseBORendering())
-		{
-			switch(rq.primitiveModality())
-			{
-			case(PR_TRIANGLES):
-				drawTriangles(rq,textid);
-				break;
-			case(PR_POINTS):
-				drawPoints(rq);
-				break;
-			case (PR_QUADS):
-				break;
-			default:
-				break;
-			}
-		}
-		else
-			immediateModeRendering(rq,textid);
-	}
+    if (isPossibleToUseBORendering())
+    {
+      switch(rq.primitiveModality())
+      {
+      case(PR_TRIANGLES):
+        drawTriangles(rq,textid);
+        break;
+      case(PR_POINTS):
+        drawPoints(rq);
+        break;
+      case (PR_QUADS):
+        break;
+      default:
+        break;
+      }
+    }
+    else
+      immediateModeRendering(rq,textid);
+  }
 
     void setPerBatchPrimitives(size_t perbatchprimitives)
     {
@@ -477,11 +477,11 @@ protected:
                         /*we switched back from the replicated pipeline to the normal one. All the bos have to be regenerated*/
                         (!replicated && _lastfeedingusedreplicatedpipeline) ||
                         /*the buffer object is valid but for same reason the number of cells of the bo don't suit anymore the required size. we have to reallocate the buffer object*/
-                        (((*it)->_isvalid) && (sz != (*it)->_size)) 
-						//||
+                        (((*it)->_isvalid) && (sz != (*it)->_size))
+            //||
                         //the buffer is valid, but the attribute is not required to be displayed
                         /*(((*it)->_isvalid) && !isAttributeRequiredToBeDisplayed(boname)))*/
-						))
+            ))
             {
 
                 //disableClientState(boname,importattribute);
@@ -684,20 +684,20 @@ protected:
         size_t vertexchunk = std::min(size_t(vn),_perbatchprim);
 
         std::vector<vcg::Point3f> pv; //position vector
-		if (attributestobeupdated[GLFeederInfo::ATT_VERTPOSITION])
-			pv.resize(vertexchunk);
+    if (attributestobeupdated[GLFeederInfo::ATT_VERTPOSITION])
+      pv.resize(vertexchunk);
 
         std::vector<vcg::Point3f> nv; //per vertex normal vector
-		if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL])
-			nv.resize(vertexchunk);
+    if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL])
+      nv.resize(vertexchunk);
 
-		std::vector<vcg::Color4b> cv; // Per vertex color vector
-		if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR])
-			cv.resize(vertexchunk); 
+    std::vector<vcg::Color4b> cv; // Per vertex color vector
+    if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR])
+      cv.resize(vertexchunk);
 
         std::vector<float> tv; // per vertex texture coord vector
-		if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
-			tv.resize(vertexchunk * 2);
+    if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
+      tv.resize(vertexchunk * 2);
 
         size_t chunkingpu = 0;
 
@@ -785,7 +785,7 @@ protected:
                 {
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[GLFeederInfo::ATT_VERTINDEX]->_bohandle);
                     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,chunkingpu * facechunk *  _bo[GLFeederInfo::ATT_VERTINDEX]->_components *  _bo[GLFeederInfo::ATT_VERTINDEX]->getSizeOfGLType(),_bo[GLFeederInfo::ATT_VERTINDEX]->_components *  _bo[GLFeederInfo::ATT_VERTINDEX]->getSizeOfGLType() * chunksize,&ti[0]);
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+          glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
                 }
                 ++chunkingpu;
             }
@@ -799,33 +799,33 @@ protected:
 
         size_t facechunk = std::min(size_t(tn),_perbatchprim);
 
-		std::vector<vcg::Point3f> rpv; //position vector
-		if (attributestobeupdated[GLFeederInfo::ATT_VERTPOSITION])
-			rpv.resize(facechunk * 3);
+    std::vector<vcg::Point3f> rpv; //position vector
+    if (attributestobeupdated[GLFeederInfo::ATT_VERTPOSITION])
+      rpv.resize(facechunk * 3);
 
-		std::vector<vcg::Point3f> rnv; //per vertex normal vector
-		if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL])
-			rnv.resize(facechunk * 3);
+    std::vector<vcg::Point3f> rnv; //per vertex normal vector
+    if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL])
+      rnv.resize(facechunk * 3);
 
-		std::vector<vcg::Point3f> rfnv; //per face normal vector
-		if (attributestobeupdated[GLFeederInfo::ATT_FACENORMAL])
-			rfnv.resize(facechunk * 3);
+    std::vector<vcg::Point3f> rfnv; //per face normal vector
+    if (attributestobeupdated[GLFeederInfo::ATT_FACENORMAL])
+      rfnv.resize(facechunk * 3);
 
-		std::vector<vcg::Color4b> rcv; // Per vertex color vector
-		if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR])
-			rcv.resize(facechunk * 3); 
+    std::vector<vcg::Color4b> rcv; // Per vertex color vector
+    if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR])
+      rcv.resize(facechunk * 3);
 
-		std::vector<vcg::Color4b> rfcv; // Per vertex color vector
-		if (attributestobeupdated[GLFeederInfo::ATT_FACECOLOR])
-			rfcv.resize(facechunk * 3); 
+    std::vector<vcg::Color4b> rfcv; // Per vertex color vector
+    if (attributestobeupdated[GLFeederInfo::ATT_FACECOLOR])
+      rfcv.resize(facechunk * 3);
 
-		std::vector<float> rtv; // per vertex texture coord vector
-		if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
-			rtv.resize(facechunk * 3 * 2);
+    std::vector<float> rtv; // per vertex texture coord vector
+    if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
+      rtv.resize(facechunk * 3 * 2);
 
-		std::vector<float> rwtv; // per wedge texture coord vector
-		if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
-			rwtv.resize(facechunk * 3 * 2);
+    std::vector<float> rwtv; // per wedge texture coord vector
+    if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
+      rwtv.resize(facechunk * 3 * 2);
 
         size_t chunkingpu = 0;
 
@@ -889,8 +889,8 @@ protected:
                         rnv[chunkindex*3+1].Import(_mesh.face[indf].V(1)->N().Normalize());
                         rnv[chunkindex*3+2].Import(_mesh.face[indf].V(2)->N().Normalize());
                     }
-                    
-					if (attributestobeupdated[GLFeederInfo::ATT_FACENORMAL])
+
+          if (attributestobeupdated[GLFeederInfo::ATT_FACENORMAL])
                     {
                         rfnv[chunkindex*3+0].Import(_mesh.face[indf].N().Normalize());
                         rfnv[chunkindex*3+1].Import(_mesh.face[indf].N().Normalize());
@@ -903,15 +903,15 @@ protected:
                         rcv[chunkindex*3+1] = _mesh.face[indf].V(1)->C();
                         rcv[chunkindex*3+2] = _mesh.face[indf].V(2)->C();
                     }
-                    
-					if ((attributestobeupdated[GLFeederInfo::ATT_FACECOLOR]))
+
+          if ((attributestobeupdated[GLFeederInfo::ATT_FACECOLOR]))
                     {
                         rfcv[chunkindex*3+0] = _mesh.face[indf].C();
                         rfcv[chunkindex*3+1] = _mesh.face[indf].C();
                         rfcv[chunkindex*3+2] = _mesh.face[indf].C();
                     }
-                    
-					if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
+
+          if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
                     {
                         rtv[chunkindex*6+0]=float(_mesh.face[indf].V(0)->T().U());
                         rtv[chunkindex*6+1]=float(_mesh.face[indf].V(0)->T().V());
@@ -921,15 +921,15 @@ protected:
                         rtv[chunkindex*6+5]=float(_mesh.face[indf].V(2)->T().V());
                     }
 
-					if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
-					{
-						rwtv[chunkindex*6+0]=float(_mesh.face[indf].WT(0).U());
-						rwtv[chunkindex*6+1]=float(_mesh.face[indf].WT(0).V());
-						rwtv[chunkindex*6+2]=float(_mesh.face[indf].WT(1).U());
-						rwtv[chunkindex*6+3]=float(_mesh.face[indf].WT(1).V());
-						rwtv[chunkindex*6+4]=float(_mesh.face[indf].WT(2).U());
-						rwtv[chunkindex*6+5]=float(_mesh.face[indf].WT(2).V());
-					}
+          if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
+          {
+            rwtv[chunkindex*6+0]=float(_mesh.face[indf].WT(0).U());
+            rwtv[chunkindex*6+1]=float(_mesh.face[indf].WT(0).V());
+            rwtv[chunkindex*6+2]=float(_mesh.face[indf].WT(1).U());
+            rwtv[chunkindex*6+3]=float(_mesh.face[indf].WT(1).V());
+            rwtv[chunkindex*6+4]=float(_mesh.face[indf].WT(2).U());
+            rwtv[chunkindex*6+5]=float(_mesh.face[indf].WT(2).V());
+          }
 
                     if((i == tn - 1) || (chunkindex == facechunk - 1))
                     {
@@ -953,13 +953,13 @@ protected:
                             glBindBuffer(GL_ARRAY_BUFFER, 0);
                         }
 
-						if (attributestobeupdated[GLFeederInfo::ATT_FACENORMAL])
-						{
-							GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_FACENORMAL];
-							glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-							glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 * buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rfnv[0]);
-							glBindBuffer(GL_ARRAY_BUFFER, 0);
-						}
+            if (attributestobeupdated[GLFeederInfo::ATT_FACENORMAL])
+            {
+              GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_FACENORMAL];
+              glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
+              glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 * buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rfnv[0]);
+              glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
 
                         if (attributestobeupdated[GLFeederInfo::ATT_VERTCOLOR])
                         {
@@ -969,13 +969,13 @@ protected:
                             glBindBuffer(GL_ARRAY_BUFFER, 0);
                         }
 
-						if (attributestobeupdated[GLFeederInfo::ATT_FACECOLOR])
-						{
-							GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_FACECOLOR];
-							glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-							glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rfcv[0]);
-							glBindBuffer(GL_ARRAY_BUFFER, 0);
-						}
+            if (attributestobeupdated[GLFeederInfo::ATT_FACECOLOR])
+            {
+              GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_FACECOLOR];
+              glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
+              glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rfcv[0]);
+              glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
 
                         if (attributestobeupdated[GLFeederInfo::ATT_VERTTEXTURE])
                         {
@@ -985,13 +985,13 @@ protected:
                             glBindBuffer(GL_ARRAY_BUFFER, 0);
                         }
 
-						if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
-						{
-							GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_WEDGETEXTURE];
-							glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
-							glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rwtv[0]);
-							glBindBuffer(GL_ARRAY_BUFFER, 0);
-						}
+            if (attributestobeupdated[GLFeederInfo::ATT_WEDGETEXTURE])
+            {
+              GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_WEDGETEXTURE];
+              glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
+              glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * facechunk * 3 *buffobj->_components * buffobj->getSizeOfGLType(),3 * buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&rwtv[0]);
+              glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
 
                         ++chunkingpu;
                     }
@@ -1074,38 +1074,38 @@ protected:
                         glBegin(GL_TRIANGLES);
                     }
 
-                if(req[ATT_FACENORMAL])	
+                if(req[ATT_FACENORMAL])
                     glNormal(f.cN());
-                if(req[ATT_VERTNORMAL])	
+                if(req[ATT_VERTNORMAL])
                     glNormal(f.V(0)->cN());
 
-                if(req[ATT_FACECOLOR])	
+                if(req[ATT_FACECOLOR])
                     glColor(f.C());
-                if(req[ATT_VERTCOLOR])	
+                if(req[ATT_VERTCOLOR])
                     glColor(f.V(0)->C());
-                if(req[ATT_VERTTEXTURE]) 
+                if(req[ATT_VERTTEXTURE])
                     glTexCoord(f.V(0)->T().P());
-                if(req[ATT_WEDGETEXTURE]) 
+                if(req[ATT_WEDGETEXTURE])
                     glTexCoord(f.WT(0).t(0));
                 glVertex(f.V(0)->P());
 
-                if(req[ATT_VERTNORMAL])	
+                if(req[ATT_VERTNORMAL])
                     glNormal(f.V(1)->cN());
-                if(req[ATT_VERTCOLOR])	
+                if(req[ATT_VERTCOLOR])
                     glColor(f.V(1)->C());
-                if(req[ATT_VERTTEXTURE]) 
+                if(req[ATT_VERTTEXTURE])
                     glTexCoord(f.V(1)->T().P());
-                if(req[ATT_WEDGETEXTURE]) 
+                if(req[ATT_WEDGETEXTURE])
                     glTexCoord(f.WT(1).t(0));
                 glVertex(f.V(1)->P());
 
-                if(req[ATT_VERTNORMAL])	
+                if(req[ATT_VERTNORMAL])
                     glNormal(f.V(2)->cN());
-                if(req[ATT_VERTCOLOR]) 
+                if(req[ATT_VERTCOLOR])
                     glColor(f.V(2)->C());
-                if(req[ATT_VERTTEXTURE]) 
+                if(req[ATT_VERTTEXTURE])
                     glTexCoord(f.V(2)->T().P());
-                if(req[ATT_WEDGETEXTURE]) 
+                if(req[ATT_WEDGETEXTURE])
                     glTexCoord(f.WT(2).t(0));
                 glVertex(f.V(2)->P());
             }
@@ -1179,18 +1179,18 @@ protected:
         }
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
         glBindBuffer(GL_ARRAY_BUFFER,0);
-		int ii = 0;
-		for(typename std::vector<GLBufferObject*>::const_iterator it = _bo.begin();it != _bo.end();++it)
-		{
-			ATT_NAMES boname = static_cast<ATT_NAMES>(ii);
-			if ((boname != GLFeederInfo::ATT_VERTINDEX) && (boname != GLFeederInfo::ATT_MESHCOLOR))
-					disableClientState(boname,req);
-			++ii;
-		}
-		
-		/*disable all client state buffers*/
-		ReqAtts tmp;
-		updateClientState(tmp);
+    int ii = 0;
+    for(typename std::vector<GLBufferObject*>::const_iterator it = _bo.begin();it != _bo.end();++it)
+    {
+      ATT_NAMES boname = static_cast<ATT_NAMES>(ii);
+      if ((boname != GLFeederInfo::ATT_VERTINDEX) && (boname != GLFeederInfo::ATT_MESHCOLOR))
+          disableClientState(boname,req);
+      ++ii;
+    }
+
+    /*disable all client state buffers*/
+    ReqAtts tmp;
+    updateClientState(tmp);
     }
 
     void drawPoints(const ReqAtts& req)
@@ -1201,15 +1201,15 @@ protected:
         glDisable(GL_TEXTURE_2D);
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[GLFeederInfo::ATT_VERTINDEX]->_bohandle);
         size_t pointsnum = _mesh.vn;
-		if (isReplicatedPipeline(_currallocatedboatt))
-			pointsnum = _mesh.fn * 3;
-		
-		glDrawArrays(GL_POINTS,0,pointsnum);
+    if (isReplicatedPipeline(_currallocatedboatt))
+      pointsnum = _mesh.fn * 3;
+
+    glDrawArrays(GL_POINTS,0,pointsnum);
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-		/*disable all client state buffers*/
-		ReqAtts tmp;
-		updateClientState(tmp);
+    /*disable all client state buffers*/
+    ReqAtts tmp;
+    updateClientState(tmp);
     }
 
     void updateClientState(const ReqAtts& req)
@@ -1221,12 +1221,12 @@ protected:
             if ((boname != GLFeederInfo::ATT_VERTINDEX) && (boname != GLFeederInfo::ATT_MESHCOLOR))
             {
                 if (req[boname] && _currallocatedboatt[boname] && (*it != NULL))
-				{
-					glBindBuffer((*it)->_target, (*it)->_bohandle);
-					setBufferPointer(boname);
-					glEnableClientState((*it)->_clientstatetag);
-					glBindBuffer((*it)->_target, 0);
-				}
+        {
+          glBindBuffer((*it)->_target, (*it)->_bohandle);
+          setBufferPointer(boname);
+          glEnableClientState((*it)->_clientstatetag);
+          glBindBuffer((*it)->_target, 0);
+        }
                 else
                     disableClientState(boname,req);
             }
@@ -1279,6 +1279,7 @@ protected:
         {
             break;
         }
+        default : break;
         }
     }
 
@@ -1378,6 +1379,7 @@ protected:
                 else
                     return facenum * cbo._components;
             }
+            default : break;
             }
         }
         catch(std::out_of_range& /*exc*/)
