@@ -319,6 +319,7 @@ namespace vcg
 
         ReqAtts setupRequestedAttributes(const ReqAtts& rq,bool& allocated)
         {
+
             if (!_rendermodinitialized)
                 _rendermodinitialized = true;
 
@@ -327,6 +328,7 @@ namespace vcg
                 ReqAtts tmp = rq;
                 ReqAtts::computeARequestedAttributesSetCompatibleWithMesh(tmp,_mesh);
                 tmp = ReqAtts::setUnion(_currallocatedboatt,tmp);
+               
                 allocated = tryToAllocateAndCopyAttributesInBO(tmp);
                 return tmp;
             }
@@ -487,15 +489,11 @@ namespace vcg
             GLBufferObject* bobj = _bo[att];
             if (bobj == NULL)
                 return;
-            GLenum err = glGetError();
-            assert(err == GL_NO_ERROR);
+           
             if ((att != ATT_VERTINDEX ) && (ATT_MESHCOLOR))
                 glDisableClientState(bobj->_clientstatetag);
-            err = glGetError();
-            assert(err == GL_NO_ERROR);
+
             glDeleteBuffers(1,&(bobj->_bohandle));
-            err = glGetError();
-            assert(err == GL_NO_ERROR);
             bobj->_bohandle = 0;
             if (bobj->_size > 0)
                 //we don't use dim cause dim is the value that is going to be allocated, instead use (*it)->_size * (*it)->getSizeOfGLType() is the value already in the buffer
@@ -513,7 +511,6 @@ namespace vcg
             std::ptrdiff_t bomemoryrequiredbymesh = bufferObjectsMemoryRequired(req);
             bool generateindex = ReqAtts::isVertexIndexingRequired(req);
             unsigned int ii = 0;
-
             for(typename std::vector<GLBufferObject*>::iterator it = _bo.begin();it != _bo.end();++it)
             {
                 ATT_NAMES boname = static_cast<ATT_NAMES>(ii);
@@ -603,14 +600,13 @@ namespace vcg
                     {
                         cbo->_size = boExpectedSize(boname,replicated,generateindex);
                         std::ptrdiff_t dim = boExpectedDimension(boname,replicated,generateindex);
-
+                        
                         glGenBuffers(1, &cbo->_bohandle);
                         glBindBuffer(cbo->_target, cbo->_bohandle);
                         //we call glGetError BEFORE the glBufferData function in order to clean the error flag
                         GLenum err = glGetError();
                         glBufferData(cbo->_target, dim, NULL, GL_STATIC_DRAW);
                         err = glGetError();
-
                         //even if there according the MemoryInfo subclass there is enough space we were not able to allocate an attribute buffer object. We have to deallocate all the bos related to this mesh
                         failedallocation = (err == GL_OUT_OF_MEMORY);
                         if (!failedallocation)
@@ -771,7 +767,12 @@ namespace vcg
                         GLBufferObject* buffobj = _bo[GLFeederInfo::ATT_VERTPOSITION];
                         glBindBuffer(GL_ARRAY_BUFFER, buffobj->_bohandle);
                         glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * vertexchunk * buffobj->_components * buffobj->getSizeOfGLType(),buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&pv[0]);
+                        //std::vector<vcg::Point3f> tmppv; //position vector
+                        //if (attributestobeupdated[GLFeederInfo::ATT_VERTPOSITION])
+                        //    tmppv.resize(vertexchunk);
+                        //glGetBufferSubData(GL_ARRAY_BUFFER,0,buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&tmppv[0]);
                         glBindBuffer(GL_ARRAY_BUFFER, 0);
+                      
                     }
                     if (attributestobeupdated[GLFeederInfo::ATT_VERTNORMAL])
                     {
@@ -794,7 +795,7 @@ namespace vcg
                         glBufferSubData(GL_ARRAY_BUFFER,chunkingpu * vertexchunk * buffobj->_components * buffobj->getSizeOfGLType(),buffobj->_components * buffobj->getSizeOfGLType() * chunksize,&tv[0]);
                         glBindBuffer(GL_ARRAY_BUFFER, 0);
                     }
-
+                    glFinish();
                     ++chunkingpu;
                 }
             }
@@ -1226,7 +1227,6 @@ namespace vcg
                     disableClientState(boname,req);
                 ++ii;
             }
-
             /*disable all client state buffers*/
             ReqAtts tmp;
             updateClientState(tmp);
