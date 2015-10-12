@@ -660,7 +660,7 @@ namespace vcg
         {
             std::vector<bool> attributestobeupdated;
             bool immediatemode = !(buffersAllocationFunction(req,attributestobeupdated));
-            bool replicated = ReqAtts::isReplicatedPipeline(_currallocatedboatt);
+            bool replicated = ReqAtts::isReplicatedPipeline(req);
 
             if (immediatemode)
                 return false;
