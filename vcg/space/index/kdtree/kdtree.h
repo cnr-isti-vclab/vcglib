@@ -31,7 +31,7 @@
 #include <vector>
 #include <limits>
 #include <iostream>
-//#include <cstdint>
+#include <cstdint>
 
 namespace vcg {
 
