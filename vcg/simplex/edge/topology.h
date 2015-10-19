@@ -69,7 +69,7 @@ void VVStarVE(typename EdgeType::VertexType* vp, std::vector<typename EdgeType::
 }
 
 template <class EdgeType>
-void VEStarVE(typename EdgeType::VertexType* vp, std::vector<EdgeType *> &starVec)
+void VEStarVE(const typename EdgeType::VertexType* vp, std::vector<EdgeType *> &starVec)
 {
   starVec.clear();
   edge::VEIterator<EdgeType> vei(vp);
