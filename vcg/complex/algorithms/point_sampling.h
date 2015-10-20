@@ -47,7 +47,7 @@ sampling strategies (montecarlo, stratified etc).
 #include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/space/segment2.h>
-
+#include <vcg/space/index/grid_static_ptr.h>
 namespace vcg
 {
 namespace tri
@@ -189,6 +189,139 @@ public:
 }; // end class BaseSampler
 
 
+
+/* This sampler is used to perform compute the Hausdorff measuring.
+ * It keep internally the spatial indexing structure used to find the closest point
+ * and the partial integration results needed to compute the average and rms error values.
+ * Averaged values assume that the samples are equi-distributed (e.g. a good unbiased montecarlo sampling of the surface).
+ */
+template <class MeshType>
+class HausdorffSampler
+{
+  typedef typename MeshType::FaceType    FaceType;
+  typedef typename MeshType::VertexType    VertexType;
+  typedef typename MeshType::CoordType   CoordType;
+  typedef typename MeshType::ScalarType   ScalarType;
+  typedef GridStaticPtr<FaceType, ScalarType > MetroMeshFaceGrid;
+  typedef GridStaticPtr<VertexType, ScalarType > MetroMeshVertexGrid;
+
+public:
+
+  HausdorffSampler(MeshType* _m, MeshType* _sampleMesh=0, MeshType* _closestMesh=0 ) :markerFunctor(_m)
+  {
+    m=_m;
+    init(_sampleMesh,_closestMesh);
+  }
+
+  MeshType *m;           /// the mesh for which we search the closest points.
+  MeshType *samplePtMesh;  /// the mesh containing the sample points
+  MeshType *closestPtMesh; /// the mesh containing the corresponding closest points that have been found
+
+  MetroMeshVertexGrid   unifGridVert;
+  MetroMeshFaceGrid   unifGridFace;
+
+  // Parameters
+  double          min_dist;
+  double          max_dist;
+  double          mean_dist;
+  double          RMS_dist;   /// from the wikipedia defintion RMS DIST is sqrt(Sum(distances^2)/n), here we store Sum(distances^2)
+  double          volume;
+  double          area_S1;
+  Histogramf hist;
+  // globals parameters driving the samples.
+  int             n_total_samples;
+  int             n_samples;
+  bool useVertexSampling;
+  ScalarType dist_upper_bound;  // samples that have a distance beyond this threshold distance are not considered.
+  typedef typename tri::FaceTmark<MeshType> MarkerFace;
+  MarkerFace markerFunctor;
+
+
+  float getMeanDist() const { return mean_dist / n_total_samples; }
+  float getMinDist() const { return min_dist ; }
+  float getMaxDist() const { return max_dist ; }
+  float getRMSDist() const { return sqrt(RMS_dist / n_total_samples); }
+
+  void init(MeshType* _sampleMesh=0, MeshType* _closestMesh=0 )
+  {
+    samplePtMesh =_sampleMesh;
+    closestPtMesh = _closestMesh;
+    if(m)
+    {
+      tri::UpdateNormal<MeshType>::PerFaceNormalized(*m);
+      if(m->fn==0) useVertexSampling = true;
+      else useVertexSampling = false;
+
+      if(useVertexSampling) unifGridVert.Set(m->vert.begin(),m->vert.end());
+      else  unifGridFace.Set(m->face.begin(),m->face.end());
+      markerFunctor.SetMesh(m);
+      hist.SetRange(0.0, m->bbox.Diag()/100.0, 100);
+    }
+    min_dist = std::numeric_limits<double>::max();
+    max_dist = 0;
+    mean_dist =0;
+    RMS_dist = 0;
+    n_total_samples = 0;
+  }
+
+  void AddFace(const FaceType &f, CoordType interp)
+  {
+    CoordType startPt = f.cP(0)*interp[0] + f.cP(1)*interp[1] +f.cP(2)*interp[2]; // point to be sampled
+    CoordType startN  = f.cV(0)->cN()*interp[0] + f.cV(1)->cN()*interp[1] +f.cV(2)->cN()*interp[2]; // Normal of the interpolated point
+    AddSample(startPt,startN); // point to be sampled);
+  }
+
+  void AddVert(VertexType &p)
+  {
+    p.Q()=AddSample(p.cP(),p.cN());
+  }
+
+
+  float AddSample(const CoordType &startPt,const CoordType &startN)
+  {
+    // the results
+    CoordType       closestPt;
+    ScalarType dist = dist_upper_bound;
+
+    // compute distance between startPt and the mesh S2
+    FaceType   *nearestF=0;
+    VertexType   *nearestV=0;
+    vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
+    dist=dist_upper_bound;
+    if(useVertexSampling)
+      nearestV =  tri::GetClosestVertex<MeshType,MetroMeshVertexGrid>(*m,unifGridVert,startPt,dist_upper_bound,dist);
+    else
+      nearestF =  unifGridFace.GetClosest(PDistFunct,markerFunctor,startPt,dist_upper_bound,dist,closestPt);
+
+    // update distance measures
+    if(dist == dist_upper_bound)
+      return dist;
+
+    if(dist > max_dist) max_dist = dist;        // L_inf
+    if(dist < min_dist) min_dist = dist;        // L_inf
+
+    mean_dist += dist;	        // L_1
+    RMS_dist  += dist*dist;     // L_2
+    n_total_samples++;
+
+    hist.Add((float)fabs(dist));
+    if(samplePtMesh)
+    {
+      tri::Allocator<MeshType>::AddVertices(*samplePtMesh,1);
+      samplePtMesh->vert.back().P() = startPt;
+      samplePtMesh->vert.back().Q() = dist;
+      samplePtMesh->vert.back().N() = startN;
+    }
+    if(closestPtMesh)
+    {
+      tri::Allocator<MeshType>::AddVertices(*closestPtMesh,1);
+      closestPtMesh->vert.back().P() = closestPt;
+      closestPtMesh->vert.back().Q() = dist;
+      closestPtMesh->vert.back().N() = startN;
+    }
+    return dist;
+  }
+}; // end class HausdorffSampler
 
 
 
