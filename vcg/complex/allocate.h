@@ -998,9 +998,7 @@ public:
             if ((*fi).cFFp(i)!=0)
             {
               size_t oldIndex = (*fi).FFp(i) - fbase;
-			  printf("face %u %u\n", tri::Index(m , *fi), tri::Index(m, (*fi).FFp(i)));
-			  assert(fbase <= (*fi).FFp(i));
-			  assert(oldIndex < pu.remap.size());
+			  assert(fbase <= (*fi).FFp(i) && oldIndex < pu.remap.size());
               (*fi).FFp(i) = fbase+pu.remap[oldIndex];
             }
       }
