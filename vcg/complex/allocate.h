@@ -937,7 +937,7 @@ public:
             }
           if(HasFFAdjacency(m))
             for(int j=0;j<m.face[i].VN();++j)
-              if (m.face[i].cFFp(j)!=0) {
+              {
                 m.face[pos].FFp(j) = m.face[i].cFFp(j);
                 m.face[pos].FFi(j) = m.face[i].cFFi(j);
               }
@@ -998,7 +998,9 @@ public:
             if ((*fi).cFFp(i)!=0)
             {
               size_t oldIndex = (*fi).FFp(i) - fbase;
-              assert(fbase <= (*fi).FFp(i) && oldIndex < pu.remap.size());
+			  printf("face %u %u\n", tri::Index(m , *fi), tri::Index(m, (*fi).FFp(i)));
+			  assert(fbase <= (*fi).FFp(i));
+			  assert(oldIndex < pu.remap.size());
               (*fi).FFp(i) = fbase+pu.remap[oldIndex];
             }
       }
