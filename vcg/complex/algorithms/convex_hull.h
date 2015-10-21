@@ -57,8 +57,8 @@ private:
   // Initialize the convex hull with the biggest tetraedron created using the vertices of the input mesh
   static void InitConvexHull(InputMesh& mesh, CHMesh& convexHull)
   {
-    typename CHMesh:: template PerVertexAttributeHandle<int> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<int>(mesh, std::string("indexInput"));
-    InputVertexPointer v[3];
+	typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<size_t>(convexHull, std::string("indexInput"));
+	InputVertexPointer v[3];
     //Find the 6 points with min/max coordinate values
     InputVertexIterator vi = mesh.vert.begin();
     std::vector<InputVertexPointer> minMax(6, &(*vi));
@@ -109,7 +109,7 @@ private:
     for (int i = 0; i < 3; i++)
     {
       (*chVi).P().Import(v[i]->P());
-      indexInputVertex[chVi] = vcg::tri::Index(mesh, v[i]);
+      indexInputVertex[chVi] = 0;
       chVi++;
     }
     CHFaceIterator fi = vcg::tri::Allocator<CHMesh>::AddFace(convexHull, 0, 1, 2);
@@ -169,11 +169,11 @@ public:
     vcg::tri::RequireFFAdjacency(convexHull);
     vcg::tri::RequirePerFaceNormal(convexHull);
     vcg::tri::Allocator<InputMesh>::CompactVertexVector(mesh);
-    typename CHMesh:: template PerVertexAttributeHandle<int> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<int>(mesh, std::string("indexInput"));
+	typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<size_t>(convexHull, std::string("indexInput"));
     if (mesh.vert.size() < 4)
       return false;
     InitConvexHull(mesh, convexHull);
-
+	
     //Build list of visible vertices for each convex hull face and find the furthest vertex for each face
     std::vector<std::vector<InputVertexPointer>> listVertexPerFace(convexHull.face.size());
     std::vector<Pair> furthestVexterPerFace(convexHull.face.size(), std::make_pair((InputVertexPointer)NULL, 0.0f));
@@ -236,7 +236,7 @@ public:
         {
           CHVertexIterator vi = vcg::tri::Allocator<CHMesh>::AddVertices(convexHull, 1);
           (*vi).P().Import((*vertex).P());
-          indexInputVertex[vi] = vcg::tri::Index(mesh, vertex);
+		  indexInputVertex[vi] = vcg::tri::Index(mesh, vertex);
         }
 
         //Add a new face for each border
@@ -322,7 +322,8 @@ public:
         }
       }
     }
-    tri::UpdateTopology<CHMesh>::ClearFaceFace(convexHull);
+
+	tri::UpdateTopology<CHMesh>::ClearFaceFace(convexHull);
     vcg::tri::Allocator<CHMesh>::CompactFaceVector(convexHull);
     vcg::tri::Clean<CHMesh>::RemoveUnreferencedVertex(convexHull);
     return true;
