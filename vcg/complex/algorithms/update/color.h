@@ -257,7 +257,7 @@ vcg::tri::UpdateColor<Mesh>::PerVertexBorderFlag(m.cm);
 
     Color4b BaseColor = Color4b::Green;
 
-    VertexConstant(m,BaseColor);
+    PerVertexConstant(m,BaseColor);
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
       for(int j=0;j<3;++j)
       {
