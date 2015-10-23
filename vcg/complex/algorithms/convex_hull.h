@@ -42,6 +42,7 @@ class ConvexHull
 public:
 
   typedef typename InputMesh::ScalarType		ScalarType;
+  typedef typename InputMesh::CoordType		CoordType;
   typedef typename InputMesh::VertexPointer	InputVertexPointer;
   typedef typename InputMesh::VertexIterator	InputVertexIterator;
   typedef typename CHMesh::VertexIterator		CHVertexIterator;
@@ -57,8 +58,8 @@ private:
   // Initialize the convex hull with the biggest tetraedron created using the vertices of the input mesh
   static void InitConvexHull(InputMesh& mesh, CHMesh& convexHull)
   {
-	typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<size_t>(convexHull, std::string("indexInput"));
-	InputVertexPointer v[3];
+  typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<size_t>(convexHull, std::string("indexInput"));
+  InputVertexPointer v[3];
     //Find the 6 points with min/max coordinate values
     InputVertexIterator vi = mesh.vert.begin();
     std::vector<InputVertexPointer> minMax(6, &(*vi));
@@ -109,7 +110,7 @@ private:
     for (int i = 0; i < 3; i++)
     {
       (*chVi).P().Import(v[i]->P());
-      indexInputVertex[chVi] = 0;
+      indexInputVertex[chVi] = vcg::tri::Index(mesh, v[i]);
       chVi++;
     }
     CHFaceIterator fi = vcg::tri::Allocator<CHMesh>::AddFace(convexHull, 0, 1, 2);
@@ -122,11 +123,11 @@ private:
     for (vi = mesh.vert.begin(); vi != mesh.vert.end(); vi++)
     {
       float tempDist = ((*vi).P() - (*fi).P(0)).dot((*fi).N());
-      if (abs(tempDist) > absDist)
+      if (fabs(tempDist) > absDist)
       {
         distance = tempDist;
         v4 = &(*vi);
-        absDist = abs(distance);
+        absDist = fabs(distance);
       }
     }
 
@@ -150,7 +151,7 @@ private:
     fi = vcg::tri::Allocator<CHMesh>::AddFace(convexHull, &convexHull.vert[3], convexHull.face[0].V2(1), convexHull.face[0].V2(0));
     (*fi).N() = vcg::NormalizedTriangleNormal(*fi);
     vcg::tri::UpdateTopology<CHMesh>::FaceFace(convexHull);
-  };
+  }
 
 
 public:
@@ -169,11 +170,11 @@ public:
     vcg::tri::RequireFFAdjacency(convexHull);
     vcg::tri::RequirePerFaceNormal(convexHull);
     vcg::tri::Allocator<InputMesh>::CompactVertexVector(mesh);
-	typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<size_t>(convexHull, std::string("indexInput"));
+    typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<size_t>(convexHull, std::string("indexInput"));
     if (mesh.vert.size() < 4)
       return false;
     InitConvexHull(mesh, convexHull);
-	
+
     //Build list of visible vertices for each convex hull face and find the furthest vertex for each face
     std::vector<std::vector<InputVertexPointer>> listVertexPerFace(convexHull.face.size());
     std::vector<Pair> furthestVexterPerFace(convexHull.face.size(), std::make_pair((InputVertexPointer)NULL, 0.0f));
@@ -236,7 +237,7 @@ public:
         {
           CHVertexIterator vi = vcg::tri::Allocator<CHMesh>::AddVertices(convexHull, 1);
           (*vi).P().Import((*vertex).P());
-		  indexInputVertex[vi] = vcg::tri::Index(mesh, vertex);
+          indexInputVertex[vi] = vcg::tri::Index(mesh, vertex);
         }
 
         //Add a new face for each border
@@ -281,7 +282,7 @@ public:
               std::vector<InputVertexPointer> vertexToTest(listVertexPerFace[indices[0]].size() + listVertexPerFace[indices[1]].size());
               typename std::vector<InputVertexPointer>::iterator tempIt = std::set_union(listVertexPerFace[indices[0]].begin(), listVertexPerFace[indices[0]].end(), listVertexPerFace[indices[1]].begin(), listVertexPerFace[indices[1]].end(), vertexToTest.begin());
               vertexToTest.resize(tempIt - vertexToTest.begin());
-              ScalarType maxDist = 0;
+
               Pair newInfo = std::make_pair((InputVertexPointer)NULL , 0.0f);
               for (int ii = 0; ii < vertexToTest.size(); ii++)
               {
@@ -323,13 +324,90 @@ public:
       }
     }
 
-	tri::UpdateTopology<CHMesh>::ClearFaceFace(convexHull);
+  tri::UpdateTopology<CHMesh>::ClearFaceFace(convexHull);
     vcg::tri::Allocator<CHMesh>::CompactFaceVector(convexHull);
     vcg::tri::Clean<CHMesh>::RemoveUnreferencedVertex(convexHull);
     return true;
   }
+  /**
+  * @brief ComputePointVisibility
+  * Select the <b>visible points</b> in a point cloud, as viewed from a given viewpoint.
+  * It uses the Qhull implementation of che convex hull in the vcglibrary
+  * The algorithm used (Katz, Tal and Basri 2007) determines visibility without
+  * reconstructing a surface or estimating normals.
+  * A point is considered visible if its transformed point lies on the convex hull
+  * of a trasformed points cloud from the original mesh points.
+  *
+  * @param m         The point cloud
+  * @param visible   The mesh that will contain the visible hull
+  * @param viewpoint
+  * @param logR      Bounds the radius of the sphere used to select visible points.
+  *   It is used to adjust the radius of the sphere (calculated as distance between
+  *   the center and the farthest point from it) according to the following equation:
+  *       radius = radius * pow(10,threshold);
+  *   As the radius increases more points are marked as visible.
+  *   Use a big threshold for dense point clouds, a small one for sparse clouds.
+  */
 
+ static void ComputePointVisibility(InputMesh& m, CHMesh& visible, CoordType viewpoint, ScalarType logR=2)
+ {
+   visible.Clear();
+   tri::RequireCompactness(m);
+   InputMesh flipM;
 
+   tri::Allocator<InputMesh>::AddVertices(flipM,m.vn);
+   ScalarType maxDist=0;
+   InputVertexIterator ci=flipM.vert.begin();
+   for(InputVertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+   {
+     ci->P()=vi->P()-viewpoint;
+     maxDist = std::max(maxDist,Norm(ci->P()));
+     ++ci;
+   }
+   ScalarType R = maxDist*pow(10,logR);
+   printf("Using R = %f logR = %f maxdist=%f \n",R,logR,maxDist);
+   for(InputVertexIterator vi=flipM.vert.begin();vi!=flipM.vert.end();++vi)
+   {
+     ScalarType d = Norm(vi->P());
+     vi->P() = vi->P() + vi->P()*ScalarType(2.0*(R - d)/d);
+   }
+
+   tri::Allocator<InputMesh>::AddVertex(flipM,CoordType(0,0,0));
+   assert(m.vn+1 == flipM.vn);
+
+   ComputeConvexHull(flipM,visible);
+   assert(flipM.vert[m.vn].P()==Point3f(0,0,0));
+   int vpInd=-1; // Index of the viewpoint in the ConvexHull mesh
+   int selCnt=0;
+   typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<size_t>(visible, std::string("indexInput"));
+   for(int i=0;i<visible.vn;++i)
+   {
+     size_t ind = indexInputVertex[i];
+     if(ind==m.vn) vpInd = i;
+     else
+     {
+       visible.vert[i].P() = m.vert[ind].P();
+       m.vert[ind].SetS();
+       m.vert[ind].C() = Color4b::LightBlue;
+       selCnt++;
+     }
+   }
+   printf("Selected %i visible points\n",selCnt);
+
+   assert(vpInd != -1);
+   // Final pass delete all the faces of the convex hull incident in the viewpoint
+   for(int i=0;i<visible.fn;++i)
+   {
+     if( (Index(visible,visible.face[i].V(0)) == vpInd) ||
+         (Index(visible,visible.face[i].V(1)) == vpInd) ||
+         (Index(visible,visible.face[i].V(2)) == vpInd) )
+       tri::Allocator<CHMesh>::DeleteFace(visible,visible.face[i]);
+   }
+
+   tri::Allocator<CHMesh>::CompactEveryVector(visible);
+   tri::Clean<CHMesh>::FlipMesh(visible);
+
+ }
 };
 
 } // end namespace tri
