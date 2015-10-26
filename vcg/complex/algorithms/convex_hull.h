@@ -110,6 +110,7 @@ private:
     for (int i = 0; i < 3; i++)
     {
       (*chVi).P().Import(v[i]->P());
+	  v[i]->SetV();
       indexInputVertex[chVi] = vcg::tri::Index(mesh, v[i]);
       chVi++;
     }
@@ -144,6 +145,7 @@ private:
     chVi = vcg::tri::Allocator<CHMesh>::AddVertices(convexHull, 1);
     (*chVi).P().Import(v4->P());
     indexInputVertex[chVi] = vcg::tri::Index(mesh, v4);
+	v4->SetV();
     fi = vcg::tri::Allocator<CHMesh>::AddFace(convexHull, &convexHull.vert[3], convexHull.face[0].V0(1), convexHull.face[0].V0(0));
     (*fi).N() = vcg::NormalizedTriangleNormal(*fi);
     fi = vcg::tri::Allocator<CHMesh>::AddFace(convexHull, &convexHull.vert[3], convexHull.face[0].V1(1), convexHull.face[0].V1(0));
@@ -173,6 +175,7 @@ public:
     typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<size_t>(convexHull, std::string("indexInput"));
     if (mesh.vert.size() < 4)
       return false;
+	vcg::tri::UpdateFlags<InputMesh>::VertexClearV(mesh);
     InitConvexHull(mesh, convexHull);
 
     //Build list of visible vertices for each convex hull face and find the furthest vertex for each face
@@ -180,20 +183,23 @@ public:
     std::vector<Pair> furthestVexterPerFace(convexHull.face.size(), std::make_pair((InputVertexPointer)NULL, 0.0f));
     for (int i = 0; i < mesh.vert.size(); i++)
     {
-      ScalarType maxDist = 0;
-      for (int j = 0; j < convexHull.face.size(); j++)
-      {
-        ScalarType dist = (mesh.vert[i].P() - convexHull.face[j].P(0)).dot(convexHull.face[j].N());
-        if (dist > 0)
-        {
-          listVertexPerFace[j].push_back(&mesh.vert[i]);
-          if (dist > furthestVexterPerFace[j].second)
-          {
-            furthestVexterPerFace[j].second = dist;
-            furthestVexterPerFace[j].first = &mesh.vert[i];
-          }
-        }
-      }
+		if (!mesh.vert[i].IsV())
+		{
+			ScalarType maxDist = 0;
+			for (int j = 0; j < convexHull.face.size(); j++)
+			{
+				ScalarType dist = (mesh.vert[i].P() - convexHull.face[j].P(0)).dot(convexHull.face[j].N());
+				if (dist > 0)
+				{
+					listVertexPerFace[j].push_back(&mesh.vert[i]);
+					if (dist > furthestVexterPerFace[j].second)
+					{
+						furthestVexterPerFace[j].second = dist;
+						furthestVexterPerFace[j].first = &mesh.vert[i];
+					}
+				}
+			}
+		}
     }
 
     for (int i = 0; i < listVertexPerFace.size(); i++)
@@ -237,6 +243,7 @@ public:
         {
           CHVertexIterator vi = vcg::tri::Allocator<CHMesh>::AddVertices(convexHull, 1);
           (*vi).P().Import((*vertex).P());
+		  vertex->SetV();
           indexInputVertex[vi] = vcg::tri::Index(mesh, vertex);
         }
 
@@ -286,16 +293,19 @@ public:
               Pair newInfo = std::make_pair((InputVertexPointer)NULL , 0.0f);
               for (int ii = 0; ii < vertexToTest.size(); ii++)
               {
-                float dist = ((*vertexToTest[ii]).P() - (*fi).P(0)).dot((*fi).N());
-                if (dist > 0)
-                {
-                  tempVect.push_back(vertexToTest[ii]);
-                  if (dist > newInfo.second)
-                  {
-                    newInfo.second = dist;
-                    newInfo.first = vertexToTest[ii];
-                  }
-                }
+				  if ((*vertexToTest[ii]).IsV())
+				  {
+					  float dist = ((*vertexToTest[ii]).P() - (*fi).P(0)).dot((*fi).N());
+					  if (dist > 0)
+					  {
+						  tempVect.push_back(vertexToTest[ii]);
+						  if (dist > newInfo.second)
+						  {
+							  newInfo.second = dist;
+							  newInfo.first = vertexToTest[ii];
+						  }
+					  }
+				  }
               }
               listVertexPerFace.push_back(tempVect);
               furthestVexterPerFace.push_back(newInfo);
