@@ -177,6 +177,10 @@ public:
     {
         return _v;
     }
+	inline S * V()
+	{
+		return _v;
+	}
     inline S & V( const int i )
     {
         assert(i>=0 && i<N);
