@@ -144,12 +144,12 @@ template <class A, class TT> class CurvatureOcc: public TT {
 public:
   typedef Point2<A> CurvatureTypeOcc;
 	typedef typename TT::VertType VertType;
-	typedef typename CurvatureTypeOcc::ScalarType ScalarType;
+	typedef typename CurvatureTypeOcc::ScalarType ScalarTypeCur;
 
-	ScalarType  &H(){  return CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[0];}
-	ScalarType  &K(){  return CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[1];}
-	const ScalarType &cH() const { return CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[0];}
-	const ScalarType &cK() const { return CAT< vector_occ<VertType>,CurvatureTypeOcc>::Instance()->Get((VertType*)this)[1];}
+  ScalarTypeCur  &H(){ return CAT< vector_occ<VertType>, CurvatureTypeOcc>::Instance()->Get((VertType*)this)[0]; }
+  ScalarTypeCur  &K(){ return CAT< vector_occ<VertType>, CurvatureTypeOcc>::Instance()->Get((VertType*)this)[1]; }
+  const ScalarTypeCur &cH() const { return CAT< vector_occ<VertType>, CurvatureTypeOcc>::Instance()->Get((VertType*)this)[0]; }
+  const ScalarTypeCur &cK() const { return CAT< vector_occ<VertType>, CurvatureTypeOcc>::Instance()->Get((VertType*)this)[1]; }
 
  	template <class LeftV>
 	void ImportData(const LeftV & leftV){
@@ -188,19 +188,19 @@ struct CurvatureDirTypeOcc{
 template <class A, class TT> class CurvatureDirOcc: public TT {
 public:
   typedef A CurvatureDirTypeOcc;
-	typedef typename CurvatureDirTypeOcc::VecType VecType;
-	typedef typename CurvatureDirTypeOcc::ScalarType ScalarType;
+	typedef typename CurvatureDirTypeOcc::VecType CurVecType;
+	typedef typename CurvatureDirTypeOcc::ScalarType CurScalarType;
 	typedef typename TT::VertType VertType;
 
-	VecType &PD1(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).max_dir;}
-	VecType &PD2(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).min_dir;}
-	const VecType &cPD1() const {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).max_dir;}
-	const VecType &cPD2() const {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).min_dir;}
+	CurVecType &PD1(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).max_dir;}
+	CurVecType &PD2(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).min_dir;}
+	const CurVecType &cPD1() const {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).max_dir;}
+	const CurVecType &cPD2() const {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).min_dir;}
 
-	ScalarType &K1(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k1;}
-	ScalarType &K2(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k2;}
-	const ScalarType &cK1() const {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k1;}
-	const ScalarType &cK2()const  {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k2;}
+	CurScalarType &K1(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k1;}
+	CurScalarType &K2(){ return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k2;}
+	const CurScalarType &cK1() const {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k1;}
+	const CurScalarType &cK2()const  {return CAT< vector_occ<VertType>,CurvatureDirTypeOcc>::Instance()->Get((VertType*)this).k2;}
 
   static bool HasCurvatureDir()   { return true; }
   static bool HasCurvatureDirOcc()   { return true; }

@@ -128,6 +128,7 @@ public:
   static bool HasVHAdjacency()   {   return false; }
 
   typedef float   CurScalarType;
+  typedef float   ScalarTypeCur;
   typedef Point3f CurVecType;
   typedef Point2f CurvatureType;
   float &Kh()       { static float dummy = 0.f; assert(0);return dummy;}
@@ -399,13 +400,13 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
   template <class A, class TT> class Curvature: public TT {
   public:
     typedef Point2<A> CurvatureType;
-    typedef typename CurvatureType::ScalarType ScalarType;
-    const ScalarType &Kh() const { return _hk[0];}
-    const ScalarType &Kg() const { return _hk[1];}
-          ScalarType &Kh()       { return _hk[0];}
-          ScalarType &Kg()       { return _hk[1];}
-          ScalarType cKh() const { return _hk[0];}
-          ScalarType cKg() const { return _hk[1];}
+    typedef typename CurvatureType::ScalarType ScalarTypeCur;
+    const ScalarTypeCur &Kh() const { return _hk[0]; }
+    const ScalarTypeCur &Kg() const { return _hk[1]; }
+          ScalarTypeCur &Kh()       { return _hk[0]; }
+          ScalarTypeCur &Kg()       { return _hk[1]; }
+          ScalarTypeCur cKh() const { return _hk[0]; }
+          ScalarTypeCur cKg() const { return _hk[1]; }
 
           template < class RightValueType>
           void ImportData(const RightValueType  & rVert ) {
@@ -440,18 +441,18 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class A, class TT> class CurvatureDir: public TT {
 public:
   typedef A CurvatureDirType;
-    typedef typename CurvatureDirType::VecType VecType;
-    typedef typename CurvatureDirType::ScalarType ScalarType;
+    typedef typename CurvatureDirType::VecType CurVecType;
+    typedef typename CurvatureDirType::ScalarType CurScalarType;
 
-    VecType &PD1(){ return _curv.max_dir;}
-    VecType &PD2(){ return _curv.min_dir;}
-    const VecType &cPD1() const {return _curv.max_dir;}
-    const VecType &cPD2() const {return _curv.min_dir;}
+    CurVecType &PD1(){ return _curv.max_dir; }
+    CurVecType &PD2(){ return _curv.min_dir; }
+    const CurVecType &cPD1() const { return _curv.max_dir; }
+    const CurVecType &cPD2() const { return _curv.min_dir; }
 
-    ScalarType &K1(){ return _curv.k1;}
-    ScalarType &K2(){ return _curv.k2;}
-    const ScalarType &cK1() const {return _curv.k1;}
-    const ScalarType &cK2() const {return _curv.k2;}
+    CurScalarType &K1(){ return _curv.k1; }
+    CurScalarType &K2(){ return _curv.k2; }
+    const CurScalarType &cK1() const { return _curv.k1; }
+    const CurScalarType &cK2() const { return _curv.k2; }
     template < class RightValueType>
     void ImportData(const RightValueType  & rVert ) {
       if(rVert.IsCurvatureDirEnabled()) {

@@ -641,9 +641,9 @@ template <class T> class WedgeTexCoordfOcf: public WedgeTexCoordOcf<TexCoord2<fl
 template <class A, class TT> class WedgeColorOcf: public TT {
 public:
   WedgeColorOcf(){ }
-  typedef A ColorType;
-  ColorType &WC(const int i)              { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
-  const ColorType cWC(const int i) const { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
+  typedef A WedgeColorType;
+  WedgeColorType &WC(const int i)              { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
+  const WedgeColorType cWC(const int i) const { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
   template <class RightFaceType>
   void ImportData(const RightFaceType & rightF){
     if(this->IsWedgeColorEnabled() && rightF.IsWedgeColorEnabled())
@@ -661,9 +661,9 @@ template <class T> class WedgeColor4bOcf: public WedgeColorOcf<vcg::Color4b, T> 
 template <class A, class TT> class WedgeNormalOcf: public TT {
 public:
   WedgeNormalOcf(){ }
-  typedef A NormalType;
-  NormalType &WN(const int i)              { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
-  NormalType const &cWN(const int i) const { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
+  typedef A WedgeNormalType;
+  WedgeNormalType &WN(const int i)              { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
+  WedgeNormalType const &cWN(const int i) const { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
   template <class RightFaceType>
   void ImportData(const RightFaceType & rightF){
     if(this->IsWedgeNormalEnabled() && rightF.IsWedgeNormalEnabled())

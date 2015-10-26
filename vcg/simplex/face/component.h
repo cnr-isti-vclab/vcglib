@@ -47,10 +47,11 @@ public:
   static bool HasFVAdjacency()   { return false; }
 
   typedef typename T::VertexType::NormalType NormalType;
+  typedef NormalType WedgeNormalType;
   NormalType &N() { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
   NormalType cN() const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
-  NormalType &WN(int) { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
-  NormalType cWN(int) const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  WedgeNormalType &WN(int) { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
+  WedgeNormalType cWN(int) const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
 
 
   typedef int WedgeTexCoordType;
@@ -58,7 +59,7 @@ public:
   TexCoordType &WT(const int) { static TexCoordType dummy_texture;  assert(0); return dummy_texture;}
   TexCoordType const &cWT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
 
-
+  typedef int FlagType;
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
   int cFlags() const { return 0; }
   static bool HasFlags()   { return false; }
@@ -71,11 +72,11 @@ public:
   typedef float QualityType;
   typedef Point3f Quality3Type;
   typedef vcg::Color4b ColorType;
-
+  typedef ColorType WedgeColorType;
   ColorType &C()       { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   ColorType cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
-  ColorType &WC(const int)       { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
-  ColorType cWC(const int) const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  WedgeColorType &WC(const int)       { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  WedgeColorType cWC(const int) const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   QualityType &Q()       { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   QualityType cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   Quality3Type &Q3()       { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
@@ -128,17 +129,18 @@ public:
   static bool HasFEAdjacency()   {   return false; }
   static bool HasFHAdjacency()   {   return false; }
 
-  typedef int CurvatureDirType;
+  typedef typename T::VertexType::CurvatureDirType CurvatureDirType;
+  typedef typename T::CoordType CurVecType;
+  typedef typename T::ScalarType CurScalarType;
+  typename CurVecType &PD1()       { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
+  typename CurVecType &PD2()       { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
+  typename CurVecType cPD1() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
+  typename CurVecType cPD2() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
 
-  typename T::CoordType &PD1()       { static typename T::CoordType dummy(0,0,0); assert(0); return dummy;}
-  typename T::CoordType &PD2()       { static typename T::CoordType dummy(0,0,0); assert(0); return dummy;}
-  typename T::CoordType cPD1() const { static typename T::CoordType dummy(0,0,0); assert(0); return dummy;}
-  typename T::CoordType cPD2() const { static typename T::CoordType dummy(0,0,0); assert(0); return dummy;}
-
-  typename T::ScalarType &K1()      { static typename T::ScalarType dummy(0); assert(0); return dummy;}
-  typename T::ScalarType &K2()      { static typename T::ScalarType dummy(0); assert(0); return dummy;}
-  typename T::ScalarType cK1() const { static typename T::ScalarType dummy(0); assert(0); return dummy;}
-  typename T::ScalarType cK2() const { static typename T::ScalarType dummy(0); assert(0); return dummy;}
+  typename CurScalarType &K1()      { static typename T::ScalarType dummy(0); assert(0); return dummy; }
+  typename CurScalarType &K2()      { static typename T::ScalarType dummy(0); assert(0); return dummy; }
+  typename CurScalarType cK1() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
+  typename CurScalarType cK2() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
 
   static bool HasCurvatureDir()   { return false; }
 
@@ -230,9 +232,9 @@ private:
 
 template <class T> class WedgeNormal: public T {
 public:
-  typedef typename T::VertexType::NormalType NormalType;
-  inline NormalType &WN(int j)       { return _wnorm[j]; }
-  inline NormalType cWN(int j) const { return _wnorm[j]; }
+  typedef typename T::VertexType::NormalType WedgeNormalType;
+  inline WedgeNormalType &WN(int j)       { return _wnorm[j]; }
+  inline WedgeNormalType cWN(int j) const { return _wnorm[j]; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){ if(rightF.IsWedgeNormalEnabled()) for (int i=0; i<3; ++i) { WN(i) = rightF.cWN(i); } T::ImportData(rightF);}
   inline void Alloc(const int & ns){T::Alloc(ns);}
@@ -241,14 +243,14 @@ public:
   static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeNormal"));T::Name(name);}
 
 private:
-  NormalType _wnorm[3];
+  WedgeNormalType _wnorm[3];
 };
 
 template <class A, class T> class WedgeRealNormal: public T {
 public:
-  typedef A NormalType;
-  inline NormalType &WN(int i)       { return _wn[i]; }
-  inline NormalType cWN(int i) const { return _wn[i]; }
+  typedef A WedgeNormalType;
+  inline WedgeNormalType &WN(int i)       { return _wn[i]; }
+  inline WedgeNormalType cWN(int i) const { return _wn[i]; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){ if(RightValueType::HasWedgeNormal()) for (int i=0; i<3; ++i) { WN(i) = rightF.cWN(i); } T::ImportData(rightF);}
   inline void Alloc(const int & ns){T::Alloc(ns);}
@@ -257,7 +259,7 @@ public:
   static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeRealNormal"));T::Name(name);}
 
 private:
-  NormalType _wn[3];
+  WedgeNormalType _wn[3];
 };
 
 template <class TT> class WedgeRealNormal3s: public WedgeRealNormal<vcg::Point3s, TT> {
@@ -319,6 +321,7 @@ This component stores a 32 bit array of bit flags. These bit flags are used for 
 template <class T> class BitFlags:  public T {
 public:
   BitFlags():_flags(0) {}
+  typedef int FlagType;
   int &Flags()       {return _flags; }
   int cFlags() const {return _flags; }
   template <class RightValueType>
@@ -359,9 +362,9 @@ private:
 
 template <class A, class T> class WedgeColor: public T {
 public:
-  typedef A ColorType;
-  ColorType &WC(int i) { return _color[i]; }
-  ColorType cWC(int i) const { return _color[i]; }
+  typedef A WedgeColorType;
+  WedgeColorType &WC(int i) { return _color[i]; }
+  WedgeColorType cWC(int i) const { return _color[i]; }
 
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
@@ -376,7 +379,7 @@ public:
   static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor"));T::Name(name);}
 
 private:
-  ColorType _color[3];
+  WedgeColorType _color[3];
 };
 
 template <class T> class WedgeColor4b: public WedgeColor<vcg::Color4b, T> {

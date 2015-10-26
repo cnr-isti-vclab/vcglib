@@ -431,12 +431,12 @@ public:
 template <class A, class TT> class CurvatureOcf: public TT {
 public:
   typedef Point2<A> CurvatureType;
-  typedef typename CurvatureType::ScalarType CurScalarType;
+  typedef typename CurvatureType::ScalarType ScalarTypeCur;
 
-  CurScalarType &Kh(){  assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][0];}
-  CurScalarType &Kg(){  assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][1];}
-  CurScalarType cKh() const { assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][0];}
-  CurScalarType cKg() const { assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][1];}
+  ScalarTypeCur &Kh(){ assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][0]; }
+  ScalarTypeCur &Kg(){ assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][1]; }
+  ScalarTypeCur cKh() const { assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][0]; }
+  ScalarTypeCur cKg() const { assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][1]; }
 
   template <class RightVertexType>
   void ImportData(const RightVertexType & rightV){
