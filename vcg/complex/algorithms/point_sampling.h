@@ -165,8 +165,13 @@ public:
   typedef typename MeshType::FaceType    FaceType;
   typedef typename MeshType::CoordType   CoordType;
 
-  MeshSampler(MeshType &_m):m(_m){}
+  MeshSampler(MeshType &_m):m(_m){
+    perFaceNormal = false;
+  }
   MeshType &m;
+
+  bool perFaceNormal;  // default false; if true the sample normal is the face normal, otherwise it is interpolated
+
   void reset()
   {
     m.Clear();
@@ -182,7 +187,8 @@ public:
   {
     tri::Allocator<MeshType>::AddVertices(m,1);
     m.vert.back().P() = f.cP(0)*p[0] + f.cP(1)*p[1] +f.cP(2)*p[2];
-    m.vert.back().N() = f.cV(0)->N()*p[0] + f.cV(1)->N()*p[1] + f.cV(2)->N()*p[2];
+    if(perFaceNormal) m.vert.back().N() = f.cN();
+       else m.vert.back().N() = f.cV(0)->N()*p[0] + f.cV(1)->N()*p[1] + f.cV(2)->N()*p[2];
     if(tri::HasPerVertexQuality(m) )
        m.vert.back().Q() = f.cV(0)->Q()*p[0] + f.cV(1)->Q()*p[1] + f.cV(2)->Q()*p[2];
   }
