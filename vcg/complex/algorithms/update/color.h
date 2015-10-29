@@ -324,53 +324,56 @@ Note: The faux bit is used to color polygonal faces uniformly
       }
   }
 
-  /*! \brief Perlin Noise.
-  \return the number of changed vertexes (the selected ones)
+/*! \brief Perlin Noise.
+\return the number of changed vertexes (the selected ones)
 
-  Simple Perlin noise. To make things weirder each color band can have its own offset and frequency.
-  Period is expressed in absolute terms.
-  So as period it is meaningful could be to use something in the range of 1/10 of the bbox diag.
-  */
-  static void PerVertexPerlinNoise(MeshType& m, CoordType period, CoordType offset=CoordType(0,0,0))
-  {
-    RequirePerVertexColor(m);
+Simple Perlin noise. To make things weirder each color band can have its own offset and frequency.
+Period is expressed in absolute terms.
+So as period it is meaningful could be to use something in the range of 1/10 of the bbox diag.
+*/
+static void PerVertexPerlinNoise(MeshType& m, CoordType period, CoordType offset = CoordType(0, 0, 0), bool onSelected = false)
+{
+	RequirePerVertexColor(m);
 
-    CoordType p[3];
-    for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
-    {
-      if(!(*vi).IsD()){
-        // perlin noise is defined in 022
-        p[0] = (vi->P()/period[0])+offset;
-        p[1] = (vi->P()/period[1])+offset;
-        p[2] = (vi->P()/period[2])+offset;
-        (*vi).C() = Color4b( int(127+128.0*math::Perlin::Noise(p[0][0],p[0][1],p[0][2])),
-                             int(127+128.0*math::Perlin::Noise(p[1][0],p[1][1],p[1][2])),
-                             int(127+128.0*math::Perlin::Noise(p[2][0],p[2][1],p[2][2])),
-                             255 );
-      }
-    }
-  }
+	CoordType p[3];
+	
+	for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
+		if(!(*vi).IsD())
+			if ((!onSelected) || ((*vi).IsS()))
+			{
+				// perlin noise is defined in 022
+				p[0] = (vi->P()/period[0])+offset;
+				p[1] = (vi->P()/period[1])+offset;
+				p[2] = (vi->P()/period[2])+offset;
+				(*vi).C() = Color4b(	int(127+128.0*math::Perlin::Noise(p[0][0],p[0][1],p[0][2])),
+										int(127+128.0*math::Perlin::Noise(p[1][0],p[1][1],p[1][2])),
+										int(127+128.0*math::Perlin::Noise(p[2][0],p[2][1],p[2][2])),
+										255 );
+			}
 
-  /*! \brief Simple Noise adding function.
-  It simply add signed noise to the color of the mesh. The noise has uniform distribution and the amplitude is +/-2^(noisebits-1).
-  */
-  static void PerVertexAddNoise(MeshType& m, int noiseBits)
-  {
-    RequirePerVertexColor(m);
+}
 
-    if(noiseBits>8) noiseBits = 8;
-    if(noiseBits<1) return;
+/*! \brief Simple Noise adding function.
+It simply add signed noise to the color of the mesh. The noise has uniform distribution and the amplitude is +/-2^(noisebits-1).
+*/
+static void PerVertexAddNoise(MeshType& m, int noiseBits, bool onSelected=false)
+{
+	RequirePerVertexColor(m);
 
-    math::SubtractiveRingRNG randomGen = math::SubtractiveRingRNG(time(NULL));
-    for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
-    {
-      if(!(*vi).IsD()){
-        (*vi).C()[0] = math::Clamp<int>((*vi).C()[0] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
-        (*vi).C()[1] = math::Clamp<int>((*vi).C()[1] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
-        (*vi).C()[2] = math::Clamp<int>((*vi).C()[2] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
-      }
-    }
-  }
+	if(noiseBits>8) noiseBits = 8;
+	if(noiseBits<1) return;
+
+	math::SubtractiveRingRNG randomGen = math::SubtractiveRingRNG(time(NULL));
+	for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
+		if(!(*vi).IsD())
+			if ((!onSelected) || ((*vi).IsS()))
+			{
+				(*vi).C()[0] = math::Clamp<int>((*vi).C()[0] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
+				(*vi).C()[1] = math::Clamp<int>((*vi).C()[1] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
+				(*vi).C()[2] = math::Clamp<int>((*vi).C()[2] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
+			}
+	
+}
 
 
 /*! \brief Reduces vertex color the mesh to two colors according to a threshold.
