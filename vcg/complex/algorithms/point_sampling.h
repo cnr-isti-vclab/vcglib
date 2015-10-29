@@ -505,14 +505,18 @@ static int Poisson(double lambda)
 
 static void AllVertex(MeshType & m, VertexSampler &ps)
 {
-    VertexIterator vi;
-    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-    {
-        if(!(*vi).IsD())
-        {
-            ps.AddVert(*vi);
-        }
-    }
+	AllVertex(m, ps, false);
+}
+
+static void AllVertex(MeshType & m, VertexSampler &ps, bool onlySelected)
+{
+	VertexIterator vi;
+	for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+		if(!(*vi).IsD())
+			if ((!onlySelected) || ((*vi).IsS()))
+			{
+				ps.AddVert(*vi);
+			}
 }
 
 /// Sample the vertices in a weighted way. Each vertex has a probability of being chosen
@@ -603,18 +607,31 @@ static void	FillAndShuffleVertexPointerVector(MeshType & m, std::vector<VertexPo
 }
 
 /// Sample the vertices in a uniform way. Each vertex has the same probabiltiy of being chosen.
+static void VertexUniform(MeshType & m, VertexSampler &ps, int sampleNum, bool onlySelected)
+{
+	if (sampleNum >= m.vn) {
+		AllVertex(m, ps, onlySelected);
+		return;
+	}
+
+	std::vector<VertexPointer> vertVec;
+	FillAndShuffleVertexPointerVector(m, vertVec);
+
+	int added = 0;
+	for (int i = 0; ((i < m.vn) && (added < sampleNum)); ++i)
+		if (!(*vertVec[i]).IsD())
+			if ((!onlySelected) || (*vertVec[i]).IsS())
+			{
+				ps.AddVert(*vertVec[i]);
+				added++;
+			}
+		
+}
+
+
 static void VertexUniform(MeshType & m, VertexSampler &ps, int sampleNum)
 {
-    if(sampleNum>=m.vn) {
-      AllVertex(m,ps);
-        return;
-    }
-
-    std::vector<VertexPointer> vertVec;
-    FillAndShuffleVertexPointerVector(m,vertVec);
-
-    for(int i =0; i< sampleNum; ++i)
-        ps.AddVert(*vertVec[i]);
+	VertexUniform(m, ps, sampleNum, false);
 }
 
 
