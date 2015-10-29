@@ -573,14 +573,7 @@ namespace vcg {
 
                             if( HasPerFaceColor(m) && (pi.mask & Mask::IOM_FACECOLOR)  )
                             {
-                                float t[3];
-                                t[0] = float(fp->C()[0])/255;
-                                t[1] = float(fp->C()[1])/255;
-                                t[2] = float(fp->C()[2])/255;
-                                fprintf(fpout,"9 ");
-                                fprintf(fpout,"%g %g %g ",t[0],t[1],t[2]);
-                                fprintf(fpout,"%g %g %g ",t[0],t[1],t[2]);
-                                fprintf(fpout,"%g %g %g ",t[0],t[1],t[2]);
+                                fprintf(fpout, "%u %u %u %u ", fp->C()[0], fp->C()[1], fp->C()[2], fp->C()[3]);
                             }
                             else if( HasPerWedgeColor(m) && (pi.mask & Mask::IOM_WEDGCOLOR)  )
                             {
