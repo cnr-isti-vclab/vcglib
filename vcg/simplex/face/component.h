@@ -132,15 +132,15 @@ public:
   typedef typename T::VertexType::CurvatureDirType CurvatureDirType;
   typedef typename T::CoordType CurVecType;
   typedef typename T::ScalarType CurScalarType;
-  typename CurVecType &PD1()       { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
-  typename CurVecType &PD2()       { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
-  typename CurVecType cPD1() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
-  typename CurVecType cPD2() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
+  CurVecType &PD1()       { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
+  CurVecType &PD2()       { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
+  CurVecType cPD1() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
+  CurVecType cPD2() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
 
-  typename CurScalarType &K1()      { static typename T::ScalarType dummy(0); assert(0); return dummy; }
-  typename CurScalarType &K2()      { static typename T::ScalarType dummy(0); assert(0); return dummy; }
-  typename CurScalarType cK1() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
-  typename CurScalarType cK2() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
+  CurScalarType &K1()      { static typename T::ScalarType dummy(0); assert(0); return dummy; }
+  CurScalarType &K2()      { static typename T::ScalarType dummy(0); assert(0); return dummy; }
+  CurScalarType cK1() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
+  CurScalarType cK2() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
 
   static bool HasCurvatureDir()   { return false; }
 
