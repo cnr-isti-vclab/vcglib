@@ -181,12 +181,11 @@ public:
     //Build list of visible vertices for each convex hull face and find the furthest vertex for each face
     std::vector<std::vector<InputVertexPointer>> listVertexPerFace(convexHull.face.size());
     std::vector<Pair> furthestVexterPerFace(convexHull.face.size(), std::make_pair((InputVertexPointer)NULL, 0.0f));
-    for (int i = 0; i < mesh.vert.size(); i++)
+    for (size_t i = 0; i < mesh.vert.size(); i++)
     {
     if (!mesh.vert[i].IsV())
     {
-      ScalarType maxDist = 0;
-      for (int j = 0; j < convexHull.face.size(); j++)
+      for (size_t j = 0; j < convexHull.face.size(); j++)
       {
         ScalarType dist = (mesh.vert[i].P() - convexHull.face[j].P(0)).dot(convexHull.face[j].N());
         if (dist > 0)
@@ -202,7 +201,7 @@ public:
     }
     }
 
-    for (int i = 0; i < listVertexPerFace.size(); i++)
+    for (size_t i = 0; i < listVertexPerFace.size(); i++)
     {
       if (listVertexPerFace[i].size() > 0)
       {
@@ -249,7 +248,7 @@ public:
 
         //Add a new face for each border
         std::unordered_map< CHVertexPointer, std::pair<int, char> > fanMap;
-        for (int jj = 0; jj < borderFace.size(); jj++)
+        for (size_t jj = 0; jj < borderFace.size(); jj++)
         {
           int indexFace = borderFace[jj];
           CHFacePointer f = &convexHull.face[indexFace];
@@ -291,7 +290,7 @@ public:
               vertexToTest.resize(tempIt - vertexToTest.begin());
 
               Pair newInfo = std::make_pair((InputVertexPointer)NULL , 0.0f);
-              for (int ii = 0; ii < vertexToTest.size(); ii++)
+              for (size_t ii = 0; ii < vertexToTest.size(); ii++)
               {
                 if (!(*vertexToTest[ii]).IsV())
                 {
@@ -322,7 +321,7 @@ public:
           }
         }
         //Delete the faces inside the updated convex hull
-        for (int j = 0; j < visFace.size(); j++)
+        for (size_t j = 0; j < visFace.size(); j++)
         {
           if (!convexHull.face[visFace[j]].IsD())
           {
