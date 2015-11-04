@@ -677,7 +677,7 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius)
       // Third loop actually perform the sampling.
       int sampleNum = floor(totalLen / radius);
       ScalarType sampleDist = totalLen/sampleNum;
-      printf("Found a chain of %f with %i samples every %f (%f)\n",totalLen,sampleNum,sampleDist,radius);
+//      printf("Found a chain of %f with %i samples every %f (%f)\n",totalLen,sampleNum,sampleDist,radius);
 
       ScalarType curLen=0;
       int sampleCnt=1;
@@ -692,7 +692,7 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius)
         while(d1>sampleCnt*sampleDist)
         {
           ScalarType off = (sampleCnt*sampleDist-d0) /edgeLen;
-          printf("edgeLen %f off %f samplecnt %i\n",edgeLen,off,sampleCnt);
+//          printf("edgeLen %f off %f samplecnt %i\n",edgeLen,off,sampleCnt);
           ps.AddEdge(*(ep.E()),ep.VInd()==0?1.0-off:off);
           sampleCnt++;
         }
