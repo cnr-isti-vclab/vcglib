@@ -49,48 +49,52 @@ typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
 
-static void WedgeTexFromPlane(ComputeMeshType &m, const Point3<ScalarType> &uVec, const Point3<ScalarType> &vVec, bool aspectRatio)
+static void WedgeTexFromPlane(ComputeMeshType &m, const Point3<ScalarType> &uVec, const Point3<ScalarType> &vVec, bool aspectRatio, ScalarType sideGutter=0.0)
 {
-  // First just project
+	Box2f bb;
 
 	FaceIterator fi;
 	for(fi=m.face.begin();fi!=m.face.end();++fi)
-	        if(!(*fi).IsD()) 
-							{
-               for(int i=0;i<3;++i)
-               {
-                 (*fi).WT(i).U()= (*fi).V(i)->cP() * uVec;
-                 (*fi).WT(i).V()= (*fi).V(i)->cP() * vVec;
-               }
-							}											
-  // second Loop normalize to
-  Box2f bb;
-  for(fi=m.face.begin();fi!=m.face.end();++fi)
-          if(!(*fi).IsD())
-              {
-               for(int i=0;i<3;++i)
-               {
-                 bb.Add((*fi).WT(i).P());
-               }
-              }
+		if(!(*fi).IsD()) 
+		{
+			for(int i=0;i<3;++i)
+			{
+				(*fi).WT(i).U()= (*fi).V(i)->cP() * uVec;
+				(*fi).WT(i).V()= (*fi).V(i)->cP() * vVec;
+				bb.Add((*fi).WT(i).P());
+			}
+		}	
 
+	ScalarType wideU =  bb.max[0]- bb.min[0];
+	ScalarType wideV =  bb.max[1]- bb.min[1];
 
-  ScalarType wideU =  bb.max[0]- bb.min[0];
-  ScalarType wideV =  bb.max[1]- bb.min[1];
-  if(aspectRatio) {
-    wideU = std::max(wideU,wideV);
-    wideV = wideU;
-  }
+	if (sideGutter>0.0)
+	{
+		ScalarType deltaGutter = std::min(wideU, wideV) * min(sideGutter, (ScalarType)0.5);
 
-  for(fi=m.face.begin();fi!=m.face.end();++fi)
-          if(!(*fi).IsD())
-              {
-               for(int i=0;i<3;++i)
-               {
-                 (*fi).WT(i).U() = ((*fi).WT(i).U() - bb.min[0]) / wideU;
-                 (*fi).WT(i).V() = ((*fi).WT(i).V() - bb.min[1]) / wideV;
-               }
-              }
+		bb.max[0] += deltaGutter;
+		bb.min[0] -= deltaGutter;
+		bb.max[1] += deltaGutter;
+		bb.min[1] -= deltaGutter;
+
+		wideU = bb.max[0] - bb.min[0];
+		wideV = bb.max[1] - bb.min[1];
+	}
+
+	if (aspectRatio) {
+		wideU = std::max(wideU, wideV);
+		wideV = wideU;
+	}
+
+	for (fi = m.face.begin(); fi != m.face.end(); ++fi)
+	if (!(*fi).IsD())
+	{
+		for (int i = 0; i<3; ++i)
+		{
+			(*fi).WT(i).U() = ((*fi).WT(i).U() - bb.min[0]) / wideU;
+			(*fi).WT(i).V() = ((*fi).WT(i).V() - bb.min[1]) / wideV;
+		}
+	}
 }
 
 static void WedgeTexFromCamera(ComputeMeshType &m, Plane3<ScalarType> &pl)
