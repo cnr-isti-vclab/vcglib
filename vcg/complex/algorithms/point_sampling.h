@@ -643,67 +643,88 @@ static void VertexUniform(MeshType & m, VertexSampler &ps, int sampleNum)
 ///
 static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius)
 {
-  tri::RequireEEAdjacency(m);
-  tri::RequireCompactness(m);
-  tri::UpdateTopology<MeshType>::EdgeEdge(m);
-  tri::UpdateFlags<MeshType>::EdgeClearV(m);
+	tri::RequireEEAdjacency(m);
+	tri::RequireCompactness(m);
+	tri::RequirePerEdgeFlags(m);
+	tri::RequirePerVertexFlags(m);
+	tri::UpdateTopology<MeshType>::EdgeEdge(m);
+	tri::UpdateFlags<MeshType>::EdgeClearV(m);
 
-  for(EdgeIterator ei = m.edge.begin();ei!=m.edge.end();++ei)
-  {
-    if(!ei->IsV())
-    {
-      edge::Pos<EdgeType> ep(&*ei,0);
-      edge::Pos<EdgeType> startep =ep;
-      VertexPointer startVertex=0;
-      do // first loop to search a boundary component.
-      {
-        ep.NextE();
-        if(ep.IsBorder()) break;
-      } while(startep!=ep);
-      if(!ep.IsBorder())
-        startVertex=ep.V();
+	for (EdgeIterator ei = m.edge.begin(); ei != m.edge.end(); ++ei)
+	{
+		if (!ei->IsV())
+		{
+			edge::Pos<EdgeType> ep(&*ei,0);
+			edge::Pos<EdgeType> startep     = ep;
+			VertexPointer       startVertex = 0;
+			do // first loop to search a boundary component.
+			{
+				ep.NextE();
+				if (ep.IsBorder())
+					break;
+			} while (startep != ep);
+			if (!ep.IsBorder())
+			{
+				// it's a loop
+				startVertex = ep.V();
+			}
+			else
+			{
+				// to keep the uniform resampling order-independent
+				// start from the border with 'lowest' point
+				edge::Pos<EdgeType> altEp = ep;
+				do {
+					altEp.NextE();
+				} while (!altEp.IsBorder());
 
-      ScalarType totalLen=0;
-      ep.FlipV();
-      do // second loop to compute len of the chain.
-      {
-        ep.E()->SetV();
-        totalLen+=Distance(ep.V()->P(),ep.VFlip()->P());
-        ep.NextE();
-      } while(!ep.IsBorder() && ep.V()!=startVertex);
-      ep.E()->SetV();
-      totalLen+=Distance(ep.V()->P(),ep.VFlip()->P());
+				if (altEp.V()->cP() < ep.V()->cP())
+				{
+					ep = altEp;
+				}
+			}
 
-      // Third loop actually perform the sampling.
-      int sampleNum = floor(totalLen / radius);
-      ScalarType sampleDist = totalLen/sampleNum;
-//      printf("Found a chain of %f with %i samples every %f (%f)\n",totalLen,sampleNum,sampleDist,radius);
+			ScalarType totalLen = 0;
+			ep.FlipV();
+			// second loop to compute length of the chain.
+			do
+			{
+				ep.E()->SetV();
+				totalLen += Distance(ep.V()->cP(), ep.VFlip()->cP());
+				ep.NextE();
+			} while (!ep.IsBorder() && ep.V() != startVertex);
+			ep.E()->SetV();
+			totalLen += Distance(ep.V()->cP(), ep.VFlip()->cP());
 
-      ScalarType curLen=0;
-      int sampleCnt=1;
-      ps.AddEdge(*(ep.E()),ep.VInd()==0?0.0:1.0);
-      ep.FlipV();
-      do
-      {
-        ScalarType edgeLen = Distance(ep.V()->P(),ep.VFlip()->P());
-        ScalarType d0 = curLen;
-        ScalarType d1 = d0+edgeLen;
+			// Third loop actually perform the sampling.
+			int sampleNum = floor(totalLen / radius);
+			ScalarType sampleDist = totalLen / sampleNum;
+//			printf("Found a chain of %f with %i samples every %f (%f)\n", totalLen, sampleNum, sampleDist, radius);
 
-        while(d1>sampleCnt*sampleDist)
-        {
-          ScalarType off = (sampleCnt*sampleDist-d0) /edgeLen;
-//          printf("edgeLen %f off %f samplecnt %i\n",edgeLen,off,sampleCnt);
-          ps.AddEdge(*(ep.E()),ep.VInd()==0?1.0-off:off);
-          sampleCnt++;
-        }
-        curLen+=edgeLen;
-        ep.NextE();
-      } while(!ep.IsBorder() && ep.V()!=startVertex);
+			ScalarType curLen = 0;
+			int sampleCnt     = 1;
+			ps.AddEdge(*(ep.E()), ep.VInd() == 0 ? 0.0 : 1.0);
+			do
+			{
+				ep.NextE();
+				assert(ep.E()->IsV());
+				ScalarType edgeLen = Distance(ep.V()->cP(), ep.VFlip()->cP());
+				ScalarType d0      = curLen;
+				ScalarType d1      = d0 + edgeLen;
 
-      if(ep.V()!=startVertex)
-          ps.AddEdge(*(ep.E()),ep.VInd()==0?0.0:1.0);
-    }
-  }
+				while (d1 > sampleCnt * sampleDist && sampleCnt < sampleNum)
+				{
+					ScalarType off = (sampleCnt * sampleDist - d0) / edgeLen;
+//					printf("edgeLen %f off %f samplecnt %i\n", edgeLen, off, sampleCnt);
+					ps.AddEdge(*(ep.E()), ep.VInd() == 0 ? 1.0 - off : off);
+					sampleCnt++;
+				}
+				curLen += edgeLen;
+			} while(!ep.IsBorder() && ep.V() != startVertex);
+
+			if(ep.V() != startVertex)
+				ps.AddEdge(*(ep.E()), ep.VInd() == 0 ? 0.0 : 1.0);
+		}
+	}
 }
 
 
