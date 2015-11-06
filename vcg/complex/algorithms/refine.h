@@ -141,19 +141,23 @@ struct MidPoint : public   std::unary_function<face::Pos<typename MESH_TYPE::Fac
 
     void operator()(VertexType &nv, PosType  ep){
         assert(mp);
-        nv.P()=   (ep.f->V(ep.z)->P()+ep.f->V1(ep.z)->P())/2.0;
+        VertexType *V0 = ep.V() ;
+        VertexType *V1 = ep.VFlip() ;
+        if(V0 > V1) std::swap(V1,V0);
+
+        nv.P()=   (V0->P()+V1->P())/2.0;
 
         if( tri::HasPerVertexNormal(*mp))
-            nv.N()= (ep.f->V(ep.z)->N()+ep.f->V1(ep.z)->N()).normalized();
+            nv.N()= (V0->N()+V1->N()).normalized();
 
         if( tri::HasPerVertexColor(*mp))
-            nv.C().lerp(ep.f->V(ep.z)->C(),ep.f->V1(ep.z)->C(),.5f);
+            nv.C().lerp(V0->C(),V1->C(),.5f);
 
         if( tri::HasPerVertexQuality(*mp))
-            nv.Q() = ((ep.f->V(ep.z)->Q()+ep.f->V1(ep.z)->Q())) / 2.0;
+            nv.Q() = (V0->Q()+V1->Q()) / 2.0;
 
         if( tri::HasPerVertexTexCoord(*mp))
-            nv.T().P() = ((ep.f->V(ep.z)->T().P()+ep.f->V1(ep.z)->T().P())) / 2.0;
+            nv.T().P() = (V0->T().P()+V1->T().P()) / 2.0;
         if(intFunc)
           (*intFunc)(nv,ep);
     }
