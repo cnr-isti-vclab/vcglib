@@ -639,9 +639,10 @@ static void VertexUniform(MeshType & m, VertexSampler &ps, int sampleNum)
 ///
 /// It assumes that the mesh is 1-manifold.
 /// each connected component is sampled in a independent way.
-/// For each component of lenght <L> we place on it floor(L/radius) samples.
+/// For each component of lenght <L> we place on it floor(L/radius)+1 samples.
+/// (if conservative argument is false we place ceil(L/radius)+1 samples)
 ///
-static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius)
+static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool conservative = true)
 {
 	tri::RequireEEAdjacency(m);
 	tri::RequireCompactness(m);
@@ -696,7 +697,8 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius)
 			totalLen += Distance(ep.V()->cP(), ep.VFlip()->cP());
 
 			// Third loop actually perform the sampling.
-			int sampleNum = floor(totalLen / radius);
+			int sampleNum = conservative ? floor(totalLen / radius) : ceil(totalLen / radius);
+
 			ScalarType sampleDist = totalLen / sampleNum;
 //			printf("Found a chain of %f with %i samples every %f (%f)\n", totalLen, sampleNum, sampleDist, radius);
 
