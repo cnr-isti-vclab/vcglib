@@ -38,7 +38,7 @@ using namespace vcg;
 Rubberband::Rubberband(Color4b c)
 :color(c)
 {
-  this->Reset();
+	this->Reset();
 }
 
 void Rubberband::Render(QGLWidget* gla)
@@ -79,33 +79,39 @@ void Rubberband::Render(QGLWidget* gla)
   glDepthMask(false);
   glLineWidth(2.5);
   glPointSize(5.0);
-  if(currentphase==RUBBER_DRAGGING ) {
+
+  if(currentphase==RUBBER_DRAGGING )
+  {
     Point2f qt_start_point = DevicePixelConvert(start);
     glColor(color);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    gluOrtho2D(0,QTLogicalToDevice(gla,gla->width()),QTLogicalToDevice(gla,gla->height()),0);
+    gluOrtho2D(0, QTLogicalToDevice(gla,gla->width()), QTLogicalToDevice(gla,gla->height()), 0);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
     glDisable(GL_DEPTH_TEST);
     glBegin(GL_LINES);
       glVertex(qt_start_point);
-      glVertex2f(QTLogicalToDevice(gla, qt_cursor.x()),    QTLogicalToDevice(gla, qt_cursor.y()));
+      glVertex2f(QTLogicalToDevice(gla, qt_cursor.x()), QTLogicalToDevice(gla, qt_cursor.y()));
     glEnd();
     glEnable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
-  } else {
+  } 
+  else 
+  {
     assert(currentphase == RUBBER_DRAGGED);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
     glEnable(GL_LINE_SMOOTH);
     glEnable(GL_POINT_SMOOTH);
     glColor(color);
+	glLineWidth(2.0);
+	glPointSize(4.0);
     glBegin(GL_LINES);
       glVertex(start);
       glVertex(end);
@@ -114,9 +120,9 @@ void Rubberband::Render(QGLWidget* gla)
       glVertex(start);
       glVertex(end);
     glEnd();
-    glDisable(GL_DEPTH_TEST);
-    glLineWidth(0.7f);
-    glPointSize(1.4f);
+	glDepthFunc(GL_GREATER);
+    glLineWidth(1.0f);
+    glPointSize(2.0f);
     glBegin(GL_LINES);
       glVertex(start);
       glVertex(end);
@@ -125,9 +131,53 @@ void Rubberband::Render(QGLWidget* gla)
       glVertex(start);
       glVertex(end);
     glEnd();
+	glDepthFunc(GL_LESS);
   }
+
+
   glPopAttrib();
   assert(!glGetError());
+}
+
+void Rubberband::RenderLine(QGLWidget* gla, Point3f AA, Point3f BB)
+{
+	// Drawing of the line from AA to BB
+	glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT | GL_LINE_BIT | GL_POINT_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT | GL_COLOR_BUFFER_BIT);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_TEXTURE_2D);
+	glDepthMask(false);
+	glLineWidth(2.5);
+	glPointSize(6.0);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
+	glEnable(GL_LINE_SMOOTH);
+	glEnable(GL_POINT_SMOOTH);
+	glColor(color);
+	glLineWidth(2.0);
+	glPointSize(5.0);
+	glBegin(GL_LINES);
+	glVertex(AA);
+	glVertex(BB);
+	glEnd();
+	glBegin(GL_POINTS);
+	glVertex(AA);
+	glVertex(BB);
+	glEnd();
+	glDepthFunc(GL_GREATER);
+	glLineWidth(1.0f);
+	glPointSize(2.0f);
+	glBegin(GL_LINES);
+	glVertex(AA);
+	glVertex(BB);
+	glEnd();
+	glBegin(GL_POINTS);
+	glVertex(AA);
+	glVertex(BB);
+	glEnd();
+	glDepthFunc(GL_LESS);
+
+	glPopAttrib();
+	assert(!glGetError());
 }
 
 void Rubberband::Drag(QPoint p)

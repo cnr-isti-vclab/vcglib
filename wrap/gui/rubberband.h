@@ -74,6 +74,16 @@ public:
   */
   void Render(QGLWidget* glw);
 
+
+  /*!
+    @brief RenderLine draws a line from two points.
+
+	@param glw the GL widget.
+	@param AA the start point.
+	@param BB the end point.
+  */
+  void RenderLine(QGLWidget* gla, Point3f AA, Point3f BB);
+
   /*!
     @brief Set the current rubberband endpoint.
 
