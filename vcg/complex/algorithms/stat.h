@@ -99,6 +99,21 @@ public:
     return minmax;
   }
 
+  static std::pair<ScalarType,ScalarType> ComputePerEdgeQualityMinMax( MeshType & m)
+  {
+    tri::RequirePerEdgeQuality(m);
+    std::pair<ScalarType,ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(),-std::numeric_limits<ScalarType>::max());
+
+    EdgeIterator ei;
+    for(ei = m.edge.begin(); ei != m.edge.end(); ++ei)
+      if(!(*ei).IsD())
+      {
+        if( (*ei).Q() < minmax.first)  minmax.first =(*ei).Q();
+        if( (*ei).Q() > minmax.second) minmax.second=(*ei).Q();
+      }
+    return minmax;
+  }
+
   /**
     \short compute the barycenter of the surface thin-shell.
     E.g. it assume a 'empty' model where all the mass is located on the surface and compute the barycenter of that thinshell.
