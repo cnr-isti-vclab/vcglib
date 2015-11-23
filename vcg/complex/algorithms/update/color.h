@@ -59,6 +59,8 @@ public:
   typedef typename MeshType::FaceType       FaceType;
   typedef typename MeshType::FacePointer    FacePointer;
   typedef typename MeshType::FaceIterator   FaceIterator;
+  typedef typename MeshType::EdgeIterator   EdgeIterator;
+
   typedef typename MeshType::ScalarType     ScalarType;
   typedef typename MeshType::CoordType      CoordType;
 
@@ -200,6 +202,26 @@ public:
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
       if(!selected || (*fi).IsS())
         (*fi).C().SetColorRamp(minq,maxq,(*fi).Q());
+  }
+
+  /*! \brief This function colores all the edges of a mesh with a hue color shade dependent on the quality.
+
+  If no range of quality is passed it is automatically computed.
+  */
+  static void PerEdgeQualityRamp(MeshType &m, float minq=0, float maxq=0, bool selected=false)
+  {
+    RequirePerEdgeColor(m);
+    RequirePerEdgeQuality(m);
+
+    if(minq==maxq)
+    {
+      std::pair<float,float> minmax = Stat<MeshType>::ComputePerEdgeQualityMinMax(m);
+      minq=minmax.first;
+      maxq=minmax.second;
+    }
+    for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei) if(!(*ei).IsD())
+      if(!selected || (*ei).IsS())
+        (*ei).C().SetColorRamp(minq,maxq,(*ei).Q());
   }
 
   /*! \brief This function colores all the vertices of a mesh with a gray shade dependent on the quality.
