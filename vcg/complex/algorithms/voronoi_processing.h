@@ -1484,7 +1484,7 @@ static bool CheckVoronoiTopology(MeshType& m,std::vector<VertexType *> &seedVec)
   }
 
   std::vector<MeshType *> regionVec(seedVec.size(),0);
-  for(int i=0; i< seedVec.size();i++) regionVec[i] = new MeshType;
+  for(size_t i=0; i< seedVec.size();i++) regionVec[i] = new MeshType;
 
   for(int i=0;i<m.fn;++i)
   {
@@ -1502,7 +1502,7 @@ static bool CheckVoronoiTopology(MeshType& m,std::vector<VertexType *> &seedVec)
   }
 
   bool AllDiskRegion=true;
-  for(int i=0; i< seedVec.size();i++)
+  for(size_t i=0; i< seedVec.size();i++)
   {
     MeshType &rm = *(regionVec[i]);
     tri::Clean<MeshType>::RemoveDuplicateVertex(rm);
@@ -1559,7 +1559,7 @@ static void BuildSeedMap(MeshType &m, std::vector<VertexType *> &seedVec,  std::
   for(size_t i=0;i<seedVec.size();++i)
     seedMap[seedVec[i]]=i;
   for(size_t i=0;i<seedVec.size();++i)
-    assert(tri::Index(m,seedVec[i])>=0 && tri::Index(m,seedVec[i])<m.vn);
+    assert(tri::Index(m,seedVec[i])>=0 && tri::Index(m,seedVec[i])<size_t(m.vn));
 }
 
 /// \brief Build a mesh of the Delaunay triangulation induced by the given seeds
@@ -1713,12 +1713,12 @@ static void RelaxRefineTriangulationSpring(MeshType &m, MeshType &delaMesh, int 
         vector<VertexPointer> starVec;
         face::VVStarVF<FaceType>(&delaMesh.vert[i],starVec);
 
-        for(int j=0;j<starVec.size();++j)
+        for(size_t j=0;j<starVec.size();++j)
           avgLenVec[i] +=Distance(delaMesh.vert[i].cP(),starVec[j]->cP());
         avgLenVec[i] /= float(starVec.size());
 
         avgForce[i] =Point3f(0,0,0);
-        for(int j=0;j<starVec.size();++j)
+        for(size_t j=0;j<starVec.size();++j)
         {
           Point3f force = delaMesh.vert[i].cP()-starVec[j]->cP();
           float len = force.Norm();
