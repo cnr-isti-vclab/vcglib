@@ -49,35 +49,45 @@ public:
   typedef typename vcg::tri::MarchingCubes<MeshType, MyWalker>              MyMarchingCubes;
 
   VoronoiVolumeSampling(MeshType &_baseMesh, MeshType &_seedMesh)
-    :seedTree(0),surfTree(0),baseMesh(_baseMesh),seedMesh(_seedMesh)
+    :seedTree(0),surfTree(0),baseMesh(_baseMesh),seedMesh(_seedMesh),cb(0),restrictedRelaxationFlag(false)
   {
 
   }
-
-  KdTree<ScalarType>  *seedTree;
-  KdTree<ScalarType>  *surfTree;
+  
+  KdTree<ScalarType>  *surfTree; // used for fast inside query 
+  KdTree<ScalarType>  *seedTree; // used to accumulate barycenter in relaxation
+  KdTree<ScalarType>  *seedDomainTree; // used to accumulate barycenter in relaxation
+  
   typename KdTree<ScalarType>::PriorityQueue pq;
-  GridType surfGrid;
+  GridType surfGrid; // used for fast inside query
   typedef FaceTmark<MeshType> MarkerFace;
   MarkerFace mf;
   vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
-
+  vcg::CallBackPos *cb;
+      
   MeshType &baseMesh;
   MeshType &seedMesh;
   MeshType poissonSurfaceMesh;
   ScalarType poissonRadiusSurface;
-  MeshType montecarloVolumeMesh;
+  MeshType montecarloVolumeMesh; // we use this mesh as volume evaluator
+  MeshType seedDomainMesh;       // where we choose the seeds (by default is the montecarlo volume mesh)
+  bool restrictedRelaxationFlag;
 
-  void Init(ScalarType radius=0)
+  
+  // Build up the needed structure for efficient point in mesh search. 
+  // It uses poisson disk sampling of the surface plus a
+  // kdtree to speed up query point closest on surface for points far from surface. 
+  // It initializes the surfGrid, surfTree and poissonSurfaceMesh members   
+  void Init(ScalarType _poissonRadiusSurface=0)
   {
     MeshType montecarloSurfaceMesh;
 
-    if(radius==0) poissonRadiusSurface = baseMesh.bbox.Diag()/50.0f;
-    else poissonRadiusSurface = radius;
+    if(_poissonRadiusSurface==0) poissonRadiusSurface = baseMesh.bbox.Diag()/50.0f;
+    else poissonRadiusSurface = _poissonRadiusSurface;
     ScalarType meshArea = Stat<MeshType>::ComputeMeshArea(baseMesh);
-    int MontecarloSampleNum = 10 * meshArea / (radius*radius);
+    int MontecarloSampleNum = 10 * meshArea / (poissonRadiusSurface*poissonRadiusSurface);
     tri::MeshSampler<MeshType> sampler(montecarloSurfaceMesh);
-    tri::SurfaceSampling<MeshType,tri::MeshSampler<CMeshO> >::Montecarlo(baseMesh, sampler, MontecarloSampleNum);
+    tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::Montecarlo(baseMesh, sampler, MontecarloSampleNum);
     montecarloSurfaceMesh.bbox = baseMesh.bbox; // we want the same bounding box
     poissonSurfaceMesh.Clear();
     tri::MeshSampler<MeshType> mps(poissonSurfaceMesh);
@@ -86,7 +96,7 @@ public:
     tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::PoissonDiskPruning(mps, montecarloSurfaceMesh, poissonRadiusSurface,pp);
     vcg::tri::UpdateBounding<MeshType>::Box(poissonSurfaceMesh);
 
-    qDebug("Surface Sampling radius %f - montecarlo %ivn - Poisson %ivn",poissonRadiusSurface,montecarloSurfaceMesh.vn,poissonSurfaceMesh.vn);
+    printf("Surface Sampling radius %f - montecarlo %ivn - Poisson %ivn\n",poissonRadiusSurface,montecarloSurfaceMesh.vn,poissonSurfaceMesh.vn);
     VertexConstDataWrapper<MeshType> ww(poissonSurfaceMesh);
     if(surfTree) delete surfTree;
     surfTree = new  KdTree<ScalarType>(ww);
@@ -95,7 +105,9 @@ public:
     mf.SetMesh(&baseMesh);
   }
 
-// Compute the signed distance from the surface
+  // Compute the signed distance from the surface exploting both a kdtree and a ugrid 
+  // for a query point p first we use the kdtree with a good poisson sampling of the surface;
+  // to get the nearest point on the surface, then if the point is far from the surface we can use the point point distance, while if it is near (e.g. less than 3*poisson radius) we rely on point face distance with a grid.
 ScalarType DistanceFromSurface(CoordType &p)
 {
   ScalarType squaredDist;
@@ -187,7 +199,10 @@ void BarycentricRelaxVoronoiSamples(int relaxStep)
   int i;
   for(i=0;i<relaxStep;++i)
   {
+    
     std::vector<std::pair<int,CoordType> > sumVec(seedMesh.vn,std::make_pair(0,CoordType(0,0,0)));
+    
+    // First accumulate for each seed the coord of all the samples that are closest to him.
     for(typename MeshType::VertexIterator vi=montecarloVolumeMesh.vert.begin();vi!=montecarloVolumeMesh.vert.end();++vi)
     {
       unsigned int seedInd;
@@ -205,6 +220,14 @@ void BarycentricRelaxVoronoiSamples(int relaxStep)
       {
         CoordType prevP = seedMesh.vert[i].P();
         seedMesh.vert[i].P() = sumVec[i].second /ScalarType(sumVec[i].first);
+        seedMesh.vert[i].Q() = sumVec[i].first;
+        if(restrictedRelaxationFlag)
+        { 
+          unsigned int seedInd;
+          ScalarType sqdist;
+          seedDomainTree->doQueryClosest(seedMesh.vert[i].P(),seedInd,sqdist);
+          seedMesh.vert[i].P() = seedDomainMesh.vert[seedInd].P();
+        }        
         if(prevP != seedMesh.vert[i].P()) changed = true;
       }
     }
@@ -217,7 +240,7 @@ void BarycentricRelaxVoronoiSamples(int relaxStep)
     if(!changed)
       break;
   }
-  qDebug("performed %i relax step on %i",i,relaxStep);
+//  qDebug("performed %i relax step on %i",i,relaxStep);
 }
 
 // Given a volumetric sampling of the mesh, and a set of seeds
@@ -230,8 +253,9 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
   {
     QuadricSumDistance dz;
     std::vector<QuadricSumDistance> dVec(montecarloVolumeMesh.vert.size(),dz);
+    tri::UpdateQuality<MeshType>::VertexConstant(seedMesh,0);
 
-    // Each region has a quadric representing the sum of the squared distances of all the points of its region.
+    // Each voronoi region has a quadric representing the sum of the squared distances of all the points of its region.
     // First Loop:
     // For each point of the volume add its distance to the quadric of its region.
     for(typename MeshType::VertexIterator vi=montecarloVolumeMesh.vert.begin();vi!=montecarloVolumeMesh.vert.end();++vi)
@@ -240,13 +264,13 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
       ScalarType sqdist;
       seedTree->doQueryClosest(vi->P(),seedInd,sqdist);
       dVec[seedInd].AddPoint(vi->P());
+      seedMesh.vert[seedInd].Q() +=1;
     }
 
-    // Second Loop: Search for each region the point that has minimal squared distance from all other points in that region.
+    // Second Loop:  for each region we search in the seed domain the point that has minimal squared distance from all other points in that region.
     // We do that evaluating the quadric in each point
     std::vector< std::pair<ScalarType,int> > seedMinimaVec(seedMesh.vert.size(),std::make_pair(std::numeric_limits<ScalarType>::max(),-1 ));
-
-    for(typename MeshType::VertexIterator vi=montecarloVolumeMesh.vert.begin();vi!=montecarloVolumeMesh.vert.end();++vi)
+    for(typename MeshType::VertexIterator vi=seedDomainMesh.vert.begin();vi!=seedDomainMesh.vert.end();++vi)
     {
       unsigned int seedInd;
       ScalarType sqdist;
@@ -256,7 +280,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
       if(val < seedMinimaVec[seedInd].first)
       {
         seedMinimaVec[seedInd].first = val;
-        seedMinimaVec[seedInd].second = tri::Index(montecarloVolumeMesh,*vi);
+        seedMinimaVec[seedInd].second = tri::Index(seedDomainMesh,*vi);
       }
     }
     changed=false;
@@ -264,7 +288,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
     {
       CoordType prevP = seedMesh.vert[i].P() ;
       if(seedMinimaVec[i].second == -1) tri::Allocator<MeshType>::DeleteVertex(seedMesh,seedMesh.vert[i]);
-      seedMesh.vert[i].P() = montecarloVolumeMesh.vert[seedMinimaVec[i].second].P();
+      seedMesh.vert[i].P() = seedDomainMesh.vert[seedMinimaVec[i].second].P();
       if(prevP != seedMesh.vert[i].P()) changed = true;
     }
     tri::Allocator<MeshType>::CompactVertexVector(seedMesh);
@@ -276,7 +300,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
     if(!changed)
       break;
   }
-  qDebug("performed %i relax step on %i",i,relaxStep);
+//  qDebug("performed %i relax step on %i",i,relaxStep);
 }
 
 /*
@@ -308,7 +332,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
     bb.Offset(baseMesh.bbox.Diag()*0.04f);
     volume.Init(Point3i(sizeX,sizeY,sizeZ),bb);
 
-    qDebug("Init Volume of %i %i %i",sizeX,sizeY,sizeZ);
+//    qDebug("Init Volume of %i %i %i",sizeX,sizeY,sizeZ);
    int cnt=0;
    ScalarType offset= volume.voxel.Norm()*isoThr;
     for(ScalarType i=0;i<sizeX;i++)
@@ -340,7 +364,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
           }
 
     // MARCHING CUBES
-    qDebug("voxel out %i on %i",cnt,sizeX*sizeY*sizeZ);
+//    qDebug("voxel out %i on %i",cnt,sizeX*sizeY*sizeZ);
     MyWalker    walker;
     MyMarchingCubes	 mc(scaffoldingMesh, walker);
     walker.template BuildMesh <MyMarchingCubes>(scaffoldingMesh, volume, mc,0);
@@ -368,20 +392,12 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
  }
 
 
-
-/*
- * Function: BuildVolumeSampling
- * ----------------------------
- * Build a Poisson-Disk Point cloud that cover all the space of the original mesh m
- *
- */
- void BuildVolumeSampling(int montecarloSampleNum, int seedNum, ScalarType &poissonRadius, vcg::CallBackPos *cb=0)
+ void BuildMontecarloSampling(int montecarloSampleNum)
  {
    montecarloVolumeMesh.Clear();
-    math::SubtractiveRingRNG rng;
-//    surfTree->setMaxNofNeighbors(1);
+   math::SubtractiveRingRNG rng;
 
-    while(montecarloVolumeMesh.vn < montecarloSampleNum)
+   while(montecarloVolumeMesh.vn < montecarloSampleNum)
     {
         CoordType point = math::GeneratePointInBox3Uniform(rng,baseMesh.bbox);
         ScalarType d = this->DistanceFromSurface(point);
@@ -392,22 +408,40 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
         if(cb && (montecarloVolumeMesh.vn%1000)==0)
           cb((100*montecarloVolumeMesh.vn)/montecarloSampleNum,"Montecarlo Sampling...");
     }
+   tri::UpdateBounding<MeshType>::Box(montecarloVolumeMesh);
+ }
 
-    vector<VertexPointer>  pruningVec;
-    tri::UpdateBounding<MeshType>::Box(montecarloVolumeMesh);
+/*
+ * Function: BuildVolumeSampling
+ * ----------------------------
+ * Build a Poisson-Disk Point cloud that cover all the space of the original mesh m
+ *
+ */
+ void BuildVolumeSampling(int montecarloSampleNum, int seedNum, ScalarType &poissonRadius)
+ {
+   if(montecarloSampleNum >0) 
+     this->BuildMontecarloSampling(montecarloSampleNum);
+   if(seedDomainMesh.vn == 0) 
+     tri::Append<MeshType,MeshType>::MeshCopy(seedDomainMesh,montecarloVolumeMesh);     
+   
+    vector<VertexPointer>  pruningVec;    
     if(poissonRadius ==0 && seedNum!=0)
-      tri::PoissonPruningExact(montecarloVolumeMesh,pruningVec,poissonRadius,seedNum);
+      tri::PoissonPruningExact(seedDomainMesh,pruningVec,poissonRadius,seedNum);
     else
-      tri::PoissonPruning(montecarloVolumeMesh,pruningVec,poissonRadius,seedNum);
+      tri::PoissonPruning(seedDomainMesh,pruningVec,poissonRadius,seedNum);
 
     std::vector<CoordType> seedPts(pruningVec.size());
     for(size_t i=0;i<pruningVec.size();++i)
       seedPts[i]=pruningVec[i]->P();
-    tri::Build(this->seedMesh,seedPts);
+    tri::BuildMeshFromCoordVector(this->seedMesh,seedPts);
     // Kdtree must be rebuilt at the end of each step;
     VertexConstDataWrapper<MeshType> vdw(seedMesh);
     if(seedTree) delete seedTree;
     seedTree = new KdTree<ScalarType>(vdw);
+    
+    VertexConstDataWrapper<MeshType> vdw2(seedDomainMesh);
+    if(seedDomainTree) delete seedTree;
+    seedDomainTree = new KdTree<ScalarType>(vdw);
 }
 
 }; // end class
