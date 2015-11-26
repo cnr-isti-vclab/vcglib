@@ -604,7 +604,7 @@ void Torus(MeshType &m, float hRingRadius, float vRingRadius, int hRingDiv=24, i
 // this function build a mesh starting from a vector of generic coords (objects having a triple of float at their beginning)
 // and a vector of faces (objects having a triple of ints at theri beginning).
 template <class MeshType,class V, class F >
-void Build( MeshType & in, const V & v, const F & f)
+void BuildMeshFromCoordVectorIndexVector( MeshType & in, const V & v, const F & f)
 {
   typedef typename MeshType::CoordType CoordType;
   typedef typename MeshType::VertexPointer  VertexPointer;
@@ -645,10 +645,10 @@ void Build( MeshType & in, const V & v, const F & f)
 
 
 template <class MeshType,class V>
-void Build( MeshType & in, const V & v)
+void BuildMeshFromCoordVector( MeshType & in, const V & v)
 {
   std::vector<Point3i> dummyfaceVec;
-  Build(in,v,dummyfaceVec);
+  BuildMeshFromCoordVectorIndexVector(in,v,dummyfaceVec);
 }
 
 
