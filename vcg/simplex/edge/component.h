@@ -114,6 +114,7 @@ public:
     }
 
     typedef typename T::VertexType::CoordType CoordType;
+    typedef typename T::VertexType::ScalarType ScalarType;
 
     inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<2); return v[j]; }
     inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<2); return v[j]; }
