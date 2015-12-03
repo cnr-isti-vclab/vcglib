@@ -1692,7 +1692,7 @@ public:
     tri::Allocator<MeshType>::CompactVertexVector(m);
     typedef vcg::SpatialHashTable<VertexType, ScalarType> SampleSHT;
     SampleSHT sht;
-    tri::VertTmark<MeshType> markerFunctor;
+    tri::EmptyTMark<MeshType> markerFunctor;
     std::vector<VertexType*> closests;
     int mergedCnt=0;
     sht.Set(m.vert.begin(), m.vert.end());
