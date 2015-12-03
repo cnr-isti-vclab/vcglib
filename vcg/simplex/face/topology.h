@@ -793,7 +793,7 @@ void VVExtendedStarVF(typename FaceType::VertexType* vp,
             for (unsigned int i=0;i<vertVec.size();i++)
             {
                 std::vector<VertexType *> Vtemp;
-                vcg::face::VVStarVF<FaceType>(vp,Vtemp);
+                vcg::face::VVStarVF<FaceType>(vertVec[i],Vtemp);
                 toAdd.insert(toAdd.end(),Vtemp.begin(),Vtemp.end());
             }
             vertVec.insert(vertVec.end(),toAdd.begin(),toAdd.end());
