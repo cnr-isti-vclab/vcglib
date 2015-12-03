@@ -58,7 +58,7 @@ template<class MESH_TYPE> class OverlapEstimation
     typedef typename MeshType::VertexIterator VertexIterator;
     typedef typename vector<VertexPointer>::iterator VertexPointerIterator;
     typedef GridStaticPtr<VertexType, ScalarType > MeshGrid;
-    typedef tri::VertTmark<MeshType> MarkerVertex;
+    typedef tri::EmptyTMark<MeshType> MarkerVertex;
 
     private:
     /** Private simple class needed to perform sampling of pointers to vertexes. */
