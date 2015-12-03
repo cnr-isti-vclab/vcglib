@@ -29,8 +29,11 @@
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
 #include <vcg/space/point4.h>
+#include <vcg/space/index/grid_util.h>
+#include <vcg/space/index/grid_closest.h>
 #include <vcg/math/base.h>
 #include <vcg/simplex/face/distance.h>
+#include <vcg/simplex/edge/distance.h>
 #include <vcg/simplex/vertex/distance.h>
 #include <vcg/space/intersection3.h>
 #include <vcg/space/index/space_iterators.h>
@@ -64,17 +67,29 @@ namespace vcg {
             FaceTmark(){}
             FaceTmark(MESH_TYPE *m) {this->SetMesh(m);}
         };
+        
+        template <class MESH_TYPE>
+        class EdgeTmark:public Tmark<MESH_TYPE,typename MESH_TYPE::EdgeType>
+        {
+        public:
+            EdgeTmark(){}
+            EdgeTmark(MESH_TYPE *m) {this->SetMesh(m);}
+        };
+        
 
         template <class MESH_TYPE>
-        class VertTmark
+        class EmptyTMark
         {
         public:
         typedef typename  MESH_TYPE::VertexType VertexType;
-            inline VertTmark(){}
-            inline VertTmark(MESH_TYPE *){}
+          typedef typename  MESH_TYPE::EdgeType EdgeType;
+            inline EmptyTMark(){}
+            inline EmptyTMark(MESH_TYPE *){}
             inline void UnMarkAll() const {}
             inline bool IsMarked(VertexType*) const { return false; }
             inline void Mark(VertexType*) const {}
+            inline bool IsMarked(EdgeType*) const { return false; }
+            inline void Mark(EdgeType*) const {}
             inline void SetMesh(void * /*m=0*/) const {}
         };
 
@@ -190,7 +205,7 @@ namespace vcg {
         {
             typedef typename GRID::ScalarType ScalarType;
             typedef Point3<ScalarType> Point3x;
-            typedef VertTmark<MESH> MarkerVert;
+            typedef EmptyTMark<MESH> MarkerVert;
             MarkerVert mv;
             mv.SetMesh(&mesh);
             typedef vcg::vertex::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
@@ -206,7 +221,7 @@ namespace vcg {
         {
             typedef typename GRID::ScalarType ScalarType;
             typedef Point3<ScalarType> Point3x;
-            typedef VertTmark<MESH> MarkerVert;
+            typedef EmptyTMark<MESH> MarkerVert;
             MarkerVert mv;
             mv.SetMesh(&mesh);
             typedef vcg::vertex::PointScaledDistanceFunctor<typename MESH::VertexType> VDistFunct;
@@ -223,7 +238,7 @@ namespace vcg {
         {
             typedef typename GRID::ScalarType ScalarType;
             typedef Point3<ScalarType> Point3x;
-            typedef VertTmark<MESH> MarkerVert;
+            typedef EmptyTMark<MESH> MarkerVert;
             MarkerVert mv;
             mv.SetMesh(&mesh);
             typedef vcg::vertex::PointNormalDistanceFunctor<typename MESH::VertexType> VDistFunct;
@@ -266,7 +281,7 @@ namespace vcg {
             const typename GRID::CoordType & _p, const typename GRID::ScalarType & _maxDist,
             OBJPTRCONTAINER & _objectPtrs,DISTCONTAINER & _distances, POINTCONTAINER & _points)
         {
-            typedef VertTmark<MESH> MarkerVert;
+            typedef EmptyTMark<MESH> MarkerVert;
             MarkerVert mv;
             mv.SetMesh(&mesh);
             typedef vcg::vertex::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
@@ -301,7 +316,7 @@ namespace vcg {
             DISTCONTAINER & _distances,
             POINTCONTAINER & _points)
         {
-            typedef VertTmark<MESH> MarkerVert;
+            typedef EmptyTMark<MESH> MarkerVert;
             MarkerVert mv;
             mv.SetMesh(&mesh);
             typedef vcg::vertex::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
@@ -327,7 +342,7 @@ namespace vcg {
             const vcg::Box3<typename GRID::ScalarType> _bbox,
             OBJPTRCONTAINER & _objectPtrs)
         {
-            typedef VertTmark<MESH> MarkerVert;
+            typedef EmptyTMark<MESH> MarkerVert;
             MarkerVert mv;
             mv.SetMesh(&mesh);
             return(gr.GetInBox/*<MarkerVert,OBJPTRCONTAINER>*/(mv,_bbox,_objectPtrs));
@@ -452,14 +467,14 @@ namespace vcg {
         };
 
         template <class GRID,class MESH>
-        class ClosestVertexIterator:public vcg::ClosestIterator<GRID, vcg::vertex::PointDistanceFunctor<typename MESH::ScalarType>, VertTmark<MESH> >
+        class ClosestVertexIterator:public vcg::ClosestIterator<GRID, vcg::vertex::PointDistanceFunctor<typename MESH::ScalarType>, EmptyTMark<MESH> >
         {
         public:
             typedef GRID GridType;
             typedef MESH MeshType;
-            typedef VertTmark<MESH> MarkerVert;
+            typedef EmptyTMark<MESH> MarkerVert;
             typedef vcg::vertex::PointDistanceFunctor<typename MESH::ScalarType> VDistFunct;
-            typedef vcg::ClosestIterator<GRID, VDistFunct, VertTmark<MESH> > ClosestBaseType;
+            typedef vcg::ClosestIterator<GRID, VDistFunct, EmptyTMark<MESH> > ClosestBaseType;
             VDistFunct fn;
             ClosestVertexIterator(GridType &_Si):ClosestBaseType(_Si,fn){}
 
@@ -490,7 +505,7 @@ namespace vcg {
 
         /// this is for meshes with 2D coordinates
         template <class MESH, class GRID>
-            typename MESH::FaceType * GetClosestEdgeBase( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p,
+            typename MESH::EdgeType * GetClosestEdge2DBase( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p,
                                                           const typename GRID::ScalarType _maxDist,typename GRID::ScalarType & _minDist,
                                                           typename GRID::CoordType &_closestPt)
         {
@@ -503,6 +518,21 @@ namespace vcg {
             return (gr.GetClosest(PDistFunct,mf,_p,_maxDist,_minDist,_closestPt));
         }
 
+        /// this is for meshes with 3D coordinates
+        template <class MESH, class GRID>
+            typename MESH::EdgeType * GetClosestEdgeBase( MESH & mesh,GRID & gr,const typename GRID::CoordType & _p,
+                                                          const typename GRID::ScalarType _maxDist,typename GRID::ScalarType & _minDist,
+                                                          typename GRID::CoordType &_closestPt)
+        {
+            typedef typename GRID::ScalarType ScalarType;
+            typedef EmptyTMark<MESH> MarkerEdge;
+            MarkerEdge mf;
+            mf.SetMesh(&mesh);
+            vcg::edge::PointDistanceFunctor<ScalarType> PDistFunct;
+            _minDist=_maxDist;
+//            return (gr.GetClosest(PDistFunct,mf,_p,_maxDist,_minDist,_closestPt));
+            return vcg::GridClosest(gr,PDistFunct,mf, _p,_maxDist,_minDist,_closestPt);
+        }
 
     }	 // end namespace tri
 }	 // end namespace vcg

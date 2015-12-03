@@ -1507,7 +1507,7 @@ static bool checkPoissonDisk(SampleSHT & sht, const Point3<ScalarType> & p, Scal
 {
     // get the samples closest to the given one
     std::vector<VertexType*> closests;
-  typedef VertTmark<MeshType> MarkerVert;
+  typedef EmptyTMark<MeshType> MarkerVert;
   static MarkerVert mv;
 
     Box3f bb(p-Point3f(radius,radius,radius),p+Point3f(radius,radius,radius));
