@@ -23,6 +23,8 @@
 #ifndef __VCGLIB_EXPORTERFIELD
 #define __VCGLIB_EXPORTERFIELD
 
+#include <vcg/complex/algorithms/parametrization/tangent_field_operators.h>
+
 namespace vcg {
 namespace tri {
 namespace io {
@@ -63,19 +65,6 @@ public:
             fprintf(f,"# frame generated with VCG \n");
             fprintf(f,"target frame \n");
             fprintf(f,"%d\n",nf);
-//            if (fscanf(f,"%d",&nnv)!=1)
-//            {
-//                while (fscanf(f,"%c",&c)!=EOF) if (c=='\n') break; // skip
-//                fscanf(f,"%d",&nnv);
-//            }
-//            int targetnum=mesh.fn;
-//            if (per_vertex)
-//                targetnum=mesh.vn;
-//            if (nnv != (int)targetnum)
-//            {
-//                //if (errorMsg) sprintf(errorMsg,"Wrong element number. Found: %d. Expected: %d.",nnv,mesh->vn);
-//                return false;
-//            }
 //            
 //            if( per_vertex && !HasPerVertexCurvatureDir(mesh)) throw vcg::MissingComponentException("PerVertexCurvatureDir");
 //            if(!per_vertex && !HasPerFaceCurvatureDir(mesh))   throw vcg::MissingComponentException("PerFaceCurvatureDir");
@@ -83,9 +72,7 @@ public:
                 throw vcg::MissingComponentException("PerFaceCurvatureDir");
             
             fprintf(f,"k1	 k2	 k1v_x	 k1v_y	 k1v_z	 k2v_x	 k2v_y	 k2v_z\n");
-//            while (fscanf(f,"%c",&c)!=EOF) if (c=='\n') break; // skip
-//            // skip strange string line
-//            while (fscanf(f,"%c",&c)!=EOF) if (c=='\n') break;
+
             for (int i=0; i<nf; i++){
                 vcg::Point3<float> u;
                 u.Import(mesh.face[i].PD1());
@@ -95,29 +82,6 @@ public:
                 fprintf(f,"1 1 %f %f %f %f %f %f\n",
                         (u.X()),(u.Y()),(u.Z()),
                         (v.X()),(v.Y()),(v.Z()));
-//                if (fscanf(f,
-//                           "%f %f %f %f %f %f %f %f",
-//                           &a,&b,
-//                           &(v.X()),&(v.Y()),&(v.Z()),
-//                           &(u.X()),&(u.Y()),&(u.Z())
-//                           )!=8) {
-//                    //if (errorMsg) sprintf(errorMsg,"Format error reading vertex n. %d",i);
-//                    return false;
-//                }
-//                
-//                u.Normalize();
-//                v.Normalize();
-//                
-//                if (per_vertex)
-//                {
-//                    mesh.vert[i].PD1().Import(u);
-//                    mesh.vert[i].PD2().Import(v);
-//                }
-//                else
-//                {
-//                    mesh.face[i].PD1().Import(u);
-//                    mesh.face[i].PD2().Import(v);
-//                }
             }
         fclose(f);
     }
@@ -143,22 +107,19 @@ public:
         fclose(f);
     }
 
-    ///Save a 4 rosy format file as used by
-    ///Interactive Visualization of Rotational Symmetry Fields on Surfaces
-    ///Jonathan Palacios and Eugene Zhang
-    static void Save4ROSYFace(MeshType &mesh,
-                        const char *path)
+    //Save a 4 rosy format file as pair of angles
+    static void Save2AngleFace(MeshType &mesh,
+                              const char *path)
     {
         FILE *f = fopen(path,"wt");
-        fprintf(f,"%d\n",mesh.vn);
-        fprintf(f,"4\n");
+        fprintf(f,"#%d param_field\n",mesh.fn);
         for (unsigned int i=0;i<mesh.face.size();i++)
         {
-            float dirX=(float)mesh.face[i].PD1().X();
-            float dirY=(float)mesh.face[i].PD1().Y();
-            float dirZ=(float)mesh.face[i].PD1().Z();
-            fprintf(f,"%f %f %f \n",dirX,dirY,dirZ);
-
+            ScalarType alpha1,alpha2;
+            CoordType PD1Test=mesh.face[i].PD1();
+            CoordType PD2Test=mesh.face[i].PD2();
+            vcg::tri::CrossField<MeshType>::CrossFieldToAngles(mesh.face[i],alpha1,alpha2,1);
+            fprintf(f,"%d %f %f \n",i,alpha1,alpha2);
         }
         fclose(f);
     }
