@@ -158,7 +158,8 @@ public:
       }
   }
 
-  static void ComputePerFaceQualityDistribution( MeshType & m, Distribution<float> &h, bool selectionOnly = false)    // V1.0
+  static void ComputePerFaceQualityDistribution( MeshType & m,  Distribution<typename MeshType::ScalarType> &h,
+                                                 bool selectionOnly = false)    // V1.0
   {
     tri::RequirePerFaceQuality(m);
     for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
