@@ -113,7 +113,6 @@ public:
         }while(strcmp(final,"\"")!=0);
 
 //        printf("%s\n",skipstr);
-        printf("puppa!");
         fflush(stdout);
 //        for (int i=0;i<mesh.fn;i++)
 //        {
@@ -315,6 +314,26 @@ public:
         return true;
     }
 
+
+    //Load a 4 rosy format file as pair of angles
+    static bool Load2AngleFace(MeshType &mesh,
+                              const char *path)
+    {
+        FILE *f = fopen(path,"rt");
+        if (f==NULL)return false;
+        int num;
+        fscanf(f,"#%d param_field\n",&num);
+        if (num!=mesh.face.size())return false;
+        for (unsigned int i=0;i<mesh.face.size();i++)
+        {
+            float alpha1,alpha2;
+            int index;
+            fscanf(f,"%d %f %f \n",&index,&alpha1,&alpha2);
+            vcg::tri::CrossField<MeshType>::AnglesToCrossField(mesh.face[i],(ScalarType)alpha1,(ScalarType)alpha2,1);
+        }
+        fclose(f);
+        return true;
+    }
 
 }; // end class
 
