@@ -26,7 +26,7 @@
 #include <queue>
 #include <unordered_map>
 #include <algorithm>
-
+#include <vcg/complex/allocate.h>
 #include <vcg/complex/algorithms/clean.h>
 
 namespace vcg
@@ -58,7 +58,7 @@ private:
   // Initialize the convex hull with the biggest tetraedron created using the vertices of the input mesh
   static void InitConvexHull(InputMesh& mesh, CHMesh& convexHull)
   {
-  typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<size_t>(convexHull, std::string("indexInput"));
+  typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<CHMesh>::template GetPerVertexAttribute<size_t>(convexHull, std::string("indexInput"));
   InputVertexPointer v[3];
     //Find the 6 points with min/max coordinate values
     InputVertexIterator vi = mesh.vert.begin();
@@ -172,7 +172,7 @@ public:
     vcg::tri::RequireFFAdjacency(convexHull);
     vcg::tri::RequirePerFaceNormal(convexHull);
     vcg::tri::Allocator<InputMesh>::CompactVertexVector(mesh);
-    typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<InputMesh>::template GetPerVertexAttribute<size_t>(convexHull, std::string("indexInput"));
+    typename CHMesh:: template PerVertexAttributeHandle<size_t> indexInputVertex = Allocator<CHMesh>::template GetPerVertexAttribute<size_t>(convexHull, std::string("indexInput"));
     if (mesh.vert.size() < 4)
       return false;
     vcg::tri::UpdateFlags<InputMesh>::VertexClearV(mesh);
