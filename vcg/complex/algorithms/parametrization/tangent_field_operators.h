@@ -809,6 +809,55 @@ public:
         return alpha;
     }
 
+    ///transform a cross field into a couple of angles
+    static void CrossFieldToAngles(const FaceType &f,
+                                   ScalarType &alpha1,
+                                   ScalarType &alpha2,
+                                   int RefEdge=1)
+    {
+        CoordType axis0=f.cP1(RefEdge)-f.cP0(RefEdge);
+        axis0.Normalize();
+        CoordType axis2=f.cN();
+        axis2.Normalize();
+        CoordType axis1=axis2^axis0;
+        axis1.Normalize();
+
+
+        vcg::Matrix33<ScalarType> Trans=vcg::TransformationMatrix(axis0,axis1,axis2);
+
+        //trensform the vector to the reference frame by rotating it
+        CoordType trasfPD1=Trans*f.cPD1();
+        CoordType trasfPD2=Trans*f.cPD2();
+
+        //then find the angle with respact to axis 0
+        alpha1=atan2(trasfPD1.Y(),trasfPD1.X());
+        alpha2=atan2(trasfPD2.Y(),trasfPD2.X());
+    }
+
+    ///transform a cross field into a couple of angles
+    static void AnglesToCrossField(FaceType &f,
+                                   const ScalarType &alpha1,
+                                   const ScalarType &alpha2,
+                                   int RefEdge=1)
+    {
+          CoordType axis0=f.cP1(RefEdge)-f.cP0(RefEdge);
+          axis0.Normalize();
+          CoordType axis2=f.cN();
+          axis2.Normalize();
+          CoordType axis1=axis2^axis0;
+          axis1.Normalize();
+
+          vcg::Matrix33<ScalarType> Trans=vcg::TransformationMatrix(axis0,axis1,axis2);
+          vcg::Matrix33<ScalarType> InvTrans=Inverse(Trans);
+
+          CoordType PD1=CoordType(cos(alpha1),sin(alpha1),0);
+          CoordType PD2=CoordType(cos(alpha2),sin(alpha2),0);
+
+          //then transform and store in the face
+          f.PD1()=(InvTrans*PD1);
+          f.PD2()=(InvTrans*PD2);
+    }
+
     ///return the 4 directiona of the cross field in 3D
     ///given a first direction as input
     static void CrossVector(const CoordType &dir0,
@@ -1140,34 +1189,6 @@ public:
     }
 
 
-//    ///return true if a given vertex is singular,
-//    ///return also the missmatch
-//    static bool IsSingularByCross(const VertexType &v,int &missmatch)
-//    {
-//        typedef typename VertexType::FaceType FaceType;
-//        ///check that is on border..
-//        if (v.IsB())return false;
-
-//        std::vector<face::Pos<FaceType> > posVec;
-//        //SortedFaces(v,faces);
-//        face::Pos<FaceType> pos(v.cVFp(), v.cVFi());
-//        vcg::face::VFOrderedStarFF(pos, posVec);
-
-//        missmatch=0;
-//        for (unsigned int i=0;i<posVec.size();i++)
-//        {
-//            FaceType *curr_f=posVec[i].F();
-//            FaceType *next_f=posVec[(i+1)%posVec.size()].F();
-
-//            ///find the current missmatch
-//            missmatch+=MissMatchByCross(*curr_f,*next_f);
-
-//            missmatch=missmatch%4;
-//        }
-////        missmatch=missmatch%4;
-//        return(missmatch!=0);
-//    }
-
     ///return true if a given vertex is singular,
     ///return also the missmatch
     static bool IsSingularByCross(const VertexType &v,int &missmatch)
@@ -1188,9 +1209,7 @@ public:
             FaceType *next_f=posVec[(i+1)%posVec.size()].F();
 
             //find the current missmatch
-            //missmatch+=MissMatchByCross(*curr_f,*next_f);
             curr_dir=FollowDirection(*curr_f,*next_f,curr_dir);
-            //missmatch=missmatch%4;
         }
         missmatch=curr_dir;
         return(curr_dir!=0);
