@@ -209,7 +209,6 @@ bool Intersection(Plane3<ScalarType>  pl,
 									IndexingType *grid,
 									typename std::vector<typename TriMeshType::FaceType*> &v)
 {
-	typedef typename TriMeshType::FaceContainer FaceContainer;
 	typedef IndexingType GridType;
 	typename TriMeshType::FaceIterator fi;
 	v.clear();
