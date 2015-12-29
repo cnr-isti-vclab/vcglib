@@ -212,7 +212,7 @@ namespace vcg {
                 static int Open(OpenMeshType &mesh, const char *filename, int &loadmask, CallBackPos *cb=0)
                 {
                     Info oi;
-                    oi.mask=-1;
+                    oi.mask=0;
                     oi.cb=cb;
                     int ret=Open(mesh,filename,oi);
                     loadmask=oi.mask;
@@ -234,7 +234,7 @@ namespace vcg {
                     CallBackPos *cb = oi.cb;
 
                     // if LoadMask has not been called yet, we call it here
-                    if (oi.mask == -1)
+                    if (oi.mask == 0)
                         LoadMask(filename, oi);
 
                     const int inputMask = oi.mask;
