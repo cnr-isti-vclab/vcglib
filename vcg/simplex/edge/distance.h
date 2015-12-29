@@ -31,6 +31,7 @@
 
 #include <vcg/math/base.h>
 #include <vcg/space/point3.h>
+#include <vcg/space/distance3.h>
 #include <vcg/space/segment3.h>
 
 
@@ -48,8 +49,11 @@ namespace vcg {
 		s.P0()=e.V(0)->P();
 		s.P1()=e.V(1)->P();
 		typename EdgeType::CoordType nearest;
-		nearest=vcg::ClosestPoint<typename EdgeType::ScalarType>(s,q);
-		typename EdgeType::ScalarType d=(q-nearest).Norm();
+		typename EdgeType::ScalarType d;
+//		nearest=vcg::ClosestPoint<typename EdgeType::ScalarType>(s,q);
+//		d=(q-nearest).Norm();
+		vcg::SegmentPointDistance(s,q ,nearest,d); 
+		
 		if (d<dist){
 			dist=d;
 			p=nearest;
@@ -78,6 +82,19 @@ namespace vcg {
 		}
 	};
 
+	template <class EdgeType> 
+	typename EdgeType::ScalarType Length(const EdgeType &e)
+	{
+		return Distance(e.cV(0)->cP(),e.cV(1)->cP());
+	}
+
+	template <class EdgeType> 
+	typename EdgeType::VertexType::CoordType Center(const EdgeType &e)
+	{
+		return (e.cV(0)->cP()+e.cV(1)->cP())/2.0;
+	}
+
+	
 }	 // end namespace edge
 	
 }	 // end namespace vcg
