@@ -75,6 +75,7 @@ public:
 
   void start(MeshType &m, FacePointer p)
   {
+    tri::RequirePerFaceMark(m);
     mp=&m;
     while(!sf.empty()) sf.pop();
     UnMarkAll(m);
