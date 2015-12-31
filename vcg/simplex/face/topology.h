@@ -468,7 +468,9 @@ bool FFLinkCondition(FaceType &f, const int z)
 
 /*! Perform a simple edge collapse
  * The edge z is collapsed and the vertex V(z) is collapsed onto the vertex V1(Z)
- * It assumes that the mesh is Manifold.
+ * vertex V(z) is deleted and vertex V1(z) survives.
+ * It assumes that the mesh is Manifold. 
+ * Note that it preserves manifoldness only if FFLinkConditions are satisfied
  * If the mesh is not manifold it will crash (there will be faces with deleted vertexes around)
  *           f12
  *   surV ___________
