@@ -90,16 +90,10 @@ class Pos
 {
 public:
 
-	/// The vertex type
 	typedef	typename EDGETYPE::VertexType VertexType;
-	/////The HEdgePos type
 	typedef Pos< EDGETYPE> POSTYPE;
-	///// The vector type
-	//typedef typename MVTYPE::coord_type vectorial_type;
-	///// The scalar type
-	//typedef typename MVTYPE::scalar_type scalar_type;
 
-	/// Pointer to the face of the half-edge
+	/// Pointer to the edge
 	EDGETYPE *e;
 	/// Pointer to the vertex
 	VertexType *v;
@@ -113,17 +107,17 @@ public:
 
   // Official Access functions functions
    VertexType *& V(){ return v; }
-   EDGETYPE  *& E(){ return e; }
+   EDGETYPE   *& E(){ return e; }
    int VInd(){
      return (e->V(0)==v)?0:1;
      }
 
-	/// Operator to compare two half-edge
+	/// Operator to compare two edge pos
 	inline bool operator == ( POSTYPE const & p ) const {
 			return (e==p.e &&v==p.v);
 	} 
 
-	/// Operator to compare two half-edge
+	/// Operator to compare two edge pos
 	inline bool operator != ( POSTYPE const & p ) const {
 			return (e!=p.e || v!=p.v);
 	} 
@@ -169,21 +163,12 @@ public:
        FlipV();
 	}
   
-		// Paolo Cignoni 19/6/99
-		// Si muove sulla faccia adiacente a f, lungo uno spigolo che
-		// NON e' j, e che e' adiacente a v 
-		// in questo modo si scandiscono tutte le facce incidenti in un 
-		// vertice f facendo Next() finche' non si ritorna all'inizio
-		// Nota che sul bordo rimbalza, cioe' se lo spigolo !=j e' di bordo
-		// restituisce sempre la faccia f ma con nj che e' il nuovo spigolo di bordo 
-		// vecchi parametri:     	MFTYPE * & f, MVTYPE * v, int & j
-
-	// Cambia edge mantenendo la stessa faccia e lo stesso vertice
-	/// Changes edge maintaining the same face and the same vertex
+	/// Changes vertex maintaining the edge
 	void FlipV()
 	{
 		v = (e->V(0)==v)?e->V(1):e->V(0);
 	}
+	/// Changes edge maintaining the vertex
 	void FlipE()
 	{
 		assert( (e->V(0)==v) ||(e->V(1)==v));
