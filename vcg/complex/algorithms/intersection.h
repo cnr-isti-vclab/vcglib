@@ -159,7 +159,7 @@ bool IntersectionPlaneMesh(TriMeshType & m,
       nmVec.clear();
       for(int j=0;j<3;++j)
       {
-        if((qH[m.face[i].V0(j)] * qH[m.face[i].V1(j)])<0)
+       if((qH[m.face[i].V0(j)] * qH[m.face[i].V1(j)])<0)
        {
          const Point3<ScalarType> &p0 = m.face[i].V0(j)->cP();
          const Point3<ScalarType> &p1 = m.face[i].V1(j)->cP();
@@ -175,7 +175,11 @@ bool IntersectionPlaneMesh(TriMeshType & m,
          Point3<ScalarType> nn =(n0*fabs(q1) + n1*fabs(q0))/fabs(q0-q1);
          nmVec.push_back(nn);
        }
-        if(qH[m.face[i].V(j)]==0)  ptVec.push_back(m.face[i].V(j)->cP());
+	   if (qH[m.face[i].V(j)] == 0)
+	   {
+		   ptVec.push_back(m.face[i].V(j)->cP());
+		   nmVec.push_back(m.face[i].V(j)->cN());
+	   }
       }
       if(ptVec.size()>=2)
       {
