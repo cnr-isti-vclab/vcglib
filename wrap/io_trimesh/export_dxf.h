@@ -47,6 +47,9 @@ public:
 
     FILE * o = fopen(filename,"w");
     if(o==NULL)	return 1;
+
+	writeHeader(o, m);
+
     fprintf(o,"0\n");
     fprintf(o,"SECTION\n");
     fprintf(o,"2\n");
@@ -102,17 +105,20 @@ public:
   }
 
 
-  static bool SaveEdge(SaveMeshType  &mp, const char * filename)
+  static bool SaveEdge(SaveMeshType  &m, const char * filename)
   {
     FILE * o = fopen(filename,"w");
     if(o==NULL)	return 1;
+
+	writeHeader(o, m);
+
     fprintf(o,"0\n");
     fprintf(o,"SECTION\n");
     fprintf(o,"2\n");
     fprintf(o,"ENTITIES\n");
 
     typename SaveMeshType::EdgeIterator ei;
-    for(ei=mp.edge.begin(); ei!=mp.edge.end();++ei)
+    for(ei=m.edge.begin(); ei!=m.edge.end();++ei)
     {
       CoordType p1 = (*ei).V(0)->P();
       CoordType p2 = (*ei).V(1)->P();
@@ -143,6 +149,72 @@ public:
     fprintf(o,"EOF\n");
     fclose(o);
     return true;
+  }
+
+  static bool writeHeader(FILE* o, SaveMeshType  &mp)
+  {
+	  // standard DXF header
+	  // most of data is meaningless, but required by a lot of importers
+	  fprintf(o, "999\n");
+	  fprintf(o, "DXF created by VCGLib\n");
+	  fprintf(o, "0\n");
+	  fprintf(o, "SECTION\n");
+	  fprintf(o, "2\n");
+	  fprintf(o, "HEADER\n");
+
+	  // Version of the dxf specs, most reader need version 12 or above (AC1009) 
+	  fprintf(o, "9\n");
+	  fprintf(o, "$ACADVER\n");
+	  fprintf(o, "1\n");
+	  fprintf(o, "AC1009\n");
+
+	  // Insertion base set by BASE command (in WCS)
+	  fprintf(o, "9\n");
+	  fprintf(o, "$INSBASE\n");
+	  fprintf(o, "10\n");
+	  fprintf(o, "0.0\n");
+	  fprintf(o, "20\n");
+	  fprintf(o, "0.0\n");
+	  fprintf(o, "30\n");
+	  fprintf(o, "0.0\n");
+
+	  // extents for draw space and line drawing... 
+	  // I will just use the data from the boundingbox (largest bbox value in all directions) 
+	  double emin = std::min(mp.bbox.min[0], std::min(mp.bbox.min[1], mp.bbox.min[2]));
+	  double emax = std::max(mp.bbox.max[0], std::max(mp.bbox.max[1], mp.bbox.max[2]));
+
+	  fprintf(o, "9\n");
+	  fprintf(o, "$EXTMIN\n");
+	  fprintf(o, "10\n");
+	  fprintf(o, "%f\n",emin);
+	  fprintf(o, "20\n");
+	  fprintf(o, "%f\n",emin);
+
+	  fprintf(o, "9\n");
+	  fprintf(o, "$EXTMAX\n");
+	  fprintf(o, "10\n");
+	  fprintf(o, "%f\n", emax);
+	  fprintf(o, "20\n");
+	  fprintf(o, "%f\n", emax);
+
+	  fprintf(o, "9\n");
+	  fprintf(o, "$LINMIN\n");
+	  fprintf(o, "10\n");
+	  fprintf(o, "%f\n", emin);
+	  fprintf(o, "20\n");
+	  fprintf(o, "%f\n", emin);
+
+	  fprintf(o, "9\n");
+	  fprintf(o, "$LINMAX\n");
+	  fprintf(o, "10\n");
+	  fprintf(o, "%f\n", emax);
+	  fprintf(o, "20\n");
+	  fprintf(o, "%f\n", emax);
+
+	  fprintf(o, "0\n");
+	  fprintf(o, "ENDSEC\n");
+
+	  return true;
   }
 
 
