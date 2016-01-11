@@ -83,7 +83,7 @@ public:
     void Default(MeshType &m)
     {
       surfDistThr   = m.bbox.Diag()/50000.0;
-      polyDistThr   = m.bbox.Diag()/1000.0;
+      polyDistThr   = m.bbox.Diag()/5000.0;
       minRefEdgeLen    = m.bbox.Diag()/16000.0;
       maxSimpEdgeLen    = m.bbox.Diag()/10000.0;
       maxSmoothDelta =   m.bbox.Diag()/100.0;
@@ -176,7 +176,82 @@ public:
   
   }
   
-  
+  void CleanSpuriousDanglingEdges(MeshType &poly)
+  {
+    
+    EdgeGrid edgeGrid;
+    edgeGrid.Set(poly.edge.begin(), poly.edge.end());    
+    std::vector< std::pair<VertexType *, VertexType *> > mergeVec;
+    UpdateFlags<MeshType>::FaceClearV(base);
+    UpdateTopology<MeshType>::FaceFace(base);
+    for(int i=0;i<base.fn;++i)
+    {
+      FaceType *fp=&base.face[i];
+      if(!fp->IsV())
+      {
+        for(int j=0;j<3;++j)
+          if(face::IsBorder(*fp,j))
+          {
+            face::Pos<FaceType> startPos(fp,int(j));
+            assert(startPos.IsBorder());
+            face::Pos<FaceType> curPos=startPos;
+            face::Pos<FaceType> prevPos=startPos;
+            int edgeCnt=0;
+            do
+            {
+              prevPos=curPos;
+              curPos.F()->SetV();
+              curPos.NextB();
+              edgeCnt++;
+              if(Distance(curPos.V()->P(),prevPos.VFlip()->P())<0.000000001f)
+              {
+                Point3f endp = curPos.VFlip()->P();
+                float minDist=par.gridBailout;
+                Point3f closestP;
+                EdgeType *cep = vcg::tri::GetClosestEdgeBase(poly,edgeGrid,endp,par.gridBailout,minDist,closestP);        
+                if(minDist > par.polyDistThr){
+                  mergeVec.push_back(std::make_pair(curPos.V(),prevPos.VFlip()));
+                  printf("Vertex %i and %i should be merged\n",tri::Index(base,curPos.V()),tri::Index(base,prevPos.VFlip()));
+                }
+              }
+              
+            } while(curPos!=startPos);
+            printf("walked along a border of %i edges\n",edgeCnt);
+            break;
+          }
+      }
+    }
+    printf("Found %i vertex pairs to be merged\n",mergeVec.size());
+    for(int k=0;k<mergeVec.size();++k)
+    {
+      VertexType *vdel=mergeVec[k].first;
+      VertexType *vmerge=mergeVec[k].second;
+      for(int i=0;i<base.fn;++i)
+      {
+        FaceType *fp=&base.face[i];
+        for(int j=0;j<3;++j)
+          if(fp->V(j)==vdel) fp->V(j)=vmerge;        
+      }
+      Allocator<MeshType>::DeleteVertex(base,*vdel);
+    }
+    Allocator<MeshType>::CompactEveryVector(base);
+    
+   
+      for(int i=0;i<base.fn;++i)
+      {
+        FaceType *fp=&base.face[i];
+        for(int j=0;j<3;++j)
+          if(fp->V0(j)==fp->V1(j)) 
+        {
+            Allocator<MeshType>::DeleteFace(base,*fp);
+            printf("Deleted face %i\n",tri::Index(base,fp));
+        }
+        
+      }
+      Allocator<MeshType>::CompactEveryVector(base);
+      
+    
+  }  
   // 
   void BuildVisitTree(MeshType &dualMesh)
   {
@@ -579,8 +654,10 @@ public:
 //    printf("Added %i vertices\n",newVertVec.size());
 //    for(int i=0;i<newVertVec.size();++i)
 //        base.vert[newVertVec[i]].C()=Color4b::Red;
-    
     tri::io::ExporterPLY<MeshType>::Save(base,"base_cut.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );  
+    CleanSpuriousDanglingEdges(poly);
+    tri::io::ExporterPLY<MeshType>::Save(base,"base_cut_clean.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );  
+    
   }
 
    
