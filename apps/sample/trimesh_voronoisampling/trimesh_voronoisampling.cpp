@@ -70,7 +70,8 @@ int main( int argc, char **argv )
   int sampleNum = atoi(argv[2]);
   int iterNum   = atoi(argv[3]);
 
-  bool fixCornerFlag=false;
+  bool fixCornerFlag=true;
+  bool uniformEdgeSamplingFlag = true;
 
   printf("Reading %s and sampling %i points with %i iteration\n",argv[1],sampleNum,iterNum);
   int ret= tri::io::ImporterPLY<MyMesh>::Open(baseMesh,argv[1]);
@@ -91,34 +92,42 @@ int main( int argc, char **argv )
   tri::VoronoiProcessing<MyMesh>::PreprocessForVoronoi(baseMesh,radius,vpp);
 
   tri::UpdateFlags<MyMesh>::FaceBorderFromVF(baseMesh);
-  tri::UpdateFlags<MyMesh>::VertexBorderFromFace(baseMesh);
+  tri::UpdateFlags<MyMesh>::VertexBorderFromFaceBorder(baseMesh);
 
 
   // -- Build a sampling with just corners (Poisson filtered)
   MyMesh poissonCornerMesh;
   std::vector<Point3f> sampleVec;
   tri::TrivialSampler<MyMesh> mps(sampleVec);
-  if(fixCornerFlag)
+  tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::VertexBorderCorner(baseMesh,mps,math::ToRad(150.f));
+  tri::BuildMeshFromCoordVector(poissonCornerMesh,sampleVec);
+  tri::io::ExporterPLY<MyMesh>::Save(poissonCornerMesh,"cornerMesh.ply");
+  sampleVec.clear();
+  MyMesh borderMesh,poissonBorderMesh;
+
+
+  if(uniformEdgeSamplingFlag)
   {
-    tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::VertexBorderCorner(baseMesh,mps,math::ToRad(150.f));
-    tri::Build(poissonCornerMesh,sampleVec);
-    tri::io::ExporterPLY<MyMesh>::Save(poissonCornerMesh,"cornerMesh.ply");
-    sampleVec.clear();
-    tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, poissonCornerMesh, radius, pp);
-    tri::Build(poissonCornerMesh,sampleVec);
-    tri::io::ExporterPLY<MyMesh>::Save(poissonCornerMesh,"poissonCornerMesh.ply");
-    // Now save the corner as Fixed Seeds for later...
-    std::vector<MyVertex *> fixedSeedVec;
-    tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,sampleVec,fixedSeedVec);
-    tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::FixVertexVector(baseMesh,fixedSeedVec);
-    vpp.preserveFixedSeed=true;
+
   }
+  else
+  {
+    if(fixCornerFlag)
+    {
+      tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, poissonCornerMesh, radius, pp);
+      tri::BuildMeshFromCoordVector(poissonCornerMesh,sampleVec);
+      tri::io::ExporterPLY<MyMesh>::Save(poissonCornerMesh,"poissonCornerMesh.ply");
+      // Now save the corner as Fixed Seeds for later...
+      std::vector<MyVertex *> fixedSeedVec;
+      tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,sampleVec,fixedSeedVec);
+      tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::FixVertexVector(baseMesh,fixedSeedVec);
+      vpp.preserveFixedSeed=true;
+    }
 
   // -- Build a sampling with points on the border
-  MyMesh borderMesh,poissonBorderMesh;
   sampleVec.clear();
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::VertexBorder(baseMesh,mps);
-  tri::Build(borderMesh,sampleVec);
+  tri::BuildMeshFromCoordVector(borderMesh,sampleVec);
   tri::io::ExporterPLY<MyMesh>::Save(borderMesh,"borderMesh.ply");
 
   // -- and then prune the border sampling with poisson strategy using the precomputed corner vertexes.
@@ -126,14 +135,16 @@ int main( int argc, char **argv )
   pp.preGenFlag=true;
   sampleVec.clear();
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, borderMesh, radius*0.8f, pp);
-  tri::Build(poissonBorderMesh,sampleVec);
+  tri::BuildMeshFromCoordVector(poissonBorderMesh,sampleVec);
+  }
+
   tri::io::ExporterPLY<MyMesh>::Save(poissonBorderMesh,"PoissonEdgeMesh.ply");
 
   // -- Build the montercarlo sampling of the surface
   MyMesh MontecarloSurfaceMesh;
   sampleVec.clear();
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::Montecarlo(baseMesh,mps,50000);
-  tri::Build(MontecarloSurfaceMesh,sampleVec);
+  tri::BuildMeshFromCoordVector(MontecarloSurfaceMesh,sampleVec);
   tri::io::ExporterPLY<MyMesh>::Save(MontecarloSurfaceMesh,"MontecarloSurfaceMesh.ply");
 
   // -- Prune the montecarlo sampling with poisson strategy using the precomputed vertexes on the border.
@@ -141,7 +152,7 @@ int main( int argc, char **argv )
   sampleVec.clear();
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, MontecarloSurfaceMesh, radius, pp);
   MyMesh PoissonMesh;
-  tri::Build(PoissonMesh,sampleVec);
+  tri::BuildMeshFromCoordVector(PoissonMesh,sampleVec);
   tri::io::ExporterPLY<MyMesh>::Save(PoissonMesh,"PoissonMesh.ply");
 
   std::vector<MyVertex *> seedVec;

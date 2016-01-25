@@ -61,17 +61,18 @@ int main( int argc, char **argv )
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::SamplingRandomGenerator().initialize(time(0));
 
   //----------------------------------------------------------------------
-  // Basic Sample,
+  // Basic Sample of a mesh surface
   // Build a point cloud with points with a plain poisson disk distribution
+
   int t0=clock();
   vector<Point3f> pointVec;
-  float rad;
+  float rad=0;
   if(argc>2) rad=atof(argv[2]);
   int sampleNum=rad?0:1000;
   tri::PoissonSampling<MyMesh>(m,pointVec,sampleNum,rad);
   int t1=clock();
   MyMesh BasicPoissonMesh;
-  tri::Build(BasicPoissonMesh,pointVec);
+  tri::BuildMeshFromCoordVector(BasicPoissonMesh,pointVec);
 
   tri::io::ExporterOFF<MyMesh>::Save(BasicPoissonMesh,"BasicPoissonMesh.off");
   printf("Computed a basic poisson disk distribution of %i vertices radius is %6.3f in %5.2f sec\n",BasicPoissonMesh.VN(),rad,float(t1-t0)/CLOCKS_PER_SEC);
@@ -90,32 +91,32 @@ int main( int argc, char **argv )
   tri::UpdateNormal<MyMesh>::PerFace(m);
   tri::UpdateFlags<MyMesh>::FaceFauxCrease(m,math::ToRad(40.0f));
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::EdgeMontecarlo(m,mps,10000,false);
-  tri::Build(MontecarloEdgeMesh,sampleVec);
+  tri::BuildMeshFromCoordVector(MontecarloEdgeMesh,sampleVec);
   tri::io::ExporterOFF<MyMesh>::Save(MontecarloEdgeMesh,"MontecarloEdgeMesh.off");
 
   sampleVec.clear();
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::VertexCrease(m, mps);
-  tri::Build(PoissonEdgeMesh,sampleVec);
-  tri::io::ExporterOFF<MyMesh>::Save(PoissonEdgeMesh,"CreaseMesh.off");
+  tri::BuildMeshFromCoordVector(PoissonEdgeMesh,sampleVec);
+  tri::io::ExporterOFF<MyMesh>::Save(PoissonEdgeMesh,"VertexCreaseMesh.off");
 
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskParam pp;
   pp.preGenMesh = &PoissonEdgeMesh;
   pp.preGenFlag=true;
   sampleVec.clear();
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, MontecarloEdgeMesh, rad, pp);
-  tri::Build(PoissonEdgeMesh,sampleVec);
+  tri::BuildMeshFromCoordVector(PoissonEdgeMesh,sampleVec);
   tri::io::ExporterOFF<MyMesh>::Save(PoissonEdgeMesh,"PoissonEdgeMesh.off");
 
   sampleVec.clear();
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::Montecarlo(m,mps,50000);
-  tri::Build(MontecarloSurfaceMesh,sampleVec);
+  tri::BuildMeshFromCoordVector(MontecarloSurfaceMesh,sampleVec);
   tri::io::ExporterOFF<MyMesh>::Save(MontecarloSurfaceMesh,"MontecarloSurfaceMesh.off");
 
   pp.preGenMesh = &PoissonEdgeMesh;
   pp.preGenFlag=true;
   sampleVec.clear();
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, MontecarloSurfaceMesh, rad, pp);
-  tri::Build(PoissonMesh,sampleVec);
+  tri::BuildMeshFromCoordVector(PoissonMesh,sampleVec);
   tri::io::ExporterOFF<MyMesh>::Save(PoissonMesh,"PoissonMesh.off");
   printf("Computed a feature aware poisson disk distribution of %i vertices radius is %6.3f\n",PoissonMesh.VN(),rad);
 

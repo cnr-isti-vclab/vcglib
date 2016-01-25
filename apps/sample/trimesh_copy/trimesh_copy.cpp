@@ -26,9 +26,9 @@ class MyVertex  : public vcg::Vertex< MyUsedTypes,vcg::vertex::VFAdj,vcg::vertex
 class MyEdge : public vcg::Edge< MyUsedTypes> {};
 
 class MyFace    : public vcg::Face< MyUsedTypes,
-	vcg::face::VFAdj,
-	vcg::face::VertexRef,
-	vcg::face::BitFlags > {};
+    vcg::face::VFAdj,
+    vcg::face::VertexRef,
+    vcg::face::BitFlags > {};
 
 // the main mesh class
 class MyMesh    : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFace> > {};
@@ -39,8 +39,8 @@ class OcfFace;
 
 // Declaration of the semantic of the used types
 class OcfUsedTypes: public vcg::UsedTypes < vcg::Use<OcfVertex>::AsVertexType,
-	vcg::Use<OcfEdge   >::AsEdgeType,
-	vcg::Use<OcfFace  >::AsFaceType >{};
+    vcg::Use<OcfEdge   >::AsEdgeType,
+    vcg::Use<OcfFace  >::AsFaceType >{};
 
 
 // The Main Vertex Class
@@ -61,26 +61,18 @@ class OcfEdge : public vcg::Edge<OcfUsedTypes>
 // Each face needs 32 byte, on 32bit arch. and 48 byte on 64bit arch.
 class OcfFace    : public vcg::Face<  OcfUsedTypes,vcg::face::InfoOcf,vcg::face::VertexRef,vcg::face::BitFlags,vcg::face::VFAdjOcf> {};
 
-class OcfMesh    : public vcg::tri::TriMesh< vcg::vertex::vector_ocf<OcfVertex>, vcg::face::vector_ocf<OcfFace> > 
+class OcfMesh    : public vcg::tri::TriMesh< vcg::vertex::vector_ocf<OcfVertex>, vcg::face::vector_ocf<OcfFace> >
 {
 };
 
 void Usage()
 {
-	printf(
-		"---------------------------------\n"
-		"         TriMeshCopy V.1.0 \n"
-		"     http://vcg.isti.cnr.it\n"
-		"    http://vcg.sourceforge.net\n"
-		"   release date: "__DATE__"\n"
-		"---------------------------------\n\n"
-		"TriMeshCopy 1.0 \n"__DATE__"\n"
-		"Copyright 2003-2012 Visual Computing Lab I.S.T.I. C.N.R.\n"
-		"\nUsage:  "\
-		"trimeshcopy fileIn -(n|o) [fileOut]\n"\
-		"trimeshcopy test vcg::MeshCopy efficiency.\nIt imports a fileIn file into a user defined mesh and test how long vcg::MeshCopy needs to copy the imported mesh in a second one.The copy time is expressed in milliseconds.\nIf the -n flag is used a non-optional attributes mesh will be tested, defining -o, instead, the target mesh will be an ocf one.\nA fileOut file can be passed to the tool in order to check if the mesh was successfully copied.\nThe file will be exported in PLY file format.\n"
-		);
-	exit(-1);
+    printf(
+        "\nUsage:  "\
+        "trimeshcopy fileIn -(n|o) [fileOut]\n"\
+        "trimeshcopy test vcg::MeshCopy efficiency.\nIt imports a fileIn file into a user defined mesh and test how long vcg::MeshCopy needs to copy the imported mesh in a second one.The copy time is expressed in milliseconds.\nIf the -n flag is used a non-optional attributes mesh will be tested, defining -o, instead, the target mesh will be an ocf one.\nA fileOut file can be passed to the tool in order to check if the mesh was successfully copied.\nThe file will be exported in PLY file format.\n"
+        );
+    exit(-1);
 }
 
 template <class MeshType>
@@ -117,7 +109,7 @@ bool UnitTest_Append(const char *filename1, const char *filename2)
 
 int main(int /*argc*/ ,char**argv)
 {
-	UnitTest_Append<MyMesh>(argv[1],"out.ply");
-	UnitTest_Append<OcfMesh>(argv[1],"out.ply");
-	return 0;
+    UnitTest_Append<MyMesh>(argv[1],"out.ply");
+    UnitTest_Append<OcfMesh>(argv[1],"out.ply");
+    return 0;
 }

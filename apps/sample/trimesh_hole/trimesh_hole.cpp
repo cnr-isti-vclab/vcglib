@@ -73,13 +73,13 @@ bool NormalTest(typename face::Pos<typename MESH::FaceType> pos)
 {
     //giro intorno al vertice e controllo le normali
     typename MESH::ScalarType thr = 0.0f;
-        typename MESH::CoordType NdP = vcg::Normal<typename MESH::FaceType>(*pos.f);
+        typename MESH::CoordType NdP = vcg::TriangleNormal<typename MESH::FaceType>(*pos.f);
     typename MESH::CoordType tmp, oop, soglia = typename MESH::CoordType(thr,thr,thr);
     face::Pos<typename MESH::FaceType> aux=pos;
     do{
         aux.FlipF();
         aux.FlipE();
-                oop = Abs(tmp - ::vcg::Normal<typename MESH::FaceType>(*pos.f));
+                oop = Abs(tmp - ::vcg::TriangleNormal<typename MESH::FaceType>(*pos.f));
         if(oop < soglia )return false;
     }while(aux != pos && !aux.IsBorder());
 
@@ -91,7 +91,7 @@ int main(int argc,char ** argv){
     if(argc<5)
     {
         printf(
-            "\n     HoleFilling ("__DATE__")\n"
+            "\n     HoleFilling (" __DATE__ ")\n"
             "Visual Computing Group I.S.T.I. C.N.R.\n"
       "Usage: trimesh_hole #algorithm #size filein.ply fileout.ply \n"
             "#algorithm: \n"

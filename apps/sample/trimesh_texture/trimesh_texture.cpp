@@ -73,7 +73,7 @@ int main(int ,char ** )
   std::vector<std::pair<int,MyMesh::FacePointer> > fpVec;
   tri::UpdateTopology<MyMesh>::FaceFace(tm);
   tri::Clean<MyMesh>::ConnectedComponents(tm,fpVec);
-  printf("Mesh has %i texture components\n",fpVec.size());
+  printf("Mesh has %lu texture components\n",fpVec.size());
   tri::io::ExporterPLY<MyMesh>::Save(tm,"out.ply");
   std::vector< std::vector<Point2f> > outline2Vec;
 
@@ -99,13 +99,13 @@ int main(int ,char ** )
     outline2Vec.push_back(compOutline2Vec[largestInd]);
   }
 
-  printf("Mesh has %i texture components\n",outline2Vec.size());
+  printf("Mesh has %lu texture components\n",outline2Vec.size());
 
   Outline2Dumper::Param pp;
   Similarity2f sim;
   sim.sca=1024.0f;
   std::vector<Similarity2f> trVec(outline2Vec.size(),sim);
-  printf("Mesh has %i texture components\n",outline2Vec.size());
+  printf("Mesh has %lu texture components\n",outline2Vec.size());
   Outline2Dumper::dumpOutline2VecPNG("PrePack.png",outline2Vec,trVec,pp);
 
   const Point2i containerSize(1024,1024);

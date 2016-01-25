@@ -39,7 +39,7 @@ class MyFace;
 class MyVertex;
 
 struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
-																				Use<MyFace>			::AsFaceType>{};
+                                                                                Use<MyFace>			::AsFaceType>{};
 
 class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::Normal3f, vertex::BitFlags, vertex::Mark>{};
 class MyFace    : public Face  < MyUsedTypes, face::VertexRef, face::Normal3f, face::BitFlags > {};
@@ -53,51 +53,49 @@ bool callback(int percent, const char *str) {
 int  main(int argc, char **argv)
 {
  if(argc<3)
-	{
-		printf(
-		"\n                  trimesh_ball_pivoting ("__DATE__")\n"
-			"						Visual Computing Group I.S.T.I. C.N.R.\n"
+    {
+        printf(
       "Usage: trimesh_ball_pivoting filein.ply fileout.ply [opt]\n"
       "options: \n"
       "-r <val> radius of the rolling ball\n"
       "-c <val> clustering radius (as fraction of radius) default: 0.05\n"
-			);
-		exit(0);
-	}
+            );
+        exit(0);
+    }
 
    float radius = 0.0f;
    float clustering = 0.05;
    int i = 3;
-	while(i<argc)
-		{
-			if(argv[i][0]!='-')
-				{printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
-			switch(argv[i][1])
-			{				
-				case 'r' :	radius = atof(argv[++i]); printf("Using %f sphere radius\n",radius);  break;
-				case 'c' :	clustering = atof(argv[++i]); printf("Using %f clustering radius\n",clustering); break;
-      
-				default : {printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
-			}
-			++i;
-		}
-    if(radius == 0) 
-      printf("Autodetecting ball radius...\n");
-                
-	MyMesh m;
+    while(i<argc)
+        {
+            if(argv[i][0]!='-')
+                {printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
+            switch(argv[i][1])
+            {
+                case 'r' :	radius = atof(argv[++i]); printf("Using %f sphere radius\n",radius);  break;
+                case 'c' :	clustering = atof(argv[++i]); printf("Using %f clustering radius\n",clustering); break;
 
-	if(vcg::tri::io::ImporterPLY<MyMesh>::Open(m,argv[1])!=0)
-		{
+                default : {printf("Error unable to parse option '%s'\n",argv[i]); exit(0);}
+            }
+            ++i;
+        }
+    if(radius == 0)
+      printf("Autodetecting ball radius...\n");
+
+    MyMesh m;
+
+    if(vcg::tri::io::ImporterPLY<MyMesh>::Open(m,argv[1])!=0)
+        {
       printf("Error reading file  %s\n",argv[1]);
-			exit(0);
-		}
+            exit(0);
+        }
   vcg::tri::UpdateBounding<MyMesh>::Box(m);
   vcg::tri::UpdateNormal<MyMesh>::PerFace(m);
   printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
 
   int t0=clock();
   // Initialization
-  tri::BallPivoting<MyMesh> pivot(m, radius, clustering); 
+  tri::BallPivoting<MyMesh> pivot(m, radius, clustering);
   printf("Ball radius: %f\nClustering points withing %f radii\n", pivot.radius, clustering);
 
   int t1=clock();
@@ -108,7 +106,7 @@ int  main(int argc, char **argv)
 
   printf("Output mesh vn:%i fn:%i\n",m.VN(),m.FN());
   printf("Created in :%i msec (%i+%i)\n",t2-t0,t1-t0,t2-t1);
-	
+
   vcg::tri::io::PlyInfo pi;
   vcg::tri::io::ExporterPLY<MyMesh>::Save(m,argv[2],pi.mask);
   return 0;

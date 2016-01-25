@@ -45,13 +45,11 @@ class MyEdge    : public Edge<MyUsedTypes,edge::VertexRef, edge::VEAdj, edge::EE
 class MyMesh    : public tri::TriMesh< vector<MyVertex>, vector<MyFace> , vector<MyEdge>  > {};
 
 
-
-
 int main( int argc, char **argv )
 {
   if(argc<2)
   {
-    printf("Usage trimesh_base <meshfilename.obj> radius\n");
+    printf("Usage edgemesh_sampling <meshfilename.off> radius\n");
     return -1;
   }
 
@@ -90,7 +88,7 @@ int main( int argc, char **argv )
   tri::TrivialSampler<MyMesh> ps(sampleVec);
   tri::SurfaceSampling<MyMesh>::EdgeMeshUniform(e,ps,m.bbox.Diag()/90.0f);
   MyMesh sampleMesh;
-  tri::Build(sampleMesh,sampleVec);
+  tri::BuildMeshFromCoordVector(sampleMesh,sampleVec);
   tri::io::ExporterPLY<MyMesh>::Save(sampleMesh,"sampleMesh.ply");
   return 0;
 }

@@ -39,7 +39,7 @@ struct MyUsedTypes : public UsedTypes<	Use<MyVertex>   ::AsVertexType,
                                         Use<MyFace>     ::AsFaceType>{};
 
 class MyVertex  : public Vertex<MyUsedTypes, vertex::InfoOcf, vertex::Coord3f, vertex::Normal3f, vertex::TexCoord2f, vertex::VFAdj , vertex::Qualityf, vertex::Color4b, vertex::BitFlags  >{};
-class MyFace    : public Face< MyUsedTypes, face::InfoOcf, face::VertexRef, face::BitFlags, face::FFAdjOcf ,face::VFAdj , face::WedgeTexCoord2f> {};
+class MyFace    : public Face< MyUsedTypes, face::InfoOcf, face::VertexRef, face::CurvatureDirf, face::BitFlags, face::FFAdjOcf ,face::VFAdj , face::WedgeTexCoord2f> {};
 class MyEdge    : public Edge< MyUsedTypes>{};
 class MyMesh    : public tri::TriMesh< vertex::vector_ocf<MyVertex>, face::vector_ocf<MyFace> , vector<MyEdge>  > {};
 

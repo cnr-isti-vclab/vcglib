@@ -40,7 +40,7 @@ int  main(int argc, char **argv)
  if(argc<4)
 	{
 		printf(
-		"\n                  PlyRefine ("__DATE__")\n"
+		"\n                  PlyRefine (" __DATE__ ")\n"
 			"						Visual Computing Group I.S.T.I. C.N.R.\n"
       "Usage: PlyRefine filein.ply fileout.[ply|off|obj|...] ref_step [opt] \n"
 			"Commands: \n"

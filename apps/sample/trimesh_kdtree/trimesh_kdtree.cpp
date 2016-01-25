@@ -23,9 +23,9 @@
 /*! \file trimesh_kdtree.cpp
 \ingroup code_sample
 
-\brief An example about using the kdtree and meshes
+\brief An example about using a kdtree to spatially index the vertexes of a mesh
 
-KdTree are one of the Spatial indexing data structure available.
+KdTree are one of the Spatial indexing data structures available.
 They are tailored for storing point-based structures and performing k-neighbours queries.
 In this simple example we simply compute the average distance of a vertex from its neighbours.
 \ref spatial_indexing for more Details
@@ -69,13 +69,13 @@ int main( int argc, char **argv )
 
   KdTree<float> tree(ww);
   KdTree<float>::PriorityQueue queue;
- 
+
   for (int j = 0; j < m.VN(); j++) {
       tree.doQueryK(m.vert[j].cP(), 3, queue);
-	  int neighbours = queue.getNofElements();
+      int neighbours = queue.getNofElements();
       float avgDist=0;
       for (int i = 0; i < neighbours; i++) {
-		  int neightId = queue.getIndex(i);
+          int neightId = queue.getIndex(i);
           avgDist += Distance(m.vert[j].cP(),m.vert[neightId].cP());
       }
       m.vert[j].Q() = avgDist/=neighbours;
