@@ -32,6 +32,7 @@
 #include <vcg/simplex/face/topology.h>
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/clean.h>
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/triangle3.h>
 
@@ -886,7 +887,6 @@ struct CenterPointBarycenter : public std::unary_function<typename TRIMESH_TYPE:
 /// Simple templated function for splitting a triangle with a internal point.
 ///  It can be templated on a CenterPoint class that is used to generate the position of the internal point.
 
-
 template<class TRIMESH_TYPE, class CenterPoint=CenterPointBarycenter <TRIMESH_TYPE> >
 class TriSplit
 {
@@ -963,6 +963,61 @@ public:
     }
   }
 }; // end class TriSplit
+
+template <class MeshType>
+void TrivialMidPointRefine(MeshType & m)
+{
+  typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::FaceIterator FaceIterator;
+  typedef typename MeshType::VertexPointer VertexPointer;
+  typedef typename MeshType::FacePointer FacePointer;
+  
+  Allocator<MeshType>::CompactEveryVector(m);
+  int startFn = m.fn;
+  FaceIterator lastf = tri::Allocator<MeshType>::AddFaces(m,m.fn*3);
+  VertexIterator lastv = tri::Allocator<MeshType>::AddVertices(m,m.fn*3);
+  
+  /*
+   *               v0
+   *              /  \
+   *            /  f0  \
+   *          /          \
+   *        mp01----------mp02
+   *       /  \    f3    /   \
+   *     / f1   \      /  f2   \
+   *   /          \  /           \
+   *v1 ---------- mp12------------v2
+   *
+  */
+  
+  for(int i=0;i<startFn;++i)
+  {
+    FacePointer f0= &m.face[i];
+    FacePointer f1= &*lastf; ++lastf;
+    FacePointer f2= &*lastf; ++lastf;
+    FacePointer f3= &*lastf; ++lastf;    
+    VertexPointer v0 =m.face[i].V(0); 
+    VertexPointer v1 =m.face[i].V(1); 
+    VertexPointer v2 =m.face[i].V(2); 
+    VertexPointer mp01 = &*lastv; ++lastv; 
+    VertexPointer mp12 = &*lastv; ++lastv; 
+    VertexPointer mp02 = &*lastv; ++lastv; 
+    
+    f0->V(0) = v0;   f0->V(1) = mp01; f0->V(2) = mp02;
+    f1->V(0) = v1;   f1->V(1) = mp12; f1->V(2) = mp01;
+    f2->V(0) = v2;   f2->V(1) = mp02; f2->V(2) = mp12;
+    f3->V(0) = mp12; f3->V(1) = mp02; f3->V(2) = mp01;
+    mp01->P() = (v0>v1) ? (v0->P()+v1->P())/2.0 : (v1->P()+v0->P())/2.0;
+    mp12->P() = (v1>v2) ? (v1->P()+v2->P())/2.0 : (v2->P()+v1->P())/2.0;
+    mp02->P() = (v0>v2) ? (v0->P()+v2->P())/2.0 : (v2->P()+v0->P())/2.0;
+  }
+  
+  int vd = tri::Clean<MeshType>::RemoveDuplicateVertex(m);
+  printf("Vertex unification %i\n",vd);
+  int vu = tri::Clean<MeshType>::RemoveUnreferencedVertex(m);
+  printf("Vertex unref %i\n",vu);
+  Allocator<MeshType>::CompactEveryVector(m);
+}
 
 } // namespace tri
 } // namespace vcg
