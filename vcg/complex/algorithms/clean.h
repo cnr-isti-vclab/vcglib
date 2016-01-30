@@ -976,6 +976,19 @@ public:
     }
     return nonManifoldCnt;
   }
+  /// Very simple test of water tightness. No boundary and no non manifold edges. 
+  /// Assume that it is orientable. 
+  /// It could be debated if a closed non orientable surface is watertight or not. 
+  /// 
+  /// The rationale of not testing orientability here is that 
+  /// it requires FFAdj while this test do not require any adjacency.
+  /// 
+  static bool IsWaterTight(MeshType & m)
+  {
+    int edgeNum=0,edgeBorderNum=0,edgeNonManifNum=0;
+    CountEdgeNum(m, edgeNum, edgeBorderNum,edgeNonManifNum);
+    return  (edgeBorderNum==0) && (edgeNonManifNum==0);
+  }
 
   static void CountEdgeNum( MeshType & m, int &total_e, int &boundary_e, int &non_manif_e )
   {
