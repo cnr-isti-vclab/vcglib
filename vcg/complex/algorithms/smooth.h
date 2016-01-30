@@ -628,6 +628,50 @@ public:
     int cnt;
 };
 
+static void PointCloudQualityAverage(MeshType &m, int neighbourSize=8, int iter=1)
+{
+  tri::RequireCompactness(m);
+  VertexConstDataWrapper<MeshType> ww(m);
+  KdTree<ScalarType> kt(ww);
+  typename KdTree<ScalarType>::PriorityQueue pq;
+  for(int k=0;k<iter;++k)
+  {
+    std::vector<ScalarType> newQVec(m.vn);
+    for(int i=0;i<m.vn;++i)
+    {
+      kt.doQueryK(m.vert[i].P(),neighbourSize,pq);
+      float qAvg=0;
+      for(int j=0;j<pq.getNofElements();++j)
+        qAvg+= m.vert[pq.getIndex(j)].Q();   
+      newQVec[i]=qAvg/float(pq.getNofElements());
+    }
+    
+    for(int i=0;i<m.vn;++i) 
+      m.vert[i].Q() = newQVec[i];
+  }    
+}
+
+static void PointCloudQualityMedian(MeshType &m, int medianSize=8)
+{
+  tri::RequireCompactness(m);
+  VertexConstDataWrapper<MeshType> ww(m);
+  KdTree<ScalarType> kt(ww);
+  typename KdTree<ScalarType>::PriorityQueue pq;
+  std::vector<ScalarType> newQVec(m.vn);
+  for(int i=0;i<m.vn;++i)
+  {
+    kt.doQueryK(m.vert[i].P(),medianSize,pq);
+    std::vector<ScalarType> qVec(pq.getNofElements());
+    for(int j=0;j<pq.getNofElements();++j)
+      qVec[j]=m.vert[pq.getIndex(j)].Q();
+    std::sort(qVec.begin(),qVec.end());
+    newQVec[i]=qVec[qVec.size()/2];
+  }
+  
+  for(int i=0;i<m.vn;++i) 
+    m.vert[i].Q() = newQVec[i];
+      
+}
 
 static void VertexQualityLaplacian(MeshType &m, int step=1, bool SmoothSelected=false)
 {
