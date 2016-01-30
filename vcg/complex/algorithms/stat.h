@@ -33,6 +33,7 @@
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/inertia.h>
 
 
 namespace vcg {
@@ -163,6 +164,11 @@ public:
     return barycenter/areaSum;
   }
 
+  static ScalarType ComputeMeshVolume(MeshType & m)
+  {
+    Inertia<MeshType> I(m);
+    return I.Mass();
+  }
 
   static ScalarType ComputeMeshArea(MeshType & m)
   {
