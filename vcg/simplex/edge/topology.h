@@ -173,7 +173,7 @@ void VEEdgeCollapse(MeshType &poly, typename MeshType::EdgeType *e0, const int z
   if( starVecEp[1] == e0 ) e1 = starVecEp[0];
   assert(e1 && (e1!=e0) );
 
-  int z0 = (z+1)%2;
+  //int z0 = (z+1)%2;
   int z1 = -1;
   if(e1->V(0) == vd) z1=1;
   if(e1->V(1) == vd) z1=0;
