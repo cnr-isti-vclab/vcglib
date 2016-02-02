@@ -331,6 +331,112 @@ public:
 
 
 
+/* This sampler is used to transfer the detail of a mesh onto another one.
+ * It keep internally the spatial indexing structure used to find the closest point
+ */
+template <class MeshType>
+class RedetailSampler
+{
+  typedef typename MeshType::FaceType    FaceType;
+  typedef typename MeshType::VertexType    VertexType;
+  typedef typename MeshType::CoordType   CoordType;
+  typedef typename MeshType::ScalarType   ScalarType;  
+  typedef GridStaticPtr<FaceType, ScalarType > MetroMeshGrid;
+  typedef GridStaticPtr<VertexType, ScalarType > VertexMeshGrid;
+
+public:
+
+  RedetailSampler():m(0) {}
+
+  MeshType *m;           /// the source mesh for which we search the closest points (e.g. the mesh from which we take colors etc).
+  CallBackPos *cb;
+  int sampleNum;  // the expected number of samples. Used only for the callback
+  int sampleCnt;
+  MetroMeshGrid   unifGridFace;
+  VertexMeshGrid   unifGridVert;
+  bool useVertexSampling;
+
+  // Parameters
+  typedef tri::FaceTmark<MeshType> MarkerFace;
+  MarkerFace markerFunctor;
+
+  bool coordFlag;
+  bool colorFlag;
+  bool normalFlag;
+  bool qualityFlag;
+  bool selectionFlag;
+  bool storeDistanceAsQualityFlag;
+  float dist_upper_bound;
+  void init(MeshType *_m, CallBackPos *_cb=0, int targetSz=0)
+  {
+    coordFlag=false;
+    colorFlag=false;
+    qualityFlag=false;
+    selectionFlag=false;
+    storeDistanceAsQualityFlag=false;
+    m=_m;
+    tri::UpdateNormal<MeshType>::PerFaceNormalized(*m);
+    if(m->fn==0) useVertexSampling = true;
+    else useVertexSampling = false;
+
+    if(useVertexSampling) unifGridVert.Set(m->vert.begin(),m->vert.end());
+    else  unifGridFace.Set(m->face.begin(),m->face.end());
+    markerFunctor.SetMesh(m);
+    // sampleNum and sampleCnt are used only for the progress callback.
+    cb=_cb;
+    sampleNum = targetSz;
+    sampleCnt = 0;
+  }
+
+  // this function is called for each vertex of the target mesh.
+  // and retrieve the closest point on the source mesh.
+  void AddVert(VertexType &p)
+  {
+    assert(m);
+    // the results
+    CoordType       closestPt,      normf, bestq, ip;
+    ScalarType dist = dist_upper_bound;
+    const CoordType &startPt= p.cP();
+    // compute distance between startPt and the mesh S2
+    if(useVertexSampling)
+    {
+      VertexType   *nearestV=0;
+      nearestV =  tri::GetClosestVertex<MeshType,VertexMeshGrid>(*m,unifGridVert,startPt,dist_upper_bound,dist); //(PDistFunct,markerFunctor,startPt,dist_upper_bound,dist,closestPt);
+      if(cb) cb(sampleCnt++*100/sampleNum,"Resampling Vertex attributes");
+      if(storeDistanceAsQualityFlag)  p.Q() = dist;
+      if(dist == dist_upper_bound) return ;
+
+      if(coordFlag) p.P()=nearestV->P();
+      if(colorFlag) p.C() = nearestV->C();
+      if(normalFlag) p.N() = nearestV->N();
+      if(qualityFlag) p.Q()= nearestV->Q();
+      if(selectionFlag) if(nearestV->IsS()) p.SetS();
+    }
+    else
+    {
+      FaceType   *nearestF=0;
+      vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
+      dist=dist_upper_bound;
+      if(cb) cb(sampleCnt++*100/sampleNum,"Resampling Vertex attributes");
+      nearestF =  unifGridFace.GetClosest(PDistFunct,markerFunctor,startPt,dist_upper_bound,dist,closestPt);
+      if(dist == dist_upper_bound) return ;
+
+      CoordType interp;
+      InterpolationParameters(*nearestF,(*nearestF).cN(),closestPt, interp);
+      interp[2]=1.0-interp[1]-interp[0];
+
+      if(coordFlag) p.P()=closestPt;
+      if(colorFlag) p.C().lerp(nearestF->V(0)->C(),nearestF->V(1)->C(),nearestF->V(2)->C(),interp);
+      if(normalFlag) p.N() = nearestF->V(0)->N()*interp[0] + nearestF->V(1)->N()*interp[1] + nearestF->V(2)->N()*interp[2];
+      if(qualityFlag) p.Q()= nearestF->V(0)->Q()*interp[0] + nearestF->V(1)->Q()*interp[1] + nearestF->V(2)->Q()*interp[2];
+      if(selectionFlag) if(nearestF->IsS()) p.SetS();
+    }
+  }
+}; // end class RedetailSampler
+
+
+
+
 /**
  \brief Main Class of the Sampling framework.
 
