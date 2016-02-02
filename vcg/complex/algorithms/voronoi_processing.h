@@ -1229,6 +1229,7 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<CoordType> &seedPo
   ScalarType perturb = m.bbox.Diag()*vpp.seedPerturbationAmount;
   for(i=0;i<relaxStep;++i)
   {
+    if(cb) cb(i*100/relaxStep,"RestrictedVoronoiRelaxing ");    
     // Kdtree for the seeds must be rebuilt at each step;
     VectorConstDataWrapper<std::vector<CoordType> > vdw(seedPosVec);
     KdTree<ScalarType> seedTree(vdw);

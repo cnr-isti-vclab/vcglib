@@ -25,6 +25,8 @@
 #include <vcg/complex/algorithms/voronoi_processing.h>
 #include <vcg/complex/algorithms/create/marching_cubes.h>
 #include <vcg/complex/algorithms/create/mc_trivial_walker.h>
+#include <vcg/complex/algorithms/point_sampling.h>
+
 
 namespace vcg
 {
@@ -49,9 +51,11 @@ public:
   typedef typename vcg::tri::MarchingCubes<MeshType, MyWalker>              MyMarchingCubes;
 
   VoronoiVolumeSampling(MeshType &_baseMesh, MeshType &_seedMesh)
-    :seedTree(0),surfTree(0),baseMesh(_baseMesh),seedMesh(_seedMesh),cb(0),restrictedRelaxationFlag(false)
+    :surfTree(0),seedTree(0),baseMesh(_baseMesh),seedMesh(_seedMesh),cb(0),restrictedRelaxationFlag(false)
   {
-
+   tri::RequirePerFaceMark(baseMesh);
+   tri::UpdateBounding<MeshType>::Box(baseMesh);
+   tri::UpdateNormal<MeshType>::PerFaceNormalized(baseMesh);
   }
   
   KdTree<ScalarType>  *surfTree; // used for fast inside query 
@@ -63,7 +67,6 @@ public:
   typedef FaceTmark<MeshType> MarkerFace;
   MarkerFace mf;
   vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
-  vcg::CallBackPos *cb;
       
   MeshType &baseMesh;
   MeshType &seedMesh;
@@ -71,23 +74,24 @@ public:
   ScalarType poissonRadiusSurface;
   MeshType montecarloVolumeMesh; // we use this mesh as volume evaluator
   MeshType seedDomainMesh;       // where we choose the seeds (by default is the montecarlo volume mesh)
+  vcg::CallBackPos *cb;
   bool restrictedRelaxationFlag;
 
   
   // Build up the needed structure for efficient point in mesh search. 
-  // It uses poisson disk sampling of the surface plus a
+  // It uses a poisson disk sampling of the surface plus a
   // kdtree to speed up query point closest on surface for points far from surface. 
   // It initializes the surfGrid, surfTree and poissonSurfaceMesh members   
   void Init(ScalarType _poissonRadiusSurface=0)
   {
     MeshType montecarloSurfaceMesh;
-
+    
     if(_poissonRadiusSurface==0) poissonRadiusSurface = baseMesh.bbox.Diag()/50.0f;
     else poissonRadiusSurface = _poissonRadiusSurface;
     ScalarType meshArea = Stat<MeshType>::ComputeMeshArea(baseMesh);
-    int MontecarloSampleNum = 10 * meshArea / (poissonRadiusSurface*poissonRadiusSurface);
+    int MontecarloSurfSampleNum = 10 * meshArea / (poissonRadiusSurface*poissonRadiusSurface);
     tri::MeshSampler<MeshType> sampler(montecarloSurfaceMesh);
-    tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::Montecarlo(baseMesh, sampler, MontecarloSampleNum);
+    tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::Montecarlo(baseMesh, sampler, MontecarloSurfSampleNum);
     montecarloSurfaceMesh.bbox = baseMesh.bbox; // we want the same bounding box
     poissonSurfaceMesh.Clear();
     tri::MeshSampler<MeshType> mps(poissonSurfaceMesh);
@@ -370,36 +374,92 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
     walker.template BuildMesh <MyMarchingCubes>(scaffoldingMesh, volume, mc,0);
 }
  /**
-  * @brief
-  * start from the montecarlo.
-  * Write onto the poisson surface sampling the maximum distance from a vertex inside.
+  * @brief Compute an evaulation of the thickness as distance from the medial axis.
+  * It starts from a montecarlo volume sampling and try to search for the samples that can be part of the medial axis.
+  * It use a sampled representation of the surface. A volume sample is considered part 
+  * of the medial axis if there are at least two points that are (almost) the same minimal distance to that point.
   *
+  * 
   */
- void ThicknessEvaluator()
+ void ThicknessEvaluator(float distThr, int smoothSize, int smoothIter, MeshType *skelM=0)
  {
-//   surfTree->setMaxNofNeighbors(1);
    tri::UpdateQuality<MeshType>::VertexConstant(poissonSurfaceMesh,0);
+   std::vector<VertexPointer> medialSrc(poissonSurfaceMesh.vert.size(),0);
    for(VertexIterator vi=montecarloVolumeMesh.vert.begin(); vi!=montecarloVolumeMesh.vert.end(); ++vi)
     {
      unsigned int ind;
      ScalarType sqdist;
      this->surfTree->doQueryClosest(vi->P(),ind,sqdist);
      VertexPointer vp = &poissonSurfaceMesh.vert[ind];
-     ScalarType dist = math::Sqrt(sqdist);
-     if(vp->Q() < dist) vp->Q()=dist;
+     ScalarType minDist = math::Sqrt(sqdist);
+     if(vp->Q() < minDist) 
+     {
+       std::vector<unsigned int> indVec;
+       std::vector<ScalarType> sqDistVec;
+       
+       this->surfTree->doQueryDist( vi->P(), minDist*distThr,indVec,sqDistVec);
+       if(indVec.size()>1)
+       {
+         for(size_t i=0;i<indVec.size();++i)
+         {
+           VertexPointer vp = &poissonSurfaceMesh.vert[indVec[i]];
+           ScalarType dist = math::Sqrt(sqDistVec[i]);
+           if(vp->Q() < minDist) {
+             vp->Q()=minDist;
+             medialSrc[indVec[i]]=&*vi;
+           }             
+         }
+       }       
+     }
    }
+   // Now collect the vertexes of the volume mesh that are on the medial surface 
+   if(skelM)
+   {
+     tri::UpdateFlags<MeshType>::VertexClearV(montecarloVolumeMesh);
+     for(int i=0;i<medialSrc.size();++i)
+       medialSrc[i]->SetV();
+     for(VertexIterator vi=montecarloVolumeMesh.vert.begin(); vi!=montecarloVolumeMesh.vert.end(); ++vi)
+       if(vi->IsV()) tri::Allocator<MeshType>::AddVertex(*skelM,vi->P());
+     printf("Generated a medial surf of %i vertexes\n",skelM->vn);
+   }
+   
+   
+   tri::Smooth<MeshType>::PointCloudQualityMedian(poissonSurfaceMesh);
+   tri::Smooth<MeshType>::PointCloudQualityAverage(poissonSurfaceMesh,smoothSize,smoothIter);
    tri::UpdateColor<MeshType>::PerVertexQualityRamp(poissonSurfaceMesh);
+   tri::RedetailSampler<MeshType> rs;
+   rs.init(&poissonSurfaceMesh);
+   rs.dist_upper_bound = poissonSurfaceMesh.bbox.Diag()*0.05 ;
+   rs.qualityFlag = true;
+   tri::SurfaceSampling<MeshType, RedetailSampler<MeshType> >::VertexUniform(baseMesh, rs, baseMesh.vn, false);
  }
 
+ void RefineSkeletonVolume(MeshType &skelMesh)
+ {
+   math::SubtractiveRingRNG rng;
+   int trialNum=0;
+   for(int i=0;i<skelMesh.vn;++i)
+    {
+        CoordType point = math::GeneratePointInBox3Uniform(rng,baseMesh.bbox);
+        trialNum++;
+        ScalarType d = this->DistanceFromSurface(point);
+        if(d<0){
+          vcg::tri::Allocator<MeshType>::AddVertex(montecarloVolumeMesh,point);
+          montecarloVolumeMesh.vert.back().Q() = fabs(d);
+        }
+    }
+ }
+ 
 
  void BuildMontecarloSampling(int montecarloSampleNum)
  {
    montecarloVolumeMesh.Clear();
    math::SubtractiveRingRNG rng;
-
+   int trialNum=0;
    while(montecarloVolumeMesh.vn < montecarloSampleNum)
     {
         CoordType point = math::GeneratePointInBox3Uniform(rng,baseMesh.bbox);
+        trialNum++;
         ScalarType d = this->DistanceFromSurface(point);
         if(d<0){
           vcg::tri::Allocator<MeshType>::AddVertex(montecarloVolumeMesh,point);
@@ -408,6 +468,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
         if(cb && (montecarloVolumeMesh.vn%1000)==0)
           cb((100*montecarloVolumeMesh.vn)/montecarloSampleNum,"Montecarlo Sampling...");
     }
+   printf("Made %i Trials to get %i samples\n",trialNum,montecarloSampleNum);
    tri::UpdateBounding<MeshType>::Box(montecarloVolumeMesh);
  }
 
