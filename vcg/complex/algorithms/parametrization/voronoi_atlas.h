@@ -28,7 +28,7 @@ public:
                                           Use<VoroFace>     ::template AsFaceType>{};
 
   class VoroVertex  : public Vertex< VoroUsedTypes, vertex::Coord3f, vertex::Normal3f, vertex::TexCoord2f, vertex::VFAdj , vertex::Qualityf, vertex::Color4b, vertex::BitFlags  >{};
-  class VoroFace    : public Face<  VoroUsedTypes, face::VertexRef, face::BitFlags, face::FFAdj ,face::VFAdj , face::WedgeTexCoord2f> {};
+  class VoroFace    : public Face<  VoroUsedTypes, face::VertexRef, face::BitFlags, face::FFAdj ,face::VFAdj , face::CurvatureDirf,face::WedgeTexCoord2f> {};
   class VoroEdge    : public Edge< VoroUsedTypes>{};
   class VoroMesh    : public tri::TriMesh< std::vector<VoroVertex>, std::vector<VoroFace> , std::vector<VoroEdge>  > {};
 
