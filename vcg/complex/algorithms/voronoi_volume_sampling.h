@@ -50,8 +50,8 @@ public:
   typedef typename vcg::tri::TrivialWalker<MeshType,MyVolume>               MyWalker;
   typedef typename vcg::tri::MarchingCubes<MeshType, MyWalker>              MyMarchingCubes;
 
-  VoronoiVolumeSampling(MeshType &_baseMesh, MeshType &_seedMesh)
-    :surfTree(0),seedTree(0),baseMesh(_baseMesh),seedMesh(_seedMesh),cb(0),restrictedRelaxationFlag(false)
+  VoronoiVolumeSampling(MeshType &_baseMesh)
+    :surfTree(0),seedTree(0),baseMesh(_baseMesh),cb(0),restrictedRelaxationFlag(false)
   {
    tri::RequirePerFaceMark(baseMesh);
    tri::UpdateBounding<MeshType>::Box(baseMesh);
@@ -69,12 +69,13 @@ public:
   vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
       
   MeshType &baseMesh;
-  MeshType &seedMesh;
+  MeshType seedMesh;
   MeshType poissonSurfaceMesh;
   ScalarType poissonRadiusSurface;
   MeshType montecarloVolumeMesh; // we use this mesh as volume evaluator
   MeshType seedDomainMesh;       // where we choose the seeds (by default is the montecarlo volume mesh)
   vcg::CallBackPos *cb;
+  math::MarsenneTwisterRNG rng;
   bool restrictedRelaxationFlag;
 
   
@@ -91,12 +92,14 @@ public:
     ScalarType meshArea = Stat<MeshType>::ComputeMeshArea(baseMesh);
     int MontecarloSurfSampleNum = 10 * meshArea / (poissonRadiusSurface*poissonRadiusSurface);
     tri::MeshSampler<MeshType> sampler(montecarloSurfaceMesh);
+    tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::SamplingRandomGenerator()=rng;    
     tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::Montecarlo(baseMesh, sampler, MontecarloSurfSampleNum);
     montecarloSurfaceMesh.bbox = baseMesh.bbox; // we want the same bounding box
     poissonSurfaceMesh.Clear();
     tri::MeshSampler<MeshType> mps(poissonSurfaceMesh);
     typename tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::PoissonDiskParam pp;
     pp.geodesicDistanceFlag=false;
+    
     tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::PoissonDiskPruning(mps, montecarloSurfaceMesh, poissonRadiusSurface,pp);
     vcg::tri::UpdateBounding<MeshType>::Box(poissonSurfaceMesh);
 
@@ -144,7 +147,7 @@ ScalarType DistanceFromVoronoiSeed(CoordType p_point)
 {
   ScalarType squaredDist;
   unsigned int ind;
-  surfTree->doQueryClosest(p_point,ind,squaredDist);
+  seedTree->doQueryClosest(p_point,ind,squaredDist);
   return math::Sqrt(squaredDist);
 }
 
@@ -173,7 +176,7 @@ ScalarType DistanceFromVoronoiFace(CoordType p_point)
  *   returns: distance between the point P and the line R
  */
 
- ScalarType DistanceFromVoronoiEdge(CoordType p_point)
+ScalarType DistanceFromVoronoiEdge(CoordType p_point)
 {
 
   seedTree->doQueryK(p_point,3,pq);
@@ -195,6 +198,30 @@ ScalarType DistanceFromVoronoiFace(CoordType p_point)
 
     return closestDist;
 }
+
+ScalarType DistanceFromVoronoiCorner(CoordType p_point)
+{
+
+  seedTree->doQueryK(p_point,4,pq);
+  std::vector<std::pair<ScalarType, CoordType> > closeSeedVec;
+  CoordType p0= this->seedMesh.vert[pq.getIndex(0)].P();
+  CoordType p1= this->seedMesh.vert[pq.getIndex(1)].P();
+  CoordType p2= this->seedMesh.vert[pq.getIndex(2)].P();
+  CoordType p3= this->seedMesh.vert[pq.getIndex(3)].P();
+
+    Plane3<ScalarType>  pl01; pl01.Init((p0+p1)/2.0f,p0-p1);
+    Plane3<ScalarType>  pl02; pl02.Init((p0+p2)/2.0f,p0-p2);
+    Plane3<ScalarType>  pl03; pl03.Init((p0+p3)/2.0f,p0-p3);
+    Line3<ScalarType>   voroLine;
+    
+    // Calculating the line R that intersect the planes pl01 and pl02
+    vcg::IntersectionPlanePlane(pl01,pl02,voroLine);
+    CoordType intersectionPt;
+    bool ret = vcg::IntersectionLinePlane(voroLine,pl03,intersectionPt);
+    
+    return vcg::Distance(p_point,intersectionPt);
+}
+
 
 void BarycentricRelaxVoronoiSamples(int relaxStep)
 {
@@ -319,26 +346,20 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
  *   PruningPoisson: mesh of inside and surface points, it's the voronoi3d diagram
  *   n_voxel: number of voxels for the greater side
  */
- void BuildScaffoldingMesh(MeshType &scaffoldingMesh, int volumeSide, ScalarType isoThr,int elemEnum, bool surfFlag)
+ void BuildScaffoldingMesh(MeshType &scaffoldingMesh, float voxelSide, ScalarType isoThr,int elemEnum, bool surfFlag)
 {
-   printf("Scaffolding of the mesh \n");
     MyVolume    volume;
-    ScalarType       max = math::Max(baseMesh.bbox.DimX(),baseMesh.bbox.DimY(),baseMesh.bbox.DimZ());
-    ScalarType       voxel = max / volumeSide;
-    int         sizeX = (baseMesh.bbox.DimX() / voxel)+1;
-    int         sizeY = (baseMesh.bbox.DimY() / voxel)+1;
-    int         sizeZ = (baseMesh.bbox.DimZ() / voxel)+1;
-
-    // Kdtree
-//    seedTree->setMaxNofNeighbors(4);
+    int         sizeX = (baseMesh.bbox.DimX() / voxelSide)+1;
+    int         sizeY = (baseMesh.bbox.DimY() / voxelSide)+1;
+    int         sizeZ = (baseMesh.bbox.DimZ() / voxelSide)+1;
+    
+    printf("Scaffolding of the mesh %i %i %i\n",sizeX,sizeY,sizeZ);
 
     BoxType bb = BoxType::Construct(baseMesh.bbox);
-    bb.Offset(baseMesh.bbox.Diag()*0.04f);
+    bb.Offset(voxelSide+isoThr*2.0f);
     volume.Init(Point3i(sizeX,sizeY,sizeZ),bb);
 
-//    qDebug("Init Volume of %i %i %i",sizeX,sizeY,sizeZ);
    int cnt=0;
-   ScalarType offset= volume.voxel.Norm()*isoThr;
     for(ScalarType i=0;i<sizeX;i++)
         for(ScalarType j=0;j<sizeY;j++)
           for(ScalarType k=0;k<sizeZ;k++)
@@ -351,9 +372,10 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
             ScalarType elemDist;
             switch(elemEnum)
             {
-            case 0: elemDist = DistanceFromVoronoiSeed(p) - offset; break;
-            case 1: elemDist = DistanceFromVoronoiEdge(p) - offset; break;
-            case 2: elemDist = DistanceFromVoronoiFace(p) - offset; break;
+            case 0: elemDist = DistanceFromVoronoiSeed(p) - isoThr; break;
+            case 1: elemDist = DistanceFromVoronoiEdge(p) - isoThr; break;
+            case 2: elemDist = DistanceFromVoronoiFace(p) - isoThr; break;
+            case 3: elemDist = DistanceFromVoronoiCorner(p) - isoThr; break;
             default: assert(0);
             }
 
@@ -362,9 +384,9 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
               val = std::max(-elemDist,surfDist);
             else
               val = std::max(elemDist,surfDist);
+            
             volume.Val(i,j,k) = val;
             cnt++;
-
           }
 
     // MARCHING CUBES
@@ -436,7 +458,6 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
 
  void RefineSkeletonVolume(MeshType &skelMesh)
  {
-   math::SubtractiveRingRNG rng;
    int trialNum=0;
    for(int i=0;i<skelMesh.vn;++i)
     {
@@ -454,7 +475,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
  void BuildMontecarloSampling(int montecarloSampleNum)
  {
    montecarloVolumeMesh.Clear();
-   math::SubtractiveRingRNG rng;
+   
    int trialNum=0;
    while(montecarloVolumeMesh.vn < montecarloSampleNum)
     {
@@ -478,7 +499,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
  * Build a Poisson-Disk Point cloud that cover all the space of the original mesh m
  *
  */
- void BuildVolumeSampling(int montecarloSampleNum, int seedNum, ScalarType &poissonRadius)
+ void BuildVolumeSampling(int montecarloSampleNum, int poissonSampleNum, ScalarType &poissonRadius, int randSeed)
  {
    if(montecarloSampleNum >0) 
      this->BuildMontecarloSampling(montecarloSampleNum);
@@ -486,10 +507,10 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
      tri::Append<MeshType,MeshType>::MeshCopy(seedDomainMesh,montecarloVolumeMesh);     
    
     vector<VertexPointer>  pruningVec;    
-    if(poissonRadius ==0 && seedNum!=0)
-      tri::PoissonPruningExact(seedDomainMesh,pruningVec,poissonRadius,seedNum);
+    if(poissonRadius ==0 && poissonSampleNum!=0)
+      tri::PoissonPruningExact(seedDomainMesh,pruningVec,poissonRadius,poissonSampleNum,0.04,10,randSeed);
     else
-      tri::PoissonPruning(seedDomainMesh,pruningVec,poissonRadius,seedNum);
+      tri::PoissonPruning(seedDomainMesh,pruningVec,poissonRadius,randSeed);
 
     std::vector<CoordType> seedPts(pruningVec.size());
     for(size_t i=0;i<pruningVec.size();++i)
