@@ -331,7 +331,7 @@ class PoissonSolver
         b[3] = scaled_Kimag * neg_t[1];
         b[4] = scaled_Kreal * neg_t[2];
         b[5] = scaled_Kimag * neg_t[2];
-        ////fine codice mio
+
     }
 
     ///return the LHS and RHS for a given face
@@ -556,6 +556,9 @@ public:
             printf("Non Manifold Vertices \n");
             return false;
         }
+        int H=tri::Clean<MeshType>::CountHoles(mesh);
+        if (H==0)return false;
+
         int G=tri::Clean<MeshType>::MeshGenus(mesh);
         if (G!=0)
         {
@@ -627,7 +630,7 @@ public:
                 assert(0);
             }
             v0->T().P()=Point2<ScalarType>(0,0);
-            v1->T().P()=Point2<ScalarType>(1,0);
+            v1->T().P()=Point2<ScalarType>(1,1);
             to_fix.push_back(v0);
             to_fix.push_back(v1);
             return;
