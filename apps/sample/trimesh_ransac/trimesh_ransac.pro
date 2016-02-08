@@ -1,4 +1,4 @@
 include(../common.pri)
-TARGET = ransac 
+TARGET = trimesh_ransac 
 SOURCES +=  ../../../wrap/ply/plylib.cpp \
-    ransac.cpp
+    trimesh_ransac.cpp
