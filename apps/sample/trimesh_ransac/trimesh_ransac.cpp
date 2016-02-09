@@ -31,6 +31,7 @@
 #include<vcg/complex/algorithms/point_sampling.h>
 #include<vcg/complex/algorithms/ransac_matching.h>
 
+
 #include<vcg/space/index/kdtree/kdtree.h>
 #include<vcg/space/point_matching.h>
 
@@ -69,41 +70,62 @@ int main( int argc, char **argv )
   tri::UpdateBounding<MyMesh>::Box(fixM);
   tri::UpdateBounding<MyMesh>::Box(movM);
   
-  
-  float featureRad = fixM.bbox.Diag() * 0.005;
-  
-//  RansacFramework<MyMesh,BaseFeatureSet<MeshType> >::EvalNormalVariation(movM,featureRad*5.0);
-//  tri::io::ExporterPLY<MyMesh>::Save(movM,"mv0.ply",tri::io::Mask::IOM_VERTQUALITY + tri::io::Mask::IOM_VERTCOLOR);  
-//  RansacFramework<MyMesh,BaseFeatureSet>::EvalNormalVariation(movM,featureRad*10.0);
-//  tri::io::ExporterPLY<MyMesh>::Save(movM,"mv1.ply",tri::io::Mask::IOM_VERTQUALITY + tri::io::Mask::IOM_VERTCOLOR);  
-  
-//  RansacFramework<MyMesh,BaseFeatureSet>::EvalNormalVariation(fixM,featureRad*5.0);
-//  tri::io::ExporterPLY<MyMesh>::Save(fixM,"fv0.ply",tri::io::Mask::IOM_VERTQUALITY + tri::io::Mask::IOM_VERTCOLOR);  
-//  RansacFramework<MyMesh,BaseFeatureSet>::EvalNormalVariation(fixM,featureRad*10.0);
-//  tri::io::ExporterPLY<MyMesh>::Save(fixM,"fv1.ply",tri::io::Mask::IOM_VERTQUALITY + tri::io::Mask::IOM_VERTCOLOR);  
-
-  
   Point3f delta = math::GeneratePointInUnitBallUniform<float>(rnd) * fixM.bbox.Diag();
   tri::UpdatePosition<MyMesh>::Translate(movM,delta);
-  tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFaceNormalized(fixM);
-  tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFaceNormalized(movM);
+  Point3f axis = math::GeneratePointOnUnitSphereUniform<float>(rnd);
+  float angle = rnd.generate01() * M_PI;
+  Matrix44f rot; rot.SetRotateRad(angle,axis);
+  tri::UpdatePosition<MyMesh>::Matrix(movM,rot);    
   tri::io::ExporterPLY<MyMesh>::Save(movM,"out.ply");
   int randSeed = clock();
   
   RansacFramework<MyMesh,BaseFeatureSet<MyMesh> > Ran;
   RansacFramework<MyMesh,BaseFeatureSet<MyMesh> >::Param pp;
-  pp.samplingRadiusPerc=0.005;
+  BaseFeatureSet<MyMesh>::Param fpp;
+  pp.samplingRadiusPerc=0.01;
   pp.evalSize=50;
   pp.inlierRatioThr = 0.4;
-  Ran.Init(fixM,movM,pp);
-   
+  pp.iterMax = 100;
+  pp.maxMatchingFeatureNum = 400;
+  fpp.featureSampleRatio=0.5;
   std::vector<RansacFramework<MyMesh,BaseFeatureSet<MyMesh> >::Candidate> cVec;
+  
+//  RansacFramework<MyMesh,NDFeatureSet<MyMesh> > Ran;
+//  RansacFramework<MyMesh,NDFeatureSet<MyMesh> >::Param pp;
+//  NDFeatureSet<MyMesh>::Param fpp;
+//  std::vector<RansacFramework<MyMesh,NDFeatureSet<MyMesh> >::Candidate> cVec;
+
+//  pp.samplingRadiusPerc=0.01;
+//  pp.evalSize=100;
+//  pp.inlierRatioThr = 0.4;
+//  pp.iterMax = 1000;
+//  int t0=clock();
+  
+//  fpp.levAbs[0]=pp.samplingRadiusAbs*2.0;
+//  fpp.levAbs[0]=pp.samplingRadiusAbs*4.0;
+//  fpp.levAbs[0]=pp.samplingRadiusAbs*8.0;
+//  Ran.Init(fixM,movM,pp,fpp);
+//  Ran.EvaluateFeature(30,"featureTest30.ply",pp);
+//  fpp.levAbs[0]=pp.samplingRadiusAbs*3.0;
+//  fpp.levAbs[0]=pp.samplingRadiusAbs*6.0;
+//  fpp.levAbs[0]=pp.samplingRadiusAbs*9.0;
+//  Ran.Init(fixM,movM,pp,fpp);  
+//  Ran.EvaluateFeature(30,"featureTest30a.ply",pp);
+  
+//  exit(-1);
+  
+  int t0=clock();
+  Ran.Init(fixM,movM,pp,fpp);  
+  int t1=clock(); 
   Ran.Process_SearchEvaluateTriple(cVec,pp);
+  int t2=clock();
+  
+  printf("Completed Search (%5.2f init %5.2f search)\n",float(t1-t0)/CLOCKS_PER_SEC, float(t2-t1)/CLOCKS_PER_SEC);
+  
   
   MyMesh out0; tri::Append<MyMesh,MyMesh>::MeshCopy(out0,movM);   
   tri::UpdatePosition<MyMesh>::Matrix(out0,cVec[0].Tr);
   tri::io::ExporterPLY<MyMesh>::Save(out0,"out0.ply");  
-  
   
   MyMesh inlierMesh0;
   Ran.DumpInlier(inlierMesh0,cVec[0],pp);
@@ -112,6 +134,7 @@ int main( int argc, char **argv )
   MyMesh out1; tri::Append<MyMesh,MyMesh>::MeshCopy(out1,movM);
   tri::UpdatePosition<MyMesh>::Matrix(out1,cVec[1].Tr);
   tri::io::ExporterPLY<MyMesh>::Save(out1,"out1.ply");  
+  
   MyMesh inlierMesh1;
   Ran.DumpInlier(inlierMesh1,cVec[1],pp);
   tri::io::ExporterPLY<MyMesh>::Save(inlierMesh1,"inlier1.ply");

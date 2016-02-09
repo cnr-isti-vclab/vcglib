@@ -1,4 +1,5 @@
 include(../common.pri)
 TARGET = trimesh_ransac 
 SOURCES +=  ../../../wrap/ply/plylib.cpp \
-    trimesh_ransac.cpp
+  ../../../vcg/complex/algorithms/ransac_matching.h \
+  trimesh_ransac.cpp
