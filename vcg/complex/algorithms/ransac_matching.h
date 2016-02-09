@@ -30,7 +30,11 @@
 #include<vcg/space/point_matching.h>
 namespace vcg
 {
-
+/** BaseFeature a no-feature feature 
+ * 
+ * Basically it serve the purpose of evaluating the ransac framework factoring out the goodness of the feature. 
+ * 
+ */
 template <class MeshType> 
 class BaseFeature
 {
@@ -77,8 +81,8 @@ public:
     for(int i=0;i<fixFeatureVec.size();++i) 
       this->fixFeatureVec[i]._v = fixSampleVec[i];
       
-    this->movFeatureVec.resize(movSampleVec.size()/20);
-    for(int i=0;i<movSampleVec.size()/20;++i) 
+    this->movFeatureVec.resize(movSampleVec.size()*fpp.featureSampleRatio);
+    for(int i=0;i<movFeatureVec.size();++i) 
       this->movFeatureVec[i]._v = movSampleVec[i];
     
     printf("Generated %i Features on Fix\n",this->fixFeatureVec.size());
@@ -216,6 +220,21 @@ void getMatchingFixFeatureVec(FeatureType &q, vector<int> &ffiVec, int maxNum)
 };
 
 
+/** Ransac Framework
+ *
+ * A ransac framework for mesh-mesh rough alignment. 
+ * Templated on the featureSet
+ * 
+ * A feature set must expose 
+ * - A method for intializing features on a mesh
+ * - A method to return up to <k> features matching a given feature
+ * 
+ * The framework, given two meshes (fix and mov), will search for a triplet of 
+ * matching features that brings mov onto fix. 
+ * 
+ * Validity of a transformation is checked by mean of two poisson disk sampling of the input meshes. 
+ */
+
 
 template <class MeshType, class FeatureSetType>
 class RansacFramework
@@ -252,7 +271,8 @@ public:
       congruenceThrPerc = 2.0; // the distance between two matching features must be  within 2.0 * sampling distance 
       minFeatureDistancePerc = 4.0; // the distance between two chosen features must be  at least 4.0 * sampling distance 
       maxMatchingFeatureNum = 100;
-      areaThrPerc = 20.0;
+      areaThrPerc = 20.0;    // Triplets that make small triangles are discarded 
+      
     }
    
     ScalarType inlierRatioThr;
@@ -465,7 +485,7 @@ public:
     sort(cVec.begin(),cVec.end());
     printf("best candidate %f \n",cVec[0].err());
     
-    pp.evalSize = pp.evalSize*10;
+    pp.evalSize = FS.mfNum();
     
     for(int i=0;i<cVec.size();++i)
       EvaluateMatrix(cVec[i],pp);
@@ -478,13 +498,23 @@ public:
     
   } // end Process
   
+  
+  /**
+   * @brief EvaluateMatrix
+   * @param c
+   * @param pp
+   * 
+   * Evaluate the matrix resulting from a candidate.
+   * Done using the poisson sampling using only evalSize samples
+   * 
+   *  
+   */
   void EvaluateMatrix(Candidate &c, Param &pp)
   {
     c.inlierNum=0;
     c.evalSize=pp.evalSize;    
     
     ScalarType sqThr = pp.inlierSquareThr();
-    Distribution<ScalarType> H;
     int mid = pp.evalSize/2;
     uint ind;
     ScalarType squareDist;
@@ -500,7 +530,8 @@ public:
           ++c.inlierNum;
         ++pi;
       }
-      if((j==0) && (c.inlierNum < mid/10))
+      // Early bailout if after 1/2 of the test we have a very low consensus reject
+      if((j==0) && (c.inlierNum < mid/10))  
       {
         c.inlierNum *=2;
         return;
@@ -520,7 +551,6 @@ public:
       if(squareDist < sqThr)
         tri::Allocator<MeshType>::AddVertex(m,qp);
     }
-    
   }
   
 
