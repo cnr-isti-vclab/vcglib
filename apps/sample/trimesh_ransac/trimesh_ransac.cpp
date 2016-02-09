@@ -82,11 +82,11 @@ int main( int argc, char **argv )
   RansacFramework<MyMesh,BaseFeatureSet<MyMesh> > Ran;
   RansacFramework<MyMesh,BaseFeatureSet<MyMesh> >::Param pp;
   BaseFeatureSet<MyMesh>::Param fpp;
-  pp.samplingRadiusPerc=0.01;
+  pp.samplingRadiusPerc=0.008;
   pp.evalSize=50;
-  pp.inlierRatioThr = 0.4;
+  pp.inlierRatioThr = 0.5;
   pp.iterMax = 100;
-  pp.maxMatchingFeatureNum = 400;
+  pp.maxMatchingFeatureNum = 500;
   fpp.featureSampleRatio=0.5;
   std::vector<RansacFramework<MyMesh,BaseFeatureSet<MyMesh> >::Candidate> cVec;
   
