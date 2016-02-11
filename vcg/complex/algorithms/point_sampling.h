@@ -2317,9 +2317,9 @@ void PoissonPruningExact(MeshType &m, /// the mesh that has to be pruned
     curRadius=(RangeMaxRad+RangeMinRad)/2.0f;
     PoissonPruning(m,poissonSamplesTmp,curRadius,randSeed);
     //qDebug("(%6.3f:%5i %6.3f:%5i) Cur Radius %f -> %i sample instead of %i",RangeMinRad,RangeMinSampleNum,RangeMaxRad,RangeMaxSampleNum,curRadius,poissonSamplesTmp.size(),sampleNum);
-    if(poissonSamplesTmp.size() > sampleNum)
+    if(poissonSamplesTmp.size() > size_t(sampleNum))
       RangeMinRad = curRadius;
-    if(poissonSamplesTmp.size() < sampleNum)
+    if(poissonSamplesTmp.size() < size_t(sampleNum))
       RangeMaxRad = curRadius;
   }
 
