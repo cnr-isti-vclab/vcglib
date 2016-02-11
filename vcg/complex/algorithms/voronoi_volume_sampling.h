@@ -115,35 +115,35 @@ public:
   // Compute the signed distance from the surface exploting both a kdtree and a ugrid 
   // for a query point p first we use the kdtree with a good poisson sampling of the surface;
   // to get the nearest point on the surface, then if the point is far from the surface we can use the point point distance, while if it is near (e.g. less than 3*poisson radius) we rely on point face distance with a grid.
-ScalarType DistanceFromSurface(CoordType &p)
+ScalarType DistanceFromSurface(const CoordType &q, CoordType &closestP)
 {
   ScalarType squaredDist;
   unsigned int ind;
-  surfTree->doQueryClosest(p,ind,squaredDist);
+  surfTree->doQueryClosest(q,ind,squaredDist);
   ScalarType dist = sqrt(squaredDist);
   if( dist > 3.0f*poissonRadiusSurface)
   {
 //    CoordType dir = surfTree->getNeighbor(0) - p;
-    CoordType dir = this->poissonSurfaceMesh.vert[ind].P() - p;
+    CoordType dir = this->poissonSurfaceMesh.vert[ind].P() - q;
     const CoordType &surfN = this->poissonSurfaceMesh.vert[ind].N();
     if(dir* surfN > 0) dist= -dist;
+    closestP=this->poissonSurfaceMesh.vert[ind].P();
     return dist;
   }
 
   ScalarType _maxDist = this->poissonRadiusSurface*3.0f;
   dist=_maxDist;
-  CoordType _closestPt;
-  FacePointer f=surfGrid.GetClosest(PDistFunct,mf,p,_maxDist,dist,_closestPt);
+  FacePointer f=surfGrid.GetClosest(PDistFunct,mf,q,_maxDist,dist,closestP);
   assert(f);
   assert (dist >=0);
-  CoordType dir = _closestPt - p;
+  CoordType dir = closestP - q;
   if(dir*f->cN() > 0) dist = -dist;
 
   return dist;
 }
 
 
-ScalarType DistanceFromVoronoiSeed(CoordType p_point)
+ScalarType DistanceFromVoronoiSeed(const CoordType &p_point)
 {
   ScalarType squaredDist;
   unsigned int ind;
@@ -151,7 +151,7 @@ ScalarType DistanceFromVoronoiSeed(CoordType p_point)
   return math::Sqrt(squaredDist);
 }
 
-ScalarType DistanceFromVoronoiFace(CoordType p_point)
+ScalarType DistanceFromVoronoiFace(const CoordType &p_point)
 {
 
   seedTree->doQueryK(p_point,2,pq);
@@ -176,9 +176,8 @@ ScalarType DistanceFromVoronoiFace(CoordType p_point)
  *   returns: distance between the point P and the line R
  */
 
-ScalarType DistanceFromVoronoiEdge(CoordType p_point)
+ScalarType DistanceFromVoronoiInternalEdge(const CoordType &p_point)
 {
-
   seedTree->doQueryK(p_point,3,pq);
   std::vector<std::pair<ScalarType, CoordType> > closeSeedVec;
   CoordType p0= this->seedMesh.vert[pq.getIndex(0)].P();
@@ -199,9 +198,43 @@ ScalarType DistanceFromVoronoiEdge(CoordType p_point)
     return closestDist;
 }
 
-ScalarType DistanceFromVoronoiCorner(CoordType p_point)
+ScalarType DistanceFromVoronoiSurfaceEdge(const CoordType &p_point, const CoordType &surfPt)
 {
+  seedTree->doQueryK(p_point,3,pq);
+  pq.sort();
+  assert(pq.getWeight(0) <= pq.getWeight(1));
+  
+  CoordType p0= this->seedMesh.vert[pq.getIndex(0)].P();
+  CoordType p1= this->seedMesh.vert[pq.getIndex(1)].P();
+  CoordType p2= this->seedMesh.vert[pq.getIndex(2)].P();
 
+  Plane3<ScalarType>  pl01; pl01.Init((p0+p1)/2.0f,p0-p1);
+  Plane3<ScalarType>  pl02; pl02.Init((p0+p2)/2.0f,p0-p2);
+  Plane3<ScalarType>  pl12; pl12.Init((p1+p2)/2.0f,p1-p2);
+  Line3<ScalarType>   voroLine;
+  
+    
+    // Calculating the line R that intersect the planes pl01 and pl02
+    vcg::IntersectionPlanePlane(pl01,pl02,voroLine);
+    // Calculating the distance k between the point p_point and the line R.
+    CoordType closestPt;
+    ScalarType voroLineDist;
+    vcg::LinePointDistance(voroLine,p_point,closestPt, voroLineDist);
+
+    Plane3<ScalarType> plSurf; plSurf.Init(surfPt, surfPt - p_point);
+    Line3<ScalarType>   surfLine;
+    // Calculating the line R that intersect the planes pl01 and pl02
+    
+    ScalarType surfLineDist;
+    vcg::IntersectionPlanePlane(pl01,plSurf,surfLine);
+    vcg::LinePointDistance(surfLine,p_point,closestPt, surfLineDist);    
+    
+    return min(voroLineDist,surfLineDist);
+}
+
+
+ScalarType DistanceFromVoronoiCorner(const CoordType &p_point)
+{
   seedTree->doQueryK(p_point,4,pq);
   std::vector<std::pair<ScalarType, CoordType> > closeSeedVec;
   CoordType p0= this->seedMesh.vert[pq.getIndex(0)].P();
@@ -217,7 +250,7 @@ ScalarType DistanceFromVoronoiCorner(CoordType p_point)
     // Calculating the line R that intersect the planes pl01 and pl02
     vcg::IntersectionPlanePlane(pl01,pl02,voroLine);
     CoordType intersectionPt;
-    bool ret = vcg::IntersectionLinePlane(voroLine,pl03,intersectionPt);
+    vcg::IntersectionLinePlane(voroLine,pl03,intersectionPt);
     
     return vcg::Distance(p_point,intersectionPt);
 }
@@ -244,7 +277,7 @@ void BarycentricRelaxVoronoiSamples(int relaxStep)
     }
 
     changed=false;
-    for(int i=0;i<seedMesh.vert.size();++i)
+    for(size_t i=0;i<seedMesh.vert.size();++i)
     {
       if(sumVec[i].first == 0) tri::Allocator<MeshType>::DeleteVertex(seedMesh,seedMesh.vert[i]);
       else
@@ -346,54 +379,53 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
  *   PruningPoisson: mesh of inside and surface points, it's the voronoi3d diagram
  *   n_voxel: number of voxels for the greater side
  */
- void BuildScaffoldingMesh(MeshType &scaffoldingMesh, float voxelSide, ScalarType isoThr,int elemEnum, bool surfFlag)
+void BuildScaffoldingMesh(MeshType &scaffoldingMesh, float voxelSide, const ScalarType isoThr,int elemEnum, bool surfFlag)
 {
-    MyVolume    volume;
-    int         sizeX = (baseMesh.bbox.DimX() / voxelSide)+1;
-    int         sizeY = (baseMesh.bbox.DimY() / voxelSide)+1;
-    int         sizeZ = (baseMesh.bbox.DimZ() / voxelSide)+1;
-    
-    printf("Scaffolding of the mesh %i %i %i\n",sizeX,sizeY,sizeZ);
-
-    BoxType bb = BoxType::Construct(baseMesh.bbox);
-    bb.Offset(voxelSide+isoThr*2.0f);
-    volume.Init(Point3i(sizeX,sizeY,sizeZ),bb);
-
-   int cnt=0;
-    for(ScalarType i=0;i<sizeX;i++)
-        for(ScalarType j=0;j<sizeY;j++)
-          for(ScalarType k=0;k<sizeZ;k++)
-          {
-            // check if the point is inside the mesh
-            CoordType p;
-            volume.IPiToPf(Point3i(i,j,k),p);
-            ScalarType surfDist = this->DistanceFromSurface(p);
-
-            ScalarType elemDist;
-            switch(elemEnum)
-            {
-            case 0: elemDist = DistanceFromVoronoiSeed(p) - isoThr; break;
-            case 1: elemDist = DistanceFromVoronoiEdge(p) - isoThr; break;
-            case 2: elemDist = DistanceFromVoronoiFace(p) - isoThr; break;
-            case 3: elemDist = DistanceFromVoronoiCorner(p) - isoThr; break;
-            default: assert(0);
-            }
-
-            ScalarType val;
-            if(surfFlag)
-              val = std::max(-elemDist,surfDist);
-            else
-              val = std::max(elemDist,surfDist);
-            
-            volume.Val(i,j,k) = val;
-            cnt++;
-          }
-
-    // MARCHING CUBES
-//    qDebug("voxel out %i on %i",cnt,sizeX*sizeY*sizeZ);
-    MyWalker    walker;
-    MyMarchingCubes	 mc(scaffoldingMesh, walker);
-    walker.template BuildMesh <MyMarchingCubes>(scaffoldingMesh, volume, mc,0);
+  MyVolume    volume;
+  int         sizeX = (baseMesh.bbox.DimX() / voxelSide)+1;
+  int         sizeY = (baseMesh.bbox.DimY() / voxelSide)+1;
+  int         sizeZ = (baseMesh.bbox.DimZ() / voxelSide)+1;
+  
+  printf("Scaffolding of the mesh %i %i %i\n",sizeX,sizeY,sizeZ);
+  
+  BoxType bb = BoxType::Construct(baseMesh.bbox);
+  bb.Offset(voxelSide+isoThr*2.0f);
+  volume.Init(Point3i(sizeX,sizeY,sizeZ),bb);
+  int cnt=0;
+  for(ScalarType i=0;i<sizeX;i++)
+    for(ScalarType j=0;j<sizeY;j++)
+      for(ScalarType k=0;k<sizeZ;k++)
+      {
+        ScalarType val;            
+        // check if the point is inside the mesh
+        CoordType p,closest;
+        volume.IPiToPf(Point3i(i,j,k),p);
+        ScalarType surfDist = this->DistanceFromSurface(p,closest);
+        
+        ScalarType elemDist;
+        switch(elemEnum)
+        {
+        case 0: elemDist = DistanceFromVoronoiSeed(p) - isoThr; break;
+        case 1: elemDist = DistanceFromVoronoiSurfaceEdge(p,closest) - isoThr; break;
+        case 2: elemDist = DistanceFromVoronoiFace(p) - isoThr; break;
+        case 3: elemDist = DistanceFromVoronoiCorner(p) - isoThr; break;
+        case 4: elemDist = DistanceFromVoronoiInternalEdge(p) - isoThr; break;
+        default: assert(0);
+        }
+        
+        if(surfFlag)
+          val = std::max(-elemDist,surfDist);
+        else
+          val = std::max(elemDist,surfDist);
+        volume.Val(i,j,k) = val;
+        cnt++;
+      }
+  
+  // MARCHING CUBES
+  //    qDebug("voxel out %i on %i",cnt,sizeX*sizeY*sizeZ);
+  MyWalker    walker;
+  MyMarchingCubes	 mc(scaffoldingMesh, walker);
+  walker.template BuildMesh <MyMarchingCubes>(scaffoldingMesh, volume, mc,0);
 }
  /**
   * @brief Compute an evaulation of the thickness as distance from the medial axis.
@@ -425,7 +457,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
          for(size_t i=0;i<indVec.size();++i)
          {
            VertexPointer vp = &poissonSurfaceMesh.vert[indVec[i]];
-           ScalarType dist = math::Sqrt(sqDistVec[i]);
+           //ScalarType dist = math::Sqrt(sqDistVec[i]);
            if(vp->Q() < minDist) {
              vp->Q()=minDist;
              medialSrc[indVec[i]]=&*vi;
@@ -438,7 +470,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
    if(skelM)
    {
      tri::UpdateFlags<MeshType>::VertexClearV(montecarloVolumeMesh);
-     for(int i=0;i<medialSrc.size();++i)
+     for(size_t i=0;i<medialSrc.size();++i)
        medialSrc[i]->SetV();
      for(VertexIterator vi=montecarloVolumeMesh.vert.begin(); vi!=montecarloVolumeMesh.vert.end(); ++vi)
        if(vi->IsV()) tri::Allocator<MeshType>::AddVertex(*skelM,vi->P());
@@ -458,12 +490,13 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
 
  void RefineSkeletonVolume(MeshType &skelMesh)
  {
+   CoordType closestP;
    int trialNum=0;
    for(int i=0;i<skelMesh.vn;++i)
     {
         CoordType point = math::GeneratePointInBox3Uniform(rng,baseMesh.bbox);
         trialNum++;
-        ScalarType d = this->DistanceFromSurface(point);
+        ScalarType d = this->DistanceFromSurface(point, closestP);
         if(d<0){
           vcg::tri::Allocator<MeshType>::AddVertex(montecarloVolumeMesh,point);
           montecarloVolumeMesh.vert.back().Q() = fabs(d);
@@ -477,11 +510,12 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
    montecarloVolumeMesh.Clear();
    
    int trialNum=0;
+   CoordType closest;
    while(montecarloVolumeMesh.vn < montecarloSampleNum)
     {
         CoordType point = math::GeneratePointInBox3Uniform(rng,baseMesh.bbox);
         trialNum++;
-        ScalarType d = this->DistanceFromSurface(point);
+        ScalarType d = this->DistanceFromSurface(point,closest);
         if(d<0){
           vcg::tri::Allocator<MeshType>::AddVertex(montecarloVolumeMesh,point);
           montecarloVolumeMesh.vert.back().Q() = fabs(d);
