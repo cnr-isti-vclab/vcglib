@@ -583,13 +583,13 @@ void Torus(MeshType &m, float hRingRadius, float vRingRadius, int hRingDiv=24, i
   Allocator<MeshType>::AddVertices(m,(vRingDiv+1)*(hRingDiv+1));
   for(int i=0;i<hRingDiv+1;++i)
   {
-    Matrix44x RotM; RotM.SetRotateRad(float(i%hRingDiv)*angleStepH,CoordType(0,1,0));
+    Matrix44x RotM; RotM.SetRotateRad(float(i%hRingDiv)*angleStepH,CoordType(0,0,1));
     for(int j=0;j<vRingDiv+1;++j)
     {
       CoordType p;
       p[0]= vRingRadius*cos(float(j%vRingDiv)*angleStepV) + hRingRadius;
-      p[1]= vRingRadius*sin(float(j%vRingDiv)*angleStepV);
-      p[2] = 0;
+      p[1] = 0;
+      p[2]= vRingRadius*sin(float(j%vRingDiv)*angleStepV);
 
       m.vert[i*(vRingDiv+1)+j].P() = RotM*p;
     }
