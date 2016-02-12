@@ -608,7 +608,7 @@ void Torus(MeshType &m, float hRingRadius, float vRingRadius, int hRingDiv=24, i
  * similar to those that define the superquadrics. 
  */
 template <class MeshType>
-void SuperToroid(MeshType &m, float hRingRadius, float vRingRadius, float s, float t, int hRingDiv=24, int vRingDiv=12 )
+void SuperToroid(MeshType &m, float hRingRadius, float vRingRadius, float vSquareness, float hSquareness, int hRingDiv=24, int vRingDiv=12 )
 {
   typedef typename MeshType::CoordType CoordType;
   typedef typename MeshType::ScalarType ScalarType;
@@ -621,20 +621,22 @@ void SuperToroid(MeshType &m, float hRingRadius, float vRingRadius, float s, flo
   auto fnS=[](float a, float b){
       return math::Sgn(sin(a))*pow(abs(sin(a)),b);
   };
-  float u;
-  float v;
+  float u,v;
+  int count;
   Allocator<MeshType>::AddVertices(m,(vRingDiv+1)*(hRingDiv+1));
   for(int i=0;i<hRingDiv+1;++i)
   {
     u=float(i%hRingDiv)*angleStepH;
-    for(int j=0;j<vRingDiv+1;++j)
+    count=0;
+    for(int j=vRingDiv;j>=0;--j)
     {
       CoordType p;
       v=float(j%vRingDiv)*angleStepV;
-      p[0]= (hRingRadius+fnC(u,s))*fnC(v,t);
-      p[1]= (vRingRadius+fnC(u,s))*fnS(v,t);
-      p[2] = fnS(u,s);
-      m.vert[i*(vRingDiv+1)+j].P() = p;
+      p[0]= (hRingRadius+fnC(u,vSquareness))*fnC(v,hSquareness);
+      p[1]= (vRingRadius+fnC(u,vSquareness))*fnS(v,hSquareness);
+      p[2] = fnS(u,vSquareness);
+      m.vert[i*(vRingDiv+1)+count].P() = p;
+      count++;
     }
   }
   FaceGrid(m,vRingDiv+1,hRingDiv+1);
@@ -648,7 +650,7 @@ void SuperToroid(MeshType &m, float hRingRadius, float vRingRadius, float s, flo
  * the same exponent t.
  */
 template <class MeshType>
-void SuperEllipsoid(MeshType &m, float r, float s, float t, int hRingDiv=24, int vRingDiv=12 )
+void SuperEllipsoid(MeshType &m, float rFeature, float sFeature, float tFeature, int hRingDiv=24, int vRingDiv=12 )
 {
   typedef typename MeshType::CoordType CoordType;
   typedef typename MeshType::ScalarType ScalarType;
@@ -671,16 +673,13 @@ void SuperEllipsoid(MeshType &m, float r, float s, float t, int hRingDiv=24, int
     {
       CoordType p;
       v=float(j%vRingDiv)*angleStepV;
-      p[0]= fnC(v,2/r)*fnC(u,2/r);
-      p[1]= fnC(v,2/s)*fnS(u,2/s);
-      p[2] = fnS(v,2/t);
+      p[0]= fnC(v,2/rFeature)*fnC(u,2/rFeature);
+      p[1]= fnC(v,2/sFeature)*fnS(u,2/sFeature);
+      p[2] = fnS(v,2/tFeature);
       m.vert[i*(vRingDiv+1)+j].P() = p;
     }
   }
   FaceGrid(m,vRingDiv+1,hRingDiv+1);
-  tri::Clean<MeshType>::RemoveDuplicateVertex(m);
-  tri::Allocator<MeshType>::CompactEveryVector(m);
-
 }
 // this function build a mesh starting from a vector of generic coords (objects having a triple of float at their beginning)
 // and a vector of faces (objects having a triple of ints at theri beginning).
