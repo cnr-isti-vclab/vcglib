@@ -905,7 +905,7 @@ static void BuildBiasedSeedVec(MeshType &m,
 
   std::vector<VoronoiEdge> edgeVec;
   BuildVoronoiEdgeVec(m,edgeVec);
-  printf("Found %lu edges on a diagram of %lu seeds\n",edgeVec.size(),seedVec.size());
+  printf("Found %i edges on a diagram of %i seeds\n",int(edgeVec.size()),int(seedVec.size()));
 
   std::map<VertexPointer,std::vector<VoronoiEdge *> > SeedToEdgeVecMap;
   std::map< std::pair<VertexPointer,VertexPointer>, VoronoiEdge *> SeedPairToEdgeMap;
