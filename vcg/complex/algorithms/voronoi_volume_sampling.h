@@ -46,9 +46,26 @@ public:
   typedef typename MeshType::FacePointer FacePointer;
   typedef typename vcg::GridStaticPtr<typename MeshType::FaceType, ScalarType> GridType;
 
-  typedef SimpleVolume<SimpleVoxel<ScalarType> >                              MyVolume;
-  typedef typename vcg::tri::TrivialWalker<MeshType,MyVolume>               MyWalker;
-  typedef typename vcg::tri::MarchingCubes<MeshType, MyWalker>              MyMarchingCubes;
+  typedef SimpleVolume<SimpleVoxel<ScalarType> >                              VVSVolume;
+  typedef typename vcg::tri::TrivialWalker<MeshType,VVSVolume>               VVSWalker;
+  typedef typename vcg::tri::MarchingCubes<MeshType, VVSWalker>              VVSMarchingCubes;
+
+  class Param
+  {
+  public:
+    Param()
+    {
+      elemType=1;
+      isoThr=0.1;
+      surfFlag=false;
+      voxelSide=0;
+    }
+
+    int elemType; // the type of element
+    ScalarType isoThr;
+    ScalarType voxelSide;
+    bool surfFlag; 
+  };
 
   VoronoiVolumeSampling(MeshType &_baseMesh)
     :surfTree(0),seedTree(0),baseMesh(_baseMesh),cb(0),restrictedRelaxationFlag(false)
@@ -367,6 +384,31 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
 //  qDebug("performed %i relax step on %i",i,relaxStep);
 }
 
+
+ScalarType ImplicitFunction(const CoordType &p, Param &pp)
+{
+  CoordType closest;
+  ScalarType surfDist = this->DistanceFromSurface(p,closest);
+  
+  ScalarType elemDist;
+  switch(pp.elemType)
+  {
+  case 0: elemDist = DistanceFromVoronoiSeed(p) - pp.isoThr; break;
+  case 1: elemDist = DistanceFromVoronoiSurfaceEdge(p,closest) - pp.isoThr; break;
+  case 2: elemDist = DistanceFromVoronoiFace(p) - pp.isoThr; break;
+  case 3: elemDist = DistanceFromVoronoiCorner(p) - pp.isoThr; break;
+  case 4: elemDist = DistanceFromVoronoiInternalEdge(p) - pp.isoThr; break;
+  default: assert(0);
+  }
+  ScalarType val;
+  if(pp.surfFlag)
+    val = std::max(-elemDist,surfDist);
+  else
+    val = std::max(elemDist,surfDist);
+  
+  return val;
+}
+
 /*
  * Function: BuildScaffoldingMesh
  * ----------------------------
@@ -379,53 +421,34 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
  *   PruningPoisson: mesh of inside and surface points, it's the voronoi3d diagram
  *   n_voxel: number of voxels for the greater side
  */
-void BuildScaffoldingMesh(MeshType &scaffoldingMesh, float voxelSide, const ScalarType isoThr,int elemEnum, bool surfFlag)
+void BuildScaffoldingMesh(MeshType &scaffoldingMesh, Param &pp)
 {
-  MyVolume    volume;
-  int         sizeX = (baseMesh.bbox.DimX() / voxelSide)+1;
-  int         sizeY = (baseMesh.bbox.DimY() / voxelSide)+1;
-  int         sizeZ = (baseMesh.bbox.DimZ() / voxelSide)+1;
+  VVSVolume    volume;
+  int         sizeX = (baseMesh.bbox.DimX() / pp.voxelSide)+1;
+  int         sizeY = (baseMesh.bbox.DimY() / pp.voxelSide)+1;
+  int         sizeZ = (baseMesh.bbox.DimZ() / pp.voxelSide)+1;
   
-  printf("Scaffolding of the mesh %i %i %i\n",sizeX,sizeY,sizeZ);
-  
+  int t0=clock();
   BoxType bb = BoxType::Construct(baseMesh.bbox);
-  bb.Offset(voxelSide+isoThr*2.0f);
+  bb.Offset(pp.voxelSide+pp.isoThr*2.0f);
   volume.Init(Point3i(sizeX,sizeY,sizeZ),bb);
   int cnt=0;
   for(ScalarType i=0;i<sizeX;i++)
     for(ScalarType j=0;j<sizeY;j++)
       for(ScalarType k=0;k<sizeZ;k++)
       {
-        ScalarType val;            
-        // check if the point is inside the mesh
-        CoordType p,closest;
+        CoordType p;
         volume.IPiToPf(Point3i(i,j,k),p);
-        ScalarType surfDist = this->DistanceFromSurface(p,closest);
-        
-        ScalarType elemDist;
-        switch(elemEnum)
-        {
-        case 0: elemDist = DistanceFromVoronoiSeed(p) - isoThr; break;
-        case 1: elemDist = DistanceFromVoronoiSurfaceEdge(p,closest) - isoThr; break;
-        case 2: elemDist = DistanceFromVoronoiFace(p) - isoThr; break;
-        case 3: elemDist = DistanceFromVoronoiCorner(p) - isoThr; break;
-        case 4: elemDist = DistanceFromVoronoiInternalEdge(p) - isoThr; break;
-        default: assert(0);
-        }
-        
-        if(surfFlag)
-          val = std::max(-elemDist,surfDist);
-        else
-          val = std::max(elemDist,surfDist);
-        volume.Val(i,j,k) = val;
+        volume.Val(i,j,k) = ImplicitFunction(p,pp);
         cnt++;
       }
-  
-  // MARCHING CUBES
-  //    qDebug("voxel out %i on %i",cnt,sizeX*sizeY*sizeZ);
-  MyWalker    walker;
-  MyMarchingCubes	 mc(scaffoldingMesh, walker);
-  walker.template BuildMesh <MyMarchingCubes>(scaffoldingMesh, volume, mc,0);
+  int t1=clock();
+  VVSWalker    walker;
+  VVSMarchingCubes	 mc(scaffoldingMesh, walker);
+  walker.template BuildMesh <VVSMarchingCubes>(scaffoldingMesh, volume, mc,0);
+  int t2=clock();
+  printf("Fill Volume (%3i %3i %3i) %5.2f\n", sizeX,sizeY,sizeZ,float(t1-t0)/CLOCKS_PER_SEC);
+  printf("Marching %i tris %5.2f\n", scaffoldingMesh.fn,float(t2-t1)/CLOCKS_PER_SEC);
 }
  /**
   * @brief Compute an evaulation of the thickness as distance from the medial axis.
