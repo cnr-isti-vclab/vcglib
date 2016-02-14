@@ -534,7 +534,7 @@ public:
       fi->Alloc(3); fi->V(0)=v0; fi->V(1)=v1; fi->V(2)=v2;
       fi->SetF(2);
       ++fi;
-      fi->Alloc(3); fi->V(0)=v0; fi->V(2)=v1; fi->V(3)=v2;
+      fi->Alloc(3); fi->V(0)=v0; fi->V(1)=v2; fi->V(2)=v3;
       fi->SetF(0);
       return fi;
     }
