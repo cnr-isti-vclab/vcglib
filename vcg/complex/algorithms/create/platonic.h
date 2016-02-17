@@ -615,13 +615,13 @@ void SuperToroid(MeshType &m, float hRingRadius, float vRingRadius, float vSquar
   m.Clear();
   ScalarType angleStepV = (2.0f*M_PI)/vRingDiv;
   ScalarType angleStepH = (2.0f*M_PI)/hRingDiv;
-  auto fnC=[](float a, float b){
-     return math::Sgn(cos(a))*pow(abs(cos(a)),b);
+  auto fnC=[](ScalarType a, ScalarType b){
+    return math::Sgn(cos(a))*pow(fabs(cos(a)),b);
   };
-  auto fnS=[](float a, float b){
-      return math::Sgn(sin(a))*pow(abs(sin(a)),b);
+  auto fnS=[](ScalarType a, ScalarType b){
+    return math::Sgn(sin(a))*pow(fabs(sin(a)),b);
   };
-  float u,v;
+  ScalarType u,v;
   int count;
   Allocator<MeshType>::AddVertices(m,(vRingDiv+1)*(hRingDiv+1));
   for(int i=0;i<hRingDiv+1;++i)
@@ -632,9 +632,9 @@ void SuperToroid(MeshType &m, float hRingRadius, float vRingRadius, float vSquar
     {
       CoordType p;
       v=float(j%vRingDiv)*angleStepV;
-      p[0]= (hRingRadius+fnC(u,vSquareness))*fnC(v,hSquareness);
-      p[1]= (vRingRadius+fnC(u,vSquareness))*fnS(v,hSquareness);
-      p[2] = fnS(u,vSquareness);
+      p[0]= (hRingRadius+vRingRadius*fnC(u,vSquareness))*fnC(v,hSquareness);
+      p[1]= (hRingRadius+vRingRadius*fnC(u,vSquareness))*fnS(v,hSquareness);
+      p[2] = vRingRadius*fnS(u,vSquareness);
       m.vert[i*(vRingDiv+1)+count].P() = p;
       count++;
     }
