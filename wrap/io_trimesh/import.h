@@ -94,15 +94,13 @@ return lastType;
 
 public:
 // simple aux function that returns true if a given file has a given extesnion
-static bool FileExtension(std::string filename,  std::string extension)
+static bool FileExtension(std::string filename, std::string extension)
 {
-  std::locale loc1 ;
-  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*filename.begin(),&*filename.rbegin());
-  std::use_facet<std::ctype<char> > ( loc1 ).tolower(&*extension.begin(),&*extension.rbegin());
+  std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
+  std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
   std::string end=filename.substr(filename.length()-extension.length(),extension.length());
   return end==extension;
 }
-
 // Open Mesh, returns 0 on success.
 static int Open(OpenMeshType &m, const char *filename, CallBackPos *cb=0)
 {
