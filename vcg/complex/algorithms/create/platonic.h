@@ -600,6 +600,18 @@ void Torus(MeshType &m, float hRingRadius, float vRingRadius, int hRingDiv=24, i
 
 }
 
+/// Auxilary functions for superquadric surfaces
+/// Used by SuperToroid and SuperEllipsoid
+template <class ScalarType>
+static  ScalarType _SQfnC(ScalarType a, ScalarType b){
+  return math::Sgn(cos(a))*pow(fabs(cos(a)),b);
+};
+template <class ScalarType>
+static ScalarType _SQfnS(ScalarType a, ScalarType b){
+  return math::Sgn(sin(a))*pow(fabs(sin(a)),b);
+};
+
+
 /**
  * SuperToroid
  * 
@@ -615,12 +627,7 @@ void SuperToroid(MeshType &m, float hRingRadius, float vRingRadius, float vSquar
   m.Clear();
   ScalarType angleStepV = (2.0f*M_PI)/vRingDiv;
   ScalarType angleStepH = (2.0f*M_PI)/hRingDiv;
-  auto fnC=[](ScalarType a, ScalarType b){
-    return math::Sgn(cos(a))*pow(fabs(cos(a)),b);
-  };
-  auto fnS=[](ScalarType a, ScalarType b){
-    return math::Sgn(sin(a))*pow(fabs(sin(a)),b);
-  };
+  
   ScalarType u,v;
   int count;
   Allocator<MeshType>::AddVertices(m,(vRingDiv+1)*(hRingDiv+1));
@@ -632,9 +639,9 @@ void SuperToroid(MeshType &m, float hRingRadius, float vRingRadius, float vSquar
     {
       CoordType p;
       v=float(j%vRingDiv)*angleStepV;
-      p[0]= (hRingRadius+vRingRadius*fnC(u,vSquareness))*fnC(v,hSquareness);
-      p[1]= (hRingRadius+vRingRadius*fnC(u,vSquareness))*fnS(v,hSquareness);
-      p[2] = vRingRadius*fnS(u,vSquareness);
+      p[0]= (hRingRadius+vRingRadius*_SQfnC(u,vSquareness))*_SQfnC(v,hSquareness);;
+      p[1]= (hRingRadius+vRingRadius*_SQfnC(u,vSquareness))*_SQfnS(v,hSquareness);
+      p[2] = vRingRadius*_SQfnS(u,vSquareness);
       m.vert[i*(vRingDiv+1)+count].P() = p;
       count++;
     }
@@ -656,30 +663,31 @@ void SuperEllipsoid(MeshType &m, float rFeature, float sFeature, float tFeature,
   typedef typename MeshType::ScalarType ScalarType;
   m.Clear();
   ScalarType angleStepV = (2.0f*M_PI)/vRingDiv;
-  ScalarType angleStepH = (2.0f*M_PI)/hRingDiv;
-  auto fnC=[](float a, float b){
-     return math::Sgn(cos(a))*pow(abs(cos(a)),b);
-  };
-  auto fnS=[](float a, float b){
-      return math::Sgn(sin(a))*pow(abs(sin(a)),b);
-  };
+  ScalarType angleStepH = (1.0f*M_PI)/hRingDiv;
   float u;
   float v;
   Allocator<MeshType>::AddVertices(m,(vRingDiv+1)*(hRingDiv+1));
   for(int i=0;i<hRingDiv+1;++i)
   {
-    u=float(i%hRingDiv)*angleStepH;
+    //u=ScalarType(i%hRingDiv)*angleStepH + angleStepH/2.0;
+    u=i*angleStepH;
     for(int j=0;j<vRingDiv+1;++j)
     {
       CoordType p;
-      v=float(j%vRingDiv)*angleStepV;
-      p[0]= fnC(v,2/rFeature)*fnC(u,2/rFeature);
-      p[1]= fnC(v,2/sFeature)*fnS(u,2/sFeature);
-      p[2] = fnS(v,2/tFeature);
+      v=ScalarType(j%vRingDiv)*angleStepV;
+      p[0] = _SQfnC(v,2/rFeature)*_SQfnC(u,2/rFeature);
+      p[1] = _SQfnC(v,2/sFeature)*_SQfnS(u,2/sFeature);
+      p[2] = _SQfnS(v,2/tFeature);
       m.vert[i*(vRingDiv+1)+j].P() = p;
     }
   }
   FaceGrid(m,vRingDiv+1,hRingDiv+1);
+  tri::Clean<MeshType>::MergeCloseVertex(m,ScalarType(angleStepV*angleStepV*0.001));
+  tri::Allocator<MeshType>::CompactEveryVector(m);
+  bool oriented, orientable;
+  tri::UpdateTopology<MeshType>::FaceFace(m);
+  tri::Clean<MeshType>::OrientCoherentlyMesh(m,oriented,orientable);  
+  tri::UpdateSelection<MeshType>::Clear(m);
 }
 // this function build a mesh starting from a vector of generic coords (objects having a triple of float at their beginning)
 // and a vector of faces (objects having a triple of ints at theri beginning).
