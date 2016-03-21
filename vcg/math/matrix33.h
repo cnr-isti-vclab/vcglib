@@ -82,6 +82,12 @@ public:
           (*this)[i][j]=m(i,j);
     }
 
+    static inline const Matrix33 &Identity( )
+    {
+        static Matrix33<S> tmp; tmp.SetIdentity();
+        return tmp;
+    }
+
     ///	Number of columns
     inline unsigned int ColumnsNumber() const
     {
