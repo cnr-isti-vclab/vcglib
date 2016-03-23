@@ -53,7 +53,7 @@ public:
         bool * newdataLoc = new bool[ sz ];
         if(datasize!=0) memcpy(newdataLoc,data,sizeof(datasize));
         std::swap(data,newdataLoc);
-        if(newdataLoc != 0) delete newdataLoc;
+        if(newdataLoc != 0) delete[] newdataLoc;
         datareserve = sz;
     }
 
