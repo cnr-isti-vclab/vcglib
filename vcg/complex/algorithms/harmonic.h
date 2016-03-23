@@ -55,7 +55,7 @@ public:
      * @note the algorithm has unexpected behavior if the mesh contains unreferenced vertices.
      */
     template <typename ACCESSOR>
-    static bool ComputeScalarField(MeshType & m, const ConstraintVec & constraints, ACCESSOR field)
+    static bool ComputeScalarField(MeshType & m, const ConstraintVec & constraints, ACCESSOR field, bool biharmonic = false)
     {
         typedef Eigen::SparseMatrix<CoeffScalar> SpMat;  // sparse matrix type
         typedef Eigen::Triplet<CoeffScalar>      Triple; // triplet type to fill the matrix
@@ -114,6 +114,13 @@ public:
             coeffs.push_back(Triple(it->first, it->first, it->second));
         }
         laplaceMat.setFromTriplets(coeffs.begin(), coeffs.end());
+
+        if (biharmonic)
+        {
+            SpMat lap_t = laplaceMat;
+            lap_t.transpose();
+            laplaceMat = lap_t * laplaceMat;
+        }
 
 
         // Setting the constraints
