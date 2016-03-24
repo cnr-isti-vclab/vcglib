@@ -20,79 +20,58 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.7  2006/11/13 12:53:40  ponchio
-just added an #include <matrix33>
-
-Revision 1.6  2006/10/09 20:23:00  cignoni
-Added a minimum method that uses SVD. Unfortunately it is much much slower.
-
-Revision 1.5  2004/12/10 01:31:59  cignoni
-added an alternative QuadricMinimization (we should use LRU decomposition!!)
-
-Revision 1.3  2004/10/25 16:23:51  ponchio
-typedef ScalarType ScalarType; was a problem on g++
-
-Revision 1.2  2004/10/25 16:15:59  ganovelli
-template changed
-
-Revision 1.1  2004/09/14 19:48:27  ganovelli
-created
-
-
-****************************************************************************/
 #ifndef __VCGLIB_QUADRIC
 #define __VCGLIB_QUADRIC
 
 #include <vcg/space/point3.h>
 #include <vcg/space/plane3.h>
 #include <vcg/math/matrix33.h>
+#include <eigenlib/Eigen/Core>
 
 namespace vcg {
 namespace math {
 
-
-template<typename  Scalar>
+/*
+ *  This class encode a quadric function 
+ *  f(x) = xAx +bx + c
+ *  where A is a symmetric 3x3 matrix, b a vector and c a scalar constant.  
+ */ 
+template<typename  _ScalarType>
 class Quadric
 {
 public:
-        typedef Scalar ScalarType;
-	ScalarType a[6];		// Matrice 3x3 simmetrica: a11 a12 a13 a22 a23 a33
-	ScalarType b[3];		// Vettore r3
-	ScalarType c;			// Fattore scalare (se -1 quadrica nulla)
-
-	inline Quadric() { c = -1; }
-
-	// Necessari se si utilizza stl microsoft
-	// inline bool operator <  ( const Quadric & q ) const { return false; }
-	// inline bool operator == ( const Quadric & q ) const { return true; }
-
-	bool IsValid() const { return c>=0; }
-	void SetInvalid() { c = -1.0; }
-
-template< class PlaneType >
-	void ByPlane( const PlaneType & p )					// Init dato un piano
-	{
-		a[0] =  (ScalarType)p.Direction()[0]*p.Direction()[0];	// a11
-		a[1] =  (ScalarType)p.Direction()[1]*p.Direction()[0];	// a12 (=a21)
-		a[2] =  (ScalarType)p.Direction()[2]*p.Direction()[0];	// a13 (=a31)
-		a[3] =  (ScalarType)p.Direction()[1]*p.Direction()[1];	// a22
-		a[4] =  (ScalarType)p.Direction()[2]*p.Direction()[1];	// a23 (=a32)
-		a[5] =  (ScalarType)p.Direction()[2]*p.Direction()[2];	// a33
-		b[0] = (ScalarType)(-2.0)*p.Offset()*p.Direction()[0];
-		b[1] = (ScalarType)(-2.0)*p.Offset()*p.Direction()[1];
-		b[2] = (ScalarType)(-2.0)*p.Offset()*p.Direction()[2];
-		c    =  (ScalarType)p.Offset()*p.Offset();
-	}
-
-/* Initializes the quadric as the squared distance from a given line.
-   Notice that this code also works for a vcg::Ray<T>, even though the (squared) distance
-   from a ray is different "before" its origin.
- */
- template< class LineType >
+  typedef _ScalarType ScalarType;
+  ScalarType a[6];		// Symmetric Matrix 3x3 : a11 a12 a13 a22 a23 a33
+  ScalarType b[3];		// Vector r3
+  ScalarType c;			  // Scalar (-1 means null/un-initialized quadric)
+  
+  inline Quadric() { c = -1; }
+  
+  bool IsValid() const { return c>=0; }
+  void SetInvalid() { c = -1.0; }
+  
+   // Initialize the quadric to keep the squared distance from a given Plane  
+  template< class PlaneType >
+  void ByPlane( const PlaneType & p )
+  {
+    a[0] =  (ScalarType)p.Direction()[0]*p.Direction()[0];	// a11
+    a[1] =  (ScalarType)p.Direction()[1]*p.Direction()[0];	// a12 (=a21)
+    a[2] =  (ScalarType)p.Direction()[2]*p.Direction()[0];	// a13 (=a31)
+    a[3] =  (ScalarType)p.Direction()[1]*p.Direction()[1];	// a22
+    a[4] =  (ScalarType)p.Direction()[2]*p.Direction()[1];	// a23 (=a32)
+    a[5] =  (ScalarType)p.Direction()[2]*p.Direction()[2];	// a33
+    b[0] =  (ScalarType)(-2.0)*p.Offset()*p.Direction()[0];
+    b[1] =  (ScalarType)(-2.0)*p.Offset()*p.Direction()[1];
+    b[2] =  (ScalarType)(-2.0)*p.Offset()*p.Direction()[2];
+    c    =  (ScalarType)p.Offset()*p.Offset();
+  }
+  
+  /* 
+   * Initializes the quadric as the squared distance from a given line.
+   * Note that this code also works for a vcg::Ray<T>, even though the (squared) distance
+   * from a ray is different "before" its origin.
+   */
+  template< class LineType >
   void ByLine( const LineType & r ) // Init dato un raggio
   {
     ScalarType K = (ScalarType)(r.Origin()*r.Direction());
@@ -108,79 +87,119 @@ template< class PlaneType >
     c = -K*K + (ScalarType)(r.Origin()*r.Origin());
   }
 
-	void SetZero()																// Azzera la quadrica
-	{
-		a[0] = 0;
-		a[1] = 0;
-		a[2] = 0;
-		a[3] = 0;
-		a[4] = 0;
-		a[5] = 0;
-		b[0] = 0;
-		b[1] = 0;
-		b[2] = 0;
-		c    = 0;
-	}
-
-void operator = ( const Quadric & q )			// Assegna una quadrica
-	{
-		//assert( IsValid() );
-		assert( q.IsValid() );
-
-		a[0] = q.a[0];
-		a[1] = q.a[1];
-		a[2] = q.a[2];
-		a[3] = q.a[3];
-		a[4] = q.a[4];
-		a[5] = q.a[5];
-		b[0] = q.b[0];
-		b[1] = q.b[1];
-		b[2] = q.b[2];
-		c    = q.c;
-	}
-
-  void operator += ( const Quadric & q )			// Somma una quadrica
-	{
-		assert( IsValid() );
-		assert( q.IsValid() );
-
-		a[0] += q.a[0];
-		a[1] += q.a[1];
-		a[2] += q.a[2];
-		a[3] += q.a[3];
-		a[4] += q.a[4];
-		a[5] += q.a[5];
-		b[0] += q.b[0];
-		b[1] += q.b[1];
-		b[2] += q.b[2];
-		c    += q.c;
-	}
-
-template <class ResultScalarType>
-	ResultScalarType Apply( const Point3<ResultScalarType> & p ) const	// Applica la quadrica al punto p
-	{
-		assert( IsValid() );
-/*
-	// Versione Lenta
-
-		Point3d t;
-		t[0] = p[0]*a[0] + p[1]*a[1] + p[2]*a[2];
-		t[1] = p[0]*a[1] + p[1]*a[3] + p[2]*a[4];
-		t[2] = p[0]*a[2] + p[1]*a[4] + p[2]*a[5];
-		double k = b[0]*p[0] + b[1]*p[1] + b[2]*p[2];
-		double tp = t*p ;
-		assert(tp+k+c >= 0);
-		return tp + k + c;
-	*/
-
-	/* Versione veloce */
-		return ResultScalarType (
-      p[0]*p[0]*a[0] + 2*p[0]*p[1]*a[1] + 2*p[0]*p[2]*a[2] + p[0]*b[0]
-			               +   p[1]*p[1]*a[3] + 2*p[1]*p[2]*a[4] + p[1]*b[1]
-			                                  +   p[2]*p[2]*a[5] + p[2]*b[2]	+ c);
-
-	}
-
+  void SetZero()
+  {
+    a[0] = 0;
+    a[1] = 0;
+    a[2] = 0;
+    a[3] = 0;
+    a[4] = 0;
+    a[5] = 0;
+    b[0] = 0;
+    b[1] = 0;
+    b[2] = 0;
+    c    = 0;
+  }
+  
+  void operator = ( const Quadric & q )
+  {
+    assert( q.IsValid() );
+    
+    a[0] = q.a[0];
+    a[1] = q.a[1];
+    a[2] = q.a[2];
+    a[3] = q.a[3];
+    a[4] = q.a[4];
+    a[5] = q.a[5];
+    b[0] = q.b[0];
+    b[1] = q.b[1];
+    b[2] = q.b[2];
+    c    = q.c;
+  }
+  
+  void operator += ( const Quadric & q )
+  {
+    assert( IsValid() );
+    assert( q.IsValid() );
+    
+    a[0] += q.a[0];
+    a[1] += q.a[1];
+    a[2] += q.a[2];
+    a[3] += q.a[3];
+    a[4] += q.a[4];
+    a[5] += q.a[5];
+    b[0] += q.b[0];
+    b[1] += q.b[1];
+    b[2] += q.b[2];
+    c    += q.c;
+  }
+  
+  void operator *= ( const ScalarType & w )			// Amplifica una quadirca
+  {
+    assert( IsValid() );
+    
+    a[0] *= w;
+    a[1] *= w;
+    a[2] *= w;
+    a[3] *= w;
+    a[4] *= w;
+    a[5] *= w;
+    b[0] *= w;
+    b[1] *= w;
+    b[2] *= w;
+    c    *= w;
+  }
+  
+  
+  
+  /* Evaluate a quadric over a point p.
+   */
+  template <class ResultScalarType>
+  ResultScalarType Apply( const Point3<ResultScalarType> & p ) const
+  {
+    assert( IsValid() );
+    return ResultScalarType (
+            p[0]*p[0]*a[0] + 2*p[0]*p[1]*a[1] + 2*p[0]*p[2]*a[2] + p[0]*b[0]
+        +   p[1]*p[1]*a[3] + 2*p[1]*p[2]*a[4] + p[1]*b[1]
+        +   p[2]*p[2]*a[5] + p[2]*b[2]	+ c);
+  }
+  
+  
+  static double &RelativeErrorThr()
+  {
+    static double _err = 0.000001;
+    return _err;
+  }
+  
+  // Find the point minimizing the quadric xAx + bx + c 
+  // by solving the first derivative 2 Ax + b = 0 
+  // return true if the found solution fits the system. 
+  
+  template <class ReturnScalarType>
+  bool Minimum(Point3<ReturnScalarType> &x)
+  {
+    Eigen::Matrix3d A;
+    Eigen::Vector3d be;
+    A << a[0], a[1], a[2],
+         a[1], a[3], a[4],
+         a[2], a[4], a[5];
+    be << -b[0]/2, -b[1]/2, -b[2]/2;
+  
+  //  Eigen::Vector3d xe = A.colPivHouseholderQr().solve(bv);
+  //  Eigen::Vector3d xe = A.partialPivLu().solve(bv);
+    Eigen::Vector3d xe = A.fullPivLu().solve(be);
+    double relative_error = (A*xe - be).norm() / be.norm();
+    if(relative_error> Quadric<ScalarType>::RelativeErrorThr() ) 
+      return false;
+    
+    x.FromEigenVector(xe);
+    return true;
+  }
+  
+  
+  
+  
+  
 // spostare..risolve un sistema 3x3
 template<class FLTYPE>
 bool Gauss33( FLTYPE x[], FLTYPE C[3][3+1] )
@@ -244,9 +263,10 @@ bool Gauss33( FLTYPE x[], FLTYPE C[3][3+1] )
     return true;
 }
 
-// determina il punto di errore minimo
+
+
 template <class ReturnScalarType>
-bool Minimum(Point3<ReturnScalarType> &x)
+bool MinimumOld(Point3<ReturnScalarType> &x)
 {
 		ReturnScalarType C[3][4];
 		C[0][0]=a[0]; C[0][1]=a[1]; C[0][2]=a[2];
@@ -259,44 +279,6 @@ bool Minimum(Point3<ReturnScalarType> &x)
 		return Gauss33(&(x[0]),C);
 }
 
-// determina il punto di errore minimo usando le fun di inversione di matrice che usano svd
-// Molto + lento
-template <class ReturnScalarType>
-bool MinimumSVD(Point3<ReturnScalarType> &x)
-{
-    Matrix33<ReturnScalarType> C;
-		C[0][0]=a[0]; C[0][1]=a[1]; C[0][2]=a[2];
-		C[1][0]=a[1]; C[1][1]=a[3]; C[1][2]=a[4];
-		C[2][0]=a[2]; C[2][1]=a[4]; C[2][2]=a[5];
-    Invert(C);
-
-		C[0][3]=-b[0]/2;
-		C[1][3]=-b[1]/2;
-		C[2][3]=-b[2]/2;
-		x = C * Point3<ReturnScalarType>(-b[0]/2,-b[1]/2,-b[2]/2) ;
-    return  true;
-}
-
-
-bool MinimumNew(Point3<ScalarType> &x) const
-{
-  ScalarType c0=-b[0]/2;
-  ScalarType c1=-b[1]/2;
-  ScalarType c2=-b[2]/2;
-
-  ScalarType t125 = a[4]*a[1];
-  ScalarType t124 = a[4]*a[4]-a[3]*a[5];
-  ScalarType t123 = -a[1]*a[5]+a[4]*a[2];
-  ScalarType t122 = a[2]*a[3]-t125;
-  ScalarType t121 = -a[2]*a[1]+a[0]*a[4];
-  ScalarType t120 = a[2]*a[2];
-  ScalarType t119 = a[1]*a[1];
-  ScalarType t117 = 1.0/(-a[3]*t120+2*a[2]*t125-t119*a[5]-t124*a[0]);
-  x[0] = -(t124*c0+t122*c2-t123*c1)*t117;
-  x[1] = (t123*c0-t121*c2+(-t120+a[0]*a[5])*c1)*t117;
-  x[2] = -(t122*c0+(t119-a[0]*a[3])*c2+t121*c1)*t117;
-  return true;
-}
 // determina il punto di errore minimo vincolato nel segmento (a,b)
 bool Minimum(Point3<ScalarType> &x,Point3<ScalarType> &pa,Point3<ScalarType> &pb){
 ScalarType	t1,t2, t4, t5, t8, t9,
@@ -343,23 +325,6 @@ ScalarType	t1,t2, t4, t5, t8, t9,
 		 x = pa*(1.0-lambda)+pb*lambda;
 		 return true;
 	}
-
-  void operator *= ( const ScalarType & w )			// Amplifica una quadirca
-	{
-		assert( IsValid() );
-
-		a[0] *= w;
-		a[1] *= w;
-		a[2] *= w;
-		a[3] *= w;
-		a[4] *= w;
-		a[5] *= w;
-		b[0] *= w;
-		b[1] *= w;
-		b[2] *= w;
-		c    *= w;
-	}
-
 
 };
 
