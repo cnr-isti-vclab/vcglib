@@ -71,6 +71,7 @@ public:
   inline Color4 ( const Point4<T> &c) :Point4<T>(c) {}
   inline Color4 (){}
   inline Color4 (ColorConstant cc);
+  inline Color4 (unsigned int cc);
 
   template <class Q>
     inline void Import(const Color4<Q> & b )
@@ -147,6 +148,27 @@ public:
         *this= Color4<T>(Color4<T>::Blue);
     }
 
+    inline void SetColorRampParula(const float &minf,const float  &maxf ,float v)
+    {
+      if(minf>maxf) { SetColorRampParula(maxf,minf,maxf+(minf-v)); return; }
+      SetColorRampParula((v-minf)/(maxf-minf));      
+    }
+
+    inline void SetColorRampParula(float v)
+    {
+      if(v<0) v=0;
+      else if(v>1) v=1;
+      
+      unsigned int ParuVal[9]={0xff801627,  0xffe16303,  0xffd48514,
+                               0xffc6a706,  0xff9eb938,  0xff73bf92,
+                               0xff56bad9,  0xff2ecefc,  0xff0afaff};
+      int ind = int(floor(v*8.0f)); 
+      float div = (v*8.0f - ind);
+      if(div<0) div=0;
+      else if(div>1) div=1;
+      lerp(Color4<T>(ParuVal[ind]),  Color4<T>(ParuVal[ind+1]), div);
+    }
+
     void SetHSVColor( float h, float s, float v)
     {
       float r,g,b;
@@ -185,7 +207,10 @@ public:
 
 inline static Color4 GrayShade(float f)
 {
- return Color4(f,f,f,1);
+  if(f<0) f=0.0f;
+  else if(f>1) f=1.0f;
+  
+  return Color4(f,f,f,1);
 }
 
 inline void SetGrayShade(float f)
@@ -299,6 +324,18 @@ template<>
 inline Color4<float>::Color4(Color4<float>::ColorConstant cc)
 {
   Import(Color4<unsigned char>((Color4<unsigned char>::ColorConstant)cc));
+}
+
+template<>
+inline Color4<unsigned char>::Color4(unsigned int cc)
+{
+  *((int *)this )= cc;
+}
+
+template<>
+inline Color4<float>::Color4(unsigned int cc)
+{
+  Import(Color4<unsigned char>(cc));
 }
 
 inline Color4<float> Clamp(Color4<float> &c)
