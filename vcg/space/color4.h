@@ -215,7 +215,10 @@ inline static Color4 GrayShade(float f)
 
 inline void SetGrayShade(float f)
 {
- Import(Color4<float>(f,f,f,1));
+  if(f<0) f=0.0f;
+  else if(f>1) f=1.0f;
+  
+  Import(Color4<float>(f,f,f,1));
 }
 
 
