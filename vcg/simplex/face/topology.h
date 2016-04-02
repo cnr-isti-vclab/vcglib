@@ -106,7 +106,7 @@ inline typename FaceType::ScalarType DihedralAngleRad(FaceType & f,  const int i
   if(fabs(dist01) > fabs(dist10)) sign = dist01;
   else sign=dist10;
 
-  ScalarType angleRad=Angle(f0->N(),f1->N());
+  ScalarType angleRad=AngleN(n0,n1);
 
   if(sign > 0 ) return angleRad;
   else return -angleRad;
