@@ -56,11 +56,11 @@ inline bool IsEdgeBorder(EdgeType const & e,  const int j )
   return true;
 }
 
-template <class EdgeType>
-void VVStarVE(typename EdgeType::VertexType* vp, std::vector<typename EdgeType::VertexType *> &starVec)
+template <class VertexType>
+void VVStarVE(VertexType* vp, std::vector<VertexType *> &starVec)
 {
   starVec.clear();
-  edge::VEIterator<EdgeType> vei(vp);
+  edge::VEIterator<typename VertexType::EdgeType> vei(vp);
   while(!vei.End())
       {
         starVec.push_back(vei.V1());
@@ -96,34 +96,30 @@ void VEDetach(EdgeType & e, int z)
   typename EdgeType::VertexType *vz = e.V(z); // the vertex from which the edge must be detached.
   
   if(vz->VEp()==&e )  //if it is the first edge in the VE chain it detaches it from the begin
+  {
+    assert(vz->VEi() == z);
+    vz->VEp() = e.VEp(z);
+    vz->VEi() = e.VEi(z); 
+    return;  
+  }
+  else  // scan the list of edges to find the current edge e to be detached
+  {
+    for( VEIterator<EdgeType> vei(vz);!vei.End();++vei)
     {
-        int fz = vz->VEi();
-        vz->VEp() = e.VEp(fz);
-        vz->VEi() = e.VEi(fz);
+      if(vei.E()->VEp(vei.I()) == &e)
+      {
+        vei.e->VEp(vei.z) = e.VEp(z);
+        vei.e->VEi(vei.z) = e.VEi(z);
+        return;       
+      }
     }
-    else  // scan the list of edges to find the current edge e to be detached
-    {
-    VEIterator<EdgeType> x(vz->VEp(),vz->VEi());
-    VEIterator<EdgeType> y;
-
-        for(;;)
-        {
-            y = x;
-            ++x;
-            assert(x.e!=0);
-            if(x.e==&e) // found!
-            {
-                y.e->VEp(y.z) = e.VEp(z);
-                y.e->VEi(y.z) = e.VEi(z);
-                break;
-            }
-        }
-    }
+    assert(0);
+  }
 }
 
 /// Append an edge in the VE list of vertex e->V(z)
 template <class EdgeType>
-void VEAppend(EdgeType* & e, int z)
+void VEAppend(EdgeType* e, int z)
 {
     typename EdgeType::VertexType *v = e->V(z);
     if (v->VEp()!=0)
@@ -133,6 +129,11 @@ void VEAppend(EdgeType* & e, int z)
         //append
         e->VEp(z)=e0;
         e->VEi(z)=z0;
+    }
+    else
+    {
+      e->VEp(z)=0;
+      e->VEi(z)=-1;
     }
     v->VEp()=e;
     v->VEi()=z;
@@ -180,11 +181,14 @@ void VEEdgeCollapse(MeshType &poly, typename MeshType::EdgeType *e0, const int z
   assert(z1!=-1);
   
   VertexType *v1 = e1->V(z1); 
-      
-  edge::VEDetach(*e1);
-  edge::VEDetach(*e0,z);
-  e0->V(z) = v1;
-  edge::VEAppend(e0, z);
+  assert(v1 != vd);
+  
+  edge::VEDetach(*e1); // detach the edge to be deleted.
+  
+  edge::VEDetach(*e0,z); // detach one side of the surviving edge
+  e0->V(z) = v1;         // change one extreme of the edge
+  edge::VEAppend(e0, z); // attach it again.
+  
   tri::Allocator<MeshType>::DeleteEdge(poly,*e1);
   tri::Allocator<MeshType>::DeleteVertex(poly,*vd);
 }
@@ -194,7 +198,39 @@ void VEEdgeCollapse(MeshType &poly, typename MeshType::VertexType *v)
 {
   VEEdgeCollapse(poly,v->VEp(),v->VEi());
 }
+/*! Perform a simple edge split using VE adjacency
+ *  
+ */
+template <class MeshType>
+void VEEdgeSplit(MeshType &poly, typename MeshType::EdgeType *e, typename MeshType::VertexType &v)
+{
+  typename MeshType::VertexPointer v1 = e->V(1);
+  edge::VEDetach(*e,1);
+  e->V(1) = &v;
+  edge::VEAppend(e,1);
+//  tri::Allocator<MeshType>:: template PointerUpdater<typename MeshType::EdgePointer> pu;
+  typename MeshType::EdgeIterator ei = tri::Allocator<MeshType>::AddEdges(poly, 1);
+  ei->V(0)=&v;
+  ei->V(1)=v1;
+  edge::VEAppend(&*ei,0);
+  edge::VEAppend(&*ei,1);
+}
 
+template <class MeshType>
+typename MeshType::VertexPointer VEEdgeSplit(MeshType &poly, typename MeshType::EdgeType *e, const typename MeshType::CoordType &p)
+{
+  typename MeshType::VertexIterator vi = tri::Allocator<MeshType>::AddVertex(poly,p);
+  VEEdgeSplit(poly,e,*vi);
+  return &*vi;
+}
+
+template <class MeshType>
+typename MeshType::VertexPointer VEEdgeSplit(MeshType &poly, typename MeshType::EdgeType *e, const typename MeshType::CoordType &p, const typename MeshType::CoordType &n)
+{
+  typename MeshType::VertexIterator vi = tri::Allocator<MeshType>::AddVertex(poly,p,n);
+  VEEdgeSplit(poly,e,*vi);
+  return &*vi;
+}
 
 
 /*! Returns the number of incident edges over a vertex vp; Using the VE adjacency.  
