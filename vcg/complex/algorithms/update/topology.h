@@ -27,6 +27,7 @@
 #include <vector>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/topology.h>
+#include <vcg/simplex/edge/topology.h>
 
 namespace vcg {
 namespace tri {
@@ -46,8 +47,9 @@ typedef typename MeshType::ScalarType     ScalarType;
 typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
+typedef typename MeshType::EdgeType       EdgeType;
 typedef typename MeshType::EdgePointer    EdgePointer;
-typedef typename MeshType::EdgeIterator    EdgeIterator;
+typedef typename MeshType::EdgeIterator   EdgeIterator;
 typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
@@ -390,8 +392,41 @@ static void FaceFaceFromTexCoord(MeshType &m)
   }
 }
 
-
-
+/// \brief Test correctness of VEtopology
+static void TestVertexEdge(MeshType &m)
+{
+  std::vector<int> numVertex(m.vert.size(),0);
+  
+  tri::RequireVEAdjacency(m);
+  
+  for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
+  {
+      if (!(*ei).IsD())
+      {
+        assert(tri::IsValidPointer(m,ei->V(0)));
+        assert(tri::IsValidPointer(m,ei->V(1)));
+        if(ei->VEp(0)) assert(tri::IsValidPointer(m,ei->VEp(0)));
+        if(ei->VEp(1)) assert(tri::IsValidPointer(m,ei->VEp(1)));
+        numVertex[tri::Index(m,(*ei).V(0))]++;
+        numVertex[tri::Index(m,(*ei).V(1))]++;
+      }
+  }
+  
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+  {
+      if (!vi->IsD())
+      {
+        int cnt =0;
+        int ind = tri::Index(m,*vi);
+        int incidentNum = numVertex[ind];
+        for(edge::VEIterator<EdgeType> vei(&*vi);!vei.End();++vei)
+          cnt++;
+        EdgeType *vep = vi->VEp();
+        assert((incidentNum==0) == (vi->VEp()==0) );
+        assert(cnt==incidentNum);        
+      }
+  }  
+}
 
 
 /// \brief Test correctness of VFtopology
@@ -401,8 +436,7 @@ static void TestVertexFace(MeshType &m)
 
   assert(tri::HasPerVertexVFAdjacency(m));
 
-    FaceIterator fi;
-    for(fi=m.face.begin();fi!=m.face.end();++fi)
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
     {
         if (!(*fi).IsD())
         {
@@ -412,17 +446,15 @@ static void TestVertexFace(MeshType &m)
         }
     }
 
-    VertexIterator vi;
     vcg::face::VFIterator<FaceType> VFi;
 
-    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     {
         if (!vi->IsD())
         if(vi->VFp()!=0) // unreferenced vertices MUST have VF == 0;
         {
             int num=0;
-            assert(vi->VFp() >= &*m.face.begin());
-            assert(vi->VFp() <= &m.face.back());
+            assert(tri::IsValidPointer(vi->VFp()));
             VFi.f=vi->VFp();
             VFi.z=vi->VFi();
             while (!VFi.End())
@@ -554,20 +586,17 @@ static void VertexEdge(MeshType &m)
 {
   RequireVEAdjacency(m);
 
-  VertexIterator vi;
-  EdgeIterator ei;
-
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
   {
     (*vi).VEp() = 0;
     (*vi).VEi() = 0;
   }
 
-  for(ei=m.edge.begin();ei!=m.edge.end();++ei)
+  for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
   if( ! (*ei).IsD() )
   {
     for(int j=0;j<2;++j)
-    {
+    { assert(tri::IsValidPointer(m,ei->V(j)));
       (*ei).VEp(j) = (*ei).V(j)->VEp();
       (*ei).VEi(j) = (*ei).V(j)->VEi();
       (*ei).V(j)->VEp() = &(*ei);
