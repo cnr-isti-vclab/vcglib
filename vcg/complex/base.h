@@ -470,16 +470,21 @@ template <class MeshType> inline void UnMarkAll(MeshType & m)
 }
 
 
-template < class CType0, class CType1 , class CType2, class CType3>
-bool HasPerVertexVEAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasVEAdjacency();}
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasPerEdgeVEAdjacency   (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::EdgeContainer::value_type::HasVEAdjacency();}
+//template < class CType0, class CType1 , class CType2, class CType3>
+//bool HasPerVertexVEAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasVEAdjacency();}
+//template < class  CType0, class CType1, class CType2 , class CType3>
+//bool HasPerEdgeVEAdjacency   (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::EdgeContainer::value_type::HasVEAdjacency();}
 
 template < class VertexType> bool VertexVectorHasVFAdjacency     (const std::vector<VertexType> &) {  return VertexType::HasVFAdjacency(); }
+template < class VertexType> bool VertexVectorHasVEAdjacency     (const std::vector<VertexType> &) {  return VertexType::HasVEAdjacency(); }
+template < class EdgeType  > bool   EdgeVectorHasVEAdjacency     (const std::vector<EdgeType  > &) {  return EdgeType::HasVEAdjacency(); }
+template < class EdgeType  > bool   EdgeVectorHasEEAdjacency     (const std::vector<EdgeType> &) {  return EdgeType::HasEEAdjacency(); }
 template < class FaceType  > bool   FaceVectorHasVFAdjacency     (const std::vector<FaceType  > &) {  return FaceType::HasVFAdjacency(); }
 
-template < class TriMeshType> bool   HasPerFaceVFAdjacency     (const TriMeshType &m) { return tri::FaceVectorHasVFAdjacency  (m.vert); }
 template < class TriMeshType> bool HasPerVertexVFAdjacency     (const TriMeshType &m) { return tri::VertexVectorHasVFAdjacency(m.vert); }
+template < class TriMeshType> bool HasPerVertexVEAdjacency     (const TriMeshType &m) { return tri::VertexVectorHasVEAdjacency(m.vert); }
+template < class TriMeshType> bool   HasPerEdgeVEAdjacency     (const TriMeshType &m) { return tri::EdgeVectorHasVEAdjacency  (m.edge); }
+template < class TriMeshType> bool   HasPerFaceVFAdjacency     (const TriMeshType &m) { return tri::FaceVectorHasVFAdjacency  (m.face); }
 
 
 template < class VertexType> bool VertexVectorHasPerVertexQuality     (const std::vector<VertexType> &) {  return VertexType::HasQuality     (); }
@@ -543,15 +548,17 @@ template < class TriMeshType> bool HasPerFaceMark        (const TriMeshType &m) 
 template < class TriMeshType> bool HasPerFaceQuality     (const TriMeshType &m) { return tri::FaceVectorHasPerFaceQuality     (m.face); }
 template < class TriMeshType> bool HasPerFaceCurvatureDir(const TriMeshType &m) { return tri::FaceVectorHasPerFaceCurvatureDir(m.face); }
 template < class TriMeshType> bool HasFFAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFFAdjacency   (m.face); }
+template < class TriMeshType> bool HasEEAdjacency   (const TriMeshType &m) { return tri::EdgeVectorHasEEAdjacency   (m.edge); }
 template < class TriMeshType> bool HasFEAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFEAdjacency   (m.face); }
 template < class TriMeshType> bool HasFVAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFVAdjacency   (m.face); }
 
 template < class TriMeshType> bool HasVFAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasVFAdjacency   (m.face) && tri::VertexVectorHasVFAdjacency(m.vert);  }
+template < class TriMeshType> bool HasVEAdjacency   (const TriMeshType &m) { return tri::EdgeVectorHasVEAdjacency   (m.edge) && tri::VertexVectorHasVEAdjacency(m.vert);  }
 
 
 
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasVEAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasVEAdjacency();}
+//template < class  CType0, class CType1, class CType2 , class CType3>
+//bool HasVEAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasVEAdjacency();}
 
 template < class  CType0, class CType1, class CType2 , class CType3>
 bool HasVHAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasVHAdjacency();}
@@ -559,8 +566,8 @@ bool HasVHAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {r
 template < class  CType0, class CType1, class CType2 , class CType3>
 bool HasEVAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::EdgeType::HasEVAdjacency();}
 
-template < class  CType0, class CType1, class CType2 , class CType3>
-bool HasEEAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::EdgeType::HasEEAdjacency();}
+//template < class  CType0, class CType1, class CType2 , class CType3>
+//bool HasEEAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::EdgeType::HasEEAdjacency();}
 
 template < class  CType0, class CType1, class CType2 , class CType3>
 bool HasEFAdjacency (const TriMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TriMesh < CType0 , CType1, CType2, CType3>::EdgeType::HasEFAdjacency();}
