@@ -117,10 +117,16 @@ public:
 
   typename TT::EdgePointer &VEp()       { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
   typename TT::EdgePointer cVEp() const { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
-  int &VEi()       { static int z=0; return z;}
-  int cVEi() const { static int z=0; return z;}
+  int &VEi()       { static int z=-1; return z;}
+  int cVEi() const { static int z=-1; return z;}
   static bool HasVEAdjacency()   {   return false; }
-
+  bool IsVEInitialized() const {return static_cast<const typename TT::VertexType *>(this)->cVEi()!=-1;}
+  void VEClear() {
+    if(IsVEInitialized()) {
+      static_cast<typename TT::VertexPointer>(this)->VEp()=0;
+      static_cast<typename TT::VertexPointer>(this)->VEi()=-1;
+    }
+  }
   typename TT::HEdgePointer &VHp()       { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
   typename TT::HEdgePointer cVHp() const { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
   int &VHi()       { static int z=0; return z;}
