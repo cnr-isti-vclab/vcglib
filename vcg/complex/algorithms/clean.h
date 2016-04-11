@@ -505,7 +505,7 @@ public:
     for(size_t i=0;i<m.vert.size();++i)
     {
       std::vector<VertexPointer> VVStarVec;
-      edge::VVStarVE<typename MeshType::EdgeType>(&(m.vert[i]),VVStarVec);
+      edge::VVStarVE(&(m.vert[i]),VVStarVec);
       if(VVStarVec.size()==2)
       {
         CoordType v0 = m.vert[i].P() - VVStarVec[0]->P();
