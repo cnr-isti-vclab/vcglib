@@ -38,6 +38,7 @@
 #include<vcg/space/distance3.h>
 #include<eigenlib/Eigen/Core>
 #include <vcg/complex/algorithms/attribute_seam.h>
+#include <wrap/io_trimesh/export_ply.h>
 
 namespace vcg {
 namespace tri {
@@ -53,6 +54,7 @@ class CoM
 {
 public:
   typedef typename MeshType::ScalarType     ScalarType;
+  typedef typename MeshType::CoordType     CoordType;
   typedef typename MeshType::VertexType     VertexType;
   typedef typename MeshType::VertexPointer  VertexPointer;
   typedef typename MeshType::VertexIterator VertexIterator;
@@ -82,10 +84,10 @@ public:
     
     void Default(MeshType &m)
     {
-      surfDistThr   = m.bbox.Diag()/50000.0;
+      surfDistThr   = m.bbox.Diag()/1000.0;
       polyDistThr   = m.bbox.Diag()/5000.0;
       minRefEdgeLen    = m.bbox.Diag()/16000.0;
-      maxSimpEdgeLen    = m.bbox.Diag()/10000.0;
+      maxSimpEdgeLen    = m.bbox.Diag()/1000.0;
       maxSmoothDelta =   m.bbox.Diag()/100.0;
       maxSnapThr =       m.bbox.Diag()/10000.0;
       gridBailout =      m.bbox.Diag()/20.0;
@@ -106,6 +108,7 @@ public:
   
   MeshType &base; 
   MeshGrid uniformGrid;
+  
   Param par; 
   CoM(MeshType &_m) :base(_m),par(_m){}
  
@@ -130,14 +133,74 @@ public:
     return cnt;
   }
   
+  // Given two points return true if on the base mesh there exist an edge with that two coords
+  // if return true the pos indicate the found edge. 
+  bool ExistEdge(KdTree<ScalarType> &kdtree, CoordType &p0, CoordType &p1, PosType &fpos)
+  {
+    ScalarType locEps = SquaredDistance(p0,p1)/100000.0;
+    
+    VertexType *v0=0,*v1=0;
+    unsigned int veInd;
+    ScalarType sqdist;
+    kdtree.doQueryClosest(p0,veInd,sqdist);
+    if(sqdist<locEps) 
+      v0 = &base.vert[veInd];
+    kdtree.doQueryClosest(p1,veInd,sqdist);
+    if(sqdist<locEps) 
+      v1 = &base.vert[veInd];
+    if(v0 && v1)
+    {
+      face::VFIterator<FaceType> vfi(v0);
+      while(!vfi.End())
+      { 
+        if(vfi.V1()==v1)
+        {
+          fpos = PosType(vfi.F(),vfi.I(), v0);
+          return true;
+        }
+        if(vfi.V2()==v1)
+        {
+          fpos = PosType(vfi.F(),(vfi.I()+1)%3, v1);
+          return true;
+        }
+        ++vfi;
+      }      
+    }
+    return false;
+  }
+  
+  bool OptimizeTree(MeshType &t)
+  {
+    tri::Allocator<MeshType>::CompactEveryVector(t);
+    tri::UpdateTopology<MeshType>::VertexEdge(t);
+    tri::UpdateTopology<MeshType>::VertexFace(base);
+    VertexConstDataWrapper<MeshType > vdw(base);
+    KdTree<ScalarType> kdtree(vdw);
+    
+    // First simple loop that search for 2->1 moves. 
+    for(VertexIterator vi=t.vert.begin();vi!=t.vert.end();++vi)
+    {
+      std::vector<VertexType *> starVec;
+      edge::VVStarVE(&*vi,starVec);
+      if(starVec.size()==2)
+      {
+        PosType pos;
+        if(ExistEdge(kdtree,starVec[0]->P(),starVec[1]->P(),pos))
+          edge::VEEdgeCollapse(t,&*vi);
+      }
+    }
+    return (t.en < t.edge.size());
+  }
+  
   void Retract(MeshType &t)
   {
     tri::Clean<MeshType>::RemoveDuplicateVertex(t);
-    printf("Retracting a mesh of %i edges and %i vertices\n",t.en,t.vn);
+    printf("Retracting a tree of %i edges and %i vertices\n",t.en,t.vn);
     tri::UpdateTopology<MeshType>::VertexEdge(t);
   
     std::stack<VertexType *> vertStack;
   
+    // Put on the stack all the vertex with just a single incident edge. 
     for(VertexIterator vi=t.vert.begin();vi!=t.vert.end();++vi)
     {
       std::vector<EdgeType *> starVec;
@@ -148,8 +211,9 @@ public:
   
     tri::UpdateFlags<MeshType>::EdgeClearV(t);
     tri::UpdateFlags<MeshType>::VertexClearV(t);
-  
-    while(!vertStack.empty())
+    
+    int unvisitedEdgeNum = t.en;
+    while((!vertStack.empty()) && (unvisitedEdgeNum > 2) )
     {
       VertexType *vp = vertStack.top();
       vertStack.pop();
@@ -161,24 +225,25 @@ public:
       {
         assert(!ep->IsV());
         ep->SetV();
+        --unvisitedEdgeNum;
         VertexType *otherVertP;
         if(ep->V(0)==vp) otherVertP = ep->V(1);
         else otherVertP = ep->V(0);
         vertStack.push(otherVertP);
       }
     }
+    assert(unvisitedEdgeNum >0);
     
     for(size_t i =0; i<t.edge.size();++i)
       if(t.edge[i].IsV()) tri::Allocator<MeshType>::DeleteEdge(t,t.edge[i]);
-  
+    assert(t.en >0);
     tri::Clean<MeshType>::RemoveUnreferencedVertex(t);
     tri::Allocator<MeshType>::CompactEveryVector(t);
   
   }
   
   void CleanSpuriousDanglingEdges(MeshType &poly)
-  {
-    
+  {    
     EdgeGrid edgeGrid;
     edgeGrid.Set(poly.edge.begin(), poly.edge.end());    
     std::vector< std::pair<VertexType *, VertexType *> > mergeVec;
@@ -249,10 +314,17 @@ public:
         
       }
       Allocator<MeshType>::CompactEveryVector(base);
-      
-    
   }  
-  // 
+  
+  
+  // \brief This function build a cut tree. 
+  //
+  // First we make a bread first FF face visit. 
+  // Each time that we encounter a visited face we cut add to the tree the edge 
+  // that brings to the already visited face.
+  // this structure build a dense graph and we retract this graph retracting each 
+  // leaf until we remains with just the loops that cuts the object. 
+  
   void BuildVisitTree(MeshType &dualMesh)
   {
     tri::UpdateTopology<MeshType>::FaceFace(base);
@@ -295,7 +367,84 @@ public:
     assert(cnt==base.fn);
     
     Retract(dualMesh);
-}  
+} 
+  
+  /*
+   * Given a mesh <m> and a polyline <e> whose edges are a subset of edges of m
+   * This function marks the edges of m as non-faux when they coincide with the polyline ones. 
+   * 
+   * Use this function toghether with the CutMeshAlongCrease function to actually cut the mesh. 
+   */
+  
+  void MarkFauxEdgeWithPolyLine(MeshType &m, MeshType &e)
+  {
+    tri::UpdateFlags<MeshType>::FaceSetF(m);
+    tri::UpdateTopology<MeshType>::VertexEdge(e);
+    VertexConstDataWrapper<MeshType > vdw(e);
+    KdTree<ScalarType> edgeTree(vdw);
+    
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+    {
+      for(int i=0;i<3;++i)
+      {
+        ScalarType locEps = SquaredDistance(fi->P0(i), fi->P1(i))/100000.0;
+        unsigned int veInd;
+        ScalarType sqdist;
+        edgeTree.doQueryClosest(fi->P(i),veInd,sqdist);
+        if(sqdist<locEps)
+        {
+          std::vector<VertexPointer> starVecVp;
+          edge::VVStarVE(&(e.vert[veInd]),starVecVp);      
+          for(size_t j=0;j<starVecVp.size();++j)
+          {
+            if(SquaredDistance(starVecVp[j]->P(),fi->P1(i))< locEps)
+              fi->ClearF(i);
+          }
+        }        
+      }
+    }
+    
+  }
+  
+  
+  
+  
+  void SnapPolyline(MeshType &t)
+  {
+    printf("Selected vert num %i\n",tri::UpdateSelection<MeshType>::VertexCount(t));
+    
+    tri::UpdateFlags<MeshType>::VertexClearS(base);
+    tri::UpdateFlags<MeshType>::VertexClearS(t);
+    tri::Allocator<MeshType>::CompactEveryVector(t);
+    VertexConstDataWrapper<MeshType > vdw(base);
+    KdTree<ScalarType> kdtree(vdw);
+
+    for(VertexIterator vi=t.vert.begin();vi!=t.vert.end();++vi)
+    {
+      unsigned int veInd;
+      ScalarType sqdist;
+      kdtree.doQueryClosest(vi->P(),veInd,sqdist);
+      VertexPointer vp = &base.vert[veInd];
+      if(!vp->IsS())
+      {
+        ScalarType dist = sqrt(sqdist);
+        std::vector<VertexPointer> starVecVp;        
+        face::VVStarVF<FaceType>(vp,starVecVp);
+        ScalarType minEdgeLen = std::numeric_limits<ScalarType>::max();
+        for(int i=0;i<starVecVp.size();++i)
+          minEdgeLen = std::min(Distance(vp->P(),starVecVp[i]->P()),minEdgeLen);
+        if(dist < minEdgeLen/3.0)
+        {
+          vi->P() = vp->P();
+          vi->SetS();
+          vp->SetS();
+        }
+      }
+    }
+    printf("Selected vert num %i\n",tri::UpdateSelection<MeshType>::VertexCount(t));    
+  }
+  
+  
   
   
   float MinDistOnEdge(Point3f samplePnt, EdgeGrid &edgeGrid, MeshType &poly, Point3f &closestPoint)
@@ -328,16 +477,6 @@ public:
       }
     }
     return minPolyDist;    
-  }
-  
-  
-  // never ended
-  void TransferPatchInfo(MeshType &patchMesh)
-  {
-    for(int i=0;i<patchMesh.fn;++i )
-    {
-      Point3f bary= Barycenter(patchMesh.face[i]);
-    }
   }
   
   
@@ -437,6 +576,74 @@ public:
           return tmp;
       }
   };
+  
+  class EdgePointPred
+  {
+  public:
+      CoM &com;
+      KdTree<ScalarType> &kdtree;
+      
+      EdgePointPred(CoM &_com, KdTree<ScalarType> &_kdtree):com(_com),kdtree(_kdtree) {};
+      bool operator()(face::Pos<FaceType> ep) const
+      {
+        CoordType p0 = ep.V()->P();
+        CoordType p1 = ep.VFlip()->P();
+        float stepNum=100.0;
+        float locEps = Distance(p0,p1)/stepNum;
+        for(float j=0;j<stepNum;++j)
+        {
+          CoordType qp = (p0*j+p1*(stepNum-j))/stepNum;
+          unsigned int veInd;
+          ScalarType sqdist;
+          kdtree.doQueryClosest(qp,veInd,sqdist);
+          if(sqrt(sqdist)<locEps) return true;
+        }
+        return false;
+      }
+  };
+  
+  struct EdgePointSplit : public std::unary_function<face::Pos<FaceType> ,  Point3f>
+  {
+    CoM &com;
+    KdTree<ScalarType> &kdtree;
+    MeshType &poly;
+    
+    EdgePointSplit(CoM &_com, KdTree<ScalarType> &_kdtree, MeshType &_poly):com(_com),kdtree(_kdtree),poly(_poly) {};
+      void operator()(VertexType &nv, face::Pos<FaceType> ep)
+      {
+        CoordType p0 = ep.V()->P();
+        CoordType p1 = ep.VFlip()->P();
+        float stepNum=100.0;
+        float locEps = Distance(p0,p1)/stepNum;
+        for(float j=0;j<stepNum;++j)
+        {
+          CoordType qp = (p0*j+p1*(stepNum-j))/stepNum;
+          unsigned int veInd;
+          ScalarType sqdist;
+          kdtree.doQueryClosest(qp,veInd,sqdist);
+          if(sqrt(sqdist)<locEps) 
+            nv.P() = poly.vert[veInd].P();           
+        }
+        return;
+      }
+      Color4b WedgeInterp(Color4b &c0, Color4b &c1)
+      {
+          Color4b cc;
+          cc.lerp(c0,c1,0.5f);
+          return Color4b::Red;
+      }
+      TexCoord2f WedgeInterp(TexCoord2f &t0, TexCoord2f &t1)
+      {
+          TexCoord2f tmp;
+          assert(t0.n()== t1.n());
+          tmp.n()=t0.n();
+          tmp.t()=(t0.t()+t1.t())/2.0;
+          return tmp;
+      }
+  };
+  
+  
+  
   
   void DumpPlaneMesh(MeshType &poly, std::vector<Plane3f> &planeVec, int i =0)
   {
@@ -660,7 +867,9 @@ public:
     
   }
 
-   
+  
+  
+  
   void SnapPolyline(MeshType &poly, std::vector<int> *newVertVec)
   {
     const float maxDist = base.bbox.Diag()/100.0;
@@ -1055,8 +1264,8 @@ public:
     for(int i =0; i<poly.vn;++i)
     {
       std::vector<VertexPointer> starVecVp;
-      edge::VVStarVE<EdgeType>(&(poly.vert[i]),starVecVp);      
-      if(starVecVp.size()==2)
+      edge::VVStarVE(&(poly.vert[i]),starVecVp);      
+      if( (starVecVp.size()==2) && (!poly.vert[i].IsS()))
       {      
         float newSegLen = Distance(starVecVp[0]->P(), starVecVp[1]->P());
         Segment3f seg(starVecVp[0]->P(),starVecVp[1]->P());
@@ -1069,11 +1278,14 @@ public:
         if(maxSurfDist < par.surfDistThr && (newSegLen < par.maxSimpEdgeLen) )
         {
           edge::VEEdgeCollapse(poly,&(poly.vert[i]));
+          
         }
       }
     }
+    tri::UpdateTopology<MeshType>::TestVertexEdge(poly);
     tri::Allocator<MeshType>::CompactEveryVector(poly);
-    printf("Simplify %i -> %i\n",startEn,poly.en);
+    tri::UpdateTopology<MeshType>::TestVertexEdge(poly);
+    printf("Simplify %5i -> %5i (total len %5.2f)\n",startEn,poly.en,hist.Sum());
   }
   
   void EvaluateHausdorffDistance(MeshType &poly, Distribution<ScalarType> &dist)
@@ -1095,6 +1307,7 @@ public:
     }
     tri::UpdateColor<MeshType>::PerVertexQualityRamp(poly,0,dist.Max());    
   }
+  
   
   
   // Given a segment find the maximum distance from it to the original surface. 
@@ -1122,30 +1335,86 @@ public:
     return maxSurfDist;
   }
   
-  void Refine( MeshType &poly)
+  void Refine(MeshType &poly, bool uniformFlag = false)
   {
     tri::Allocator<MeshType>::CompactEveryVector(poly);    
     int startEdgeSize = poly.en;
     for(int i =0; i<startEdgeSize;++i)
     {
-      if(edge::Length(poly.edge[i])>par.minRefEdgeLen)  
+      EdgeType &ei = poly.edge[i];
+      if(edge::Length(ei)>par.minRefEdgeLen)  
       {      
         Point3f farthestP, farthestN;
-        float maxDist = MaxSegDist(poly.edge[i].V(0),poly.edge[i].V(1),farthestP, farthestN);
+        float maxDist = MaxSegDist(ei.V(0),ei.V(1),farthestP, farthestN);
         if(maxDist > par.surfDistThr)  
         {
-          VertexIterator vi = Allocator<MeshType>::AddVertex(poly,farthestP, farthestN);        
-          Allocator<MeshType>::AddEdge(poly,poly.edge[i].V(0),&*vi);
-          Allocator<MeshType>::AddEdge(poly,&*vi,poly.edge[i].V(1));
-          Allocator<MeshType>::DeleteEdge(poly,poly.edge[i]);
+          edge::VEEdgeSplit(poly, &ei, farthestP, farthestN); 
+        }
+        else if(uniformFlag)
+        {
+         edge::VEEdgeSplit(poly,&ei,(ei.P(0)+ei.P(1))/2.0,(ei.V(0)->N()+ei.V(1)->N())/2.0); 
         }
       }
     }
-    tri::Allocator<MeshType>::CompactEveryVector(poly);
+//    tri::Allocator<MeshType>::CompactEveryVector(poly);
     printf("Refine %i -> %i\n",startEdgeSize,poly.en);fflush(stdout);
   }
   
-  
+  // Take a poly and find the position of edge -edge crossing.
+  void RefineBaseMesh(MeshType &poly)
+  {
+    std::vector<CoordType> newPtVec;
+    for(int i=0;i<poly.edge.size();++i)
+    {
+      {
+        Point3f p0 = poly.edge[i].P(0);
+        Point3f p1 = poly.edge[i].P(1);
+        float stepNum = 10;
+        FaceType *lastFace=0; 
+        Point3f lastqp;
+        Segment3f seg(p0, p1);        
+        for(float j=1;j<stepNum;++j) 
+        {
+          Point3f qp = (p0*j + p1*(stepNum-j))/stepNum;
+          const float maxDist = base.bbox.Diag()/20.0;
+          float surfDist;
+          Point3f closestPSurf, normSur, ip;
+          FaceType *fp = vcg::tri::GetClosestFaceBase(base,uniformGrid,qp,maxDist, surfDist, closestPSurf, normSur, ip);                  
+          if((fp != lastFace) && (lastFace!=0)  && (fp!=0)  )
+          {
+            for(int ei =0 ; ei<3;++ei)
+            {
+              if(fp->FFp(ei) == lastFace)
+              {
+                Point3f ps0,ps1;
+                float segDist;
+                bool par;
+                Segment3f faceSeg(fp->P0(ei),fp->P1(ei));
+                float angDeg = fabs(math::ToDeg(Angle(faceSeg.Direction(),seg.Direction())));
+                
+                SegmentSegmentDistance(seg,faceSeg,segDist,par,ps0,ps1);
+                if(!par && (angDeg > 5 && angDeg<175)) newPtVec.push_back(ps1);             
+              }
+            }
+          }
+          lastFace=fp;        
+          lastqp = qp;
+        }
+      }      
+    }  
+    MeshType meshPt; tri::BuildMeshFromCoordVector(meshPt,newPtVec);
+    tri::io::ExporterPLY<MeshType>::Save(meshPt,"newPoints.ply");  
+
+    VertexConstDataWrapper<MeshType > vdw(meshPt);
+    KdTree<ScalarType> kdtree(vdw);
+    
+    EdgePointPred epPred(*this,kdtree);
+    EdgePointSplit epSplit(*this,kdtree,meshPt);
+    tri::UpdateTopology<MeshType>::FaceFace(base);
+    tri::RefineE(base,epSplit,epPred);    
+    tri::UpdateTopology<MeshType>::FaceFace(base);
+    tri::io::ExporterPLY<MeshType>::Save(base,"newbase.ply");  
+  }
   
   
   /**
@@ -1164,6 +1433,9 @@ public:
    */
   void SmoothProject(MeshType &poly, int iterNum, ScalarType smoothWeight, ScalarType projectWeight)
   {
+    tri::RequireCompactness(poly);
+    tri::UpdateTopology<MeshType>::VertexEdge(poly);
+    printf("SmoothProject: Selected vert num %i\n",tri::UpdateSelection<MeshType>::VertexCount(poly));
     assert(poly.en>0 && base.fn>0);
     for(int k=0;k<iterNum;++k)
     {
@@ -1182,30 +1454,38 @@ public:
       
       const float maxDist = base.bbox.Diag()/10.0;
       for(int i=0; i<poly.vn; ++i)
-      {
-        Point3f smoothPos = (poly.vert[i].P() + posVec[i])/float(cntVec[i]+1);
-        
-        Point3f newP = poly.vert[i].P()*(1.0-smoothWeight) + smoothPos *smoothWeight;
-        
-        Point3f delta =  newP - poly.vert[i].P();
-        if(delta.Norm() > par.maxSmoothDelta) 
+        if(!poly.vert[i].IsS())
         {
-          newP =  poly.vert[i].P() + ( delta / delta.Norm()) * maxDist*0.5;
+          Point3f smoothPos = (poly.vert[i].P() + posVec[i])/float(cntVec[i]+1);
+          
+          Point3f newP = poly.vert[i].P()*(1.0-smoothWeight) + smoothPos *smoothWeight;
+          
+          Point3f delta =  newP - poly.vert[i].P();
+          if(delta.Norm() > par.maxSmoothDelta) 
+          {
+            newP =  poly.vert[i].P() + ( delta / delta.Norm()) * maxDist*0.5;
+          }
+          
+          float minDist;
+          Point3f closestP;
+          FaceType *f = vcg::tri::GetClosestFaceBase(base,uniformGrid,newP,maxDist, minDist, closestP);
+          assert(f);
+          poly.vert[i].P() = newP*(1.0-projectWeight) +closestP*projectWeight;
+          poly.vert[i].N() = f->N();
         }
-        
-        float minDist;
-        Point3f closestP;
-        FaceType *f = vcg::tri::GetClosestFaceBase(base,uniformGrid,newP,maxDist, minDist, closestP);
-        assert(f);
-        poly.vert[i].P() = newP*(1.0-projectWeight) +closestP*projectWeight;
-        poly.vert[i].N() = f->N();
-      }
       
-      Refine(poly);      
-      Refine(poly);      
-      Simplify(poly);
-//      SnapPolyline(poly,0);
-      Clean<MeshType>::RemoveDuplicateVertex(poly);
+//      Refine(poly);      
+      tri::UpdateTopology<MeshType>::TestVertexEdge(poly);
+    Refine(poly);      
+      tri::UpdateTopology<MeshType>::TestVertexEdge(poly);
+    Simplify(poly);
+      tri::UpdateTopology<MeshType>::TestVertexEdge(poly);
+      int dupVertNum = Clean<MeshType>::RemoveDuplicateVertex(poly);
+      if(dupVertNum) {
+        printf("****REMOVED %i Duplicated\n",dupVertNum);
+        tri::Allocator<MeshType>::CompactEveryVector(poly);
+        tri::UpdateTopology<MeshType>::VertexEdge(poly);
+      }
     }
   }  
    
