@@ -29,6 +29,27 @@
 namespace vcg {
 namespace tri{
 template <class MeshType, bool PerWedgeFlag>
+
+
+/*
+ *  Energy types:
+ *
+ *    AreaDist : 0 for equiareal (equipotent) mappings
+ *    EdgeDist (hack): 0 for isometric mappings (computed on edges only)
+ *    AngleDist (hack): 0 for conformal mappings
+ *    CrossDist : as above, but computed on tangent directions (not UVs)
+ *    L2Stretch : 1 for isometric mappings (averaged case on the mesh),
+ *                +inf on degenerate / folded cases
+ *                Described in [1]
+ *    LInfStretch : as above, but WORST case
+ *                  (returns the worst stretch on any position and direction)
+ *                  Described in [1]
+ *
+ * [1] Sander, P. V., Snyder, J., Gortler, S. J., & Hoppe, H.
+ *     "Texture mapping progressive meshes."
+ *      In Proc. ACM SIGGRAPH (pp. 409-416). 2001
+ */
+
 class Distortion
 {
 public:
@@ -36,7 +57,9 @@ public:
     typedef typename MeshType::VertexType VertexType;
     typedef typename MeshType::CoordType CoordType;
     typedef typename MeshType::ScalarType ScalarType;
+    typedef typename MeshType::FaceType::CurVecType CurVecType;
     typedef typename MeshType::FaceType::TexCoordType::ScalarType TexScalarType;
+    typedef Point2<TexScalarType> TexCoordType;
 
     static ScalarType Area3D(const FaceType *f)
     {
@@ -45,7 +68,7 @@ public:
 
     static ScalarType AreaUV(const FaceType *f)
     {
-        Point2<TexScalarType> uv0,uv1,uv2;
+        TexCoordType uv0,uv1,uv2;
         if(PerWedgeFlag) {
             uv0=f->cWT(0).P();
             uv1=f->cWT(1).P();
@@ -152,7 +175,7 @@ public:
 
 
 public:
-    enum DistType{AreaDist,EdgeDist,AngleDist,CrossDist};
+    enum DistType{AreaDist,EdgeDist,AngleDist,CrossDist,L2Stretch,LInfStretch};
 
     ///return the absolute difference between angle in 3D space and texture space
     ///Actually the difference in cos space
@@ -206,7 +229,7 @@ public:
     }
 
     ///return the variance of edge length, normalized in absolute value,
-    // the needed scaling factor EdgeScaleVal may be calculated
+    ///the needed scaling factor EdgeScaleVal may be calculated
     ///by using the ScalingFactor function
     static ScalarType EdgeDistortion(const FaceType *f,int e,
                                      ScalarType EdgeScaleVal)
@@ -232,6 +255,60 @@ public:
         assert(!math::IsNAN(diff));
         return diff;
     }
+
+    static ScalarType L2StretchEnergySquared(const FaceType *f,
+                                             ScalarType AreaScaleVal)
+    {
+        TexCoordType p0 = (PerWedgeFlag)? f->cWT(0).P() :  f->cV(0)->T().P() ;
+        TexCoordType p1 = (PerWedgeFlag)? f->cWT(1).P() :  f->cV(1)->T().P() ;
+        TexCoordType p2 = (PerWedgeFlag)? f->cWT(2).P() :  f->cV(2)->T().P() ;
+
+        CoordType q0 = f->cP(0);
+        CoordType q1 = f->cP(1);
+        CoordType q2 = f->cP(2);
+
+        TexScalarType A2 = ((p1-p0)^(p2-p0));
+
+        if (A2<0) A2 = 0; // will be NAN, +infinity
+
+        CoordType Ss = ( q0 * ( p1[1]-p2[1] ) + q1 * (p2[1]-p0[1]) + q2 * (p0[1]-p1[1]) ) / A2;
+        CoordType St = ( q0 * ( p2[0]-p1[0] ) + q1 * (p0[0]-p2[0]) + q2 * (p1[0]-p0[0]) ) / A2;
+
+        ScalarType a = Ss.SquaredNorm() / AreaScaleVal;
+        ScalarType c = St.SquaredNorm() / AreaScaleVal;
+
+        return ((a+c)/2);
+    }
+
+
+
+    static ScalarType LInfStretchEnergy(const FaceType *f,  ScalarType AreaScaleVal)
+    {
+        TexCoordType p0 = (PerWedgeFlag)? f->cWT(0).P() :  f->cV(0)->T().P() ;
+        TexCoordType p1 = (PerWedgeFlag)? f->cWT(1).P() :  f->cV(1)->T().P() ;
+        TexCoordType p2 = (PerWedgeFlag)? f->cWT(2).P() :  f->cV(2)->T().P() ;
+
+        CoordType q0 = f->cP(0);
+        CoordType q1 = f->cP(1);
+        CoordType q2 = f->cP(2);
+
+        TexScalarType A2 = ((p1-p0)^(p2-p0));
+
+        if (A2<0) A2 = 0; // will be NAN, +infinity
+
+        CoordType Ss = ( q0 * ( p1[1]-p2[1] ) + q1 * (p2[1]-p0[1]) + q2 * (p0[1]-p1[1]) ) / A2;
+        CoordType St = ( q0 * ( p2[0]-p1[0] ) + q1 * (p0[0]-p2[0]) + q2 * (p1[0]-p0[0]) ) / A2;
+
+        ScalarType a = Ss.SquaredNorm() / AreaScaleVal;
+        ScalarType b = Ss*St / AreaScaleVal;
+        ScalarType c = St.SquaredNorm() / AreaScaleVal;
+
+        ScalarType delta = sqrt((a-c)*(a-c)+4*b*b);
+        ScalarType G =  sqrt( (a+c+delta)/2 );
+        //ScalarType g = sqrt( (a+c-delta)/2 ); // not needed
+        return G;
+    }
+
 
     ///return the number of folded faces
     static bool Folded(const FaceType *f)
@@ -271,10 +348,10 @@ public:
         return UDdist;
     }
 
-    static void SetQasCrossDirDistortion(MeshType &m)
+    static ScalarType SetFQAsCrossDirDistortion(MeshType &m)
     {
         //first save the old UV dir
-        std::vector<CoordType> Dir1,Dir2;
+        std::vector<CurVecType> Dir1,Dir2;
         for (size_t i=0;i<m.face.size();i++)
         {
             Dir1.push_back(m.face[i].PD1());
@@ -282,14 +359,18 @@ public:
         }
         vcg::tri::CrossField<MeshType>::InitDirFromWEdgeUV(m);
 
+        ScalarType tot = 0, totA = 0;
+
         //then compute angle deficit
         for (size_t i=0;i<m.face.size();i++)
         {
-            CoordType transfPD1=vcg::tri::CrossField<MeshType>::K_PI(Dir1[i],
-                                                                     m.face[i].PD1(),
-                                                                     m.face[i].N());
+
+            FaceType &f( m.face[i] );
+            CoordType transfPD1=vcg::tri::CrossField<MeshType>::K_PI(CoordType::Construct( Dir1[i] ),
+                                                                     CoordType::Construct( f.PD1() ),
+                                                                     f.N());
             transfPD1.Normalize();
-            ScalarType AngleDeficit=vcg::Angle(transfPD1,m.face[i].PD1());
+            ScalarType AngleDeficit=vcg::Angle(transfPD1,CoordType::Construct( f.PD1() ));
             AngleDeficit=math::ToDeg(AngleDeficit);
             if ((AngleDeficit>45)||(AngleDeficit<0))
             {
@@ -297,7 +378,13 @@ public:
             }
 //            assert(AngleDeficit<45);
 //            assert(AngleDeficit>=0);
-            m.face[i].Q()=(AngleDeficit)/(ScalarType)45;
+
+            ScalarType doubleArea = vcg::DoubleArea( f );
+            ScalarType distortion = (AngleDeficit)/ 45 ;
+
+            m.face[i].Q()= distortion;
+            tot += distortion * doubleArea;
+            totA += doubleArea;
         }
 
         //finally restore the original directions
@@ -306,36 +393,77 @@ public:
             m.face[i].PD1()=Dir1[i];
             m.face[i].PD2()=Dir2[i];
         }
+
+        return tot / totA;
     }
 
-    static void SetQasDistorsion(MeshType &m,
-                                 DistType DType=AreaDist)
+    static ScalarType SetQasDistorsion(MeshType &m, DistType DType=AreaDist)
     {
         if (DType==CrossDist)
         {
-            SetQasCrossDirDistortion(m);
+            ScalarType res = SetFQAsCrossDirDistortion(m);
+
             vcg::tri::UpdateQuality<MeshType>::VertexFromFace(m,true);
-            return;
+            return res;
         }
 
         ScalarType edge_scale,area_scale;
         MeshScalingFactor(m,area_scale,edge_scale);
+
+        float tot = 0;
+        float totA = 0;
+
         for (int i=0;i<m.face.size();i++)
         {
             if (m.face[i].IsD())continue;
-            if (DType==AreaDist)
-                m.face[i].Q()=AreaDistortion(&m.face[i],area_scale);
-            else
-                if (DType==AngleDist)
-                    m.face[i].Q()=AngleDistortion(&m.face[i]);
-                else
-                    m.face[i].Q()=(EdgeDistortion(&m.face[i],0,edge_scale)+
-                            EdgeDistortion(&m.face[i],1,edge_scale)+
-                            EdgeDistortion(&m.face[i],2,edge_scale))/3.0;
+            ScalarType q;
+            switch (DType) {
+            case CrossDist:
+                // make compiler happy
+                q = 0;
+                break;
+            case AreaDist:
+                q = AreaDistortion(&m.face[i],area_scale);
+                break;
+            case AngleDist:
+                q = AngleDistortion(&m.face[i]);
+                break;
+            case EdgeDist:
+                q =( EdgeDistortion(&m.face[i],0,edge_scale)+
+                     EdgeDistortion(&m.face[i],1,edge_scale)+
+                     EdgeDistortion(&m.face[i],2,edge_scale) )/3;
+                break;
+            case L2Stretch:
+                q = L2StretchEnergySquared( &m.face[i],area_scale );
+                break;
+            case LInfStretch:
+                q = LInfStretchEnergy( &m.face[i],area_scale );
+                break;
+            }
+
+            m.face[i].Q() = q; // note: for L2Stretch, we are puttning E^2 on Q
+
+            // aggregate:
+            if (DType==LInfStretch) {
+                tot = std::max( tot, q );
+            } else {
+                ScalarType a = Area3D(&m.face[i]);
+                tot += q*a;
+                totA += a;
+            }
+
         }
+
         vcg::tri::UpdateQuality<MeshType>::VertexFromFace(m,true);
+
+        switch (DType) {
+            case L2Stretch: return sqrt(tot/totA);
+            case LInfStretch: return tot;
+            default:  return tot/totA;
+        }
     }
 };
-}
-}
+
+}} // namespace end
+
 #endif
