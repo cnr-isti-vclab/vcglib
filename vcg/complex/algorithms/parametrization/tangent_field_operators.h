@@ -1361,7 +1361,7 @@ public:
         {
             FaceType *f=&mesh.face[i];
             if (f->IsD())continue;
-            CoordType Ntest=mesh.face[i].PD1()^mesh.face[i].PD2();
+            CoordType Ntest= CoordType::Construct( mesh.face[i].PD1()^mesh.face[i].PD2() );
             if ((Ntest*vcg::Normal(f->P(0),f->P(1),f->P(2)))<0)mesh.face[i].PD2()=-mesh.face[i].PD2();
         }
     }
@@ -1471,7 +1471,9 @@ public:
             vcg::Point2<ScalarType> UV0=mesh.face[i].WT(0).P();
             vcg::Point2<ScalarType> UV1=mesh.face[i].WT(1).P();
             vcg::Point2<ScalarType> UV2=mesh.face[i].WT(2).P();
-            GradientToCross(mesh.face[i],UV0,UV1,UV2,mesh.face[i].PD1(),mesh.face[i].PD2());
+            GradientToCross(mesh.face[i],UV0,UV1,UV2,
+                            CoordType::Construct(mesh.face[i].PD1()),
+                            CoordType::Construct(mesh.face[i].PD2()) );
         }
         OrientDirectionFaceCoherently(mesh);
     }
