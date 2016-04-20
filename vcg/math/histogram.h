@@ -163,13 +163,13 @@ public:
      */
   void SetRange(ScalarType _minv, ScalarType _maxv, int _n,ScalarType gamma=1.0 );
 
-  ScalarType MinV() {return minv;} 	//! Minimum value.
-  ScalarType MaxV() {return maxv;} 	//! Maximum value.
+  ScalarType MinV() {return minv;} 	//! Minimum value of the range where the histogram is defined.
+  ScalarType MaxV() {return maxv;} 	//! Maximum value of the range where the histogram is defined.
   ScalarType Sum()  {return sum;} 	//! Total sum of inserted values.
   ScalarType Cnt()  {return cnt;}
 
-  ScalarType MinElem() {return minElem;} 	//! Minimum element added to the histogram. It could be < or > than MinV;.
-  ScalarType MaxElem() {return maxElem;} 	//! Maximum element added to the histogram. It could be < or > than MinV;..
+  ScalarType MinElem() {return minElem;} 	//! Minimum element that has been added to the histogram. It could be < or > than MinV;.
+  ScalarType MaxElem() {return maxElem;} 	//! Maximum element that has been added to the histogram. It could be < or > than MinV;..
 
   /**
      * Add a new value to the histogram.
@@ -179,7 +179,8 @@ public:
      */
   void Add(ScalarType v, ScalarType increment=ScalarType(1.0));
 
-  ScalarType MaxCount() const;
+  ScalarType MaxCount() const;        //! Max number of elements among all buckets (including the two infinity bounded buckets)
+  ScalarType MaxCountInRange() const; //! Max number of elements among all buckets between MinV and MaxV.
   int BinNum() const {return n;}
   ScalarType BinCount(ScalarType v);
   ScalarType BinCountInd(int index) {return H[index];}
@@ -364,6 +365,12 @@ template <class ScalarType>
 ScalarType Histogram<ScalarType>::MaxCount() const
 {
   return *(std::max_element(H.begin(),H.end()));
+}
+
+template <class ScalarType>
+ScalarType Histogram<ScalarType>::MaxCountInRange() const
+{
+  return *(std::max_element(H.begin()+1,H.end()-1));
 }
 
 // Return the scalar value <r> such that there are <frac> samples <= <r>.
