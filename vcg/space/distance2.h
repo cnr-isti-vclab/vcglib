@@ -40,10 +40,17 @@ namespace vcg {
 	template<class ScalarType>
 	ScalarType Segment2DSegment2DDistance(const vcg::Segment2<ScalarType> &S0,
 									const vcg::Segment2<ScalarType> &S1,
-									vcg::Point2<ScalarType> &p_clos)
+                                    vcg::Point2<ScalarType> &p_clos0,
+                                    vcg::Point2<ScalarType> &p_clos1)
 	{
-		///first test if they intersect
-		if (vcg:: SegmentSegmentIntersection(S0,S1,p_clos))return 0;
+        //first test if they intersect
+        vcg::Point2<ScalarType> IntPoint;
+        if (vcg:: SegmentSegmentIntersection(S0,S1,IntPoint))
+        {
+            p_clos0=IntPoint;
+            p_clos1=IntPoint;
+            return 0;
+        }
 		vcg::Point2<ScalarType> Pclos0=ClosestPoint(S0,S1.P0());
 		vcg::Point2<ScalarType> Pclos1=ClosestPoint(S0,S1.P1());
 		vcg::Point2<ScalarType> Pclos2=ClosestPoint(S1,S0.P0());
@@ -52,8 +59,32 @@ namespace vcg {
 		ScalarType d1=(Pclos1-S1.P1()).Norm();
 		ScalarType d2=(Pclos2-S0.P0()).Norm();
 		ScalarType d3=(Pclos3-S0.P1()).Norm();
-		///then return the minimuim distance
-		return (std::min(d0,std::min(d1,std::min(d2,d3))));
+
+        //then return the minimuim distance
+        if ((d0<d1)&&(d0<d2)&&(d0<d3))
+        {
+            p_clos0=Pclos0;
+            p_clos1=S1.P0();
+            return d0;
+        }
+        if ((d1<d0)&&(d1<d2)&&(d1<d3))
+        {
+            p_clos0=Pclos1;
+            p_clos1=S1.P1();
+            return d1;
+        }
+        if ((d2<d0)&&(d2<d1)&&(d2<d3))
+        {
+            p_clos0=S0.P0();
+            p_clos1=Pclos2;
+            return d2;
+        }
+        else
+        {
+            p_clos0=S0.P1();
+            p_clos1=Pclos3;
+            return d3;
+        }
 	}
 
 
