@@ -59,11 +59,11 @@ static void  Random(int vn, std::vector<Point3<ScalarType > > &NN)
 
 static Point3x FibonacciPt(int i, int n)
 {
-  const ScalarType Phi =  ScalarType(sqrt(5)*0.5 + 0.5);
+  const ScalarType Phi =  ScalarType(std::sqrt(ScalarType(5))*0.5 + 0.5);
   const ScalarType phi = 2.0*M_PI* (i/Phi - floor(i/Phi));
   ScalarType cosTheta = 1.0 - (2*i + 1.0)/ScalarType(n);
     ScalarType sinTheta = 1 - cosTheta*cosTheta;
-    sinTheta = sqrt(std::min(ScalarType(1),std::max(ScalarType(0),sinTheta)));
+    sinTheta = std::sqrt(std::min(ScalarType(1),std::max(ScalarType(0),sinTheta)));
     return Point3x(
       cos(phi)*sinTheta,
       sin(phi)*sinTheta,
