@@ -12,17 +12,17 @@
 using namespace vcg;
 class CFaceO;
 class CVertexO;
+class CEdgeO;
 
-struct MyUsedTypes : public UsedTypes<	Use<CVertexO>		::AsVertexType,
+struct MyUsedTypes : public UsedTypes<Use<CVertexO>		::AsVertexType, vcg::Use<CEdgeO   >::AsEdgeType,
 	Use<CFaceO>			::AsFaceType>{};
 
 /// compositing wanted proprieties
 class CVertexO : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags>{};
 class CFaceO   : public vcg::Face<  MyUsedTypes, vcg::face::VertexRef, vcg::face::Normal3f, vcg::face::BitFlags > {};
-class CMeshO   : public vcg::tri::TriMesh< std::vector<CVertexO>, std::vector<CFaceO> > 
+class CEdgeO : public vcg::Edge<MyUsedTypes,vcg::edge::BitFlags,vcg::edge::EVAdj,vcg::edge::EEAdj>{};
+class CMeshO   : public vcg::tri::TriMesh< std::vector<CVertexO>, std::vector<CFaceO>,std::vector<CEdgeO> > 
 {
-public:
-	vcg::Box3f bbox;
 };
 
 #endif

@@ -37,20 +37,18 @@ Initial release.
 #include <QWheelEvent>
 #include <wrap/qt/trackball.h>
 #include <cassert>
+#include <wrap/gl/trimesh.h>
+#include "mainwindow.h"
 
-#ifdef Q_OS_MAC
-#define glGenVertexArrays glGenVertexArraysAPPLE
-#define glBindVertexArray glBindVertexArrayAPPLE
-#define glDeleteVertexArrays glDeleteVertexArraysAPPLE
-#endif
-
-GLArea::GLArea (CMeshO& m, MLThreadSafeGLMeshAttributesFeeder& feed,QWidget* parent,QGLWidget* sharedcont)
-    :QGLWidget (parent,sharedcont),mesh(m),feeder(feed),rq(),drawmode(MDM_SMOOTH)
+GLArea::GLArea (SharedDataOpenGLContext* sharedcontext,MainWindow* parent)
+    :QGLWidget(NULL,sharedcontext),parwin(parent)
 {
+        
 }
 
 GLArea::~GLArea()
 {
+
 }
 
 void GLArea::initializeGL()
@@ -65,21 +63,31 @@ void GLArea::initializeGL()
 	glEnable(GL_COLOR_MATERIAL);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+
+    GLenum err = glGetError();
+    assert(err == GL_NO_ERROR);
+    doneCurrent();
 }
 
 void GLArea::resizeGL (int w, int h)
 {
 	makeCurrent();
 	glViewport (0, 0, (GLsizei) w, (GLsizei) h);
+    doneCurrent();
     //initializeGL();
 }
 
 void GLArea::paintGL ()
 {
+    if (parwin == NULL)
+        return;
+    SharedDataOpenGLContext::MultiViewManager* man = parwin->getMultiviewerManager();
+    if (man == NULL)
+        return;
+    CMeshO& mesh = parwin->currentMesh();
+    //glt.m = &mesh;
 	makeCurrent();
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
-    //GLenum err = glGetError();
-    //assert(err == GL_NO_ERROR);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -91,33 +99,16 @@ void GLArea::paintGL ()
 	gluLookAt(0,0,5,   0,0,0,   0,1,0);
 	track.center=vcg::Point3f(0, 0, 0);
 	track.radius= 1;
-	track.GetView();
-	track.Apply();
-	glPushMatrix();
-	float d=2.0f/mesh.bbox.Diag();
-	vcg::glScale(d);
-	glTranslate(-mesh.bbox.Center());
-
-	if (mesh.VN() > 0)
-	{
-		switch(drawmode)
-		{
-		case MDM_SMOOTH:
-		case MDM_FLAT:
-			feeder.drawTriangles(rq);
-		case MDM_WIRE:
-			feeder.drawWire(rq);
-			break;
-		case MDM_POINTS:
-			feeder.drawPoints(rq);
-			break;
-		case MDM_FLATWIRE:
-			feeder.drawFlatWire(rq);
-			break;
-		default:
-			break;
-		}
-	}
+    track.GetView();
+    track.Apply();
+    glPushMatrix();
+    if (mesh.VN() > 0)
+    {
+        float d=2.0f/mesh.bbox.Diag();
+        vcg::glScale(d);
+	    glTranslate(-mesh.bbox.Center());
+        man->draw(context());
+    }
 	glPopMatrix();
 	
 	track.DrawPostApply();
@@ -125,7 +116,7 @@ void GLArea::paintGL ()
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glPopAttrib();
-	//doneCurrent();
+    
 	GLenum err = glGetError();
 	assert(err == GL_NO_ERROR);
 }
@@ -139,7 +130,9 @@ void GLArea::keyReleaseEvent (QKeyEvent * e)
 		track.ButtonUp (QT2VCG (Qt::NoButton, Qt::ShiftModifier));
 	if (e->key () == Qt::Key_Alt)
 		track.ButtonUp (QT2VCG (Qt::NoButton, Qt::AltModifier));
+    makeCurrent();
 	updateGL ();
+    doneCurrent();
 }
 
 void GLArea::keyPressEvent (QKeyEvent * e)
@@ -151,7 +144,9 @@ void GLArea::keyPressEvent (QKeyEvent * e)
 		track.ButtonDown (QT2VCG (Qt::NoButton, Qt::ShiftModifier));
 	if (e->key () == Qt::Key_Alt)
 		track.ButtonDown (QT2VCG (Qt::NoButton, Qt::AltModifier));
+    makeCurrent();
 	updateGL ();
+    doneCurrent();
 }
 
 void GLArea::mousePressEvent (QMouseEvent * e)
@@ -159,103 +154,79 @@ void GLArea::mousePressEvent (QMouseEvent * e)
 	e->accept ();
 	setFocus ();
 	track.MouseDown (QT2VCG_X(this,e), QT2VCG_Y(this,e), QT2VCG (e->button (), e->modifiers ()));
+    makeCurrent();
 	updateGL ();
+    doneCurrent();
 }
 
 void GLArea::mouseMoveEvent (QMouseEvent * e)
 {
 	if (e->buttons ()) {
 		track.MouseMove (QT2VCG_X(this,e), QT2VCG_Y(this,e));
+        makeCurrent();
 		updateGL ();
+        doneCurrent();
 	}
 }
 
 void GLArea::mouseReleaseEvent (QMouseEvent * e)
 {
 	track.MouseUp (QT2VCG_X(this,e), QT2VCG_Y(this,e), QT2VCG (e->button (), e->modifiers ()));
+    makeCurrent();
 	updateGL ();
+    doneCurrent();
 }
 
 void GLArea::wheelEvent (QWheelEvent * e)
 {
 	const int WHEEL_STEP = 120;
 	track.MouseWheel (e->delta () / float (WHEEL_STEP), QTWheel2VCG (e->modifiers ()));
+    makeCurrent();
 	updateGL ();
-}
-
-void GLArea::updateRequested(MyDrawMode md,vcg::GLFeederInfo::ReqAtts& reqatts)
-{
-	drawmode = md;
-	rq = reqatts;
-	updateGL();
+    doneCurrent();
 }
 
 void GLArea::resetTrackBall()
 {
-    makeCurrent();
 	track.Reset();
-	updateGL();
+	makeCurrent();
+    updateGL();
     doneCurrent();
 }
 
 
 
-SharedDataOpenGLContext::SharedDataOpenGLContext( CMeshO& mesh,MLThreadSafeMemoryInfo& mi,QWidget* parent /*= 0*/ )
-	:QGLWidget(parent),feeder(mesh,mi,100000)
+SharedDataOpenGLContext::SharedDataOpenGLContext(CMeshO& mesh,vcg::QtThreadSafeMemoryInfo& mi,QWidget* parent)
+    :QGLWidget(parent),manager(mesh,mi,100000)
 {
 }
 
 SharedDataOpenGLContext::~SharedDataOpenGLContext()
 {
-	deAllocateBO();
 }
 
 void SharedDataOpenGLContext::myInitGL()
 {
     makeCurrent();
     glewInit();
-	doneCurrent();
-}
-
-void SharedDataOpenGLContext::passInfoToOpenGL(int mode)
-{
-	makeCurrent();
-	MyDrawMode drawmode = static_cast<MyDrawMode>(mode);
-    //_tsbm.setUpBuffers();
-	vcg::GLFeederInfo::ReqAtts req;
-	bool allocated = false;
-	switch(drawmode)
-	{
-	case MDM_SMOOTH:
-	case MDM_WIRE:
-		req[vcg::GLFeederInfo::ATT_VERTPOSITION] = true;
-		req[vcg::GLFeederInfo::ATT_VERTNORMAL] = true;
-		req[vcg::GLFeederInfo::ATT_VERTINDEX] = true;
-		req.primitiveModality() = vcg::GLFeederInfo::PR_TRIANGLES;
-		break;
-	case MDM_POINTS:
-		req[vcg::GLFeederInfo::ATT_VERTPOSITION] = true;
-		req[vcg::GLFeederInfo::ATT_VERTNORMAL] = true;
-		req.primitiveModality() = vcg::GLFeederInfo::PR_POINTS;
-		break;
-	case MDM_FLAT:
-	case MDM_FLATWIRE:
-		req[vcg::GLFeederInfo::ATT_VERTPOSITION] = true;
-		req[vcg::GLFeederInfo::ATT_FACENORMAL] = true;
-		req.primitiveModality() = vcg::GLFeederInfo::PR_TRIANGLES;
-		break;
-	default:
-		break;
-	}
-	vcg::GLFeederInfo::ReqAtts rq = feeder.setupRequestedAttributes(req,allocated);
-	doneCurrent();
-	emit dataReadyToBeRead(drawmode,rq);
-
+    doneCurrent();
 }
 
 void SharedDataOpenGLContext::deAllocateBO()
 {
-	makeCurrent();
-	feeder.deAllocateBO();
-	doneCurrent();
+    makeCurrent();
+    manager.removeAllViewsAndDeallocateBO();
+    doneCurrent();
+}
+
+void SharedDataOpenGLContext::setPerViewRendAtts( QGLContext* viewid,vcg::GLMeshAttributesInfo::PRIMITIVE_MODALITY_MASK mm,vcg::GLMeshAttributesInfo::RendAtts& atts )
+{
+    manager.setPerViewInfo(viewid,mm,atts);
+}
+
+void SharedDataOpenGLContext::manageBuffers()
+{
+    makeCurrent();
+    manager.manageBuffers();
+    doneCurrent();
 }

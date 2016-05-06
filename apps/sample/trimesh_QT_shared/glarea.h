@@ -39,47 +39,44 @@ Initial release.
 
 /// wrapper imports
 #include <wrap/gui/trackball.h>
-
-
+#include <wrap/qt/qt_thread_safe_memory_info.h>
+#include <wrap/qt/qt_thread_safe_mesh_attributes_multi_viewer_bo_manager.h>
+#include <wrap/gl/trimesh.h>
 #include "mesh.h"
-#include "ml_scene_renderer.h"
-/// declaring edge and face type
 
-
-enum MyDrawMode{MDM_SMOOTH=0,MDM_POINTS,MDM_WIRE,MDM_FLATWIRE,MDM_FLAT};
+class MainWindow;
 
 class SharedDataOpenGLContext : public QGLWidget
 {
 	Q_OBJECT
 public:
-	SharedDataOpenGLContext(CMeshO& mesh,MLThreadSafeMemoryInfo& mi,QWidget* parent = 0);
+    typedef vcg::QtThreadSafeGLMeshAttributesMultiViewerBOManager<CMeshO,QGLContext*> MultiViewManager;
+
+	SharedDataOpenGLContext(CMeshO& mesh,vcg::QtThreadSafeMemoryInfo& mi,QWidget* parent = 0);
 	~SharedDataOpenGLContext();
 
     void myInitGL();
 	void deAllocateBO();
-
-	MLThreadSafeGLMeshAttributesFeeder feeder;
-
-public slots:
-	/// widget-based user interaction slots
-	void passInfoToOpenGL(int mode);
-
-signals:
-	void dataReadyToBeRead(MyDrawMode,vcg::GLFeederInfo::ReqAtts&);
+    void setPerViewRendAtts(QGLContext* view,vcg::GLMeshAttributesInfo::PRIMITIVE_MODALITY_MASK mm,vcg::GLMeshAttributesInfo::RendAtts& atts);
+    void manageBuffers();
+	MultiViewManager manager;
 };
+
 
 class GLArea:public QGLWidget
 {
 	Q_OBJECT 
 public:
-    GLArea (CMeshO& m,MLThreadSafeGLMeshAttributesFeeder& feed,QWidget* parent = NULL,QGLWidget* sharedcont = NULL);
+    GLArea (SharedDataOpenGLContext* sharedcontext,MainWindow* parent);
 	~GLArea();
 	void resetTrackBall();
+    //unsigned int getId() const {return areaid;}
 	/// we choosed a subset of the avaible drawing modes
 
 signals:
 		/// signal for setting the statusbar message
 	void setStatusBar(QString message);
+    void updateRenderModalityRequested(int);
 protected:
 	/// opengl initialization and drawing calls
 	void initializeGL ();
@@ -92,18 +89,15 @@ protected:
 	void mouseMoveEvent(QMouseEvent*e);
 	void mouseReleaseEvent(QMouseEvent*e);
 	void wheelEvent(QWheelEvent*e); 
-public slots:
-	void updateRequested(MyDrawMode,vcg::GLFeederInfo::ReqAtts&);
+
 private:
-	/// the active mesh instance
-	CMeshO& mesh;
+    MainWindow* parwin;
 	/// the active manipulator
 	vcg::Trackball track;
 	/// mesh data structure initializer
 	void initMesh(QString message);
-	MyDrawMode drawmode;
-	MLThreadSafeGLMeshAttributesFeeder& feeder;
-	vcg::GLFeederInfo::ReqAtts rq;
+    //unsigned int areaid;
+    //vcg::GlTrimesh<CMeshO> glt;
 };
 
 #endif /*GLAREA_H_ */

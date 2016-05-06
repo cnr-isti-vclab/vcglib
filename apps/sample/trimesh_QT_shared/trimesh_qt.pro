@@ -37,17 +37,12 @@ win32{
 # Input
 HEADERS += mainwindow.h
 HEADERS += glarea.h
-HEADERS += ml_thread_safe_memory_info.h
-HEADERS += ml_scene_renderer.h
-HEADERS += ml_atomic_guard.h
 
 
 
 SOURCES += main.cpp
 SOURCES += mainwindow.cpp
 SOURCES += glarea.cpp
-SOURCES += ml_thread_safe_memory_info.cpp
-SOURCES += ml_scene_renderer.cpp
 
 FORMS += mainwindow.ui
 
