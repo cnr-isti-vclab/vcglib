@@ -402,7 +402,7 @@ namespace vcg
             if (tobeupdated[INT_ATT_NAMES::ATT_EDGEINDICES])
                 updateEdgeVertIndVector();
 
-            bool immediatemode = !(buffersMemoryManagementFunction(tobeallocated,tobedeallocated));
+            bool immediatemode = !(buffersMemoryManagementFunction(tobeallocated,tobedeallocated,tobeupdated));
             bool replicated = isThereAReplicatedPipelineView();
 
             if (immediatemode)
@@ -439,7 +439,7 @@ namespace vcg
             _meshtriangleswhenedgeindiceswerecomputed = _mesh.FN();
         }
 
-        bool buffersMemoryManagementFunction(const InternalRendAtts& tobeallocated,const InternalRendAtts& tobedeallocated)
+        bool buffersMemoryManagementFunction(const InternalRendAtts& tobeallocated,const InternalRendAtts& tobedeallocated,const InternalRendAtts& tobeupdated)
         {
             //GLenum err = glGetError();
             bool replicated = isThereAReplicatedPipelineView();
@@ -510,6 +510,12 @@ namespace vcg
                         glBindBuffer(cbo->_target, 0);
                         _currallocatedboatt[boname] = !failedallocation;
                     }
+                    else
+                    {
+                        //the arity of the attribute contained in the bo didn't change so i can use the old space without reallocating it
+                        if (cbo != NULL)
+                            cbo->_isvalid = tobeupdated[boname];
+                    }
                     ++it;
                     ++ii;
                 }
@@ -573,7 +579,9 @@ namespace vcg
                 }
 
                 if (attributestobeupdated[INT_ATT_NAMES::ATT_VERTCOLOR])
+                {
                     cv[chunkindex] = _mesh.vert[i].cC();
+                }
                 if (attributestobeupdated[INT_ATT_NAMES::ATT_VERTTEXTURE])
                 {
                     tv[chunkindex*2+0] = _mesh.vert[i].cT().U();
@@ -1218,14 +1226,14 @@ namespace vcg
             }
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
             glBindBuffer(GL_ARRAY_BUFFER,0);
-            int ii = 0;
-            for(typename std::vector<GLBufferObject*>::const_iterator it = _bo.begin();it != _bo.end();++it)
-            {
-                INT_ATT_NAMES boname(ii);
-                if ((boname != INT_ATT_NAMES::ATT_VERTINDICES) && (boname != INT_ATT_NAMES::ATT_EDGEINDICES) && (boname != INT_ATT_NAMES::ATT_MESHCOLOR))
-                    disableClientState(boname,req);
-                ++ii;
-            }
+            //int ii = 0;
+            //for(typename std::vector<GLBufferObject*>::const_iterator it = _bo.begin();it != _bo.end();++it)
+            //{
+            //    INT_ATT_NAMES boname(ii);
+            //    if ((boname != INT_ATT_NAMES::ATT_VERTINDICES) && (boname != INT_ATT_NAMES::ATT_EDGEINDICES) && (boname != INT_ATT_NAMES::ATT_MESHCOLOR))
+            //        disableClientState(boname,req);
+            //    ++ii;
+            //}
             /*disable all client state buffers*/
             InternalRendAtts tmp;
             updateClientState(tmp);
