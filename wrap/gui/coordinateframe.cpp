@@ -140,7 +140,7 @@ void CoordinateFrame::Render(QGLWidget* glw,QPainter* p)
     md.qFont.setPixelSize(8);
     md.color=Color4b(Color4b::LightGray);
     float i;
-    glColor(Color4b::LightGray);
+    glColor(Color4b(Color4b::LightGray));
     for(i=slope_a;i<size;i+=slope_a){
       vcg::glLabel::render(p,vcg::Point3f( i,0,0),QString(" %1").arg(i,3,'f',1),md);
       vcg::glLabel::render(p,vcg::Point3f(-i,0,0),QString(" %1").arg(i,3,'f',1),md);
