@@ -141,7 +141,7 @@ namespace vcg
 
         bool getPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,PRIMITIVE_MODALITY_MASK* mask,RendAtts* rendatts,vcg::PerViewPerRenderingModalityGLOptions*  opts)
         {
-            ViewsMap::iterator it = _perviewreqatts.find(viewid);
+            typename ViewsMap::iterator it = _perviewreqatts.find(viewid);
             if (it == _perviewreqatts.end())
                 return false;
             if (mask != NULL)
@@ -161,7 +161,7 @@ namespace vcg
 
         bool removeView(UNIQUE_VIEW_ID_TYPE viewid)
         {
-            ViewsMap::iterator it = _perviewreqatts.find(viewid);
+            typename ViewsMap::iterator it = _perviewreqatts.find(viewid);
             if (it == _perviewreqatts.end())
                 return false;
             _perviewreqatts.erase(viewid);
@@ -175,7 +175,7 @@ namespace vcg
 
         void draw(UNIQUE_VIEW_ID_TYPE viewid,const std::vector<GLuint>& textid = std::vector<GLuint>()) const
         {
-            ViewsMap::const_iterator it = _perviewreqatts.find(viewid);
+            typename ViewsMap::const_iterator it = _perviewreqatts.find(viewid);
             if (it == _perviewreqatts.end())
                 return;
 
@@ -276,7 +276,7 @@ namespace vcg
 
         void setGLOptions(UNIQUE_VIEW_ID_TYPE viewid,const GL_OPTIONS_DERIVED_TYPE& opts)
         {
-            ViewsMap::iterator it = _perviewreqatts.find(viewid);
+            typename ViewsMap::iterator it = _perviewreqatts.find(viewid);
             if (it == _perviewreqatts.end())
                 return;
 
@@ -329,7 +329,7 @@ namespace vcg
             
             bool thereisreplicatedview = isThereAReplicatedPipelineView();
             InternalRendAtts attributesrequiredbyatlastoneview;
-            for(ViewsMap::const_iterator it = _perviewreqatts.begin();it != _perviewreqatts.end();++it)
+            for(typename ViewsMap::const_iterator it = _perviewreqatts.begin();it != _perviewreqatts.end();++it)
                 attributesrequiredbyatlastoneview = InternalRendAtts::unionSet(attributesrequiredbyatlastoneview,it->second._intatts);
             attributesrequiredbyatlastoneview[INT_ATT_NAMES::ATT_VERTINDICES] = attributesrequiredbyatlastoneview[INT_ATT_NAMES::ATT_VERTINDICES] && !thereisreplicatedview;
             for(unsigned int ii = 0;ii < INT_ATT_NAMES::enumArity();++ii)
@@ -674,7 +674,7 @@ namespace vcg
         bool isThereAReplicatedPipelineView() const
         {
             bool replicated = false;
-            for(ViewsMap::const_iterator it = _perviewreqatts.begin();it != _perviewreqatts.end();++it)
+            for(typename ViewsMap::const_iterator it = _perviewreqatts.begin();it != _perviewreqatts.end();++it)
                 replicated = replicated || InternalRendAtts::replicatedPipelineNeeded(it->second._intatts);
             return replicated;
         }
@@ -682,7 +682,7 @@ namespace vcg
         bool isThereAnEdgesView() const
         {
             bool isthereaquadview = false;
-            for(ViewsMap::const_iterator it = _perviewreqatts.begin();it != _perviewreqatts.end();++it)
+            for(typename ViewsMap::const_iterator it = _perviewreqatts.begin();it != _perviewreqatts.end();++it)
                 isthereaquadview = (it->second._pmmask & PR_WIREFRAME_EDGES) || isthereaquadview;
         }
 
@@ -914,7 +914,7 @@ namespace vcg
 
                 if ((attributestobeupdated[INT_ATT_NAMES::ATT_EDGEINDICES]) && (_edge.size() > 0)) 
                 {
-                    for(std::vector<EdgeVertInd>::iterator it = _edge.begin();it != _edge.end();++it)
+                    for(typename std::vector<EdgeVertInd>::iterator it = _edge.begin();it != _edge.end();++it)
                     {
                         it->_v[0] = vpatlas[it->_v[0]];
                         it->_v[1] = vpatlas[it->_v[1]];
@@ -1565,7 +1565,7 @@ namespace vcg
             if (m.FN() > 0)
             {
                 edgeVec.reserve(m.FN()*3);
-                for(MESH_TYPE::FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+                for(typename MESH_TYPE::FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
                     if( ! (*fi).IsD() )
                         for(int j=0;j<(*fi).VN();++j)
                             if(includeFauxEdge || !(*fi).IsF(j))
@@ -1575,7 +1575,7 @@ namespace vcg
                 if ((m.VN() > 0) && (m.EN() > 0) )
                 {
                     edgeVec.reserve(m.EN()*2);
-                    for(MESH_TYPE::EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
+                    for(typename MESH_TYPE::EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
                         if( ! (*ei).IsD() )
                             for(int j=0;j<2;++j)
                                     edgeVec.push_back(EdgeVertInd(m,&*ei,j));
