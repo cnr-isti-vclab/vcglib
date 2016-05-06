@@ -512,7 +512,7 @@ public:
       for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
         if( ! (*vi).IsD() && (*vi).IsW())
         {
-          const double quality01squared = pow((vi->Q()-minQ)/(maxQ-minQ),2.0);
+          const double quality01squared = pow((double)((vi->Q()-minQ)/(maxQ-minQ)),2.0);
           QH::Qd(*vi) *= 1.0 + quality01squared * (pp->QualityWeightFactor-1.0); 
         }
     }
