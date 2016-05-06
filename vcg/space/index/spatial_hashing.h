@@ -209,7 +209,7 @@ protected:
           return inSphVec.size();
         }
 
-        int RemoveInSphere(const Point3<ScalarType> &p, const ScalarType radius)
+        size_t RemoveInSphere(const Point3<ScalarType> &p, const ScalarType radius)
         {
           std::vector<HashIterator> inSphVec;
           CountInSphere(p,radius,inSphVec);
