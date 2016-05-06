@@ -23,6 +23,8 @@
 #ifndef __VCG_TRIVIAL_WALKER
 #define __VCG_TRIVIAL_WALKER
 
+#include<vcg/space/index/grid_util.h>
+
 namespace vcg {
 
 // Very simple volume class.
