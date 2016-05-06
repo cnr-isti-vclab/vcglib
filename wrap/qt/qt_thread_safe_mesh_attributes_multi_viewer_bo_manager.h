@@ -42,19 +42,19 @@ namespace vcg
 		
 		~QtThreadSafeGLMeshAttributesMultiViewerBOManager() {}
 
-		void meshAttributesUpdated(bool hasmeshconnectivitychanged,const RendAtts& changedrendatts)
+                void meshAttributesUpdated(bool hasmeshconnectivitychanged,const vcg::GLMeshAttributesInfo::RendAtts& changedrendatts)
 		{
 			QWriteLocker locker(&_lock);
 			vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::meshAttributesUpdated(hasmeshconnectivitychanged,changedrendatts);
 		}
 
-		bool getPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,PRIMITIVE_MODALITY_MASK* mask,RendAtts* rendatts,vcg::PerViewPerRenderingModalityGLOptions*  opts)
+                bool getPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,vcg::GLMeshAttributesInfo::PRIMITIVE_MODALITY_MASK* mask,vcg::GLMeshAttributesInfo::RendAtts* rendatts,vcg::PerViewPerRenderingModalityGLOptions*  opts)
         {
 			QReadLocker locker(&_lock);
 			return vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::getPerViewInfo(viewid,mask,rendatts,opts);
 		}
 		
-        void setPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,PRIMITIVE_MODALITY_MASK pm,const RendAtts& reqatts)
+        void setPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,vcg::GLMeshAttributesInfo::PRIMITIVE_MODALITY_MASK pm,const vcg::GLMeshAttributesInfo::RendAtts& reqatts)
         {
             QWriteLocker locker(&_lock);
             vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::setPerViewInfo(viewid,pm,reqatts);
