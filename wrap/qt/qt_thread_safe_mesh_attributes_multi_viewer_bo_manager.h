@@ -28,6 +28,7 @@
 #include <wrap/qt/qt_thread_safe_memory_info.h>
 #include <wrap/qt/qt_thread_safe_texture_names_container.h>
 #include <wrap/gl/gl_mesh_attributes_multi_viewer_bo_manager.h>
+#include <QString>
 
 namespace vcg
 {
@@ -103,6 +104,18 @@ namespace vcg
         {
             QWriteLocker locker(&_lock);
             vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::setGLOptions(viewid,opts);
+        }
+        
+        void setDebugMode(bool activatedebugmodality)
+        {
+            QWriteLocker locker(&_lock);
+            vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::setDebugMode(activatedebugmodality);
+        }
+
+        void getLog(vcg::GLMeshAttributesInfo::DebugInfo& info)
+        {
+            QWriteLocker locker(&_lock);
+            vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::getLog(info);
         }
 
 	private:
