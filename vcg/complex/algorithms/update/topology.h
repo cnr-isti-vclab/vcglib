@@ -454,7 +454,7 @@ static void TestVertexFace(MeshType &m)
         if(vi->VFp()!=0) // unreferenced vertices MUST have VF == 0;
         {
             int num=0;
-            assert(tri::IsValidPointer(vi->VFp()));
+            assert(tri::IsValidPointer(m, vi->VFp()));
             VFi.f=vi->VFp();
             VFi.z=vi->VFi();
             while (!VFi.End())
