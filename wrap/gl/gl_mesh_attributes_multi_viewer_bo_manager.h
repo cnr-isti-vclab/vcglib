@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <stdexcept>
 #include <climits>
+#include <string>
+#include <bitset>
 
 #include <wrap/gl/space.h>
 #include <wrap/gl/math.h>
@@ -97,7 +99,7 @@ namespace vcg
         /*************************************************************************************************************************************************************************/
 
         NotThreadSafeGLMeshAttributesMultiViewerBOManager(/*const*/ MESH_TYPE& mesh,MemoryInfo& meminfo, size_t perbatchprimitives)
-            :_mesh(mesh),_gpumeminfo(meminfo),_bo(INT_ATT_NAMES::enumArity(),NULL),_currallocatedboatt(),_perbatchprim(perbatchprimitives),_chunkmap(),_borendering(false),_edge(),_meshverticeswhenedgeindiceswerecomputed(0),_meshtriangleswhenedgeindiceswerecomputed(0),_tr()
+            :_mesh(mesh),_gpumeminfo(meminfo),_bo(INT_ATT_NAMES::enumArity(),NULL),_currallocatedboatt(),_perbatchprim(perbatchprimitives),_chunkmap(),_borendering(false),_edge(),_meshverticeswhenedgeindiceswerecomputed(0),_meshtriangleswhenedgeindiceswerecomputed(0),_tr(),_debugmode(false),_loginfo()
         {
             _tr.SetIdentity();
 
@@ -156,7 +158,8 @@ namespace vcg
         void setPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,PRIMITIVE_MODALITY_MASK pm,const RendAtts& reqatts)
         {
             InternalRendAtts intreqatts(reqatts,pm); 
-            _perviewreqatts[viewid] = PerViewData(pm,intreqatts);
+            InternalRendAtts::suggestedMinimalAttributeSetForPrimitiveModalityMask(pm,intreqatts);
+            _perviewreqatts[viewid] = PerViewData(pm,intreqatts); 
         }
 
         bool removeView(UNIQUE_VIEW_ID_TYPE viewid)
@@ -270,7 +273,8 @@ namespace vcg
             bool arebuffersok = checkBuffersAllocationStatus(tobeallocated,tobedeallocated,tobeupdated);
             if (!arebuffersok)
                 correctlyallocated = manageAndFeedBuffersIfNeeded(tobeallocated,tobedeallocated,tobeupdated);
-
+            if (_debugmode)
+                debug(tobeallocated,tobedeallocated,tobeupdated);
             return (arebuffersok || correctlyallocated);
         }
 
@@ -287,6 +291,26 @@ namespace vcg
         void setTrMatrix(const vcg::Matrix44<typename MESH_TYPE::ScalarType>& tr)
         {
             _tr = tr;
+        }
+
+        void setDebugMode(bool isdebug)
+        {
+            _debugmode = isdebug;
+        }
+
+        void getLog(DebugInfo& info)
+        {
+            info.reset();
+            info._tobedeallocated = _loginfo._tobedeallocated;
+            info._tobeallocated = _loginfo._tobeallocated;
+            info._tobeupdated = _loginfo._tobeupdated;
+
+            info._currentlyallocated = _loginfo._currentlyallocated;
+            info._perviewdata.resize(_loginfo._perviewdata.size());
+            for(std::vector<std::string>::iterator it = _loginfo._perviewdata.begin();it != _loginfo._perviewdata.end();++it)
+                info._perviewdata.push_back(*it);
+
+            _loginfo.reset();
         }
 
     private:
@@ -361,38 +385,6 @@ namespace vcg
                     } 
                 }
                 somethingtodo = somethingtodo || tobeallocated[boname] || tobedeallocated[boname] || tobeupdated[boname];
-            }
-            if (somethingtodo)
-            {
-                std::string stdeallocate("deallocated: ");
-                std::string stallocate("allocated: ");
-                std::string stupdated("updated: ");
-
-                std::string truestring("true");
-                std::string falsestring("false");
-                for(unsigned int ii = 0;ii < INT_ATT_NAMES::enumArity();++ii)
-                {
-                    std::string deallocres(falsestring);
-                    if (tobedeallocated[ii])
-                        deallocres = truestring;
-                    stdeallocate +=  deallocres + " ";
-
-                    std::string allocres(falsestring);
-                    if (tobeallocated[ii])
-                        allocres = truestring;
-                    stallocate +=  allocres + " ";
-
-                    std::string upres(falsestring);
-                    if (tobeupdated[ii])
-                        upres = truestring;
-                    stupdated +=  upres + " ";
-                }
-                std::cout << "-------------------------------\n";
-                std::cout << "[" << stdeallocate << "]\n";
-                std::cout << "[" << stallocate << "]\n";
-                std::cout << "[" << stupdated << "]\n";
-                std::cout << "-------------------------------\n";
-
             }
             return !(somethingtodo);
         }
@@ -514,7 +506,7 @@ namespace vcg
                     {
                         //the arity of the attribute contained in the bo didn't change so i can use the old space without reallocating it
                         if (cbo != NULL)
-                            cbo->_isvalid = tobeupdated[boname];
+                            cbo->_isvalid = cbo->_isvalid || tobeupdated[boname];
                     }
                     ++it;
                     ++ii;
@@ -523,19 +515,6 @@ namespace vcg
                    buffersDeAllocationRequested(_currallocatedboatt);
                 _borendering = !failedallocation;
             }
-            std::string stallocated("allocated: ");
-            std::string truestring("true");
-            std::string falsestring("false");
-            for(unsigned int ii = 0;ii < INT_ATT_NAMES::enumArity();++ii)
-            {
-                std::string allocres(falsestring);
-                if (_currallocatedboatt[ii])
-                    allocres = truestring;
-                stallocated +=  allocres + " ";
-            }
-            std::cout << "********************************\n";
-            std::cout << "[" << stallocated << "]\n";
-            std::cout << "********************************\n";
             return _borendering;
         }
 
@@ -1506,6 +1485,66 @@ namespace vcg
             _chunkmap[texind].push_back(std::make_pair(std::distance(_mesh.face.begin(),infrange),std::distance(_mesh.face.begin(),_mesh.face.end() - 1)));
         }
 
+        void debug(const InternalRendAtts& tobeallocated,const InternalRendAtts& tobedeallocated,const InternalRendAtts& tobeupdated)
+        {
+            _loginfo.reset();
+            _loginfo._tobedeallocated = std::string("to_be_deallocated: ");
+            _loginfo._tobeallocated = std::string("to_be_allocated: ");
+            _loginfo._tobeupdated = std::string("to_be_updated: ");
+
+            std::string truestring("true");
+            std::string falsestring("false");
+            for(unsigned int ii = 0;ii < INT_ATT_NAMES::enumArity();++ii)
+            {
+                std::string deallocres(falsestring);
+                if (tobedeallocated[ii])
+                    deallocres = truestring;
+                _loginfo._tobedeallocated +=  deallocres + " ";
+
+                std::string allocres(falsestring);
+                if (tobeallocated[ii])
+                    allocres = truestring;
+                _loginfo._tobeallocated +=  allocres + " ";
+
+                std::string upres(falsestring);
+                if (tobeupdated[ii])
+                    upres = truestring;
+                _loginfo._tobeupdated +=  upres + " ";
+            }
+
+            _loginfo._tobedeallocated = std::string("[") + _loginfo._tobedeallocated + std::string("]");
+            _loginfo._tobeallocated = std::string("[") + _loginfo._tobeallocated + std::string("]");
+            _loginfo._tobeupdated = std::string("[") + _loginfo._tobeupdated + std::string("]");
+
+         
+            int hh = 0;
+            for(ViewsMap::const_iterator it = _perviewreqatts.begin();it != _perviewreqatts.end();++it)
+            {
+                std::stringstream tmpstream;
+                std::bitset<5> tmpset(int(it->second._pmmask));
+                tmpstream << "view_" << hh << " PR_MASK " << tmpset.to_string() << " ";
+                for(unsigned int ii = 0;ii < INT_ATT_NAMES::enumArity();++ii)
+                {
+                    std::string res = falsestring;
+                    if (it->second._intatts[ii])
+                        res = truestring;
+                    tmpstream << "att[" << ii << "]=" << res << " ";
+                }
+                _loginfo._perviewdata.push_back(tmpstream.str());
+            }
+            
+            std::stringstream tmpstream;
+            tmpstream << "currently_allocated: " ;
+            for(unsigned int ii = 0;ii < INT_ATT_NAMES::enumArity();++ii)
+            {
+                std::string res = falsestring; 
+                if (_currallocatedboatt[ii])
+                    res = truestring;
+                tmpstream << "att[" << ii << "]=" << res << " ";
+            }
+            _loginfo._currentlyallocated = tmpstream.str();
+        }
+
         class EdgeVertInd
         {
         public:
@@ -1586,7 +1625,7 @@ namespace vcg
         static void fillUniqueEdgeVector(MESH_TYPE &m, std::vector<EdgeVertInd> &edgeVec)
         {
             fillEdgeVector(m,edgeVec,false);
-            std::sort(edgeVec.begin(), edgeVec.end());		// Lo ordino per vertici
+            std::sort(edgeVec.begin(), edgeVec.end());		
 
             typename std::vector<EdgeVertInd>::iterator newEnd = std::unique(edgeVec.begin(), edgeVec.end());
 
@@ -1687,6 +1726,9 @@ namespace vcg
 
         //vcg::GLOptions _glopts;
         vcg::Matrix44<typename MESH_TYPE::ScalarType> _tr;
+
+        bool _debugmode;
+        DebugInfo _loginfo;
     };
 }
 

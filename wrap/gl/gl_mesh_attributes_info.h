@@ -24,6 +24,9 @@
 #ifndef __VCG_GL_MESH_ATTRIBUTES_INFO
 #define __VCG_GL_MESH_ATTRIBUTES_INFO
 
+#include <vector>
+#include <string>
+
 namespace vcg
 {
 	 struct GLMeshAttributesInfo
@@ -232,42 +235,32 @@ namespace vcg
 
         typedef RenderingAtts<ATT_NAMES> RendAtts;
 
-        //template<typename MESH_TYPE>
-        //static void computeRenderingAttributesCompatibleWithMesh( const MESH_TYPE& mesh,const PRIMITIVE_MODALITY_MASK& inputpm,const RendAtts& inputatts, 
-        //                                                                                                            PRIMITIVE_MODALITY_MASK& outputpm,RendAtts& outputatts )
-        //{
-        //    outputpm = 0;
-        //    outputatts.reset();
+        struct DebugInfo
+        {
+            std::string _tobeallocated;
+            std::string _tobedeallocated;
+            std::string _tobeupdated;
 
-        //    if (mesh.VN() == 0)
-        //        return;
+            std::string _currentlyallocated;
 
-        //    outputatts[ATT_NAMES::ATT_VERTPOSITION] = inputatts[ATT_NAMES::ATT_VERTPOSITION];
+            std::vector<std::string> _perviewdata;
 
-        //    bool validfaces = (mesh.FN() > 0);
-        //    if (!validfaces)
-        //    {
-        //        outputpm = (unsigned int) PR_POINTS;
-        //        return;
-        //    }
+            DebugInfo()
+                :_tobeallocated(),_tobedeallocated(),_tobeupdated(),_currentlyallocated(),_perviewdata()
+            {
 
-        //    outputpm = inputpm;
-        //    if ((inputpm & vcg::GLMeshAttributesInfo::PR_WIREFRAME_EDGES) && (!vcg::tri::HasPerVertexFlags(mesh)))
-        //        outputpm = outputpm & (!vcg::GLMeshAttributesInfo::PR_WIREFRAME_EDGES);
+            }
 
-        //    outputatts[ATT_NAMES::ATT_VERTNORMAL] = inputatts[ATT_NAMES::ATT_VERTNORMAL] && vcg::tri::HasPerVertexNormal(mesh);
-        //    outputatts[ATT_NAMES::ATT_FACENORMAL] = inputatts[ATT_NAMES::ATT_FACENORMAL] && vcg::tri::HasPerFaceNormal(mesh) && validfaces;
-        //    outputatts[ATT_NAMES::ATT_VERTCOLOR] = inputatts[ATT_NAMES::ATT_VERTCOLOR] && vcg::tri::HasPerVertexColor(mesh);
-        //    outputatts[ATT_NAMES::ATT_FACECOLOR] = inputatts[ATT_NAMES::ATT_FACECOLOR] && vcg::tri::HasPerFaceColor(mesh) && validfaces;
-        //    outputatts[ATT_NAMES::ATT_MESHCOLOR] = inputatts[ATT_NAMES::ATT_MESHCOLOR];
+            void reset()
+            {
+                _tobeallocated.clear();
+                _tobedeallocated.clear();
+                _tobeupdated.clear();
+                _currentlyallocated.clear();
+                _perviewdata.clear();
+            }
+        };
 
-        //    //horrible trick caused by MeshLab GUI. In MeshLab exists just a button turning on/off the texture visualization.
-        //    //Unfortunately the RenderMode::textureMode member field is not just a boolean value but and enum one.
-        //    //The enum-value depends from the enabled attributes of input mesh.
-        //    bool wedgetexture = vcg::tri::HasPerWedgeTexCoord(mesh) && validfaces;
-        //    outputatts[ATT_NAMES::ATT_VERTTEXTURE] = inputatts[ATT_NAMES::ATT_VERTTEXTURE] && (vcg::tri::HasPerVertexTexCoord(mesh) && (!wedgetexture));
-        //    outputatts[ATT_NAMES::ATT_WEDGETEXTURE] = inputatts[ATT_NAMES::ATT_WEDGETEXTURE] && wedgetexture;
-        //}
     protected:
         struct INT_ATT_NAMES : public ATT_NAMES
         {
@@ -341,7 +334,10 @@ namespace vcg
                 :RenderingAtts<INT_ATT_NAMES>()
             {
                 for(unsigned int ii = 0;ii < ATT_NAMES::enumArity();++ii)
-                    (*this)[ii] = reqatt[ii];
+                {
+                    bool somethingtorender = (pm != ((unsigned int) PR_NONE));
+                    (*this)[ii] = reqatt[ii] && somethingtorender;
+                }
 
                 (*this)[INT_ATT_NAMES::ATT_VERTINDICES] = isVertexIndexingRequired(reqatt,pm);
                 (*this)[INT_ATT_NAMES::ATT_EDGEINDICES] = isEdgeIndexingRequired(pm);
@@ -386,6 +382,10 @@ namespace vcg
             static bool isVertexIndexingRequired(const RendAtts& rqatt,PRIMITIVE_MODALITY_MASK pm)
             {
                 bool required = false;
+                
+                if (pm == ((unsigned int) PR_NONE))
+                    return false;
+
                 if (pm & PR_POINTS)
                     required = required || isVertexIndexingRequired(rqatt,PR_POINTS);
 
@@ -428,6 +428,33 @@ namespace vcg
                 //    required = isEdgeIndexingRequired(PR_BBOX);
 
                 return required;
+            }
+
+            static void suggestedMinimalAttributeSetForPrimitiveModalityMask(PRIMITIVE_MODALITY_MASK pm,RenderingAtts<INT_ATT_NAMES>& atts)
+            {
+                if ((pm == (unsigned int)(PR_NONE)) || (pm == (unsigned int)(PR_BBOX)))
+                {
+                    atts.reset();
+                    return;
+                }
+
+                if (pm & PR_POINTS)
+                {
+                    atts[INT_ATT_NAMES::ATT_VERTPOSITION] = true;
+                }
+
+                if (pm & PR_WIREFRAME_EDGES)
+                {
+                    atts[INT_ATT_NAMES::ATT_VERTPOSITION] = true;
+                    atts[INT_ATT_NAMES::ATT_EDGEINDICES] = true;
+                }
+
+                if ((pm & PR_WIREFRAME_TRIANGLES) || (pm & PR_SOLID))
+                {
+                    atts[INT_ATT_NAMES::ATT_VERTPOSITION] = true;
+                    atts[INT_ATT_NAMES::ATT_VERTINDICES] = true;
+                }
+
             }
         };
     };
