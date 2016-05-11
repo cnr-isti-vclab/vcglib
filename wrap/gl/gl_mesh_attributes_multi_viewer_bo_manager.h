@@ -1518,7 +1518,7 @@ namespace vcg
 
          
             int hh = 0;
-            for(ViewsMap::const_iterator it = _perviewreqatts.begin();it != _perviewreqatts.end();++it)
+            for(typename ViewsMap::const_iterator it = _perviewreqatts.begin();it != _perviewreqatts.end();++it)
             {
                 std::stringstream tmpstream;
                 std::bitset<5> tmpset(int(it->second._pmmask));
