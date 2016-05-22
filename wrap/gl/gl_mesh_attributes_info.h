@@ -107,6 +107,20 @@ namespace vcg
 
         typedef unsigned int PRIMITIVE_MODALITY_MASK;
 
+        static PRIMITIVE_MODALITY_MASK addPrimitiveModality(const PRIMITIVE_MODALITY_MASK& mask,PRIMITIVE_MODALITY newpm)
+        {
+            PRIMITIVE_MODALITY_MASK res(mask);
+            res = res | newpm;
+            return res;
+        }
+
+        static PRIMITIVE_MODALITY_MASK removePrimitiveModality(const PRIMITIVE_MODALITY_MASK& mask,PRIMITIVE_MODALITY removedpm)
+        {
+            PRIMITIVE_MODALITY_MASK res(mask);
+            res = res & ~(removedpm);
+            return res;
+        }
+
         template<typename ATT_NAMES_DERIVED_CLASS>
         class RenderingAtts
         {

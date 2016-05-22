@@ -692,8 +692,10 @@ namespace vcg {
                             }
 
                             // set faux edge flags according to internals faces
-                            if (indexedFaces[i].edge[j]) m.face[i].SetF(j);
-                            else m.face[i].ClearF(j);
+                            if (indexedFaces[i].edge[j]) 
+								m.face[i].SetF(j);
+                            else 
+                                m.face[i].ClearF(j);
                         }
 
                         if (HasPerFaceNormal(m))

@@ -49,7 +49,7 @@ namespace vcg
 			vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::meshAttributesUpdated(hasmeshconnectivitychanged,changedrendatts);
 		}
 
-                bool getPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,vcg::GLMeshAttributesInfo::PRIMITIVE_MODALITY_MASK* mask,vcg::GLMeshAttributesInfo::RendAtts* rendatts,vcg::PerViewPerRenderingModalityGLOptions*  opts)
+         bool getPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,vcg::GLMeshAttributesInfo::PRIMITIVE_MODALITY_MASK* mask,vcg::GLMeshAttributesInfo::RendAtts* rendatts,GL_OPTIONS_DERIVED_TYPE*  opts)
         {
 			QReadLocker locker(&_lock);
 			return vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::getPerViewInfo(viewid,mask,rendatts,opts);

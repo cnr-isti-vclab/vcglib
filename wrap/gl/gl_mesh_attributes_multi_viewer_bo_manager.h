@@ -44,13 +44,20 @@ namespace vcg
 {
     struct PerViewPerRenderingModalityGLOptions
     {
+        Color4b _permesh_color;
+
         float _perpoint_pointsize;
         bool _perpoint_pointsmooth;
         bool _perpoint_pointattenuation;
+        bool _use_perpoint_fixedcolor;
         Color4b _perpoint_fixedcolor;
         
         float _peredge_linesize;
+        bool _use_peredge_fixedcolor;
         Color4b _peredge_fixedcolor;
+
+        bool _use_perface_fixedcolor;
+        Color4b _perface_fixedcolor;
 
 
         PerViewPerRenderingModalityGLOptions()
@@ -71,6 +78,7 @@ namespace vcg
             copyData(opts);
             return (*this);
         }
+
 
     private:
         void copyData(const PerViewPerRenderingModalityGLOptions& opts)
@@ -141,7 +149,7 @@ namespace vcg
             }
         }
 
-        bool getPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,PRIMITIVE_MODALITY_MASK* mask,RendAtts* rendatts,vcg::PerViewPerRenderingModalityGLOptions*  opts)
+        bool getPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,PRIMITIVE_MODALITY_MASK* mask,RendAtts* rendatts,GL_OPTIONS_DERIVED_TYPE*  opts)
         {
             typename ViewsMap::iterator it = _perviewreqatts.find(viewid);
             if (it == _perviewreqatts.end())
