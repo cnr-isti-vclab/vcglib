@@ -80,12 +80,12 @@ namespace vcg
 
 		void acquiredMemory(std::ptrdiff_t mem)
 		{
-			if (mem > _originaltotalmemory)
+			/*if (mem > _originaltotalmemory)
 				throw MemoryInfo::MemoryInfoException("It has been requested more memory than the total one.\\n");
 			else 
 				if (mem > _currentfreememory)
 					throw MemoryInfo::MemoryInfoException("It has been requested more memory than the free available one.\\n");
-				else
+				else*/
 					_currentfreememory -= mem;
 		}
 
@@ -101,9 +101,9 @@ namespace vcg
 
 		void releasedMemory(std::ptrdiff_t mem = 0)
 		{
-			if (mem > _originaltotalmemory)
+			/*if (mem > _originaltotalmemory)
 				throw MemoryInfo::MemoryInfoException("It has been released more memory than the total one. Something strange happened!\\n");
-			else
+			else*/
 				_currentfreememory += mem;
 		}
 

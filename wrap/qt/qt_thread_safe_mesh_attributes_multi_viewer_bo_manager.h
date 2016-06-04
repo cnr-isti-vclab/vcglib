@@ -29,10 +29,11 @@
 #include <wrap/qt/qt_thread_safe_texture_names_container.h>
 #include <wrap/gl/gl_mesh_attributes_multi_viewer_bo_manager.h>
 #include <QString>
+#include <QReadWriteLock>
 
 namespace vcg
 {
-    template<typename MESH_TYPE,typename UNIQUE_VIEW_ID_TYPE,typename GL_OPTIONS_DERIVED_TYPE = vcg::PerViewPerRenderingModalityGLOptions>
+    template<typename MESH_TYPE,typename UNIQUE_VIEW_ID_TYPE,typename GL_OPTIONS_DERIVED_TYPE = vcg::RenderingModalityGLOptions>
     class QtThreadSafeGLMeshAttributesMultiViewerBOManager : public vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>
 	{
 	public:
@@ -43,22 +44,22 @@ namespace vcg
 		
 		~QtThreadSafeGLMeshAttributesMultiViewerBOManager() {}
 
-                void meshAttributesUpdated(bool hasmeshconnectivitychanged,const vcg::GLMeshAttributesInfo::RendAtts& changedrendatts)
+        void meshAttributesUpdated(bool hasmeshconnectivitychanged,const RendAtts& changedrendatts)
 		{
 			QWriteLocker locker(&_lock);
 			vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::meshAttributesUpdated(hasmeshconnectivitychanged,changedrendatts);
 		}
 
-         bool getPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,vcg::GLMeshAttributesInfo::PRIMITIVE_MODALITY_MASK* mask,vcg::GLMeshAttributesInfo::RendAtts* rendatts,GL_OPTIONS_DERIVED_TYPE*  opts)
+        bool getPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt) const
         {
 			QReadLocker locker(&_lock);
-			return vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::getPerViewInfo(viewid,mask,rendatts,opts);
+			return vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::getPerViewInfo(viewid,dt);
 		}
 		
-        void setPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,vcg::GLMeshAttributesInfo::PRIMITIVE_MODALITY_MASK pm,const vcg::GLMeshAttributesInfo::RendAtts& reqatts)
+        void setPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,const PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt)
         {
             QWriteLocker locker(&_lock);
-            vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::setPerViewInfo(viewid,pm,reqatts);
+            vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::setPerViewInfo(viewid,dt);
         }
 
 		void removeView(UNIQUE_VIEW_ID_TYPE viewid)
@@ -105,7 +106,7 @@ namespace vcg
             QWriteLocker locker(&_lock);
             vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::setGLOptions(viewid,opts);
         }
-        
+
         void setDebugMode(bool activatedebugmodality)
         {
             QWriteLocker locker(&_lock);

@@ -26,17 +26,18 @@
 
 #include <vector>
 #include <string>
+#include <bitset>
 
 namespace vcg
 {
-	 struct GLMeshAttributesInfo
+	struct GLMeshAttributesInfo
     {
-        struct GLBOException : public std::exception
+        struct Exception : public std::exception
         {
-            GLBOException(const char* text)
+            Exception(const char* text)
                 :std::exception(),_text(text) {}
 
-            ~GLBOException() throw() {}
+            ~Exception() throw() {}
             inline const char* what() const throw() {return _text.c_str();}
         private:
             std::string _text;
@@ -52,10 +53,9 @@ namespace vcg
             static const unsigned int ATT_FACENORMAL = 2;
             static const unsigned int ATT_VERTCOLOR = 3;
             static const unsigned int ATT_FACECOLOR = 4;
-            static const unsigned int ATT_MESHCOLOR = 5;
-            static const unsigned int ATT_VERTTEXTURE = 6;
-            static const unsigned int ATT_WEDGETEXTURE = 7;
-            enum {ATT_ARITY = 8};
+            static const unsigned int ATT_VERTTEXTURE = 5;
+            static const unsigned int ATT_WEDGETEXTURE = 6;
+            enum {ATT_ARITY = 7};
 
 
             ATT_NAMES()
@@ -66,14 +66,14 @@ namespace vcg
             ATT_NAMES(unsigned int att)
             {
                 if ((att < ATT_VERTPOSITION) || (att >= ATT_NAMES::enumArity()))
-                    throw GLBOException("Out of range value\n");
+                    throw Exception("Out of range value\n");
                 else
                     _val = att;
             }
 
             static unsigned int enumArity()
             {
-                return ATT_ARITY;
+                return ATT_NAMES::ATT_ARITY;
             }
 
             operator unsigned int() const
@@ -96,30 +96,24 @@ namespace vcg
         };
 
         enum PRIMITIVE_MODALITY
-        {
-            PR_NONE                 = 0x00000000,
-            PR_BBOX                 = 0x00000001,
-            PR_POINTS               = 0x00000002,
-            PR_WIREFRAME_EDGES      = 0x00000004,
-            PR_WIREFRAME_TRIANGLES  = 0x00000008,
-            PR_SOLID                = 0x00000010
+        {            
+            PR_POINTS = 0,              
+            PR_WIREFRAME_EDGES = 1,      
+            PR_WIREFRAME_TRIANGLES = 2, 
+            PR_SOLID = 3,               
+            PR_ARITY = 4                 
         };
 
-        typedef unsigned int PRIMITIVE_MODALITY_MASK;
-
-        static PRIMITIVE_MODALITY_MASK addPrimitiveModality(const PRIMITIVE_MODALITY_MASK& mask,PRIMITIVE_MODALITY newpm)
+        static PRIMITIVE_MODALITY next(PRIMITIVE_MODALITY pm)
         {
-            PRIMITIVE_MODALITY_MASK res(mask);
-            res = res | newpm;
-            return res;
+            int tmp = static_cast<int>(pm);
+            if (tmp == PR_ARITY)
+                throw Exception("PRIMITIVE_MODALITY iterator: PR_ARITY passed as parameter!");
+            ++tmp;          
+            return static_cast<PRIMITIVE_MODALITY>(tmp);
         }
 
-        static PRIMITIVE_MODALITY_MASK removePrimitiveModality(const PRIMITIVE_MODALITY_MASK& mask,PRIMITIVE_MODALITY removedpm)
-        {
-            PRIMITIVE_MODALITY_MASK res(mask);
-            res = res & ~(removedpm);
-            return res;
-        }
+        typedef std::bitset<PR_ARITY> PRIMITIVE_MODALITY_MASK;
 
         template<typename ATT_NAMES_DERIVED_CLASS>
         class RenderingAtts
@@ -169,24 +163,23 @@ namespace vcg
             bool operator[](unsigned int ind) const
             {
                 if (ind >= ATT_NAMES_DERIVED_CLASS::enumArity())
-                    throw GLBOException("Out of range value\n");
+                    throw Exception("Out of range value\n");
                 return _atts[ind];
             }
 
             bool& operator[](unsigned int ind)
             {
                 if (ind >= ATT_NAMES_DERIVED_CLASS::enumArity())
-                    throw GLBOException("Out of range value\n");
+                    throw Exception("Out of range value\n");
                 return _atts[ind];
             }
 
-            void reset(bool posactivated = false)
+            void reset()
             {
                 //delete[] _atts;
                 //_atts = new bool[ATT_NAMES_DERIVED_CLASS::enumArity()];
                 for(unsigned int ii = 0;ii < ATT_NAMES_DERIVED_CLASS::enumArity();++ii)
                     _atts[ii] = false;
-                _atts[ATT_NAMES_DERIVED_CLASS::ATT_VERTPOSITION] = posactivated;
             }
 
             static RenderingAtts<ATT_NAMES_DERIVED_CLASS> unionSet(const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& a,const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b)
@@ -238,13 +231,14 @@ namespace vcg
             //    rqatt[ATT_NAMES_DERIVED_CLASS::ATT_FACENORMAL] = rqatt[ATT_NAMES_DERIVED_CLASS::ATT_FACENORMAL] && vcg::tri::HasPerFaceNormal(mesh);
             //    rqatt[ATT_NAMES_DERIVED_CLASS::ATT_VERTCOLOR] = rqatt[ATT_NAMES_DERIVED_CLASS::ATT_VERTCOLOR] && vcg::tri::HasPerVertexColor(mesh);
             //    rqatt[ATT_NAMES_DERIVED_CLASS::ATT_FACECOLOR] = rqatt[ATT_NAMES_DERIVED_CLASS::ATT_FACECOLOR] && vcg::tri::HasPerFaceColor(mesh);
-            //    rqatt[ATT_NAMES_DERIVED_CLASS::ATT_MESHCOLOR] = rqatt[ATT_NAMES_DERIVED_CLASS::ATT_MESHCOLOR];
+            //    rqatt[ATT_NAMES_DERIVED_CLASS::ATT_FIXEDCOLOR] = rqatt[ATT_NAMES_DERIVED_CLASS::ATT_FIXEDCOLOR];
             //    rqatt[ATT_NAMES_DERIVED_CLASS::ATT_VERTTEXTURE] = rqatt[ATT_NAMES_DERIVED_CLASS::ATT_VERTTEXTURE] && vcg::tri::HasPerVertexTexCoord(mesh);
             //    rqatt[ATT_NAMES_DERIVED_CLASS::ATT_WEDGETEXTURE] = rqatt[ATT_NAMES_DERIVED_CLASS::ATT_WEDGETEXTURE] && vcg::tri::HasPerWedgeTexCoord(mesh);
             //}
         protected:
             /*an array of enumArity() bool values*/
             bool _atts[ATT_NAMES_DERIVED_CLASS::ATT_ARITY];
+            //std::bitset<ATT_NAMES_DERIVED_CLASS::ATT_ARITY> _atts;
         };
 
         typedef RenderingAtts<ATT_NAMES> RendAtts;
@@ -273,6 +267,25 @@ namespace vcg
                 _currentlyallocated.clear();
                 _perviewdata.clear();
             }
+
+            static const char* primitiveName(size_t ind)
+            {
+                static std::string res;
+
+                if (ind == size_t(PR_POINTS))
+                    res = std::string("PR_POINTS");
+
+                if (ind == size_t(PR_WIREFRAME_EDGES))
+                    res = std::string("PR_WIREFRAME_EDGES");
+
+                if (ind == size_t(PR_WIREFRAME_TRIANGLES))
+                    res = std::string("PR_WIREFRAME_TRIANGLES");
+
+                if (ind == size_t(PR_SOLID))
+                    res = std::string("PR_SOLID");
+
+                return res.c_str();
+            }
         };
 
     protected:
@@ -283,10 +296,10 @@ namespace vcg
             /*A triangles meshes rendered in wireframe or in solid wireframe, in order to save GPU memory, use the glPolygonMode approach*/
             /*Edges meshes uses the edges index array just for a matter of coherence*/ 
 
-            /*WARNING!!!! to be changed whit ATT_NAMES::enumArity() + 1 (and so on...) as soon as constexpr will be supported by most of the old c++ compilers*/
-            static const unsigned int ATT_VERTINDICES = 8;
-            static const unsigned int ATT_EDGEINDICES = 9;
-            enum {ATT_ARITY = 10};
+            /*WARNING!!!! to be changed whit ATT_NAMES::enumArity() (and so on...) as soon as constexpr will be supported by most of the old c++ compilers*/
+            static const unsigned int ATT_VERTINDICES = 7;
+            static const unsigned int ATT_EDGEINDICES = 8;
+            enum {ATT_ARITY = 9};
 
             INT_ATT_NAMES()
                 :ATT_NAMES()
@@ -297,14 +310,14 @@ namespace vcg
                 :ATT_NAMES()
             {
                 if ((att < INT_ATT_NAMES::ATT_VERTPOSITION) || (att >= INT_ATT_NAMES::enumArity()))
-                    throw GLBOException("Out of range value\n");
+                    throw Exception("Out of range value\n");
                 else
                     _val = att;
             }
 
             static unsigned int enumArity() 
             {
-                return ATT_ARITY;
+                return INT_ATT_NAMES::ATT_ARITY;
             }
 
             operator unsigned int() const
@@ -344,27 +357,10 @@ namespace vcg
                 (*this)[INT_ATT_NAMES::ATT_EDGEINDICES] = isEdgeIndexingRequired(pm);
             }
 
-            InternalRendAtts(const RendAtts& reqatt,PRIMITIVE_MODALITY_MASK pm)
-                :RenderingAtts<INT_ATT_NAMES>()
-            {
-                for(unsigned int ii = 0;ii < ATT_NAMES::enumArity();++ii)
-                {
-                    bool somethingtorender = (pm != ((unsigned int) PR_NONE));
-                    (*this)[ii] = reqatt[ii] && somethingtorender;
-                }
-
-                (*this)[INT_ATT_NAMES::ATT_VERTINDICES] = isVertexIndexingRequired(reqatt,pm);
-                (*this)[INT_ATT_NAMES::ATT_EDGEINDICES] = isEdgeIndexingRequired(pm);
-            }
 
             InternalRendAtts(const RenderingAtts<INT_ATT_NAMES>& r)
             :RenderingAtts<INT_ATT_NAMES>(r)
             {
-            }
-
-            static InternalRendAtts create(const RendAtts& rqatts,PRIMITIVE_MODALITY_MASK pm)
-            {
-                return InternalRendAtts(rqatts,pm);
             }
 
             //upcast from InternalRendAtts to RendAtts
@@ -376,7 +372,12 @@ namespace vcg
                 return rendatt;
             }
 
-            
+            InternalRendAtts& setIndexingIfNeeded(PRIMITIVE_MODALITY pm)
+            {
+                (*this)[INT_ATT_NAMES::ATT_VERTINDICES] = isVertexIndexingRequired((*this),pm);
+                (*this)[INT_ATT_NAMES::ATT_EDGEINDICES] = isEdgeIndexingRequired(pm);
+                return (*this);
+            }
 
             static bool isPerVertexAttribute(INT_ATT_NAMES name)
             {
@@ -393,58 +394,12 @@ namespace vcg
                 return (!replicatedPipelineNeeded(rqatt) && ((pm == PR_SOLID) || (pm == PR_WIREFRAME_TRIANGLES)));
             }
 
-            static bool isVertexIndexingRequired(const RendAtts& rqatt,PRIMITIVE_MODALITY_MASK pm)
-            {
-                bool required = false;
-                
-                if (pm == ((unsigned int) PR_NONE))
-                    return false;
-
-                if (pm & PR_POINTS)
-                    required = required || isVertexIndexingRequired(rqatt,PR_POINTS);
-
-                if (pm & PR_WIREFRAME_EDGES)
-                    required = required || isVertexIndexingRequired(rqatt,PR_WIREFRAME_EDGES);
-
-                if (pm & PR_WIREFRAME_TRIANGLES)
-                    required = required || isVertexIndexingRequired(rqatt,PR_WIREFRAME_TRIANGLES);
-
-                if (pm & PR_SOLID)
-                    required = required || isVertexIndexingRequired(rqatt,PR_SOLID);
-
-                if (pm & PR_BBOX)
-                    required = required || isVertexIndexingRequired(rqatt,PR_BBOX);
-
-                return required;
-            }
-
             static bool isEdgeIndexingRequired(PRIMITIVE_MODALITY pm)
             {
                 return (pm == PR_WIREFRAME_EDGES);
             }
 
-            static bool isEdgeIndexingRequired(PRIMITIVE_MODALITY_MASK pm)
-            {
-                bool required = false;
-                //if (pm & PR_POINTS)
-                //    required = isEdgeIndexingRequired(PR_POINTS);
-
-                //if (pm & PR_WIREFRAME_TRIANGLES)
-                //    required = isEdgeIndexingRequired(PR_WIREFRAME_TRIANGLES);
-
-                if (pm & PR_WIREFRAME_EDGES)
-                    required = isEdgeIndexingRequired(PR_WIREFRAME_EDGES);
-
-                //if (pm & PR_SOLID)
-                //    required = isEdgeIndexingRequired(PR_SOLID);
-
-                //if (pm & PR_BBOX)
-                //    required = isEdgeIndexingRequired(PR_BBOX);
-
-                return required;
-            }
-
-            static void suggestedMinimalAttributeSetForPrimitiveModalityMask(PRIMITIVE_MODALITY_MASK pm,RenderingAtts<INT_ATT_NAMES>& atts)
+            /*static void suggestedMinimalAttributeSetForPrimitiveModalityMask(PRIMITIVE_MODALITY_MASK pm,RenderingAtts<INT_ATT_NAMES>& atts)
             {
                 if ((pm == (unsigned int)(PR_NONE)) || (pm == (unsigned int)(PR_BBOX)))
                 {
@@ -469,7 +424,7 @@ namespace vcg
                     atts[INT_ATT_NAMES::ATT_VERTINDICES] = true;
                 }
 
-            }
+            }*/
         };
     };
 }
