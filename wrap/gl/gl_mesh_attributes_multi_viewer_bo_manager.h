@@ -265,7 +265,7 @@ namespace vcg
         }
 
     protected:
-        template<typename MESH_TYPE,typename UNIQUE_VIEW_ID_TYPE,typename GL_OPTIONS_DERIVED_TYPE> friend class NotThreadSafeGLMeshAttributesMultiViewerBOManager;
+        template<typename MESH_TYPE,typename UNIQUE_VIEW_ID_TYPE, typename XX_GL_OPTIONS_DERIVED_TYPE> friend class NotThreadSafeGLMeshAttributesMultiViewerBOManager;
 
         typedef std::vector<InternalRendAtts> PerRendModData;
 
@@ -450,7 +450,7 @@ namespace vcg
 
         void setGLOptions(UNIQUE_VIEW_ID_TYPE viewid,const GL_OPTIONS_DERIVED_TYPE& opts)
         {
-            ViewsMap::iterator it = _perviewreqatts.find(viewid);
+            typename ViewsMap::iterator it = _perviewreqatts.find(viewid);
             if (it == _perviewreqatts.end())
                 return;
             it->second.set(opts);

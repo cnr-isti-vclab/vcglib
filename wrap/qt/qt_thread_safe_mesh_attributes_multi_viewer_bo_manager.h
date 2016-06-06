@@ -44,7 +44,7 @@ namespace vcg
 		
 		~QtThreadSafeGLMeshAttributesMultiViewerBOManager() {}
 
-        void meshAttributesUpdated(bool hasmeshconnectivitychanged,const RendAtts& changedrendatts)
+        void meshAttributesUpdated(bool hasmeshconnectivitychanged,const GLMeshAttributesInfo::RendAtts& changedrendatts)
 		{
 			QWriteLocker locker(&_lock);
 			vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::meshAttributesUpdated(hasmeshconnectivitychanged,changedrendatts);
