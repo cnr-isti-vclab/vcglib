@@ -26,7 +26,6 @@
 #include<wrap/io_trimesh/export.h>
 
 #include<vcg/complex/algorithms/point_sampling.h>
-#include<vcg/complex/algorithms/create/platonic.h>
 #include<vcg/complex/algorithms/clustering.h>
 
 using namespace vcg;
