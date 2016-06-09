@@ -85,7 +85,7 @@ int main( int argc, char **argv )
   pp.samplingRadiusPerc=0.008;
   pp.evalSize=50;
   pp.inlierRatioThr = 0.5;
-  pp.iterMax = 100;
+  pp.iterMax = 400;
   pp.maxMatchingFeatureNum = 500;
   fpp.featureSampleRatio=0.5;
   std::vector<RansacFramework<MyMesh,BaseFeatureSet<MyMesh> >::Candidate> cVec;
@@ -123,8 +123,8 @@ int main( int argc, char **argv )
   printf("Completed Search (%5.2f init %5.2f search)\n",float(t1-t0)/CLOCKS_PER_SEC, float(t2-t1)/CLOCKS_PER_SEC);
   
   
-  MyMesh out0; tri::Append<MyMesh,MyMesh>::MeshCopy(out0,movM);   
-  tri::UpdatePosition<MyMesh>::Matrix(out0,cVec[0].Tr);
+  MyMesh out0; tri::Append<MyMesh,MyMesh>::MeshCopy(out0,fixM);
+  //tri::UpdatePosition<MyMesh>::Matrix(out0,cVec[0].Tr);
   tri::io::ExporterPLY<MyMesh>::Save(out0,"out0.ply");  
   
   MyMesh inlierMesh0;
