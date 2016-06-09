@@ -1,6 +1,8 @@
 #ifndef GL_FIELD
 #define GL_FIELD
 
+#include <wrap/gl/space.h>
+#include <wrap/gl/math.h>
 #include <vcg/complex/algorithms/parametrization/tangent_field_operators.h>
 #include <vcg/complex/allocate.h>
 
@@ -155,7 +157,7 @@ public:
        glEnable(GL_COLOR_MATERIAL);
        glDisable(GL_LIGHTING);
        glDisable(GL_BLEND);
-       glPointSize(10);
+       glPointSize(20);
        glBegin(GL_POINTS);
        for (size_t i=0;i<mesh.vert.size();i++)
        {
