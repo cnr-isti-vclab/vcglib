@@ -98,7 +98,7 @@ void example2(){
 
         // normally, faces with more than 4sides are split into parallelograms
         // this merges them (optional, try removing it!)
-        vcg::tri::PolygonSupport<MyMesh,int>::MergeFlatFaces(m);
+        vcg::tri::PolygonSupport<MyMesh,MyMesh>::MergeFlatFaces(m);
 
         int savemask = vcg::tri::io::Mask::IOM_BITPOLYGONAL;
         vcg::tri::io::ExporterOFF<MyMesh>::Save(m,fullMeshFilename,savemask);
