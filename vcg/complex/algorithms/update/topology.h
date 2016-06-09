@@ -69,6 +69,7 @@ public:
   VertexPointer  v[2];  // the two Vertex pointer are ordered!
   FacePointer    f;     // the face where this edge belong
   int            z;     // index in [0..2] of the edge of the face
+  bool isBorder;
 
   PEdge() {}
   PEdge(FacePointer  pf, const int nz) { this->Set(pf,nz); }
@@ -123,15 +124,25 @@ static void FillEdgeVector(MeshType &m, std::vector<PEdge> &edgeVec, bool includ
           edgeVec.push_back(PEdge(&*fi,j));
 }
 
-static void FillUniqueEdgeVector(MeshType &m, std::vector<PEdge> &edgeVec, bool includeFauxEdge=true)
+static void FillUniqueEdgeVector(MeshType &m, std::vector<PEdge> &edgeVec, bool includeFauxEdge=true, bool computeBorderFlag=false)
 {
     FillEdgeVector(m,edgeVec,includeFauxEdge);
-    sort(edgeVec.begin(), edgeVec.end());		// Lo ordino per vertici
+    sort(edgeVec.begin(), edgeVec.end()); // oredering by vertex
+
+    if (computeBorderFlag) {
+        for (size_t i=0; i<edgeVec.size(); i++)
+            edgeVec[ i ].isBorder = true;
+        for (size_t i=1; i<edgeVec.size(); i++) {
+            if (edgeVec[i]==edgeVec[i-1])
+                edgeVec[i-1].isBorder = edgeVec[i-1].isBorder = false;
+        }
+    }
 
     typename std::vector< PEdge>::iterator newEnd = std::unique(edgeVec.begin(), edgeVec.end());
 
-    edgeVec.resize(newEnd-edgeVec.begin());
+    edgeVec.resize(newEnd-edgeVec.begin()); // redundant! remove?
 }
+
 
 /*! \brief Initialize the edge vector all the edges that can be inferred from current face vector, setting up all the current adjacency relations
  *
@@ -147,7 +158,7 @@ static void AllocateEdge(MeshType &m)
 
   // Compute and add edges
   std::vector<PEdge> Edges;
-  FillUniqueEdgeVector(m,Edges);
+  FillUniqueEdgeVector(m,Edges,true,tri::HasPerEdgeFlags(m) );
   assert(m.edge.empty());
   tri::Allocator<MeshType>::AddEdges(m,Edges.size());
   assert(m.edge.size()==Edges.size());
@@ -159,6 +170,12 @@ static void AllocateEdge(MeshType &m)
     {
       m.edge[i].V(0) = Edges[i].v[0];
       m.edge[i].V(1) = Edges[i].v[1];
+    }
+  }
+
+  if (tri::HasPerEdgeFlags(m)){
+    for(size_t i=0; i< Edges.size(); ++i) {
+        if (Edges[i].isBorder) m.edge[i].SetB(); else m.edge[i].ClearB();
     }
   }
 
