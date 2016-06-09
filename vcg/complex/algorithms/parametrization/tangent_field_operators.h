@@ -40,7 +40,8 @@ vcg::Point2<ScalarType> InterpolateNRosy2D(const std::vector<vcg::Point2<ScalarT
                                            const int N)
 {
     // check parameter
-    assert(V.size() == W.size() && N > 0);
+    assert(V.size() == W.size());
+    assert( N > 0);
 
     // create a vector of angles
     std::vector<ScalarType> angles(V.size(), 0);
@@ -68,6 +69,7 @@ vcg::Point2<ScalarType> InterpolateNRosy2D(const std::vector<vcg::Point2<ScalarT
         Res += VV[i] * W[i];
         Sum+=W[i];
     }
+    assert(Sum>0);
     Res /=Sum;
 
     //R /= VV.rows();
@@ -124,12 +126,17 @@ vcg::Point3<ScalarType> InterpolateNRosy3D(const std::vector<vcg::Point3<ScalarT
 
         ///trassform to the reference frame
         rotV=RotFrame*rotV;
+        assert(!isnan(rotV.X()));
+        assert(!isnan(rotV.Y()));
+
         //it's 2D from now on
         Cross2D.push_back(vcg::Point2<ScalarType>(rotV.X(),rotV.Y()));
 
     }
 
     vcg::Point2<ScalarType> AvDir2D=InterpolateNRosy2D(Cross2D,W,N);
+    assert(!isnan(AvDir2D.X()));
+    assert(!isnan(AvDir2D.Y()));
     CoordType AvDir3D=CoordType(AvDir2D.X(),AvDir2D.Y(),0);
     //transform back to 3D
     AvDir3D=RotFrameInv*AvDir3D;
@@ -659,7 +666,7 @@ public:
         CoordType dirR=vcg::tri::CrossField<MeshType>::Rotate(f0,f1,dir0);
         ///then get the closest upf to K*PI/2 rotations
         CoordType dir1=f1.cPD1();
-        CoordType ret=vcg::tri::CrossField<MeshType>::K_PI(dir1,dirR,f1.cN());
+        CoordType ret=vcg::tri::CrossField<MeshType>::K_PI(dirR,dir1,f1.cN());
         return ret;
     }
 
@@ -1117,28 +1124,57 @@ public:
     }
 
 
-    ///return the difference of two cross field, values between [0,0.5]
+    ///return the difference of two cross field, values between [0,1]
     static typename FaceType::ScalarType DifferenceCrossField(const typename FaceType::CoordType &t0,
                                                               const typename FaceType::CoordType &t1,
                                                               const typename FaceType::CoordType &n)
     {
         CoordType trans0=t0;
         CoordType trans1=K_PI(t1,t0,n);
-        ScalarType diff = 1-fabs(trans0*trans1);
+        ScalarType diff = vcg::AngleN(trans0,trans1)/(M_PI_4);
         return diff;
     }
 
-    ///return the difference of two cross field, values between [0,0.5]
+    ///return the difference of two cross field, values between [0,1]
+    static typename FaceType::ScalarType DifferenceLineField(const typename FaceType::CoordType &t0,
+                                                             const typename FaceType::CoordType &t1,
+                                                             const typename FaceType::CoordType &n)
+    {
+        CoordType trans0=t0;
+        CoordType trans1=t1;
+        if ((trans0*trans1)<0)trans1=-trans1;
+        ScalarType angleD=vcg::Angle(trans0,trans1);
+        assert(angleD>=0);
+        assert(angleD<=M_PI_2);
+        return (angleD/M_PI_2);
+    }
+
+    ///return the difference of two cross field, values between [0,1]
     static typename FaceType::ScalarType DifferenceCrossField(const typename vcg::Point2<ScalarType> &t0,
                                                               const typename vcg::Point2<ScalarType> &t1)
     {
         CoordType t03D=CoordType(t0.X(),t0.Y(),0);
         CoordType t13D=CoordType(t1.X(),t1.Y(),0);
-        CoordType trans0=t03D;
-        CoordType n=CoordType(0,0,1);
-        CoordType trans1=K_PI(t13D,t03D,n);
-        ScalarType diff = 1-fabs(trans0*trans1);
-        return diff;
+        CoordType Norm=CoordType(0,0,1);
+//        CoordType n=CoordType(0,0,1);
+//        CoordType trans1=K_PI(t13D,t03D,n);
+//        ScalarType diff=vcg::AngleN(trans0,trans1)/(M_PI_4);
+        //ScalarType diff = 1-fabs(trans0*trans1);
+        return DifferenceCrossField(t03D,t13D,Norm);
+    }
+
+    ///return the difference of two cross field, values between [0,1]
+    static typename FaceType::ScalarType DifferenceLineField(const typename vcg::Point2<ScalarType> &t0,
+                                                              const typename vcg::Point2<ScalarType> &t1)
+    {
+        CoordType t03D=CoordType(t0.X(),t0.Y(),0);
+        CoordType t13D=CoordType(t1.X(),t1.Y(),0);
+        CoordType Norm=CoordType(0,0,1);
+//        CoordType n=CoordType(0,0,1);
+//        CoordType trans1=K_PI(t13D,t03D,n);
+//        ScalarType diff=vcg::AngleN(trans0,trans1)/(M_PI_4);
+        //ScalarType diff = 1-fabs(trans0*trans1);
+        return DifferenceLineField(t03D,t13D,Norm);
     }
 
     ///compute the mismatch between 2 directions
