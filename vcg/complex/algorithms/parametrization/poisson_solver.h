@@ -691,13 +691,13 @@ public:
         ///initialize the matrix ALLOCATING SPACE
         InitMatrix();
 
-        if (use_direction_field)
-        {
-            bool CrossDir0 = tri::HasPerFaceAttribute(mesh,"CrossDir0");
-            bool CrossDir1 = tri::HasPerFaceAttribute(mesh,"CrossDir1");
-            assert(CrossDir0);
-            assert(CrossDir1);
-        }
+//        if (use_direction_field)
+//        {
+//            bool CrossDir0 = tri::HasPerFaceAttribute(mesh,"CrossDir0");
+//            bool CrossDir1 = tri::HasPerFaceAttribute(mesh,"CrossDir1");
+//            assert(CrossDir0);
+//            assert(CrossDir1);
+//        }
 
         ///build the laplacian system
         BuildLaplacianMatrix(fieldScale);
@@ -725,7 +725,7 @@ public:
             printf("\n ASSIGNING COORDS \n");
         }
 
-        MapCoords(true,fieldScale);
+        MapCoords(false,fieldScale);
         if (_write_messages)
         {
             t3=clock();
