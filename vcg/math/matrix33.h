@@ -505,7 +505,7 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
     {
         typedef typename vcg::Point3<S> CoordType;
         Matrix33<S> rotM;
-        const S epsilon=0.00001;
+        const S epsilon=0.000000001;
         if (!normalized)
         {
             v0.Normalize();
