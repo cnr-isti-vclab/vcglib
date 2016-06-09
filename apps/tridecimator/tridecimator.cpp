@@ -35,11 +35,12 @@ class MyFace;
 struct MyUsedTypes: public UsedTypes<Use<MyVertex>::AsVertexType,Use<MyEdge>::AsEdgeType,Use<MyFace>::AsFaceType>{};
 
 class MyVertex  : public Vertex< MyUsedTypes,
-  vertex::VFAdj,
-  vertex::Coord3f,
-  vertex::Normal3f,
-  vertex::Mark,
-  vertex::BitFlags  >{
+    vertex::VFAdj,
+    vertex::Coord3f,
+    vertex::Normal3f,
+    vertex::Mark,
+    vertex::Qualityf,
+    vertex::BitFlags  >{
 public:
   vcg::math::Quadric<double> &Qd() {return q;}
 private:
@@ -69,43 +70,43 @@ class MyTriEdgeCollapse: public vcg::tri::TriEdgeCollapseQuadric< MyMesh, Vertex
 void Usage()
 {
     printf(
-           "---------------------------------\n"
-           "         TriSimp V.1.0 \n"
-           "     http://vcg.isti.cnr.it\n"
-           "    http://vcg.sourceforge.net\n"
-           "   release date: "__DATE__"\n"
-           "---------------------------------\n\n"
-          "TriDecimator 1.0 \n"__DATE__"\n"
-      "Copyright 2003-2012 Visual Computing Lab I.S.T.I. C.N.R.\n"
-      "\nUsage:  "\
-      "tridecimator fileIn fileOut face_num [opt]\n"\
-      "Where opt can be:\n"\
-      "     -e# QuadricError threshold  (range [0,inf) default inf)\n"
-            "     -b# Boundary Weight (default .5)\n"
-            "     -q# Quality threshold (range [0.0, 0.866],  default .3 )\n"
-            "     -n# Normal threshold  (degree range [0,180] default 90)\n"
-            "     -E# Minimal admitted quadric value (default 1e-15, must be >0)\n"
-            "     -Q[y|n]  Use or not Quality Threshold (default yes)\n"
-            "     -N[y|n]  Use or not Normal Threshold (default no)\n"
-            "     -A[y|n]  Use or not Area Weighted Quadrics (default yes)\n"
-            "     -O[y|n]  Use or not vertex optimal placement (default yes)\n"
-            "     -S[y|n]  Use or not Scale Independent quadric measure(default yes) \n"
-            "     -B[y|n]  Preserve or not mesh boundary (default no)\n"
-            "     -T[y|n]  Preserve or not Topology (default no)\n"
-            "     -H[y|n]  Use or not Safe Heap Update (default no)\n"
-          "     -P       Before simplification, remove duplicate & unreferenced vertices\n"
-                                       );
+          "---------------------------------\n"
+          "        TriDecimator 1.0 \n"
+          "     http://vcg.isti.cnr.it\n"
+          "    http://vcg.sourceforge.net\n"
+          "   release date: " __DATE__ 
+          "\n---------------------------------\n\n"
+          "Copyright 2003-2016 Visual Computing Lab I.S.T.I. C.N.R.\n"
+          "\nUsage:  "\
+          "tridecimator fileIn fileOut face_num [opt]\n"\
+          "Where opt can be:\n"\
+          "     -e# QuadricError threshold  (range [0,inf) default inf)\n"
+          "     -b# Boundary Weight (default .5)\n"
+          "     -q# Quality threshold (range [0.0, 0.866],  default .3 )\n"
+          "     -n# Normal threshold  (degree range [0,180] default 90)\n"
+          "     -w# Quality weight factor  (10)\n"
+          "     -E# Minimal admitted quadric value (default 1e-15, must be >0)\n"
+          "     -Q[y|n]  Use or not Face Quality Threshold (default yes)\n"
+          "     -P[y|n]  Add or not QualityQuadric (default no)\n"
+          "     -N[y|n]  Use or not Face Normal Threshold (default no)\n"
+          "     -A[y|n]  Use or not Area Weighted Quadrics (default yes)\n"
+          "     -O[y|n]  Use or not vertex optimal placement (default yes)\n"
+          "     -S[y|n]  Use or not Scale Independent quadric measure(default yes) \n"
+          "     -B[y|n]  Preserve or not mesh boundary (default no)\n"
+          "     -T[y|n]  Preserve or not Topology (default no)\n"
+          "     -W[y|n]  Use or not per vertex Quality to weight the quadric error (default no)\n"
+          "     -C       Before simplification, remove duplicate & unreferenced vertices\n"
+          );
   exit(-1);
 }
 
-// mesh to simplify
-MyMesh mesh;
+int main(int argc ,char**argv)
+{
+  if(argc<4) Usage();
 
-int main(int argc ,char**argv){
-if(argc<4) Usage();
-
+  MyMesh mesh;
+  
   int FinalSize=atoi(argv[3]);
-  //int t0=clock();
   int err=vcg::tri::io::Importer<MyMesh>::Open(mesh,argv[1]);
   if(err)
   {
@@ -124,7 +125,6 @@ if(argc<4) Usage();
       if(argv[i][0]=='-')
         switch(argv[i][1])
       {
-        case 'H' : qparams.SafeHeapUpdate=true; printf("Using Safe heap option\n"); break;
         case 'Q' : if(argv[i][2]=='y') { qparams.QualityCheck	= true;  printf("Using Quality Checking\n");	}
                                   else { qparams.QualityCheck	= false; printf("NOT Using Quality Checking\n");	}                break;
         case 'N' : if(argv[i][2]=='y') { qparams.NormalCheck	= true;  printf("Using Normal Deviation Checking\n");	}
@@ -137,11 +137,16 @@ if(argc<4) Usage();
                                   else { qparams.PreserveBoundary	= false; printf("NOT Preserving Boundary\n");	}        break;
         case 'T' : if(argv[i][2]=='y') { qparams.PreserveTopology	= true;  printf("Preserving Topology\n");	}
                                   else { qparams.PreserveTopology	= false; printf("NOT Preserving Topology\n");	}        break;
+        case 'P' : if(argv[i][2]=='y') { qparams.QualityQuadric 	= true;  printf("Adding Quality Quadrics\n");	}
+                                  else { qparams.QualityQuadric 	= false; printf("NOT Adding Quality Quadrics\n");	}        break;
+        case 'W' : if(argv[i][2]=='y') { qparams.QualityWeight 	= true;  printf("Using per vertex Quality as Weight\n");	}
+                                  else { qparams.QualityWeight 	= false; printf("NOT Using per vertex Quality as Weight\n");	}        break;
+        case 'w' :	qparams.QualityWeightFactor	= atof(argv[i]+2);	           printf("Setting Quality Weight factor to %f\n",atof(argv[i]+2)); 	 break;
         case 'q' :	qparams.QualityThr	= atof(argv[i]+2);	           printf("Setting Quality Thr to %f\n",atof(argv[i]+2)); 	 break;
         case 'n' :	qparams.NormalThrRad = math::ToRad(atof(argv[i]+2));  printf("Setting Normal Thr to %f deg\n",atof(argv[i]+2)); break;
         case 'b' :	qparams.BoundaryWeight  = atof(argv[i]+2);			printf("Setting Boundary Weight to %f\n",atof(argv[i]+2)); break;
         case 'e' :	TargetError = float(atof(argv[i]+2));			printf("Setting TargetError to %g\n",atof(argv[i]+2)); break;
-        case 'P' :	CleaningFlag=true;  printf("Cleaning mesh before simplification\n"); break;
+        case 'C' :	CleaningFlag=true;  printf("Cleaning mesh before simplification\n"); break;
 
         default  :  printf("Unknown option '%s'\n", argv[i]);
           exit(0);
@@ -179,7 +184,7 @@ if(argc<4) Usage();
 
   int t3=clock();
   printf("mesh  %d %d Error %g \n",mesh.vn,mesh.fn,DeciSession.currMetric);
-  printf("\nCompleted in (%i+%i) msec\n",t2-t1,t3-t2);
+  printf("\nCompleted in (%5.3f+%5.3f) sec\n",float(t2-t1)/CLOCKS_PER_SEC,float(t3-t2)/CLOCKS_PER_SEC);
 
   vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh,argv[2]);
     return 0;
