@@ -8,7 +8,7 @@
  *                                                                    \      *
  * All rights reserved.                                                      *
  *                                                                           *
- * This program is free software; you can redistribute it and/or modify      *   
+ * This program is free software; you can redistribute it and/or modify      *
  * it under the terms of the GNU General Public License as published by      *
  * the Free Software Foundation; either version 2 of the License, or         *
  * (at your option) any later version.                                       *
@@ -21,50 +21,16 @@
  *                                                                           *
  ****************************************************************************/
 
-#include <vector>
-#include <string>
 #include <sstream>
 
-/*include the base definition for the vertex */
-#include <vcg/simplex/vertex/base.h>
-
-/*include the base definition for the face */
-#include <vcg/simplex/face/base.h>
-
-/*include the base definition for the edge */
-#include <vcg/connectors/hedge.h>
-
-/*include the base definition for the trimesh*/
 #include <vcg/complex/complex.h>
 
-/*include the algorithms for updating: */
-#include <vcg/complex/algorithms/update/topology.h>	/* topology */
-#include <vcg/complex/algorithms/update/bounding.h>	/* bounding box */
-#include <vcg/complex/algorithms/update/normal.h>		/* normal */
-
-/*include the algorithms for mesh fixing  */
 #include <vcg/complex/algorithms/clean.h>
 
-/*include the importer from disk*/
 #include <wrap/io_trimesh/import.h>
-
 #include <wrap/io_trimesh/export_off.h>
-
-/* include the support for polygon meshes (function to convert from/to trimesh)*/
 #include <vcg/complex/algorithms/polygon_support.h>
-
-/* include the support for polygon meshes (the component for the face )*/
-#include <vcg/simplex/face/component_polygon.h>
-
-/* include the support for half edges */
-#include <vcg/complex/algorithms/update/halfedge_indexed.h>
-
 #include <vcg/complex/algorithms/local_optimization/quad_diag_collapse.h>
-
-#include <vcg/complex/algorithms/update/edges.h>
-
-#include <vcg/simplex/face/component_rt.h>
-
 #include <vcg/complex/algorithms/update/fitmaps.h>
 
 using namespace vcg;
@@ -82,9 +48,9 @@ struct CUsedTypes: public vcg::UsedTypes< vcg::Use<CVertex>::AsVertexType, vcg::
 // Mesh of triangles
 class CVertex : public Vertex<
         CUsedTypes,
-	vertex::BitFlags,
-	vertex::Coord3f, 
-	vertex::Normal3f,
+    vertex::BitFlags,
+    vertex::Coord3f,
+    vertex::Normal3f,
         vertex::VFAdj,
         vertex::Mark,
         vcg::vertex::Curvaturef,
