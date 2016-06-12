@@ -121,10 +121,19 @@ public:
     if(p.coherentAdjNum==0) return;
 //    tree.setMaxNofNeighbors(p.coherentAdjNum+1);
 
+    if(p.useViewPoint) // Simple case use the viewpoint position to determine the right orientation of each point
+    {
+      for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+      {
+        if ( vi->N().dot(p.viewPoint- vi->P())<0.0f)
+            vi->N()=-(*vi).N();
+      }
+      return;
+    }
+
     tri::UpdateFlags<MeshType>::VertexClearV(m);
     std::vector<WArc> heap;
     VertexIterator vi=m.vert.begin();
-
     while(true)
     {
       // search an unvisited vertex
@@ -132,10 +141,6 @@ public:
         ++vi;
 
       if(vi==m.vert.end()) return;
-
-      if ( p.useViewPoint &&
-          ( vi->N().dot(p.viewPoint- vi->P())<0.0f) )
-          vi->N()=-(*vi).N();
 
       vi->SetV();
       AddNeighboursToHeap(m,&*vi,p.coherentAdjNum,tree,heap);
@@ -149,7 +154,6 @@ public:
         {
           a.trg->SetV();
           if(a.src->cN()*a.trg->cN()<0.0f)
-            if(!p.useViewPoint || ( a.trg->N().dot(p.viewPoint- a.trg->P())<0.0f)) // test to prevent flipping according to viewpos
               a.trg->N()=-a.trg->N();
           AddNeighboursToHeap(m,a.trg,p.coherentAdjNum,tree,heap);
         }
