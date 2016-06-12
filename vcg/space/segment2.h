@@ -91,12 +91,10 @@ public:
     inline PointType MidPoint( ) const
     { return ( _p0 +  _p1) / ScalarType(2.0) ; }
       /// return the bounding box
-    inline Box2<ScalarType> BBox( ) const
+    inline void GetBBox(  Box2<ScalarType> &t) const
     {
-      Box2<ScalarType> t;
-      t.Add(_p0);
+      t.Set(_p0);
       t.Add(_p1);
-      return t;
     }
         /// returns segment length
     ScalarType Length()

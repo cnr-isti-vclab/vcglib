@@ -169,11 +169,13 @@ MySegmentType * DoRay(MyRayType & _r,
 void GetInBoxSegmentsBruteF( vcg::Box2<MyScalarType> bbox,
                              std::vector<MySegmentType*> &result)
 {
-    for (size_t i=0;i<AllocatedSeg.size();i++)
-    {
-        if (!AllocatedSeg[i].BBox().Collide(bbox))continue;
-        result.push_back(&AllocatedSeg[i]);
-    }
+  vcg::Box2<MyScalarType> ibbox;
+  for (size_t i=0;i<AllocatedSeg.size();i++)
+  {
+    AllocatedSeg[i].GetBBox(ibbox);
+    if (!ibbox.Collide(bbox)) continue;
+    result.push_back(&AllocatedSeg[i]);
+  }
 }
 
 MySegmentType* GetClosesestSegmentBruteF(MyCoordType & _p,

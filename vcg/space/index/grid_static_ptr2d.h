@@ -85,7 +85,8 @@ private:
         OBJITER IteObj;
         for (IteObj=_oBegin;IteObj!=_oEnd;IteObj++)
         {
-            Box2<ScalarType> Box2D=(*IteObj).BBox();
+            Box2<ScalarType> Box2D;
+            (*IteObj).GetBBox(Box2D);
 
             //get index of intersected cells
             Point2i minIndex=this->GridP(Box2D.min);
@@ -134,12 +135,15 @@ public:
     inline void Set(const OBJITER & _oBegin,
                     const OBJITER & _oEnd)
     {
-      Box2x bbox;
+      Box2x bbox,ibbox;
 
       OBJITER IteObj;
       for (IteObj=_oBegin;IteObj!=_oEnd;IteObj++)
-          bbox.Add((*IteObj).BBox());
-
+      {
+        (*IteObj).GetBBox(ibbox);
+        bbox.Add(ibbox);
+      }
+      
       ScalarType diag=bbox.Diag();
       bbox.Offset(diag*0.01);
       Set<OBJITER>(_oBegin,_oEnd,bbox);
