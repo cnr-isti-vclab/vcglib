@@ -1,14 +1,14 @@
 /****************************************************************************
-* MeshLab                                                           o o     *
-* A versatile mesh processing toolbox                             o     o   *
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2005                                                \/)\/    *
+* Copyright(C) 2004-2016                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *
+* This program is free software; you can redistribute it and/or modify      *   
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -19,32 +19,6 @@
 * GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
 * for more details.                                                         *
 *                                                                           *
-****************************************************************************/
-/****************************************************************************
-  History
-$Log$
-Revision 1.7  2008/04/26 13:45:48  pirosu
-improved loss of precision minimization
-
-Revision 1.6  2008/04/26 12:50:32  pirosu
-commented assert
-
-Revision 1.5  2008/04/04 10:03:51  cignoni
-Solved namespace ambiguities caused by the removal of a silly 'using namespace' in meshmodel.h
-
-Revision 1.4  2008/03/02 15:15:50  pirosu
-loss of precision management
-
-Revision 1.3  2008/02/29 20:37:27  pirosu
-fixed zero area faces management
-
-Revision 1.2  2007/03/20 15:51:15  cignoni
-Update to the new texture syntax
-
-Revision 1.1  2007/02/08 13:39:59  pirosu
-Added Quadric Simplification(with textures) Filter
-
-
 ****************************************************************************/
 
 #ifndef __VCGLIB_QUADRIC5

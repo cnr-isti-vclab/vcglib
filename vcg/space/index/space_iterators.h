@@ -2,13 +2,13 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2006                                                \/)\/    *
+* Copyright(C) 2004-2016                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *
+* This program is free software; you can redistribute it and/or modify      *   
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -19,35 +19,6 @@
 * GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
 * for more details.                                                         *
 *                                                                           *
-****************************************************************************/
-/****************************************************************************
-History
-
-$Log: not supported by cvs2svn $
-Revision 1.25  2007/03/08 17:05:50  pietroni
-line 375,  corrected 1 error concerning intersection with bounding of the grid
-
-Revision 1.24  2007/02/20 16:22:50  ganovelli
-modif in ClosestIterator to include  the last shell Si.siz [X|Y|X]. Tested with minialign and point based animation
-
-Revision 1.23  2006/12/06 12:53:14  pietroni
-changed 1 wrong comment RayIterator---- Refresh .. was the opposite
-
-Revision 1.22  2006/10/26 08:28:50  pietroni
-corrected 1 bug in operator ++ of closest iterator
-
-Revision 1.21  2006/10/25 15:59:29  pietroni
-corrected bug in closest iterator.. if doesn't find any alement at first cells examinated continue until find some element
-
-Revision 1.20  2006/10/25 09:47:53  pietroni
-added max dist control and constructor
-
-Revision 1.19  2006/10/02 07:47:57  cignoni
-Reverted to version 1.14 to nullify dangerous marfr960's changes
-
-Revision 1.14  2006/06/01 20:53:56  cignoni
-added missing header
-
 ****************************************************************************/
 #ifndef __VCGLIB_SPATIAL_ITERATORS
 #define __VCGLIB_SPATIAL_ITERATORS

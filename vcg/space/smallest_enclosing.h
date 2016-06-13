@@ -1,9 +1,8 @@
-#pragma once
 /****************************************************************************
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004                                                \/)\/    *
+* Copyright(C) 2004-2016                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -20,28 +19,6 @@
 * GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
 * for more details.                                                         *
 *                                                                           *
-****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.5  2007/11/07 09:37:20  ganovelli
-added draft for sphereofsphres enclosing
-
-Revision 1.4  2006/09/14 08:46:00  ganovelli
-added inclusion of sphere3
-
-Revision 1.3  2006/07/12 12:13:23  zifnab1974
-static keyword only in declaration not in implementation
-
-Revision 1.2  2006/07/10 10:38:16  turini
-minor changes in SphereOfTetra()
-
-Revision 1.1  2006/07/06 12:37:18  ganovelli
-draft version. For the triangle is not tehe smallest enclosing sphere and for the set of spheres works only for two spheres
-
-
-
 ****************************************************************************/
 
 #include <vcg/space/triangle3.h>

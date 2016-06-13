@@ -1,13 +1,11 @@
-
 /****************************************************************************
-* IDOLib                                                                    *
-* Interactive Deformable Objects Library									*
-*	http://idolib.sf.net													*	
-*																			*
-* Copyright(C) 2005															*
-* Visual Computing Lab                                                      *
-* ISTI - Italian National Research Council                                  *
-*                                                                           *
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004-2016                                           \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
 * This program is free software; you can redistribute it and/or modify      *   
@@ -21,20 +19,6 @@
 * GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
 * for more details.                                                         *
 *                                                                           *
-****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.3  2007/06/06 15:38:57  turini
-Use the barycenter function from triangle3.h instead of
-the one in face\base.h.
-
-Revision 1.2  2007/06/06 14:26:51  pietroni
-compiling error resolved
-
-
-
 ****************************************************************************/
 
 #ifndef __VCG_TRIMESH_INSIDE

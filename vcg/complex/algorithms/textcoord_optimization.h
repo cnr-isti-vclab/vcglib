@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004                                                \/)\/    *
+* Copyright(C) 2004-2016                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -19,25 +19,6 @@
 * GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
 * for more details.                                                         *
 *                                                                           *
-****************************************************************************/
-/****************************************************************************
-  History
-  
-$Log: not supported by cvs2svn $
-Revision 1.6  2007/02/02 04:11:00  tarini
-added parameter theta (from conformal to equiareal) to AreaPresTextureOptimizer.
-Improved feature lists (comments).
-
-Revision 1.5  2007/02/02 01:39:58  tarini
-added three general-utility global functions for texture coordinates: SmoothTextureCoords, IsFoldFree, MarkFolds (see descriptions)
-
-Revision 1.4  2007/02/02 01:23:47  tarini
-added a few general comments on AreaPreserving optimizer, recapping optimizer features.
-
-Revision 1.3  2007/02/02 01:18:15  tarini
-First version: general virtual class for texture optimizers. A subclass for area preservation.
-
-
 ****************************************************************************/
 
 #ifndef __VCGLIB__TEXTCOOORD_OPTIMIZATION

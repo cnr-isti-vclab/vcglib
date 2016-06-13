@@ -2,13 +2,13 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2006                                                \/)\/    *
+* Copyright(C) 2004-2016                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *
+* This program is free software; you can redistribute it and/or modify      *   
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -19,32 +19,6 @@
 * GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
 * for more details.                                                         *
 *                                                                           *
-****************************************************************************/
-/****************************************************************************
-History
-
-$Log: not supported by cvs2svn $
-Revision 1.16  2007/01/29 00:18:20  pietroni
--added some explicit CASTs in order to avoid warning if one use float instead of double as ScalarType
-
-Revision 1.15  2006/09/29 08:36:10  cignoni
-Added missing typedef for gcc compiing
-
-Revision 1.14  2006/09/28 22:49:49  fiorin
-Removed some warnings
-
-Revision 1.13  2006/07/28 12:39:05  zifnab1974
-added some typename directives
-
-Revision 1.12  2006/07/24 07:26:47  fiorin
-Changed the template argument in JacobiRotate and added method for sorting eigenvalues and eigenvectors (SortEigenvaluesAndEigenvectors)
-
-Revision 1.11  2006/05/25 09:35:55  cignoni
-added missing internal prototype to Sort function
-
-Revision 1.10  2006/05/17 09:26:35  cignoni
-Added initial disclaimer
-
 ****************************************************************************/
 #ifndef __VCGLIB_LINALGEBRA_H
 #define __VCGLIB_LINALGEBRA_H

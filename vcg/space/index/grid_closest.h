@@ -2,13 +2,13 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2005                                                \/)\/    *
+* Copyright(C) 2004-2016                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *
+* This program is free software; you can redistribute it and/or modify      *   
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -19,57 +19,6 @@
 * GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
 * for more details.                                                         *
 *                                                                           *
-****************************************************************************/
-/****************************************************************************
-History
-
-$Log: not supported by cvs2svn $
-Revision 1.16  2006/10/02 09:34:03  cignoni
-Re-added diff 1.12 by Pietroni (cancelled by previous rollback):
-in GridDoRay function the RayIterator must be initialized with maximum distance
-
-Revision 1.15  2006/10/02 09:28:45  cignoni
-Reverted to version 1.10 to nullify dangerous marfr960's changes
-
-Revision 1.10  2006/05/17 12:48:52  pietroni
-corrected bug in GridGetInBox function
-
-Revision 1.9  2006/01/27 09:58:47  corsini
-fix signed/unsigned mismatch
-
-Revision 1.8  2005/12/06 18:00:39  pietroni
-added deleted objects control for GridClosest() function call
-
-Revision 1.7  2005/12/02 00:30:27  cignoni
-Corrected typename usage and removed excess ';' from end of template functions, for gcc compiling
-
-Revision 1.6  2005/10/03 13:57:32  pietroni
-added GridGetInSphere and GridGetInBox functions
-
-Revision 1.5  2005/10/02 23:18:06  cignoni
-Small bug in the computation of the intersection between the todo box and the grid bbox that failed for extrema points.
-
-Revision 1.4  2005/09/30 15:12:16  cignoni
-Completely rewrote the GridClosest, now it:
-- works for point out of the grid
-- expands the box in a distance coherent way
-- does not re-visit already visited cells
-- shorter code!!
-( still to be tested :) )
-
-Revision 1.3  2005/09/30 13:15:48  pietroni
-added functions:
-- GetKClosest
-- DoRay
-
-Revision 1.2  2005/09/28 08:27:11  cignoni
-Added a control to avoid multiple check of the same cells during radial expansion
-Still miss some code to properly initialize when point is out of the BBox of the grid.
-
-Revision 1.1  2005/09/27 15:09:38  cignoni
-First Version
-
-
 ****************************************************************************/
 
 ///** Returns the closest posistion of a point _p and its distance
