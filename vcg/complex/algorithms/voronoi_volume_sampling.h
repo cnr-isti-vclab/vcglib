@@ -44,6 +44,7 @@ public:
   typedef typename MeshType::VertexPointer VertexPointer;
   typedef typename MeshType::CoordType CoordType;
   typedef typename MeshType::FacePointer FacePointer;
+  typedef typename MeshType::FaceType FaceType;
   typedef typename vcg::GridStaticPtr<typename MeshType::FaceType, ScalarType> GridType;
 
   typedef SimpleVolume<SimpleVoxel<ScalarType> >                              VVSVolume;
@@ -385,7 +386,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
 }
 
 
-ScalarType ImplicitFunction(const CoordType &p, Param &pp)
+ScalarType ImplicitFunction(const CoordType &p, const Param &pp)
 {
   CoordType closest;
   ScalarType surfDist = this->DistanceFromSurface(p,closest);
@@ -421,35 +422,128 @@ ScalarType ImplicitFunction(const CoordType &p, Param &pp)
  *   PruningPoisson: mesh of inside and surface points, it's the voronoi3d diagram
  *   n_voxel: number of voxels for the greater side
  */
-void BuildScaffoldingMesh(MeshType &scaffoldingMesh, Param &pp)
+void BuildScaffoldingMeshOld(MeshType &scaffoldingMesh, const Param &pp)
 {
   VVSVolume    volume;
-  int         sizeX = (baseMesh.bbox.DimX() / pp.voxelSide)+1;
-  int         sizeY = (baseMesh.bbox.DimY() / pp.voxelSide)+1;
-  int         sizeZ = (baseMesh.bbox.DimZ() / pp.voxelSide)+1;
-  
+  const Point3i sizInt = Point3i::Construct(baseMesh.bbox.Dim()/pp.voxelSide)+Point3i(1,1,1);
   int t0=clock();
   BoxType bb = BoxType::Construct(baseMesh.bbox);
   bb.Offset(pp.voxelSide+pp.isoThr*2.0f);
-  volume.Init(Point3i(sizeX,sizeY,sizeZ),bb);
-  int cnt=0;
-  for(ScalarType i=0;i<sizeX;i++)
-    for(ScalarType j=0;j<sizeY;j++)
-      for(ScalarType k=0;k<sizeZ;k++)
+  volume.Init(sizInt,bb);
+  for(ScalarType i=0;i<sizInt[0];i++)
+    for(ScalarType j=0;j<sizInt[1];j++)
+      for(ScalarType k=0;k<sizInt[2];k++)
       {
         CoordType p;
         volume.IPiToPf(Point3i(i,j,k),p);
-        volume.Val(i,j,k) = ImplicitFunction(p,pp);
-        cnt++;
+        ScalarType val = ImplicitFunction(p,pp);
+        volume.Val(i,j,k) = val;
       }
   int t1=clock();
   VVSWalker    walker;
   VVSMarchingCubes	 mc(scaffoldingMesh, walker);
   walker.template BuildMesh <VVSMarchingCubes>(scaffoldingMesh, volume, mc,0);
   int t2=clock();
-  printf("Fill Volume (%3i %3i %3i) %5.2f\n", sizeX,sizeY,sizeZ,float(t1-t0)/CLOCKS_PER_SEC);
+  printf("Fill Volume (%3i %3i %3i) %5.2f\n", sizInt[0],sizInt[1],sizInt[2],float(t1-t0)/CLOCKS_PER_SEC);
   printf("Marching %i tris %5.2f\n", scaffoldingMesh.fn,float(t2-t1)/CLOCKS_PER_SEC);
 }
+
+void BuildScaffoldingMesh(MeshType &scaffoldingMesh, const Param &pp)
+{
+  VVSVolume    volume;
+  const Point3i sizInt = Point3i::Construct(baseMesh.bbox.Dim()/pp.voxelSide)+Point3i(1,1,1);
+  int t0=clock();
+  BoxType bb = BoxType::Construct(baseMesh.bbox);
+  bb.Offset(pp.voxelSide+pp.isoThr*2.0f);
+  volume.Init(sizInt,bb);
+  for(int i=0;i<sizInt[0];i+=4)
+    for(int j=0;j<sizInt[1];j+=4)
+      for(int k=0;k<sizInt[2];k+=4)
+      {
+        CoordType p;
+        volume.IPiToPf(Point3i(i,j,k),p);
+        ScalarType val = ImplicitFunction(p,pp);
+        volume.Val(i,j,k) = val;
+      }
+  ScalarType diagThr = sqrt(3.0)*4.1*pp.voxelSide;
+  for(int i=0;i<sizInt[0];i+=2)
+    for(int j=0;j<sizInt[1];j+=2)
+      for(int k=0;k<sizInt[2];k+=2)
+      {
+        if(((i%4)==0) && ((j%4)==0) && ((k%4)==0)) continue;
+        const ScalarType nearVal =  volume.Val((i/4)*4,(j/4)*4,(k/4)*4);
+        if(fabs(nearVal) < diagThr)
+        {
+          CoordType p;
+          volume.IPiToPf(Point3i(i,j,k),p);
+          ScalarType val = ImplicitFunction(p,pp);
+          volume.Val(i,j,k) = val;
+        }
+        else volume.Val(i,j,k) = nearVal;
+      }
+  
+  diagThr = sqrt(3.0)*2.1*pp.voxelSide;
+  for(int i=0;i<sizInt[0];i++)
+    for(int j=0;j<sizInt[1];j++)
+      for(int k=0;k<sizInt[2];k++)
+      {
+        if(((i%2)==0) && ((j%2)==0) && ((k%2)==0)) continue;
+        const ScalarType nearVal =  volume.Val((i/2)*2,(j/2)*2,(k/2)*2);
+        if(fabs(nearVal) < diagThr)
+        {
+          CoordType p;
+          volume.IPiToPf(Point3i(i,j,k),p);
+          ScalarType val = ImplicitFunction(p,pp);
+          volume.Val(i,j,k) = val;
+        }
+        else volume.Val(i,j,k) = nearVal;
+      }
+
+  
+  
+  int t1=clock();
+  VVSWalker    walker;
+  VVSMarchingCubes	 mc(scaffoldingMesh, walker);
+  walker.template BuildMesh <VVSMarchingCubes>(scaffoldingMesh, volume, mc,0);
+  int t2=clock();
+  printf("Fill Volume (%3i %3i %3i) %5.2f\n", sizInt[0],sizInt[1],sizInt[2],float(t1-t0)/CLOCKS_PER_SEC);
+  printf("Marching %i tris %5.2f\n", scaffoldingMesh.fn,float(t2-t1)/CLOCKS_PER_SEC);
+}
+
+
+void OptimizeIsosurf(MeshType &m, const Param &pp)
+{
+  int t0=clock();
+  int flipCnt=0;
+  tri::Allocator<MeshType>::CompactEveryVector(m);
+  tri::UpdateTopology<MeshType>::FaceFace(m);
+  for(int i=0;i<m.fn;++i)
+  {
+    for(int j=0;j<3;++j)
+    {
+      FaceType &f=m.face[i];
+      if(face::CheckFlipEdge(f,j))        
+      {
+        CoordType midOld = (f.P0(j)+f.P1(j))/2.0;
+        FaceType *fop = f.FFp(j);
+        int foi= f.FFi(j);
+        CoordType midNew = (f.P2(j)+fop->P2(foi))/2.0;
+        
+        ScalarType oldVal = ImplicitFunction(midOld,pp);
+        ScalarType newVal = ImplicitFunction(midNew,pp);
+        if(fabs(oldVal)-fabs(newVal) > pp.voxelSide/4.0)
+        {
+          face::FlipEdge(f,j);
+          flipCnt++;
+        }
+      }
+    }
+  }
+  int t1=clock();
+  printf("Optimize Isosurf performed %i edge flip in %5.2f s\n",flipCnt,float(t1-t0)/CLOCKS_PER_SEC);
+}
+
+
  /**
   * @brief Compute an evaulation of the thickness as distance from the medial axis.
   * It starts from a montecarlo volume sampling and try to search for the samples that can be part of the medial axis.
