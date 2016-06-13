@@ -115,24 +115,7 @@ public:
   
   //******** CUT TREE GENERATION 
 
-  int countNonVisitedEdges(VertexType * vp, EdgeType * &ep)
-  {
-    std::vector<EdgeType *> starVec;
-    edge::VEStarVE(&*vp,starVec);
-  
-    int cnt =0;
-    for(size_t i=0;i<starVec.size();++i)
-    {
-      if(!starVec[i]->IsV())
-      {
-        cnt++;
-        ep = starVec[i];
-      }
-    }
-  
-    return cnt;
-  }
-  
+    
   // Given two points return true if on the base mesh there exist an edge with that two coords
   // if return true the pos indicate the found edge. 
   bool ExistEdge(KdTree<ScalarType> &kdtree, CoordType &p0, CoordType &p1, PosType &fpos)
@@ -192,6 +175,20 @@ public:
     return (t.en < t.edge.size());
   }
   
+  int findNonVisitedEdgesDuringRetract(VertexType * vp, EdgeType * &ep)
+  {
+    std::vector<EdgeType *> starVec;
+    edge::VEStarVE(&*vp,starVec);
+    int cnt =0;
+    for(size_t i=0;i<starVec.size();++i) {
+      if(!starVec[i]->IsV()) {
+        cnt++;
+        ep = starVec[i];
+      }
+    }  
+    return cnt;
+  }
+  
   void Retract(MeshType &t)
   {
     tri::Clean<MeshType>::RemoveDuplicateVertex(t);
@@ -219,8 +216,7 @@ public:
       vertStack.pop();
       vp->C()=Color4b::Blue;
       EdgeType *ep=0;
-  
-      int eCnt =  countNonVisitedEdges(vp,ep);
+      int eCnt =  findNonVisitedEdgesDuringRetract(vp,ep);
       if(eCnt==1) // We have only one non visited edge over vp
       {
         assert(!ep->IsV());
@@ -239,7 +235,6 @@ public:
     assert(t.en >0);
     tri::Clean<MeshType>::RemoveUnreferencedVertex(t);
     tri::Allocator<MeshType>::CompactEveryVector(t);
-  
   }
   
   void CleanSpuriousDanglingEdges(MeshType &poly)
