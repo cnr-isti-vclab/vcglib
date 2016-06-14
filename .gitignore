@@ -1,2 +1,8 @@
-
+# QTCreator user prefs
 *.user
+
+# Directories to ignore
+debug/
+release/
+*-debug/
+*-release/
