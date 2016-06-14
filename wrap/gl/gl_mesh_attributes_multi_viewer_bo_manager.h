@@ -1910,7 +1910,7 @@ namespace vcg
         void setBufferPointer( INT_ATT_NAMES boname) const
         {
             unsigned int ii = boname;
-            if ((ii < INT_ATT_NAMES::ATT_VERTPOSITION) || (ii >= INT_ATT_NAMES::enumArity()))
+            if (ii >= INT_ATT_NAMES::enumArity())
                 return;
             GLBufferObject* cbo = _bo[ii];
             if (cbo == NULL)
@@ -1948,7 +1948,7 @@ namespace vcg
         void disableClientState( INT_ATT_NAMES boname,const RendAtts& req) const
         {
 
-            if ((boname < INT_ATT_NAMES::ATT_VERTPOSITION) || (boname >= INT_ATT_NAMES::enumArity()))
+            if (boname >= INT_ATT_NAMES::enumArity())
                 return;
 
             switch(boname)
