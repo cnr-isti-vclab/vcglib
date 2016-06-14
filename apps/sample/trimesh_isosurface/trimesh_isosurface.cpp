@@ -23,7 +23,6 @@
 #include <vcg/complex/complex.h>
 #include <vcg/math/perlin_noise.h>
 #include <vcg/complex/algorithms/create/marching_cubes.h>
-#include <vcg/complex/algorithms/create/extended_marching_cubes.h>
 #include <vcg/complex/algorithms/create/mc_trivial_walker.h>
 #include <wrap/io_trimesh/export_ply.h>
 
