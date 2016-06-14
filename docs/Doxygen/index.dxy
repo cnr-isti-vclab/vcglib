@@ -53,6 +53,6 @@ For any info about licensing (portion of) the library please contact us:<br>
 <b> Fabio Ganovelli (f.ganovelli@isti.cnr.it) </b><br>
 <a href="http://vcg.isti.cnr.it">Visual Computing Lab</a> of the Italian National Research Council - ISTI
 
-In case of \b bugs please report them <a href="https://sourceforge.net/p/vcg/bugs/"> here</a>.
+In case of \b bugs please report them <a href="https://github.com/cnr-isti-vclab/vcglib/issues"> here</a>.
 
 */
