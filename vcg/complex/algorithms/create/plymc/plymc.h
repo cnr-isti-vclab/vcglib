@@ -54,6 +54,8 @@
 #include <wrap/ply/plystuff.h>
 
 #include <vcg/complex/algorithms/create/marching_cubes.h>
+#include <vcg/complex/algorithms/create/mc_trivial_walker.h>
+
 // local optimization
 #include <vcg/complex/algorithms/local_optimization.h>
 #include <vcg/complex/algorithms/local_optimization/tri_edge_collapse.h>
