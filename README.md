@@ -1,4 +1,4 @@
-The **_Visualization and Computer Graphics Library_** (VCGlib for short) is a open source, portable, C++, templated, no dependency, library for manipulation, processing and displaying with OpenGL of triangle and tetrahedral meshes.
+The **_Visualization and Computer Graphics Library_** (VCGlib for short) is a open source, portable, C++, templated, no dependency, library for manipulation, processing, cleaning, simplifying triangle meshes.
 
 The library, composed by more than 100k lines of code, is released under the GPL license, and it is the base of most of the software tools of the [Visual Computing Lab](http://vcg.isti.cnr.it) of the Italian National Research Council Institute ISTI , like MeshLab, metro and many others.
 
@@ -10,7 +10,7 @@ The VCG library is tailored to mostly manage triangular meshes: The library is f
 - computation of curvature,
 - optimization of texture coordinates,
 - Hausdorff distance computation,
-- Geodesic paths,
+- geodesic paths,
 - mesh repairing capabilities,
 - isosurface extraction and advancing front meshing algorithms,
 - Poisson Disk sampling and other tools to sample point distributions over meshes,
