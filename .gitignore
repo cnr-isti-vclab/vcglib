@@ -6,3 +6,4 @@ debug/
 release/
 *-debug/
 *-release/
+/docs/Doxygen/html/
