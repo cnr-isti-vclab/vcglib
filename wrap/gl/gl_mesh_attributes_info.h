@@ -309,7 +309,7 @@ namespace vcg
             INT_ATT_NAMES(unsigned int att)
                 :ATT_NAMES()
             {
-                if ((att < INT_ATT_NAMES::ATT_VERTPOSITION) || (att >= INT_ATT_NAMES::enumArity()))
+                if (att >= INT_ATT_NAMES::enumArity())
                     throw Exception("Out of range value\n");
                 else
                     _val = att;
