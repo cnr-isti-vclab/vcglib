@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004-2016                                           \/)\/    *
+* Copyright(C) 2004                                                \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -426,6 +426,8 @@ namespace vcg
 
             glPopMatrix();
             glPopAttrib();
+            glFlush();
+            glFinish();
         }
 
         bool isBORenderingAvailable() const
@@ -531,9 +533,9 @@ namespace vcg
             case(INT_ATT_NAMES::ATT_WEDGETEXTURE):
                 return vcg::tri::HasPerWedgeTexCoord(_mesh);
             case(INT_ATT_NAMES::ATT_VERTINDICES):
-                return true;
+                return (_mesh.VN() != 0) && (_mesh.FN() != 0);
             case(INT_ATT_NAMES::ATT_EDGEINDICES):
-                return vcg::tri::HasPerVertexFlags(_mesh);
+                return vcg::tri::HasPerVertexFlags(_mesh) || ((_mesh.VN() != 0) && (_mesh.FN() == 0) && (_mesh.EN() == 0));
             default:
                 return false;
             }
@@ -557,7 +559,7 @@ namespace vcg
                 {
                     //If a primitive_modality is not rendered (== no att_VERTPOSITION) all the referred attributes by this view can be eventually deallocated IF they are not used
                     //by some other rendered primitive
-                    //the vertindices is, as usual a diffrent case
+                    //the vertindices is, as usual, a different case
                     if (it->second._intatts[size_t(pm)][INT_ATT_NAMES::ATT_VERTPOSITION])
                         meaningfulrequiredbyatleastoneview = InternalRendAtts::unionSet(meaningfulrequiredbyatleastoneview,it->second._intatts[size_t(pm)]);
                     else
@@ -565,11 +567,15 @@ namespace vcg
                 }
             }
             bool thereisreplicatedview = InternalRendAtts::replicatedPipelineNeeded(meaningfulrequiredbyatleastoneview);
-            meaningfulrequiredbyatleastoneview[INT_ATT_NAMES::ATT_VERTINDICES] = !thereisreplicatedview;
+            meaningfulrequiredbyatleastoneview[INT_ATT_NAMES::ATT_VERTINDICES] &= !thereisreplicatedview;
             
             InternalRendAtts reallyuseless = InternalRendAtts::complementSet(probabilyuseless,meaningfulrequiredbyatleastoneview);
             
             bool switchreplicatedindexed = (!InternalRendAtts::replicatedPipelineNeeded(_currallocatedboatt) && thereisreplicatedview) || (InternalRendAtts::replicatedPipelineNeeded(_currallocatedboatt) && !thereisreplicatedview); 
+
+            /*in some way the vertices number changed. If i use the indexed pipeline i have to deallocate/allocate/update the vertex indices*/
+            bool numvertchanged = boExpectedSize(INT_ATT_NAMES::ATT_VERTPOSITION,thereisreplicatedview) != _bo[INT_ATT_NAMES::ATT_VERTPOSITION]->_size;
+            bool vertindforcedupdate = numvertchanged && meaningfulrequiredbyatleastoneview[INT_ATT_NAMES::ATT_VERTINDICES];
 
             InternalRendAtts probablytoallocate = InternalRendAtts::complementSet(meaningfulrequiredbyatleastoneview,_currallocatedboatt);
             InternalRendAtts probablytodeallocate = InternalRendAtts::complementSet(_currallocatedboatt,meaningfulrequiredbyatleastoneview);
@@ -588,8 +594,11 @@ namespace vcg
                         tobedeallocated[boname] =   (notempty && !hasmeshattribute) || 
                                                     (notempty && probablytodeallocate[boname]) ||
                                                     (notempty && reallyuseless[boname]) ||
-                                                    (notempty && (_bo[boname]->_size != sz) && meaningfulrequiredbyatleastoneview[boname]);
-                        tobeallocated[boname] = (hasmeshattribute && (sz > 0) && (sz != _bo[boname]->_size) && meaningfulrequiredbyatleastoneview[boname]) || (hasmeshattribute && (sz > 0) && probablytoallocate[boname]);
+                                                    (notempty && (_bo[boname]->_size != sz) && meaningfulrequiredbyatleastoneview[boname]) ||
+                                                    (notempty && (boname == INT_ATT_NAMES::ATT_VERTINDICES) && (vertindforcedupdate));
+                        tobeallocated[boname] = (hasmeshattribute && (sz > 0) && (sz != _bo[boname]->_size) && meaningfulrequiredbyatleastoneview[boname]) || 
+                                                (hasmeshattribute && (sz > 0) && probablytoallocate[boname]) ||
+                                                (hasmeshattribute && (boname == INT_ATT_NAMES::ATT_VERTINDICES) && (vertindforcedupdate));
                         tobeupdated[boname] = tobeallocated[boname] || (hasmeshattribute && (sz > 0) && !(isvalid) && meaningfulrequiredbyatleastoneview[boname]);
                     }
                     else 
@@ -1290,14 +1299,14 @@ namespace vcg
             glPushAttrib(GL_ALL_ATTRIB_BITS);
   
             bool isgloptsvalid = (glopts != NULL);
-
-            if ((!isgloptsvalid) ||  (req[INT_ATT_NAMES::ATT_VERTNORMAL]) || (req[INT_ATT_NAMES::ATT_FACENORMAL]))
-            {
-                glEnable(GL_LIGHTING);
-            }
-            else if (isgloptsvalid && glopts->_persolid_noshading)
+            
+            if (isgloptsvalid && glopts->_persolid_noshading)
                 glDisable(GL_LIGHTING);
-
+            else
+                if ((!isgloptsvalid) ||  (req[INT_ATT_NAMES::ATT_VERTNORMAL]) || (req[INT_ATT_NAMES::ATT_FACENORMAL]))
+                {
+                    glEnable(GL_LIGHTING);
+                }
 
             glEnable(GL_COLOR_MATERIAL);
             if ((isgloptsvalid) && (glopts->_persolid_fixed_color_enabled))
@@ -1332,14 +1341,14 @@ namespace vcg
            
             bool isgloptsvalid = (glopts != NULL);
 
-            if ((!isgloptsvalid) || (req[INT_ATT_NAMES::ATT_VERTNORMAL]))
-            {
-                glEnable(GL_LIGHTING);
-            }
-            else if (isgloptsvalid && glopts->_perwire_noshading)
+            if (isgloptsvalid && glopts->_perwire_noshading)
                 glDisable(GL_LIGHTING);
-
-
+            else 
+                if ((!isgloptsvalid) || (req[INT_ATT_NAMES::ATT_VERTNORMAL]))
+                {
+                    glEnable(GL_LIGHTING);
+                }
+                
             glEnable(GL_COLOR_MATERIAL);
             if ((isgloptsvalid) && (glopts->_perwire_fixed_color_enabled))
                 glColor(glopts->_perwire_fixed_color);
@@ -1547,12 +1556,14 @@ namespace vcg
 
             bool isgloptsvalid = (glopts != NULL);        
 
-            if ((!isgloptsvalid) ||  req[INT_ATT_NAMES::ATT_VERTNORMAL])
-            {
-                glEnable(GL_LIGHTING);
-            }
-            else if (isgloptsvalid && glopts->_perpoint_noshading)
+            
+            if (isgloptsvalid && glopts->_perpoint_noshading)
                 glDisable(GL_LIGHTING);
+            else 
+                if ((!isgloptsvalid) ||  req[INT_ATT_NAMES::ATT_VERTNORMAL])
+                {
+                    glEnable(GL_LIGHTING);
+                }
 
             glEnable(GL_COLOR_MATERIAL);
             if ((isgloptsvalid) && ((glopts->_perpoint_fixed_color_enabled) || (glopts->_perpoint_mesh_color_enabled)))
@@ -1651,13 +1662,13 @@ namespace vcg
             glEnable(GL_COLOR_MATERIAL);
             glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
 
-            if ((!isgloptsvalid) ||  req[INT_ATT_NAMES::ATT_VERTNORMAL])
-            {
-                glEnable(GL_LIGHTING);
-            }
-            else if (isgloptsvalid && glopts->_perwire_noshading)
+            if (isgloptsvalid && glopts->_perwire_noshading)
                 glDisable(GL_LIGHTING);
-
+            else 
+                if ((!isgloptsvalid) || (req[INT_ATT_NAMES::ATT_VERTNORMAL]))
+                {
+                    glEnable(GL_LIGHTING);
+                }
 
             bool colordefinedenabled = (isgloptsvalid) && ((glopts->_perwire_fixed_color_enabled) || (glopts->_perwire_mesh_color_enabled));
 
@@ -1910,7 +1921,7 @@ namespace vcg
         void setBufferPointer( INT_ATT_NAMES boname) const
         {
             unsigned int ii = boname;
-            if (ii >= INT_ATT_NAMES::enumArity())
+            if ((ii < INT_ATT_NAMES::ATT_VERTPOSITION) || (ii >= INT_ATT_NAMES::enumArity()))
                 return;
             GLBufferObject* cbo = _bo[ii];
             if (cbo == NULL)
@@ -1948,7 +1959,7 @@ namespace vcg
         void disableClientState( INT_ATT_NAMES boname,const RendAtts& req) const
         {
 
-            if (boname >= INT_ATT_NAMES::enumArity())
+            if ((boname < INT_ATT_NAMES::ATT_VERTPOSITION) || (boname >= INT_ATT_NAMES::enumArity()))
                 return;
 
             switch(boname)

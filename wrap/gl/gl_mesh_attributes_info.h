@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004-2016                                           \/)\/    *
+* Copyright(C) 2004                                                \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -65,7 +65,7 @@ namespace vcg
 
             ATT_NAMES(unsigned int att)
             {
-                if (att >= ATT_NAMES::enumArity())
+                if ((att < ATT_VERTPOSITION) || (att >= ATT_NAMES::enumArity()))
                     throw Exception("Out of range value\n");
                 else
                     _val = att;
@@ -119,9 +119,9 @@ namespace vcg
         class RenderingAtts
         {
         public:
-            RenderingAtts()
+            RenderingAtts(bool defaultvalue = false)
             {
-                reset();
+                reset(defaultvalue);
             }
 
             RenderingAtts(const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& att)
@@ -174,12 +174,12 @@ namespace vcg
                 return _atts[ind];
             }
 
-            void reset()
+            void reset(bool defaultvalue = false)
             {
                 //delete[] _atts;
                 //_atts = new bool[ATT_NAMES_DERIVED_CLASS::enumArity()];
                 for(unsigned int ii = 0;ii < ATT_NAMES_DERIVED_CLASS::enumArity();++ii)
-                    _atts[ii] = false;
+                    _atts[ii] = defaultvalue;
             }
 
             static RenderingAtts<ATT_NAMES_DERIVED_CLASS> unionSet(const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& a,const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b)
@@ -309,7 +309,7 @@ namespace vcg
             INT_ATT_NAMES(unsigned int att)
                 :ATT_NAMES()
             {
-                if (att >= INT_ATT_NAMES::enumArity())
+                if ((att < INT_ATT_NAMES::ATT_VERTPOSITION) || (att >= INT_ATT_NAMES::enumArity()))
                     throw Exception("Out of range value\n");
                 else
                     _val = att;

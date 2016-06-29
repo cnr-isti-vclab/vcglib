@@ -113,7 +113,7 @@ namespace vcg
             vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::setDebugMode(activatedebugmodality);
         }
 
-        void getLog(vcg::GLMeshAttributesInfo::DebugInfo& info)
+        void getLog(DebugInfo& info)
         {
             QWriteLocker locker(&_lock);
             vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::getLog(info);
