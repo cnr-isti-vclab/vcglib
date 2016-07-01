@@ -880,8 +880,6 @@ namespace vcg
 
                     if (attributestobeupdated[INT_ATT_NAMES::ATT_VERTINDICES])
                     {
-                      
-                        //size_t tsz = _bo[INT_ATT_NAMES::ATT_VERTINDICES]->_components *  _bo[INT_ATT_NAMES::ATT_VERTINDICES]->getSizeOfGLType() * chunksize;
                         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[INT_ATT_NAMES::ATT_VERTINDICES]->_bohandle);
                         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,chunkingpu * facechunk *  _bo[INT_ATT_NAMES::ATT_VERTINDICES]->_components *  _bo[INT_ATT_NAMES::ATT_VERTINDICES]->getSizeOfGLType(),_bo[INT_ATT_NAMES::ATT_VERTINDICES]->_components *  _bo[INT_ATT_NAMES::ATT_VERTINDICES]->getSizeOfGLType() * chunksize,&ti[0]);
                         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -1568,7 +1566,10 @@ namespace vcg
 
             glEnable(GL_COLOR_MATERIAL);
             if ((isgloptsvalid) && ((glopts->_perpoint_fixed_color_enabled) || (glopts->_perpoint_mesh_color_enabled)))
-                glColor(glopts->_perpoint_fixed_color);
+                if (glopts->_perpoint_fixed_color_enabled)
+                    glColor(glopts->_perpoint_fixed_color);
+                else
+                    glColor(glopts->_permesh_color);
             
 
             if (req[INT_ATT_NAMES::ATT_VERTCOLOR])       
