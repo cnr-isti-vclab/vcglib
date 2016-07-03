@@ -59,8 +59,6 @@ namespace vcg
         bool _perpoint_mesh_color_enabled;
         bool _perwire_mesh_color_enabled;
         bool _persolid_mesh_color_enabled;
-
-        Color4b _permesh_color;
         
         bool _perpoint_noshading;
         bool _perwire_noshading;
@@ -90,8 +88,6 @@ namespace vcg
             _perbbox_mesh_color_enabled = false;
             _perpoint_mesh_color_enabled = false;
             _perwire_mesh_color_enabled = false;
-
-            _permesh_color = Color4b(Color4d::Magenta);
 
             _perpoint_dot_enabled = false;
 
@@ -135,8 +131,6 @@ namespace vcg
             _perpoint_fixed_color_enabled = opts._perpoint_fixed_color_enabled;
             _perwire_fixed_color_enabled = opts._perwire_fixed_color_enabled;
             _persolid_fixed_color_enabled = opts._persolid_fixed_color_enabled;
-
-            _permesh_color = opts._permesh_color;
 
             _perbbox_mesh_color_enabled = opts._perbbox_mesh_color_enabled;
             _perpoint_mesh_color_enabled = opts._perpoint_mesh_color_enabled;
@@ -1313,7 +1307,8 @@ namespace vcg
             else
             {
                 if ((isgloptsvalid) && (glopts->_persolid_mesh_color_enabled))
-                    glColor(glopts->_permesh_color);
+                    glColor(_mesh.C());
+                else
                 {
                     if ((req[INT_ATT_NAMES::ATT_VERTCOLOR]) || (req[INT_ATT_NAMES::ATT_FACECOLOR]))
                         glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
@@ -1354,7 +1349,8 @@ namespace vcg
             else
             {
                 if ((isgloptsvalid) && (glopts->_perwire_mesh_color_enabled))
-                    glColor(glopts->_permesh_color);
+                    glColor(_mesh.C());
+                else
                 {
                     if (req[INT_ATT_NAMES::ATT_VERTCOLOR])
                         glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
@@ -1569,7 +1565,7 @@ namespace vcg
                 if (glopts->_perpoint_fixed_color_enabled)
                     glColor(glopts->_perpoint_fixed_color);
                 else
-                    glColor(glopts->_permesh_color);
+                    glColor(_mesh.C());
             
 
             if (req[INT_ATT_NAMES::ATT_VERTCOLOR])       
@@ -1784,7 +1780,7 @@ namespace vcg
             else
             {
                 if ((isgloptsvalid) && (glopts->_perbbox_mesh_color_enabled))
-                    glColor(glopts->_permesh_color);
+                    glColor(_mesh.C());
                 else
                     glColor(vcg::Color4b(vcg::Color4b::White));
             }
