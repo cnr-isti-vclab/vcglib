@@ -57,7 +57,7 @@ inline bool IsEdgeBorder(EdgeType const & e,  const int j )
 }
 
 template <class VertexType>
-void VVStarVE(VertexType* vp, std::vector<VertexType *> &starVec)
+void VVStarVE(const VertexType* vp, std::vector<VertexType *> &starVec)
 {
   starVec.clear();
   edge::VEIterator<typename VertexType::EdgeType> vei(vp);
