@@ -1561,12 +1561,12 @@ namespace vcg
                 }
 
             glEnable(GL_COLOR_MATERIAL);
-            if ((isgloptsvalid) && ((glopts->_perpoint_fixed_color_enabled) || (glopts->_perpoint_mesh_color_enabled)))
+            if ((isgloptsvalid) && ((glopts->_perpoint_fixed_color_enabled) || (glopts->_perpoint_mesh_color_enabled))){
                 if (glopts->_perpoint_fixed_color_enabled)
                     glColor(glopts->_perpoint_fixed_color);
                 else
                     glColor(_mesh.C());
-            
+            }
 
             if (req[INT_ATT_NAMES::ATT_VERTCOLOR])       
                 glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
