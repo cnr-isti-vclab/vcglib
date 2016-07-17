@@ -400,7 +400,7 @@ static void PerVertexPerlinNoise(MeshType& m, CoordType period, CoordType offset
 
 Simple Perlin color mixing. Color 1 and 2 are mixed according the perlin noise function, with period and offset.
 */
-static void PerVertexPerlinColoring(MeshType& m, Scalarm period, CoordType offset = CoordType(0, 0, 0), Color4b color1 = Color4b(0, 0, 0, 255), Color4b color2 = Color4b(255, 255, 255, 255), bool onSelected = false)
+static void PerVertexPerlinColoring(MeshType& m, ScalarType period, CoordType offset = CoordType(0, 0, 0), Color4b color1 = Color4b::Black, Color4b color2 = Color4b::White, bool onSelected = false)
 {
 	RequirePerVertexColor(m);
 
