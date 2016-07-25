@@ -559,7 +559,7 @@ namespace vcg {
                             else if( HasPerWedgeTexCoord(m) && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
                             {
                                 fprintf(fpout,"%d ",fp->VN()*2);
-                                for(int k=0;k<fp->VN()*2;++k)
+                                for(int k=0;k<fp->VN();++k)
                                     fprintf(fpout,"%f %f "
                                     ,fp->WT(k).u()
                                     ,fp->WT(k).v()
