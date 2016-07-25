@@ -666,7 +666,7 @@ public:
         CoordType dirR=vcg::tri::CrossField<MeshType>::Rotate(f0,f1,dir0);
         ///then get the closest upf to K*PI/2 rotations
         CoordType dir1=f1.cPD1();
-        CoordType ret=vcg::tri::CrossField<MeshType>::K_PI(dirR,dir1,f1.cN());
+        CoordType ret=vcg::tri::CrossField<MeshType>::K_PI(dir1,dirR,f1.cN());
         return ret;
     }
 
