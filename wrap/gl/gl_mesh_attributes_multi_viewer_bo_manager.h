@@ -79,10 +79,10 @@ namespace vcg
             _perpoint_fixed_color_enabled = false;
             _perwire_fixed_color_enabled = true;
             
-            _perbbox_fixed_color = Color4b(Color4b::White);
-            _perpoint_fixed_color = Color4b(Color4b::White);
+            _perbbox_fixed_color = vcg::Color4b(Color4b::White);
+            _perpoint_fixed_color = vcg::Color4b(Color4b::White);
             _perwire_fixed_color = Color4b(Color4b::DarkGray);
-            _persolid_fixed_color = Color4b(Color4b::White);
+            _persolid_fixed_color = vcg::Color4b(Color4b::White);
 
             _persolid_fixed_color_enabled = false;
             _perbbox_mesh_color_enabled = false;
