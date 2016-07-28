@@ -1516,13 +1516,18 @@ public:
         return;}
   }
 
-  static void DeletePerMeshAttribute( MeshType & m,  std::string name){
+  // Generic DeleteAttribute.
+  // It must not crash if you try to delete a non existing attribute,
+  // because you do not have a way of asking for a handle of an attribute for which you do not know the type.
+  static bool DeletePerMeshAttribute( MeshType & m,  std::string name){
     AttrIterator i;
     PointerToAttribute h1; h1._name = name;
     i = m.mesh_attr.find(h1);
-    assert(i!=m.mesh_attr.end());
+    if (i==m.mesh_attr.end())
+        return false;
     delete ((SimpleTempDataBase  *)(*i)._handle);
     m.mesh_attr.erase(i);
+    return true;
   }
 
   template <class ATTR_TYPE>
