@@ -74,6 +74,12 @@ namespace vcg
 			vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::draw(viewid,_textids.textId());
 		}
 
+        void drawAllocatedAttributesSubset(UNIQUE_VIEW_ID_TYPE viewid,const PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt) const
+        {
+            QReadLocker locker(&_lock);
+            vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::drawAllocatedAttributesSubset(viewid,dt,_textids.textId());
+        }
+
 		bool isBORenderingAvailable() const
 		{
 			QReadLocker locker(&_lock);

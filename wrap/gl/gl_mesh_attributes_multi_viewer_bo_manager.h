@@ -369,60 +369,36 @@ namespace vcg
 
             const PVData& dt = it->second;
             //const InternalRendAtts& atts = it->second._intatts;
-            glPushAttrib(GL_ALL_ATTRIB_BITS);
-            glMatrixMode(GL_MODELVIEW);
-            glPushMatrix();
-            glMultMatrix(_tr);
-
-            if ((dt._glopts != NULL) && (dt._glopts->_perbbox_enabled))
-                drawBBox(dt._glopts);
-
-            if (dt.isPrimitiveActive(PR_SOLID))
-            {
-                bool somethingmore = dt.isPrimitiveActive(PR_WIREFRAME_EDGES) || dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES) || dt.isPrimitiveActive(PR_POINTS);
-                if (somethingmore)
-                {
-                    glEnable(GL_POLYGON_OFFSET_FILL);
-                    glPolygonOffset(1.0, 1);
-                }
-                drawFilledTriangles(dt._intatts[size_t(PR_SOLID)],dt._glopts,textid);
-                if (somethingmore)
-                    glDisable(GL_POLYGON_OFFSET_FILL);
-            }
-
-            if (dt.isPrimitiveActive(PR_WIREFRAME_EDGES) || dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES))
-            {
-                //InternalRendAtts tmpatts = atts;
-                bool pointstoo = dt.isPrimitiveActive(PR_POINTS);
-
-                if (pointstoo)
-                {
-                    glEnable(GL_POLYGON_OFFSET_FILL);
-                    glPolygonOffset(1.0, 1);
-                }
-                bool solidtoo = dt.isPrimitiveActive(PR_SOLID);
-                    
-                if (dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES))
-                {
-                    drawWiredTriangles(dt._intatts[size_t(PR_WIREFRAME_TRIANGLES)],dt._glopts,textid);
-                }
-                else
-                {
-                    if (dt.isPrimitiveActive(PR_WIREFRAME_EDGES))
-                        drawEdges(dt._intatts[size_t(PR_WIREFRAME_EDGES)],dt._glopts);
-                }
-                   
-                if (pointstoo || solidtoo)
-                    glDisable(GL_POLYGON_OFFSET_FILL);
-            }     
-            if (dt.isPrimitiveActive(PR_POINTS))
-                drawPoints(dt._intatts[size_t(PR_POINTS)],it->second._glopts);
-
-            glPopMatrix();
-            glPopAttrib();
-            glFlush();
-            glFinish();
+			drawFun(dt, textid);
         }
+
+		
+		void drawAllocatedAttributesSubset(UNIQUE_VIEW_ID_TYPE viewid,const PVData& dt, const std::vector<GLuint>& textid = std::vector<GLuint>()) const
+		{
+			typename ViewsMap::const_iterator it = _perviewreqatts.find(viewid);
+			if (it == _perviewreqatts.end())
+				return;
+
+			PVData tmp = dt;
+			
+			if (!(_currallocatedboatt[INT_ATT_NAMES::ATT_VERTPOSITION]))
+			{
+				for (PRIMITIVE_MODALITY pm = PRIMITIVE_MODALITY(0); pm < PR_ARITY; pm = next(pm))
+				{		
+					tmp._pmmask[size_t(pm)] = 0;
+					tmp._intatts[size_t(pm)] = InternalRendAtts();
+				}
+			}
+			else
+			{
+				for (PRIMITIVE_MODALITY pm = PRIMITIVE_MODALITY(0); pm < PR_ARITY; pm = next(pm))
+				{
+					tmp._intatts[size_t(pm)] = InternalRendAtts::intersectionSet(tmp._intatts[size_t(pm)],_meaningfulattsperprimitive[size_t(pm)]);
+					tmp._intatts[size_t(pm)] = InternalRendAtts::intersectionSet(tmp._intatts[size_t(pm)],_currallocatedboatt);
+				}
+			}
+			drawFun(dt, textid);
+		}
 
         bool isBORenderingAvailable() const
         {
@@ -1283,6 +1259,63 @@ namespace vcg
             }
             return 0;
         }
+
+		void drawFun(const PVData& dt, const std::vector<GLuint>& textid = std::vector<GLuint>()) const
+		{
+			glPushAttrib(GL_ALL_ATTRIB_BITS);
+			glMatrixMode(GL_MODELVIEW);
+			glPushMatrix();
+			glMultMatrix(_tr);
+
+			if ((dt._glopts != NULL) && (dt._glopts->_perbbox_enabled))
+				drawBBox(dt._glopts);
+
+			if (dt.isPrimitiveActive(PR_SOLID))
+			{
+				bool somethingmore = dt.isPrimitiveActive(PR_WIREFRAME_EDGES) || dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES) || dt.isPrimitiveActive(PR_POINTS);
+				if (somethingmore)
+				{
+					glEnable(GL_POLYGON_OFFSET_FILL);
+					glPolygonOffset(1.0, 1);
+				}
+				drawFilledTriangles(dt._intatts[size_t(PR_SOLID)], dt._glopts, textid);
+				if (somethingmore)
+					glDisable(GL_POLYGON_OFFSET_FILL);
+			}
+
+			if (dt.isPrimitiveActive(PR_WIREFRAME_EDGES) || dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES))
+			{
+				//InternalRendAtts tmpatts = atts;
+				bool pointstoo = dt.isPrimitiveActive(PR_POINTS);
+
+				if (pointstoo)
+				{
+					glEnable(GL_POLYGON_OFFSET_FILL);
+					glPolygonOffset(1.0, 1);
+				}
+				bool solidtoo = dt.isPrimitiveActive(PR_SOLID);
+
+				if (dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES))
+				{
+					drawWiredTriangles(dt._intatts[size_t(PR_WIREFRAME_TRIANGLES)], dt._glopts, textid);
+				}
+				else
+				{
+					if (dt.isPrimitiveActive(PR_WIREFRAME_EDGES))
+						drawEdges(dt._intatts[size_t(PR_WIREFRAME_EDGES)], dt._glopts);
+				}
+
+				if (pointstoo || solidtoo)
+					glDisable(GL_POLYGON_OFFSET_FILL);
+			}
+			if (dt.isPrimitiveActive(PR_POINTS))
+				drawPoints(dt._intatts[size_t(PR_POINTS)], dt._glopts);
+
+			glPopMatrix();
+			glPopAttrib();
+			glFlush();
+			glFinish();
+		}
 
         void drawFilledTriangles(const InternalRendAtts& req,const GL_OPTIONS_DERIVED_TYPE* glopts,const std::vector<GLuint>& textureindex = std::vector<GLuint>()) const
         {
