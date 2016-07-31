@@ -26,6 +26,8 @@
 
 #include <vector>
 #include <algorithm>
+#include "gl_type_name.h"
+
 namespace vcg{
 
 template <class MESH_TYPE>
