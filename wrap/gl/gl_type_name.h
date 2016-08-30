@@ -21,6 +21,9 @@
 *                                                                           *
 ****************************************************************************/
 
+#ifndef __VCG_GL_TYPE_NAME
+#define __VCG_GL_TYPE_NAME
+
 namespace vcg 
 {
 	template <typename T>
@@ -39,3 +42,5 @@ namespace vcg
 	static GLenum SCALAR() { return GL_DOUBLE; }
 	};
 }
+
+#endif
