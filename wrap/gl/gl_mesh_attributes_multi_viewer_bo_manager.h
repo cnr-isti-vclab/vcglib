@@ -347,6 +347,16 @@ namespace vcg
             _perviewreqatts[viewid] = copydt;
         }
 
+		void setPerAllViewsInfo(const PVData& data)
+		{
+			///cleanup stage...if an attribute impossible for a primitive modality is still here (it should not be...) we change the required atts into the view
+			PVData copydt(data);
+			for (PRIMITIVE_MODALITY pm = PRIMITIVE_MODALITY(0); pm < PR_ARITY; pm = next(pm))
+				copydt._intatts[pm] = InternalRendAtts::intersectionSet(copydt._intatts[size_t(pm)], _meaningfulattsperprimitive[size_t(pm)]);
+			for (typename ViewsMap::iterator it = _perviewreqatts.begin(); it != _perviewreqatts.end(); ++it)
+				it->second = copydt;
+		}
+
         bool removeView(UNIQUE_VIEW_ID_TYPE viewid)
         {
             typename ViewsMap::iterator it = _perviewreqatts.find(viewid);
@@ -1158,7 +1168,7 @@ namespace vcg
             {
                 glDisableClientState(bobj->_clientstatetag);
             }
-
+			//glBufferData(bobj->_target, sizeof(vcg::Point3f)*_primitivebatch, 0, GL_DYNAMIC_DRAW);
             glDeleteBuffers(1,&(bobj->_bohandle));
             glFlush();
             glFinish();
