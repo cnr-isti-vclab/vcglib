@@ -75,19 +75,21 @@ namespace vcg
         RenderingModalityGLOptions()
         {
             _perbbox_enabled = false;
+
             _perbbox_fixed_color_enabled = true;
             _perpoint_fixed_color_enabled = false;
             _perwire_fixed_color_enabled = true;
-            
+			_persolid_fixed_color_enabled = true;
+
             _perbbox_fixed_color = vcg::Color4b(Color4b::White);
             _perpoint_fixed_color = vcg::Color4b(Color4b::White);
             _perwire_fixed_color = Color4b(Color4b::DarkGray);
             _persolid_fixed_color = vcg::Color4b(Color4b::White);
 
-            _persolid_fixed_color_enabled = false;
             _perbbox_mesh_color_enabled = false;
             _perpoint_mesh_color_enabled = false;
             _perwire_mesh_color_enabled = false;
+			_persolid_mesh_color_enabled = false;
 
             _perpoint_dot_enabled = false;
 

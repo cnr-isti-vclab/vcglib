@@ -288,6 +288,7 @@ namespace vcg
             }
         };
 
+
     protected:
         struct INT_ATT_NAMES : public ATT_NAMES
         {

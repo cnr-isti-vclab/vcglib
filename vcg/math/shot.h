@@ -75,7 +75,7 @@ public:
       RotoType rot;	 // rotation
       Point3<S> tra; // viewpoint
   public:
-      ReferenceFrame(){}
+      ReferenceFrame():rot(),tra(){}
 
       void SetIdentity(){ rot.SetIdentity(); tra = Point3<S>(0.0,0.0,0.0);}
       void SetTra(const Point3<S> & tr) {tra = tr;}
@@ -87,18 +87,21 @@ public:
   Camera<S>	                       Intrinsics;		// the camera that made the shot
   ReferenceFrame<S,RotationType>   Extrinsics;		// the position and orientation of the camera
   Shot(const Camera<S> &i, const ReferenceFrame<S,RotationType> &e)
+      :Intrinsics(),Extrinsics()
   {
     Intrinsics = i;
     Extrinsics = e;
   }
 
   Shot(const Camera<S> &c)
+      :Intrinsics(),Extrinsics()
   {
     Intrinsics = c;
     Extrinsics.SetIdentity();
   }
 
   Shot()
+      :Intrinsics(),Extrinsics()
   {
     Extrinsics.SetIdentity();
   }
