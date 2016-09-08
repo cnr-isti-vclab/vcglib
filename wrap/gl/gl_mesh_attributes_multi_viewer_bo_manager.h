@@ -1321,7 +1321,7 @@ namespace vcg
 					glDisable(GL_POLYGON_OFFSET_FILL);
 			}
 			if (dt.isPrimitiveActive(PR_POINTS))
-				drawPoints(dt._intatts[size_t(PR_POINTS)], dt._glopts);
+				drawPoints(dt._intatts[size_t(PR_POINTS)], dt._glopts,textid);
 
 			glPopMatrix();
 			glPopAttrib();
@@ -1587,7 +1587,7 @@ namespace vcg
             glEnd();
         }
 
-        void drawPoints(const InternalRendAtts& req,GL_OPTIONS_DERIVED_TYPE* glopts) const
+        void drawPoints(const InternalRendAtts& req,GL_OPTIONS_DERIVED_TYPE* glopts, const std::vector<GLuint>& textureindex = std::vector<GLuint>()) const
         {
             if (_mesh.VN() == 0)
                 return;
@@ -1597,7 +1597,7 @@ namespace vcg
             bool isgloptsvalid = (glopts != NULL);        
 
             
-            if (isgloptsvalid && glopts->_perpoint_noshading)
+            if ((isgloptsvalid && glopts->_perpoint_noshading) || (isgloptsvalid && glopts->_perpoint_dot_enabled))
                 glDisable(GL_LIGHTING);
             else 
                 if ((!isgloptsvalid) ||  req[INT_ATT_NAMES::ATT_VERTNORMAL])
@@ -1617,16 +1617,23 @@ namespace vcg
                 glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
          
 
-            if (req[INT_ATT_NAMES::ATT_VERTTEXTURE])
-                glEnable(GL_TEXTURE_2D);
-            else
-                glDisable(GL_TEXTURE_2D);
+			if (req[INT_ATT_NAMES::ATT_VERTTEXTURE])
+			{
+				glEnable(GL_TEXTURE_2D);
+				if (textureindex.size() > 0)
+					glBindTexture(GL_TEXTURE_2D, textureindex[0]);
+				else
+					glBindTexture(GL_TEXTURE_2D, 0);
+			}
+			else
+				glDisable(GL_TEXTURE_2D);
             //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[GLMeshAttributesInfo::ATT_VERTINDEX]->_bohandle);
            
             if (glopts != NULL)
             {
-                glPointSize(glopts->_perpoint_pointsize);
-                if(glopts->_perpoint_pointsmooth_enabled) 
+				if (!glopts->_perpoint_dot_enabled)
+					glPointSize(glopts->_perpoint_pointsize);
+                if ((glopts->_perpoint_pointsmooth_enabled) || (glopts->_perpoint_dot_enabled))
                     glEnable(GL_POINT_SMOOTH);
                 else 
                     glDisable(GL_POINT_SMOOTH);
@@ -1650,11 +1657,30 @@ namespace vcg
                         pointsize = glopts->_perpoint_pointsize;
                     glPointSize(pointsize);
                 }
+
+				if (glopts->_perpoint_dot_enabled)
+				{
+					glEnable(GL_BLEND);
+					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+					glColor(vcg::Color4b(vcg::Color4b::Black));
+					glDepthRange(0.0, 0.9999);
+					glDepthFunc(GL_LEQUAL);
+					glPointSize(glopts->_perpoint_pointsize + 0.5);
+				}
             }
             if (isBORenderingAvailable())
                 drawPointsBO(req);
             else
                 drawPointsIM(req);
+
+			if ((glopts != NULL) && (glopts->_perpoint_dot_enabled))
+			{
+				glPointSize(glopts->_perpoint_pointsize - 1);
+				if (isBORenderingAvailable())
+					drawPointsBO(req);
+				else
+					drawPointsIM(req);
+			}
             glPopAttrib();
         }
 
