@@ -1307,14 +1307,21 @@ namespace vcg
 				}
 				bool solidtoo = dt.isPrimitiveActive(PR_SOLID);
 
-				if (dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES))
-				{
-					drawWiredTriangles(dt._intatts[size_t(PR_WIREFRAME_TRIANGLES)], dt._glopts, textid);
-				}
+				/*EDGE    |     TRI     |    DRAW
+				---------------------------------
+				  TRUE         TRUE         EDGE
+				  TRUE         FALSE        EDGE
+				  FALSE        TRUE         TRI
+				  FALSE        FALSE        NOTHING */
+
+				if (dt.isPrimitiveActive(PR_WIREFRAME_EDGES))
+					drawEdges(dt._intatts[size_t(PR_WIREFRAME_EDGES)], dt._glopts);
 				else
 				{
-					if (dt.isPrimitiveActive(PR_WIREFRAME_EDGES))
-						drawEdges(dt._intatts[size_t(PR_WIREFRAME_EDGES)], dt._glopts);
+					if (dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES))
+					{
+						drawWiredTriangles(dt._intatts[size_t(PR_WIREFRAME_TRIANGLES)], dt._glopts, textid);
+					}
 				}
 
 				if (pointstoo || solidtoo)

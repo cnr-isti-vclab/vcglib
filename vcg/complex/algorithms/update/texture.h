@@ -111,6 +111,7 @@ static void WedgeTexFromVertexTex(ComputeMeshType &m)
                {
                  (*fi).WT(i).U() = (*fi).V(i)->T().U();
                  (*fi).WT(i).V() = (*fi).V(i)->T().V();
+				 (*fi).WT(i).N() = 0;
                }
               }
 }
