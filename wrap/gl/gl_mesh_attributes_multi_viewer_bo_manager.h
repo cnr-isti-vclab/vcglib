@@ -1731,8 +1731,7 @@ namespace vcg
             if (_mesh.VN() == 0)
                 return;
             glPushAttrib(GL_ALL_ATTRIB_BITS);
-            
-
+           
             bool isgloptsvalid = (glopts != NULL);
 
             glEnable(GL_COLOR_MATERIAL);
@@ -1751,8 +1750,13 @@ namespace vcg
             if (!(isgloptsvalid) || colordefinedenabled)
             {
                 vcg::Color4b tmpcol = vcg::Color4b(vcg::Color4b::DarkGray);
-                if (colordefinedenabled)
-                    tmpcol = glopts->_perwire_fixed_color;
+				if (colordefinedenabled)
+				{
+					if (glopts->_perwire_fixed_color_enabled)
+						tmpcol = glopts->_perwire_fixed_color;
+					else
+						tmpcol = _mesh.cC();
+				}
                 glColor(tmpcol);
             }
 
