@@ -511,7 +511,7 @@ namespace nanoply
       bufferOffset = 0;
     }
     //memcpy(dest, &buffer[bufferOffset], nByte);
-	dest = buffer + bufferOffset;
+		dest = buffer + bufferOffset;
     bufferOffset += nByte;
     return true;
   }
@@ -2075,18 +2075,23 @@ namespace nanoply
     if (typeSize > 1 && fixEndian)
       adjustEndianess(reinterpret_cast<unsigned char *>(buffer), typeSize, count);
 
+		unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
     C* temp = (C*)buffer;
-    float norm = 1.0f;
     if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
     {
+			float norm = 1.0f;
       if (std::is_same<ScalarType, float>::value && std::is_same<C, unsigned char>::value)
         norm = 1.0f / 255.0f;
       else if (std::is_same<ScalarType, unsigned char>::value && std::is_same<C, float>::value)
         norm = 255.0f;
+			for (int i = 0; i < std::min(VectorSize, count); i++)
+				*((ScalarType *)(baseProp + i*sizeof(ScalarType))) = ScalarType(temp[i] * norm);
     }
-    unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
-    for (int i = 0; i < std::min(VectorSize, count); i++)
-      *((ScalarType *)(baseProp + i*sizeof(ScalarType))) = ScalarType(temp[i] * norm);
+		else
+		{
+			for (int i = 0; i < std::min(VectorSize, count); i++)
+				*((ScalarType *)(baseProp + i*sizeof(ScalarType))) = ScalarType(temp[i]);
+		}
     ++(this->curPos);
   }
 
@@ -2140,17 +2145,22 @@ namespace nanoply
     for (int i = 0; i < count; i++)
       file.ReadAsciiData(temp[i]);
 
-    float norm = 1.0f;
+    unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
     if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
     {
+			float norm = 1.0f;
       if (std::is_same<ScalarType, float>::value && prop.type == NNP_UINT8)
         norm = 1.0f / 255.0f;
       else if (std::is_same<ScalarType, unsigned char>::value && prop.type == NNP_FLOAT32)
         norm = 255.0f;
+			for (int i = 0; i < std::min(VectorSize, count); i++)
+				*((ScalarType *)(baseProp + i*sizeof(ScalarType))) = ScalarType(temp[i] * norm);
     }
-    unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
-    for (int i = 0; i < std::min(VectorSize, count); i++)
-			*((ScalarType *)(baseProp + i*sizeof(ScalarType))) = ScalarType(temp[i] * norm);
+		else
+		{
+			for (int i = 0; i < std::min(VectorSize, count); i++)
+				*((ScalarType *)(baseProp + i*sizeof(ScalarType))) = ScalarType(temp[i]);
+		}
     delete[] temp;
     ++(this->curPos);
   }
@@ -2217,19 +2227,24 @@ namespace nanoply
       }
     }
 
-    float norm = 1.0f;
+    C temp = 0;
+		unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
     if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
     {
+			float norm = 1.0f;
       if (std::is_same<ScalarType, float>::value && std::is_same<C, unsigned char>::value)
         norm = 255.0f;
       else if (std::is_same<ScalarType, unsigned char>::value && std::is_same<C, float>::value)
         norm = 1.0f / 255.0f;
+			for (int i = 0; i < std::min(VectorSize, count); i++)
+				data[i] = (C)((*(ScalarType*)(baseProp + i*sizeof(ScalarType))) * norm);
     }
+		else
+		{
+			for (int i = 0; i < std::min(VectorSize, count); i++)
+				data[i] = (C)((*(ScalarType*)(baseProp + i*sizeof(ScalarType))));
+		}
 
-    C temp = 0;
-    unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
-    for (int i = 0; i < std::min(VectorSize, count); i++)
-      data[i] = (C)((*(ScalarType*)(baseProp + i*sizeof(ScalarType))) * norm);
     if (sizeof(C) > 1 && fixEndian)
       adjustEndianess((unsigned char*)data, sizeof(C), std::min(VectorSize, count));
 
@@ -2298,19 +2313,25 @@ namespace nanoply
       file.WriteAsciiData(std::string(" "));
     }
 
-    float norm = 1.0;
+    C data[VectorSize];
+		unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
     if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
     {
+			float norm = 1.0;
       if (std::is_same<ScalarType, float>::value && prop.type == NNP_UINT8)
         norm = 255.0f;
       else if (std::is_same<ScalarType, unsigned char>::value && prop.type == NNP_FLOAT32)
         norm = 1.0f / 255.0f;
+			for (int i = 0; i < std::min(VectorSize, count); i++)
+				data[i] = (C)((*(ScalarType*)(baseProp + i*sizeof(ScalarType))) * norm);
     }
-
-    C data[VectorSize];
-    unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
-    for (int i = 0; i < std::min(VectorSize, count); i++)
-      data[i] = (C)((*(ScalarType*)(baseProp + i*sizeof(ScalarType))) * norm);
+		else
+		{
+			for (int i = 0; i < std::min(VectorSize, count); i++)
+				data[i] = (C)((*(ScalarType*)(baseProp + i*sizeof(ScalarType))));
+		}
+		   
+   
     for (int i = 0; i < (count - VectorSize); i++)
       data[i] = 0;
 
