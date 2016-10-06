@@ -180,6 +180,8 @@ public:
         (*this)[3]=255;
         return;
       }
+      float dummy;
+      h = modff(h,&dummy);
       if(h==1.0) h = 0.0;
 
       int i   = int( floor(h*6.0) );
