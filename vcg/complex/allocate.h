@@ -52,13 +52,13 @@ template<class MeshType>
 size_t Index(MeshType &m, const typename MeshType::HEdgeType*  h) {return h-&*m.hedge.begin();}
 
 template<class MeshType>
-bool IsValidPointer( MeshType & m, const typename MeshType::VertexType *vp) { return ( (vp >= &*m.vert.begin()) && ( vp < &*m.vert.end()) ); }
+bool IsValidPointer( MeshType & m, const typename MeshType::VertexType *vp) { return ( m.vert.size() > 0 && (vp >= &*m.vert.begin()) && (vp <= &m.vert.back()) ); }
 template<class MeshType>
-bool IsValidPointer( MeshType & m, const typename MeshType::EdgeType   *ep) { return ( (ep >= &*m.edge.begin()) && ( ep < &*m.edge.end()) ); }
+bool IsValidPointer(MeshType & m, const typename MeshType::EdgeType   *ep) { return ( m.edge.size() > 0 && (ep >= &*m.edge.begin()) && (ep <= &m.edge.back())); }
 template<class MeshType>
-bool IsValidPointer( MeshType & m, const typename MeshType::FaceType   *fp) { return ( (fp >= &*m.face.begin()) && ( fp < &*m.face.end()) ); }
+bool IsValidPointer(MeshType & m, const typename MeshType::FaceType   *fp) { return ( m.face.size() > 0 && (fp >= &*m.face.begin()) && (fp <= &m.face.back())); }
 template<class MeshType>
-bool IsValidPointer( MeshType & m, const typename MeshType::HEdgeType  *hp) { return ( (hp >= &*m.hedge.begin())&& ( hp < &*m.hedge.end()) ); }
+bool IsValidPointer(MeshType & m, const typename MeshType::HEdgeType  *hp) { return ( m.hedge.size() > 0 && (hp >= &*m.hedge.begin()) && (hp <= &m.hedge.back())); }
 
 template <class MeshType, class ATTR_CONT>
 void ReorderAttribute(ATTR_CONT &c, std::vector<size_t> & newVertIndex, MeshType & /* m */){
