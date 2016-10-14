@@ -1664,12 +1664,11 @@ namespace vcg
                         pointsize = glopts->_perpoint_pointsize;
                     glPointSize(pointsize);
                 }
-
+				GLenum err;
 				if (glopts->_perpoint_dot_enabled)
 				{
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-					glColor(vcg::Color4b(vcg::Color4b::Black));
 					glDepthRange(0.0, 0.9999);
 					glDepthFunc(GL_LEQUAL);
 					glPointSize(glopts->_perpoint_pointsize + 0.5);
@@ -1682,7 +1681,10 @@ namespace vcg
 
 			if ((glopts != NULL) && (glopts->_perpoint_dot_enabled))
 			{
-				glPointSize(glopts->_perpoint_pointsize - 1);
+				float psize = 0.0001;
+				if ((glopts->_perpoint_pointsize - 1) > 0)
+					psize = (glopts->_perpoint_pointsize - 1);
+				glPointSize(psize);
 				if (isBORenderingAvailable())
 					drawPointsBO(req);
 				else
@@ -1696,10 +1698,8 @@ namespace vcg
             size_t pointsnum = _mesh.VN();
             if (InternalRendAtts::replicatedPipelineNeeded(_currallocatedboatt))
                 pointsnum = _mesh.FN() * 3;
-
             updateClientState(req);
             glDrawArrays(GL_POINTS,0,GLsizei(pointsnum));
-
             /*disable all client state buffers*/
             InternalRendAtts tmp;
             updateClientState(tmp);
