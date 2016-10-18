@@ -82,7 +82,8 @@ namespace vcg {
         {
         public:
         typedef typename  MESH_TYPE::VertexType VertexType;
-          typedef typename  MESH_TYPE::EdgeType EdgeType;
+        typedef typename  MESH_TYPE::EdgeType EdgeType;
+        typedef typename  MESH_TYPE::FaceType FaceType;
             inline EmptyTMark(){}
             inline EmptyTMark(MESH_TYPE *){}
             inline void UnMarkAll() const {}
@@ -90,6 +91,8 @@ namespace vcg {
             inline void Mark(VertexType*) const {}
             inline bool IsMarked(EdgeType*) const { return false; }
             inline void Mark(EdgeType*) const {}
+            inline bool IsMarked(FaceType*) const { return false; }
+            inline void Mark(FaceType*) const {}
             inline void SetMesh(void * /*m=0*/) const {}
         };
 
