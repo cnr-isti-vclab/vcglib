@@ -108,7 +108,6 @@ public:
   {
       if(m.FN()>0)
         throw vcg::MissingPreconditionException("Expecting a mesh composed only by edges (no faces needed or allowed)");
-    }
   }
   
   
