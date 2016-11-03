@@ -176,7 +176,7 @@ bool HitHyper (Point3f center, float radius, Point3f viewpoint, Plane3f viewplan
  * in the simple ortho case, the hit point is just the value of
  * y = 1/x * (r^2 /2 ) on the hitOnViewPlane
  */
-bool HitHyperOrtho(Point3f center, float radius, Point3f viewpoint, Plane3f viewplane,
+bool HitHyperOrtho(Point3f center, float radius, Point3f /*viewpoint*/, Plane3f viewplane,
                    Point3f hitOnViewplane, Point3f & hit)
 {
   float xval = Distance (center, hitOnViewplane);
