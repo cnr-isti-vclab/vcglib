@@ -1664,7 +1664,6 @@ namespace vcg
                         pointsize = glopts->_perpoint_pointsize;
                     glPointSize(pointsize);
                 }
-				GLenum err;
 				if (glopts->_perpoint_dot_enabled)
 				{
 					glEnable(GL_BLEND);
