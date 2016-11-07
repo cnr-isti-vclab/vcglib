@@ -3,6 +3,8 @@ The Visualization and Computer Graphics Library (VCG for short) is
 a open source portable C++ templated library for manipulation, processing
 and displaying with OpenGL of triangle and tetrahedral meshes.
 
+VCG Lib uses a git repository hosted by github at http://github.com/cnr-isti-vclab/vcglib/
+
 The library, composed by more than 100k lines of code,
 is released under the GPL license, and it is the base of most of the
 software tools of the <b>Visual Computing Lab</b> of the Italian National Research Council Institute ISTI
