@@ -185,7 +185,7 @@ namespace vcg
 						}
 
 						sa = line.split(' ');
-						if (!sa.size()>=3)
+						if (!(sa.size()>=3))
 						{
 							std::cerr << "Error parsing vertex " << line.toLocal8Bit().data() << "\n";
 							return InvalidFile;
@@ -213,7 +213,7 @@ namespace vcg
 						}
 
 						sa = line.split(' ');
-						if (!sa.size()>=2)
+						if (!(sa.size()>=2))
 						{
 							std::cerr << "Error parsing edge " << line.toLocal8Bit().data() << "\n";
 							return InvalidFile;
@@ -238,7 +238,7 @@ namespace vcg
 						}
 
 						sa = line.split(' ');
-						if (!sa.size()>=3)
+						if (!(sa.size()>=3))
 						{
 							std::cerr << "Error parsing face " << line.toLocal8Bit().data() << "\n";
 							return InvalidFile;
