@@ -99,7 +99,7 @@ public:
         DELETED     = 0x00000001,		// Face is deleted from the mesh
         NOTREAD     = 0x00000002,		// Face of the mesh is not readable
         NOTWRITE    = 0x00000004,		// Face of the mesh is not writable
-    VISITED     = 0x00000010,		// Face has been visited. Usualy this is a per-algorithm used bit.
+        VISITED     = 0x00000010,		// Face has been visited. Usualy this is a per-algorithm used bit.
         SELECTED    = 0x00000020,		// Face is selected. Algorithms should try to work only on selected face (if explicitly requested)
         // Border _flags, it is assumed that BORDERi = BORDER0<<i
         BORDER0     = 0x00000040,
@@ -121,7 +121,7 @@ public:
         FAUX012     = FAUX0 | FAUX1 | FAUX2 ,
         // First user bit
         USER0       = 0x00200000
-            };
+    };
 
 
     ///  checks if the Face is deleted

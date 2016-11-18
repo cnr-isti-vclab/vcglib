@@ -539,14 +539,20 @@ template < class FaceType>    bool FaceVectorHasPerFaceQuality(const std::vector
 template < class FaceType>    bool FaceVectorHasFFAdjacency   (const std::vector<FaceType> &) {  return FaceType::HasFFAdjacency(); }
 template < class FaceType>    bool FaceVectorHasFEAdjacency   (const std::vector<FaceType> &) {  return FaceType::HasFEAdjacency(); }
 template < class FaceType>    bool FaceVectorHasFVAdjacency   (const std::vector<FaceType> &) {  return FaceType::HasFVAdjacency(); }
-template < class FaceType>    bool FaceVectorHasPerFaceCurvatureDir   (const std::vector<FaceType> &) {  return FaceType::HasCurvatureDir(); }
+template < class FaceType>    bool FaceVectorHasPerFaceCurvatureDir     (const std::vector<FaceType> &) { return FaceType::HasCurvatureDir    (); }
+template < class FaceType>    bool FaceVectorHasPerFaceSpecularColor    (const std::vector<FaceType> &) { return FaceType::HasSpecularColor   (); }
+template < class FaceType>    bool FaceVectorHasPerFaceAmbientColor     (const std::vector<FaceType> &) { return FaceType::HasAmbientColor    (); }
+template < class FaceType>    bool FaceVectorHasPerFaceSpecularExponent (const std::vector<FaceType> &) { return FaceType::HasSpecularExponent(); }
 
-template < class TriMeshType> bool HasPerFaceFlags       (const TriMeshType &m) { return tri::FaceVectorHasPerFaceFlags       (m.face); }
-template < class TriMeshType> bool HasPerFaceNormal      (const TriMeshType &m) { return tri::FaceVectorHasPerFaceNormal      (m.face); }
-template < class TriMeshType> bool HasPerFaceColor       (const TriMeshType &m) { return tri::FaceVectorHasPerFaceColor       (m.face); }
-template < class TriMeshType> bool HasPerFaceMark        (const TriMeshType &m) { return tri::FaceVectorHasPerFaceMark        (m.face); }
-template < class TriMeshType> bool HasPerFaceQuality     (const TriMeshType &m) { return tri::FaceVectorHasPerFaceQuality     (m.face); }
-template < class TriMeshType> bool HasPerFaceCurvatureDir(const TriMeshType &m) { return tri::FaceVectorHasPerFaceCurvatureDir(m.face); }
+template < class TriMeshType> bool HasPerFaceFlags            (const TriMeshType &m) { return tri::FaceVectorHasPerFaceFlags           (m.face); }
+template < class TriMeshType> bool HasPerFaceNormal           (const TriMeshType &m) { return tri::FaceVectorHasPerFaceNormal          (m.face); }
+template < class TriMeshType> bool HasPerFaceColor            (const TriMeshType &m) { return tri::FaceVectorHasPerFaceColor           (m.face); }
+template < class TriMeshType> bool HasPerFaceMark             (const TriMeshType &m) { return tri::FaceVectorHasPerFaceMark            (m.face); }
+template < class TriMeshType> bool HasPerFaceQuality          (const TriMeshType &m) { return tri::FaceVectorHasPerFaceQuality         (m.face); }
+template < class TriMeshType> bool HasPerFaceCurvatureDir     (const TriMeshType &m) { return tri::FaceVectorHasPerFaceCurvatureDir    (m.face); }
+template < class TriMeshType> bool HasPerFaceSpecularColor    (const TriMeshType &m) { return tri::FaceVectorHasPerFaceSpecularColor   (m.face); }
+template < class TriMeshType> bool HasPerFaceAmbientColor     (const TriMeshType &m) { return tri::FaceVectorHasPerFaceAmbientColor    (m.face); }
+template < class TriMeshType> bool HasPerFaceSpecularExponent (const TriMeshType &m) { return tri::FaceVectorHasPerFaceSpecularExponent(m.face); }
 template < class TriMeshType> bool HasFFAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFFAdjacency   (m.face); }
 template < class TriMeshType> bool HasEEAdjacency   (const TriMeshType &m) { return tri::EdgeVectorHasEEAdjacency   (m.edge); }
 template < class TriMeshType> bool HasFEAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFEAdjacency   (m.face); }

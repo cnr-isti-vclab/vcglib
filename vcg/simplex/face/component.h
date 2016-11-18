@@ -75,6 +75,12 @@ public:
   typedef ColorType WedgeColorType;
   ColorType &C()       { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   ColorType cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  ColorType &Amb()       { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  ColorType cAmb() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  ColorType &Spec()       { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  ColorType cSpec() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  float     &Ns()       { static float dumfloat; assert(0); return dumfloat; }
+  float     cNs() const { static float dumfloat; assert(0); return dumfloat; }
   WedgeColorType &WC(const int)       { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   WedgeColorType cWC(const int) const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   QualityType &Q()       { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
@@ -83,6 +89,9 @@ public:
   Quality3Type cQ3() const { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
 
   static bool HasColor()   { return false; }
+  static bool HasAmbientColor()   { return false; }
+  static bool HasSpecularColor()   { return false; }
+  static bool HasSpecularExponent()   { return false; }
   static bool HasQuality()   { return false; }
   static bool HasQuality3()   { return false; }
   static bool HasMark()   { return false; }
@@ -382,16 +391,77 @@ private:
   WedgeColorType _color[3];
 };
 
+template <class A, class T> class AmbientColor: public T {
+public:
+  typedef A ColorType;
+  AmbientColor():_color(vcg::Color4b::White) {}
+  ColorType &Amb()       { return _color; }
+  ColorType cAmb() const { return _color; }
+  template <class RightValueType>
+  void ImportData(const RightValueType & rightF){
+    if(rightF.IsAmbientColorEnabled()) Amb() = rightF.cAmb();
+    T::ImportData(rightF);
+  }
+
+  static bool HasAmbientColor()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("AmbientColor"));T::Name(name);}
+
+private:
+  ColorType _color;
+};
+
+template <class A, class T> class SpecularColor: public T {
+public:
+  typedef A ColorType;
+  SpecularColor():_color(vcg::Color4b::White) {}
+  ColorType &Spec()       { return _color; }
+  ColorType cSpec() const { return _color; }
+  template <class RightValueType>
+  void ImportData(const RightValueType & rightF){
+    if(rightF.IsSpecularColorEnabled()) Spec() = rightF.cSpec();
+    T::ImportData(rightF);
+  }
+
+  static bool HasSpecularColor()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("SpecularColor"));T::Name(name);}
+
+private:
+  ColorType _color;
+};
+
+template <class T> class SpecularExponent: public T {
+public:
+  SpecularExponent():_ns(0.0) {}
+  inline float &Ns()       { return _ns; }
+  inline float cNs() const { return _ns; }
+  template <class RightValueType>
+  void ImportData(const RightValueType & rightF){
+    if(rightF.IsSpecularExponentEnabled()) Ns() = rightF.cNs();
+    T::ImportData(rightF);
+  }
+
+  static bool HasSpecularExponent()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("SpecularExponent"));T::Name(name);}
+
+private:
+  float _ns;
+};
+
 template <class T> class WedgeColor4b: public WedgeColor<vcg::Color4b, T> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor4b"));T::Name(name);}
 };
 template <class T> class WedgeColor4f: public WedgeColor<vcg::Color4f, T> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor4f"));T::Name(name);}
 };
-template <class T> class Color4b: public Color<vcg::Color4b, T> { public:
+template <class T> class Color4b: public Color<vcg::Color4b, T> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));T::Name(name);}
 };
-
+template <class T> class AmbientColor4b: public AmbientColor<vcg::Color4b, T> {
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("AmbientColor4b"));T::Name(name);}
+};
+template <class T> class SpecularColor4b: public SpecularColor<vcg::Color4b, T> {
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("SpecularColor4b"));T::Name(name);}
+};
 /*-------------------------- Quality  ----------------------------------*/
 template <class A, class T> class Quality: public T {
 public:

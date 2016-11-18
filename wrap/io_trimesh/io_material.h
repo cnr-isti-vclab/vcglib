@@ -96,24 +96,32 @@ namespace io {
 		inline static int CreateNewMaterial(SaveMeshType &m, std::vector<Material> &materials, unsigned int index, FaceIterator &fi)
 		{			
 			Point3f diffuse(1,1,1);
-      float Transp = 1;
-      if(HasPerFaceColor(m)){
-        diffuse = Point3f((float)((*fi).C()[0])/255.0f,(float)((*fi).C()[1])/255.0f,(float)((*fi).C()[2])/255.0f);//diffuse
-			  Transp = (float)((*fi).C()[3])/255.0f;//alpha
-      }
-			
-			int illum = 2; //default not use Ks!
-			float ns = 0.0; //default
+            Point3f ambient(1,1,1);
+            Point3f specular(1,1,1);
+            float specularExponent = 0.0;
+            float Transp = 1;
+            int illumination = 2;
+
+            if(HasPerFaceColor(m)){
+                diffuse = Point3f((float)((*fi).C()[0])/255.0f,(float)((*fi).C()[1])/255.0f,(float)((*fi).C()[2])/255.0f);//diffuse
+                Transp = (float)((*fi).C()[3])/255.0f;//alpha
+            }
+            if(HasPerFaceAmbientColor(m))
+                ambient = Point3f((float)((*fi).Amb()[0])/255.0f,(float)((*fi).Amb()[1])/255.0f,(float)((*fi).Amb()[2])/255.0f);
+            if(HasPerFaceSpecularColor(m))
+                specular = Point3f((float)((*fi).Spec()[0])/255.0f,(float)((*fi).Spec()[1])/255.0f,(float)((*fi).Spec()[2])/255.0f);
+            if(HasPerFaceSpecularExponent(m))
+                specularExponent = (*fi).Ns();
 
 			Material mtl;
 
 			mtl.index = index;//index of materials
-			mtl.Ka = Point3f(0.2f,0.2f,0.2f);//ambient
-			mtl.Kd = diffuse;//diffuse
-			mtl.Ks = Point3f(1.0f,1.0f,1.0f);//specular
-			mtl.Tr = Transp;//alpha
-			mtl.Ns = ns;
-			mtl.illum = illum;//illumination
+            mtl.Ka = ambient;
+            mtl.Kd = diffuse;
+            mtl.Ks = specular;
+            mtl.Tr = Transp;
+            mtl.Ns = specularExponent;
+            mtl.illum = illumination;
 			
 			if(m.textures.size() && (*fi).WT(0).n() >=0 ) 
 				mtl.map_Kd = m.textures[(*fi).WT(0).n()];
