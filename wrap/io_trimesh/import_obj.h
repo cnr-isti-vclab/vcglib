@@ -51,6 +51,8 @@ namespace vcg {
             template <class OpenMeshType>
             class ImporterOBJ
             {
+            private:
+                std::vector<Material> materials;
             public:
                 static int &MRGBLineCount(){static int _MRGBLineCount=0; return _MRGBLineCount;}
 
@@ -113,6 +115,7 @@ namespace vcg {
                     int tInd;
                     bool  edge[3];// useless if the face is a polygon, no need to have variable length array
                     Color4b c;
+                    int mInd;
                 };
 
                 struct ObjEdge
@@ -254,7 +257,9 @@ namespace vcg {
                         stream.close();
                         return E_CANTOPEN;
                     }
-                    std::vector<Material>	materials;  // materials vector
+                    typename OpenMeshType::template PerMeshAttributeHandle<std::vector<Material>> hMaterial =
+                            vcg::tri::Allocator<OpenMeshType>:: template GetPerMeshAttribute<std::vector<Material>>(m, std::string("materials"));
+                    std::vector<Material>	materials = hMaterial();  // materials vector
                     std::vector<ObjTexCoord>	texCoords;  // texture coordinates
                     std::vector<CoordType>  normals;		// vertex normals
                     std::vector<ObjIndexedFace> indexedFaces;
@@ -584,6 +589,8 @@ namespace vcg {
 
                                         // assigning face color
                                         if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) ff.c = currentColor;
+
+                                        ff.mInd = currentMaterialIdx;
 
                                         ++numTriangles;
                                         indexedFaces.push_back(ff);

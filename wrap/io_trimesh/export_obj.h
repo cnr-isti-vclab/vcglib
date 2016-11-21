@@ -205,7 +205,7 @@ public:
     {
       if((mask & Mask::IOM_FACECOLOR) || (mask & Mask::IOM_WEDGTEXCOORD) || (mask & Mask::IOM_VERTTEXCOORD))
       {
-        int index = Materials<SaveMeshType>::CreateNewMaterial(m,materialVec,material_num,fi);
+        int index = (*fi).mInd;
 
         if(index == (int)materialVec.size())//inserts a new element material
         {
