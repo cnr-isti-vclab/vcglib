@@ -51,8 +51,6 @@ namespace vcg {
             template <class OpenMeshType>
             class ImporterOBJ
             {
-            private:
-                std::vector<Material> materials;
             public:
                 static int &MRGBLineCount(){static int _MRGBLineCount=0; return _MRGBLineCount;}
 
@@ -257,9 +255,12 @@ namespace vcg {
                         stream.close();
                         return E_CANTOPEN;
                     }
-                    typename OpenMeshType::template PerMeshAttributeHandle<std::vector<Material>> hMaterial =
+
+                    typename OpenMeshType::template PerMeshAttributeHandle<std::vector<Material>> materialsHandle =
                             vcg::tri::Allocator<OpenMeshType>:: template GetPerMeshAttribute<std::vector<Material>>(m, std::string("materials"));
-                    std::vector<Material>	materials = hMaterial();  // materials vector
+                    typename OpenMeshType::template PerFaceAttributeHandle<int> mIndHandle =
+                            vcg::tri::Allocator<OpenMeshType>:: template GetPerFaceAttribute<int>(m, std::string("mInd"));
+                    std::vector<Material>&	materials = materialsHandle();  // materials vector
                     std::vector<ObjTexCoord>	texCoords;  // texture coordinates
                     std::vector<CoordType>  normals;		// vertex normals
                     std::vector<ObjIndexedFace> indexedFaces;
@@ -707,6 +708,7 @@ namespace vcg {
                             if (((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && (HasPerFaceColor(m)))
                             {
                                 m.face[i].C() = indexedFaces[i].c;
+                                mIndHandle[i] = indexedFaces[i].mInd;
                             }
 
                             if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) != 0) && (HasPerWedgeNormal(m)))
@@ -953,7 +955,15 @@ namespace vcg {
 
                     materials.clear();
                     Material currentMaterial;
+
+                    // Fill in some default values for the material
                     currentMaterial.index = (unsigned int)(-1);
+                    currentMaterial.Ka = Point3f(0.2, 0.2, 0.2);
+                    currentMaterial.Kd = Point3f(1, 1, 1);
+                    currentMaterial.Ks = Point3f(1, 1, 1);
+                    currentMaterial.Tr = 1;
+                    currentMaterial.Ns = 0;
+                    currentMaterial.illum = 2;
 
                     bool first = true;
                     while (!stream.eof())

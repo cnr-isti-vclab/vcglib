@@ -28,7 +28,6 @@
 
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
-#include "io_material.h"
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -129,7 +128,8 @@ public:
     int current = 0;
     int totalPrimitives = m.vn+m.fn;
 
-    std::vector<Material> materialVec;
+    typename SaveMeshType::template PerMeshAttributeHandle<std::vector<Material>> materialsHandle =
+            vcg::tri::Allocator<SaveMeshType>::template FindPerMeshAttribute<std::vector<Material>>(m, "materials");
 
     std::string fn(filename);
     int LastSlash=fn.size()-1;
@@ -197,29 +197,19 @@ public:
     fprintf(fp,"# %d vertices, %d vertices normals\n\n",m.vn,int(NormalVertex.size()));
 
     //faces + texture coords
+    typename SaveMeshType::template PerFaceAttributeHandle<int> mIndHandle =
+            vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<int>(m, "mInd");
     std::map<TexCoordType,int> CoordIndexTexture;
-    unsigned int material_num = 0;
-    int mem_index = 0; //var temporany
     int curTexCoordIndex = 1;
+    int curMatIndex = -1;
     for(FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
     {
       if((mask & Mask::IOM_FACECOLOR) || (mask & Mask::IOM_WEDGTEXCOORD) || (mask & Mask::IOM_VERTTEXCOORD))
       {
-        int index = (*fi).mInd;
-
-        if(index == (int)materialVec.size())//inserts a new element material
-        {
-          material_num++;
-          fprintf(fp,"\nusemtl material_%d\n",materialVec[index-1].index);
-          mem_index = index-1;
-        }
-        else
-        {
-          if(index != mem_index)//inserts old name elemente material
-          {
-            fprintf(fp,"\nusemtl material_%d\n",materialVec[index].index);
-            mem_index=index;
-          }
+        int index = mIndHandle[fi];
+        if(index != curMatIndex) {
+          fprintf(fp,"\nusemtl material_%d\n", index);
+          curMatIndex = index;
         }
       }
 
@@ -281,7 +271,7 @@ public:
 
     int errCode = E_NOERROR;
     if((mask & Mask::IOM_WEDGTEXCOORD) || (mask & Mask::IOM_FACECOLOR) || (mask & Mask::IOM_VERTTEXCOORD) )
-      errCode = WriteMaterials(materialVec, filename,cb);//write material
+      errCode = WriteMaterials(materialsHandle(), filename,cb);//write material
 
     if(errCode!= E_NOERROR)
       return errCode;
@@ -382,7 +372,7 @@ public:
         else
         { /* fclose(fp); return E_ABORTED; */ }
 
-        fprintf(fp,"newmtl material_%d\n",materialVec[i].index);
+        fprintf(fp,"newmtl material_%d\n",i);
         fprintf(fp,"Ka %f %f %f\n",materialVec[i].Ka[0],materialVec[i].Ka[1],materialVec[i].Ka[2]);
         fprintf(fp,"Kd %f %f %f\n",materialVec[i].Kd[0],materialVec[i].Kd[1],materialVec[i].Kd[2]);
         fprintf(fp,"Ks %f %f %f\n",materialVec[i].Ks[0],materialVec[i].Ks[1],materialVec[i].Ks[2]);
