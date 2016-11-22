@@ -28,6 +28,7 @@
 
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/io_trimesh/io_material.h>
 #include <iostream>
 #include <fstream>
 #include <map>
