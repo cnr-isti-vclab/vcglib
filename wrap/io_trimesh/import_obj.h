@@ -745,8 +745,8 @@ namespace vcg {
                         std::getline(stream, line);
                         // We have to manage backspace terminated lines, 
                         // joining them together before parsing them
-                        if(line.back()==13) line.pop_back();
-                        while(line.back()=='\\') {
+                        if(!line.empty() && line.back()==13) line.pop_back();
+                        while(!line.empty() && line.back()=='\\') {
                           std::string tmpLine;
                           std::getline(stream, tmpLine);
                           if(tmpLine.back()==13) line.pop_back();
