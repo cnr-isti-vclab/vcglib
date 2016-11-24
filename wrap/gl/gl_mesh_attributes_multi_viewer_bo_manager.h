@@ -895,6 +895,7 @@ namespace vcg
             bool isthereaquadview = false;
             for(typename ViewsMap::const_iterator it = _perviewreqatts.begin();it != _perviewreqatts.end();++it)
                 isthereaquadview = (it->second._intatts[size_t(PR_WIREFRAME_EDGES)][INT_ATT_NAMES::ATT_VERTPOSITION]) || isthereaquadview;
+			return isthereaquadview;
         }
 
 
