@@ -284,7 +284,7 @@ public:
     const char* Info(TRIMESH_TYPE &m)
     {
         static char dump[60];
-        sprintf(dump,"%lu -> %lu %g\n", tri::Index(m,_pos.F()->V(0)), tri::Index(m,_pos.F()->V(1)),-_priority);
+        sprintf(dump,"%zu -> %zu %g\n", tri::Index(m,_pos.F()->V(0)), tri::Index(m,_pos.F()->V(1)),-_priority);
         return dump;
     }
 
