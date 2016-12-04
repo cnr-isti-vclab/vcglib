@@ -23,8 +23,8 @@
 
 #ifndef __VCGLIB_LOCALOPTIMIZATION
 #define __VCGLIB_LOCALOPTIMIZATION
-#include<vcg/complex/complex.h>
-
+#include <vcg/complex/complex.h>
+#include <time.h>
 namespace vcg{
 // Base class for Parameters
 // all parameters must be derived from this.
