@@ -974,13 +974,13 @@ namespace vcg
                 _texindnumtriangles.resize(_chunkmap.size());
             }
             
-            std::vector<size_t> vpatlas;
+            std::vector<GLuint> vpatlas;
             if (attributestobeupdated[INT_ATT_NAMES::ATT_EDGEINDICES])
                 vpatlas.resize(_mesh.VN(),UINT_MAX);
 
             int faceind = 0;
             size_t chunkindex = faceind;
-            size_t triangles = 0;
+			GLuint triangles = 0;
 
 
             for(ChunkMap::const_iterator mit = _chunkmap.begin();mit != _chunkmap.end();++mit)
@@ -1681,7 +1681,7 @@ namespace vcg
 
 			if ((glopts != NULL) && (glopts->_perpoint_dot_enabled))
 			{
-				float psize = 0.0001;
+				float psize = 0.0001f;
 				if ((glopts->_perpoint_pointsize - 1) > 0)
 					psize = (glopts->_perpoint_pointsize - 1);
 				glPointSize(psize);
@@ -2187,8 +2187,8 @@ namespace vcg
                 assert(nz>=0);
                 assert(nz<pf->VN());
 
-                _v[0] = size_t(vcg::tri::Index(m,pf->V(nz)));;
-                _v[1] = size_t(vcg::tri::Index(m,pf->V(pf->Next(nz))));
+                _v[0] = GLuint(vcg::tri::Index(m,pf->V(nz)));;
+                _v[1] = GLuint(vcg::tri::Index(m,pf->V(pf->Next(nz))));
                 assert(_v[0] != _v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
 
                 if( _v[0] > _v[1] ) 
