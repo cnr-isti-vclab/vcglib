@@ -282,6 +282,15 @@ inline void Color4<float>::Import(const Color4<unsigned char> &b)
 }
 
 template <> template <>
+inline void Color4<double>::Import(const Color4<unsigned char> &b)
+{
+  (*this)[0]=b[0]/255.0;
+  (*this)[1]=b[1]/255.0;
+  (*this)[2]=b[2]/255.0;
+  (*this)[3]=b[3]/255.0;
+}
+
+template <> template <>
 inline void Color4<unsigned char>::Import(const Color4<float> &b)
 {
   (*this)[0]=(unsigned char)(b[0]*255.0f);
@@ -297,6 +306,15 @@ inline void Color4<unsigned char>::Import(const Point4<float> &b)
   (*this)[1]=(unsigned char)(b[1]*255.0f);
   (*this)[2]=(unsigned char)(b[2]*255.0f);
   (*this)[3]=(unsigned char)(b[3]*255.0f);
+}
+
+template <> template <>
+inline void Color4<unsigned char>::Import(const Point4<double> &b)
+{
+  (*this)[0]=(unsigned char)(b[0]*255.0);
+  (*this)[1]=(unsigned char)(b[1]*255.0);
+  (*this)[2]=(unsigned char)(b[2]*255.0);
+  (*this)[3]=(unsigned char)(b[3]*255.0);
 }
 
 template <> template <>
@@ -319,6 +337,16 @@ inline Color4<float> Color4<float>::Construct( const Color4<unsigned char> & b )
                                     (float)(b[3])/255.0f);
 }
 
+template <> template <>
+inline Color4<double> Color4<double>::Construct( const Color4<unsigned char> & b )
+{
+    return Color4<double>(
+                                    (double)(b[0])/255.0,
+                                    (double)(b[1])/255.0,
+                                    (double)(b[2])/255.0,
+                                    (double)(b[3])/255.0);
+}
+
 template<>
 inline Color4<unsigned char>::Color4(Color4<unsigned char>::ColorConstant cc)
 {
@@ -327,6 +355,12 @@ inline Color4<unsigned char>::Color4(Color4<unsigned char>::ColorConstant cc)
 
 template<>
 inline Color4<float>::Color4(Color4<float>::ColorConstant cc)
+{
+  Import(Color4<unsigned char>((Color4<unsigned char>::ColorConstant)cc));
+}
+
+template<>
+inline Color4<double>::Color4(Color4<double>::ColorConstant cc)
 {
   Import(Color4<unsigned char>((Color4<unsigned char>::ColorConstant)cc));
 }
@@ -343,12 +377,27 @@ inline Color4<float>::Color4(unsigned int cc)
   Import(Color4<unsigned char>(cc));
 }
 
+template<>
+inline Color4<double>::Color4(unsigned int cc)
+{
+  Import(Color4<unsigned char>(cc));
+}
+
 inline Color4<float> Clamp(Color4<float> &c)
 {
     c[0]=math::Clamp(c[0],0.0f,1.0f);
     c[1]=math::Clamp(c[1],0.0f,1.0f);
     c[2]=math::Clamp(c[2],0.0f,1.0f);
     c[3]=math::Clamp(c[3],0.0f,1.0f);
+    return c;
+}
+
+inline Color4<double> Clamp(Color4<double> &c)
+{
+    c[0]=math::Clamp(c[0],0.0,1.0);
+    c[1]=math::Clamp(c[1],0.0,1.0);
+    c[2]=math::Clamp(c[2],0.0,1.0);
+    c[3]=math::Clamp(c[3],0.0,1.0);
     return c;
 }
 
