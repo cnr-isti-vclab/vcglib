@@ -321,8 +321,8 @@ void FFAttach(FaceType * &f, int z1, FaceType *&f2, int z2)
 template <class FaceType>
 void FFAttachManifold(FaceType * &f1, int z1, FaceType *&f2, int z2)
 {
-  assert(IsBorder<FaceType>(*f1,z1));
-  assert(IsBorder<FaceType>(*f2,z2));
+  assert(IsBorder<FaceType>(*f1,z1) || f1->FFp(z1)==0);
+  assert(IsBorder<FaceType>(*f2,z2) || f2->FFp(z2)==0);
   assert(f1->V0(z1) == f2->V0(z2) || f1->V0(z1) == f2->V1(z2));
   assert(f1->V1(z1) == f2->V0(z2) || f1->V1(z1) == f2->V1(z2));
   f1->FFp(z1) = f2;
