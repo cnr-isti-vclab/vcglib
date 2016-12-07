@@ -1,8 +1,7 @@
-/** \page basic_concepts
-How to define a mesh type
-=====
-
-The VCG Lib may encode a mesh in several ways, the most common of which is a set of vertices and set of triangles (i.e. triangles for triangle meshes, tetrahedra for tetrahedral meshes). The following line is an example of the definition of a VCG type of mesh:
+/** \page basic_concepts Basic Concepts
+How to define the type of a mesh
+=========================
+The VCG Lib may encode a mesh in several ways, the most common of which is a vector of vertices and vector of triangles (i.e. triangles for triangle meshes, tetrahedra for tetrahedral meshes). The following line is an example of the definition of a VCG type of mesh:
 
 \dontinclude trimesh_base.cpp
 \skip MyMesh

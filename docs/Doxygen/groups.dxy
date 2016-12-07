@@ -28,8 +28,9 @@ This module contains the documentation for the types and the functions used for 
 /** \defgroup code_sample Code Examples
 \brief This module contains a number of small examples to explain the library features
 
-All the example here reported are located under vcglib/apps/sample
-Each sample has a minimal '.pro' file
+All the examples here listed are located in the folder `vcglib/apps/sample`. 
+To compile each sample, please use the corresponding `qmake`  `*.pro` project files. 
+
 
 */
 

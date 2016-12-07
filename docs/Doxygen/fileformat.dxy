@@ -1,4 +1,4 @@
-/** \page fileformat
+/** \page fileformat File Formats
 File Formats
 ============
 VCGLib provides importer and exporter for several file formats
