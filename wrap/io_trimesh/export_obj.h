@@ -129,8 +129,8 @@ public:
     int current = 0;
     int totalPrimitives = m.vn+m.fn;
 
-    typename SaveMeshType::template PerMeshAttributeHandle<std::vector<Material>> materialsHandle =
-            vcg::tri::Allocator<SaveMeshType>::template FindPerMeshAttribute<std::vector<Material>>(m, "materials");
+    typename SaveMeshType::template PerMeshAttributeHandle<std::vector<Material> > materialsHandle =
+            vcg::tri::Allocator<SaveMeshType>::template FindPerMeshAttribute<std::vector<Material> >(m, "materials");
 
     std::string fn(filename);
     int LastSlash=fn.size()-1;

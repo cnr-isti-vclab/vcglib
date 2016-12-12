@@ -256,8 +256,8 @@ namespace vcg {
                         return E_CANTOPEN;
                     }
 
-                    typename OpenMeshType::template PerMeshAttributeHandle<std::vector<Material>> materialsHandle =
-                            vcg::tri::Allocator<OpenMeshType>:: template GetPerMeshAttribute<std::vector<Material>>(m, std::string("materials"));
+                    typename OpenMeshType::template PerMeshAttributeHandle<std::vector<Material> > materialsHandle =
+                            vcg::tri::Allocator<OpenMeshType>:: template GetPerMeshAttribute<std::vector<Material> >(m, std::string("materials"));
                     typename OpenMeshType::template PerFaceAttributeHandle<int> mIndHandle =
                             vcg::tri::Allocator<OpenMeshType>:: template GetPerFaceAttribute<int>(m, std::string("mInd"));
                     std::vector<Material>&	materials = materialsHandle();  // materials vector
