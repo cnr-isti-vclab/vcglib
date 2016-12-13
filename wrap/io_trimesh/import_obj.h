@@ -269,8 +269,8 @@ namespace vcg {
                     Material defaultMaterial;
                     defaultMaterial.index = currentMaterialIdx;
                     defaultMaterial.Ka = Point3f(0.2, 0.2, 0.2);
-                    defaultMaterial.Kd = Point3f(currentColor[0] / 255, currentColor[1] / 255, currentColor[2] / 255);
-                    defaultMaterial.Tr = currentColor[3] / 255;
+                    defaultMaterial.Kd = Point3f(currentColor[0] / 255.0f, currentColor[1] / 255.0f, currentColor[2] / 255.0f);
+                    defaultMaterial.Tr = currentColor[3] / 255.0f;
                     defaultMaterial.Ks = Point3f(1, 1, 1);
                     defaultMaterial.Ns = 0;
                     defaultMaterial.illum = 2;
