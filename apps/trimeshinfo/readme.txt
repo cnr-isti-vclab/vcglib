@@ -1,5 +1,5 @@
 
-   VCGLib  http://vcg.sf.net                                         o o     
+   VCGLib  http://www.vcglib.net                                         o o     
    Visual and Computer Graphics Library                            o     o   
                                                                   _   O  _   
    Copyright(C) 2004-2006                                           \/)\/    
@@ -56,7 +56,7 @@ The application has no graphical interface but works as the "Metro" tool on comm
 TriMeshInfo is written in C++ and makes use of the VCG library. 
 The tool supports the following file formats:
 
-  - PLY (http://vcg.sourceforge.net/img/wiki_up/plyformat.pdf)
+  - PLY 
   - OFF (http://www.geomview.org/docs/html/geomview_41.html#SEC44)
   - STL (http://astronomy.swin.edu.au/~pbourke/dataformats/stl/) 
   - OBJ (http://www.eg-models.de/formats/Format_Obj.html)

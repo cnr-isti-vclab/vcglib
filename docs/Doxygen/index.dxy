@@ -13,7 +13,7 @@ software tools of the <b>Visual Computing Lab</b> of the Italian National Resear
 
 The VCG library is tailored to mostly manage triangular meshes:
 The library is fairly large and offers many state of the art functionalities for processing meshes, like:
-- high quality quadric-error edge-collapse based simplfication,
+- high quality quadric-error edge-collapse based simplification,
 - efficient spatial query structures (uniform grids, hashed grids, kdtree, ...) ,
 - advanced smoothing and fairing algorithms,
 - computation of curvature,
@@ -43,7 +43,7 @@ Start from the following pages for basic concepts and examples.
 Notable Applications
 -------
 A number of applications have been developed using the vcglib:
-- <a href="http://meshlab.sourceforge.net">MeshLab</a>: the renowed open source mesh processing is based on this library.
+- <a href="http://www.meshlab.net">MeshLab</a>: the renowned open source mesh processing is based on this library.
 - \subpage metro "Metro, the tool for measuring differences between meshes"
 - The first high quality  <a href="http://dl.acm.org/citation.cfm?id=940008"> out-of-core mesh simplifier </a> that was used by the Stanford Digital Michelangelo project to process their huge 3D scanned models.
 
