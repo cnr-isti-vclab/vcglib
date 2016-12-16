@@ -288,7 +288,7 @@ namespace vcg
         /*************************************************************************************************************************************************************************/
 
         NotThreadSafeGLMeshAttributesMultiViewerBOManager(/*const*/ MESH_TYPE& mesh,MemoryInfo& meminfo, size_t perbatchprimitives)
-            :_mesh(mesh),_gpumeminfo(meminfo),_bo(INT_ATT_NAMES::enumArity(),NULL),_currallocatedboatt(),_perbatchprim(perbatchprimitives),_chunkmap(),_borendering(false),_edge(),_meshverticeswhenedgeindiceswerecomputed(0),_meshtriangleswhenedgeindiceswerecomputed(0),_tr(),_debugmode(false),_loginfo(),_meaningfulattsperprimitive(PR_ARITY,InternalRendAtts()),_tmpbuffer(0)
+            :_mesh(mesh),_gpumeminfo(meminfo),_bo(INT_ATT_NAMES::enumArity(),NULL),_currallocatedboatt(),_perbatchprim(perbatchprimitives),_chunkmap(),_borendering(false),_edge(),_meshverticeswhenedgeindiceswerecomputed(0),_meshtriangleswhenedgeindiceswerecomputed(0),_tr(),_debugmode(false),_loginfo(),_meaningfulattsperprimitive(PR_ARITY,InternalRendAtts())
         {
             _tr.SetIdentity();
             _bo[INT_ATT_NAMES::ATT_VERTPOSITION] = new GLBufferObject(3,GL_FLOAT,GL_VERTEX_ARRAY,GL_ARRAY_BUFFER);
@@ -645,22 +645,6 @@ namespace vcg
 
         bool buffersMemoryManagementFunction(const InternalRendAtts& tobeallocated,const InternalRendAtts& tobedeallocated,const InternalRendAtts& tobeupdated)
         {
-            if (_tmpbuffer == 0)
-            {
-                GLfloat tmpdata[9] = {-0.5, -0.5, 0.5, 
-                    0.5, -0.5, 0.5, 
-                    -0.5, 0.5, 0.5} ;       
-                glGenBuffers(1,&(_tmpbuffer));
-                glBindBuffer(GL_ARRAY_BUFFER,_tmpbuffer);
-                glBufferData(GL_ARRAY_BUFFER,4 * 9,(GLvoid*) &(tmpdata[0]),GL_STATIC_DRAW);
-                glBindBuffer(GL_ARRAY_BUFFER,0);
-                GLuint index[3] = {1,2,0};
-                glGenBuffers(1,&(_tmpind));
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_tmpind);
-                glBufferData(GL_ELEMENT_ARRAY_BUFFER,3 * 4 ,(GLvoid*) &(index),GL_STATIC_DRAW);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-            }
-
             //GLenum err = glGetError();
             bool replicated = isThereAReplicatedPipelineView();
             std::ptrdiff_t newallocatedmem = bufferObjectsMemoryRequired(tobeallocated);
@@ -2340,8 +2324,6 @@ namespace vcg
         DebugInfo _loginfo;
 
         std::vector<InternalRendAtts> _meaningfulattsperprimitive;
-        GLuint _tmpbuffer;
-        GLuint _tmpind;
     };
 }
 
