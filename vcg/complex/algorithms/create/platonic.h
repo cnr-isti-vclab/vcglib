@@ -837,12 +837,13 @@ void FaceGrid(MeshType & in, int w, int h)
 }
 
 
-// Build a regular grid mesh of faces as a typical height field mesh
-// Vertexes are assumed to be already be allocated, but not oll the grid vertexes are present.
-// For this purpos a grid of indexes is also passed. negative indexes means that there is no vertex.
+// Build a regular grid mesh of faces as the resulto of a sparsely regularly sampled height field.
+// Vertexes are assumed to be already be allocated, but not all the grid vertexes are present.
+// For this purpose vector with a grid of indexes is also passed. 
+// Negative indexes in this vector means that there is no vertex.
 
 template <class MeshType>
-void FaceGrid(MeshType & in, const std::vector<int> &grid, int w, int h)
+void SparseFaceGrid(MeshType & in, const std::vector<int> &grid, int w, int h)
 {
     tri::RequireCompactness(in);
     assert(in.vn <= w*h); // the number of vertices should match the number of expected grid vertices
