@@ -949,7 +949,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                 }
             }
             //qDebug("Completed the reading of %i indexes",RangeGridAuxVec.size());
-            tri::FaceGrid(m, RangeGridAuxVec, RangeGridCols,RangeGridRows);
+            tri::SparseFaceGrid(m, RangeGridAuxVec, RangeGridCols,RangeGridRows);
         }
         else
         {
