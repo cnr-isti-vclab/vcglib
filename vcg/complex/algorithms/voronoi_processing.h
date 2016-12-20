@@ -79,7 +79,7 @@ struct VoronoiProcessingParameter
   bool relaxOnlyConstrainedFlag;
 
   bool preserveFixedSeed;       /// If true the 'fixed' seeds are not moved during relaxation.
-                                /// \see FixVertexVector function to see how to fix a set of seeds.
+                                /// \see MarkVertexVectorAsFixed function to see how to fix a set of seeds.
 
   float refinementRatio;        /// It defines how much the input mesh has to be refined in order to have a supporting
                                 /// triangulation that is dense enough to well approximate the voronoi diagram.
@@ -1195,7 +1195,7 @@ static void PruneSeedByRegionArea(std::vector<VertexType *> &seedVec,
 /// Vertex pointers must belong to the mesh.
 /// The framework use a boolean attribute called "fixed" to store this info.
 ///
-static void FixVertexVector(MeshType &m, std::vector<VertexType *> &vertToFixVec)
+static void MarkVertexVectorAsFixed(MeshType &m, std::vector<VertexType *> &vertToFixVec)
 {
   typename MeshType::template PerVertexAttributeHandle<bool> fixed;
   fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
