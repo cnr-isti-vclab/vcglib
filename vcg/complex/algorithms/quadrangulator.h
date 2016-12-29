@@ -676,6 +676,8 @@ public:
         UV.clear();
         Pmesh.Clear();
 
+        vcg::tri::UpdateTopology<TriMesh>::FaceFace(Tmesh);
+
         TestIsProper(Tmesh);
 
         RoundInitial(Tmesh);

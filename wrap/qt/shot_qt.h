@@ -30,6 +30,7 @@ template <class ShotType>
     shot.Extrinsics.SetRot(rot);
 
     vcg::Camera<ScalarType> &cam = shot.Intrinsics;
+	if(attr.contains("CameraType")) cam.cameraType = attr.namedItem("CameraType").nodeValue().toInt();
     cam.FocalMm = attr.namedItem("FocalMm").nodeValue().toDouble();
     cam.ViewportPx.X() = attr.namedItem("ViewportPx").nodeValue().section(' ',0,0).toInt();
     cam.ViewportPx.Y() = attr.namedItem("ViewportPx").nodeValue().section(' ',1,1).toInt();
@@ -117,6 +118,8 @@ template <class ShotType>
   shotElem.setAttribute( "RotationMatrix", str);
 
   const vcg::Camera<ScalarType> &cam = shot.Intrinsics;
+
+  shotElem.setAttribute("CameraType", cam.cameraType);
 
   shotElem.setAttribute( "FocalMm", cam.FocalMm);
 

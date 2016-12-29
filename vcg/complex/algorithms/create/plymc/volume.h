@@ -24,26 +24,10 @@
 #ifndef __VOLUME_H__
 #define __VOLUME_H__
 
-#ifdef __MINGW32__
-#define _int64 __int64
-#endif
-
 #include "voxel.h"
-#include "svoxel.h"
-#include <vector>
 #include <vcg/space/index/grid_static_ptr.h>
 
-//#define BLOCKSIDE() 8
-
-// Stato di un voxel
-
-// B() dice se ci sono dati in uno stadio usabile.
-// Cnt() dice quanti ce ne sono stati sommati (per la normalizzazione)
-
-// b==false cnt==0 totalmente non inzializzato (Zero)
-// b==false cnt >0 da normalizzare
-// b==true  cnt==0 gia' normalizzato
-// b==true  cnt >0 Errore!!!
+namespace vcg {
 
 // forward definition
 template < class VOL >
@@ -67,7 +51,7 @@ const char *SFormat( const char * f, ... )
 template<class VOX_TYPE, class SCALAR_TYPE=float>
 class Volume {
 public:
-    typedef SCALAR_TYPE scalar;
+  typedef SCALAR_TYPE scalar;
   typedef Point3<scalar> Point3x;
   typedef Box3<scalar> Box3x;
 
@@ -172,7 +156,7 @@ bool Verbose; // se true stampa un sacco di info in piu su logfp;
         for(size_t i=0;i<rv.size();++i)
             rv[i].resize(0,VOX_TYPE::Zero());
         SetDim(bb);
-    };
+    }
 
 private:
 
@@ -324,16 +308,16 @@ public:
     }
 
     /*
-    Data una posizione x,y,z restituisce true se tale posizione appartiene a  un blocco gia' allocato
-    In ogni caso mette in rpos la posizione del subbloc e in lpos la posizione all'interno del sottoblocco
-    */
+     * Compute the offset <lpos> inside the subblock <rpos> of voxel (x,y,z).    
+     * return true if the subblock is allocated.
+     */
     bool Pos(const int &_x,const int &_y,const int &_z, int & rpos,int &lpos) const
     {
         int x=_x-SubPartSafe.min[0];		int y=_y-SubPartSafe.min[1];		int z=_z-SubPartSafe.min[2];
 
         assert(_x>=SubPartSafe.min[0] && _x<SubPartSafe.max[0] &&
-                 _y>=SubPartSafe.min[1] && _y<SubPartSafe.max[1] &&
-                     _z>=SubPartSafe.min[2] && _z<SubPartSafe.max[2]);
+               _y>=SubPartSafe.min[1] && _y<SubPartSafe.max[1] &&
+               _z>=SubPartSafe.min[2] && _z<SubPartSafe.max[2]);
 
     //	assert(x>=0 && x<sz[0] && y>=0 && y<sz[1] && z>=0 && z<sz[2]);
 
@@ -1374,6 +1358,6 @@ class VolumeIterator
     }
 
 
-
 };
+}
 #endif

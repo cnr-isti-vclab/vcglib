@@ -524,7 +524,6 @@ namespace vcg {
                                             locInd[iii]=indexTriangulatedVect[pi+iii];
                                             ff.v[iii]=indexVVect[ locInd[iii] ];
                                             ff.n[iii]=indexNVect[ locInd[iii] ];
-//											qDebug("ff.n[iii]=indexNVect[ locInd[iii] ]; %i", ff.n[iii]);
                                             ff.t[iii]=indexTVect[ locInd[iii] ];
                                         }
 
@@ -644,14 +643,11 @@ namespace vcg {
                         for(int i=0; i<numEdges; ++i)
                         {
                             ObjEdge &  e    = ev[i];
-                            EdgeType & edge = m.edge[i];
-
                             assert(e.v0 >= 0 && size_t(e.v0) < m.vert.size() &&
                                    e.v1 >= 0 && size_t(e.v1) < m.vert.size());
                             // TODO add proper handling of bad indices
-
-                            edge.V(0) = &(m.vert[e.v0]);
-                            edge.V(1) = &(m.vert[e.v1]);
+                            m.edge[i].V(0) = &(m.vert[e.v0]);
+                            m.edge[i].V(1) = &(m.vert[e.v1]);
                         }
                     }
                     //-------------------------------------------------------------------------------
@@ -664,7 +660,9 @@ namespace vcg {
                         m.face[i].Alloc(indexedFaces[i].v.size()); // it does not do anything if it is a trimesh
 
                         for(unsigned int j=0;j<indexedFaces[i].v.size();++j)
-                        {
+                        {   
+                           int vertInd = indexedFaces[i].v[j];
+                           assert(vertInd >=0 && vertInd < m.vn);
                             m.face[i].V(j) = &(m.vert[indexedFaces[i].v[j]]);
 
                             if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) != 0) && (HasPerWedgeTexCoord(m)))
@@ -687,7 +685,6 @@ namespace vcg {
 
                             if ( oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL )
                             {
-//							  qDebug("XXXXXX %i",indexedFaces[i].n[j]);
                                 m.face[i].V(j)->N().Import(normals[indexedFaces[i].n[j]]);
                             }
 
@@ -734,10 +731,10 @@ namespace vcg {
 
 
                 /*!
-                * Read the next valid line and parses it into "tokens", allowing
-                *	the tokens to be read one at a time.
-                * \param stream	The object providing the input stream
-                *	\param tokens	The "tokens" in the next line
+                * Read the next valid line and parses it into "tokens" (e.g. groups like 234/234/234), allowing
+                * the tokens to be read one at a time. It read multiple lines  concatenating them if they end with '\'
+                *  \param stream  The object providing the input stream
+                *  \param tokens  The "tokens" in the next line
                 */
                 inline static void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens, std::vector<Color4b> *colVec)
                 {
@@ -746,6 +743,16 @@ namespace vcg {
                     do
                     {
                         std::getline(stream, line);
+                        // We have to manage backspace terminated lines, 
+                        // joining them together before parsing them
+                        if(!line.empty() && line.back()==13) line.pop_back();
+                        while(!line.empty() && line.back()=='\\') {
+                          std::string tmpLine;
+                          std::getline(stream, tmpLine);
+                          if(tmpLine.back()==13) line.pop_back();
+                          line.pop_back(); 
+                          line.append(tmpLine);
+                        }
                         const size_t len = line.length();
                         if((len > 0) && colVec && line[0] == '#')
                         {
@@ -798,6 +805,12 @@ namespace vcg {
                     while (from<length);
                 } // end TokenizeNextLine
 
+                // This function takes a token and, according to the mask, it returns the indexes of the involved vertex, normal and texcoord indexes.
+                // Example. if the obj file has vertex texcoord (e.g. lines 'vt 0.444 0.5555')
+                // when parsing  a line like
+                // f 46/303 619/325 624/326 623/327
+                // if in the mask you have specified to read wedge tex coord
+                // for the first token it will return inside vId and tId the corresponding indexes 46 and 303 )                
                 inline static void SplitToken(const std::string & token, int & vId, int & nId, int & tId, int mask)
                 {
                     static const char delimiter = '/';
@@ -813,150 +826,17 @@ namespace vcg {
                     const bool hasNormal   = (secondSep != std::string::npos) || (mask & Mask::IOM_WEDGNORMAL) || (mask & Mask::IOM_VERTNORMAL);
 
                     if (hasPosition) vId = atoi(token.substr(0, firstSep).c_str()) - 1;
-                    if (hasTexcoord) tId =               atoi(token.substr(firstSep + 1, secondSep - firstSep - 1).c_str()) - 1;
+                    if (hasTexcoord) tId = atoi(token.substr(firstSep + 1, secondSep - firstSep - 1).c_str()) - 1;
                     if (hasNormal)
                       nId = atoi(token.substr(secondSep + 1).c_str()) - 1;
-//					qDebug("%s -> %i %i %i",token.c_str(),vId,nId,tId);
-                    /*
-                    const std::string vStr = (hasPosition) ? (token.substr(0, firstSep))                            : ("0");
-                    const std::string tStr = (hasTexcoord) ? (token.substr(firstSep + 1, secondSep - firstSep - 1)) : ("0");
-                    const std::string nStr = (hasNormal)   ? (token.substr(secondSep + 1))                          : ("0");
-
-                    if (!vStr.empty()) vId = atoi(vStr.c_str()) - 1;
-                    if (!tStr.empty()) tId = atoi(tStr.c_str()) - 1;
-                    if (!nStr.empty()) nId = atoi(nStr.c_str()) - 1;
-                    */
                 }
 
-#if 0
-                // This function takes a token and, according to the mask, it returns the indexes of the involved vertex, normal and texcoord indexes.
-                // Example. if the obj file has vertex texcoord (e.g. lines 'vt 0.444 0.5555')
-                // when parsing  a line like
-                // f 46/303 619/325 624/326 623/327
-                // if in the mask you have specified to read wedge tex coord
-                // for the first token it will return inside vId and tId the corresponding indexes 46 and 303 )
-                inline static void SplitToken(std::string token, int &vId, int &nId, int &tId, int mask)
-                {
-                    std::string vertex;
-                    std::string texcoord;
-                    std::string normal;
-
-                    if( ( mask & Mask::IOM_WEDGTEXCOORD ) && (mask & Mask::IOM_WEDGNORMAL) )   SplitVVTVNToken(token, vertex, texcoord, normal);
-                    if(!( mask & Mask::IOM_WEDGTEXCOORD ) && (mask & Mask::IOM_WEDGNORMAL) )   SplitVVNToken(token, vertex, normal);
-                    if( ( mask & Mask::IOM_WEDGTEXCOORD ) &&!(mask & Mask::IOM_WEDGNORMAL) )   SplitVVTToken(token, vertex, texcoord);
-                    if(!( mask & Mask::IOM_WEDGTEXCOORD ) &&!(mask & Mask::IOM_WEDGNORMAL) )   SplitVToken(token, vertex);
-
-                    vId = atoi(vertex.c_str()) - 1;
-                    if(mask & Mask::IOM_WEDGTEXCOORD) tId = atoi(texcoord.c_str()) - 1;
-                    if(mask & Mask::IOM_WEDGNORMAL)   nId = atoi(normal.c_str())   - 1;
-                }
-
-                inline static void SplitVToken(std::string token, std::string &vertex)
-                {
-                    vertex = token;
-                }
-
-                inline static void SplitVVTToken(std::string token, std::string &vertex, std::string &texcoord)
-                {
-                    vertex.clear();
-                    texcoord.clear();
-
-                    size_t from		= 0;
-                    size_t to			= 0;
-                    size_t length = token.size();
-
-                    if(from!=length)
-                    {
-                        char c = token[from];
-                        vertex.push_back(c);
-
-                        to = from+1;
-                        while (to<length && ((c = token[to]) !='/'))
-                        {
-                            vertex.push_back(c);
-                            ++to;
-                        }
-                        ++to;
-                        while (to<length && ((c = token[to]) !=' '))
-                        {
-                            texcoord.push_back(c);
-                            ++to;
-                        }
-                    }
-                }	// end of SplitVVTToken
-
-                inline static void SplitVVNToken(std::string token, std::string &vertex, std::string &normal)
-                {
-                    vertex.clear();
-                    normal.clear();
-
-                    size_t from		= 0;
-                    size_t to			= 0;
-                    size_t length = token.size();
-
-                    if(from!=length)
-                    {
-                        char c = token[from];
-                        vertex.push_back(c);
-
-                        to = from+1;
-                        while (to!=length && ((c = token[to]) !='/'))
-                        {
-                            vertex.push_back(c);
-                            ++to;
-                        }
-                        ++to;
-                        ++to;  // should be the second '/'
-                        while (to!=length && ((c = token[to]) !=' '))
-                        {
-                            normal.push_back(c);
-                            ++to;
-                        }
-                    }
-                }	// end of SplitVVNToken
-
-                inline static void SplitVVTVNToken(std::string token, std::string &vertex, std::string &texcoord, std::string &normal)
-                {
-                    vertex.clear();
-                    texcoord.clear();
-                    normal.clear();
-
-                    size_t from		= 0;
-                    size_t to			= 0;
-                    size_t length = token.size();
-
-                    if(from!=length)
-                    {
-                        char c = token[from];
-                        vertex.push_back(c);
-
-                        to = from+1;
-                        while (to!=length && ((c = token[to]) !='/'))
-                        {
-                            vertex.push_back(c);
-                            ++to;
-                        }
-                        ++to;
-                        while (to!=length && ((c = token[to]) !='/'))
-                        {
-                            texcoord.push_back(c);
-                            ++to;
-                        }
-                        ++to;
-                        while (to!=length && ((c = token[to]) !=' '))
-                        {
-                            normal.push_back(c);
-                            ++to;
-                        }
-                    }
-                }	// end of SplitVVTVNToken
-#endif
 
                 /*!
                 * Retrieves infos about kind of data stored into the file and fills a mask appropriately
                 * \param filename The name of the file to open
-                *	\param mask	A mask which will be filled according to type of data found in the object
-                * \param oi A structure which will be filled with infos about the object to be opened
+                * \param mask     A mask which will be filled according to type of data found in the object
+                * \param oi       A structure which will be filled with infos about the object to be opened
                 */
 
                 static bool LoadMask(const char * filename, Info &oi)

@@ -689,10 +689,14 @@ void SuperEllipsoid(MeshType &m, float rFeature, float sFeature, float tFeature,
   tri::Clean<MeshType>::OrientCoherentlyMesh(m,oriented,orientable);  
   tri::UpdateSelection<MeshType>::Clear(m);
 }
-// this function build a mesh starting from a vector of generic coords (objects having a triple of float at their beginning)
-// and a vector of faces (objects having a triple of ints at theri beginning).
-template <class MeshType,class V, class F >
-void BuildMeshFromCoordVectorIndexVector( MeshType & in, const V & v, const F & f)
+
+/** This function build a mesh starting from a vector of generic coords (InCoordType) and indexes (InFaceIndexType)
+ *  InCoordsType needs to have a [] access method for accessing the three coordinates
+ *  and similarly the InFaceIndexType requires [] access method for accessing the three indexes
+ */
+
+template <class MeshType, class InCoordType, class InFaceIndexType >
+void BuildMeshFromCoordVectorIndexVector(MeshType & in, const std::vector<InCoordType> & v, const std::vector<InFaceIndexType> & f)
 {
   typedef typename MeshType::CoordType CoordType;
   typedef typename MeshType::VertexPointer  VertexPointer;
@@ -704,7 +708,7 @@ void BuildMeshFromCoordVectorIndexVector( MeshType & in, const V & v, const F & 
 
   for(size_t i=0;i<v.size();++i)
   {
-    float *vv=(float *)(&v[i]);
+    const InCoordType &vv = v[i];
     in.vert[i].P() = CoordType( vv[0],vv[1],vv[2]);
   }
 
@@ -716,7 +720,7 @@ void BuildMeshFromCoordVectorIndexVector( MeshType & in, const V & v, const F & 
 
   for(size_t i=0;i<f.size();++i)
   {
-    int * ff=(int *)(&f[i]);
+    const InFaceIndexType &ff= f[i];
     assert( ff[0]>=0 );
     assert( ff[1]>=0 );
     assert( ff[2]>=0 );
@@ -833,12 +837,13 @@ void FaceGrid(MeshType & in, int w, int h)
 }
 
 
-// Build a regular grid mesh of faces as a typical height field mesh
-// Vertexes are assumed to be already be allocated, but not oll the grid vertexes are present.
-// For this purpos a grid of indexes is also passed. negative indexes means that there is no vertex.
+// Build a regular grid mesh of faces as the resulto of a sparsely regularly sampled height field.
+// Vertexes are assumed to be already be allocated, but not all the grid vertexes are present.
+// For this purpose vector with a grid of indexes is also passed. 
+// Negative indexes in this vector means that there is no vertex.
 
 template <class MeshType>
-void FaceGrid(MeshType & in, const std::vector<int> &grid, int w, int h)
+void SparseFaceGrid(MeshType & in, const std::vector<int> &grid, int w, int h)
 {
     tri::RequireCompactness(in);
     assert(in.vn <= w*h); // the number of vertices should match the number of expected grid vertices

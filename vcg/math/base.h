@@ -89,6 +89,7 @@ Edited Comments and GPL license
 #include <float.h>
 #include <math.h>
 #include <assert.h>
+#include <cmath>
 #include <limits>
 #include <algorithm>
 
@@ -196,7 +197,7 @@ template<class T> int IsNAN(T t) {    return _isnan(t) || (!_finite(t)); }
 #elif defined(__MINGW32__) // GCC
 template<class T> int IsNAN(T t) {    return std::isnan(t) || std::isinf(t); }
 #elif defined(__GNUC__) // GCC
-template<class T> int IsNAN(T t) {    return isnan(t) || isinf(t); }
+template<class T> int IsNAN(T t) {    return std::isnan(t) || std::isinf(t); }
 #else // generic
 
 template<class T> int IsNAN(T t)

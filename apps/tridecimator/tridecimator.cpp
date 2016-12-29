@@ -73,7 +73,6 @@ void Usage()
           "---------------------------------\n"
           "        TriDecimator 1.0 \n"
           "     http://vcg.isti.cnr.it\n"
-          "    http://vcg.sourceforge.net\n"
           "   release date: " __DATE__ 
           "\n---------------------------------\n\n"
           "Copyright 2003-2016 Visual Computing Lab I.S.T.I. C.N.R.\n"

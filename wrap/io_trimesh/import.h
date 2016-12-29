@@ -93,6 +93,9 @@ return lastType;
 }
 
 public:
+enum ImporterError {
+  E_NOERROR =0 // No error =0 is the standard for ALL the imported files.
+};
 // simple aux function that returns true if a given file has a given extesnion
 static bool FileExtension(std::string filename, std::string extension)
 {

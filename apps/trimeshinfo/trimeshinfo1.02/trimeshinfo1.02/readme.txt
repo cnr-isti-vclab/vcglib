@@ -1,5 +1,5 @@
 
-   VCGLib  http://vcg.sf.net                                         o o     
+   VCGLib  http://www.vcglib.net                                         o o     
    Visual and Computer Graphics Library                            o     o   
                                                                   _   O  _   
    Copyright(C) 2004-2005                                           \/)\/    
@@ -51,6 +51,4 @@ For each analyzed dataset the following information are extracted:
 The application has no graphical interface but works as the "Metro" tool on command line. 
 
 TriMeshInfo is written in C++ and makes use of the VCL library. 
-The tool supports two file formats ply (as described in the following document 
-http://vcg.sourceforge.net/img/wiki_up/plyformat.pdf) 
-and off (as described in http://www.geomview.org/docs/html/geomview_41.html#SEC44) . 
+The tool supports two file formats ply and off (as described in http://www.geomview.org/docs/html/geomview_41.html#SEC44) . 

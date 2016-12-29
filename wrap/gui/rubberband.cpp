@@ -146,36 +146,39 @@ void Rubberband::RenderLine(QGLWidget* gla, Point3f AA, Point3f BB)
 	glDisable(GL_LIGHTING);
 	glDisable(GL_TEXTURE_2D);
 	glDepthMask(false);
-	glLineWidth(2.5);
-	glPointSize(6.0);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_POINT_SMOOTH);
 	glColor(color);
-	glLineWidth(2.0);
-	glPointSize(5.0);
-	glBegin(GL_LINES);
-	glVertex(AA);
-	glVertex(BB);
-	glEnd();
-	glBegin(GL_POINTS);
-	glVertex(AA);
-	glVertex(BB);
-	glEnd();
-	glDepthFunc(GL_GREATER);
-	glLineWidth(1.0f);
-	glPointSize(2.0f);
-	glBegin(GL_LINES);
-	glVertex(AA);
-	glVertex(BB);
-	glEnd();
-	glBegin(GL_POINTS);
-	glVertex(AA);
-	glVertex(BB);
-	glEnd();
-	glDepthFunc(GL_LESS);
 
+	// IN FRONT OF SURFACE
+	glDepthFunc(GL_LESS);
+	glLineWidth(2.5);
+	glPointSize(6.0);
+	glBegin(GL_LINES);
+	glVertex(AA);
+	glVertex(BB);
+	glEnd();
+	glBegin(GL_POINTS);
+	glVertex(AA);
+	glVertex(BB);
+	glEnd();
+
+	// BEHIND SURFACE
+	glDepthFunc(GL_GREATER);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
+	glLineWidth(1.5f);
+	glPointSize(4.0f);
+	glBegin(GL_LINES);
+	glVertex(AA);
+	glVertex(BB);
+	glEnd();
+	glBegin(GL_POINTS);
+	glVertex(AA);
+	glVertex(BB);
+	glEnd();
+
+	glDepthFunc(GL_LESS);
 	glPopAttrib();
 	assert(!glGetError());
 }

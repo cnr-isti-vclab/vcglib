@@ -164,7 +164,10 @@ static void FaceFromVertex( MeshType &m)
   tri::RequirePerVertexQuality(m);
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
   {
-    (*fi).Q() = ((*fi).V(0)->Q()+(*fi).V(1)->Q()+(*fi).V(2)->Q())/3.0f;
+     (*fi).Q() =0;
+     for (size_t i=0;i<(*fi).VN();i++)
+        (*fi).Q() += (*fi).V(i)->Q();
+     (*fi).Q()/=(ScalarType)(*fi).VN();
   }
 }
 

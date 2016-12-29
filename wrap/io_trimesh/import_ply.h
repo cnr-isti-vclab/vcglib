@@ -469,12 +469,14 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
         {
             pf.AddToRead(VertDesc(6));
             pf.AddToRead(VertDesc(7));
+            pf.AddToRead(VertDesc(8));
             pi.mask |= Mask::IOM_VERTCOLOR;
         }
         if( pf.AddToRead(VertDesc(9))!=-1 )
         {
             pf.AddToRead(VertDesc(10));
             pf.AddToRead(VertDesc(11));
+            pf.AddToRead(VertDesc(12));
             pi.mask |= Mask::IOM_VERTCOLOR;
         }
         if( pf.AddToRead(VertDesc(21))!=-1 )
@@ -518,6 +520,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
         {
             pf.AddToRead(FaceDesc(7));
             pf.AddToRead(FaceDesc(8));
+            pf.AddToRead(FaceDesc(9));
             pi.mask |= Mask::IOM_FACECOLOR;
         }
     }
@@ -646,6 +649,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
             for(j=0;j<n;++j)
             {
                 if(pi.cb && (j%1000)==0) pi.cb(j*50/n,"Vertex Loading");
+                va.a = 255;
                 if( pf.Read( (void *)&(va) )==-1 )
                 {
                     pi.status = PlyInfo::E_SHORTFILE;
@@ -737,6 +741,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                 int k;
 
                 if(pi.cb && (j%1000)==0) pi.cb(50+j*50/n,"Face Loading");
+                fa.a = 255;
                 if( pf.Read(&fa)==-1 )
                 {
                     pi.status = PlyInfo::E_SHORTFILE;
@@ -768,7 +773,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                     (*fi).C()[0] = fa.r;
                     (*fi).C()[1] = fa.g;
                     (*fi).C()[2] = fa.b;
-                    (*fi).C()[3] = 255;
+                    (*fi).C()[3] = fa.a;
                 }
 
                 if( pi.mask & Mask::IOM_WEDGTEXCOORD )
@@ -944,7 +949,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                 }
             }
             //qDebug("Completed the reading of %i indexes",RangeGridAuxVec.size());
-            tri::FaceGrid(m, RangeGridAuxVec, RangeGridCols,RangeGridRows);
+            tri::SparseFaceGrid(m, RangeGridAuxVec, RangeGridCols,RangeGridRows);
         }
         else
         {

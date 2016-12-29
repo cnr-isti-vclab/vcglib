@@ -95,7 +95,8 @@ void PanMode::Apply (Trackball * tb, Point3f new_point)
 }
 
 void PanMode::Draw(Trackball * tb){
-  DrawSphereIcon(tb,true );
+  DrawSphereIcon(tb,true);
+  DrawSphereAxis(tb);
   DrawUglyPanMode(tb);
 }
 

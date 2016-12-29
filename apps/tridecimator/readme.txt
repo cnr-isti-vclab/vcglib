@@ -1,5 +1,5 @@
 
-   VCGLib  http://vcg.sf.net                                         o o     
+   VCGLib  http://www.vcglib.net                                         o o     
    Visual and Computer Graphics Library                            o     o   
                                                                   _   O  _   
    Copyright(C) 2005-2006                                           \/)\/    

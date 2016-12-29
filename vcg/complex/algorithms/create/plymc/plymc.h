@@ -35,23 +35,13 @@
 #include <float.h>
 #include <math.h>
 
-#include <locale>
-#include <iostream>
-
-#include <list>
-#include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/complex.h>
 
-#include <vcg/complex/algorithms/update/position.h>
-#include <vcg/complex/algorithms/update/normal.h>
-#include <vcg/complex/algorithms/update/quality.h>
-#include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/math/histogram.h>
-#include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/geodesic.h>
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
-#include <wrap/ply/plystuff.h>
+//#include <wrap/ply/plystuff.h>
 
 #include <vcg/complex/algorithms/create/marching_cubes.h>
 #include <vcg/complex/algorithms/create/mc_trivial_walker.h>
@@ -61,7 +51,6 @@
 #include <vcg/complex/algorithms/local_optimization/tri_edge_collapse.h>
 #include <vcg/complex/algorithms/local_optimization/tri_edge_collapse_quadric.h>
 
-//#include <vcg/simplex/edge/base.h>
 #include <stdarg.h>
 #include "volume.h"
 #include "tri_edge_collapse_mc.h"
@@ -72,6 +61,15 @@ namespace tri {
 template<class MeshType>
 void MCSimplify( MeshType &m, float perc, bool preserveBB=true, vcg::CallBackPos *cb=0);
 
+
+/** Surface Reconstruction
+ * 
+ *  To allow the managment of a very large set of meshes to be merged,
+ *  it is templated on a MeshProvider class that is able to provide the meshes to be merged. 
+ *  IT is the surface reconstrction algorithm that have been used for a long time inside the ISTI-Visual Computer Lab.
+ *  It is mostly a variant of the Curless et al. e.g. a volumetric approach with some original weighting schemes,"
+ *  a different expansion rule, and another approach to hole filling through volume dilation/relaxations.
+ */
 
 template < class SMesh, class MeshProvider>
 class PlyMC
@@ -175,6 +173,7 @@ public:
   MeshProvider MP;
   Parameter p;
   Volume<Voxelf> VV;
+  char errorMessage[1024];
 
 /// PLYMC Methods
 
@@ -192,21 +191,36 @@ public:
     {
       if(!(loadmask & tri::io::Mask::IOM_VERTNORMAL))
       {
-        printf("Error, pointset MUST have normals");
-        return false;
+        if(m.FN()==0)
+        {
+          sprintf(errorMessage,"%sError: mesh has not per vertex normals\n",errorMessage);
+          return false;
+        }
+        else
+        {          
+          tri::Clean<SMesh>::RemoveUnreferencedVertex(m);
+          tri::Allocator<SMesh>::CompactEveryVector(m);
+          tri::UpdateNormal<SMesh>::PerVertexNormalizedPerFaceNormalized(m);          
+        }
       }
+      tri::UpdateNormal<SMesh>::NormalizePerVertex(m);    
+      int badNormalCnt=0;
       for(SVertexIterator vi=m.vert.begin(); vi!=m.vert.end();++vi)
         if(math::Abs(SquaredNorm((*vi).N())-1.0)>0.0001)
         {
-          printf("Error: mesh has not per vertex normalized normals\n");
+          badNormalCnt++;
+          tri::Allocator<SMesh>::DeleteVertex(m,*vi);
+        }
+      tri::Allocator<SMesh>::CompactEveryVector(m);      
+       if(badNormalCnt > m.VN()/10)
+        {
+          sprintf(errorMessage,"%sError: mesh has null normals\n",errorMessage);
           return false;
         }
-
+      
       if(!(loadmask & tri::io::Mask::IOM_VERTQUALITY))
         tri::UpdateQuality<SMesh>::VertexConstant(m,0);
       tri::UpdateNormal<SMesh>::PerVertexMatrix(m,Tr);
-      //if(!(loadmask & tri::io::Mask::IOM_VERTCOLOR))
-      //  saveMask &= ~tri::io::Mask::IOM_VERTCOLOR;
     }
     else // processing for triangle meshes
     {
@@ -223,7 +237,6 @@ public:
           tri::UpdateTopology<SMesh>::VertexFace(m);
           tri::UpdateFlags<SMesh>::FaceBorderFromVF(m);
           tri::Geodesic<SMesh>::DistanceFromBorder(m);
-          //          tri::UpdateQuality<SMesh>::VertexGeodesicFromBorder(m);
         }
       }
 
@@ -325,8 +338,9 @@ public:
     return true;
 }
 
-void Process(vcg::CallBackPos *cb=0)
+bool Process(vcg::CallBackPos *cb=0)
 {
+  sprintf(errorMessage,"");
   printf("bbox scanning...\n"); fflush(stdout);
   Matrix44f Id; Id.SetIdentity();
   MP.InitBBox();
@@ -344,7 +358,6 @@ void Process(vcg::CallBackPos *cb=0)
 
   voxdim = fullb.max - fullb.min;
 
-  int TotAdd=0,TotMC=0,TotSav=0;
   // if kcell==0 the number of cells is computed starting from required voxel size;
   __int64 cells;
   if(p.NCell>0) cells = (__int64)(p.NCell)*(__int64)(1000);
@@ -364,6 +377,7 @@ void Process(vcg::CallBackPos *cb=0)
   }
 
 
+  int TotAdd=0,TotMC=0,TotSav=0; // partial timings counter
 
   for(p.IPos[0]=p.IPosS[0];p.IPos[0]<=p.IPosE[0];++p.IPos[0])
     for(p.IPos[1]=p.IPosS[1];p.IPos[1]<=p.IPosE[1];++p.IPos[1])
@@ -405,8 +419,8 @@ void Process(vcg::CallBackPos *cb=0)
                 res = InitMesh(*sm,MP.MeshName(i).c_str(),MP.Tr(i));
                 if(!res)
                 {
-                  printf("Failed Init of mesh %s",MP.MeshName(i).c_str());
-                  return;
+                  sprintf(errorMessage,"%sFailed Init of mesh %s\n",errorMessage,MP.MeshName(i).c_str());
+                  return false ;
                 }
               }
               res |= AddMeshToVolumeM(*sm, MP.MeshName(i),MP.W(i));
@@ -452,26 +466,20 @@ void Process(vcg::CallBackPos *cb=0)
             VV.SlicedPPM("final","__",p.SliceNum);
             VV.SlicedPPMQ("final","__",p.SliceNum);
           }
-          //MCMesh me;
-          //
           MCMesh me;
           if(res)
           {
-            typedef vcg::tri::TrivialWalker<MCMesh, Volume <Voxelf> >	Walker;
+            typedef vcg::tri::TrivialWalker<MCMesh, Volume <Voxelf> >	  Walker;
             typedef vcg::tri::MarchingCubes<MCMesh, Walker>             MarchingCubes;
-            //typedef vcg::tri::ExtendedMarchingCubes<MCMesh, Walker> ExtendedMarchingCubes;
 
             Walker walker;
             MarchingCubes	mc(me, walker);
-            Box3i currentSubBox=VV.SubPartSafe;
-            Point3i currentSubBoxRes=VV.ssz;
             /**********************/
             if(cb) cb(50,"Step 2: Marching Cube...");
             else printf("Step 2: Marching Cube...\n");
             /**********************/
-            walker.Init(VV,currentSubBox);
+            walker.SetExtractionBox(VV.SubPartSafe);
             walker.BuildMesh(me,VV,mc,0);
-            //            walker.BuildMesh(me,VV,mc,currentSubBox,currentSubBoxRes);
 
             typename MCMesh::VertexIterator vi;
             Box3f bbb; bbb.Import(VV.SubPart);
@@ -481,8 +489,7 @@ void Process(vcg::CallBackPos *cb=0)
                 vcg::tri::Allocator< MCMesh >::DeleteVertex(me,*vi);
               VV.DeInterize((*vi).P());
             }
-            typename MCMesh::FaceIterator fi;
-            for (fi = me.face.begin(); fi != me.face.end(); ++fi)
+            for (typename MCMesh::FaceIterator fi = me.face.begin(); fi != me.face.end(); ++fi)
             {
               if((*fi).V(0)->IsD() || (*fi).V(1)->IsD() || (*fi).V(2)->IsD() )
                 vcg::tri::Allocator< MCMesh >::DeleteFace(me,*fi);
@@ -526,6 +533,7 @@ void Process(vcg::CallBackPos *cb=0)
         {
           printf("----------- skipping SubBlock %2i %2i %2i ----------\n",p.IPos[0],p.IPos[1],p.IPos[2]);
         }
+  return true;
 }
 
 

@@ -176,7 +176,7 @@ bool HitHyper (Point3f center, float radius, Point3f viewpoint, Plane3f viewplan
  * in the simple ortho case, the hit point is just the value of
  * y = 1/x * (r^2 /2 ) on the hitOnViewPlane
  */
-bool HitHyperOrtho(Point3f center, float radius, Point3f viewpoint, Plane3f viewplane,
+bool HitHyperOrtho(Point3f center, float radius, Point3f /*viewpoint*/, Plane3f viewplane,
                    Point3f hitOnViewplane, Point3f & hit)
 {
   float xval = Distance (center, hitOnViewplane);
@@ -707,15 +707,15 @@ void DrawSphereIcon (Trackball * tb, bool active, bool planeshandle=false)
   glRotatef (90, 1, 0, 0);
   col[0] = .40f; col[1] = .85f; col[2] = .40f;
   glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, col);
-  DrawCircle(planeshandle);
+    DrawCircle(planeshandle);
 
   glRotatef (90, 0, 1, 0);
   col[0] = .85f; col[1] = .40f; col[2] = .40f;
   glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, col);
     DrawCircle(planeshandle);
 
-    glPopMatrix ();
-    glPopAttrib ();
+  glPopMatrix();
+  glPopAttrib();
 }
 
 // TEMPORARY drawing section
@@ -830,6 +830,66 @@ void DrawUglyScaleMode(Trackball * tb)
   ugly_s.push_back(Point3f(1,-1,0));
   ugly_s.push_back(Point3f(-1,-1,0));
   DrawUglyLetter(tb,ugly_s);
+}
+
+/*!
+@brief function to draw X,Y and Z axis in the trackball sphere.
+
+Draws the three colored axis inside the trackball sphere. added to better see the trackball center when panning
+
+@param tb the manipulator.
+*/
+void DrawSphereAxis(Trackball * tb)
+{
+	glPushAttrib(GL_TRANSFORM_BIT | GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glDepthMask(GL_FALSE);
+
+	Point3f center = tb->center + tb->track.InverseMatrix()*Point3f(0, 0, 0);
+	glTranslate(center);
+	glScale(tb->radius / tb->track.sca);
+
+	float amb[4] = { .35f, .35f, .35f, 1.0f };
+	float col[4] = { .5f, .5f, .8f, 1.0f };
+	glEnable(GL_LINE_SMOOTH);
+    glLineWidth(DH.LineWidthMoving);
+	glDisable(GL_COLOR_MATERIAL); // has to be disabled, it is used by wrapper to draw meshes, and prevent direct material setting, used here
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glColor(DH.color);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, amb);
+
+	col[0] = 1.0f; col[1] = 0.0f; col[2] = 0.0f;
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, col);
+	glBegin(GL_LINES);
+	glNormal3d(-1.0, 0.0, 0.0);
+	glVertex3d(-1.2, 0.0, 0.0);
+	glNormal3d( 1.0, 0.0, 0.0);
+	glVertex3d( 1.2, 0.0, 0.0);
+	glEnd();
+	col[0] = 0.0f; col[1] = 1.0f; col[2] = 0.0f;
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, col);
+	glBegin(GL_LINES);
+	glNormal3d(0.0,-1.0, 0.0);
+	glVertex3d(0.0,-1.2, 0.0);
+	glNormal3d(0.0, 1.0, 0.0);
+	glVertex3d(0.0, 1.2, 0.0);
+	glEnd();
+	col[0] = 0.0f; col[1] = 0.0f; col[2] = 1.0f;
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, col);
+	glBegin(GL_LINES);
+	glNormal3d(0.0, 0.0,-1.0);
+	glVertex3d(0.0, 0.0,-1.2);
+	glNormal3d(0.0, 0.0, 1.0);
+	glVertex3d(0.0, 0.0, 1.2);
+	glEnd();
+
+	glPopMatrix();
+	glPopAttrib();
 }
 
 /*!

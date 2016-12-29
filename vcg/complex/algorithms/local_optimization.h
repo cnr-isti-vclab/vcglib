@@ -20,83 +20,11 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  $Log: not supported by cvs2svn $
-  Revision 1.20  2007/01/19 09:13:09  cignoni
-  Added Finalize() method to the interface
-
-  Revision 1.19  2007/01/11 11:48:33  ganovelli
-  currMetric inizialied to heap.front() (it was heap.back()- wrong)
-
-  Revision 1.18  2006/12/11 14:09:44  ganovelli
-  added missing initialization of currMetric
-
-  Revision 1.17  2006/06/09 07:28:43  m_di_benedetto
-  Corrected ClearHeap(): iterator "hi" not decrementable if it was the first of the container.
-
-  Revision 1.16  2005/11/10 15:38:46  cignoni
-  Added casts to remove warnings
-
-  Revision 1.15  2005/10/02 23:23:52  cignoni
-  Changed the sense of the < operator for heap: it is reversed according to the stl where highest score elements must float in the heap
-  Completed TimeBudget Termination condition.
-  Parametrized the ClearHeap procedure now there is a HeapSimplexRatio param. Removed dirty printf.
-
-  Revision 1.14  2005/04/14 11:34:33  ponchio
-  *** empty log message ***
-
-  Revision 1.13  2005/01/19 10:33:50  cignoni
-  Improved ClearHeap management
-
-  Revision 1.12  2004/12/10 01:02:48  cignoni
-  added an inline and removed loggng
-
-  Revision 1.11  2004/12/03 21:14:39  ponchio
-  Fixed memory leak...
-
-  Revision 1.10  2004/11/23 10:37:17  cignoni
-  Added a member with a cached copy of the floating Priority() value inside the HeapElem to optimize operator< in heap updating operator
-
-  Revision 1.9  2004/11/05 10:03:47  fiorin
-  Added ModifierType::TriEdgeFlipOp
-
-  Revision 1.8  2004/10/25 07:02:56  ganovelli
-  some inline function, logs on file (precompiler directive)
-
-  Revision 1.7  2004/09/29 17:08:39  ganovelli
-  changed > to < in heapelem comparison
-
-  Revision 1.6  2004/09/28 09:57:08  cignoni
-  Better Doxygen docs
-
-  Revision 1.5  2004/09/15 10:40:20  ponchio
-  typedef LocalOptimization HeapType -> public:
-
-  Revision 1.4  2004/09/08 15:10:59  ganovelli
-  *** empty log message ***
-
-  Revision 1.3  2004/07/27 09:46:15  cignoni
-  First working version of the LocalOptimization/Simplification Framework
-
-  Revision 1.1  2004/07/15 12:04:14  ganovelli
-  minor changes
-
-  Revision 1.2  2004/07/09 10:22:56  ganovelli
-  working draft
-
-  Revision 1.1  2004/07/08 08:25:15  ganovelli
-  first draft
-
-****************************************************************************/
 
 #ifndef __VCGLIB_LOCALOPTIMIZATION
 #define __VCGLIB_LOCALOPTIMIZATION
-#include<vector>
-#include<algorithm>
-#include<time.h>
-#include<math.h>
-#include<vcg/complex/complex.h>
-
+#include <vcg/complex/complex.h>
+#include <time.h>
 namespace vcg{
 // Base class for Parameters
 // all parameters must be derived from this.

@@ -72,35 +72,36 @@ public:
     {
         return min!=p.min || max!=p.max;
     }
-        /** Varia le dimensioni del bounding box scalandole rispetto al parametro scalare.
-            @param s Valore scalare che indica di quanto deve variare il bounding box
+        /** Offset of a vector (s,s,s)
         */
     void Offset( const BoxScalarType s )
     {
         Offset( Point3<BoxScalarType> (s,s,s));
     }
-        /** Varia le dimensioni del bounding box del valore fornito attraverso il parametro.
-            @param delta Point in 3D space
+        /** Offset the two corner of the box of a vector delta. 
+         *  adding delta to max and -delta to min. 
+            @param delta offset vector
         */
     void Offset( const Point3<BoxScalarType> & delta )
     {
         min -= delta;
         max += delta;
     }
-        /// Initializing the bounding box
+    /// Initializing the bounding box
     void Set( const Point3<BoxScalarType> & p )
     {
         min = max = p;
     }
-        /// Set the bounding box to a null value
+    
+    /// Set the bounding box to a null value
     void SetNull()
     {
         min.X()= 1; max.X()= -1;
         min.Y()= 1; max.Y()= -1;
         min.Z()= 1; max.Z()= -1;
     }
-        /** Function to add two bounding box
-            @param b Il bounding box che si vuole aggiungere
+        /** Modify the current bbox to contain also the passed box.
+         *  Adding a null bounding box does nothing
         */
     void Add( Box3<BoxScalarType> const & b )
     {
@@ -117,9 +118,7 @@ public:
             if(max.Z() < b.max.Z()) max.Z() = b.max.Z();
         }
     }
-        /** Funzione per aggiungere un punto al bounding box. Il bounding box viene modificato se il punto
-            cade fuori da esso.
-            @param p The point 3D
+        /** Modify the current bbox to contain also the passed point
         */
     void Add( const Point3<BoxScalarType> & p )
     {
@@ -136,9 +135,7 @@ public:
         }
     }
 
-    /** Function to add a sphere (a point + radius) to a bbox
-        @param p The point 3D
-        @param radius the radius of the sphere centered on p
+    /** Modify the current bbox to contain also the passed sphere
     */
 void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
 {
@@ -154,19 +151,22 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
       max.Z() = std::max(max.Z(),p.Z()+radius);
     }
 }
-    // Aggiunge ad un box un altro box trasformato secondo la matrice m
+  /** Modify the current bbox to contain also the box b trasformed according to the matrix m
+  */
     void Add( const Matrix44<BoxScalarType> &m, const Box3<BoxScalarType> & b )
     {
-            const Point3<BoxScalarType> &mn= b.min;
-            const Point3<BoxScalarType> &mx= b.max;
+      if(b.IsNull()) return; // Adding a null bbox should do nothing
+      
+      const Point3<BoxScalarType> &mn= b.min;
+      const Point3<BoxScalarType> &mx= b.max;
       Add(m*(Point3<BoxScalarType>(mn[0],mn[1],mn[2])));
-            Add(m*(Point3<BoxScalarType>(mx[0],mn[1],mn[2])));
-            Add(m*(Point3<BoxScalarType>(mn[0],mx[1],mn[2])));
-            Add(m*(Point3<BoxScalarType>(mx[0],mx[1],mn[2])));
-            Add(m*(Point3<BoxScalarType>(mn[0],mn[1],mx[2])));
-            Add(m*(Point3<BoxScalarType>(mx[0],mn[1],mx[2])));
-            Add(m*(Point3<BoxScalarType>(mn[0],mx[1],mx[2])));
-            Add(m*(Point3<BoxScalarType>(mx[0],mx[1],mx[2])));
+      Add(m*(Point3<BoxScalarType>(mx[0],mn[1],mn[2])));
+      Add(m*(Point3<BoxScalarType>(mn[0],mx[1],mn[2])));
+      Add(m*(Point3<BoxScalarType>(mx[0],mx[1],mn[2])));
+      Add(m*(Point3<BoxScalarType>(mn[0],mn[1],mx[2])));
+      Add(m*(Point3<BoxScalarType>(mx[0],mn[1],mx[2])));
+      Add(m*(Point3<BoxScalarType>(mn[0],mx[1],mx[2])));
+      Add(m*(Point3<BoxScalarType>(mx[0],mx[1],mx[2])));
     }
         /** Calcola l'intersezione tra due bounding box. Al bounding box viene assegnato il valore risultante.
             @param b Il bounding box con il quale si vuole effettuare l'intersezione
@@ -191,9 +191,7 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
         min += p;
         max += p;
     }
-        /** Verifica se un punto appartiene ad un bounding box.
-            @param p The point 3D
-            @return True se p appartiene al bounding box, false altrimenti
+        /** true if the point belong to the closed box 
         */
     bool IsIn( Point3<BoxScalarType> const & p ) const
     {
@@ -203,9 +201,8 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
             min.Z() <= p.Z() && p.Z() <= max.Z()
         );
     }
-        /** Verifica se un punto appartiene ad un bounding box aperto sul max.
-            @param p The point 3D
-            @return True se p appartiene al bounding box, false altrimenti
+        /** true if the point belong to the open box (open on the max side) 
+         * e.g. if p in [min,max)
         */
     bool IsInEx( Point3<BoxScalarType> const & p ) const
     {
@@ -234,15 +231,14 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
                b.min.Y()<max.Y() && b.max.Y()>min.Y() &&
                b.min.Z()<max.Z() && b.max.Z()>min.Z() ;
     }
-        /** Controlla se il bounding box e' nullo.
-            @return True se il bounding box e' nullo, false altrimenti
+        /** 
+          return true if the box is null (e.g. invalid or not initialized);
         */
     bool IsNull() const { return min.X()>max.X() || min.Y()>max.Y() || min.Z()>max.Z(); }
-        /** Controlla se il bounding box e' vuoto.
-            @return True se il bounding box e' vuoto, false altrimenti
+        /** return true if the box is empty (e.g. if min == max)
         */
     bool IsEmpty() const { return min==max; }
-        /// Restituisce la lunghezza della diagonale del bounding box.
+        /// Return the lenght of the diagonal of the box .
     BoxScalarType Diag() const
     {
         return Distance(min,max);
@@ -252,7 +248,7 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
     {
         return SquaredDistance(min,max);
     }
-        /// Calcola il centro del bounding box.
+        /// Return the center of the box.
     Point3<BoxScalarType> Center() const
     {
         return (min+max)/2;
@@ -277,7 +273,7 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
           (p[2]-min[2])/(max[2]-min[2])
             );
     }
-        /// Calcola il volume del bounding box.
+        /// Return the volume of the box.
     BoxScalarType Volume() const
     {
         return (max.X()-min.X())*(max.Y()-min.Y())*(max.Z()-min.Z());
