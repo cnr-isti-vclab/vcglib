@@ -139,7 +139,7 @@ static void SetGLIsometricProj(float x1, float x2, float y1, float y2, float z1,
 }
 
 /// get OpenGL-like frustum from a vcg camera (intrinsics)
-static void GetFrustum(vcg::Camera<S> & intrinsics, S & sx,S & dx,S & bt,S & tp,S & f) const
+static void GetFrustum(vcg::Camera<S> & intrinsics, S & sx,S & dx,S & bt,S & tp,S & f)
 {
 	intrinsics.GetFrustum(sx,dx,bt,tp,f);
 }
