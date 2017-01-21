@@ -316,41 +316,38 @@ public:
   }
 
 
-  /** This function removes that are not referenced by any face. The function updates the vn counter.
+  /** This function removes that are not referenced by any face or by any edge.
             @param m The mesh
+            @param DeleteVertexFlag if false prevent the vertex deletion and just count it.
             @return The number of removed vertices
             */
   static int RemoveUnreferencedVertex( MeshType& m, bool DeleteVertexFlag=true)   // V1.0
   {
-    FaceIterator fi;
-    EdgeIterator ei;
-    VertexIterator vi;
-    int referredBit = VertexType::NewBitFlag();
-
-    int j;
+    tri::RequirePerVertexFlags(m);
+    
+    std::vector<bool> referredVec(m.vert.size(),false);
     int deleted = 0;
 
-    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-      (*vi).ClearUserBit(referredBit);
-
-    for(fi=m.face.begin();fi!=m.face.end();++fi)
+    for(auto fi=m.face.begin();fi!=m.face.end();++fi)
       if( !(*fi).IsD() )
-        for(j=0;j<(*fi).VN();++j)
-          (*fi).V(j)->SetUserBit(referredBit);
+        for(auto j=0;j<(*fi).VN();++j)
+          referredVec[tri::Index(m,(*fi).V(j))]=true;
 
-    for(ei=m.edge.begin();ei!=m.edge.end();++ei)
+    for(auto ei=m.edge.begin();ei!=m.edge.end();++ei)
       if( !(*ei).IsD() ){
-        (*ei).V(0)->SetUserBit(referredBit);
-        (*ei).V(1)->SetUserBit(referredBit);
+        referredVec[tri::Index(m,(*ei).V(0))]=true;
+        referredVec[tri::Index(m,(*ei).V(1))]=true;
       }
-
-    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-      if( (!(*vi).IsD()) && (!(*vi).IsUserBit(referredBit)))
+    
+    if(!DeleteVertexFlag) 
+      return std::count(referredVec.begin(),referredVec.end(),true);
+    
+    for(auto vi=m.vert.begin();vi!=m.vert.end();++vi)
+      if( (!(*vi).IsD()) && (!referredVec[tri::Index(m,*vi)]) )
       {
-        if(DeleteVertexFlag) Allocator<MeshType>::DeleteVertex(m,*vi);
+        Allocator<MeshType>::DeleteVertex(m,*vi);
         ++deleted;
       }
-    VertexType::DeleteBitFlag(referredBit);
     return deleted;
   }
 
