@@ -472,11 +472,11 @@ void TriangleSegmentDistance(const vcg::Triangle3<ScalarType> &t,
 	///project endpoints and see if they fall into the triangle
 	vcg::Plane3<ScalarType> pl3;
 	pl3.Init(t.P(0),t.P(1),t.P(2));
-	CoordType pj0=pl3.Projection(s.P(0));
-	CoordType pj1=pl3.Projection(s.P(1));
+    CoordType pj0=pl3.Projection(s.P0());
+    CoordType pj1=pl3.Projection(s.P1());
 	///take distances
-	ScalarType dpj0=(pj0-s.P(0)).Norm();
-	ScalarType dpj1=(pj1-s.P(1)).Norm();
+    ScalarType dpj0=(pj0-s.P0()).Norm();
+    ScalarType dpj1=(pj1-s.P1()).Norm();
 
 	///test if they fall inside the triangle
 	CoordType bary0,bary1;
