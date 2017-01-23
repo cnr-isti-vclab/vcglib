@@ -1289,6 +1289,13 @@ public:
         }
     }
 
+    static bool IsSingular(MeshType &mesh,const VertexType &v)
+    {
+       assert(vcg::tri::HasPerVertexAttribute(mesh,std::string("Singular")));
+       typename MeshType::template PerVertexAttributeHandle<bool> Handle_Singular;
+       Handle_Singular = vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<bool>(mesh,std::string("Singular"));
+       return (Handle_Singular[v]);
+    }
 
     static void GradientToCross(const FaceType &f,
                                 const vcg::Point2<ScalarType> &UV0,
@@ -1514,6 +1521,31 @@ public:
         OrientDirectionFaceCoherently(mesh);
     }
 
+    static size_t expectedValence(MeshType &mesh,
+                                  const VertexType &v) {
+
+        // query if an attribute is present or not
+        assert(vcg::tri::HasPerVertexAttribute(mesh,std::string("Singular")));
+        assert(vcg::tri::HasPerVertexAttribute(mesh,std::string("SingularIndex")));
+        typename MeshType::template PerVertexAttributeHandle<bool> Handle_Singular;
+        Handle_Singular = vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<bool>(mesh,std::string("Singular"));
+        typename MeshType::template PerVertexAttributeHandle<int> Handle_SingularIndex;
+        Handle_SingularIndex = vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<int>(mesh,std::string("SingularIndex"));
+        if (!Handle_Singular[v])
+            return 4;
+        switch (Handle_SingularIndex[v]) {
+        case 1:
+            return 5;
+        case 2:
+            return 6;
+        case 3:
+            return 3;
+        case 4:
+            return 2;
+        default:
+            return 4;
+        }
+    }
 };///end class
 } //End Namespace Tri
 } // End Namespace vcg
