@@ -79,7 +79,7 @@ typename CoordType::ScalarType Area(const std::vector<CoordType> &Pos)
 {
     typedef typename CoordType::ScalarType ScalarType;
     CoordType bary=CoordType(0,0,0);
-    for (int i=0;i<Pos.size();i++)
+    for (size_t i=0;i<Pos.size();i++)
         bary+=Pos[i];
 
     bary/=Pos.size();
@@ -127,7 +127,7 @@ typename PolygonType::ScalarType PolyArea(const PolygonType &F)
 
     CoordType bary=PolyBarycenter(F);
     ScalarType Area=0;
-    for (size_t i=0;i<F.VN();i++)
+    for (size_t i=0;i<(size_t)F.VN();i++)
     {
         CoordType p0=F.cP0(i);
         CoordType p1=F.cP1(i);
