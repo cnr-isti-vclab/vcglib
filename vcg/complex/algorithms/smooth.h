@@ -401,6 +401,44 @@ static void VertexCoordTaubin(MeshType &m, int step, float lambda, float mu, boo
             } // end for step
 }
 
+static void VertexQualityTaubin(MeshType &m, int step, float lambda, float mu, bool SmoothSelected=false, vcg::CallBackPos * cb=0)
+{
+    SimpleTempData<typename MeshType::VertContainer,ScalarType > OldQ(m.vert,0);
+
+    VertexIterator vi;
+    for(int i=0;i<step;++i)
+        {
+            for (size_t i=0;i<m.vert.size();i++)
+                OldQ[i]=m.vert[i].Q();
+
+            if(cb) cb(100*i/step, "Taubin Smoothing");
+
+            VertexQualityLaplacian(m,1,SmoothSelected);
+
+            for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+                {
+                    if(!SmoothSelected || (*vi).IsS())
+                    {
+                        ScalarType Delta = (*vi).Q() - OldQ[(*vi)];
+                        (*vi).Q() = OldQ[(*vi)] + Delta*lambda ;
+                    }
+                }
+
+            for (size_t i=0;i<m.vert.size();i++)
+                OldQ[i]=m.vert[i].Q();
+            VertexQualityLaplacian(m,1,SmoothSelected);
+
+            for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+                    {
+                        if(!SmoothSelected || (*vi).IsS())
+                        {
+                            ScalarType Delta = m.vert[i].Q() -  OldQ[(*vi)];
+                            (*vi).Q() =  OldQ[(*vi)] + Delta*mu ;
+                        }
+                    }
+            } // end for step
+}
+
 
 static void VertexCoordLaplacianQuality(MeshType &m, int step, bool SmoothSelected=false)
 {
@@ -689,7 +727,7 @@ static void VertexQualityLaplacian(MeshType &m, int step=1, bool SmoothSelected=
         FaceIterator fi;
         for(fi=m.face.begin();fi!=m.face.end();++fi)
             if(!(*fi).IsD())
-                for(int j=0;j<3;++j)
+                for(int j=0;j<(*fi).VN();++j)
                     if(!(*fi).IsB(j))
                         {
                             TD[(*fi).V(j)].sum+=(*fi).V1(j)->Q();
@@ -701,7 +739,7 @@ static void VertexQualityLaplacian(MeshType &m, int step=1, bool SmoothSelected=
             // si azzaera i dati per i vertici di bordo
             for(fi=m.face.begin();fi!=m.face.end();++fi)
                 if(!(*fi).IsD())
-                    for(int j=0;j<3;++j)
+                    for(int j=0;j<(*fi).VN();++j)
                         if((*fi).IsB(j))
                             {
                                 TD[(*fi).V(j)]=lpz;
@@ -711,7 +749,7 @@ static void VertexQualityLaplacian(MeshType &m, int step=1, bool SmoothSelected=
             // se l'edge j e' di bordo si deve mediare solo con gli adiacenti
             for(fi=m.face.begin();fi!=m.face.end();++fi)
                 if(!(*fi).IsD())
-                    for(int j=0;j<3;++j)
+                    for(int j=0;j<(*fi).VN();++j)
                         if((*fi).IsB(j))
                             {
                                 TD[(*fi).V(j)].sum+=(*fi).V1(j)->Q();
