@@ -100,6 +100,22 @@ public:
     return minmax;
   }
 
+  static ScalarType ComputePerFaceQualityAvg( MeshType & m)
+  {
+    tri::RequirePerFaceQuality(m);
+    ScalarType AvgQ = 0;
+
+    FaceIterator fi;
+    size_t num=0;
+    for(fi = m.face.begin(); fi != m.face.end(); ++fi)
+    {
+      if((*fi).IsD())continue;
+        AvgQ+= (*fi).Q();
+        num++;
+    }
+    return (AvgQ/(ScalarType)num);
+  }
+
   static std::pair<ScalarType,ScalarType> ComputePerEdgeQualityMinMax( MeshType & m)
   {
     tri::RequirePerEdgeQuality(m);
