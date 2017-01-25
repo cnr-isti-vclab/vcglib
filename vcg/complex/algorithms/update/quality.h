@@ -56,6 +56,7 @@ public:
   typedef typename MeshType::FacePointer    FacePointer;
   typedef typename MeshType::FaceIterator   FaceIterator;
 
+
 /** Assign to each vertex of the mesh a constant quality value. Useful for initialization.
 */
 static void VertexConstant(MeshType &m, ScalarType q)
@@ -63,6 +64,23 @@ static void VertexConstant(MeshType &m, ScalarType q)
   tri::RequirePerVertexQuality(m);
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
     (*vi).Q()=q;
+}
+
+/** Assign to each vertex of the mesh the valence of faces.
+*/
+static void VertexValence(UpdateMeshType &m)
+{
+    VertexConstant(m,0);
+    for (size_t i=0;i<m.face.size();i++)
+    {
+        if (m.face[i].IsD())continue;
+
+        for (int j=0;j<m.face[i].VN();j++)
+        {
+            VertexType *v=m.face[i].V(j);
+            v->Q()+=1;
+        }
+    }
 }
 
 /** Clamp each vertex of the mesh with a range of values.
