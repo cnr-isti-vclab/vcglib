@@ -1,3 +1,7 @@
+# Please do not add here all kind of intermediate files just by extension. 
+# Try whenever possible to match folder and to try to use 
+# building rules that put all the generated files into separate folders
+
 # QTCreator user prefs
 *.user
 
@@ -10,26 +14,4 @@ release/
 
 # Intermediate Files
 *.bc
-apps/sample/polygonmesh_dual/polygonmesh_base
 
-*.stash
-
-apps/sample/polygonmesh_dual/dual_dual.obj
-
-apps/sample/polygonmesh_dual/dual.obj
-
-apps/sample/polygonmesh_dual/Makefile
-
-apps/sample/polygonmesh_dual/plylib.o
-
-*.o
-
-*.ply
-
-*.obj
-
-apps/sample/polygonmesh_optimize/polygonmesh_base
-
-apps/sample/polygonmesh_optimize/Makefile
-
-vcg/complex/algorithms/polygonal_algorithmsOLD.h
