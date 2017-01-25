@@ -10,3 +10,26 @@ release/
 
 # Intermediate Files
 *.bc
+apps/sample/polygonmesh_dual/polygonmesh_base
+
+*.stash
+
+apps/sample/polygonmesh_dual/dual_dual.obj
+
+apps/sample/polygonmesh_dual/dual.obj
+
+apps/sample/polygonmesh_dual/Makefile
+
+apps/sample/polygonmesh_dual/plylib.o
+
+*.o
+
+*.ply
+
+*.obj
+
+apps/sample/polygonmesh_optimize/polygonmesh_base
+
+apps/sample/polygonmesh_optimize/Makefile
+
+vcg/complex/algorithms/polygonal_algorithmsOLD.h
