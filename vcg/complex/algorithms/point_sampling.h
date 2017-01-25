@@ -848,27 +848,33 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 ///
 static void VertexBorderCorner(MeshType & m, VertexSampler &ps, float angleRad)
 {
-  typename MeshType::template PerVertexAttributeHandle<float> angleSumH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m);
+//  typename MeshType::template PerVertexAttributeHandle<float> angleSumH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m);
 
-  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-    angleSumH[vi]=0;
+//  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+//    angleSumH[vi]=0;
 
-  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-  {
-    for(int i=0;i<3;++i)
+//  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+//  {
+//    for(int i=0;i<3;++i)
+//    {
+//      angleSumH[fi->V(i)] += vcg::Angle(fi->P2(i) - fi->P0(i),fi->P1(i) - fi->P0(i));
+//    }
+//  }
+
+//  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+//  {
+//    if((angleSumH[vi]<angleRad && vi->IsB())||
+//       (angleSumH[vi]>(360-angleRad) && vi->IsB()))
+//        ps.AddVert(*vi);
+//  }
+
+//  tri::Allocator<MeshType>:: template DeletePerVertexAttribute<float> (m,angleSumH);
+    vcg::tri::UpdateFlags<MeshType>::FaceClearS(m);
+    vcg::tri::UpdateFlags<MeshType>::SelectVertexCornerBorder(m,angleRad);
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     {
-      angleSumH[fi->V(i)] += vcg::Angle(fi->P2(i) - fi->P0(i),fi->P1(i) - fi->P0(i));
+      if(vi->IsS())ps.AddVert(*vi);
     }
-  }
-
-  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-  {
-    if((angleSumH[vi]<angleRad && vi->IsB())||
-       (angleSumH[vi]>(360-angleRad) && vi->IsB()))
-        ps.AddVert(*vi);
-  }
-
-  tri::Allocator<MeshType>:: template DeletePerVertexAttribute<float> (m,angleSumH);
 }
 
 /// \brief Sample all the border vertices
