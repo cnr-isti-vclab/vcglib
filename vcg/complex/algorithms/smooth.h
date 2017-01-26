@@ -298,7 +298,7 @@ static void VertexCoordPlanarLaplacian(MeshType &m, int step, float AngleThrRad 
                 if(!(*fi).IsD()){
                     for (int j = 0; j < 3; ++j) {
                         if(Angle( Normal(TD[(*fi).V0(j)].sum, (*fi).P1(j), (*fi).P2(j) ),
-                                            Normal(   (*fi).P0(j)     , (*fi).P1(j), (*fi).P2(j) ) ) > AngleThrRad )
+                                  Normal(   (*fi).P0(j)     , (*fi).P1(j), (*fi).P2(j) ) ) > AngleThrRad )
                             TD[(*fi).V0(j)].sum = (*fi).P0(j);
                     }
                 }
@@ -307,7 +307,7 @@ static void VertexCoordPlanarLaplacian(MeshType &m, int step, float AngleThrRad 
                 if(!(*fi).IsD()){
                     for (int j = 0; j < 3; ++j) {
                         if(Angle( Normal(TD[(*fi).V0(j)].sum, TD[(*fi).V1(j)].sum, (*fi).P2(j) ),
-                                            Normal(   (*fi).P0(j)     ,    (*fi).P1(j),      (*fi).P2(j) ) ) > AngleThrRad )
+                                  Normal(   (*fi).P0(j)     ,    (*fi).P1(j),      (*fi).P2(j) ) ) > AngleThrRad )
                         {
                             TD[(*fi).V0(j)].sum = (*fi).P0(j);
                             TD[(*fi).V1(j)].sum = (*fi).P1(j);
@@ -318,7 +318,8 @@ static void VertexCoordPlanarLaplacian(MeshType &m, int step, float AngleThrRad 
 
             for(vi=m.vert.begin();vi!=m.vert.end();++vi)
                 if(!(*vi).IsD() && TD[*vi].cnt>0 )
-                        (*vi).P()= TD[*vi].sum;
+                  if(!SmoothSelected || (*vi).IsS())
+                    (*vi).P()= TD[*vi].sum;
 
 
 
