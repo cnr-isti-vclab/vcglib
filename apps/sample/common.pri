@@ -1,5 +1,5 @@
 DEPENDPATH += . ../../..
-INCLUDEPATH += . ../../..
+INCLUDEPATH += . ../../.. ../../../eigenlib
 CONFIG += console c++11
 TEMPLATE = app
 # Mac specific Config required to avoid to make application bundles
