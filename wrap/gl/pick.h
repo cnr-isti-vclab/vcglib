@@ -41,9 +41,8 @@ class GLPickTri
   typedef typename MESH_TYPE::VertexPointer  VertexPointer;
   typedef typename MESH_TYPE::VertexType  VertexType;
 
-private:
-
- static CoordType Proj(const Eigen::Matrix<ScalarType,4,4> &M, const ScalarType * viewport, const CoordType &p)
+public:
+ static CoordType glProject(const Eigen::Matrix<ScalarType,4,4> &M, const ScalarType * viewport, const CoordType &p)
   {
     const ScalarType vx=viewport[0];
     const ScalarType vy=viewport[1];
@@ -67,7 +66,7 @@ private:
     pVec.resize(m.vert.size());
     for(size_t i=0;i<m.vert.size();++i) if(!m.vert[i].IsD())
     {
-      pVec[i] = Proj(M, viewportF,CoordType::Construct(m.vert[i].P()));
+      pVec[i] = GLPickTri<MESH_TYPE>::glProject(M, viewportF,CoordType::Construct(m.vert[i].P()));
     }
   }
 
@@ -227,7 +226,7 @@ public:
     ScalarType LocalEpsilon(0.001);
     for(size_t i =0;i<result.size();++i)
     {
-      CoordType p = Proj(M,vp,CoordType::Construct(Barycenter(*(result[i])))) ;
+      CoordType p = glProject(M,vp,CoordType::Construct(Barycenter(*(result[i])))) ;
       if(p[0] >=0 && p[0]<screenW && p[1] >=0 && p[1]<screenH)
       {
         ScalarType bufZ(buffer[int(p[0])+int(p[1])*screenW]);
