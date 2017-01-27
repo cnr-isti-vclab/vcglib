@@ -91,8 +91,8 @@ class PolygonalAlgorithm
 
         //get border edges
         std::vector<std::vector<bool> > IsBorder;
-        BorderEdgeFromPFFAdj(poly_m,IsBorder);
-
+        //BorderEdgeFromPFFAdj(poly_m,IsBorder);
+        vcg::tri::UpdateFlags<PolyMeshType>::VertexBorderFromFaceAdj(poly_m);
         //deselect all vertices
         vcg::tri::UpdateFlags<PolyMeshType>::VertexClearS(poly_m);
 
@@ -242,30 +242,6 @@ class PolygonalAlgorithm
 
 public:
 
-//    static void GetFaceNormals(FaceType &F,
-//                               std::vector<CoordType> &Norms)
-//    {
-//        Norms.clear();
-//        if (F.VN()<=2) return;
-//        for (int i=0;i<F.VN();i++)
-//        {
-//            int index0=(i+F.VN()-1) % F.VN();
-//            int index1=i;
-//            int index2=(i+1) % F.VN();
-
-//            CoordType p0=F.P(index0);
-//            CoordType p1=F.P(index1);
-//            CoordType p2=F.P(index2);
-
-//            CoordType v0=p0-p1;
-//            CoordType v1=p2-p1;
-//            CoordType Ni=v1^v0;
-//            Ni.Normalize();
-//            //            bool isOK=CheckCoords(Ni);
-//            //            if (isOK)
-//            Norms.push_back(Ni);
-//        }
-//    }
     
     static CoordType GetFaceGetBary(FaceType &F)
     {
@@ -330,24 +306,6 @@ public:
 //        }
 //    }
     
-//    //METTERE IN QUALITY -> update quality
-//    static void PerVertexValence(PolyMeshType &poly_m,
-//                                 std::vector<unsigned int> &Valence)
-//    {
-//        Valence.resize(poly_m.vert.size(),0);
-//        for (size_t i=0;i<poly_m.face.size();i++)
-//        {
-//            if (poly_m.face[i].IsD())continue;
-
-//            for (int j=0;j<poly_m.face[i].VN();j++)
-//            {
-//                VertexType *v=poly_m.face[i].V(j);
-//                int Index=vcg::tri::Index(poly_m,v);
-
-//                Valence[Index]++;
-//            }
-//        }
-//    }
 
     enum PolyQualityType{QAngle,QPlanar,QTemplate};
 
@@ -378,57 +336,6 @@ public:
             }
         }
     }
-    
-//    //DELETE
-//    static void ColorByQuality(PolyMeshType &poly_m,
-//                               const PolyQualityType &QType)
-//    {
-//        UpdateQuality(poly_m,QType);
-//        vcg::tri::UpdateColor<PolyMeshType>::PerFaceQualityRamp(poly_m);
-//    }
-
-//    static void ColorScatterByQuality(PolyMeshType &poly_m)
-//    {
-//        //get the max of quality
-//        ScalarType MaxQ=0;
-//        for (size_t i=0;i<poly_m.face.size();i++)
-//        {
-//            if (poly_m.face[i].Q()<MaxQ)continue;
-//            MaxQ=poly_m.face[i].Q();
-//        }
-//        for (size_t i=0;i<poly_m.face.size();i++)
-//        {
-//            poly_m.face[i].C()=vcg::Color4b::Scatter(MaxQ+1,poly_m.face[i].Q());
-//        }
-//    }
-
-//    static void ColorRangeByQuality(PolyMeshType &poly_m,
-//                                    ScalarType minV=0,
-//                                    ScalarType maxV=1)
-//    {
-//        //get the max of quality
-//        ScalarType testMin=std::min(minV,maxV);
-//        ScalarType testMax=std::max(minV,maxV);
-//        bool to_swap=minV>maxV;
-//        for (size_t i=0;i<poly_m.face.size();i++)
-//        {
-//            ScalarType val=poly_m.face[i].Q();
-//            if (val<testMin)val=testMin;
-//            if (val>testMax)val=testMax;
-//            if (!to_swap)
-//                poly_m.face[i].C()=vcg::Color4b::ColorRamp(testMin,testMax,poly_m.face[i].Q());
-//            else
-//                poly_m.face[i].C()=vcg::Color4b::ColorRamp(testMax,testMin,poly_m.face[i].Q());
-
-//        }
-//    }
-    
-//    //DELETE
-//    static void ColorUniformly(PolyMeshType &poly_m,
-//                               vcg::Color4b col=vcg::Color4b(200,200,200,255))
-//    {
-//        vcg::tri::UpdateColor<PolyMeshType>::PerFaceConstant(poly_m,col);
-//    }
 
     /*! \brief given a face this function returns the template positions as in "Statics Aware Grid Shells"
     */
