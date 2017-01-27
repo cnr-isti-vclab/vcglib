@@ -846,7 +846,7 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 /// It assumes that the border flag have been set over the mesh both for vertex and for faces.
 /// All the vertices on the border where the edges of the boundary of the surface forms an angle smaller than the given threshold are sampled.
 ///
-static void VertexBorderCorner(MeshType & m, VertexSampler &ps, float angleRad)
+static void VertexBorderCorner(MeshType & m, VertexSampler &ps, ScalarType angleRad)
 {
 //  typename MeshType::template PerVertexAttributeHandle<float> angleSumH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m);
 
