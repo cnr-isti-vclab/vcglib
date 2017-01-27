@@ -37,7 +37,7 @@
 #include <igl/n_polyvector.h>
 #include <igl/principal_curvature.h>
 #include <igl/igl_inline.h>
-#include <igl/comiso/nrosy.h>
+#include <igl/copyleft/comiso/nrosy.h>
 
 namespace vcg {
 namespace tri {
@@ -238,7 +238,7 @@ class FieldSmoother
         Eigen::MatrixXd output_field;
         Eigen::VectorXd output_sing;
 
-        igl::nrosy(V,F,HardI,HardD,SoftI,SoftW,SoftD,Ndir,alpha_soft,output_field,output_sing);
+        igl::copyleft::comiso::nrosy(V,F,HardI,HardD,SoftI,SoftW,SoftD,Ndir,alpha_soft,output_field,output_sing);
 
         //finally update the principal directions
         for (size_t i=0;i<mesh.face.size();i++)
