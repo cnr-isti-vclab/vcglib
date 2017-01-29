@@ -226,6 +226,67 @@ static void VertexFromMeanCurvatureDir(MeshType &m)
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
         (*vi).Q() = ((*vi).K1()+(*vi).K2())/2.0f;
 }
+static void VertexFromMinCurvatureDir(MeshType &m)
+{
+  tri::RequirePerVertexQuality(m);
+  tri::RequirePerVertexCurvatureDir(m);
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+        (*vi).Q() = (*vi).K1();
+}
+static void VertexFromMaxCurvatureDir(MeshType &m)
+{
+  tri::RequirePerVertexQuality(m);
+  tri::RequirePerVertexCurvatureDir(m);
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+        (*vi).Q() = (*vi).K2();
+}
+
+/**
+ * @brief VertexFromShapeIndexCurvatureDir
+ * Compute from the current Curvature Direction the Shape Index S as defined by [Koenderink 1992]
+ * and store it in the per-vertex Quality.
+ * S = 2/pi atan(k1+k2/k1-k2)
+ * 
+ * J. Koenderink and A. van Doorn. 
+ * Surface shape and curvature scales. 
+ * Image and vision computing, 10(8):557–565, 1992.
+ */
+
+static void VertexFromShapeIndexCurvatureDir(MeshType &m)
+{
+  tri::RequirePerVertexQuality(m);
+  tri::RequirePerVertexCurvatureDir(m);
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+    { 
+      ScalarType k1=(*vi).K1(); 
+      ScalarType k2=(*vi).K2();
+      if(k1<k2) std::swap(k1,k2); 
+      (*vi).Q() = (2.0/M_PI)*atan2(k1+k2,k1-k2);
+    }
+}
+/**
+ * @brief VertexFromCurvednessCurvatureDir
+ * Compute from the current Curvature Direction the Curvedness as defined by [Koenderink 1992]
+ * and store it in the per-vertex Quality.
+ * C =  Sqrt((k1*k1+k2*k2)/2.0)
+ * 
+ * J. Koenderink and A. van Doorn. 
+ * Surface shape and curvature scales. 
+ * Image and vision computing, 10(8):557–565, 1992.
+ */
+static void VertexFromCurvednessCurvatureDir(MeshType &m)
+{
+  tri::RequirePerVertexQuality(m);
+  tri::RequirePerVertexCurvatureDir(m);
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+    {
+      const ScalarType k1=(*vi).K1(); 
+      const ScalarType k2=(*vi).K2();
+
+      (*vi).Q() = math::Sqrt((k1*k1+k2*k2)/2.0);
+    }
+}
+
 
 /*
  *  Absolute Curvature
