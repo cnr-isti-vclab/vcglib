@@ -108,7 +108,7 @@ public:
     for(size_t i=0;i<m.face.size();++i) if(!m.face[i].IsD())
     {
       CoordType bary = vcg::Barycenter(m.face[i]);
-      CoordType bz = Proj(M, viewportF,bary);
+      CoordType bz = glProject(M, viewportF,bary);
 
       if(bz[2]<bzmin && reg.IsIn(bz))
       {
@@ -131,7 +131,7 @@ public:
 
     for(size_t i=0;i<m.vert.size();++i) if(!m.vert[i].IsD())
     {
-      CoordType bz = Proj(M, viewportF,m.vert[i].P());
+      CoordType bz = glProject(M, viewportF,m.vert[i].P());
       if(bz[2]<bzmin && reg.IsIn(bz))
       {
         bzmin=bz[2];
