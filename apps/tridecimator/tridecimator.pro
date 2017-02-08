@@ -1,7 +1,7 @@
 
 TARGET = tridecimator
 DEPENDPATH += ../..
-INCLUDEPATH += . ../..
+INCLUDEPATH += . ../.. ../../eigenlib
 CONFIG += console stl  c++11 debug_and_release
 TEMPLATE = app
 HEADERS += 
