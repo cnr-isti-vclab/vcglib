@@ -17,6 +17,7 @@ OBJECTS_DIR = build/obj
 # Lib headers
 INCLUDEPATH += .
 INCLUDEPATH += ../../..
+INCLUDEPATH += ../../../eigenlib
 
 # Lib sources
 SOURCES += ../../../wrap/ply/plylib.cpp
