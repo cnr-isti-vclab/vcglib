@@ -38,14 +38,13 @@ enum ModifierType{	TetraEdgeCollapseOp, TriEdgeSwapOp, TriVertexSplitOp,
 				QuadDiagCollapseOp, QuadEdgeCollapseOp};
 /** \addtogroup tetramesh */
 /*@{*/
-/// This abstract class define which functions  a local modification to be used in the LocalOptimization.
+/// This abstract class define which functions a local modification class must have to be used in the LocalOptimization framework.
 template <class MeshType>
 class LocalModification
 {
  public:
         typedef typename LocalOptimization<MeshType>::HeapType HeapType;
         typedef typename MeshType::ScalarType ScalarType;
-
 
   inline LocalModification(){}
   virtual ~LocalModification(){}
@@ -95,19 +94,12 @@ template<class MeshType>
 class LocalOptimization
 {
 public:
-  LocalOptimization(MeshType &mm, BaseParameterClass *_pp): m(mm){ ClearTermination();e=0.0;HeapSimplexRatio=5; pp=_pp;}
+  LocalOptimization(MeshType &mm, BaseParameterClass *_pp): m(mm){ ClearTermination();HeapSimplexRatio=5; pp=_pp;}
 
 	struct  HeapElem;
-	// scalar type
 	typedef typename MeshType::ScalarType ScalarType;
-	// type of the heap
 	typedef typename std::vector<HeapElem> HeapType;	
-	// modification type	
   typedef  LocalModification <MeshType>  LocModType;
-	// modification Pointer type	
-  typedef  LocalModification <MeshType> * LocModPtrType;
-	
-
 
 	/// termination conditions	
 	 enum LOTermination {	
@@ -118,9 +110,9 @@ public:
 			LOTime			= 0x10  // test how much time is passed since the start
 		} ;
 
-	int tf;
+	int tf; // Termination Flag
 	
-  int nPerfmormedOps,
+  int nPerformedOps,
 		nTargetOps,
 		nTargetSimplices,
 		nTargetVertices;
@@ -159,8 +151,6 @@ public:
 	/// the mesh to optimize
 	MeshType & m;
 
-
-
 	///the heap of operations
 	HeapType h;
 
@@ -175,15 +165,14 @@ public:
 	  ~HeapElem(){}
 
     ///pointer to instance of local modifier
-    LocModPtrType locModPtr;
+    LocModType *locModPtr;
     float pri;
-
    
-    inline HeapElem( LocModPtrType _locModPtr)
+    inline HeapElem( LocModType *_locModPtr)
     {
-		  locModPtr = _locModPtr;
+      locModPtr = _locModPtr;
       pri=float(locModPtr->Priority());
-    };
+    }
 
     /// STL heap has the largest element as the first one.
     /// usually we mean priority as an error so we should invert the comparison
@@ -206,35 +195,37 @@ public:
     typename HeapType::iterator i;
     for(i = h.begin(); i != h.end(); i++)
       delete (*i).locModPtr;
-  };
+  }
 	
-	double e;
-
   /// main cycle of optimization
   bool DoOptimization()
   {
+    assert ( ( ( tf & LOnSimplices	)==0) ||  ( nTargetSimplices!= -1));
+    assert ( ( ( tf & LOnVertices	)==0) ||  ( nTargetVertices	!= -1));
+    assert ( ( ( tf & LOnOps		)==0) ||  ( nTargetOps		!= -1));
+    assert ( ( ( tf & LOMetric		)==0) ||  ( targetMetric	!= -1));
+    assert ( ( ( tf & LOTime		)==0) ||  ( timeBudget		!= -1));
+    
     start=clock();
-		nPerfmormedOps =0;
+		nPerformedOps =0;
 		while( !GoalReached() && !h.empty())
 			{
         if(h.size()> m.SimplexNumber()*HeapSimplexRatio )  ClearHeap();
 				std::pop_heap(h.begin(),h.end());
-        LocModPtrType  locMod   = h.back().locModPtr;
+        LocModType  *locMod   = h.back().locModPtr;
 				currMetric=h.back().pri;
         h.pop_back();
         				
         if( locMod->IsUpToDate() )
 				{	
           //printf("popped out: %s\n",locMod->Info(m));
-         	// check if it is feasible
           if (locMod->IsFeasible(this->pp))
 					{
-						nPerfmormedOps++;
+						nPerformedOps++;
             locMod->Execute(m,this->pp);
             locMod->UpdateHeap(h,this->pp);
 						}
 				}
-        //else printf("popped out unfeasible\n");
 				delete locMod;
 			}
 		return !(h.empty());
@@ -243,31 +234,30 @@ public:
 // It removes from the heap all the operations that are no more 'uptodate' 
 // (e.g. collapses that have some recently modified vertices)
 // This function  is called from time to time by the doOptimization (e.g. when the heap is larger than fn*3)
-void ClearHeap()
-{
-	typename HeapType::iterator hi;
-	//int sz=h.size();
-	for(hi=h.begin();hi!=h.end();)
-	{
-    if(!(*hi).locModPtr->IsUpToDate())
-		{
-			delete (*hi).locModPtr;
-			*hi=h.back();
-			if(&*hi==&h.back()) 
-			{
-				hi=h.end();
-				h.pop_back();
-				break;
-			}
-		    h.pop_back();
-			continue;
-		}
-		++hi;
-	}
-	//qDebug("\nReduced heap from %7i to %7i (fn %7i) ",sz,h.size(),m.fn);
-	make_heap(h.begin(),h.end());
-}
-
+  void ClearHeap()
+  {
+//    int sz=h.size(); int t0=clock();
+    for(auto hi=h.begin();hi!=h.end();)
+    {
+      if(!(*hi).locModPtr->IsUpToDate())
+      {
+        delete (*hi).locModPtr;
+        *hi=h.back();
+        if(&*hi==&h.back()) 
+        {
+          hi=h.end();
+          h.pop_back();
+          break;
+        }
+        h.pop_back();
+        continue;
+      }
+      ++hi;
+    }
+//    printf("\nReduced heap from %7i to %7i (fn %7i) in %7.2f \n",sz,h.size(),m.fn,float(clock()-t0)/CLOCKS_PER_SEC);
+    make_heap(h.begin(),h.end());
+  }
+  
 	///initialize for all vertex the temporary mark must call only at the start of decimation
 	///by default it takes the first element in the heap and calls Init (static funcion) of that type
 	///of local modification. 
@@ -293,16 +283,10 @@ void ClearHeap()
 	/// say if the process is to end or not: the process ends when any of the termination conditions is verified
 	/// override this function to implemetn other tests
 	bool GoalReached(){
-		assert ( ( ( tf & LOnSimplices	)==0) ||  ( nTargetSimplices!= -1));
-		assert ( ( ( tf & LOnVertices	)==0) ||  ( nTargetVertices	!= -1));
-		assert ( ( ( tf & LOnOps		)==0) ||  ( nTargetOps		!= -1));
-		assert ( ( ( tf & LOMetric		)==0) ||  ( targetMetric	!= -1));
-		assert ( ( ( tf & LOTime		)==0) ||  ( timeBudget		!= -1));
-
-		if ( IsTerminationFlag(LOnSimplices) &&	( m.SimplexNumber()<= nTargetSimplices)) return true;
-		if ( IsTerminationFlag(LOnVertices)  &&  ( m.VertexNumber() <= nTargetVertices)) return true;
-		if ( IsTerminationFlag(LOnOps)		   && (nPerfmormedOps	== nTargetOps)) return true;
-		if ( IsTerminationFlag(LOMetric)		 &&  ( currMetric		> targetMetric)) return true;
+    if ( IsTerminationFlag(LOnSimplices) &&	( m.SimplexNumber()<= nTargetSimplices)) return true;
+    if ( IsTerminationFlag(LOnVertices)  &&  ( m.VertexNumber() <= nTargetVertices)) return true;
+    if ( IsTerminationFlag(LOnOps)		   && (nPerformedOps	== nTargetOps)) return true;
+    if ( IsTerminationFlag(LOMetric)		 &&  ( currMetric		> targetMetric)) return true;
     if ( IsTerminationFlag(LOTime) )
     {
       clock_t cur = clock();
@@ -313,23 +297,6 @@ void ClearHeap()
     }
 		return false;
 	}
-
-
-
-///erase from the heap the operations that are out of date
-  void ClearHeapOld()
-  {
-		typename HeapType::iterator hi;
-		for(hi=h.begin();hi!=h.end();++hi)
-			if(!(*hi).locModPtr->IsUpToDate())
-			{
-				*hi=h.back();
-				h.pop_back();
-				if(hi==h.end()) break;
-			}
-			//printf("\nReduced heap from %i to %i",sz,h.size());
-			make_heap(h.begin(),h.end());
-  }
 
 };//end class decimation
 
