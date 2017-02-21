@@ -259,6 +259,7 @@ namespace vcg {
                     std::vector<CoordType>  normals;		// vertex normals
                     std::vector<ObjIndexedFace> indexedFaces;
                     std::vector< std::string > tokens;
+					std::string line;
                     std::string	header;
 
                     short currentMaterialIdx = 0;			// index of current material into materials vector
@@ -287,7 +288,7 @@ namespace vcg {
                     while (!stream.eof())
                     {
                         tokens.clear();
-                        TokenizeNextLine(stream, tokens,&vertexColorVector);
+                        TokenizeNextLine(stream, tokens, line, &vertexColorVector);
 
                         unsigned int numTokens = static_cast<unsigned int>(tokens.size());
                         if (numTokens > 0)
@@ -594,13 +595,23 @@ namespace vcg {
                             else if ((header.compare("mtllib")==0) && (tokens.size() > 1))	// material library
                             {
                                 // obtain the name of the file containing materials library
-                                std::string materialFileName = tokens[1];
+								std::string materialFileName;
+								if (tokens.size() == 2)
+									materialFileName = tokens[1]; //play it safe
+								else
+									materialFileName = line.substr(7); //get everything after "mtllib "
+
                                 if (!LoadMaterials( materialFileName.c_str(), materials, m.textures))
                                     result = E_MATERIAL_FILE_NOT_FOUND;
                             }
                             else if ((header.compare("usemtl")==0) && (tokens.size() > 1))	// material usage
                             {
-                                std::string materialName = tokens[1];
+								std::string materialName;
+								if (tokens.size() == 2)
+									materialName = tokens[1]; //play it safe
+								else
+									materialName = line.substr(7); //get everything after "usemtl "
+
                                 bool found = false;
                                 unsigned i = 0;
                                 while (!found && (i < materials.size()))
@@ -736,10 +747,10 @@ namespace vcg {
                 *  \param stream  The object providing the input stream
                 *  \param tokens  The "tokens" in the next line
                 */
-                inline static void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens, std::vector<Color4b> *colVec)
+				inline static void TokenizeNextLine(std::ifstream &stream, std::vector< std::string > &tokens, std::string &line, std::vector<Color4b> *colVec)
                 {
                     if(stream.eof()) return;
-                    std::string line;
+                    
                     do
                     {
                         std::getline(stream, line);
@@ -942,6 +953,7 @@ namespace vcg {
                         return false;
 
                     std::vector< std::string > tokens;
+					std::string line;
                     std::string	header;
 
                     materials.clear();
@@ -952,7 +964,7 @@ namespace vcg {
                     while (!stream.eof())
                     {
                         tokens.clear();
-                        TokenizeNextLine(stream, tokens,0);
+                        TokenizeNextLine(stream, tokens, line, 0);
 
                         if (tokens.size() > 0)
                         {
@@ -972,7 +984,10 @@ namespace vcg {
                                 //strcpy(currentMaterial.name, tokens[1].c_str());
                                 if(tokens.size() < 2)
                                     return false;
-                                currentMaterial.materialName=tokens[1];
+								else if (tokens.size() == 2)
+									currentMaterial.materialName = tokens[1]; //play it safe
+								else
+									currentMaterial.materialName = line.substr(7); //space in the name, get everything after "newmtl "
                             }
                             else if (header.compare("Ka")==0)
                             {
@@ -1027,10 +1042,14 @@ namespace vcg {
                             }
                             else if( (header.compare("map_Kd")==0)	|| (header.compare("map_Ka")==0) ) // texture name
                             {
+								std::string textureName;
                                 if (tokens.size() < 2)
                                     return false;
-                                std::string textureName = tokens[1];
-                                //strcpy(currentMaterial.textureFileName, textureName.c_str());
+								else if (tokens.size() == 2)
+									textureName = tokens[1]; //play it safe
+								else
+									textureName = line.substr(7); //get everything after "map_Kd " or "map_Ka "
+
                                 currentMaterial.map_Kd=textureName;
 
                                 // adding texture name into textures vector (if not already present)
