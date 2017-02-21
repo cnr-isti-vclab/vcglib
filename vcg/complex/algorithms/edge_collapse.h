@@ -53,80 +53,59 @@ private:
 template <class TRI_MESH_TYPE, class VertexPair>
 class EdgeCollapser
 {
-    public:
-  /// The tetrahedral mesh type
-  typedef	 TRI_MESH_TYPE TriMeshType;
-  /// The face type
+public:
+  typedef	TRI_MESH_TYPE TriMeshType;
   typedef	typename TriMeshType::FaceType FaceType;
-    /// The vertex type
-    typedef	typename FaceType::VertexType VertexType;
+  typedef	typename FaceType::VertexType VertexType;
   typedef	typename FaceType::VertexPointer VertexPointer;
-  /// The vertex iterator type
-  typedef	typename TriMeshType::VertexIterator VertexIterator;
-  /// The tetra iterator type
-  typedef	typename TriMeshType::FaceIterator FaceIterator;
-  /// The coordinate type
-    typedef	typename FaceType::VertexType::CoordType CoordType;
-  /// The scalar type
+  typedef	typename FaceType::VertexType::CoordType CoordType;
   typedef	typename TriMeshType::VertexType::ScalarType ScalarType;
-  ///the container of tetrahedron type
-  typedef typename TriMeshType::FaceContainer FaceContainer;
-  ///the container of vertex type
-  typedef typename TriMeshType::VertContainer VertContainer;
-  ///half edge type
-  //typedef typename TriMeshType::FaceType::EdgeType EdgeType;
-    /// vector of pos
-//	typedef typename std::vector<EdgeType> EdgeVec;
-    ///of VFIterator
-    typedef typename vcg::face::VFIterator<FaceType>  VFI;
-    /// vector of VFIterator
-    typedef typename std::vector<vcg::face::VFIterator<FaceType> > VFIVec;
+  typedef typename vcg::face::VFIterator<FaceType>  VFIterator;
+  typedef typename std::vector<vcg::face::VFIterator<FaceType> > VFIVec;
+
 private:
   struct EdgeSet
   {
-     VFIVec av0,av1,av01;
-     VFIVec & AV0() { return av0;}
-     VFIVec & AV1() { return av1;}
-     VFIVec & AV01(){ return av01;}
+     VFIVec av0, av1, av01;
+     VFIVec & AV0() { return av0;}  // Faces incident only on v0
+     VFIVec & AV1() { return av1;}  // Faces incident only on v1
+     VFIVec & AV01(){ return av01;} // Faces incident only on both v0 and v1
   };
 
   static void FindSets(VertexPair &p, EdgeSet &es)
+  {
+    VertexType * v0 = p.V(0);
+    VertexType * v1 = p.V(1);
+    
+    es.AV0().clear(); 
+    es.AV1().clear(); 
+    es.AV01().clear();
+    
+    for(VFIterator x = VFIterator(v0); !x.End(); ++x)
     {
-        VertexType * v0 = p.V(0);
-        VertexType * v1 = p.V(1);
-
-    es.AV0().clear();  // Facce incidenti in v0
-    es.AV1().clear();  // Facce incidenti in v1
-    es.AV01().clear(); // Facce incidenti in v0 e v1
-
-        VFI x;
-
-        for( x.f = v0->VFp(), x.z = v0->VFi(); x.f!=0; ++x)
-        {
-            int zv1 = -1;
-
-            for(int j=0;j<3;++j)
-                if( x.f->V(j)==&*v1 )	{
-                    zv1 = j;
-                    break;
-                }
-      if(zv1==-1) 	es.AV0().push_back( x ); // la faccia x.f non ha il vertice v1 => e' incidente solo in v0
-      else    			es.AV01().push_back( x );
+      bool foundV1=false;      
+      for(int j=0;j<3;++j)
+        if( x.f->V(j)==v1 )	{
+          foundV1 = true;
+          break;
         }
-
-        for( x.f = v1->VFp(), x.z = v1->VFi(); x.f!=0; ++x )
-        {
-            int zv0 = -1;
-
-            for(int j=0;j<3;++j)
-                if( x.f->V(j)==&*v0 )	{
-                    zv0 = j;
-                    break;
-                }
-      if(zv0==-1)	es.AV1().push_back( x ); // la faccia x.f non ha il vertice v1 => e' incidente solo in v0
+      if(!foundV1)  es.AV0().push_back( x ); // v1 not found -> so the face is incident only on v0
+      else         es.AV01().push_back( x );
+    }
+    
+    for( VFIterator x = VFIterator(v1); !x.End(); ++x)
+    {
+      bool foundV0=false;      
+      for(int j=0;j<3;++j)
+        if( x.f->V(j)==v0 )	{
+          foundV0=true;
+          break;
         }
-}
-/*
+      if(!foundV0)	es.AV1().push_back( x ); // v0 not found -> so the face is incident only on v0
+    }
+  }
+  
+  /*
     Link Conditions test, as described in
 
     Topology Preserving Edge Contraction
@@ -153,7 +132,6 @@ private:
 public:
   static bool LinkConditions(VertexPair &pos)
   {
-    typedef typename vcg::face::VFIterator<FaceType> VFIterator;
     // at the end of the loop each vertex must be counted twice
     // except for boundary vertex.
     std::map<VertexPointer,int> VertCnt;
@@ -228,41 +206,41 @@ public:
     return true;
   }
 
-  // Main function; the one that actually make the collapse
-  // remember that v[0] will be deleted and v[1] will survive (eventually with a new position)
-  // hint to do a 'collapse onto a vertex simply pass p as the position of the surviving vertex
+  // Main Collapsing Function: the one that actually makes the collapse
+  // Remember that v[0] will be deleted and v[1] will survive (eventually with a new position)
+  // hint: to do a collapse onto a vertex simply pass p as the position of the surviving vertex
   static int Do(TriMeshType &m, VertexPair & c, const Point3<ScalarType> &p)
-    {
+  {
     EdgeSet es;
     FindSets(c,es);
-        typename VFIVec::iterator i;
+    typename VFIVec::iterator i;
     int n_face_del =0 ;
-
+    
     for(i=es.AV01().begin();i!=es.AV01().end();++i)
-        {
-            FaceType  & f = *((*i).f);
-            assert(f.V((*i).z) == c.V(0));
-            vcg::face::VFDetach(f,((*i).z+1)%3);
-            vcg::face::VFDetach(f,((*i).z+2)%3);
-            Allocator<TriMeshType>::DeleteFace(m,f);
+    {
+      FaceType  & f = *((*i).f);
+      assert(f.V((*i).z) == c.V(0));
+      vcg::face::VFDetach(f,((*i).z+1)%3);
+      vcg::face::VFDetach(f,((*i).z+2)%3);
+      Allocator<TriMeshType>::DeleteFace(m,f);
       n_face_del++;
     }
-
-        //set Vertex Face topology
+    
+    //Update Vertex-Face topology
     for(i=es.AV0().begin();i!=es.AV0().end();++i)
-        {
-            (*i).f->V((*i).z) = c.V(1);									 // In tutte le facce incidenti in v0, si sostituisce v0 con v1
-            (*i).f->VFp((*i).z) = (*i).f->V((*i).z)->VFp(); // e appendo la lista di facce incidenti in v1 a questa faccia
-            (*i).f->VFi((*i).z) = (*i).f->V((*i).z)->VFi();
-            (*i).f->V((*i).z)->VFp() = (*i).f;
-            (*i).f->V((*i).z)->VFi() = (*i).z;
-        }
-
-        Allocator<TriMeshType>::DeleteVertex(m,*(c.V(0)));
-        c.V(1)->P()=p;
-        return n_face_del;
+    {
+      (*i).f->V((*i).z) = c.V(1);	// For each face in v0 we substitute v0 with v1
+      (*i).f->VFp((*i).z) = (*i).f->V((*i).z)->VFp(); // e appendo la lista di facce incidenti in v1 a questa faccia
+      (*i).f->VFi((*i).z) = (*i).f->V((*i).z)->VFi();
+      (*i).f->V((*i).z)->VFp() = (*i).f;
+      (*i).f->V((*i).z)->VFi() = (*i).z;
     }
-
+    
+    Allocator<TriMeshType>::DeleteVertex(m,*(c.V(0)));
+    c.V(1)->P()=p;
+    return n_face_del;
+  }
+  
 };
 
 }
