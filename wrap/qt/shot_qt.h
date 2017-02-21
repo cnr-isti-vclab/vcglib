@@ -34,8 +34,8 @@ template <class ShotType>
     cam.FocalMm = attr.namedItem("FocalMm").nodeValue().toDouble();
     cam.ViewportPx.X() = attr.namedItem("ViewportPx").nodeValue().section(' ',0,0).toInt();
     cam.ViewportPx.Y() = attr.namedItem("ViewportPx").nodeValue().section(' ',1,1).toInt();
-    cam.CenterPx[0] = attr.namedItem("CenterPx").nodeValue().section(' ',0,0).toInt();
-    cam.CenterPx[1] = attr.namedItem("CenterPx").nodeValue().section(' ',1,1).toInt();
+	cam.CenterPx[0] = attr.namedItem("CenterPx").nodeValue().section(' ', 0, 0).toDouble();
+	cam.CenterPx[1] = attr.namedItem("CenterPx").nodeValue().section(' ', 1, 1).toDouble();
     cam.PixelSizeMm[0] = attr.namedItem("PixelSizeMm").nodeValue().section(' ',0,0).toDouble();
     cam.PixelSizeMm[1] = attr.namedItem("PixelSizeMm").nodeValue().section(' ',1,1).toDouble();
     cam.k[0] = attr.namedItem("LensDistortion").nodeValue().section(' ',0,0).toDouble();
@@ -132,7 +132,7 @@ template <class ShotType>
   str = QString("%1 %2").arg(cam.ViewportPx[0]).arg(cam.ViewportPx[1]);
   shotElem.setAttribute( "ViewportPx", str);
 
-  str = QString("%1 %2").arg((int)(cam.CenterPx[0])).arg((int)(cam.CenterPx[1]));
+  str = QString("%1 %2").arg(cam.CenterPx[0]).arg(cam.CenterPx[1]);
   shotElem.setAttribute( "CenterPx", str);
 
   //scale correction should no more exist !!!
