@@ -124,6 +124,27 @@ public:
         fclose(f);
     }
 
+    static void SaveCSVField(MeshType &mesh,
+                             const std::string &field_1,
+                             const std::string &field_2)
+    {
+        FILE *f1=NULL;
+        FILE *f2=NULL;
+        f1=fopen(field_1.c_str(),"wt");
+        f2=fopen(field_2.c_str(),"wt");
+        for (size_t i=0;i<mesh.face.size();i++)
+        {
+            typename MeshType::CoordType PD1=mesh.face[i].PD1();
+            typename MeshType::CoordType PD2=mesh.face[i].PD2();
+            fprintf(f1,"%e,%e,%e\n",PD1.X(),PD1.Y(),PD1.Z());
+            fprintf(f2,"%e,%e,%e\n",PD2.X(),PD2.Y(),PD2.Z());
+        }
+
+        //then color by quality
+        fclose(f1);
+        fclose(f2);
+    }
+
 }; // end class
 
 

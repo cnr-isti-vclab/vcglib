@@ -365,6 +365,7 @@ public:
         //then color by quality
         fclose(f1);
         fclose(f2);
+        return true;
     }
 
 }; // end class
