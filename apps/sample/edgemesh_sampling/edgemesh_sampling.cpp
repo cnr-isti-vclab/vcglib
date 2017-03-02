@@ -74,11 +74,11 @@ int main( int argc, char **argv )
 
   tri::UpdateTopology<MyMesh>::VertexEdge(e);
   tri::Clean<MyMesh>::SelectNonManifoldVertexOnEdgeMesh(e);
-  printf("Selected vertices %i\n",tri::UpdateSelection<MyMesh>::VertexCount(e));
+  printf("Selected vertices %lu\n",tri::UpdateSelection<MyMesh>::VertexCount(e));
   tri::Clean<MyMesh>::SplitSelectedVertexOnEdgeMesh(e);
   printf("Out mesh has %i vert %i edges\n",e.vn,e.en);
   tri::Clean<MyMesh>::SelectCreaseVertexOnEdgeMesh(e,math::ToRad(30.f));
-  printf("Selected vertices %i\n",tri::UpdateSelection<MyMesh>::VertexCount(e));
+  printf("Selected vertices %lu\n",tri::UpdateSelection<MyMesh>::VertexCount(e));
   tri::Clean<MyMesh>::SplitSelectedVertexOnEdgeMesh(e);
   printf("Out mesh has %i vert %i edges\n",e.vn,e.en);
 

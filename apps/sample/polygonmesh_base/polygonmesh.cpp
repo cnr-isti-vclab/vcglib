@@ -126,7 +126,7 @@ class PMesh: public
 PMesh pm;
 TMesh tm0;
 
-int	main(int argc, char *argv[]) {
+int	main(int /*argc*/, char *argv[]) {
 
     int loadmask;
 

@@ -12,7 +12,6 @@ SUBDIRS       = trimesh_base  \
                 trimesh_edge \
                 trimesh_fitting \
                 trimesh_geodesic \
-#                trimesh_ext_mc \
                 trimesh_hole \
                 trimesh_inertia \
                 trimesh_intersection \
