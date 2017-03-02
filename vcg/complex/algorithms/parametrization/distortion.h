@@ -110,7 +110,6 @@ public:
         CoordType p0=f->P((e+2)%3);
         CoordType p1=f->P(e);
         CoordType p2=f->P((e+1)%3);
-        typedef typename CoordType::ScalarType ScalarType;
         CoordType dir0=p2-p1;
         CoordType dir1=p0-p1;
         dir0.Normalize();
@@ -145,7 +144,6 @@ public:
         CoordType p0=f->cP((e+2)%3);
         CoordType p1=f->cP(e);
         CoordType p2=f->cP((e+1)%3);
-        typedef typename CoordType::ScalarType ScalarType;
         CoordType dir0=p2-p1;
         CoordType dir1=p0-p1;
         return Angle(dir0,dir1);
