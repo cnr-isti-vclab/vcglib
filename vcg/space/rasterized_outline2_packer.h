@@ -523,6 +523,7 @@ public:
             finalArea +=  tri::OutlineUtil<SCALAR_TYPE>::Outline2Area(oldPoints);
         }
 //        printf("PACKING EFFICIENCY: %f with scale %f\n", finalArea/gridArea, latestSuccessScale);
+        return true;
     }
 
     //tries to pack polygons using the given gridSize and scaleFactor

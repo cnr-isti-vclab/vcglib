@@ -57,7 +57,7 @@ static void buildRandRectSet(int rectNum, vector<Box2f> &rectVec)
   }
 }
 
-int main( int argc, char **argv )
+int main( int /*argc*/, char **/*argv*/ )
 {
   vector<Similarity2f> trVec;
   vector<Similarity2f> trPolyVec;
