@@ -97,21 +97,16 @@ static void WedgeTexFromPlane(ComputeMeshType &m, const Point3<ScalarType> &uVec
 	}
 }
 
-static void WedgeTexFromCamera(ComputeMeshType &m, Plane3<ScalarType> &pl)
-{
-	
-}
-
 static void WedgeTexFromVertexTex(ComputeMeshType &m)
 {
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
           if(!(*fi).IsD())
               {
-               for(int i=0;i<3;++i)
+               for(int i=0;i<fi->VN();++i)
                {
                  (*fi).WT(i).U() = (*fi).V(i)->T().U();
                  (*fi).WT(i).V() = (*fi).V(i)->T().V();
-				 (*fi).WT(i).N() = 0;
+                 (*fi).WT(i).N() = 0;
                }
               }
 }

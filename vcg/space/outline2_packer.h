@@ -88,7 +88,7 @@ public:
 static  bool PackAsEqualSquares(const std::vector< std::vector<Point2x> > &polyVec,
                   const Point2i containerSizeX,
                   std::vector<Similarity2x> &trVec,
-                  Point2x &coveredContainer)
+                  Point2x &/*coveredContainer*/)
 {
   int minSide = std::min(containerSizeX[0],containerSizeX[1]);
   const vcg::Point2i containerSize(minSide,minSide);

@@ -743,9 +743,6 @@ public:
     ///by the cross field (where Z=0)
     static vcg::Matrix33<ScalarType> TransformationMatrix(const FaceType &f)
     {
-        typedef typename FaceType::CoordType CoordType;
-        typedef typename FaceType::ScalarType ScalarType;
-
         ///transform to 3d
         CoordType axis0=f.cPD1();
         CoordType axis1=f.cPD2();//axis0^f.cN();
@@ -1138,7 +1135,7 @@ public:
     ///return the difference of two cross field, values between [0,1]
     static typename FaceType::ScalarType DifferenceLineField(const typename FaceType::CoordType &t0,
                                                              const typename FaceType::CoordType &t1,
-                                                             const typename FaceType::CoordType &n)
+                                                             const typename FaceType::CoordType &/*n*/)
     {
         CoordType trans0=t0;
         CoordType trans1=t1;
