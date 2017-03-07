@@ -33,10 +33,10 @@
  *     (use fixedMask parameter to customize)
  *
  * Example of usage:
- *    MyMesh m;
+ *    MeshType m;
  *    ...
  *    vcg::tri::UpdateFlags<MeshType>::Clear(m);
- *    vcg::tri::UpdateFlags<MyMesh>::VertexBorderFromNone(m);
+ *    vcg::tri::UpdateFlags<MeshType>::VertexBorderFromNone(m);
  *    vcg::tri::OptimizeUV_ARAP(m);
  *
  */
