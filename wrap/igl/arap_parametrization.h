@@ -74,7 +74,7 @@ void OptimizeUV_ARAP(
 	}
 
 	// build fixed points data
-	int nFixed = 0;
+	size_t nFixed = 0;
 	if (fixedMask != 0)
 	{
 		for (size_t i=0; i<m.vert.size(); i++)
@@ -106,7 +106,7 @@ void OptimizeUV_ARAP(
 
 	b.resize(nFixed);
 	bc.resize(nFixed,2);
-	for (size_t i=0,k=0; i<(int)m.vert.size(); i++)
+	for (size_t i=0,k=0; i<m.vert.size(); i++)
 	{
 		if (m.vert[i].Flags() & fixedMask)
 		{
@@ -138,7 +138,6 @@ template <class MeshType>
 void InitializeArapWithLSCM(MeshType & m, unsigned int fixedMask = 0)
 {
 	typedef typename MeshType::ScalarType                          ScalarType;
-	typedef typename MeshType::CoordType                           CoordType;
 	typedef typename MeshType::VertexType::TexCoordType::PointType TexPointType;
 	typedef typename TexPointType::ScalarType                      TexScalarType;
 
