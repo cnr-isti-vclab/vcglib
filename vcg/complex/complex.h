@@ -42,6 +42,10 @@
 #include <vcg/complex/used_types.h>
 #include <vcg/complex/base.h>
 #include <vcg/complex/allocate.h>
+#include <vcg/simplex/face/pos.h>
+#include <vcg/simplex/face/topology.h>
+#include <vcg/simplex/edge/pos.h>
+#include <vcg/simplex/edge/topology.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/update/selection.h>
 #include <vcg/complex/algorithms/mesh_assert.h>
