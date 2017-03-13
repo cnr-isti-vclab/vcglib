@@ -23,8 +23,6 @@
 #ifndef __VCGLIB_MESH_ASSERT
 #define __VCGLIB_MESH_ASSERT
 
-#include <vcg/complex/complex.h>
-
 namespace vcg {
 namespace tri {
 /**
@@ -70,6 +68,25 @@ public:
       }
   }
 
+  static void EEAdjacencyIsInitialized(MeshType &m)
+  {
+    for(auto ei=m.edge.begin();ei!=m.edge.end();++ei) if(!ei->IsD())
+        {
+          if(ei->EEp(0)==0)
+            throw vcg::MissingPreconditionException("EE adjacency is not initialized");
+        }
+  }
+  
+  static void EEOneManifold(MeshType &m)
+  {
+    EEAdjacencyIsInitialized(m);
+    for(auto ei=m.edge.begin();ei!=m.edge.end();++ei) if(!ei->IsD())
+    {
+     if(! edge::IsEdgeManifold(*ei,0) )
+       throw vcg::MissingPreconditionException("The edge mesh is not 1-manifold (e.g there are more than 2 edges on a vertex)");
+    }
+  }
+
   static void NoUnreferencedVertex(MeshType &m)
   {
     tri::UpdateFlags<MeshType>::VertexClearV(m);
@@ -110,6 +127,16 @@ public:
         throw vcg::MissingPreconditionException("Expecting a mesh composed only by edges (no faces needed or allowed)");
   }
   
+  static void FFTwoManifoldEdge(MeshType & m)
+  {
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
+    {
+      for(int i=0;i<fi->VN();++i){
+        if(!face::IsManifold(*fi,i))
+          throw vcg::MissingPreconditionException("There are non quadrilateral faces");
+      }
+    }    
+}
   
 };
 
