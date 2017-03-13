@@ -68,7 +68,7 @@ int main( int argc, char **argv )
     printf("Unable to open %s for '%s'\n",argv[1],tri::io::ImporterPLY<MyMesh>::ErrorMsg(ret));
     return -1;
   }
-  float samplingRadius = 0.3;
+  float samplingRadius = startMesh.bbox.Diag() *0.02f;
   auto remeshed = Remesher<MyMesh>::Remesh(startMesh, samplingRadius, 50.0);
   
   
