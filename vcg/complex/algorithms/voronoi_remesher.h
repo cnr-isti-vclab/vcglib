@@ -84,22 +84,13 @@ protected:
     
     if (CCV.size() == 1)
       return ret;
-    
-    ConnectedComponentIterator<MeshType> ci;
     for(size_t i=0; i<CCV.size(); ++i)
     {
-      // clear selection
       UpdateSelection<MeshType>::Clear(mesh);
-      for(ci.start(mesh, CCV[i].second); !ci.completed(); ++ci)
-      {
-        // select all faces for a CC
-        (*ci)->SetS();
-      }
-      
-      // create from selected
-      MeshPtr cc = std::make_shared<MeshType>();
-      Append<MeshType, MeshType>::MeshCopy(*cc, mesh, true);
-      ret.push_back(cc);
+      CCV[i].second->SetS();
+      UpdateSelection<MeshType>::FaceConnectedFF(mesh);
+      ret.push_back(std::make_shared<MeshType>());
+      Append<MeshType, MeshType>::MeshCopy(*(ret.back()), mesh, true);
     }
     
     return ret;
