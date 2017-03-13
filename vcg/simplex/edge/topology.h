@@ -31,16 +31,15 @@
 namespace vcg {
 namespace edge {
 /** \addtogroup edge */
-/*@{*/template <class EdgeType>
-inline bool IsEdgeManifoldFF( EdgeType const & e, const int j )
-{
-  assert(e.cFFp(j) != 0); // never try to use this on uncomputed topology
+/*@{*/
 
-  if(EdgeType::HasFFAdjacency())
-    return ( e.cFFp(j) == &e || &e == e.cFFp(j)->cFFp(e.cFFi(j)) );
-  else
-    return true;
+
+template <class EdgeType>
+inline bool IsEdgeManifold( EdgeType const & e, const int j )
+{
+  return ( e.cEEp(j) == &e || &e == e.cEEp(j)->cEEp(e.cEEi(j)) );
 }
+
 
 /** Return a boolean that indicate if the j-th edge of the face is a border.
   @param j Index of the edge
