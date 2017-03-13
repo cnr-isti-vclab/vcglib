@@ -92,7 +92,7 @@ static void PerVertex(ComputeMeshType &m)
  for(FaceIterator f=m.face.begin();f!=m.face.end();++f)
    if( !(*f).IsD() && (*f).IsR() )
    {
-    typename FaceType::NormalType t = vcg::TriangleNormal(*f);
+    typename VertexType::NormalType t = vcg::TriangleNormal(*f);
 
     for(int j=0; j<(*f).VN(); ++j)
      if( !(*f).V(j)->IsD() && (*f).V(j)->IsRW() )
@@ -102,11 +102,12 @@ static void PerVertex(ComputeMeshType &m)
 
 static void PerFacePolygonal(ComputeMeshType &m)
 {
-for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-{
-  if( !(*fi).IsD() )
-    fi->N() = PolygonNormal(*fi).Normalize();
-}
+  RequirePerFaceNormal(m);  
+  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+  {
+    if( !(*fi).IsD() )
+      fi->N() = PolygonNormal(*fi).Normalize();
+  }
 }
 
 ///  \brief Calculates the vertex normal as an angle weighted average. It does not need or exploit current face normals.
@@ -118,7 +119,7 @@ G. Thurmer, C. A. Wuthrich
 "Computing vertex normals from polygonal facets"
 Journal of Graphics Tools, 1998
  */
- static void PerVertexAngleWeighted(ComputeMeshType &m)
+static void PerVertexAngleWeighted(ComputeMeshType &m)
 {
   PerVertexClear(m);
   FaceIterator f;
