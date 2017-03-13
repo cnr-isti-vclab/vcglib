@@ -761,7 +761,7 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 	tri::RequirePerVertexFlags(m);
 	tri::UpdateTopology<MeshType>::EdgeEdge(m);
 	tri::UpdateFlags<MeshType>::EdgeClearV(m);
-
+  tri::MeshAssert<MeshType>::EEOneManifold(m);
 	for (EdgeIterator ei = m.edge.begin(); ei != m.edge.end(); ++ei)
 	{
 		if (!ei->IsV())
