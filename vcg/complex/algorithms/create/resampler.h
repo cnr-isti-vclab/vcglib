@@ -24,13 +24,11 @@
 #define __VCG_MESH_RESAMPLER
 
 #include <vcg/complex/algorithms/update/normal.h>
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/update/component_ep.h>
 #include <vcg/complex/algorithms/create/marching_cubes.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/algorithms/closest.h>
-#include <vcg/space/box3.h>
 
 namespace vcg {
 namespace tri {

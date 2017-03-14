@@ -42,10 +42,8 @@ sampling strategies (montecarlo, stratified etc).
 #include <vcg/complex/algorithms/hole.h>
 #include <vcg/complex/algorithms/stat.h>
 #include <vcg/complex/algorithms/create/platonic.h>
-#include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/space/segment2.h>
 #include <vcg/space/index/grid_static_ptr.h>
 namespace vcg

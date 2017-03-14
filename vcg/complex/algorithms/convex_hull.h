@@ -25,8 +25,7 @@
 
 #include <queue>
 #include <unordered_map>
-#include <algorithm>
-#include <vcg/complex/allocate.h>
+#include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/clean.h>
 
 namespace vcg

@@ -26,8 +26,6 @@
 
 #include <iostream>
 #include <list>
-#include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/flag.h>
 
 namespace vcg {
   namespace tri {

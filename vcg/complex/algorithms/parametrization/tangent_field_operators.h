@@ -22,8 +22,6 @@
 ****************************************************************************/
 #include <vcg/math/histogram.h>
 #include <vcg/complex/algorithms/update/curvature.h>
-#include <vcg/complex/algorithms/update/flag.h>
-#include <algorithm>
 
 #ifndef VCG_TANGENT_FIELD_OPERATORS
 #define VCG_TANGENT_FIELD_OPERATORS

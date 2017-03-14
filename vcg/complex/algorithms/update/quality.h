@@ -22,9 +22,6 @@
 ****************************************************************************/
 #ifndef __VCG_TRI_UPDATE_QUALITY
 #define __VCG_TRI_UPDATE_QUALITY
-#include <vcg/simplex/face/pos.h>
-#include <vcg/simplex/face/topology.h>
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/stat.h>
 
 namespace vcg {

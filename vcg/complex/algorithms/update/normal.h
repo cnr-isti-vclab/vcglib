@@ -24,10 +24,7 @@
 #ifndef __VCG_TRI_UPDATE_NORMALS
 #define __VCG_TRI_UPDATE_NORMALS
 
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/polygon_support.h>
-#include <vcg/math/matrix44.h>
-#include <vcg/complex/exception.h>
 
 namespace vcg {
 namespace tri {

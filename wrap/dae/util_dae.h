@@ -24,7 +24,6 @@
 #define __VCGLIB_UTILDAE
 
 
-#include <vcg/complex/append.h>
 #include <wrap/io_trimesh/additionalinfo.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/position.h>

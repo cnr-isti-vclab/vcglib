@@ -30,6 +30,7 @@
 #include <vector>
 #include <set>
 #include <stack>
+#include <queue>
 #include <algorithm>
 #include <map>
 #include <iostream>
@@ -48,6 +49,9 @@
 #include <vcg/simplex/edge/topology.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/update/selection.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/mesh_assert.h>
 #include <vcg/complex/append.h>
 

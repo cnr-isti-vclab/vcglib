@@ -23,9 +23,6 @@
 #ifndef __VCG_TRI_UPDATE_SELECTION
 #define __VCG_TRI_UPDATE_SELECTION
 
-#include <queue>
-#include <vcg/complex/algorithms/update/flag.h>
-
 namespace vcg {
 namespace tri {
 /// \ingroup trimesh

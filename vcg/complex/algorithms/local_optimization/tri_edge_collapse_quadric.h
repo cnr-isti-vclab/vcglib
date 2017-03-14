@@ -25,9 +25,6 @@
 #define __VCG_TRIMESHCOLLAPSE_QUADRIC__
 
 #include<vcg/math/quadric.h>
-#include<vcg/simplex/face/pos.h>
-#include<vcg/complex/algorithms/update/flag.h>
-#include<vcg/complex/algorithms/update/topology.h>
 #include<vcg/complex/algorithms/update/bounding.h>
 #include<vcg/complex/algorithms/local_optimization/tri_edge_collapse.h>
 #include<vcg/complex/algorithms/local_optimization.h>

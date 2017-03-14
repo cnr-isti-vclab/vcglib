@@ -20,18 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.2  2004/05/10 14:40:47  ganovelli
-name of adhacency function updated
-
-Revision 1.1  2004/05/10 14:01:56  ganovelli
-created
-
-****************************************************************************/
-
 
 #ifndef __VCG_EDGE_POS
 #define __VCG_EDGE_POS

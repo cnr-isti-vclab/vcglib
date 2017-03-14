@@ -24,9 +24,6 @@
 #ifndef _VCG_FACE_TOPOLOGY
 #define _VCG_FACE_TOPOLOGY
 
-#include <vcg/simplex/face/pos.h>
-#include <set>
-
 namespace vcg {
 namespace face {
 /** \addtogroup face */

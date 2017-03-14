@@ -27,7 +27,6 @@
 #include<vcg/complex/complex.h>
 #include<vcg/complex/algorithms/closest.h>
 #include<vcg/complex/algorithms/update/quality.h>
-#include<vcg/complex/algorithms/update/selection.h>
 
 
 #ifndef __VCGLIB_INTERSECTION_TRI_MESH

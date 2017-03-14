@@ -26,16 +26,10 @@
 
 // VCG headers
 #include <vcg/complex/complex.h>
-#include <vcg/simplex/face/pos.h>
-#include <vcg/simplex/face/topology.h>
-#include <vcg/simplex/edge/topology.h>
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/space/index/spatial_hashing.h>
-#include <vcg/complex/algorithms/update/selection.h>
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/update/normal.h>
-#include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/space/triangle3.h>
 
 namespace vcg {

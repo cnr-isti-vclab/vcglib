@@ -29,8 +29,6 @@ $Log: gen_normal.h,v $
 #ifndef __VCG_GEN_NORMAL
 #define __VCG_GEN_NORMAL
 
-#include <algorithm>
-
 namespace vcg {
 
 template <class ScalarType>

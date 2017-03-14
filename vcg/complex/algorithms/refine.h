@@ -28,10 +28,6 @@
 #include <map>
 #include <vcg/space/sphere3.h>
 #include <vcg/space/plane3.h>
-#include <vcg/simplex/face/pos.h>
-#include <vcg/simplex/face/topology.h>
-#include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/triangle3.h>

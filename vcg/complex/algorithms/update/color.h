@@ -24,7 +24,6 @@
 #ifndef __VCG_TRI_UPDATE_COLOR
 #define __VCG_TRI_UPDATE_COLOR
 
-#include <limits>
 #include <math.h>
 #include <time.h>
 #include <vcg/space/color4.h>

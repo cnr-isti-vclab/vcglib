@@ -26,9 +26,7 @@
 
 #include<vcg/math/base.h>
 #include<vcg/complex/algorithms/refine.h>
-#include<vcg/complex/algorithms/update/flag.h>
 #include<vcg/complex/algorithms/update/position.h>
-#include<vcg/complex/algorithms/update/topology.h>
 #include<vcg/complex/algorithms/update/bounding.h>
 #include<vcg/complex/algorithms/clean.h>
 #include<vcg/complex/algorithms/polygon_support.h>

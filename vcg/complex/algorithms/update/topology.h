@@ -23,11 +23,6 @@
 
 #ifndef __VCG_TRI_UPDATE_TOPOLOGY
 #define __VCG_TRI_UPDATE_TOPOLOGY
-#include <algorithm>
-#include <vector>
-#include <vcg/simplex/face/pos.h>
-#include <vcg/simplex/face/topology.h>
-#include <vcg/simplex/edge/topology.h>
 
 namespace vcg {
 namespace tri {

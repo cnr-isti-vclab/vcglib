@@ -25,8 +25,6 @@
 #define VCGLIB_UPDATE_CURVATURE_
 
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/simplex/face/topology.h>
-#include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/point_sampling.h>

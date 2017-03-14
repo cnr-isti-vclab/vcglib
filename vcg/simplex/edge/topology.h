@@ -24,10 +24,6 @@
 #ifndef _VCG_EDGE_TOPOLOGY
 #define _VCG_EDGE_TOPOLOGY
 
-#include <vector>
-#include <algorithm>
-#include <vcg/simplex/edge/pos.h>
-
 namespace vcg {
 namespace edge {
 /** \addtogroup edge */

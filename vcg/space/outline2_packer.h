@@ -26,8 +26,6 @@
 #include <limits>
 #include <stdio.h>
 #include <assert.h>
-#include <algorithm>
-#include <vector>
 #include <vcg/space/box2.h>
 #include <vcg/space/rect_packer.h>
 #include <vcg/space/point2.h>

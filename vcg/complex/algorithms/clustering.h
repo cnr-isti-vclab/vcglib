@@ -27,12 +27,10 @@
 #include<vcg/complex/complex.h>
 #include <vcg/complex/algorithms/clean.h>
 #include<vcg/space/triangle3.h>
-#include<vcg/complex/algorithms/update/topology.h>
 #include<vcg/space/index/grid_util.h>
 
 #include <iostream>
 #include <math.h>
-#include <limits>
 #include <unordered_set>
 #include <unordered_map>
 

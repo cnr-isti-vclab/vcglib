@@ -28,7 +28,6 @@
 #include <vcg/space/polygon3.h>
 #include <vcg/complex/algorithms/update/color.h>
 #include <vcg/complex/algorithms/closest.h>
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/point_sampling.h>
 
 //define a temporary triangle mesh type

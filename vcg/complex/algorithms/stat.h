@@ -28,11 +28,8 @@
 // VCG headers
 
 #include <vcg/math/histogram.h>
-#include <vcg/simplex/face/pos.h>
-#include <vcg/simplex/face/topology.h>
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/inertia.h>
 
 
