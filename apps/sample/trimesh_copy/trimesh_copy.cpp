@@ -1,17 +1,7 @@
 
-// stuff to define the mesh
 #include <vcg/complex/complex.h>
-#include <vcg/complex/append.h>
-// io
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
-
-#include <cstdlib>
-
-#include <sys/timeb.h>
-#include <iostream>
-#include <string>
-
 
 class MyVertex;
 class MyEdge;
@@ -19,9 +9,7 @@ class MyFace;
 
 struct MyUsedTypes: public vcg::UsedTypes<vcg::Use<MyVertex>::AsVertexType,vcg::Use<MyEdge>::AsEdgeType,vcg::Use<MyFace>::AsFaceType>{};
 
-class MyVertex  : public vcg::Vertex< MyUsedTypes,vcg::vertex::VFAdj,vcg::vertex::Coord3f,vcg::vertex::Normal3f,vcg::vertex::Mark,vcg::vertex::BitFlags  >
-{
-};
+class MyVertex  : public vcg::Vertex< MyUsedTypes,vcg::vertex::VFAdj,vcg::vertex::Coord3f,vcg::vertex::Normal3f,vcg::vertex::Mark,vcg::vertex::BitFlags  > {};
 
 class MyEdge : public vcg::Edge< MyUsedTypes> {};
 

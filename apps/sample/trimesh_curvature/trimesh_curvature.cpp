@@ -28,13 +28,12 @@
 This file contain a minimal example of the library
 
 */
-#include<vcg/complex/complex.h>
+#include <vcg/complex/complex.h>
+
+#include <vcg/complex/algorithms/create/platonic.h>
+#include <vcg/complex/algorithms/update/curvature.h>
 
 #include<wrap/io_trimesh/export_off.h>
-#include <vcg/complex/algorithms/create/platonic.h>
-
-#include<vcg/complex/algorithms/update/curvature.h>
-#include<vcg/complex/algorithms/update/normal.h>
 
 class MyEdge;
 class MyFace;

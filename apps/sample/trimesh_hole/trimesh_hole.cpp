@@ -29,16 +29,6 @@
 #include<vcg/complex/algorithms/smooth.h>
 #include<vcg/complex/algorithms/refine.h>
 
-#include<vcg/complex/algorithms/update/selection.h>
-
-// topology computation
-#include<vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/flag.h>
-#include <vcg/complex/algorithms/update/normal.h>
-
-// half edge iterators
-#include<vcg/simplex/face/pos.h>
-
 // input output
 #include <wrap/io_trimesh/import_ply.h>
 #include <wrap/io_trimesh/export_ply.h>

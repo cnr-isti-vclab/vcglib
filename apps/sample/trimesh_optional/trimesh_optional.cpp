@@ -34,10 +34,6 @@ This file shows how to dynamically allocate component that you do not need most 
 #include<vcg/complex/complex.h>
 
 #include<vcg/complex/algorithms/create/platonic.h>
-#include<vcg/complex/algorithms/update/topology.h>
-#include<vcg/complex/algorithms/update/flag.h>
-#include<vcg/complex/algorithms/update/normal.h>
-#include<vcg/complex/algorithms/update/bounding.h>
 #include<vcg/complex/algorithms/update/curvature.h>
 #include <vcg/complex/algorithms/refine_loop.h>
 #include <wrap/io_trimesh/export_off.h>

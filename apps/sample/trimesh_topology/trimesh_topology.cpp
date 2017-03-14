@@ -24,10 +24,6 @@
 #include<vcg/complex/complex.h>
 #include<vcg/complex/algorithms/create/platonic.h>
 
-#include<vcg/complex/algorithms/update/topology.h>
-
-#include<vcg/simplex/face/pos.h>
-
 using namespace vcg;
 
 class MyEdge;

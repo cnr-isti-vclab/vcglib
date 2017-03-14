@@ -24,7 +24,6 @@
 #include <vcg/complex/complex.h>
 
 /*include the algorithms for updating: */
-#include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/update/normal.h>
 

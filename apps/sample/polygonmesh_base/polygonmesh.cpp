@@ -23,19 +23,11 @@
 
 #include <vcg/complex/complex.h>
 
-/*include the algorithms for updating: */
-#include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/update/normal.h>
-
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/create/platonic.h>
 
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
-
-/* include the support for polygon meshes (function to convert from/to trimesh)*/
-//#include <vcg/complex/algorithms/polygon_support.h>
 
 /* include the support for half edges */
 #include <vcg/complex/algorithms/update/halfedge_indexed.h>

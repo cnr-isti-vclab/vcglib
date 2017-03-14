@@ -28,10 +28,7 @@
 #include <wrap/io_trimesh/import_ply.h>
 #include <wrap/io_trimesh/export_ply.h>
 
-#include<vcg/complex/algorithms/update/topology.h>
 #include<vcg/complex/algorithms/outline_support.h>
-
-#include<vcg/simplex/face/pos.h>
 
 #include <vcg/space/outline2_packer.h>
 #include <wrap/qt/outline2_rasterizer.h>

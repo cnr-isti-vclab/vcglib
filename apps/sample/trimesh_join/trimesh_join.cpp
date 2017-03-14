@@ -21,17 +21,12 @@
 *                                                                           *
 ****************************************************************************/
 #include<vcg/complex/complex.h>
-#include<vcg/complex/append.h>
 #include<vcg/complex/algorithms/clean.h>
 #include<vcg/complex/algorithms/clip.h>
-#include<vcg/complex/algorithms/update/bounding.h>
 
 // input output
 #include <wrap/io_trimesh/import_ply.h>
 #include <wrap/io_trimesh/export_ply.h>
-
-// std
-#include <vector>
 
 using namespace vcg;
 using namespace std;

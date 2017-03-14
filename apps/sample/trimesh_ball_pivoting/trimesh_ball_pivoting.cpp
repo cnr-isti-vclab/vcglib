@@ -21,11 +21,6 @@
 *                                                                           *
 ****************************************************************************/
 #include<vcg/complex/complex.h>
-
-#include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/normal.h>
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/create/ball_pivoting.h>
 
 // input output
