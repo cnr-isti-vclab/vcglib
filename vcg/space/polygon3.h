@@ -28,6 +28,7 @@
 #include <vcg/space/fitting3.h>
 #include <vcg/space/point_matching.h>
 #include <vcg/math/matrix33.h>
+#include <vcg/space/distance3.h>
 
 namespace vcg {
 
@@ -425,13 +426,13 @@ void GetPolyTemplatePos(const PolygonType &F,
         dirX.Normalize();
         dirY.Normalize();
         dirZ.Normalize();
-//        CoordType dirXN=dirX;dirXN.Normalize();
-//        CoordType dirYN=dirY;dirYN.Normalize();
-//        CoordType dirZN=dirZ;dirZN.Normalize();
+        //        CoordType dirXN=dirX;dirXN.Normalize();
+        //        CoordType dirYN=dirY;dirYN.Normalize();
+        //        CoordType dirZN=dirZ;dirZN.Normalize();
 
-//        dirX=dirX*0.8+dirXN*0.2;
-//        dirY=dirY*0.8+dirYN*0.2;
-//        dirZ=dirZ*0.8+dirZN*0.2;
+        //        dirX=dirX*0.8+dirXN*0.2;
+        //        dirY=dirY*0.8+dirYN*0.2;
+        //        dirZ=dirZ*0.8+dirZN*0.2;
     }
 
     ///set the Rotation matrix
@@ -456,10 +457,10 @@ void GetPolyTemplatePos(const PolygonType &F,
     ScalarType AreaTemplate=Area(TemplatePos);
     ScalarType AreaUniform=Area(UniformPos);
 
-//    if (TargetArea>0)
-//    {
-//        AreaUniform*=(AreaUniform/TargetArea);
-//    }
+    //    if (TargetArea>0)
+    //    {
+    //        AreaUniform*=(AreaUniform/TargetArea);
+    //    }
 
     ScalarType Scale=sqrt(AreaTemplate/AreaUniform);
 
@@ -530,5 +531,36 @@ typename PolygonType::ScalarType PolyAspectRatio(const PolygonType &F,
     return(diff);
 }
 
+
+template<class PolygonType>
+typename PolygonType::ScalarType PolygonPointDistance(const PolygonType &F,
+                                                      const vcg::Point3<typename PolygonType::ScalarType> &pos)
+{
+    typedef typename PolygonType::ScalarType ScalarType;
+    typedef typename PolygonType::CoordType CoordType;
+
+    ScalarType minD=std::numeric_limits<ScalarType>::max();
+    CoordType bary=vcg::PolyBarycenter(F);
+    for (size_t j=0;j<F.VN();j++)
+    {
+        vcg::Triangle3<ScalarType> T(F.cP0(j),F.cP1(j),bary);
+        ScalarType dist;
+        CoordType closest;
+        vcg::TrianglePointDistance(T,pos,dist,closest);
+        if (dist>minD)continue;
+        minD=dist;
+    }
+    return minD;
+}
+
+template<class PolygonType>
+vcg::Box3<typename PolygonType::ScalarType> PolygonBox(const PolygonType &F)
+{
+    typedef typename PolygonType::ScalarType ScalarType;
+    vcg::Box3<ScalarType> bb;
+    for (size_t j=0;j<F.VN();j++)
+        bb.Add(F.V(j)->P());
+    return bb;
+}
 }
 #endif // POLYGON_H
