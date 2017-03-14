@@ -518,7 +518,7 @@ public:
     static void SmoothPCA(PolyMeshType &poly_m,
                           int relax_step=10,
                           ScalarType Damp=0.5,
-                          bool fixIrr=false,
+                          bool FixS=false,
                           bool isotropic=true,
                           ScalarType smoothTerm=0.1,
                           bool fixB=true)
@@ -575,7 +575,7 @@ public:
                 CoordType newP=avgPos[i]/weightSum[i];
                 newP=newP*(1-alpha)+AvVert[i]*alpha;
                 if ((fixB)&&(poly_m.vert[i].IsB()))continue;
-                if ((fixIrr)&&(poly_m.vert[i].IsS()))continue;
+                if ((FixS)&&(poly_m.vert[i].IsS()))continue;
                 poly_m.vert[i].P()=poly_m.vert[i].P()*Damp+
                         newP*(1-Damp);
             }
@@ -717,6 +717,28 @@ public:
 
     }
 
+    /*! \brief This function laplacian smooth of a polygonal mesh
+    */
+    static void Laplacian(PolyMeshType &poly_m,
+                          bool FixS=false,
+                          int nstep=10,
+                          ScalarType Damp=0.5)
+    {
+        for (int s=0;s<nstep;s++)
+        {
+            std::vector<CoordType> AvVert;
+            LaplacianPos(poly_m,AvVert);
+
+            for (size_t i=0;i<poly_m.vert.size();i++)
+            {
+                if ((FixS) && (poly_m.vert[i].IsS()))continue;
+                poly_m.vert[i].P()=poly_m.vert[i].P()*Damp+
+                        AvVert[i]*(1-Damp);
+            }
+        }
+
+    }
+
     /*! \brief This function performs the polygon regularization as in "Statics Aware Grid Shells"
      * followed by a reprojection step on the triangle mesh passed as parameter
     */
@@ -802,7 +824,7 @@ public:
 
     /*! \brief This function return average edge size
     */
-    static ScalarType AverageEdge(PolyMeshType &poly_m)
+    static ScalarType AverageEdge(const PolyMeshType &poly_m)
     {
         ScalarType AvL=0;
         size_t numE=0;
@@ -811,8 +833,8 @@ public:
             int NumV=poly_m.face[i].VN();
             for (size_t j=0;j<NumV;j++)
             {
-                CoordType pos0=poly_m.face[i].V(j)->P();
-                CoordType pos1=poly_m.face[i].V((j+1)%NumV)->P();
+                CoordType pos0=poly_m.face[i].cV(j)->P();
+                CoordType pos1=poly_m.face[i].cV((j+1)%NumV)->P();
                 AvL+=(pos0-pos1).Norm();
                 numE++;
             }
