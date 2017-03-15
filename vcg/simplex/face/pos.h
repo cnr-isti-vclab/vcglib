@@ -332,7 +332,15 @@ public:
     {
         return face::IsManifold(*f,z);
     }
-
+    
+    /*!
+     * Returns the angle (in radiant) between the two edges incident on V.
+     */
+    ScalarType AngleRad() const
+    {      
+      return Angle(f->V(f->Prev(z))->cP()-v->cP(), f->V(f->Next(z))->cP()-v->cP());
+    }
+    
     /*!
      * Returns the number of vertices incident on the vertex pos is currently pointing to.
      */
