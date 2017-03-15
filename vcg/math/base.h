@@ -180,7 +180,19 @@ inline SCALAR  Clamp( const SCALAR & val, const SCALAR& minval, const SCALAR& ma
 	return val;
 }
 
+template <class SCALAR>
+inline SCALAR Lerp(SCALAR a, SCALAR b, SCALAR lambda)
+{
+    return a * lambda + (1-lambda) * b;
+}
 
+template <class SCALAR>
+inline SCALAR ClampedLerp(SCALAR a, SCALAR b, SCALAR lambda)
+{
+  math::Clamp(lambda, 0.f, 1.f);
+  return a * lambda + (1-lambda) * b;
+}
+                   
 
 inline float   ToDeg(const float &a){return a*180.0f/float(M_PI);}
 inline float   ToRad(const float &a){return float(M_PI)*a/180.0f;}
