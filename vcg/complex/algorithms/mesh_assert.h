@@ -33,7 +33,11 @@ namespace tri {
  * the subsequent algorithm can run without issues.
  * Typical cases are the fact that there are no unreferenced vertices (NoUnreferencedVertex)
  * or a given adjacency is correctly initialized (and not only statically present as a type component).
- *
+ * 
+ * Naming Notes: 
+ * - First two letters of the function name code the required adjacency involved 
+ * - The exception text completes the sentence "This exception is thronw when/because...
+ * 
  */
 template <class MeshType>
 class MeshAssert
@@ -46,6 +50,7 @@ public:
   typedef typename MeshType::CoordType  CoordType;
   typedef typename MeshType::ScalarType ScalarType;
 
+  /// \brief Throw vcg::MissingPreconditionException if FF adjacency is not initialized
   static void FFAdjacencyIsInitialized(MeshType &m)
   {
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
@@ -59,6 +64,7 @@ public:
     }
   }
 
+  /// \brief Throw vcg::MissingPreconditionException if VF adjacency is not initialized
   static void VFAdjacencyIsInitialized(MeshType &m)
   {
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!vi->IsD())
@@ -68,6 +74,7 @@ public:
       }
   }
 
+  /// \brief Throw vcg::MissingPreconditionException if EE adjacency is not initialized
   static void EEAdjacencyIsInitialized(MeshType &m)
   {
     for(auto ei=m.edge.begin();ei!=m.edge.end();++ei) if(!ei->IsD())
@@ -77,19 +84,21 @@ public:
         }
   }
   
+  /// \brief Throw vcg::MissingPreconditionException if According to EE adjacency, the edge mesh is not 1-manifold (e.g there are more than 2 edges on a vertex)
   static void EEOneManifold(MeshType &m)
   {
     EEAdjacencyIsInitialized(m);
     for(auto ei=m.edge.begin();ei!=m.edge.end();++ei) if(!ei->IsD())
     {
      if(! edge::IsEdgeManifold(*ei,0) )
-       throw vcg::MissingPreconditionException("The edge mesh is not 1-manifold (e.g there are more than 2 edges on a vertex)");
+       throw vcg::MissingPreconditionException("According to EE adjacency, the edge mesh is not 1-manifold (e.g there are more than 2 edges on a vertex)");
     }
   }
 
+  /// \brief Throw vcg::MissingPreconditionException if There are unreferenced vertices
   static void NoUnreferencedVertex(MeshType &m)
   {
-    tri::UpdateFlags<MeshType>::VertexClearV(m);
+    UpdateFlags<MeshType>::VertexClearV(m);
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
     {
       for(int i=0;i<fi->VN();++i) fi->V(i)->SetV();
@@ -103,6 +112,7 @@ public:
       }
   }
 
+  /// \brief Throw vcg::MissingPreconditionException if There are faces with more than three vertices
   static void OnlyTriFace(MeshType &m)
   {
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
@@ -112,6 +122,7 @@ public:
     }
   }
 
+  /// \brief Throw vcg::MissingPreconditionException if There are non quadrilateral faces
   static void OnlyQuadFace(MeshType &m)
   {
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
@@ -121,19 +132,21 @@ public:
     }
   }
 
+  /// \brief Throw vcg::MissingPreconditionException if The mesh is not composed only by edges (no faces needed or allowed)
   static void OnlyEdgeMesh(MeshType &m)
   {
       if(m.FN()>0)
-        throw vcg::MissingPreconditionException("Expecting a mesh composed only by edges (no faces needed or allowed)");
+        throw vcg::MissingPreconditionException("The mesh is not composed only by edges (no faces needed or allowed)");
   }
   
+  /// \brief Throw vcg::MissingPreconditionException if According to FF adjacency, the mesh is not two manifold (e.g. there are more than two faces on an edge)
   static void FFTwoManifoldEdge(MeshType & m)
   {
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
     {
       for(int i=0;i<fi->VN();++i){
         if(!face::IsManifold(*fi,i))
-          throw vcg::MissingPreconditionException("There are non quadrilateral faces");
+          throw vcg::MissingPreconditionException("According to FF adjacency, the mesh is not two manifold (e.g. there are more than two faces on an edge)");
       }
     }    
 }
