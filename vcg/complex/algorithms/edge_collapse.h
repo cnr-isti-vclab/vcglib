@@ -20,8 +20,8 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#ifndef __VCG_TETRA_TRI_COLLAPSE
-#define __VCG_TETRA_TRI_COLLAPSE
+#ifndef _VCG_EDGE_COLLAPSE_
+#define _VCG_EDGE_COLLAPSE_
 
 
 #include<vcg/simplex/face/pos.h>
@@ -68,7 +68,7 @@ private:
   {
      VFIVec av0, av1, av01;
      VFIVec & AV0() { return av0;}  // Faces incident only on v0
-     VFIVec & AV1() { return av1;}  // Faces incident only on v1
+//     VFIVec & AV1() { return av1;}  // Faces incident only on v1
      VFIVec & AV01(){ return av01;} // Faces incident only on both v0 and v1
   };
 
@@ -78,7 +78,7 @@ private:
     VertexType * v1 = p.V(1);
     
     es.AV0().clear(); 
-    es.AV1().clear(); 
+//    es.AV1().clear(); 
     es.AV01().clear();
     
     for(VFIterator x = VFIterator(v0); !x.End(); ++x)
@@ -93,16 +93,16 @@ private:
       else         es.AV01().push_back( x );
     }
     
-    for( VFIterator x = VFIterator(v1); !x.End(); ++x)
-    {
-      bool foundV0=false;      
-      for(int j=0;j<3;++j)
-        if( x.f->V(j)==v0 )	{
-          foundV0=true;
-          break;
-        }
-      if(!foundV0)	es.AV1().push_back( x ); // v0 not found -> so the face is incident only on v0
-    }
+//    for( VFIterator x = VFIterator(v1); !x.End(); ++x)
+//    {
+//      bool foundV0=false;      
+//      for(int j=0;j<3;++j)
+//        if( x.f->V(j)==v0 )	{
+//          foundV0=true;
+//          break;
+//        }
+//      if(!foundV0)	es.AV1().push_back( x ); // v0 not found -> so the face is incident only on v0
+//    }
   }
   
   /*
@@ -206,17 +206,16 @@ public:
     return true;
   }
 
-  // Main Collapsing Function: the one that actually makes the collapse
-  // Remember that v[0] will be deleted and v[1] will survive (eventually with a new position)
-  // hint: to do a collapse onto a vertex simply pass p as the position of the surviving vertex
+  // Main Collapsing Function: the one that actually performs the collapse of the edge denoted by the VertexPair c
+  // Remember that v[0] will be deleted and v[1] will survive with the position indicated by p
+  // To do a collapse onto a vertex simply pass p as the position of the surviving vertex
   static int Do(TriMeshType &m, VertexPair & c, const Point3<ScalarType> &p)
   {
     EdgeSet es;
     FindSets(c,es);
-    typename VFIVec::iterator i;
-    int n_face_del =0 ;
     
-    for(i=es.AV01().begin();i!=es.AV01().end();++i)
+    int n_face_del=0 ;    
+    for(auto i=es.AV01().begin();i!=es.AV01().end();++i)
     {
       FaceType  & f = *((*i).f);
       assert(f.V((*i).z) == c.V(0));
@@ -226,14 +225,17 @@ public:
       n_face_del++;
     }
     
-    //Update Vertex-Face topology
-    for(i=es.AV0().begin();i!=es.AV0().end();++i)
+    // Very LOW LEVEL update of VF Adjacency;  
+    // for all the faces incident in v[0]
+    // - v[0] will be deleted so we substitute v[0] with v[1]
+    // - we prepend that face to the list of the faces incident on v[1]
+    for(auto i=es.AV0().begin();i!=es.AV0().end();++i)
     {
       (*i).f->V((*i).z) = c.V(1);	// For each face in v0 we substitute v0 with v1
-      (*i).f->VFp((*i).z) = (*i).f->V((*i).z)->VFp(); // e appendo la lista di facce incidenti in v1 a questa faccia
-      (*i).f->VFi((*i).z) = (*i).f->V((*i).z)->VFi();
-      (*i).f->V((*i).z)->VFp() = (*i).f;
-      (*i).f->V((*i).z)->VFi() = (*i).z;
+      (*i).f->VFp((*i).z) = c.V(1)->VFp(); 
+      (*i).f->VFi((*i).z) = c.V(1)->VFi();
+      c.V(1)->VFp() = (*i).f;
+      c.V(1)->VFi() = (*i).z;
     }
     
     Allocator<TriMeshType>::DeleteVertex(m,*(c.V(0)));
@@ -243,6 +245,6 @@ public:
   
 };
 
-}
-}
+} // end namespace tri
+} // end namespace vcg
 #endif
