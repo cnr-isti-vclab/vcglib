@@ -23,6 +23,7 @@ SUBDIRS       = trimesh_base  \
                 trimesh_pointmatching \
                 trimesh_ray \
                 trimesh_refine \
+                trimesh_remeshing \
                 trimesh_sampling \
                 trimesh_smooth \
                 trimesh_split_vertex \
