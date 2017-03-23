@@ -62,7 +62,7 @@ public:
 //    tree.setMaxNofNeighbors(nn);
     const ScalarType maxDistSquared = maxDist*maxDist;
     int cnt=0;
-    int step=m.vn/100;
+	int step = max(m.vn, int(m.vn / 100));
     typename KdTree<ScalarType>::PriorityQueue nq;
     for (VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     {
