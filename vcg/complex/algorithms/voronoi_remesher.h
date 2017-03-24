@@ -32,6 +32,7 @@
 #include <vcg/complex/algorithms/voronoi_processing.h>
 #include <vcg/complex/algorithms/point_sampling.h>
 #include <vcg/complex/algorithms/crease_cut.h>
+#include <vcg/complex/algorithms/curve_on_manifold.h>
 
 #include <memory>
 #include <string>
@@ -43,7 +44,10 @@
 #include <array>
 #include <utility>
 
-//#define DEBUG_VORO 1
+#define DEBUG_VORO 1
+#include <wrap/io_trimesh/export.h>
+#include <QString>
+
 namespace vcg {
 namespace tri {
 
@@ -142,7 +146,7 @@ public:
     for (size_t i=0; i<ccs.size(); i++)
     {
       std::cout << "Remeshing component " << (i+1) << "/" << ccs.size() << std::endl;
-      ccs[i] = RemeshOneCC(*ccs[i], samplingRadius, borderCreaseAngleThreshold);
+      ccs[i] = RemeshOneCC(*ccs[i], samplingRadius, borderCreaseAngleThreshold, i);
     }
     
     MeshPtr ret = std::make_shared<Mesh>();
@@ -161,7 +165,7 @@ public:
   /// \param borderCreaseAngleThreshold is the angle treshold for preserving corner points on the mesh boundary
   /// \return the remeshed mesh
   ///
-  static inline MeshPtr RemeshOneCC(Mesh & original, const ScalarType samplingRadius, const ScalarType borderCreaseAngleThreshold = 0.0)
+  static inline MeshPtr RemeshOneCC(Mesh & original, const ScalarType samplingRadius, const ScalarType borderCreaseAngleThreshold = 0.0, int idx = 0)
   {
     RequireCompactness(original);
     RequirePerFaceFlags(original);
@@ -207,17 +211,9 @@ public:
       TrivialSampler<EdgeMeshType> ps(borderSamples);
       
       // uniform sampling
-      // (use different sampling radius for the edges)
       UpdateTopology<EdgeMeshType>::EdgeEdge(em);
       SurfaceSampling<EdgeMeshType>::EdgeMeshUniform(em, ps, samplingRadius, true);
-      
-      // convert to mesh
-      auto vi = Allocator<Mesh>::AddVertices(poissonEdgeMesh, borderSamples.size());
-      for (auto p : borderSamples)
-      {
-        vi->P() = CoordType::Construct(p);
-        vi++;
-      }
+      BuildMeshFromCoordVector(poissonEdgeMesh, borderSamples);
       UpdateBounding<Mesh>::Box(poissonEdgeMesh);
       
       // remove duplicate vertices
@@ -484,6 +480,8 @@ protected:
                                                 const std::vector<bool> & seedFixed,
                                                 std::vector<VertexType *> & seedVVec)
   {
+    // TODO mark here all seeds (cross-border)
+
     typedef typename vcg::SpatialHashTable<VertexType, ScalarType> HashVertexGrid;
     seedVVec.clear();
     
