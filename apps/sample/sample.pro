@@ -12,19 +12,22 @@ SUBDIRS       = trimesh_allocate \
                 trimesh_cylinder_clipping \
                 trimesh_disk_parametrization \
                 trimesh_edge \
-                trimesh_field_smoothing\
                 trimesh_fitting \
                 trimesh_geodesic \
                 trimesh_harmonic \
                 trimesh_hole \
+                trimesh_implicit_smooth \
+                trimesh_indexing \
                 trimesh_inertia \
                 trimesh_intersection \
                 trimesh_isosurface \
                 trimesh_join \
                 trimesh_kdtree \
+                trimesh_montecarlo_sampling \
                 trimesh_normal \
                 trimesh_optional \
                 trimesh_pointmatching \
+                trimesh_pointcloud_sampling \
                 trimesh_ray \
                 trimesh_refine \
                 trimesh_remeshing \
