@@ -1570,11 +1570,11 @@ namespace vcg
         HashTable		m_HashTable;		/*!< The hash table that will substitute the uniform grid.				*/
         BinaryImage	m_Bitmap;
 
-        const static float  m_BOUNDING_BOX_EXPANSION_FACTOR() { return SCALAR_TYPE(0.035); }
-        const static float  m_SIGMA() {return SCALAR_TYPE(1.0f/(2.0f*SCALAR_TYPE(m_DIMENSION)));}
-        const static int    m_MAX_TRIALS_IN_COMPACT_CONSTRUCTION () { return 5; }
-        const static int    m_MAX_NUM_OF_RANDOM_GENERATED_OFFSET() {return 32;}
-        const static int    m_DIMENSION() {return 3;}
+        static float  m_BOUNDING_BOX_EXPANSION_FACTOR() { return SCALAR_TYPE(0.035); }
+        static float  m_SIGMA() {return SCALAR_TYPE(1.0f/(2.0f*SCALAR_TYPE(m_DIMENSION)));}
+        static int    m_MAX_TRIALS_IN_COMPACT_CONSTRUCTION () { return 5; }
+        static int    m_MAX_NUM_OF_RANDOM_GENERATED_OFFSET() {return 32;}
+        static int    m_DIMENSION() {return 3;}
     }; //end of class PerfectSpatialHashing
 
     /*! @} */
