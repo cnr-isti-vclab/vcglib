@@ -316,10 +316,10 @@ class PoissonSolver
                 assert(CrossDir1);*/
 
         //K1=f->Q3();
-        K1=f->PD1();
+        K1.Import(f->PD1());
         K1.Normalize();
         //K2=fNorm^K1;
-        K2=f->PD2();
+        K2.Import(f->PD2());
         K2.Normalize();
 
         scaled_Kreal = K1*(vector_field_scale);///2);
