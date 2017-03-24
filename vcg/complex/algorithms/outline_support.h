@@ -167,7 +167,7 @@ public:
   }
 
   template<class PointType>
-  static bool ConvertOutline3VecToOutline2Vec(std::vector< std::vector< PointType> > &outline3Vec, std::vector< std::vector< Point2f> > &outline2Vec )
+  static bool ConvertOutline3VecToOutline2Vec(std::vector< std::vector< PointType> > &outline3Vec, std::vector< std::vector< Point2<ScalarType> > > &outline2Vec )
   {
     outline2Vec.resize(outline3Vec.size());
     for(size_t i=0;i<outline3Vec.size();++i)
@@ -186,10 +186,10 @@ public:
   }
 
   template<class MeshType>
-  static int ConvertMeshBoundaryToOutline3Vec(MeshType &m, std::vector< std::vector<Point3f> > &outline3Vec)
+  static int ConvertMeshBoundaryToOutline3Vec(MeshType &m, std::vector< std::vector<Point3<ScalarType> > > &outline3Vec)
   {
     typedef typename MeshType::FaceType FaceType;
-    std::vector<Point3f> outline;
+    std::vector<Point3<ScalarType> > outline;
 
     tri::Allocator<MeshType>::CompactVertexVector(m);
     tri::Allocator<MeshType>::CompactFaceVector(m);
@@ -199,7 +199,7 @@ public:
     int totalVn=0;
     for(size_t i=0;i<m.face.size();i++)
     {
-      for (int j=0;j<3;j++)
+      for (int j=0;j<m.face[i].VN();j++)
         if (!m.face[i].IsV() && face::IsBorder(m.face[i],j))
         {
           FaceType* startB=&(m.face[i]);
@@ -210,7 +210,7 @@ public:
           {
             assert(p.IsManifold());
             p.F()->SetV();
-            outline.push_back(p.V()->P());
+            outline.push_back(Point3<ScalarType>(p.V()->P()));
             p.NextB();
             totalVn++;
           }
