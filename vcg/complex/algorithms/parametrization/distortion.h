@@ -91,7 +91,6 @@ public:
     typedef typename MeshType::CoordType CoordType;
     typedef typename MeshType::ScalarType ScalarType;
     typedef typename MeshType::FaceType::CurVecType CurVecType;
-//    typedef typename std::conditional<PerWedgeFlag, FaceType, VertexType>::type BaseTexType;
     typedef UVHelper<MeshType, PerWedgeFlag>          UV;
     typedef typename UV::TexCoordType                 TexCoordType;
 	typedef typename TexCoordType::ScalarType         TexScalarType;
@@ -108,16 +107,6 @@ public:
 
     static ScalarType AreaUV(const FaceType *f)
     {
-//        TexCoordType uv0,uv1,uv2;
-//        if(PerWedgeFlag) {
-//            uv0=f->cWT(0).P();
-//            uv1=f->cWT(1).P();
-//            uv2=f->cWT(2).P();
-//        } else {
-//            uv0=f->cV(0)->T().P();
-//            uv1=f->cV(1)->T().P();
-//            uv2=f->cV(2)->T().P();
-//        }
 		TexCoordType uv0 = UVCoord(f, 0);
 		TexCoordType uv1 = UVCoord(f, 1);
 		TexCoordType uv2 = UVCoord(f, 2);
@@ -137,14 +126,6 @@ public:
         assert((e>=0)&&(e<3));
 		TexCoordType uv0 = UVCoord(f, e+0);
 		TexCoordType uv1 = UVCoord(f, (e+1)%3);
-//        Point2<TexScalarType> uv0,uv1;
-//        if(PerWedgeFlag) {
-//            uv0=f->cWT(e+0).P();
-//            uv1=f->cWT((e+1)%3).P();
-//        } else {
-//            uv0=f->cV0(e)->T().P();
-//            uv1=f->cV1(e)->T().P();
-//        }
         ScalarType UVlength=Distance(uv0,uv1);
         return UVlength;
     }
@@ -168,16 +149,6 @@ public:
 		TexCoordType uv0 = UVCoord(f, (e+2)%3);
 		TexCoordType uv1 = UVCoord(f,  e);
 		TexCoordType uv2 = UVCoord(f, (e+1)%3);
-//        Point2<ScalarType> uv0,uv1,uv2;
-//        if(PerWedgeFlag) {
-//            uv0=f->cWT((e+2)%3).P();
-//            uv1=f->cWT((e+0)%3).P();
-//            uv2=f->cWT((e+1)%3).P();
-//        } else {
-//            uv0=f->V2(e)->T().P();
-//            uv1=f->V0(e)->T().P();
-//            uv2=f->V1(e)->T().P();
-//        }
         vcg::Point2<ScalarType> dir0=uv2-uv1;
         vcg::Point2<ScalarType> dir1=uv0-uv1;
         dir0.Normalize();
@@ -202,16 +173,6 @@ public:
 		TexCoordType uv0 = UVCoord(f, (e+2)%3);
 		TexCoordType uv1 = UVCoord(f,  e);
 		TexCoordType uv2 = UVCoord(f, (e+1)%3);
-//        Point2<TexScalarType> uv0,uv1,uv2;
-//        if(PerWedgeFlag) {
-//            uv0=f->cWT((e+2)%3).P();
-//            uv1=f->cWT((e+0)%3).P();
-//            uv2=f->cWT((e+1)%3).P();
-//        } else {
-//            uv0=f->cV2(e)->T().P();
-//            uv1=f->cV0(e)->T().P();
-//            uv2=f->cV1(e)->T().P();
-//        }
         vcg::Point2<TexScalarType> dir0=uv2-uv1;
         vcg::Point2<TexScalarType> dir1=uv0-uv1;
         dir0.Normalize();
@@ -311,9 +272,6 @@ public:
 		TexCoordType p0 = UVCoord(f, 0);
 		TexCoordType p1 = UVCoord(f, 1);
 		TexCoordType p2 = UVCoord(f, 2);
-//        TexCoordType p0 = (PerWedgeFlag)? f->cWT(0).P() :  f->cV(0)->T().P() ;
-//        TexCoordType p1 = (PerWedgeFlag)? f->cWT(1).P() :  f->cV(1)->T().P() ;
-//        TexCoordType p2 = (PerWedgeFlag)? f->cWT(2).P() :  f->cV(2)->T().P() ;
 
         CoordType q0 = f->cP(0);
         CoordType q1 = f->cP(1);
@@ -339,9 +297,6 @@ public:
 		TexCoordType p0 = UVCoord(f, 0);
 		TexCoordType p1 = UVCoord(f, 1);
 		TexCoordType p2 = UVCoord(f, 2);
-//        TexCoordType p0 = (PerWedgeFlag)? f->cWT(0).P() :  f->cV(0)->T().P() ;
-//        TexCoordType p1 = (PerWedgeFlag)? f->cWT(1).P() :  f->cV(1)->T().P() ;
-//        TexCoordType p2 = (PerWedgeFlag)? f->cWT(2).P() :  f->cV(2)->T().P() ;
 
         CoordType q0 = f->cP(0);
         CoordType q1 = f->cP(1);
@@ -375,7 +330,6 @@ public:
 		const Eigen::Vector2d singular = svd2x2(F);
 		const double a = singular(0) - 1;
 		const double b = singular(1) - 1;
-//		std::cout << "Singular" << std::endl << singular << std::endl;
 		return ScalarType(0.5 * (a*a + b*b));
 	}
 
@@ -586,12 +540,6 @@ public:
         }
     }
 };
-
-//template <class MeshType, false>
-//static TexCoordType Distortion::UVCoord<false>(const FaceType *f, int i)
-//{
-//	return f->cV(0)->T().P();
-//}
 
 }} // namespace end
 
