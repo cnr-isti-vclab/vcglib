@@ -1,5 +1,2 @@
 include(../common.pri)
-SOURCES += trimesh_cylclip.cpp ../../../wrap/ply/plylib.cpp
-
-HEADERS += \
-    cylinder_clip.h
+SOURCES += trimesh_cylinder_clipping.cpp ../../../wrap/ply/plylib.cpp

@@ -71,7 +71,7 @@ int main( int argc, char **argv )
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::Montecarlo(m,mps,10000000);
   int t1=clock();
 
-  printf("Computed a montecarlo distribution of %i vertices radius is %6.3f\n",sampleVec.size(),float(t1-t0)/float(CLOCKS_PER_SEC));
+  printf("Computed a montecarlo distribution of %lu vertices radius is %6.3f\n",sampleVec.size(),float(t1-t0)/float(CLOCKS_PER_SEC));
 
   return 0;
 }

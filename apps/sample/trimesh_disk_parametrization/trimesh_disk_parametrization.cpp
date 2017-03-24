@@ -21,13 +21,6 @@
 *                                                                           *
 ****************************************************************************/
 
-#include<vcg/simplex/vertex/base.h>
-#include<vcg/simplex/vertex/component.h>
-
-#include <vcg/complex/used_types.h>
-
-#include<vcg/simplex/face/base.h>
-#include<vcg/simplex/face/component.h>
 #include<vcg/complex/complex.h>
 #include<vcg/complex/algorithms/create/platonic.h>
 #include<vcg/complex/algorithms/parametrization/poisson_solver.h>
