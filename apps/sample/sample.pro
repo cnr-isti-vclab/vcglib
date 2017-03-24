@@ -1,17 +1,21 @@
 
 TEMPLATE      = subdirs
-SUBDIRS       = trimesh_base  \
-                trimesh_allocate \
+SUBDIRS       = trimesh_allocate \
                 trimesh_attribute \
                 trimesh_ball_pivoting \
+                trimesh_base  \
                 trimesh_closest \
-                trimesh_copy \
-                trimesh_color \
-                trimesh_curvature \
                 trimesh_clustering \
+                trimesh_color \
+                trimesh_copy \
+                trimesh_curvature \
+                trimesh_cylinder_clipping \
+                trimesh_disk_parametrization \
                 trimesh_edge \
+                trimesh_field_smoothing\
                 trimesh_fitting \
                 trimesh_geodesic \
+                trimesh_harmonic \
                 trimesh_hole \
                 trimesh_inertia \
                 trimesh_intersection \
@@ -33,10 +37,4 @@ SUBDIRS       = trimesh_base  \
                 trimesh_voronoiatlas \
                 trimesh_voronoiclustering \
                 trimesh_voronoisampling \
-                edgemesh_sampling \
-                polygonmesh_base \
-                colorspace \ 
-                space_index_2d \
-                space_packer
-#                aabb_binary_tree
 
