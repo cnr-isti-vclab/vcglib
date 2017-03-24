@@ -81,11 +81,12 @@ int main()
   vcg::tri::Allocator<MyMesh>::DeleteFace(m,m.face[3]);
 
   // If you loop in a mesh with deleted elements you have to skip them!
+  MyMesh::CoordType b(0,0,0);
   for(fi = m.face.begin(); fi!=m.face.end(); ++fi )
   {
      if(!fi->IsD()) //    <---- Check added
        {
-        MyMesh::CoordType b = vcg::Barycenter(*fi);
+        b += vcg::Barycenter(*fi);
        }
   }
 
@@ -94,7 +95,7 @@ int main()
   {
      if(!fi->IsD())
        {
-        MyMesh::CoordType b = vcg::Barycenter(*fi);
+       b += vcg::Barycenter(*fi);
        }
   }
 
