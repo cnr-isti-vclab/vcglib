@@ -1506,12 +1506,12 @@ public:
     {
         for (size_t i=0;i<mesh.face.size();i++)
         {
-            vcg::Point2<ScalarType> UV0=mesh.face[i].WT(0).P();
-            vcg::Point2<ScalarType> UV1=mesh.face[i].WT(1).P();
-            vcg::Point2<ScalarType> UV2=mesh.face[i].WT(2).P();
-            GradientToCross(mesh.face[i],UV0,UV1,UV2,
-                            CoordType::Construct(mesh.face[i].PD1()),
-                            CoordType::Construct(mesh.face[i].PD2()) );
+            vcg::Point2<ScalarType> UV0 = vcg::Point2<ScalarType>::Construct(mesh.face[i].WT(0).P());
+            vcg::Point2<ScalarType> UV1 = vcg::Point2<ScalarType>::Construct(mesh.face[i].WT(1).P());
+            vcg::Point2<ScalarType> UV2 = vcg::Point2<ScalarType>::Construct(mesh.face[i].WT(2).P());
+            CoordType uDir = CoordType::Construct(mesh.face[i].PD1());
+            CoordType vDir = CoordType::Construct(mesh.face[i].PD2());
+            GradientToCross(mesh.face[i],UV0,UV1,UV2, uDir, vDir);
         }
         OrientDirectionFaceCoherently(mesh);
     }
