@@ -26,6 +26,7 @@
 #include <assert.h>
 #include <string>
 #include <limits>
+#include <vector>
 #include <vcg/math/base.h>
 #include <stdio.h>
 
