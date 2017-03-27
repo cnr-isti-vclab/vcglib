@@ -200,6 +200,7 @@ public:
         const CoordType &p1 = pVec[tri::Index(m, m.face[i].V(1))];
         const CoordType &p2 = pVec[tri::Index(m, m.face[i].V(2))];
 
+        if (!(abs(p0[2]) > 1 || abs(p1[2]) > 1 || abs(p2[2]) > 1) && IntersectionTriangleBox(reg, p0, p1, p2))
           result.push_back(&m.face[i]);
       }
     }
