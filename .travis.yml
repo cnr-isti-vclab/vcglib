@@ -1,0 +1,15 @@
+# Enable C++ support
+language: cpp
+
+# Compiler selection
+compiler:
+  - clang
+  - gcc
+
+# Build steps
+script:
+  - cd apps/tridecimator
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
