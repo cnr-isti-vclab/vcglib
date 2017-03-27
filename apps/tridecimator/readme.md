@@ -1,13 +1,8 @@
 
-   VCGLib  http://www.vcglib.net                                         o o     
-   Visual and Computer Graphics Library                            o     o   
-                                                                  _   O  _   
-   Copyright(C) 2005-2006                                           \/)\/    
-   Visual Computing Lab  http://vcg.isti.cnr.it                    /\/|      
-   ISTI - Italian National Research Council                           |      
-                                                                      \      
-   TriDecimator 1.00 2/10/2005
-   All rights reserved.                                                      
+   VCGLib  http://www.vcglib.net 
+    Copyright(C) 2005-2006             
+   Visual Computing Lab  http://vcg.isti.cnr.it          
+   ISTI - Italian National Research Council                 
    
 
                                                                        
@@ -24,27 +19,31 @@ for more details.
 
 --- Synopsis ---
 
-tridecimator fileIn fileOut face_num [opt]\
-Where opt can be:\
-    -e# QuadricError threshold  (range [0,inf) default inf)
-    -b# Boundary Weight (default .5)
-    -q# Quality threshold (range [0.0, 0.866],  default .3 )
-    -n# Normal threshold  (degree range [0,180] default 90)
-    -E# Minimal admitted quadric value (default 1e-15, must be >0)
-    -Q[y|n]  Use or not Quality Threshold (default yes)
-    -N[y|n]  Use or not Normal Threshold (default no)
-    -A[y|n]  Use or not Area Weighted Quadrics (default yes)
-    -O[y|n]  Use or not vertex optimal placement (default yes)
-    -S[y|n]  Use or not Scale Independent quadric measure(default yes) 
-    -B[y|n]  Preserve or not mesh boundary (default no)
-    -T[y|n]  Preserve or not Topology (default no)
-    -H[y|n]  Use or not Safe Heap Update (default no)
-    -P       Before simplification, remove duplicate & unreferenced vertices
+`tridecimator fileIn fileOut face_num [opt]`
+
+Tridecimator is a commandline mesh simplifier based on a variant of the quadric error edge collapse strategy. 
+It supports `PLY, OFF, OBJ` format for input and output and require a target number of faces. 
+The following options are supported:
+
+-e# QuadricError threshold  (range [0,inf) default inf) 
+-b# Boundary Weight (default .5) 
+-p# Quality quadric Weight (default .5) 
+-q# Quality threshold (range [0.0, 0.866],  default .3 ) 
+-n# Normal threshold  (degree range [0,180] default 90) 
+-w# Quality weight factor  (10) 
+-E# Minimal admitted quadric value (default 1e-15, must be >0) 
+-Q[y|n]  Use or not Face Quality Threshold (default yes) 
+-H[y|n]  Use or not HardQualityCheck (default no) 
+-N[y|n]  Use or not Face Normal Threshold (default no) 
+-P[y|n]  Add or not QualityQuadric (default no) 
+-A[y|n]  Use or not Area Checking (default no) 
+-O[y|n]  Use or not vertex optimal placement (default yes) 
+-S[y|n]  Use or not Scale Independent quadric measure(default yes)  
+-B[y|n]  Preserve or not mesh boundary (default no) 
+-T[y|n]  Preserve or not Topology (default no) 
+-W[y|n]  Use or not per vertex Quality to weight the quadric error (default no) 
+-C       Before simplification, remove duplicate & unreferenced vertices 
     
-
-Supported formats: PLY, OFF, STL
-
--- Some technical notes -- 
 
 This simplification tool employ a quadric error based edge collapse iterative approach. 
 Each possible collapse is scored taking into account
@@ -57,7 +56,7 @@ The simplification can ends when the desired number of triangles has been reache
 
 The 'Safe Heap Update' change the set of edges re-inserted in the heap
 after a collapse resulting in a vertex v; this option put back in the
-heap not only incident in the vbut all the edges of the triangles incident
+heap not only incident in the v, but all the edges of the triangles incident
 in v. It slows down a lot.
 
 The 'Scale Independent quadric' is useful when you want simplify 
