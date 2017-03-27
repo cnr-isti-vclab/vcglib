@@ -28,6 +28,7 @@
 #include <algorithm>
 #include "gl_type_name.h"
 
+
 namespace vcg{
 
 template <class MESH_TYPE>
@@ -169,38 +170,39 @@ public:
      return result.size();
    }
 
-  static int PickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width=4, int height=4)
+  static int PickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width = 4, int height = 4)
   {
-    static Eigen::Matrix<ScalarType,4,4> lastM;
-    static MESH_TYPE *lastm=0;
+    static Eigen::Matrix<ScalarType, 4, 4> lastM;
+    static MESH_TYPE *lastm = 0;
     static std::vector<CoordType> pVec;
 
     ScalarType viewportF[4];
-    Eigen::Matrix<ScalarType,4,4> M;
-    glGetMatrixAndViewport(M,viewportF);
+    Eigen::Matrix<ScalarType, 4, 4> M;
+    glGetMatrixAndViewport(M, viewportF);
     result.clear();
     Box3<ScalarType> reg;
-    reg.Add(CoordType(x-width/ScalarType(2.0),y-height/ScalarType(2.0),ScalarType(-1.0)));
-    reg.Add(CoordType(x+width/ScalarType(2.0),y+height/ScalarType(2.0),ScalarType(1.0)));
+    reg.Add(CoordType(x - width / ScalarType(2.0), y - height / ScalarType(2.0), ScalarType(-1.0)));
+    reg.Add(CoordType(x + width / ScalarType(2.0), y + height / ScalarType(2.0), ScalarType(1.0)));
 
-    if((M!=lastM) || (&m != lastm) || (pVec.size() != m.VN()))
+    
+    if ((M != lastM) || (&m != lastm) || (pVec.size() != m.VN()))
     {
-      FillProjectedVector(m,pVec,M,viewportF);
+      FillProjectedVector(m, pVec, M, viewportF);
       lastM = M;
       lastm = &m;
     }
 
-	for (size_t i = 0; i < m.face.size(); ++i)
-	{
-		if (!m.face[i].IsD())
-		{
-			const CoordType &p0 = pVec[tri::Index(m, m.face[i].V(0))];
-			const CoordType &p1 = pVec[tri::Index(m, m.face[i].V(1))];
-			const CoordType &p2 = pVec[tri::Index(m, m.face[i].V(2))];
-			if ((p0[2] > -1.0f) && (p1[2] > -1.0f) && (p2[2] > -1.0f) && IntersectionTriangleBox(reg, p0, p1, p2))
-				result.push_back(&m.face[i]);
-		}
-	}
+    for (size_t i = 0; i < m.face.size(); ++i)
+    {
+      if (!m.face[i].IsD())
+      {
+        const CoordType &p0 = pVec[tri::Index(m, m.face[i].V(0))];
+        const CoordType &p1 = pVec[tri::Index(m, m.face[i].V(1))];
+        const CoordType &p2 = pVec[tri::Index(m, m.face[i].V(2))];
+
+          result.push_back(&m.face[i]);
+      }
+    }
     return result.size();
   }
 
