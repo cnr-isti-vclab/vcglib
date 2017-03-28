@@ -7,7 +7,6 @@ os:
   - osx
 
 
-
 # Compiler selection
 compiler:
   - clang
@@ -43,7 +42,7 @@ install:
   
 # Build steps
 script:
-  - cd apps/tridecimator
+  - cd apps
   - mkdir build
   - cd build
   - cmake ..
