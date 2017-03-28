@@ -548,7 +548,6 @@ void Sampling<MetroMesh>::Hausdorff()
 {
         Box3< ScalarType> bbox;
 
-    typedef typename std::vector<FaceType>::iterator  FaceVecIterator;
     // set grid meshes.
     if(Flags & SamplingFlags::USE_HASH_GRID)   hS2.Set(S2.face.begin(),S2.face.end());
     if(Flags & SamplingFlags::USE_AABB_TREE)   tS2.Set(S2.face.begin(),S2.face.end());
