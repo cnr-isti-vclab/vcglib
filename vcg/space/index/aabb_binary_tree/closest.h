@@ -59,7 +59,6 @@ public:
 
 	template <class OBJPOINTDISTANCEFUNCT>
 	static inline ObjPtr Closest(TreeType & tree, OBJPOINTDISTANCEFUNCT & getPointDistance, const CoordType & p, const ScalarType & maxDist, ScalarType & minDist, CoordType & q) {
-		typedef OBJPOINTDISTANCEFUNCT ObjPointDistanceFunct;
 		typedef std::vector<NodeType *> NodePtrVector;
 		typedef typename NodePtrVector::const_iterator NodePtrVector_ci;
 

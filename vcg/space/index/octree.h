@@ -500,7 +500,6 @@ OBJECT_RETRIEVER:
 
                 //otherwise, retrieve the leaves and fill the container with the objects contained
                 std::vector< NodePointer > leaves;
-                unsigned int object_count;
                 int					 leaves_count;
 
                 TemplatedOctree::ContainedLeaves(query_bounding_box, leaves, TemplatedOctree::Root(), TemplatedOctree::boundingBox);
