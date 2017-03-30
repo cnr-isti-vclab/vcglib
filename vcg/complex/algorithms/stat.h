@@ -43,6 +43,7 @@ public:
   typedef typename MeshType::VertexType     VertexType;
   typedef typename MeshType::VertexPointer  VertexPointer;
   typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::ConstVertexIterator ConstVertexIterator;
   typedef typename MeshType::ScalarType			ScalarType;
   typedef typename MeshType::FaceType       FaceType;
   typedef typename MeshType::FacePointer    FacePointer;
@@ -108,6 +109,22 @@ public:
     {
       if((*fi).IsD())continue;
         AvgQ+= (*fi).Q();
+        num++;
+    }
+    return (AvgQ/(ScalarType)num);
+  }
+
+  static ScalarType ComputePerVertQualityAvg(const MeshType & m)
+  {
+    tri::RequirePerVertexQuality(m);
+    ScalarType AvgQ = 0;
+
+    ConstVertexIterator vi;
+    size_t num=0;
+    for(vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+    {
+      if((*vi).IsD())continue;
+        AvgQ+= (*vi).cQ();
         num++;
     }
     return (AvgQ/(ScalarType)num);
