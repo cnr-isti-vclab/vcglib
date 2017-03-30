@@ -77,8 +77,8 @@ class PolygonalAlgorithm
     typedef typename vcg::face::Pos<FaceType> PosType;
 public:
     static bool CollapseEdges(PolyMeshType &poly_m,
-                             const std::vector<PosType> &CollapsePos,
-                             const std::vector<CoordType> &InterpPos)
+                              const std::vector<PosType> &CollapsePos,
+                              const std::vector<CoordType> &InterpPos)
     {
 
         //this set how to remap the vertices after deletion
@@ -166,119 +166,7 @@ public:
         return collapsed;
     }
 private:
-//    static bool CollapseBorderSmallEdgesStep(PolyMeshType &poly_m,
-//                                             const ScalarType edge_limit)
-//    {
-//        bool collapsed=false;
 
-//        //update topology
-//        vcg::tri::UpdateTopology<PolyMeshType>::FaceFace(poly_m);
-
-//        //update border vertices
-//        //UpdateBorderVertexFromPFFAdj(poly_m);
-//        vcg::tri::UpdateFlags<PolyMeshType>::VertexBorderFromFaceAdj(poly_m);
-
-//        //get border edges
-//        std::vector<std::vector<bool> > IsBorder;
-//        //BorderEdgeFromPFFAdj(poly_m,IsBorder);
-//        vcg::tri::UpdateFlags<PolyMeshType>::VertexBorderFromFaceAdj(poly_m);
-//        //deselect all vertices
-//        vcg::tri::UpdateFlags<PolyMeshType>::VertexClearS(poly_m);
-
-//        //this set how to remap the vertices after deletion
-//        std::map<VertexType*,VertexType*> VertexRemap;
-
-//        //go over all faces and check the ones needed to be deleted
-//        for (size_t i=0;i<poly_m.face.size();i++)
-//        {
-//            int NumV=poly_m.face[i].VN();
-//            for (size_t j=0;j<NumV;j++)
-//            {
-//                VertexType *v0=poly_m.face[i].V(j);
-//                VertexType *v1=poly_m.face[i].V((j+1)%NumV);
-//                assert(v0!=v1);
-
-//                bool IsBV0=v0->IsB();
-//                bool IsBV1=v1->IsB();
-
-//                //in these cases is not possible to collapse
-//                if ((!IsBV0)&&(!IsBV1))continue;
-//                //if ((!IsBorder[i][j])&&(IsBV0)&&(IsBV1))continue;
-//                bool IsBorderE=poly_m.face[i].FFp(j);
-//                if ((IsBorderE)&&(IsBV0)&&(IsBV1))continue;
-//                if (v0->IsS())continue;
-//                if (v1->IsS())continue;
-
-//                assert((IsBV0)||(IsBV1));
-//                CoordType pos0=v0->P();
-//                CoordType pos1=v1->P();
-//                ScalarType currL=(pos0-pos1).Norm();
-//                if (currL>edge_limit)continue;
-
-//                //then collapse the point
-//                CoordType InterpPos;
-//                if ((IsBV0)&&(!IsBV1))InterpPos=pos0;
-//                if ((!IsBV0)&&(IsBV1))InterpPos=pos1;
-//                if ((IsBV0)&&(IsBV1))InterpPos=(pos0+pos1)/2.0;
-
-//                //put on the same position
-//                v0->P()=InterpPos;
-//                v1->P()=InterpPos;
-
-//                //select the the two vertices
-//                v0->SetS();
-//                v1->SetS();
-
-//                //set the remap
-//                VertexRemap[v1]=v0;
-
-//                collapsed=true;
-//            }
-//        }
-
-//        //then remap vertices
-//        for (size_t i=0;i<poly_m.face.size();i++)
-//        {
-//            int NumV=poly_m.face[i].VN();
-//            for (int j=0;j<NumV;j++)
-//            {
-//                //get the two vertices of the edge
-//                VertexType *v0=poly_m.face[i].V(j);
-//                //see if it must substituted or not
-//                if (VertexRemap.count(v0)==0)continue;
-//                //in that case remap to the new one
-//                VertexType *newV=VertexRemap[v0];
-//                //assign new vertex
-//                poly_m.face[i].V(j)=newV;
-//            }
-//        }
-
-//        //then re-elaborate the face
-//        for (size_t i=0;i<poly_m.face.size();i++)
-//        {
-//            //get vertices of the face
-//            int NumV=poly_m.face[i].VN();
-//            std::vector<VertexType*> FaceV;
-//            for (int j=0;j<NumV;j++)
-//            {
-//                VertexType *v0=poly_m.face[i].V(j);
-//                VertexType *v1=poly_m.face[i].V((j+1)%NumV);
-//                if(v0==v1)continue;
-//                FaceV.push_back(v0);
-//            }
-
-//            //then deallocate face
-//            if ((int)FaceV.size()==NumV)continue;
-
-//            //otherwise deallocate and set new vertices
-//            poly_m.face[i].Dealloc();
-//            poly_m.face[i].Alloc(FaceV.size());
-//            for (size_t j=0;j<FaceV.size();j++)
-//                poly_m.face[i].V(j)=FaceV[j];
-//        }
-
-//        return collapsed;
-//    }
 
     static bool CollapseBorderSmallEdgesStep(PolyMeshType &poly_m,
                                              const ScalarType edge_limit)
@@ -410,46 +298,6 @@ public:
             UpdateNormalByFitting(poly_m.face[i]);
     }
 
-    //    ///METTERE SOTTO TOPOLOGY?
-    //    static void  BorderEdgeFromPFFAdj(FaceType &F,std::vector<bool> &IsBorder)
-    //    {
-    //        IsBorder.resize(F.VN(),false);
-    //        for (int j=0;j<F.VN();j++)
-    //            IsBorder[j]=(F.FFp(j)==&F);
-    //    }
-
-    //    static void BorderEdgeFromPFFAdj(PolyMeshType &poly_m,
-    //                                     std::vector<std::vector<bool> > &IsBorder)
-    //    {
-    //        IsBorder.resize(poly_m.face.size());
-    //        for (size_t i=0;i<poly_m.face.size();i++)
-    //        {
-    //            if (poly_m.face[i].IsD())continue;
-    //            BorderEdgeFromPFFAdj(poly_m.face[i],IsBorder[i]);
-    //        }
-    //    }
-
-    //    static void UpdateBorderVertexFromPFFAdj(PolyMeshType &poly_m)
-    //    {
-    //        //get per edge border flag
-    //        std::vector<std::vector<bool> > IsBorderE;
-    //        BorderEdgeFromPFFAdj(poly_m,IsBorderE);
-
-    //        //then update per vertex
-    //        vcg::tri::UpdateFlags<PolyMeshType>::VertexClearB(poly_m);
-    //        for (size_t i=0;i<poly_m.face.size();i++)
-    //        {
-    //            if (poly_m.face[i].IsD())continue;
-
-    //            for (int j=0;j<poly_m.face[i].VN();j++)
-    //            {
-    //                if (!IsBorderE[i][j])continue;
-    //                poly_m.face[i].V0(j)->SetB();
-    //                poly_m.face[i].V1(j)->SetB();
-    //            }
-    //        }
-    //    }
-    
 
     enum PolyQualityType{QAngle,QPlanar,QTemplate};
 
@@ -1023,6 +871,26 @@ public:
         return MaxDispl;
     }
 
+    static ScalarType Area(PolyMeshType &poly_m)
+    {
+        ScalarType MeshArea=0;
+        for (size_t i=0;i<poly_m.face.size();i++)
+            MeshArea+=vcg::PolyArea(poly_m.face[i]);
+        return MeshArea;
+    }
+
+    static void InitQualityVertVoronoiArea(PolyMeshType &poly_m)
+    {
+        for (size_t i=0;i<poly_m.vert.size();i++)
+            poly_m.vert[i].Q()=0;
+
+        for (size_t i=0;i<poly_m.face.size();i++)
+        {
+            ScalarType AreaF=vcg::PolyArea(poly_m.face[i]);
+            for (size_t j=0;j<poly_m.face[i].VN();j++)
+                poly_m.face[i].V(j)->Q()+=AreaF/(ScalarType)poly_m.face[i].VN();
+        }
+    }
 };
 
 }//end namespace vcg
