@@ -429,13 +429,11 @@ static void TestVertexEdge(MeshType &m)
       if (!vi->IsD())
       {
         int cnt =0;
-        int ind = tri::Index(m,*vi);
-        int incidentNum = numVertex[ind];
         for(edge::VEIterator<EdgeType> vei(&*vi);!vei.End();++vei)
           cnt++;
         EdgeType *vep = vi->VEp();
-        assert((incidentNum==0) == (vi->VEp()==0) );
-        assert(cnt==incidentNum);        
+        assert((numVertex[tri::Index(m,*vi)] == 0) == (vi->VEp()==0) );
+        assert(cnt==numVertex[tri::Index(m,*vi)]);        
       }
   }  
 }
