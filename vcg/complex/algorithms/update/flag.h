@@ -441,36 +441,7 @@ public:
     FaceFauxSignedCrease(m,-AngleRad,AngleRad);
   }
 
-  /// \brief Select the border vertices that form a corner along the boder
-  /// with an angle that is below a certain threshold
-  static void SelectVertexCornerBorder(MeshType &m,typename MeshType::ScalarType &angleRad)
-  {
-      typedef typename MeshType::ScalarType ScalarType;
-
-      //get corner vertices
-      typename MeshType::template PerVertexAttributeHandle<ScalarType> angleSumH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType> (m);
-
-      for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-          angleSumH[vi]=0;
-
-      for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-      {
-          for(int i=0;i<(*fi).VN();++i)
-          {
-              typename MeshType::CoordType P0=fi->P(i);
-              typename MeshType::CoordType P1=fi->P((i+1)%(*fi).VN());
-              typename MeshType::CoordType P2=fi->P((i+2)%(*fi).VN());
-              angleSumH[fi->V(i)] += vcg::Angle(P2 - P0,P1 - P0);
-          }
-      }
-
-      for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-      {
-          if(angleSumH[vi]<angleRad && vi->IsB())
-             (*vi).SetS();
-      }
-  }
-
+ 
 }; // end class
 
 }	// End namespace tri
