@@ -32,6 +32,7 @@ SUBDIRS       = trimesh_allocate \
                 trimesh_refine \
                 trimesh_remeshing \
                 trimesh_sampling \
+                trimesh_select \
                 trimesh_smooth \
                 trimesh_split_vertex \
                 trimesh_texture \
