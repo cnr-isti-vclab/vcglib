@@ -109,6 +109,16 @@ inline typename FaceType::ScalarType DihedralAngleRad(FaceType & f,  const int i
   else return -angleRad;
 }
 
+/// Return the internal angle (in radians) of the i-th wedge of the triangle.
+template <class FaceType>
+inline typename FaceType::ScalarType WedgeAngleRad(FaceType & f,  const int i )
+{
+  auto &P0=f.P(i);
+  auto &P1=f.P(f.Next(i));
+  auto &P2=f.P(f.Prev(i));
+  return vcg::Angle(P2 - P0,P1 - P0);  
+}
+
 /// Count border edges of the face
 template <class FaceType>
 inline int BorderCount(FaceType const & f)
