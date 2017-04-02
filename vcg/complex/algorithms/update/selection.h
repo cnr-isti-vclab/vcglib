@@ -538,6 +538,7 @@ static size_t VertexInBox( MeshType & m, const Box3Type &bb, bool preserveSelect
 
 /// \brief Select the border vertices that form a corner along the border
 /// with an angle that is below a certain threshold (e.g. with 90 will select all the acute angles)
+/// It assumes that the Per-Vertex border Flag has been set.
 static size_t VertexCornerBorder(MeshType &m, ScalarType angleRad, bool preserveSelection=false)
 {
   if(!preserveSelection) VertexClear(m);

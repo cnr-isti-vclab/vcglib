@@ -61,8 +61,7 @@ namespace tri
  For example if you just want to get a vector with positions over the surface You have just to write
 
      vector<Point3f> myVec;
-     TrivialSampler<MyMesh> ts(myVec);
-     SurfaceSampling<MyMesh, TrivialSampler<MyMesh> >::Montecarlo(M, ts, SampleNum);
+     SurfaceSampling<MyMesh, TrivialSampler<MyMesh> >::Montecarlo(M, TrivialSampler<MyMesh>(myVec), SampleNum);
 
 **/
 
@@ -843,35 +842,13 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 ///
 /// It assumes that the border flag have been set over the mesh both for vertex and for faces.
 /// All the vertices on the border where the edges of the boundary of the surface forms an angle smaller than the given threshold are sampled.
-///
+/// It assumes that the Per-Vertex border Flag has been set.
 static void VertexBorderCorner(MeshType & m, VertexSampler &ps, ScalarType angleRad)
 {
-//  typename MeshType::template PerVertexAttributeHandle<float> angleSumH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m);
-
-//  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-//    angleSumH[vi]=0;
-
-//  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-//  {
-//    for(int i=0;i<3;++i)
-//    {
-//      angleSumH[fi->V(i)] += vcg::Angle(fi->P2(i) - fi->P0(i),fi->P1(i) - fi->P0(i));
-//    }
-//  }
-
-//  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-//  {
-//    if((angleSumH[vi]<angleRad && vi->IsB())||
-//       (angleSumH[vi]>(360-angleRad) && vi->IsB()))
-//        ps.AddVert(*vi);
-//  }
-
-//  tri::Allocator<MeshType>:: template DeletePerVertexAttribute<float> (m,angleSumH);
-    vcg::tri::UpdateFlags<MeshType>::FaceClearS(m);
-    vcg::tri::UpdateFlags<MeshType>::SelectVertexCornerBorder(m,angleRad);
+    vcg::tri::UpdateSelection<MeshType>::VertexCornerBorder(m,angleRad);
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     {
-      if(vi->IsS())ps.AddVert(*vi);
+      if(vi->IsS()) ps.AddVert(*vi);
     }
 }
 
