@@ -10,7 +10,7 @@ clone_folder: c:\projects\vcglib
 # Build Configuration, i.e. Debug, Release, etc.
 configuration:
   - release
-  - debug
+#  - debug
   
 environment:
   matrix:
@@ -51,9 +51,9 @@ build_script:
   # Go to clone directory
   - cd %APPVEYOR_BUILD_FOLDER%
   - cd apps
-  - cd tridecimator
+  - cd sample
   # Run qmake
-  - qmake tridecimator.pro -r -spec %SPEC% "CONFIG+=%CONFIGURATION%"
+  - qmake sample.pro -r -spec %SPEC% "CONFIG+=%CONFIGURATION%"
   # Run compiler
   #- '%COMPILER%'
   - call %COMPILER%
