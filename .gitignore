@@ -15,3 +15,7 @@ release/
 # Intermediate Files
 *.bc
 
+# Visual Studio Project files
+*.vcxproj
+*.vcxproj.filters
+*.suo
