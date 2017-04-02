@@ -11,7 +11,6 @@ SUBDIRS       = trimesh_allocate \
                 trimesh_curvature \
                 trimesh_cylinder_clipping \
                 trimesh_disk_parametrization \
-                trimesh_edge \
                 trimesh_fitting \
                 trimesh_geodesic \
                 trimesh_harmonic \
