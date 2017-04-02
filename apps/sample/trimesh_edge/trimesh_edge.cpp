@@ -21,12 +21,13 @@
 *                                                                           *
 ****************************************************************************/
 
-// This sample require gl.
+// This sample requires gl.
 #ifndef GLU_VERSIONS
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #else
 #ifdef _WIN32
+#define NOMINMAX
   #include <windows.h>
 #endif
 #include <GL/gl.h>

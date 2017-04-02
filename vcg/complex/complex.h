@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <string>
 #include <cstring>
+#include <ctime>
 #include <vector>
 #include <set>
 #include <stack>
