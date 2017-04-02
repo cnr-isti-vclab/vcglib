@@ -17,5 +17,5 @@ before_build:
 
 # to run your custom scripts instead of automatic MSBuild
 build_script:
-  ps: qmake
-      msbuild
+  - ps: qmake
+  - ps: msbuild
