@@ -8,7 +8,7 @@ image: Visual Studio 2015
 # clone directory
 clone_folder: c:\projects\vcglib
 # build Configuration, i.e. Debug, Release, etc.
-configuration: Release
+#configuration: Release
 
 install:
   - set QTDIR=C:\Qt\5.8\msvc2015_64
@@ -18,5 +18,5 @@ install:
 # to run your custom scripts instead of automatic MSBuild
 build_script:
   - cd apps/tridecimator
-  - qmake -d -tp vc 
+  - qmake -tp vc 
   - msbuild
