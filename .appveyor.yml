@@ -50,8 +50,10 @@ before_build:
 build_script:
   # Go to clone directory
   - cd %APPVEYOR_BUILD_FOLDER%
+  - cd apps
+  - cd tridecimator
   # Run qmake
-  - qmake Project.pro -r -spec %SPEC% "CONFIG+=%CONFIGURATION%"
+  - qmake tridecimator.pro -r -spec %SPEC% "CONFIG+=%CONFIGURATION%"
   # Run compiler
   #- '%COMPILER%'
   - call %COMPILER%
