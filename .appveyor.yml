@@ -12,9 +12,10 @@ configuration: Release
 
 # scripts to run before build
 before_build:
-  ps: cd apps/sample/tridecimator
+  ps: cd apps/tridecimator
 
 
 # to run your custom scripts instead of automatic MSBuild
 build_script:
   ps: qmake
+  ps: msbuild
