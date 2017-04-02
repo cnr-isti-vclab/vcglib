@@ -10,12 +10,12 @@ clone_folder: c:\projects\vcglib
 # build Configuration, i.e. Debug, Release, etc.
 configuration: Release
 
-# scripts to run before build
-before_build:
-  ps: cd apps/tridecimator
-
+install:
+  - set QTDIR=C:\Qt\5.8\msvc2015_64
+  - set PATH=%PATH%;%QTDIR%\bin;C:\MinGW\bin
 
 # to run your custom scripts instead of automatic MSBuild
 build_script:
-  - ps: qmake
-  - ps: msbuild
+  - cd apps/tridecimator
+  - qmake
+  - msbuild
