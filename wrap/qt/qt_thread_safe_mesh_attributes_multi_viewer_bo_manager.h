@@ -47,7 +47,7 @@ namespace vcg
         void meshAttributesUpdated(bool hasmeshconnectivitychanged,const GLMeshAttributesInfo::RendAtts& changedrendatts)
 		{
 			QWriteLocker locker(&_lock);
-			vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::meshAttributesUpdated(hasmeshconnectivitychanged,changedrendatts);
+			vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::meshAttributesUpdated(hasmeshconnectivitychanged, changedrendatts);
 		}
 
         bool getPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid,PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt) const
@@ -62,6 +62,12 @@ namespace vcg
             vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::setPerViewInfo(viewid,dt);
         }
 
+		void setPerAllViewsInfo(const PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt)
+		{
+			QWriteLocker locker(&_lock);
+			vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE, UNIQUE_VIEW_ID_TYPE, GL_OPTIONS_DERIVED_TYPE>::setPerAllViewsInfo(dt);
+		}
+
 		void removeView(UNIQUE_VIEW_ID_TYPE viewid)
 		{
             QWriteLocker locker(&_lock);
@@ -74,6 +80,13 @@ namespace vcg
 			vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::draw(viewid,_textids.textId());
 		}
 
+        void drawAllocatedAttributesSubset(UNIQUE_VIEW_ID_TYPE viewid,const PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt) const
+        {
+            QReadLocker locker(&_lock);
+            vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::drawAllocatedAttributesSubset(viewid,dt,_textids.textId());
+        }
+
+		
 		bool isBORenderingAvailable() const
 		{
 			QReadLocker locker(&_lock);
@@ -113,7 +126,7 @@ namespace vcg
             vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::setDebugMode(activatedebugmodality);
         }
 
-        void getLog(vcg::GLMeshAttributesInfo::DebugInfo& info)
+        void getLog(GLMeshAttributesInfo::DebugInfo& info)
         {
             QWriteLocker locker(&_lock);
             vcg::NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE,UNIQUE_VIEW_ID_TYPE,GL_OPTIONS_DERIVED_TYPE>::getLog(info);

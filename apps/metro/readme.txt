@@ -1,5 +1,5 @@
 
-   VCGLib  http://vcg.sf.net                                         o o     
+   VCGLib  http://www.vcglib.net                                         o o     
    Visual and Computer Graphics Library                            o     o   
                                                                   _   O  _   
    Copyright(C) 2005-2006                                           \/)\/    
@@ -31,14 +31,10 @@ Please, when using this tool, cite the following reference:
 P. Cignoni, C. Rocchini and R. Scopigno
 "Metro: measuring error on simplified surfaces"
 Computer Graphics Forum, Blackwell Publishers, vol. 17(2), June 1998, pp 167-174
-Available at http://vcg.sf.net
 
-
-
-You can find some sample mesh to test in the 'Metro Sample dataset' package downloadable from sourceforge.
 
 For any question about this software please contact:
-Paolo Cignoni ( p.cignoni@isti.cnr.it )
+Paolo Cignoni ( paolo.cignoni@isti.cnr.it )
 
 --- General Info ---
 

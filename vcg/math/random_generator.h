@@ -412,18 +412,6 @@ public:
         return (((double)generate()) + 0.5)*(1.0/4294967296.0);
     }
 
-    /// Generate a random triple of baricentric coords
-    template <class PointType>
-    void generateBarycentric(PointType &p){
-        p[1] = this->generate01();
-        p[2] = this->generate01();
-
-        if(p[1] + p[2] > 1.0){
-            p[1] = 1.0 - p[1];
-            p[2] = 1.0 - p[2];
-        }
-        p[0]=1.0-(p[1] + p[2]);
-    }
 }; // end class MarsenneTwisterRNG
 
 /* Returns a value with normal distribution with mean m, standard deviation s

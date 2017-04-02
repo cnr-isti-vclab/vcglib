@@ -1,9 +1,9 @@
 /** \page attributes
-User-defined attributes
+User-Defined Attributes
 =======================
 VCG Lib also provides a simple mechanism to associate user-defined typed 'attributes' to the simplicies and to the mesh.
 
-Note that both 'attributes' and 'components' are basically accessory data that are bound to a simplex.
+Note that both 'attributes' and 'components' are basically accessory data that are bound to a simplex. In short, components are statically defined member data, while attributes are run-time defined, handle accessed, data.
 
 Conceptually the difference is that with the term component VCGLib indicates those basic values that are considered to 'define' the simplex (its position, its normal, its connectivity information), while an user defined attribute is an accessory data that is useful for some specific algorithms, like "the average direction from which a vertex is visible".
 
@@ -16,14 +16,14 @@ Once you have the handle retrieving and using the attributes is rather simple by
 
 \snippet trimesh_attribute.cpp Using an attribute
 
-You also have functions to check if a given attribute exists, retrieve an handle for it and eventually deleting it (using the handle or by name).
-Do not get mix up the scope of the handle with the memory allocation of the attribute. If you do not delete an attribute explicitly, it will be allocated until the mesh itself is destroyed, even if you do not have any more handles to it.
+You also have functions to check if a given attribute exists, to retrieve an handle for it and for, eventually, deleting it (using the handle or by name).
+Remember that the scope of a handle does not interfere with the memory allocation of the attribute. If you do not delete an attribute explicitly, it will stay allocated until the mesh itself is destroyed, even if you do not have any more handles to it.
 
 \snippet trimesh_attribute.cpp Deleting an attribute
 
-The same can be done for the faces, just replace the occurences of PerVertex with PerFace.
+The same can be done for edges, faces and for the mesh itself, just replace the occurences of PerVertex with PerFace, PerEdge and PerMesh.
 Note that if you call add an attribute without specifying a name and you lose the handle, you will not be able to get your handle back.
-Attributes can also be specified per mesh; in this case the access is done in a slightly different way. 
+For attributes specified as per-mesh the access is done in a slightly different way. 
 \snippet trimesh_attribute.cpp Per Mesh attribute
 
 

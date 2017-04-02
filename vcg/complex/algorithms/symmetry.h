@@ -226,6 +226,7 @@ public:
         //create the sphere
         vcg::tri::Sphere<TriMeshType>(*sphere,SubDirections);
         vcg::tri::UpdateBounding<TriMeshType>::Box(*sphere);
+		sphere->face.EnableMark();
 
         ///initialize grid
         GridSph.Set(sphere->face.begin(),sphere->face.end());

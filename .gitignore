@@ -6,3 +6,7 @@ debug/
 release/
 *-debug/
 *-release/
+/docs/Doxygen/html/
+
+# Intermediate Files
+*.bc

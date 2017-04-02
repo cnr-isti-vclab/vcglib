@@ -368,7 +368,6 @@ Note: The faux bit is used to color polygonal faces uniformly
   }
 
 /*! \brief Perlin Noise.
-\return the number of changed vertexes (the selected ones)
 
 Simple Perlin noise. To make things weirder each color band can have its own offset and frequency.
 Period is expressed in absolute terms.
@@ -394,6 +393,34 @@ static void PerVertexPerlinNoise(MeshType& m, CoordType period, CoordType offset
 										255 );
 			}
 
+}
+
+
+/*! \brief Perlin Color mixing.
+
+Simple Perlin color mixing. Color 1 and 2 are mixed according the perlin noise function, with period and offset.
+*/
+static void PerVertexPerlinColoring(MeshType& m, ScalarType period, CoordType offset = CoordType(0, 0, 0), Color4b color1 = Color4b::Black, Color4b color2 = Color4b::White, bool onSelected = false)
+{
+	RequirePerVertexColor(m);
+
+	CoordType p;
+
+	for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+	if (!(*vi).IsD())
+	if ((!onSelected) || ((*vi).IsS()))
+	{
+		// perlin noise is defined in 022
+		p = (vi->P() / period) + offset;
+		double factor = (math::Perlin::Noise(p[0], p[1], p[2]) + 1.0) / 2.0; 
+
+		int rr = (color1[0] * factor) + (color2[0] * (1.0 - factor));
+		int gg = (color1[1] * factor) + (color2[1] * (1.0 - factor));
+		int bb = (color1[2] * factor) + (color2[2] * (1.0 - factor));
+		int aa = (color1[3] * factor) + (color2[3] * (1.0 - factor));
+
+		(*vi).C() = Color4b(rr, gg, bb, aa);
+	}
 }
 
 /*! \brief Simple Noise adding function.

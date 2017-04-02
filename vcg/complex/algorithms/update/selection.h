@@ -441,9 +441,8 @@ static size_t FaceOutOfRangeEdge(MeshType &m, ScalarType MinEdgeThr, ScalarType 
 }
 
 /// \brief This function expand current selection to cover the whole connected component.
-static size_t FaceConnectedFF(MeshType &m, bool preserveSelection=false)
+static size_t FaceConnectedFF(MeshType &m)
 {
-  if(!preserveSelection) FaceClear(m);
   // it also assumes that the FF adjacency is well computed.
   RequireFFAdjacency(m);
   UpdateFlags<MeshType>::FaceClearV(m);

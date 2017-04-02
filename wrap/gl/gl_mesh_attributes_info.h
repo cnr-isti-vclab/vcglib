@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004-2016                                           \/)\/    *
+* Copyright(C) 2004                                                \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -119,9 +119,9 @@ namespace vcg
         class RenderingAtts
         {
         public:
-            RenderingAtts()
+            RenderingAtts(bool defaultvalue = false)
             {
-                reset();
+                reset(defaultvalue);
             }
 
             RenderingAtts(const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& att)
@@ -174,12 +174,12 @@ namespace vcg
                 return _atts[ind];
             }
 
-            void reset()
+            void reset(bool defaultvalue = false)
             {
                 //delete[] _atts;
                 //_atts = new bool[ATT_NAMES_DERIVED_CLASS::enumArity()];
                 for(unsigned int ii = 0;ii < ATT_NAMES_DERIVED_CLASS::enumArity();++ii)
-                    _atts[ii] = false;
+                    _atts[ii] = defaultvalue;
             }
 
             static RenderingAtts<ATT_NAMES_DERIVED_CLASS> unionSet(const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& a,const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b)
@@ -287,6 +287,7 @@ namespace vcg
                 return res.c_str();
             }
         };
+
 
     protected:
         struct INT_ATT_NAMES : public ATT_NAMES

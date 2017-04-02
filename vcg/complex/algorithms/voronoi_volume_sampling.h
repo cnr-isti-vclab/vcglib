@@ -33,6 +33,103 @@ namespace vcg
 namespace tri
 {
 
+template <class MeshType> 
+class PointSampledDistance
+{
+public:
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef typename MeshType::BoxType BoxType;
+  typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::VertexPointer VertexPointer;
+  typedef typename MeshType::CoordType CoordType;
+  typedef typename MeshType::FacePointer FacePointer;
+  typedef typename MeshType::FaceType FaceType;
+  typedef typename vcg::GridStaticPtr<typename MeshType::FaceType, ScalarType> GridType;
+
+  typedef SimpleVolume<SimpleVoxel<ScalarType> >                              VVSVolume;
+  typedef typename vcg::tri::TrivialWalker<MeshType,VVSVolume>               VVSWalker;
+  typedef typename vcg::tri::MarchingCubes<MeshType, VVSWalker>              VVSMarchingCubes;
+  
+  PointSampledDistance(MeshType &_baseMesh)
+    :surfTree(0),baseMesh(_baseMesh) {}
+  typename KdTree<ScalarType>::PriorityQueue pq;
+  GridType surfGrid; // used for fast inside query
+  typedef FaceTmark<MeshType> MarkerFace;
+  MarkerFace mf;
+  vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
+  KdTree<ScalarType>  *surfTree; // used for fast inside query 
+  MeshType &baseMesh;
+  MeshType poissonSurfaceMesh;
+  ScalarType poissonRadiusSurface;
+  
+  void Init(ScalarType _poissonRadiusSurface=0)
+  {
+    MeshType montecarloSurfaceMesh;
+    if(_poissonRadiusSurface==0) poissonRadiusSurface = baseMesh.bbox.Diag()/50.0f;
+    else poissonRadiusSurface = _poissonRadiusSurface;
+    ScalarType meshArea = Stat<MeshType>::ComputeMeshArea(baseMesh);
+    int MontecarloSurfSampleNum = 10 * meshArea / (poissonRadiusSurface*poissonRadiusSurface);
+    tri::MeshSampler<MeshType> sampler(montecarloSurfaceMesh);
+    tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::Montecarlo(baseMesh, sampler, MontecarloSurfSampleNum);
+    montecarloSurfaceMesh.bbox = baseMesh.bbox; // we want the same bounding box
+    poissonSurfaceMesh.Clear();
+    tri::MeshSampler<MeshType> mps(poissonSurfaceMesh);
+    typename tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::PoissonDiskParam pp;
+    pp.geodesicDistanceFlag=false;
+    
+    tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::PoissonDiskPruning(mps, montecarloSurfaceMesh, poissonRadiusSurface,pp);
+    vcg::tri::UpdateBounding<MeshType>::Box(poissonSurfaceMesh);
+
+    printf("Surface Sampling radius %f - montecarlo %ivn - Poisson %ivn\n",poissonRadiusSurface,montecarloSurfaceMesh.vn,poissonSurfaceMesh.vn);
+    VertexConstDataWrapper<MeshType> ww(poissonSurfaceMesh);
+    if(surfTree) delete surfTree;
+    surfTree = new  KdTree<ScalarType>(ww);
+
+    surfGrid.SetWithRadius(baseMesh.face.begin(),baseMesh.face.end(),poissonRadiusSurface);
+    mf.SetMesh(&baseMesh);
+  }
+    // Compute the signed distance from the surface exploting both a kdtree and a ugrid 
+    // for a query point p first we use the kdtree with a good poisson sampling of the surface;
+    // to get the nearest point on the surface, then if the point is far from the surface we can use the point point distance, while if it is near (e.g. less than 3*poisson radius) we rely on point face distance with a grid.
+  ScalarType DistanceFromSurface(const CoordType &q, CoordType &closestP)
+  {
+    ScalarType squaredDist;
+    unsigned int ind;
+    surfTree->doQueryClosest(q,ind,squaredDist);
+    ScalarType dist = sqrt(squaredDist);
+    if( dist > 3.0f*poissonRadiusSurface)
+    {
+  //    CoordType dir = surfTree->getNeighbor(0) - p;
+      CoordType dir = this->poissonSurfaceMesh.vert[ind].P() - q;
+      const CoordType &surfN = this->poissonSurfaceMesh.vert[ind].N();
+      if(dir* surfN > 0) dist= -dist;
+      closestP=this->poissonSurfaceMesh.vert[ind].P();
+      return dist;
+    }
+  
+    ScalarType _maxDist = this->poissonRadiusSurface*3.0f;
+    dist=_maxDist;
+    FacePointer f=surfGrid.GetClosest(PDistFunct,mf,q,_maxDist,dist,closestP);
+    assert(f);
+    assert (dist >=0);
+    CoordType dir = closestP - q;
+    if(dir*f->cN() > 0) dist = -dist;
+  
+    return dist;
+  }
+  
+  
+};
+
+/** Compute a well distributed set of samples (seeds) inside a watertight mesh.
+ *
+ * The main idea is that we have start from a poisson disk distribution and we improve it using Lloyd relaxation. 
+ * To make things simpler and more controllable we estabilish since the beginning a Domain where we can choose the points.
+ * 
+ */
+
+
+
 template< class MeshType>
 class VoronoiVolumeSampling
 {
@@ -69,33 +166,26 @@ public:
   };
 
   VoronoiVolumeSampling(MeshType &_baseMesh)
-    :surfTree(0),seedTree(0),baseMesh(_baseMesh),cb(0),restrictedRelaxationFlag(false)
+    :seedTree(0),baseMesh(_baseMesh),cb(0),restrictedRelaxationFlag(false),psd(_baseMesh)
   {
    tri::RequirePerFaceMark(baseMesh);
    tri::UpdateBounding<MeshType>::Box(baseMesh);
    tri::UpdateNormal<MeshType>::PerFaceNormalized(baseMesh);
   }
   
-  KdTree<ScalarType>  *surfTree; // used for fast inside query 
   KdTree<ScalarType>  *seedTree; // used to accumulate barycenter in relaxation
   KdTree<ScalarType>  *seedDomainTree; // used to accumulate barycenter in relaxation
-  
   typename KdTree<ScalarType>::PriorityQueue pq;
-  GridType surfGrid; // used for fast inside query
-  typedef FaceTmark<MeshType> MarkerFace;
-  MarkerFace mf;
-  vcg::face::PointDistanceBaseFunctor<ScalarType> PDistFunct;
+  
       
-  MeshType &baseMesh;
+  MeshType &baseMesh;            // The base mesh for which we compute all
   MeshType seedMesh;
-  MeshType poissonSurfaceMesh;
-  ScalarType poissonRadiusSurface;
-  MeshType montecarloVolumeMesh; // we use this mesh as volume evaluator
+  MeshType montecarloVolumeMesh; // we use this mesh as volume evaluator and to choose 
   MeshType seedDomainMesh;       // where we choose the seeds (by default is the montecarlo volume mesh)
   vcg::CallBackPos *cb;
   math::MarsenneTwisterRNG rng;
   bool restrictedRelaxationFlag;
-
+  PointSampledDistance<MeshType> psd;
   
   // Build up the needed structure for efficient point in mesh search. 
   // It uses a poisson disk sampling of the surface plus a
@@ -103,62 +193,11 @@ public:
   // It initializes the surfGrid, surfTree and poissonSurfaceMesh members   
   void Init(ScalarType _poissonRadiusSurface=0)
   {
-    MeshType montecarloSurfaceMesh;
-    
-    if(_poissonRadiusSurface==0) poissonRadiusSurface = baseMesh.bbox.Diag()/50.0f;
-    else poissonRadiusSurface = _poissonRadiusSurface;
-    ScalarType meshArea = Stat<MeshType>::ComputeMeshArea(baseMesh);
-    int MontecarloSurfSampleNum = 10 * meshArea / (poissonRadiusSurface*poissonRadiusSurface);
-    tri::MeshSampler<MeshType> sampler(montecarloSurfaceMesh);
+    psd.Init(_poissonRadiusSurface);
     tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::SamplingRandomGenerator()=rng;    
-    tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::Montecarlo(baseMesh, sampler, MontecarloSurfSampleNum);
-    montecarloSurfaceMesh.bbox = baseMesh.bbox; // we want the same bounding box
-    poissonSurfaceMesh.Clear();
-    tri::MeshSampler<MeshType> mps(poissonSurfaceMesh);
-    typename tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::PoissonDiskParam pp;
-    pp.geodesicDistanceFlag=false;
     
-    tri::SurfaceSampling<MeshType,tri::MeshSampler<MeshType> >::PoissonDiskPruning(mps, montecarloSurfaceMesh, poissonRadiusSurface,pp);
-    vcg::tri::UpdateBounding<MeshType>::Box(poissonSurfaceMesh);
-
-    printf("Surface Sampling radius %f - montecarlo %ivn - Poisson %ivn\n",poissonRadiusSurface,montecarloSurfaceMesh.vn,poissonSurfaceMesh.vn);
-    VertexConstDataWrapper<MeshType> ww(poissonSurfaceMesh);
-    if(surfTree) delete surfTree;
-    surfTree = new  KdTree<ScalarType>(ww);
-
-    surfGrid.SetWithRadius(baseMesh.face.begin(),baseMesh.face.end(),poissonRadiusSurface);
-    mf.SetMesh(&baseMesh);
   }
 
-  // Compute the signed distance from the surface exploting both a kdtree and a ugrid 
-  // for a query point p first we use the kdtree with a good poisson sampling of the surface;
-  // to get the nearest point on the surface, then if the point is far from the surface we can use the point point distance, while if it is near (e.g. less than 3*poisson radius) we rely on point face distance with a grid.
-ScalarType DistanceFromSurface(const CoordType &q, CoordType &closestP)
-{
-  ScalarType squaredDist;
-  unsigned int ind;
-  surfTree->doQueryClosest(q,ind,squaredDist);
-  ScalarType dist = sqrt(squaredDist);
-  if( dist > 3.0f*poissonRadiusSurface)
-  {
-//    CoordType dir = surfTree->getNeighbor(0) - p;
-    CoordType dir = this->poissonSurfaceMesh.vert[ind].P() - q;
-    const CoordType &surfN = this->poissonSurfaceMesh.vert[ind].N();
-    if(dir* surfN > 0) dist= -dist;
-    closestP=this->poissonSurfaceMesh.vert[ind].P();
-    return dist;
-  }
-
-  ScalarType _maxDist = this->poissonRadiusSurface*3.0f;
-  dist=_maxDist;
-  FacePointer f=surfGrid.GetClosest(PDistFunct,mf,q,_maxDist,dist,closestP);
-  assert(f);
-  assert (dist >=0);
-  CoordType dir = closestP - q;
-  if(dir*f->cN() > 0) dist = -dist;
-
-  return dist;
-}
 
 
 ScalarType DistanceFromVoronoiSeed(const CoordType &p_point)
@@ -389,7 +428,7 @@ void QuadricRelaxVoronoiSamples(int relaxStep)
 ScalarType ImplicitFunction(const CoordType &p, const Param &pp)
 {
   CoordType closest;
-  ScalarType surfDist = this->DistanceFromSurface(p,closest);
+  ScalarType surfDist = this->psd.DistanceFromSurface(p,closest);
   
   ScalarType elemDist;
   switch(pp.elemType)
@@ -543,86 +582,16 @@ void OptimizeIsosurf(MeshType &m, const Param &pp)
   printf("Optimize Isosurf performed %i edge flip in %5.2f s\n",flipCnt,float(t1-t0)/CLOCKS_PER_SEC);
 }
 
+/** Given a surface sampling it adds to the montecarloVolumeMesh, a number of near surface samples. 
+ * For each surface it try to add a sample generated as a point in the half ball of <radius> centered on the sample.
+*/
 
- /**
-  * @brief Compute an evaulation of the thickness as distance from the medial axis.
-  * It starts from a montecarlo volume sampling and try to search for the samples that can be part of the medial axis.
-  * It use a sampled representation of the surface. A volume sample is considered part 
-  * of the medial axis if there are at least two points that are (almost) the same minimal distance to that point.
-  *
-  * 
-  */
- void ThicknessEvaluator(float distThr, int smoothSize, int smoothIter, MeshType *skelM=0)
- {
-   tri::UpdateQuality<MeshType>::VertexConstant(poissonSurfaceMesh,0);
-   std::vector<VertexPointer> medialSrc(poissonSurfaceMesh.vert.size(),0);
-   for(VertexIterator vi=montecarloVolumeMesh.vert.begin(); vi!=montecarloVolumeMesh.vert.end(); ++vi)
-    {
-     unsigned int ind;
-     ScalarType sqdist;
-     this->surfTree->doQueryClosest(vi->P(),ind,sqdist);
-     VertexPointer vp = &poissonSurfaceMesh.vert[ind];
-     ScalarType minDist = math::Sqrt(sqdist);
-     if(vp->Q() < minDist) 
-     {
-       std::vector<unsigned int> indVec;
-       std::vector<ScalarType> sqDistVec;
-       
-       this->surfTree->doQueryDist( vi->P(), minDist*distThr,indVec,sqDistVec);
-       if(indVec.size()>1)
-       {
-         for(size_t i=0;i<indVec.size();++i)
-         {
-           VertexPointer vp = &poissonSurfaceMesh.vert[indVec[i]];
-           //ScalarType dist = math::Sqrt(sqDistVec[i]);
-           if(vp->Q() < minDist) {
-             vp->Q()=minDist;
-             medialSrc[indVec[i]]=&*vi;
-           }             
-         }
-       }       
-     }
-   }
-   // Now collect the vertexes of the volume mesh that are on the medial surface 
-   if(skelM)
-   {
-     tri::UpdateFlags<MeshType>::VertexClearV(montecarloVolumeMesh);
-     for(size_t i=0;i<medialSrc.size();++i)
-       medialSrc[i]->SetV();
-     for(VertexIterator vi=montecarloVolumeMesh.vert.begin(); vi!=montecarloVolumeMesh.vert.end(); ++vi)
-       if(vi->IsV()) tri::Allocator<MeshType>::AddVertex(*skelM,vi->P());
-     printf("Generated a medial surf of %i vertexes\n",skelM->vn);
-   }
-   
-   
-   tri::Smooth<MeshType>::PointCloudQualityMedian(poissonSurfaceMesh);
-   tri::Smooth<MeshType>::PointCloudQualityAverage(poissonSurfaceMesh,smoothSize,smoothIter);
-   tri::UpdateColor<MeshType>::PerVertexQualityRamp(poissonSurfaceMesh);
-   tri::RedetailSampler<MeshType> rs;
-   rs.init(&poissonSurfaceMesh);
-   rs.dist_upper_bound = poissonSurfaceMesh.bbox.Diag()*0.05 ;
-   rs.qualityFlag = true;
-   tri::SurfaceSampling<MeshType, RedetailSampler<MeshType> >::VertexUniform(baseMesh, rs, baseMesh.vn, false);
- }
+void RefineMontecarloVolumeSamplingNearSurface(MeshType &surfaceSamplingMesh, ScalarType radius, int perSampleNum)
+{
+  
+}
 
- void RefineSkeletonVolume(MeshType &skelMesh)
- {
-   CoordType closestP;
-   int trialNum=0;
-   for(int i=0;i<skelMesh.vn;++i)
-    {
-        CoordType point = math::GeneratePointInBox3Uniform(rng,baseMesh.bbox);
-        trialNum++;
-        ScalarType d = this->DistanceFromSurface(point, closestP);
-        if(d<0){
-          vcg::tri::Allocator<MeshType>::AddVertex(montecarloVolumeMesh,point);
-          montecarloVolumeMesh.vert.back().Q() = fabs(d);
-        }
-    }
- }
- 
-
- void BuildMontecarloSampling(int montecarloSampleNum)
+ void BuildMontecarloVolumeSampling(int montecarloSampleNum)
  {
    montecarloVolumeMesh.Clear();
    
@@ -632,7 +601,7 @@ void OptimizeIsosurf(MeshType &m, const Param &pp)
     {
         CoordType point = math::GeneratePointInBox3Uniform(rng,baseMesh.bbox);
         trialNum++;
-        ScalarType d = this->DistanceFromSurface(point,closest);
+        ScalarType d = this->psd.DistanceFromSurface(point,closest);
         if(d<0){
           vcg::tri::Allocator<MeshType>::AddVertex(montecarloVolumeMesh,point);
           montecarloVolumeMesh.vert.back().Q() = fabs(d);
@@ -647,26 +616,23 @@ void OptimizeIsosurf(MeshType &m, const Param &pp)
 /*
  * Function: BuildVolumeSampling
  * ----------------------------
- * Build a Poisson-Disk Point cloud that cover all the space of the original mesh m
+ * Build and prepare the seed set. 
+ * This is the starting point for the subsequent relaxation calls. 
+ * You can insert some initial seeds into the seed set and they will be preserved
+ * 
  *
  */
- void BuildVolumeSampling(int montecarloSampleNum, int poissonSampleNum, ScalarType &poissonRadius, int randSeed)
+ void BuildVolumeSampling(int montecarloSampleNum, ScalarType &poissonRadius, int randSeed)
  {
    if(montecarloSampleNum >0) 
-     this->BuildMontecarloSampling(montecarloSampleNum);
-   if(seedDomainMesh.vn == 0) 
+     this->BuildMontecarloVolumeSampling(montecarloSampleNum);
+   if(this->seedDomainMesh.vn == 0) 
      tri::Append<MeshType,MeshType>::MeshCopy(seedDomainMesh,montecarloVolumeMesh);     
    
-    vector<VertexPointer>  pruningVec;    
-    if(poissonRadius ==0 && poissonSampleNum!=0)
-      tri::PoissonPruningExact(seedDomainMesh,pruningVec,poissonRadius,poissonSampleNum,0.04,10,randSeed);
-    else
-      tri::PoissonPruning(seedDomainMesh,pruningVec,poissonRadius,randSeed);
-
-    std::vector<CoordType> seedPts(pruningVec.size());
-    for(size_t i=0;i<pruningVec.size();++i)
-      seedPts[i]=pruningVec[i]->P();
+    std::vector<CoordType> seedPts;
+    tri::PoissonPruning(seedDomainMesh,seedPts,poissonRadius,randSeed);
     tri::BuildMeshFromCoordVector(this->seedMesh,seedPts);
+    
     // Kdtree must be rebuilt at the end of each step;
     VertexConstDataWrapper<MeshType> vdw(seedMesh);
     if(seedTree) delete seedTree;

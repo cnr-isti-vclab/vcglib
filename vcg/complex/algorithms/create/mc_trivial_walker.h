@@ -108,10 +108,8 @@ public:
     Vol.resize(this->siz[0]*this->siz[1]*this->siz[2]);
     this->ComputeDimAndVoxel();
   }
-
-
-
 };
+
 template <class _ScalarType=float>
 class SimpleVoxel
 {
@@ -163,18 +161,10 @@ private:
   typedef typename MeshType::VertexPointer VertexPointer;
     public:
 
-  // subbox is the portion of the volume to be computed
-  // resolution determine the sampling step:
-  // should be a divisor of bbox size (e.g. if bbox size is 256^3 resolution could be 128,64, etc)
-
-  void Init(VolumeType &volume)
-  {
-    Init(volume,Box3i(Point3i(0,0,0),volume.ISize()));
-  }
-
-  void Init(VolumeType &/*volume*/, Box3i subbox)
+  // SetExtractionBox set the portion of the volume to be traversed
+  void SetExtractionBox(Box3i subbox)
     {
-        _bbox				= subbox;
+        _bbox = subbox;
         _slice_dimension = _bbox.DimX()*_bbox.DimZ();
 
         _x_cs = new VertexIndex[ _slice_dimension ];
@@ -182,40 +172,39 @@ private:
         _z_cs = new VertexIndex[ _slice_dimension ];
         _x_ns = new VertexIndex[ _slice_dimension ];
         _z_ns = new VertexIndex[ _slice_dimension ];
-
     }
-
-    ~TrivialWalker()
-    {_thr=0;}
+   
+    TrivialWalker()
+    { 
+      _bbox.SetNull();
+      _slice_dimension=0;
+    }
 
     template<class EXTRACTOR_TYPE>
   void BuildMesh(MeshType &mesh, VolumeType &volume, EXTRACTOR_TYPE &extractor, const float threshold, vcg::CallBackPos * cb=0)
   {
-    Init(volume);
+    if(_bbox.IsNull() || _slice_dimension==0)
+      SetExtractionBox(Box3i(Point3i(0,0,0),volume.ISize()));
     _volume = &volume;
     _mesh		= &mesh;
     _mesh->Clear();
     _thr=threshold;
-    vcg::Point3i p1, p2;
-
     Begin();
     extractor.Initialize();
     for (int j=_bbox.min.Y(); j<(_bbox.max.Y()-1)-1; j+=1)
     {
-
       if(cb && ((j%10)==0) ) 	cb(j*_bbox.DimY()/100.0,"Marching volume");
-
       for (int i=_bbox.min.X(); i<(_bbox.max.X()-1)-1; i+=1)
       {
         for (int k=_bbox.min.Z(); k<(_bbox.max.Z()-1)-1; k+=1)
         {
-          p1.X()=i;	  p1.Y()=j;     p1.Z()=k;
-          p2.X()=i+1; p2.Y()=j+1;	p2.Z()=k+1;
+          Point3i p1(i,j,k);
+          Point3i p2(i+1,j+1,k+1);
           if(volume.ValidCell(p1,p2))
             extractor.ProcessCell(p1, p2);
         }
       }
-      NextSlice();
+      NextYSlice();
     }
     extractor.Finalize();
     _volume = NULL;
@@ -229,7 +218,7 @@ private:
 
     bool Exist(const vcg::Point3i &p0, const vcg::Point3i &p1, VertexPointer &v)
     {
-        int pos = p0.X()+p0.Z()*_bbox.max.X();
+        int pos = p0.X()+p0.Z()*_bbox.DimX();
         int vidx;
 
         if (p0.X()!=p1.X()) // punti allineati lungo l'asse X
@@ -249,8 +238,8 @@ private:
     {
         int i = p1.X() - _bbox.min.X();
         int z = p1.Z() - _bbox.min.Z();
-        VertexIndex index = i+z*_bbox.max.X();
-        VertexIndex pos;
+        VertexIndex index = i+z*_bbox.DimX();
+        VertexIndex pos=-1;
         if (p1.Y()==_current_slice)
         {
             if ((pos=_x_cs[index])==-1)
@@ -282,7 +271,7 @@ private:
     {
         int i = p1.X() - _bbox.min.X();
         int z = p1.Z() - _bbox.min.Z();
-        VertexIndex index = i+z*_bbox.max.X();
+        VertexIndex index = i+z*_bbox.DimX();
         VertexIndex pos;
         if ((pos=_y_cs[index])==-1)
         {
@@ -298,7 +287,7 @@ private:
     {
         int i = p1.X() - _bbox.min.X();
         int z = p1.Z() - _bbox.min.Z();
-        VertexIndex index = i+z*_bbox.max.X();
+        VertexIndex index = i+z*_bbox.DimX();
         VertexIndex pos;
         if (p1.Y()==_current_slice)
         {
@@ -343,7 +332,7 @@ protected:
     VolumeType	*_volume;
 
   float _thr;
-    void NextSlice()
+    void NextYSlice()
     {
         memset(_x_cs, -1, _slice_dimension*sizeof(VertexIndex));
         memset(_y_cs,	-1, _slice_dimension*sizeof(VertexIndex));

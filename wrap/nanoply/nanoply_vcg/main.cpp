@@ -71,8 +71,8 @@ public:
      faceBarycenter[i] = vcg::Barycenter(face[i]);
 
     material().resize(2);
-    material()[0] = { vcg::Point3f(0.1, 0.2, 0.3), vcg::Point3f(0.3, 0.3, 0.3), 5.0 };
-    material()[1] = { vcg::Point3f(0.1, 0.1, 0.1), vcg::Point3f(0.5, 0.3, 0.4), 50.0 };
+    material()[0] = { vcg::Point3f(0.1f, 0.2f, 0.3f), vcg::Point3f(0.3f, 0.3f, 0.3f), 5.0f };
+    material()[1] = { vcg::Point3f(0.1f, 0.1f, 0.1f), vcg::Point3f(0.5f, 0.3f, 0.4f), 50.0f };
   }
 
 };
@@ -87,9 +87,12 @@ bool Load(const char* filename, MyMesh& mesh)
   mesh.material().resize(count);
   customAttrib.AddVertexAttribDescriptor<int, int, 1>(std::string("materialId"), nanoply::NNP_INT32, NULL);
   customAttrib.AddFaceAttribDescriptor<vcg::Point3f, float, 3>(std::string("barycenter"), nanoply::NNP_LIST_UINT8_FLOAT32, NULL);
-  customAttrib.AddMeshAttribDescriptor<Material, float, 3>(std::string("material"), std::string("kd"), nanoply::NNP_FLOAT32, mesh.material()[0].kd.V());
-  customAttrib.AddMeshAttribDescriptor<Material, float, 3>(std::string("material"), std::string("ks"), nanoply::NNP_FLOAT32, mesh.material()[0].ks.V());
-  customAttrib.AddMeshAttribDescriptor<Material, float, 1>(std::string("material"), std::string("rho"), nanoply::NNP_FLOAT32, &mesh.material()[0].rho);
+	if (count > 0)
+	{
+		customAttrib.AddMeshAttribDescriptor<Material, float, 3>(std::string("material"), std::string("kd"), nanoply::NNP_FLOAT32, mesh.material()[0].kd.V());
+		customAttrib.AddMeshAttribDescriptor<Material, float, 3>(std::string("material"), std::string("ks"), nanoply::NNP_FLOAT32, mesh.material()[0].ks.V());
+		customAttrib.AddMeshAttribDescriptor<Material, float, 1>(std::string("material"), std::string("rho"), nanoply::NNP_FLOAT32, &mesh.material()[0].rho);
+	}
 
   //Load the ply file
   unsigned int mask = 0;
@@ -102,7 +105,7 @@ bool Load(const char* filename, MyMesh& mesh)
   mask |= nanoply::NanoPlyWrapper<MyMesh>::IO_FACENORMAL;
   mask |= nanoply::NanoPlyWrapper<MyMesh>::IO_FACEATTRIB;
   mask |= nanoply::NanoPlyWrapper<MyMesh>::IO_MESHATTRIB;
-  return (nanoply::NanoPlyWrapper<MyMesh>::LoadModel(filename, mesh, mask, customAttrib) != 0);
+	return (nanoply::NanoPlyWrapper<MyMesh>::LoadModel(filename, mesh, mask, customAttrib) != 0);
 }
 
 
@@ -113,10 +116,13 @@ bool Save(const char* filename, MyMesh& mesh, bool binary)
   nanoply::NanoPlyWrapper<MyMesh>::CustomAttributeDescriptor customAttrib;
   customAttrib.AddVertexAttribDescriptor<int, int, 1>(std::string("materialId"), nanoply::NNP_INT32, &mesh.vertexMaterial[0]);
   customAttrib.AddFaceAttribDescriptor<vcg::Point3f, float, 3>(std::string("barycenter"), nanoply::NNP_LIST_UINT8_FLOAT32, mesh.faceBarycenter[0].V());
-  customAttrib.AddMeshAttrib(std::string("material"), 2);
-  customAttrib.AddMeshAttribDescriptor<Material, float, 3>(std::string("material"), std::string("kd"), nanoply::NNP_LIST_UINT8_FLOAT32, mesh.material()[0].kd.V());
-  customAttrib.AddMeshAttribDescriptor<Material, float, 3>(std::string("material"), std::string("ks"), nanoply::NNP_LIST_UINT8_FLOAT32, mesh.material()[0].ks.V());
-  customAttrib.AddMeshAttribDescriptor<Material, float, 1>(std::string("material"), std::string("rho"), nanoply::NNP_FLOAT32, &mesh.material()[0].rho);
+	if (mesh.material().size() > 0)
+	{
+		customAttrib.AddMeshAttrib(std::string("material"), mesh.material().size());
+		customAttrib.AddMeshAttribDescriptor<Material, float, 3>(std::string("material"), std::string("kd"), nanoply::NNP_LIST_UINT8_FLOAT32, mesh.material()[0].kd.V());
+		customAttrib.AddMeshAttribDescriptor<Material, float, 3>(std::string("material"), std::string("ks"), nanoply::NNP_LIST_UINT8_FLOAT32, mesh.material()[0].ks.V());
+		customAttrib.AddMeshAttribDescriptor<Material, float, 1>(std::string("material"), std::string("rho"), nanoply::NNP_FLOAT32, &mesh.material()[0].rho);
+	}
 
   //Save the ply file
   unsigned int mask = 0;

@@ -405,7 +405,7 @@ namespace vcg {
                                 fprintf(fpout,"%.*g %.*g %.*g " ,DGT,vp->P()[0],DGT,vp->P()[1],DGT,vp->P()[2]);
 
                                 if( HasPerVertexNormal(m) && (pi.mask & Mask::IOM_VERTNORMAL) )
-                                    fprintf(fpout,"%.*g %.*g %.*g " ,DGT,vp->N()[0],DGT,vp->N()[1],DGT,vp->N()[2]);
+                                    fprintf(fpout,"%.*g %.*g %.*g " ,DGT,double(vp->N()[0]),DGT,double(vp->N()[1]),DGT,double(vp->N()[2]));
 
                                 if( HasPerVertexFlags(m) && (pi.mask & Mask::IOM_VERTFLAGS))
                                     fprintf(fpout,"%d ",vp->Flags());
@@ -559,7 +559,7 @@ namespace vcg {
                             else if( HasPerWedgeTexCoord(m) && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
                             {
                                 fprintf(fpout,"%d ",fp->VN()*2);
-                                for(int k=0;k<fp->VN()*2;++k)
+                                for(int k=0;k<fp->VN();++k)
                                     fprintf(fpout,"%f %f "
                                     ,fp->WT(k).u()
                                     ,fp->WT(k).v()

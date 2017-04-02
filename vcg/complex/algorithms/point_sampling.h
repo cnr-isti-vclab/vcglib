@@ -105,6 +105,11 @@ private:
   std::vector<CoordType> *sampleVec;
   bool vectorOwner;
 public:
+  
+  std::vector<CoordType> &SampleVec() 
+  {
+    return *sampleVec;
+  }
 
   void AddVert(const VertexType &p)
   {
@@ -839,11 +844,11 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 /// \brief Sample all the border corner vertices
 ///
 /// It assumes that the border flag have been set over the mesh both for vertex and for faces.
-/// All the vertices on the border where the surface forms an angle smaller than the given threshold are sampled.
+/// All the vertices on the border where the edges of the boundary of the surface forms an angle smaller than the given threshold are sampled.
 ///
 static void VertexBorderCorner(MeshType & m, VertexSampler &ps, float angleRad)
 {
-  typename MeshType::template PerVertexAttributeHandle  <float> angleSumH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m);
+  typename MeshType::template PerVertexAttributeHandle<float> angleSumH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m);
 
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     angleSumH[vi]=0;
@@ -1846,9 +1851,14 @@ static void PoissonDiskPruningByNumber(VertexSampler &ps, MeshType &m,
 
 
 /// This is the main function that is used to build a poisson distribuition
-/// starting from a dense sample cloud.
-/// Trivial approach that puts all the samples in a hashed UG and randomly choose a sample
+/// starting from a dense sample cloud (the montecarloMesh) by 'pruning' it.
+/// it puts all the samples in a hashed UG and randomly choose a sample
 /// and remove all the points in the sphere centered on the chosen sample
+/// 
+/// You can impose some constraint: all the vertices in the montecarloMesh 
+/// that are marked with a bool attribute called "fixed" are surely chosen 
+/// (if you also set the  preGenFlag option)
+/// 
 static void PoissonDiskPruning(VertexSampler &ps, MeshType &montecarloMesh,
                                ScalarType diskRadius, PoissonDiskParam &pp)
 {
@@ -2256,18 +2266,18 @@ void PoissonPruning(MeshType &m, // the mesh that has to be pruned
 
 /// \brief Low level wrapper for Poisson Disk Pruning
 ///
-/// This function simply takes a mesh and a radius and returns a vector
-/// of vertex pointers listing the "surviving" points.
-//
+/// This function simply takes a mesh containing a point cloud to be pruned and a radius 
+/// It returns a vector of CoordType listing the "surviving" points.
+///
 template <class MeshType>
 void PoissonPruning(MeshType &m, // the mesh that has to be pruned
-                    std::vector<Point3f> &poissonSamples, // the vector that will contain the chosen set of points
+                    std::vector<typename MeshType::CoordType> &poissonSamples, // the vector that will contain the chosen set of points
                     float radius, unsigned int randSeed=0)
 {
   std::vector<typename MeshType::VertexPointer> poissonSamplesVP;
   PoissonPruning(m,poissonSamplesVP,radius,randSeed);
   poissonSamples.resize(poissonSamplesVP.size());
-  for(size_t  i=0;i<poissonSamplesVP.size();++i)
+  for(size_t i=0;i<poissonSamplesVP.size();++i)
     poissonSamples[i]=poissonSamplesVP[i]->P();
 }
 

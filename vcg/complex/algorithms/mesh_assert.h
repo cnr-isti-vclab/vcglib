@@ -104,6 +104,13 @@ public:
     }
   }
 
+  static void OnlyEdgeMesh(MeshType &m)
+  {
+      if(m.FN()>0)
+        throw vcg::MissingPreconditionException("Expecting a mesh composed only by edges (no faces needed or allowed)");
+  }
+  
+  
 };
 
 } // end namespace tri

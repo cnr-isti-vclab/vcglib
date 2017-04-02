@@ -59,8 +59,6 @@ namespace vcg
         bool _perpoint_mesh_color_enabled;
         bool _perwire_mesh_color_enabled;
         bool _persolid_mesh_color_enabled;
-
-        Color4b _permesh_color;
         
         bool _perpoint_noshading;
         bool _perwire_noshading;
@@ -77,21 +75,21 @@ namespace vcg
         RenderingModalityGLOptions()
         {
             _perbbox_enabled = false;
+
             _perbbox_fixed_color_enabled = true;
             _perpoint_fixed_color_enabled = false;
             _perwire_fixed_color_enabled = true;
-            
-            _perbbox_fixed_color = Color4b(Color4b::White);
-            _perpoint_fixed_color = Color4b(Color4b::White);
-            _perwire_fixed_color = Color4b(Color4b::DarkGray);
-            _persolid_fixed_color = Color4b(Color4b::White);
+			_persolid_fixed_color_enabled = true;
 
-            _persolid_fixed_color_enabled = false;
+            _perbbox_fixed_color = vcg::Color4b(Color4b::White);
+            _perpoint_fixed_color = vcg::Color4b(Color4b::White);
+            _perwire_fixed_color = Color4b(Color4b::DarkGray);
+            _persolid_fixed_color = vcg::Color4b(Color4b::White);
+
             _perbbox_mesh_color_enabled = false;
             _perpoint_mesh_color_enabled = false;
             _perwire_mesh_color_enabled = false;
-
-            _permesh_color = Color4b(Color4d::Magenta);
+			_persolid_mesh_color_enabled = false;
 
             _perpoint_dot_enabled = false;
 
@@ -135,8 +133,6 @@ namespace vcg
             _perpoint_fixed_color_enabled = opts._perpoint_fixed_color_enabled;
             _perwire_fixed_color_enabled = opts._perwire_fixed_color_enabled;
             _persolid_fixed_color_enabled = opts._persolid_fixed_color_enabled;
-
-            _permesh_color = opts._permesh_color;
 
             _perbbox_mesh_color_enabled = opts._perbbox_mesh_color_enabled;
             _perpoint_mesh_color_enabled = opts._perpoint_mesh_color_enabled;
@@ -292,7 +288,7 @@ namespace vcg
         /*************************************************************************************************************************************************************************/
 
         NotThreadSafeGLMeshAttributesMultiViewerBOManager(/*const*/ MESH_TYPE& mesh,MemoryInfo& meminfo, size_t perbatchprimitives)
-            :_mesh(mesh),_gpumeminfo(meminfo),_bo(INT_ATT_NAMES::enumArity(),NULL),_currallocatedboatt(),_perbatchprim(perbatchprimitives),_chunkmap(),_borendering(false),_edge(),_meshverticeswhenedgeindiceswerecomputed(0),_meshtriangleswhenedgeindiceswerecomputed(0),_tr(),_debugmode(false),_loginfo(),_meaningfulattsperprimitive(PR_ARITY,InternalRendAtts()),_tmpbuffer(0)
+            :_mesh(mesh),_gpumeminfo(meminfo),_bo(INT_ATT_NAMES::enumArity(),NULL),_currallocatedboatt(),_perbatchprim(perbatchprimitives),_chunkmap(),_borendering(false),_edge(),_meshverticeswhenedgeindiceswerecomputed(0),_meshtriangleswhenedgeindiceswerecomputed(0),_tr(),_debugmode(false),_loginfo(),_meaningfulattsperprimitive(PR_ARITY,InternalRendAtts())
         {
             _tr.SetIdentity();
             _bo[INT_ATT_NAMES::ATT_VERTPOSITION] = new GLBufferObject(3,GL_FLOAT,GL_VERTEX_ARRAY,GL_ARRAY_BUFFER);
@@ -353,6 +349,16 @@ namespace vcg
             _perviewreqatts[viewid] = copydt;
         }
 
+		void setPerAllViewsInfo(const PVData& data)
+		{
+			///cleanup stage...if an attribute impossible for a primitive modality is still here (it should not be...) we change the required atts into the view
+			PVData copydt(data);
+			for (PRIMITIVE_MODALITY pm = PRIMITIVE_MODALITY(0); pm < PR_ARITY; pm = next(pm))
+				copydt._intatts[pm] = InternalRendAtts::intersectionSet(copydt._intatts[size_t(pm)], _meaningfulattsperprimitive[size_t(pm)]);
+			for (typename ViewsMap::iterator it = _perviewreqatts.begin(); it != _perviewreqatts.end(); ++it)
+				it->second = copydt;
+		}
+
         bool removeView(UNIQUE_VIEW_ID_TYPE viewid)
         {
             typename ViewsMap::iterator it = _perviewreqatts.find(viewid);
@@ -375,58 +381,36 @@ namespace vcg
 
             const PVData& dt = it->second;
             //const InternalRendAtts& atts = it->second._intatts;
-            glPushAttrib(GL_ALL_ATTRIB_BITS);
-            glMatrixMode(GL_MODELVIEW);
-            glPushMatrix();
-            glMultMatrix(_tr);
-
-            if ((dt._glopts != NULL) && (dt._glopts->_perbbox_enabled))
-                drawBBox(dt._glopts);
-
-            if (dt.isPrimitiveActive(PR_SOLID))
-            {
-                bool somethingmore = dt.isPrimitiveActive(PR_WIREFRAME_EDGES) || dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES) || dt.isPrimitiveActive(PR_POINTS);
-                if (somethingmore)
-                {
-                    glEnable(GL_POLYGON_OFFSET_FILL);
-                    glPolygonOffset(1.0, 1);
-                }
-                drawFilledTriangles(dt._intatts[size_t(PR_SOLID)],dt._glopts,textid);
-                if (somethingmore)
-                    glDisable(GL_POLYGON_OFFSET_FILL);
-            }
-
-            if (dt.isPrimitiveActive(PR_WIREFRAME_EDGES) || dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES))
-            {
-                //InternalRendAtts tmpatts = atts;
-                bool pointstoo = dt.isPrimitiveActive(PR_POINTS);
-
-                if (pointstoo)
-                {
-                    glEnable(GL_POLYGON_OFFSET_FILL);
-                    glPolygonOffset(1.0, 1);
-                }
-                bool solidtoo = dt.isPrimitiveActive(PR_SOLID);
-                    
-                if (dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES))
-                {
-                    drawWiredTriangles(dt._intatts[size_t(PR_WIREFRAME_TRIANGLES)],dt._glopts,textid);
-                }
-                else
-                {
-                    if (dt.isPrimitiveActive(PR_WIREFRAME_EDGES))
-                        drawEdges(dt._intatts[size_t(PR_WIREFRAME_EDGES)],dt._glopts);
-                }
-                   
-                if (pointstoo || solidtoo)
-                    glDisable(GL_POLYGON_OFFSET_FILL);
-            }     
-            if (dt.isPrimitiveActive(PR_POINTS))
-                drawPoints(dt._intatts[size_t(PR_POINTS)],it->second._glopts);
-
-            glPopMatrix();
-            glPopAttrib();
+			drawFun(dt, textid);
         }
+
+		
+		void drawAllocatedAttributesSubset(UNIQUE_VIEW_ID_TYPE viewid,const PVData& dt, const std::vector<GLuint>& textid = std::vector<GLuint>()) const
+		{
+			typename ViewsMap::const_iterator it = _perviewreqatts.find(viewid);
+			if (it == _perviewreqatts.end())
+				return;
+
+			PVData tmp = dt;
+			
+			if (!(_currallocatedboatt[INT_ATT_NAMES::ATT_VERTPOSITION]))
+			{
+				for (PRIMITIVE_MODALITY pm = PRIMITIVE_MODALITY(0); pm < PR_ARITY; pm = next(pm))
+				{		
+					tmp._pmmask[size_t(pm)] = 0;
+					tmp._intatts[size_t(pm)] = InternalRendAtts();
+				}
+			}
+			else
+			{
+				for (PRIMITIVE_MODALITY pm = PRIMITIVE_MODALITY(0); pm < PR_ARITY; pm = next(pm))
+				{
+					tmp._intatts[size_t(pm)] = InternalRendAtts::intersectionSet(tmp._intatts[size_t(pm)],_meaningfulattsperprimitive[size_t(pm)]);
+					tmp._intatts[size_t(pm)] = InternalRendAtts::intersectionSet(tmp._intatts[size_t(pm)],_currallocatedboatt);
+				}
+			}
+			drawFun(dt, textid);
+		}
 
         bool isBORenderingAvailable() const
         {
@@ -531,9 +515,9 @@ namespace vcg
             case(INT_ATT_NAMES::ATT_WEDGETEXTURE):
                 return vcg::tri::HasPerWedgeTexCoord(_mesh);
             case(INT_ATT_NAMES::ATT_VERTINDICES):
-                return true;
+                return (_mesh.VN() != 0) && (_mesh.FN() != 0);
             case(INT_ATT_NAMES::ATT_EDGEINDICES):
-                return vcg::tri::HasPerVertexFlags(_mesh);
+                return vcg::tri::HasPerVertexFlags(_mesh) || ((_mesh.VN() != 0) && (_mesh.FN() == 0) && (_mesh.EN() == 0));
             default:
                 return false;
             }
@@ -557,7 +541,7 @@ namespace vcg
                 {
                     //If a primitive_modality is not rendered (== no att_VERTPOSITION) all the referred attributes by this view can be eventually deallocated IF they are not used
                     //by some other rendered primitive
-                    //the vertindices is, as usual a diffrent case
+                    //the vertindices is, as usual, a different case
                     if (it->second._intatts[size_t(pm)][INT_ATT_NAMES::ATT_VERTPOSITION])
                         meaningfulrequiredbyatleastoneview = InternalRendAtts::unionSet(meaningfulrequiredbyatleastoneview,it->second._intatts[size_t(pm)]);
                     else
@@ -565,11 +549,15 @@ namespace vcg
                 }
             }
             bool thereisreplicatedview = InternalRendAtts::replicatedPipelineNeeded(meaningfulrequiredbyatleastoneview);
-            meaningfulrequiredbyatleastoneview[INT_ATT_NAMES::ATT_VERTINDICES] = !thereisreplicatedview;
+            meaningfulrequiredbyatleastoneview[INT_ATT_NAMES::ATT_VERTINDICES] &= !thereisreplicatedview;
             
             InternalRendAtts reallyuseless = InternalRendAtts::complementSet(probabilyuseless,meaningfulrequiredbyatleastoneview);
             
             bool switchreplicatedindexed = (!InternalRendAtts::replicatedPipelineNeeded(_currallocatedboatt) && thereisreplicatedview) || (InternalRendAtts::replicatedPipelineNeeded(_currallocatedboatt) && !thereisreplicatedview); 
+
+            /*in some way the vertices number changed. If i use the indexed pipeline i have to deallocate/allocate/update the vertex indices*/
+            bool numvertchanged = boExpectedSize(INT_ATT_NAMES::ATT_VERTPOSITION,thereisreplicatedview) != _bo[INT_ATT_NAMES::ATT_VERTPOSITION]->_size;
+            bool vertindforcedupdate = numvertchanged && meaningfulrequiredbyatleastoneview[INT_ATT_NAMES::ATT_VERTINDICES];
 
             InternalRendAtts probablytoallocate = InternalRendAtts::complementSet(meaningfulrequiredbyatleastoneview,_currallocatedboatt);
             InternalRendAtts probablytodeallocate = InternalRendAtts::complementSet(_currallocatedboatt,meaningfulrequiredbyatleastoneview);
@@ -588,8 +576,11 @@ namespace vcg
                         tobedeallocated[boname] =   (notempty && !hasmeshattribute) || 
                                                     (notempty && probablytodeallocate[boname]) ||
                                                     (notempty && reallyuseless[boname]) ||
-                                                    (notempty && (_bo[boname]->_size != sz) && meaningfulrequiredbyatleastoneview[boname]);
-                        tobeallocated[boname] = (hasmeshattribute && (sz > 0) && (sz != _bo[boname]->_size) && meaningfulrequiredbyatleastoneview[boname]) || (hasmeshattribute && (sz > 0) && probablytoallocate[boname]);
+                                                    (notempty && (_bo[boname]->_size != sz) && meaningfulrequiredbyatleastoneview[boname]) ||
+                                                    (notempty && (boname == INT_ATT_NAMES::ATT_VERTINDICES) && (vertindforcedupdate));
+                        tobeallocated[boname] = (hasmeshattribute && (sz > 0) && (sz != _bo[boname]->_size) && meaningfulrequiredbyatleastoneview[boname]) || 
+                                                (hasmeshattribute && (sz > 0) && probablytoallocate[boname]) ||
+                                                (hasmeshattribute && (boname == INT_ATT_NAMES::ATT_VERTINDICES) && (vertindforcedupdate));
                         tobeupdated[boname] = tobeallocated[boname] || (hasmeshattribute && (sz > 0) && !(isvalid) && meaningfulrequiredbyatleastoneview[boname]);
                     }
                     else 
@@ -654,22 +645,6 @@ namespace vcg
 
         bool buffersMemoryManagementFunction(const InternalRendAtts& tobeallocated,const InternalRendAtts& tobedeallocated,const InternalRendAtts& tobeupdated)
         {
-            if (_tmpbuffer == 0)
-            {
-                GLfloat tmpdata[9] = {-0.5, -0.5, 0.5, 
-                    0.5, -0.5, 0.5, 
-                    -0.5, 0.5, 0.5} ;       
-                glGenBuffers(1,&(_tmpbuffer));
-                glBindBuffer(GL_ARRAY_BUFFER,_tmpbuffer);
-                glBufferData(GL_ARRAY_BUFFER,4 * 9,(GLvoid*) &(tmpdata[0]),GL_STATIC_DRAW);
-                glBindBuffer(GL_ARRAY_BUFFER,0);
-                GLuint index[3] = {1,2,0};
-                glGenBuffers(1,&(_tmpind));
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_tmpind);
-                glBufferData(GL_ELEMENT_ARRAY_BUFFER,3 * 4 ,(GLvoid*) &(index),GL_STATIC_DRAW);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-            }
-
             //GLenum err = glGetError();
             bool replicated = isThereAReplicatedPipelineView();
             std::ptrdiff_t newallocatedmem = bufferObjectsMemoryRequired(tobeallocated);
@@ -871,7 +846,6 @@ namespace vcg
 
                     if (attributestobeupdated[INT_ATT_NAMES::ATT_VERTINDICES])
                     {
-                        size_t tsz = _bo[INT_ATT_NAMES::ATT_VERTINDICES]->_components *  _bo[INT_ATT_NAMES::ATT_VERTINDICES]->getSizeOfGLType() * chunksize;
                         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[INT_ATT_NAMES::ATT_VERTINDICES]->_bohandle);
                         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,chunkingpu * facechunk *  _bo[INT_ATT_NAMES::ATT_VERTINDICES]->_components *  _bo[INT_ATT_NAMES::ATT_VERTINDICES]->getSizeOfGLType(),_bo[INT_ATT_NAMES::ATT_VERTINDICES]->_components *  _bo[INT_ATT_NAMES::ATT_VERTINDICES]->getSizeOfGLType() * chunksize,&ti[0]);
                         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -905,6 +879,7 @@ namespace vcg
             bool isthereaquadview = false;
             for(typename ViewsMap::const_iterator it = _perviewreqatts.begin();it != _perviewreqatts.end();++it)
                 isthereaquadview = (it->second._intatts[size_t(PR_WIREFRAME_EDGES)][INT_ATT_NAMES::ATT_VERTPOSITION]) || isthereaquadview;
+			return isthereaquadview;
         }
 
 
@@ -983,13 +958,13 @@ namespace vcg
                 _texindnumtriangles.resize(_chunkmap.size());
             }
             
-            std::vector<size_t> vpatlas;
+            std::vector<GLuint> vpatlas;
             if (attributestobeupdated[INT_ATT_NAMES::ATT_EDGEINDICES])
                 vpatlas.resize(_mesh.VN(),UINT_MAX);
 
             int faceind = 0;
             size_t chunkindex = faceind;
-            size_t triangles = 0;
+			GLuint triangles = 0;
 
 
             for(ChunkMap::const_iterator mit = _chunkmap.begin();mit != _chunkmap.end();++mit)
@@ -1180,7 +1155,7 @@ namespace vcg
             {
                 glDisableClientState(bobj->_clientstatetag);
             }
-
+			//glBufferData(bobj->_target, sizeof(vcg::Point3f)*_primitivebatch, 0, GL_DYNAMIC_DRAW);
             glDeleteBuffers(1,&(bobj->_bohandle));
             glFlush();
             glFinish();
@@ -1282,6 +1257,70 @@ namespace vcg
             return 0;
         }
 
+		void drawFun(const PVData& dt, const std::vector<GLuint>& textid = std::vector<GLuint>()) const
+		{
+			glPushAttrib(GL_ALL_ATTRIB_BITS);
+			glMatrixMode(GL_MODELVIEW);
+			glPushMatrix();
+			glMultMatrix(_tr);
+
+			if ((dt._glopts != NULL) && (dt._glopts->_perbbox_enabled))
+				drawBBox(dt._glopts);
+
+			if (dt.isPrimitiveActive(PR_SOLID))
+			{
+				bool somethingmore = dt.isPrimitiveActive(PR_WIREFRAME_EDGES) || dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES) || dt.isPrimitiveActive(PR_POINTS);
+				if (somethingmore)
+				{
+					glEnable(GL_POLYGON_OFFSET_FILL);
+					glPolygonOffset(1.0, 1);
+				}
+				drawFilledTriangles(dt._intatts[size_t(PR_SOLID)], dt._glopts, textid);
+				if (somethingmore)
+					glDisable(GL_POLYGON_OFFSET_FILL);
+			}
+
+			if (dt.isPrimitiveActive(PR_WIREFRAME_EDGES) || dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES))
+			{
+				//InternalRendAtts tmpatts = atts;
+				bool pointstoo = dt.isPrimitiveActive(PR_POINTS);
+
+				if (pointstoo)
+				{
+					glEnable(GL_POLYGON_OFFSET_FILL);
+					glPolygonOffset(1.0, 1);
+				}
+				bool solidtoo = dt.isPrimitiveActive(PR_SOLID);
+
+				/*EDGE    |     TRI     |    DRAW
+				---------------------------------
+				  TRUE         TRUE         EDGE
+				  TRUE         FALSE        EDGE
+				  FALSE        TRUE         TRI
+				  FALSE        FALSE        NOTHING */
+
+				if (dt.isPrimitiveActive(PR_WIREFRAME_EDGES))
+					drawEdges(dt._intatts[size_t(PR_WIREFRAME_EDGES)], dt._glopts);
+				else
+				{
+					if (dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES))
+					{
+						drawWiredTriangles(dt._intatts[size_t(PR_WIREFRAME_TRIANGLES)], dt._glopts, textid);
+					}
+				}
+
+				if (pointstoo || solidtoo)
+					glDisable(GL_POLYGON_OFFSET_FILL);
+			}
+			if (dt.isPrimitiveActive(PR_POINTS))
+				drawPoints(dt._intatts[size_t(PR_POINTS)], dt._glopts,textid);
+
+			glPopMatrix();
+			glPopAttrib();
+			glFlush();
+			glFinish();
+		}
+
         void drawFilledTriangles(const InternalRendAtts& req,const GL_OPTIONS_DERIVED_TYPE* glopts,const std::vector<GLuint>& textureindex = std::vector<GLuint>()) const
         {
             if (_mesh.VN() == 0)
@@ -1290,14 +1329,14 @@ namespace vcg
             glPushAttrib(GL_ALL_ATTRIB_BITS);
   
             bool isgloptsvalid = (glopts != NULL);
-
-            if ((!isgloptsvalid) ||  (req[INT_ATT_NAMES::ATT_VERTNORMAL]) || (req[INT_ATT_NAMES::ATT_FACENORMAL]))
-            {
-                glEnable(GL_LIGHTING);
-            }
-            else if (isgloptsvalid && glopts->_persolid_noshading)
+            
+            if (isgloptsvalid && glopts->_persolid_noshading)
                 glDisable(GL_LIGHTING);
-
+            else
+                if ((!isgloptsvalid) ||  (req[INT_ATT_NAMES::ATT_VERTNORMAL]) || (req[INT_ATT_NAMES::ATT_FACENORMAL]))
+                {
+                    glEnable(GL_LIGHTING);
+                }
 
             glEnable(GL_COLOR_MATERIAL);
             if ((isgloptsvalid) && (glopts->_persolid_fixed_color_enabled))
@@ -1305,7 +1344,8 @@ namespace vcg
             else
             {
                 if ((isgloptsvalid) && (glopts->_persolid_mesh_color_enabled))
-                    glColor(glopts->_permesh_color);
+                    glColor(_mesh.C());
+                else
                 {
                     if ((req[INT_ATT_NAMES::ATT_VERTCOLOR]) || (req[INT_ATT_NAMES::ATT_FACECOLOR]))
                         glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
@@ -1332,21 +1372,22 @@ namespace vcg
            
             bool isgloptsvalid = (glopts != NULL);
 
-            if ((!isgloptsvalid) || (req[INT_ATT_NAMES::ATT_VERTNORMAL]))
-            {
-                glEnable(GL_LIGHTING);
-            }
-            else if (isgloptsvalid && glopts->_perwire_noshading)
+            if (isgloptsvalid && glopts->_perwire_noshading)
                 glDisable(GL_LIGHTING);
-
-
+            else 
+                if ((!isgloptsvalid) || (req[INT_ATT_NAMES::ATT_VERTNORMAL]))
+                {
+                    glEnable(GL_LIGHTING);
+                }
+                
             glEnable(GL_COLOR_MATERIAL);
             if ((isgloptsvalid) && (glopts->_perwire_fixed_color_enabled))
                 glColor(glopts->_perwire_fixed_color);
             else
             {
                 if ((isgloptsvalid) && (glopts->_perwire_mesh_color_enabled))
-                    glColor(glopts->_permesh_color);
+                    glColor(_mesh.C());
+                else
                 {
                     if (req[INT_ATT_NAMES::ATT_VERTCOLOR])
                         glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
@@ -1538,7 +1579,7 @@ namespace vcg
             glEnd();
         }
 
-        void drawPoints(const InternalRendAtts& req,GL_OPTIONS_DERIVED_TYPE* glopts) const
+        void drawPoints(const InternalRendAtts& req,GL_OPTIONS_DERIVED_TYPE* glopts, const std::vector<GLuint>& textureindex = std::vector<GLuint>()) const
         {
             if (_mesh.VN() == 0)
                 return;
@@ -1547,32 +1588,44 @@ namespace vcg
 
             bool isgloptsvalid = (glopts != NULL);        
 
-            if ((!isgloptsvalid) ||  req[INT_ATT_NAMES::ATT_VERTNORMAL])
-            {
-                glEnable(GL_LIGHTING);
-            }
-            else if (isgloptsvalid && glopts->_perpoint_noshading)
+            
+            if ((isgloptsvalid && glopts->_perpoint_noshading) || (isgloptsvalid && glopts->_perpoint_dot_enabled))
                 glDisable(GL_LIGHTING);
+            else 
+                if ((!isgloptsvalid) ||  req[INT_ATT_NAMES::ATT_VERTNORMAL])
+                {
+                    glEnable(GL_LIGHTING);
+                }
 
             glEnable(GL_COLOR_MATERIAL);
-            if ((isgloptsvalid) && ((glopts->_perpoint_fixed_color_enabled) || (glopts->_perpoint_mesh_color_enabled)))
-                glColor(glopts->_perpoint_fixed_color);
-            
+            if ((isgloptsvalid) && ((glopts->_perpoint_fixed_color_enabled) || (glopts->_perpoint_mesh_color_enabled))){
+                if (glopts->_perpoint_fixed_color_enabled)
+                    glColor(glopts->_perpoint_fixed_color);
+                else
+                    glColor(_mesh.C());
+            }
 
             if (req[INT_ATT_NAMES::ATT_VERTCOLOR])       
                 glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
          
 
-            if (req[INT_ATT_NAMES::ATT_VERTTEXTURE])
-                glEnable(GL_TEXTURE_2D);
-            else
-                glDisable(GL_TEXTURE_2D);
+			if (req[INT_ATT_NAMES::ATT_VERTTEXTURE])
+			{
+				glEnable(GL_TEXTURE_2D);
+				if (textureindex.size() > 0)
+					glBindTexture(GL_TEXTURE_2D, textureindex[0]);
+				else
+					glBindTexture(GL_TEXTURE_2D, 0);
+			}
+			else
+				glDisable(GL_TEXTURE_2D);
             //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[GLMeshAttributesInfo::ATT_VERTINDEX]->_bohandle);
            
             if (glopts != NULL)
             {
-                glPointSize(glopts->_perpoint_pointsize);
-                if(glopts->_perpoint_pointsmooth_enabled) 
+				if (!glopts->_perpoint_dot_enabled)
+					glPointSize(glopts->_perpoint_pointsize);
+                if ((glopts->_perpoint_pointsmooth_enabled) || (glopts->_perpoint_dot_enabled))
                     glEnable(GL_POINT_SMOOTH);
                 else 
                     glDisable(GL_POINT_SMOOTH);
@@ -1596,11 +1649,31 @@ namespace vcg
                         pointsize = glopts->_perpoint_pointsize;
                     glPointSize(pointsize);
                 }
+				if (glopts->_perpoint_dot_enabled)
+				{
+					glEnable(GL_BLEND);
+					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+					glDepthRange(0.0, 0.9999);
+					glDepthFunc(GL_LEQUAL);
+					glPointSize(glopts->_perpoint_pointsize + 0.5);
+				}
             }
             if (isBORenderingAvailable())
                 drawPointsBO(req);
             else
                 drawPointsIM(req);
+
+			if ((glopts != NULL) && (glopts->_perpoint_dot_enabled))
+			{
+				float psize = 0.0001f;
+				if ((glopts->_perpoint_pointsize - 1) > 0)
+					psize = (glopts->_perpoint_pointsize - 1);
+				glPointSize(psize);
+				if (isBORenderingAvailable())
+					drawPointsBO(req);
+				else
+					drawPointsIM(req);
+			}
             glPopAttrib();
         }
 
@@ -1609,10 +1682,8 @@ namespace vcg
             size_t pointsnum = _mesh.VN();
             if (InternalRendAtts::replicatedPipelineNeeded(_currallocatedboatt))
                 pointsnum = _mesh.FN() * 3;
-
             updateClientState(req);
             glDrawArrays(GL_POINTS,0,GLsizei(pointsnum));
-
             /*disable all client state buffers*/
             InternalRendAtts tmp;
             updateClientState(tmp);
@@ -1644,28 +1715,32 @@ namespace vcg
             if (_mesh.VN() == 0)
                 return;
             glPushAttrib(GL_ALL_ATTRIB_BITS);
-            
-
+           
             bool isgloptsvalid = (glopts != NULL);
 
             glEnable(GL_COLOR_MATERIAL);
             glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
 
-            if ((!isgloptsvalid) ||  req[INT_ATT_NAMES::ATT_VERTNORMAL])
-            {
-                glEnable(GL_LIGHTING);
-            }
-            else if (isgloptsvalid && glopts->_perwire_noshading)
+            if (isgloptsvalid && glopts->_perwire_noshading)
                 glDisable(GL_LIGHTING);
-
+            else 
+                if ((!isgloptsvalid) || (req[INT_ATT_NAMES::ATT_VERTNORMAL]))
+                {
+                    glEnable(GL_LIGHTING);
+                }
 
             bool colordefinedenabled = (isgloptsvalid) && ((glopts->_perwire_fixed_color_enabled) || (glopts->_perwire_mesh_color_enabled));
 
             if (!(isgloptsvalid) || colordefinedenabled)
             {
                 vcg::Color4b tmpcol = vcg::Color4b(vcg::Color4b::DarkGray);
-                if (colordefinedenabled)
-                    tmpcol = glopts->_perwire_fixed_color;
+				if (colordefinedenabled)
+				{
+					if (glopts->_perwire_fixed_color_enabled)
+						tmpcol = glopts->_perwire_fixed_color;
+					else
+						tmpcol = _mesh.cC();
+				}
                 glColor(tmpcol);
             }
 
@@ -1771,7 +1846,7 @@ namespace vcg
             else
             {
                 if ((isgloptsvalid) && (glopts->_perbbox_mesh_color_enabled))
-                    glColor(glopts->_permesh_color);
+                    glColor(_mesh.C());
                 else
                     glColor(vcg::Color4b(vcg::Color4b::White));
             }
@@ -2096,8 +2171,8 @@ namespace vcg
                 assert(nz>=0);
                 assert(nz<pf->VN());
 
-                _v[0] = size_t(vcg::tri::Index(m,pf->V(nz)));;
-                _v[1] = size_t(vcg::tri::Index(m,pf->V(pf->Next(nz))));
+                _v[0] = GLuint(vcg::tri::Index(m,pf->V(nz)));;
+                _v[1] = GLuint(vcg::tri::Index(m,pf->V(pf->Next(nz))));
                 assert(_v[0] != _v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
 
                 if( _v[0] > _v[1] ) 
@@ -2249,8 +2324,6 @@ namespace vcg
         DebugInfo _loginfo;
 
         std::vector<InternalRendAtts> _meaningfulattsperprimitive;
-        GLuint _tmpbuffer;
-        GLuint _tmpind;
     };
 }
 

@@ -34,26 +34,10 @@
 #include <wrap/gl/space.h>
 #include <wrap/gl/math.h>
 #include <vcg/space/color4.h>
+#include <wrap/gl/gl_type_name.h>
 
-
-namespace vcg {
-
-	template <typename T>
-	class GL_TYPE_NM
-	{public:
-	static GLenum SCALAR() { assert(0); return 0;}
-	};
-	template <> class GL_TYPE_NM<float>
-	{ public:
-	typedef GLfloat ScalarType;
-	static GLenum SCALAR() { return GL_FLOAT; }
-	};
-	template <> class GL_TYPE_NM<double>
-	{public:
-	typedef GLdouble ScalarType;
-	static GLenum SCALAR() { return GL_DOUBLE; }
-	};
-
+namespace vcg 
+{
 	//template <> GL_TYPE::SCALAR<double>() { return GL_DOUBLE; }
 
 	// classe base di glwrap usata solo per poter usare i vari drawmode, normalmode senza dover

@@ -496,7 +496,7 @@ namespace nanoply
 			for (int i = 0; i < faceDescr.dataDescriptor.size(); i++)
 				if (faceDescr.dataDescriptor[i]->elem != NNP_UNKNOWN_ENTITY)
 					delete faceDescr.dataDescriptor[i];
-
+			mesh.textures = info.textureFile;
 			return info.errInfo;
 		}
 
@@ -687,6 +687,7 @@ namespace nanoply
 			infoSave.AddPlyElement(vertexElem);
 			infoSave.AddPlyElement(edgeElem);
 			infoSave.AddPlyElement(faceElem);
+			infoSave.textureFile = mesh.textures;
 			std::vector<ElementDescriptor*> meshDescr;
 			meshDescr.push_back(&cameraDescr);
 			meshDescr.push_back(&vertexDescr);

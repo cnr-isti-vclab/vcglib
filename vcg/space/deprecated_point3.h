@@ -145,10 +145,10 @@ public:
         _v[1] = nv[1];
         _v[2] = nv[2];
     }
-    inline Point3 & operator =( Point3 const & p )
+    inline Point3 & operator =(Point3 const & p)
     {
-            _v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2];
-            return *this;
+      _v[0] = p._v[0]; _v[1] = p._v[1]; _v[2] = p._v[2];
+      return *this;
     }
     inline void SetZero()
     {

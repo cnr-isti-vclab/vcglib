@@ -22,7 +22,8 @@
 ****************************************************************************/
 #ifndef __TRI_EDGE_COLLAPSE_MC__
 #define __TRI_EDGE_COLLAPSE_MC__
-#include<vcg/simplex/face/topology.h>
+namespace vcg{
+namespace tri{
 
 class TriEdgeCollapseMCParameter : public BaseParameterClass
 {
@@ -125,5 +126,7 @@ class MCTriEdgeCollapse: public tri::TriEdgeCollapse< MCTriMesh, VertexPair, MYT
 						
 						
 };
+}
+}
 
 #endif

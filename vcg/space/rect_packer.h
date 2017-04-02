@@ -240,6 +240,148 @@ static  bool PackOccupancyMulti(const std::vector<Box2x > & rectVec,  /// the se
     return true;
   }
 
+/* This is the low level function that packs a set of int rects onto a grid.
+
+Based on the criptic code written by Claudio Rocchini
+
+Greedy algorithm.
+Sort the rect according their height (larger first)
+and then place them in the position that minimize the area of the bbox of all the placed rectangles
+
+To efficiently skip occupied areas it fills the grid with the id of the already placed rectangles.
+*/
+static bool PackInt(const std::vector<vcg::Point2i> & sizes, // the sizes of the rect to be packed
+	const vcg::Point2i & max_size,           // the size of the container
+	std::vector<vcg::Point2i> & posiz,       // the found positionsof each rect
+	vcg::Point2i & global_size)              // the size of smallest rect covering all the packed rect
+{
+	int n = (int)(sizes.size());
+	assert(n>0 && max_size[0]>0 && max_size[1]>0);
+
+	int gridSize = max_size[0] * max_size[1];		// Size dell griglia
+	int i, j, x, y;
+
+	posiz.resize(n, Point2i(-1, -1));
+	std::vector<int> grid(gridSize, 0);			// Creazione griglia
+
+#define Grid(q,w)	(grid[(q)+(w)*max_size[0]])
+
+												// Build a permutation that keeps the reordiering of the sizes vector according to their width
+	std::vector<int> perm(n);
+	for (i = 0; i<n; i++) perm[i] = i;
+	ComparisonFunctor cmp(sizes);
+	sort(perm.begin(), perm.end(), cmp);
+
+	if (sizes[perm[0]][0]>max_size[0] || sizes[perm[0]][1]>max_size[1])
+		return false;
+
+	// Posiziono il primo
+	j = perm[0];
+	global_size = sizes[j];
+	posiz[j] = Point2i(0, 0);
+
+	// Fill the grid with the id(+1) of the first
+	for (y = 0; y<global_size[1]; y++)
+		for (x = 0; x<global_size[0]; x++)
+		{
+			assert(x >= 0 && x<max_size[0]);
+			assert(y >= 0 && y<max_size[1]);
+			grid[x + y*max_size[0]] = j + 1;
+		}
+
+	// Posiziono tutti gli altri
+	for (i = 1; i<n; ++i)
+	{
+		j = perm[i];
+		assert(j >= 0 && j<n);
+		assert(posiz[j][0] == -1);
+
+		int bestx, besty, bestsx, bestsy, bestArea;
+
+		bestArea = -1;
+
+		int sx = sizes[j][0];	// Pe comodita' mi copio la dimensione
+		int sy = sizes[j][1];
+		assert(sx>0 && sy>0);
+
+		// Calcolo la posizione limite
+		int lx = std::min(global_size[0], max_size[0] - sx);
+		int ly = std::min(global_size[1], max_size[1] - sy);
+
+		assert(lx>0 && ly>0);
+
+		int finterior = 0;
+
+		for (y = 0; y <= ly; y++)
+		{
+			for (x = 0; x <= lx;)
+			{
+				int px;
+				int c = Grid(x, y + sy - 1);
+				// Intersection check
+				if (!c) c = Grid(x + sx - 1, y + sy - 1);
+				if (!c)
+				{
+					for (px = x; px<x + sx; px++)
+					{
+						c = Grid(px, y);
+						if (c) break;
+					}
+				}
+
+				if (c)	// Salto il rettangolo
+				{
+					--c;  // we store id+1...
+					assert(c >= 0 && c<n);
+					assert(posiz[c][0] != -1);
+					x = posiz[c][0] + sizes[c][0];
+				}
+				else // x,y are an admissible position where we can put the rectangle
+				{
+					int nsx = std::max(global_size[0], x + sx);
+					int nsy = std::max(global_size[1], y + sy);
+					int area = nsx*nsy;
+
+					if (bestArea == -1 || bestArea>area)
+					{
+						bestx = x;
+						besty = y;
+						bestsx = nsx;
+						bestsy = nsy;
+						bestArea = area;
+						if (bestsx == global_size[0] && bestsy == global_size[1])
+							finterior = 1;
+					}
+					break;
+				}
+				if (finterior) break;
+			}
+			if (finterior) break;
+		}
+
+		if (bestArea == -1)
+		{
+			return false;
+		}
+
+		posiz[j][0] = bestx;
+		posiz[j][1] = besty;
+		global_size[0] = bestsx;
+		global_size[1] = bestsy;
+		for (y = posiz[j][1]; y<posiz[j][1] + sy; y++)
+			for (x = posiz[j][0]; x<posiz[j][0] + sx; x++)
+			{
+				assert(x >= 0 && x<max_size[0]);
+				assert(y >= 0 && y<max_size[1]);
+				grid[x + y*max_size[0]] = j + 1;
+			}
+	}
+
+#undef Grid
+
+	return true;
+}
+
 private:
 
 
@@ -259,148 +401,6 @@ public:
   }
 };
 
-
-/* This is the low level function that packs a set of int rects onto a grid.
-
-   Based on the criptic code written by Claudio Rocchini
-
-   Greedy algorithm.
-   Sort the rect according their height (larger first)
-   and then place them in the position that minimize the area of the bbox of all the placed rectangles
-
-   To efficiently skip occupied areas it fills the grid with the id of the already placed rectangles.
-  */
-static bool PackInt(const std::vector<vcg::Point2i> & sizes, // the sizes of the rect to be packed
-                    const vcg::Point2i & max_size,           // the size of the container
-                    std::vector<vcg::Point2i> & posiz,       // the found positionsof each rect
-                    vcg::Point2i & global_size)              // the size of smallest rect covering all the packed rect
-{
-  int n = (int)(sizes.size());
-  assert(n>0 && max_size[0]>0 && max_size[1]>0);
-
-  int gridSize = max_size[0]*max_size[1];		// Size dell griglia
-  int i,j,x,y;
-
-  posiz.resize(n,Point2i(-1,-1));
-  std::vector<int> grid(gridSize,0);			// Creazione griglia
-
-  #define Grid(q,w)	(grid[(q)+(w)*max_size[0]])
-
-  // Build a permutation that keeps the reordiering of the sizes vector according to their width
-  std::vector<int> perm(n);
-  for(i=0;i<n;i++) perm[i] = i;
-  ComparisonFunctor cmp(sizes);
-  sort(perm.begin(),perm.end(),cmp);
-
-  if(sizes[perm[0]][0]>max_size[0] || sizes[perm[0]][1]>max_size[1] )
-    return false;
-
-  // Posiziono il primo
-  j = perm[0];
-  global_size = sizes[j];
-  posiz[j] = Point2i(0,0);
-
-  // Fill the grid with the id(+1) of the first
-  for(y=0;y<global_size[1];y++)
-    for(x=0;x<global_size[0];x++)
-    {
-      assert(x>=0 && x<max_size[0]);
-      assert(y>=0 && y<max_size[1]);
-        grid[x+y*max_size[0]] = j+1;
-    }
-
-  // Posiziono tutti gli altri
-  for(i=1;i<n;++i)
-  {
-        j = perm[i];
-    assert(j>=0 && j<n);
-        assert(posiz[j][0]==-1);
-
-    int bestx,besty,bestsx,bestsy,bestArea;
-
-    bestArea = -1;
-
-    int sx = sizes[j][0];	// Pe comodita' mi copio la dimensione
-    int sy = sizes[j][1];
-    assert(sx>0 &&  sy>0);
-
-    // Calcolo la posizione limite
-    int lx = std::min(global_size[0],max_size[0]-sx);
-    int ly = std::min(global_size[1],max_size[1]-sy);
-
-    assert(lx>0 && ly>0);
-
-    int finterior = 0;
-
-	for(y=0;y<=ly;y++)
-		{
-	  for(x=0;x<=lx;)
-			{
-				int px;
-		int c = Grid(x,y+sy-1);
-		// Intersection check
-		if(!c) c = Grid(x+sx-1,y+sy-1);
-				if(!c)
-				{
-					for(px=x;px<x+sx;px++)
-					{
-						c = Grid(px,y);
-						if(c) break;
-					}
-				}
-
-				if(c)	// Salto il rettangolo
-				{
-		  --c;  // we store id+1...
-		  assert(c>=0 && c<n);
-					assert(posiz[c][0]!=-1);
-					x = posiz[c][0] + sizes[c][0];
-				}
-		else // x,y are an admissible position where we can put the rectangle
-				{
-		  int nsx = std::max(global_size[0],x+sx);
-		  int nsy = std::max(global_size[1],y+sy);
-		  int area   = nsx*nsy;
-
-		  if(bestArea==-1 || bestArea>area)
-					{
-						bestx  = x;
-						besty  = y;
-						bestsx = nsx;
-						bestsy = nsy;
-			bestArea  = area;
-						if( bestsx==global_size[0] && bestsy==global_size[1] )
-							finterior = 1;
-					}
-					break;
-				}
-				if(finterior) break;
-			}
-			if( finterior ) break;
-		}
-
-	if(bestArea==-1)
-		{
-			return false;
-		}
-
-		posiz[j][0] = bestx;
-		posiz[j][1] = besty;
-		global_size[0] = bestsx;
-		global_size[1] = bestsy;
-		for(y=posiz[j][1];y<posiz[j][1]+sy;y++)
-			for(x=posiz[j][0];x<posiz[j][0]+sx;x++)
-			{
-		assert(x>=0 && x<max_size[0]);
-		assert(y>=0 && y<max_size[1]);
-				grid[x+y*max_size[0]] = j+1;
-			}
-	}
-
-#undef Grid
-
-	return true;
-}
 
 // Versione multitexture
 static bool PackIntMulti( const std::vector<Point2i> & sizes,

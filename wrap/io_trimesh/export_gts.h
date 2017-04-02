@@ -53,7 +53,7 @@ namespace vcg {
 				typedef typename SaveMeshType::VertexIterator VertexIterator;
 				typedef typename SaveMeshType::FaceIterator FaceIterator;
 
-				static int Save(SaveMeshType &m, const char * filename, int mask=0 )
+				static int Save(SaveMeshType &m, const char * filename, int /*mask*/ )
 				{
 					QFile device(filename);
 					if (!device.open(QFile::WriteOnly))

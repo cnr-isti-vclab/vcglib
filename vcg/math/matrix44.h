@@ -138,12 +138,18 @@ public:
     void operator*=( const T k );
 
     template <class Matrix44Type>
-    void ToMatrix(Matrix44Type & m) const {for(int i = 0; i < 16; i++) m.V()[i]=V()[i];}
+    void ToMatrix(Matrix44Type & m) const 
+    {
+        for(int i = 0; i < 16; i++) 
+        {
+            m.V()[i]= V()[i];
+        }
+    }
 
     void ToEulerAngles(T &alpha, T &beta, T &gamma);
 
     template <class Matrix44Type>
-    void FromMatrix(const Matrix44Type & m){for(int i = 0; i < 16; i++) V()[i]=m.V()[i];}
+    void FromMatrix(const Matrix44Type & m){for(int i = 0; i < 16; i++) V()[i]=T(m.V()[i]);}
 
     template <class EigenMatrix44Type>
     void ToEigenMatrix(EigenMatrix44Type & m) const {
