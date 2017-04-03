@@ -138,7 +138,7 @@ private:
     // this returns the value of cos(a) where a is the angle between n0 and n1. (scalar prod is cos(a))
     static inline ScalarType fastAngle(Point3<ScalarType> n0, Point3<ScalarType> n1)
     {
-        return math::Clamp(n0*n1, -1.f, 1.f);
+        return math::Clamp(n0*n1,(ScalarType)-1.0,(ScalarType)1.0);
     }
     // compare the value of the scalar prod with the cos of the crease threshold
     static inline bool testCreaseEdge(PosType &p, ScalarType creaseCosineThr)
@@ -310,7 +310,7 @@ private:
         ScalarType length, lengthThr, minQ, maxQ;
         bool operator()(PosType &ep)
         {
-            ScalarType mult = math::ClampedLerp(0.5f, 1.5f, (((math::Abs(ep.V()->Q())+math::Abs(ep.VFlip()->Q()))/2.f)/(maxQ-minQ)));
+            ScalarType mult = math::ClampedLerp((ScalarType)0.5,(ScalarType)1.5, (((math::Abs(ep.V()->Q())+math::Abs(ep.VFlip()->Q()))/(ScalarType)2.0)/(maxQ-minQ)));
             ScalarType dist = Distance(ep.V()->P(), ep.VFlip()->P());
             if(dist > std::max(mult*length,lengthThr*2))
             {
@@ -422,7 +422,7 @@ private:
     // and adaptivity.
     static bool testCollapse(PosType &p, Point3<ScalarType> &mp, ScalarType minQ, ScalarType maxQ, Params &params, bool relaxed = false)
     {
-        ScalarType mult = (params.adapt) ? math::ClampedLerp(0.5f, 1.5f, (((math::Abs(p.V()->Q())+math::Abs(p.VFlip()->Q()))/2.f)/(maxQ-minQ))) : 1.f;
+        ScalarType mult = (params.adapt) ? math::ClampedLerp((ScalarType)0.5,(ScalarType)1.5, (((math::Abs(p.V()->Q())+math::Abs(p.VFlip()->Q()))/(ScalarType)2.0)/(maxQ-minQ))) : (ScalarType)1;
         ScalarType dist = Distance(p.V()->P(), p.VFlip()->P());
         ScalarType thr = mult*params.minLength;
         ScalarType area = DoubleArea(*(p.F()))/2.f;
