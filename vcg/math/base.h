@@ -189,7 +189,7 @@ inline SCALAR Lerp(SCALAR a, SCALAR b, SCALAR lambda)
 template <class SCALAR>
 inline SCALAR ClampedLerp(SCALAR a, SCALAR b, SCALAR lambda)
 {
-  math::Clamp(lambda, 0.f, 1.f);
+  math::Clamp(lambda, (SCALAR)0, (SCALAR)1);
   return a * lambda + (1-lambda) * b;
 }
                    
