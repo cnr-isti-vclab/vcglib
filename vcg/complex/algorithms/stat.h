@@ -211,7 +211,7 @@ public:
     return area/ScalarType(2.0);
   }
 
-  static void ComputePerVertexQualityDistribution( MeshType & m, Distribution<float> &h, bool selectionOnly = false)    // V1.0
+  static void ComputePerVertexQualityDistribution( MeshType & m, Distribution<ScalarType> &h, bool selectionOnly = false)    // V1.0
   {
     tri::RequirePerVertexQuality(m);
     for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
