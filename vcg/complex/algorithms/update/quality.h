@@ -436,7 +436,8 @@ static void VertexSaturate(MeshType &m, ScalarType gradientThr=1.0)
          if(vc->Q() > qi)  // first case: the center of the star has to be lowered (and re-inserted in the queue).
          {
            //printf("Reinserting center %i \n",vc - &*m.vert.begin());
-           vc->Q() = qi+distGeom-(ScalarType)0.00001;
+           ScalarType delta=std::min(0.00001,distGeom/2);
+           vc->Q() = qi+distGeom-delta;
            assert( distGeom > fabs(qi - vc->Q()));
            st.push(vc);
            break;
@@ -446,7 +447,8 @@ static void VertexSaturate(MeshType &m, ScalarType gradientThr=1.0)
            // second case: you have to lower qi, the vertex under examination.
            assert( distGeom < fabs(qi - vc->Q()));
            assert(vc->Q() < qi);
-           float newQi = vc->Q() + distGeom -(ScalarType)0.00001;
+           ScalarType delta=std::min(0.00001,distGeom/2);
+           float newQi = vc->Q() + distGeom -delta;
            assert(newQi <= qi);
            assert(vc->Q() < newQi);
            assert( distGeom > fabs(newQi - vc->Q()) );
