@@ -112,7 +112,10 @@ namespace vcg {
                     std::vector<int> t;
                     int tInd;
                     bool  edge[3];// useless if the face is a polygon, no need to have variable length array
-                    Color4b c;
+                    Color4b c; // diffuse color
+                    Color4b a; // ambient color
+                    Color4b s; // spectral color
+                    float ns;  // spectral exponent
                 };
 
                 struct ObjEdge
@@ -265,6 +268,9 @@ namespace vcg {
                     short currentMaterialIdx = 0;			// index of current material into materials vector
                     Color4b currentColor=Color4b::LightGray;	// we declare this outside code block since other
                     // triangles of this face will share the same color
+                    Color4b currentAmbient = Color4b::LightGray;
+                    Color4b currentSpecular = Color4b::LightGray;
+                    float currentNs = 0.0;
 
                     Material defaultMaterial;					// default material: white
                     materials.push_back(defaultMaterial);
@@ -461,8 +467,12 @@ namespace vcg {
                                     }
 
 
-                                    if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) // assigning face color
+                                    if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) { // assigning face color
                                         ff.c = currentColor;
+                                        ff.a = currentAmbient;
+                                        ff.s = currentSpecular;
+                                        ff.ns = currentNs;
+                                    }
 
                                     ++numTriangles;
                                     indexedFaces.push_back(ff);
@@ -584,7 +594,12 @@ namespace vcg {
                                         }
 
                                         // assigning face color
-                                        if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) ff.c = currentColor;
+                                        if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) {
+                                            ff.c = currentColor;
+                                            ff.a = currentAmbient;
+                                            ff.s = currentSpecular;
+                                            ff.ns = currentNs;
+                                        }
 
                                         ++numTriangles;
                                         indexedFaces.push_back(ff);
@@ -621,12 +636,11 @@ namespace vcg {
                                     {
                                         currentMaterialIdx = i;
                                         Material &material = materials[currentMaterialIdx];
-                                        Point3f diffuseColor = material.Kd;
-                                        unsigned char r			= (unsigned char) (diffuseColor[0] * 255.0);
-                                        unsigned char g			= (unsigned char) (diffuseColor[1] * 255.0);
-                                        unsigned char b			= (unsigned char) (diffuseColor[2] * 255.0);
-                                        unsigned char alpha = (unsigned char) (material.Tr  * 255.0);
-                                        currentColor= Color4b(r, g, b, alpha);
+
+                                        currentColor = toIntColor(material.Kd, material.Tr);
+                                        currentAmbient = toIntColor(material.Ka, 1.0);
+                                        currentSpecular = toIntColor(material.Ks, 1.0);
+                                        currentNs = material.Ns;
                                         found = true;
                                     }
                                     ++i;
@@ -708,9 +722,16 @@ namespace vcg {
 
                         if (HasPerFaceNormal(m))
                         {
-                            if (((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && (HasPerFaceColor(m)))
+                            if (((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0))
                             {
-                                m.face[i].C() = indexedFaces[i].c;
+                                if (HasPerFaceColor(m))
+                                    m.face[i].C() = indexedFaces[i].c;
+                                if (HasPerFaceAmbientColor(m))
+                                    m.face[i].Amb() = indexedFaces[i].a;
+                                if (HasPerFaceSpecularExponent(m))
+                                    m.face[i].Ns() = indexedFaces[i].ns;
+                                if (HasPerFaceSpecularColor(m))
+                                    m.face[i].Spec() = indexedFaces[i].s;
                             }
 
                             if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) != 0) && (HasPerWedgeNormal(m)))
@@ -942,6 +963,15 @@ namespace vcg {
                     bool ret=LoadMask(filename, oi);
                     mask= oi.mask;
                     return ret;
+                }
+
+                static Color4b toIntColor(Point3f rgb, float a)
+                {
+                    unsigned char r			= (unsigned char) (rgb[0] * 255.0);
+                    unsigned char g			= (unsigned char) (rgb[1] * 255.0);
+                    unsigned char b			= (unsigned char) (rgb[2] * 255.0);
+                    unsigned char alpha     = (unsigned char) (a  * 255.0);
+                    return Color4b(r, g, b, alpha);
                 }
 
                 static bool LoadMaterials(const char * filename, std::vector<Material> &materials, std::vector<std::string> &textures)
