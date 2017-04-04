@@ -18,7 +18,7 @@ SUBDIRS       = trimesh_allocate \
                 trimesh_implicit_smooth \
                 trimesh_indexing \
                 trimesh_inertia \
-                trimesh_intersection \
+                trimesh_intersection_plane \
                 trimesh_isosurface \
                 trimesh_join \
                 trimesh_kdtree \
