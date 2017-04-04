@@ -413,7 +413,7 @@ public:
     static ScalarType MeshAngleDistortion(const MeshType &m)
     {
         ScalarType UDdist=0;
-        for (int i=0;i<m.face.size();i++)
+        for (size_t i=0;i<m.face.size();i++)
         {
             if (m.face[i].IsD())continue;
             const FaceType *f=&(m.face[i]);
@@ -487,7 +487,7 @@ public:
         ScalarType tot = 0;
         ScalarType totA = 0;
 
-        for (int i=0;i<m.face.size();i++)
+        for (size_t i=0;i<m.face.size();i++)
         {
             if (m.face[i].IsD())continue;
             ScalarType q;
