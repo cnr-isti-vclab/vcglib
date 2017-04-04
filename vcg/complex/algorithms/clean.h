@@ -518,30 +518,30 @@ public:
     ss.push();
     CountNonManifoldVertexFF(m,true);
     UpdateFlags<MeshType>::VertexClearV(m);
-    for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
-    {
-      for(int i=0;i<3;i++)
-        if((*fi).V(i)->IsS() && !(*fi).V(i)->IsV())
-        {
-          (*fi).V(i)->SetV();
-          face::Pos<FaceType> startPos(&*fi,i);
-          face::Pos<FaceType> curPos = startPos;
-          std::set<FaceInt> faceSet;
-          do
-          {
-            faceSet.insert(std::make_pair(curPos.F(),curPos.VInd()));
-            curPos.NextE();
-          } while (curPos != startPos);
+	for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD())
+	{
+		for (int i=0; i<fi->VN(); i++)
+			if ((*fi).V(i)->IsS() && !(*fi).V(i)->IsV())
+			{
+				(*fi).V(i)->SetV();
+				face::Pos<FaceType> startPos(&*fi,i);
+				face::Pos<FaceType> curPos = startPos;
+				std::set<FaceInt> faceSet;
+				do
+				{
+					faceSet.insert(std::make_pair(curPos.F(),curPos.VInd()));
+					curPos.NextE();
+				} while (curPos != startPos);
 
-          ToSplitVec.push_back(make_pair((*fi).V(i),std::vector<FaceInt>()));
+				ToSplitVec.push_back(make_pair((*fi).V(i),std::vector<FaceInt>()));
 
-          typename std::set<FaceInt>::const_iterator iii;
+				typename std::set<FaceInt>::const_iterator iii;
 
-          for(iii=faceSet.begin();iii!=faceSet.end();++iii)
-            ToSplitVec.back().second.push_back(*iii);
-        }
-    }
-    ss.pop();
+				for(iii=faceSet.begin();iii!=faceSet.end();++iii)
+					ToSplitVec.back().second.push_back(*iii);
+			}
+	}
+	ss.pop();
     // Second step actually add new vertices and split them.
     typename tri::Allocator<MeshType>::template PointerUpdater<VertexPointer> pu;
     VertexIterator firstVp = tri::Allocator<MeshType>::AddVertices(m,ToSplitVec.size(),pu);
@@ -922,9 +922,10 @@ public:
     FaceIterator fi;
     for (fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
     {
-      TD[(*fi).V(0)]++;
-      TD[(*fi).V(1)]++;
-      TD[(*fi).V(2)]++;
+		for (int k=0; k<fi->VN(); k++)
+		{
+			TD[(*fi).V(k)]++;
+		}
     }
 
     tri::UpdateFlags<MeshType>::VertexClearV(m);
@@ -932,30 +933,33 @@ public:
     // mark out of the game the vertexes that are incident on non manifold edges.
     for (fi = m.face.begin(); fi != m.face.end(); ++fi) if (!fi->IsD())
     {
-      for(int i=0;i<3;++i)
-        if (!IsManifold(*fi,i))  {
-          (*fi).V0(i)->SetV();
-          (*fi).V1(i)->SetV();
-        }
+		for(int i=0; i<fi->VN(); ++i)
+			if (!IsManifold(*fi,i))
+			{
+				(*fi).V0(i)->SetV();
+				(*fi).V1(i)->SetV();
+			}
     }
     // Third Loop, for safe vertexes, check that the number of faces that you can reach starting
     // from it and using FF is the same of the previously counted.
-    for (fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
-    {
-      for(int i=0;i<3;i++) if(!(*fi).V(i)->IsV()){
-        (*fi).V(i)->SetV();
-        face::Pos<FaceType> pos(&(*fi),i);
+	for (fi = m.face.begin(); fi != m.face.end(); ++fi)	if (!fi->IsD())
+	{
+		for(int i=0; i<fi->VN(); i++) if (!(*fi).V(i)->IsV())
+		{
+			(*fi).V(i)->SetV();
+			face::Pos<FaceType> pos(&(*fi),i);
 
-        int starSizeFF = pos.NumberOfIncidentFaces();
+			int starSizeFF = pos.NumberOfIncidentFaces();
 
-        if (starSizeFF != TD[(*fi).V(i)])
-        {
-          if(selectVert) (*fi).V(i)->SetS();
-          nonManifoldCnt++;
-        }
-      }
-    }
-    return nonManifoldCnt;
+			if (starSizeFF != TD[(*fi).V(i)])
+			{
+				if (selectVert)
+					(*fi).V(i)->SetS();
+				nonManifoldCnt++;
+			}
+		}
+	}
+	return nonManifoldCnt;
   }
   /// Very simple test of water tightness. No boundary and no non manifold edges. 
   /// Assume that it is orientable. 
