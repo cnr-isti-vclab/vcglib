@@ -55,7 +55,7 @@ public:
   {
     FacePointer fpt=sf.top();
     sf.pop();
-    for(int j=0;j<3;++j)
+    for(int j=0; j<fpt->VN(); ++j)
       if( !face::IsBorder(*fpt,j) )
       {
         FacePointer l=fpt->FFp(j);
@@ -1059,7 +1059,7 @@ public:
           fpt=sf.top();
           ++CCV.back().first;
           sf.pop();
-          for(int j=0;j<3;++j)
+          for(int j=0; j<fpt->VN(); ++j)
           {
             if( !face::IsBorder(*fpt,j) )
             {
