@@ -20,16 +20,24 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
+/*! \file trimesh_intersection_plane.cpp
+\ingroup code_sample
+
+\brief An example of computing the intersection of a mesh with a plane, 
+saving this polyline as a well projected 2D SVG 
+and splicing the mesh in the two components below and over the plane
+
+*/
 
 #include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/intersection.h>
-#include <vcg/space/index/grid_static_ptr.h>
+#include <vcg/complex/algorithms/refine.h>
+#include <vcg/complex/algorithms/create/platonic.h>
 
-// VCG File Format Importer/Exporter
-#include <wrap/io_trimesh/import.h>
 #include <wrap/io_edgemesh/export_svg.h>
 #include <wrap/io_edgemesh/export_dxf.h>
+#include <wrap/io_trimesh/export_off.h>
 
 using namespace std;
 using namespace vcg;
@@ -38,82 +46,61 @@ class MyFace;
 class MyEdge;
 class MyVertex;
 
-struct MyUsedTypes : public UsedTypes<	Use<MyVertex>		::AsVertexType,
-																				Use<MyEdge>			::AsEdgeType,
-																				Use<MyFace>			::AsFaceType>{};
+struct MyUsedTypes : public UsedTypes<	
+    Use<MyVertex>::AsVertexType,
+    Use<MyEdge>  ::AsEdgeType,
+    Use<MyFace>  ::AsFaceType>{};
 
 
-class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::BitFlags, vertex::Normal3f, vertex::Mark>{};
-class MyEdge    : public Edge< MyUsedTypes, edge::VertexRef, edge::EVAdj> {};
-class MyFace    : public Face  <MyUsedTypes, face::VertexRef,face::FFAdj, face::BitFlags, face::Normal3f> {};
+class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::BitFlags, vertex::Normal3f, vertex::Qualityf, vertex::Mark>{};
+class MyEdge    : public Edge  < MyUsedTypes, edge::VertexRef, edge::EVAdj> {};
+class MyFace    : public Face  < MyUsedTypes, face::VertexRef, face::FFAdj, face::BitFlags, face::Normal3f> {};
 
 class MyEdgeMesh: public tri::TriMesh< vector<MyVertex>, vector<MyEdge> > {};
-class MyMesh : public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
+class MyMesh:     public tri::TriMesh< vector<MyVertex>, vector<MyFace > >{};
 
-
-typedef vcg::GridStaticPtr<MyMesh::FaceType, MyMesh::ScalarType> TriMeshGrid;
-
-int main(int argc,char ** argv)
-{
-	if (argc<6) 
-	{
-		printf("\n");
-		printf("    Usage: trimesh_intersection <filename> <a> <b> <c> <d>\n\n");
-		printf("       <filename>        Mesh model to intersect (PLY format).\n");
-		printf("       <a> <b> <c> <d>   The coefficients that specifying a plane in the form:\n\n");
-		printf("                             a*x + b*y + c*z + d = 0\n\n\n");
-
-		printf("       Example: trimesh_intersection bunny.ply 0.0 1.0 0.0 0.0\n\n");
-
-		return 0;
-	}
-
-	MyMesh m;
-
-	// open a mesh
-	int err = tri::io::Importer<MyMesh>::Open(m,argv[1]);
-	if(err) 
-	{
-		printf("Error in reading %s: '%s'\n",argv[1],tri::io::Importer<MyMesh>::ErrorMsg(err));
-		exit(-1);  
-	}
-
-	// some cleaning to get rid of bad file formats like stl that duplicate vertexes..
-	int dup = tri::Clean<MyMesh>::RemoveDuplicateVertex(m);
-	int unref =  tri::Clean<MyMesh>::RemoveUnreferencedVertex(m);
-
-	if (dup > 0 || unref > 0)
-		printf("Removed %i duplicate and %i unreferenced vertices from mesh %s\n",dup,unref,argv[1]);
-
-	// Compute cross-intersection with the given plane
-	/////////////////////////////////////////////////////////
-
-	MyMesh::ScalarType a = static_cast<MyMesh::ScalarType>(atof(argv[2]));
-	MyMesh::ScalarType b = static_cast<MyMesh::ScalarType>(atof(argv[3]));
-	MyMesh::ScalarType c = static_cast<MyMesh::ScalarType>(atof(argv[4]));
-	MyMesh::ScalarType d = static_cast<MyMesh::ScalarType>(atof(argv[5]));
-
-	vcg::Point3<MyMesh::ScalarType> direction(a, b, c);
-	MyMesh::ScalarType distance = -d / direction.Norm();
-	direction.Normalize();
-
-	vcg::Plane3<MyMesh::ScalarType> plane(distance, direction);
-
-	MyEdgeMesh edge_mesh;  // returned EdgeMesh (i.e. the cross-section)
-
-	vcg::IntersectionPlaneMesh<MyMesh, MyEdgeMesh, MyMesh::ScalarType>(m, plane, edge_mesh);
-
-	// Compute bounding box
-	vcg::tri::UpdateBounding<MyEdgeMesh>::Box(edge_mesh);
-
-	// export the cross-section
-	tri::io::SVGProperties pro;
-	if (tri::io::ExporterSVG<MyEdgeMesh>::Save(edge_mesh, "out.svg",pro))
-		printf("    The cross-intersection has been successfully saved (OUT.SVG).\n");
-	else
-		printf("    The cross-intersection cannot be saved.\n");
-
-
-	return 0;
+int main(int ,char **)
+{  
+  MyMesh m, m_over, m_under;;
+  Sphere(m);
+  printf("Created a sphere mesh of %i vertices %i edges\n",m.VN(),m.FN());
+  
+  // Compute intersection with a random plane
+  math::MarsenneTwisterRNG rnd;
+  Point3f direction = vcg::math::GeneratePointOnUnitSphereUniform<float,math::MarsenneTwisterRNG>(rnd);
+  float distance = rnd.generate01();
+  vcg::Plane3<MyMesh::ScalarType> plane(distance, direction);
+  
+  printf("Intersecting a sphere with a plane %4.2f %4.2f %4.2f off: %4.2f\n",direction[0],direction[1],direction[2],distance);
+  MyEdgeMesh edge_mesh;  // the cross-section
+  vcg::IntersectionPlaneMesh<MyMesh, MyEdgeMesh, MyMesh::ScalarType>(m, plane, edge_mesh);
+  
+  // Compute bounding box
+  vcg::tri::UpdateBounding<MyEdgeMesh>::Box(edge_mesh);
+  printf("Created a edge mesh of %i vertices %i edges\n",edge_mesh.VN(),edge_mesh.EN());
+  
+  // export the cross-section (projected along the plane normal direction) 
+  tri::io::SVGProperties pro;
+  pro.projDir = plane.Direction(); 
+  tri::io::ExporterSVG<MyEdgeMesh>::Save(edge_mesh, "trimesh_intersection.svg",pro);
+  
+  // Now actually cut the mesh using the refine framework 
+  tri::UpdateQuality<MyMesh>::VertexFromPlane(m, plane);
+  tri::QualityMidPointFunctor<MyMesh> slicingfunc(0.0);
+  tri::QualityEdgePredicate<MyMesh> slicingpred(0.0,0.0);
+  tri::UpdateTopology<MyMesh>::FaceFace(m);
+  tri::RefineE<MyMesh, tri::QualityMidPointFunctor<MyMesh>, tri::QualityEdgePredicate<MyMesh> > (m, slicingfunc, slicingpred, false);
+  
+  tri::UpdateSelection<MyMesh>::VertexFromQualityRange(m,0,std::numeric_limits<float>::max());
+  tri::UpdateSelection<MyMesh>::FaceFromVertexStrict(m);
+  tri::Append<MyMesh,MyMesh>::Mesh(m_over,m,true);
+  tri::UpdateSelection<MyMesh>::FaceInvert(m);
+  tri::Append<MyMesh,MyMesh>::Mesh(m_under,m,true);
+  printf("Created a sphere mesh of %i vertices %i edges\n",m_over.VN(),m_over.FN());
+  tri::io::ExporterOFF<MyMesh>::Save(m_over,"trimesh_intersection_over.off");
+  printf("Created a sphere mesh of %i vertices %i edges\n",m_under.VN(),m_under.FN());
+  tri::io::ExporterOFF<MyMesh>::Save(m_under,"trimesh_intersection_under.off");
+  
+  return 0;
 }
 
