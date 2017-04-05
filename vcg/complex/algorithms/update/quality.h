@@ -70,17 +70,18 @@ static void VertexConstant(MeshType &m, VertexQualityType q)
 */
 static void VertexValence(UpdateMeshType &m)
 {
-    VertexConstant(m,0);
-    for (size_t i=0;i<m.face.size();i++)
+  tri::RequirePerVertexQuality(m);
+  VertexConstant(m,0);
+  for (size_t i=0;i<m.face.size();i++)
+  {
+    if (m.face[i].IsD())continue;
+    
+    for (int j=0;j<m.face[i].VN();j++)
     {
-        if (m.face[i].IsD())continue;
-
-        for (int j=0;j<m.face[i].VN();j++)
-        {
-            VertexType *v=m.face[i].V(j);
-            v->Q()+=1;
-        }
+      VertexType *v=m.face[i].V(j);
+      v->Q()+=1;
     }
+  }
 }
 
 /** Clamp each vertex of the mesh with a range of values.
@@ -164,6 +165,7 @@ static void VertexFromFace( MeshType &m, bool areaWeighted=true)
 template <class HandleScalar>
 static void VertexFromAttributeHandle(MeshType &m, typename MeshType::template PerVertexAttributeHandle<HandleScalar> &h)
 {
+  tri::RequirePerVertexQuality(m);
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     if(!(*vi).IsD())
       (*vi).Q()=VertexQualityType(h[vi]);
@@ -172,6 +174,7 @@ static void VertexFromAttributeHandle(MeshType &m, typename MeshType::template P
 template <class HandleScalar>
 static void FaceFromAttributeHandle(MeshType &m, typename MeshType::template PerFaceAttributeHandle<HandleScalar> &h)
 {
+  tri::RequirePerFaceQuality(m);
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
     (*fi).Q() =FaceQualityType(h[fi]);
 }
@@ -191,6 +194,7 @@ static void FaceFromVertex( MeshType &m)
 
 static void VertexFromPlane(MeshType &m, const Plane3<ScalarType> &pl)
 {
+  tri::RequirePerVertexQuality(m);
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
     (*vi).Q() =SignedDistancePlanePoint(pl,(*vi).cP());
 }
@@ -306,6 +310,8 @@ static void VertexFromCurvednessCurvatureDir(MeshType &m)
 
 static void VertexFromAbsoluteCurvature(MeshType &m)
 {
+  tri::RequirePerVertexQuality(m);
+  tri::RequirePerVertexCurvature(m);
   VertexIterator vi;
   for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
   {
@@ -325,6 +331,8 @@ static void VertexFromAbsoluteCurvature(MeshType &m)
  */
 static void VertexFromRMSCurvature(MeshType &m)
 {
+  tri::RequirePerVertexQuality(m);
+  tri::RequirePerVertexCurvature(m);
     VertexIterator vi;
     for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
         (*vi).Q() = math::Sqrt(math::Abs( 4*(*vi).Kh()*(*vi).Kh() - 2*(*vi).Kg()));
@@ -338,6 +346,8 @@ static void VertexFromRMSCurvature(MeshType &m)
   */
 static void FaceSaturate(MeshType &m, FaceQualityType gradientThr=1.0)
 {
+  tri::RequirePerFaceQuality(m);
+  tri::RequireFFAdjacency(m);
   UpdateFlags<MeshType>::FaceClearV(m);
   std::stack<FacePointer> st;
 
@@ -410,6 +420,9 @@ static void FaceSaturate(MeshType &m, FaceQualityType gradientThr=1.0)
   */
 static void VertexSaturate(MeshType &m, ScalarType gradientThr=1.0)
 {
+  tri::RequirePerVertexQuality(m);
+  tri::RequireVFAdjacency(m);
+  
   UpdateFlags<MeshType>::VertexClearV(m);
   std::stack<VertexPointer> st;
 
