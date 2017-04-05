@@ -138,8 +138,8 @@ bool IntersectionPlaneMeshOld(TriMeshType & m,
 */
 template < typename  TriMeshType, typename EdgeMeshType, class ScalarType >
 bool IntersectionPlaneMesh(TriMeshType & m,
-									Plane3<ScalarType>  pl,
-									EdgeMeshType & em)
+                           Plane3<ScalarType>  pl,
+                           EdgeMeshType & em)
 {
   std::vector<Point3<ScalarType> > ptVec;
   std::vector<Point3<ScalarType> > nmVec;
@@ -147,9 +147,8 @@ bool IntersectionPlaneMesh(TriMeshType & m,
   typename TriMeshType::template PerVertexAttributeHandle < ScalarType > qH =
       tri::Allocator<TriMeshType> :: template AddPerVertexAttribute < ScalarType >(m,"TemporaryPlaneDistance");
 
-  typename TriMeshType::VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-    qH[vi] =SignedDistancePlanePoint(pl,(*vi).cP());
+  for(auto vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+    qH[vi] = SignedDistancePlanePoint(pl,(*vi).cP());
 
   for(size_t i=0;i<m.face.size();i++)
     if(!m.face[i].IsD())
@@ -174,11 +173,11 @@ bool IntersectionPlaneMesh(TriMeshType & m,
          Point3<ScalarType> nn =(n0*fabs(q1) + n1*fabs(q0))/fabs(q0-q1);
          nmVec.push_back(nn);
        }
-	   if (qH[m.face[i].V(j)] == 0)
-	   {
-		   ptVec.push_back(m.face[i].V(j)->cP());
-		   nmVec.push_back(m.face[i].V(j)->cN());
-	   }
+       if (qH[m.face[i].V(j)] == 0)
+       {
+         ptVec.push_back(m.face[i].V(j)->cP());
+         nmVec.push_back(m.face[i].V(j)->cN());
+       }
       }
       if(ptVec.size()>=2)
       {
