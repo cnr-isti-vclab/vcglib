@@ -120,7 +120,11 @@ public:
 	{
 		std::vector<EdgeMeshType*> MeshVec;
 		MeshVec.push_back(&m);
-		return Save(MeshVec,filename,pro);
+    SVGProperties pro2=pro;
+    pro2.numCol=1;
+    pro2.numRow=1;
+    
+		return Save(MeshVec,filename,pro2);
 	}	
 	
 	
@@ -189,7 +193,7 @@ static void WriteXmlBody(FILE* fpo, EdgeMeshType &mp, SVGProperties &pro, int me
 		
 		// First Step align projDir to Z
 		Matrix33f rotM = RotationMatrix(pro.projDir,Point3f(0,0,1),false);
-		Point3f rotatedUp = rotM * pro.projUp;
+//		Point3f rotatedUp = rotM * pro.projUp;
 		Point3f rotCenter = rotM * pro.projCenter;
 		float scale = pro.scale;
 		if(scale==0) scale = 2.0/mp.bbox.Diag();
