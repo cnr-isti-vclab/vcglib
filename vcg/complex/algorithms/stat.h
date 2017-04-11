@@ -317,15 +317,16 @@ public:
       h.Add(Distance(edgeVec[i].v[0]->P(),edgeVec[i].v[1]->P()));
   }
 
-  static ScalarType ComputeFaceEdgeLengthAverage(MeshType & m)
+  static ScalarType ComputeFaceEdgeLengthAverage(MeshType & m, bool selected=false)
   {
     double sum=0;
     for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
       if(!(*fi).IsD())
-      {
-        for(int i=0;i<3;++i)
-          sum+=double(Distance(fi->P0(i),fi->P1(i)));
-      }
+        if(!selected || fi->IsS())
+        {
+          for(int i=0;i<3;++i)
+            sum+=double(Distance(fi->P0(i),fi->P1(i)));
+        }
     return sum/(m.fn*3.0);
   }
 
