@@ -66,11 +66,12 @@ public:
     ScalarType maxLength; // maximal admitted length: no edge should be longer than this value  (used when refining)
     ScalarType lengthThr;
     ScalarType creaseAngleCosThr= cos(math::ToRad(10.0)) ;
-    bool splitFlag=true;
-    bool swapFlag=true;
-    bool collapseFlag=true;
+    bool splitFlag    = true;
+    bool swapFlag     = true;
+    bool collapseFlag = true;
     bool smoothFlag=true;
     bool projectFlag=true;
+    bool selectedOnly = false;
     bool adapt=false;
     int iter=1;
     Stat stat;
@@ -88,8 +89,19 @@ public:
     
   } Params;
   
+  static void Do(MeshType &toRemesh, Params params, vcg::CallBackPos * cb=0)
+  {
+    MeshType toProjectCopy;
+    tri::UpdateBounding<MeshType>::Box(toRemesh);
+    tri::UpdateNormal<MeshType>::PerVertexNormalizedPerFaceNormalized(toRemesh);
+    
+    tri::Append<MeshType,MeshType>::MeshCopy(toProjectCopy, toRemesh);
+    
+    Do(toRemesh,toProjectCopy,params,cb);
+  }
     static void Do(MeshType &toRemesh, MeshType &toProject, Params params, vcg::CallBackPos * cb=0)
     {
+      assert(&toRemesh != &toProject);
         StaticGrid t;
         params.stat.Reset();
         t.Set(toProject.face.begin(), toProject.face.end());
@@ -99,11 +111,7 @@ public:
         tri::UpdateTopology<MeshType>::FaceFace(toRemesh);
         tri::UpdateFlags<MeshType>::VertexBorderFromFaceAdj(toRemesh);
 
-        /* Manifold(ness) check*/
-        assert(tri::Clean<MeshType>::CountNonManifoldEdgeFF(toRemesh) != 0 ||
-                tri::Clean<MeshType>::CountNonManifoldVertexFF(toRemesh) != 0 ||
-                "Input mesh is non-manifold, manifoldness is required!\nInterrupting filter");
-
+        tri::MeshAssert<MeshType>::FFTwoManifoldEdge(toRemesh);        
         tri::UpdateTopology<MeshType>::VertexFace(toRemesh);
         computeQuality(toRemesh);
         tri::UpdateQuality<MeshType>::VertexSaturate(toRemesh);
@@ -292,7 +300,8 @@ private:
         tri::UpdateTopology<MeshType>::FaceFace(m); //collapser does not update FF
         forEachFacePos(m, [&](PosType &p){
           if(p.FFlip() > p.F())
-            if(testSwap(p, params.creaseAngleCosThr) &&
+            if(((!params.selectedOnly) || (p.F()->IsS() && p.FFlip()->IsS())) &&
+               testSwap(p, params.creaseAngleCosThr) &&
                face::CheckFlipEdgeNormal(*p.F(), p.E(), math::ToRad(10.f)) &&
                face::CheckFlipEdge(*p.F(), p.E()) )
             {
@@ -360,7 +369,7 @@ private:
         else {
           EdgeSplitLenPred ep;
           ep.squaredlengthThr = params.maxLength*params.maxLength;
-          tri::RefineE(m,midFunctor,ep);
+          tri::RefineE(m,midFunctor,ep,params.selectedOnly);
           params.stat.splitNum+=ep.count;
         }
     }
@@ -378,10 +387,12 @@ private:
         vector<int> vi;
 
         face::VFStarVF<FaceType>(p.V(), ff, vi);
-
+        bool allIncidentFaceSelected = true; 
         for(FaceType *f: ff)
             if(!(*f).IsD() && f != p.F()) //i'm not a deleted face
             {
+                allIncidentFaceSelected &= f->IsS();
+                
                 PosType pi(f, p.V()); //same vertex
 
                 VertexType *v0 = pi.V();
@@ -415,6 +426,7 @@ private:
                         return false;
                 }
             }
+        if(params.selectedOnly) return allIncidentFaceSelected;
         return true;
     }
 
