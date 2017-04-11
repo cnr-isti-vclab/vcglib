@@ -1822,6 +1822,36 @@ public:
       }
     }
   }
+  /**
+  Select the faces on the first mesh that intersect the second mesh.
+  It uses a grid for querying so a face::mark should be added.
+  */
+  static bool SelectIntersectingFaces(MeshType &m1, MeshType &m2)
+  {
+    RequirePerFaceMark(m2);
+    RequireCompactness(m1);
+    RequireCompactness(m2);
+    
+    tri::UpdateSelection<MeshType>::FaceClear(m1);
+    
+    TriMeshGrid gM;
+    gM.Set(m2.face.begin(),m2.face.end());
+  
+    for(auto fi=m1.face.begin();fi!=m1.face.end();++fi) 
+    {
+      Box3< ScalarType> bbox;
+      (*fi).GetBBox(bbox);
+      std::vector<FaceType*> inBox;
+      vcg::tri::GetInBoxFace(m2, gM, bbox,inBox);
+      for(auto fib=inBox.begin(); fib!=inBox.end(); ++fib)
+      {
+          if(Clean<MeshType>::TestFaceFaceIntersection(&*fi,*fib)){
+            fi->SetS();
+          }
+      }
+      inBox.clear();
+    }
+  }
 
 }; // end class
 /*@}*/
