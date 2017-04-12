@@ -65,6 +65,7 @@ public:
     ScalarType minLength; // minimal admitted length: no edge should be shorter than this value (used when collapsing)
     ScalarType maxLength; // maximal admitted length: no edge should be longer than this value  (used when refining)
     ScalarType lengthThr;
+    ScalarType creaseAngleRadThr= math::ToRad(10.0) ;
     ScalarType creaseAngleCosThr= cos(math::ToRad(10.0)) ;
     bool splitFlag    = true;
     bool swapFlag     = true;
@@ -83,7 +84,8 @@ public:
     }
     void SetFeatureAngleDeg(ScalarType angle)
     {
-      creaseAngleCosThr= cos(math::ToRad(angle));
+      creaseAngleRadThr =  math::ToRad(angle);
+      creaseAngleCosThr= cos(creaseAngleRadThr);
     }
     
     
@@ -654,8 +656,8 @@ private:
         tri::UpdateSelection<MeshType>::VertexFromBorderFlag(m);
         selectVertexFromCrease(m, params.creaseAngleCosThr);
         tri::UpdateSelection<MeshType>::VertexInvert(m);
-        tri::Smooth<MeshType>::VertexCoordPlanarLaplacian(m,1,math::ToRad(10.f),true);
-        tri::UpdateSelection<MeshType>::Clear(m);
+        tri::Smooth<MeshType>::VertexCoordPlanarLaplacian(m,1,params.creaseAngleRadThr,true);
+        tri::UpdateSelection<MeshType>::VertexClear(m);
     }
     /*
         Reprojection step, this method reprojects each vertex on the original surface
