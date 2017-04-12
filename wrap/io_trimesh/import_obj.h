@@ -113,6 +113,7 @@ namespace vcg {
                     int tInd;
                     bool  edge[3];// useless if the face is a polygon, no need to have variable length array
                     Color4b c;
+                    int mInd;
                 };
 
                 struct ObjEdge
@@ -254,7 +255,12 @@ namespace vcg {
                         stream.close();
                         return E_CANTOPEN;
                     }
-                    std::vector<Material>	materials;  // materials vector
+
+                    typename OpenMeshType::template PerMeshAttributeHandle<std::vector<Material> > materialsHandle =
+                            vcg::tri::Allocator<OpenMeshType>:: template GetPerMeshAttribute<std::vector<Material> >(m, std::string("materials"));
+                    typename OpenMeshType::template PerFaceAttributeHandle<int> mIndHandle =
+                            vcg::tri::Allocator<OpenMeshType>:: template GetPerFaceAttribute<int>(m, std::string("mInd"));
+                    std::vector<Material>&	materials = materialsHandle();  // materials vector
                     std::vector<ObjTexCoord>	texCoords;  // texture coordinates
                     std::vector<CoordType>  normals;		// vertex normals
                     std::vector<ObjIndexedFace> indexedFaces;
@@ -586,6 +592,8 @@ namespace vcg {
                                         // assigning face color
                                         if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) ff.c = currentColor;
 
+                                        ff.mInd = currentMaterialIdx;
+
                                         ++numTriangles;
                                         indexedFaces.push_back(ff);
                                     }
@@ -711,6 +719,7 @@ namespace vcg {
                             if (((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && (HasPerFaceColor(m)))
                             {
                                 m.face[i].C() = indexedFaces[i].c;
+                                mIndHandle[i] = indexedFaces[i].mInd;
                             }
 
                             if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) != 0) && (HasPerWedgeNormal(m)))
@@ -958,7 +967,15 @@ namespace vcg {
 
                     materials.clear();
                     Material currentMaterial;
+
+                    // Fill in some default values for the material
                     currentMaterial.index = (unsigned int)(-1);
+                    currentMaterial.Ka = Point3f(0.2, 0.2, 0.2);
+                    currentMaterial.Kd = Point3f(1, 1, 1);
+                    currentMaterial.Ks = Point3f(1, 1, 1);
+                    currentMaterial.Tr = 1;
+                    currentMaterial.Ns = 0;
+                    currentMaterial.illum = 2;
 
                     bool first = true;
                     while (!stream.eof())
