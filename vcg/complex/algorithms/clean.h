@@ -1826,7 +1826,7 @@ public:
   Select the faces on the first mesh that intersect the second mesh.
   It uses a grid for querying so a face::mark should be added.
   */
-  static bool SelectIntersectingFaces(MeshType &m1, MeshType &m2)
+  static int SelectIntersectingFaces(MeshType &m1, MeshType &m2)
   {
     RequirePerFaceMark(m2);
     RequireCompactness(m1);
@@ -1836,7 +1836,7 @@ public:
     
     TriMeshGrid gM;
     gM.Set(m2.face.begin(),m2.face.end());
-  
+    int selCnt=0;
     for(auto fi=m1.face.begin();fi!=m1.face.end();++fi) 
     {
       Box3< ScalarType> bbox;
@@ -1847,10 +1847,12 @@ public:
       {
           if(Clean<MeshType>::TestFaceFaceIntersection(&*fi,*fib)){
             fi->SetS();
+            ++selCnt;
           }
       }
       inBox.clear();
     }
+    return selCnt;
   }
 
 }; // end class
