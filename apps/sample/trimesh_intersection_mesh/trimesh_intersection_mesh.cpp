@@ -20,12 +20,10 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/*! \file trimesh_intersection_plane.cpp
+/*! \file trimesh_intersection_mesh.cpp
 \ingroup code_sample
 
-\brief An example of computing the intersection of a mesh with a plane, 
-saving this polyline as a well projected 2D SVG 
-and splicing the mesh in the two components below and over the plane
+\brief An example of adaptively remeshing the intersection between a cube and a sphere
 
 */
 
@@ -33,7 +31,7 @@ and splicing the mesh in the two components below and over the plane
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/intersection.h>
 #include <vcg/complex/algorithms/refine.h>
-#include <vcg/complex/algorithms/Update/color.h>
+#include <vcg/complex/algorithms/update/color.h>
 #include <vcg/complex/algorithms/create/platonic.h>
 #include<vcg/complex/algorithms/isotropic_remeshing.h>
 
@@ -63,26 +61,26 @@ int main(int ,char **)
   printf("Created a sphere mesh of %i vertices %i edges\n",m1.VN(),m1.FN());
   printf("Created a cube mesh of %i vertices %i edges\n",m2.VN(),m2.FN());
   
-  math::MarsenneTwisterRNG rnd;
+  math::MarsenneTwisterRNG rnd(clock());
   Point3f direction = vcg::math::GeneratePointOnUnitSphereUniform<float,math::MarsenneTwisterRNG>(rnd);
   tri::UpdatePosition<MyMesh>::Translate(m1,direction);
-  for(int i=0;i<10;++i)
+  for(int i=0;i<6;++i)
   {
-  tri::Clean<MyMesh>::SelectIntersectingFaces(m1,m2);
-  tri::UpdateSelection<MyMesh>::FaceDilate(m1);
-  tri::Clean<MyMesh>::SelectIntersectingFaces(m2,m1);
-  tri::UpdateSelection<MyMesh>::FaceDilate(m2);
-  IsotropicRemeshing<MyMesh>::Params params;
-
-  float len = (tri::Stat<MyMesh>::ComputeFaceEdgeLengthAverage(m1,true) + tri::Stat<MyMesh>::ComputeFaceEdgeLengthAverage(m1,true));
-  params.SetTargetLen(len);
-  params.SetFeatureAngleDeg(10);
-  params.iter=3;
-  params.selectedOnly=true;
-  printf(" Input mesh %8i v %8i f\n",m1.VN(),m1.FN());
-  IsotropicRemeshing<MyMesh>::Do(m1, params);
-  IsotropicRemeshing<MyMesh>::Do(m2, params);
-  printf(" Input mesh %8i v %8i f\n",m1.VN(),m1.FN());
+    tri::Clean<MyMesh>::SelectIntersectingFaces(m1,m2);
+    tri::UpdateSelection<MyMesh>::FaceDilate(m1);
+    tri::Clean<MyMesh>::SelectIntersectingFaces(m2,m1);
+    tri::UpdateSelection<MyMesh>::FaceDilate(m2);
+    IsotropicRemeshing<MyMesh>::Params params;
+    
+    float len = (tri::Stat<MyMesh>::ComputeFaceEdgeLengthAverage(m1,true) + tri::Stat<MyMesh>::ComputeFaceEdgeLengthAverage(m1,true));
+    params.SetTargetLen(len*0.8f);
+    params.SetFeatureAngleDeg(10);
+    params.iter=1; // just one iteration to avoid overtessellating.
+    params.selectedOnly=true;
+    printf(" Input mesh %8i v %8i f\n",m1.VN(),m1.FN());
+    IsotropicRemeshing<MyMesh>::Do(m1, params);
+    IsotropicRemeshing<MyMesh>::Do(m2, params);
+    printf(" Input mesh %8i v %8i f\n",m1.VN(),m1.FN());
   }
   tri::Clean<MyMesh>::SelectIntersectingFaces(m1,m2);
   tri::Clean<MyMesh>::SelectIntersectingFaces(m2,m1);  
