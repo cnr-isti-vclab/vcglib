@@ -681,7 +681,7 @@ namespace vcg {
                         for(unsigned int j=0;j<indexedFaces[i].v.size();++j)
                         {   
                            int vertInd = indexedFaces[i].v[j];
-                           assert(vertInd >=0 && vertInd < m.vn);
+                           assert(vertInd >=0 && vertInd < m.vn); (void)vertInd;
                             m.face[i].V(j) = &(m.vert[indexedFaces[i].v[j]]);
 
                             if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) != 0) && (HasPerWedgeTexCoord(m)))

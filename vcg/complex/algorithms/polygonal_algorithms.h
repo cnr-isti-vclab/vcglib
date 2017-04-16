@@ -171,8 +171,6 @@ private:
     static bool CollapseBorderSmallEdgesStep(PolyMeshType &poly_m,
                                              const ScalarType edge_limit)
     {
-        bool collapsed=false;
-
         //update topology
         vcg::tri::UpdateTopology<PolyMeshType>::FaceFace(poly_m);
 
@@ -440,8 +438,6 @@ public:
                                          ScalarType Damp=0.5,
                                          ScalarType angleDeg=100)
     {
-        typedef typename TriMeshType::FaceType FaceType;
-
         //first select corners
         vcg::tri::UpdateFlags<PolyMeshType>::VertexClearS(poly_m);
 
