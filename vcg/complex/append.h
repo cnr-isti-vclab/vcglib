@@ -311,10 +311,10 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
         for(int i = 0; i < fl.VN(); ++i)
           fl.V(i) = &ml.vert[remap.vert[Index(mr,fi->cV(i))]];
       }
+	  fl.ImportData(*fi);
       if(WTFlag)
         for(int i = 0; i < fl.VN(); ++i)
           fl.WT(i).n() += short(textureOffset);
-      fl.ImportData(*fi);
       if(adjFlag)  ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,*fi)]],*fi,remap);
 
     }
