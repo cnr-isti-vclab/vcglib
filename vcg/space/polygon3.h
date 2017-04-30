@@ -534,7 +534,8 @@ typename PolygonType::ScalarType PolyAspectRatio(const PolygonType &F,
 
 template<class PolygonType>
 typename PolygonType::ScalarType PolygonPointDistance(const PolygonType &F,
-                                                      const vcg::Point3<typename PolygonType::ScalarType> &pos)
+                                                      const vcg::Point3<typename PolygonType::ScalarType> &pos,
+                                                      vcg::Point3<typename PolygonType::ScalarType> &ClosestP)
 {
     typedef typename PolygonType::ScalarType ScalarType;
     typedef typename PolygonType::CoordType CoordType;
@@ -549,6 +550,7 @@ typename PolygonType::ScalarType PolygonPointDistance(const PolygonType &F,
         vcg::TrianglePointDistance(T,pos,dist,closest);
         if (dist>minD)continue;
         minD=dist;
+        ClosestP=closest;
     }
     return minD;
 }
