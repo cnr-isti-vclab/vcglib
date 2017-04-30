@@ -315,7 +315,7 @@ public:
             case QAngle:
                 ScalarType AvgDev,WorstDev;
                 vcg::PolyAngleDeviation(poly_m.face[i],AvgDev,WorstDev);
-                poly_m.face[i].Q()=AvgDev;
+                poly_m.face[i].Q()=WorstDev;
                 break;
             case QPlanar:
                 poly_m.face[i].Q()=vcg::PolyFlatness(poly_m.face[i]);
@@ -449,7 +449,7 @@ public:
 
         //select corner vertices on the border
         ScalarType angleRad=angleDeg * M_PI / 180;
-        vcg::tri::UpdateFlags<PolyMeshType>::SelectVertexCornerBorder(poly_m,angleRad);
+        vcg::tri::UpdateSelection<PolyMeshType>::VertexCornerBorder(poly_m,angleRad);
 
         for (int s=0;s<nstep;s++)
         {
@@ -476,7 +476,7 @@ public:
                 for (size_t j=0;j<tri_mesh.face.size();j++)
                     for (size_t k=0;k<3;k++)
                     {
-                        if (!tri_mesh.face[j].IsB(k))continue;
+                        if (tri_mesh.face[j].FFp(k)!=(&tri_mesh.face[j]))continue;
 
                         CoordType P0,P1;
                         P0.Import(tri_mesh.face[j].cP0(k));
@@ -885,6 +885,49 @@ public:
             ScalarType AreaF=vcg::PolyArea(poly_m.face[i]);
             for (size_t j=0;j<poly_m.face[i].VN();j++)
                 poly_m.face[i].V(j)->Q()+=AreaF/(ScalarType)poly_m.face[i].VN();
+        }
+    }
+
+    static void InterpolateQualityVertFormFaces(PolyMeshType &poly_m)
+    {
+        std::vector<ScalarType> SumW(poly_m.vert.size(),0);
+
+        for (size_t i=0;i<poly_m.vert.size();i++)
+            poly_m.vert[i].Q()=0;
+
+        for (size_t i=0;i<poly_m.face.size();i++)
+        {
+            ScalarType AreaF=vcg::PolyArea(poly_m.face[i]);
+            for (size_t j=0;j<poly_m.face[i].VN();j++)
+            {
+                poly_m.face[i].V(j)->Q()+=AreaF*(ScalarType)poly_m.face[i].Q();
+                size_t IndexV=vcg::tri::Index(poly_m,poly_m.face[i].V(j));
+                SumW[IndexV]+=AreaF;
+            }
+        }
+        for (size_t i=0;i<poly_m.vert.size();i++)
+        {
+            if (SumW[i]>0)
+                poly_m.vert[i].Q()/=SumW[i];
+            else
+                poly_m.vert[i].Q()=0;
+        }
+    }
+
+
+    static void ClosestPoint(const PolyMeshType &poly_m,const CoordType &pos,
+                             int &CloseF,CoordType &ClosePos)
+    {
+        ScalarType minD=std::numeric_limits<ScalarType>::max();
+        CloseF=-1;
+        for (size_t i=0;i<poly_m.face.size();i++)
+        {
+            CoordType closeTest;
+            ScalarType currD=vcg::PolygonPointDistance(poly_m.face[i],pos,closeTest);
+            if (currD>minD)continue;
+            minD=currD;
+            CloseF=i;
+            ClosePos=closeTest;
         }
     }
 };
