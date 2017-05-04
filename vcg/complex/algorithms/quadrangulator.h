@@ -671,7 +671,8 @@ public:
 
     void Quadrangulate(TriMesh &Tmesh,
                        PolyMesh &Pmesh,
-                       std::vector< std::vector< short int> > &UV)
+                       std::vector< std::vector< short int> > &UV,
+                       bool preserve_border_corner=true)
     {
         UV.clear();
         Pmesh.Clear();
@@ -713,6 +714,9 @@ public:
 
         for (int i=0;i<Tmesh.face.size();i++)
             Tmesh.face[i].C()=vcg::Color4b(255,255,255,255);
+
+        if (preserve_border_corner)
+            vcg::tri::UpdateSelection<TriMesh>::VertexCornerBorder(Tmesh,math::ToRad(150.0),true);
 
         std::vector<std::vector<TriVertexType *> > polygons;
         FindPolygons(Tmesh,polygons,UV);
