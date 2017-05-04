@@ -169,7 +169,8 @@ private:
 
 
     static bool CollapseBorderSmallEdgesStep(PolyMeshType &poly_m,
-                                             const ScalarType edge_limit)
+                                             const ScalarType edge_limit,
+                                              ScalarType angleDeg=100)
     {
         //update topology
         vcg::tri::UpdateTopology<PolyMeshType>::FaceFace(poly_m);
@@ -177,6 +178,8 @@ private:
         //update border vertices
         vcg::tri::UpdateFlags<PolyMeshType>::VertexBorderFromFaceAdj(poly_m);
 
+
+        vcg::tri::UpdateSelection<PolyMeshType>::VertexCornerBorder(poly_m,math::ToRad(150.0));
 
         std::vector<PosType> CollapsePos;
         std::vector<CoordType> InterpPos;
@@ -194,10 +197,15 @@ private:
                 bool IsBV0=v0->IsB();
                 bool IsBV1=v1->IsB();
 
+                bool IsS0=v0->IsS();
+                bool IsS1=v1->IsS();
+
+                if ((IsS0)&&(IsS1))continue;
+
                 //in these cases is not possible to collapse
                 if ((!IsBV0)&&(!IsBV1))continue;
-                bool IsBorderE=poly_m.face[i].FFp(j);
-                if ((IsBorderE)&&(IsBV0)&&(IsBV1))continue;
+                bool IsBorderE=(poly_m.face[i].FFp(j)==&poly_m.face[i]);
+                if ((!IsBorderE)&&(IsBV0)&&(IsBV1))continue;
 
                 assert((IsBV0)||(IsBV1));
                 CoordType pos0=v0->P();
@@ -209,8 +217,21 @@ private:
                 CoordType CurrInterpPos;
                 if ((IsBV0)&&(!IsBV1))CurrInterpPos=pos0;
                 if ((!IsBV0)&&(IsBV1))CurrInterpPos=pos1;
-                if ((IsBV0)&&(IsBV1))CurrInterpPos=(pos0+pos1)/2.0;
-
+                if ((IsBV0)&&(IsBV1))
+                {
+                    if ((!IsS0)&&(!IsS1))
+                        CurrInterpPos=(pos0+pos1)/2.0;
+                    else
+                    {
+                        if ((!IsS0)&&(IsS1))
+                            CurrInterpPos=pos1;
+                        else
+                        {
+                            assert((IsS0)&&(!IsS1));
+                            CurrInterpPos=pos0;
+                        }
+                    }
+                }
                 CollapsePos.push_back(PosType(&poly_m.face[i],j));
                 InterpPos.push_back(CurrInterpPos);
             }
