@@ -951,6 +951,64 @@ public:
             ClosePos=closeTest;
         }
     }
+
+    static void Triangulate(PolyMeshType &poly_m,size_t IndexF)
+    {
+
+        CoordType bary=vcg::PolyBarycenter(poly_m.face[IndexF]);
+        size_t sizeV=poly_m.face[IndexF].VN();
+
+        //add the new vertex
+        vcg::tri::Allocator<PolyMeshType>::AddVertex(poly_m,bary);
+        VertexType *newV=&poly_m.vert.back();
+
+        std::vector<size_t> ToUpdateF;
+
+        //then reupdate the faces
+        for (size_t j=0;j<(sizeV-1);j++)
+        {
+            VertexType * v0=poly_m.face[IndexF].V0(j);
+            VertexType * v1=poly_m.face[IndexF].V1(j);
+            VertexType * v2=newV;
+
+            vcg::tri::Allocator<PolyMeshType>::AddFaces(poly_m,1);
+
+            poly_m.face.back().Alloc(3);
+            poly_m.face.back().V(0)=v0;
+            poly_m.face.back().V(1)=v1;
+            poly_m.face.back().V(2)=v2;
+            ToUpdateF.push_back(poly_m.face.size()-1);
+        }
+        VertexType * v0=poly_m.face[IndexF].V0((sizeV-1));
+        VertexType * v1=poly_m.face[IndexF].V1((sizeV-1));
+        poly_m.face[IndexF].Dealloc();
+        poly_m.face[IndexF].Alloc(3);
+        poly_m.face[IndexF].V(0)=v0;
+        poly_m.face[IndexF].V(1)=v1;
+        poly_m.face[IndexF].V(2)=newV;
+        ToUpdateF.push_back(IndexF);
+    }
+
+
+    static void Triangulate(PolyMeshType &poly_m)
+    {
+        size_t size0=poly_m.face.size();
+        for (size_t i=0;i<size0;i++)
+            Triangulate(poly_m,i);
+    }
+
+    template <class TriMeshType>
+    static void TriangulateToTriMesh(PolyMeshType &poly_m,TriMeshType &triangle_mesh)
+    {
+        triangle_mesh.Clear();
+
+        PolyMeshType PolySwap;
+        vcg::tri::Append<PolyMeshType,PolyMeshType>::Mesh(PolySwap,poly_m);
+        Triangulate(PolySwap);
+
+        //then copy onto the triangle mesh
+        vcg::tri::Append<TriMeshType,PolyMeshType>::Mesh(triangle_mesh,PolySwap);
+    }
 };
 
 }//end namespace vcg
