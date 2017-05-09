@@ -51,7 +51,34 @@
 namespace vcg {
 namespace tri {
 
-template <class MeshType, class EdgeMeshType = MeshType>
+class VoroEdgeMeshAux
+{
+    class EmEdgeType;
+    class EmVertexType;
+    class EUsedTypes : public vcg::UsedTypes<vcg::Use<EmVertexType>::AsVertexType,
+                                             vcg::Use<EmEdgeType>::AsEdgeType> {};
+    class EmVertexType : public vcg::Vertex<EUsedTypes
+            , vcg::vertex::Coord3d
+            , vcg::vertex::BitFlags
+            , vcg::vertex::VEAdj> {};
+    class EmEdgeType   : public vcg::Edge<EUsedTypes
+            , vcg::edge::VertexRef
+            , vcg::edge::BitFlags
+            , vcg::edge::EEAdj
+            , vcg::edge::VEAdj> {};
+public:
+    class EdgeMeshType : public vcg::tri::TriMesh<std::vector<EmVertexType>, std::vector<EmEdgeType> >
+    {
+    public:
+      ~EdgeMeshType()
+      {
+        this->Clear();
+        this->ClearAttributes();
+      }
+    };
+};
+
+template <class MeshType>
 class Remesher
 {
 public:
@@ -71,8 +98,9 @@ public:
   
 protected:
   typedef face::Pos<FaceType>                            PosType;
-  
-  
+
+  typedef typename VoroEdgeMeshAux::EdgeMeshType EdgeMeshType;
+
   /// \brief splitCC split the provided mesh into connected components.
   /// \param mesh the inputMesh.
   /// \return the vector of connected components (meshes) for the input model
@@ -115,6 +143,9 @@ public:
     UpdateTopology<Mesh>::FaceFace(original);
     UpdateFlags<Mesh>::FaceBorderFromFF(original);
     UpdateFlags<Mesh>::VertexBorderFromFaceAdj(original);
+
+    RequireFFAdjacency(original);
+	RequireVFAdjacency(original);
     
     if (Clean<Mesh>::CountNonManifoldEdgeFF(original) > 0)
     {
@@ -344,7 +375,6 @@ protected:
   static inline void ExtractMeshBorders(Mesh & mesh, EdgeMeshType & sides)
   {
     RequireFFAdjacency(mesh);
-    RequireVFAdjacency(mesh);
     
     // clean the edge mesh containing the borders
     sides.Clear();
@@ -686,9 +716,9 @@ protected:
     std::vector<CoordType> & sampleVec;
     std::vector<bool>      & fixedVec;
   };
-};
 
+};
 } // end namespace tri
 } // end namespace vcg
 
-#endif // REMESHER_H
+#endif _VCGLIB_VORONOI_REMESHER_H
