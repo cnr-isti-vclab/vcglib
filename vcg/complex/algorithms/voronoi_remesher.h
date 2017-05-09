@@ -44,9 +44,9 @@
 #include <array>
 #include <utility>
 
-#define DEBUG_VORO 1
-#include <wrap/io_trimesh/export.h>
-#include <QString>
+//#define DEBUG_VORO 1
+//#include <wrap/io_trimesh/export.h>
+//#include <QString>
 
 namespace vcg {
 namespace tri {
