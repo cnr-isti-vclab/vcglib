@@ -272,7 +272,16 @@ namespace vcg {
                     Color4b currentColor=Color4b::LightGray;	// we declare this outside code block since other
                     // triangles of this face will share the same color
 
-                    Material defaultMaterial;					// default material: white
+                    // Create a default material
+                    Material defaultMaterial;
+                    defaultMaterial.index = currentMaterialIdx;
+                    defaultMaterial.Ka = Point3f(0.2, 0.2, 0.2);
+                    defaultMaterial.Kd = Point3f(currentColor[0] / 255.0f, currentColor[1] / 255.0f, currentColor[2] / 255.0f);
+                    defaultMaterial.Tr = currentColor[3] / 255.0f;
+                    defaultMaterial.Ks = Point3f(1, 1, 1);
+                    defaultMaterial.Ns = 0;
+                    defaultMaterial.illum = 2;
+                    defaultMaterial.map_Kd = "";
                     materials.push_back(defaultMaterial);
 
                     int numVertices  = 0;  // stores the number of vertices been read till now
