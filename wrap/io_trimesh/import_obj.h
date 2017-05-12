@@ -257,9 +257,9 @@ namespace vcg {
                     }
 
                     typename OpenMeshType::template PerMeshAttributeHandle<std::vector<Material> > materialsHandle =
-                            vcg::tri::Allocator<OpenMeshType>:: template GetPerMeshAttribute<std::vector<Material> >(m, std::string("materials"));
+                            vcg::tri::Allocator<OpenMeshType>:: template GetPerMeshAttribute<std::vector<Material> >(m, std::string("materialVector"));
                     typename OpenMeshType::template PerFaceAttributeHandle<int> mIndHandle =
-                            vcg::tri::Allocator<OpenMeshType>:: template GetPerFaceAttribute<int>(m, std::string("mInd"));
+                            vcg::tri::Allocator<OpenMeshType>:: template GetPerFaceAttribute<int>(m, std::string("materialIndex"));
                     std::vector<Material>&	materials = materialsHandle();  // materials vector
                     std::vector<ObjTexCoord>	texCoords;  // texture coordinates
                     std::vector<CoordType>  normals;		// vertex normals
