@@ -65,18 +65,18 @@ namespace io {
   */
 struct Material
 {
-  unsigned int index;//index of material
+  unsigned int index=-1;//index of material
   std::string materialName;
   
-  Point3f Ka;//ambient
-  Point3f Kd;//diffuse
-  Point3f Ks;//specular
+  Point3f Ka=Point3f(0.2f, 0.2f, 0.2f);//ambient
+  Point3f Kd=Point3f(1.0f, 1.0f, 1.0f);//diffuse
+  Point3f Ks=Point3f(1.0f, 1.0f, 1.0f);//specular
   
   float d;//alpha
-  float Tr;//alpha
+  float Tr=1.0f;//alpha
   
-  int illum;//specular illumination
-  float Ns;
+  int illum=2;//specular illumination
+  float Ns=0.f;
   
   std::string map_Kd; //filename texture
 };
@@ -96,13 +96,6 @@ public:
   inline static int CreateNewMaterial(SaveMeshType &m, std::vector<Material> &materials, FaceIterator &fi)
   {			
     Material mtl;
-    mtl.index = -1;                // index of materials
-    mtl.Ka = Point3f(0.2f,0.2f,0.2f); // ambient
-    mtl.Kd = Point3f(1,1,1);          // diffuse
-    mtl.Ks = Point3f(1.0f,1.0f,1.0f); // specular
-    mtl.Tr = 1.0f;                    // alpha
-    mtl.Ns = 0.0f;
-    mtl.illum = 2;                    // illumination
             
     if(HasPerFaceColor(m)){
       mtl.Kd = Point3f((float)((*fi).C()[0])/255.0f,(float)((*fi).C()[1])/255.0f,(float)((*fi).C()[2])/255.0f);//diffuse

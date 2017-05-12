@@ -273,6 +273,7 @@ namespace vcg {
                     // triangles of this face will share the same color
 
                     Material defaultMaterial;					// default material: white
+                    defaultMaterial.index=currentMaterialIdx;
                     materials.push_back(defaultMaterial);
 
                     int numVertices  = 0;  // stores the number of vertices been read till now
