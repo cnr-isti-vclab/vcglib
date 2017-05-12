@@ -1057,7 +1057,7 @@ namespace vcg {
                                 //currentMaterial.bSpecular = (illumination == 2);
                                 currentMaterial.illum = illumination;
                             }
-                            else if( (header.compare("map_Kd")==0)	|| (header.compare("map_Ka")==0) ) // texture name
+                            else if(header.compare("map_Kd")==0) // texture name
                             {
 								std::string textureName;
                                 if (tokens.size() < 2)
@@ -1065,7 +1065,7 @@ namespace vcg {
 								else if (tokens.size() == 2)
 									textureName = tokens[1]; //play it safe
 								else
-									textureName = line.substr(7); //get everything after "map_Kd " or "map_Ka "
+									textureName = line.substr(7); //get everything after "map_Kd "
 
                                 currentMaterial.map_Kd=textureName;
 
