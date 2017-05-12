@@ -28,7 +28,6 @@
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/refine.h>
 #include <vcg/complex/algorithms/clean.h>
-#include <vcg/simplex/face/pos.h>
 #include <vcg/complex/algorithms/voronoi_processing.h>
 #include <vcg/complex/algorithms/point_sampling.h>
 #include <vcg/complex/algorithms/crease_cut.h>
@@ -135,10 +134,10 @@ public:
   /// \brief Remesh the main function that remeshes a mesh preserving creases.
   /// \param original the mesh
   /// \param samplingRadius is the sampling ragius for remeshing
-  /// \param borderCreaseAngleThreshold is the angle treshold for preserving corner points on the mesh boundary
+  /// \param borderCreaseAngleDeg is the angle treshold for preserving corner points on the mesh boundary
   /// \return the remeshed mesh
   ///
-  static inline MeshPtr Remesh(Mesh & original, const ScalarType samplingRadius, const ScalarType borderCreaseAngleThreshold = 0.0)
+  static inline MeshPtr Remesh(Mesh & original, const ScalarType samplingRadius, const ScalarType borderCreaseAngleDeg = 0.0)
   {
     UpdateTopology<Mesh>::FaceFace(original);
     UpdateFlags<Mesh>::FaceBorderFromFF(original);
@@ -156,7 +155,7 @@ public:
     // for closed watertight mesh try to split
     if (Clean<Mesh>::CountHoles(original) < 1)
     {
-      CreaseCut<Mesh>(original, vcg::math::ToRad(70.0));
+      CreaseCut<Mesh>(original, vcg::math::ToRad(borderCreaseAngleDeg));
       Allocator<Mesh>::CompactEveryVector(original);
       UpdateTopology<Mesh>::FaceFace(original);
       UpdateFlags<Mesh>::FaceBorderFromFF(original);
@@ -169,7 +168,7 @@ public:
     // One CC
     std::vector<MeshPtr> ccs = splitCC(original);
     if (ccs.empty())
-      return RemeshOneCC(original, samplingRadius, borderCreaseAngleThreshold);
+      return RemeshOneCC(original, samplingRadius, borderCreaseAngleDeg);
     
     
     // Multiple CCs
@@ -177,7 +176,7 @@ public:
     for (size_t i=0; i<ccs.size(); i++)
     {
       std::cout << "Remeshing component " << (i+1) << "/" << ccs.size() << std::endl;
-      ccs[i] = RemeshOneCC(*ccs[i], samplingRadius, borderCreaseAngleThreshold, i);
+      ccs[i] = RemeshOneCC(*ccs[i], samplingRadius, borderCreaseAngleDeg, i);
     }
     
     MeshPtr ret = std::make_shared<Mesh>();
@@ -193,10 +192,10 @@ public:
   /// \brief RemeshOneCC the function that remeshes a single connected component mesh preserving its boundary (consistently for eventually adjacent meshes).
   /// \param original the mesh
   /// \param samplingRadius is the sampling ragius for remeshing
-  /// \param borderCreaseAngleThreshold is the angle treshold for preserving corner points on the mesh boundary
+  /// \param borderCreaseAngleDeg is the angle treshold for preserving corner points on the mesh boundary
   /// \return the remeshed mesh
   ///
-  static inline MeshPtr RemeshOneCC(Mesh & original, const ScalarType samplingRadius, const ScalarType borderCreaseAngleThreshold = 0.0, int idx = 0)
+  static inline MeshPtr RemeshOneCC(Mesh & original, const ScalarType samplingRadius, const ScalarType borderCreaseAngleDeg = 0.0, int idx = 0)
   {
     RequireCompactness(original);
     RequirePerFaceFlags(original);
@@ -226,11 +225,11 @@ public:
 #endif
       
       // eventually split on 'creases'
-      if (borderCreaseAngleThreshold > 0.0)
+      if (borderCreaseAngleDeg > 0.0)
       {
         UpdateFlags<EdgeMeshType>::VertexClearS(em);
         UpdateFlags<EdgeMeshType>::VertexClearV(em);
-        Clean<EdgeMeshType>::SelectCreaseVertexOnEdgeMesh(em, vcg::math::ToRad(borderCreaseAngleThreshold));
+        Clean<EdgeMeshType>::SelectCreaseVertexOnEdgeMesh(em, vcg::math::ToRad(borderCreaseAngleDeg));
         std::cout << Clean<EdgeMeshType>::SplitSelectedVertexOnEdgeMesh(em) << " splits" << std::endl;
       }
 #ifdef DEBUG_VORO
