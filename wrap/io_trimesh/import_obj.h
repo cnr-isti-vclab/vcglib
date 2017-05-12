@@ -1065,7 +1065,7 @@ namespace vcg {
 								else if (tokens.size() == 2)
 									textureName = tokens[1]; //play it safe
 								else
-                                    textureName = line.substr(7); //get everything after "map_Kd "
+									textureName = line.substr(7); //get everything after "map_Kd "
 
                                 currentMaterial.map_Kd=textureName;
 
