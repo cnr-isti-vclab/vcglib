@@ -981,7 +981,7 @@ public:
         }
     }
 
-    ///set the face cross vector from vertex one
+    ///set the vert cross vector from the faces
     static void SetVertCrossVectorFromFace(VertexType &v)
     {
         std::vector<FaceType *> faceVec;

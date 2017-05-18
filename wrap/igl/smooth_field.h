@@ -391,7 +391,7 @@ public:
 
 
     static void InitByCurvature(MeshType & mesh,
-                                int Nring,
+                                unsigned Nring,
                                 bool UpdateFaces=true)
     {
 

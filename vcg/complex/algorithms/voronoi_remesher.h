@@ -720,4 +720,4 @@ protected:
 } // end namespace tri
 } // end namespace vcg
 
-#endif _VCGLIB_VORONOI_REMESHER_H
+#endif // _VCGLIB_VORONOI_REMESHER_H
