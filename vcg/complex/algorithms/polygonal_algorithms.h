@@ -728,8 +728,8 @@ public:
     /*! \brief This function remove valence 2 vertices on the border by considering the degree threshold
      * bacause there could be eventually some corner that should be preserved
     */
-    static void RemoveValence2BorderVertices(PolyMeshType &poly_m,
-                                             ScalarType corner_degree=25)
+    static void RemoveValence2Vertices(PolyMeshType &poly_m,
+                                       ScalarType corner_degree=25)
     {
         //update topology
         vcg::tri::UpdateTopology<PolyMeshType>::FaceFace(poly_m);
@@ -754,13 +754,13 @@ public:
                 VertexType *v1=poly_m.face[i].V(j);
                 VertexType *v2=poly_m.face[i].V((j+1)%NumV);
                 //must be 3 borders
-                if ((!v0->IsB())||(!v1->IsB())||(!v2->IsB()))continue;
+                bool IsB=((v0->IsB())&&(v1->IsB())&&(v2->IsB()));
                 CoordType dir0=(v0->P()-v1->P());
                 CoordType dir1=(v2->P()-v1->P());
                 dir0.Normalize();
                 dir1.Normalize();
                 ScalarType testDot=(dir0*dir1);
-                if (testDot>(-cos(corner_degree* (M_PI / 180.0))))
+                if ((IsB)&&(testDot>(-cos(corner_degree* (M_PI / 180.0)))))
                     v1->SetS();
             }
         }
@@ -790,7 +790,10 @@ public:
             {
                 VertexType *v=poly_m.face[i].V(j);
                 assert(!v->IsD());
+                //if ((!v->IsS()) && (v->IsB()) && (valenceVertH[v]==1)) continue;
                 if ((!v->IsS()) && (v->IsB()) && (valenceVertH[v]==1)) continue;
+                if ((!v->IsB()) && (valenceVertH[v]<3)) continue;
+                //if (!v->IsS()) continue;
                 FaceV.push_back(v);
             }
 
@@ -825,7 +828,8 @@ public:
 
         RemoveValence2Faces(poly_m);
 
-        RemoveValence2BorderVertices(poly_m);
+        //RemoveValence2BorderVertices(poly_m);
+        RemoveValence2Vertices(poly_m);
     }
 
     /*! \brief This function use a local global approach to flatten polygonal faces
