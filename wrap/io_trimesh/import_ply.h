@@ -839,6 +839,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                 }
                 for(int qq=0;qq<fa.size-3;++qq)
                 {
+                    if(HasPolyInfo(m)) (*fi).Alloc(3);
+
                     (*fi).V(0) = index[ fa.v[0] ];
                     for(k=1;k<3;++k)
                     {
