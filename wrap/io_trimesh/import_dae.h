@@ -397,14 +397,42 @@ namespace io {
                     }
                 //	ind_txt = indexTextureByImgNode(*(info.doc),txt_node);
                 }
-                int faceAttributeNum = triNodeList.at(tript).toElement().elementsByTagName("input").size();
+
+                // Fetch number of triangles.
+                int triCount = triNodeList.at(tript).toElement().attribute("count").toInt();
+
+                // A triangle can have multiple inputs that share a common offset.
+                // Therefore it is not sufficient to simply take the number of
+                // input to derive the stride from triangle to triangle.
+                // Instead, this heuristic uses the maximal offset found among inputs.
+                QDomNodeList attributes = triNodeList.at(tript).toElement().elementsByTagName("input");
+                int faceAttributeIndicesNum = 0;
+                for (int i = 0; i < attributes.size(); ++i)
+                {
+                  QDomNode attr = attributes.at(i);
+                  int offset = attr.toElement().attribute("offset", "-1").toInt();
+                  faceAttributeIndicesNum = std::max(faceAttributeIndicesNum, offset+1);
+                }
 
                 QStringList face;
                 valueStringList(face,triNodeList.at(tript),"p");
+
+                QDEBUG("********* Number of face attribute indices = %i", faceAttributeIndicesNum);
+                QDEBUG("********* Tri count = %i", triCount);
+                QDEBUG("********* Face size = %i", face.size());
+
+                // Ensure that the size of the <p> array is consistent with the
+                // number of triangles and the exprected stride.
+                if (face.size() != 3 * triCount * faceAttributeIndicesNum)
+                {
+                  QDEBUG("********* ERROR triangle count is inconsistent with input offsets and face index list");
+                  return E_INCOMPATIBLECOLLADA141FORMAT;
+                }
+
                 int offsetface = (int)m.face.size();
                 if (face.size() != 0)
                 {
-                    vcg::tri::Allocator<ColladaMesh>::AddFaces(m,face.size() / (faceAttributeNum * 3));
+                    vcg::tri::Allocator<ColladaMesh>::AddFaces(m, triCount);
                     WedgeAttribute wa;
                     FindStandardWedgeAttributes(wa,triNodeList.at(tript),*(info.doc));
 
@@ -430,7 +458,7 @@ namespace io {
                                 WedgeTextureAttribute(m,face,ind_txt,wa.wt,wa.wtsrc,ff,jj + wa.offtx,tt,wa.stridetx);
                             }
 
-                            jj += faceAttributeNum;
+                            jj += faceAttributeIndicesNum;
                         }
                         if( ! ( (m.face[ff].V(0) != m.face[ff].V(1)) &&
                                         (m.face[ff].V(0) != m.face[ff].V(2)) &&
@@ -590,7 +618,13 @@ namespace io {
 
                     }
                     if (isTri && tripatch.isEmpty())
+                    {
                         tripatch=polylist;
+                        // Clear the polylist. Otherwise faces are loaded twice,
+                        // once by LoadTriangularMesh and another time by
+                        // LoadPolygonalListMesh.
+                        polylist = QDomNodeList();
+                    }
                     if (tripatch.isEmpty()  && polypatch.isEmpty() && polylist.isEmpty())
                         return E_NOPOLYGONALMESH;
 
