@@ -1,7 +1,5 @@
 #include <wrap/qt/outline2_rasterizer.h>
 #include <wrap/qt/col_qt_convert.h>
-#include "stdio.h"
-#include "math.h"
 #include <vcg/space/color4.h>
 #include <wrap/qt/col_qt_convert.h>
 
