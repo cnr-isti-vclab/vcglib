@@ -21,7 +21,12 @@
 *                                                                           *
 ****************************************************************************/
 
+#ifdef QT_OPENGL_LIB
+#include <QtOpenGL/qgl.h> 
+#else
 #include <GL/glew.h>
+#endif
+
 #include <vcg/space/distance3.h>
 #include <wrap/gui/trackmode.h>
 #include <wrap/gui/trackball.h>
