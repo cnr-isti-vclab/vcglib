@@ -69,10 +69,19 @@ public:
 
   bool popOr()
   {
-    return pop(true);
+    return pop(true,false);
   }
 
-  bool pop(bool mergeFlag=false)
+  bool popAnd()
+  {
+    return pop(false,true);
+  }
+  
+  /// It restore a saved selection. 
+  /// The process can be done or in a straightforward manner (e.g. selection values are substituted)
+  /// or preserving selected or unselected elements (e.g. the restoring is combined in OR/AND) 
+  /// 
+  bool pop(bool orFlag=false, bool andFlag=false)
   {
     if(vsV.empty()) return false;
     vsHandle vsH = vsV.back();
@@ -80,37 +89,36 @@ public:
     fsHandle fsH = fsV.back();
     if(! (Allocator<ComputeMeshType>::template IsValidHandle(*_m, vsH))) return false;
 
-    typename ComputeMeshType::VertexIterator vi;
-    for(vi = _m->vert.begin(); vi != _m->vert.end(); ++vi)
+    for(auto vi = _m->vert.begin(); vi != _m->vert.end(); ++vi)
       if( !(*vi).IsD() )
       {
-        if(vsH[*vi]) 
-          (*vi).SetS();
-        else
-          if(!mergeFlag)
-            (*vi).ClearS();
+        if(vsH[*vi]) { 
+           if(!andFlag) (*vi).SetS();
+        } else {
+          if(!orFlag)   (*vi).ClearS();
+        }
       }
 
-    typename ComputeMeshType::EdgeIterator ei;
-    for(ei = _m->edge.begin(); ei != _m->edge.end(); ++ei)
+    for(auto ei = _m->edge.begin(); ei != _m->edge.end(); ++ei)
       if( !(*ei).IsD() )
       {
-        if(esH[*ei]) 
-          (*ei).SetS();
-        else
-          if(!mergeFlag)
-            (*ei).ClearS();
+        if(vsH[*ei]) { 
+           if(!andFlag) (*ei).SetS();
+        } else {
+          if(!orFlag)   (*ei).ClearS();
+        }
       }
-    typename ComputeMeshType::FaceIterator fi;
-    for(fi = _m->face.begin(); fi != _m->face.end(); ++fi)
+    
+    
+    for(auto fi = _m->face.begin(); fi != _m->face.end(); ++fi)
       if( !(*fi).IsD() )
       {  
-        if(fsH[*fi]) 
-          (*fi).SetS();
-        else
-          if(!mergeFlag)
-            (*fi).ClearS();
-      }
+        if(vsH[*fi]) { 
+           if(!andFlag) (*fi).SetS();
+        } else {
+          if(!orFlag)   (*fi).ClearS();
+        }
+     }
 
     Allocator<ComputeMeshType>::template DeletePerVertexAttribute<bool>(*_m,vsH);
     Allocator<ComputeMeshType>::template DeletePerEdgeAttribute<bool>(*_m,esH);
