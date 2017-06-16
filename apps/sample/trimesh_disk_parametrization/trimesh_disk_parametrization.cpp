@@ -60,7 +60,7 @@ int main( int argc, char **argv )
   printf("Mesh has %i vn %i fn\n",m.VN(),m.FN());
   tri::PoissonSolver<MyMesh> PS(m);
 
-  if(!PS.IsFeaseable())
+  if(!PS.IsFeasible())
   {
     printf("mesh is not homeomorphic to a disk\n");
     return -1;

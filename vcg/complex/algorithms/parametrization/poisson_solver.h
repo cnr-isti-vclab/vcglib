@@ -541,7 +541,7 @@ class PoissonSolver
 public:
 
     ///return true if is possible to
-    bool IsFeaseable()
+    bool IsFeasible()
     {
         tri::UpdateTopology<MeshType>::FaceFace(mesh);
         int NNmanifoldE=tri::Clean<MeshType>::CountNonManifoldEdgeFF(mesh);
@@ -575,13 +575,12 @@ public:
         for (size_t i=0;i<mesh.vert.size();i++)
         {
             VertexType* v=&mesh.vert[i];
-            if (v->IsD())continue;
-            if(v->IsB())to_fix.push_back(v);
+            if (v->IsD()) continue;
+            if(v->IsB()) to_fix.push_back(v);
         }
         std::sort(to_fix.begin(),to_fix.end());
-        typename std::vector<VertexType*>::iterator new_end=std::unique(to_fix.begin(),to_fix.end());
-        int dist=distance(to_fix.begin(),new_end);
-        to_fix.resize(dist);
+        auto new_end=std::unique(to_fix.begin(),to_fix.end());
+        to_fix.resize(distance(to_fix.begin(),new_end));
     }
 
     ///set selected vertices as fixed

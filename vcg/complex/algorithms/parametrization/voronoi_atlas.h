@@ -184,7 +184,7 @@ public:
       tri::Append<VoroMesh,VoroMesh>::Mesh(*rm, m, true);
       int tp0=clock();
       tri::PoissonSolver<VoroMesh> PS(*rm);
-      if(PS.IsFeaseable())
+      if(PS.IsFeasible())
       {
         PS.Init();
         PS.FixDefaultVertices();
