@@ -646,18 +646,35 @@ private:
 
         return count;
     }
-    /*
-        Simple Laplacian Smoothing step - Border and crease vertices are kept fixed.
-    */
+    /**
+      * Simple Laplacian Smoothing step 
+      * Border and crease vertices are kept fixed.
+      * If there are selected faces and the param.onlySelected is true we compute 
+      * the set of internal vertices to the selection and we combine it in and with 
+      * the vertexes not on border or creases 
+    */  
     static void ImproveByLaplacian(MeshType &m, Params params)
     {
-        tri::UpdateTopology<MeshType>::FaceFace(m);
-        tri::UpdateFlags<MeshType>::VertexBorderFromFaceAdj(m);
-        tri::UpdateSelection<MeshType>::VertexFromBorderFlag(m);
-        selectVertexFromCrease(m, params.creaseAngleCosThr);
-        tri::UpdateSelection<MeshType>::VertexInvert(m);
-        tri::Smooth<MeshType>::VertexCoordPlanarLaplacian(m,1,params.creaseAngleRadThr,true);
-        tri::UpdateSelection<MeshType>::VertexClear(m);
+      SelectionStack<MeshType> ss(m);
+      
+      if(params.selectedOnly) {
+        ss.push();        
+        tri::UpdateSelection<MeshType>::VertexFromFaceStrict(m);        
+        ss.push();                
+      }
+      tri::UpdateTopology<MeshType>::FaceFace(m);
+      tri::UpdateFlags<MeshType>::VertexBorderFromFaceAdj(m);
+      tri::UpdateSelection<MeshType>::VertexFromBorderFlag(m);
+      selectVertexFromCrease(m, params.creaseAngleCosThr);
+      tri::UpdateSelection<MeshType>::VertexInvert(m);
+      if(params.selectedOnly) {
+        ss.popAnd();        
+      } 
+      tri::Smooth<MeshType>::VertexCoordPlanarLaplacian(m,1,params.creaseAngleRadThr,true);
+      tri::UpdateSelection<MeshType>::VertexClear(m);
+      if(params.selectedOnly) {
+        ss.pop();        
+      }         
     }
     /*
         Reprojection step, this method reprojects each vertex on the original surface
