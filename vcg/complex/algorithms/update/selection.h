@@ -84,6 +84,8 @@ public:
   bool pop(bool orFlag=false, bool andFlag=false)
   {
     if(vsV.empty()) return false;
+    if(orFlag && andFlag) return false;
+    
     vsHandle vsH = vsV.back();
     esHandle esH = esV.back();
     fsHandle fsH = fsV.back();
@@ -102,7 +104,7 @@ public:
     for(auto ei = _m->edge.begin(); ei != _m->edge.end(); ++ei)
       if( !(*ei).IsD() )
       {
-        if(vsH[*ei]) { 
+        if(esH[*ei]) { 
            if(!andFlag) (*ei).SetS();
         } else {
           if(!orFlag)   (*ei).ClearS();
@@ -113,7 +115,7 @@ public:
     for(auto fi = _m->face.begin(); fi != _m->face.end(); ++fi)
       if( !(*fi).IsD() )
       {  
-        if(vsH[*fi]) { 
+        if(fsH[*fi]) { 
            if(!andFlag) (*fi).SetS();
         } else {
           if(!orFlag)   (*fi).ClearS();
