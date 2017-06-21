@@ -900,6 +900,49 @@ public:
         return MeshArea;
     }
 
+//    static void InitQualityVertVoronoiArea(PolyMeshType &poly_m)
+//    {
+//        for (size_t i=0;i<poly_m.vert.size();i++)
+//            poly_m.vert[i].Q()=0;
+
+//        //set the sum of angle for each face
+
+//        std::vector<ScalarType> SumAngle(poly_m.face.size(),0);
+//        for (size_t i=0;i<poly_m.face.size();i++)
+//        {
+//            size_t sizeV=poly_m.face[i].VN()-1;
+//            for (size_t j=0;j<sizeV;j++)
+//            {
+//                CoordType P0=poly_m.face[i].P((j+1)%sizeV);
+//                CoordType P1=poly_m.face[i].P(j);
+//                CoordType P2=poly_m.face[i].P1(j);
+//                CoordType dir0=P0-P1;
+//                CoordType dir1=P2-P1;
+//                dir0.Normalize();
+//                dir1.Normalize();
+//                SumAngle[i]+=vcg::Angle(dir0,dir1);
+//            }
+//        }
+
+//        for (size_t i=0;i<poly_m.face.size();i++)
+//        {
+//            ScalarType AreaF=vcg::PolyArea(poly_m.face[i]);
+//            size_t sizeV=poly_m.face[i].VN()-1;
+//            for (size_t j=0;j<poly_m.face[i].VN();j++)
+//            {
+//                CoordType P0=poly_m.face[i].P((j+1)%sizeV);
+//                CoordType P1=poly_m.face[i].P(j);
+//                CoordType P2=poly_m.face[i].P1(j);
+//                CoordType dir0=P0-P1;
+//                CoordType dir1=P2-P1;
+//                dir0.Normalize();
+//                dir1.Normalize();
+//                ScalarType CurrAngle=vcg::Angle(dir0,dir1);
+//                poly_m.face[i].V(j)->Q()+=AreaF * CurrAngle/SumAngle[i];
+//            }
+//        }
+//    }
+
     static void InitQualityVertVoronoiArea(PolyMeshType &poly_m)
     {
         for (size_t i=0;i<poly_m.vert.size();i++)
@@ -907,9 +950,20 @@ public:
 
         for (size_t i=0;i<poly_m.face.size();i++)
         {
-            ScalarType AreaF=vcg::PolyArea(poly_m.face[i]);
+//            ScalarType AreaF=vcg::PolyArea(poly_m.face[i]);
+            size_t sizeV=poly_m.face[i].VN()-1;
+            CoordType baryF=vcg::PolyBarycenter(poly_m.face[i]);
             for (size_t j=0;j<poly_m.face[i].VN();j++)
-                poly_m.face[i].V(j)->Q()+=AreaF/(ScalarType)poly_m.face[i].VN();
+            {
+                CoordType P0=poly_m.face[i].P((j+sizeV-1)%sizeV);
+                CoordType P1=poly_m.face[i].P(j);
+                CoordType P2=poly_m.face[i].P1(j);
+                vcg::Triangle3<ScalarType> T0(P1,(P0+P1)/2,baryF);
+                vcg::Triangle3<ScalarType> T1(P1,(P1+P2)/2,baryF);
+
+                poly_m.face[i].V(j)->Q()+=vcg::DoubleArea(T0)/2;
+                poly_m.face[i].V(j)->Q()+=vcg::DoubleArea(T1)/2;
+            }
         }
     }
 
