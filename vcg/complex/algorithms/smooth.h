@@ -125,7 +125,7 @@ static void VertexCoordLaplacianAngleWeighted(MeshType &m, int step, ScalarType 
 // Note the delta parameter is in a absolute unit
 // to get stability it should be a small percentage of the shortest edge.
 
-static void VertexCoordScaleDependentLaplacian_Fujiwara(MeshType &m, int step, ScalarType delta)
+static void VertexCoordScaleDependentLaplacian_Fujiwara(MeshType &m, int step, ScalarType delta,bool SmoothSelected=false)
 {
     SimpleTempData<typename MeshType::VertContainer, ScaleLaplacianInfo > TD(m.vert);
     ScaleLaplacianInfo lpz;
@@ -181,7 +181,10 @@ static void VertexCoordScaleDependentLaplacian_Fujiwara(MeshType &m, int step, S
 
             for(vi=m.vert.begin();vi!=m.vert.end();++vi)
                 if(!(*vi).IsD() && TD[*vi].LenSum>0 )
-                 (*vi).P() = (*vi).P() + (TD[*vi].PntSum/TD[*vi].LenSum)*delta;
+                {
+                    if(!SmoothSelected || (*vi).IsS())
+                        (*vi).P() = (*vi).P() + (TD[*vi].PntSum/TD[*vi].LenSum)*delta;
+                }
     }
 };
 
