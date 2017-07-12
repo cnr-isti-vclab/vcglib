@@ -436,33 +436,51 @@ public:
     return count_removed;
   }
 
-  static int SplitSelectedVertexOnEdgeMesh(MeshType& m)
-  {
-    tri::RequireCompactness(m);
-    tri::UpdateFlags<MeshType>::VertexClearV(m);
-    int count_split = 0;
-    for(size_t i=0;i<m.edge.size();++i)
-    {
-      for(int j=0;j<2;++j)
-      {
-        VertexPointer vp = m.edge[i].V(j);
-        if(vp->IsS())
-        {
-          if(!vp->IsV())
-	    {
-            m.edge[i].V(j) = &*(tri::Allocator<MeshType>::AddVertex(m,vp->P()));
-	    ++count_split;
-	    }
-          else 
-	    {
-	      vp->SetV();
-	    }
-	  
-        }
-      }
-    }
-    return count_split;
-  }
+
+	static int SplitSelectedVertexOnEdgeMesh(MeshType& m)
+	{
+		tri::RequireCompactness(m);
+
+		// count selected vertices references
+		std::unordered_map<size_t,size_t> refCount; // selected vertex index -> reference count
+		size_t countSplit = 0;
+		for (size_t i=0; i<m.edge.size(); ++i)
+		{
+			for (int j=0; j<2; ++j)
+			{
+				const VertexPointer vp = m.edge[i].V(j);
+				if (vp->IsS())
+				{
+					const size_t refs = ++refCount[Index(m, m.edge[i].V(j))];
+					if (refs > 1) {
+						countSplit++;
+					}
+				}
+			}
+		}
+		// actual split
+		if (countSplit > 0)
+		{
+			auto newVertIt = tri::Allocator<MeshType>::AddVertices(m, countSplit);
+			for (size_t i=0; i<m.edge.size(); ++i)
+			{
+				for (int j=0; j<2; ++j)
+				{
+					const VertexPointer vp = m.edge[i].V(j);
+					const size_t vIdx = Index(m, vp);
+					if (vp->IsS())
+					{
+						if (--refCount[vIdx] > 0)
+						{
+							newVertIt->ImportData(*vp);
+							m.edge[i].V(j) = &*(newVertIt++);
+						}
+					}
+				}
+			}
+		}
+		return int(countSplit);
+	}
 
 
   static void SelectNonManifoldVertexOnEdgeMesh(MeshType &m)
@@ -485,6 +503,7 @@ public:
     tri::RequireCompactness(m);
     tri::RequireVEAdjacency(m);
     tri::UpdateTopology<MeshType>::VertexEdge(m);
+	tri::UpdateSelection<MeshType>::VertexClear(m);
     for(size_t i=0;i<m.vert.size();++i)
     {
       std::vector<VertexPointer> VVStarVec;
