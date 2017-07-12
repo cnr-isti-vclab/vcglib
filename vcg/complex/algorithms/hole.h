@@ -378,7 +378,7 @@ public:
         {
           int e0,e1;
           bool ret=face::FindSharedEdge(f,*it,e0,e1);
-          assert(ret);
+          assert(ret); (void)ret;
           if(!face::IsBorder(**it,e1))
             return false;
         }

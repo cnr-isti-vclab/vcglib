@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004-2016                                           \/)\/    *
+* Copyright(C) 2004-2017                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -25,6 +25,7 @@
 #define __VCG_CREASE_CUT
 #include<vcg/simplex/face/jumping_pos.h>
 #include<vcg/complex/algorithms/update/normal.h>
+#include<vcg/complex/algorithms/update/flag.h>
 namespace vcg {
 namespace tri {
 
@@ -49,11 +50,11 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
 template<class MESH_TYPE>
 void CutMeshAlongNonFauxEdges(MESH_TYPE &m)
 {
-  typedef typename MESH_TYPE::FaceIterator		FaceIterator;
-  typedef typename MESH_TYPE::FaceType				FaceType;
+  typedef typename MESH_TYPE::FaceIterator FaceIterator;
+  typedef typename MESH_TYPE::FaceType     FaceType;
   
   tri::Allocator<MESH_TYPE>::CompactVertexVector(m);
-  tri::Allocator<MESH_TYPE>::CompactFaceVector(m);    
+  tri::Allocator<MESH_TYPE>::CompactFaceVector(m);
   tri::RequireFFAdjacency(m);
   
   tri::UpdateFlags<MESH_TYPE>::VertexClearV(m);
@@ -82,7 +83,7 @@ void CutMeshAlongNonFauxEdges(MESH_TYPE &m)
         }
         
         int locCreaseCounter=0;
-        int curVertexCounter =vertInd;
+        int curVertexCounter=vertInd;
         
         do { // The real Loop          
           size_t faceInd = Index(m,iPos.F());
@@ -96,13 +97,13 @@ void CutMeshAlongNonFauxEdges(MESH_TYPE &m)
           }
           iPos.NextFE();
         } while (startPos!=iPos);
-        if(locCreaseCounter>0 && (!isBorderVertex) ) newVertexCounter--;
+        if (locCreaseCounter > 0) newVertexCounter--;
         //printf("For vertex %i found %i creases\n",vertInd,locCreaseCounter);
       }
   } // end foreach face/vert 
 
-  // Now the indVec vector contains for each the new index of each vertex (duplicated as necessary)
-  // We do a second loop to copy split vertexes into new positions
+  // Now the indVec vector contains for each face wedge the new index of each vertex (duplicated as necessary)
+  // We do a second loop to copy split vertices into new positions
   tri::Allocator<MESH_TYPE>::AddVertices(m,newVertexCounter-m.vn);
   
   tri::UpdateFlags<MESH_TYPE>::VertexClearV(m);
@@ -110,11 +111,10 @@ void CutMeshAlongNonFauxEdges(MESH_TYPE &m)
     for(int j=0;j<3;++j) 
     {
       size_t faceInd = Index(m, *fi);
-      size_t vertInd = Index(m, (*fi).V(j));
       int curVertexInd = indVec[faceInd*3+ j];
       assert(curVertexInd != -1);
       assert(curVertexInd < m.vn);
-      if(curVertexInd < startVn) assert(size_t(curVertexInd) == vertInd);
+      if(curVertexInd < startVn) { assert(size_t(curVertexInd) == Index(m, (*fi).V(j))); }
       if(curVertexInd >= startVn)
       {
         m.vert[curVertexInd].ImportData(*((*fi).V(j)));
