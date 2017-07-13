@@ -43,9 +43,9 @@
 #include <array>
 #include <utility>
 
-//#define DEBUG_VORO 1
-//#include <wrap/io_trimesh/export.h>
-//#include <QString>
+#define DEBUG_VORO 1
+#include <wrap/io_trimesh/export.h>
+#include <QString>
 
 namespace vcg {
 namespace tri {
@@ -152,19 +152,66 @@ public:
       return nullptr;
     }
     
-    // for closed watertight mesh try to split
-    if (Clean<Mesh>::CountHoles(original) < 1)
-    {
+      // split on creases
       CreaseCut<Mesh>(original, vcg::math::ToRad(borderCreaseAngleDeg));
       Allocator<Mesh>::CompactEveryVector(original);
       UpdateTopology<Mesh>::FaceFace(original);
       UpdateFlags<Mesh>::FaceBorderFromFF(original);
       UpdateFlags<Mesh>::VertexBorderFromFaceAdj(original);
+
+	  // Mark the non manifold border vertices as visited on the original mesh
+//	  tri::UpdateColor<Mesh>::PerVertexConstant(original);
+	  {
+		// extract border mesh
+		EdgeMeshType em;
+		ThisType::ExtractMeshBorders(original, em);
+
+		// get the border edge mesh and leave the non manifold vertices only
+		tri::Allocator<EdgeMeshType>::CompactEveryVector(em);
+		vcg::tri::Clean<EdgeMeshType>::SelectNonManifoldVertexOnEdgeMesh(em);
+		for (EdgeMeshType::VertexType & v : em.vert)
+		{
+			if (!v.IsS())
+			{
+				tri::Allocator<EdgeMeshType>::DeleteVertex(em, v);
+			}
+		}
+		tri::Allocator<EdgeMeshType>::CompactVertexVector(em);
+
+
+		// clear visited vertices
+		tri::UpdateFlags<Mesh>::VertexClearV(original);
+		if (em.vn != 0)
+		{
+			// iterate over the mesh and mark as visited all the matching vertices with the non manifold border
+			tri::UpdateBounding<EdgeMeshType>::Box(em);
+			EdgeMeshType::BoxType bbox = em.bbox;
+			bbox.Offset(bbox.Diag()/4.0);
+			typedef SpatialHashTable<EdgeMeshType::VertexType, EdgeMeshType::ScalarType> HashVertexGrid;
+			HashVertexGrid HG;
+			HG.Set(em.vert.begin(), em.vert.end(), bbox);
+
+			typedef EdgeMeshType::CoordType Coord;
+			EdgeMeshType::ScalarType dist_upper_bound = bbox.Diag()/100.0;
+			for (VertexType & v : original.vert)
+			{
+				EdgeMeshType::ScalarType dist;
+				EdgeMeshType::VertexType * nonManifoldVertex = GetClosestVertex<EdgeMeshType,HashVertexGrid>(em, HG, Coord::Construct(v.cP()), dist_upper_bound, dist);
+				if (nonManifoldVertex != NULL && dist == 0)
+				{
+					v.SetV();
+//					v.C() = vcg::Color4b::Black;
+				}
+			}
+		}
+
+
+	  }
 #ifdef DEBUG_VORO
-      io::Exporter<Mesh>::Save(original, "creaseSplit.ply", 0);
+      io::Exporter<Mesh>::Save(original, "creaseSplit.ply", io::Mask::IOM_VERTCOLOR);
 #endif
-    }
-    
+//    }
+
     // One CC
     std::vector<MeshPtr> ccs = splitCC(original);
     if (ccs.empty())
@@ -211,14 +258,19 @@ public:
       typedef typename EdgeMeshType::CoordType Coord;
       
       EdgeMeshType em;
-      //			ThisType::ExtractMeshSides(original, em);
-      
       ThisType::ExtractMeshBorders(original, em);
-      
-      // wtf we should close the loops
-      Clean<EdgeMeshType>::RemoveDuplicateVertex(em);
       Allocator<EdgeMeshType>::CompactVertexVector(em);
       Allocator<EdgeMeshType>::CompactEdgeVector(em);
+      // split on non manifold vertices of edgemesh
+	  vcg::tri::Clean<EdgeMeshType>::SelectNonManifoldVertexOnEdgeMesh(em);
+	  {
+		  // select also the visited vertices (coming from the non manifold vertices of the whole crease-cut mesh)
+		  for (auto & v : em.vert)
+		  {
+			  if (v.IsV()) { v.SetS(); }
+		  }
+	  }
+	  std::cout << vcg::tri::Clean<EdgeMeshType>::SplitSelectedVertexOnEdgeMesh(em) << " non-manifold splits" << std::endl;
       
 #ifdef DEBUG_VORO
       io::ExporterOBJ<EdgeMeshType>::Save(em, QString("edgeMesh_%1.obj").arg(idx).toStdString().c_str(), io::Mask::IOM_EDGEINDEX);
@@ -227,6 +279,7 @@ public:
       // eventually split on 'creases'
       if (borderCreaseAngleDeg > 0.0)
       {
+		// split creases
         UpdateFlags<EdgeMeshType>::VertexClearS(em);
         UpdateFlags<EdgeMeshType>::VertexClearV(em);
         Clean<EdgeMeshType>::SelectCreaseVertexOnEdgeMesh(em, vcg::math::ToRad(borderCreaseAngleDeg));
@@ -254,20 +307,6 @@ public:
       UpdateFlags<Mesh>::VertexSetS(poissonEdgeMesh);
       
 #ifdef DEBUG_VORO
-      //			// temp remove
-      //			UpdateColor<Mesh>::PerVertexConstant(poissonEdgeMesh, vcg::Color4b::Gray);
-      
-      //			typedef typename vcg::SpatialHashTable<VertexType, ScalarType> HashVertexGrid;
-      //			HashVertexGrid HG;
-      //			HG.Set(poissonEdgeMesh.vert.begin(),poissonEdgeMesh.vert.end());
-      //			for (size_t i=0; i<creases.size(); i++)
-      //			{
-      //				const float dist_upper_bound=FLT_MAX;
-      //				ScalarType dist;
-      //				VertexType * vp = GetClosestVertex<MeshType,HashVertexGrid>(poissonEdgeMesh, HG, creases[i], dist_upper_bound, dist);
-      //				assert(vp);
-      //				vp->C() = vcg::Color4b::Red;
-      //			}
       io::ExporterPLY<MeshType>::Save(poissonEdgeMesh, QString("borderMesh_%1.ply").arg(idx).toStdString().c_str(), io::Mask::IOM_VERTCOLOR);
 #endif
     }
@@ -509,8 +548,6 @@ protected:
                                                 const std::vector<bool> & seedFixed,
                                                 std::vector<VertexType *> & seedVVec)
   {
-    // TODO mark here all seeds (cross-border)
-
     typedef typename vcg::SpatialHashTable<VertexType, ScalarType> HashVertexGrid;
     seedVVec.clear();
     
@@ -547,28 +584,49 @@ protected:
     {
       const CoordType & p = seedPVec[i];
       const bool fixed    = seedFixed[i];
-      
       if (!fixed)
       {
         ScalarType dist;
         vp = GetClosestVertex<MeshType,HashVertexGrid>(m, HG, p, dist_upper_bound, dist);
+		if (vp)
+		{
+			seedVVec.push_back(vp);
+		}
       }
       else
       {
         vp = NULL;
-        
+
         ScalarType dist;
         VertexType * borderVp = GetClosestVertex<MeshType,HashVertexGrid>(borderMesh, borderHG, p, dist_upper_bound, dist);
         
         if (borderVp)
         {
-          vp = GetClosestVertex<MeshType,HashVertexGrid>(m, HG, borderVp->cP(), dist_upper_bound, dist);
+			std::vector<ScalarType>   dist;
+			std::vector<VertexType *> vps;
+			std::vector<CoordType>    pts;
+
+//			vp = GetClosestVertex<MeshType,HashVertexGrid>(m, HG, borderVp->cP(), dist_upper_bound, dist);
+			unsigned int n = GetKClosestVertex<MeshType,HashVertexGrid>(m, HG, 16, borderVp->cP(), dist_upper_bound, vps, dist, pts);
+			if (n>0)
+			{
+				ScalarType d = dist[0];
+				seedVVec.push_back(vps[0]);
+				assert(dist.size() == size_t(n));
+				for (size_t j=1; j<dist.size(); j++)
+				{
+					if (dist[j] <= d)
+					{
+						seedVVec.push_back(vps[j]);
+						d = dist[j];
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
         }
-      }
-      
-      if (vp)
-      {
-        seedVVec.push_back(vp);
       }
     }
   }
@@ -663,15 +721,48 @@ protected:
         pos.V()->SetV();
         
         //				assert(edgeVoroVertices.size() >= 2);
-        
-        // add face if 3 different voronoi regions are crossed by the edge
-        if (edgeVoroVertices.size() == 3)
-        {
-          VertexPointer v0 = & outMesh.vert[seedMap[edgeVoroVertices[0]]];
-          VertexPointer v1 = & outMesh.vert[seedMap[edgeVoroVertices[1]]];
-          VertexPointer v2 = & outMesh.vert[seedMap[edgeVoroVertices[2]]];
-          Allocator<MeshType>::AddFace(outMesh, v0,v1,v2);
-        }
+        // TODO
+		// 1) handle 5 vertices holes
+		// 2) make coherent split/border-sampling on different connected components (e.g., left eye raptor50k)
+
+
+		if (edgeVoroVertices.size() >= 3)
+		{
+			std::vector<VertexPointer> v;
+			for (size_t i=0; i<edgeVoroVertices.size(); i++)
+			{
+				v.push_back(&outMesh.vert[seedMap[edgeVoroVertices[i]]]);
+			}
+			for (size_t i=0; i<edgeVoroVertices.size()-2; i++)
+			{
+				Allocator<MeshType>::AddFace(outMesh, v[0],v[i+1],v[i+2]);
+			}
+			if (edgeVoroVertices.size() > 3)
+			{
+				std::cout << "Weird case!! " << edgeVoroVertices.size() << " voroseeds on one border" << std::endl;
+			}
+		}
+//        // add face if 3 different voronoi regions are crossed by the edge
+//        if (edgeVoroVertices.size() == 3)
+//        {
+//          VertexPointer v0 = & outMesh.vert[seedMap[edgeVoroVertices[0]]];
+//          VertexPointer v1 = & outMesh.vert[seedMap[edgeVoroVertices[1]]];
+//          VertexPointer v2 = & outMesh.vert[seedMap[edgeVoroVertices[2]]];
+//          Allocator<MeshType>::AddFace(outMesh, v0,v1,v2);
+//        }
+//		else
+//		{
+//			std::cout << "Weird case!! " << edgeVoroVertices.size() << " voroseeds on one border" << std::endl;
+//			if (edgeVoroVertices.size() == 4)
+//			{
+//				VertexPointer v0 = & outMesh.vert[seedMap[edgeVoroVertices[0]]];
+//				VertexPointer v1 = & outMesh.vert[seedMap[edgeVoroVertices[1]]];
+//				VertexPointer v2 = & outMesh.vert[seedMap[edgeVoroVertices[2]]];
+//				VertexPointer v3 = & outMesh.vert[seedMap[edgeVoroVertices[3]]];
+//				Allocator<MeshType>::AddFace(outMesh, v0,v1,v2);
+//				Allocator<MeshType>::AddFace(outMesh, v0,v2,v3);
+//			}
+//		}
         
       } while ((pos.V() != startBorderVertex));
     }
