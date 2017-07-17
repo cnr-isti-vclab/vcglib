@@ -59,17 +59,26 @@ int main( int argc, char **argv )
   if(argc < 2 )
   {
     printf("Usage trimesh_voro mesh region_num\n");
-     return -1;
-  }
-  printf("Reading %s  \n",argv[1]);
-  int ret= tri::io::Importer<MyMesh>::Open(startMesh,argv[1]);
-  if(ret!=0)
-  {
-    printf("Unable to open %s for '%s'\n",argv[1],tri::io::ImporterPLY<MyMesh>::ErrorMsg(ret));
     return -1;
   }
-  float samplingRadius = startMesh.bbox.Diag() *0.02f;
-  auto remeshed = Remesher<MyMesh>::Remesh(startMesh, samplingRadius, 50.0);
+  printf("Reading %s  \n",argv[1]);
+  int ret = tri::io::Importer<MyMesh>::Open(startMesh,argv[1]);
+  if(ret!=0)
+  {
+    printf("Unable to open %s: '%s'\n",argv[1],tri::io::ImporterPLY<MyMesh>::ErrorMsg(ret));
+    return -1;
+  }
+  tri::UpdateBounding<MyMesh>::Box(startMesh);
+
+  float samplingRadius = startMesh.bbox.Diag() * 0.01f;
+  if (argc == 3)
+  {
+	  try {
+		samplingRadius = stof(string(argv[2]));
+	  } catch (exception &) {}
+  }
+  std::cout << "using sampling radius: " << samplingRadius << std::endl;
+  auto remeshed = Remesher<MyMesh>::Remesh(startMesh, samplingRadius, 75.0);
   
   
   tri::io::ExporterPLY<MyMesh>::Save(*remeshed,"Full.ply",tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );
