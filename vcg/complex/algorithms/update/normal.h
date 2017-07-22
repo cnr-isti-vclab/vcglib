@@ -168,7 +168,7 @@ static void PerFace(ComputeMeshType &m)
   RequirePerFaceNormal(m);
   for(FaceIterator f=m.face.begin();f!=m.face.end();++f)
     if( !(*f).IsD() )
-              f->N() = TriangleNormal(*f).Normalize();
+              f->N() = TriangleNormal(*f);
 }
 
 
