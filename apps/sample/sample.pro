@@ -8,6 +8,7 @@ SUBDIRS       = trimesh_allocate \
                 trimesh_clustering \
                 trimesh_color \
                 trimesh_copy \
+                trimesh_create \
                 trimesh_curvature \
                 trimesh_cylinder_clipping \
                 trimesh_disk_parametrization \
@@ -37,6 +38,7 @@ SUBDIRS       = trimesh_allocate \
                 trimesh_split_vertex \
                 trimesh_texture \
                 trimesh_topology \
+                trimesh_topological_cut \
                 trimesh_voronoi \
                 trimesh_voronoiatlas \
                 trimesh_voronoiclustering \
