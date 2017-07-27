@@ -27,7 +27,6 @@
 #include <Eigen/Sparse>
 
 #include <vcg/complex/algorithms/clean.h>
-#include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/parametrization/distortion.h>
 #include <vcg/complex/algorithms/parametrization/uv_utils.h>
 
@@ -36,26 +35,19 @@ namespace tri{
 template <class MeshType>
 class PoissonSolver
 {
-
     typedef typename MeshType::ScalarType ScalarType;
     typedef typename MeshType::FaceType FaceType;
     typedef typename MeshType::VertexType VertexType;
     typedef typename MeshType::CoordType CoordType;
-    typedef typename MeshType:: template PerFaceAttributeHandle<CoordType> PerFaceCoordHandle;
 
-    ///the mesh itself
     MeshType &mesh;
 
     ///solver data
-
     std::map<VertexType*,int> VertexToInd;
     std::map<int, VertexType*> IndToVertex;
 
     ///vertices to fix
     std::vector<VertexType *> to_fix;
-
-    ///unknown vector
-
     Eigen::SparseMatrix<double> A; // A
     Eigen::VectorXd b,x;// x and b
 
@@ -70,8 +62,6 @@ class PoissonSolver
     bool use_direction_field,fix_selected,correct_fixed;
     ///size of the scalar field
     ScalarType fieldScale;
-//    ///handle per direction field
-//    PerFaceCoordHandle Fh0,Fh1;
 
     int VertexIndex(VertexType* v)
     {
@@ -95,54 +85,24 @@ class PoissonSolver
     ///set the value of A of the system Ax=b
     void SetValA(int Xindex,int Yindex,ScalarType val)
     {
-        //int size=(int)S.nrows();
         assert(0 <= Xindex && Xindex < int(total_size));
         assert(0 <= Yindex && Yindex < int(total_size));
-        //S.A().addEntryReal(Xindex,Yindex,val);
-        //if (Xindex>=Yindex)
         A.coeffRef(Xindex,Yindex) +=val;
-
     }
 
-
-    void FindFarthestVert(VertexType* &v0,VertexType* &v1)
+    void FindFarthestVert(VertexType* &v0, VertexType* &v1)
     {
-        UpdateBounding<MeshType>::Box(mesh);
-
-        tri::UpdateTopology<MeshType>::FaceFace(mesh);
-        tri::UpdateFlags<MeshType>::FaceBorderFromFF(mesh);
-        tri::UpdateFlags<MeshType>::VertexBorderFromFaceBorder(mesh);
-
-        ScalarType dmax=0;
-        v0=NULL;
-        v1=NULL;
-        for (unsigned int i=0;i<mesh.vert.size();i++)
-            for (unsigned int j=(i+1);j<mesh.vert.size();j++)
-            {
-                VertexType *vt0=&mesh.vert[i];
-                VertexType *vt1=&mesh.vert[j];
-                if (vt0->IsD())continue;
-                if (vt1->IsD())continue;
-                if (!vt0->IsB())continue;
-                if (!vt1->IsB())continue;
-                ScalarType d_test=(vt0->P()-vt1->P()).Norm();
-//                ScalarType Dx=fabs(vt0->P().X()-vt1->P().X());
-//                ScalarType Dy=fabs(vt0->P().Y()-vt1->P().Y());
-//                ScalarType Dz=fabs(vt0->P().Z()-vt1->P().Z());
-
-                //ScalarType d_test=std::max(Dx,std::max(Dy,Dz));
-                //ScalarType d_test=std::max(fabs(Dx-Dy),std::max(fabs(Dx-Dz),fabs(Dy-Dz)));
-                if (d_test>dmax)
-                {
-                    dmax=d_test;
-                    v0=vt0;
-                    v1=vt1;
-                }
-            }
-        assert(v0!=NULL);
-        assert(v1!=NULL);
+      v0=NULL;
+      v1=NULL;
+      int bestAxis = mesh.bbox.MaxDim();
+      for(VertexType &vv : mesh.vert)
+      {
+        if(vv.P()[bestAxis] <= mesh.bbox.min[bestAxis]) v0 = &vv;
+        if(vv.P()[bestAxis] >= mesh.bbox.max[bestAxis]) v1 = &vv;
+      }
+      assert(v0 && v1);
     }
-
+    
     ///set the value of b of the system Ax=b
     void SetValB(int Xindex,
                  ScalarType val)
@@ -308,18 +268,9 @@ class PoissonSolver
         neg_t[1] = fNorm ^ (p[0] - p[2]);
         neg_t[2] = fNorm ^ (p[1] - p[0]);
 
-        CoordType K1,K2;
-        /*MyMesh::PerFaceCoordHandle<ScalarType> Fh = tri::Allocator<MyMesh>::AddPerVertexAttribute<float>  (m,std::string("Irradiance"));
-        bool CrossDir0 = tri::HasPerVertexAttribute(mesh,"CrossDir0");
-                bool CrossDir1 = tri::HasPerVertexAttribute(mesh,"CrossDir1");
-                assert(CrossDir0);
-                assert(CrossDir1);*/
-
-        //K1=f->Q3();
-        K1.Import(f->PD1());
+        CoordType K1 = CoordType::Construct(f->PD1());
+        CoordType K2 = CoordType::Construct(f->PD2());
         K1.Normalize();
-        //K2=fNorm^K1;
-        K2.Import(f->PD2());
         K2.Normalize();
 
         scaled_Kreal = K1*(vector_field_scale);///2);
@@ -641,16 +592,6 @@ public:
               ScalarType _fieldScale=1.0)
     {
         use_direction_field=_use_direction_field;
-        //query if an attribute is present or not
-//        if (use_direction_field)
-//        {
-//            bool CrossDir0 = tri::HasPerFaceAttribute(mesh,"CrossDir0");
-//            bool CrossDir1 = tri::HasPerFaceAttribute(mesh,"CrossDir1");
-//            assert(CrossDir0);
-//            assert(CrossDir1);
-//            Fh0= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir0"));
-//            Fh1= tri::Allocator<MeshType> :: template GetPerFaceAttribute<CoordType>(mesh,std::string("CrossDir1"));
-//        }
         correct_fixed=_correct_fixed;
         fieldScale=_fieldScale;
         to_fix.clear();
@@ -673,10 +614,6 @@ public:
         ///set vertex indexes
         InitIndex();
 
-        /*///find vertex to fix
-        std::vector<VertexType *> to_fix;
-        FindFixedVertices(to_fix);
-        n_fixed_vars=to_fix.size();*/
         if (use_direction_field)
         {
             assert(to_fix.size()>0);
@@ -689,14 +626,6 @@ public:
         n_fixed_vars=to_fix.size();
         ///initialize the matrix ALLOCATING SPACE
         InitMatrix();
-
-//        if (use_direction_field)
-//        {
-//            bool CrossDir0 = tri::HasPerFaceAttribute(mesh,"CrossDir0");
-//            bool CrossDir1 = tri::HasPerFaceAttribute(mesh,"CrossDir1");
-//            assert(CrossDir0);
-//            assert(CrossDir1);
-//        }
 
         ///build the laplacian system
         BuildLaplacianMatrix(fieldScale);
