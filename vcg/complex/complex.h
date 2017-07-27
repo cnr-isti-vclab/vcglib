@@ -25,20 +25,19 @@
 #define __VCG_MESH_H
 #define __VCG_MESH
 
-#include <assert.h>
-#include <string>
+#include <cassert>
 #include <cstring>
+#include <string>
 #include <ctime>
 #include <vector>
 #include <set>
 #include <stack>
 #include <queue>
-#include <algorithm>
 #include <map>
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <limits>
-#include <set>
 #include <wrap/callback.h>
 #include <vcg/complex/exception.h>
 #include <vcg/container/simple_temporary_data.h>
