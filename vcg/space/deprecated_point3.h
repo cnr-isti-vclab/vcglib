@@ -208,6 +208,11 @@ public:
     return Point3(0,0,0);
   }
 
+  static inline Point3 One(void)
+  {
+    return Point3(1,1,1);
+  }
+
 //@}
 
 //@{

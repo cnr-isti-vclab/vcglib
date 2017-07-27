@@ -309,6 +309,16 @@ public:
     return Point2(b.X(),b.Y());
 	}
 
+	static inline Point2 Zero(void)
+    {
+      return Point2(0,0);
+    }
+
+    static inline Point2 One(void)
+    {
+      return Point2(1,1);
+    }
+
 
 }; // end class definition
 
