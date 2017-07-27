@@ -52,12 +52,13 @@ inline bool COutCallBackPos(const int ,  const char *str ) {
 inline bool CErrCallBackPos(const int ,  const char *str ) {
   std::cerr << str; return true;
 }
+
 /*! \brief Helper function that formats a string a la printf and returns a simple char*
  * 
  * Quite useful for formatting the above callback... 
  */
 
-char* StrFormat(const std::string fmt_str, ...) {
+inline char* StrFormat(const std::string fmt_str, ...) {
     int final_n, n = ((int)fmt_str.size()) * 2; /* Reserve two times as much as the length of the fmt_str */
     std::unique_ptr<char[]> formatted;
     va_list ap;
