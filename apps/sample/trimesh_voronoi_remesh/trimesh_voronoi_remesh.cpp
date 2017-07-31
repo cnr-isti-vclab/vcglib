@@ -70,15 +70,15 @@ int main( int argc, char **argv )
   }
   tri::UpdateBounding<MyMesh>::Box(startMesh);
 
-  float samplingRadius = startMesh.bbox.Diag() * 0.01f;
+  float samplingRadius = startMesh.bbox.Diag() * 0.005f;
   if (argc == 3)
   {
 	  try {
 		samplingRadius = stof(string(argv[2]));
 	  } catch (exception &) {}
   }
-  std::cout << "using sampling radius: " << samplingRadius << std::endl;
-  auto remeshed = Remesher<MyMesh>::Remesh(startMesh, samplingRadius, 75.0);
+  std::cout << "Remeshing using sampling radius: " << samplingRadius << std::endl;
+  auto remeshed = Remesher<MyMesh>::Remesh(startMesh, samplingRadius, 50.0, 0.0);
   
   
   tri::io::ExporterPLY<MyMesh>::Save(*remeshed,"Full.ply",tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );

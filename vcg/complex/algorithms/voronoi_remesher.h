@@ -140,9 +140,10 @@ public:
 	/// \param original the mesh
 	/// \param samplingRadius is the sampling ragius for remeshing
 	/// \param borderCreaseAngleDeg is the angle treshold for preserving corner points on the mesh boundary
+	/// \param internalCreaseAngleDeg is the angle treshold for preserving creases on the mesh surface (if this value is < 0 it is set to borderCreaseAngleDeg)
 	/// \return the remeshed mesh
 	///
-	static inline MeshPtr Remesh(Mesh & original, const ScalarType samplingRadius, const ScalarType borderCreaseAngleDeg = 0.0)
+	static inline MeshPtr Remesh(Mesh & original, const ScalarType samplingRadius, const ScalarType borderCreaseAngleDeg = 0.0, const ScalarType internalCreaseAngleDeg = -1.0)
 	{
 		RequireFFAdjacency(original);
 		RequireVFAdjacency(original);
@@ -157,12 +158,18 @@ public:
 			return nullptr;
 		}
 
+		const ScalarType borderAngleDeg = std::max(ScalarType(0), borderCreaseAngleDeg);
+		const ScalarType creaseAngleDeg = internalCreaseAngleDeg < 0 ? borderAngleDeg : internalCreaseAngleDeg;
+
 		// split on creases
-		CreaseCut<Mesh>(original, vcg::math::ToRad(borderCreaseAngleDeg));
-		Allocator<Mesh>::CompactEveryVector(original);
-		UpdateTopology<Mesh>::FaceFace(original);
-		UpdateFlags<Mesh>::FaceBorderFromFF(original);
-		UpdateFlags<Mesh>::VertexBorderFromFaceAdj(original);
+		if (creaseAngleDeg > 0)
+		{
+			CreaseCut<Mesh>(original, vcg::math::ToRad(creaseAngleDeg));
+			Allocator<Mesh>::CompactEveryVector(original);
+			UpdateTopology<Mesh>::FaceFace(original);
+			UpdateFlags<Mesh>::FaceBorderFromFF(original);
+			UpdateFlags<Mesh>::VertexBorderFromFaceAdj(original);
+		}
 
 		// Mark the non manifold border vertices as visited on the input mesh
 		// TODO maybe optimize this
@@ -218,7 +225,7 @@ public:
 		std::vector<MeshPtr> ccs = splitCC(original);
 		if (ccs.empty())
 		{
-			return RemeshOneCC(original, samplingRadius, borderCreaseAngleDeg);
+			return RemeshOneCC(original, samplingRadius, borderAngleDeg);
 		}
 
 		// Multiple CCs
@@ -226,7 +233,7 @@ public:
 		for (size_t i=0; i<ccs.size(); i++)
 		{
 //			std::cout << "Remeshing component " << (i+1) << "/" << ccs.size() << std::endl;
-			ccs[i] = RemeshOneCC(*ccs[i], samplingRadius, borderCreaseAngleDeg, i);
+			ccs[i] = RemeshOneCC(*ccs[i], samplingRadius, borderAngleDeg, i);
 		}
 
 		MeshPtr ret = std::make_shared<Mesh>();
@@ -237,6 +244,8 @@ public:
 		Clean<Mesh>::RemoveDuplicateVertex(*ret, true);
 		return ret;
 	}
+
+protected:
 
 	///
 	/// \brief RemeshOneCC the function that remeshes a single connected component mesh preserving its boundary (consistently for eventually adjacent meshes).
@@ -448,7 +457,6 @@ public:
 		return finalMeshPtr;
 	}
 
-protected:
 	static inline void ExtractMeshBorders(Mesh & mesh, EdgeMeshType & sides)
 	{
 		RequireFFAdjacency(mesh);
