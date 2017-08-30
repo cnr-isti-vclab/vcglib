@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004-2016                                           \/)\/    *
+* Copyright(C) 2004-2017                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -21,42 +21,70 @@
 *                                                                           *
 ****************************************************************************/
 
-#ifndef __VCG_MESH_H
-#define __VCG_MESH_H
-#define __VCG_MESH
+#ifndef VCG__FOREACH_H
+#define VCG__FOREACH_H
 
-#include <cassert>
-#include <cstring>
-#include <string>
-#include <ctime>
-#include <vector>
-#include <set>
-#include <stack>
-#include <queue>
-#include <map>
-#include <algorithm>
-#include <iostream>
-#include <stdexcept>
-#include <limits>
-#include <wrap/callback.h>
-#include <vcg/complex/exception.h>
-#include <vcg/container/simple_temporary_data.h>
-#include <vcg/complex/used_types.h>
-#include <vcg/complex/base.h>
-#include <vcg/complex/allocate.h>
-#include <vcg/simplex/face/pos.h>
-#include <vcg/simplex/face/topology.h>
-#include <vcg/simplex/edge/pos.h>
-#include <vcg/simplex/edge/topology.h>
-#include <vcg/complex/foreach.h>
-#include <vcg/complex/algorithms/update/flag.h>
-#include <vcg/complex/algorithms/update/selection.h>
-#include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/normal.h>
-#include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/mesh_assert.h>
-#include <vcg/complex/append.h>
-
-#undef __VCG_MESH
+#ifndef __VCG_MESH
+#error "This file should not be included alone. It is automatically included by complex.h"
 #endif
 
+namespace vcg {
+namespace tri {
+/** \addtogroup trimesh
+@{
+*/
+
+template <class MeshType>
+inline void ForEachFacePos(MeshType &m, std::function<void (typename face::Pos<typename MeshType::FaceType>  &)> action)
+{
+  typedef typename face::Pos<typename MeshType::FaceType> PosType;
+  
+    for(auto fi=m.face.begin();fi!=m.face.end();++fi)
+        if(!(*fi).IsD())
+        {
+            for(int i=0;i<3;++i)
+            {
+                PosType pi(&*fi,i);
+                action(pi);
+            }
+        }
+}
+
+template <class MeshType>
+inline void ForEachFace(const MeshType &m, std::function<void (const typename MeshType::FaceType &)> action)
+{
+    for(auto fi=m.face.begin();fi!=m.face.end();++fi)
+        if(!(*fi).IsD())
+        {
+          action(*fi);
+        }
+}
+
+template <class MeshType>
+inline void ForEachFace(MeshType &m, std::function<void (typename MeshType::FaceType &)> action)
+{
+    for(auto fi=m.face.begin();fi!=m.face.end();++fi)
+        if(!(*fi).IsD())
+        {
+          action(*fi);
+        }
+}
+
+
+template <class MeshType>
+inline void forEachVertex(MeshType &m, std::function<void (typename MeshType::FaceType &)> action)
+{
+    for(auto fi=m.face.begin();fi!=m.face.end();++fi)
+        if(!(*fi).IsD())
+        {
+          action(*fi);
+        }
+}
+
+
+
+/** @} */ // end doxygen group trimesh
+} // end namespace tri
+} // end namespace vcg
+
+#endif // VCG__FOREACH_H
