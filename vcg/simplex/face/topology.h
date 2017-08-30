@@ -711,6 +711,22 @@ void FlipEdge(FaceType &f, const int z)
 }
 
 template <class FaceType>
+void TriSplit(FaceType *fToSplit, FaceType *newf0, FaceType *newf1, typename FaceType::VertexType *newVert)
+{
+  typedef typename FaceType::VertexType VertexType;
+  
+  VertexType *vp0 = fToSplit->V(0);
+  VertexType *vp1 = fToSplit->V(1);
+  VertexType *vp2 = fToSplit->V(2);
+  
+  fToSplit->V(0) = vp0; fToSplit->V(1) = vp1; fToSplit->V(2) = newVert;
+  newf0->V(0) = vp1; newf0->V(1) = vp2; newf0->V(2) = newVert;
+  newf1->V(0) = vp2; newf1->V(1) = vp0; newf1->V(2) = newVert;    
+}
+
+
+
+template <class FaceType>
 void VFDetach(FaceType & f)
 {
   VFDetach(f,0);
