@@ -26,6 +26,7 @@
 #include<wrap/io_trimesh/export.h>
 
 
+#include<vcg/complex/algorithms/cut_tree.h>
 #include<vcg/complex/algorithms/curve_on_manifold.h>
 #include<vcg/complex/algorithms/crease_cut.h>
 
@@ -44,47 +45,62 @@ class MyMesh : public tri::TriMesh< std::vector<MyVertex>, std::vector<MyEdge>, 
 
 int main(int argc,char ** argv )
 {
-  MyMesh base,basecopy, poly;
+  MyMesh base, basecopy, poly;
   int ret0 = tri::io::Importer<MyMesh>::Open(base,argv[1]);
-  tri::UpdateBounding<MyMesh>::Box(base);
-  tri::Append<MyMesh,MyMesh>::MeshCopy(basecopy,base);
-  printf( "Mesh %s has %i vert and %i faces\n", argv[1], basecopy.VN(), basecopy.FN() );
   if(ret0 != 0 ) 
   {
     printf("Failed Loading\n");
     exit(-1);
-  }
+  }  
+  
+  tri::UpdateBounding<MyMesh>::Box(base);
+  printf( "Mesh %s has %i vert and %i faces\n", argv[1], base.VN(), base.FN() );
+  srand(time(0));
+  tri::CutTree<MyMesh> ct(base);
+  ct.BuildVisitTree(poly,rand()%base.fn);
+  tri::io::ExporterPLY<MyMesh>::Save(poly,"tree.ply",tri::io::Mask::IOM_EDGEINDEX);  
+  
   tri::CoM<MyMesh> cc(base);
   cc.Init();
-  cc.BuildVisitTree(poly);
-  tri::UpdateBounding<MyMesh>::Box(poly);  
-  tri::io::ExporterPLY<MyMesh>::Save(poly,"tree.ply",tri::io::Mask::IOM_EDGEINDEX);  
-  while(cc.OptimizeTree(poly));
-  tri::io::ExporterPLY<MyMesh>::Save(poly,"tree1.ply",tri::io::Mask::IOM_EDGEINDEX);  
-
-  cc.MarkFauxEdgeWithPolyLine(basecopy,poly);
+  cc.MarkFauxEdgeWithPolyLine(poly);
+  tri::Append<MyMesh,MyMesh>::MeshCopy(basecopy,base);  
   tri::UpdateTopology<MyMesh>::FaceFace(basecopy);
   tri::CutMeshAlongNonFauxEdges<MyMesh>(basecopy);
-  tri::io::ExporterPLY<MyMesh>::Save(basecopy,"basecut.ply");  
+  tri::io::ExporterPLY<MyMesh>::Save(basecopy,"base_cut_with_tree.ply");  
+  
+  
   cc.par.surfDistThr = base.bbox.Diag()/100.0;
-  cc.par.maxSimpEdgeLen = base.bbox.Diag()/60.0;
-  cc.SmoothProject(poly,5,0.8, 0.2);
+  cc.par.maxSimpEdgeLen = base.bbox.Diag()/40.0;
+  cc.par.minRefEdgeLen = base.bbox.Diag()/80.0;
+  cc.SmoothProject(poly,40,0.5, .7);
+
   Distribution<float> dist;  
   cc.EvaluateHausdorffDistance(poly, dist );
-  tri::io::ExporterPLY<MyMesh>::Save(poly,"poly_adapted.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
-  cc.par.surfDistThr = base.bbox.Diag()/1000.0;
-  cc.par.maxSimpEdgeLen = base.bbox.Diag()/500.0;
-  cc.SmoothProject(poly,5,0.3, 0.7);
+  
+//  tri::io::ExporterPLY<MyMesh>::Save(poly,"poly_adapted.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
+//  cc.par.surfDistThr = base.bbox.Diag()/2000.0;
+//  cc.par.maxSimpEdgeLen = base.bbox.Diag()/100.0;
+//  cc.par.minRefEdgeLen = base.bbox.Diag()/200.0;
+//  cc.SmoothProject(poly,10,0.3, 0.7);
+//  cc.SmoothProject(poly,1,0.01, 0.99);
   tri::io::ExporterPLY<MyMesh>::Save(poly,"poly_adapted2.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
-  cc.par.minRefEdgeLen = base.bbox.Diag()/200.0;  
-  cc.Refine(poly,true);
-  cc.Refine(poly,true);
+  std::vector<MyVertex*> newVertVec;  
   cc.SnapPolyline(poly);
-  tri::io::ExporterPLY<MyMesh>::Save(poly,"poly_adapted2_snap.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
-  cc.par.maxSimpEdgeLen = base.bbox.Diag()/200.0;
-  cc.SmoothProject(poly,10 ,0.8, 0.2);
-  cc.RefineBaseMesh(poly);
-  tri::io::ExporterPLY<MyMesh>::Save(poly,"poly_adapted2_snapSmooth.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
+  tri::io::ExporterPLY<MyMesh>::Save(poly,"poly_snap.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
+  cc.RefineCurveByBaseMesh(poly);
+  tri::io::ExporterPLY<MyMesh>::Save(poly,"poly_refined.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
+   
+  cc.SplitMeshWithPolyline(poly);
+  cc.RefineCurveByBaseMesh(poly);
+  tri::io::ExporterPLY<MyMesh>::Save(base,"base_refined.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
+  cc.SplitMeshWithPolyline(poly);
+  cc.RefineCurveByBaseMesh(poly);
+  cc.SplitMeshWithPolyline(poly);
+  cc.RefineCurveByBaseMesh(poly);
+  tri::io::ExporterPLY<MyMesh>::Save(base,"base_refined2.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY+tri::io::Mask::IOM_FACEFLAGS);
+  cc.MarkFauxEdgeWithPolyLine(poly);
+  CutMeshAlongNonFauxEdges(base);
+  tri::io::ExporterPLY<MyMesh>::Save(base,"base_refined2_cut.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
   
   return 0;
 }
