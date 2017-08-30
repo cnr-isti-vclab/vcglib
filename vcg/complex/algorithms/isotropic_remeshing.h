@@ -166,26 +166,7 @@ private:
         maxQ = distr.Percentile(0.9f);
         minQ = distr.Percentile(0.1f);
     }
-    static inline void forEachFacePos(MeshType &m, std::function<void (PosType &)> action)
-    {
-        for(auto fi=m.face.begin();fi!=m.face.end();++fi)
-            if(!(*fi).IsD())
-            {
-                for(int i=0;i<3;++i)
-                {
-                    PosType pi(&*fi,i);
-                    action(pi);
-                }
-            }
-    }
-    static inline void forEachFace(MeshType &m, std::function<void (FaceType &)> action)
-    {
-        for(auto fi=m.face.begin();fi!=m.face.end();++fi)
-            if(!(*fi).IsD())
-            {
-              action(*fi);
-            }
-    }
+
     //Computes PerVertexQuality as a function of the 'deviation' of the normals taken from
     //the faces incident to each vertex
     static void computeQuality(MeshType &m)
@@ -300,7 +281,7 @@ private:
     static void ImproveValence(MeshType &m, Params &params)
     {
         tri::UpdateTopology<MeshType>::FaceFace(m); //collapser does not update FF
-        forEachFacePos(m, [&](PosType &p){
+        ForEachFacePos(m, [&](PosType &p){
           if(p.FFlip() > p.F())
             if(((!params.selectedOnly) || (p.F()->IsS() && p.FFlip()->IsS())) &&
                testSwap(p, params.creaseAngleCosThr) &&
@@ -635,7 +616,7 @@ private:
     {
         int count = 0;
 
-        forEachFacePos(m, [&](PosType &p){
+        ForEachFacePos(m, [&](PosType &p){
           if((p.FFlip() > p.F()) && testCreaseEdge(p, creaseThr))
           {
             p.V()->SetS();
