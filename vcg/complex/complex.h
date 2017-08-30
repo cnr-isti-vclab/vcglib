@@ -38,6 +38,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <limits>
+#include <iterator>
 #include <wrap/callback.h>
 #include <vcg/complex/exception.h>
 #include <vcg/container/simple_temporary_data.h>
