@@ -61,7 +61,6 @@ void OptimizeTree(KdTree<ScalarType> &kdtree, MeshType &t)
   {
     lastEn=t.en;
     tri::UpdateTopology<MeshType>::VertexEdge(t);
-    tri::UpdateTopology<MeshType>::VertexFace(base); 
     
     // First simple loop that search for 2->1 moves. 
     for(VertexIterator vi=t.vert.begin();vi!=t.vert.end();++vi)
@@ -97,21 +96,14 @@ bool ExistEdge(KdTree<ScalarType> &kdtree, CoordType &p0, CoordType &p1, PosType
     v1 = &base.vert[veInd];
   if(v0 && v1)
   {
-    face::VFIterator<FaceType> vfi(v0);
-    while(!vfi.End())
-    { 
-      if(vfi.V1()==v1)
-      {
-        fpos = PosType(vfi.F(),vfi.I(), v0);
-        return true;
-      }
-      if(vfi.V2()==v1)
-      {
-        fpos = PosType(vfi.F(),(vfi.I()+1)%3, v1);
-        return true;
-      }
-      ++vfi;
-    }      
+    fpos =PosType(v0->VFp(),v0);
+    assert(fpos.V()==v0);
+    PosType startPos=fpos;
+    do
+    {
+      fpos.FlipE(); fpos.FlipF();
+      if(fpos.VFlip()== v1) return true;
+    } while(startPos!=fpos);    
   }
   return false;
 }
@@ -145,13 +137,13 @@ bool IsBoundaryVertexOnBase(KdTree<ScalarType> &kdtree, const CoordType &p)
 /**
  * @brief Retract
  * @param t the edgemesh containing the visit tree. 
- * We assume that the vertexes 
+ *  
  */
 void Retract(KdTree<ScalarType> &kdtree, MeshType &t)
 {
   printf("Retracting a tree of %i edges and %i vertices\n",t.en,t.vn);
   tri::UpdateTopology<MeshType>::VertexEdge(t);
-
+  tri::Allocator<MeshType>::CompactEveryVector(t);
   std::stack<VertexType *> vertStack;
 
   // Put on the stack all the vertex with just a single incident edge. 
@@ -159,7 +151,7 @@ void Retract(KdTree<ScalarType> &kdtree, MeshType &t)
   {
     std::vector<EdgeType *> starVec;
     edge::VEStarVE(&*vi,starVec);
-    if(starVec.size()==1 && !IsBoundaryVertexOnBase(kdtree, vi->cP()))
+    if(starVec.size()==1)// && !IsBoundaryVertexOnBase(kdtree, vi->cP()))
       vertStack.push(&*vi);
   }
  
@@ -186,9 +178,22 @@ void Retract(KdTree<ScalarType> &kdtree, MeshType &t)
     }
   }
   assert(unvisitedEdgeNum >0);
-  
-  for(size_t i =0; i<t.edge.size();++i)
-    if(t.edge[i].IsV()) tri::Allocator<MeshType>::DeleteEdge(t,t.edge[i]);
+  for(size_t i =0; i<t.edge.size();++i){
+    PosType fpos;
+    if( ExistEdge(kdtree, t.edge[i].P(0), t.edge[i].P(1), fpos)){
+      if(fpos.IsBorder()) {
+        t.edge[i].SetV();
+      }
+  }
+    else assert(0);
+  }
+
+  // All the boundary edges are in the initial tree so the clean boundary loops chains remains as irreducible loops
+  // We delete them (leaving dangling edges with a vertex on the boundary)
+  for(size_t i =0; i<t.edge.size();++i){    
+    if (t.edge[i].IsV()) 
+      tri::Allocator<MeshType>::DeleteEdge(t,t.edge[i]) ;
+  }
   assert(t.en >0);
   tri::Clean<MeshType>::RemoveUnreferencedVertex(t);
   tri::Allocator<MeshType>::CompactEveryVector(t);
@@ -198,7 +203,7 @@ void Retract(KdTree<ScalarType> &kdtree, MeshType &t)
 // \brief This function build a cut tree. 
 //
 // First we make a bread first FF face visit. 
-// Each time that we encounter a visited face we cut add to the tree the edge 
+// Each time that we encounter a visited face we add to the tree the edge 
 // that brings to the already visited face.
 // this structure build a dense graph and we retract this graph retracting each 
 // leaf until we remains with just the loops that cuts the object. 
@@ -206,6 +211,8 @@ void Retract(KdTree<ScalarType> &kdtree, MeshType &t)
 void BuildVisitTree(MeshType &dualMesh, int startingFaceInd=0)
 {
   tri::UpdateTopology<MeshType>::FaceFace(base);
+  tri::UpdateTopology<MeshType>::VertexFace(base); 
+  
   tri::UpdateFlags<MeshType>::FaceClearV(base);
   tri::UpdateFlags<MeshType>::VertexBorderFromFaceAdj(base);
   std::vector<face::Pos<FaceType> > visitStack; // the stack contain the pos on the 'starting' face. 
@@ -235,8 +242,7 @@ void BuildVisitTree(MeshType &dualMesh, int startingFaceInd=0)
     }
     else
     {
-      if(!c.IsBorder())
-         tri::Allocator<MeshType>::AddEdge(dualMesh,c.V()->P(),c.VFlip()->P());
+      tri::Allocator<MeshType>::AddEdge(dualMesh,c.V()->P(),c.VFlip()->P());
     }
   }
   assert(cnt==base.fn);
@@ -245,6 +251,8 @@ void BuildVisitTree(MeshType &dualMesh, int startingFaceInd=0)
   KdTree<ScalarType> kdtree(vdw);
   
   tri::Clean<MeshType>::RemoveDuplicateVertex(dualMesh);    
+//  tri::io::ExporterPLY<MeshType>::Save(dualMesh,"fulltree.ply",tri::io::Mask::IOM_EDGEINDEX);  
+  
   Retract(kdtree,dualMesh);
   OptimizeTree(kdtree, dualMesh);
   tri::UpdateBounding<MeshType>::Box(dualMesh);    
