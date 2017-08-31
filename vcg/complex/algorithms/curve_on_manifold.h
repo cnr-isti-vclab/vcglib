@@ -404,7 +404,7 @@ public:
         toSplitVec.push_back(std::make_pair(tri::Index(base,f),&*vi));
     }
     
-    printf("SplitMeshWithPolyline found %i non snapped points\n",toSplitVec.size());fflush(stdout);
+    printf("SplitMeshWithPolyline found %lu non snapped points\n",toSplitVec.size());fflush(stdout);
 
     FaceIterator newFi = tri::Allocator<MeshType>::AddFaces(base,toSplitVec.size()*2);
     VertexIterator newVi = tri::Allocator<MeshType>::AddVertices(base,toSplitVec.size());    
@@ -434,12 +434,12 @@ public:
         CoordType p0=f->P0(i);
         CoordType p1=f->P1(i);
         if (p0>p1) std::swap(p0,p1);  
-        if(edgeToPolyVertMap[make_pair(p0,p1)]) printf("Found an already used Edge %i - %i %i!!!\n", tri::Index(base,f->V0(i)),tri::Index(base,f->V1(i)),tri::Index(poly,&*vi));
+        if(edgeToPolyVertMap[make_pair(p0,p1)]) printf("Found an already used Edge %lu - %lu %lu!!!\n", tri::Index(base,f->V0(i)),tri::Index(base,f->V1(i)),tri::Index(poly,&*vi));
         edgeToPolyVertMap[make_pair(p0,p1)]=&*vi;
        }         
       }
     }
-    printf("SplitMeshWithPolyline: Created a map of %i edges to be split\n",edgeToPolyVertMap.size());
+    printf("SplitMeshWithPolyline: Created a map of %lu edges to be split\n",edgeToPolyVertMap.size());
     EdgePointPred ePred(edgeToPolyVertMap);
     EdgePointSplit eSplit(edgeToPolyVertMap);
     tri::UpdateTopology<MeshType>::FaceFace(base);
