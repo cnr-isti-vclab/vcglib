@@ -147,14 +147,11 @@ void Retract(KdTree<ScalarType> &kdtree, MeshType &t)
   std::stack<VertexType *> vertStack;
 
   // Put on the stack all the vertex with just a single incident edge. 
-  for(VertexIterator vi=t.vert.begin();vi!=t.vert.end();++vi)
-  {
-    std::vector<EdgeType *> starVec;
-    edge::VEStarVE(&*vi,starVec);
-    if(starVec.size()==1)// && !IsBoundaryVertexOnBase(kdtree, vi->cP()))
-      vertStack.push(&*vi);
-  }
- 
+  ForEachVertex(t, [&](VertexType &v){
+    if(edge::VEDegree<EdgeType>(&v) ==1)  
+      vertStack.push(&v);
+  });
+  
   tri::UpdateFlags<MeshType>::EdgeClearV(t);
   tri::UpdateFlags<MeshType>::VertexClearV(t);
   
