@@ -52,7 +52,7 @@ void CutMeshAlongNonFauxEdges(MESH_TYPE &m)
 {
   typedef typename MESH_TYPE::FaceIterator FaceIterator;
   typedef typename MESH_TYPE::FaceType     FaceType;
-  
+  typedef typename face::Pos<FaceType> PosType;
   tri::Allocator<MESH_TYPE>::CompactVertexVector(m);
   tri::Allocator<MESH_TYPE>::CompactFaceVector(m);
   tri::RequireFFAdjacency(m);
@@ -68,37 +68,46 @@ void CutMeshAlongNonFauxEdges(MESH_TYPE &m)
       {
         (*fi).V(j)->SetV();
         
-        face::JumpingPos<FaceType> iPos(&*fi,j,(*fi).V(j));
-        size_t vertInd = Index(m, iPos.V()); 
-        bool isBorderVertex = iPos.FindBorder();   // for border vertex we start from the border.
-        face::JumpingPos<FaceType> startPos=iPos;
-        if(!isBorderVertex)                        // for internal vertex we search the first crease and start from it
+        PosType startPos(&*fi,j,(*fi).V(j));
+        PosType curPos=startPos;
+        bool borderVertexFlag=false;  // on border vertex swe startfrom border edges (so we are sure that we cross the crease once)
+        do 
         {
-          do {
-              bool creaseFlag = !iPos.IsFaux();
-              iPos.NextFE();
-              if(creaseFlag) break;
-          } while (startPos!=iPos);
-          startPos=iPos;                       // the found crease become the new starting pos.
-        }
+          curPos.FlipF();curPos.FlipE();
+          if(curPos.IsBorder()) {
+            borderVertexFlag=true;
+            break;
+          }
+        } while(curPos!=startPos);
         
+        assert(borderVertexFlag == curPos.IsBorder());
+        startPos=curPos;
+        if(!borderVertexFlag) // on internal vertex we start on creases.
+        {
+          do  {
+            curPos.FlipF();curPos.FlipE();
+            if(!curPos.IsFaux()) 
+              break;           
+          } while(curPos!=startPos);
+          startPos=curPos;
+        }        
         int locCreaseCounter=0;
-        int curVertexCounter=vertInd;
+        int curVertexCounter= Index(m, curPos.V());        
         
-        do { // The real Loop          
-          size_t faceInd = Index(m,iPos.F());
-          indVec[faceInd*3+ iPos.VInd()] = curVertexCounter;
-          
-          if(!iPos.IsFaux()) 
+        // The real Loop; we assume that if there is border we are starting from a border pos;
+        // the idea is that just before jumping on the next face, if we cross a crease, we increase the vertex counter.
+        do {          
+          size_t faceInd = Index(m,curPos.F());
+          indVec[faceInd*3+ curPos.VInd()] = curVertexCounter;
+          curPos.FlipE();
+          if(!curPos.IsFaux()) 
           { //qDebug("  Crease FOUND");
             ++locCreaseCounter;
             curVertexCounter=newVertexCounter;
             newVertexCounter++;
           }
-          iPos.NextFE();
-        } while (startPos!=iPos);
-        if (locCreaseCounter > 0) newVertexCounter--;
-        //printf("For vertex %i found %i creases\n",vertInd,locCreaseCounter);
+          curPos.FlipF();
+        } while (startPos!=curPos && !curPos.IsBorder());
       }
   } // end foreach face/vert 
 
