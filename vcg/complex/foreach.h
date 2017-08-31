@@ -50,36 +50,83 @@ inline void ForEachFacePos(MeshType &m, std::function<void (typename face::Pos<t
         }
 }
 
+/**
+ * ForEachFace Helper
+ * to traverse all the faces of a mesh you can simply write something like:
+ * 
+ *      ForEachFace(m, [&](const FaceType &f){
+ *         MakeSomethingWithFace(f);
+ *      });
+ *  
+ */
+
 template <class MeshType>
 inline void ForEachFace(const MeshType &m, std::function<void (const typename MeshType::FaceType &)> action)
 {
+  if(m.fn == (int) m.face.size())
+  {
+    for(auto fi=m.face.begin();fi!=m.face.end();++fi) {
+      action(*fi);
+    }       
+  }
+  else
+  {
     for(auto fi=m.face.begin();fi!=m.face.end();++fi)
-        if(!(*fi).IsD())
-        {
-          action(*fi);
-        }
+      if(!(*fi).IsD())
+      {
+        action(*fi);
+      }    
+  }
 }
 
 template <class MeshType>
-inline void ForEachFace(MeshType &m, std::function<void (typename MeshType::FaceType &)> action)
+inline void ForEachFace(const MeshType &m, std::function<void (typename MeshType::FaceType &)> action)
 {
+  if(m.fn == (int) m.face.size())
+  {
+    for(auto fi=m.face.begin();fi!=m.face.end();++fi) {
+      action(*fi);
+    }       
+  }
+  else
+  {
     for(auto fi=m.face.begin();fi!=m.face.end();++fi)
-        if(!(*fi).IsD())
-        {
-          action(*fi);
-        }
+      if(!(*fi).IsD())
+      {
+        action(*fi);
+      }    
+  }
 }
 
+/**
+ * ForEachVertex Helper
+ * to traverse all the vertexes of a mesh you can simply write something like:
+ * 
+ *      ForEachVertex(m, [&](const VertexType &v){
+ *         MakeSomethingWithVertex(v);
+ *      });
+ *  
+ */
 
 template <class MeshType>
-inline void forEachVertex(MeshType &m, std::function<void (typename MeshType::FaceType &)> action)
+inline void ForEachVertex(MeshType &m, std::function<void (typename MeshType::VertexType &)> action)
 {
-    for(auto fi=m.face.begin();fi!=m.face.end();++fi)
-        if(!(*fi).IsD())
-        {
-          action(*fi);
-        }
+  if(m.vn == (int) m.vert.size())
+  {
+    for(auto vi=m.vert.begin();vi!=m.vert.end();++vi) {
+      action(*vi);
+    }       
+  }
+  else
+  {
+    for(auto vi=m.vert.begin();vi!=m.vert.end();++vi)
+      if(!(*vi).IsD())
+      {
+        action(*vi);
+      }    
+  }
 }
+
 
 
 
