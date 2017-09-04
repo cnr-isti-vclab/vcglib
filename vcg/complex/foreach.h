@@ -127,6 +127,34 @@ inline void ForEachVertex(MeshType &m, std::function<void (typename MeshType::Ve
   }
 }
 
+/**
+ * ForEachEdge Helper
+ * to traverse all the vertexes of a mesh you can simply write something like:
+ * 
+ *      ForEachEdge(m, [&](const EdgeType &e){
+ *         MakeSomethingWithEdge(e);
+ *      });
+ *  
+ */
+
+template <class MeshType>
+inline void ForEachEdge(MeshType &m, std::function<void (typename MeshType::EdgeType &)> action)
+{
+  if(m.en == (int) m.edge.size())
+  {
+    for(auto ei=m.edge.begin();ei!=m.edge.end();++ei) {
+      action(*ei);
+    }       
+  }
+  else
+  {
+    for(auto ei=m.edge.begin();ei!=m.edge.end();++ei)
+      if(!(*ei).IsD())
+      {
+        action(*ei);
+      }    
+  }
+}
 
 
 
