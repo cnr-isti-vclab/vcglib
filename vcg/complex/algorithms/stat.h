@@ -40,15 +40,16 @@ class Stat
 {
 public:
   typedef StatMeshType MeshType;
+  typedef typename MeshType::ScalarType			ScalarType;
   typedef typename MeshType::VertexType     VertexType;
   typedef typename MeshType::VertexPointer  VertexPointer;
   typedef typename MeshType::VertexIterator VertexIterator;
   typedef typename MeshType::ConstVertexIterator ConstVertexIterator;
-  typedef typename MeshType::ScalarType			ScalarType;
+  typedef typename MeshType::EdgeType       EdgeType;
+  typedef typename MeshType::EdgeIterator   EdgeIterator;
   typedef typename MeshType::FaceType       FaceType;
   typedef typename MeshType::FacePointer    FacePointer;
   typedef typename MeshType::FaceIterator   FaceIterator;
-  typedef typename MeshType::EdgeIterator   EdgeIterator;
   typedef typename MeshType::FaceContainer  FaceContainer;
   typedef typename vcg::Box3<ScalarType>  Box3Type;
 
@@ -307,6 +308,14 @@ public:
     return h.Avg();
   }
 
+  static ScalarType ComputeEdgeLengthSum(MeshType & m)
+  {
+    ScalarType sum=0;
+    ForEachEdge(m, [&](EdgeType &e){
+      sum+=Distance(e.cP(0),e.cP(1));
+    });    
+    return sum;
+  }
   static void ComputeFaceEdgeLengthDistribution( MeshType & m, Distribution<float> &h, bool includeFauxEdge=false)
   {
     std::vector< typename tri::UpdateTopology<MeshType>::PEdge > edgeVec;
