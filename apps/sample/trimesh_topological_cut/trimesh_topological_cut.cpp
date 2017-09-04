@@ -47,7 +47,9 @@ int main(int argc,char ** argv )
 {
   MyMesh base, basecopy, poly;
   int ret0 = tri::io::Importer<MyMesh>::Open(base,argv[1]);
-  if(ret0 != 0 ) 
+  int ret1 = 0;
+  if(argc>2) ret1 = tri::io::Importer<MyMesh>::Open(poly,argv[2]); 
+  if(ret0 != 0 || ret1 != 0) 
   {
     printf("Failed Loading\n");
     exit(-1);
@@ -55,10 +57,13 @@ int main(int argc,char ** argv )
   
   tri::UpdateBounding<MyMesh>::Box(base);
   printf( "Mesh %s has %i vert and %i faces\n", argv[1], base.VN(), base.FN() );
-  srand(time(0));
-  tri::CutTree<MyMesh> ct(base);
-  ct.BuildVisitTree(poly,rand()%base.fn);
-  tri::io::ExporterPLY<MyMesh>::Save(poly,"tree.ply",tri::io::Mask::IOM_EDGEINDEX);  
+  printf( "Poly %s has %i vert and %i edges\n", argv[2], poly.VN(), poly.EN() );
+  if(poly.EN()==0) {
+    srand(time(0));
+    tri::CutTree<MyMesh> ct(base);
+    ct.BuildVisitTree(poly,rand()%base.fn);
+  }
+  tri::io::ExporterPLY<MyMesh>::Save(poly,"0_cut_tree.ply",tri::io::Mask::IOM_EDGEINDEX);  
   
   tri::CoM<MyMesh> cc(base);
   cc.Init();
@@ -68,39 +73,38 @@ int main(int argc,char ** argv )
   tri::CutMeshAlongNonFauxEdges<MyMesh>(basecopy);
   tri::io::ExporterPLY<MyMesh>::Save(basecopy,"base_cut_with_tree.ply");  
   
+  // Selected vertices are 'locked' during the smoothing. 
+  cc.SelectBoundaryVertex(poly);
+  cc.SelectUniformlyDistributed(poly,20); // lock some vertices uniformly just for fun
   
+  // Two smoothing runs,
+  // the first that allows fast movement over the surface (long edges that can skim surface details)
   cc.par.surfDistThr = base.bbox.Diag()/100.0;
-  cc.par.maxSimpEdgeLen = base.bbox.Diag()/40.0;
-  cc.par.minRefEdgeLen = base.bbox.Diag()/80.0;
-  cc.SmoothProject(poly,40,0.5, .7);
+  cc.par.maxSimpEdgeLen = base.bbox.Diag()/50.0;
+  cc.par.minRefEdgeLen = base.bbox.Diag()/100.0;
+  cc.SmoothProject(poly,10,0.7,.3);
+  tri::io::ExporterPLY<MyMesh>::Save(poly,"1_poly_smooth.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
+
+  // The second smooting run more accurate to adapt to the surface
+  cc.par.surfDistThr = base.bbox.Diag()/1000.0;
+  cc.par.maxSimpEdgeLen = base.bbox.Diag()/1000.0;
+  cc.par.minRefEdgeLen = base.bbox.Diag()/2000.0;
+  cc.SmoothProject(poly,10,0.01,.99);
+  tri::io::ExporterPLY<MyMesh>::Save(poly,"2_poly_smooth.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
 
   Distribution<float> dist;  
   cc.EvaluateHausdorffDistance(poly, dist );
   
-//  tri::io::ExporterPLY<MyMesh>::Save(poly,"poly_adapted.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
-//  cc.par.surfDistThr = base.bbox.Diag()/2000.0;
-//  cc.par.maxSimpEdgeLen = base.bbox.Diag()/100.0;
-//  cc.par.minRefEdgeLen = base.bbox.Diag()/200.0;
-//  cc.SmoothProject(poly,10,0.3, 0.7);
-//  cc.SmoothProject(poly,1,0.01, 0.99);
-  tri::io::ExporterPLY<MyMesh>::Save(poly,"poly_adapted2.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
-  std::vector<MyVertex*> newVertVec;  
-  cc.SnapPolyline(poly);
-  tri::io::ExporterPLY<MyMesh>::Save(poly,"poly_snap.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
+  // Adapt the polyline to the mesh (in the end it will have vertices only on edges and vertices of the base mesh)
   cc.RefineCurveByBaseMesh(poly);
-  tri::io::ExporterPLY<MyMesh>::Save(poly,"poly_refined.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
-   
+  tri::io::ExporterPLY<MyMesh>::Save(poly,"3_poly_refined.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);   
+  // Safely split the mesh with this refined polyline
   cc.SplitMeshWithPolyline(poly);
-  cc.RefineCurveByBaseMesh(poly);
-  tri::io::ExporterPLY<MyMesh>::Save(base,"base_refined.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
-  cc.SplitMeshWithPolyline(poly);
-  cc.RefineCurveByBaseMesh(poly);
-  cc.SplitMeshWithPolyline(poly);
-  cc.RefineCurveByBaseMesh(poly);
-  tri::io::ExporterPLY<MyMesh>::Save(base,"base_refined2.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY+tri::io::Mask::IOM_FACEFLAGS);
+  tri::io::ExporterPLY<MyMesh>::Save(base,"3_mesh_refined.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
+  // Now the two meshes should have coincident edges
   cc.MarkFauxEdgeWithPolyLine(poly);
   CutMeshAlongNonFauxEdges(base);
-  tri::io::ExporterPLY<MyMesh>::Save(base,"base_refined2_cut.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
+  tri::io::ExporterPLY<MyMesh>::Save(base,"4_mesh_cut.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
   
   return 0;
 }

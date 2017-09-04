@@ -32,6 +32,7 @@
 #include<vcg/complex/algorithms/clean.h>
 #include<vcg/complex/algorithms/refine.h>
 #include<vcg/complex/algorithms/create/platonic.h>
+#include<vcg/complex/algorithms/point_sampling.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/space/index/kdtree/kdtree.h>
 #include <vcg/math/histogram.h>
@@ -74,7 +75,7 @@ public:
     ScalarType surfDistThr; // Distance between surface and curve; used in simplify and refine
     ScalarType polyDistThr; // Distance between the 
     ScalarType minRefEdgeLen;  // Minimal admitted Edge Lenght (used in refine: never make edge shorther than this value) 
-    ScalarType maxSimpEdgeLen; // Minimal admitted Edge Lenght (used in simplify: never make edges longer than this value) 
+    ScalarType maxSimpEdgeLen; // Maximal admitted Edge Lenght (used in simplify: never make edges longer than this value) 
     ScalarType maxSmoothDelta; // The maximum movement that is admitted during smoothing.
     ScalarType maxSnapThr;     // The maximum distance allowed when snapping a vertex of the polyline onto a mesh vertex
     ScalarType gridBailout;    // The maximum distance bailout used in grid sampling
@@ -115,21 +116,21 @@ public:
  
   FaceType *GetClosestFace(const CoordType &p)
   {
-    float closestDist;
+    ScalarType closestDist;
     CoordType closestP;
     return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, p.gridBailout, closestDist, closestP);
   }
   
   FaceType *GetClosestFaceIP(const CoordType &p, CoordType &ip)
     {
-      float closestDist;
+      ScalarType closestDist;
       CoordType closestP,closestN;
       return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, this->par.gridBailout, closestDist, closestP,closestN,ip);
     }
 
   FaceType *GetClosestFacePoint(const CoordType &p, CoordType &closestP)
   {
-    float closestDist;
+    ScalarType closestDist;
     return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, this->par.gridBailout, closestDist, closestP);
   }
   
@@ -171,11 +172,11 @@ public:
    * @param poly
    * @return true if all the edges of the polyline are snapped onto the mesh. 
    * 
-   * Use this function toghether with the CutMeshAlongCrease function to actually cut the mesh with a snapped polyline.
+   * Use this function together with the CutMeshAlongCrease function to actually cut the mesh with a snapped polyline.
    * 
    */
     
-  bool MarkFauxEdgeWithPolyLine( MeshType &poly)
+  bool MarkFauxEdgeWithPolyLine(MeshType &poly)
   {
     tri::UpdateFlags<MeshType>::FaceSetF(base);
     tri::UpdateTopology<MeshType>::VertexFace(base);
@@ -183,7 +184,7 @@ public:
     
     for(EdgeIterator ei=poly.edge.begin(); ei!=poly.edge.end();++ei)
     {
-      Point3f ip0,ip1;
+      CoordType ip0,ip1;
       FaceType *f0 = GetClosestFaceIP(ei->cP(0),ip0);
       FaceType *f1 = GetClosestFaceIP(ei->cP(1),ip1);
       
@@ -191,14 +192,19 @@ public:
       {
         VertexPointer v0 = FindVertexSnap(f0,ip0);
         VertexPointer v1 = FindVertexSnap(f1,ip1);
-        assert(v1>=0 && v0>=0 && v0!=v1);
+        assert(v1>0 && v0>0 && v0!=v1);
         FacePointer ff0,ff1;
         int e0,e1;
         bool ret=face::FindSharedFaces<FaceType>(v0,v1,ff0,ff1,e0,e1);
-        assert(ret); 
-        assert(ff0->V(e0)==v0 || ff0->V(e0)==v1);
-        ff0->ClearF(e0);
-        ff1->ClearF(e1);        
+        if(ret){
+          assert(ret); 
+          assert(ff0->V(e0)==v0 || ff0->V(e0)==v1);
+          ff0->ClearF(e0);
+          ff1->ClearF(e1);        
+        }
+        else {
+          
+        }
       }
       else {
         assert(0);
@@ -206,25 +212,25 @@ public:
     }
   }
    
-  float MinDistOnEdge(Point3f samplePnt, EdgeGrid &edgeGrid, MeshType &poly, Point3f &closestPoint)
+  ScalarType MinDistOnEdge(CoordType samplePnt, EdgeGrid &edgeGrid, MeshType &poly, CoordType &closestPoint)
   {
-      float polyDist;
+      ScalarType polyDist;
       EdgeType *cep = vcg::tri::GetClosestEdgeBase(poly,edgeGrid,samplePnt,par.gridBailout,polyDist,closestPoint);        
       return polyDist;    
   }
   
   // Given an edge of a mesh, supposedly intersecting the polyline, 
   // we search on it the closest point to the polyline
-  static float MinDistOnEdge(VertexType *v0,VertexType *v1, EdgeGrid &edgeGrid, MeshType &poly, Point3f &closestPoint)
+  static ScalarType MinDistOnEdge(VertexType *v0,VertexType *v1, EdgeGrid &edgeGrid, MeshType &poly, CoordType &closestPoint)
   {
-    float minPolyDist = std::numeric_limits<ScalarType>::max();
-    const float sampleNum = 50;
-    const float maxDist = poly.bbox.Diag()/10.0;
-    for(float k = 0;k<sampleNum+1;++k)
+    ScalarType minPolyDist = std::numeric_limits<ScalarType>::max();
+    const ScalarType sampleNum = 50;
+    const ScalarType maxDist = poly.bbox.Diag()/10.0;
+    for(ScalarType k = 0;k<sampleNum+1;++k)
     {
-      float polyDist;
-      Point3f closestPPoly;
-      Point3f samplePnt = (v0->P()*k +v1->P()*(sampleNum-k))/sampleNum;          
+      ScalarType polyDist;
+      CoordType closestPPoly;
+      CoordType samplePnt = (v0->P()*k +v1->P()*(sampleNum-k))/sampleNum;          
       
       EdgeType *cep = vcg::tri::GetClosestEdgeBase(poly,edgeGrid,samplePnt,maxDist,polyDist,closestPPoly);        
       
@@ -266,12 +272,12 @@ public:
   
   
   
-  static Point3f QLerp(VertexType *v0, VertexType *v1)
+  static CoordType QLerp(VertexType *v0, VertexType *v1)
   {
     
-    float qSum = fabs(v0->Q())+fabs(v1->Q());      
-    float w0 = (qSum - fabs(v0->Q()))/qSum;
-    float w1 = (qSum - fabs(v1->Q()))/qSum;      
+    ScalarType qSum = fabs(v0->Q())+fabs(v1->Q());      
+    ScalarType w0 = (qSum - fabs(v0->Q()))/qSum;
+    ScalarType w1 = (qSum - fabs(v1->Q()))/qSum;      
     return v0->P()*w0 + v1->P()*w1;      
   }
   
@@ -282,7 +288,8 @@ public:
    * @param newVertVec the vector of the indexes of the snapped vertices
    * 
    * Polyline vertices can be snapped either on vertexes or on edges. 
-   * 
+   * Usually the only points that we should allow to not be snapped are the endpoints and non manifold points.
+   * Vertexes are colored according to their snapping state 
    */  
     
   void SnapPolyline(MeshType &poly)
@@ -294,7 +301,7 @@ public:
     int borderCnt=0,midCnt=0,nonmanifCnt=0;
     for(VertexIterator vi=poly.vert.begin(); vi!=poly.vert.end();++vi)
     {
-      Point3f ip;
+      CoordType ip;
       FaceType *f = GetClosestFaceIP(vi->cP(),ip);
       if(BarycentricSnap(ip))
       {
@@ -321,7 +328,25 @@ public:
     if(dupCnt) printf("SnapPolyline: Removed %i Duplicated vertices\n",dupCnt);
   }
   
-
+   void SelectBoundaryVertex(MeshType &poly)
+   {
+     tri::UpdateSelection<MeshType>::VertexClear(poly);
+     tri::UpdateTopology<MeshType>::VertexEdge(poly);
+     ForEachVertex(poly, [&](VertexType &v){
+       if(edge::VEDegree<EdgeType>(&v)==1) v.SetS();
+     });
+   }
+  
+   void SelectUniformlyDistributed(MeshType &poly, int k)
+   {
+     tri::TrivialPointerSampler<MeshType> tps;
+     ScalarType samplingRadius = tri::Stat<MeshType>::ComputeEdgeLengthSum(poly)/ScalarType(k);
+     tri::SurfaceSampling<MeshType, typename tri::TrivialPointerSampler<MeshType> >::EdgeMeshUniform(poly,tps,samplingRadius);     
+     for(int i=0;i<tps.sampleVec.size();++i)
+       tps.sampleVec[i]->SetS();
+   }
+   
+   
     
   /*
    * Make an edge mesh 1-manifold by splitting all the
@@ -398,7 +423,7 @@ public:
     
     for(VertexIterator vi=poly.vert.begin(); vi!=poly.vert.end();++vi)
     {
-      Point3f ip;
+      CoordType ip;
       FaceType *f = GetClosestFaceIP(vi->cP(),ip);
       if(!BarycentricSnap(ip))
         toSplitVec.push_back(std::make_pair(tri::Index(base,f),&*vi));
@@ -424,7 +449,7 @@ public:
     std::map<std::pair<CoordType,CoordType>, VertexPointer> edgeToPolyVertMap;
     for(VertexIterator vi=poly.vert.begin(); vi!=poly.vert.end();++vi)
     {
-      Point3f ip;
+      CoordType ip;
       FaceType *f = GetClosestFaceIP(vi->cP(),ip);
       if(!BarycentricSnap(ip)) { assert(0); }            
       for(int i=0;i<3;++i)
@@ -493,26 +518,29 @@ public:
     }
     tri::Clean<MeshType>::RemoveDuplicateVertex(poly);
     tri::Allocator<MeshType>::CompactEveryVector(poly);     
-    printf("SimplifyMidEdge %5i -> %5i %i mid %i ve \n",startVn,poly.vn,midEdgeCollapseCnt);
+//    printf("SimplifyMidEdge %5i -> %5i %i mid %i ve \n",startVn,poly.vn,midEdgeCollapseCnt);
    } while(startVn>poly.vn);
   } 
   
   /**
-   * @brief SimplifyMidFace remove all the vertices that in the mid of a face and between two of the points snapped onto the edges of the same face
+   * @brief SimplifyMidFace remove all the vertices that in the mid of a face 
+   * and between two of the points snapped onto the edges of the same face
    * @param poly
    * 
    * It assumes that the mesh has been snapped and refined by the BaseMesh
+   * 
    */
   void SimplifyMidFace(MeshType &poly)
   {
-   int startVn;
+   int startVn= poly.vn;;
+   int midFaceCollapseCnt=0;
+   int vertexEdgeCollapseCnt=0;
+   int curVn;
    do
    {
-     tri::Allocator<MeshType>::CompactEveryVector(poly); 
-    startVn = poly.vn;
+    tri::Allocator<MeshType>::CompactEveryVector(poly); 
+    curVn = poly.vn;
     UpdateTopology<MeshType>::VertexEdge(poly);
-    int midFaceCollapseCnt=0;
-    int vertexEdgeCollapseCnt=0;
     for(int i =0; i<poly.vn;++i)
     {
       std::vector<VertexPointer> starVecVp;
@@ -562,8 +590,8 @@ public:
           edge::VEEdgeCollapse(poly,&(poly.vert[i]));
       }
     }  
-    printf("SimplifyMidFace %5i -> %5i %i mid %i ve \n",startVn,poly.vn,midFaceCollapseCnt,vertexEdgeCollapseCnt);
-   } while(startVn>poly.vn);
+   } while(curVn>poly.vn);
+   printf("SimplifyMidFace %5i -> %5i %i mid %i ve \n",startVn,poly.vn,midFaceCollapseCnt,vertexEdgeCollapseCnt);
   } 
   
   void Simplify( MeshType &poly)
@@ -581,13 +609,13 @@ public:
       edge::VVStarVE(&(poly.vert[i]),starVecVp);      
       if( (starVecVp.size()==2) && (!poly.vert[i].IsS()))
       {      
-        float newSegLen = Distance(starVecVp[0]->P(), starVecVp[1]->P());
+        ScalarType newSegLen = Distance(starVecVp[0]->P(), starVecVp[1]->P());
         Segment3f seg(starVecVp[0]->P(),starVecVp[1]->P());
-        float segDist;
-        Point3f closestPSeg;
+        ScalarType segDist;
+        CoordType closestPSeg;
         SegmentPointDistance(seg,poly.vert[i].cP(),closestPSeg,segDist);
-        Point3f fp,fn;
-        float maxSurfDist = MaxSegDist(starVecVp[0], starVecVp[1],fp,fn);
+        CoordType fp,fn;
+        ScalarType maxSurfDist = MaxSegDist(starVecVp[0], starVecVp[1],fp,fn);
         
         if((maxSurfDist < par.surfDistThr) && (newSegLen < par.maxSimpEdgeLen) )
         {
@@ -608,8 +636,8 @@ public:
     tri::UpdateQuality<MeshType>::VertexConstant(poly,0);
     for(int i =0; i<poly.edge.size();++i)
     {      
-      Point3f farthestP, farthestN;      
-      float maxDist = MaxSegDist(poly.edge[i].V(0),poly.edge[i].V(1), farthestP, farthestN, &dist);      
+      CoordType farthestP, farthestN;      
+      ScalarType maxDist = MaxSegDist(poly.edge[i].V(0),poly.edge[i].V(1), farthestP, farthestN, &dist);      
       poly.edge[i].V(0)->Q()+= maxDist;
       poly.edge[i].V(1)->Q()+= maxDist;
     }
@@ -629,7 +657,8 @@ public:
    * @return true if they have been snapped.
    * 
    * This is the VERY important function that is used everywhere. 
-   * Given a barycentric coord of a point inside a triangle it decides if it should be "snapped" either onto an edge or on a vertex. * 
+   * Given a barycentric coord of a point inside a triangle it decides if it should be "snapped" either onto an edge or on a vertex. 
+   * It relies on the  barycentricSnapThr parameter
    * 
    */
   bool BarycentricSnap(CoordType &ip)
@@ -666,10 +695,10 @@ public:
    * 
    * Note that we have to check the case where 
    */
-  bool TestSplitSegWithMesh(VertexType *v0, VertexType *v1, Point3f &splitPt)
+  bool TestSplitSegWithMesh(VertexType *v0, VertexType *v1, CoordType &splitPt)
   {
     Segment3f segPoly(v0->P(),v1->P());
-    const float sampleNum = 40;    
+    const ScalarType sampleNum = 40;    
     CoordType ip0,ip1;
     
     FaceType *f0=GetClosestFaceIP(v0->P(),ip0);
@@ -699,9 +728,9 @@ public:
     
     CoordType bestSplitPt(0,0,0);
     ScalarType bestDist = std::numeric_limits<ScalarType>::max();
-    for(float k = 1;k<sampleNum;++k)
+    for(ScalarType k = 1;k<sampleNum;++k)
     {
-      Point3f samplePnt = segPoly.Lerp(k/sampleNum);    
+      CoordType samplePnt = segPoly.Lerp(k/sampleNum);    
       CoordType ip;
       FaceType *f=GetClosestFaceIP(samplePnt,ip);
 //      BarycentricEdgeSnap(ip);
@@ -790,6 +819,7 @@ public:
      PosType curPos=startPos;
      do
      {
+       assert(curPos.V()==f0->V(v0));
        if(curPos.VFlip()==f1->V(v1)) return true;
        curPos.FlipE();
        curPos.FlipF();       
@@ -816,7 +846,7 @@ public:
    * 
    * Note that we have to check the case where 
    */
-  bool TestSplitSegWithMeshAdapt(VertexType *v0, VertexType *v1, Point3f &splitPt)
+  bool TestSplitSegWithMeshAdapt(VertexType *v0, VertexType *v1, CoordType &splitPt)
   {
     splitPt=(v0->P()+v1->P())/2.0;
       
@@ -831,6 +861,8 @@ public:
     bool snap1=BarycentricSnap(ip1);
     bool snapm=BarycentricSnap(ipm);
     
+    splitPt = fm->P(0)*ipm[0]+fm->P(1)*ipm[1]+fm->P(2)*ipm[2];
+    
     if(!snap0 && !snap1) {
       assert(f0!=f1);
       return true;
@@ -838,8 +870,7 @@ public:
     if(snap0 && snap1) 
     {
       if(SnappedOnSameFace(f0,ip0,f1,ip1)) 
-        return false;
-            
+        return false;            
     }
     
     if(snap0) {
@@ -852,14 +883,25 @@ public:
           if(f1->V(i)==f0->V(v0)) return false;
       }
     }
+    if(snap1) {
+      int e1,v1;
+      if (IsSnappedEdge(ip1,e1)) {
+        if(f1->FFp(e1) == f0) return false;
+      }
+      if(IsSnappedVertex(ip1,v1)) {
+        for(int i=0;i<3;++i) 
+          if(f0->V(i)==f1->V(v1)) return false;
+      }
+    }
+    
     return true;
   }
   
   
-  bool TestSplitSegWithMeshAdaptOld(VertexType *v0, VertexType *v1, Point3f &splitPt)
+  bool TestSplitSegWithMeshAdaptOld(VertexType *v0, VertexType *v1, CoordType &splitPt)
   {
     Segment3f segPoly(v0->P(),v1->P());
-    const float sampleNum = 40;    
+    const ScalarType sampleNum = 40;    
     CoordType ip0,ip1;    
     FaceType *f0=GetClosestFaceIP(v0->P(),ip0);
     FaceType *f1=GetClosestFaceIP(v1->P(),ip1);
@@ -895,16 +937,16 @@ public:
   
   // Given a segment find the maximum distance from it to the original surface. 
   // It is used to evaluate the Haustdorff distance of a Segment from the mesh.
-  float MaxSegDist(VertexType *v0, VertexType *v1, Point3f &farthestPointOnSurf, Point3f &farthestN, Distribution<ScalarType> *dist=0)
+  ScalarType MaxSegDist(VertexType *v0, VertexType *v1, CoordType &farthestPointOnSurf, CoordType &farthestN, Distribution<ScalarType> *dist=0)
   {
-    float maxSurfDist = 0;
-    const float sampleNum = 10;
-    const float maxDist = base.bbox.Diag()/10.0;
-    for(float k = 1;k<sampleNum;++k)
+    ScalarType maxSurfDist = 0;
+    const ScalarType sampleNum = 10;
+    const ScalarType maxDist = base.bbox.Diag()/10.0;
+    for(ScalarType k = 1;k<sampleNum;++k)
     {
-      float surfDist;
-      Point3f closestPSurf;
-      Point3f samplePnt = (v0->P()*k +v1->P()*(sampleNum-k))/sampleNum;          
+      ScalarType surfDist;
+      CoordType closestPSurf;
+      CoordType samplePnt = (v0->P()*k +v1->P()*(sampleNum-k))/sampleNum;          
       FaceType *f = vcg::tri::GetClosestFaceBase(base,uniformGrid,samplePnt,maxDist, surfDist, closestPSurf);        
       if(dist)
         dist->Add(surfDist);
@@ -940,8 +982,8 @@ public:
       EdgeType &ei = poly.edge[i];
       if(edge::Length(ei)>par.minRefEdgeLen)  
       {      
-        Point3f farthestP, farthestN;
-        float maxDist = MaxSegDist(ei.V(0),ei.V(1),farthestP, farthestN);
+        CoordType farthestP, farthestN;
+        ScalarType maxDist = MaxSegDist(ei.V(0),ei.V(1),farthestP, farthestN);
         if(maxDist > par.surfDistThr)  
         {
           edge::VEEdgeSplit(poly, &ei, farthestP, farthestN); 
@@ -960,23 +1002,36 @@ public:
   void RefineCurveByBaseMesh(MeshType &poly)
   {
     tri::Allocator<MeshType>::CompactEveryVector(poly);    
-    int lastEn;
-    do 
-    {
-      lastEn = poly.en;
-      for(int i =0; i<lastEn;++i)
+    std::vector<int> edgeToRefineVec;
+    for(int i=0; i<poly.en;++i) 
+      edgeToRefineVec.push_back(i);
+    int startEn=poly.en;  
+    int iterCnt=0;
+    while (!edgeToRefineVec.empty() && iterCnt<100) {
+      iterCnt++;
+      std::vector<int> edgeToRefineVecNext;
+      for(int i=0; i<edgeToRefineVec.size();++i)
       {
+        EdgeType &e = poly.edge[edgeToRefineVec[i]];
         CoordType splitPt;
-        if(TestSplitSegWithMeshAdapt(poly.edge[i].V(0),poly.edge[i].V(1),splitPt))  
-          edge::VEEdgeSplit(poly, &poly.edge[i], splitPt); 
-      } 
-      printf("RefineCurveByBaseMesh %i en -> %i en\n",lastEn,poly.en); fflush(stdout);
+        if(TestSplitSegWithMeshAdapt(e.V(0),e.V(1),splitPt))  
+        {
+          edge::VEEdgeSplit(poly, &e, splitPt); 
+          edgeToRefineVecNext.push_back(edgeToRefineVec[i]);
+          edgeToRefineVecNext.push_back(poly.en-1);
+        } 
+      }
       tri::Allocator<MeshType>::CompactEveryVector(poly);
-    } while(lastEn < poly.en);
+      swap(edgeToRefineVecNext,edgeToRefineVec);
+       printf("RefineCurveByBaseMesh %i en -> %i en\n",startEn,poly.en); fflush(stdout);    
+    }
+//    
     SimplifyMidFace(poly);
     SimplifyMidEdge(poly);
     SnapPolyline(poly);    
+    printf("RefineCurveByBaseMesh %i en -> %i en\n",startEn,poly.en); fflush(stdout);    
   }
+  
   
   
   /**
@@ -1003,35 +1058,35 @@ public:
     {
       if(k==iterNum-1) projectWeight=1; 
       
-      std::vector<Point3f> posVec(poly.vn,Point3f(0,0,0));
+      std::vector<CoordType> posVec(poly.vn,CoordType(0,0,0));
       std::vector<int>     cntVec(poly.vn,0);
   
       for(int i =0; i<poly.en;++i)
       {
         for(int j=0;j<2;++j)
         {
-          int vertInd = tri::Index(poly,poly.edge[i].V(j));
+          int vertInd = tri::Index(poly,poly.edge[i].V0(j));
           posVec[vertInd] += poly.edge[i].V1(j)->P();
           cntVec[vertInd] += 1;
         }
       }
       
-      const float maxDist = base.bbox.Diag()/10.0; 
+      const ScalarType maxDist = base.bbox.Diag()/10.0; 
       for(int i=0; i<poly.vn; ++i)
         if(!poly.vert[i].IsS())
         {
-          Point3f smoothPos = (poly.vert[i].P() + posVec[i])/float(cntVec[i]+1);
+          CoordType smoothPos = (poly.vert[i].P() + posVec[i])/ScalarType(cntVec[i]+1);
           
-          Point3f newP = poly.vert[i].P()*(1.0-smoothWeight) + smoothPos *smoothWeight;
+          CoordType newP = poly.vert[i].P()*(1.0-smoothWeight) + smoothPos *smoothWeight;
           
-          Point3f delta =  newP - poly.vert[i].P();
-          if(delta.Norm() > par.maxSmoothDelta) 
-          {
-            newP =  poly.vert[i].P() + ( delta / delta.Norm()) * maxDist*0.5;
-          }
+//          CoordType delta =  newP - poly.vert[i].P();
+//          if(delta.Norm() > par.maxSmoothDelta) 
+//          {
+//            newP =  poly.vert[i].P() + ( delta / delta.Norm()) * maxDist*0.5;
+//          }
           
-          float minDist;
-          Point3f closestP;
+          ScalarType minDist;
+          CoordType closestP;
           FaceType *f = vcg::tri::GetClosestFaceBase(base,uniformGrid,newP,maxDist, minDist, closestP);
           assert(f);
           poly.vert[i].P() = newP*(1.0-projectWeight) +closestP*projectWeight;
@@ -1070,7 +1125,7 @@ public:
     }
 };
 
-struct EdgePointSplit : public std::unary_function<face::Pos<FaceType> ,  Point3f>
+struct EdgePointSplit : public std::unary_function<face::Pos<FaceType> ,  CoordType>
 {
 public:
   std::map<std::pair<CoordType,CoordType>, VertexPointer> &edgeToPolyVertMap;
