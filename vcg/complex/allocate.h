@@ -287,7 +287,6 @@ public:
             */
   static EdgeIterator AddEdges(MeshType &m, size_t n, PointerUpdater<EdgePointer> &pu)
   {
-    EdgeIterator last;
     if(n == 0) return m.edge.end();
     pu.Clear();
     if(m.edge.empty()) pu.oldBase=0;  // if the vector is empty we cannot find the last valid element
@@ -298,6 +297,9 @@ public:
 
     m.edge.resize(m.edge.size()+n);
     m.en+=int(n);
+    size_t siz=(size_t)(m.edge.size()-n);
+    EdgeIterator firstNewEdge = m.edge.begin();
+    advance(firstNewEdge,siz);
 
     typename std::set<typename MeshType::PointerToAttribute>::iterator ai;
     for(ai = m.edge_attr.begin(); ai != m.edge_attr.end(); ++ai)
@@ -314,22 +316,25 @@ public:
               if ((*fi).cFEp(i)!=0) pu.Update((*fi).FEp(i));
         }
 
-      if(HasVEAdjacency(m))
+      if(HasVEAdjacency(m)){
         for (VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
           if(!(*vi).IsD())
             if ((*vi).cVEp()!=0) pu.Update((*vi).VEp());
-
+        for(EdgeIterator ei=m.edge.begin();ei!=firstNewEdge;++ei)
+          if(!(*ei).IsD())
+          {            
+            if ((*ei).cVEp(0)!=0) pu.Update((*ei).VEp(0));
+            if ((*ei).cVEp(1)!=0) pu.Update((*ei).VEp(1));
+          }        
+      }
+      
       if(HasHEAdjacency(m))
         for (HEdgeIterator hi=m.hedge.begin(); hi!=m.hedge.end(); ++hi)
           if(!(*hi).IsD())
             if ((*hi).cHEp()!=0) pu.Update((*hi).HEp());
     }
-    size_t siz=(size_t)(m.edge.size()-n);
-
-    last = m.edge.begin();
-    advance(last,siz);
-
-    return last;// deve restituire l'iteratore alla prima faccia aggiunta;
+    
+    return firstNewEdge;// deve restituire l'iteratore alla prima faccia aggiunta;
   }
 
   /** Function to add a single edge to the mesh. and initializing it with two VertexPointer
