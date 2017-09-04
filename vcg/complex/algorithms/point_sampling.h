@@ -134,8 +134,10 @@ template <class MeshType>
 class TrivialPointerSampler
 {
 public:
+  typedef typename MeshType::ScalarType  ScalarType;
   typedef typename MeshType::CoordType  CoordType;
   typedef typename MeshType::VertexType VertexType;
+  typedef typename MeshType::EdgeType EdgeType;
   typedef typename MeshType::FaceType   FaceType;
 
   TrivialPointerSampler() {}
@@ -153,6 +155,15 @@ public:
   {
     sampleVec.push_back(&p);
   }
+
+  void AddEdge(const EdgeType& e, ScalarType u ) // u==0 -> v(0) u==1 -> v(1);
+  {
+    if( u < 0.5 )
+      sampleVec.push_back(e.cV(0));
+    else 
+      sampleVec.push_back(e.cV(1));
+  }
+  
   // This sampler should be used only for getting vertex pointers. Meaningless in other case.
   void AddFace(const FaceType &, const CoordType &)   { assert(0); }
   void AddTextureSample(const FaceType &, const CoordType &, const Point2i &, float ) { assert(0); }
