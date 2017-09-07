@@ -205,6 +205,7 @@ void VEEdgeSplit(MeshType &poly, typename MeshType::EdgeType *e, typename MeshTy
   edge::VEAppend(e,1);
 //  tri::Allocator<MeshType>:: template PointerUpdater<typename MeshType::EdgePointer> pu;
   typename MeshType::EdgeIterator ei = tri::Allocator<MeshType>::AddEdges(poly, 1);
+  ei->ImportData(*e);
   ei->V(0)=&v;
   ei->V(1)=v1;
   edge::VEAppend(&*ei,0);
