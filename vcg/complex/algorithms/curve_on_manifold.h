@@ -54,7 +54,7 @@ class CoM
 {
 public:
   typedef typename MeshType::ScalarType     ScalarType;
-  typedef typename MeshType::CoordType     CoordType;
+  typedef typename MeshType::CoordType      CoordType;
   typedef typename MeshType::VertexType     VertexType;
   typedef typename MeshType::VertexPointer  VertexPointer;
   typedef typename MeshType::VertexIterator VertexIterator;
@@ -63,7 +63,8 @@ public:
   typedef typename MeshType::FaceType       FaceType;
   typedef typename MeshType::FacePointer    FacePointer;
   typedef typename MeshType::FaceIterator   FaceIterator;
-  typedef Box3  <ScalarType>               Box3Type;
+  typedef Box3<ScalarType>                  Box3Type;
+  typedef Segment3<ScalarType>              Segment3Type;  
   typedef typename vcg::GridStaticPtr<FaceType, ScalarType> MeshGrid;  
   typedef typename vcg::GridStaticPtr<EdgeType, ScalarType> EdgeGrid;
   typedef typename face::Pos<FaceType> PosType;
@@ -610,7 +611,7 @@ public:
       if( (starVecVp.size()==2) && (!poly.vert[i].IsS()))
       {      
         ScalarType newSegLen = Distance(starVecVp[0]->P(), starVecVp[1]->P());
-        Segment3f seg(starVecVp[0]->P(),starVecVp[1]->P());
+        Segment3Type seg(starVecVp[0]->P(),starVecVp[1]->P());
         ScalarType segDist;
         CoordType closestPSeg;
         SegmentPointDistance(seg,poly.vert[i].cP(),closestPSeg,segDist);
@@ -697,7 +698,7 @@ public:
    */
   bool TestSplitSegWithMesh(VertexType *v0, VertexType *v1, CoordType &splitPt)
   {
-    Segment3f segPoly(v0->P(),v1->P());
+    Segment3Type segPoly(v0->P(),v1->P());
     const ScalarType sampleNum = 40;    
     CoordType ip0,ip1;
     
@@ -707,22 +708,22 @@ public:
     
     bool snap0=false,snap1=false; // true if the segment start/end on a edge/vert
     
-    Segment3f seg0; // The two segments to be avoided 
-    Segment3f seg1; // from which the current poly segment can start
+    Segment3Type seg0; // The two segments to be avoided 
+    Segment3Type seg1; // from which the current poly segment can start
     VertexPointer vertexSnap0 = 0;
     VertexPointer vertexSnap1 = 0;
     if(BarycentricSnap(ip0)) { 
       snap0=true; 
       for(int i=0;i<3;++i) {
         if(ip0[i]==1.0) vertexSnap0=f0->V(i);
-        if(ip0[i]==0.0) seg0=Segment3f(f0->P1(i),f0->P2(i)); 
+        if(ip0[i]==0.0) seg0=Segment3Type(f0->P1(i),f0->P2(i)); 
       }        
     } 
     if(BarycentricSnap(ip1)) { 
       snap1=true; 
       for(int i=0;i<3;++i){
         if(ip1[i]==1.0) vertexSnap1=f1->V(i);
-        if(ip1[i]==0.0) seg1=Segment3f(f1->P1(i),f1->P2(i)); 
+        if(ip1[i]==0.0) seg1=Segment3Type(f1->P1(i),f1->P2(i)); 
       }        
     } 
     
@@ -900,7 +901,7 @@ public:
   
   bool TestSplitSegWithMeshAdaptOld(VertexType *v0, VertexType *v1, CoordType &splitPt)
   {
-    Segment3f segPoly(v0->P(),v1->P());
+    Segment3Type segPoly(v0->P(),v1->P());
     const ScalarType sampleNum = 40;    
     CoordType ip0,ip1;    
     FaceType *f0=GetClosestFaceIP(v0->P(),ip0);
