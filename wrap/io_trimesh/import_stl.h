@@ -112,6 +112,7 @@ static bool IsSTLColored(const char * filename, bool &magicsMode)
    int facenum;
    fread(&facenum, sizeof(int), 1, fp);
 
+   bool colored = false;
    for(int i=0;i<std::min(facenum,1000);++i)
    {
      unsigned short attr;
@@ -120,14 +121,14 @@ static bool IsSTLColored(const char * filename, bool &magicsMode)
      fread(&norm,sizeof(Point3f),1,fp);
      fread(&tri,sizeof(Point3f),3,fp);
      fread(&attr,sizeof(unsigned short),1,fp);
-     if(attr!=0)
+     if(attr!=0 && Color4b::FromUnsignedR5G5B5(attr) != Color4b(Color4b::White))
      {
-      if(Color4b::FromUnsignedR5G5B5(attr) != Color4b(Color4b::White))
-    return true;
+       colored = true;
+       break;
      }
    }
-
-   return false;
+   fclose(fp);
+   return colored;
 }
 
 static bool IsSTLBinary(const char * filename)
