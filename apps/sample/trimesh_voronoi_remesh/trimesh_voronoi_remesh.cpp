@@ -78,7 +78,7 @@ int main( int argc, char **argv )
 	  } catch (exception &) {}
   }
   std::cout << "Remeshing using sampling radius: " << samplingRadius << std::endl;
-  auto remeshed = Remesher<MyMesh>::Remesh(startMesh, samplingRadius, 50.0, 0.0);
+  auto remeshed = Remesher<MyMesh>::Remesh(startMesh, samplingRadius, 70.0);
   
   
   tri::io::ExporterPLY<MyMesh>::Save(*remeshed,"Full.ply",tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );

@@ -265,6 +265,8 @@ protected:
 //		QElapsedTimer timer;
 //		timer.start();
 
+		(void)idx;
+
 		RequireCompactness(original);
 		RequirePerFaceFlags(original);
 
@@ -295,9 +297,10 @@ protected:
 				}
 			}
 			const int manifoldSplits = vcg::tri::Clean<EdgeMeshType>::SplitSelectedVertexOnEdgeMesh(em);
-//			std::cout << manifoldSplits << " non-manifold splits" << std::endl;
+			(void)manifoldSplits;
 
 #ifdef DEBUG_VORO
+			std::cout << manifoldSplits << " non-manifold splits" << std::endl;
 			io::ExporterOBJ<EdgeMeshType>::Save(em, QString("edgeMesh_%1.obj").arg(idx).toStdString().c_str(), io::Mask::IOM_EDGEINDEX);
 #endif
 
@@ -309,11 +312,13 @@ protected:
 				UpdateFlags<EdgeMeshType>::VertexClearV(em);
 				Clean<EdgeMeshType>::SelectCreaseVertexOnEdgeMesh(em, vcg::math::ToRad(borderCreaseAngleDeg));
 				const int splits = Clean<EdgeMeshType>::SplitSelectedVertexOnEdgeMesh(em);
-//				std::cout << splits << " splits" << std::endl;
-			}
+				(void)splits;
+
 #ifdef DEBUG_VORO
-			io::ExporterOBJ<EdgeMeshType>::Save(em, QString("edgeMesh_split_%1.obj").arg(idx).toStdString().c_str(), io::Mask::IOM_EDGEINDEX);
+				std::cout << splits << " splits" << std::endl;
+				io::ExporterOBJ<EdgeMeshType>::Save(em, QString("edgeMesh_split_%1.obj").arg(idx).toStdString().c_str(), io::Mask::IOM_EDGEINDEX);
 #endif
+			}
 
 			// Samples vector
 			std::vector<Coord> borderSamples;
@@ -321,7 +326,7 @@ protected:
 
 			// uniform edge sampling
 			UpdateTopology<EdgeMeshType>::EdgeEdge(em);
-			SurfaceSampling<EdgeMeshType>::EdgeMeshUniform(em, ps, samplingRadius, true);
+			SurfaceSampling<EdgeMeshType>::EdgeMeshUniform(em, ps, samplingRadius, false);
 			BuildMeshFromCoordVector(poissonEdgeMesh, borderSamples);
 			UpdateBounding<Mesh>::Box(poissonEdgeMesh);
 
@@ -538,9 +543,12 @@ protected:
 				if (!vit->IsD() && vit->IsB())
 					borderPts.push_back(vit->cP());
 			}
-			BuildMeshFromCoordVector(borderMesh,borderPts);
-			borderMesh.bbox = m.bbox;
-			borderHG.Set(borderMesh.vert.begin(), borderMesh.vert.end(), bbox);
+			if (!borderPts.empty())
+			{
+				BuildMeshFromCoordVector(borderMesh,borderPts);
+				borderMesh.bbox = m.bbox;
+				borderHG.Set(borderMesh.vert.begin(), borderMesh.vert.end(), bbox);
+			}
 		}
 
 		const ScalarType dist_upper_bound=samplingRadius*4;

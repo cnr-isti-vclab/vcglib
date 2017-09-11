@@ -46,6 +46,7 @@ sampling strategies (montecarlo, stratified etc).
 #include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/space/segment2.h>
 #include <vcg/space/index/grid_static_ptr.h>
+
 namespace vcg
 {
 namespace tri
@@ -769,14 +770,14 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 	tri::RequirePerVertexFlags(m);
 	tri::UpdateTopology<MeshType>::EdgeEdge(m);
 	tri::UpdateFlags<MeshType>::EdgeClearV(m);
-  tri::MeshAssert<MeshType>::EEOneManifold(m);
+	tri::MeshAssert<MeshType>::EEOneManifold(m);
+
 	for (EdgeIterator ei = m.edge.begin(); ei != m.edge.end(); ++ei)
 	{
 		if (!ei->IsV())
 		{
 			edge::Pos<EdgeType> ep(&*ei,0);
-			edge::Pos<EdgeType> startep     = ep;
-			VertexPointer       startVertex = 0;
+			edge::Pos<EdgeType> startep = ep;
 			do // first loop to search a boundary component.
 			{
 				ep.NextE();
@@ -786,10 +787,33 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 			if (!ep.IsBorder())
 			{
 				// it's a loop
-				startVertex = ep.V();
+				assert(ep == startep);
+
+				// to keep the uniform resampling order-independent:
+				// 1) start from the 'lowest' point...
+				edge::Pos<EdgeType> altEp = ep;
+				altEp.NextE();
+				while (altEp != startep) {
+					if (altEp.V()->cP() < ep.V()->cP())
+					{
+						ep = altEp;
+					}
+					altEp.NextE();
+				}
+
+				// 2) ... with consistent direction
+				const auto dir0 = ep.VFlip()->cP() - ep.V()->cP();
+				ep.FlipE();
+				const auto dir1 = ep.VFlip()->cP() - ep.V()->cP();
+				if (dir0 < dir1)
+				{
+					ep.FlipE();
+				}
 			}
 			else
 			{
+				// not a loop
+
 				// to keep the uniform resampling order-independent
 				// start from the border with 'lowest' point
 				edge::Pos<EdgeType> altEp = ep;
@@ -805,17 +829,22 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 
 			ScalarType totalLen = 0;
 			ep.FlipV();
-			// second loop to compute length of the chain.
+			// second loop to compute the length of the chain.
 			do
 			{
 				ep.E()->SetV();
 				totalLen += Distance(ep.V()->cP(), ep.VFlip()->cP());
 				ep.NextE();
-			} while (!ep.IsBorder() && ep.V() != startVertex);
-			ep.E()->SetV();
-			totalLen += Distance(ep.V()->cP(), ep.VFlip()->cP());
+			} while (!ep.E()->IsV() && !ep.IsBorder());
+			if (ep.IsBorder())
+			{
+				ep.E()->SetV();
+				totalLen += Distance(ep.V()->cP(), ep.VFlip()->cP());
+			}
 
-			// Third loop actually perform the sampling.
+			VertexPointer startVertex = ep.V();
+
+			// Third loop actually performs the sampling.
 			int sampleNum = conservative ? floor(totalLen / radius) : ceil(totalLen / radius);
 
 			ScalarType sampleDist = totalLen / sampleNum;
@@ -824,11 +853,11 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 			ScalarType curLen = 0;
 			int sampleCnt     = 1;
 			ps.AddEdge(*(ep.E()), ep.VInd() == 0 ? 0.0 : 1.0);
-			do
-			{
+
+			do {
 				ep.NextE();
 				assert(ep.E()->IsV());
-				ScalarType edgeLen = Distance(ep.V()->cP(), ep.VFlip()->cP());
+				ScalarType edgeLen = Distance(ep.VFlip()->cP(), ep.V()->cP());
 				ScalarType d0      = curLen;
 				ScalarType d1      = d0 + edgeLen;
 
@@ -843,7 +872,9 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 			} while(!ep.IsBorder() && ep.V() != startVertex);
 
 			if(ep.V() != startVertex)
+			{
 				ps.AddEdge(*(ep.E()), ep.VInd() == 0 ? 0.0 : 1.0);
+			}
 		}
 	}
 }
