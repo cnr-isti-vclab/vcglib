@@ -92,15 +92,13 @@ class PoissonSolver
 
     void FindFarthestVert(VertexType* &v0, VertexType* &v1)
     {
-      v0=NULL;
-      v1=NULL;
-      int bestAxis = mesh.bbox.MaxDim();
-      for(VertexType &vv : mesh.vert)
-      {
+      v0=v1=NULL;
+      const int bestAxis = mesh.bbox.MaxDim();
+      for(VertexType &vv : mesh.vert) {
         if(vv.P()[bestAxis] <= mesh.bbox.min[bestAxis]) v0 = &vv;
         if(vv.P()[bestAxis] >= mesh.bbox.max[bestAxis]) v1 = &vv;
       }
-      assert(v0 && v1);
+      assert( (v0!=v1) && v0 && v1);
     }
     
     ///set the value of b of the system Ax=b
@@ -398,6 +396,7 @@ class PoissonSolver
     {
         //--- Allocates the data for Ax=b
         A=Eigen::SparseMatrix<double>(total_size, total_size); // A
+        A.reserve(Eigen::VectorXi::Constant(total_size,32));  // This prealloaction trick greatly speed up the acc
         b = Eigen::VectorXd::Zero(total_size);  // x and b
     }
 
@@ -673,12 +672,12 @@ public:
 
     PoissonSolver(MeshType &_mesh):mesh(_mesh)
     {
-        assert(mesh.vert.size()>3);
-        assert(mesh.face.size()>1);
+        assert(mesh.vert.size()>=3);
+        assert(mesh.face.size()>=1);
     }
 
 
 }; // end class
-} //End Namespace Tri
+} // End Namespace tri
 } // End Namespace vcg
 #endif
