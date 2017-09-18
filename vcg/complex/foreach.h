@@ -80,7 +80,7 @@ inline void ForEachFace(const MeshType &m, std::function<void (const typename Me
 }
 
 template <class MeshType>
-inline void ForEachFace(const MeshType &m, std::function<void (typename MeshType::FaceType &)> action)
+inline void ForEachFace(MeshType &m, std::function<void (typename MeshType::FaceType &)> action)
 {
   if(m.fn == (int) m.face.size())
   {
