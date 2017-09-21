@@ -182,7 +182,8 @@ public:
     tri::UpdateFlags<MeshType>::FaceSetF(base);
     tri::UpdateTopology<MeshType>::VertexFace(base);
     tri::UpdateTopology<MeshType>::FaceFace(base);
-    
+
+    bool ret = true;
     for(EdgeIterator ei=poly.edge.begin(); ei!=poly.edge.end();++ei)
     {
       CoordType ip0,ip1;
@@ -196,21 +197,19 @@ public:
         assert(v1>0 && v0>0 && v0!=v1);
         FacePointer ff0,ff1;
         int e0,e1;
-        bool ret=face::FindSharedFaces<FaceType>(v0,v1,ff0,ff1,e0,e1);
-        if(ret){
-          assert(ret); 
+        ret &= face::FindSharedFaces<FaceType>(v0,v1,ff0,ff1,e0,e1);
+        if(ret) {
           assert(ff0->V(e0)==v0 || ff0->V(e0)==v1);
           ff0->ClearF(e0);
-          ff1->ClearF(e1);        
-        }
-        else {
-          
+          ff1->ClearF(e1);
         }
       }
-      else {
+      else
+      {
         assert(0);
-      }    
+      }
     }
+    return ret;
   }
    
   ScalarType MinDistOnEdge(CoordType samplePnt, EdgeGrid &edgeGrid, MeshType &poly, CoordType &closestPoint)
@@ -595,7 +594,7 @@ public:
    printf("SimplifyMidFace %5i -> %5i %i mid %i ve \n",startVn,poly.vn,midFaceCollapseCnt,vertexEdgeCollapseCnt);
   } 
   
-  void Simplify( MeshType &poly)
+  void Simplify(MeshType &poly)
   {
     int startEn = poly.en;
     Distribution<ScalarType> hist;
@@ -608,8 +607,8 @@ public:
     {
       std::vector<VertexPointer> starVecVp;
       edge::VVStarVE(&(poly.vert[i]),starVecVp);      
-      if( (starVecVp.size()==2) && (!poly.vert[i].IsS()))
-      {      
+      if ((starVecVp.size()==2) && (!poly.vert[i].IsS()))
+      {
         ScalarType newSegLen = Distance(starVecVp[0]->P(), starVecVp[1]->P());
         Segment3Type seg(starVecVp[0]->P(),starVecVp[1]->P());
         ScalarType segDist;

@@ -296,7 +296,7 @@ public:
     {
       if(!(*ei).IsD())
       {
-        h.Add(Distance<float>((*ei).V(0)->P(),(*ei).V(1)->P()));
+        h.Add(Distance<ScalarType>((*ei).V(0)->P(),(*ei).V(1)->P()));
       }
     }
   }
