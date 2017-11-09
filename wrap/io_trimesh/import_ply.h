@@ -115,7 +115,7 @@ struct LoadPly_VertAux
     S p[3];
     S n[3];
     int flags;
-    float q; // the confidence
+    S q; // the confidence
     float intensity;
     unsigned char r;
     unsigned char g;
