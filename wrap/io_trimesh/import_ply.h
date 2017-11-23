@@ -115,7 +115,7 @@ struct LoadPly_VertAux
     S p[3];
     S n[3];
     int flags;
-    float q; // the confidence
+    S q; // the confidence
     float intensity;
     unsigned char r;
     unsigned char g;
@@ -189,7 +189,7 @@ static const  PropDescriptor &VertDesc(int i)
 /*27*/ {"vertex", "nx",            ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n)                       ,0,0,0,0,0  ,0},
 /*28*/ {"vertex", "ny",            ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 1*sizeof(ScalarType),0,0,0,0,0  ,0},
 /*29*/ {"vertex", "nz",            ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
-/*30*/ {"vertex", "radius",        ply::T_DOUBLE, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,radius),0,0,0,0,0  ,0},
+/*30*/ {"vertex", "radius",        ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,radius),0,0,0,0,0  ,0},
 /*31*/ {"vertex", "quality",       ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0}
     };
     return pv[i];

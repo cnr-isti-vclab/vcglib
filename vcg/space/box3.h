@@ -323,6 +323,7 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
 
 template <class T> Box3<T> Point3<T>::GetBBox(Box3<T> &bb) const {
  bb.Set( *this );
+ return bb;
 }
 
 
