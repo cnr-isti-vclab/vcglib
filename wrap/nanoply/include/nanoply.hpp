@@ -476,7 +476,7 @@ namespace nanoply
     std::getline(fileStream, line);
     std::transform(line.begin(), line.end(), line.begin(), ::tolower);
     last = false;
-    if (line == "end_header")
+    if (line.find("end_header") != std::string::npos)
       last = true;
     return true;
   }
@@ -1139,7 +1139,7 @@ namespace nanoply
     token = strtok(tempStr, " \t");
     if (strstr(token, "element") == NULL)
       return false;
-    token = strtok(0, " \t\n");
+    token = strtok(0, " \t\r\n");
     name = std::string(token);
     plyElem = PlyElemEntity::NNP_UNKNOWN_ELEM;
     ElementMapIterator iter = mapElem.begin();
@@ -1162,7 +1162,7 @@ namespace nanoply
       }
       iter++;
     }
-    token = strtok(0, " \t\n");
+    token = strtok(0, " \t\r\n");
     cnt = atoi(token);
     for (size_t i = 0; i < propStr.size(); i++)
       if (!AddProperty(propStr[i]))
@@ -1512,7 +1512,7 @@ namespace nanoply
   {
     this->filename = filename;
     this->errInfo = NNP_OK;
-    std::ifstream input(filename, std::ios::binary);
+    std::ifstream input(filename);
     if (!input.good())
     {
       this->errInfo = NNP_UNABLE_TO_OPEN;
