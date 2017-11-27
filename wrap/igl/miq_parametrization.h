@@ -31,7 +31,7 @@
 #include <igl/cut_mesh_from_singularities.h>
 #include <igl/find_cross_field_singularities.h>
 #include <igl/compute_frame_field_bisectors.h>
-#include <igl/comiso/miq.h>
+#include <igl/copyleft/comiso/miq.h>
 #include <vcg/complex/algorithms/parametrization/uv_utils.h>
 #include <vcg/complex/algorithms/mesh_to_matrix.h>
 
@@ -163,7 +163,7 @@ private:
             }
         }
 
-        igl::miq(V,F,X1,X2,UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
+        igl::copyleft::comiso::miq(V,F,X1,X2,UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
                  MiqP.stiffness_iter,MiqP.local_iter,MiqP.doRound,MiqP.round_singularities,
                  extra_round,hard_features);
 
@@ -287,7 +287,7 @@ private:
 //                 MMatch,isSingularity,singularityIndex,Seams,
 //                 UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
 //                 MiqP.stiffness_iter,MiqP.local_iter,MiqP.doRound,MiqP.round_singularities,extra_round,hard_features);
-        igl::miq(V,F,X1_combed,X2_combed,
+        igl::copyleft::comiso::miq(V,F,X1_combed,X2_combed,
                  UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
                  MiqP.stiffness_iter,MiqP.local_iter,MiqP.doRound,MiqP.round_singularities,extra_round,hard_features);
 
