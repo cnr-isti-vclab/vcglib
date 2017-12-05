@@ -118,7 +118,6 @@ namespace vcg
             return (*this);
         }
 
-
     private:
         void copyData(const RenderingModalityGLOptions& opts)
         {
@@ -156,6 +155,9 @@ namespace vcg
     class PerViewData : public GLMeshAttributesInfo
     {
     public:
+
+      typedef GL_OPTIONS_DERIVED_TYPE GLOptionsType;
+
         PerViewData()
             :_pmmask(),_intatts(PR_ARITY),_glopts(NULL)
         {
@@ -258,6 +260,53 @@ namespace vcg
                 delete _glopts;
                 _glopts = 0;
             }
+        }
+
+
+        void serialize(std::string& str)
+        {
+          str.append(_pmmask.to_string());
+          for (typename PerRendModData::iterator it = _intatts.begin(); it != _intatts.end(); ++it)
+          {
+            std::string s;
+            it->serialize(s);
+            str.append(s);
+          }
+          std::string s;
+          _glopts->serialize(s);
+          str.append(s);
+        }
+
+        bool deserialize(const std::string& str)
+        {
+          std::string::size_type pos = 0;
+          std::string token[6];
+          token[0] = str.substr(pos, _pmmask.size());
+          if (token[0].length() < _pmmask.size())
+            return false;
+          int i = 1;
+          pos = _pmmask.size();
+          for (typename PerRendModData::iterator it = _intatts.begin(); it != _intatts.end(); ++it, i++)
+          {
+            token[i] = str.substr(pos, InternalRendAtts::AttName::enumArity());
+            if (token[i].length() < InternalRendAtts::AttName::enumArity())
+              return false;
+            pos = pos + InternalRendAtts::AttName::enumArity();
+          }
+          if (_glopts != NULL)
+          {
+            int size = _glopts->serialize(std::string());
+            token[i] = str.substr(pos, size);
+            if (token[i].length() < size)
+              return false;
+          }
+          _pmmask = PRIMITIVE_MODALITY_MASK(token[0]);
+          i = 1;
+          for (typename PerRendModData::iterator it = _intatts.begin(); it != _intatts.end(); ++it, i++)
+            it->deserialize(token[i]);
+          if (_glopts != NULL)
+            _glopts->deserialize(token[i]);
+          return true;
         }
 
     protected:
