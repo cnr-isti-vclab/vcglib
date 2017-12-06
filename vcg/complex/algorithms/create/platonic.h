@@ -522,6 +522,47 @@ void Cone( MeshType& in,
         }
 }
 
+template <class MeshType>
+void OrientedCone(MeshType & m,
+                  const typename MeshType::CoordType origin,
+                  const typename MeshType::CoordType end,
+                  const typename MeshType::ScalarType r1,
+                  const typename MeshType::ScalarType r2,
+                  const int SubDiv = 36  )
+{
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef typename MeshType::CoordType CoordType;
+  typedef Matrix44<typename MeshType::ScalarType> Matrix44x;
+  Cone(m,r1,r2,Distance(origin,end),SubDiv);
+
+//  tri::UpdatePosition<MeshType>::Translate(m,CoordType(0,1,0));
+//  tri::UpdatePosition<MeshType>::Scale(m,CoordType(1,0.5f,1));
+//  tri::UpdatePosition<MeshType>::Scale(m,CoordType(xScale,1.0f,yScale));
+
+//  float height = Distance(origin,end);
+//  tri::UpdatePosition<MeshType>::Scale(m,CoordType(radius,height,radius));
+  CoordType norm = end-origin;
+  ScalarType angleRad = Angle(CoordType(0,1,0),norm);
+  const ScalarType Delta= 0.000000001;
+  Matrix44x rotM;
+  if (fabs(angleRad)<Delta)
+      rotM.SetIdentity();
+  else
+  if (fabs(angleRad-M_PI)<Delta)
+  {
+      CoordType axis = CoordType(0,0,1)^norm;
+      rotM.SetRotateRad(angleRad,axis);
+  }
+  else
+  {
+    CoordType axis = CoordType(0,1,0)^norm;
+    rotM.SetRotateRad(angleRad,axis);
+  }
+  tri::UpdatePosition<MeshType>::Matrix(m,rotM);
+  tri::UpdatePosition<MeshType>::Translate(m,origin);
+
+}
+
 
 template <class MeshType >
 void Box(MeshType &in, const typename MeshType::BoxType & bb )
@@ -1000,9 +1041,21 @@ void OrientedEllipticPrism(MeshType & m, const typename MeshType::CoordType orig
   tri::UpdatePosition<MeshType>::Scale(m,CoordType(radius,height,radius));
   CoordType norm = end-origin;
   ScalarType angleRad = Angle(CoordType(0,1,0),norm);
-  CoordType axis = CoordType(0,1,0)^norm;
+  const ScalarType Delta= 0.000000001;
   Matrix44x rotM;
-  rotM.SetRotateRad(angleRad,axis);
+  if (fabs(angleRad)<Delta)
+      rotM.SetIdentity();
+  else
+  if (fabs(angleRad-M_PI)<Delta)
+  {
+      CoordType axis = CoordType(0,0,1)^norm;
+      rotM.SetRotateRad(angleRad,axis);
+  }
+  else
+  {
+    CoordType axis = CoordType(0,1,0)^norm;
+    rotM.SetRotateRad(angleRad,axis);
+  }
   tri::UpdatePosition<MeshType>::Matrix(m,rotM);
   tri::UpdatePosition<MeshType>::Translate(m,origin);
 

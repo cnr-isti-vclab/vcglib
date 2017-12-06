@@ -74,6 +74,8 @@ public:
         bool crease_as_feature;
         //true if roound selected vert
         bool round_selected;
+        //the anisotropy in MIQ sense (see paper)
+        double miqAnisotropy;
 
         MIQParameters()
         {
@@ -89,6 +91,7 @@ public:
             Ndir=4;
             crease_thr=0.2;
             hexaLine=false;
+            miqAnisotropy=1;
         }
     };
 
@@ -165,7 +168,7 @@ private:
 
         igl::copyleft::comiso::miq(V,F,X1,X2,UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
                  MiqP.stiffness_iter,MiqP.local_iter,MiqP.doRound,MiqP.round_singularities,
-                 extra_round,hard_features);
+                 extra_round,hard_features,MiqP.miqAnisotropy);
 
         // then copy UV
         for (size_t i=0;i<trimesh.face.size();i++)
@@ -336,8 +339,8 @@ public:
     static void MIQParametrize(MeshType &trimesh,
                                MIQParameters &MiqP)
     {
-        if (MiqP.crease_as_feature)
-            SetCreases(trimesh,MiqP.crease_thr);
+//        if (MiqP.crease_as_feature)
+//            SetCreases(trimesh,MiqP.crease_thr);
 
         if (MiqP.Ndir==4)
             CrossFieldParam(trimesh,MiqP);
