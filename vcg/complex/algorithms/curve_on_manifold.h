@@ -201,7 +201,7 @@ public:
       {
         VertexPointer v0 = FindVertexSnap(f0,ip0);
         VertexPointer v1 = FindVertexSnap(f1,ip1);
-        assert(v1 != NULL && v1 != NULL && v0 != v1);
+        assert(v0 != NULL && v1 != NULL && v0 != v1);
         FacePointer ff0,ff1;
         int e0,e1;
         ret &= face::FindSharedFaces<FaceType>(v0,v1,ff0,ff1,e0,e1);
