@@ -37,10 +37,12 @@ public:
     int _padding;						// padding 	(used only with VMI loading)
 
     int n_attr;							// unique ID of the attribute
-
+    std::type_index _type;
     void Resize(size_t sz){((SimpleTempDataBase *)_handle)->Resize(sz);}
     void Reorder(std::vector<size_t> & newVertIndex){((SimpleTempDataBase *)_handle)->Reorder(newVertIndex);}
     bool operator<(const  PointerToAttribute    b) const {	return(_name.empty()&&b._name.empty())?(_handle < b._handle):( _name < b._name);}
+
+    PointerToAttribute(): _type(typeid(void)) { };
 };
 
 

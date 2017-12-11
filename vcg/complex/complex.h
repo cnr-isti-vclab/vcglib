@@ -39,6 +39,7 @@
 #include <stdexcept>
 #include <limits>
 #include <iterator>
+#include <typeindex>
 #include <wrap/callback.h>
 #include <vcg/complex/exception.h>
 #include <vcg/container/simple_temporary_data.h>
