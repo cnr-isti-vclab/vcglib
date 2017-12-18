@@ -1070,6 +1070,7 @@ public:
     h._sizeof = sizeof(ATTR_TYPE);
     h._padding = 0;
     h._handle =   new SimpleTempData<VertContainer,ATTR_TYPE>(m.vert);
+    h._type = typeid(ATTR_TYPE);
     m.attrn++;
     h.n_attr = m.attrn;
     std::pair < AttrIterator , bool> res =  m.vert_attr.insert(h);
@@ -1211,6 +1212,7 @@ public:
     h._padding = 0;
     //		h._typename = typeid(ATTR_TYPE).name();
     h._handle =  new SimpleTempData<EdgeContainer,ATTR_TYPE>(m.edge);
+    h._type = typeid(ATTR_TYPE);
     m.attrn++;
     h.n_attr = m.attrn;
     std::pair < AttrIterator , bool> res =  m.edge_attr.insert(h);
@@ -1334,6 +1336,7 @@ public:
     h._sizeof = sizeof(ATTR_TYPE);
     h._padding = 0;
     h._handle =   new SimpleTempData<FaceContainer,ATTR_TYPE>(m.face);
+    h._type = typeid(ATTR_TYPE);
     m.attrn++;
     h.n_attr = m.attrn;
     std::pair < AttrIterator , bool> res =  m.face_attr.insert(h);
@@ -1452,6 +1455,7 @@ public:
     h._sizeof = sizeof(ATTR_TYPE);
     h._padding = 0;
     h._handle =  new Attribute<ATTR_TYPE>();
+    h._type = typeid(ATTR_TYPE);
     m.attrn++;
     h.n_attr = m.attrn;
     std::pair < AttrIterator , bool> res =  m.mesh_attr.insert(h);
