@@ -74,10 +74,11 @@ public:
                                       const ScalarType &size,
                                       const bool oneside,
                                       const bool onlyPD1,
-                                      const ScalarType maxN)
+                                      const ScalarType maxN,
+                                      const ScalarType minN)
 	{
         CoordType center=(f.cP(0)+f.cP(1)+f.cP(2))/3;
-		CoordType normal=f.cN();
+        //CoordType normal=f.cN();
 		CoordType dir[4];
 		vcg::tri::CrossField<MeshType>::CrossVector(f,dir);
 
@@ -92,10 +93,10 @@ public:
             ScalarType IntervW=MaxW-MinW;
             if (Norm0>maxN)Norm0=maxN;
             if (Norm1>maxN)Norm1=maxN;
-            vcg::Color4b Col0=vcg::Color4b::ColorRamp(0,maxN,Norm0);
-            vcg::Color4b Col1=vcg::Color4b::ColorRamp(0,maxN,Norm1);
-            ScalarType W0=(Norm0/maxN)*IntervW+MinW;
-            ScalarType W1=(Norm1/maxN)*IntervW+MinW;
+            vcg::Color4b Col0=vcg::Color4b::ColorRamp(minN,maxN,Norm0);
+            vcg::Color4b Col1=vcg::Color4b::ColorRamp(minN,maxN,Norm1);
+            ScalarType W0=(Norm0/(maxN-minN))*IntervW+MinW;
+            ScalarType W1=(Norm1/(maxN-minN))*IntervW+MinW;
             GLDrawField(dir,center,size,W0,W1,Col0,Col1,oneside,onlyPD1);
         }
 	}
@@ -132,7 +133,8 @@ public:
                                 bool onlyPD1,
                                 bool oneside,
                                 ScalarType GlobalScale=0.002,
-                                const ScalarType maxN=0)
+                                const ScalarType maxN=0,
+                                const ScalarType minN=0)
 	{
 
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -144,7 +146,7 @@ public:
         for (unsigned int i=0;i<mesh.face.size();i++)
 		{
             if (mesh.face[i].IsD())continue;
-            GLDrawSingleFaceField(mesh.face[i],size,oneside,onlyPD1,maxN);
+            GLDrawSingleFaceField(mesh.face[i],size,oneside,onlyPD1,maxN,minN);
 		}
 		glPopAttrib();
 	}

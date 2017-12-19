@@ -30,6 +30,8 @@
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/complex/algorithms/point_sampling.h>
 
+#include <wrap/io_trimesh/export_obj.h>
+
 //define a temporary triangle mesh type
 class TempFace;
 class TempVertex;
@@ -169,8 +171,7 @@ private:
 
 
     static bool CollapseBorderSmallEdgesStep(PolyMeshType &poly_m,
-                                             const ScalarType edge_limit,
-                                              ScalarType angleDeg=100)
+                                             const ScalarType edge_limit)
     {
         //update topology
         vcg::tri::UpdateTopology<PolyMeshType>::FaceFace(poly_m);
@@ -356,11 +357,19 @@ public:
         vcg::GetPolyTemplatePos(f,TemplatePos,true);
 
         CoordType NormT=Normal(TemplatePos);
+
         //get the normal of vertices
-        CoordType AVN(0,0,0);
+        //CoordType AVN(0,0,0);
+        //CoordType AVN0(0,0,0);
         CoordType Origin(0,0,0);
-        for (int j=0;j<f.VN();j++)
-            AVN+=f.V(j)->N();
+//        for (int j=0;j<f.VN();j++)
+//            AVN0=AVN0+f.V(j)->N();
+
+        CoordType AVN=vcg::PolygonNormal(f);
+        //AVN0.Normalize();
+//        std::cout<<"AVN "<<AVN.X()<<","<<AVN.Y()<<","<<AVN.Z()<<std::endl;
+//        std::cout<<"AVN0 "<<AVN0.X()<<","<<AVN0.Y()<<","<<AVN0.Z()<<std::endl;
+//        std::cout<<"NormT "<<NormT.X()<<","<<NormT.Y()<<","<<NormT.Z()<<std::endl;
 
         for (size_t j=0;j<TemplatePos.size();j++)
             Origin+=TemplatePos[j];
@@ -374,9 +383,9 @@ public:
         //apply transformation
         for (size_t j=0;j<TemplatePos.size();j++)
         {
-            TemplatePos[j]-=Origin;
+            TemplatePos[j]=TemplatePos[j]-Origin;
             TemplatePos[j]=Rot*TemplatePos[j];
-            TemplatePos[j]+=Origin;
+            TemplatePos[j]=TemplatePos[j]+Origin;
         }
     }
 
@@ -402,12 +411,15 @@ public:
 
         ScalarType AvgArea=MeshArea/(ScalarType)poly_m.face.size();
 
+        PolyMeshType TestM;
+
         for (size_t s=0;s<(size_t)relax_step;s++)
         {
             //initialize the accumulation vector
             std::vector<CoordType> avgPos(poly_m.vert.size(),CoordType(0,0,0));
             std::vector<ScalarType> weightSum(poly_m.vert.size(),0);
             //then compute the templated positions
+
             for (size_t i=0;i<poly_m.face.size();i++)
             {
                 std::vector<typename PolygonType::CoordType> TemplatePos;
@@ -416,8 +428,7 @@ public:
                 ScalarType val=vcg::PolyArea(poly_m.face[i]);
                 if (val<(AvgArea*0.00001))
                     val=(AvgArea*0.00001);
-                ScalarType W=1.0/val;//poly_m.face[i].Q();
-                //ScalarType W=1;
+                ScalarType W=1.0/val;
 
                 for (size_t j=0;j<TemplatePos.size();j++)
                 {
@@ -426,7 +437,9 @@ public:
                     //sum up contributes
                     avgPos[IndexV]+=Pos*W;
                     weightSum[IndexV]+=W;
+
                 }
+
             }
 
             //get the laplacian contribute
@@ -440,7 +453,9 @@ public:
                 //               if (alpha>1)alpha=1;
                 //               if (isnan(alpha))alpha=1;
                 CoordType newP=avgPos[i]/weightSum[i];
+                //std::cout<<"W "<<weightSum[i]<<std::endl;
                 newP=newP*(1-alpha)+AvVert[i]*alpha;
+                //newP=AvVert[i];
                 if ((fixB)&&(poly_m.vert[i].IsB()))continue;
                 if ((FixS)&&(poly_m.vert[i].IsS()))continue;
                 poly_m.vert[i].P()=poly_m.vert[i].P()*Damp+
@@ -899,49 +914,6 @@ public:
             MeshArea+=vcg::PolyArea(poly_m.face[i]);
         return MeshArea;
     }
-
-//    static void InitQualityVertVoronoiArea(PolyMeshType &poly_m)
-//    {
-//        for (size_t i=0;i<poly_m.vert.size();i++)
-//            poly_m.vert[i].Q()=0;
-
-//        //set the sum of angle for each face
-
-//        std::vector<ScalarType> SumAngle(poly_m.face.size(),0);
-//        for (size_t i=0;i<poly_m.face.size();i++)
-//        {
-//            size_t sizeV=poly_m.face[i].VN()-1;
-//            for (size_t j=0;j<sizeV;j++)
-//            {
-//                CoordType P0=poly_m.face[i].P((j+1)%sizeV);
-//                CoordType P1=poly_m.face[i].P(j);
-//                CoordType P2=poly_m.face[i].P1(j);
-//                CoordType dir0=P0-P1;
-//                CoordType dir1=P2-P1;
-//                dir0.Normalize();
-//                dir1.Normalize();
-//                SumAngle[i]+=vcg::Angle(dir0,dir1);
-//            }
-//        }
-
-//        for (size_t i=0;i<poly_m.face.size();i++)
-//        {
-//            ScalarType AreaF=vcg::PolyArea(poly_m.face[i]);
-//            size_t sizeV=poly_m.face[i].VN()-1;
-//            for (size_t j=0;j<poly_m.face[i].VN();j++)
-//            {
-//                CoordType P0=poly_m.face[i].P((j+1)%sizeV);
-//                CoordType P1=poly_m.face[i].P(j);
-//                CoordType P2=poly_m.face[i].P1(j);
-//                CoordType dir0=P0-P1;
-//                CoordType dir1=P2-P1;
-//                dir0.Normalize();
-//                dir1.Normalize();
-//                ScalarType CurrAngle=vcg::Angle(dir0,dir1);
-//                poly_m.face[i].V(j)->Q()+=AreaF * CurrAngle/SumAngle[i];
-//            }
-//        }
-//    }
 
     static void InitQualityVertVoronoiArea(PolyMeshType &poly_m)
     {

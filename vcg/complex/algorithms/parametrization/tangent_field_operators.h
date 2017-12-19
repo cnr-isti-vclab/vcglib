@@ -199,7 +199,7 @@ private:
 
         //push the first one
         SubDEdges.push_back(Edge0);
-        for (size_t i=1;i<Nsub;i++)
+        for (int i=1;i<Nsub;i++)
         {
             //find angle interval
             ScalarType B=StepAngle*(ScalarType)i;
@@ -340,8 +340,8 @@ private:
                 IndexF1=(interval+1) % OriginalFace.size();
                 alpha=1;
             }
-            assert((IndexF0>=0)&&(IndexF0<OriginalFace.size()));
-            assert((IndexF1>=0)&&(IndexF1<OriginalFace.size()));
+            assert((IndexF0>=0)&&(IndexF0<(int)OriginalFace.size()));
+            assert((IndexF1>=0)&&(IndexF1<(int)OriginalFace.size()));
 
             FaceType* F0=OriginalFace[IndexF0];
             FaceType* F1=OriginalFace[IndexF1];
@@ -394,7 +394,7 @@ private:
                                const TriangleType &t0,
                                const TriangleType &t1,
                                CoordType &Interpolated,
-                               size_t &Face)
+                               int &Face)
     {
        //find smallest edge
        ScalarType smallestE=std::numeric_limits<ScalarType>::max();
@@ -511,7 +511,7 @@ private:
         directions.clear();
         faces.clear();
 
-        for (size_t i=0;i<SwapV.size();i++)
+        for (int i=0;i<(int)SwapV.size();i++)
         {
             if (i==IndexDel)continue;
             directions.push_back(SwapV[i]);
@@ -619,7 +619,7 @@ public:
 
 
             CoordType InterpDir;
-            size_t tri_Index=-1;
+            int tri_Index=-1;
             if ((versef0D1 * versef1D1) < ScalarType(0))
             {
                 InterpolateDir(Dir1F0,Dir1F1,Bary0,Bary1,t0,t1,InterpDir,tri_Index);
@@ -636,7 +636,7 @@ public:
             assert((tri_Index==0)||(tri_Index==1));
             int OrigFIndex=((i+tri_Index)%SubFaces.size())/numSub;
             assert(OrigFIndex>=0);
-            assert(OrigFIndex<OriginalFaces.size());
+            assert(OrigFIndex<(int)OriginalFaces.size());
 
             FaceType* currF=OriginalFaces[OrigFIndex];
             //add the data
@@ -644,7 +644,7 @@ public:
             faces.push_back(currF);
         }
         if (expVal==-1)return directions.size();
-        if (directions.size()<=expVal)return directions.size();
+        if ((int)directions.size()<=expVal)return directions.size();
 
         size_t sampledDir=directions.size();
         int to_erase=directions.size()-expVal;
@@ -700,7 +700,7 @@ public:
         CoordType dirS=CrossVector(f0,dir0);
         CoordType dirR=vcg::tri::CrossField<MeshType>::Rotate(f0,f1,dirS);
         ///then get the closest upf to K*PI/2 rotations
-        CoordType dir1=f1.cPD1();
+        //CoordType dir1=f1.cPD1();
         //int ret=I_K_PI(dir1,dirR,f1.cN());
         CoordType dir[4];
         CrossVector(f1,dir);
@@ -936,8 +936,8 @@ public:
         const CoordType &t1=f.V(1)->PD1();
         const CoordType &t2=f.V(2)->PD1();
         const CoordType &N0=f.V(0)->N();
-        const CoordType &N1=f.V(0)->N();
-        const CoordType &N2=f.V(0)->N();
+        const CoordType &N1=f.V(1)->N();
+        const CoordType &N2=f.V(2)->N();
         const CoordType &NF=f.N();
         const CoordType bary=CoordType(0.33333,0.33333,0.33333);
         CoordType tF0,tF1;
@@ -948,7 +948,9 @@ public:
         SetCrossVector(f,tF0,tF1);
 
         //then set the magnitudo
-        ScalarType mag1,mag2;
+        ScalarType mag1=0;
+        ScalarType mag2=0;
+
         for (int i=0;i<3;i++)
         {
            vcg::Matrix33<ScalarType> rotN=vcg::RotationMatrix(f.V(i)->N(),f.N());

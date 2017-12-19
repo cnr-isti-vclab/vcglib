@@ -186,7 +186,7 @@ static void FaceFromVertex( MeshType &m)
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
   {
      (*fi).Q() =0;
-     for (size_t i=0;i<(*fi).VN();i++)
+     for (int i=0;i<(*fi).VN();i++)
         (*fi).Q() += (*fi).V(i)->Q();
      (*fi).Q()/=(FaceQualityType)(*fi).VN();
   }
