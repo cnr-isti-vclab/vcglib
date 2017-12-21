@@ -96,7 +96,7 @@ public:
     }
   }
 
-  typename VALUE_TYPE::ColorType wc[3];
+  typename VALUE_TYPE::WedgeColorType wc[3];
 };
 
 class WedgeNormalTypePack {
@@ -111,7 +111,7 @@ public:
     }
   }
 
-  typename VALUE_TYPE::NormalType wn[3];
+  typename VALUE_TYPE::WedgeNormalType wn[3];
 };
 
 

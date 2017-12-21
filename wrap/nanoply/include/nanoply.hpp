@@ -246,7 +246,7 @@ namespace nanoply
       { PlyEntity::NNP_K2DIR, NameVector({ "k2dir" }) },
       { PlyEntity::NNP_EDGE_V1, NameVector({ "vertex1", "v1" }) },
       { PlyEntity::NNP_EDGE_V2, NameVector({ "vertex2", "v2" }) },
-      { PlyEntity::NNP_FACE_VERTEX_LIST, NameVector({ "vertex_index", "vertex_indices" }) },
+      { PlyEntity::NNP_FACE_VERTEX_LIST, NameVector({ "vertex_indices", "vertex_index" }) },
       { PlyEntity::NNP_FACE_WEDGE_COLOR, NameVector({ "color" }) },
       { PlyEntity::NNP_FACE_WEDGE_NORMAL, NameVector({ "normal" }) },
       { PlyEntity::NNP_FACE_WEDGE_TEX, NameVector({ "texcoord" }) }
@@ -463,7 +463,7 @@ namespace nanoply
     if (fileStream.fail())
       return false;
     bufferOffset = 0;
-    //fileStream.setf(std::ios::fixed, std::ios::floatfield);
+    fileStream.setf(std::ios::fixed, std::ios::floatfield);
     //fileStream.precision(7);
     return true;
   }
@@ -476,7 +476,7 @@ namespace nanoply
     std::getline(fileStream, line);
     std::transform(line.begin(), line.end(), line.begin(), ::tolower);
     last = false;
-    if (line == "end_header")
+    if (line.find("end_header") != std::string::npos)
       last = true;
     return true;
   }
@@ -582,6 +582,10 @@ namespace nanoply
     PlyType type;		/**< Property type. */
     PlyEntity elem;		/**< Property entity. */
     bool validToWrite;  /**< Property validity (necessary to write the header). */
+
+
+    inline PlyProperty() {}
+
 
     /**
     * Constructor that sets the type and the entity of a standard PLY property.
@@ -1139,7 +1143,7 @@ namespace nanoply
     token = strtok(tempStr, " \t");
     if (strstr(token, "element") == NULL)
       return false;
-    token = strtok(0, " \t\n");
+    token = strtok(0, " \t\r\n");
     name = std::string(token);
     plyElem = PlyElemEntity::NNP_UNKNOWN_ELEM;
     ElementMapIterator iter = mapElem.begin();
@@ -1162,7 +1166,7 @@ namespace nanoply
       }
       iter++;
     }
-    token = strtok(0, " \t\n");
+    token = strtok(0, " \t\r\n");
     cnt = atoi(token);
     for (size_t i = 0; i < propStr.size(); i++)
       if (!AddProperty(propStr[i]))
@@ -1512,7 +1516,7 @@ namespace nanoply
   {
     this->filename = filename;
     this->errInfo = NNP_OK;
-    std::ifstream input(filename, std::ios::binary);
+    std::ifstream input(filename);
     if (!input.good())
     {
       this->errInfo = NNP_UNABLE_TO_OPEN;
@@ -1732,7 +1736,7 @@ namespace nanoply
     * @param _s		Name of the PlyProperty.
     * @param _b	Pointer to the memory location that contains the data of the property.
     */
-    inline DescriptorInterface(std::string& _s, void *_b) :curPos(0), elem(PlyEntity::NNP_UNKNOWN_ENTITY), name(_s), base(_b){};
+    inline DescriptorInterface(const std::string& _s, void *_b) :curPos(0), elem(PlyEntity::NNP_UNKNOWN_ENTITY), name(_s), base(_b){};
 
     /**
     * Restart the descriptor.
@@ -1990,17 +1994,335 @@ namespace nanoply
 
 
 
+  template<class ContainerType, int VectorSize, typename ScalarType>
+  class DescriptorHelper
+  {
+
+  public:
+
+    template<typename C>
+    static void ReadBinary(DescriptorInterface& descr, PlyFile &file, PlyProperty &prop, bool fixEndian)
+    {
+      char * buffer = nullptr;
+      int size;
+      int count = prop.CountValue();
+      int typeSize = prop.TypeSize();
+      if (prop.type >= NNP_LIST_UINT8_UINT32)
+      {
+        file.ReadBinaryData(buffer, sizeof(char));
+        const int cntList = int(*(reinterpret_cast<unsigned char *>(buffer)));
+        size = typeSize * cntList;
+        count = cntList;
+      }
+      else
+        size = typeSize * count;
+      file.ReadBinaryData(buffer, size);
+
+      if (typeSize > 1 && fixEndian)
+        adjustEndianess(reinterpret_cast<unsigned char *>(buffer), typeSize, count);
+
+      unsigned char* baseProp = (unsigned char*)descr.base + descr.curPos * sizeof(ContainerType);
+      C* temp = (C*)buffer;
+      if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
+      {
+        float norm = 1.0f;
+        if (std::is_same<ScalarType, float>::value && std::is_same<C, unsigned char>::value)
+          norm = 1.0f / 255.0f;
+        else if (std::is_same<ScalarType, unsigned char>::value && std::is_same<C, float>::value)
+          norm = 255.0f;
+        for (int i = 0; i < std::min(VectorSize, count); i++)
+          *((ScalarType *)(baseProp + i * sizeof(ScalarType))) = ScalarType(temp[i] * norm);
+      }
+      else
+      {
+        for (int i = 0; i < std::min(VectorSize, count); i++)
+          *((ScalarType *)(baseProp + i * sizeof(ScalarType))) = ScalarType(temp[i]);
+      }
+      ++(descr.curPos);
+    }
+
+    template<typename C>
+    static void ReadAscii(DescriptorInterface& descr, PlyFile &file, PlyProperty &prop)
+    {
+      int count = prop.CountValue();
+      if (prop.type >= NNP_LIST_UINT8_UINT32)
+        file.ReadAsciiData(count);
+
+      C* temp = new C[count];
+      for (int i = 0; i < count; i++)
+        file.ReadAsciiData(temp[i]);
+
+      unsigned char* baseProp = (unsigned char*)descr.base + descr.curPos * sizeof(ContainerType);
+      if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
+      {
+        float norm = 1.0f;
+        if (std::is_same<ScalarType, float>::value && prop.type == NNP_UINT8)
+          norm = 1.0f / 255.0f;
+        else if (std::is_same<ScalarType, unsigned char>::value && prop.type == NNP_FLOAT32)
+          norm = 255.0f;
+        for (int i = 0; i < std::min(VectorSize, count); i++)
+          *((ScalarType *)(baseProp + i * sizeof(ScalarType))) = ScalarType(temp[i] * norm);
+      }
+      else
+      {
+        for (int i = 0; i < std::min(VectorSize, count); i++)
+          *((ScalarType *)(baseProp + i * sizeof(ScalarType))) = ScalarType(temp[i]);
+      }
+      delete[] temp;
+      ++(descr.curPos);
+    }
+
+    template<typename C>
+    static void WriteBinary(DescriptorInterface& descr, PlyFile &file, PlyProperty &prop, bool fixEndian)
+    {
+      (void)fixEndian;
+      int count = prop.CountValue();
+      C data[VectorSize];
+      if (prop.type >= NNP_LIST_UINT8_UINT32)
+      {
+        if (prop.IsSigned())
+        {
+          char listSize = (char)VectorSize;
+          file.WriteBinaryData(&listSize, 1);
+          count = VectorSize;
+        }
+        else
+        {
+          unsigned char listSize = (unsigned char)VectorSize;
+          file.WriteBinaryData(&listSize, 1);
+          count = VectorSize;
+        }
+      }
+
+      C temp = 0;
+      unsigned char* baseProp = (unsigned char*)descr.base + descr.curPos * sizeof(ContainerType);
+      if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
+      {
+        float norm = 1.0f;
+        if (std::is_same<ScalarType, float>::value && std::is_same<C, unsigned char>::value)
+          norm = 255.0f;
+        else if (std::is_same<ScalarType, unsigned char>::value && std::is_same<C, float>::value)
+          norm = 1.0f / 255.0f;
+        for (int i = 0; i < std::min(VectorSize, count); i++)
+          data[i] = (C)((*(ScalarType*)(baseProp + i * sizeof(ScalarType))) * norm);
+      }
+      else
+      {
+        for (int i = 0; i < std::min(VectorSize, count); i++)
+          data[i] = (C)((*(ScalarType*)(baseProp + i * sizeof(ScalarType))));
+      }
+
+      if (sizeof(C) > 1 && fixEndian)
+        adjustEndianess((unsigned char*)data, sizeof(C), std::min(VectorSize, count));
+
+      file.WriteBinaryData(data, sizeof(C)*std::min(VectorSize, count));
+      for (int i = 0; i < (count - VectorSize); i++)
+        file.WriteBinaryData(&temp, sizeof(C));
+      ++(descr.curPos);
+    }
+
+    template<typename C>
+    static void WriteAscii(DescriptorInterface& descr, PlyFile &file, PlyProperty &prop)
+    {
+      int count = prop.CountValue();
+      if (prop.type >= NNP_LIST_UINT8_UINT32)
+      {
+        if (prop.IsSigned())
+        {
+          int listSize = (int)VectorSize;
+          file.WriteAsciiData(listSize);
+          count = VectorSize;
+        }
+        else
+        {
+          unsigned int listSize = (unsigned int)VectorSize;
+          file.WriteAsciiData(listSize);
+          count = VectorSize;
+        }
+        file.WriteAsciiData(std::string(" "));
+      }
+
+      C data[VectorSize];
+      unsigned char* baseProp = (unsigned char*)descr.base + descr.curPos * sizeof(ContainerType);
+      if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
+      {
+        float norm = 1.0;
+        if (std::is_same<ScalarType, float>::value && prop.type == NNP_UINT8)
+          norm = 255.0f;
+        else if (std::is_same<ScalarType, unsigned char>::value && prop.type == NNP_FLOAT32)
+          norm = 1.0f / 255.0f;
+        for (int i = 0; i < std::min(VectorSize, count); i++)
+          data[i] = (C)((*(ScalarType*)(baseProp + i * sizeof(ScalarType))) * norm);
+      }
+      else
+      {
+        for (int i = 0; i < std::min(VectorSize, count); i++)
+          data[i] = (C)((*(ScalarType*)(baseProp + i * sizeof(ScalarType))));
+      }
+
+
+      for (int i = 0; i < (count - VectorSize); i++)
+        data[i] = 0;
+
+      for (int i = 0; i < count; i++)
+      {
+        file.WriteAsciiData(data[i]);
+        if (i < count - 1)
+          file.WriteAsciiData(std::string(" "));
+      }
+      ++(descr.curPos);
+    }
+  };
+
+
+
+
+  template<class ContainerType, typename ScalarType>
+  class DescriptorHelper<ContainerType, 0, ScalarType>
+  {
+
+  public:
+
+    template<typename C>
+    static void ReadBinary(DescriptorInterface& descr, PlyFile &file, PlyProperty &prop, bool fixEndian)
+    {
+      char * buffer = nullptr;
+      int size;
+      int count = prop.CountValue();
+      int typeSize = prop.TypeSize();
+      if (prop.type >= NNP_LIST_UINT8_UINT32)
+      {
+        file.ReadBinaryData(buffer, sizeof(char));
+        const int cntList = int(*(reinterpret_cast<unsigned char *>(buffer)));
+        size = typeSize * cntList;
+        count = cntList;
+      }
+      else
+        size = typeSize * count;
+      file.ReadBinaryData(buffer, size);
+
+      if (typeSize > 1 && fixEndian)
+        adjustEndianess(reinterpret_cast<unsigned char *>(buffer), typeSize, count);
+
+      C* temp = (C*)buffer;
+
+      ContainerType* container = (ContainerType*)((unsigned char*)descr.base + descr.curPos * sizeof(ContainerType));
+      (*container).resize(count);
+      for (int i = 0; i < count; i++)
+        (*container)[i] = (ScalarType)(temp[i]);
+      ++(descr.curPos);
+    }
+
+    template<typename C>
+    static void ReadAscii(DescriptorInterface& descr, PlyFile &file, PlyProperty &prop)
+    {
+      int count = prop.CountValue();
+      if (prop.type >= NNP_LIST_UINT8_UINT32)
+        file.ReadAsciiData(count);
+
+      C* temp = new C[count];
+      for (int i = 0; i < count; i++)
+        file.ReadAsciiData(temp[i]);
+
+      ContainerType* container = (ContainerType*)((unsigned char*)descr.base + descr.curPos * sizeof(ContainerType));
+      (*container).resize(count);
+      for (int i = 0; i < count; i++)
+        (*container)[i] = (ScalarType)(temp[i]);
+      delete[] temp;
+      ++(descr.curPos);
+    }
+
+    template<typename C>
+    static void WriteBinary(DescriptorInterface& descr, PlyFile &file, PlyProperty &prop, bool fixEndian)
+    {
+      size_t count = prop.CountValue();
+      ContainerType* list = (ContainerType*)((unsigned char*)descr.base + descr.curPos * sizeof(ContainerType));
+      if (prop.type >= NNP_LIST_UINT8_UINT32)
+      {
+        if (prop.IsSigned())
+        {
+          char listSize = (char)list->size();
+          file.WriteBinaryData(&listSize, 1);
+          count = list->size();
+        }
+        else
+        {
+          unsigned char listSize = (unsigned char)list->size();
+          file.WriteBinaryData(&listSize, 1);
+          count = list->size();
+        }
+      }
+
+      std::vector<C> data(count);
+
+      for (int i = 0; i < std::min(count, list->size()); i++)
+        data[i] = (C)((*list)[i]);
+
+      if (sizeof(C) > 1 && fixEndian)
+        adjustEndianess((unsigned char*)data.data(), sizeof(C), std::min(count, list->size()));
+
+      file.WriteBinaryData(data.data(), sizeof(C)*std::min(count, list->size()));
+      C temp = 0;
+      for (int i = 0; i < (count - list->size()); i++)
+        file.WriteBinaryData(&temp, sizeof(C));
+      ++(descr.curPos);
+    }
+
+    template<typename C>
+    static void WriteAscii(DescriptorInterface& descr, PlyFile &file, PlyProperty &prop)
+    {
+      size_t count = prop.CountValue();
+      ContainerType* list = (ContainerType*)((unsigned char*)descr.base + descr.curPos * sizeof(ContainerType));
+      if (prop.type >= NNP_LIST_UINT8_UINT32)
+      {
+        if (prop.IsSigned())
+        {
+          int listSize = (int)list->size();
+          file.WriteAsciiData(listSize);
+          count = list->size();
+        }
+        else
+        {
+          unsigned int listSize = (unsigned int)list->size();
+          file.WriteAsciiData(listSize);
+          count = list->size();
+        }
+        file.WriteAsciiData(std::string(" "));
+      }
+
+      std::vector<C> data(count);
+      for (int i = 0; i < std::min(count, list->size()); i++)
+        data[i] = (C)((*list)[i]);
+
+      for (int i = 0; i < (count - list->size()); i++)
+        data[i] = 0;
+
+      for (int i = 0; i < count; i++)
+      {
+        file.WriteAsciiData(data[i]);
+        if (i < count - 1)
+          file.WriteAsciiData(std::string(" "));
+      }
+      ++(descr.curPos);
+    }
+  };
+
+
+
+  
   /** Memory descriptor of a vector of properties.
   *	The class defines how a vector of PlyProperty is saved in memory.
   *
-  *  @tparam CointainerType	Type of the container of the property
+  *  @tparam ContainerType	Type of the container of the property
   *  @tparam VectorSize		Number of values stored in the property.
   *  @tparam ScalarType		Type of the values stored in the property.
   */
-  template<class CointainerType, int VectorSize, typename ScalarType>
+  template<class ContainerType, int VectorSize, typename ScalarType>
   class DataDescriptor : public DescriptorInterface
   {
   public:
+
+    DescriptorHelper<ContainerType, VectorSize, ScalarType> helper;
 
     inline DataDescriptor();
 
@@ -2018,7 +2340,7 @@ namespace nanoply
     * @param _s	Name of the PlyProperty.
     * @param _b	Pointer to the memory location that contains the data of the property.
     */
-    inline DataDescriptor(std::string& _s, void *_b) :DescriptorInterface(_s, _b){};
+    inline DataDescriptor(const std::string& _s, void *_b) :DescriptorInterface(_s, _b){};
 
     inline void Restart();
 
@@ -2029,75 +2351,18 @@ namespace nanoply
     inline bool WriteElemBinary(PlyFile &file, PlyProperty &prop, bool fixEndian);
 
     inline bool WriteElemAscii(PlyFile &file, PlyProperty &prop);
-
-  private:
-
-    template<typename C>
-    inline void ReadBinary(PlyFile &file, PlyProperty &prop, bool fixEndian);
-
-    template<typename C>
-    inline void ReadAscii(PlyFile &file, PlyProperty &prop);
-
-    template<typename C>
-    inline void WriteBinary(PlyFile &file, PlyProperty &prop, bool fixEndian);
-
-    template<typename C>
-    inline void WriteAscii(PlyFile &file, PlyProperty &prop);
-
   };
+  
 
-
-  template<class CointainerType, int VectorSize, typename ScalarType>
-  inline void DataDescriptor<CointainerType, VectorSize, ScalarType>::Restart()
+  template<class ContainerType, int VectorSize, typename ScalarType>
+  void DataDescriptor<ContainerType, VectorSize, ScalarType>::Restart()
   {
     this->curPos = 0;
   }
 
+ 
   template<class ContainerType, int VectorSize, typename ScalarType>
-  template<typename C>
-  inline void DataDescriptor<ContainerType, VectorSize, ScalarType>::ReadBinary(PlyFile &file, PlyProperty &prop, bool fixEndian)
-  {
-    char * buffer = nullptr;
-    int size;
-    int count = prop.CountValue();
-    int typeSize = prop.TypeSize();
-    if (prop.type >= NNP_LIST_UINT8_UINT32)
-    {
-       file.ReadBinaryData(buffer, sizeof(char));
-       const int cntList = int(*(reinterpret_cast<unsigned char *>(buffer)));
-       size = typeSize * cntList;
-       count = cntList;
-    }
-    else
-      size = typeSize * count;
-    file.ReadBinaryData(buffer, size);
-
-    if (typeSize > 1 && fixEndian)
-      adjustEndianess(reinterpret_cast<unsigned char *>(buffer), typeSize, count);
-
-		unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
-    C* temp = (C*)buffer;
-    if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
-    {
-			float norm = 1.0f;
-      if (std::is_same<ScalarType, float>::value && std::is_same<C, unsigned char>::value)
-        norm = 1.0f / 255.0f;
-      else if (std::is_same<ScalarType, unsigned char>::value && std::is_same<C, float>::value)
-        norm = 255.0f;
-			for (int i = 0; i < std::min(VectorSize, count); i++)
-				*((ScalarType *)(baseProp + i*sizeof(ScalarType))) = ScalarType(temp[i] * norm);
-    }
-		else
-		{
-			for (int i = 0; i < std::min(VectorSize, count); i++)
-				*((ScalarType *)(baseProp + i*sizeof(ScalarType))) = ScalarType(temp[i]);
-		}
-    ++(this->curPos);
-  }
-
-
-  template<class ContainerType, int VectorSize, typename ScalarType>
-  inline bool DataDescriptor<ContainerType, VectorSize, ScalarType>::ReadElemBinary(PlyFile &file, PlyProperty &prop, bool fixEndian)
+  bool DataDescriptor<ContainerType, VectorSize, ScalarType>::ReadElemBinary(PlyFile &file, PlyProperty &prop, bool fixEndian)
   {
     if (prop.elem != elem)
       return false;
@@ -2105,70 +2370,35 @@ namespace nanoply
     {
     case NNP_LIST_INT8_INT8:
     case NNP_LIST_UINT8_INT8:
-    case NNP_INT8:				this->ReadBinary<char>(file, prop, fixEndian); break;
+    case NNP_INT8:				helper.ReadBinary<char>(*this, file, prop, fixEndian); break;
     case NNP_LIST_INT8_UINT8:
     case NNP_LIST_UINT8_UINT8:
-    case NNP_UINT8:				this->ReadBinary<unsigned char>(file, prop, fixEndian); break;
+    case NNP_UINT8:				helper.ReadBinary<unsigned char>(*this, file, prop, fixEndian); break;
     case NNP_LIST_INT8_INT16:
     case NNP_LIST_UINT8_INT16:
-    case NNP_INT16:				this->ReadBinary<short>(file, prop, fixEndian); break;
+    case NNP_INT16:				helper.ReadBinary<short>(*this, file, prop, fixEndian); break;
     case NNP_LIST_INT8_UINT16:
     case NNP_LIST_UINT8_UINT16:
-    case NNP_UINT16:			this->ReadBinary<unsigned short>(file, prop, fixEndian); break;
+    case NNP_UINT16:			helper.ReadBinary<unsigned short>(*this, file, prop, fixEndian); break;
     case NNP_LIST_INT8_FLOAT32:
     case NNP_LIST_UINT8_FLOAT32:
-    case NNP_FLOAT32:			this->ReadBinary<float>(file, prop, fixEndian); break;
+    case NNP_FLOAT32:			helper.ReadBinary<float>(*this, file, prop, fixEndian); break;
     case NNP_LIST_UINT8_INT32:
     case NNP_LIST_INT8_INT32:
-    case NNP_INT32:				this->ReadBinary<int>(file, prop, fixEndian); break;
+    case NNP_INT32:				helper.ReadBinary<int>(*this, file, prop, fixEndian); break;
     case NNP_LIST_UINT8_UINT32:
     case NNP_LIST_INT8_UINT32:
-    case NNP_UINT32:			this->ReadBinary<unsigned int>(file, prop, fixEndian); break;
+    case NNP_UINT32:			helper.ReadBinary<unsigned int>(*this, file, prop, fixEndian); break;
     case NNP_LIST_INT8_FLOAT64:
     case NNP_LIST_UINT8_FLOAT64:
-    case NNP_FLOAT64:			this->ReadBinary<double>(file, prop, fixEndian); break;
+    case NNP_FLOAT64:			helper.ReadBinary<double>(*this, file, prop, fixEndian); break;
     }
     return true;
   }
 
 
-
   template<class ContainerType, int VectorSize, typename ScalarType>
-  template<typename C>
-  inline void DataDescriptor<ContainerType, VectorSize, ScalarType>::ReadAscii(PlyFile &file, PlyProperty &prop)
-  {
-    int count = prop.CountValue();
-    if (prop.type >= NNP_LIST_UINT8_UINT32)
-      file.ReadAsciiData(count);
-
-    C* temp = new C[count];
-    for (int i = 0; i < count; i++)
-      file.ReadAsciiData(temp[i]);
-
-    unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
-    if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
-    {
-			float norm = 1.0f;
-      if (std::is_same<ScalarType, float>::value && prop.type == NNP_UINT8)
-        norm = 1.0f / 255.0f;
-      else if (std::is_same<ScalarType, unsigned char>::value && prop.type == NNP_FLOAT32)
-        norm = 255.0f;
-			for (int i = 0; i < std::min(VectorSize, count); i++)
-				*((ScalarType *)(baseProp + i*sizeof(ScalarType))) = ScalarType(temp[i] * norm);
-    }
-		else
-		{
-			for (int i = 0; i < std::min(VectorSize, count); i++)
-				*((ScalarType *)(baseProp + i*sizeof(ScalarType))) = ScalarType(temp[i]);
-		}
-    delete[] temp;
-    ++(this->curPos);
-  }
-
-
-
-  template<class ContainerType, int VectorSize, typename ScalarType>
-  inline bool DataDescriptor<ContainerType, VectorSize, ScalarType>::ReadElemAscii(PlyFile &file, PlyProperty &prop)
+  bool DataDescriptor<ContainerType, VectorSize, ScalarType>::ReadElemAscii(PlyFile &file, PlyProperty &prop)
   {
     if (prop.elem != elem)
       return false;
@@ -2176,87 +2406,35 @@ namespace nanoply
     {
     case NNP_LIST_UINT8_INT8:
     case NNP_LIST_INT8_INT8:
-    case NNP_INT8:				this->ReadAscii<int>(file, prop); break;
+    case NNP_INT8:				helper.ReadAscii<int>(*this, file, prop); break;
     case NNP_LIST_UINT8_UINT8:
     case NNP_LIST_INT8_UINT8:
-    case NNP_UINT8:				this->ReadAscii<unsigned int>(file, prop); break;
+    case NNP_UINT8:				helper.ReadAscii<unsigned int>(*this, file, prop); break;
     case NNP_LIST_UINT8_INT16:
     case NNP_LIST_INT8_INT16:
-    case NNP_INT16:				this->ReadAscii<short>(file, prop); break;
+    case NNP_INT16:				helper.ReadAscii<short>(*this, file, prop); break;
     case NNP_LIST_UINT8_UINT16:
     case NNP_LIST_INT8_UINT16:
-    case NNP_UINT16:			this->ReadAscii<unsigned short>(file, prop); break;
+    case NNP_UINT16:			helper.ReadAscii<unsigned short>(*this, file, prop); break;
     case NNP_LIST_UINT8_FLOAT32:
     case NNP_LIST_INT8_FLOAT32:
-    case NNP_FLOAT32:			this->ReadAscii<float>(file, prop); break;
+    case NNP_FLOAT32:			helper.ReadAscii<float>(*this, file, prop); break;
     case NNP_LIST_UINT8_INT32:
     case NNP_LIST_INT8_INT32:
-    case NNP_INT32:				this->ReadAscii<int>(file, prop); break;
+    case NNP_INT32:				helper.ReadAscii<int>(*this, file, prop); break;
     case NNP_LIST_UINT8_UINT32:
     case NNP_LIST_INT8_UINT32:
-    case NNP_UINT32:			this->ReadAscii<unsigned int>(file, prop); break;
+    case NNP_UINT32:			helper.ReadAscii<unsigned int>(*this, file, prop); break;
     case NNP_LIST_UINT8_FLOAT64:
     case NNP_LIST_INT8_FLOAT64:
-    case NNP_FLOAT64:			this->ReadAscii<double>(file, prop); break;
+    case NNP_FLOAT64:			helper.ReadAscii<double>(*this, file, prop); break;
     }
     return true;
   }
 
 
-
   template<class ContainerType, int VectorSize, typename ScalarType>
-  template<typename C>
-  inline void DataDescriptor<ContainerType, VectorSize, ScalarType>::WriteBinary(PlyFile &file, PlyProperty &prop, bool fixEndian)
-  {
-    (void)fixEndian;
-    int count = prop.CountValue();
-    C data[VectorSize];
-    if (prop.type >= NNP_LIST_UINT8_UINT32)
-    {
-      if (prop.IsSigned())
-      {
-        char listSize = (char)VectorSize;
-        file.WriteBinaryData(&listSize, 1);
-        count = VectorSize;
-      }
-      else
-      {
-        unsigned char listSize = (unsigned char)VectorSize;
-        file.WriteBinaryData(&listSize, 1);
-        count = VectorSize;
-      }
-    }
-
-    C temp = 0;
-		unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
-    if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
-    {
-			float norm = 1.0f;
-      if (std::is_same<ScalarType, float>::value && std::is_same<C, unsigned char>::value)
-        norm = 255.0f;
-      else if (std::is_same<ScalarType, unsigned char>::value && std::is_same<C, float>::value)
-        norm = 1.0f / 255.0f;
-			for (int i = 0; i < std::min(VectorSize, count); i++)
-				data[i] = (C)((*(ScalarType*)(baseProp + i*sizeof(ScalarType))) * norm);
-    }
-		else
-		{
-			for (int i = 0; i < std::min(VectorSize, count); i++)
-				data[i] = (C)((*(ScalarType*)(baseProp + i*sizeof(ScalarType))));
-		}
-
-    if (sizeof(C) > 1 && fixEndian)
-      adjustEndianess((unsigned char*)data, sizeof(C), std::min(VectorSize, count));
-
-    file.WriteBinaryData(data, sizeof(C)*std::min(VectorSize, count));
-    for (int i = 0; i < (count - VectorSize); i++)
-      file.WriteBinaryData(&temp, sizeof(C));
-    ++(this->curPos);
-  }
-
-
-  template<class ContainerType, int VectorSize, typename ScalarType>
-  inline bool DataDescriptor<ContainerType, VectorSize, ScalarType>::WriteElemBinary(PlyFile &file, PlyProperty &prop, bool fixEndian)
+  bool DataDescriptor<ContainerType, VectorSize, ScalarType>::WriteElemBinary(PlyFile &file, PlyProperty &prop, bool fixEndian)
   {
     if (prop.elem != elem)
       return false;
@@ -2264,89 +2442,35 @@ namespace nanoply
     {
     case NNP_LIST_INT8_INT8:
     case NNP_LIST_UINT8_INT8:
-    case NNP_INT8:				this->WriteBinary<char>(file, prop, fixEndian); break;
+    case NNP_INT8:				helper.WriteBinary<char>(*this, file, prop, fixEndian); break;
     case NNP_LIST_INT8_UINT8:
     case NNP_LIST_UINT8_UINT8:
-    case NNP_UINT8:				this->WriteBinary<unsigned char>(file, prop, fixEndian); break;
+    case NNP_UINT8:				helper.WriteBinary<unsigned char>(*this, file, prop, fixEndian); break;
     case NNP_LIST_INT8_INT16:
     case NNP_LIST_UINT8_INT16:
-    case NNP_INT16:				this->WriteBinary<short>(file, prop, fixEndian); break;
+    case NNP_INT16:				helper.WriteBinary<short>(*this, file, prop, fixEndian); break;
     case NNP_LIST_INT8_UINT16:
     case NNP_LIST_UINT8_UINT16:
-    case NNP_UINT16:			this->WriteBinary<unsigned short>(file, prop, fixEndian); break;
+    case NNP_UINT16:			helper.WriteBinary<unsigned short>(*this, file, prop, fixEndian); break;
     case NNP_LIST_INT8_FLOAT32:
     case NNP_LIST_UINT8_FLOAT32:
-    case NNP_FLOAT32:			this->WriteBinary<float>(file, prop, fixEndian); break;
+    case NNP_FLOAT32:			helper.WriteBinary<float>(*this, file, prop, fixEndian); break;
     case NNP_LIST_UINT8_INT32:
     case NNP_LIST_INT8_INT32:
-    case NNP_INT32:				this->WriteBinary<int>(file, prop, fixEndian); break;
+    case NNP_INT32:				helper.WriteBinary<int>(*this, file, prop, fixEndian); break;
     case NNP_LIST_UINT8_UINT32:
     case NNP_LIST_INT8_UINT32:
-    case NNP_UINT32:			this->WriteBinary<unsigned int>(file, prop, fixEndian); break;
+    case NNP_UINT32:			helper.WriteBinary<unsigned int>(*this, file, prop, fixEndian); break;
     case NNP_LIST_INT8_FLOAT64:
     case NNP_LIST_UINT8_FLOAT64:
-    case NNP_FLOAT64:			this->WriteBinary<double>(file, prop, fixEndian); break;
+    case NNP_FLOAT64:			helper.WriteBinary<double>(*this, file, prop, fixEndian); break;
     }
     return true;
   }
 
 
   template<class ContainerType, int VectorSize, typename ScalarType>
-  template<typename C>
-  inline void DataDescriptor<ContainerType, VectorSize, ScalarType>::WriteAscii(PlyFile &file, PlyProperty &prop)
-  {
-    int count = prop.CountValue();
-    if (prop.type >= NNP_LIST_UINT8_UINT32)
-    {
-      if (prop.IsSigned())
-      {
-        int listSize = (int)VectorSize;
-        file.WriteAsciiData(listSize);
-        count = VectorSize;
-      }
-      else
-      {
-        unsigned int listSize = (unsigned int)VectorSize;
-        file.WriteAsciiData(listSize);
-        count = VectorSize;
-      }
-      file.WriteAsciiData(std::string(" "));
-    }
-
-    C data[VectorSize];
-		unsigned char* baseProp = (unsigned char*)base + this->curPos*sizeof(ContainerType);
-    if ((prop.elem == NNP_CRGB || prop.elem == NNP_CRGBA))
-    {
-			float norm = 1.0;
-      if (std::is_same<ScalarType, float>::value && prop.type == NNP_UINT8)
-        norm = 255.0f;
-      else if (std::is_same<ScalarType, unsigned char>::value && prop.type == NNP_FLOAT32)
-        norm = 1.0f / 255.0f;
-			for (int i = 0; i < std::min(VectorSize, count); i++)
-				data[i] = (C)((*(ScalarType*)(baseProp + i*sizeof(ScalarType))) * norm);
-    }
-		else
-		{
-			for (int i = 0; i < std::min(VectorSize, count); i++)
-				data[i] = (C)((*(ScalarType*)(baseProp + i*sizeof(ScalarType))));
-		}
-		   
-   
-    for (int i = 0; i < (count - VectorSize); i++)
-      data[i] = 0;
-
-    for (int i = 0; i < count; i++)
-    {
-      file.WriteAsciiData(data[i]);
-      if (i < count - 1)
-        file.WriteAsciiData(std::string(" "));
-    }
-    ++(this->curPos);
-  }
-
-
-  template<class ContainerType, int VectorSize, typename ScalarType>
-  inline bool DataDescriptor<ContainerType, VectorSize, ScalarType>::WriteElemAscii(PlyFile &file, PlyProperty& prop)
+  bool DataDescriptor<ContainerType, VectorSize, ScalarType>::WriteElemAscii(PlyFile &file, PlyProperty& prop)
   {
     if (prop.elem != elem)
       return false;
@@ -2356,28 +2480,28 @@ namespace nanoply
     {
     case NNP_LIST_UINT8_INT8:
     case NNP_LIST_INT8_INT8:
-    case NNP_INT8:				this->WriteAscii<int>(file, prop); break;
+    case NNP_INT8:				helper.WriteAscii<int>(*this, file, prop); break;
     case NNP_LIST_UINT8_UINT8:
     case NNP_LIST_INT8_UINT8:
-    case NNP_UINT8:				this->WriteAscii<unsigned int>(file, prop); break;
+    case NNP_UINT8:				helper.WriteAscii<unsigned int>(*this, file, prop); break;
     case NNP_LIST_UINT8_INT16:
     case NNP_LIST_INT8_INT16:
-    case NNP_INT16:				this->WriteAscii<short>(file, prop); break;
+    case NNP_INT16:				helper.WriteAscii<short>(*this, file, prop); break;
     case NNP_LIST_UINT8_UINT16:
     case NNP_LIST_INT8_UINT16:
-    case NNP_UINT16:			this->WriteAscii<unsigned short>(file, prop); break;
+    case NNP_UINT16:			helper.WriteAscii<unsigned short>(*this, file, prop); break;
     case NNP_LIST_UINT8_FLOAT32:
     case NNP_LIST_INT8_FLOAT32:
-    case NNP_FLOAT32:			this->WriteAscii<float>(file, prop); break;
+    case NNP_FLOAT32:			helper.WriteAscii<float>(*this, file, prop); break;
     case NNP_LIST_UINT8_INT32:
     case NNP_LIST_INT8_INT32:
-    case NNP_INT32:				this->WriteAscii<int>(file, prop); break;
+    case NNP_INT32:				helper.WriteAscii<int>(*this, file, prop); break;
     case NNP_LIST_UINT8_UINT32:
     case NNP_LIST_INT8_UINT32:
-    case NNP_UINT32:			this->WriteAscii<unsigned int>(file, prop); break;
+    case NNP_UINT32:			helper.WriteAscii<unsigned int>(*this, file, prop); break;
     case NNP_LIST_UINT8_FLOAT64:
     case NNP_LIST_INT8_FLOAT64:
-    case NNP_FLOAT64:			this->WriteAscii<double>(file, prop); break;
+    case NNP_FLOAT64:			helper.WriteAscii<double>(*this, file, prop); break;
     }
     return true;
   }

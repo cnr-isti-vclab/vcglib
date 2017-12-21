@@ -129,6 +129,13 @@ public:
       return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, this->par.gridBailout, closestDist, closestP,closestN,ip);
     }
 
+  FaceType *GetClosestFaceIP(const CoordType &p, CoordType &ip, CoordType &in)
+    {
+      ScalarType closestDist;
+      CoordType closestP;
+      return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, this->par.gridBailout, closestDist, closestP,in,ip);
+    }
+
   FaceType *GetClosestFacePoint(const CoordType &p, CoordType &closestP)
   {
     ScalarType closestDist;
@@ -193,8 +200,10 @@ public:
       {
         VertexPointer v0 = FindVertexSnap(f0,ip0);
         VertexPointer v1 = FindVertexSnap(f1,ip1);
+
         if(v0==0 || v1==0) return false;
         if(v0==v1) return false; 
+
         FacePointer ff0,ff1;
         int e0,e1;
         bool ret=face::FindSharedFaces<FaceType>(v0,v1,ff0,ff1,e0,e1);

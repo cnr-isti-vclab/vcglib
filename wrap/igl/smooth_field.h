@@ -341,11 +341,8 @@ public:
             Ndir=4;
             curvRing=2;
             alpha_curv=0.0;
-
             align_borders=false;
-
             SmoothM=SMMiq;
-
             sharp_thr=0.0;
             curv_thr=0.4;
         }
@@ -488,10 +485,10 @@ public:
         //for the moment only cross and line field
 
         //initialize direction by curvature if needed
-        if ((SParam.alpha_curv>0)||
-             (SParam.sharp_thr>0)||
-             (SParam.curv_thr>0))
-            InitByCurvature(mesh,SParam.curvRing);
+//        if ((SParam.alpha_curv>0)||
+//             (SParam.sharp_thr>0)||
+//             (SParam.curv_thr>0))
+        InitByCurvature(mesh,SParam.curvRing);
 
         SelectConstraints(mesh,SParam);
         //then do the actual smooth

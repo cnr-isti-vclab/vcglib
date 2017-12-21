@@ -31,7 +31,7 @@
 #include <igl/cut_mesh_from_singularities.h>
 #include <igl/find_cross_field_singularities.h>
 #include <igl/compute_frame_field_bisectors.h>
-#include <igl/comiso/miq.h>
+#include <igl/copyleft/comiso/miq.h>
 #include <vcg/complex/algorithms/parametrization/uv_utils.h>
 #include <vcg/complex/algorithms/mesh_to_matrix.h>
 
@@ -74,6 +74,8 @@ public:
         bool crease_as_feature;
         //true if roound selected vert
         bool round_selected;
+        //the anisotropy in MIQ sense (see paper)
+        double miqAnisotropy;
 
         MIQParameters()
         {
@@ -89,6 +91,7 @@ public:
             Ndir=4;
             crease_thr=0.2;
             hexaLine=false;
+            miqAnisotropy=1;
         }
     };
 
@@ -163,9 +166,9 @@ private:
             }
         }
 
-        igl::miq(V,F,X1,X2,UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
+        igl::copyleft::comiso::miq(V,F,X1,X2,UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
                  MiqP.stiffness_iter,MiqP.local_iter,MiqP.doRound,MiqP.round_singularities,
-                 extra_round,hard_features);
+                 extra_round,hard_features,MiqP.miqAnisotropy);
 
         // then copy UV
         for (size_t i=0;i<trimesh.face.size();i++)
@@ -287,7 +290,7 @@ private:
 //                 MMatch,isSingularity,singularityIndex,Seams,
 //                 UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
 //                 MiqP.stiffness_iter,MiqP.local_iter,MiqP.doRound,MiqP.round_singularities,extra_round,hard_features);
-        igl::miq(V,F,X1_combed,X2_combed,
+        igl::copyleft::comiso::miq(V,F,X1_combed,X2_combed,
                  UV,FUV,MiqP.gradient,MiqP.stiffness,MiqP.directRound,
                  MiqP.stiffness_iter,MiqP.local_iter,MiqP.doRound,MiqP.round_singularities,extra_round,hard_features);
 
@@ -336,8 +339,8 @@ public:
     static void MIQParametrize(MeshType &trimesh,
                                MIQParameters &MiqP)
     {
-        if (MiqP.crease_as_feature)
-            SetCreases(trimesh,MiqP.crease_thr);
+//        if (MiqP.crease_as_feature)
+//            SetCreases(trimesh,MiqP.crease_thr);
 
         if (MiqP.Ndir==4)
             CrossFieldParam(trimesh,MiqP);

@@ -27,6 +27,7 @@
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/simplex/face/pos.h>
 #include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/polygonal_algorithms.h>
 
 namespace vcg {
 namespace tri {
@@ -61,65 +62,8 @@ class DualMeshing
             vertSeq.push_back(indexV);
         }
 
-        if (startV.IsB())
-        {
-            vcg::face::Pos<FaceType> firstPos=posVec[0];
-            firstPos.FlipE();
-            assert(firstPos.IsBorder());
-
-            int indexVt0=vcg::tri::Index(primal,firstPos.V());
-            int indexVt1=vcg::tri::Index(primal,firstPos.VFlip());
-            std::pair<int,int> key(std::min(indexVt0,indexVt1),
-                                   std::max(indexVt0,indexVt1));
-            assert(EdgeMap.count(key)>0);
-            int indexV0=EdgeMap[key];
-
-            vcg::face::Pos<FaceType> lastPos=posVec.back();
-            assert(lastPos.IsBorder());
-
-            indexVt0=vcg::tri::Index(primal,lastPos.V());
-            indexVt1=vcg::tri::Index(primal,lastPos.VFlip());
-            key=std::pair<int,int> (std::min(indexVt0,indexVt1),
-                                    std::max(indexVt0,indexVt1));
-            assert(EdgeMap.count(key)>0);
-            int indexV1=EdgeMap[key];
-
-            vertSeq.push_back(indexV1);
-            vertSeq.push_back(indexV0);
-        }
     }
 
-    static void CreateBorderEdgeVert(PolyMeshType &primal,
-                                     PolyMeshType &dual,
-                                     std::map<std::pair<int,int>, int> &VertMap)
-    {
-        VertMap.clear();
-        vcg::tri::UpdateFlags<PolyMeshType>::VertexClearB(primal);
-
-        for (size_t i=0;i<primal.face.size();i++)
-            for (int j=0;j<primal.face[i].VN();j++)
-            {
-                int edge_size=primal.face[i].VN();
-                FaceType *nextF=primal.face[i].cFFp(j);
-
-                if (nextF!=&primal.face[i])continue;
-
-                VertexType *v0=primal.face[i].V(j);
-                VertexType *v1=primal.face[i].V((j+1)%edge_size);
-
-                v0->SetB();
-                v1->SetB();
-
-                int V0Index=vcg::tri::Index(primal,v0);
-                int V1Index=vcg::tri::Index(primal,v1);
-                CoordType pos=(v0->P()+v1->P())/2;
-                vcg::tri::Allocator<PolyMeshType>::AddVertex(dual,pos);
-                std::pair<int,int> key(std::min(V0Index,V1Index),
-                                       std::max(V0Index,V1Index));
-
-                VertMap[key]=dual.vert.size()-1;
-            }
-    }
 
     static void CreateFaceVert(PolyMeshType &primal,
                                PolyMeshType &dual,
@@ -137,7 +81,6 @@ class DualMeshing
             int num=0;
             if (snapBorder)//search for border edge
             {
-                std::vector<CoordType> BorderPos;
                 for (int j=0;j<primal.face[i].VN();j++)
                 {
                    if (!primal.face[i].V(j)->IsB())continue;
@@ -145,7 +88,7 @@ class DualMeshing
                     num++;
                 }
                 if (num>0)
-                pos/=num;
+                    pos/=num;
             }
 
             if (num==0)
@@ -153,15 +96,22 @@ class DualMeshing
                 for (int j=0;j<primal.face[i].VN();j++)
                 {
                     pos+=primal.face[i].V(j)->P();
-                    int indexV=vcg::tri::Index(primal,primal.face[i].V(j));
-                    if (VertFace[indexV]!=-1)continue;
-                    VertFace[indexV]=i;
                 }
                 pos/=(ScalarType)primal.face[i].VN();
             }
             vcg::tri::Allocator<PolyMeshType>::AddVertex(dual,pos);
             VertMap[i]=dual.vert.size()-1;
+            dual.vert.back().Q()=i;
         }
+
+        //then initialize VF first face
+        for (size_t i=0;i<primal.face.size();i++)
+            for (int j=0;j<primal.face[i].VN();j++)
+            {
+                int indexV=vcg::tri::Index(primal,primal.face[i].V(j));
+                if (VertFace[indexV]!=-1)continue;
+                VertFace[indexV]=i;
+            }
     }
 
 public:
@@ -177,16 +127,18 @@ public:
         vcg::tri::RequireFFAdjacency(primal);
 
         vcg::tri::UpdateTopology<PolyMeshType>::FaceFace(primal);
+        vcg::tri::UpdateFlags<PolyMeshType>::VertexBorderFromFaceAdj(primal);
 
         std::map<std::pair<int,int>, int> VertEdgeMap;
-        CreateBorderEdgeVert(primal,dual,VertEdgeMap);
 
+        std::cout<<"Creating Dual Vertices"<<std::endl;
         std::vector<int> VertFaceMap,VertFace;
         CreateFaceVert(primal,dual,VertFaceMap,VertFace,snapBorder);
 
+        std::cout<<"Creating Dual Faces"<<std::endl;
         for (size_t i=0;i<primal.vert.size();i++)
         {
-            if ((snapBorder)&&(primal.vert[i].IsB()))continue;
+            if (primal.vert[i].IsB())continue;
 
             FaceType *firstF=&primal.face[VertFace[i]];
             std::vector<int> VertSeq;
@@ -195,9 +147,11 @@ public:
             dual.face.back().Alloc(VertSeq.size());
             for (size_t j=0;j<VertSeq.size();j++)
                 dual.face.back().V(j)=&dual.vert[VertSeq[j]];
+            dual.face.back().Q()=i;
         }
-
         vcg::tri::Clean<PolyMeshType>::RemoveUnreferencedVertex(dual);
+        //finally remove valence 1 vertices on the border
+        vcg::PolygonalAlgorithm<PolyMeshType>::RemoveValence2Vertices(dual);
     }
 
 };

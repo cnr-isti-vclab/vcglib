@@ -108,6 +108,7 @@ public:
     T::Dealloc();
   }
 
+  static bool HasVertexRef() { return true; }
   static bool HasFVAdjacency()   { return true; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("PFVAdj"));T::Name(name);}
 
