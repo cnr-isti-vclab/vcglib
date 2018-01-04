@@ -189,7 +189,7 @@ private:
         for (size_t i=0;i<poly_m.face.size();i++)
         {
             int NumV=poly_m.face[i].VN();
-            for (size_t j=0;j<NumV;j++)
+            for (int j=0;j<NumV;j++)
             {
                 VertexType *v0=poly_m.face[i].V(j);
                 VertexType *v1=poly_m.face[i].V((j+1)%NumV);
@@ -806,7 +806,7 @@ public:
         for (size_t i=0;i<poly_m.face.size();i++)
         {
             int NumV=poly_m.face[i].VN();
-            for (size_t j=0;j<NumV;j++)
+            for (int j=0;j<NumV;j++)
             {
                 CoordType pos0=poly_m.face[i].cV(j)->P();
                 CoordType pos1=poly_m.face[i].cV((j+1)%NumV)->P();
@@ -858,7 +858,7 @@ public:
             //get vertices of the face
             int NumV=poly_m.face[i].VN();
 
-            for (size_t j=0;j<NumV;j++)
+            for (int j=0;j<NumV;j++)
             {
                 VertexType *v0=poly_m.face[i].V((j+NumV-1)%NumV);
                 VertexType *v1=poly_m.face[i].V(j);
@@ -896,7 +896,7 @@ public:
             int NumV=poly_m.face[i].VN();
 
             std::vector<VertexType*> FaceV;
-            for (size_t j=0;j<NumV;j++)
+            for (int j=0;j<NumV;j++)
             {
                 VertexType *v=poly_m.face[i].V(j);
                 assert(!v->IsD());
@@ -908,7 +908,7 @@ public:
             }
 
             //then deallocate face
-            if (FaceV.size()==NumV)continue;
+            if ((int)FaceV.size()==NumV)continue;
 
             //otherwise deallocate and set new vertices
             poly_m.face[i].Dealloc();
@@ -1020,7 +1020,7 @@ public:
             //            ScalarType AreaF=vcg::PolyArea(poly_m.face[i]);
             size_t sizeV=poly_m.face[i].VN()-1;
             CoordType baryF=vcg::PolyBarycenter(poly_m.face[i]);
-            for (size_t j=0;j<poly_m.face[i].VN();j++)
+            for (int j=0;j<poly_m.face[i].VN();j++)
             {
                 CoordType P0=poly_m.face[i].P((j+sizeV-1)%sizeV);
                 CoordType P1=poly_m.face[i].P(j);
@@ -1030,6 +1030,25 @@ public:
 
                 poly_m.face[i].V(j)->Q()+=vcg::DoubleArea(T0)/2;
                 poly_m.face[i].V(j)->Q()+=vcg::DoubleArea(T1)/2;
+            }
+        }
+    }
+
+    static void InitQualityVertEdgeLenght(PolyMeshType &poly_m)
+    {
+        for (size_t i=0;i<poly_m.vert.size();i++)
+            poly_m.vert[i].Q()=0;
+
+        for (size_t i=0;i<poly_m.face.size();i++)
+        {
+            for (int j=0;j<poly_m.face[i].VN();j++)
+            {
+                FaceType *f=&poly_m.face[i];
+                FaceType *f1=f->FFp(j);
+                if (f>f1)continue;
+                ScalarType L=(poly_m.face[i].P0(j)-poly_m.face[i].P1(j)).Norm();
+                poly_m.face[i].V0(j)->Q()+=L;
+                poly_m.face[i].V1(j)->Q()+=L;
             }
         }
     }
