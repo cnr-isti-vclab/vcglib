@@ -197,7 +197,7 @@ public:
         CollectUVBorder(rm,uvBorder);
         meshRegionVec.push_back(rm);
         uvBorders.push_back(uvBorder);
-        int foldedCnt = tri::Distortion<VoroMesh,false>::Folded(*rm);
+        int foldedCnt = tri::Distortion<VoroMesh,false>::FoldedNum(*rm);
         if( foldedCnt > rm->fn/10)
         {
           badRegionVec.push_back(rm);

@@ -385,7 +385,7 @@ public:
 
 
     ///return the number of folded faces
-    static bool Folded(const FaceType *f)
+    static bool IsFolded(const FaceType *f)
     {
         ScalarType areaUV=AreaUV(f);
         /*if (areaUV<0)
@@ -393,32 +393,30 @@ public:
         return (areaUV<0);
     }
 
-    static int Folded(const MeshType &m)
+    static int FoldedNum(const MeshType &m)
     {
         int folded=0;
-        for (size_t i=0;i<m.face.size();i++)
-        {
-            if (m.face[i].IsD())continue;
-            if(Folded(&m.face[i]))folded++;
-        }
+
+        ForEachFace(m, std::function<void (const FaceType&)>([&folded](const FaceType &f){
+          if(IsFolded(&f)) folded++;
+        }));
+        
         return folded;
     }
 
     static bool GloballyUnFolded(const MeshType &m)
     {
-        int num=Folded(m);
+        int num=FoldedNum(m);
         return (num>(m.fn)/2);
     }
 
     static ScalarType MeshAngleDistortion(const MeshType &m)
     {
         ScalarType UDdist=0;
-        for (size_t i=0;i<m.face.size();i++)
-        {
-            if (m.face[i].IsD())continue;
-            const FaceType *f=&(m.face[i]);
-            UDdist+=AngleDistortion(f)*Area3D(f);
-        }
+        ForEachFace(m, std::function<void (const FaceType&)>([&UDdist](const FaceType &f){
+          UDdist += AngleDistortion(f)*Area3D(f);
+        }));
+        
         return UDdist;
     }
 

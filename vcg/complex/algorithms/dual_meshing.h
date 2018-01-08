@@ -48,6 +48,8 @@ class DualMeshing
                             const PolyMeshType &primal,
                             std::vector<int> &vertSeq)
     {
+        (void)EdgeMap;
+
         vcg::face::Pos<FaceType> startP(&startF,&startV);
 
         //get the star of pos

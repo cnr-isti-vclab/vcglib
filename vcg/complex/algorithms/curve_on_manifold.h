@@ -184,13 +184,12 @@ public:
    * 
    */
     
-  bool MarkFauxEdgeWithPolyLine(MeshType &poly)
+  bool MarkFauxEdgeWithPolyLine(MeshType &poly,bool markFlag=true)
   {
-    tri::UpdateFlags<MeshType>::FaceSetF(base);
+    if(markFlag) tri::UpdateFlags<MeshType>::FaceSetF(base);
     tri::UpdateTopology<MeshType>::VertexFace(base);
     tri::UpdateTopology<MeshType>::FaceFace(base);
-
-    bool ret = true;
+    
     for(EdgeIterator ei=poly.edge.begin(); ei!=poly.edge.end();++ei)
     {
       CoordType ip0,ip1;
@@ -201,23 +200,30 @@ public:
       {
         VertexPointer v0 = FindVertexSnap(f0,ip0);
         VertexPointer v1 = FindVertexSnap(f1,ip1);
-        assert(v0 != NULL && v1 != NULL && v0 != v1);
+
+        if(v0==0 || v1==0) return false;
+        if(v0==v1) return false; 
+
         FacePointer ff0,ff1;
         int e0,e1;
-        ret &= face::FindSharedFaces<FaceType>(v0,v1,ff0,ff1,e0,e1);
-        if(ret) {
+        bool ret=face::FindSharedFaces<FaceType>(v0,v1,ff0,ff1,e0,e1);
+        if(ret){
+          assert(ret); 
           assert(ff0->V(e0)==v0 || ff0->V(e0)==v1);
           ff0->ClearF(e0);
-          ff1->ClearF(e1);
+          ff1->ClearF(e1);        
+        }
+        else {
+          return false;
         }
       }
-      else
-      {
-        assert(0);
-      }
+      else {
+        return false;
+      }    
     }
-    return ret;
+    return true;
   }
+
    
   ScalarType MinDistOnEdge(CoordType samplePnt, EdgeGrid &edgeGrid, MeshType &poly, CoordType &closestPoint)
   {

@@ -369,7 +369,7 @@ public:
             AddBorderConstraints(mesh);
 
         //aff final constraints
-        for (int i=0;i<SParam.AddConstr.size();i++)
+        for (size_t i=0;i<SParam.AddConstr.size();i++)
         {
             int indexF=SParam.AddConstr[i].first;
             CoordType dir=SParam.AddConstr[i].second;

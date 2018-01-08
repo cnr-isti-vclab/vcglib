@@ -346,6 +346,17 @@ public:
     ei->V(1)=v1;
     return ei;
   }
+  
+  /** Function to add a single edge to the mesh. and initializing it with two indexes to the vertexes
+            */
+  static EdgeIterator AddEdge(MeshType &m, size_t v0, size_t v1)
+  {
+    assert(v0!=v1);
+    assert(v0>=0 && v0<m.vert.size());
+    assert(v1>=0 && v1<m.vert.size());
+    return AddEdge(m,&(m.vert[v0]),&(m.vert[v1]));
+  }
+  
 
   /** Function to add a face to the mesh and initializing it with the three given coords
             */
@@ -501,9 +512,9 @@ public:
   static FaceIterator AddFace(MeshType &m, size_t v0, size_t v1, size_t v2)
   {
     assert((v0!=v1) && (v1!=v2) && (v0!=v2));
-    assert(v0>=0 && v0<=m.vert.size());
-    assert(v1>=0 && v1<=m.vert.size());
-    assert(v2>=0 && v2<=m.vert.size());
+    assert(v0>=0 && v0<m.vert.size());
+    assert(v1>=0 && v1<m.vert.size());
+    assert(v2>=0 && v2<m.vert.size());
     return AddFace(m,&(m.vert[v0]),&(m.vert[v1]),&(m.vert[v2]));
   }
   /** Function to add a face to the mesh and initializing it with the three given coords
@@ -810,7 +821,6 @@ public:
     assert((int)pos==m.vn);
 
     PermutateVertexVector(m, pu);
-
   }
 
   /*! \brief Wrapper without the PointerUpdater. */
@@ -868,7 +878,7 @@ public:
             m.edge[ pu.remap[i] ].VEi(1) = m.edge[i].cVEi(1);
           }
         if(HasEEAdjacency(m))
-          if (m.edge[i].cEEp(0)!=0)
+//          if (m.edge[i].cEEp(0)!=0)
           {
             m.edge[ pu.remap[i] ].EEp(0) = m.edge[i].cEEp(0);
             m.edge[ pu.remap[i] ].EEi(0) = m.edge[i].cEEi(0);

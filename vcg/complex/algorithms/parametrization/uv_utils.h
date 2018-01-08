@@ -24,7 +24,6 @@
 #ifndef VCG_UV_UTILS
 #define VCG_UV_UTILS
 
-
 namespace vcg {
 namespace tri{
 template <class MeshType>
@@ -109,6 +108,26 @@ public:
         {
             ScalarType distAV=(*vi).T().P().X()-XAv;
             (*vi).T().P().X()=XAv-distAV;
+        }
+    }
+
+    static void GloballyRotate(MeshType &m,ScalarType Angle)
+    {
+        vcg::Box2<ScalarType> BB=PerWedgeUVBox(m);
+        UVCoordType Origin=BB.Center();
+        typename MeshType::FaceIterator fi;
+        for (fi=m.face.begin();fi!=m.face.end();fi++)
+        {
+            if ((*fi).IsD()) continue;
+            for (int i=0;i<3;i++)
+            {
+                (*fi).WT(i).P()-=Origin;
+                ScalarType X1=(*fi).WT(i).P().X()*cos(Angle)-(*fi).WT(i).P().Y()*sin(Angle);
+                ScalarType Y1=(*fi).WT(i).P().X()*cos(Angle)+(*fi).WT(i).P().Y()*sin(Angle);
+                (*fi).WT(i).P().X()=X1;
+                (*fi).WT(i).P().Y()=Y1;
+                (*fi).WT(i).P()+=Origin;
+            }
         }
     }
 

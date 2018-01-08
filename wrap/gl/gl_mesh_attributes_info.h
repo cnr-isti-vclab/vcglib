@@ -217,7 +217,7 @@ namespace vcg
                 return res;
             }
 
-            size_t serialize(std::string& str)
+            size_t serialize(std::string& str) const 
             {
               for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
                 str.append(((_atts[ii]) ? "1" : "0"));

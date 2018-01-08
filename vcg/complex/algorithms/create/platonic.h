@@ -535,12 +535,8 @@ void OrientedCone(MeshType & m,
   typedef Matrix44<typename MeshType::ScalarType> Matrix44x;
   Cone(m,r1,r2,Distance(origin,end),SubDiv);
 
-//  tri::UpdatePosition<MeshType>::Translate(m,CoordType(0,1,0));
-//  tri::UpdatePosition<MeshType>::Scale(m,CoordType(1,0.5f,1));
-//  tri::UpdatePosition<MeshType>::Scale(m,CoordType(xScale,1.0f,yScale));
+  tri::UpdatePosition<MeshType>::Translate(m,CoordType(0,Distance(origin,end)/2,0));
 
-//  float height = Distance(origin,end);
-//  tri::UpdatePosition<MeshType>::Scale(m,CoordType(radius,height,radius));
   CoordType norm = end-origin;
   ScalarType angleRad = Angle(CoordType(0,1,0),norm);
   const ScalarType Delta= 0.000000001;
@@ -560,7 +556,6 @@ void OrientedCone(MeshType & m,
   }
   tri::UpdatePosition<MeshType>::Matrix(m,rotM);
   tri::UpdatePosition<MeshType>::Translate(m,origin);
-
 }
 
 
