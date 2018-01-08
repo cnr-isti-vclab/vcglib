@@ -397,9 +397,9 @@ public:
     {
         int folded=0;
 
-        ForEachFace(m, [&](const FaceType &f){
+        ForEachFace(m, std::function<void (const FaceType&)>([&folded](const FaceType &f){
           if(IsFolded(&f)) folded++;
-        });
+        }));
         
         return folded;
     }
@@ -413,9 +413,9 @@ public:
     static ScalarType MeshAngleDistortion(const MeshType &m)
     {
         ScalarType UDdist=0;
-        ForEachFace(m, [&](const FaceType &f){
+        ForEachFace(m, std::function<void (const FaceType&)>([&UDdist](const FaceType &f){
           UDdist += AngleDistortion(f)*Area3D(f);
-        });        
+        }));
         
         return UDdist;
     }
