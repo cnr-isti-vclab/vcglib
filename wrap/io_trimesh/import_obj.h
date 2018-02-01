@@ -887,6 +887,7 @@ namespace vcg {
                     oi.numNormals=0;
                     int lineCount=0;
                     int totRead=0;
+					bool firstV = true;
                     std::string line;
                     while (!stream.eof())
                     {
@@ -899,11 +900,20 @@ namespace vcg {
                         {
                             if(line[0]=='v')
                             {
-                                if(line[1]==' ')
+								if ((line[1] == ' ') || (line[1] == '\t'))
                                 {
                                     oi.numVertices++;
-                                    if(line.size()>=7)
-                                        bHasPerVertexColor = true;
+									if (firstV)
+									{
+										int sepN = 0;
+										for (int lit = 0; lit < line.size(); lit++){
+											if ((line[lit] == ' ') || (line[lit] == '\t'))
+												sepN++;
+										}
+										if (sepN >= 6)
+											bHasPerVertexColor = true;
+										firstV = false;
+									}
                                 }
                                 if(line[1]=='t') oi.numTexCoords++;
                                 if(line[1]=='n') {
@@ -930,8 +940,8 @@ namespace vcg {
                         // Usually if you have tex coords you also have materials
                         oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR;
                     }
-                    if(bHasPerFaceColor)		oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR;
-                    if(bHasPerVertexColor)	oi.mask |= vcg::tri::io::Mask::IOM_VERTCOLOR;
+                    if(bHasPerFaceColor)  oi.mask |= vcg::tri::io::Mask::IOM_FACECOLOR;
+                    if(bHasPerVertexColor)  oi.mask |= vcg::tri::io::Mask::IOM_VERTCOLOR;
                     if (bHasNormals) {
                         if (oi.numNormals == oi.numVertices)
                             oi.mask |= vcg::tri::io::Mask::IOM_VERTNORMAL;
