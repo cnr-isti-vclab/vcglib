@@ -143,27 +143,35 @@ void InitializeArapWithLSCM(MeshType & m, unsigned int fixedMask = 0)
 
 	if (fixedMask == 0)
 	{
-		// manually select fixed vertices
+		// automatically select 2 vertices to fix
 		vcg::tri::UpdateFlags<MeshType>::Clear(m);
 
 		int fixed0, fixed1 = -1;
-		ScalarType minD0 = std::numeric_limits<ScalarType>::max();
-		ScalarType minD1 = std::numeric_limits<ScalarType>::max();
+		auto p = m.bbox.Center();
+		ScalarType maxDist = -1;
 		for (size_t i=0; i<m.vert.size(); i++)
 		{
-			const ScalarType testD0 =(m.vert[i].P() - m.bbox.min).Norm();
-			const ScalarType testD1 =(m.vert[i].P() - m.bbox.max).Norm();
-			if (testD0 < minD0)
+			// farthest point from the center
+			const ScalarType dist =(m.vert[i].cP() - p).Norm();
+			if (dist > maxDist)
 			{
 				fixed0 = i;
-				minD0  = testD0;
-			}
-			if (testD1 < minD1)
-			{
-				fixed1 = i;
-				minD1 = testD1;
+				maxDist = dist;
 			}
 		}
+		maxDist = -1;
+		p = m.vert[fixed0].cP();
+		for (size_t i=0; i<m.vert.size(); i++)
+		{
+			// farthest point from the previous
+			const ScalarType dist =(m.vert[i].cP() - p).Norm();
+			if (dist > maxDist)
+			{
+				fixed1 = i;
+				maxDist = dist;
+			}
+		}
+
 		assert(fixed0 >= 0);
 		assert(fixed1 >= 0);
 		assert(fixed0 != fixed1);
