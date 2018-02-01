@@ -615,6 +615,15 @@ namespace vcg {
                             }
                             else if ((header.compare("usemtl")==0) && (tokens.size() > 1))	// material usage
                             {
+								// emergency check. If there are no materials, the materail library failed to load or was not specified
+								// but there are tools that save the material library with the same name of the file, but do not add the 
+								// "mtllib" definition in the header. So, we can try to see if this is the case
+								if ((materials.size() == 1)&&(materials[0].materialName == "")){
+									std::string materialFileName(filename);
+									materialFileName.replace(materialFileName.end()-4, materialFileName.end(), ".mtl");
+									LoadMaterials(materialFileName.c_str(), materials, m.textures);
+								}
+
 								std::string materialName;
 								if (tokens.size() == 2)
 									materialName = tokens[1]; //play it safe
