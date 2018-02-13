@@ -52,6 +52,8 @@ namespace vcg {
 namespace tri {
 namespace io {
 
+
+
   
 /** Additional data needed or useful for parsing a ply mesh.
 This class can be passed to the ImporterPLY::Open() function for 
@@ -63,14 +65,35 @@ class PlyInfo
 {
 public:
   typedef ::vcg::ply::PropDescriptor PropDescriptor ;
-
+  
+  void AddPerVertexFloatAttribute(const std::string &attrName, std::string propName="")
+  {
+    static const char *vertStr="vertex";
+    if(propName.empty()) propName=attrName;
+    VertDescriptorVec.push_back(PropDescriptor());
+    VertAttrNameVec.push_back(attrName);
+    VertDescriptorVec.back().elemname=vertStr;
+    VertDescriptorVec.back().propname=propName.c_str();
+    VertDescriptorVec.back().stotype1 = vcg::ply::T_FLOAT;
+    VertDescriptorVec.back().memtype1 = vcg::ply::T_FLOAT;
+  }
+  void AddPerFaceFloatAttribute(const std::string &attrName, std::string propName="")
+  {
+    static const char *faceStr="face";
+    if(propName.empty()) propName=attrName;
+    FaceDescriptorVec.push_back(PropDescriptor());
+    FaceAttrNameVec.push_back(attrName);
+    FaceDescriptorVec.back().elemname=faceStr;
+    FaceDescriptorVec.back().propname=propName.c_str();
+    FaceDescriptorVec.back().stotype1 = vcg::ply::T_FLOAT;
+    FaceDescriptorVec.back().memtype1 = vcg::ply::T_FLOAT;
+  }
+  
   PlyInfo()
   {
     status=0;
     mask=0;
-    cb=0;
-    vdn=fdn=0;
-    VertexData=FaceData=0;
+    cb=0;    
   }
   /// Store the error codes enconutered when parsing a ply
   int status;
@@ -81,15 +104,16 @@ public:
   // it returns the current position, and formats a string with a description of what th efunction is doing (loading vertexes, faces...)
   CallBackPos *cb;
 
-  /// the number of per-vertex descriptor (usually 0)
-  int vdn;
   /// The additional vertex descriptor that a user can specify to load additional per-vertex non-standard data stored in a ply
-  PropDescriptor *VertexData;
-  /// the number of per-face descriptor (usually 0)
-  int fdn;
+  std::vector<PropDescriptor> VertDescriptorVec;
+  /// AttributeName is an array, externally allocated, containing the names of the attributes to be saved (loaded). 
+  /// We assume that AttributeName[], if not empty, is exactly of the same size of VertexdData[]
+  /// If AttributeName[i] is not empty we use it to retrieve/store the info instead of the offsetted space in the current vertex
+  std::vector<std::string> VertAttrNameVec; 
   
   /// The additional vertex descriptor that a user can specify to load additional per-face non-standard data stored in a ply
-  PropDescriptor *FaceData;
+  std::vector<PropDescriptor> FaceDescriptorVec;
+  std::vector<std::string> FaceAttrNameVec; 
 
   /// a string containing the current ply header. Useful for showing it to the user.
   std::string header;
