@@ -915,7 +915,7 @@ namespace vcg {
 									if (firstV)
 									{
 										int sepN = 0;
-										for (int lit = 0; lit < line.size(); lit++){
+										for (size_t lit = 0; lit < line.size(); lit++){
 											if ((line[lit] == ' ') || (line[lit] == '\t'))
 												sepN++;
 										}
