@@ -296,7 +296,7 @@ int main(int argc, char**argv)
     // save error files.
     if(flags & SamplingFlags::SAVE_ERROR)
     {
-      int saveMask|=vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY /* | vcg::ply::PLYMask::PM_VERTQUALITY*/ ;
+      int saveMask = vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY /* | vcg::ply::PLYMask::PM_VERTQUALITY*/ ;
       //p.mask|=vcg::ply::PLYMask::PM_VERTCOLOR|vcg::ply::PLYMask::PM_VERTQUALITY;
       if(ColorMax!=0 || ColorMin != 0){
         vcg::tri::UpdateColor<CMesh>::PerVertexQualityRamp(S1,ColorMin,ColorMax);
