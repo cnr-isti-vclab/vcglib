@@ -137,8 +137,6 @@ int  main(int argc, char **argv)
   
   printf("Output mesh vn:%i fn:%i\n",m.VN(),m.FN());
 
-  vcg::tri::io::PlyInfo pi;
-  pi.mask|=vcg::tri::io::Mask::IOM_BITPOLYGONAL;
-  vcg::tri::io::Exporter<MyMesh>::Save(m,argv[2],pi.mask);
+  vcg::tri::io::Exporter<MyMesh>::Save(m,argv[2],vcg::tri::io::Mask::IOM_BITPOLYGONAL);
   return 0;
 }
