@@ -65,29 +65,57 @@ class PlyInfo
 {
 public:
   typedef ::vcg::ply::PropDescriptor PropDescriptor ;
+    
+  void AddPerElemFloatAttribute(int elemType, const char *attrName, const char * propName=0)
+  {
+    static const char *elemStr[2]={"vertex","face"};
+    static std::vector<PropDescriptor> *elemDescVec[2]={&(this->VertDescriptorVec), &(this->FaceDescriptorVec)};
+    static std::vector<std::string   > *elemNameVec[2]={&(this->VertAttrNameVec),   &(this->FaceAttrNameVec)};
+        
+    if(propName==0) propName=attrName;
+    elemDescVec[elemType]->push_back(PropDescriptor());
+    elemNameVec[elemType]->push_back(attrName);
+    elemDescVec[elemType]->back().elemname=elemStr[elemType];
+    elemDescVec[elemType]->back().propname=propName;
+    elemDescVec[elemType]->back().stotype1 = vcg::ply::T_FLOAT;
+    elemDescVec[elemType]->back().memtype1 = vcg::ply::T_FLOAT;
+  }
   
-  void AddPerVertexFloatAttribute(const std::string &attrName, std::string propName="")
-  {
-    static const char *vertStr="vertex";
-    if(propName.empty()) propName=attrName;
-    VertDescriptorVec.push_back(PropDescriptor());
-    VertAttrNameVec.push_back(attrName);
-    VertDescriptorVec.back().elemname=vertStr;
-    VertDescriptorVec.back().propname=propName.c_str();
-    VertDescriptorVec.back().stotype1 = vcg::ply::T_FLOAT;
-    VertDescriptorVec.back().memtype1 = vcg::ply::T_FLOAT;
+  void AddPerVertexFloatAttribute(const char *attrName, const char *propName=0) { 
+    AddPerElemFloatAttribute(0,attrName,propName);     
   }
-  void AddPerFaceFloatAttribute(const std::string &attrName, std::string propName="")
-  {
-    static const char *faceStr="face";
-    if(propName.empty()) propName=attrName;
-    FaceDescriptorVec.push_back(PropDescriptor());
-    FaceAttrNameVec.push_back(attrName);
-    FaceDescriptorVec.back().elemname=faceStr;
-    FaceDescriptorVec.back().propname=propName.c_str();
-    FaceDescriptorVec.back().stotype1 = vcg::ply::T_FLOAT;
-    FaceDescriptorVec.back().memtype1 = vcg::ply::T_FLOAT;
+  void AddPerFaceFloatAttribute(const char *attrName, const char *propName=0) { 
+    AddPerElemFloatAttribute(1,attrName,propName);     
   }
+  
+  
+  /* Note that saving a per vertex point3 attribute is a mess. 
+   * Actually require to allocate 3 float attribute and save them. And they are never deallocated... */
+  template<class MeshType>
+  void AddPerVertexPoint3fAttribute(MeshType &m, const char *attrName, const char *propName="")
+  {
+    if(propName==0) propName=attrName;
+    
+    const char *attrxyz[3] = {
+      strdup((std::string(attrName)+std::string("_x")).c_str()),
+      strdup((std::string(attrName)+std::string("_y")).c_str()),
+      strdup((std::string(attrName)+std::string("_z")).c_str()),
+    };
+    typename MeshType::template PerVertexAttributeHandle <vcg::Point3f> 
+        ht = vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute <vcg::Point3f> (m,attrName);
+    
+    typename MeshType::template PerVertexAttributeHandle <float> htt[3];
+  
+    for(int i=0;i<3;++i)
+    { 
+      htt[i] = vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m,std::string(attrxyz[i]));
+      ForEachVertex (m, [&](typename MeshType::VertexType &v) {
+        htt[i][v] = ht[v][i];
+      });    
+      AddPerVertexFloatAttribute(attrxyz[i]);      
+    }
+  }
+  
   
   PlyInfo()
   {

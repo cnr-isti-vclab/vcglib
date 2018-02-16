@@ -46,25 +46,33 @@ int main()
 {
   MyMesh m;
   Torus<MyMesh>(m, 3.0f, 1.0f);
-  //! [Adding an attribute]
+  //! [Adding a few attributes]
   // add a per-vertex attribute with type float named "GaussianCurvature"
   MyMesh::PerVertexAttributeHandle<float> 
-      hv = vcg::tri::Allocator<MyMesh>:: GetPerVertexAttribute<float> (m,std::string("GaussianCurvature"));
+      hvf = vcg::tri::Allocator<MyMesh>:: GetPerVertexAttribute<float> (m,std::string("GaussianCurvature"));
+  
+  MyMesh::PerVertexAttributeHandle<vcg::Point3f> 
+      hv3f = vcg::tri::Allocator<MyMesh>:: GetPerVertexAttribute<vcg::Point3f> (m,std::string("InvertedNormal"));
+  
   // add a per-face attribute with type float named "FaceArea"
   MyMesh::PerFaceAttributeHandle<float> 
-      hf = vcg::tri::Allocator<MyMesh>:: GetPerFaceAttribute<float> (m,std::string("FaceArea"));
+      hff = vcg::tri::Allocator<MyMesh>:: GetPerFaceAttribute<float> (m,std::string("FaceArea"));
   //! [filling the attribute]
-  vcg::tri::Allocator<MyMesh>::ClearPerVertexAttribute<float>(m,hv, float(M_PI*2));
+  vcg::tri::Allocator<MyMesh>::ClearPerVertexAttribute<float>(m,hvf, float(M_PI*2));
+  vcg::tri::Allocator<MyMesh>::ClearPerVertexAttribute<vcg::Point3f>(m,hv3f, vcg::Point3f(0,0,0));
   
   ForEachFace(m, [&](MyFace &f){
-    hf[&f]=vcg::DoubleArea(f)*0.5f;
-    for(int i=0;i<3;++i)
-      hv[f.V(i)] -= vcg::Angle(f.P1(i)-f.P0(i),f.P2(i)-f.P0(i)); 
+    hff[&f]=vcg::DoubleArea(f)*0.5f;
+    for(int i=0;i<3;++i){
+      hvf[f.V(i)] -= vcg::Angle(f.P1(i)-f.P0(i),f.P2(i)-f.P0(i)); 
+      hv3f[f.V(i)] -= vcg::NormalizedTriangleNormal(f);
+    }
   }); 
   
-  //! [Saving two attributes in ply, one of the two disguised as quality]
+  //! [Saving 3 attributes in ply, one of the 3 disguised as quality]
   vcg::tri::io::PlyInfo pi;
   pi.AddPerVertexFloatAttribute("GaussianCurvature","quality");
   pi.AddPerFaceFloatAttribute("FaceArea");
-  vcg::tri::io::ExporterPLY<MyMesh>::Save(m,"MeshWithCurvature.ply",true,pi);     
+  pi.AddPerVertexPoint3fAttribute(m,"InvertedNormal");
+  vcg::tri::io::ExporterPLY<MyMesh>::Save(m,"MeshWithCurvature.ply",false,pi);     
 }
