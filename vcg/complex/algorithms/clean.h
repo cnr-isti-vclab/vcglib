@@ -1369,7 +1369,7 @@ public:
       count = 0;
 
       ScalarType NormalThrRad = math::ToRad(normalThresholdDeg);
-      ScalarType eps = 0.0001; // this epsilon value is in absolute value. It is a distance from edge in baricentric coords.
+      ScalarType eps = ScalarType(0.0001); // this epsilon value is in absolute value. It is a distance from edge in baricentric coords.
       //detection stage
       for(FaceIterator fi=m.face.begin();fi!= m.face.end();++fi ) if(!(*fi).IsV())
       { Point3<ScalarType> NN = vcg::TriangleNormal((*fi)).Normalize();

@@ -154,7 +154,7 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
     shots[i].Intrinsics.FocalMm    = f/100.0f;
     shots[i].Intrinsics.k[0] = 0.0;//k1; To be uncommented when distortion is taken into account reliably
     shots[i].Intrinsics.k[1] = 0.0;//k2;
-    shots[i].Intrinsics.PixelSizeMm = vcg::Point2<ScalarType>(0.01,0.01);
+    shots[i].Intrinsics.PixelSizeMm = vcg::Point2<ScalarType>(ScalarType(0.01), ScalarType(0.01));
     QImageReader sizeImg(QString::fromStdString(image_filenames[i]));
     QSize size=sizeImg.size();
     shots[i].Intrinsics.ViewportPx = vcg::Point2i(size.width(),size.height());

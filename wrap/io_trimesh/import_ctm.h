@@ -87,7 +87,7 @@ static const char* ErrorMsg(int error)
 };
 
 
-static int Open( OpenMeshType &m, const char * filename, int &loadmask, CallBackPos */*cb*/=0)
+static int Open( OpenMeshType &m, const char * filename, int &loadmask, CallBackPos * /*cb*/=0)
 {
     CTMcontext context;
 
