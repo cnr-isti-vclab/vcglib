@@ -310,7 +310,7 @@ public:
   }
 
 
-  /** This function removes that are not referenced by any face or by any edge.
+  /** This function removes vertices that are not referenced by any face or by any edge.
             @param m The mesh
             @param DeleteVertexFlag if false prevent the vertex deletion and just count it.
             @return The number of removed vertices
