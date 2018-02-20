@@ -145,10 +145,10 @@ static void WedgeTexRemoveNull(ComputeMeshType &m, const std::string &texturenam
  * the default for merging is if two textures dist less than one 16th of texel on a 4k texture...
 */
 
-static void WedgeTexMergeClose(ComputeMeshType &m, ScalarType mergeThr = ScalarType(1.0/65536.0) )
+static int WedgeTexMergeClose(ComputeMeshType &m, ScalarType mergeThr = ScalarType(1.0/65536.0) )
 {
   tri::RequireVFAdjacency(m);
-  
+  int mergedCnt=0;
   ForEachVertex(m, [&](VertexType &v){
     face::VFIterator<FaceType> vfi(&v);
     std::vector<UVCoordType> clusterVec;
@@ -161,6 +161,7 @@ static void WedgeTexMergeClose(ComputeMeshType &m, ScalarType mergeThr = ScalarT
       for(auto p:clusterVec) {
         if(Distance(p,cur) < mergeThr){ 
           vfi.F()->WT(vfi.I()).P()=p;
+          ++mergedCnt;
           merged=true;
         }
       }
@@ -169,7 +170,8 @@ static void WedgeTexMergeClose(ComputeMeshType &m, ScalarType mergeThr = ScalarT
       
       ++vfi;      
     }
-  });    
+  });
+  return mergedCnt;
 }
 
 }; // end class
