@@ -296,7 +296,7 @@ namespace vcg
 			if (_glopts != NULL)
 			{
 				std::string tmp;
-				int size = _glopts->serialize(tmp);
+				size_t size = _glopts->serialize(tmp);
 				token[i] = str.substr(pos, size);
 				if (token[i].length() < size)
 					return false;
