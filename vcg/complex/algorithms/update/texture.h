@@ -159,7 +159,7 @@ static int WedgeTexMergeClose(ComputeMeshType &m, ScalarType mergeThr = ScalarTy
       UVCoordType cur= vfi.F()->WT(vfi.I()).P();
       bool merged=false;
       for(auto p:clusterVec) {
-        if(Distance(p,cur) < mergeThr){ 
+        if(p!=cur && Distance(p,cur) < mergeThr){ 
           vfi.F()->WT(vfi.I()).P()=p;
           ++mergedCnt;
           merged=true;
