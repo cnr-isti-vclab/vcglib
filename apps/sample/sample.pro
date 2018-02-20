@@ -38,6 +38,7 @@ SUBDIRS       = trimesh_allocate \
                 trimesh_smooth \
                 trimesh_split_vertex \
                 trimesh_texture \
+                trimesh_texture_clean \
                 trimesh_topology \
                 trimesh_topological_cut \
                 trimesh_voronoi \

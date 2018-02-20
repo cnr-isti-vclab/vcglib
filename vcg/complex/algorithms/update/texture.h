@@ -71,7 +71,7 @@ static void WedgeTexFromPlane(ComputeMeshType &m, const Point3<ScalarType> &uVec
 
 	if (sideGutter>0.0)
 	{
-		ScalarType deltaGutter = std::min(wideU, wideV) * min(sideGutter, (ScalarType)0.5);
+		ScalarType deltaGutter = std::min(wideU, wideV) * std::min(sideGutter, (ScalarType)0.5);
 
 		bb.max[0] += deltaGutter;
 		bb.min[0] -= deltaGutter;
