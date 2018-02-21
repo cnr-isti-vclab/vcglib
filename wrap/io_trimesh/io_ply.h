@@ -109,9 +109,12 @@ public:
     for(int i=0;i<3;++i)
     { 
       htt[i] = vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m,std::string(attrxyz[i]));
-      ForEachVertex (m, [&](typename MeshType::VertexType &v) {
-        htt[i][v] = ht[v][i];
-      });    
+//      ForEachVertex (m, [&](typename MeshType::VertexType &v) {
+//        htt[i][v] = ht[v][i];
+//      });    
+      for(auto vi=m.vert.begin();vi!=m.vert.end();++vi)
+        if(!vi->IsD()) 
+           htt[i][vi] = ht[vi][i];
       AddPerVertexFloatAttribute(attrxyz[i]);      
     }
   }
