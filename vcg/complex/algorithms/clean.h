@@ -24,6 +24,8 @@
 #ifndef __VCGLIB_CLEAN
 #define __VCGLIB_CLEAN
 
+#include <unordered_set>
+
 // VCG headers
 #include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/closest.h>
@@ -1790,6 +1792,7 @@ public:
   */
   static void SelectFoldedFaceFromOneRingFaces(MeshType &m, ScalarType cosThreshold)
   {
+    typedef std::unordered_set<typename MeshType::VertexPointer> VertexSet;
     tri::RequireVFAdjacency(m);
     tri::RequirePerFaceNormal(m);
     tri::RequirePerVertexNormal(m);
@@ -1803,7 +1806,7 @@ public:
 #pragma omp parallel for schedule(dynamic, 10)
     for (int i = 0; i < m.face.size(); i++)
     {
-      std::vector<typename MeshType::VertexPointer> nearVertex;
+      VertexSet nearVertex;
       std::vector<typename MeshType::CoordType> point;
       typename MeshType::FacePointer f = &m.face[i];
       for (int j = 0; j < 3; j++)
@@ -1815,11 +1818,11 @@ public:
         {
           if ((*iter) != f->V1(j) && (*iter) != f->V2(j))
           {
-            nearVertex.push_back((*iter));
-            point.push_back((*iter)->P());
+            if (nearVertex.insert((*iter)).second)
+              point.push_back((*iter)->P());
           }
         }
-        nearVertex.push_back(f->V(j));
+        nearVertex.insert(f->V(j));
         point.push_back(f->P(j));
       }
 
@@ -1828,8 +1831,8 @@ public:
         vcg::Plane3<typename MeshType::ScalarType> plane;
         vcg::FitPlaneToPointSet(point, plane);
         float avgDot = 0;
-        for (int j = 0; j < nearVertex.size(); j++)
-          avgDot += plane.Direction().dot(nearVertex[j]->N());
+        for (VertexSet::iterator j = nearVertex.begin(); j != nearVertex.end(); j++)
+          avgDot += plane.Direction().dot((*j)->N());
         avgDot /= nearVertex.size();
         typename MeshType::VertexType::NormalType normal;
         if (avgDot < 0)
