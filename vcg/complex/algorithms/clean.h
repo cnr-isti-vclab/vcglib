@@ -1831,8 +1831,8 @@ public:
         vcg::Plane3<typename MeshType::ScalarType> plane;
         vcg::FitPlaneToPointSet(point, plane);
         float avgDot = 0;
-        for (VertexSet::iterator j = nearVertex.begin(); j != nearVertex.end(); j++)
-          avgDot += plane.Direction().dot((*j)->N());
+        for (auto  nvp :  nearVertex.end())
+          avgDot += plane.Direction().dot((*nvp)->N());
         avgDot /= nearVertex.size();
         typename MeshType::VertexType::NormalType normal;
         if (avgDot < 0)
