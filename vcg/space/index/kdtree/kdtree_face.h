@@ -73,7 +73,7 @@ namespace vcg {
     {
       targetCellSize = maxObjPerCell;
       targetMaxDepth = maxDepth;
-      Set(mesh, maxObjPerCell, maxDepth);
+      Set(mesh.face.begin(), mesh.face.end(), mesh.face.size(), onlySelection);
     };
 
     ~KdTreeFace()
