@@ -1792,7 +1792,7 @@ public:
   */
   static void SelectFoldedFaceFromOneRingFaces(MeshType &m, ScalarType cosThreshold)
   {
-    typedef std::unordered_set<typename MeshType::VertexPointer> VertexSet;
+    typedef std::unordered_set<VertexPointer> VertexSet;
     tri::RequireVFAdjacency(m);
     tri::RequirePerFaceNormal(m);
     tri::RequirePerVertexNormal(m);
@@ -1807,32 +1807,32 @@ public:
     for (int i = 0; i < m.face.size(); i++)
     {
       VertexSet nearVertex;
-      std::vector<typename MeshType::CoordType> point;
-      typename MeshType::FacePointer f = &m.face[i];
+      std::vector<CoordType> pointVec;
+      FacePointer f = &m.face[i];
       for (int j = 0; j < 3; j++)
       {
-        std::vector<typename MeshType::VertexPointer> temp;
-        vcg::face::VVStarVF<typename MeshType::FaceType>(f->V(j), temp);
-              typename std::vector<typename MeshType::VertexPointer>::iterator iter = temp.begin();
+        std::vector<VertexPointer> temp;
+        vcg::face::VVStarVF<FaceType>(f->V(j), temp);
+        typename std::vector<VertexPointer>::iterator iter = temp.begin();
         for (; iter != temp.end(); iter++)
         {
           if ((*iter) != f->V1(j) && (*iter) != f->V2(j))
           {
             if (nearVertex.insert((*iter)).second)
-              point.push_back((*iter)->P());
+              pointVec.push_back((*iter)->P());
           }
         }
         nearVertex.insert(f->V(j));
-        point.push_back(f->P(j));
+        pointVec.push_back(f->P(j));
       }
 
-      if (point.size() > 3)
+      if (pointVec.size() > 3)
       {
-        vcg::Plane3<typename MeshType::ScalarType> plane;
-        vcg::FitPlaneToPointSet(point, plane);
+        vcg::Plane3<ScalarType> plane;
+        vcg::FitPlaneToPointSet(pointVec, plane);
         float avgDot = 0;
-        for (auto  nvp :  nearVertex.end())
-          avgDot += plane.Direction().dot((*nvp)->N());
+        for (auto  nvp :  nearVertex)
+          avgDot += plane.Direction().dot(nvp->N());
         avgDot /= nearVertex.size();
         typename MeshType::VertexType::NormalType normal;
         if (avgDot < 0)
