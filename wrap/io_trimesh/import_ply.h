@@ -756,7 +756,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                     }
                 }
 
-                if(HasPolyInfo(m)) (*fi).Alloc(3);
+                if(HasPolyInfo(m)) (*fi).Alloc(fa.size);
 
                 if(HasPerFaceFlags(m) &&( pi.mask & Mask::IOM_FACEFLAGS) )
                 {
@@ -805,6 +805,22 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                         (*fi).C()[2] = (unsigned char)((fa.colors[0*3+2]*255+fa.colors[1*3+2]*255+fa.colors[2*3+2]*255)/3.0f);
                     }
                 }
+
+                if (HasPolyInfo(m))
+                {
+                    for(k=0; k<fa.size; ++k)
+                    {
+                        if( fa.v[k]<0 || fa.v[k]>=m.vn )
+                        {
+                            pi.status = PlyInfo::E_BAD_VERT_INDEX;
+                            return pi.status;
+                        }
+                        (*fi).V(k) = index[ fa.v[k] ];
+                    }
+                    fi++;
+                    continue;
+                }
+
                 /// Now the temporary struct 'fa' is ready to be copied into the real face '*fi'
                 /// This loop
                 for(k=0;k<3;++k)
