@@ -76,7 +76,7 @@ public:
     elemDescVec[elemType]->push_back(PropDescriptor());
     elemNameVec[elemType]->push_back(attrName);
     elemDescVec[elemType]->back().elemname=elemStr[elemType];
-    elemDescVec[elemType]->back().propname=strdup(propName);
+    elemDescVec[elemType]->back().propname=_strdup(propName);
     elemDescVec[elemType]->back().stotype1 = vcg::ply::T_FLOAT;
     elemDescVec[elemType]->back().memtype1 = vcg::ply::T_FLOAT;
   }

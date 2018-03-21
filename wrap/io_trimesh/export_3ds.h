@@ -234,7 +234,7 @@ namespace io {
 							if(AddDuplexVertexCoord(ListOfDuplexVert,Key(i,t)))
 							{
 								VectorOfVertexType.push_back((*(*fi).V(k)));
-								ListOfDuplexVert[Key(i,t)] = VectorOfVertexType.size()-1;
+								ListOfDuplexVert[Key(i,t)] = int(VectorOfVertexType.size()-1);
 								count++;
 							}
 						}

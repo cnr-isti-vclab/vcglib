@@ -1509,7 +1509,7 @@ namespace vcg
 				{
 					//qDebug("Indexed drawing");
 					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[INT_ATT_NAMES::ATT_VERTINDICES]->_bohandle);
-					glDrawElements(GL_TRIANGLES, _mesh.FN() * _bo[INT_ATT_NAMES::ATT_VERTINDICES]->_components, GL_UNSIGNED_INT, NULL);
+					glDrawElements(GL_TRIANGLES, GLsizei(_mesh.FN() * _bo[INT_ATT_NAMES::ATT_VERTINDICES]->_components), GL_UNSIGNED_INT, NULL);
 					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 				}
@@ -1819,7 +1819,7 @@ namespace vcg
 				//qDebug("Indexed drawing");
 				updateClientState(req);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bo[INT_ATT_NAMES::ATT_EDGEINDICES]->_bohandle);
-				glDrawElements(GL_LINES, _edge.size() * _bo[INT_ATT_NAMES::ATT_EDGEINDICES]->_components, GL_UNSIGNED_INT, NULL);
+				glDrawElements(GL_LINES, GLsizei(_edge.size() * _bo[INT_ATT_NAMES::ATT_EDGEINDICES]->_components), GL_UNSIGNED_INT, NULL);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 				InternalRendAtts tmp;
 				updateClientState(tmp);
@@ -2235,8 +2235,8 @@ namespace vcg
 				assert(nz >= 0);
 				assert(nz < 2);
 
-				_v[0] = size_t(vcg::tri::Index(m, pe->V(nz)));;
-				_v[1] = size_t(vcg::tri::Index(m, pe->V((nz + 1) % 2)));
+				_v[0] = GLuint(vcg::tri::Index(m, pe->V(nz)));;
+				_v[1] = GLuint(vcg::tri::Index(m, pe->V((nz + 1) % 2)));
 				assert(_v[0] != _v[1]); // The face pointed by 'f' is Degenerate (two coincident vertexes)
 
 				if (_v[0] > _v[1])
