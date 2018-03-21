@@ -99,7 +99,7 @@ template <class MESH> class AdvancingFront {
   void BuildMesh(CallBackPos call = NULL, int interval = 512)
   {
     float finalfacesext = mesh.vert.size() * 2.0f;
-    if(call) call(0, "Advancing front");
+	if (call) (*call)(0, "Advancing front");
     while(1) {
 
       for(int i = 0; i < interval; i++) {

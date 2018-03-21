@@ -162,7 +162,7 @@ public:
 	  for (vi = m.vert.begin(); vi != m.vert.end(); ++vi)
 	  if (!(*vi).IsD())
 	  {
-		  ScalarType weight = useQualityAsWeight ? (*vi).Q() : 1.0;
+		  ScalarType weight = useQualityAsWeight ? (*vi).Q() : 1.0f;
 		  accumulator[0] += (double)((*vi).P()[0] * weight);
 		  accumulator[1] += (double)((*vi).P()[1] * weight);
 		  accumulator[2] += (double)((*vi).P()[2] * weight);

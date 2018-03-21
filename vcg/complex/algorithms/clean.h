@@ -585,7 +585,7 @@ public:
       firstVp++;
     }
 
-    return ToSplitVec.size();
+    return int(ToSplitVec.size());
   }
 
 

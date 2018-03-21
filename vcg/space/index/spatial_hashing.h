@@ -206,7 +206,7 @@ protected:
                     inSphVec.push_back(hi);
                 }
               }
-          return inSphVec.size();
+          return int(inSphVec.size());
         }
 
         size_t RemoveInSphere(const Point3<ScalarType> &p, const ScalarType radius)
