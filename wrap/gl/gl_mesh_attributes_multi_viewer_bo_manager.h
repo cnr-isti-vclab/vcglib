@@ -97,7 +97,7 @@ namespace vcg
 			_perwire_noshading = true;
 			_persolid_noshading = false;
 
-			_perpoint_pointsize = 1.0f;
+			_perpoint_pointsize = 3.0f;
 			_perpoint_pointsmooth_enabled = false;
 			_perpoint_pointattenuation_enabled = true;
 			_perwire_wirewidth = 1.0f;
