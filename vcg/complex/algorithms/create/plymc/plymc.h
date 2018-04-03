@@ -59,7 +59,7 @@ namespace tri {
 
 // Simple prototype for later use...
 template<class MeshType>
-void MCSimplify( MeshType &m, float perc, bool preserveBB=true, vcg::CallBackPos *cb=0);
+int MCSimplify( MeshType &m, float perc, bool preserveBB=true, vcg::CallBackPos *cb=0);
 
 
 /** Surface Reconstruction
@@ -550,63 +550,66 @@ template < class MeshType, class VertexPair>
 
 
 template<   class MeshType>
-void MCSimplify( MeshType &m, float absoluteError, bool preserveBB, vcg::CallBackPos *cb)
+int MCSimplify( MeshType &m, float absoluteError, bool preserveBB, vcg::CallBackPos *cb)
 {
 
-  typedef PlyMCTriEdgeCollapse<MeshType,BasicVertexPair<typename MeshType::VertexType> > MyColl;
-  typedef typename MeshType::FaceIterator FaceIterator;
-  typedef typename MeshType::CoordType CoordType;
+	typedef PlyMCTriEdgeCollapse<MeshType,BasicVertexPair<typename MeshType::VertexType> > MyColl;
+	typedef typename MeshType::FaceIterator FaceIterator;
+	typedef typename MeshType::CoordType CoordType;
 
 
-    tri::UpdateBounding<MeshType>::Box(m);
-    tri::UpdateTopology<MeshType>::VertexFace(m);
-    TriEdgeCollapseMCParameter pp;
-    pp.bb.Import(m.bbox);
-    pp.preserveBBox=preserveBB;
-    vcg::LocalOptimization<MeshType> DeciSession(m,&pp);
-    if(absoluteError==0)
-    {
+	tri::UpdateBounding<MeshType>::Box(m);
+	tri::UpdateTopology<MeshType>::VertexFace(m);
+	TriEdgeCollapseMCParameter pp;
+	pp.bb.Import(m.bbox);
+	pp.preserveBBox=preserveBB;
+	vcg::LocalOptimization<MeshType> DeciSession(m,&pp);
+	if(absoluteError==0)
+	{
       // guess the mc side.
       // In a MC mesh the vertices are on the egdes of the cells. and the edges are (mostly) on face of the cells.
       // If you have  2 vert over the same face xy they share z
 
-      std::vector<float> ZSet;
-      for(FaceIterator fi = m.face.begin();fi!=m.face.end();++fi)
-        if(!(*fi).IsD())
-        {
-         CoordType v0=(*fi).V(0)->P();
-         CoordType v1=(*fi).V(1)->P();
-         CoordType v2=(*fi).V(2)->P();
-         if(v0[2]==v1[2] && v0[1]!=v1[1] && v0[0]!=v1[0]) ZSet.push_back(v0[2]);
-         if(v0[2]==v2[2] && v0[1]!=v1[1] && v2[0]!=v2[0]) ZSet.push_back(v0[2]);
-         if(v1[2]==v2[2] && v1[1]!=v1[1] && v2[0]!=v2[0]) ZSet.push_back(v0[2]);
-         if(ZSet.size()>100) break;
-       }
-      std::sort(ZSet.begin(),ZSet.end());
-      std::vector<float>::iterator lastV = std::unique(ZSet.begin(),ZSet.end());
-      ZSet.resize(lastV-ZSet.begin());
-      float Delta=0;
-      for(size_t i = 0; i< ZSet.size()-1;++i)
-      {
-        Delta = std::max(ZSet[i+1]-ZSet[i],Delta);
-//        qDebug("%f",Delta);
-      }
-      absoluteError= Delta/4.0f;
-    }
-//    qDebug("Simplifying at absoluteError=%f",absoluteError);
+		std::vector<float> ZSet;
+		for(FaceIterator fi = m.face.begin();fi!=m.face.end();++fi)
+		if(!(*fi).IsD())
+		{
+			CoordType v0=(*fi).V(0)->P();
+			CoordType v1=(*fi).V(1)->P();
+			CoordType v2=(*fi).V(2)->P();
+			if(v0[2]==v1[2] && v0[1]!=v1[1] && v0[0]!=v1[0]) ZSet.push_back(v0[2]);
+			if(v0[2]==v2[2] && v0[1]!=v2[1] && v0[0]!=v2[0]) ZSet.push_back(v0[2]);
+			if(v1[2]==v2[2] && v1[1]!=v2[1] && v1[0]!=v2[0]) ZSet.push_back(v1[2]);
+			if(ZSet.size()>100) break;
+		}
+		if (ZSet.size() == 0) return -1;	//no straight edges found. exit with error
+		std::sort(ZSet.begin(),ZSet.end());
+		std::vector<float>::iterator lastV = std::unique(ZSet.begin(),ZSet.end());
+		ZSet.resize(lastV-ZSet.begin());
+		float Delta=0;
+		for(size_t i = 0; i< ZSet.size()-1;++i)
+		{
+			Delta = std::max(ZSet[i+1]-ZSet[i],Delta);
+			//qDebug("%f",Delta);
+		}
+		absoluteError= Delta/4.0f;
+	}
+	//qDebug("Simplifying at absoluteError=%f",absoluteError);
 
-    float TargetError = absoluteError;
-    char buf[1024];
-    DeciSession.template Init< MyColl > ();
+	float TargetError = absoluteError;
+	char buf[1024];
+	DeciSession.template Init< MyColl > ();
 
-    pp.areaThr=TargetError*TargetError;
-    DeciSession.SetTimeBudget(1.0f);
-    if(TargetError < std::numeric_limits<float>::max() ) DeciSession.SetTargetMetric(TargetError);
-    while(DeciSession.DoOptimization() && DeciSession.currMetric < TargetError)
-      {
-        sprintf(buf,"Simplyfing %7i err %9g \r",m.fn,DeciSession.currMetric);
-        if (cb) cb(int(100.0f*DeciSession.currMetric/TargetError),buf);
-      }
+	pp.areaThr=TargetError*TargetError;
+	DeciSession.SetTimeBudget(1.0f);
+	if(TargetError < std::numeric_limits<float>::max() ) DeciSession.SetTargetMetric(TargetError);
+	while(DeciSession.DoOptimization() && DeciSession.currMetric < TargetError)
+	{
+		sprintf(buf,"Simplyfing %7i err %9g \r",m.fn,DeciSession.currMetric);
+		if (cb) cb(int(100.0f*DeciSession.currMetric/TargetError),buf);
+	}
+
+	return 1; //success
 }
 
 
