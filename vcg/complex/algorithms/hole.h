@@ -283,7 +283,7 @@ public:
 template<class MESH> class MinimumWeightEar : public TrivialEar<MESH>
 {
 public:
-  static float &DiedralWeight() { static float _dw=0.1; return _dw;}
+  static float &DiedralWeight() { static float _dw=0.1f; return _dw;}
   typedef TrivialEar<MESH> TE;
   typename MESH::ScalarType dihedralRad;
   typename MESH::ScalarType aspectRatio;

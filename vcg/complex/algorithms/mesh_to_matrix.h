@@ -241,7 +241,7 @@ public:
     {
         tri::RequireCompactness(m);
         h.resize(m.vn);
-        for(int i=0;i<m.vn;++i) h[i]=0;
+        fill(h.begin(),h.end(),0);        
         for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi)
         {
             ScalarType a = DoubleArea(*fi)/6.0;

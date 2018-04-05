@@ -25,7 +25,6 @@
 
 #include <vcg/space/index/kdtree/kdtree.h>
 
-
 namespace vcg
 {
 
@@ -94,7 +93,7 @@ class OutlierRemoval
         dem += 0.230389 * value * value;
         dem += 0.000972 * value * value * value;
         dem += 0.078108 * value * value * value * value;
-        ScalarType op = max(0.0, 1.0 - 1.0 / dem);
+        ScalarType op = std::max(0.0, 1.0 - 1.0 / dem);
         outlierScore[i] = op;
       }
 

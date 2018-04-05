@@ -790,6 +790,7 @@ static Color4b ColorDesaturate(Color4b c, int method)
     }
     default: assert(0);
   }
+  return Color4b(255, 255, 255, 255);
 }
 
 //ausiliary function to compute average lightness. value = (R+G+B)/3

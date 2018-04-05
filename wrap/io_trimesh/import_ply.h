@@ -210,8 +210,8 @@ static const  PropDescriptor &FaceDesc(int i)
 /*  5 */	{"face", "texnumber",      ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,texcoordind), 0,0,0,0,0  ,0},
 /*  6 */	{"face", "red"  ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,r),           0,0,0,0,0  ,0},
 /*  7 */	{"face", "green",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,g),           0,0,0,0,0  ,0},
-/*  8 */  {"face", "blue",           ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,b),           0,0,0,0,0  ,0},
-/*  9 */  {"face", "alpha",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,a),           0,0,0,0,0  ,0},
+/*  8 */	{"face", "blue",           ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,b),           0,0,0,0,0  ,0},
+/*  9 */	{"face", "alpha",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_FaceAux,a),           0,0,0,0,0  ,0},
 /* 10 */	{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_UCHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 /* 11 */	{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_CHAR,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 /* 12 */	{"face", "vertex_index",   ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_INT,   ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
@@ -547,15 +547,15 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
     }
 
     // User defined descriptors
-    std::vector<PropDescriptor> VPV(pi.vdn); // property descriptor relative al tipo LoadPly_VertexAux
-    std::vector<PropDescriptor> FPV(pi.fdn); // property descriptor relative al tipo LoadPly_FaceAux
-    if(pi.vdn>0){
+    std::vector<PropDescriptor> VPV(pi.VertDescriptorVec.size()); // property descriptor relative al tipo LoadPly_VertexAux
+    std::vector<PropDescriptor> FPV(pi.FaceDescriptorVec.size()); // property descriptor relative al tipo LoadPly_FaceAux
+    if(pi.VertDescriptorVec.size()>0){
         // Compute the total size needed to load additional per vertex data.
         size_t totsz=0;
-        for(int i=0;i<pi.vdn;i++){
-            VPV[i] = pi.VertexData[i];
+        for(size_t i=0;i<pi.VertDescriptorVec.size();i++){
+            VPV[i] = pi.VertDescriptorVec[i];
             VPV[i].offset1=offsetof(LoadPly_VertAux<ScalarType>,data)+totsz;
-            totsz+=pi.VertexData[i].memtypesize();
+            totsz+=pi.VertDescriptorVec[i].memtypesize();
             if( pf.AddToRead(VPV[i])==-1 ) { pi.status = pf.GetError(); return pi.status; }
         }
         if(totsz > MAX_USER_DATA)
@@ -564,12 +564,12 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
             return pi.status;
         }
     }
-    if(pi.fdn>0){
+    if(pi.FaceDescriptorVec.size()>0){
         size_t totsz=0;
-        for(int i=0;i<pi.fdn;i++){
-            FPV[i] = pi.FaceData[i];
+        for(size_t i=0;i<pi.FaceDescriptorVec.size();i++){
+            FPV[i] = pi.FaceDescriptorVec[i];
             FPV[i].offset1=offsetof(LoadPly_FaceAux,data)+totsz;
-            totsz+=pi.FaceData[i].memtypesize();
+            totsz+=pi.FaceDescriptorVec[i].memtypesize();
             if( pf.AddToRead(FPV[i])==-1 ) { pi.status = pf.GetError(); return pi.status; }
         }
         if(totsz > MAX_USER_DATA)
@@ -583,7 +583,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
     /* Main Reading Loop */
     /**************************************************************/
     m.Clear();
-    for(int i=0;i<int(pf.elements.size());i++)
+    for(size_t i=0;i<pf.elements.size();i++)
     {
         int n = pf.ElemNumber(i);
 
@@ -695,8 +695,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                     (*vi).R() = va.radius;
 
 
-                for(int k=0;k<pi.vdn;k++)
-                    memcpy((char *)(&*vi) + pi.VertexData[k].offset1,
+                for(size_t k=0;k<pi.VertDescriptorVec.size();k++)
+                    memcpy((char *)(&*vi) + pi.VertDescriptorVec[k].offset1,
                            (char *)(&va) + VPV[k].offset1,
                            VPV[k].memtypesize());
                 ++vi;
@@ -756,7 +756,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                     }
                 }
 
-                if(HasPolyInfo(m)) (*fi).Alloc(3);
+                if(HasPolyInfo(m)) (*fi).Alloc(fa.size);
 
                 if(HasPerFaceFlags(m) &&( pi.mask & Mask::IOM_FACEFLAGS) )
                 {
@@ -805,6 +805,22 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                         (*fi).C()[2] = (unsigned char)((fa.colors[0*3+2]*255+fa.colors[1*3+2]*255+fa.colors[2*3+2]*255)/3.0f);
                     }
                 }
+
+                if (HasPolyInfo(m))
+                {
+                    for(k=0; k<fa.size; ++k)
+                    {
+                        if( fa.v[k]<0 || fa.v[k]>=m.vn )
+                        {
+                            pi.status = PlyInfo::E_BAD_VERT_INDEX;
+                            return pi.status;
+                        }
+                        (*fi).V(k) = index[ fa.v[k] ];
+                    }
+                    fi++;
+                    continue;
+                }
+
                 /// Now the temporary struct 'fa' is ready to be copied into the real face '*fi'
                 /// This loop
                 for(k=0;k<3;++k)
@@ -820,8 +836,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                 // tag faux vertices of first face
                 if (fa.size>3) fi->SetF(2);
 
-                for(k=0;k<pi.fdn;k++)
-                    memcpy((char *)(&(*fi)) + pi.FaceData[k].offset1,
+                for(size_t k=0;k<pi.FaceDescriptorVec.size();k++)
+                    memcpy((char *)(&(*fi)) + pi.FaceDescriptorVec[k].offset1,
                            (char *)(&fa) + FPV[k].offset1,
                            FPV[k].memtypesize());
 
@@ -861,8 +877,8 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
                     fi->SetF(0);
                     if(qq<(fa.size-4)) fi->SetF(2);
 
-                    for(k=0;k<pi.fdn;k++)
-                        memcpy((char *)(&(*fi)) + pi.FaceData[k].offset1,
+                    for(size_t k=0;k<pi.FaceDescriptorVec.size();k++)
+                        memcpy((char *)(&(*fi)) + pi.FaceDescriptorVec[k].offset1,
                                (char *)(&fa) + FPV[k].offset1, FPV[k].memtypesize());
                     ++fi;
                 }
@@ -911,7 +927,7 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
             //qDebug("Starting Reading of Range Grid");
             if(RangeGridCols==0) // not initialized.
             {
-                for(int co=0;co<int(pf.comments.size());++co)
+                for(size_t co=0;co< pf.comments.size();++co)
                 {
                     std::string num_cols = "num_cols";
                     std::string num_rows = "num_rows";
@@ -974,20 +990,20 @@ static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
     m.textures.clear();
     m.normalmaps.clear();
 
-    for(int co=0;co<int(pf.comments.size());++co)
+    for(size_t co=0;co<pf.comments.size();++co)
     {
         std::string TFILE = "TextureFile";
         std::string NFILE = "TextureNormalFile";
         std::string &c = pf.comments[co];
         //		char buf[256];
         std::string bufstr,bufclean;
-        int i,n;
+        int n;
 
         if( TFILE == c.substr(0,TFILE.length()) )
         {
             bufstr = c.substr(TFILE.length()+1);
             n = static_cast<int>(bufstr.length());
-            for(i=0;i<n;i++)
+            for(int i=0;i<n;i++)
                 if( bufstr[i]!=' ' && bufstr[i]!='\t' && bufstr[i]>32 && bufstr[i]<125 )	bufclean.push_back(bufstr[i]);
 
             char buf2[255];
@@ -1036,8 +1052,7 @@ int LoadCamera(const char * filename)
 
 
     bool found = true;
-    int i;
-    for(i=0;i<23;++i)
+    for(int i=0;i<23;++i)
     {
         if( pf.AddToRead(CameraDesc(i))==-1 )
         {
@@ -1049,7 +1064,7 @@ int LoadCamera(const char * filename)
     if(!found)
         return this->pi.status;
 
-    for(i=0;i<int(pf.elements.size());i++)
+    for(size_t i=0;i<pf.elements.size();i++)
     {
         int n = pf.ElemNumber(i);
 

@@ -179,7 +179,7 @@ public:
     this->optimalPos = newPos;
   }
   
-  void Execute(TriMeshType &m, BaseParameterClass */*_pp*/)
+  void Execute(TriMeshType &m, BaseParameterClass * /*_pp*/)
   {
     CoordType newPos = this->optimalPos;
     QH::Qd(this->pos.V(1))+=QH::Qd(this->pos.V(0)); // v0 is deleted and v1 take the new position

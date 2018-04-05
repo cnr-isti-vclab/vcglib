@@ -24,6 +24,8 @@
 #ifndef __VCGLIB_CLEAN
 #define __VCGLIB_CLEAN
 
+#include <unordered_set>
+
 // VCG headers
 #include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/closest.h>
@@ -310,7 +312,7 @@ public:
   }
 
 
-  /** This function removes that are not referenced by any face or by any edge.
+  /** This function removes vertices that are not referenced by any face or by any edge.
             @param m The mesh
             @param DeleteVertexFlag if false prevent the vertex deletion and just count it.
             @return The number of removed vertices
@@ -583,7 +585,7 @@ public:
       firstVp++;
     }
 
-    return ToSplitVec.size();
+    return int(ToSplitVec.size());
   }
 
 
@@ -1369,7 +1371,7 @@ public:
       count = 0;
 
       ScalarType NormalThrRad = math::ToRad(normalThresholdDeg);
-      ScalarType eps = 0.0001; // this epsilon value is in absolute value. It is a distance from edge in baricentric coords.
+      ScalarType eps = ScalarType(0.0001); // this epsilon value is in absolute value. It is a distance from edge in baricentric coords.
       //detection stage
       for(FaceIterator fi=m.face.begin();fi!= m.face.end();++fi ) if(!(*fi).IsV())
       { Point3<ScalarType> NN = vcg::TriangleNormal((*fi)).Normalize();
@@ -1790,6 +1792,7 @@ public:
   */
   static void SelectFoldedFaceFromOneRingFaces(MeshType &m, ScalarType cosThreshold)
   {
+    typedef std::unordered_set<VertexPointer> VertexSet;
     tri::RequireVFAdjacency(m);
     tri::RequirePerFaceNormal(m);
     tri::RequirePerVertexNormal(m);
@@ -1803,33 +1806,33 @@ public:
 #pragma omp parallel for schedule(dynamic, 10)
     for (int i = 0; i < m.face.size(); i++)
     {
-      std::vector<typename MeshType::VertexPointer> nearVertex;
-      std::vector<typename MeshType::CoordType> point;
-      typename MeshType::FacePointer f = &m.face[i];
+      VertexSet nearVertex;
+      std::vector<CoordType> pointVec;
+      FacePointer f = &m.face[i];
       for (int j = 0; j < 3; j++)
       {
-        std::vector<typename MeshType::VertexPointer> temp;
-        vcg::face::VVStarVF<typename MeshType::FaceType>(f->V(j), temp);
-              typename std::vector<typename MeshType::VertexPointer>::iterator iter = temp.begin();
+        std::vector<VertexPointer> temp;
+        vcg::face::VVStarVF<FaceType>(f->V(j), temp);
+        typename std::vector<VertexPointer>::iterator iter = temp.begin();
         for (; iter != temp.end(); iter++)
         {
           if ((*iter) != f->V1(j) && (*iter) != f->V2(j))
           {
-            nearVertex.push_back((*iter));
-            point.push_back((*iter)->P());
+            if (nearVertex.insert((*iter)).second)
+              pointVec.push_back((*iter)->P());
           }
         }
-        nearVertex.push_back(f->V(j));
-        point.push_back(f->P(j));
+        nearVertex.insert(f->V(j));
+        pointVec.push_back(f->P(j));
       }
 
-      if (point.size() > 3)
+      if (pointVec.size() > 3)
       {
-        vcg::Plane3<typename MeshType::ScalarType> plane;
-        vcg::FitPlaneToPointSet(point, plane);
+        vcg::Plane3<ScalarType> plane;
+        vcg::FitPlaneToPointSet(pointVec, plane);
         float avgDot = 0;
-        for (int j = 0; j < nearVertex.size(); j++)
-          avgDot += plane.Direction().dot(nearVertex[j]->N());
+        for (auto  nvp :  nearVertex)
+          avgDot += plane.Direction().dot(nvp->N());
         avgDot /= nearVertex.size();
         typename MeshType::VertexType::NormalType normal;
         if (avgDot < 0)

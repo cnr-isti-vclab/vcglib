@@ -296,15 +296,14 @@ int main(int argc, char**argv)
     // save error files.
     if(flags & SamplingFlags::SAVE_ERROR)
     {
-      vcg::tri::io::PlyInfo p;
-      p.mask|=vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY /* | vcg::ply::PLYMask::PM_VERTQUALITY*/ ;
+      int saveMask = vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY /* | vcg::ply::PLYMask::PM_VERTQUALITY*/ ;
       //p.mask|=vcg::ply::PLYMask::PM_VERTCOLOR|vcg::ply::PLYMask::PM_VERTQUALITY;
       if(ColorMax!=0 || ColorMin != 0){
         vcg::tri::UpdateColor<CMesh>::PerVertexQualityRamp(S1,ColorMin,ColorMax);
         vcg::tri::UpdateColor<CMesh>::PerVertexQualityRamp(S2,ColorMin,ColorMax);
       }
-      tri::io::ExporterPLY<CMesh>::Save( S1,S1NewName.c_str(),true,p);
-      tri::io::ExporterPLY<CMesh>::Save( S2,S2NewName.c_str(),true,p);
+      tri::io::ExporterPLY<CMesh>::Save( S1,S1NewName.c_str(),saveMask);
+      tri::io::ExporterPLY<CMesh>::Save( S2,S2NewName.c_str(),saveMask);
     }
 
     // save error files.

@@ -226,7 +226,7 @@ public:
     //err = glGetError();
     std::vector<FacePointer> result;
     PickFace(x,y,m,result,width,height);
-    ScalarType LocalEpsilon(0.001);
+	ScalarType LocalEpsilon(ScalarType(0.001));
     for(size_t i =0;i<result.size();++i)
     {
       CoordType p = glProject(M,vp,CoordType::Construct(Barycenter(*(result[i])))) ;

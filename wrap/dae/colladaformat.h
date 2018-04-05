@@ -760,7 +760,7 @@ namespace Tags
 	class BindVertexInputTag : public XMLTag
 	{
 	public:
-		BindVertexInputTag(const QString& semantic,const QString& input_semantic,const QString& input_set)
+		BindVertexInputTag(const QString& semantic,const QString& input_semantic,const QString& /*input_set*/)
 			:XMLTag("bind_vertex_input")
 		{
 			_attributes.push_back(TagAttribute("semantic",semantic));

@@ -65,7 +65,7 @@ namespace vcg {
 				typedef typename SaveMeshType::FaceIterator FaceIterator;
 				
 				///Standard call for saving a mesh
-				static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos */*cb=0*/)
+				static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos * /*cb=0*/)
 				{					
 					FILE *fp;
 					fp = fopen(filename,"wb");

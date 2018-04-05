@@ -52,6 +52,8 @@ namespace vcg {
 namespace tri {
 namespace io {
 
+
+
   
 /** Additional data needed or useful for parsing a ply mesh.
 This class can be passed to the ImporterPLY::Open() function for 
@@ -63,14 +65,66 @@ class PlyInfo
 {
 public:
   typedef ::vcg::ply::PropDescriptor PropDescriptor ;
-
+    
+  void AddPerElemFloatAttribute(int elemType, const char *attrName, const char * propName=0)
+  {
+    static const char *elemStr[2]={"vertex","face"};
+    static std::vector<PropDescriptor> *elemDescVec[2]={&(this->VertDescriptorVec), &(this->FaceDescriptorVec)};
+    static std::vector<std::string   > *elemNameVec[2]={&(this->VertAttrNameVec),   &(this->FaceAttrNameVec)};
+        
+    if(propName==0) propName=attrName;
+    elemDescVec[elemType]->push_back(PropDescriptor());
+    elemNameVec[elemType]->push_back(attrName);
+    elemDescVec[elemType]->back().elemname=elemStr[elemType];
+    elemDescVec[elemType]->back().propname=strdup(propName);
+    elemDescVec[elemType]->back().stotype1 = vcg::ply::T_FLOAT;
+    elemDescVec[elemType]->back().memtype1 = vcg::ply::T_FLOAT;
+  }
+  
+  void AddPerVertexFloatAttribute(const char *attrName, const char *propName=0) { 
+    AddPerElemFloatAttribute(0,attrName,propName);     
+  }
+  void AddPerFaceFloatAttribute(const char *attrName, const char *propName=0) { 
+    AddPerElemFloatAttribute(1,attrName,propName);     
+  }
+  
+  
+  /* Note that saving a per vertex point3 attribute is a mess. 
+   * Actually require to allocate 3 float attribute and save them. And they are never deallocated... */
+  template<class MeshType>
+  void AddPerVertexPoint3fAttribute(MeshType &m, const char *attrName, const char *propName="")
+  {
+    if(propName==0) propName=attrName;
+    
+    const char *attrxyz[3] = {
+      strdup((std::string(attrName)+std::string("_x")).c_str()),
+      strdup((std::string(attrName)+std::string("_y")).c_str()),
+      strdup((std::string(attrName)+std::string("_z")).c_str()),
+    };
+    typename MeshType::template PerVertexAttributeHandle <vcg::Point3f> 
+        ht = vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute <vcg::Point3f> (m,attrName);
+    
+    typename MeshType::template PerVertexAttributeHandle <float> htt[3];
+  
+    for(int i=0;i<3;++i)
+    { 
+      htt[i] = vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m,std::string(attrxyz[i]));
+//      ForEachVertex (m, [&](typename MeshType::VertexType &v) {
+//        htt[i][v] = ht[v][i];
+//      });    
+      for(auto vi=m.vert.begin();vi!=m.vert.end();++vi)
+        if(!vi->IsD()) 
+           htt[i][vi] = ht[vi][i];
+      AddPerVertexFloatAttribute(attrxyz[i]);      
+    }
+  }
+  
+  
   PlyInfo()
   {
     status=0;
     mask=0;
-    cb=0;
-    vdn=fdn=0;
-    VertexData=FaceData=0;
+    cb=0;    
   }
   /// Store the error codes enconutered when parsing a ply
   int status;
@@ -81,15 +135,16 @@ public:
   // it returns the current position, and formats a string with a description of what th efunction is doing (loading vertexes, faces...)
   CallBackPos *cb;
 
-  /// the number of per-vertex descriptor (usually 0)
-  int vdn;
   /// The additional vertex descriptor that a user can specify to load additional per-vertex non-standard data stored in a ply
-  PropDescriptor *VertexData;
-  /// the number of per-face descriptor (usually 0)
-  int fdn;
+  std::vector<PropDescriptor> VertDescriptorVec;
+  /// AttributeName is an array, externally allocated, containing the names of the attributes to be saved (loaded). 
+  /// We assume that AttributeName[], if not empty, is exactly of the same size of VertexdData[]
+  /// If AttributeName[i] is not empty we use it to retrieve/store the info instead of the offsetted space in the current vertex
+  std::vector<std::string> VertAttrNameVec; 
   
   /// The additional vertex descriptor that a user can specify to load additional per-face non-standard data stored in a ply
-  PropDescriptor *FaceData;
+  std::vector<PropDescriptor> FaceDescriptorVec;
+  std::vector<std::string> FaceAttrNameVec; 
 
   /// a string containing the current ply header. Useful for showing it to the user.
   std::string header;

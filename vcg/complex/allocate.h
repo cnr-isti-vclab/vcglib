@@ -1157,12 +1157,12 @@ public:
   template <class ATTR_TYPE>
   static
   void
-  ClearPerVertexAttribute( MeshType & m,typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & h){
+  ClearPerVertexAttribute( MeshType & m,typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & h, const  ATTR_TYPE & initVal = ATTR_TYPE()){
     typename std::set<PointerToAttribute > ::iterator i;
     for( i = m.vert_attr.begin(); i !=  m.vert_attr.end(); ++i)
       if( (*i)._handle == h._handle ){
         for(typename MeshType::VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-          h[vi] = ATTR_TYPE();
+          h[vi] = initVal;
         return;}
     assert(0);
   }

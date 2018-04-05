@@ -50,26 +50,26 @@ void ComputeCrossCovarianceMatrix(const std::vector<Point3<S> > &spVec, Point3<S
                                   const std::vector<Point3<S> > &tpVec, Point3<S> &tpBarycenter,
                                   Eigen::Matrix3d &m)
 {
-    assert(spVec.size()==tpVec.size());
-    m.setZero();
-    spBarycenter.SetZero();
-    tpBarycenter.SetZero();
-    Eigen::Vector3d spe;
-    Eigen::Vector3d tpe;
-    typename std::vector <Point3<S> >::const_iterator si,ti;
-    for(si=spVec.begin(),ti=tpVec.begin();si!=spVec.end();++si,++ti){
-        spBarycenter+=*si;
-        tpBarycenter+=*ti;
-         si->ToEigenVector(spe);
-         ti->ToEigenVector(tpe);
-        m+=spe*tpe.transpose();
-    }
-    spBarycenter/=spVec.size();
-    tpBarycenter/=tpVec.size();
-    spBarycenter.ToEigenVector(spe);
-    tpBarycenter.ToEigenVector(tpe);
-    m/=spVec.size();
-    m-=spe*tpe.transpose();
+	assert(spVec.size() == tpVec.size());
+	m.setZero();
+	spBarycenter.SetZero();
+	tpBarycenter.SetZero();
+	Eigen::Vector3d spe;
+	Eigen::Vector3d tpe;
+	typename std::vector <Point3<S> >::const_iterator si, ti;
+	for (si = spVec.begin(), ti = tpVec.begin(); si != spVec.end(); ++si, ++ti){
+		spBarycenter += *si;
+		tpBarycenter += *ti;
+		si->ToEigenVector(spe);
+		ti->ToEigenVector(tpe);
+		m += spe*tpe.transpose();
+	}
+	spBarycenter /= double(spVec.size());
+	tpBarycenter /= double(tpVec.size());
+	spBarycenter.ToEigenVector(spe);
+	tpBarycenter.ToEigenVector(tpe);
+	m /= double(spVec.size());
+	m -= spe*tpe.transpose();
 }
 
 /*! \brief Compute the roto-translation that applied to PMov bring them onto Pfix

@@ -96,7 +96,6 @@ namespace vcg {
                 static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi, CallBackPos *cb=0)	// V1.0
                 {
                     FILE * fpout;
-                    int i;
                     const char * hbin = "binary_little_endian";
                     const char * hasc = "ascii";
                     const char * h;
@@ -106,7 +105,7 @@ namespace vcg {
                     const int DGTVQ = vcg::tri::io::Precision<typename VertexType::QualityType>::digits();
                     const int DGTVR = vcg::tri::io::Precision<typename VertexType::RadiusType>::digits();
                     const int DGTFQ = vcg::tri::io::Precision<typename FaceType::QualityType>::digits();
-                    bool multit = false;
+                    bool saveTexIndexFlag = false;
 
                     if(binary) h=hbin;
                     else       h=hasc;
@@ -127,10 +126,10 @@ namespace vcg {
                     {
                         const char * TFILE = "TextureFile";
 
-                        for(i=0; i < static_cast<int>(m.textures.size()); ++i)
+                        for(size_t i=0; i < m.textures.size(); ++i)
                             fprintf(fpout,"comment %s %s\n", TFILE, (const char *)(m.textures[i].c_str()) );
 
-                        if(m.textures.size()>1 && (HasPerWedgeTexCoord(m) || HasPerVertexTexCoord(m))) multit = true;
+                        if(m.textures.size()>1 && (HasPerWedgeTexCoord(m) || HasPerVertexTexCoord(m))) saveTexIndexFlag = true;
                     }
 
                     if((pi.mask & Mask::IOM_CAMERA))
@@ -211,8 +210,8 @@ namespace vcg {
                             "property float texture_v\n"
                             );
                     }
-                    for(i=0;i<pi.vdn;i++)
-                        fprintf(fpout,"property %s %s\n",pi.VertexData[i].stotypename(),pi.VertexData[i].propname);
+                    for(size_t i=0;i<pi.VertDescriptorVec.size();i++)
+                        fprintf(fpout,"property %s %s\n",pi.VertDescriptorVec[i].stotypename(),pi.VertDescriptorVec[i].propname);
 
                     fprintf(fpout,
                         "element face %d\n"
@@ -226,14 +225,22 @@ namespace vcg {
                             "property int flags\n"
                             );
                     }
-
-                    if( (HasPerWedgeTexCoord(m) || HasPerVertexTexCoord(m) ) && pi.mask & Mask::IOM_WEDGTEXCOORD ) // Note that you can save VT as WT if you really want it...
+                   
+                    if( (HasPerWedgeTexCoord(m)  && pi.mask & Mask::IOM_WEDGTEXCOORD ) ||
+                        (HasPerVertexTexCoord(m) && (!HasPerWedgeTexCoord(m)) && pi.mask & Mask::IOM_WEDGTEXCOORD ) )  // Note that you can save VT as WT if you really really want it...
                     {
                         fprintf(fpout,
                             "property list uchar float texcoord\n"
                             );
-
-                        if(multit)
+                    }
+                    // The texture index information has to be saved for each face (if necessary) both for PerVert and PerWedg 
+                    if( saveTexIndexFlag &&
+                        ( ( HasPerWedgeTexCoord(m)  && (pi.mask & Mask::IOM_WEDGTEXCOORD) ) ||
+                          ( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) ) ||
+                          ( HasPerVertexTexCoord(m) && (!HasPerWedgeTexCoord(m)) && (pi.mask & Mask::IOM_WEDGTEXCOORD) ) 
+                         )
+                       )
+                    {
                             fprintf(fpout,
                             "property int texnumber\n"
                             );
@@ -262,8 +269,8 @@ namespace vcg {
                         fprintf(fpout,"property %s quality\n",fqtp);
                     }
 
-                    for(i=0;i<pi.fdn;i++)
-                        fprintf(fpout,"property %s %s\n",pi.FaceData[i].stotypename(),pi.FaceData[i].propname);
+                    for(size_t i=0;i<pi.FaceDescriptorVec.size();i++)
+                        fprintf(fpout,"property %s %s\n",pi.FaceDescriptorVec[i].stotypename(),pi.FaceDescriptorVec[i].propname);
                     // Saving of edges is enabled if requested
                     if( m.en>0 && (pi.mask & Mask::IOM_EDGEINDEX) )
                         fprintf(fpout,
@@ -344,7 +351,59 @@ namespace vcg {
                     VertexPointer  vp;
                     VertexIterator vi;
                     SimpleTempData<typename SaveMeshType::VertContainer,int> indices(m.vert);
-
+                   
+                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<float > > thfv(pi.VertDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<double> > thdv(pi.VertDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<int   > > thiv(pi.VertDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<short > > thsv(pi.VertDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<char  > > thcv(pi.VertDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<unsigned char> >  thuv(pi.VertDescriptorVec.size());
+                    
+                    for(size_t i=0;i<pi.VertDescriptorVec.size();i++)
+                    {
+                      if(!pi.VertAttrNameVec.empty() && !pi.VertAttrNameVec[i].empty())
+                      { // trying to use named attribute to retrieve the value to store
+                        assert(vcg::tri::HasPerVertexAttribute(m,pi.VertAttrNameVec[i]));
+                        switch (pi.VertDescriptorVec[i].stotype1)
+                        {
+                        case ply::T_FLOAT  : thfv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<float>(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_DOUBLE : thdv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<double>(m,pi.VertAttrNameVec[i]); break; 
+                        case ply::T_INT    : thiv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<int   >(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_SHORT  : thsv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<short >(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_CHAR   : thcv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<char>(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_UCHAR  : thuv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<unsigned char>(m,pi.VertAttrNameVec[i]); break;
+                        default : assert(0);
+                        }
+                      }                      
+                    }                    
+                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<float > > thff(pi.FaceDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<double> > thdf(pi.FaceDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<int   > > thif(pi.FaceDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<short > > thsf(pi.FaceDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<char  > > thcf(pi.FaceDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<unsigned char> >  thuf(pi.FaceDescriptorVec.size());
+                    
+                    for(size_t i=0;i<pi.FaceDescriptorVec.size();i++)
+                    {
+                      if(!pi.FaceAttrNameVec.empty() && !pi.FaceAttrNameVec[i].empty())
+                      { // trying to use named attribute to retrieve the value to store
+                        assert(vcg::tri::HasPerFaceAttribute(m,pi.FaceAttrNameVec[i]));
+                        switch (pi.FaceDescriptorVec[i].stotype1)
+                        {
+                        case ply::T_FLOAT  : thff[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<float>(m,pi.FaceAttrNameVec[i]); break;
+                        case ply::T_DOUBLE : thdf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<double>(m,pi.FaceAttrNameVec[i]); break; 
+                        case ply::T_INT    : thif[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<int   >(m,pi.FaceAttrNameVec[i]); break;
+                        case ply::T_SHORT  : thsf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<short >(m,pi.FaceAttrNameVec[i]); break;
+                        case ply::T_CHAR   : thcf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<char>(m,pi.FaceAttrNameVec[i]); break;
+                        case ply::T_UCHAR  : thuf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<unsigned char>(m,pi.FaceAttrNameVec[i]); break;
+                        default : assert(0);
+                        }
+                      }                      
+                    }
+                    
+                    
+                    
+                    
                     for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi){
                         vp=&(*vi);
                         indices[vi] = j;
@@ -381,22 +440,39 @@ namespace vcg {
 
                                 if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) )
                                 {
-                                    t = float(vp->T().u()); fwrite(&t,sizeof(float),1,fpout);
-                                    t = float(vp->T().v()); fwrite(&t,sizeof(float),1,fpout);
+                                    t = ScalarType(vp->T().u()); fwrite(&t,sizeof(ScalarType),1,fpout);
+                                    t = ScalarType(vp->T().v()); fwrite(&t,sizeof(ScalarType),1,fpout);
                                 }
 
-                                for(i=0;i<pi.vdn;i++)
+                                for(size_t i=0;i<pi.VertDescriptorVec.size();i++)
                                 {
-                                    double td(0); float tf(0);int ti;short ts; char tc; unsigned char tuc;
-                                    switch (pi.VertexData[i].stotype1)
+                                    double td(0); float tf(0);int ti;short ts; char tc; unsigned char tu;
+                                    if(!pi.VertAttrNameVec.empty() && !pi.VertAttrNameVec[i].empty())
+                                    { // trying to use named attribute to retrieve the value to store
+                                      assert(vcg::tri::HasPerVertexAttribute(m,pi.VertAttrNameVec[i]));
+                                      switch (pi.VertDescriptorVec[i].stotype1)
+                                      {
+                                      case ply::T_FLOAT  : tf=thfv[i][vp]; fwrite(&tf, sizeof(float),1,fpout); break;
+                                      case ply::T_DOUBLE : td=thdv[i][vp]; fwrite(&td, sizeof(double),1,fpout); break;
+                                      case ply::T_INT    : ti=thiv[i][vp]; fwrite(&ti, sizeof(int),1,fpout); break;
+                                      case ply::T_SHORT  : ts=thsv[i][vp]; fwrite(&ts, sizeof(short),1,fpout); break;
+                                      case ply::T_CHAR   : tc=thcv[i][vp]; fwrite(&tc, sizeof(char),1,fpout); break;
+                                      case ply::T_UCHAR  : tu=thuv[i][vp]; fwrite(&tu,sizeof(unsigned char),1,fpout); break;
+                                      default : assert(0);
+                                      }
+                                    }
+                                    else
                                     {
-                                    case ply::T_FLOAT	 :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, tf );	fwrite(&tf, sizeof(float),1,fpout); break;
-                                    case ply::T_DOUBLE :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, td );	fwrite(&td, sizeof(double),1,fpout); break;
-                                    case ply::T_INT		 :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, ti );	fwrite(&ti, sizeof(int),1,fpout); break;
-                                    case ply::T_SHORT	 :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, ts );	fwrite(&ts, sizeof(short),1,fpout); break;
-                                    case ply::T_CHAR	 :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, tc );	fwrite(&tc, sizeof(char),1,fpout); break;
-                                    case ply::T_UCHAR	 :		PlyConv(pi.VertexData[i].memtype1,  ((char *)vp)+pi.VertexData[i].offset1, tuc);	fwrite(&tuc,sizeof(unsigned char),1,fpout); break;
-                                    default : assert(0);
+                                      switch (pi.VertDescriptorVec[i].stotype1)
+                                      {
+                                      case ply::T_FLOAT	 :		PlyConv(pi.VertDescriptorVec[i].memtype1,  ((char *)vp)+pi.VertDescriptorVec[i].offset1, tf );	fwrite(&tf, sizeof(float),1,fpout); break;
+                                      case ply::T_DOUBLE :		PlyConv(pi.VertDescriptorVec[i].memtype1,  ((char *)vp)+pi.VertDescriptorVec[i].offset1, td );	fwrite(&td, sizeof(double),1,fpout); break;
+                                      case ply::T_INT		 :		PlyConv(pi.VertDescriptorVec[i].memtype1,  ((char *)vp)+pi.VertDescriptorVec[i].offset1, ti );	fwrite(&ti, sizeof(int),1,fpout); break;
+                                      case ply::T_SHORT	 :		PlyConv(pi.VertDescriptorVec[i].memtype1,  ((char *)vp)+pi.VertDescriptorVec[i].offset1, ts );	fwrite(&ts, sizeof(short),1,fpout); break;
+                                      case ply::T_CHAR	 :		PlyConv(pi.VertDescriptorVec[i].memtype1,  ((char *)vp)+pi.VertDescriptorVec[i].offset1, tc );	fwrite(&tc, sizeof(char),1,fpout); break;
+                                      case ply::T_UCHAR	 :		PlyConv(pi.VertDescriptorVec[i].memtype1,  ((char *)vp)+pi.VertDescriptorVec[i].offset1, tu );	fwrite(&tu,sizeof(unsigned char),1,fpout); break;
+                                      default : assert(0);
+                                      }
                                     }
                                 }
                             }
@@ -422,19 +498,35 @@ namespace vcg {
                                 if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) )
                                     fprintf(fpout,"%f %f",vp->T().u(),vp->T().v());
 
-                                for(i=0;i<pi.vdn;i++)
+                                for(size_t i=0;i<pi.VertDescriptorVec.size();i++)
                                 {
-                                    float tf(0); double td(0);
-                                    int ti;
-                                    switch (pi.VertexData[i].memtype1)
+                                    float tf(0); double td(0); int ti;
+                                    if(!pi.VertAttrNameVec.empty() && !pi.VertAttrNameVec[i].empty())
+                                    { // trying to use named attribute to retrieve the value to store
+                                      assert(vcg::tri::HasPerVertexAttribute(m,pi.VertAttrNameVec[i]));
+                                      switch (pi.VertDescriptorVec[i].stotype1)
+                                      {
+                                      case ply::T_FLOAT  : tf=thfv[i][vp]; fprintf(fpout,"%f ",tf); break;
+                                      case ply::T_DOUBLE : td=thdv[i][vp]; fprintf(fpout,"%lf ",td); break;
+                                      case ply::T_INT    : ti=thiv[i][vp]; fprintf(fpout,"%i ",ti); break;
+                                      case ply::T_SHORT  : ti=thsv[i][vp]; fprintf(fpout,"%i ",ti); break;
+                                      case ply::T_CHAR   : ti=thcv[i][vp]; fprintf(fpout,"%i ",ti); break;
+                                      case ply::T_UCHAR  : ti=thuv[i][vp]; fprintf(fpout,"%i ",ti); break;
+                                      default : assert(0);
+                                      }
+                                    }
+                                    else
                                     {
-                                    case ply::T_FLOAT	 :		tf=*( (float  *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%f ",tf); break;
-                                    case ply::T_DOUBLE :    td=*( (double *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%f ",tf); break;
-                                    case ply::T_INT		 :		ti=*( (int    *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-                                    case ply::T_SHORT	 :		ti=*( (short  *)        (((char *)vp)+pi.VertexData[i].offset1)); fprintf(fpout,"%i ",ti); break;
-                                    case ply::T_CHAR	 :		ti=*( (char   *)        (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-                                    case ply::T_UCHAR	 :		ti=*( (unsigned char *) (((char *)vp)+pi.VertexData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-                                    default : assert(0);
+                                      switch (pi.VertDescriptorVec[i].memtype1)
+                                      {
+                                      case ply::T_FLOAT	 :		tf=*( (float  *)        (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%f ",tf); break;
+                                      case ply::T_DOUBLE :    td=*( (double *)        (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%f ",tf); break;
+                                      case ply::T_INT		 :		ti=*( (int    *)        (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
+                                      case ply::T_SHORT	 :		ti=*( (short  *)        (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
+                                      case ply::T_CHAR	 :		ti=*( (char   *)        (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
+                                      case ply::T_UCHAR	 :		ti=*( (unsigned char *) (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
+                                      default : assert(0);
+                                      }
                                     }
                                 }
 
@@ -447,9 +539,9 @@ namespace vcg {
                     // this assert triggers when the vn != number of vertexes in vert that are not deleted.
                     assert(j==m.vn);
 
-                    char c = 3;
-                    unsigned char b9 = 9;
-                    unsigned char b6 = 6;
+                    unsigned char b3char = 3;
+                    unsigned char b9char = 9;
+                    unsigned char b6char = 6;
                     FacePointer fp;
                     int vv[3];
                     FaceIterator fi;
@@ -468,15 +560,15 @@ namespace vcg {
                             vv[0]=indices[fp->cV(0)];
                             vv[1]=indices[fp->cV(1)];
                             vv[2]=indices[fp->cV(2)];
-                            fwrite(&c,1,1,fpout);
+                            fwrite(&b3char,sizeof(char),1,fpout);
                             fwrite(vv,sizeof(int),3,fpout);
 
                             if(HasPerFaceFlags(m)&&( pi.mask & Mask::IOM_FACEFLAGS) )
                                 fwrite(&(fp->Flags()),sizeof(int),1,fpout);
 
-                            if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) )
+                            if( HasPerVertexTexCoord(m) && (!HasPerWedgeTexCoord(m)) && (pi.mask & Mask::IOM_WEDGTEXCOORD) )  // Note that you can save VT as WT if you really want it...
                             {
-                                fwrite(&b6,sizeof(char),1,fpout);
+                                fwrite(&b6char,sizeof(char),1,fpout);
                                 float t[6];
                                 for(int k=0;k<3;++k)
                                 {
@@ -487,7 +579,7 @@ namespace vcg {
                             }
                             else if( HasPerWedgeTexCoord(m) && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
                             {
-                                fwrite(&b6,sizeof(char),1,fpout);
+                                fwrite(&b6char,sizeof(char),1,fpout);
                                 float t[6];
                                 for(int k=0;k<3;++k)
                                 {
@@ -497,7 +589,7 @@ namespace vcg {
                                 fwrite(t,sizeof(float),6,fpout);
                             }
 
-                            if(multit)
+                            if(saveTexIndexFlag)
                             {
                                 int t = fp->WT(0).n();
                                 fwrite(&t,sizeof(int),1,fpout);
@@ -509,7 +601,7 @@ namespace vcg {
 
                             if( HasPerWedgeColor(m) && (pi.mask & Mask::IOM_WEDGCOLOR)  )
                             {
-                                fwrite(&b9,sizeof(char),1,fpout);
+                                fwrite(&b9char,sizeof(char),1,fpout);
                                 float t[3];
                                 for(int z=0;z<3;++z)
                                 {
@@ -524,17 +616,34 @@ namespace vcg {
                                 fwrite( &(fp->Q()),sizeof(typename FaceType::ScalarType),1,fpout);
 
 
-                            for(i=0;i<pi.fdn;i++)
+                            for(size_t i=0;i<pi.FaceDescriptorVec.size();i++)
                             {
-                                double td(0); float tf(0);int ti;short ts; char tc; unsigned char tuc;
-                                switch (pi.FaceData[i].stotype1){
-                                case ply::T_FLOAT	 :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, tf );	fwrite(&tf, sizeof(float),1,fpout); break;
-                                case ply::T_DOUBLE :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, td );	fwrite(&td, sizeof(double),1,fpout); break;
-                                case ply::T_INT		 :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, ti );	fwrite(&ti, sizeof(int),1,fpout); break;
-                                case ply::T_SHORT	 :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, ts );	fwrite(&ts, sizeof(short),1,fpout); break;
-                                case ply::T_CHAR	 :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, tc );	fwrite(&tc, sizeof(char),1,fpout); break;
-                                case ply::T_UCHAR	 :		PlyConv(pi.FaceData[i].memtype1,  ((char *)fp)+pi.FaceData[i].offset1, tuc);	fwrite(&tuc,sizeof(unsigned char),1,fpout); break;
-                                default : assert(0);
+                                double td(0); float tf(0);int ti;short ts; char tc; unsigned char tu;
+                                if(!pi.FaceAttrNameVec.empty() && !pi.FaceAttrNameVec[i].empty())
+                                { // trying to use named attribute to retrieve the value to store
+                                  assert(vcg::tri::HasPerFaceAttribute(m,pi.FaceAttrNameVec[i]));
+                                  switch (pi.FaceDescriptorVec[i].stotype1)
+                                  {
+                                  case ply::T_FLOAT  : tf=thff[i][fp]; fwrite(&tf, sizeof(float),1,fpout); break;
+                                  case ply::T_DOUBLE : td=thdf[i][fp]; fwrite(&td, sizeof(double),1,fpout); break;
+                                  case ply::T_INT    : ti=thif[i][fp]; fwrite(&ti, sizeof(int),1,fpout); break;
+                                  case ply::T_SHORT  : ts=thsf[i][fp]; fwrite(&ts, sizeof(short),1,fpout); break;
+                                  case ply::T_CHAR   : tc=thcf[i][fp]; fwrite(&tc, sizeof(char),1,fpout); break;
+                                  case ply::T_UCHAR  : tu=thuf[i][fp]; fwrite(&tu,sizeof(unsigned char),1,fpout); break;
+                                  default : assert(0);
+                                  }
+                                }
+                                else
+                                {
+                                  switch (pi.FaceDescriptorVec[i].stotype1){
+                                  case ply::T_FLOAT	 :		PlyConv(pi.FaceDescriptorVec[i].memtype1,  ((char *)fp)+pi.FaceDescriptorVec[i].offset1, tf );	fwrite(&tf, sizeof(float),1,fpout); break;
+                                  case ply::T_DOUBLE :		PlyConv(pi.FaceDescriptorVec[i].memtype1,  ((char *)fp)+pi.FaceDescriptorVec[i].offset1, td );	fwrite(&td, sizeof(double),1,fpout); break;
+                                  case ply::T_INT		 :		PlyConv(pi.FaceDescriptorVec[i].memtype1,  ((char *)fp)+pi.FaceDescriptorVec[i].offset1, ti );	fwrite(&ti, sizeof(int),1,fpout); break;
+                                  case ply::T_SHORT	 :		PlyConv(pi.FaceDescriptorVec[i].memtype1,  ((char *)fp)+pi.FaceDescriptorVec[i].offset1, ts );	fwrite(&ts, sizeof(short),1,fpout); break;
+                                  case ply::T_CHAR	 :		PlyConv(pi.FaceDescriptorVec[i].memtype1,  ((char *)fp)+pi.FaceDescriptorVec[i].offset1, tc );	fwrite(&tc, sizeof(char),1,fpout); break;
+                                  case ply::T_UCHAR	 :		PlyConv(pi.FaceDescriptorVec[i].memtype1,  ((char *)fp)+pi.FaceDescriptorVec[i].offset1, tu );	fwrite(&tu, sizeof(unsigned char),1,fpout); break;
+                                  default : assert(0);
+                                  }
                                 }
                             }
                         }
@@ -566,7 +675,7 @@ namespace vcg {
                                     );
                             }
 
-                            if(multit)
+                            if(saveTexIndexFlag)
                             {
                                 fprintf(fpout,"%d ",fp->WT(0).n());
                             }
@@ -589,20 +698,36 @@ namespace vcg {
                             if( HasPerFaceQuality(m) && (pi.mask & Mask::IOM_FACEQUALITY) )
                                 fprintf(fpout,"%.*g ",DGTFQ,fp->Q());
 
-                            for(i=0;i<pi.fdn;i++)
+                            for(size_t i=0;i<pi.FaceDescriptorVec.size();i++)
                             {
-                                float tf(0); double td(0);
-                                int ti;
-                                switch (pi.FaceData[i].memtype1)
+                              float tf(0); double td(0); int ti;
+                              if(!pi.FaceAttrNameVec.empty() && !pi.FaceAttrNameVec[i].empty())
+                              { // trying to use named attribute to retrieve the value to store
+                                assert(vcg::tri::HasPerFaceAttribute(m,pi.FaceAttrNameVec[i]));
+                                switch (pi.FaceDescriptorVec[i].stotype1)
                                 {
-                                case  ply::T_FLOAT	:		tf=*( (float  *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%g ",tf); break;
-                                case  ply::T_DOUBLE :		td=*( (double *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%g ",tf); break;
-                                case  ply::T_INT		:		ti=*( (int    *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-                                case  ply::T_SHORT	:		ti=*( (short  *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-                                case  ply::T_CHAR		:		ti=*( (char   *)        (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
-                                case  ply::T_UCHAR	:		ti=*( (unsigned char *) (((char *)fp)+pi.FaceData[i].offset1));	fprintf(fpout,"%i ",ti); break;
+                                case ply::T_FLOAT  : tf=thff[i][fp]; fprintf(fpout,"%f ",tf); break;
+                                case ply::T_DOUBLE : td=thdf[i][fp]; fprintf(fpout,"%g ",td); break;
+                                case ply::T_INT    : ti=thif[i][fp]; fprintf(fpout,"%i ",ti); break;
+                                case ply::T_SHORT  : ti=thsf[i][fp]; fprintf(fpout,"%i ",ti); break;
+                                case ply::T_CHAR   : ti=thcf[i][fp]; fprintf(fpout,"%i ",ti); break;
+                                case ply::T_UCHAR  : ti=thuf[i][fp]; fprintf(fpout,"%i ",ti); break;
                                 default : assert(0);
                                 }
+                              }
+                              else
+                              {
+                                switch (pi.FaceDescriptorVec[i].memtype1)
+                                {
+                                case  ply::T_FLOAT	:		tf=*( (float  *)        (((char *)fp)+pi.FaceDescriptorVec[i].offset1));	fprintf(fpout,"%g ",tf); break;
+                                case  ply::T_DOUBLE :		td=*( (double *)        (((char *)fp)+pi.FaceDescriptorVec[i].offset1));	fprintf(fpout,"%g ",tf); break;
+                                case  ply::T_INT		:		ti=*( (int    *)        (((char *)fp)+pi.FaceDescriptorVec[i].offset1));	fprintf(fpout,"%i ",ti); break;
+                                case  ply::T_SHORT	:		ti=*( (short  *)        (((char *)fp)+pi.FaceDescriptorVec[i].offset1));	fprintf(fpout,"%i ",ti); break;
+                                case  ply::T_CHAR		:		ti=*( (char   *)        (((char *)fp)+pi.FaceDescriptorVec[i].offset1));	fprintf(fpout,"%i ",ti); break;
+                                case  ply::T_UCHAR	:		ti=*( (unsigned char *) (((char *)fp)+pi.FaceDescriptorVec[i].offset1));	fprintf(fpout,"%i ",ti); break;
+                                default : assert(0);
+                                }
+                              }
                             }
 
                             fprintf(fpout,"\n");

@@ -120,7 +120,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
         targets.push_back(vp);
       }
 
-      int n = targets.size();
+      int n = int(targets.size());
       if(n<3) continue;
 
       bool success = true;
@@ -205,10 +205,10 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
       Mark(vv1);
       Mark(vv2);
 
-      v0 = tri::Index(this->mesh,vv0);
-      v1 = tri::Index(this->mesh,vv1);
-      v2 = tri::Index(this->mesh,vv2);
-      return true;
+	  v0 = int(tri::Index(this->mesh, vv0));
+	  v1 = int(tri::Index(this->mesh, vv1));
+	  v2 = int(tri::Index(this->mesh, vv2));
+	  return true;
     }
     return false;
   }
@@ -252,7 +252,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
     if(nn==0) return -1;
 
     VertexType *candidate = NULL;
-    ScalarType min_angle = M_PI;
+	ScalarType min_angle = ScalarType(M_PI);
     //
     // Loop over all the nearest vertexes and choose the best one according the ball pivoting strategy.
     //
@@ -312,7 +312,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
       assert((candidate->P() - v1).Norm() > min_edge);
     }
 
-    int candidateIndex = tri::Index(this->mesh,candidate);
+    int candidateIndex = int(tri::Index(this->mesh,candidate));
     assert(candidateIndex != edge.v0 && candidateIndex != edge.v1);
 
     Point3x newnormal = ((candidate->P() - v0)^(v1 - v0)).Normalize();
