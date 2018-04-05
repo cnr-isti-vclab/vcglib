@@ -105,7 +105,7 @@ namespace vcg {
                     const int DGTVQ = vcg::tri::io::Precision<typename VertexType::QualityType>::digits();
                     const int DGTVR = vcg::tri::io::Precision<typename VertexType::RadiusType>::digits();
                     const int DGTFQ = vcg::tri::io::Precision<typename FaceType::QualityType>::digits();
-                    bool multit = false;
+                    bool saveTexIndexFlag = false;
 
                     if(binary) h=hbin;
                     else       h=hasc;
@@ -129,7 +129,7 @@ namespace vcg {
                         for(size_t i=0; i < m.textures.size(); ++i)
                             fprintf(fpout,"comment %s %s\n", TFILE, (const char *)(m.textures[i].c_str()) );
 
-                        if(m.textures.size()>1 && (HasPerWedgeTexCoord(m) || HasPerVertexTexCoord(m))) multit = true;
+                        if(m.textures.size()>1 && (HasPerWedgeTexCoord(m) || HasPerVertexTexCoord(m))) saveTexIndexFlag = true;
                     }
 
                     if((pi.mask & Mask::IOM_CAMERA))
@@ -225,18 +225,22 @@ namespace vcg {
                             "property int flags\n"
                             );
                     }
-                    // Note that you can save VT as WT if you really want it...
-                    if( (HasPerWedgeTexCoord(m) || HasPerVertexTexCoord(m) ) && pi.mask & Mask::IOM_WEDGTEXCOORD ) 
+                   
+                    if( (HasPerWedgeTexCoord(m)  && pi.mask & Mask::IOM_WEDGTEXCOORD ) ||
+                        (HasPerVertexTexCoord(m) && (!HasPerWedgeTexCoord(m)) && pi.mask & Mask::IOM_WEDGTEXCOORD ) )  // Note that you can save VT as WT if you really really want it...
                     {
                         fprintf(fpout,
                             "property list uchar float texcoord\n"
                             );
                     }
-                    // The per-face texture index information has to be saved (if necessary) both for PerVert and PerWedg 
-                    if( (     HasPerWedgeTexCoord(m)          || HasPerVertexTexCoord(m) ) && 
-                        (  (pi.mask & Mask::IOM_WEDGTEXCOORD) || (pi.mask & Mask::IOM_VERTTEXCOORD ) ) ) 
+                    // The texture index information has to be saved for each face (if necessary) both for PerVert and PerWedg 
+                    if( saveTexIndexFlag &&
+                        ( ( HasPerWedgeTexCoord(m)  && (pi.mask & Mask::IOM_WEDGTEXCOORD) ) ||
+                          ( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) ) ||
+                          ( HasPerVertexTexCoord(m) && (!HasPerWedgeTexCoord(m)) && (pi.mask & Mask::IOM_WEDGTEXCOORD) ) 
+                         )
+                       )
                     {
-                        if(multit)
                             fprintf(fpout,
                             "property int texnumber\n"
                             );
@@ -535,9 +539,9 @@ namespace vcg {
                     // this assert triggers when the vn != number of vertexes in vert that are not deleted.
                     assert(j==m.vn);
 
-                    char c = 3;
-                    unsigned char b9 = 9;
-                    unsigned char b6 = 6;
+                    unsigned char b3char = 3;
+                    unsigned char b9char = 9;
+                    unsigned char b6char = 6;
                     FacePointer fp;
                     int vv[3];
                     FaceIterator fi;
@@ -556,15 +560,15 @@ namespace vcg {
                             vv[0]=indices[fp->cV(0)];
                             vv[1]=indices[fp->cV(1)];
                             vv[2]=indices[fp->cV(2)];
-                            fwrite(&c,1,1,fpout);
+                            fwrite(&b3char,sizeof(char),1,fpout);
                             fwrite(vv,sizeof(int),3,fpout);
 
                             if(HasPerFaceFlags(m)&&( pi.mask & Mask::IOM_FACEFLAGS) )
                                 fwrite(&(fp->Flags()),sizeof(int),1,fpout);
 
-                            if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) )
+                            if( HasPerVertexTexCoord(m) && (!HasPerWedgeTexCoord(m)) && (pi.mask & Mask::IOM_WEDGTEXCOORD) )  // Note that you can save VT as WT if you really want it...
                             {
-                                fwrite(&b6,sizeof(char),1,fpout);
+                                fwrite(&b6char,sizeof(char),1,fpout);
                                 float t[6];
                                 for(int k=0;k<3;++k)
                                 {
@@ -575,7 +579,7 @@ namespace vcg {
                             }
                             else if( HasPerWedgeTexCoord(m) && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
                             {
-                                fwrite(&b6,sizeof(char),1,fpout);
+                                fwrite(&b6char,sizeof(char),1,fpout);
                                 float t[6];
                                 for(int k=0;k<3;++k)
                                 {
@@ -585,7 +589,7 @@ namespace vcg {
                                 fwrite(t,sizeof(float),6,fpout);
                             }
 
-                            if(multit)
+                            if(saveTexIndexFlag)
                             {
                                 int t = fp->WT(0).n();
                                 fwrite(&t,sizeof(int),1,fpout);
@@ -597,7 +601,7 @@ namespace vcg {
 
                             if( HasPerWedgeColor(m) && (pi.mask & Mask::IOM_WEDGCOLOR)  )
                             {
-                                fwrite(&b9,sizeof(char),1,fpout);
+                                fwrite(&b9char,sizeof(char),1,fpout);
                                 float t[3];
                                 for(int z=0;z<3;++z)
                                 {
@@ -671,7 +675,7 @@ namespace vcg {
                                     );
                             }
 
-                            if(multit)
+                            if(saveTexIndexFlag)
                             {
                                 fprintf(fpout,"%d ",fp->WT(0).n());
                             }
