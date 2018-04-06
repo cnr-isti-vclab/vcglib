@@ -420,10 +420,10 @@ public:
         delete [] selectBuf;
         return result.size();
     }
+#endif // _I_REALLY_NEED_OLD_GL_PICK_
 
 };
 
-}
-#endif // _I_REALLY_NEED_OLD_GL_PICK_
+} // end namespace vcg
 
 #endif
