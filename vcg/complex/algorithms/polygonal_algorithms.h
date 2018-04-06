@@ -471,6 +471,41 @@ public:
         }
     }
 
+    template <class TriMeshType>
+    static void ReprojectBorder(PolyMeshType &poly_m,
+                                TriMeshType &tri_mesh,
+                                bool FixS=true)
+    {
+        //then reproject on border
+        for (size_t i=0;i<poly_m.vert.size();i++)
+        {
+            if (!poly_m.vert[i].IsB())continue;
+            if (FixS && poly_m.vert[i].IsS())continue;
+
+            CoordType testPos=poly_m.vert[i].P();
+            ScalarType minD=std::numeric_limits<ScalarType>::max();
+            CoordType closPos;
+            for (size_t j=0;j<tri_mesh.face.size();j++)
+                for (size_t k=0;k<3;k++)
+                {
+                    //check if border edge
+                    if (tri_mesh.face[j].FFp(k)!=(&tri_mesh.face[j]))continue;
+
+                    CoordType P0,P1;
+                    P0.Import(tri_mesh.face[j].cP0(k));
+                    P1.Import(tri_mesh.face[j].cP1(k));
+                    vcg::Segment3<ScalarType> Seg(P0,P1);
+                    ScalarType testD;
+                    CoordType closTest;
+                    vcg::SegmentPointDistance(Seg,testPos,closTest,testD);
+                    if (testD>minD)continue;
+                    minD=testD;
+                    closPos=closTest;
+                }
+            poly_m.vert[i].P()=closPos;
+        }
+    }
+
     /*! \brief This function smooth the borders of the polygonal mesh and reproject back to the triangolar one
      * except the vertices that are considered as corner wrt the angleDeg threshold
     */
@@ -507,33 +542,34 @@ public:
                         AvVert[i]*(1-Damp);
             }
 
-            //then reproject on border
-            for (size_t i=0;i<poly_m.vert.size();i++)
-            {
-                if (!poly_m.vert[i].IsB())continue;
-                if (poly_m.vert[i].IsS())continue;
+//            //then reproject on border
+//            for (size_t i=0;i<poly_m.vert.size();i++)
+//            {
+//                if (!poly_m.vert[i].IsB())continue;
+//                if (poly_m.vert[i].IsS())continue;
 
-                CoordType testPos=poly_m.vert[i].P();
-                ScalarType minD=std::numeric_limits<ScalarType>::max();
-                CoordType closPos;
-                for (size_t j=0;j<tri_mesh.face.size();j++)
-                    for (size_t k=0;k<3;k++)
-                    {
-                        if (tri_mesh.face[j].FFp(k)!=(&tri_mesh.face[j]))continue;
+//                CoordType testPos=poly_m.vert[i].P();
+//                ScalarType minD=std::numeric_limits<ScalarType>::max();
+//                CoordType closPos;
+//                for (size_t j=0;j<tri_mesh.face.size();j++)
+//                    for (size_t k=0;k<3;k++)
+//                    {
+//                        if (tri_mesh.face[j].FFp(k)!=(&tri_mesh.face[j]))continue;
 
-                        CoordType P0,P1;
-                        P0.Import(tri_mesh.face[j].cP0(k));
-                        P1.Import(tri_mesh.face[j].cP1(k));
-                        vcg::Segment3<ScalarType> Seg(P0,P1);
-                        ScalarType testD;
-                        CoordType closTest;
-                        vcg::SegmentPointDistance(Seg,testPos,closTest,testD);
-                        if (testD>minD)continue;
-                        minD=testD;
-                        closPos=closTest;
-                    }
-                poly_m.vert[i].P()=closPos;
-            }
+//                        CoordType P0,P1;
+//                        P0.Import(tri_mesh.face[j].cP0(k));
+//                        P1.Import(tri_mesh.face[j].cP1(k));
+//                        vcg::Segment3<ScalarType> Seg(P0,P1);
+//                        ScalarType testD;
+//                        CoordType closTest;
+//                        vcg::SegmentPointDistance(Seg,testPos,closTest,testD);
+//                        if (testD>minD)continue;
+//                        minD=testD;
+//                        closPos=closTest;
+//                    }
+//                poly_m.vert[i].P()=closPos;
+//            }
+            ReprojectBorder(poly_m,tri_mesh);
         }
     }
 
@@ -797,6 +833,47 @@ public:
         vcg::PolygonalAlgorithm<PolyMeshType>::SmoothReprojectPCA<TempMesh>(poly_m,GuideSurf,relaxStep,fixIrr,Damp,SharpDeg,WeightByQuality);
     }
 
+    static void Reproject(PolyMeshType &poly_m,
+                          PolyMeshType &target)
+    {
+        vcg::tri::UpdateTopology<PolyMeshType>::FaceFace(poly_m);
+        vcg::tri::UpdateFlags<PolyMeshType>::VertexBorderFromFaceAdj(poly_m);
+
+        //transform into triangular
+        TempMesh GuideSurf;
+        //vcg::tri::PolygonSupport<TempMesh,PolyMeshType>:(GuideSurf,poly_m);
+        TriangulateToTriMesh<TempMesh>(target,GuideSurf);
+        vcg::tri::UpdateBounding<TempMesh>::Box(GuideSurf);
+        vcg::tri::UpdateNormal<TempMesh>::PerVertexNormalizedPerFace(GuideSurf);
+        vcg::tri::UpdateTopology<TempMesh>::FaceFace(GuideSurf);
+        vcg::tri::UpdateFlags<TempMesh>::FaceBorderFromFF(GuideSurf);
+
+        //initialize the grid
+        typedef typename TempMesh::FaceType FaceType;
+        typedef vcg::GridStaticPtr<FaceType, typename TempMesh::ScalarType> TriMeshGrid;
+        TriMeshGrid grid;
+        grid.Set(GuideSurf.face.begin(),GuideSurf.face.end());
+
+        ScalarType MaxD=GuideSurf.bbox.Diag();
+
+        for (size_t i=0;i<poly_m.vert.size();i++)
+        {
+            //reproject on border later
+            if (poly_m.vert[i].IsB())continue;
+                typename TempMesh::CoordType testPos;
+                testPos.Import(poly_m.vert[i].P());
+                typename TempMesh::CoordType closestPt;
+                typename TempMesh::ScalarType minDist;
+                typename TempMesh::FaceType *f=NULL;
+                typename TempMesh::CoordType norm,ip;
+                f=vcg::tri::GetClosestFaceBase(GuideSurf,grid,testPos,MaxD,minDist,closestPt,norm,ip);
+                poly_m.vert[i].P()=closestPt;
+        }
+        //then reprojec the border
+        ReprojectBorder(poly_m,GuideSurf);
+    }
+
+
     /*! \brief This function return average edge size
     */
     static ScalarType AverageEdge(const PolyMeshType &poly_m)
@@ -928,18 +1005,20 @@ public:
      * this is sometimes useful to remove small edges coming out from a quadrangulation which is not
      * aligned to boundaries
     */
-    static void CollapseBorderSmallEdges(PolyMeshType &poly_m,const ScalarType perc_average=0.3)
+    static bool CollapseBorderSmallEdges(PolyMeshType &poly_m,
+                                         const ScalarType perc_average=0.3)
     {
         //compute the average edge
         ScalarType AvEdge=AverageEdge(poly_m);
         ScalarType minLimit=AvEdge*perc_average;
-
-        while(CollapseBorderSmallEdgesStep(poly_m,minLimit)){};
+        bool collapsed=false;
+        while(CollapseBorderSmallEdgesStep(poly_m,minLimit)){collapsed=true;};
 
         RemoveValence2Faces(poly_m);
 
         //RemoveValence2BorderVertices(poly_m);
         RemoveValence2Vertices(poly_m);
+        return collapsed;
     }
 
     /*! \brief This function use a local global approach to flatten polygonal faces
@@ -1133,6 +1212,89 @@ public:
         ToUpdateF.push_back(IndexF);
     }
 
+    static void ReorderFaceVert(FaceType &f,const size_t &StartI)
+    {
+        if (StartI==0)return;
+        size_t sizeN=f.VN();
+        assert(StartI>=0);
+        assert(StartI<sizeN);
+        std::vector<VertexType*> NewV;
+        for (size_t i=0;i<sizeN;i++)
+        {
+            int IndexV=(i+StartI)%sizeN;
+            NewV.push_back(f.V(IndexV));
+        }
+        //then reset all vertices
+        for (size_t i=0;i<sizeN;i++)
+            f.V(i)=NewV[i];
+    }
+
+    static void MergeAlongEdge(PolyMeshType &poly_m,
+                                FaceType &f,
+                                const size_t &EdgeI)
+    {
+        //cannot be a border
+        assert(f.FFp(EdgeI)!=&f);
+        FaceType *f1=f.FFp(EdgeI);
+        int EdgeI1=f.FFi(EdgeI);
+
+        //sort first face
+        int FirstV0=(EdgeI+1) % f.VN();
+        ReorderFaceVert(f,FirstV0);
+        int FirstV1=(EdgeI1+1)%f1->VN();
+        ReorderFaceVert(*f1,FirstV1);
+
+        std::vector<VertexType*> NewV;
+        for (size_t i=0;i<(f.VN()-1);i++)
+            NewV.push_back(f.V(i));
+
+        for (size_t i=0;i<(f1->VN()-1);i++)
+            NewV.push_back(f1->V(i));
+
+        f.Dealloc();
+        f.Alloc(NewV.size());
+        for (size_t i=0;i<NewV.size();i++)
+            f.V(i)=NewV[i];
+
+        vcg::tri::Allocator<PolyMeshType>::DeleteFace(poly_m,*f1);
+    }
+
+    static void MergeAlongEdges(PolyMeshType &poly_m,
+                                const std::vector<FaceType*> &PolyF,
+                                const std::vector<size_t> &EdgeI)
+    {
+        //create a table with all edges that have to be merged
+        std::set<std::pair<CoordType,CoordType> > NeedMerge;
+        for (size_t i=0;i<PolyF.size();i++)
+        {
+            CoordType P0=PolyF[i]->P0(EdgeI[i]);
+            CoordType P1=PolyF[i]->P1(EdgeI[i]);
+            std::pair<CoordType,CoordType> key(std::min(P0,P1),std::max(P0,P1));
+            NeedMerge.insert(key);
+        }
+
+        //then cycle and collapse
+        do{
+        for (size_t i=0;i<poly_m.face.size();i++)
+        {
+            if (poly_m.face[i].IsD())continue;
+            for (size_t j=0;j<poly_m.face[i].VN();j++)
+            {
+                CoordType P0=poly_m.face[i].P0(j);
+                CoordType P1=poly_m.face[i].P1(j);
+                std::pair<CoordType,CoordType> key(std::min(P0,P1),std::max(P0,P1));
+                if (NeedMerge.count(key)==0)continue;
+
+                //do the merge
+                MergeAlongEdge(poly_m,poly_m.face[i],j);
+                //remove it
+                NeedMerge.erase(key);
+                break;
+            }
+         }
+        vcg::tri::Allocator<PolyMeshType>::CompactEveryVector(poly_m);
+        }while (!NeedMerge.empty());
+    }
 
     static void Triangulate(PolyMeshType &poly_m)
     {
