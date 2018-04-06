@@ -212,6 +212,21 @@ public:
     return area/ScalarType(2.0);
   }
 
+	static ScalarType ComputeBorderLength(MeshType & m)
+	{
+		RequireFFAdjacency(m);
+		ScalarType sum = 0;
+		tri::UpdateTopology<MeshType>::FaceFace(m);
+		ForEachFace(m, [&](FaceType &f) {
+			for (int k=0; k<f.VN(); k++)
+				if (face::IsBorder(f, k))
+				{
+					sum += Distance(f.cP(k), f.cP(1));
+				}
+		});
+		return sum;
+	}
+
   static void ComputePerVertexQualityDistribution( MeshType & m, Distribution<ScalarType> &h, bool selectionOnly = false)    // V1.0
   {
     tri::RequirePerVertexQuality(m);

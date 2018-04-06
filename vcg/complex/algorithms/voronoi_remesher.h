@@ -133,7 +133,7 @@ protected:
 	}
 
 public:
-	static const int VoroRelaxationStep = 20;
+	static const int VoroRelaxationStep = 30;
 
 	///
 	/// \brief Remesh the main function that remeshes a mesh preserving creases.
@@ -355,7 +355,7 @@ protected:
 
 		// refine to obtain a base mesh
 		VoronoiProcessingParameter vpp;
-		vpp.refinementRatio = 4.0f;
+		vpp.refinementRatio = 5.0f;
 		Voronoi::PreprocessForVoronoi(baseMesh, samplingRadius, vpp);
 
 		// Poisson sampling preserving border
@@ -372,7 +372,15 @@ protected:
 
 		// Montecarlo oversampling
 		Mesh montecarloMesh;
-		int poissonCount = SurfaceSampler::ComputePoissonSampleNum(original, samplingRadius) * 0.7;
+//		const int poissonCount = SurfaceSampler::ComputePoissonSampleNum(original, samplingRadius)/* * 0.7*/;
+		int poissonCount = 0;
+		{
+			const ScalarType meshArea = Stat<Mesh>::ComputeMeshArea(original);
+			const ScalarType meshBoundary = Stat<Mesh>::ComputeBorderLength(original);
+			const double factor = math::Sqrt(3)/2;
+			const ScalarType areaPerSample = samplingRadius*samplingRadius * factor;
+			poissonCount = meshArea / areaPerSample - meshBoundary * samplingRadius * factor * 0.5; // totalArea / (r^2 * sqrt(3)/2) - (totalBoundary * r * sqrt(3)/4)
+		}
 
 //		std::cout << "poisson Count: " << poissonCount << std::endl;
 		if (poissonCount <= 0)
@@ -386,7 +394,7 @@ protected:
 		else
 		{
 			// Montecarlo poisson sampling
-			SurfaceSampler::MontecarloPoisson(original, mps, poissonCount * 20);
+			SurfaceSampler::MontecarloPoisson(original, mps, poissonCount * 40);
 			BuildMeshFromCoordVector(montecarloMesh,sampleVec);
 
 #ifdef DEBUG_VORO
@@ -420,6 +428,7 @@ protected:
 		// restricted relaxation with fixed points
 		vpp.seedPerturbationProbability = 0.0f;
 		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep, vpp);
+
 
 #ifdef DEBUG_VORO
 		BuildMeshFromCoordVector(poissonMesh,seedPointVec);
