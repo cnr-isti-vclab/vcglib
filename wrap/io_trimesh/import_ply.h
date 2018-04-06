@@ -221,10 +221,10 @@ static const  PropDescriptor &FaceDesc(int i)
 /* 15 */	{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_UCHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 /* 16 */	{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_CHAR,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
 /* 17 */	{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_INT,   ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 18 */	{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_CHAR,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 19 */	{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_UCHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 20 */	{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_INT,   ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
-/* 21 */	{"face", "vertex_indices", ply::T_CHAR,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_UCHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0}
+/* 18 */	{"face", "vertex_indices", ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_USHORT,ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 19 */	{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_CHAR,  ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 20 */	{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_UCHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
+/* 21 */	{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux,v),           1,0,ply::T_INT,   ply::T_CHAR,offsetof(LoadPly_FaceAux,size)   ,0},
     };
     return qf[i];
 }
