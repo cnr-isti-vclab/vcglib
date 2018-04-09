@@ -338,7 +338,7 @@ namespace vcg
 		/*************************************************************************************************************************************************************************/
 
 		NotThreadSafeGLMeshAttributesMultiViewerBOManager(/*const*/ MESH_TYPE& mesh, MemoryInfo& meminfo, size_t perbatchprimitives)
-			:_mesh(mesh), _gpumeminfo(meminfo), _bo(INT_ATT_NAMES::enumArity(), NULL), _currallocatedboatt(), _perbatchprim(perbatchprimitives), _chunkmap(), _borendering(false), _edge(), _meshverticeswhenedgeindiceswerecomputed(0), _meshtriangleswhenedgeindiceswerecomputed(0), _tr(), _debugmode(false), _loginfo(), _meaningfulattsperprimitive(PR_ARITY, InternalRendAtts())
+			:_mesh(mesh), _gpumeminfo(meminfo), _bo(INT_ATT_NAMES::enumArity(), NULL), _currallocatedboatt(), _borendering(false), _perbatchprim(perbatchprimitives), _chunkmap(),  _edge(), _meshverticeswhenedgeindiceswerecomputed(0), _meshtriangleswhenedgeindiceswerecomputed(0), _tr(), _debugmode(false), _loginfo(), _meaningfulattsperprimitive(PR_ARITY, InternalRendAtts())
 		{
 			_tr.SetIdentity();
 			_bo[INT_ATT_NAMES::ATT_VERTPOSITION] = new GLBufferObject(3, GL_FLOAT, GL_VERTEX_ARRAY, GL_ARRAY_BUFFER);
@@ -635,7 +635,7 @@ namespace vcg
 					}
 					else
 					{
-						bool meshchanged = ((_mesh.FN() != _meshtriangleswhenedgeindiceswerecomputed) || (_mesh.VN() != _meshverticeswhenedgeindiceswerecomputed));
+						bool meshchanged = ((size_t(_mesh.FN()) != _meshtriangleswhenedgeindiceswerecomputed) || (size_t(_mesh.VN()) != _meshverticeswhenedgeindiceswerecomputed));
 						tobedeallocated[INT_ATT_NAMES::ATT_EDGEINDICES] = (notempty && !hasmeshattribute) ||
 							(notempty && !meaningfulrequiredbyatleastoneview[INT_ATT_NAMES::ATT_EDGEINDICES]) ||
 							(notempty && !(isvalid) && meshchanged);
@@ -1089,10 +1089,10 @@ namespace vcg
 						}
 
 
-						if ((faceind == tn - 1) || (chunkindex == facechunk - 1))
+						if ((faceind == int(tn - 1)) || (chunkindex == size_t(facechunk - 1) ))
 						{
 							size_t chunksize = facechunk;
-							if (faceind == tn - 1)
+							if (faceind == int(tn - 1))
 								chunksize = chunkindex + 1;
 
 							if (attributestobeupdated[INT_ATT_NAMES::ATT_VERTPOSITION])
@@ -1480,7 +1480,7 @@ namespace vcg
 					glEnable(GL_TEXTURE_2D);
 					for (std::vector< std::pair<short, GLuint> >::const_iterator it = _texindnumtriangles.begin(); it != _texindnumtriangles.end(); ++it)
 					{
-						if ((it->first != -1) && (it->first < textureindex.size()))
+						if ((int(it->first) != -1) && (size_t(it->first) < textureindex.size()))
 							glBindTexture(GL_TEXTURE_2D, textureindex[it->first]);
 						else
 							glBindTexture(GL_TEXTURE_2D, 0);
@@ -2295,12 +2295,12 @@ namespace vcg
 		struct GLBufferObject
 		{
 			GLBufferObject(size_t components, GLenum gltype, GLenum clientstatetag, GLenum target)
-				:_size(0), _components(components), _isvalid(false), _gltype(gltype), _clientstatetag(clientstatetag), _target(target), _bohandle(0)
+				:_size(0), _components(components), _isvalid(false), _gltype(gltype), _target(target), _clientstatetag(clientstatetag), _bohandle(0)
 			{
 			}
 
 			GLBufferObject(size_t components, GLenum gltype, GLenum target)
-				:_size(0), _components(components), _isvalid(false), _gltype(gltype), _clientstatetag(), _target(target), _bohandle(0)
+				:_size(0), _components(components), _isvalid(false), _gltype(gltype), _target(target), _clientstatetag(), _bohandle(0)
 			{
 			}
 

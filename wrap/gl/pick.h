@@ -244,7 +244,7 @@ public:
   }
 
 
-
+#ifdef _I_REALLY_NEED_OLD_GL_PICK_
  // Same of above but it also assumes that you want only visible faces.
  // Visibility is computed according to the current depth buffer.
     static int OldPickFaceVisible(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &resultZ, int width=4, int height=4, bool sorted=true)
@@ -288,7 +288,6 @@ public:
         delete [] buffer;
         return resultZ.size();
     }
-
 
     static int OldPickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width=4, int height=4,bool sorted=true)
       {
@@ -421,9 +420,10 @@ public:
         delete [] selectBuf;
         return result.size();
     }
+#endif // _I_REALLY_NEED_OLD_GL_PICK_
 
 };
 
-}
+} // end namespace vcg
 
 #endif
