@@ -155,7 +155,8 @@ class QuadricTexHelper
            return qv[i].second;
        }
 
-       assert(0);
+       assert(0);       
+       return qv[0].second; 
     }
       static math::Quadric<double> &Qd3(VertexType *v) {return TD3()[*v];}
     static math::Quadric<double> &Qd3(VertexType &v) {return TD3()[v];}
