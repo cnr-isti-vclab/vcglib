@@ -119,7 +119,7 @@ public:
   {
     ScalarType closestDist;
     CoordType closestP;
-    return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, p.gridBailout, closestDist, closestP);
+    return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, this->par.gridBailout, closestDist, closestP);
   }
   
   FaceType *GetClosestFaceIP(const CoordType &p, CoordType &ip)
