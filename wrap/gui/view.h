@@ -165,8 +165,7 @@ template <class T> void View<T>::SetView(const float *_proj,
     viewport[i] = _viewport[i];
   }
   matrix = proj*model;
-  inverse = matrix;
-  Invert(inverse);
+  inverse = vcg::Inverse(matrix);;
 }
 
 template <class T> Point3<T> View<T>::ViewPoint() const {
