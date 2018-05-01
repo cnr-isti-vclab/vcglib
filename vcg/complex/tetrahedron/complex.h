@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -20,20 +20,46 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#ifndef VCG_ALL_TYPES_H
-#define VCG_ALL_TYPES_H
 
-namespace vcg{
+#ifndef __VCG_TETRA_MESH_H
+#define __VCG_TETRA_MESH_H
+#define __VCG_TETRA_MESH
 
-struct AllTypes{
-		struct AVertexType {};
-		struct AEdgeType {};
-		struct AFaceType {};
-		struct AHEdgeType {};
-		struct ATetraType {};
-};
+#include <cassert>
+#include <cstring>
+#include <string>
+#include <ctime>
+#include <vector>
+#include <set>
+#include <stack>
+#include <queue>
+#include <map>
+#include <algorithm>
+#include <iostream>
+#include <stdexcept>
+#include <limits>
+#include <iterator>
+#include <typeindex>
+#include <wrap/callback.h>
+#include <vcg/complex/exception.h>
+#include <vcg/container/simple_temporary_data.h>
+#include <vcg/complex/tetrahedron/base.h>
+#include <vcg/complex/allocate.h>
+#include <vcg/simplex/face/pos.h>
+#include <vcg/simplex/face/topology.h>
+#include <vcg/simplex/edge/pos.h>
+#include <vcg/simplex/edge/topology.h>
+#include <vcg/simplex/tetrahedron/tetrahedron.h>
+#include <vcg/simplex/tetrahedron/pos.h>
+#include <vcg/complex/foreach.h>
+#include <vcg/complex/algorithms/update/flag.h>
+#include <vcg/complex/algorithms/update/selection.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/mesh_assert.h>
+#include <vcg/complex/append.h>
 
+#undef __VCG_TETRA_MESH
+#endif
 
-}
-
-#endif // USED_TYPES_H

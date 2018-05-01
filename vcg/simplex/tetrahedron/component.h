@@ -65,6 +65,7 @@ public:
 		v[0]=0;
 		v[1]=0;
 		v[2]=0;
+		v[3]=0;
 	}
 
   inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<4); return v[j]; }
@@ -82,23 +83,29 @@ public:
 	inline       typename T::VertexType *       &  V0( const int j )       { return V(j);}
 	inline       typename T::VertexType *       &  V1( const int j )       { return V((j+1)%4);}
 	inline       typename T::VertexType *       &  V2( const int j )       { return V((j+2)%4);}
+	inline       typename T::VertexType *       &  V3( const int j )       { return V((j+3)%4);}
 	inline const typename T::VertexType * const &  V0( const int j ) const { return V(j);}
 	inline const typename T::VertexType * const &  V1( const int j ) const { return V((j+1)%4);}
 	inline const typename T::VertexType * const &  V2( const int j ) const { return V((j+2)%4);}
+	inline const typename T::VertexType * const &  V3( const int j ) const { return V((j+3)%4);}
 	inline const typename T::VertexType * const & cV0( const int j ) const { return cV(j);}
 	inline const typename T::VertexType * const & cV1( const int j ) const { return cV((j+1)%4);}
 	inline const typename T::VertexType * const & cV2( const int j ) const { return cV((j+2)%4);}
+	inline const typename T::VertexType * const & cV3( const int j ) const { return cV((j+3)%4);}
 
 	/// Shortcut to get vertex values
 	inline       typename T::CoordType &  P0( const int j )       { return V(j)->P();}
 	inline       typename T::CoordType &  P1( const int j )       { return V((j+1)%4)->P();}
 	inline       typename T::CoordType &  P2( const int j )       { return V((j+2)%4)->P();}
+	inline       typename T::CoordType &  P3( const int j )       { return V((j+3)%4)->P();}
 	inline const typename T::CoordType &  P0( const int j ) const { return V(j)->P();}
 	inline const typename T::CoordType &  P1( const int j ) const { return V((j+1)%4)->P();}
 	inline const typename T::CoordType &  P2( const int j ) const { return V((j+2)%4)->P();}
+	inline const typename T::CoordType &  P3( const int j ) const { return V((j+3)%4)->P();}
 	inline const typename T::CoordType & cP0( const int j ) const { return cV(j)->P();}
 	inline const typename T::CoordType & cP1( const int j ) const { return cV((j+1)%4)->P();}
 	inline const typename T::CoordType & cP2( const int j ) const { return cV((j+2)%4)->P();}
+	inline const typename T::CoordType & cP3( const int j ) const { return cV((j+3)%4)->P();}
 
   static bool HasVertexRef()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("VertexRef"));T::Name(name);}
@@ -214,13 +221,17 @@ public:
 template <class T> class VTAdj: public T {
 public:
 	VTAdj() { _vtp[0]=0; _vtp[1]=0; _vtp[2]=0; _vtp[3]=0; }
+
 	typename T::TetraPointer & VTp( const int j ) { assert( j >= 0 && j < 4 ); return _vtp[j]; }
 	typename T::TetraPointer const VTp( const int j ) const { assert( j >= 0 && j < 4 ); return _vtp[j]; }
 	typename T::TetraPointer const cVTp( const int j ) const { assert( j >= 0 && j < 4 ); return _vtp[j]; }
+	
 	char & VTi( const int j ) { return _vti[j]; }
 	const char & cVTi( const int j ) const { return _vti[j]; }
+	
 	static bool HasVTAdjacency() { return true; }
 	static bool HasVTAdjacencyOcc() { return false; }
+	
 	static void Name( std::vector< std::string > & name ) { name.push_back( std::string("VTAdj") ); T::Name(name); }
 
 private:
@@ -246,8 +257,10 @@ public:
 
   typename T::TetraPointer        &TTp1( const int j )       { return TTp((j+1)%4);}
 	typename T::TetraPointer        &TTp2( const int j )       { return TTp((j+2)%4);}
+	typename T::TetraPointer        &TTp3( const int j )       { return TTp((j+3)%4);}
 	typename T::TetraPointer  const  TTp1( const int j ) const { return TTp((j+1)%4);}
 	typename T::TetraPointer  const  TTp2( const int j ) const { return TTp((j+2)%4);}
+	typename T::TetraPointer  const  TTp3( const int j ) const { return TTp((j+3)%4);}
 
 	bool IsBorderF(const int & i)  const { assert( (i>=0) && (i < 4)); { return TTp(i) == this;}}
 
