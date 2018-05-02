@@ -275,10 +275,79 @@ public:
 private:
 	int  _flags;
 };
+
 /*-------------------------- QUALITY  ----------------------------------------*/ 
+template <class A, class T> class Quality: public T {
+public:
+  typedef A QualityType;
+  Quality():_quality(0) {}
+  QualityType &Q()       { return _quality; }
+  QualityType cQ() const { return _quality; }
+
+    template <class RightValueType>
+    void ImportData(const RightValueType & rightT){
+      if(rightT.IsQualityEnabled())
+        Q() = rightT.cQ();
+      T::ImportData(rightT);
+    }
+
+  static bool HasQuality()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));T::Name(name);}
+private:
+  QualityType _quality;
+};
+
+template <class T> class Qualityf: public Quality<float, T> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityf"));T::Name(name);}
+};
+template <class T> class Qualityd: public Quality<double, T> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));T::Name(name);}
+};
+
+/*-------------------------- Quality3  ----------------------------------*/
+template <class A, class T> class Quality3: public T {
+public:
+  typedef vcg::Point3<A> Quality3Type;
+  Quality3Type &Q3()       { return _quality; }
+  Quality3Type cQ3() const { return _quality; }
+  template <class RightValueType>
+  void ImportData(const RightValueType & rightT){
+    if(rightT.IsQuality3Enabled()) Q3() = rightT.cQ3();
+    T::ImportData(rightT);
+  }
+
+  static bool HasQuality3()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality3"));T::Name(name);}
+private:
+  Quality3Type _quality;
+};
+
+template <class T> class Quality3f: public Quality3<float, T> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality3f"));T::Name(name);}
+};
+template <class T> class Quality3d: public Quality3<double, T> {
+public:  static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality3d"));T::Name(name);}
+};
 
 /*-------------------------- COLOR  ----------------------------------------*/ 
+template <class A, class T> class Color: public T {
+public:
+  typedef A ColorType;
+  Color():_color(vcg::Color4b::White) {}
+  ColorType &C()       { return _color; }
+  ColorType cC() const { return _color; }
+  template <class RightValueType>
+  void ImportData(const RightValueType & rightT){
+    if(rightT.IsColorEnabled()) C() = rightT.cC();
+    T::ImportData(rightT);
+  }
 
+  static bool HasColor()   { return true; }
+  static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
+
+private:
+  ColorType _color;
+};
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/ 
 
 // template <class T> class EmptyMark: public T {
