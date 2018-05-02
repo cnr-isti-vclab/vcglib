@@ -919,6 +919,20 @@ public:
     --m.tn;
   }
 
+
+//TODO:
+  // static void PermutateTetraVector(MeshType & m, PointerUpdater<TetraPointer> & pu)
+  // {
+  //   if (m.tetra.empty())
+  //     return;
+  //   for (size_t i = 0; i < m.tetra.size(); ++i)
+  //   {
+  //     if (pu.remap[i] < size_t(m.tn))
+  //     {
+
+  //     }
+  //   }
+  // }
   /*
             Function to rearrange the vertex vector according to a given index permutation
             the permutation is vector such that after calling this function

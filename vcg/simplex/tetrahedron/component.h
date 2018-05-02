@@ -40,25 +40,106 @@ namespace vcg {
   namespace tetra {
 /*
 Some naming Rules
-All the Components that can be added to a vertex should be defined in the namespace vert:
-
+All the Components that can be added to a tetra should be defined in the namespace tetra:
 */
-
-/*-------------------------- VERTEX ----------------------------------------*/ 
-template <class T> class EmptyVertexRef: public T {
+template <class T> class EmptyCore : public T {
 public:
- // typedef typename T::VertexType VertexType;
- // typedef typename T::CoordType CoordType;
-  inline typename T::VertexType *       & V( const int j ) 	    {	assert(0);		static typename T::VertexType *vp=0; return vp; }
-  inline typename T::VertexType * const & V( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp; }
+	//Empty vertexref
+	inline typename T::VertexType *       & V( const int j ) 	    {	assert(0);		static typename T::VertexType *vp=0; return vp; }
+	inline typename T::VertexType * const & V( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp; }
 	inline typename T::VertexType * const  cV( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp;	}
 	inline       typename T::CoordType & P( const int j ) 	    {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType & P( const int j ) const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 	inline const typename T::CoordType &cP( const int j ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
-  static bool HasVertexRef()   { return false; }
-	static void Name(std::vector<std::string> & name){T::Name(name);}
+	
+	static bool HasVertexRef()   { return false; }
+	static bool HasTVAdjacency() { return false; }
 
-};
+	//Empty normals
+	typedef typename T::VertexType::NormalType NormalType;
+	NormalType &N(const int & ){ static NormalType dummynormal(0, 0, 0); assert(0); return dummynormal; }
+	const NormalType cN(const int & ) const { static NormalType dummynormal(0, 0, 0); assert(0); return dummynormal; }
+  
+	static bool HasFaceNormal()      { return false; }
+	static bool HasFaceNormalOcc()   { return false; }
+
+	//Empty color
+	typedef vcg::Color4b ColorType;
+	ColorType &C()       { static ColorType dummycolor(vcg::Color4b::White); assert(0); return dummycolor; }
+	ColorType cC() const { static ColorType dummycolor(vcg::Color4b::White); assert(0); return dummycolor; }
+
+	static bool HasColor() { return false; }
+	static bool IsColorEnabled() const { return T::TetraType::HasColor(); }
+
+	//Empty Quality
+	typedef float QualityType;
+	typedef vcg::Point3f Quality3Type;
+	QualityType &Q()       { static QualityType dummyquality(0); assert(0); return dummyquality; }
+	QualityType cQ() const { static QualityType dummyquality(0); assert(0); return dummyquality; }
+	Quality3Type &Q3()       { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
+	Quality3Type cQ3() const { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
+
+	static bool HasQuality() { return false; }
+	static bool HasQuality3() { return false; }
+	static bool IsQualityEnabled() const { return T::TetraType::HasQuality(); }
+	static bool IsQuality3Enabled() const { return T::TetraType::HasQuality3(); }
+
+	//Empty flags
+  int &Flags() { static int dummyflags(0); assert(0); return dummyflags; }
+  int cFlags() const { return 0; }
+
+  static bool HasFlags()      { return false; }
+  static bool HasFlagsOcc()   { return false; }
+
+	//Empty IMark
+	typedef int MarkType;
+
+  inline void InitIMark()    {  }
+  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
+  inline const int IMark() const {return 0;}
+  
+	static bool HasMark()   { return false; }
+  static bool HasMarkOcc()   { return false; }
+	
+	//Empty Adjacency
+	typedef int VFAdjType;
+	typename T::TetraPointer & VTp( const int ) { static typename T::TetraPointer tp=0; assert(0); return tp; }
+	typename T::TetraPointer const cVTp( const int ) const { static typename T::TetraPointer const tp=0; assert(0); return tp; }
+
+	typename T::TetraPointer & TTp( const int ) { static typename T::TetraPointer tp=0; assert(0); return tp; }
+	typename T::TetraPointer const cTTp( const int ) const { static typename T::TetraPointer const tp=0; assert(0); return tp; }
+
+	char & VTi( const int j ) { static char z=0; assert(0); return z; }
+	char & TTi( const int j ) { static char z=0; assert(0); return z; }
+	
+	static bool HasVTAdjacency() { return false; }
+	static bool HasTTAdjacency() { return false; }
+	static bool HasTTAdjacencyOcc() { return false; }
+	static bool HasVTAdjacencyOcc() { return false; }
+
+	template <class RightValuteType>
+	void ImportData(const RightValuteType & ) {}
+
+	static void Name(std::vector<std::string> & name) { T::Name(name); }
+
+
+
+}
+/*-------------------------- VERTEX ----------------------------------------*/ 
+// template <class T> class EmptyVertexRef: public T {
+// public:
+//  // typedef typename T::VertexType VertexType;
+//  // typedef typename T::CoordType CoordType;
+//   inline typename T::VertexType *       & V( const int j ) 	    {	assert(0);		static typename T::VertexType *vp=0; return vp; }
+//   inline typename T::VertexType * const & V( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp; }
+// 	inline typename T::VertexType * const  cV( const int j ) const {	assert(0);		static typename T::VertexType *vp=0; return vp;	}
+// 	inline       typename T::CoordType & P( const int j ) 	    {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
+// 	inline const typename T::CoordType & P( const int j ) const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
+// 	inline const typename T::CoordType &cP( const int j ) const	{	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
+  
+// 	static bool HasVertexRef()   { return false; }
+// };
+
 template <class T> class VertexRef: public T {
 public:
 	VertexRef(){
@@ -107,9 +188,13 @@ public:
 	inline const typename T::CoordType & cP2( const int j ) const { return cV((j+2)%4)->P();}
 	inline const typename T::CoordType & cP3( const int j ) const { return cV((j+3)%4)->P();}
 
-  static bool HasVertexRef()   { return true; }
-	static void Name(std::vector<std::string> & name){name.push_back(std::string("VertexRef"));T::Name(name);}
+	static bool HasVertexRef()   { return true; }
+	static bool HasTVAdjacency() { return true; }
 
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("VertexRef"));T::Name(name);}
+	
+	template <class RightValueType>
+	void ImportData(const RightValuteType & rTetra) { T::ImportData(rTetra); }
 
   private:
   typename T::VertexType *v[4];
@@ -117,79 +202,101 @@ public:
 
 
 /*------------------------- FACE NORMAL -----------------------------------------*/
-template <class A, class T> class EmptyFaceNormal: public T {
-public:
-	typedef ::vcg::Point3<A> NormalType;
-	/// Return the vector of Flags(), senza effettuare controlli sui bit
-	NormalType N(const int & ){ static int dummynormal(0); return dummynormal; }
-  const NormalType cN(const int & ) const { return 0; }
-  static bool HasFaceNormal()   { return false; }
-  static bool HasFaceNormalOcc()   { return false; }
-	static void Name(std::vector<std::string> & name){T::Name(name);}
+// template <class A, class T> class EmptyFaceNormal: public T {
+// public:
+// 	typedef ::vcg::Point3<A> NormalType;
+// 	/// Return the vector of Flags(), senza effettuare controlli sui bit
+// 	NormalType N(const int & ){ static int dummynormal(0); return dummynormal; }
+//   const NormalType cN(const int & ) const { return 0; }
+//   static bool HasFaceNormal()   { return false; }
+//   static bool HasFaceNormalOcc()   { return false; }
+// 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
-};
+// };
 
 template <class A, class T> class FaceNormal:  public T {
 public:
-	typedef ::vcg::Point3<A> NormalType;
+	typedef A NormalType;
 
-	NormalType N(const int & i){  assert((i>=0)&&(i < 4)); return _facenormals[i]; }
-  const NormalType cN(const int & i) const { assert((i>=0)&&(i < 4)); return _facenormals[i]; }
+	inline NormalType N(const int & i){  assert((i>=0)&&(i < 4)); return _facenormals[i]; }
+  inline NormalType cN(const int & i) const { assert((i>=0)&&(i < 4)); return _facenormals[i]; }
   static bool HasFaceNormals()   { return true; }
   static bool HasFaceNormalOcc()   { return false; }
+
+  template <class RightValueType>
+  void ImportData(const RightValueType & rightT)
+  {
+    if(rightT.IsNormalEnabled()) N().Import(rightT.cN());
+    T::ImportData(rightT);
+  }
+
   static void Name(std::vector<std::string> & name){name.push_back(std::string("FaceNormal"));T::Name(name);}
 	
 private:
   NormalType  _facenormals[4];    
 };
 
-template <class T> class FaceNormal3f: public FaceNormal<float,T>{
+template <class T> class FaceNormal3f: public FaceNormal<vcg::Point3f, T>{
 public:static void Name(std::vector<std::string> & name){name.push_back(std::string("FaceNormal3f"));T::Name(name);} };
 
-template <class T> class FaceNormal3d: public FaceNormal<double,T>{
+template <class T> class FaceNormal3d: public FaceNormal<vcg::Point3d, T>{
 public:static void Name(std::vector<std::string> & name){name.push_back(std::string("FaceNormal3d"));T::Name(name);} };
 
 /*------------------------- FLAGS -----------------------------------------*/ 
-template <class T> class EmptyBitFlags: public T {
-public:
-	/// Return the vector of Flags(), senza effettuare controlli sui bit
-  int &Flags() { static int dummyflags(0); return dummyflags; }
-  const int Flags() const { return 0; }
-  static bool HasFlags()   { return false; }
-  static bool HasFlagsOcc()   { return false; }
-	static void Name(std::vector<std::string> & name){T::Name(name);}
+// template <class T> class EmptyBitFlags: public T {
+// public:
+// 	/// Return the vector of Flags(), senza effettuare controlli sui bit
+//   int &Flags() { static int dummyflags(0); return dummyflags; }
+//   const int Flags() const { return 0; }
+//   static bool HasFlags()   { return false; }
+//   static bool HasFlagsOcc()   { return false; }
+// 	static void Name(std::vector<std::string> & name){T::Name(name);}
 
-};
+// };
 
 template <class T> class BitFlags:  public T {
 public:
-  BitFlags(){_flags=0;}
-   int &Flags() {return _flags; }
-   const int Flags() const {return _flags; }
-  static bool HasFlags()   { return true; }
-  static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
+	typedef int FlagType;
+	BitFlags(){_flags=0;}
+	int &Flags() {return _flags; }
+	int Flags() const {return _flags; }
+
+	template <class RightValueType>
+	void ImportData(const RightValueType & rightT){
+		if(RightValueType::HasFlags())
+			Flags() = rightT.cFlags();
+		T::ImportData(rightT);
+	}
+
+	static bool HasFlags()   { return true; }
+	static void Name(std::vector<std::string> & name){name.push_back(std::string("BitFlags"));T::Name(name);}
 
 
 private:
-  int  _flags;    
+	int  _flags;
 };
+/*-------------------------- QUALITY  ----------------------------------------*/ 
+
+/*-------------------------- COLOR  ----------------------------------------*/ 
+
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/ 
 
-template <class T> class EmptyMark: public T {
-public:
-	typedef int MarkType;
-  static bool HasMark()   { return false; }
-  static bool HasMarkOcc()   { return false; }
-  inline void InitIMark()    {  }
-  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
-  inline const int IMark() const {return 0;}
-  static void Name(std::vector<std::string> & name){T::Name(name);}
+// template <class T> class EmptyMark: public T {
+// public:
+// 	typedef int MarkType;
+//   static bool HasMark()   { return false; }
+//   static bool HasMarkOcc()   { return false; }
+//   inline void InitIMark()    {  }
+//   inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
+//   inline const int IMark() const {return 0;}
+//   static void Name(std::vector<std::string> & name){T::Name(name);}
 
-};
+// };
+
 template <class T> class Mark: public T {
 public:
   static bool HasMark()      { return true; }
-  static bool HasMarkOcc()   { return true; }
+  static bool HasMarkOcc()   { return false; }
   inline void InitIMark()    { _imark = 0; }
   inline int & IMark()       { return _imark;}
   inline const int & IMark() const {return _imark;}
@@ -202,21 +309,21 @@ public:
 
 /*----------------------------- VTADJ ------------------------------*/ 
 
-template <class T> class EmptyAdj: public T {
-public:
-	typedef int VFAdjType;
-	typename T::TetraPointer & VTp( const int ) { static typename T::TetraPointer tp=0; return tp; }
-	typename T::TetraPointer const cVTp( const int ) const { static typename T::TetraPointer const tp=0; return tp; }
-	typename T::TetraPointer & TTp( const int ) { static typename T::TetraPointer tp=0; return tp; }
-	typename T::TetraPointer const cTTp( const int ) const { static typename T::TetraPointer const tp=0; return tp; }
-	char & VTi( const int j ) { static char z=0; return z; }
-	char & TTi( const int j ) { static char z=0; return z; }
-	static bool HasVTAdjacency() { return false; }
-	static bool HasTTAdjacency() { return false; }
-	static bool HasTTAdjacencyOcc() { return false; }
-	static bool HasVTAdjacencyOcc() { return false; }
-	static void Name( std::vector< std::string > & name ){ T::Name(name); }
-};
+// template <class T> class EmptyAdj: public T {
+// public:
+// 	typedef int VFAdjType;
+// 	typename T::TetraPointer & VTp( const int ) { static typename T::TetraPointer tp=0; return tp; }
+// 	typename T::TetraPointer const cVTp( const int ) const { static typename T::TetraPointer const tp=0; return tp; }
+// 	typename T::TetraPointer & TTp( const int ) { static typename T::TetraPointer tp=0; return tp; }
+// 	typename T::TetraPointer const cTTp( const int ) const { static typename T::TetraPointer const tp=0; return tp; }
+// 	char & VTi( const int j ) { static char z=0; return z; }
+// 	char & TTi( const int j ) { static char z=0; return z; }
+// 	static bool HasVTAdjacency() { return false; }
+// 	static bool HasTTAdjacency() { return false; }
+// 	static bool HasTTAdjacencyOcc() { return false; }
+// 	static bool HasVTAdjacencyOcc() { return false; }
+// 	static void Name( std::vector< std::string > & name ){ T::Name(name); }
+// };
 
 template <class T> class VTAdj: public T {
 public:
