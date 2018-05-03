@@ -29,22 +29,22 @@
 namespace vcg
 {
 
-class PointerToAttribute
-{
-  public:
-    SimpleTempDataBase *_handle; // pointer to the SimpleTempData that stores the attribute
-    std::string _name;           // name of the attribute
-    int _sizeof;                 // size of the attribute type (used only with VMI loading)
-    int _padding;                // padding 	(used only with VMI loading)
+//class PointerToAttribute
+//{
+//  public:
+//    SimpleTempDataBase *_handle; // pointer to the SimpleTempData that stores the attribute
+//    std::string _name;           // name of the attribute
+//    int _sizeof;                 // size of the attribute type (used only with VMI loading)
+//    int _padding;                // padding 	(used only with VMI loading)
 
-    int n_attr; // unique ID of the attribute
-    std::type_index _type;
-    void Resize(size_t sz) { ((SimpleTempDataBase *)_handle)->Resize(sz); }
-    void Reorder(std::vector<size_t> &newVertIndex) { ((SimpleTempDataBase *)_handle)->Reorder(newVertIndex); }
-    bool operator<(const PointerToAttribute b) const { return (_name.empty() && b._name.empty()) ? (_handle < b._handle) : (_name < b._name); }
+//    int n_attr; // unique ID of the attribute
+//    std::type_index _type;
+//    void Resize(size_t sz) { ((SimpleTempDataBase *)_handle)->Resize(sz); }
+//    void Reorder(std::vector<size_t> &newVertIndex) { ((SimpleTempDataBase *)_handle)->Reorder(newVertIndex); }
+//    bool operator<(const PointerToAttribute b) const { return (_name.empty() && b._name.empty()) ? (_handle < b._handle) : (_name < b._name); }
 
-    PointerToAttribute() : _type(typeid(void)){};
-};
+//    PointerToAttribute() : _type(typeid(void)){};
+//};
 
 namespace tetra
 {
@@ -195,7 +195,7 @@ class TetraMesh
     typedef typename TetraMesh::TetraType TetraType;
     typedef typename TetraMesh::TetraPointer TetraPointer;
     typedef typename TetraMesh::ConstTetraPointer ConstTetraPointer;
-    typedef typename TetraMesh::TetraIterator TetraIterator
+    typedef typename TetraMesh::TetraIterator TetraIterator;
     typedef typename TetraMesh::ConstTetraIterator ConstTetraIterator;
 
     typedef vcg::PointerToAttribute PointerToAttribute;
@@ -402,7 +402,8 @@ class TetraMesh
         vn = 0;
         en = 0;
         fn = 0;
-        hn = 0;
+        tn = 0;
+//        hn = 0;
         imark = 0;
         C() = Color4b::Gray;
     }
@@ -692,17 +693,19 @@ bool HasFVAdjacency(const TetraMeshType &m) { return tetra::FaceVectorHasFVAdjac
 //:::::::::::TETRA::::::::::::::::
 template <class TetraType>
 bool TetraVectorHasVTAdjacency(const std::vector<TetraType> &) { return TetraType::HasVTAdjacency(); }
+template <class TetraType>
+bool TetraVectorHasTTAdjacency(const std::vector<TetraType> &) { return TetraType::HasTTAdjacency(); }
 
 template <class TetraMeshType>
 bool HasTVAdjacency(const TetraMeshType &m) { return tetra::TetraVectorHasVTAdjacency(m.tetra); }
-
 template <class TetraMeshType>
 bool HasVFAdjacency(const TetraMeshType &m) { return tetra::FaceVectorHasVFAdjacency(m.face) && tetra::VertexVectorHasVFAdjacency(m.vert); }
 template <class TetraMeshType>
 bool HasVEAdjacency(const TetraMeshType &m) { return tetra::EdgeVectorHasVEAdjacency(m.edge) && tetra::VertexVectorHasVEAdjacency(m.vert); }
 template <class TetraMeshType>
 bool HasVTAdjacency(const TetraMeshType &m) { return tetra::VertexVectorHasVTAdjacency(m.vert) && tetra::TetraVectorHasVTAdjacency(m.tetra); }
-
+template <class TetraMeshType>
+bool HasTTAdjacency(const TetraMeshType &m) { return tetra::TetraVectorHasTTAdjacency(m.tetra); }
 //template < class  CType0, class CType1, class CType2 , class CType3>
 //bool HasVEAdjacency (const TetraMesh < CType0, CType1, CType2, CType3> & /*m*/) {return TetraMesh < CType0 , CType1, CType2, CType3>::VertContainer::value_type::HasVEAdjacency();}
 

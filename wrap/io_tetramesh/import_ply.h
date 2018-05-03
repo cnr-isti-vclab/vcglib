@@ -33,11 +33,8 @@ created
 
 #include<wrap/callback.h>
 #include<wrap/ply/plylib.h>
-#include<wrap/ply/io_mask.h>
+#include<wrap/io_tetramesh/io_mask.h>
 #include<wrap/io_tetramesh/io_ply.h>
-#include<vcg/complex/tetramesh/allocate.h>
-
-
 
 namespace vcg {
 namespace tetra {
@@ -219,7 +216,7 @@ static const  PropDescriptor &TetraDesc(int i)
 /// Standard call for reading a mesh
 static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
 {
-	PlyInfo pi;
+  PlyInfo pi;
   pi.cb=cb; 
   return Open(m, filename, pi);
 }
@@ -235,7 +232,7 @@ static int Open( OpenMeshType &m, const char * filename, int & loadmask, CallBac
 
 
 /// read a mesh with all the possible option specified in the PlyInfo obj.
-static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
+static int Open( OpenMeshType &m, const char * filename, PlyInfo & pi )
 {
   assert(filename!=0);
 	vector<VertexPointer> index;

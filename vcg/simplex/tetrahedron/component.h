@@ -37,7 +37,7 @@ added
 #include <vcg/space/tetra3.h>
 
 namespace vcg {
-  namespace tetra {
+  namespace tetrahedron {
 /*
 Some naming Rules
 All the Components that can be added to a tetra should be defined in the namespace tetra:
@@ -68,8 +68,8 @@ public:
 	ColorType &C()       { static ColorType dummycolor(vcg::Color4b::White); assert(0); return dummycolor; }
 	ColorType cC() const { static ColorType dummycolor(vcg::Color4b::White); assert(0); return dummycolor; }
 
-	static bool HasColor() { return false; }
-	static bool IsColorEnabled() const { return T::TetraType::HasColor(); }
+        static bool HasColor() { return false; }
+        static bool IsColorEnabled() { return T::TetraType::HasColor(); }
 
 	//Empty Quality
 	typedef float QualityType;
@@ -81,8 +81,8 @@ public:
 
 	static bool HasQuality() { return false; }
 	static bool HasQuality3() { return false; }
-	static bool IsQualityEnabled() const { return T::TetraType::HasQuality(); }
-	static bool IsQuality3Enabled() const { return T::TetraType::HasQuality3(); }
+        bool IsQualityEnabled() const { return T::TetraType::HasQuality(); }
+        bool IsQuality3Enabled() const { return T::TetraType::HasQuality3(); }
 
 	//Empty flags
   int &Flags() { static int dummyflags(0); assert(0); return dummyflags; }
@@ -94,12 +94,12 @@ public:
 	//Empty IMark
 	typedef int MarkType;
 
-  inline void InitIMark()    {  }
-  inline int & IMark()       { assert(0); static int tmp=-1; return tmp;}
-  inline const int IMark() const {return 0;}
+  inline void InitIMark()   {  }
+  inline int & IMark()      { assert(0); static int tmp=-1; return tmp;}
+  inline int cIMark() const {return 0;}
   
-	static bool HasMark()   { return false; }
-  static bool HasMarkOcc()   { return false; }
+	static bool HasMark()     { return false; }
+  static bool HasMarkOcc()  { return false; }
 	
 	//Empty Adjacency
 	typedef int VFAdjType;
@@ -109,9 +109,19 @@ public:
 	typename T::TetraPointer & TTp( const int ) { static typename T::TetraPointer tp=0; assert(0); return tp; }
 	typename T::TetraPointer const cTTp( const int ) const { static typename T::TetraPointer const tp=0; assert(0); return tp; }
 
-	char & VTi( const int j ) { static char z=0; assert(0); return z; }
-	char & TTi( const int j ) { static char z=0; assert(0); return z; }
-	
+	char & VTi( const int j )       { static char z=0; assert(0); return z; }
+	char  cVTi( const int j ) const { static char z=0; assert(0); return z; }
+	char & TTi( const int j )       { static char z=0; assert(0); return z; }
+	char  cTTi( const int j ) const { static char z=0; assert(0); return z; }
+
+  bool IsVTInitialized(const int j) const {return  static_cast<const typename T::TetraType *>(this)->cVTi(j)!=-1;}
+  void VTClear(int j) {
+    if(IsVTInitialized(j)) {
+      static_cast<typename T::TetraPointer>(this)->VTp(j)=0;
+      static_cast<typename T::TetraPointer>(this)->VTi(j)=-1;
+    }
+  }
+
 	static bool HasVTAdjacency() { return false; }
 	static bool HasTTAdjacency() { return false; }
 	static bool HasTTAdjacencyOcc() { return false; }
@@ -121,10 +131,7 @@ public:
 	void ImportData(const RightValuteType & ) {}
 
 	static void Name(std::vector<std::string> & name) { T::Name(name); }
-
-
-
-}
+};
 /*-------------------------- VERTEX ----------------------------------------*/ 
 // template <class T> class EmptyVertexRef: public T {
 // public:
@@ -148,15 +155,17 @@ public:
 		v[2]=0;
 		v[3]=0;
 	}
+        typedef typename T::VertexType::CoordType CoordType;
+        typedef typename T::VertexType::ScalarType ScalarType;
 
-  inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<4); return v[j]; }
-  inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<4); return v[j]; }
-	inline typename T::VertexType * const  cV( const int j ) const { assert(j>=0 && j<4);	return v[j]; }
+          inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<4); return v[j]; }
+          inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<4); return v[j]; }
+                inline typename T::VertexType * const  cV( const int j ) const { assert(j>=0 && j<4);	return v[j]; }
 
 	// Shortcut per accedere ai punti delle facce
-	inline       typename T::CoordType & P( const int j ) 	    {	assert(j>=0 && j<4);		return v[j]->P();	}
-	inline const typename T::CoordType & P( const int j ) const	{	assert(j>=0 && j<4);		return v[j]->cP(); }
-	inline const typename T::CoordType &cP( const int j ) const	{	assert(j>=0 && j<4);		return v[j]->cP(); }
+        inline       typename CoordType & P( const int j ) 	    {	assert(j>=0 && j<4);		return v[j]->P();	}
+        inline const typename CoordType & P( const int j ) const	{	assert(j>=0 && j<4);		return v[j]->cP(); }
+        inline const typename CoordType &cP( const int j ) const	{	assert(j>=0 && j<4);		return v[j]->cP(); }
 
 	/** Return the pointer to the ((j+1)%3)-th vertex of the face.
 		@param j Index of the face vertex.
@@ -175,18 +184,18 @@ public:
 	inline const typename T::VertexType * const & cV3( const int j ) const { return cV((j+3)%4);}
 
 	/// Shortcut to get vertex values
-	inline       typename T::CoordType &  P0( const int j )       { return V(j)->P();}
-	inline       typename T::CoordType &  P1( const int j )       { return V((j+1)%4)->P();}
-	inline       typename T::CoordType &  P2( const int j )       { return V((j+2)%4)->P();}
-	inline       typename T::CoordType &  P3( const int j )       { return V((j+3)%4)->P();}
-	inline const typename T::CoordType &  P0( const int j ) const { return V(j)->P();}
-	inline const typename T::CoordType &  P1( const int j ) const { return V((j+1)%4)->P();}
-	inline const typename T::CoordType &  P2( const int j ) const { return V((j+2)%4)->P();}
-	inline const typename T::CoordType &  P3( const int j ) const { return V((j+3)%4)->P();}
-	inline const typename T::CoordType & cP0( const int j ) const { return cV(j)->P();}
-	inline const typename T::CoordType & cP1( const int j ) const { return cV((j+1)%4)->P();}
-	inline const typename T::CoordType & cP2( const int j ) const { return cV((j+2)%4)->P();}
-	inline const typename T::CoordType & cP3( const int j ) const { return cV((j+3)%4)->P();}
+        inline       typename CoordType &  P0( const int j )       { return V(j)->P();}
+        inline       typename CoordType &  P1( const int j )       { return V((j+1)%4)->P();}
+        inline       typename CoordType &  P2( const int j )       { return V((j+2)%4)->P();}
+        inline       typename CoordType &  P3( const int j )       { return V((j+3)%4)->P();}
+        inline const typename CoordType &  P0( const int j ) const { return V(j)->P();}
+        inline const typename CoordType &  P1( const int j ) const { return V((j+1)%4)->P();}
+        inline const typename CoordType &  P2( const int j ) const { return V((j+2)%4)->P();}
+        inline const typename CoordType &  P3( const int j ) const { return V((j+3)%4)->P();}
+        inline const typename CoordType & cP0( const int j ) const { return cV(j)->P();}
+        inline const typename CoordType & cP1( const int j ) const { return cV((j+1)%4)->P();}
+        inline const typename CoordType & cP2( const int j ) const { return cV((j+2)%4)->P();}
+        inline const typename CoordType & cP3( const int j ) const { return cV((j+3)%4)->P();}
 
 	static bool HasVertexRef()   { return true; }
 	static bool HasTVAdjacency() { return true; }
@@ -194,7 +203,7 @@ public:
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("VertexRef"));T::Name(name);}
 	
 	template <class RightValueType>
-	void ImportData(const RightValuteType & rTetra) { T::ImportData(rTetra); }
+        void ImportData(const RightValueType & rTetra) { T::ImportData(rTetra); }
 
   private:
   typename T::VertexType *v[4];
@@ -259,7 +268,7 @@ public:
 	typedef int FlagType;
 	BitFlags(){_flags=0;}
 	int &Flags() {return _flags; }
-	int Flags() const {return _flags; }
+	int cFlags() const {return _flags; }
 
 	template <class RightValueType>
 	void ImportData(const RightValueType & rightT){
@@ -368,7 +377,14 @@ public:
   static bool HasMarkOcc()   { return false; }
   inline void InitIMark()    { _imark = 0; }
   inline int & IMark()       { return _imark;}
-  inline const int & IMark() const {return _imark;}
+  inline int  cIMark() const {return _imark;}
+
+  template <class RightValueType>
+  void ImportData(const RightValueType & rightT){
+    if(rightT.IsMarkEnabled()) IMark() = rightT.cIMark();
+    T::ImportData(rightT);
+  }
+
   static void Name(std::vector<std::string> & name){name.push_back(std::string("Mark"));T::Name(name);}
     
  private:
@@ -396,7 +412,16 @@ public:
 
 template <class T> class VTAdj: public T {
 public:
-	VTAdj() { _vtp[0]=0; _vtp[1]=0; _vtp[2]=0; _vtp[3]=0; }
+	VTAdj() { 
+		_vtp[0]=0; 
+		_vtp[1]=0; 
+		_vtp[2]=0; 
+		_vtp[3]=0;
+		_vti[0]=-1;
+		_vti[1]=-1;
+		_vti[2]=-1;
+		_vti[3]=-1; 
+		}
 
 	typename T::TetraPointer & VTp( const int j ) { assert( j >= 0 && j < 4 ); return _vtp[j]; }
 	typename T::TetraPointer const VTp( const int j ) const { assert( j >= 0 && j < 4 ); return _vtp[j]; }
@@ -410,6 +435,8 @@ public:
 	
 	static void Name( std::vector< std::string > & name ) { name.push_back( std::string("VTAdj") ); T::Name(name); }
 
+	template <class RightValueType>
+	void ImportData(const RightValueType & rightT){T::ImportData(rightT);}
 private:
 	typename T::TetraPointer _vtp[4];
 	char _vti[4];
@@ -443,6 +470,9 @@ public:
   static bool HasTTAdjacency()      {   return true; }
   static bool HasTTAdjacencyOcc()   {   return false; }
   static void Name(std::vector<std::string> & name){name.push_back(std::string("TTAdj"));T::Name(name);}
+
+	template <class RightValueType>
+	void ImportData(const RightValueType & rightT){T::ImportData(rightT);}
 
 private:
   typename T::TetraPointer _ttp[4] ;    

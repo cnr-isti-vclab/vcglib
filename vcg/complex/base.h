@@ -64,7 +64,7 @@ namespace tri {
                 typedef std::vector< typename TYPESPOOL::HEdgeType  >		CONTH;
 
                 typedef CONTV									VertContainer;
-                typedef _Vertex 								VertexType;
+                typedef typename CONTV::value_type 								VertexType;
                 typedef typename TYPESPOOL::VertexPointer		VertexPointer;
                 typedef const typename TYPESPOOL::VertexPointer ConstVertexPointer;
                 typedef bool									CoordType;

@@ -96,7 +96,7 @@ public:
   static bool HasTexCoord()   { return false; }
   inline bool IsTexCoordEnabled() const { return TT::VertexType::HasTexCoord();}
 
-  typename TT::TetraPointer &VTp()       { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
+  typename TT::TetraPointer &VTp()        { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
   typename TT::TetraPointer cVTp() const  { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
   int &VTi() { static int z = 0; return z; }
   static bool HasVTAdjacency() { return false; }

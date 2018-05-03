@@ -37,8 +37,8 @@ Revision 1.1  2004/03/03 15:00:51  cignoni
 Initial commit
 
 ****************************************************************************/
-#ifndef __VCGLIB_IOTRIMESH_IO_PLY
-#define __VCGLIB_IOTRIMESH_IO_PLY
+#ifndef __VCGLIB_IOTETRAMESH_IO_PLY
+#define __VCGLIB_IOTETRAMESH_IO_PLY
 
 
 /**

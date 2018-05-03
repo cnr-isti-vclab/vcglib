@@ -121,7 +121,18 @@ template <
           template <typename> class G, template <typename> class H,
           template <typename> class I, template <typename> class J,
           template <typename> class K, template <typename> class L>
-					class Arity12: public L<Arity11<Base, A, B, C, D, E, F, G, H, I, J, K> > {};
+                                        class Arity12: public L<Arity11<Base, A, B, C, D, E, F, G, H, I, J, K> > {};
+
+                                        template <
+                                                class Base,
+                                                template <typename> class A, template <typename> class B,
+                                                template <typename> class C, template <typename> class D,
+                                                template <typename> class E, template <typename> class F,
+                                                template <typename> class G, template <typename> class H,
+                                                template <typename> class I, template <typename> class J,
+                                                template <typename> class K, template <typename> class L,
+                                                template <typename> class M >
+                                        class Arity13: public L<Arity12<Base, A, B, C, D, E, F, G, H, I, J, K, L> > {};
 
 
 // chain with 2 template arguments on the derivers

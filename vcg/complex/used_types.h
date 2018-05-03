@@ -92,11 +92,11 @@ template <template <typename> class A = DefaultDeriver, template <typename> clas
                     template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
                     template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
                     template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver >
-                    class UsedTypes: public Arity12<DummyTypes,
-                                Use<  Vertex	<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsVertexType,
+                    class UsedTypes: public Arity13<DummyTypes,
+                                Use<  Vertex            <UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsVertexType,
                                 Use<  Edge		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsEdgeType,
                                 Use<  Face		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsFaceType,
-                                Use<  Tetra		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsTetraType,
+                                Use<  TetraSimp		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsTetraType,
                                 Use<  HEdge	  <UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsHEdgeType,
                             A, B, C, D, E, F, G, H
                     >  {
@@ -117,7 +117,7 @@ struct _UsedTypes: public UsedTypes<
 struct _Vertex: public  Vertex<_UsedTypes>{};
 struct _Edge  : public  Edge<_UsedTypes>{};
 struct _Face  : public  Face<_UsedTypes>{};
-struct _Tetra : public  Tetra<_UsedTypes>{};
+struct _Tetra : public  TetraSimp<_UsedTypes>{};
 struct _HEdge : public  HEdge<_UsedTypes>{};
 
 };

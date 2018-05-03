@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *
+* This program is free software; you can redistribute it and/or modify      *   
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -21,48 +21,60 @@
 *                                                                           *
 ****************************************************************************/
 
-#ifndef __VCG_TETRA_MESH_H
-#define __VCG_TETRA_MESH_H
-#define __VCG_TETRA_MESH
-#define __VCG_MESH
+#ifndef __VCGLIB_IOTETRAMESH_IO_MASK
+#define __VCGLIB_IOTETRAMESH_IO_MASK
 
-#include <cassert>
-#include <cstring>
-#include <string>
-#include <ctime>
-#include <vector>
-#include <set>
-#include <stack>
-#include <queue>
-#include <map>
-#include <algorithm>
-#include <iostream>
-#include <stdexcept>
-#include <limits>
-#include <iterator>
-#include <typeindex>
-#include <wrap/callback.h>
-#include <vcg/complex/exception.h>
-#include <vcg/container/simple_temporary_data.h>
-#include <vcg/complex/used_types.h>
-#include <vcg/complex/tetrahedron/base.h>
-#include <vcg/complex/tetrahedron/allocate.h>
-#include <vcg/simplex/face/pos.h>
-#include <vcg/simplex/face/topology.h>
-#include <vcg/simplex/edge/pos.h>
-#include <vcg/simplex/edge/topology.h>
-#include <vcg/simplex/tetrahedron/pos.h>
-#include <vcg/complex/foreach.h>
-#include <vcg/complex/algorithms/update/flag.h>
-#include <vcg/complex/algorithms/update/selection.h>
-#include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/normal.h>
-#include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/mesh_assert.h>
-#include <vcg/complex/append.h>
+namespace vcg {
+namespace tetra {
+namespace io {
 
-#undef __VCG_TETRA_MESH
-#undef __VCG_MESH
+/**
+@name Input/output data mask
+*/
+//@{
+  
+class Mask
+{
+public:
 
+  /*
+  Bitmask for specifying what data has to be loaded or saved or it is present in a given plyfile;
+*/
+
+enum {
+	IOM_NONE         = 0x00000,
+
+    IOM_VERTCOORD    = 0x00001,
+	IOM_VERTFLAGS    = 0x00002,
+	IOM_VERTCOLOR    = 0x00004,
+	IOM_VERTQUALITY  = 0x00008,
+	IOM_VERTRADIUS   = 0x10000,
+
+	IOM_EDGEINDEX    = 0x80000,
+
+	IOM_TETRAINDEX   = 0x00010,
+	IOM_TETRAFLAGS   = 0x00020,
+	IOM_TETRACOLOR   = 0x00040,
+	IOM_TETRAQUALITY = 0x00080,
+
+	IOM_CAMERA       = 0x08000,
+
+	IOM_FLAGS        = IOM_VERTFLAGS + IOM_TETRAFLAGS,
+
+	IOM_ALL          = 0xFFFFF
+};
+
+template <class MeshType>
+static void ClampMask(MeshType &m, int &mask)
+{
+  if( (mask & IOM_TETRACOLOR)    && !HasPerTetraColor(m) )   mask = mask & (~IOM_TETRACOLOR);
+  if( (mask & IOM_VERTCOLOR)    && !HasPerVertexColor(m) )   mask = mask & (~IOM_VERTCOLOR);
+}
+
+}; // end class
+//@}
+
+} // end namespace tetra
+} // end namespace io
+} // end namespace vcg
 #endif
-

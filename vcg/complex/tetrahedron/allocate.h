@@ -225,7 +225,7 @@ public:
         }
 
       for (TetraIterator ti = m.tetra.begin(); ti != m.tetra.end(); ++ti)
-        if (!(*ti.IsD()))
+        if (!(*ti).IsD())
           for (int i = 0; i < 4; ++i)
             if ((*ti).cV(i) != 0)
               pu.Update((*ti).V(i));
@@ -660,12 +660,12 @@ public:
             pu.Update((*ei).EFp());
       }
 
-      if (HasHFAdjacency(m))
-      {
-        for (HEdgeIterator hi = m.hedge.begin(); hi != m.hedge.end(); ++hi)
-          if (!(*hi).IsD() && (*hi).cHFp() != 0)
-            pu.Update((*hi).HFp());
-      }
+//      if (HasHFAdjacency(m))
+//      {
+//        for (HEdgeIterator hi = m.hedge.begin(); hi != m.hedge.end(); ++hi)
+//          if (!(*hi).IsD() && (*hi).cHFp() != 0)
+//            pu.Update((*hi).HFp());
+//      }
     }
     return firstNewFace;
   }
@@ -699,7 +699,7 @@ public:
     else
     {
       pu.oldBase = &*m.tetra.begin();
-      pu.oldEnd = &*m.tetra.back() + 1;
+      pu.oldEnd  = &m.tetra.back() + 1;
     }
 
     //resize the tetra list and update tetra count
@@ -719,7 +719,7 @@ public:
 
     //do the update
     pu.newBase = &*m.tetra.begin();
-    pu.newEnd = &*m.tetra.back() + 1;
+    pu.newEnd  = &m.tetra.back() + 1;
     if (pu.NeedUpdate())
     {
       if (HasVTAdjacency(m))
@@ -739,9 +739,8 @@ public:
       }
 
       //do edge and face adjacency
-
       if (HasTTAdjacency(m))
-        for (TetraPointer ti = m.tetra.begin(); ti != m.tetra.end(); ++ti)
+        for (TetraIterator ti = m.tetra.begin(); ti != m.tetra.end(); ++ti)
           if (!ti->IsD())
           {
             pu.Update(ti->TTp(0));
@@ -803,6 +802,11 @@ public:
     VertexPointer v1 = &*vi++;
     VertexPointer v2 = &*vi++;
     VertexPointer v3 = &*vi++;
+
+    v0->P() = p0;
+    v1->P() = p1;
+    v2->P() = p2;
+    v3->P() = p3;
 
     return AddTetra(m, v0, v1, v2, v3);
   }
@@ -920,19 +924,6 @@ public:
   }
 
 
-//TODO:
-  // static void PermutateTetraVector(MeshType & m, PointerUpdater<TetraPointer> & pu)
-  // {
-  //   if (m.tetra.empty())
-  //     return;
-  //   for (size_t i = 0; i < m.tetra.size(); ++i)
-  //   {
-  //     if (pu.remap[i] < size_t(m.tn))
-  //     {
-
-  //     }
-  //   }
-  // }
   /*
             Function to rearrange the vertex vector according to a given index permutation
             the permutation is vector such that after calling this function
@@ -1159,6 +1150,7 @@ public:
     CompactEdgeVector(m, pu);
   }
 
+
   /*!
     \brief Compact face vector by removing deleted elements.
 
@@ -1276,6 +1268,127 @@ public:
   {
     PointerUpdater<FacePointer> pu;
     CompactFaceVector(m, pu);
+  }
+
+
+  /*!
+    \brief Compact tetra vector by removing deleted elements.
+
+    Deleted elements are put to the end of the vector and the vector is resized.
+    Order between elements is preserved, but not their position (hence the PointerUpdater)
+    Immediately after calling this function the \c IsD() test during the scanning a vector, is no more necessary.
+    \warning It should not be called when some TemporaryData is active (but works correctly if attributes are present)
+    */
+  static void CompactTetraVector(MeshType & m, PointerUpdater<TetraPointer> & pu)
+  {
+    //nothing to do
+    if (size_t(m.tn) == m.tetra.size())
+      return;
+
+    //init the remap 
+    pu.remap.resize(m.tetra.size(), std::numeric_limits<size_t>::max());
+    
+    //cycle over all the tetras, pos is the last not D() position, I is the index
+    //when pos != i and !tetra[i].IsD() => we need to compact and update adj
+    size_t pos = 0;
+    for (size_t i = 0; i < m.tetra.size(); ++i)
+    {
+      if (!m.tetra.IsD())
+      {
+        if (pos != i)
+        {
+          //import data 
+          m.tetra[pos].ImportData(m.tetra[i]);
+          //import vertex refs
+          for (int j = 0; j < 4; ++j)
+            m.tetra[pos].V(j) = m.tetra[i].cV(j);
+          //import VT adj
+          if (HasVTAdjacency(m))
+            for (int j = 0; j < 4; ++j)
+            {
+              if (m.tetra[i].IsVTInitialized(j))
+              {
+                m.tetra[pos].VTp(j) = m.tetra[i].VTp(j);
+                m.tetra[pos].VTi(j) = m.tetra[i].VTi(j);
+              }
+              else
+                m.tetra[pos].VTClear();
+            }
+          //import TT adj
+          if (HasTTAdjacency(m))
+            for (int j = 0; j < 4; ++j)
+            {
+              m.tetra[pos].TTp(j) = m.tetra[i].cTTp(j);
+              m.tetra[pos].TTi(j) = m.tetra[i].cTTi(j);
+            }
+        }
+        //update remapping and advance pos
+        pu.remap[i] = pos;
+        ++pos;
+      }
+    }
+
+    assert(size_t(m.tn) == pos);
+    //reorder the optional attributes in m.tetra_attr 
+    ReorderAttribute(m.tetra_attr, pu.remap, m);
+    // resize the optional atttributes in m.tetra_attr to reflect the changes
+    ResizeAttribute(m.tetra_attr, m.tn, m);
+
+    // Loop on the tetras to correct VT and TT relations
+    pu.oldBase = &m.tetra[0];
+    pu.oldEnd = &m.tetra.back() + 1;
+
+    m.tetra.resize(m.tn);
+    pu.newBase = (m.tetra.empty()) ? 0 : &m.tetra[0];
+    pu.newEnd  = (m.tetra.empty()) ? 0 : &m.tetra.back() + 1;
+
+    TetraPointer tbase = &m.tetra[0];
+
+    //Loop on the vertices to correct VT relation (since we moved things around)
+    if (HasVTAdjacency(m))
+    {
+      for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+        if (!(*vi).IsD())
+        {
+          if ((*vi).IsVTInitialized() && (*vi).VTp() != 0)
+          {
+            size_t oldIndex = (*vi).cVTp() - tbase;
+            assert(tbase <= (*vi).cVTp() && oldIndex < pu.remap.size());
+            (*vi).VTp() = tbase + pu.remap[oldIndex];
+          }
+        }
+    }
+
+    // Loop on the tetras to correct the VT and TT relations
+    for (TetraIterator ti = m.tetra.begin(); ti != m.tetra.end(); ++ti)
+      if (!(*ti).IsD())
+      {
+        //VT
+        if (HasVTAdjacency(m))
+          for (int i = 0; i < 4; ++i)
+            if ((*ti).IsVTInitialized(i) && (*ti).VTp(i) != 0)
+            {
+              size_t oldIndex = (*ti).VTp(i) - fbase;
+              assert(tbase <= (*ti).VTp(i) && oldIndex < pu.remap.size());
+              (*ti).VTp(i) = tbase + pu.remap[oldIndex];
+            }
+        //TT
+        if (HasTTAdjacency(m))
+          for (int i = 0; i < 4; ++i)
+            if ((*ti).cTTp(i) != 0)
+            {
+              size_t oldIndex = (*ti).TTp(i) - tbase;
+              assert(tbase <= (*ti).TTp(i) && oldIndex < pu.remap.size());
+              (*ti).TTp(i) = tbase + pu.remap[oldIndex];
+            }
+      }
+  }
+
+  /*! \brief Wrapper without the PointerUpdater. */
+  static void CompactTetraVector(MeshType &m)
+  {
+    PointerUpdater<TetraPointer> pu;
+    CompactTetraVector(m, pu);
   }
 
 public:
