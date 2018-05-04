@@ -39,57 +39,63 @@ struct MyUsedTypes : public UsedTypes<Use<MyVertex>::AsVertexType, Use<MyEdge>::
 
 class MyVertex  : public Vertex< MyUsedTypes, vertex::Coord3f, vertex::Normal3f, vertex::Qualityf, vertex::Color4b, vertex::VEAdj, vertex::VFAdj,vertex::BitFlags  >{};
 class MyEdge    : public Edge<   MyUsedTypes, edge::VertexRef, edge::VEAdj,     edge::EEAdj, edge::BitFlags> {};
-class MyFace    : public Face  < MyUsedTypes, face::VertexRef,  face::Normal3f, face::VFAdj, face::FFAdj, face::Mark, face::Color4b, face::BitFlags > {};
+class MyFace    : public Face  < MyUsedTypes, face::VertexRef,  face::Normal3f, face::Qualityf, face::Color4b, face::VFAdj, face::FFAdj, face::Mark, face::Color4b, face::BitFlags > {};
 class MyMesh : public tri::TriMesh< std::vector<MyVertex>, std::vector<MyEdge>, std::vector<MyFace> >{};
 
-
+/**
+ * In this sample we take a torus we compute a poly line on it that open it into a disk and we open it. 
+ * Then using the COM (Curve On Manifold) framework we smooth this polyline keeping 
+ * it on the surface of the torus and then first we refine the torus surface with this 
+ * smooth polyline and then we open it along these new edges. 
+ * 
+ * Optionally you can use your own mesh and polyline by passing them as parameters. 
+ */
 int main(int argc,char ** argv )
 {
   MyMesh base, basecopy, poly;
-  int ret0 = tri::io::Importer<MyMesh>::Open(base,argv[1]);
-  int ret1 = 0;
-  if(argc>2) ret1 = tri::io::Importer<MyMesh>::Open(poly,argv[2]); 
-  if(ret0 != 0 || ret1 != 0) 
-  {
-    printf("Failed Loading\n");
-    exit(-1);
-  }  
+  int ret0=0, ret1=0;
+  if(argc>1) ret0 = tri::io::Importer<MyMesh>::Open(base,argv[1]);
   
+  if(base.FN() == 0)   Torus(base,10,4,48,24);
+
+  if(argc>2) ret1 = tri::io::Importer<MyMesh>::Open(poly,argv[2]); 
   tri::UpdateBounding<MyMesh>::Box(base);
   printf( "Mesh %s has %i vert and %i faces\n", argv[1], base.VN(), base.FN() );
   printf( "Poly %s has %i vert and %i edges\n", argv[2], poly.VN(), poly.EN() );
-  if(poly.EN()==0) {
-    srand(time(0));
+  if(poly.EN() == 0) {
+    srand(time(nullptr));
     tri::CutTree<MyMesh> ct(base);
-    ct.BuildVisitTree(poly,rand()%base.fn);
+    ct.Build(poly,rand()%base.fn);
   }
   tri::io::ExporterPLY<MyMesh>::Save(poly,"0_cut_tree.ply",tri::io::Mask::IOM_EDGEINDEX);  
-  
+
   tri::CoM<MyMesh> cc(base);
   cc.Init();
-  cc.MarkFauxEdgeWithPolyLine(poly);
-  tri::Append<MyMesh,MyMesh>::MeshCopy(basecopy,base);  
-  tri::UpdateTopology<MyMesh>::FaceFace(basecopy);
-  tri::CutMeshAlongNonFauxEdges<MyMesh>(basecopy);
-  tri::io::ExporterPLY<MyMesh>::Save(basecopy,"base_cut_with_tree.ply");  
-  
+  bool ret = cc.TagFaceEdgeSelWithPolyLine(poly);
+  if(ret)
+  {
+    tri::Append<MyMesh,MyMesh>::MeshCopy(basecopy,base);  
+    tri::UpdateTopology<MyMesh>::FaceFace(basecopy);
+    tri::CutMeshAlongSelectedFaceEdges<MyMesh>(basecopy);
+    tri::io::ExporterPLY<MyMesh>::Save(basecopy,"base_cut_with_tree.ply");  
+  }
   // Selected vertices are 'locked' during the smoothing. 
   cc.SelectBoundaryVertex(poly);
-  cc.SelectUniformlyDistributed(poly,20); // lock some vertices uniformly just for fun
+//  cc.SelectUniformlyDistributed(poly,10); // lock some vertices uniformly just for fun
   
   // Two smoothing runs,
   // the first that allows fast movement over the surface (long edges that can skim surface details)
-  cc.par.surfDistThr = base.bbox.Diag()/100.0;
-  cc.par.maxSimpEdgeLen = base.bbox.Diag()/50.0;
-  cc.par.minRefEdgeLen = base.bbox.Diag()/100.0;
-  cc.SmoothProject(poly,10,0.7,.3);
+  cc.par.surfDistThr = base.bbox.Diag()/100.0f;
+  cc.par.maxSimpEdgeLen = base.bbox.Diag()/50.0f;
+  cc.par.minRefEdgeLen = base.bbox.Diag()/100.0f;
+  cc.SmoothProject(poly,30,0.7f,.3f);
   tri::io::ExporterPLY<MyMesh>::Save(poly,"1_poly_smooth.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
 
   // The second smooting run more accurate to adapt to the surface
-  cc.par.surfDistThr = base.bbox.Diag()/1000.0;
-  cc.par.maxSimpEdgeLen = base.bbox.Diag()/1000.0;
-  cc.par.minRefEdgeLen = base.bbox.Diag()/2000.0;
-  cc.SmoothProject(poly,10,0.01,.99);
+  cc.par.surfDistThr = base.bbox.Diag()/1000.0f;
+  cc.par.maxSimpEdgeLen = base.bbox.Diag()/1000.0f;
+  cc.par.minRefEdgeLen = base.bbox.Diag()/2000.0f;
+  cc.SmoothProject(poly,10,0.01f,.99f);
   tri::io::ExporterPLY<MyMesh>::Save(poly,"2_poly_smooth.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
 
   Distribution<float> dist;  
@@ -102,8 +108,8 @@ int main(int argc,char ** argv )
   cc.SplitMeshWithPolyline(poly);
   tri::io::ExporterPLY<MyMesh>::Save(base,"3_mesh_refined.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
   // Now the two meshes should have coincident edges
-  cc.MarkFauxEdgeWithPolyLine(poly);
-  CutMeshAlongNonFauxEdges(base);
+  cc.TagFaceEdgeSelWithPolyLine(poly);
+  CutMeshAlongSelectedFaceEdges(base);
   tri::io::ExporterPLY<MyMesh>::Save(base,"4_mesh_cut.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
   
   return 0;

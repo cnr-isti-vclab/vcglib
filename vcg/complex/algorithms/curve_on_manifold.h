@@ -184,9 +184,9 @@ public:
    * 
    */
     
-  bool MarkFauxEdgeWithPolyLine(MeshType &poly,bool markFlag=true)
+  bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
   {
-    if(markFlag) tri::UpdateFlags<MeshType>::FaceSetF(base);
+    if(markFlag) tri::UpdateFlags<MeshType>::FaceClearFaceEdgeS(base);
     tri::UpdateTopology<MeshType>::VertexFace(base);
     tri::UpdateTopology<MeshType>::FaceFace(base);
     
@@ -210,8 +210,8 @@ public:
         if(ret){
           assert(ret); 
           assert(ff0->V(e0)==v0 || ff0->V(e0)==v1);
-          ff0->ClearF(e0);
-          ff1->ClearF(e1);        
+          ff0->SetFaceEdgeS(e0);
+          ff1->SetFaceEdgeS(e1);        
         }
         else {
           return false;

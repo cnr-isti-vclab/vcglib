@@ -23,6 +23,11 @@
 #ifndef CUT_TREE_H
 #define CUT_TREE_H
 
+#include<vcg/complex/complex.h>
+#include <vcg/space/index/kdtree/kdtree.h>
+#include<vcg/complex/algorithms/update/quality.h>
+#include<vcg/complex/algorithms/update/color.h>
+
 namespace vcg {
 namespace tri {
 
@@ -40,18 +45,17 @@ public:
   typedef typename MeshType::FaceType       FaceType;
   typedef typename MeshType::FacePointer    FacePointer;
   typedef typename MeshType::FaceIterator   FaceIterator;
-  typedef Box3  <ScalarType>               Box3Type;
-  typedef typename vcg::GridStaticPtr<FaceType, ScalarType> MeshGrid;  
-  typedef typename vcg::GridStaticPtr<EdgeType, ScalarType> EdgeGrid;
+  typedef Box3<ScalarType>               Box3Type;
   typedef typename face::Pos<FaceType> PosType;
   typedef typename tri::UpdateTopology<MeshType>::PEdge PEdge;
   
   MeshType &base; 
-//  MeshGrid uniformGrid;
   
-//  Param par; 
   CutTree(MeshType &_m) :base(_m){}
   
+  
+// Perform a simple optimization of the three applying simple shortcuts:
+// if the endpoints of two consecutive edges are connected by an edge existing on base mesh just use that edges
   
 void OptimizeTree(KdTree<ScalarType> &kdtree, MeshType &t)
 {
@@ -67,7 +71,7 @@ void OptimizeTree(KdTree<ScalarType> &kdtree, MeshType &t)
     {
       std::vector<VertexType *> starVec;
       edge::VVStarVE(&*vi,starVec);
-      if(starVec.size()==2)
+      if(starVec.size()==2)  // middle vertex has to be 1-manifold
       {
         PosType pos;
         if(ExistEdge(kdtree,starVec[0]->P(),starVec[1]->P(),pos))
@@ -181,10 +185,10 @@ void Retract(KdTree<ScalarType> &kdtree, MeshType &t)
       if(fpos.IsBorder()) {
         t.edge[i].SetV();
       }
-  }
+    }
     else assert(0);
   }
-
+  
   // All the boundary edges are in the initial tree so the clean boundary loops chains remains as irreducible loops
   // We delete them (leaving dangling edges with a vertex on the boundary)
   for(size_t i =0; i<t.edge.size();++i){    
@@ -196,6 +200,143 @@ void Retract(KdTree<ScalarType> &kdtree, MeshType &t)
   tri::Allocator<MeshType>::CompactEveryVector(t);
 }
 
+/** \brief Main function
+ * 
+ * It builds a cut tree that open the mesh into a topological disk
+ * 
+ * 
+ */
+void Build(MeshType &dualMesh, int startingFaceInd=0)
+{
+  tri::UpdateTopology<MeshType>::FaceFace(base);
+  tri::UpdateTopology<MeshType>::VertexFace(base); 
+  
+  BuildVisitTree(dualMesh,startingFaceInd);
+//  BuildDijkstraVisitTree(dualMesh,startingFaceInd);
+
+  VertexConstDataWrapper<MeshType > vdw(base);
+  KdTree<ScalarType> kdtree(vdw);  
+  Retract(kdtree,dualMesh);  
+  OptimizeTree(kdtree, dualMesh);
+  tri::UpdateBounding<MeshType>::Box(dualMesh);      
+}
+
+/* Auxiliary class for keeping the heap of vertices to visit and their estimated distance */
+  struct FaceDist{
+    FaceDist(FacePointer _f):f(_f),dist(_f->Q()){}
+    FacePointer f;
+    ScalarType dist; 
+    bool operator < (const FaceDist &o) const
+    {
+      if( dist != o.dist)
+        return dist > o.dist;
+      return f<o.f;
+    }
+  };
+
+
+void BuildDijkstraVisitTree(MeshType &dualMesh, int startingFaceInd=0, ScalarType maxDistanceThr=std::numeric_limits<ScalarType>::max())
+{
+  tri::RequireFFAdjacency(base);
+  tri::RequirePerFaceMark(base);
+  tri::RequirePerFaceQuality(base);
+  typename MeshType::template PerFaceAttributeHandle<FacePointer> parentHandle
+      = tri::Allocator<MeshType>::template GetPerFaceAttribute<FacePointer>(base, "parent");
+
+  std::vector<FacePointer> seedVec;
+  seedVec.push_back(&base.face[startingFaceInd]);
+   
+  std::vector<FaceDist> Heap;
+  tri::UnMarkAll(base);
+  tri::UpdateQuality<MeshType>::FaceConstant(base,0);
+  ForEachVertex(base, [&](VertexType &v){
+    tri::Allocator<MeshType>::AddVertex(dualMesh,v.cP());
+  });
+  
+  // Initialize the face heap; 
+  // All faces in the heap are already marked; Q() store the distance from the source faces; 
+  for(size_t i=0;i<seedVec.size();++i)
+  {
+    seedVec[i]->Q()=0;
+    Heap.push_back(FaceDist(seedVec[i]));
+  }
+  // Main Loop
+  int boundary=0;
+  std::make_heap(Heap.begin(),Heap.end());
+  
+  int vCnt=0;
+  int eCnt=0;
+  int fCnt=0;
+  
+  // The main idea is that in the heap we maintain all the faces to be visited. 
+  int nonDiskCnt=0;
+  while(!Heap.empty() && nonDiskCnt<10)
+  {
+    int eulerChi= vCnt-eCnt+fCnt;
+    if(eulerChi==1) nonDiskCnt=0;
+    else ++nonDiskCnt;
+//    printf("HeapSize %i: %i - %i + %i = %i\n",Heap.size(), vCnt,eCnt,fCnt,eulerChi);
+    pop_heap(Heap.begin(),Heap.end());
+    FacePointer currFp = (Heap.back()).f;
+    if(tri::IsMarked(base,currFp))
+    {
+//      printf("Found an already visited face %f %f \n",Heap.back().dist, Heap.back().f->Q());
+      //assert(Heap.back().dist != currFp->Q());
+            
+      Heap.pop_back(); 
+      continue;
+    }
+    Heap.pop_back();
+    ++fCnt;
+    eCnt+=3;
+    tri::Mark(base,currFp);
+    
+//    printf("pop face %i \n", tri::Index(base,currFp));
+    for(int i=0;i<3;++i)
+    {
+      if(!currFp->V(i)->IsV()) {++vCnt; currFp->V(i)->SetV();}
+      
+      FacePointer nextFp = currFp->FFp(i);
+      if( tri::IsMarked(base,nextFp) )
+      {
+        eCnt-=1;
+        printf("is marked\n");
+        if(nextFp != parentHandle[currFp] )
+        {
+          if(currFp>nextFp){
+            tri::Allocator<MeshType>::AddEdge(dualMesh,tri::Index(base,currFp->V0(i)), tri::Index(base,currFp->V1(i)));
+          }
+        }
+      }
+      else // add it to the heap;
+      {
+//        printf("is NOT marked\n");
+        parentHandle[nextFp] = currFp;
+        ScalarType nextDist = currFp->Q() + Distance(Barycenter(*currFp),Barycenter(*nextFp));
+        int adjMarkedNum=0; 
+        for(int k=0;k<3;++k) if(tri::IsMarked(base,nextFp->FFp(k))) ++adjMarkedNum;
+        if(nextDist < maxDistanceThr || adjMarkedNum>1)        
+        {
+          nextFp->Q() = nextDist;
+          Heap.push_back(FaceDist(nextFp));
+          push_heap(Heap.begin(),Heap.end());
+        }
+        else {
+//          printf("boundary %i\n",++boundary);
+          tri::Allocator<MeshType>::AddEdge(dualMesh,tri::Index(base,currFp->V0(i)), tri::Index(base,currFp->V1(i)));
+        }
+      }
+    }
+  } // End while
+  printf("fulltree %i vn %i en \n",dualMesh.vn, dualMesh.en);
+  int dupVert=tri::Clean<MeshType>::RemoveDuplicateVertex(dualMesh,false);   printf("Removed %i dup vert\n",dupVert);
+  int dupEdge=tri::Clean<MeshType>::RemoveDuplicateEdge(dualMesh);   printf("Removed %i dup edges %i\n",dupEdge,dualMesh.EN());
+  tri::Clean<MeshType>::RemoveUnreferencedVertex(dualMesh);   
+  
+  tri::io::ExporterPLY<MeshType>::Save(dualMesh,"fulltree.ply",tri::io::Mask::IOM_EDGEINDEX);   
+  tri::UpdateColor<MeshType>::PerFaceQualityRamp(base);
+  tri::io::ExporterPLY<MeshType>::Save(base,"colored_Bydistance.ply",tri::io::Mask::IOM_FACECOLOR);    
+}
 
 // \brief This function build a cut tree. 
 //
@@ -207,9 +348,6 @@ void Retract(KdTree<ScalarType> &kdtree, MeshType &t)
 
 void BuildVisitTree(MeshType &dualMesh, int startingFaceInd=0)
 {
-  tri::UpdateTopology<MeshType>::FaceFace(base);
-  tri::UpdateTopology<MeshType>::VertexFace(base); 
-  
   tri::UpdateFlags<MeshType>::FaceClearV(base);
   tri::UpdateFlags<MeshType>::VertexBorderFromFaceAdj(base);
   std::vector<face::Pos<FaceType> > visitStack; // the stack contain the pos on the 'starting' face. 
@@ -243,16 +381,9 @@ void BuildVisitTree(MeshType &dualMesh, int startingFaceInd=0)
     }
   }
   assert(cnt==base.fn);
-  
-  VertexConstDataWrapper<MeshType > vdw(base);
-  KdTree<ScalarType> kdtree(vdw);
-  
+ 
   tri::Clean<MeshType>::RemoveDuplicateVertex(dualMesh);    
-//  tri::io::ExporterPLY<MeshType>::Save(dualMesh,"fulltree.ply",tri::io::Mask::IOM_EDGEINDEX);  
-  
-  Retract(kdtree,dualMesh);
-  OptimizeTree(kdtree, dualMesh);
-  tri::UpdateBounding<MeshType>::Box(dualMesh);    
+  tri::io::ExporterPLY<MeshType>::Save(dualMesh,"fulltree.ply",tri::io::Mask::IOM_EDGEINDEX);    
 } 
 
 };
