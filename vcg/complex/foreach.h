@@ -156,7 +156,53 @@ inline void ForEachEdge(MeshType &m, std::function<void (typename MeshType::Edge
   }
 }
 
+/**
+ * ForEachTetra Helper
+ * to traverse all the tetras of a mesh you can simply write something like:
+ * 
+ *      ForEachTetra(m, [&](const TetraType &t){
+ *         MakeSomethingWithTetra(t);
+ *      });
+ *  
+ */
 
+template <class MeshType>
+inline void ForEachTetra(const MeshType &m, std::function<void (const typename MeshType::TetraType &)> action)
+{
+  if(m.tn == (int) m.tetra.size())
+  {
+    for(auto ti = m.tetra.begin(); ti! = m.tetra.end(); ++ti) {
+      action(*ti);
+    }       
+  }
+  else
+  {
+    for(auto ti = m.tetra.begin(); ti != m.tetra.end(); ++ti)
+      if(!(*ti).IsD())
+      {
+        action(*ti);
+      }    
+  }
+}
+
+template <class MeshType>
+inline void ForEachTetra(MeshType &m, std::function<void (typename MeshType::TetraType &)> action)
+{
+  if(m.tn == (int) m.tetra.size())
+  {
+    for(auto ti = m.tetra.begin(); ti! = m.tetra.end(); ++ti) {
+      action(*ti);
+    }       
+  }
+  else
+  {
+    for(auto ti = m.tetra.begin(); ti != m.tetra.end(); ++ti)
+      if(!(*ti).IsD())
+      {
+        action(*ti);
+      }    
+  }
+}
 
 /** @} */ // end doxygen group trimesh
 } // end namespace tri

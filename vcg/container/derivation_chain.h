@@ -173,6 +173,20 @@ template <
 					template <typename,typename> class D>
 					class MArity4: public D<MArity3<Base, TA,A,TB, B, TC,C>,TD > {};
 
+template <
+					class Base,
+					class TA,
+					template <typename,typename> class A,
+					class TB,
+					template <typename,typename> class B,
+					class TC,
+					template <typename,typename> class C,
+					class TD,
+                                        template <typename,typename> class D,
+					class TE,
+					template <typename,typename> class E>
+					class MArity5: public E<MArity4<Base, TA,A,TB, B, TC,C, TD, D>, TE> {};
+
 
 
 class DumClass {};

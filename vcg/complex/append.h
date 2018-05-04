@@ -46,19 +46,24 @@ public:
  typedef typename MeshLeft::EdgeType				EdgeLeft;
  typedef typename MeshLeft::FaceType				FaceLeft;
  typedef typename MeshLeft::HEdgeType				HEdgeLeft;
+ typedef typename MeshLeft::TetraType       TetraLeft;
  typedef typename MeshLeft::VertexPointer		VertexPointerLeft;
  typedef typename MeshLeft::VertexIterator	VertexIteratorLeft;
  typedef typename MeshLeft::EdgeIterator		EdgeIteratorLeft;
  typedef typename MeshLeft::HEdgeIterator		HEdgeIteratorLeft;
  typedef typename MeshLeft::FaceIterator		FaceIteratorLeft;
+ typedef typename MeshLeft::TetraIterator   TetraIteratorLeft;
 
 
- typedef typename ConstMeshRight::ScalarType			ScalarRight;
- typedef typename ConstMeshRight::CoordType			CoordRight;
- typedef typename ConstMeshRight::VertexType			VertexRight;
- typedef typename ConstMeshRight::EdgeType				EdgeRight;
- typedef typename ConstMeshRight::HEdgeType			HEdgeRight;
- typedef typename ConstMeshRight::FaceType				FaceRight;
+ typedef typename ConstMeshRight::ScalarType     ScalarRight;
+ typedef typename ConstMeshRight::CoordType      CoordRight;
+ typedef typename ConstMeshRight::VertexType     VertexRight;
+ typedef typename ConstMeshRight::EdgeType       EdgeRight;
+ typedef typename ConstMeshRight::HEdgeType      HEdgeRight;
+ typedef typename ConstMeshRight::FaceType       FaceRight;
+ typedef typename ConstMeshRight::TetraType      TetraRight;
+ typedef typename ConstMeshRight::TetraPointer   TetraPointerRight;
+ typedef typename ConstMeshRight::TetraIterator  TetraIteratorRight;
  typedef typename ConstMeshRight::VertexPointer  VertexPointerRight;
  typedef typename ConstMeshRight::VertexIterator VertexIteratorRight;
  typedef typename ConstMeshRight::EdgeIterator   EdgeIteratorRight;
@@ -68,7 +73,7 @@ public:
 
  struct Remap{
    static size_t InvalidIndex() { return std::numeric_limits<size_t>::max(); }
-        std::vector<size_t> vert,face,edge, hedge;
+        std::vector<size_t> vert, face, edge, hedge, tetra;
  };
 
  static void ImportVertexAdj(MeshLeft &ml, ConstMeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap ){
@@ -90,6 +95,13 @@ public:
    if(HasVHAdjacency(ml) && HasVHAdjacency(mr) && vr.cVHp() != 0){
      vl.VHp() = &ml.hedge[remap.hedge[Index(mr,vr.cVHp())]];
      vl.VHi() = vr.VHi();
+   }
+
+   // Vertex to Tetra Adj
+   if(HasVTAdjacency(ml) && HasVTAdjacency(mr) && vr.cVTp() != 0){
+     size_t i = Index(mr, vr.cVTp());
+     vl.VTp() = (i > ml.edge.size()) ? 0 : &ml.tetra[remap.tetra[i]];
+     vl.VTi() = vr.VTi();
    }
  }
 
@@ -176,6 +188,21 @@ public:
    if(HasHPrevAdjacency(ml) && HasHPrevAdjacency(mr))
      hl.HPp() = &ml.hedge[remap.hedge[Index(mr,hr.cHPp())]];
  }
+
+  static void ImportTetraAdj(MeshLeft &ml, ConstMeshRight &mr, TetraLeft &tl, const TetraRight &tr, Remap &remap )
+ {
+   // Tetra to Tetra  Adj
+   if(HasTTAdjacency(ml) && HasTTAdjacency(mr)){
+     assert(tl.TN() == tr.TN());
+     for( int vi = 0; vi < 4; ++vi ){
+       size_t idx = remap.tetra[Index(mr,tr.cTTp(vi))];
+       if(idx != Remap::InvalidIndex()){
+         tl.TTp(vi) = &ml.tetra[idx];
+         tl.TTi(vi) = tr.cTTi(vi);
+       }
+     }
+   }
+}
 
 // Append Right Mesh to the Left Mesh
 // Append::Mesh(ml, mr) is equivalent to ml += mr.
@@ -275,6 +302,16 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
       (*hp).ImportData(*(hi));
       remap.hedge[ind]=Index(ml,*hp);
     }
+  
+  remap.tetra.resize(mr.tetra.size(), Remap::InvalidIndex());
+  for (TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti)
+    if (!(*ti).IsD() && (!selected || (*ti).IsS())) {
+      size_t idx = Index(mr, *ti);
+      assert (remap.tetra[ind] == Remap::InvalidIndex());
+      TetraIteratorLeft tp = Allocator<MeshLeft>::AddTetras(ml, 1);
+      (*tp).ImportData(*ti);
+      remap.tetra[idx] = Index(ml, *tp);
+    }
 
   // phase 2.
   // copy data from ml to its corresponding elements in ml and adjacencies
@@ -324,6 +361,21 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
     if(!(*hi).IsD() && (!selected || (*hi).IsS())){
       ml.hedge[remap.hedge[Index(mr,*hi)]].ImportData(*hi);
       ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,*hi)]],*hi,remap,selected);
+    }
+  
+  //tetra
+  for(TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti)
+    if(!(*ti).IsD() && (!selected || (*ti).IsS()))
+    {
+      TetraLeft &tl = ml.tetra[remap.tetra[Index(mr,*ti)]];
+      
+      if(HasFVAdjacency(ml) && HasFVAdjacency(mr)){
+        for(int i = 0; i < 4; ++i)
+          tl.V(i) = &ml.vert[remap.vert[Index(mr,ti->cV(i))]];
+      }
+	    tl.ImportData(*ti);
+      if(adjFlag)  ImportTetraAdj(ml, mr, ml.tetra[remap.tetra[Index(mr,*ti)]], *ti, remap);
+
     }
 
         // phase 3.
@@ -381,6 +433,18 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
                 }
             }
 
+        // per tetra attributes
+        for(al = ml.tetra_attr.begin(); al != ml.tetra_attr.end(); ++al)
+            if(!(*al)._name.empty()){
+                ar =    mr.tetra_attr.find(*al);
+                if(ar!= mr.tetra_attr.end()){
+                    id_r = 0;
+                    for(TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti, ++id_r)
+                        if( !(*ti).IsD() && (!selected || (*ti).IsS()))
+                            memcpy((*al)._handle->At(remap.tetra[Index(mr, *ti)]),(*ar)._handle->At(id_r),
+                                (*al)._handle->SizeOf());
+                }
+            }
                 // per mesh attributes
                 // if both ml and mr have an attribute with the same name, no action is done
                 // if mr has an attribute that is NOT present in ml, the attribute is added to ml

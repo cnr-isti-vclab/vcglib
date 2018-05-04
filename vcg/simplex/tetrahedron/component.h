@@ -55,13 +55,13 @@ public:
 	static bool HasVertexRef()   { return false; }
 	static bool HasTVAdjacency() { return false; }
 
-	//Empty normals
-	typedef typename T::VertexType::NormalType NormalType;
-	NormalType &N(const int & ){ static NormalType dummynormal(0, 0, 0); assert(0); return dummynormal; }
-	const NormalType cN(const int & ) const { static NormalType dummynormal(0, 0, 0); assert(0); return dummynormal; }
+	// //Empty normals
+	// typedef typename T::VertexType::NormalType NormalType;
+	// NormalType &N(const int & ){ static NormalType dummynormal(0, 0, 0); assert(0); return dummynormal; }
+	// const NormalType cN(const int & ) const { static NormalType dummynormal(0, 0, 0); assert(0); return dummynormal; }
   
-	static bool HasFaceNormal()      { return false; }
-	static bool HasFaceNormalOcc()   { return false; }
+	// static bool HasFaceNormal()      { return false; }
+	// static bool HasFaceNormalOcc()   { return false; }
 
 	//Empty color
 	typedef vcg::Color4b ColorType;
@@ -223,33 +223,33 @@ public:
 
 // };
 
-template <class A, class T> class FaceNormal:  public T {
-public:
-	typedef A NormalType;
+// template <class A, class T> class FaceNormal:  public T {
+// public:
+// 	typedef A NormalType;
 
-	inline NormalType N(const int & i){  assert((i>=0)&&(i < 4)); return _facenormals[i]; }
-  inline NormalType cN(const int & i) const { assert((i>=0)&&(i < 4)); return _facenormals[i]; }
-  static bool HasFaceNormals()   { return true; }
-  static bool HasFaceNormalOcc()   { return false; }
+// 	inline NormalType N(const int & i){  assert((i>=0)&&(i < 4)); return _facenormals[i]; }
+//   inline NormalType cN(const int & i) const { assert((i>=0)&&(i < 4)); return _facenormals[i]; }
+//   static bool HasFaceNormals()   { return true; }
+//   static bool HasFaceNormalOcc()   { return false; }
 
-  template <class RightValueType>
-  void ImportData(const RightValueType & rightT)
-  {
-    if(rightT.IsNormalEnabled()) N().Import(rightT.cN());
-    T::ImportData(rightT);
-  }
+//   template <class RightValueType>
+//   void ImportData(const RightValueType & rightT)
+//   {
+//     if(rightT.IsNormalEnabled()) N().Import(rightT.cN());
+//     T::ImportData(rightT);
+//   }
 
-  static void Name(std::vector<std::string> & name){name.push_back(std::string("FaceNormal"));T::Name(name);}
+//   static void Name(std::vector<std::string> & name){name.push_back(std::string("FaceNormal"));T::Name(name);}
 	
-private:
-  NormalType  _facenormals[4];    
-};
+// private:
+//   NormalType  _facenormals[4];    
+// };
 
-template <class T> class FaceNormal3f: public FaceNormal<vcg::Point3f, T>{
-public:static void Name(std::vector<std::string> & name){name.push_back(std::string("FaceNormal3f"));T::Name(name);} };
+//template <class T> class FaceNormal3f: public FaceNormal<vcg::Point3f, T>{
+//public:static void Name(std::vector<std::string> & name){name.push_back(std::string("FaceNormal3f"));T::Name(name);} };
 
-template <class T> class FaceNormal3d: public FaceNormal<vcg::Point3d, T>{
-public:static void Name(std::vector<std::string> & name){name.push_back(std::string("FaceNormal3d"));T::Name(name);} };
+//template <class T> class FaceNormal3d: public FaceNormal<vcg::Point3d, T>{
+//public:static void Name(std::vector<std::string> & name){name.push_back(std::string("FaceNormal3d"));T::Name(name);} };
 
 /*------------------------- FLAGS -----------------------------------------*/ 
 // template <class T> class EmptyBitFlags: public T {
