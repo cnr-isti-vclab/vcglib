@@ -193,7 +193,6 @@ public:
  {
    // Tetra to Tetra  Adj
    if(HasTTAdjacency(ml) && HasTTAdjacency(mr)){
-     assert(tl.TN() == tr.TN());
      for( int vi = 0; vi < 4; ++vi ){
        size_t idx = remap.tetra[Index(mr,tr.cTTp(vi))];
        if(idx != Remap::InvalidIndex()){
@@ -307,7 +306,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
   for (TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti)
     if (!(*ti).IsD() && (!selected || (*ti).IsS())) {
       size_t idx = Index(mr, *ti);
-      assert (remap.tetra[ind] == Remap::InvalidIndex());
+      assert (remap.tetra[idx] == Remap::InvalidIndex());
       TetraIteratorLeft tp = Allocator<MeshLeft>::AddTetras(ml, 1);
       (*tp).ImportData(*ti);
       remap.tetra[idx] = Index(ml, *tp);

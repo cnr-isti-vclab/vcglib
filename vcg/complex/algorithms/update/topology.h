@@ -48,15 +48,97 @@ typedef typename MeshType::EdgeIterator   EdgeIterator;
 typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
+typedef typename MeshType::TetraType      TetraType;
+typedef typename MeshType::TetraPointer   TetraPointer;
+typedef typename MeshType::TetraIterator  TetraIterator;
 
 
 /// \headerfile topology.h vcg/complex/algorithms/update/topology.h
+
+/// \brief Auxiliary data structure for computing tetra tetra adjacency information.
+/**
+ * It identifies a face, storing three vertex pointers and a tetra pointer where it belongs.
+ */
+
+class PFace
+{
+public:
+  VertexPointer v[3];  //three ordered vertex pointers, identify a face
+  TetraPointer  t;     //the pointer to the tetra where this face belongs
+  int           z;     //index in [0..3] of the face in the tetra
+  bool   isBorder;
+
+  PFace () {}
+  PFace (TetraPointer tp, const int nz) { this->Set(tp, nz); }
+
+  void Set (TetraPointer tp /*the tetra pointer*/, const int nz /*the face index*/) 
+  {
+    assert (tp != 0);
+    assert (nz >= 0 && nz < 4);
+    
+    v[0] = tp->cV(Tetra::VofF(nz, 0));
+    v[1] = tp->cV(Tetra::VofF(nz, 1));
+    v[2] = tp->cV(Tetra::VofF(nz, 2));
+    
+    assert(v[0] != v[1] && v[1] != v[2]); //no degenerate faces
+
+    if (v[0] > v[1])
+      std::swap(v[0], v[1]);
+    if (v[1] > v[2])
+      std::swap(v[1], v[2]);
+    if (v[0] > v[1])
+      std::swap(v[0], v[1]);
+
+    t = tp;
+    z = nz;
+    
+
+  }
+
+  inline bool operator < (const PFace & pf) const 
+  {
+    if (v[0] < pf.v[0]) 
+      return true;
+    else
+    { 
+      if (v[0] > pf.v[0]) return false;
+
+      if (v[1] < pf.v[1])
+        return true;
+      else
+      {
+        if (v[1] > pf.v[1]) return false;
+
+        return (v[2] < pf.v[2]);
+      }
+    }
+  }
+
+  inline bool operator == (const PFace & pf) const
+  {
+    return v[0] == pf.v[0] && v[1] == pf.v[1] && v[2] == pf.v[2];
+  }
+};
+
+static void FillFaceVector (MeshType & m, std::vector<PFace> & fvec)
+{
+  ForEachTetra(m, [&fvec] (MeshType::TetraType & t) {
+    for (int i = 0; i < 4; ++i)
+      fvec.push_back(PFace(&t, i));
+  });
+}
+
+static void FillUniqueFaceVector (MeshType & m, std::vector<PFace> & fvec)
+{
+  FillFaceVector(m, fvec);
+  std::sort(fvec.begin(), fvec.end());
+  typename std::vector<PFace>::iterator newEnd = std::unique(fvec.begin(), fvec.end());
+}
 
 /// \brief Auxiliairy data structure for computing face face adjacency information.
 /**
 It identifies and edge storing two vertex pointer and a face pointer where it belong.
 */
-
 class PEdge
 {
 public:
@@ -219,6 +301,60 @@ static void AllocateEdge(MeshType &m)
 
 }
 
+/// \brief Clear the tetra-tetra topological relation, setting each involved pointer to null.
+/// useful when you passed a mesh with tt adjacency to an algorithm that does not use it and chould have messed it
+static void ClearTetraTetra (MeshType & m)
+{
+  RequireTTAdjacency(m);
+  ForEachTetra(m, [] (MeshType::TetraType & t) {
+      for (int i = 0; i < 4; ++i)
+      {
+        t.TTp(i) = NULL;
+        t.TTi(i) = -1;
+      }
+  });
+}
+
+/// \brief Updates the Tetra-Tetra topological relation by allowing to retrieve for each tetra what other tetras share their faces.
+static void TetraTetra (MeshType & m)
+{
+  RequireTTAdjacency(m);
+  if (m.tn == 0) return;
+
+  std::vector<PFace> fvec;
+  FillFaceVector(m, fvec);
+  std::sort(fvec.begin(), fvec.end());
+
+  int nf = 0;
+  typename std::vector<PFace>::iterator pback, pfront;
+  pback  = fvec.begin();
+  pfront = fvec.begin();
+
+  do 
+  {
+    if (pfront == fvec.end() || !(*pfront == *pback))
+    {
+      typename std::vector<PFace>::iterator q, q_next;
+      for (q = pback; q < pfront - 1; ++q)
+      {
+        assert((*q).z >= 0);
+        q_next = q;
+        ++q_next;
+        assert((*q_next).z >= 0 && (*q_next).z < 4);
+        
+        (*q).t->TTp(q->z) = (*q_next).t;
+        (*q).t->TTi(q->z) = (*q_next).z;
+      }
+      
+      (*q).t->TTp(q->z) = pback->t;
+      (*q).t->TTi(q->z) = pback->z;
+      pback = pfront;
+      ++nf;
+    }
+    if (pfront == fvec.end()) break;
+    ++pfront;
+  } while (true);
+}
 /// \brief Clear the Face-Face topological relation setting each involved pointer to null.
 /// useful when you passed a mesh with ff adjacency to an algorithm that does not use it and could have messed it.
 static void ClearFaceFace(MeshType &m)
@@ -280,6 +416,30 @@ static void FaceFace(MeshType &m)
   } while(true);
 }
 
+
+/// \brief Update the vertex-tetra topological relation.
+static void VertexTetra(MeshType & m)
+{
+  RequireVTAdjacency(m);
+
+  
+  ForEachVertex(m, [] (MeshType::VertexType & v) {
+      v.VTp() = NULL;
+      v.VTi() = 0;
+  });
+
+  ForEachTetra(m, [] (MeshType::TetraType & t) {
+    //this works like this: the first iteration defines the end of the chain
+    //then it backwards chains everything
+      for (int i = 0; i < 4; ++i)
+      {
+        t.VTp(i) = t.V(i)->VTp();
+        t.VTi(i) = t.V(i)->VTi();
+        t.V(i)->VTp() = &t;
+        t.V(i)->VTi() = i;
+      }
+  });
+}
 /// \brief Update the Vertex-Face topological relation.
 /**
 The function allows to retrieve for each vertex the list of faces sharing this vertex.

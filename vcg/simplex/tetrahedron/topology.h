@@ -21,48 +21,28 @@
 *                                                                           *
 ****************************************************************************/
 
-#ifndef __VCG_TETRA_MESH_H
-#define __VCG_TETRA_MESH_H
-#define __VCG_TETRA_MESH
-#define __VCG_MESH
+#ifndef _VCG_TETRA_TOPOLOGY
+#define _VCG_TETRA_TOPOLOGY
 
-#include <cassert>
-#include <cstring>
-#include <string>
-#include <ctime>
-#include <vector>
-#include <set>
-#include <stack>
-#include <queue>
-#include <map>
-#include <algorithm>
-#include <iostream>
-#include <stdexcept>
-#include <limits>
-#include <iterator>
-#include <typeindex>
-#include <wrap/callback.h>
-#include <vcg/complex/exception.h>
-#include <vcg/container/simple_temporary_data.h>
-#include <vcg/complex/used_types.h>
-#include <vcg/complex/tetrahedron/base.h>
-#include <vcg/complex/tetrahedron/allocate.h>
-#include <vcg/simplex/face/pos.h>
-#include <vcg/simplex/face/topology.h>
-#include <vcg/simplex/edge/pos.h>
-#include <vcg/simplex/edge/topology.h>
-#include <vcg/simplex/tetrahedron/pos.h>
-#include <vcg/complex/foreach.h>
-#include <vcg/complex/algorithms/update/flag.h>
-#include <vcg/complex/algorithms/update/selection.h>
-#include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/normal.h>
-#include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/mesh_assert.h>
-#include <vcg/complex/append.h>
+namespace vcg {
+namespace tetrahedron {
+/** \addtogroup tetrahedron */
+/*@{*/
 
-#undef __VCG_TETRA_MESH
-#undef __VCG_MESH
+/** Return a boolean that indicate if the j-th face of the tetra is a border.
+    @param j Index of the face
+    @return true if j is an face of border, false otherwise
+*/
+template <class TetraType>
+inline bool IsBorder(TetraType const & t,  const int j )
+{
+  if(TetraType::HasTTAdjacency())
+      return t.cTTp(j)==&t;
+  assert(0);
+  return true;
+}
+
+}
+}
 
 #endif
-

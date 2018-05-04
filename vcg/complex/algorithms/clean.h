@@ -116,6 +116,11 @@ public:
   typedef typename MeshType::FaceIterator         FaceIterator;
   typedef typename MeshType::ConstFaceIterator    ConstFaceIterator;
   typedef typename MeshType::FaceContainer        FaceContainer;
+  typedef typename MeshType::TetraType            TetraType;
+  typedef typename MeshType::TetraPointer         TetraPointer;
+  typedef typename MeshType::TetraIterator        TetraIterator;
+  typedef typename MeshType::ConstTetraIterator   ConstTetraIterator;
+
   typedef typename vcg::Box3<ScalarType>  Box3Type;
 
   typedef GridStaticPtr<FaceType, ScalarType > TriMeshGrid;
@@ -191,6 +196,13 @@ public:
           {
             (*ei).V(k) = &*mp[ (*ei).V(k) ];
           }
+
+    for (TetraIterator ti = m.tetra.begin(); ti != m.tetra.end(); ++ti)
+        if (!(*ti).IsD())
+            for (k = 0; k < 4; ++k)
+                if (mp.find((typename MeshType::VertexPointer)(*ti).V(k)) != mp.end())
+                    (*ti).V(k) = &*mp[ (*ti).V(k) ];
+
     if(RemoveDegenerateFlag) RemoveDegenerateFace(m);
     if(RemoveDegenerateFlag && m.en>0) {
       RemoveDegenerateEdge(m);

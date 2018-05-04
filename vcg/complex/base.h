@@ -641,10 +641,10 @@ template < class TetraType> bool TetraVectorHasPerTetraQuality(const std::vector
 template < class TetraType> bool TetraVectorHasVTAdjacency   (const std::vector<TetraType> &) { return TetraType::HasVTAdjacency(); }
 template < class TetraType> bool TetraVectorHasTTAdjacency   (const std::vector<TetraType> &) { return TetraType::HasTTAdjacency(); }
 
-template < class TriMeshType> bool HasPerTetraFlags       (const TriMeshType &m) { return tri::FaceVectorHasPerTetraFlags       (m.face); }
-template < class TriMeshType> bool HasPerTetraColor       (const TriMeshType &m) { return tri::FaceVectorHasPerTetraColor       (m.face); }
-template < class TriMeshType> bool HasPerTetraMark        (const TriMeshType &m) { return tri::FaceVectorHasPerTetraMark        (m.face); }
-template < class TriMeshType> bool HasPerTetraQuality     (const TriMeshType &m) { return tri::FaceVectorHasPerTetraQuality     (m.face); }
+template < class TriMeshType> bool HasPerTetraFlags       (const TriMeshType &m) { return tri::TetraVectorHasPerTetraFlags       (m.tetra); }
+template < class TriMeshType> bool HasPerTetraColor       (const TriMeshType &m) { return tri::TetraVectorHasPerTetraColor       (m.tetra); }
+template < class TriMeshType> bool HasPerTetraMark        (const TriMeshType &m) { return tri::TetraVectorHasPerTetraMark        (m.tetra); }
+template < class TriMeshType> bool HasPerTetraQuality     (const TriMeshType &m) { return tri::TetraVectorHasPerTetraQuality     (m.tetra); }
 
 template < class TriMeshType> bool HasFFAdjacency   (const TriMeshType &m) { return tri::FaceVectorHasFFAdjacency   (m.face); }
 template < class TriMeshType> bool HasEEAdjacency   (const TriMeshType &m) { return tri::EdgeVectorHasEEAdjacency   (m.edge); }

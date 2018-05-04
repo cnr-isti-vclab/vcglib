@@ -298,6 +298,27 @@ static int FofEE(const int &indexE0,const int &indexE1)
 						  
 			return edgesface[indexE0][indexE1];
 }
+
+// compute the barycenter
+template<class TetraType>
+static Point3<typename TetraType::ScalarType> Barycenter(const TetraType & t) 
+{
+	return ((t.cP(0)+t.cP(1)+t.cP(2)+t.cP(3))/(TetraType::ScalarType) 4.0);
+}
+
+// compute and return the volume of a tetrahedron
+ template<class TetraType>
+static typename TetraType::ScalarType ComputeVolume( const TetraType &  t){
+	return (typename TetraType::ScalarType)((( t.cP(2)-t.cP(0))^(t.cP(1)-t.cP(0) ))*(t.cP(3)-t.cP(0))/6.0);
+}
+		
+/// Returns the normal to the face face of the tetrahedron t
+template<class TetraType>
+static Point3<typename TetraType::ScalarType> Normal( const TetraType &t,const int & face)
+{
+  return(((t.cP(Tetra::VofF(face,1))-t.cP(Tetra::VofF(face,0)))^(t.cP(Tetra::VofF(face,2))-t.cP(Tetra::VofF(face,0)))).Normalize());
+}
+
 };
 
 /** 
@@ -488,25 +509,7 @@ ScalarType ComputeAspectRatio()
 
 }; //end Class
 
-// compute the barycenter
-template<class ScalarType>
-Point3<ScalarType> Barycenter(const Tetra3<ScalarType> &t) 
-{
-	return ((t.cP(0)+t.cP(1)+t.cP(2)+t.cP(3))/(ScalarType) 4.0);
-}
 
-// compute and return the volume of a tetrahedron
- template<class TetraType>
-typename TetraType::ScalarType ComputeVolume( const TetraType &  t){
-	return (typename TetraType::ScalarType)((( t.cP(2)-t.cP(0))^(t.cP(1)-t.cP(0) ))*(t.cP(3)-t.cP(0))/6.0);
-}
-		
-/// Returns the normal to the face face of the tetrahedron t
-template<class TetraType>
-Point3<typename TetraType::ScalarType> Normal( const TetraType &t,const int &face)
-{
-  return(((t.cP(Tetra::VofF(face,1))-t.cP(Tetra::VofF(face,0)))^(t.cP(Tetra::VofF(face,2))-t.cP(Tetra::VofF(face,0)))).Normalize());
-}
 /*@}*/
 }	 // end namespace
 

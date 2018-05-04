@@ -81,8 +81,8 @@ public:
 
 	static bool HasQuality() { return false; }
 	static bool HasQuality3() { return false; }
-        bool IsQualityEnabled() const { return T::TetraType::HasQuality(); }
-        bool IsQuality3Enabled() const { return T::TetraType::HasQuality3(); }
+  inline bool IsQualityEnabled() const { return T::TetraType::HasQuality(); }
+	inline bool IsQuality3Enabled() const { return T::TetraType::HasQuality3(); }
 
 	//Empty flags
   int &Flags() { static int dummyflags(0); assert(0); return dummyflags; }
@@ -103,10 +103,10 @@ public:
 	
 	//Empty Adjacency
 	typedef int VFAdjType;
-	typename T::TetraPointer & VTp( const int ) { static typename T::TetraPointer tp=0; assert(0); return tp; }
+	typename T::TetraPointer & VTp     ( const int )       { static typename T::TetraPointer tp=0; assert(0); return tp; }
 	typename T::TetraPointer const cVTp( const int ) const { static typename T::TetraPointer const tp=0; assert(0); return tp; }
 
-	typename T::TetraPointer & TTp( const int ) { static typename T::TetraPointer tp=0; assert(0); return tp; }
+	typename T::TetraPointer & TTp     ( const int )       { static typename T::TetraPointer tp=0; assert(0); return tp; }
 	typename T::TetraPointer const cTTp( const int ) const { static typename T::TetraPointer const tp=0; assert(0); return tp; }
 
 	char & VTi( const int j )       { static char z=0; assert(0); return z; }
@@ -122,8 +122,8 @@ public:
     }
   }
 
-	static bool HasVTAdjacency() { return false; }
-	static bool HasTTAdjacency() { return false; }
+	static bool HasVTAdjacency()    { return false; }
+	static bool HasTTAdjacency()    { return false; }
 	static bool HasTTAdjacencyOcc() { return false; }
 	static bool HasVTAdjacencyOcc() { return false; }
 
@@ -154,20 +154,39 @@ public:
 		v[1]=0;
 		v[2]=0;
 		v[3]=0;
+
+/******* vertex and faces indices scheme*********
+ * 
+ * 						/2\`
+ * 					 /   \  `
+ * 					/     \    `
+ * 				 /       \  _ 3`
+ *				/     _   \    '
+ * 			 / _         \  '
+ *      /0___________1\'
+ * 
+ */ 
+		findices[0][0] = 0; findices[0][1] = 1; findices[0][2] = 2;
+		findices[1][0] = 0; findices[1][1] = 3; findices[1][2] = 1;
+		findices[2][0] = 0; findices[2][1] = 2; findices[2][2] = 3;
+		findices[3][0] = 1; findices[3][1] = 3; findices[3][2] = 2;
 	}
-        typedef typename T::VertexType::CoordType CoordType;
-        typedef typename T::VertexType::ScalarType ScalarType;
+  
+	typedef typename T::VertexType::CoordType CoordType;
+  typedef typename T::VertexType::ScalarType ScalarType;
 
-          inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<4); return v[j]; }
-          inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<4); return v[j]; }
-                inline typename T::VertexType * const  cV( const int j ) const { assert(j>=0 && j<4);	return v[j]; }
+  inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<4); return v[j]; }
+  inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<4); return v[j]; }
+  inline typename T::VertexType * const  cV( const int j ) const { assert(j>=0 && j<4);	return v[j]; }
 
-	// Shortcut per accedere ai punti delle facce
-        inline       typename CoordType & P( const int j ) 	    {	assert(j>=0 && j<4);		return v[j]->P();	}
-        inline const typename CoordType & P( const int j ) const	{	assert(j>=0 && j<4);		return v[j]->cP(); }
-        inline const typename CoordType &cP( const int j ) const	{	assert(j>=0 && j<4);		return v[j]->cP(); }
+	inline typename size_t const cFtoVi (const int f, const int j) const { assert(f >= 0 && f < 4); assert(j >= 0 && j < 3); return findices[f][j]; }
 
-	/** Return the pointer to the ((j+1)%3)-th vertex of the face.
+	// Shortcut for tetra points
+  inline       typename CoordType & P( const int j ) 	    {	assert(j>=0 && j<4);		return v[j]->P();	}
+  inline const typename CoordType & P( const int j ) const	{	assert(j>=0 && j<4);		return v[j]->cP(); }
+  inline const typename CoordType &cP( const int j ) const	{	assert(j>=0 && j<4);		return v[j]->cP(); }
+
+	/** Return the pointer to the ((j+1)%4)-th vertex of the tetra.
 		@param j Index of the face vertex.
 	 */
 	inline       typename T::VertexType *       &  V0( const int j )       { return V(j);}
@@ -184,18 +203,18 @@ public:
 	inline const typename T::VertexType * const & cV3( const int j ) const { return cV((j+3)%4);}
 
 	/// Shortcut to get vertex values
-        inline       typename CoordType &  P0( const int j )       { return V(j)->P();}
-        inline       typename CoordType &  P1( const int j )       { return V((j+1)%4)->P();}
-        inline       typename CoordType &  P2( const int j )       { return V((j+2)%4)->P();}
-        inline       typename CoordType &  P3( const int j )       { return V((j+3)%4)->P();}
-        inline const typename CoordType &  P0( const int j ) const { return V(j)->P();}
-        inline const typename CoordType &  P1( const int j ) const { return V((j+1)%4)->P();}
-        inline const typename CoordType &  P2( const int j ) const { return V((j+2)%4)->P();}
-        inline const typename CoordType &  P3( const int j ) const { return V((j+3)%4)->P();}
-        inline const typename CoordType & cP0( const int j ) const { return cV(j)->P();}
-        inline const typename CoordType & cP1( const int j ) const { return cV((j+1)%4)->P();}
-        inline const typename CoordType & cP2( const int j ) const { return cV((j+2)%4)->P();}
-        inline const typename CoordType & cP3( const int j ) const { return cV((j+3)%4)->P();}
+	inline       typename CoordType &P0 (const int j)       { return V(j)->P(); }
+	inline       typename CoordType &P2 (const int j)       { return V((j + 2) % 4)->P(); }
+	inline       typename CoordType &P3 (const int j)       { return V((j + 3) % 4)->P(); }
+	inline       typename CoordType &P1 (const int j)       { return V((j + 1) % 4)->P(); }
+	inline const typename CoordType &P0 (const int j) const { return V(j)->P(); }
+	inline const typename CoordType &P1 (const int j) const { return V((j + 1) % 4)->P(); }
+	inline const typename CoordType &P2 (const int j) const { return V((j + 2) % 4)->P(); }
+	inline const typename CoordType &P3 (const int j) const { return V((j + 3) % 4)->P(); }
+	inline const typename CoordType &cP0(const int j) const { return cV(j)->P(); }
+	inline const typename CoordType &cP1(const int j) const { return cV((j + 1) % 4)->P(); }
+	inline const typename CoordType &cP2(const int j) const { return cV((j + 2) % 4)->P(); }
+	inline const typename CoordType &cP3(const int j) const { return cV((j + 3) % 4)->P(); }
 
 	static bool HasVertexRef()   { return true; }
 	static bool HasTVAdjacency() { return true; }
@@ -207,6 +226,7 @@ public:
 
   private:
   typename T::VertexType *v[4];
+	size_t findices[4][3];
 };
 
 

@@ -51,6 +51,9 @@ public:
   typedef typename MeshType::FaceType       FaceType;
   typedef typename MeshType::FacePointer    FacePointer;
   typedef typename MeshType::FaceIterator   FaceIterator;
+  typedef typename MeshType::TetraType      TetraType;
+  typedef typename MeshType::TetraPointer   TetraPointer;
+  typedef typename MeshType::TetraIterator  TetraIterator;
 
   /// \brief Reset all the mesh flags (vertexes edge faces) setting everithing to zero (the default value for flags)
 
@@ -65,7 +68,11 @@ public:
     if(HasPerFaceFlags(m) )
       for(FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi)
         (*fi).Flags() = 0;
+    if(HasPerTetraFlags(m) )
+      for(TetraIterator ti=m.tetra.begin(); ti!=m.tetra.end(); ++ti)
+        (*ti).Flags() = 0;
   }
+
 
   static void VertexClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
   {
@@ -91,6 +98,14 @@ public:
       if(!(*fi).IsD()) (*fi).Flags() &= andMask ;
   }
 
+  static void TetraClear(MeshType &m, unsigned int FlagMask = 0xffffffff)
+  {
+    RequirePerTetraFlags(m);
+    int andMask = ~FlagMask;
+    for(TetraIterator ti=m.tetra.begin(); ti!=m.tetra.end(); ++ti)
+      if(!(*ti).IsD()) (*ti).Flags() &= andMask ;
+  }
+
   static void VertexSet(MeshType &m, unsigned int FlagMask)
   {
     RequirePerVertexFlags(m);
@@ -110,6 +125,13 @@ public:
     RequirePerFaceFlags(m);
     for(FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi)
       if(!(*fi).IsD()) (*fi).Flags() |= FlagMask ;
+  }
+
+  static void TetraSet(MeshType &m, unsigned int FlagMask)
+  {
+    RequirePerTetraFlags(m);
+    for(TetraIterator ti=m.tetra.begin(); ti!=m.tetra.end(); ++ti)
+      if(!(*ti).IsD()) (*ti).Flags() |= FlagMask ;
   }
 
 
@@ -134,9 +156,13 @@ public:
   static void FaceSetV(MeshType &m) { FaceSet(m,FaceType::VISITED);}
   static void FaceSetB(MeshType &m) { FaceSet(m,FaceType::BORDER);}
   static void FaceSetF(MeshType &m) { FaceSet(m,FaceType::FAUX012);}
-
+  static void TetraClearV(MeshType &m) { TetraClear(m, TetraType::VISITED); }
+  static void TetraClearS(MeshType &m) { TetraClear(m, TetraType::SELECTED); }
+  static void TetraClearB(MeshType &m) { TetraClear(m, TetraType::BORDER0123); }
+  static void TetraSetV(MeshType &m) { TetraSet(m, TetraType::VISITED); }
+  static void TetraSetS(MeshType &m) { TetraSet(m, TetraType::SELECTED); }
+  static void TetraSetB(MeshType &m) { TetraSet(m, TetraType::BORDER0123); }
   /// \brief Compute the border flags for the faces using the Face-Face Topology.
-
   /**
  \warning Obviously it assumes that the topology has been correctly computed (see: UpdateTopology::FaceFace )
 */
@@ -153,6 +179,23 @@ public:
       }
   }
 
+  /// \brief Compute the border flags for the tetras using the Tetra-Tetra Topology.
+  /**
+ \warning Obviously it assumes that the topology has been correctly computed (see: UpdateTopology::FaceFace )
+*/
+  static void TetraBorderFromTT(MeshType &m)
+  {
+    RequirePerTetraFlags(m);
+    RequireTTAdjacency(m);
+
+    for(TetraIterator ti=m.tetra.begin(); ti!=m.tetra.end(); ++ti)
+      if(!(*ti).IsD())
+        for(int j = 0; j < 4; ++j)
+        {
+          if (tetrahedron::IsBorder(*fi,j)) (*ti).SetB(j);
+          else (*ti).ClearB(j);
+        }
+  }
 
   static void FaceBorderFromVF(MeshType &m)
   {

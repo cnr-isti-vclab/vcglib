@@ -98,8 +98,16 @@ public:
 
   typename TT::TetraPointer &VTp()        { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
   typename TT::TetraPointer cVTp() const  { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
-  int &VTi() { static int z = 0; return z; }
+  int &VTi()       { static int z = 0; assert(0); return z; }
+  int cVTi() const { static int z = 0; assert(0); return z; }
   static bool HasVTAdjacency() { return false; }
+  bool IsVTInitialized() const {return static_cast<const typename TT::VertexType *>(this)->cVTi()!=-1;}
+  void VTClear() {
+    if(IsVTInitialized()) {
+      static_cast<typename TT::VertexPointer>(this)->VTp()=0;
+      static_cast<typename TT::VertexPointer>(this)->VTi()=-1;
+    }
+  }
 
   typename TT::FacePointer &VFp()       { static typename TT::FacePointer fp=0;  assert(0); return fp; }
   typename TT::FacePointer cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
@@ -589,6 +597,7 @@ public:
     typename T::TetraPointer &VTp()       { return _tp; }
     typename T::TetraPointer cVTp() const { return _tp; }
     int &VTi() {return _zp; }
+    int cVTi() const { return _zp; }
     static bool HasVTAdjacency() { return true; }
     static void Name( std::vector< std::string > & name ) { name.push_back( std::string("VTAdj") ); T::Name(name); }
 

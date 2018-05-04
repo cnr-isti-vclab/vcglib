@@ -1131,10 +1131,10 @@ public:
         if(HasEFAdjacency(m))
 //          if (m.edge[i].cEEp(0)!=0)
           {
-            m.edge[ pu.remap[i] ].EFp(0) = m.edge[i].cEFp(0);
-            m.edge[ pu.remap[i] ].EFi(0) = m.edge[i].cEFi(0);
-            m.edge[ pu.remap[i] ].EFp(1) = m.edge[i].cEFp(1);
-            m.edge[ pu.remap[i] ].EFi(1) = m.edge[i].cEFi(1);
+            m.edge[ pu.remap[i] ].EFp() = m.edge[i].cEFp();
+            m.edge[ pu.remap[i] ].EFi() = m.edge[i].cEFi();
+            m.edge[ pu.remap[i] ].EFp() = m.edge[i].cEFp();
+            m.edge[ pu.remap[i] ].EFi() = m.edge[i].cEFi();
           }
 
       }
@@ -1170,8 +1170,8 @@ public:
           pu.Update((*ei).VEp(i));
         if(HasEEAdjacency(m))
           pu.Update((*ei).EEp(i));
-        if(HasEFAdjacency(m))
-          pu.Update((*ei).EFp(i));
+//        if(HasEFAdjacency(m))
+//          pu.Update((*ei).EFp());
       }
   }
 
@@ -1322,7 +1322,7 @@ public:
     size_t pos = 0;
     for (size_t i = 0; i < m.tetra.size(); ++i)
     {
-      if (!m.tetra.IsD())
+      if (!m.tetra[i].IsD())
       {
         if (pos != i)
         {
@@ -1341,7 +1341,7 @@ public:
                 m.tetra[pos].VTi(j) = m.tetra[i].VTi(j);
               }
               else
-                m.tetra[pos].VTClear();
+                m.tetra[pos].VTClear(j);
             }
           //import TT adj
           if (HasTTAdjacency(m))
@@ -1397,7 +1397,7 @@ public:
           for (int i = 0; i < 4; ++i)
             if ((*ti).IsVTInitialized(i) && (*ti).VTp(i) != 0)
             {
-              size_t oldIndex = (*ti).VTp(i) - fbase;
+              size_t oldIndex = (*ti).VTp(i) - tbase;
               assert(tbase <= (*ti).VTp(i) && oldIndex < pu.remap.size());
               (*ti).VTp(i) = tbase + pu.remap[oldIndex];
             }

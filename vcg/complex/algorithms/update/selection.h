@@ -37,6 +37,8 @@ class SelectionStack
   typedef typename ComputeMeshType::template PerVertexAttributeHandle< bool > vsHandle;
   typedef typename ComputeMeshType::template PerEdgeAttributeHandle< bool >   esHandle;
   typedef typename ComputeMeshType::template PerFaceAttributeHandle< bool >   fsHandle;
+  typedef typename ComputeMeshType::template PerTetraAttributeHandle< bool >  tsHandle;
+
 
 public:
   SelectionStack(ComputeMeshType &m)
@@ -47,8 +49,9 @@ public:
   bool push()
   {
     vsHandle vsH = Allocator<ComputeMeshType>::template AddPerVertexAttribute< bool >(*_m);
-    esHandle esH = Allocator<ComputeMeshType>::template AddPerEdgeAttribute< bool >(*_m);
+    esHandle esH = Allocator<ComputeMeshType>::template AddPerEdgeAttribute< bool >  (*_m);
     fsHandle fsH = Allocator<ComputeMeshType>::template AddPerFaceAttribute< bool >  (*_m);
+    fsHandle tsH = Allocator<ComputeMeshType>::template AddPerTetraAttribute< bool > (*_m);
     typename ComputeMeshType::VertexIterator vi;
     for(vi = _m->vert.begin(); vi != _m->vert.end(); ++vi)
       if( !(*vi).IsD() ) vsH[*vi] = (*vi).IsS() ;
@@ -61,9 +64,14 @@ public:
     for(fi = _m->face.begin(); fi != _m->face.end(); ++fi)
       if( !(*fi).IsD() ) fsH[*fi] = (*fi).IsS() ;
 
+    typename ComputeMeshType::TetraIterator ti;
+    for(ti = _m->tetra.begin(); ti != _m->tetra.end(); ++ti)
+      if( !(*ti).IsD() ) tsH[*ti] = (*ti).IsS() ;
+
     vsV.push_back(vsH);
     esV.push_back(esH);
     fsV.push_back(fsH);
+    tsV.push_back(tsH);
     return true;
   }
 
@@ -89,6 +97,8 @@ public:
     vsHandle vsH = vsV.back();
     esHandle esH = esV.back();
     fsHandle fsH = fsV.back();
+    tsHandle tsH = tsV.back();
+
     if(! (Allocator<ComputeMeshType>::template IsValidHandle(*_m, vsH))) return false;
 
     for(auto vi = _m->vert.begin(); vi != _m->vert.end(); ++vi)
@@ -122,12 +132,25 @@ public:
         }
      }
 
+     for (auto ti = _m->tetra.begin(); ti != _m.tetra.end(); ++ti)
+      if (!(*ti).IsD())
+      {
+        if (fsH[*ti]) {
+          if (!andFlag) (*ti).SetS();
+        } else {
+          if (!orFlag)  (*ti).ClearS();
+        }
+      }
+
     Allocator<ComputeMeshType>::template DeletePerVertexAttribute<bool>(*_m,vsH);
     Allocator<ComputeMeshType>::template DeletePerEdgeAttribute<bool>(*_m,esH);
     Allocator<ComputeMeshType>::template DeletePerFaceAttribute<bool>(*_m,fsH);
+    Allocator<ComputeMeshType>::template DeletePerTetraAttribute<bool>(*_m,tsH);
+
     vsV.pop_back();
     esV.pop_back();
     fsV.pop_back();
+    tsV.pop_back();
     return true;
   }
 
@@ -136,6 +159,8 @@ private:
   std::vector<vsHandle> vsV;
   std::vector<esHandle> esV;
   std::vector<fsHandle> fsV;
+  std::vector<fsHandle> tsV;
+
 };
 
 /// \ingroup trimesh
@@ -161,6 +186,10 @@ typedef typename MeshType::EdgeIterator   EdgeIterator;
 typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
+typedef typename MeshType::TetraType      TetraType;
+typedef typename MeshType::TetraPointer   TetraPointer;
+typedef typename MeshType::TetraIterator  TetraIterator;
+
 typedef typename vcg::Box3<ScalarType>  Box3Type;
 
 /// \brief This function select all the vertices.
@@ -184,6 +213,16 @@ static size_t FaceAll(MeshType &m)
   for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
     if( !(*fi).IsD() )	(*fi).SetS();
   return m.fn;
+}
+
+/// \brief This function select all the tetras.
+static size_t TetraAll (MeshType & m)
+{
+  ForEachTetra(m, [] (MeshType::TetraType & t) {
+    t.SetS();
+  });
+
+  return m.tn;
 }
 
 /// \brief This function clear the selection flag for all the vertices.
@@ -210,12 +249,23 @@ static size_t FaceClear(MeshType &m)
   return 0;
 }
 
+/// \brief This function clears the selection flag for all the tetras.
+static size_t TetraClear (MeshType & m)
+{
+  ForEachTetra(m, [] (MeshType::TetraType & t) {
+    t.ClearS();
+  });
+
+  return 0;
+}
+
 /// \brief This function clears the selection flag for all the elements of a mesh (vertices, edges, and faces).
 static void Clear(MeshType &m)
 {
   VertexClear(m);
   EdgeClear(m);
   FaceClear(m);
+  TetraClear(m);
 }
 
 /// \brief This function returns the number of selected faces.
@@ -245,6 +295,17 @@ static size_t VertexCount(MeshType &m)
   return selCnt;
 }
 
+/// \brief This function returns the number of selected tetras.
+static size_t TetraCount (MeshType & m)
+{
+  size_t selCnt = 0;
+  ForEachTetra(m, [&selCnt] (MeshType::TetraType & t) {
+    if (t.IsS()) 
+      ++selCnt;
+  });
+
+  return selCnt;
+}
 /// \brief This function inverts the selection flag for all the faces.
 static size_t FaceInvert(MeshType &m)
 {
@@ -292,6 +353,24 @@ static size_t VertexInvert(MeshType &m)
       }
   return selCnt;
 }
+
+/// \brief This function inverts the selection flag for all the tetras.
+static size_t TetraInvert (MeshType & m)
+{
+  size_t selCnt = 0;
+  ForEachTetra(m, [&selCnt] (MeshType::TetraType & t) {
+    if (t.IsS())
+      t.ClearS();
+    else
+    {
+      t.SetS();
+      ++selCnt;
+    }
+  });
+
+  return selCnt;
+}
+
 
 /// \brief Select all the vertices that are touched by at least a single selected faces
 static size_t VertexFromFaceLoose(MeshType &m, bool preserveSelection=false)

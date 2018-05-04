@@ -55,6 +55,11 @@ public:
   typedef typename MeshType::FaceIterator   FaceIterator;
   typedef typename MeshType::VertexType::QualityType VertexQualityType;
   typedef typename MeshType::FaceType::QualityType FaceQualityType;
+  typedef typename MeshType::TetraType              TetraType;
+  typedef typename MeshType::TetraPointer           TetraPointer;
+  typedef typename MeshType::TetraIterator          TetraIterator;
+  typedef typename MeshType::TetraType::QualityType TetraQualityType;
+
 
 
 /** Assign to each vertex of the mesh a constant quality value. Useful for initialization.
@@ -134,6 +139,21 @@ static void FaceArea(MeshType &m)
   tri::RequirePerFaceQuality(m);
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
     (*fi).Q()=FaceQualityType(vcg::DoubleArea(*fi)/ScalarType(2.0));
+}
+
+static void TetraConstant(MeshType & m, const TetraQualityType q)
+{
+  tri::RequirePerTetraQuality(m);
+  ForEachTetra(m, [&q] (MeshType::TetraType & t) {
+      t.Q() = q;
+  });
+}
+static void TetraVolume(MeshType & m)
+{
+  tri::RequirePerTetraQuality(m);
+  ForEachTetra(m, [] (MeshType::TetraType & t) {
+     t.Q() =  TetraQualityType(vcg::Tetra::ComputeVolume(t));
+  });
 }
 
 static void VertexFromFace( MeshType &m, bool areaWeighted=true)

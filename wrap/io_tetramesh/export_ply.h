@@ -403,6 +403,7 @@ public:
                     vv[2]=indices[fp->cV(2)];
                     vv[3]=indices[fp->cV(3)];
 
+
                     fwrite(&c,1,1,fpout);
                     fwrite(vv,sizeof(int),4,fpout);
 
@@ -432,6 +433,7 @@ public:
                 }
                 else	// ***** ASCII *****
                 {
+                    fprintf(fpout,"%d " , 4);
                     fprintf(fpout,"%d %d %d %d ",
                             indices[fp->cV(0)],	indices[fp->cV(1)], indices[fp->cV(2)], indices[fp->cV(3)]);
 
