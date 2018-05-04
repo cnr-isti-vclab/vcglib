@@ -289,38 +289,10 @@ public:
         //assert(f->FFp(z)==f); // f is border along j
     }
 
-    /// Finds the next Crease half-edge border
-    /// TODO change crease flag with something more generic (per edge)
-    void NextCrease( )
-    {
-        assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
-        assert(IsCrease()); // f is border along j
-        // Si deve cambiare faccia intorno allo stesso vertice v
-        //finche' non si trova una faccia di bordo.
-        do
-        {
-            FlipE();
-            if (!IsCrease()) FlipF();
-        }
-        while(!IsCrease());
-
-        // L'edge j e' di bordo e deve contenere v
-        assert(IsCrease() &&( f->V(z)==v || f->V(f->Next(z))==v ));
-
-        FlipV();
-        assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
-    }
-
     /// Checks if the half-edge is of border
     bool IsBorder()const
     {
         return face::IsBorder(*f,z);
-    }
-
-    /// Checks if the half-edge is of crease
-    bool IsCrease() const
-    {
-        return f->IsCrease(z);
     }
 
     bool IsFaux() const
@@ -332,6 +304,10 @@ public:
     {
         return face::IsManifold(*f,z);
     }
+    
+    bool IsFaceS() const { return f->IsS();}
+    bool IsEdgeS() const { return f->IsFaceEdgeS(z);}
+    bool IsVertS() const { return v->IsS();}
     
     /*!
      * Returns the angle (in radiant) between the two edges incident on V.
