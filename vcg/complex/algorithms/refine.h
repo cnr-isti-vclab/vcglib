@@ -316,8 +316,8 @@ class RefinedFaceData
     {
         public:
         RefinedFaceData(){
-            ep[0]=0;ep[1]=0;ep[2]=0;
-            vp[0]=0;vp[1]=0;vp[2]=0;
+            ep[0] = ep[1] = ep[2] = false;
+            vp[0] = vp[1] = vp[2] = NULL;
         }
         bool ep[3];
         VertexPointer vp[3];
@@ -443,11 +443,11 @@ bool RefineE(MESH_TYPE &m, MIDPOINT &mid, EDGEPRED &ep,bool RefineSelected=false
     TexCoordType wtt[6];  // per ogni faccia sono al piu' tre i nuovi valori
     // di texture per wedge (uno per ogni edge)
 
-    int fca=0,fcn =0;
+    int fca=0;
     for(fi=m.face.begin();fi!=oldendf;++fi) if(!(*fi).IsD())
     {
-      if(cb && (++step%PercStep)==0)(*cb)(step/PercStep,"Refining...");
-      fcn++;
+      if(cb && (++step%PercStep)==0)
+          (*cb)(step/PercStep,"Refining...");
       vv[0]=(*fi).V(0);
       vv[1]=(*fi).V(1);
       vv[2]=(*fi).V(2);
@@ -455,7 +455,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT &mid, EDGEPRED &ep,bool RefineSelected=false
       vv[4] = RD[fi].vp[1];
       vv[5] = RD[fi].vp[2];
 
-      int ind=((&*vv[3])?1:0)+((&*vv[4])?2:0)+((&*vv[5])?4:0);
+      int ind = ((vv[3] != NULL) ? 1 : 0) + ((vv[4] != NULL) ? 2 : 0) + ((vv[5] != NULL) ? 4 : 0);
 
       nf[0]=&*fi;
       int i;
@@ -468,29 +468,41 @@ bool RefineE(MESH_TYPE &m, MIDPOINT &mid, EDGEPRED &ep,bool RefineSelected=false
       }
 
 
-      if(tri::HasPerWedgeTexCoord(m))
-        for(i=0;i<3;++i)	{
-          wtt[i]=(*fi).WT(i);
-          wtt[3+i]=mid.WedgeInterp((*fi).WT(i),(*fi).WT((i+1)%3));
-        }
+	if(tri::HasPerWedgeTexCoord(m))
+		for(i=0;i<3;++i)
+		{
+			wtt[i]=(*fi).WT(i);
+			wtt[3+i]=mid.WedgeInterp((*fi).WT(i),(*fi).WT((i+1)%3));
+		}
 
-      int orgflag=	(*fi).Flags();
-      for(i=0;i<SplitTab[ind].TriNum;++i)
-        for(j=0;j<3;++j){
-          (*nf[i]).V(j)=&*vv[SplitTab[ind].TV[i][j]];
+	int orgflag = (*fi).Flags();
+	for (i=0; i<SplitTab[ind].TriNum; ++i)
+		for(j=0;j<3;++j)
+		{
+			(*nf[i]).V(j)=&*vv[SplitTab[ind].TV[i][j]];
 
-          if(tri::HasPerWedgeTexCoord(m)) //analogo ai vertici...
-            (*nf[i]).WT(j)=wtt[SplitTab[ind].TV[i][j]];
+			if(tri::HasPerWedgeTexCoord(m)) //analogo ai vertici...
+				(*nf[i]).WT(j) = wtt[SplitTab[ind].TV[i][j]];
 
-          assert((*nf[i]).V(j)!=0);
-          if(SplitTab[ind].TE[i][j]!=3){
-            if(orgflag & (MESH_TYPE::FaceType::BORDER0<<(SplitTab[ind].TE[i][j])))
-              (*nf[i]).SetB(j);
-            else
-              (*nf[i]).ClearB(j);
-          }
-          else (*nf[i]).ClearB(j);
-        }
+			assert((*nf[i]).V(j)!=0);
+			if(SplitTab[ind].TE[i][j]!=3)
+			{
+				if(orgflag & (MESH_TYPE::FaceType::BORDER0<<(SplitTab[ind].TE[i][j])))
+					(*nf[i]).SetB(j);
+				else
+					(*nf[i]).ClearB(j);
+
+				if(orgflag & (MESH_TYPE::FaceType::FACEEDGESEL0<<(SplitTab[ind].TE[i][j])))
+					(*nf[i]).SetFaceEdgeS(j);
+				else
+					(*nf[i]).ClearFaceEdgeS(j);
+			}
+			else
+			{
+				(*nf[i]).ClearB(j);
+				(*nf[i]).ClearFaceEdgeS(j);
+			}
+		}
 
       if(SplitTab[ind].TriNum==3 &&
          SquaredDistance(vv[SplitTab[ind].swap[0][0]]->P(),vv[SplitTab[ind].swap[0][1]]->P()) <
@@ -507,6 +519,11 @@ bool RefineE(MESH_TYPE &m, MIDPOINT &mid, EDGEPRED &ep,bool RefineSelected=false
         if((*nf[2]).IsB(0)) (*nf[1]).SetB(1); else (*nf[1]).ClearB(1);
         (*nf[1]).ClearB(0);
         (*nf[2]).ClearB(0);
+
+        if((*nf[1]).IsFaceEdgeS(0)) (*nf[2]).SetFaceEdgeS(1); else (*nf[2]).ClearFaceEdgeS(1);
+        if((*nf[2]).IsFaceEdgeS(0)) (*nf[1]).SetFaceEdgeS(1); else (*nf[1]).ClearFaceEdgeS(1);
+        (*nf[1]).ClearFaceEdgeS(0);
+        (*nf[2]).ClearFaceEdgeS(0);
       }
     }
 
