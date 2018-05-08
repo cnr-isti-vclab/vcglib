@@ -42,6 +42,52 @@ inline bool IsBorder(TetraType const & t,  const int j )
   return true;
 }
 
+template <class TetraMesh, class TriMesh>
+inline void TriMeshFromBorder(TetraMesh & tetramesh, TriMesh & trimesh)
+{
+    RequireTTAdjacency(tetramesh);
+    tri::UpdateTopology<TetraMesh>::TetraTetra(tetramesh);
+
+    trimesh.Clear();
+
+    std::vector<TriMesh::VertexPointer> verts;
+    std::vector<TriMesh::FacePointer>   faces;
+
+    ForEachTetra(tetramesh, [&] (TetraMesh::TetraType & t) {
+        for (int i = 0; i < 4; ++i)
+            if (IsBorder(t, i))
+            {
+                verts.push_back(t.V(Tetra::VofF(i, 0)));
+                verts.push_back(t.V(Tetra::VofF(i, 1)));
+                verts.push_back(t.V(Tetra::VofF(i, 2)));
+            }
+    });
+
+    TriMesh::VertexIterator vi = tri::Allocator<TriMesh>::AddVertices(trimesh, verts.size());
+    TriMesh::FaceIterator   fi = tri::Allocator<TriMesh>::AddFaces(trimesh, verts.size() / 3);
+    
+    for (int i = 0; i < verts.size(); i += 3)
+    {
+        fi->Alloc(3);
+        
+        vi->P() = verts[i + 0]->P();
+        fi->V(0) = &*vi;
+        ++vi;
+
+        vi->P() = verts[i + 1]->P();
+        fi->V(1) = &*vi;
+        ++vi;
+
+        vi->P() = verts[i + 2]->P();
+        fi->V(2) = &*vi;
+        ++vi;
+
+        ++fi;
+    }
+
+    tri::Clean<TriMesh>::RemoveDuplicateVertex(trimesh);
+}
+
 }
 }
 

@@ -192,7 +192,7 @@ public:
       if(!(*ti).IsD())
         for(int j = 0; j < 4; ++j)
         {
-          if (tetrahedron::IsBorder(*fi,j)) (*ti).SetB(j);
+          if (tetrahedron::IsBorder(*ti,j)) (*ti).SetB(j);
           else (*ti).ClearB(j);
         }
   }

@@ -44,30 +44,6 @@ added
 namespace vcg {
 
 /*------------------------------------------------------------------*/ 
-/* 
-The base class of all the recusive definition chain. It is just a container of the typenames of the various simplexes.
-These typenames must be known form all the derived classes.
-*/
-
-// template <class BVT, class BET, class BFT, class BTT>
-// class TetraTypeHolder{
-//   public:
-//   typedef BVT VertexType;
-//   typedef typename VertexType::CoordType CoordType;
-//   typedef typename VertexType::ScalarType ScalarType;
-//   typedef BET EdgeType;
-//   typedef BFT FaceType;
-//   typedef BTT TetraType;
-//   typedef BVT *VertPointer;
-//   typedef BET *EdgePointer;
-//   typedef BFT *FacePointer;
-//   typedef BTT *TetraPointer;
-//   static void Name(std::vector<std::string> & name){}
-
-
-//  // prot
- 
-// };
 
 // /* The base class form which we start to add our components.
 // it has the empty definition for all the standard members (coords, color flags)
@@ -80,87 +56,14 @@ These typenames must be known form all the derived classes.
 // we have to build the type a step a time (deriving from a single ancestor at a time). 
 
 
-// */ 
-// template <class BVT, class BET=DumET, class BFT=DumFT, class BTT=DumTT>
-// class TetraBase: public  tetra::EmptyCore<
-//                          TetraTypeHolder <BVT, BET, BFT, BTT> > {
-// };
-
-
-
-// // Metaprogramming Core
-
-// template <class BVT, class BET, class BFT,class BTT,
-//           template <typename> class A> 
-//           class TetraArity1: public A<TetraBase<BVT,BET,BFT,BTT> > {};
-
-// template <class BVT, class BET, typename BFT, class BTT,
-//           template <typename> class A, template <typename> class B> 
-//           class TetraArity2: public B<TetraArity1<BVT,BET,BFT,BTT, A> > {};
-
-// template <class BVT, class BET, typename BFT,class BTT,
-//           template <typename> class A, template <typename> class B, 
-//           template <typename> class C > 
-//           class TetraArity3: public C<TetraArity2<BVT,BET,BFT,BTT, A, B> > {};
-
-// template <class BVT, class BET, typename BFT,class BTT,
-//           template <typename> class A, template <typename> class B, 
-//           template <typename> class C, template <typename> class D> 
-//           class TetraArity4: public D<TetraArity3<BVT,BET,BFT,BTT, A, B, C> > {};
-
-// template <class BVT, class BET, typename BFT,class BTT,
-//           template <typename> class A, template <typename> class B, 
-//           template <typename> class C, template <typename> class D,
-//           template <typename> class E > 
-//           class TetraArity5: public E<TetraArity4<BVT,BET,BFT,BTT, A, B, C, D> > {};
-
-// template <class BVT, class BET, typename BFT,class BTT,
-//           template <typename> class A, template <typename> class B, 
-//           template <typename> class C, template <typename> class D,
-//           template <typename> class E, template <typename> class F > 
-//           class TetraArity6: public F<TetraArity5<BVT,BET,BFT,BTT, A, B, C, D, E> > {};
-
-// template <class BVT, class BET, typename BFT,class BTT,
-//           template <typename> class A, template <typename> class B, 
-//           template <typename> class C, template <typename> class D,
-//           template <typename> class E, template <typename> class F, 
-//           template <typename> class G  > 
-//           class TetraArity7: public G<TetraArity6<BVT,BET,BFT,BTT, A, B, C, D, E, F> > {};
-
-// template <class BVT, class BET, typename BFT,class BTT,
-//           template <typename> class A, template <typename> class B, 
-//           template <typename> class C, template <typename> class D,
-//           template <typename> class E, template <typename> class F, 
-//           template <typename> class G, template <typename> class H  > 
-//           class TetraArity8: public H<TetraArity7<BVT,BET,BFT,BTT, A, B, C, D, E, F, G> > {};
-
-// /* The Real Big Face class;
-
-// The class __FaceArityMax__ is the one that is the Last to be derived,
-// and therefore is the only one to know the real members 
-// (after the many overrides) so all the functions with common behaviour 
-// using the members defined in the various Empty/nonEmpty component classes 
-// MUST be defined here. 
-
-// I.e. IsD() that uses the overridden Flags() member must be defined here.
-
-// */
-
-// template <class BVT, class BET, typename BFT,class BTT,
-//           template <typename> class A, template <typename> class B, 
-//           template <typename> class C, template <typename> class D, 
-//           template <typename> class E, template <typename> class F,
-//           template <typename> class G, template <typename> class H,
-//           template <typename> class I  > 
-//           class TetraArityMax: public I<TetraArity8<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H> > {
 
 
 template <class UserTypes>
                 class TetraTypeHolder: public UserTypes {
   public:
 
-    template <class LeftT>
-    void ImportData(const LeftT & ){}
+    template <class RightT>
+    void ImportData(const RightT & ){}
     static void Name(std::vector<std::string> & /* name */){}
 
 
@@ -209,6 +112,7 @@ public:
 		BORDER1     = 0x00000080,
 		BORDER2     = 0x00000100,
 		BORDER3     = 0x00000200,
+		BORDER0123  = BORDER0 | BORDER1 | BORDER2 | BORDER3,
 		// Crease _flags,  it is assumed that FEATUREi = FEATURE0<<i 
 		// First user bit
 		USER0       = 0x00004000
@@ -260,7 +164,7 @@ public:
   void ClearV()	{this->Flags() &= ~VISITED;}
 	
 	/// This function checks if the face is selected
-	bool IsB(int i) const {return (this->Flags() & (BORDER0<<i)) != 0;}
+	bool IsB(int i) const {return (this->cFlags() & (BORDER0<<i)) != 0;}
 	/// This function select the face
   void SetB(int i)		{this->Flags() |=(BORDER0<<i);}
 	/// This funcion execute the inverse operation of SetS()
@@ -345,30 +249,14 @@ TTAdj                                           //topology: face face adj
 
 */
 
-// template <class BVT, class BET, class BFT, class BTT,
-//           template <typename> class A = TetraDefaultDeriver, template <typename> class B = TetraDefaultDeriver,
-//           template <typename> class C = TetraDefaultDeriver, template <typename> class D = TetraDefaultDeriver,
-//           template <typename> class E = TetraDefaultDeriver, template <typename> class F = TetraDefaultDeriver,
-//           template <typename> class G = TetraDefaultDeriver, template <typename> class H = TetraDefaultDeriver,
-//           template <typename> class I = TetraDefaultDeriver > 
-//               class TetraSimp3: public TetraArityMax<BVT,BET,BFT,BTT, A, B, C, D, E, F, G, H, I>  {};
-// class DumTT;
-// template <class BVT, class BET, class BFT, 
-//           template <typename> class A = TetraDefaultDeriver, template <typename> class B = TetraDefaultDeriver,
-//           template <typename> class C = TetraDefaultDeriver, template <typename> class D = TetraDefaultDeriver,
-//           template <typename> class E = TetraDefaultDeriver, template <typename> class F = TetraDefaultDeriver,
-//           template <typename> class G = TetraDefaultDeriver, template <typename> class H = TetraDefaultDeriver,
-//           template <typename> class I = TetraDefaultDeriver > 
-//               class TetraSimp2: public TetraArityMax<BVT,BET,BFT,DumTT, A, B, C, D, E, F, G, H, I>  {};
-
 template <class UserTypes,
           template <typename> class A = DefaultDeriver, template <typename> class B = DefaultDeriver,
           template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
           template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
           template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver,
-					template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
-					template <typename> class K = DefaultDeriver, template <typename> class L = DefaultDeriver>
-							class TetraSimp: public TetraArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J, K, L>  {
+          template <typename> class I = DefaultDeriver, template <typename> class J = DefaultDeriver,
+          template <typename> class K = DefaultDeriver, template <typename> class L = DefaultDeriver>
+class TetraSimp : public TetraArityMax<UserTypes, A, B, C, D, E, F, G, H, I, J, K, L>  {
 			 public: typedef AllTypes::ATetraType IAm; typedef UserTypes TypesPool;};
 
 }// end namespace
