@@ -89,7 +89,7 @@ int main( int argc, char **argv )
   tri::TrivialSampler<MyMesh> mps(sampleVec);
   tri::UpdateTopology<MyMesh>::FaceFace(m);
   tri::UpdateNormal<MyMesh>::PerFace(m);
-  tri::UpdateFlags<MyMesh>::FaceFauxCrease(m,math::ToRad(40.0f));
+  tri::UpdateFlags<MyMesh>::FaceEdgeSelCrease(m,math::ToRad(40.0f));
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::EdgeMontecarlo(m,mps,10000,false);
   tri::BuildMeshFromCoordVector(MontecarloEdgeMesh,sampleVec);
   tri::io::ExporterOFF<MyMesh>::Save(MontecarloEdgeMesh,"MontecarloEdgeMesh.off");
