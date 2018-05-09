@@ -51,7 +51,7 @@ public:
     vsHandle vsH = Allocator<ComputeMeshType>::template AddPerVertexAttribute< bool >(*_m);
     esHandle esH = Allocator<ComputeMeshType>::template AddPerEdgeAttribute< bool >  (*_m);
     fsHandle fsH = Allocator<ComputeMeshType>::template AddPerFaceAttribute< bool >  (*_m);
-    fsHandle tsH = Allocator<ComputeMeshType>::template AddPerTetraAttribute< bool > (*_m);
+    tsHandle tsH = Allocator<ComputeMeshType>::template AddPerTetraAttribute< bool > (*_m);
     typename ComputeMeshType::VertexIterator vi;
     for(vi = _m->vert.begin(); vi != _m->vert.end(); ++vi)
       if( !(*vi).IsD() ) vsH[*vi] = (*vi).IsS() ;
@@ -132,10 +132,10 @@ public:
         }
      }
 
-     for (auto ti = _m->tetra.begin(); ti != _m.tetra.end(); ++ti)
+     for (auto ti = _m->tetra.begin(); ti != _m->tetra.end(); ++ti)
       if (!(*ti).IsD())
       {
-        if (fsH[*ti]) {
+        if (tsH[*ti]) {
           if (!andFlag) (*ti).SetS();
         } else {
           if (!orFlag)  (*ti).ClearS();
@@ -159,7 +159,7 @@ private:
   std::vector<vsHandle> vsV;
   std::vector<esHandle> esV;
   std::vector<fsHandle> fsV;
-  std::vector<fsHandle> tsV;
+  std::vector<tsHandle> tsV;
 
 };
 
