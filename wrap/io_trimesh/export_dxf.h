@@ -86,22 +86,26 @@ public:
     fprintf(o,"ENDSEC\n");
     fprintf(o,"0\n");
     fprintf(o,"EOF\n");
-    fclose(o);
-    return 0;
+
+	int result = 0;
+	if (ferror(o)) result = 2;
+	fclose(o);
+	return result;
   }
   /// Standard call for knowing the meaning of an error code
   static const char *ErrorMsg(int error)
   {
-    static std::vector<std::string> dxf_error_msg;
-    if(dxf_error_msg.empty())
-    {
-      dxf_error_msg.resize(2 );
-      dxf_error_msg[0]="No errors";
-      dxf_error_msg[1]="Can't open file";
-    }
+	  static std::vector<std::string> dxf_error_msg;
+	  if (dxf_error_msg.empty())
+	  {
+		  dxf_error_msg.resize(3);
+		  dxf_error_msg[0] = "No errors";
+		  dxf_error_msg[1] = "Can't open file";
+		  dxf_error_msg[2] = "Output Stream Error";
+	  }
 
-    if(error>1 || error<0) return "Unknown error";
-    else return dxf_error_msg[error].c_str();
+	  if (error>2 || error<0) return "Unknown error";
+	  else return dxf_error_msg[error].c_str();
   }
 
 

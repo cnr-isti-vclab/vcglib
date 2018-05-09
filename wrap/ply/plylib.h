@@ -91,6 +91,8 @@ enum PlyError {
 	E_BADTYPE,				// 10
 	E_INCOMPATIBLETYPE,		// 11
 	E_BADCAST,				// 12
+		//saving error
+	E_STREAMERROR,          // 13
 	E_MAXPLYERRORS
 };
 

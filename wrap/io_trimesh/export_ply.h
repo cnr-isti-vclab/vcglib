@@ -756,8 +756,10 @@ namespace vcg {
                         }
                         assert(ecnt==m.en);
                     }
+					int result = 0;
+					if (ferror(fpout)) result = ply::E_STREAMERROR;
                     fclose(fpout);
-                    return 0;
+                    return result;
                 }
 
                 static const char *ErrorMsg(int error)
@@ -766,19 +768,21 @@ namespace vcg {
                     if(ply_error_msg.empty())
                     {
                         ply_error_msg.resize(PlyInfo::E_MAXPLYINFOERRORS );
-                        ply_error_msg[ply::E_NOERROR				]="No errors";
-                        ply_error_msg[ply::E_CANTOPEN				]="Can't open file";
-                        ply_error_msg[ply::E_NOTHEADER ]="Header not found";
-                        ply_error_msg[ply::E_UNESPECTEDEOF	]="Eof in header";
-                        ply_error_msg[ply::E_NOFORMAT				]="Format not found";
+                        ply_error_msg[ply::E_NOERROR            ]="No errors";
+                        ply_error_msg[ply::E_CANTOPEN           ]="Can't open file";
+                        ply_error_msg[ply::E_NOTHEADER          ]="Header not found";
+                        ply_error_msg[ply::E_UNESPECTEDEOF	    ]="Eof in header";
+                        ply_error_msg[ply::E_NOFORMAT           ]="Format not found";
                         ply_error_msg[ply::E_SYNTAX				]="Syntax error on header";
-                        ply_error_msg[ply::E_PROPOUTOFELEMENT]="Property without element";
+                        ply_error_msg[ply::E_PROPOUTOFELEMENT   ]="Property without element";
                         ply_error_msg[ply::E_BADTYPENAME		]="Bad type name";
                         ply_error_msg[ply::E_ELEMNOTFOUND		]="Element not found";
                         ply_error_msg[ply::E_PROPNOTFOUND		]="Property not found";
-                        ply_error_msg[ply::E_BADTYPE				]="Bad type on addtoread";
-                        ply_error_msg[ply::E_INCOMPATIBLETYPE]="Incompatible type";
-                        ply_error_msg[ply::E_BADCAST				]="Bad cast";
+                        ply_error_msg[ply::E_BADTYPE            ]="Bad type on addtoread";
+                        ply_error_msg[ply::E_INCOMPATIBLETYPE   ]="Incompatible type";
+                        ply_error_msg[ply::E_BADCAST            ]="Bad cast";
+
+						ply_error_msg[ply::E_STREAMERROR        ] = "Output Stream Error";
 
                         ply_error_msg[PlyInfo::E_NO_VERTEX      ]="No vertex field found";
                         ply_error_msg[PlyInfo::E_NO_FACE        ]="No face field found";

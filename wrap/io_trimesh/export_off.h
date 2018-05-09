@@ -139,28 +139,30 @@ public:
       }
     }
 
-
-    fclose(fpout);
     // Recupera i flag originali
     j=0;
     for(vi=m.vert.begin();vi!=m.vert.end();++vi)
       (*vi).Flags()=FlagV[j++];
 
-    return 0;
+	int result = 0;
+	if (ferror(fpout)) result = 2;
+	fclose(fpout);
+	return result;
   }
 
   static const char *ErrorMsg(int error)
   {
-    static std::vector<std::string> off_error_msg;
-    if(off_error_msg.empty())
-    {
-      off_error_msg.resize(2 );
-      off_error_msg[0]="No errors";
-      off_error_msg[1]="Can't open file";
-    }
+	  static std::vector<std::string> off_error_msg;
+	  if (off_error_msg.empty())
+	  {
+		  off_error_msg.resize(3);
+		  off_error_msg[0] = "No errors";
+		  off_error_msg[1] = "Can't open file";
+		  off_error_msg[1] = "Output Stream error";
+	  }
 
-    if(error>1 || error<0) return "Unknown error";
-    else return off_error_msg[error].c_str();
+	  if (error>2 || error<0) return "Unknown error";
+	  else return off_error_msg[error].c_str();
   }
   /*
             returns mask of capability one define with what are the saveable information of the format.
