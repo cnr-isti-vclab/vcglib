@@ -780,10 +780,10 @@ public:
     assert(v2 >= &m.vert.front() && v2 <= &m.vert.back());
     assert(v3 >= &m.vert.front() && v3 <= &m.vert.back());
 
-    AddFace(m, v0, v1, v2);
-    AddFace(m, v0, v3, v1);
-    AddFace(m, v0, v2, v3);
-    AddFace(m, v1, v3, v2);
+//    AddFace(m, v0, v1, v2);
+//    AddFace(m, v0, v3, v1);
+//    AddFace(m, v0, v2, v3);
+//    AddFace(m, v1, v3, v2);
 
     PointerUpdater<TetraPointer> pu;
     TetraIterator ti = AddTetras(m, 1, pu);

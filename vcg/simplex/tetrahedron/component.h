@@ -176,15 +176,13 @@ public:
     typedef typename T::VertexType::ScalarType ScalarType;
 
     inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<4); return v[j]; }
-    inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<4); return v[j]; }
     inline typename T::VertexType * const  cV( const int j ) const { assert(j>=0 && j<4);	return v[j]; }
 
     inline typename size_t const cFtoVi (const int f, const int j) const { assert(f >= 0 && f < 4); assert(j >= 0 && j < 3); return findices[f][j]; }
 
     // Shortcut for tetra points
-    inline       typename CoordType & P( const int j ) 	    {	assert(j>=0 && j<4);		return v[j]->P();	}
-    inline const typename CoordType & P( const int j ) const	{	assert(j>=0 && j<4);		return v[j]->cP(); }
-    inline const typename CoordType &cP( const int j ) const	{	assert(j>=0 && j<4);		return v[j]->cP(); }
+    inline       typename CoordType & P( const int j )       { assert(j>=0 && j<4); return v[j]->P();	}
+    inline const typename CoordType &cP( const int j ) const { assert(j>=0 && j<4); return v[j]->P(); }
 
     /** Return the pointer to the ((j+1)%4)-th vertex of the tetra.
                 @param j Index of the face vertex.
@@ -360,7 +358,8 @@ public:  static void Name(std::vector<std::string> & name){name.push_back(std::s
 };
 
 /*-------------------------- COLOR  ----------------------------------------*/
-template <class A, class T> class Color: public T {
+template <class A, class T>
+class Color: public T {
 public:
     typedef A ColorType;
     Color():_color(vcg::Color4b::White) {}
@@ -377,6 +376,10 @@ public:
 
 private:
     ColorType _color;
+};
+
+template <class T> class Color4b : public Color<vcg::Color4b, T> {
+public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));T::Name(name); }
 };
 /*-------------------------- INCREMENTAL MARK  ----------------------------------------*/
 

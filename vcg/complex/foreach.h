@@ -171,7 +171,7 @@ inline void ForEachTetra(const MeshType &m, std::function<void (const typename M
 {
   if(m.tn == (int) m.tetra.size())
   {
-    for(auto ti = m.tetra.begin(); ti! = m.tetra.end(); ++ti) {
+    for(auto ti = m.tetra.begin(); ti != m.tetra.end(); ++ti) {
       action(*ti);
     }       
   }
