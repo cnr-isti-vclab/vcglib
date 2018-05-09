@@ -148,11 +148,11 @@ static void TetraConstant(MeshType & m, const TetraQualityType q)
       t.Q() = q;
   });
 }
-static void TetraVolume(MeshType & m)
+static void TetraFromVolume(MeshType & m)
 {
   tri::RequirePerTetraQuality(m);
   ForEachTetra(m, [] (MeshType::TetraType & t) {
-     t.Q() =  TetraQualityType(vcg::Tetra::ComputeVolume(t));
+     t.Q() = TetraQualityType(vcg::Tetra::ComputeVolume(t));
   });
 }
 

@@ -59,6 +59,10 @@ public:
   typedef typename MeshType::FacePointer    FacePointer;
   typedef typename MeshType::FaceIterator   FaceIterator;
   typedef typename MeshType::EdgeIterator   EdgeIterator;
+  typedef typename MeshType::TetraType      TetraType;
+  typedef typename MeshType::TetraPointer   TetraPointer;
+  typedef typename MeshType::TetraIterator  TetraIterator;
+
 
   typedef typename MeshType::ScalarType     ScalarType;
   typedef typename MeshType::CoordType      CoordType;
@@ -73,7 +77,7 @@ public:
     int cnt;
   };
 
-  /*! \brief This function colores all (or the selected) the vertices of a mesh.
+  /*! \brief This function colors all (or the selected) the vertices of a mesh.
     */
   static int PerVertexConstant(MeshType &m, Color4b vs=Color4b::White,bool selected=false)
   {
@@ -91,7 +95,7 @@ public:
     return cnt;
   }
 
-  /*! \brief This function colores all (or the selected) faces of a mesh.
+  /*! \brief This function colors all (or the selected) faces of a mesh.
   */
   static int PerFaceConstant(MeshType &m, Color4b vs=Color4b::White,bool selected=false)
   {
@@ -107,6 +111,55 @@ public:
       }
     return cnt;
   }
+
+  /*! \brief This function colors all (or the selected) tetras of a mesh.
+  */
+  static int PerTetraConstant(MeshType & m, Color4b vs = Color4b::White, bool selected = false)
+  {
+    RequirePerTetraColor(m);
+    int cnt = 0;
+    ForEachTetra(m, [&] (TetraType & t) {
+      if (!selected || t.IsS())
+      {
+        t.C() = vs;
+        ++cnt;
+      }
+    });
+    return cnt;
+  }
+
+  /** \brief Transfer tetra color onto vertex color
+
+  Plain average of the color of the tetras incident on a given vertex.
+  No adjacency required.
+  */
+ static void PerVertexFromTetra(MeshType & m)
+ {
+   RequirePerTetraColor(m);
+   RequirePerVertexColor(m);
+
+   ColorAvgInfo csi;
+   csi.r = csi.g = csi.b = csi.cnt = 0;
+   SimpleTempData<typename MeshType::VertContainer, ColorAvgInfo> TD(m.vert, csi);
+
+   ForEachTetra(m, [&] (TetraType & t) {
+     for (int i = 0; i < 4; ++i)
+     {
+       TD[t.V(i)].r += t.C()[0];
+       TD[t.V(i)].g += t.C()[1];
+       TD[t.V(i)].b += t.C()[2];
+       TD[t.V(i)].a += t.C()[3];
+       TD[t.V(i)].cnt += 1;
+     }
+   });
+
+   ForEachVertex(m, [&] (VertexType & v) {
+     v.C()[0] = TD[v].r / TD[v].cnt;
+     v.C()[1] = TD[v].g / TD[v].cnt;
+     v.C()[2] = TD[v].b / TD[v].cnt;
+     v.C()[3] = TD[v].a / TD[v].cnt;
+   });
+ }
 
   /** \brief Transfer face color onto vertex color
 
@@ -167,14 +220,14 @@ public:
 
   If no range of quality is passed it is automatically computed.
   */
-  static void PerVertexQualityRamp(MeshType &m, float minq=0, float maxq=0)
+  static void PerVertexQualityRamp(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0.)
   {
     RequirePerVertexQuality(m);
     RequirePerVertexColor(m);
 
-    if(minq==maxq)
+    if(minq == maxq)
     {
-      std::pair<float,float> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
+      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
       minq=minmax.first;
       maxq=minmax.second;
     }
@@ -188,54 +241,76 @@ public:
 
   If no range of quality is passed it is automatically computed.
   */
-  static void PerVertexQualityRampParula(MeshType &m, float minq=0, float maxq=0)
+  static void PerVertexQualityRampParula(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0.)
   {
     RequirePerVertexQuality(m);
     RequirePerVertexColor(m);
 
-    if(minq==maxq)
+    if(minq == maxq)
     {
-      std::pair<float,float> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
+      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
       minq=minmax.first;
       maxq=minmax.second;
     }
-    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+    for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
           if(!(*vi).IsD())
-              (*vi).C().SetColorRampParula(minq,maxq,(*vi).Q());
+              (*vi).C().SetColorRampParula(minq, maxq, (*vi).Q());
   }
   
+    /*! \brief This function colores all the faces of a mesh with a hue color shade dependent on the quality.
+
+  If no range of quality is passed it is automatically computed.
+  */
+  static void PerTetraQualityRamp(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0., bool selected = false)
+  {
+    RequirePerTetraColor(m);
+    RequirePerTetraQuality(m);
+
+    if(minq == maxq)
+    {
+      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputerPerTetraQualityMinMax(m);
+      minq=minmax.first;
+      maxq=minmax.second;
+    }
+
+    ForEachTetra(m, [&] (TetraType & t){
+      if (!selected || t.IsS())
+        t.C().SetColorRamp(minq, maxq, t.Q());
+    });
+  }
   /*! \brief This function colores all the faces of a mesh with a hue color shade dependent on the quality.
 
   If no range of quality is passed it is automatically computed.
   */
-  static void PerFaceQualityRamp(MeshType &m, float minq=0, float maxq=0, bool selected=false)
+  static void PerFaceQualityRamp(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0, bool selected = false)
   {
     RequirePerFaceColor(m);
     RequirePerFaceQuality(m);
 
-    if(minq==maxq)
+    if(minq == maxq)
     {
-      std::pair<float,float> minmax = Stat<MeshType>::ComputePerFaceQualityMinMax(m);
+      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerFaceQualityMinMax(m);
       minq=minmax.first;
       maxq=minmax.second;
     }
-    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-      if(!selected || (*fi).IsS())
-        (*fi).C().SetColorRamp(minq,maxq,(*fi).Q());
+    for(FaceIterator fi = m.face.begin();fi != m.face.end(); ++fi) 
+      if(!(*fi).IsD())
+        if(!selected || (*fi).IsS())
+          (*fi).C().SetColorRamp(minq, maxq, (*fi).Q());
   }
 
   /*! \brief This function colores all the edges of a mesh with a hue color shade dependent on the quality.
 
   If no range of quality is passed it is automatically computed.
   */
-  static void PerEdgeQualityRamp(MeshType &m, float minq=0, float maxq=0, bool selected=false)
+  static void PerEdgeQualityRamp(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0, bool selected = false)
   {
     RequirePerEdgeColor(m);
     RequirePerEdgeQuality(m);
 
-    if(minq==maxq)
+    if(minq == maxq)
     {
-      std::pair<float,float> minmax = Stat<MeshType>::ComputePerEdgeQualityMinMax(m);
+      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerEdgeQualityMinMax(m);
       minq=minmax.first;
       maxq=minmax.second;
     }
@@ -248,13 +323,13 @@ public:
 
   If no range of quality is passed it is automatically computed.
   */
-  static void PerVertexQualityGray(MeshType &m,  float minq,  float maxq)
+  static void PerVertexQualityGray(MeshType &m,  ScalarType minq = 0, ScalarType maxq = 0)
   {
     RequirePerVertexColor(m);
     RequirePerVertexQuality(m);
     if(minq==maxq)
     {
-      std::pair<float,float> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
+      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
       minq=minmax.first;
       maxq=minmax.second;
     }
@@ -267,14 +342,14 @@ public:
 
   If no range of quality is passed it is automatically computed.
   */
-  static void PerFaceQualityGray(MeshType &m, float minq=0, float maxq=0)
+  static void PerFaceQualityGray(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0)
   {
     RequirePerFaceColor(m);
     RequirePerFaceQuality(m);
 
     if(minq==maxq)
     {
-      std::pair<float,float> minmax = Stat<MeshType>::ComputePerFaceQualityMinMax(m);
+      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerFaceQualityMinMax(m);
       minq=minmax.first;
       maxq=minmax.second;
     }
