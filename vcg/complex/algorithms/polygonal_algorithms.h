@@ -1113,6 +1113,33 @@ public:
         }
     }
 
+    static ScalarType InitQualityFaceTorsion(PolyMeshType &poly_m)
+    {
+        UpdateFaceNormalByFitting(poly_m);
+        vcg::tri::UpdateNormal<PolyMeshType>::PerVertexFromCurrentFaceNormal(poly_m);
+        ScalarType MaxA=0;
+        for (size_t i=0;i<poly_m.face.size();i++)
+        {
+            poly_m.face[i].Q()=PolygonTorsion(poly_m.face[i]);
+            MaxA=std::max(MaxA,poly_m.face[i].Q());
+        }
+        return MaxA;
+    }
+
+    static ScalarType InitQualityFaceBending(PolyMeshType &poly_m)
+    {
+        UpdateFaceNormalByFitting(poly_m);
+        vcg::tri::UpdateNormal<PolyMeshType>::PerVertexFromCurrentFaceNormal(poly_m);
+        ScalarType MaxA=0;
+        for (size_t i=0;i<poly_m.face.size();i++)
+        {
+            poly_m.face[i].Q()=PolygonBending(poly_m.face[i]);
+            MaxA=std::max(MaxA,poly_m.face[i].Q());
+        }
+        return MaxA;
+    }
+
+
     static void InitQualityVertEdgeLenght(PolyMeshType &poly_m)
     {
         for (size_t i=0;i<poly_m.vert.size();i++)
