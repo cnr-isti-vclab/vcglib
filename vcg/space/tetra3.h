@@ -327,15 +327,15 @@ static typename TetraType::ScalarType DihedralAngle (const TetraType & t, const 
 	int f0 = Tetra::FofE(eidx, 0);
 	int f1 = Tetra::FofE(eidx, 1);
 
-	CoordType p0 = t.P(Tetra::VofF(f0, 0));
-	CoordType p1 = t.P(Tetra::VofF(f0, 1));
-	CoordType p2 = t.P(Tetra::VofF(f0, 2));
+        CoordType p0 = t.cP(Tetra::VofF(f0, 0));
+        CoordType p1 = t.cP(Tetra::VofF(f0, 1));
+        CoordType p2 = t.cP(Tetra::VofF(f0, 2));
 
 	CoordType n0 = ((p2 - p0) ^ (p1 - p0)).normalized();
 
-	p0 = t.P(Tetra::VofF(f1, 0));
-	p1 = t.P(Tetra::VofF(f1, 1));
-	p2 = t.P(Tetra::VofF(f1, 2));
+        p0 = t.cP(Tetra::VofF(f1, 0));
+        p1 = t.cP(Tetra::VofF(f1, 1));
+        p2 = t.cP(Tetra::VofF(f1, 2));
 
 	CoordType n1 = ((p2 - p0) ^ (p1 - p0)).normalized();
 

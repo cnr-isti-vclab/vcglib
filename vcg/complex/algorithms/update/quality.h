@@ -156,6 +156,14 @@ static void TetraFromVolume(MeshType & m)
   });
 }
 
+static void TetraFromAspectRatio(MeshType & m)
+{
+  tri::RequirePerTetraQuality(m);
+  ForEachTetra(m, [] (MeshType::TetraType & t) {
+      t.Q() = TetraQualityType(vcg::Tetra::AspectRatio(t));
+  });
+}
+
 static void VertexFromFace( MeshType &m, bool areaWeighted=true)
 {
   tri::RequirePerFaceQuality(m);
@@ -180,6 +188,31 @@ static void VertexFromFace( MeshType &m, bool areaWeighted=true)
     {
       (*vi).Q() = TQ[*vi] / TCnt[*vi];
     }
+}
+
+static void VertexFromTetra(MeshType & m, bool volumeWeighted = true)
+{
+    tri::RequirePerTetraQuality(m);
+    tri::RequirePerVertexQuality(m);
+
+    SimpleTempData<typename MeshType::VertContainer, ScalarType> TQ(m.vert, 0);
+    SimpleTempData<typename MeshType::VertContainer, ScalarType> TCnt(m.vert, 0);
+
+    ForEachTetra(m, [&] (TetraType & t) {
+      TetraQualityType w = 1.;
+      if (volumeWeighted)
+        w = vcg::Tetra::ComputeVolume(t);
+      
+      for (int i = 0; i < 4; ++i)
+      {
+        TQ[t.V(i)]   += t.Q() * w;
+        TCnt[t.V(i)] += w;
+      }
+    });
+
+    ForEachVertex(m, [&] (VertexType & v) {
+      v.Q() = TQ[v] / TCnt[v];
+    });
 }
 
 template <class HandleScalar>
