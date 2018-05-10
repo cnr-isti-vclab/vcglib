@@ -319,6 +319,50 @@ static Point3<typename TetraType::ScalarType> Normal( const TetraType &t,const i
   return(((t.cP(Tetra::VofF(face,1))-t.cP(Tetra::VofF(face,0)))^(t.cP(Tetra::VofF(face,2))-t.cP(Tetra::VofF(face,0)))).Normalize());
 }
 
+template < class TetraType >
+static typename TetraType::ScalarType DihedralAngle (const TetraType & t, const size_t eidx)
+{
+	typedef typename TetraType::CoordType CoordType;
+	//get two faces incident on eidx
+	int f0 = Tetra::FofE(eidx, 0);
+	int f1 = Tetra::FofE(eidx, 1);
+
+	CoordType p0 = t.P(Tetra::VofF(f0, 0));
+	CoordType p1 = t.P(Tetra::VofF(f0, 1));
+	CoordType p2 = t.P(Tetra::VofF(f0, 2));
+
+	CoordType n0 = ((p2 - p0) ^ (p1 - p0)).normalized();
+
+	p0 = t.P(Tetra::VofF(f1, 0));
+	p1 = t.P(Tetra::VofF(f1, 1));
+	p2 = t.P(Tetra::VofF(f1, 2));
+
+	CoordType n1 = ((p2 - p0) ^ (p1 - p0)).normalized();
+
+	return M_PI - double(acos(n0 * n1));
+
+};
+
+template < class TetraType >
+static typename TetraType::ScalarType SolidAngle (const TetraType & t, const size_t vidx)
+{
+	TetraType::ScalarType a0 = DihedralAngle(t, Tetra::EofV(vidx, 0));
+	TetraType::ScalarType a1 = DihedralAngle(t, Tetra::EofV(vidx, 1));
+	TetraType::ScalarType a2 = DihedralAngle(t, Tetra::EofV(vidx, 2));
+
+	return (a0 + a1 + a2) - M_PI;
+};
+
+template < class TetraType >
+static typename TetraType::ScalarType AspectRatio (const TetraType & t)
+{
+	TetraType::ScalarType a0 = SolidAngle(t, 0);
+	TetraType::ScalarType a1 = SolidAngle(t, 1);
+	TetraType::ScalarType a2 = SolidAngle(t, 2);
+	TetraType::ScalarType a3 = SolidAngle(t, 3);
+
+	return std::min(a0, std::min(a1, std::min(a2, a3)));
+}
 };
 
 /** 
