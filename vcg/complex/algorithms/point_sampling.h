@@ -759,7 +759,7 @@ static void VertexUniform(MeshType & m, VertexSampler &ps, int sampleNum)
 ///
 /// It assumes that the mesh is 1-manifold.
 /// each connected component is sampled in a independent way.
-/// For each component of lenght <L> we place on it floor(L/radius)+1 samples.
+/// For each component of length <L> we place on it floor(L/radius)+1 samples.
 /// (if conservative argument is false we place ceil(L/radius)+1 samples)
 ///
 static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool conservative = true)

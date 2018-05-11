@@ -152,15 +152,15 @@ public:
 enum Error
 {
 		// Funzioni superiori
-  E_NO_VERTEX       = ply::E_MAXPLYERRORS+1,			// 14
-	E_NO_FACE         = ply::E_MAXPLYERRORS+2,				// 15
-	E_SHORTFILE       = ply::E_MAXPLYERRORS+3,			// 16
-	E_NO_3VERTINFACE  = ply::E_MAXPLYERRORS+4,		// 17
-	E_BAD_VERT_INDEX  = ply::E_MAXPLYERRORS+5,		// 18
-	E_NO_6TCOORD      = ply::E_MAXPLYERRORS+6,			// 19
-	E_DIFFER_COLORS   = ply::E_MAXPLYERRORS+7,	
-	E_BAD_VERT_INDEX_EDGE  = ply::E_MAXPLYERRORS+8,		// 18
-  E_MAXPLYINFOERRORS= ply::E_MAXPLYERRORS+9// 20
+	E_NO_VERTEX       = ply::E_MAXPLYERRORS+1,       // 15
+	E_NO_FACE         = ply::E_MAXPLYERRORS+2,       // 16
+	E_SHORTFILE       = ply::E_MAXPLYERRORS+3,       // 17
+	E_NO_3VERTINFACE  = ply::E_MAXPLYERRORS+4,       // 18
+	E_BAD_VERT_INDEX  = ply::E_MAXPLYERRORS+5,       // 19
+	E_NO_6TCOORD      = ply::E_MAXPLYERRORS+6,		 // 20
+	E_DIFFER_COLORS   = ply::E_MAXPLYERRORS+7,	     // 21
+	E_BAD_VERT_INDEX_EDGE  = ply::E_MAXPLYERRORS+8,  // 22
+	E_MAXPLYINFOERRORS= ply::E_MAXPLYERRORS+9        // 23
 };
 
 }; // end class

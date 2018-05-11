@@ -768,11 +768,11 @@ void BuildMeshFromCoordVector( MeshType & in, const V & v)
 
 
 template <class TriMeshType,class EdgeMeshType >
-void BuildFromNonFaux(TriMeshType &in, EdgeMeshType &out)
+void BuildFromFaceEdgeSel(TriMeshType &in, EdgeMeshType &out)
 {
   tri::RequireCompactness(in);
   std::vector<typename tri::UpdateTopology<TriMeshType>::PEdge> edgevec;
-  tri::UpdateTopology<TriMeshType>::FillUniqueEdgeVector(in, edgevec, false);
+  tri::UpdateTopology<TriMeshType>::FillSelectedFaceEdgeVector(in, edgevec);
   out.Clear();
   for(size_t i=0;i<in.vert.size();++i)
     tri::Allocator<EdgeMeshType>::AddVertex(out, in.vert[i].P());

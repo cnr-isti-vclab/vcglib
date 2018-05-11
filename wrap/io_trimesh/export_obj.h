@@ -54,15 +54,16 @@ public:
         */
   enum SaveError
   {
-    E_NOERROR,					// 0
-    E_CANTOPENFILE,				// 1
-    E_CANTCLOSEFILE,			// 2
-    E_UNESPECTEDEOF,			// 3
-    E_ABORTED,					// 4
-    E_NOTDEFINITION,			// 5
-    E_NO_VERTICES,			// 6
-    E_NOTFACESVALID,				// 7
-    E_NO_VALID_MATERIAL
+    E_NOERROR,            // 0
+    E_CANTOPENFILE,       // 1
+    E_CANTCLOSEFILE,      // 2
+    E_UNESPECTEDEOF,      // 3
+    E_ABORTED,            // 4
+    E_NOTDEFINITION,      // 5
+    E_NO_VERTICES,        // 6
+    E_NOTFACESVALID,      // 7
+    E_NO_VALID_MATERIAL,  // 8
+	E_STREAMERROR         // 9
   };
 
   /*
@@ -72,18 +73,19 @@ public:
   {
     static const char* obj_error_msg[] =
     {
-      "No errors",							// 0
-      "Can't open file",						// 1
-      "can't close file",						// 2
-      "Premature End of file",				// 3
-      "File saving aborted",					// 4
-      "Function not defined",					// 5
-      "Vertices not valid",					// 6
-      "Faces not valid",						// 7
-      "The mesh has not a attribute containing the vector of materials"	// 8
+      "No errors",  // 0
+      "Can't open file",  // 1
+      "can't close file",  // 2
+      "Premature End of file",  // 3
+      "File saving aborted",  // 4
+      "Function not defined",  // 5
+      "Vertices not valid",  // 6
+      "Faces not valid",  // 7
+      "The mesh has not a attribute containing the vector of materials",  // 8
+	  "Output Stream Error" //9
     };
 
-    if(error>7 || error<0) return "Unknown error";
+    if(error>9 || error<0) return "Unknown error";
     else return obj_error_msg[error];
   };
 
@@ -277,7 +279,6 @@ public:
     fprintf(fp,"# %d faces, %d coords texture\n\n",m.fn,int(CoordIndexTexture.size()));
 
     fprintf(fp,"# End of File\n");
-    fclose(fp);
 
     int errCode = E_NOERROR;
     if((mask & Mask::IOM_WEDGTEXCOORD) || (mask & Mask::IOM_FACECOLOR) || (mask & Mask::IOM_VERTTEXCOORD) )
@@ -286,9 +287,13 @@ public:
       else                     errCode = WriteMaterials(materialVec, filename,cb);
     }
 
-    if(errCode!= E_NOERROR)
-      return errCode;
-    return E_NOERROR;
+	int result = E_NOERROR;
+	if (errCode != E_NOERROR)
+		result = errCode;
+	else if (ferror(fp))
+		result = E_STREAMERROR;
+	fclose(fp);
+	return result;
   }
 
    /*

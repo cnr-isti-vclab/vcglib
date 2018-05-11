@@ -475,14 +475,14 @@ private:
         tri::UpdateFlags<MeshType>::VertexBorderFromNone(m);
 
         for(auto fi=m.face.begin(); fi!=m.face.end(); ++fi)
-            if(!(*fi).IsD())
+            if(!(*fi).IsD() && (params.selectedOnly == false || fi->IsS()))
             {
                 for(auto i=0; i<3; ++i)
                 {
                     PosType pi(&*fi, i);
                     ++candidates;
                     VertexPair  bp = VertexPair(pi.V(), pi.VFlip());
-                    Point3<ScalarType> mp = (pi.V()->P()+pi.VFlip()->P())/2.f;;
+                    Point3<ScalarType> mp = (pi.V()->P()+pi.VFlip()->P())/2.f;
                     bool boundary = false;
 
                     if(pi.V()->IsB() == pi.VFlip()->IsB())
@@ -581,7 +581,7 @@ private:
         int count = 0;
 
         for(auto fi=m.face.begin(); fi!=m.face.end(); ++fi)
-            if(!(*fi).IsD())
+            if(!(*fi).IsD() && (params.selectedOnly == false || fi->IsS()))
             {
                 for(auto i=0; i<3; ++i)
                 {

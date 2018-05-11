@@ -564,5 +564,116 @@ vcg::Box3<typename PolygonType::ScalarType> PolygonBox(const PolygonType &F)
         bb.Add(F.V(j)->P());
     return bb;
 }
+
+template<class PolygonType>
+typename PolygonType::ScalarType PolygonTorsion(const PolygonType &F,int side)
+{
+    typedef typename PolygonType::CoordType CoordType;
+    typedef typename PolygonType::ScalarType ScalarType;
+
+    assert(side>=0);
+    assert(side<2);
+    assert(F.VN()==4);
+
+    //get firts two edges directions
+    CoordType Dir0,Dir1;
+    if (side==0)
+    {
+        Dir0=F.cP(1)-F.cP(0);
+        Dir1=F.cP(2)-F.cP(3);
+    }
+    else
+    {
+        Dir0=F.cP(2)-F.cP(1);
+        Dir1=F.cP(3)-F.cP(0);
+    }
+
+    Dir0.Normalize();
+    Dir1.Normalize();
+
+    //then make them lying on face's Normal
+    CoordType DirPlane0=Dir0*0.5+Dir1*0.5;
+    CoordType DirPlane1=F.cN();
+    CoordType NormPlane=DirPlane0^DirPlane1;
+    NormPlane.Normalize();
+    CoordType subV0=NormPlane*(NormPlane*Dir0);
+    CoordType subV1=NormPlane*(NormPlane*Dir1);
+    Dir0-=subV0;
+    Dir1-=subV1;
+    Dir0.Normalize();
+    Dir1.Normalize();
+    ScalarType AngleVal=vcg::Angle(Dir0,Dir1);
+    return AngleVal;
+}
+
+template<class PolygonType>
+typename PolygonType::ScalarType PolygonBending(const PolygonType &F,int side)
+{
+    typedef typename PolygonType::CoordType CoordType;
+    typedef typename PolygonType::ScalarType ScalarType;
+
+    assert(side>=0);
+    assert(side<2);
+    assert(F.VN()==4);
+
+    //get firts two edges directions
+    CoordType Norm0,Norm1;
+    CoordType Avg0,Avg1;
+    if (side==0)
+    {
+        Norm0=F.V(0)->N()*0.5+F.V(1)->N()*0.5;
+        Avg0=F.cP(0)*0.5+F.cP(1)*0.5;
+        Norm1=F.V(2)->N()*0.5+F.V(3)->N()*0.5;
+        Avg1=F.cP(2)*0.5+F.cP(3)*0.5;
+    }
+    else
+    {
+        Norm0=F.V(2)->N()*0.5+F.V(1)->N()*0.5;
+        Avg0=F.cP(2)*0.5+F.cP(1)*0.5;
+        Norm1=F.V(3)->N()*0.5+F.V(0)->N()*0.5;
+        Avg1=F.cP(3)*0.5+F.cP(0)*0.5;
+    }
+
+    Norm0.Normalize();
+    Norm1.Normalize();
+
+    //then make them lying on face's Normal
+    CoordType DirPlane0=Avg0-Avg1;
+    DirPlane0.Normalize();
+    CoordType DirPlane1=F.cN();
+    CoordType NormPlane=DirPlane0^DirPlane1;
+    NormPlane.Normalize();
+    CoordType subV0=NormPlane*(NormPlane*Norm0);
+    CoordType subV1=NormPlane*(NormPlane*Norm1);
+    Norm0-=subV0;
+    Norm1-=subV1;
+    Norm0.Normalize();
+    Norm1.Normalize();
+    ScalarType AngleVal=vcg::Angle(Norm0,Norm1);
+    return AngleVal;
+}
+
+template<class PolygonType>
+typename PolygonType::ScalarType PolygonBending(const PolygonType &F)
+{
+    typedef typename PolygonType::ScalarType ScalarType;
+    ScalarType Bend0=PolygonBending(F,0);
+    ScalarType Bend1=PolygonBending(F,1);
+    assert(Bend0>=0);
+    assert(Bend1>=0);
+    return (std::max(Bend0,Bend1));
+}
+
+template<class PolygonType>
+typename PolygonType::ScalarType PolygonTorsion(const PolygonType &F)
+{
+    typedef typename PolygonType::ScalarType ScalarType;
+    ScalarType Torsion0=PolygonTorsion(F,0);
+    ScalarType Torsion1=PolygonTorsion(F,1);
+    assert(Torsion0>=0);
+    assert(Torsion1>=0);
+    return (std::max(Torsion0,Torsion1));
+}
+
 }
 #endif // POLYGON_H

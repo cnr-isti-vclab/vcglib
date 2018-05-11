@@ -220,6 +220,20 @@ static void FillUniqueEdgeVector(MeshType &m, std::vector<PEdge> &edgeVec, bool 
     edgeVec.resize(newEnd-edgeVec.begin()); // redundant! remove?
 }
 
+static void FillSelectedFaceEdgeVector(MeshType &m, std::vector<PEdge> &edgeVec)
+{
+  edgeVec.reserve(m.fn*3);
+  ForEachFace(m, [&](FaceType &f){
+    for(int j=0;j<f.VN();++j)
+      if(f.IsFaceEdgeS(j))
+        edgeVec.push_back(PEdge(&f,j));
+        });
+
+  sort(edgeVec.begin(), edgeVec.end()); // oredering by vertex
+  edgeVec.erase(std::unique(edgeVec.begin(), edgeVec.end()),edgeVec.end()); 
+}
+
+
 
 /*! \brief Initialize the edge vector all the edges that can be inferred from current face vector, setting up all the current adjacency relations
  *
@@ -591,7 +605,6 @@ static void TestVertexEdge(MeshType &m)
         int cnt =0;
         for(edge::VEIterator<EdgeType> vei(&*vi);!vei.End();++vei)
           cnt++;
-        EdgeType *vep = vi->VEp();
         assert((numVertex[tri::Index(m,*vi)] == 0) == (vi->VEp()==0) );
         assert(cnt==numVertex[tri::Index(m,*vi)]);        
       }

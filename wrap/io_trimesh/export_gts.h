@@ -173,22 +173,27 @@ namespace vcg {
 					for(j=0,vi=m.vert.begin();vi!=m.vert.end();++vi)
 						(*vi).Flags()=FlagV[j++];
 
-					return 0;
+
+					int result = 0;
+					if (stream.status() != QTextStream::Ok) result = 3;
+					stream.flush();
+					return result;
 				}
 
         static const char *ErrorMsg(int error)
         {
-          static std::vector<std::string> off_error_msg;
-          if(off_error_msg.empty())
-          {
-            off_error_msg.resize(2 );
-            off_error_msg[0]="No errors";
-	          off_error_msg[1]="Can't open file";
-						off_error_msg[2]="Internal error";
-					}
+			static std::vector<std::string> off_error_msg;
+			if (off_error_msg.empty())
+			{
+				off_error_msg.resize(4);
+				off_error_msg[0] = "No errors";
+				off_error_msg[1] = "Can't open file";
+				off_error_msg[2] = "Internal error";
+				off_error_msg[3] = "Otput Stream Error";
+			}
 
-          if(error>2 || error<0) return "Unknown error";
-          else return off_error_msg[error].c_str();
+			if (error>3 || error<0) return "Unknown error";
+			else return off_error_msg[error].c_str();
         }
         /*
 	        returns mask of capability one define with what are the saveable information of the format.

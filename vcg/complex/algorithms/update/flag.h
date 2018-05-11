@@ -144,10 +144,7 @@ public:
   static void FaceClearB(MeshType &m) { FaceClear(m,FaceType::BORDER012);}
   static void FaceClearS(MeshType &m) {FaceClear(m,FaceType::SELECTED);}
   static void FaceClearF(MeshType &m) { FaceClear(m,FaceType::FAUX012);}
-  static void FaceClearCreases(MeshType &m) { FaceClear(m,FaceType::CREASE0);
-                                              FaceClear(m,FaceType::CREASE1);
-                                              FaceClear(m,FaceType::CREASE2);
-                                            }
+  static void FaceClearFaceEdgeS(MeshType &m) { FaceClear(m,FaceType::FACEEDGESEL012 ); }
 
   static void EdgeSetV(MeshType &m) { EdgeSet(m,EdgeType::VISITED);}
   static void VertexSetV(MeshType &m) { VertexSet(m,VertexType::VISITED);}
@@ -423,20 +420,20 @@ public:
 
 
   /// \brief Marks feature edges according to two signed dihedral angles.
-  /// Actually it marks as fauxedges all the non feature edges,
-  /// e.g. the edges where the signed dihedral angle between the normal of two incident faces , 
-  /// is between the two given thresholds.
-  /// In this way all the edges that are almost planar are marked as Faux Edges (e.g. edges to be ignored)
+  /// Actually it uses the face_edge selection bit on faces,
+  /// we select the edges where the signed dihedral angle between the normal of two incident faces , 
+  /// is outside the two given thresholds.
+  /// In this way all the edges that are almost planar are marked as non selected (e.g. edges to be ignored)
   /// Note that it uses the signed dihedral angle convention (negative for concave edges and positive for convex ones);
   ///
   /// Optionally it can also mark as feature edges also the boundary edges.
   ///
-  static void FaceFauxSignedCrease(MeshType &m, float AngleRadNeg, float AngleRadPos, bool MarkBorderFlag = false )
+  static void FaceEdgeSelSignedCrease(MeshType &m, float AngleRadNeg, float AngleRadPos, bool MarkBorderFlag = false )
   {
     RequirePerFaceFlags(m);
     RequireFFAdjacency(m);
     //initially Nothing is faux (e.g all crease)
-    FaceClearF(m);
+    FaceClearFaceEdgeS(m);
     // Then mark faux only if the signed angle is the range.
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
     {
@@ -445,12 +442,12 @@ public:
         if(!face::IsBorder(*fi,z) )
         {
           ScalarType angle = DihedralAngleRad(*fi,z);
-          if(angle>AngleRadNeg && angle<AngleRadPos)
-            (*fi).SetF(z);
+          if(angle<AngleRadNeg || angle>AngleRadPos)
+            (*fi).SetFaceEdgeS(z);
         }
         else
         {
-          if(MarkBorderFlag) (*fi).SetF(z);
+          if(MarkBorderFlag) (*fi).SetFaceEdgeS(z);
         }
       }
     }
@@ -459,29 +456,30 @@ public:
   /// \brief Marks feature edges according to border flag.
   /// Actually it marks as fauxedges all the non border edges,
   ///
-  static void FaceFauxBorder(MeshType &m)
+  static void FaceEdgeSelBorder(MeshType &m)
   {
     RequirePerFaceFlags(m);
     RequireFFAdjacency(m);
     //initially Nothing is faux (e.g all crease)
-    FaceClearF(m);
+    FaceClearFaceEdgeS(m);
     // Then mark faux only if the signed angle is the range.
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
     {
       for(int z=0;z<(*fi).VN();++z)
       {
-        if(!face::IsBorder(*fi,z) ) (*fi).SetF(z);
+        if(!face::IsBorder(*fi,z) ) (*fi).SetFaceEdgeS(z);
       }
     }
   }
 
   /// \brief Marks feature edges according to a given angle
-  /// Actually it marks as fauxedges all the non feature edges,
-  /// e.g. the edge such that the angle between the normal of two faces sharing it is less than the given threshold.
-  /// In this way all the near planar edges are marked as Faux Edges (e.g. edges to be ignored)
-  static void FaceFauxCrease(MeshType &m,float AngleRad)
+  /// Actually it uses the face_edge selection bit on faces,
+  /// we select the edges where the dihedral angle between the normal of two incident faces is larger than , 
+  /// the given thresholds.
+  /// In this way all the near planar edges are marked remains not selected (e.g. edges to be ignored)
+  static void FaceEdgeSelCrease(MeshType &m,float AngleRad)
   {
-    FaceFauxSignedCrease(m,-AngleRad,AngleRad);
+    FaceEdgeSelSignedCrease(m,-AngleRad,AngleRad);
   }
 
  

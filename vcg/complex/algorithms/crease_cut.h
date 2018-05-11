@@ -35,8 +35,8 @@ namespace tri {
 template<class MESH_TYPE>
 void CreaseCut(MESH_TYPE &m, float angleRad)
 {
-  tri::UpdateFlags<MESH_TYPE>::FaceFauxSignedCrease(m, -angleRad, angleRad);
-  CutMeshAlongNonFauxEdges(m);
+  tri::UpdateFlags<MESH_TYPE>::FaceEdgeSelSignedCrease(m, -angleRad, angleRad);
+  CutMeshAlongSelectedFaceEdges(m);
 }
 
 /**
@@ -48,7 +48,7 @@ void CreaseCut(MESH_TYPE &m, float angleRad)
  * 
  */
 template<class MESH_TYPE>
-void CutMeshAlongNonFauxEdges(MESH_TYPE &m)
+void CutMeshAlongSelectedFaceEdges(MESH_TYPE &m)
 {
   typedef typename MESH_TYPE::FaceIterator FaceIterator;
   typedef typename MESH_TYPE::FaceType     FaceType;
@@ -86,7 +86,7 @@ void CutMeshAlongNonFauxEdges(MESH_TYPE &m)
         {
           do  {
             curPos.FlipF();curPos.FlipE();
-            if(!curPos.IsFaux()) 
+            if(curPos.IsEdgeS()) 
               break;           
           } while(curPos!=startPos);
           startPos=curPos;
@@ -100,7 +100,7 @@ void CutMeshAlongNonFauxEdges(MESH_TYPE &m)
           size_t faceInd = Index(m,curPos.F());
           indVec[faceInd*3+ curPos.VInd()] = curVertexCounter;
           curPos.FlipE();
-          if(!curPos.IsFaux()) 
+          if(curPos.IsEdgeS()) 
           { //qDebug("  Crease FOUND");
             ++locCreaseCounter;
             curVertexCounter=newVertexCounter;
