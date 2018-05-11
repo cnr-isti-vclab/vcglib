@@ -755,6 +755,19 @@ static void VertexUniform(MeshType & m, VertexSampler &ps, int sampleNum)
 }
 
 
+///
+/// \brief The EdgeSamplingStrategy enum determines the sampling strategy for edge meshes.
+/// Given a sampling radius 'r', and the total length of the edge mesh 'L',
+/// the number of generated samples is: op(L/r) (+ 1 if the mesh is not a loop)
+/// where op is (floor | round | ceil)
+///
+enum EdgeSamplingStrategy
+{
+	Floor = 0,
+	Round,
+	Ceil,
+};
+
 /// Perform an uniform sampling over an EdgeMesh.
 ///
 /// It assumes that the mesh is 1-manifold.
@@ -762,7 +775,7 @@ static void VertexUniform(MeshType & m, VertexSampler &ps, int sampleNum)
 /// For each component of length <L> we place on it floor(L/radius)+1 samples.
 /// (if conservative argument is false we place ceil(L/radius)+1 samples)
 ///
-static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool conservative = true)
+static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, SurfaceSampling::EdgeSamplingStrategy strategy = 0)
 {
 	tri::RequireEEAdjacency(m);
 	tri::RequireCompactness(m);
@@ -845,7 +858,22 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 			VertexPointer startVertex = ep.V();
 
 			// Third loop actually performs the sampling.
-			int sampleNum = conservative ? floor(totalLen / radius) : ceil(totalLen / radius);
+			int sampleNum = -1;
+			{
+				double div = double(totalLen) / radius;
+				switch (strategy) {
+				case Round:
+					sampleNum = int(round(div));
+					break;
+				case Ceil:
+					sampleNum = int(ceil(div));
+					break;
+				default: // Floor
+					sampleNum = int(floor(div));
+					break;
+				};
+			}
+			assert(sampleNum >= 0);
 
 			ScalarType sampleDist = totalLen / sampleNum;
 //			printf("Found a chain of %f with %i samples every %f (%f)\n", totalLen, sampleNum, sampleDist, radius);
