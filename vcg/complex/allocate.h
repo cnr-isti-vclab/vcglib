@@ -870,7 +870,7 @@ public:
     PointerUpdater<TetraPointer> pu;
     TetraIterator t_ret = AddTetras(m, n, pu);
 
-    typename std::vector<TetraPointer *>::iterator fi;
+    typename std::vector<TetraPointer *>::iterator ti;
     for (ti = local_vec.begin(); ti != local_vec.end(); ++ti)
       pu.Update(**ti);
     return t_ret;

@@ -209,7 +209,6 @@ class TriMesh
         typedef typename TriMesh::TetraType						TetraType;
         typedef typename TriMesh::TetraPointer					TetraPointer;
         typedef typename TriMesh::TetraIterator					TetraIterator;
-        typedef typename TriMesh::TetraContainer				TetraContainer;
         typedef typename TriMesh::ConstTetraIterator		    ConstTetraIterator;
 
         typedef vcg::PointerToAttribute PointerToAttribute;
@@ -395,7 +394,7 @@ public:
         for( i = face_attr.begin(); i != face_attr.end(); ++i)
             size +=  ((SimpleTempDataBase*)(*i)._handle)->SizeOf()*nf;
         for (i = tetra_attr.begin(); i != tetra_attr.end(); ++i)
-            size += ((SimpleTempDataBase *)(*i)._handle)->SizeOf() * nt;
+            size += ((SimpleTempDataBase *)(*i)._handle)->SizeOf() * tn;
         for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i)
             size +=  ((SimpleTempDataBase*)(*i)._handle)->SizeOf();
 
@@ -566,7 +565,7 @@ template < class FaceType  > bool   FaceVectorHasVFAdjacency     (const std::vec
 
 template < class TriMeshType> bool HasPerVertexVFAdjacency     (const TriMeshType &m) { return tri::VertexVectorHasVFAdjacency(m.vert); }
 template < class TriMeshType> bool HasPerVertexVEAdjacency     (const TriMeshType &m) { return tri::VertexVectorHasVEAdjacency(m.vert); }
-template < class TriMeshType> bool HasPerVertexVTAdjacency     (const TriMeshType &m) { return tetra::VertexVectorHasVTAdjacency(m.vert); }
+template < class TriMeshType> bool HasPerVertexVTAdjacency     (const TriMeshType &m) { return tri::VertexVectorHasVTAdjacency(m.vert); }
 template < class TriMeshType> bool   HasPerEdgeVEAdjacency     (const TriMeshType &m) { return tri::EdgeVectorHasVEAdjacency  (m.edge); }
 template < class TriMeshType> bool   HasPerEdgeEFAdjacency     (const TriMeshType &m) { return tri::EdgeVectorHasEFAdjacency  (m.edge); }
 template < class TriMeshType> bool   HasPerFaceVFAdjacency     (const TriMeshType &m) { return tri::FaceVectorHasVFAdjacency  (m.face); }

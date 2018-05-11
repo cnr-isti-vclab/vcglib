@@ -24,6 +24,8 @@
 #ifndef _VCG_TETRA_TOPOLOGY
 #define _VCG_TETRA_TOPOLOGY
 
+#include <vcg/complex/algorithms/update/topology.h> 
+
 namespace vcg {
 namespace tetrahedron {
 /** \addtogroup tetrahedron */
@@ -45,15 +47,19 @@ inline bool IsBorder(TetraType const & t,  const int j )
 template <class TetraMesh, class TriMesh>
 inline void TriMeshFromBorder(TetraMesh & tetramesh, TriMesh & trimesh)
 {
+    typedef typename TriMesh::VertexPointer VertexPointer;
+    typedef typename TriMesh::FacePointer     FacePointer;
+
     RequireTTAdjacency(tetramesh);
     tri::UpdateTopology<TetraMesh>::TetraTetra(tetramesh);
 
     trimesh.Clear();
 
-    std::vector<TriMesh::VertexPointer> verts;
-    std::vector<TriMesh::FacePointer>   faces;
+    std::vector<VertexPointer> verts;
+    std::vector<FacePointer>   faces;
 
-    ForEachTetra(tetramesh, [&] (TetraMesh::TetraType & t) {
+    typedef typename TetraMesh::TetraType TetraType;
+    ForEachTetra(tetramesh, [&] (TetraType & t) {
         for (int i = 0; i < 4; ++i)
             if (IsBorder(t, i))
             {
@@ -63,8 +69,11 @@ inline void TriMeshFromBorder(TetraMesh & tetramesh, TriMesh & trimesh)
             }
     });
 
-    TriMesh::VertexIterator vi = tri::Allocator<TriMesh>::AddVertices(trimesh, verts.size());
-    TriMesh::FaceIterator   fi = tri::Allocator<TriMesh>::AddFaces(trimesh, verts.size() / 3);
+    typedef typename TriMesh::VertexIterator VertexIterator;
+    typedef typename TriMesh::FaceIterator     FaceIterator;
+    
+    VertexIterator vi = tri::Allocator<TriMesh>::AddVertices(trimesh, verts.size());
+    FaceIterator   fi = tri::Allocator<TriMesh>::AddFaces(trimesh, verts.size() / 3);
     
     for (int i = 0; i < verts.size(); i += 3)
     {
@@ -84,8 +93,6 @@ inline void TriMeshFromBorder(TetraMesh & tetramesh, TriMesh & trimesh)
 
         ++fi;
     }
-
-    tri::Clean<TriMesh>::RemoveDuplicateVertex(trimesh);
 }
 
 }

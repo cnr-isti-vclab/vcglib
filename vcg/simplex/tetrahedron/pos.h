@@ -185,7 +185,7 @@ public:
 
 	/// Operator to compare two half-edge
 	inline bool operator == ( BasePosType const & p ) const {
-			return (T()==p.T() && F()==p.F() && E==p.E() && V==p.V());
+			return (T()==p.T() && F()==p.F() && E()==p.E() && V()==p.V());
 	} 
 
 	/// Operator to compare two half-edge
