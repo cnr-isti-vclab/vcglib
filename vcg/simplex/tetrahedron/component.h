@@ -178,11 +178,11 @@ public:
     inline typename T::VertexType *       & V( const int j ) 	     { assert(j>=0 && j<4); return v[j]; }
     inline typename T::VertexType * const  cV( const int j ) const { assert(j>=0 && j<4);	return v[j]; }
 
-    inline typename size_t const cFtoVi (const int f, const int j) const { assert(f >= 0 && f < 4); assert(j >= 0 && j < 3); return findices[f][j]; }
+    inline  size_t const cFtoVi (const int f, const int j) const { assert(f >= 0 && f < 4); assert(j >= 0 && j < 3); return findices[f][j]; }
 
     // Shortcut for tetra points
-    inline       typename CoordType & P( const int j )       { assert(j>=0 && j<4); return v[j]->P();	}
-    inline const typename CoordType &cP( const int j ) const { assert(j>=0 && j<4); return v[j]->P(); }
+    inline       CoordType & P( const int j )       { assert(j>=0 && j<4); return v[j]->P();	}
+    inline const CoordType &cP( const int j ) const { assert(j>=0 && j<4); return v[j]->P(); }
 
     /** Return the pointer to the ((j+1)%4)-th vertex of the tetra.
                 @param j Index of the face vertex.
@@ -201,18 +201,18 @@ public:
     inline const typename T::VertexType * const & cV3( const int j ) const { return cV((j+3)%4);}
 
     /// Shortcut to get vertex values
-    inline       typename CoordType &P0 (const int j)       { return V(j)->P(); }
-    inline       typename CoordType &P2 (const int j)       { return V((j + 2) % 4)->P(); }
-    inline       typename CoordType &P3 (const int j)       { return V((j + 3) % 4)->P(); }
-    inline       typename CoordType &P1 (const int j)       { return V((j + 1) % 4)->P(); }
-    inline const typename CoordType &P0 (const int j) const { return V(j)->P(); }
-    inline const typename CoordType &P1 (const int j) const { return V((j + 1) % 4)->P(); }
-    inline const typename CoordType &P2 (const int j) const { return V((j + 2) % 4)->P(); }
-    inline const typename CoordType &P3 (const int j) const { return V((j + 3) % 4)->P(); }
-    inline const typename CoordType &cP0(const int j) const { return cV(j)->P(); }
-    inline const typename CoordType &cP1(const int j) const { return cV((j + 1) % 4)->P(); }
-    inline const typename CoordType &cP2(const int j) const { return cV((j + 2) % 4)->P(); }
-    inline const typename CoordType &cP3(const int j) const { return cV((j + 3) % 4)->P(); }
+    inline       CoordType &P0 (const int j)       { return V(j)->P(); }
+    inline       CoordType &P2 (const int j)       { return V((j + 2) % 4)->P(); }
+    inline       CoordType &P3 (const int j)       { return V((j + 3) % 4)->P(); }
+    inline       CoordType &P1 (const int j)       { return V((j + 1) % 4)->P(); }
+    inline const CoordType &P0 (const int j) const { return V(j)->P(); }
+    inline const CoordType &P1 (const int j) const { return V((j + 1) % 4)->P(); }
+    inline const CoordType &P2 (const int j) const { return V((j + 2) % 4)->P(); }
+    inline const CoordType &P3 (const int j) const { return V((j + 3) % 4)->P(); }
+    inline const CoordType &cP0(const int j) const { return cV(j)->P(); }
+    inline const CoordType &cP1(const int j) const { return cV((j + 1) % 4)->P(); }
+    inline const CoordType &cP2(const int j) const { return cV((j + 2) % 4)->P(); }
+    inline const CoordType &cP3(const int j) const { return cV((j + 3) % 4)->P(); }
 
     static bool HasVertexRef()   { return true; }
     static bool HasTVAdjacency() { return true; }
