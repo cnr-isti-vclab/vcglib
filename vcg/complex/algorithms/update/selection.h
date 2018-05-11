@@ -218,7 +218,7 @@ static size_t FaceAll(MeshType &m)
 /// \brief This function select all the tetras.
 static size_t TetraAll (MeshType & m)
 {
-  ForEachTetra(m, [] (MeshType::TetraType & t) {
+  ForEachTetra(m, [] (TetraType & t) {
     t.SetS();
   });
 
@@ -252,7 +252,7 @@ static size_t FaceClear(MeshType &m)
 /// \brief This function clears the selection flag for all the tetras.
 static size_t TetraClear (MeshType & m)
 {
-  ForEachTetra(m, [] (MeshType::TetraType & t) {
+  ForEachTetra(m, [] (TetraType & t) {
     t.ClearS();
   });
 
@@ -299,7 +299,7 @@ static size_t VertexCount(MeshType &m)
 static size_t TetraCount (MeshType & m)
 {
   size_t selCnt = 0;
-  ForEachTetra(m, [&selCnt] (MeshType::TetraType & t) {
+  ForEachTetra(m, [&selCnt] (TetraType & t) {
     if (t.IsS()) 
       ++selCnt;
   });
@@ -358,7 +358,7 @@ static size_t VertexInvert(MeshType &m)
 static size_t TetraInvert (MeshType & m)
 {
   size_t selCnt = 0;
-  ForEachTetra(m, [&selCnt] (MeshType::TetraType & t) {
+  ForEachTetra(m, [&selCnt] (TetraType & t) {
     if (t.IsS())
       t.ClearS();
     else

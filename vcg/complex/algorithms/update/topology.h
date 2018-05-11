@@ -122,7 +122,7 @@ public:
 
 static void FillFaceVector (MeshType & m, std::vector<PFace> & fvec)
 {
-  ForEachTetra(m, [&fvec] (MeshType::TetraType & t) {
+  ForEachTetra(m, [&fvec] (TetraType & t) {
     for (int i = 0; i < 4; ++i)
       fvec.push_back(PFace(&t, i));
   });
@@ -320,7 +320,7 @@ static void AllocateEdge(MeshType &m)
 static void ClearTetraTetra (MeshType & m)
 {
   RequireTTAdjacency(m);
-  ForEachTetra(m, [] (MeshType::TetraType & t) {
+  ForEachTetra(m, [] (TetraType & t) {
       for (int i = 0; i < 4; ++i)
       {
         t.TTp(i) = NULL;
@@ -437,12 +437,12 @@ static void VertexTetra(MeshType & m)
   RequireVTAdjacency(m);
 
   
-  ForEachVertex(m, [] (MeshType::VertexType & v) {
+  ForEachVertex(m, [] (VertexType & v) {
       v.VTp() = NULL;
       v.VTi() = 0;
   });
 
-  ForEachTetra(m, [] (MeshType::TetraType & t) {
+  ForEachTetra(m, [] (TetraType & t) {
     //this works like this: the first iteration defines the end of the chain
     //then it backwards chains everything
       for (int i = 0; i < 4; ++i)

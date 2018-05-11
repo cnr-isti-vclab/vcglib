@@ -144,14 +144,14 @@ static void FaceArea(MeshType &m)
 static void TetraConstant(MeshType & m, const TetraQualityType q)
 {
   tri::RequirePerTetraQuality(m);
-  ForEachTetra(m, [&q] (MeshType::TetraType & t) {
+  ForEachTetra(m, [&q] (TetraType & t) {
       t.Q() = q;
   });
 }
 static void TetraFromVolume(MeshType & m)
 {
   tri::RequirePerTetraQuality(m);
-  ForEachTetra(m, [] (MeshType::TetraType & t) {
+  ForEachTetra(m, [] (TetraType & t) {
      t.Q() = TetraQualityType(vcg::Tetra::ComputeVolume(t));
   });
 }
@@ -159,7 +159,7 @@ static void TetraFromVolume(MeshType & m)
 static void TetraFromAspectRatio(MeshType & m)
 {
   tri::RequirePerTetraQuality(m);
-  ForEachTetra(m, [] (MeshType::TetraType & t) {
+  ForEachTetra(m, [] (TetraType & t) {
       t.Q() = TetraQualityType(vcg::Tetra::AspectRatio(t));
   });
 }

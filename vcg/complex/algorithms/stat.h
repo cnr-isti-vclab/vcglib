@@ -311,7 +311,7 @@ public:
         assert(!math::IsNAN(t.Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
         h.Add(t.Q());
       }
-    })
+    });
   }
 
   static void ComputePerTetraQualityHistogram(MeshType & m, Histogram<ScalarType> & h, bool selectionOnly = false, int HistSize = 10000)

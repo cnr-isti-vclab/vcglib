@@ -54,6 +54,7 @@ class Smooth
     typedef typename MeshType::FacePointer FacePointer;
     typedef typename MeshType::FaceIterator FaceIterator;
     typedef typename MeshType::FaceContainer FaceContainer;
+    typedef typename MeshType::TetraType TetraType;
     typedef typename vcg::Box3<ScalarType> Box3Type;
     typedef typename vcg::face::VFIterator<FaceType> VFLocalIterator;
 
@@ -215,7 +216,7 @@ class Smooth
         float weight = 1.0f;
 
         //if we are applying to a tetrahedral mesh:
-        ForEachTetra(m, [&](MeshType::TetraType &t) {
+        ForEachTetra(m, [&](TetraType &t) {
             for (int i = 0; i < 4; ++i)
                 if (!t.IsB(i))
                 {
@@ -238,7 +239,7 @@ class Smooth
                 }
         });
 
-        ForEachTetra(m, [&](MeshType::TetraType &t) {
+        ForEachTetra(m, [&](TetraType &t) {
             for (int i = 0; i < 4; ++i)
                 if (t.IsB(i))
                 {
@@ -257,7 +258,7 @@ class Smooth
                 }
         });
 
-        ForEachTetra(m, [&](MeshType::TetraType &t) {
+        ForEachTetra(m, [&](TetraType &t) {
             for (int i = 0; i < 4; ++i)
                 if (t.IsB(i))
                 {
