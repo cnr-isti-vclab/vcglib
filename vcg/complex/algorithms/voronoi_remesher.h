@@ -31,7 +31,7 @@
 #include <vcg/complex/algorithms/voronoi_processing.h>
 #include <vcg/complex/algorithms/point_sampling.h>
 #include <vcg/complex/algorithms/crease_cut.h>
-#include <vcg/complex/algorithms/curve_on_manifold.h>
+//#include <vcg/complex/algorithms/curve_on_manifold.h>
 
 #include <memory>
 #include <string>
@@ -133,7 +133,7 @@ protected:
 	}
 
 public:
-	static const int VoroRelaxationStep = 30;
+	static const int VoroRelaxationStep = 40;
 
 	///
 	/// \brief Remesh the main function that remeshes a mesh preserving creases.
@@ -326,7 +326,7 @@ protected:
 
 			// uniform edge sampling
 			UpdateTopology<EdgeMeshType>::EdgeEdge(em);
-			SurfaceSampling<EdgeMeshType>::EdgeMeshUniform(em, ps, samplingRadius, false);
+			SurfaceSampling<EdgeMeshType>::EdgeMeshUniform(em, ps, samplingRadius, SurfaceSampling<EdgeMeshType>::Round);
 			BuildMeshFromCoordVector(poissonEdgeMesh, borderSamples);
 			UpdateBounding<Mesh>::Box(poissonEdgeMesh);
 
@@ -355,7 +355,7 @@ protected:
 
 		// refine to obtain a base mesh
 		VoronoiProcessingParameter vpp;
-		vpp.refinementRatio = 5.0f;
+		vpp.refinementRatio = 8.0f;
 		Voronoi::PreprocessForVoronoi(baseMesh, samplingRadius, vpp);
 
 		// Poisson sampling preserving border
@@ -394,7 +394,7 @@ protected:
 		else
 		{
 			// Montecarlo poisson sampling
-			SurfaceSampler::MontecarloPoisson(original, mps, poissonCount * 40);
+			SurfaceSampler::MontecarloPoisson(original, mps, poissonCount * 50);
 			BuildMeshFromCoordVector(montecarloMesh,sampleVec);
 
 #ifdef DEBUG_VORO
@@ -405,6 +405,8 @@ protected:
 			typename SurfaceFixSampler::PoissonDiskParam pp;
 			pp.preGenMesh = &poissonEdgeMesh;
 			pp.preGenFlag = true;
+			pp.bestSampleChoiceFlag = true;
+			pp.bestSamplePoolSize = 100;
 			SurfaceFixSampler::PoissonDiskPruning(fix_sampler, montecarloMesh, samplingRadius, pp);
 
 		}
@@ -425,9 +427,13 @@ protected:
 			return std::make_shared<Mesh>();
 		}
 
+		// TODO: rimettere a posto
 		// restricted relaxation with fixed points
-		vpp.seedPerturbationProbability = 0.0f;
+		vpp.seedPerturbationProbability = 0.2f;
+		vpp.seedPerturbationAmount      = 0.005f;
 		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep, vpp);
+		vpp.seedPerturbationProbability = 0.0f;
+		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep/2, vpp);
 
 
 #ifdef DEBUG_VORO
