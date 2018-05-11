@@ -775,7 +775,7 @@ enum EdgeSamplingStrategy
 /// For each component of length <L> we place on it floor(L/radius)+1 samples.
 /// (if conservative argument is false we place ceil(L/radius)+1 samples)
 ///
-static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, SurfaceSampling::EdgeSamplingStrategy strategy = 0)
+static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, EdgeSamplingStrategy strategy = Floor)
 {
 	tri::RequireEEAdjacency(m);
 	tri::RequireCompactness(m);
