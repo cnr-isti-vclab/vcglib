@@ -71,7 +71,7 @@ public:
     typename MeshType::template PerMeshAttributeHandle  < std::pair<ScalarType, ScalarType> > mmqH;
     mmqH = tri::Allocator<MeshType>::template GetPerMeshAttribute <std::pair<ScalarType, ScalarType> >(m,"minmaxQ");
 
-    std::pair<ScalarType, ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(), -std::numeric_limits<fScalarTypeloat>::max());
+    std::pair<ScalarType, ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(), -std::numeric_limits<ScalarType>::max());
 
     for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
       if(!(*vi).IsD())
@@ -399,7 +399,7 @@ public:
 
   static ScalarType ComputeEdgeLengthAverage(MeshType & m)
   {
-    Histogramf h;
+    Histogram<ScalarType> h;
     ComputeEdgeLengthHistogram(m,h);
     return h.Avg();
   }
