@@ -354,7 +354,7 @@ public:
                         fprintf(fpout,"%d ",vp->Flags());
 
                     if( HasPerVertexColor(m) && (pi.mask & Mask::IOM_VERTCOLOR) )
-                        fprintf(fpout,"%d %d %d %d ",vp->C()[0],vp->C()[1],vp->C()[2],vp->C()[3] );
+                        fprintf(fpout,"%d %d %d %d ",vp->C()[0], vp->C()[1], vp->C()[2], vp->C()[3] );
 
                     if( HasPerVertexQuality(m) && (pi.mask & Mask::IOM_VERTQUALITY) )
                         fprintf(fpout,"%g ",vp->Q());
