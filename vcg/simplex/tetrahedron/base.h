@@ -163,8 +163,9 @@ public:
 	/// Un-select a Face
   void ClearV()	{this->Flags() &= ~VISITED;}
 	
-	/// This function checks if the face is selected
+	/// This function checks if the face is border
 	bool IsB(int i) const {return (this->cFlags() & (BORDER0<<i)) != 0;}
+	bool IsAnyB() const {return (this->cFlags() & (BORDER0123)) != 0;}
 	/// This function select the face
   void SetB(int i)		{this->Flags() |=(BORDER0<<i);}
 	/// This funcion execute the inverse operation of SetS()
