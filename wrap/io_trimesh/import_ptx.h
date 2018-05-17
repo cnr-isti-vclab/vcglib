@@ -64,7 +64,6 @@ public:
       savecolor		= true;
       pointcull		= true;
       pointsonly	= false;
-      switchside	= false;
       flipfaces		= false;
     }
 
@@ -180,21 +179,20 @@ public:
 
     bool hascolor;
     bool savecolor   =  importparams.savecolor &&  VertexType::HasColor();
-    bool switchside  =  importparams.switchside;
 
     int total = 50;
     if (importparams.pointsonly) total = 100;
-    char linebuf[256];
+    char linebuf[1024];
 
     fscanf(fp,"%i\n",&colnum);
     fscanf(fp,"%i\n",&rownum);
 
     if ( ( colnum <=0 ) || ( rownum <=0 ) ) return false;
-    // initial 4 lines [still don't know what is this :) :)]
-    if ( !fscanf(fp,"%lf %lf %lf\n", &xx, &yy, &zz) ) return false;
-    if ( !fscanf(fp,"%lf %lf %lf\n", &xx, &yy, &zz) ) return false;
-    if ( !fscanf(fp,"%lf %lf %lf\n", &xx, &yy, &zz) ) return false;
-    if ( !fscanf(fp,"%lf %lf %lf\n", &xx, &yy, &zz) ) return false;
+    // initial 4 lines
+	if (!fscanf(fp, "%lf %lf %lf\n", &xx, &yy, &zz)) return false; // scanner registered position 
+	if (!fscanf(fp, "%lf %lf %lf\n", &xx, &yy, &zz)) return false; // scanner registered axis 'X' 
+	if (!fscanf(fp, "%lf %lf %lf\n", &xx, &yy, &zz)) return false; // scanner registered axis 'Y'
+	if (!fscanf(fp, "%lf %lf %lf\n", &xx, &yy, &zz)) return false; // scanner registered axis 'Z'
     // now the transformation matrix
     if ( !fscanf(fp,"%lf %lf %lf %lf\n", &(currtrasf.ElementAt(0,0)), &(currtrasf.ElementAt(0,1)), &(currtrasf.ElementAt(0,2)), &(currtrasf.ElementAt(0,3))) )return false;
     if ( !fscanf(fp,"%lf %lf %lf %lf\n", &(currtrasf.ElementAt(1,0)), &(currtrasf.ElementAt(1,1)), &(currtrasf.ElementAt(1,2)), &(currtrasf.ElementAt(1,3))) )return false;
@@ -215,7 +213,7 @@ public:
     for(ii=0; ii<(int)strlen(linebuf); ii++) if(linebuf[ii] == ' ') numtokens++;
     if(numtokens == 4)  hascolor = false;
     else if(numtokens == 7)  hascolor = true;
-    else  return false;
+    else return false;
 
     // PTX transformation matrix is transposed
     currtrasf.transposeInPlace();
@@ -263,8 +261,6 @@ public:
     }
     vi++;
 
-    if(switchside) std::swap(rownum,colnum);
-
     // now for each line until end of mesh (row*col)-1
     for(ii=0; ii<((rownum*colnum)-1); ii++)
     {
@@ -280,7 +276,6 @@ public:
       (*vi).P()[0]=xx;
       (*vi).P()[1]=yy;
       (*vi).P()[2]=zz;
-
 
       if(tri::HasPerVertexQuality(m)) (*vi).Q()=rf;
 
@@ -316,6 +311,7 @@ public:
           v0i = (rit  ) + ((cit  ) * rownum);
           v1i = (rit+1) + ((cit  ) * rownum);
           v2i = (rit  ) + ((cit+1) * rownum);
+		  if (importparams.flipfaces) std::swap(v0i, v1i);
 
           // upper tri
           (*fi).V(2) = &(m.vert[v0i]);
@@ -327,6 +323,7 @@ public:
           v0i = (rit+1) + ((cit  ) * rownum);
           v1i = (rit+1) + ((cit+1) * rownum);
           v2i = (rit  ) + ((cit+1) * rownum);
+		  if (importparams.flipfaces) std::swap(v0i, v1i);
 
           // lower tri
           (*fi).V(2) = &(m.vert[v0i]);
@@ -337,6 +334,7 @@ public:
         }
     }
     printf("Loaded %i vert\n",m.vn);
+
     // remove unsampled points
     if(importparams.pointcull)
     {
@@ -400,15 +398,19 @@ public:
           // Compute an average Normal skipping null normals and normals that are too steep.
           // Compute also the sum of non null edge lenght to compute the radius
           CoordType N(0,0,0);
-          if((vLTn*v0pn)>limitCos)  { N+=vLTn; r += Distance(m.vert[vL].P(),v0p)+Distance(m.vert[vT].P(),v0p); rc++; }
-          if((vTRn*v0pn)>limitCos)  { N+=vTRn; r += Distance(m.vert[vT].P(),v0p)+Distance(m.vert[vR].P(),v0p); rc++; }
-          if((vRBn*v0pn)>limitCos)  { N+=vRBn; r += Distance(m.vert[vR].P(),v0p)+Distance(m.vert[vB].P(),v0p); rc++; }
-          if((vBLn*v0pn)>limitCos)  { N+=vBLn; r += Distance(m.vert[vB].P(),v0p)+Distance(m.vert[vL].P(),v0p); rc++; }
+		  if (abs(vLTn*v0pn)>limitCos)  { N += vLTn; r += Distance(m.vert[vL].P(), v0p) + Distance(m.vert[vT].P(), v0p); rc++; }
+		  if (abs(vTRn*v0pn)>limitCos)  { N += vTRn; r += Distance(m.vert[vT].P(), v0p) + Distance(m.vert[vR].P(), v0p); rc++; }
+		  if (abs(vRBn*v0pn)>limitCos)  { N += vRBn; r += Distance(m.vert[vR].P(), v0p) + Distance(m.vert[vB].P(), v0p); rc++; }
+		  if (abs(vBLn*v0pn)>limitCos)  { N += vBLn; r += Distance(m.vert[vB].P(), v0p) + Distance(m.vert[vL].P(), v0p); rc++; }
 
-          m.vert[v0].N()=-N;
+		  if (importparams.flipfaces)
+			m.vert[v0].N() = N;
+		  else
+			m.vert[v0].N() = -N;
 
           if(tri::HasPerVertexRadius(m)) m.vert[v0].R() = r/(rc*2.0f);
-          // Isolated points has null normal. Delete them please.
+
+          // Isolated points have null normal. Delete them please.
           if(m.vert[v0].N() == CoordType(0,0,0)) Allocator<OpenMeshType>::DeleteVertex(m,m.vert[v0]);
         }
       }
@@ -416,8 +418,6 @@ public:
     else
       // eliminate high angle triangles
     {
-      if(importparams.flipfaces)
-        tri::Clean<OpenMeshType>::FlipMesh(m);
       if(importparams.anglecull)
       {
         if(cb) cb(85,"PTX Mesh Loading - remove steep faces");
