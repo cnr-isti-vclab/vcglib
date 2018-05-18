@@ -206,7 +206,7 @@ public:
     if(tri::HasPerVertexQuality(m) )
        m.vert.back().Q() = f.cV(0)->Q()*p[0] + f.cV(1)->Q()*p[1] + f.cV(2)->Q()*p[2];
   }
-}; // end class BaseSampler
+}; // end class MeshSampler
 
 
 
@@ -2311,7 +2311,7 @@ void PoissonPruning(MeshType &m, // the mesh that has to be pruned
   tri::UpdateBounding<MeshType>::Box(m);
   BaseSampler pdSampler;
   tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(pdSampler, m, radius,pp);
-  std::swap(pdSampler.sampleVec,poissonSamples);
+  poissonSamples = pdSampler.sampleVec;
 }
 
 

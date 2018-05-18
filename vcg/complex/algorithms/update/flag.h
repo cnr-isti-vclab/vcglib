@@ -470,24 +470,24 @@ public:
     }
   }
 
-  /// \brief Marks feature edges according to border flag.
-  /// Actually it marks as fauxedges all the non border edges,
-  ///
-  static void FaceEdgeSelBorder(MeshType &m)
-  {
-    RequirePerFaceFlags(m);
-    RequireFFAdjacency(m);
-    //initially Nothing is faux (e.g all crease)
-    FaceClearFaceEdgeS(m);
-    // Then mark faux only if the signed angle is the range.
-    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-    {
-      for(int z=0;z<(*fi).VN();++z)
-      {
-        if(!face::IsBorder(*fi,z) ) (*fi).SetFaceEdgeS(z);
-      }
-    }
-  }
+	/// \brief Selects feature edges according to Face adjacency.
+	///
+	static void FaceEdgeSelBorder(MeshType &m)
+	{
+		RequirePerFaceFlags(m);
+		RequireFFAdjacency(m);
+		//initially Nothing is selected
+		FaceClearFaceEdgeS(m);
+		for (FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi)
+			if (!fi->IsD())
+			{
+				for (int z=0; z<(*fi).VN(); ++z)
+				{
+					if (face::IsBorder(*fi,z))
+						fi->SetFaceEdgeS(z);
+				}
+			}
+	}
 
   /// \brief Marks feature edges according to a given angle
   /// Actually it uses the face_edge selection bit on faces,
