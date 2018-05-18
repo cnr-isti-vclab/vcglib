@@ -418,6 +418,23 @@ public:
       }
   }
 
+	/// Compute the PerVertex Border flag deriving it from the Edge-Edge adjacency (made for edgemeshes)
+	static void VertexBorderFromEdgeAdj(MeshType &m)
+	{
+		 RequirePerVertexFlags(m);
+		 RequireEEAdjacency(m);
+
+		VertexClearB(m);
+		for (EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
+			if (!ei->IsD())
+			{
+				for (int z=0; z<2; ++z)
+					if (edge::IsEdgeBorder(*ei, z))
+					{
+						ei->V(z)->SetB();
+					}
+			}
+	}
 
   /// \brief Marks feature edges according to two signed dihedral angles.
   /// Actually it uses the face_edge selection bit on faces,
