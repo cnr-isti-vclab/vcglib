@@ -305,6 +305,23 @@ public:
         return face::IsManifold(*f,z);
     }
     
+    void NextEdgeS( )
+    {
+        assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
+        assert(IsEdgeS());
+        do
+        {
+            FlipE();
+            if (!IsEdgeS()) FlipF();
+        }
+        while(!IsEdgeS());
+
+        assert(IsEdgeS() &&( f->V(z)==v || f->V(f->Next(z))==v ));
+
+        FlipV();
+        assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
+    }
+
     bool IsFaceS() const { return f->IsS();}
     bool IsEdgeS() const { return f->IsFaceEdgeS(z);}
     bool IsVertS() const { return v->IsS();}
@@ -313,8 +330,8 @@ public:
      * Returns the angle (in radiant) between the two edges incident on V.
      */
     ScalarType AngleRad() const
-    {      
-      return Angle(f->V(f->Prev(z))->cP()-v->cP(), f->V(f->Next(z))->cP()-v->cP());
+    {
+        return Angle(f->V(f->Prev(z))->cP()-v->cP(), f->V(f->Next(z))->cP()-v->cP());
     }
     
     /*!
