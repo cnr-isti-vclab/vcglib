@@ -873,6 +873,38 @@ public:
         ReprojectBorder(poly_m,GuideSurf);
     }
 
+    template <class TriMesh>
+    static void ReprojectonTriMesh(PolyMeshType &poly_m,
+                                   TriMesh &target)
+    {
+        vcg::tri::UpdateTopology<PolyMeshType>::FaceFace(poly_m);
+        vcg::tri::UpdateFlags<PolyMeshType>::VertexBorderFromFaceAdj(poly_m);
+
+
+        //initialize the grid
+        typedef typename TriMesh::FaceType FaceType;
+        typedef vcg::GridStaticPtr<FaceType, typename TriMesh::ScalarType> TriMeshGrid;
+        TriMeshGrid grid;
+        grid.Set(target.face.begin(),target.face.end());
+
+        ScalarType MaxD=target.bbox.Diag();
+
+        for (size_t i=0;i<poly_m.vert.size();i++)
+        {
+            //reproject on border later
+            if (poly_m.vert[i].IsB())continue;
+                typename TriMesh::CoordType testPos;
+                testPos.Import(poly_m.vert[i].P());
+                typename TriMesh::CoordType closestPt;
+                typename TriMesh::ScalarType minDist;
+                typename TriMesh::FaceType *f=NULL;
+                typename TriMesh::CoordType norm,ip;
+                f=vcg::tri::GetClosestFaceBase(target,grid,testPos,MaxD,minDist,closestPt,norm,ip);
+                poly_m.vert[i].P()=closestPt;
+        }
+        //then reprojec the border
+        ReprojectBorder(poly_m,target);
+    }
 
     /*! \brief This function return average edge size
     */
