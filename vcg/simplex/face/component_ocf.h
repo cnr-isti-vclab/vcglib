@@ -516,10 +516,10 @@ public:
   CurVecType cPD1() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].max_dir; }
   CurVecType cPD2() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].min_dir; }
 
-  CurScalarType &K1()       { assert((*this).Base().NormalEnabled); return (*this).Base().CDV[(*this).Index()].k1; }
-  CurScalarType &K2()       { assert((*this).Base().NormalEnabled); return (*this).Base().CDV[(*this).Index()].k2; }
-  CurScalarType cK1() const { assert((*this).Base().NormalEnabled); return (*this).Base().CDV[(*this).Index()].k1; }
-  CurScalarType cK2() const { assert((*this).Base().NormalEnabled); return (*this).Base().CDV[(*this).Index()].k2; }
+  CurScalarType &K1()       { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k1; }
+  CurScalarType &K2()       { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k2; }
+  CurScalarType cK1() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k1; }
+  CurScalarType cK2() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k2; }
 
   template <class RightFaceType>
   void ImportData(const RightFaceType & rightF){
