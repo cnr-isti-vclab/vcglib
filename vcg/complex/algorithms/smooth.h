@@ -223,13 +223,16 @@ class Smooth
                 v0 = t.V(Tetra::VofE(i, 0));
                 v1 = t.V(Tetra::VofE(i, 1));
 
-                vo0 = t.V(Tetra::VofE(5 - i, 0));
-                vo1 = t.V(Tetra::VofE(5 - i, 1));
+                if (cotangentFlag)
+                {
+                    vo0 = t.V(Tetra::VofE(5 - i, 0));
+                    vo1 = t.V(Tetra::VofE(5 - i, 1));
 
-                ScalarType angle = Tetra::DihedralAngle(t, 5 - i);
-                ScalarType length = vcg::Distance(vo0->P(), vo1->P());
+                    ScalarType angle = Tetra::DihedralAngle(t, 5 - i);
+                    ScalarType length = vcg::Distance(vo0->P(), vo1->P());
 
-                weight = (length / 6.) * (tan(M_PI / 2. - angle));
+                    weight = (length / 6.) * (tan(M_PI / 2. - angle));
+                }
 
                 TD[v0].sum += v1->cP() * weight;
                 TD[v1].sum += v0->cP() * weight;
