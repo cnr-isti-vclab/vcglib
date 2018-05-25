@@ -205,7 +205,7 @@ private:
 
         glEnable(GL_LIGHT0);
         glEnable(GL_LIGHTING);
-        ForEachTetra(*_m, [] (TetraType & t) {
+        ForEachTetra(*_m, [&] (TetraType & t) {
             if (!t.IsD())
             {
                 if (!t.IsS()) //draw as normal
@@ -251,7 +251,7 @@ private:
             glPolygonMode(GL_FRONT,GL_FILL);
         }
 
-        ForEachTetra(*_m, [] (TetraType & t) {
+        ForEachTetra(*_m, [&] (TetraType & t) {
             _DrawTetra<dm,nm,cm>(t);
         });
 
