@@ -176,7 +176,7 @@ public:
   
   
   /**
-   * @brief MarkFauxEdgeWithPolyLine marks the edges of basemesh as non-faux when they coincide with the polyline ones  *
+   * @brief TagFaceEdgeSelWithPolyLine selects edges of basemesh when they coincide with the polyline ones  *
    * @param poly
    * @return true if all the edges of the polyline are snapped onto the mesh. 
    * 
@@ -642,7 +642,7 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
     tri::UpdateTopology<MeshType>::TestVertexEdge(poly);
     tri::Allocator<MeshType>::CompactEveryVector(poly);
     tri::UpdateTopology<MeshType>::TestVertexEdge(poly);
-    printf("Simplify %5i -> %5i (total len %5.2f)\n",startEn,poly.en,hist.Sum());
+//    printf("Simplify %5i -> %5i (total len %5.2f)\n",startEn,poly.en,hist.Sum());
   }
   
   void EvaluateHausdorffDistance(MeshType &poly, Distribution<ScalarType> &dist)
@@ -1007,7 +1007,7 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
       }
     }
 //    tri::Allocator<MeshType>::CompactEveryVector(poly);
-    printf("Refine %i -> %i\n",startEdgeSize,poly.en);fflush(stdout);
+//    printf("Refine %i -> %i\n",startEdgeSize,poly.en);fflush(stdout);
   }
   
   /**
@@ -1068,7 +1068,7 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
   {
     tri::RequireCompactness(poly);
     tri::UpdateTopology<MeshType>::VertexEdge(poly);
-    printf("SmoothProject: Selected vert num %i\n",tri::UpdateSelection<MeshType>::VertexCount(poly));
+//    printf("SmoothProject: Selected vert num %i\n",tri::UpdateSelection<MeshType>::VertexCount(poly));
     assert(poly.en>0 && base.fn>0);
     for(int k=0;k<iterNum;++k)
     {
@@ -1117,7 +1117,7 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
       tri::UpdateTopology<MeshType>::TestVertexEdge(poly);
       int dupVertNum = Clean<MeshType>::RemoveDuplicateVertex(poly);
       if(dupVertNum) {
-        printf("****REMOVED %i Duplicated\n",dupVertNum);
+//        printf("****REMOVED %i Duplicated\n",dupVertNum);
         tri::Allocator<MeshType>::CompactEveryVector(poly);
         tri::UpdateTopology<MeshType>::VertexEdge(poly);
       }
