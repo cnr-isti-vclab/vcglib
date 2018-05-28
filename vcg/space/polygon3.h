@@ -126,6 +126,9 @@ typename PolygonType::ScalarType PolyArea(const PolygonType &F)
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
 
+	if (F.VN() == 3)
+		return vcg::DoubleArea(F) / 2;
+
     CoordType bary=PolyBarycenter(F);
     ScalarType Area=0;
     for (size_t i=0;i<(size_t)F.VN();i++)
