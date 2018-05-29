@@ -62,9 +62,9 @@ class ImporterMSH
                 if (index < 0)
                     return INVALID_FORMAT;
 
-                m.vert[index].P().X() = *reinterpret_cast<float *>(&data[i * lineBytes + 4]);
-                m.vert[index].P().Y() = *reinterpret_cast<float *>(&data[i * lineBytes + 4 + 8]);
-                m.vert[index].P().Z() = *reinterpret_cast<float *>(&data[i * lineBytes + 4 + 2 * 8]);
+                m.vert[index].P().X() = *reinterpret_cast<double *>(&data[i * lineBytes + 4]);
+                m.vert[index].P().Y() = *reinterpret_cast<double *>(&data[i * lineBytes + 4 + 8]);
+                m.vert[index].P().Z() = *reinterpret_cast<double *>(&data[i * lineBytes + 4 + 2 * 8]);
             }
             delete[] data;
         }
@@ -103,18 +103,16 @@ class ImporterMSH
 
             while (parsedElems < numOfElements)
             {
-                int index, type, tags;
-                fin.read((char *)&index, sizeof(int));
-                fin.read((char *)&type, sizeof(int));
-                fin.read((char *)&tags, sizeof(int));
-                --index;
+                //MSH in binary format has a elem-header 3*4 bytes: {elems_type, numElems, tagsPerElem}
+                //followed by the list of elems under this header and eventually a new header and list.
+                int type, elements, tags;
+                fin.read((char *)&type,     sizeof(int));
+                fin.read((char *)&elements, sizeof(int));
+                fin.read((char *)&tags,     sizeof(int));
 
                 //check for tetra type
                 if (type != 4)
                     return NOT_IMPLEMENTED;
-                //check index validity
-                if (index < 0)
-                    return INVALID_FORMAT;
 
                 //read tags and throw them
                 for (size_t j = 0; j < tags; ++j)
@@ -123,20 +121,32 @@ class ImporterMSH
                     fin.read((char *)&tag, sizeof(int));
                 }
 
-                //read element nodes
-                TetraType t = m.tetra[index];
-                for (int i = 0; i < 4; ++i)
+                //foreach element
+                for (int i = 0; i < elements; ++i)
                 {
-                    int nodeIndex;
-                    fin.read((char *)&nodeIndex, sizeof(int));
-                    --nodeIndex;
+                    int index;
+                    fin.read((char *)&index, sizeof(int));
+                    --index;
 
-                    if (nodeIndex < 0 || nodeIndex >= m.VN())
+                    //check index validity
+                    if (index < 0)
                         return INVALID_FORMAT;
 
-                    t.V(i) = &m.vert[nodeIndex];
+                    //read element nodes
+                    TetraType * t = &m.tetra[index];
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        int nodeIndex;
+                        fin.read((char *)&nodeIndex, sizeof(int));
+                        --nodeIndex;
+
+                        if (nodeIndex < 0 || nodeIndex >= m.VN())
+                            return INVALID_FORMAT;
+
+                        t->V(i) = &m.vert[nodeIndex];
+                    }
+                    ++parsedElems;
                 }
-                ++parsedElems;
             }
         }
         else
@@ -146,8 +156,6 @@ class ImporterMSH
                 int index, type, tags;
                 fin >> index >> type >> tags;
                 --index;
-
-                // std::cerr << index << std::endl;
 
                 //check for tetra type
                 if (type != 4)
@@ -162,7 +170,7 @@ class ImporterMSH
                     fin >> tag;
                 }
 
-                TetraType * t = &m.tetra[index];
+                TetraType *t = &m.tetra[index];
                 for (int i = 0; i < 4; ++i)
                 {
                     int nodeIndex;
@@ -171,7 +179,6 @@ class ImporterMSH
 
                     if (nodeIndex < 0 || nodeIndex > m.VN())
                         return INVALID_FORMAT;
-                    // std::cerr << nodeIndex << std::endl;
 
                     t->V(i) = &m.vert[nodeIndex];
                 }
@@ -179,6 +186,106 @@ class ImporterMSH
         }
 
         return 0;
+    }
+
+    static int parseDataField(MeshType &m, std::ifstream &fin, bool binary)
+    {
+        int numString, numReal, numInteger;
+
+        fin >> numString;
+
+        std::string *strTags = new std::string[numString];
+        for (int i = 0; i < numString; ++i)
+        {
+            parseWhiteSpace(fin);
+            fin >> strTags[i];
+        }
+
+        fin >> numReal;
+
+        double *doubleTags = new double[numReal];
+        for (int i = 0; i < numReal; ++i)
+            fin >> doubleTags[i];
+
+        fin >> numInteger;
+
+        if (numString <= 0 || numInteger < 3)
+            return INVALID_FORMAT;
+
+        int *integerTags = new int[numInteger];
+
+        for (int i = 0; i < numInteger; ++i)
+            fin >> integerTags[i];
+
+        std::string fieldName = strTags[0];
+        int fieldComponents = integerTags[1];
+        int fieldSize = integerTags[2];
+
+        double *fieldVec = new double[fieldComponents * fieldSize];
+
+        delete[] strTags;
+        delete[] doubleTags;
+        delete[] integerTags;
+
+        if (binary)
+        {
+            size_t totalBytes = (4 + 8 * fieldComponents) * fieldSize;
+            char *data = new char[totalBytes];
+            parseWhiteSpace(fin);
+            fin.read(data, totalBytes);
+
+            for (int i = 0; i < fieldSize; ++i)
+            {
+                int index = *reinterpret_cast<int *>(&data[i * (4 + fieldComponents * 8)]);
+                --index;
+
+                if (index < 0)
+                    return INVALID_FORMAT;
+
+                //values
+                int baseIndex = i * (4 + fieldComponents * 8) + 4;
+
+                for (int j = 0; j < fieldComponents; ++j)
+                    fieldVec[index * fieldComponents + j] = *reinterpret_cast<float *>(&data[baseIndex + j * 8]);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < fieldSize; ++i)
+            {
+                int index;
+                fin >> index;
+                --index;
+
+                if (index < 0)
+                    return INVALID_FORMAT;
+
+                for (int j = 0; j < fieldComponents; ++j)
+                    fin >> fieldVec[index * fieldComponents + j];
+            }
+        }
+    }
+
+    static int parseNodeData(MeshType &m, std::ifstream &fin, bool binary)
+    {
+        return parseDataField(m, fin, binary);
+    }
+
+    static int parseElementData(MeshType &m, std::ifstream &fin, bool binary)
+    {
+        return parseDataField(m, fin, binary);
+    }
+
+    static int parseUnsupportedTag(std::ifstream &fin, std::string &tag)
+    {
+        std::cerr << "found unsupported tag" << std::endl;
+        std::string tagName = tag.substr(1, tag.size() - 1);
+
+        std::string tagEnd = tag.substr(0, 1) + "End" + tagName;
+
+        std::string buf;
+        while (buf != tagEnd && !fin.eof())
+            fin >> buf;
     }
 
     static int parseMshMesh(MeshType &m, std::string &filename)
@@ -194,7 +301,6 @@ class ImporterMSH
         if (lookAhead != "$MeshFormat")
             return INVALID_FORMAT;
 
-
         double version;
         int type, dataSize;
 
@@ -208,7 +314,7 @@ class ImporterMSH
         if (dataSize != 8)
             return INVALID_FORMAT;
 
-        // Read in extra info from binary header.
+        // Read endiannes info in binary header...it's a 1 used to detect endiannes.
         if (binary)
         {
             int one;
@@ -228,8 +334,6 @@ class ImporterMSH
         if (lookAhead != "$EndMeshFormat")
             return INVALID_FORMAT;
 
-        std::cerr << "reading nodes and elements" << std::endl;
-
         while (!fin.eof())
         {
             lookAhead.clear();
@@ -238,13 +342,8 @@ class ImporterMSH
             if (lookAhead == "$Nodes")
             {
                 int res = parseNodes(m, fin, binary);
-
-                std::cerr << "reading nodes: " << res << std::endl;
-
-
                 if (res != 0)
                     return res;
-                std::cerr << "reading nodes" << std::endl;
 
                 fin >> lookAhead;
                 if (lookAhead != "$EndNodes")
@@ -257,28 +356,24 @@ class ImporterMSH
                 if (res != 0)
                     return res;
 
-                std::cerr << "elements" << std::endl;
-
-
                 fin >> lookAhead;
                 if (lookAhead != "$EndElements")
                     return INVALID_FORMAT;
             }
             else if (lookAhead == "$NodeData")
             {
-                return NOT_IMPLEMENTED;
-                // parse_node_field(fin);
-                // fin >> lookAhead;
-                // if (lookAhead != "$EndNodeData")
-                //     return INVALID_FORMAT;
+                parseNodeData(m, fin, binary);
+                fin >> lookAhead;
+                if (lookAhead != "$EndNodeData")
+                    return INVALID_FORMAT;
             }
             else if (lookAhead == "$ElementData")
             {
-                return NOT_IMPLEMENTED;
-                // parse_element_field(fin);
-                // fin >> lookAhead;
-                // if (lookAhead != "$EndElementData")
-                //     return INVALID_FORMAT;
+                parseElementData(m, fin, binary);
+                fin >> lookAhead;
+                if (lookAhead != "$EndElementData")
+                    return INVALID_FORMAT;
+
             }
             else if (fin.eof())
             {
@@ -286,8 +381,7 @@ class ImporterMSH
             }
             else
             {
-                return INVALID_FORMAT;
-                // parse_unknown_field(fin, lookAhead);
+                parseUnsupportedTag(fin, lookAhead);
             }
         }
         fin.close();
