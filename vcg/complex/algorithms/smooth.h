@@ -912,7 +912,7 @@ So if
     static void VertexCoordViewDepth(MeshType &m,
                                      const CoordType &viewpoint,
                                      const ScalarType alpha,
-                                     int step, bool SmoothBorder = false)
+									 int step, bool SmoothSelected, bool SmoothBorder = false)
     {
         LaplacianInfo lpz;
         lpz.sum = CoordType(0, 0, 0);
@@ -961,13 +961,14 @@ So if
 
             for (vi = m.vert.begin(); vi != m.vert.end(); ++vi)
                 if (!(*vi).IsD() && TD[*vi].cnt > 0)
-                {
-                    CoordType np = TD[*vi].sum / TD[*vi].cnt;
-                    CoordType d = (*vi).cP() - viewpoint;
-                    d.Normalize();
-                    ScalarType s = d.dot(np - (*vi).cP());
-                    (*vi).P() += d * (s * alpha);
-                }
+					if (!SmoothSelected || (*vi).IsS())
+					{
+						CoordType np = TD[*vi].sum / TD[*vi].cnt;
+						CoordType d = (*vi).cP() - viewpoint;
+						d.Normalize();
+						ScalarType s = d.dot(np - (*vi).cP());
+						(*vi).P() += d * (s * alpha);
+					}
         }
     }
 
