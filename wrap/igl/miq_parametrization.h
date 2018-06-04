@@ -106,7 +106,8 @@ public:
             for (int j=0;j<3;j++)
             {
                 //if (!trimesh.face[i].IsB(j))continue;
-                if (!trimesh.face[i].IsCrease(j))continue;
+                //if (!trimesh.face[i].IsCrease(j))continue;
+                if (!trimesh.face[i].IsFaceEdgeS(j))continue;
 
                 feature_lines.push_back(std::vector<int>());
                 feature_lines.back().push_back(i);
@@ -316,7 +317,8 @@ public:
             for (int j=0;j<mesh.face[i].VN();j++)
             {
                 FaceType *f0=&mesh.face[i];
-                f0->ClearCrease(j);
+                //f0->ClearCrease(j);
+                f0->ClearFaceEdgeS(j);
             }
 
 
@@ -326,12 +328,14 @@ public:
                 FaceType *f0=&mesh.face[i];
                 FaceType *f1=f0->FFp(j);
 
-                if (f0==f1){f0->SetCrease(j);continue;}
+                //if (f0==f1){f0->SetCrease(j);continue;}
+                if (f0==f1){f0->SetFaceEdgeS(j);continue;}
 
                 CoordType N0=f0->N();
                 CoordType N1=f1->N();
                 if ((N0*N1)>thr)continue;
-                f0->SetCrease(j);
+                //f0->SetCrease(j);
+                f0->SetFaceEdgeS(j);
 
             }
     }

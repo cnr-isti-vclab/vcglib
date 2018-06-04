@@ -141,16 +141,21 @@ public:
 
     static const  PropDescriptor &VertDesc(int i)
     {
-        const static PropDescriptor pv[9]={
-            {"vertex", "x",         ply::T_FLOAT, PlyType<ScalarType>(),          offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0},
-            {"vertex", "y",         ply::T_FLOAT, PlyType<ScalarType>(),          offsetof(LoadPly_VertAux<ScalarType>,p) +     sizeof(ScalarType),0,0,0,0,0},
-            {"vertex", "z",         ply::T_FLOAT, PlyType<ScalarType>(),          offsetof(LoadPly_VertAux<ScalarType>,p) + 2 * sizeof(ScalarType),0,0,0,0,0},
-            {"vertex", "flags",     ply::T_INT,   ply::T_INT,            offsetof(LoadPly_VertAux<ScalarType>,flags),0,0,0,0,0},
-            {"vertex", "quality",   ply::T_FLOAT, ply::T_FLOAT,          offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0},
-            {"vertex", "red"  ,     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,r),0,0,0,0,0},
-            {"vertex", "green",     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,g),0,0,0,0,0},
-            {"vertex", "blue" ,     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,b),0,0,0,0,0},
-            {"vertex", "alpha" ,     ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,a),0,0,0,0,0},
+        const static PropDescriptor pv[13]={
+            /*00*/ {"vertex", "x",         ply::T_FLOAT, PlyType<ScalarType>(),          offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0},
+            /*01*/ {"vertex", "y",         ply::T_FLOAT, PlyType<ScalarType>(),          offsetof(LoadPly_VertAux<ScalarType>,p) +     sizeof(ScalarType),0,0,0,0,0},
+            /*02*/ {"vertex", "z",         ply::T_FLOAT, PlyType<ScalarType>(),          offsetof(LoadPly_VertAux<ScalarType>,p) + 2 * sizeof(ScalarType),0,0,0,0,0},
+            /*03*/ {"vertex", "flags",     ply::T_INT,   ply::T_INT,            offsetof(LoadPly_VertAux<ScalarType>,flags),0,0,0,0,0},
+            /*04*/ {"vertex", "quality",   ply::T_FLOAT, ply::T_FLOAT,          offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0},
+            /*05*/ {"vertex", "red"  ,     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,r),0,0,0,0,0},
+            /*06*/ {"vertex", "green",     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,g),0,0,0,0,0},
+            /*07*/ {"vertex", "blue" ,     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,b),0,0,0,0,0},
+            /*08*/ {"vertex", "alpha" ,    ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,a),0,0,0,0,0},
+            // DOUBLE
+            /*09*/ {"vertex", "x",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0  ,0},
+            /*10*/ {"vertex", "y",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + sizeof(ScalarType)  ,0,0,0,0,0  ,0},
+            /*11*/ {"vertex", "z",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
+            /*12*/ {"vertex", "quality",   ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0}
         };
         return pv[i];
     }
@@ -224,18 +229,18 @@ public:
         pi.header = pf.GetHeader();
 
         // Descrittori dati standard (vertex coord e faces)
-        if( pf.AddToRead(VertDesc(0)) == -1 ) { pi.status = PlyInfo::E_NO_VERTEX; return -1; }
-        if( pf.AddToRead(VertDesc(1)) == -1 ) { pi.status = PlyInfo::E_NO_VERTEX; return -1; }
-        if( pf.AddToRead(VertDesc(2)) == -1 ) { pi.status = PlyInfo::E_NO_VERTEX; return -1; }
-        if( pf.AddToRead(TetraDesc(0))== -1 ) { pi.status = PlyInfo::E_NO_VERTEX; return -1; }
+        if( pf.AddToRead(VertDesc(0))  == -1 && pf.AddToRead(VertDesc(9))  == -1 ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
+        if( pf.AddToRead(VertDesc(1))  == -1 && pf.AddToRead(VertDesc(10)) == -1 ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
+        if( pf.AddToRead(VertDesc(2))  == -1 && pf.AddToRead(VertDesc(11)) == -1 ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
+        if( pf.AddToRead(TetraDesc(0)) == -1 ) { pi.status = PlyInfo::E_NO_VERTEX; return pi.status; }
 
         // Descrittori facoltativi dei flags
-        if( pf.AddToRead(VertDesc(3))!=-1 )
+        if( pf.AddToRead(VertDesc(3)) != -1 )
             pi.mask |= vcg::tetra::io::Mask::IOM_VERTFLAGS;
         if( VertexType::HasQuality() )
         {
-            if( pf.AddToRead(VertDesc(4))!=-1 ||
-                pf.AddToRead(VertDesc(9))!=-1 )
+            if( pf.AddToRead(VertDesc(4)) != -1 ||
+                pf.AddToRead(VertDesc(9)) != -1 )
                 pi.mask |= vcg::tetra::io::Mask::IOM_VERTQUALITY;
         }
         if( VertexType::HasColor() )

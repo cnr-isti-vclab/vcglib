@@ -43,78 +43,59 @@ public:
     enum Hint {HShrinkFactor};
 };
 
-template <typename CONT_TETRA>
+template <typename MeshType>
 class GlTetramesh:public GLW{
 
 
 public:
 
-    typedef typename CONT_TETRA::value_type TetraType;
-    typedef typename TetraType::VertexType VertexType;
+    typedef typename MeshType::TetraType    TetraType;
+    typedef typename TetraType::VertexType  VertexType;
     typedef typename VertexType::ScalarType ScalarType;
-    typedef typename VertexType::CoordType Point3x;
+    typedef typename VertexType::CoordType  CoordType;
 
     //subclass for clipping planes
     class ClipPlane
     {
     private:
-        Point3x D;
-        Point3x D0;
-        GLdouble eqn[4];
-        vcg::Matrix44<float> TR;
 
-        Point3x pp0;
-        Point3x pp1;
-        Point3x pp2;
-        Point3x	pp3;
+        CoordType D, D0;
+        ScalarType dist;
+
+        GLdouble eqn[4];
+
 
     public:
-
         bool active;
-
-        Point3x P;
 
         ClipPlane (){active=false;}
 
         ~ClipPlane (){}
 
-        ClipPlane(Point3x p0, Point3x p1,Point3x p2)
+        ClipPlane(CoordType & p0, CoordType & p1, CoordType & p2)
         {
-            Point3x N=((p1-p0)^(p2-p0)).Normalize();
-            N.Normalize();
-            D=N;
-            D0=D;
-            P=(p0+p1+p2)/3.f;
+            CoordType N = ((p1-p0)^(p2-p0)).Normalize();
 
-            Point3x v0=N;
-            Point3x v1=(P-p0);
-            v1.Normalize();
-            Point3x v2=(v0^v1);
-            v2.Normalize();
+            D  = N;
+            D0 = D;
 
-            v0=v0*2;
-            v1=v1*2;
-            v2=v2*2;
-
-            pp0=-v1-v2;
-            pp1=-v1+v2;
-            pp2=v1+v2;
-            pp3=v1-v2;
-
+            dist = vcg::Norm((p0 + p1 + p2) / 3.f);
         }
+
         //set normal of the clipping plane
-        void SetD(Point3x d)
+        void SetD(CoordType d)
         {
-            D=d;
+            D  = d;
+            D0 = d;
         }
         //set the point of the clipping plane
-        void SetP(Point3x p)
+        void SetDist(ScalarType d)
         {
-            P=p;
+            dist = d;
         }
-        bool IsClipped(Point3x p)
+        bool IsClipped(CoordType p)
         {
-            return D.V(0) * p.X() + D.V(1) * p.Y() + D.V(2) * p.Z() - vcg::Norm(P) < 0;
+            return D.V(0) * p.X() + D.V(1) * p.Y() + D.V(2) * p.Z() - dist > 0;
         }
 
         void GlClip()
@@ -132,55 +113,58 @@ public:
 
         void GlDraw()
         {
-            glPushMatrix();
-            glPushAttrib(0xffffffff);
-            glDisable(GL_CLIP_PLANE0);
+            const ScalarType w = 50;
+            glColor4f(1., 1., 0., 0.3);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDisable(GL_LIGHTING);
 
-            glEnable(GL_LIGHTING);
-            glEnable(GL_NORMALIZE);
-
-            glTranslate(P);
-            glMultMatrix(TR);
-            glLineWidth(0.5);
-            glColor3d(0.7,0,0.7);
-            glBegin(GL_LINE_LOOP);
-            glVertex(pp0);
-            glVertex(pp1);
-            glVertex(pp2);
-            glVertex(pp3);
+            glBegin(GL_LINES);
+            glVertex3f(0, 0, 0);
+            glVertex3f(dist, 0, 0);
+            glEnd();
+            glBegin(GL_TRIANGLES);
+            glVertex3f(dist, -w,  w);
+            glVertex3f(dist,  w,  w);
+            glVertex3f(dist, -w, -w);
+            glVertex3f(dist,  w,  w);
+            glVertex3f(dist,  w, -w);
+            glVertex3f(dist, -w, -w);
             glEnd();
 
-            glPopAttrib();
-            glPopMatrix();
+            glDisable(GL_BLEND);
+            glEnable(GL_LIGHTING);
         }
 
-        void Transform(vcg::Matrix44<float> Tr)
+        void Transform(vcg::Matrix44<float> & tr)
         {
-            //thath's for casting in case of trackball using
-            //float to double and vice-versa
-            Point3f p=Point3f((float)D0.V(0),(float)D0.V(1),(float)D0.V(2));
-            TR=Tr;
-            p=TR*p;
-            D=Point3x((ScalarType) p.V(0),(ScalarType) p.V(1),(ScalarType) p.V(2));
+            D = (tr * D0).Normalize();
         }
 
-        void Translate(float L)
+        void offsetDist(ScalarType off)
         {
-            Point3x D1=D*L;
-            P+=D1;
+            dist = (off < -dist) ? 0.001f : dist + off;
         }
 
+        bool IsActive()
+        {
+            return active;
+        }
 
+        bool switchActive()
+        {
+            return active ^= true;
+        }
     };
 
-    GlTetramesh(CONT_TETRA * _t):tetra(_t){}
+    GlTetramesh(MeshType * m) : _m(m){}
     GlTetramesh( )  {}
 
-    CONT_TETRA	* tetra;
+    MeshType * _m;
     ClipPlane section;
 
 private:
-    ScalarType shrink_factor = 0.95f;
+    ScalarType shrink_factor = 0.98f;
 
 
 public:
@@ -191,7 +175,7 @@ public:
         }
     }
 
-    void AddClipSection(Point3x p0,Point3x p1,Point3x p2)
+    void AddClipSection(CoordType p0, CoordType p1, CoordType p2)
     {
         section=ClipPlane(p0,p1,p2);
         section.active=true;
@@ -206,49 +190,34 @@ public:
     void Draw(){
         switch (dm){
         case DMNone: break;
-        case DMSmallTetra:_DrawSmallTetra<cm>();break;
-        case DMFlat:_DrawSurface<dm,nm,cm>();break;
-        case DMWire:_DrawSurface<dm,nm,cm>();break;
-        case DMHidden:_DrawSurface<dm,nm,cm>();break;
-        case DMFlatWire:_DrawFlatWire<nm,cm>(); break;
-        case DMTransparent:break;
+        case DMSmallTetra: _DrawSmallTetra<cm>();break;
+        case DMFlat:       _DrawSurface<dm,nm,cm>();break;
+        case DMWire:       _DrawSurface<dm,nm,cm>();break;
+        case DMHidden:     _DrawSurface<dm,nm,cm>();break;
+        case DMFlatWire:   _DrawFlatWire<nm,cm>(); break;
+        case DMTransparent: break;
         }
     }
 
 private:
     template <ColorMode cm >
     void _DrawSmallTetra(){
-        typename CONT_TETRA::iterator it;
 
-//        glPushAttrib(0xffff);
-//        glEnable(GL_COLOR_MATERIAL);
-//        glEnable(GL_NORMALIZE);
-//        glPolygonMode(GL_FRONT, GL_FILL);
-//        glLight(GL_LIGHT0, GL_DIFFUSE, vcg::Color4b::White);
-//        glEnable(GL_LIGHT0);
-//        glEnable(GL_LIGHTING);
-        /*glBegin(GL_TRIANGLES);*/
-        for( it = tetra->begin(); it != tetra->end(); ++it)
-            if((!it->IsD())&&(!(it->IsS()))) //draw as normal
+        glEnable(GL_LIGHT0);
+        glEnable(GL_LIGHTING);
+        ForEachTetra(*_m, [&] (TetraType & t) {
+            if (!t.IsD())
             {
-                _DrawSmallTetra<cm>(*it);
+                if (!t.IsS()) //draw as normal
+                    _DrawSmallTetra<cm>(t);
+                else          //draw in selected mode
+                    _DrawSelectedTetra(t);
             }
-            else
-                if((!it->IsD())&&((it->IsS())))//draw in selection mode
-                {
-                    _DrawSelectedTetra(*it);
-                }
-        //glEnd();
-//        glPopAttrib();
-        if (section.active)
-        {
-//            section.GlClip();
-            section.GlDraw();
-        }
+        });
     }
 
     template <NormalMode nm,ColorMode cm >
-    void 	_DrawFlatWire(){
+    void _DrawFlatWire(){
         glPushAttrib(0xffff);
         glEnable(GL_COLOR_MATERIAL);
         glEnable(GL_DEPTH);
@@ -264,7 +233,7 @@ private:
 
     template <DrawMode dm,NormalMode nm,ColorMode cm >
     void _DrawSurface(){
-        typename CONT_TETRA::iterator it;
+
 
         glPushAttrib(0xffff);
         glEnable(GL_COLOR_MATERIAL);
@@ -281,10 +250,11 @@ private:
             glEnable(GL_NORMALIZE);
             glPolygonMode(GL_FRONT,GL_FILL);
         }
-        //glBegin(GL_TRIANGLES);
-        for( it = tetra->begin(); it != tetra->end(); ++it)
-            _DrawTetra<dm,nm,cm>((*it));
-        //glEnd();
+
+        ForEachTetra(*_m, [&] (TetraType & t) {
+            _DrawTetra<dm,nm,cm>(t);
+        });
+
         glPopAttrib();
     }
 
@@ -355,14 +325,14 @@ private:
         }
         if (cm == CMPerTetra)
             vcg::glColor(t.C());
-//        else
-//            if(cm == CMPerTetraF)
-//            {
-//                Color4b c;
-//                c = color_tetra(t);
-//                GLint ic[4]; ic[0] = c[0];ic[1] = c[1];ic[2] = c[2];ic[3] = c[3];
-//                glMaterialiv(GL_FRONT,GL_DIFFUSE ,ic);
-//            }
+        //        else
+        //            if(cm == CMPerTetraF)
+        //            {
+        //                Color4b c;
+        //                c = color_tetra(t);
+        //                GLint ic[4]; ic[0] = c[0];ic[1] = c[1];ic[2] = c[2];ic[3] = c[3];
+        //                glMaterialiv(GL_FRONT,GL_DIFFUSE ,ic);
+        //            }
     }
 
     template <ColorMode cm >
@@ -370,16 +340,16 @@ private:
     {
         if (cm!=CMNone)
         {
-//            if(cm == CMPerVertexF)
-//            {
-//                Color4b c;
-//                c = color_vertex(v);
-//                GLint ic[4]; ic[0] = c[0];ic[1] = c[1];ic[2] = c[2];ic[3] = c[3];
-//                glMaterialiv(GL_FRONT,GL_DIFFUSE ,ic);
-//            }
-//            else
-                if(cm == CMPerVertex)
-                    vcg::glColor(v.C());
+            //            if(cm == CMPerVertexF)
+            //            {
+            //                Color4b c;
+            //                c = color_vertex(v);
+            //                GLint ic[4]; ic[0] = c[0];ic[1] = c[1];ic[2] = c[2];ic[3] = c[3];
+            //                glMaterialiv(GL_FRONT,GL_DIFFUSE ,ic);
+            //            }
+            //            else
+            if(cm == CMPerVertex)
+                vcg::glColor(v.C());
         }
     }
 
@@ -424,24 +394,29 @@ private:
     template < ColorMode cm >
     void _DrawSmallTetra(TetraType &t)
     {
-        Point3x p[4], br;
+        CoordType p[4], br;
         br = Tetra::Barycenter(t);
-        if (section.IsClipped(br))
-            return;
-        bool border = false;
-        bool clipBorder = false;
-        for (int i = 0; i < 4; ++i)
-        {
-            border = border || t.IsB(i);
 
-            Point3x br1 = Tetra::Barycenter(*t.TTp(i));
-            clipBorder = clipBorder || section.IsClipped(br1);
+        if (section.active)
+        {
+            if (section.IsClipped(br))
+                return;
+            bool border = false;
+            bool clipBorder = false;
+            for (int i = 0; i < 4; ++i)
+            {
+                border = border || t.IsB(i);
+
+                CoordType br1 = Tetra::Barycenter(*t.TTp(i));
+                clipBorder = clipBorder || section.IsClipped(br1);
+            }
+
+            if (!border && !clipBorder)
+                return;
         }
 
-        if (!border && !clipBorder)
-            return;
-
         for(int i = 0; i < 4; ++i)
+            //            p[i] = t.V(i)->P();
             p[i] = t.V(i)->P() * shrink_factor + br * (1 - shrink_factor);
 
 

@@ -413,6 +413,7 @@ public:
     vert.clear();
     face.clear();
     edge.clear();
+    tetra.clear();
 //    textures.clear();
 //    normalmaps.clear();
     vn = 0;

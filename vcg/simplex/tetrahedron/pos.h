@@ -165,7 +165,7 @@ public:
 		return _e;
 	}
 
-  	/// Return the index of face as seen from the tetrahedron
+  	/// Return the index of edge as seen from the tetrahedron
 	inline const char & E() const
 	{
 		return _e;
@@ -269,7 +269,7 @@ public:
     //get the current vertex
     VertexType *vcurr=T()->V(V());
 
-		//get new tetrahedron according to faceto face topology
+		//get new tetrahedron according to tetra to tetra topology
 		TetraType *nt=T()->TTp(F());
 		char nfa=T()->TTi(F());
 		if (nfa!=-1)

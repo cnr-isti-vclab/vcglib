@@ -31,6 +31,7 @@
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/space/index/grid_static_ptr.h>
 #include <vcg/complex/algorithms/inertia.h>
+#include <vcg/space/polygon3.h>
 
 
 namespace vcg {
@@ -262,6 +263,17 @@ public:
         area += DoubleArea(*fi);
 
     return area/ScalarType(2.0);
+  }
+
+  static ScalarType ComputePolyMeshArea(MeshType & m)
+  {
+    ScalarType area=0;
+
+    for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+      if(!(*fi).IsD())
+        area += PolyArea(*fi);
+
+    return area;
   }
 
 	static ScalarType ComputeBorderLength(MeshType & m)

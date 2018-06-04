@@ -126,6 +126,9 @@ typename PolygonType::ScalarType PolyArea(const PolygonType &F)
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
 
+	if (F.VN() == 3)
+		return vcg::DoubleArea(F) / 2;
+
     CoordType bary=PolyBarycenter(F);
     ScalarType Area=0;
     for (size_t i=0;i<(size_t)F.VN();i++)
@@ -535,12 +538,12 @@ typename PolygonType::ScalarType PolyAspectRatio(const PolygonType &F,
 template<class PolygonType>
 typename PolygonType::ScalarType PolygonPointDistance(const PolygonType &F,
                                                       const vcg::Point3<typename PolygonType::ScalarType> &pos,
-                                                      vcg::Point3<typename PolygonType::ScalarType> &ClosestP)
+                                                      vcg::Point3<typename PolygonType::ScalarType> &ClosestP,
+                                                      typename PolygonType::ScalarType minD = std::numeric_limits<typename PolygonType::ScalarType>::max())
 {
     typedef typename PolygonType::ScalarType ScalarType;
     typedef typename PolygonType::CoordType CoordType;
 
-    ScalarType minD=std::numeric_limits<ScalarType>::max();
     CoordType bary=vcg::PolyBarycenter(F);
     for (size_t j=0;j<F.VN();j++)
     {
