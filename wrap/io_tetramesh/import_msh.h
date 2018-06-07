@@ -3,12 +3,118 @@
 
 #include <iostream>
 
-namespace vcg
+namespace vcg {
+namespace tetra {
+namespace io {
+
+template <class MeshType>
+class MshInfo
 {
-namespace tetra
-{
-namespace io
-{
+    typedef std::map<std::string, double *> FieldMap;
+
+    FieldMap nodeFields;
+    FieldMap elemFields;
+
+
+    template <typename Scalar, int Dimensions>
+    struct AttribTraits
+    {
+        typedef std::vector<Scalar> Type;
+        enum { Dimension = Dimensions };
+    };
+
+    template <typename Scalar>
+    struct AttribTraits<Scalar, 1>
+    {
+            typedef Scalar Type;
+            enum { Dimension = 1 };
+    };
+
+    template <typename AttrHandle, typename Scalar, int Dimension>
+    struct AttribHelper
+    {
+        static void assign(AttrHandle & handle, int index, const double * data)
+        {
+            for (int i=0; i<Dimension; ++i)
+            {
+                handle[index][i] = Scalar(data[Dimension * index + i]);
+            }
+        }
+    };
+
+    template <typename AttrHandle, typename Scalar>
+    struct AttribHelper<AttrHandle, Scalar, 1>
+    {
+        static void assign(AttrHandle & handle, int index, const double * data)
+        {
+            handle[index] = Scalar(data[index]);
+        }
+    };
+
+    template <bool PerNode, typename Scalar>
+    static void fillMeshAttributes(const std::string & attrib_name, int attrib_dim, MeshType & mesh, const double * data)
+    {
+        if (PerNode)
+        {
+            switch(attrib_dim)
+            {
+            case 1 : fillMeshWithAttributePerNode<Scalar, 1>(attrib_name, mesh, data); break;
+            case 2 : fillMeshWithAttributePerNode<Scalar, 2>(attrib_name, mesh, data); break;
+            case 3 : fillMeshWithAttributePerNode<Scalar, 3>(attrib_name, mesh, data); break;
+            case 4 : fillMeshWithAttributePerNode<Scalar, 4>(attrib_name, mesh, data); break;
+            case 5 : fillMeshWithAttributePerNode<Scalar, 5>(attrib_name, mesh, data); break;
+            case 6 : fillMeshWithAttributePerNode<Scalar, 6>(attrib_name, mesh, data); break;
+            case 7 : fillMeshWithAttributePerNode<Scalar, 7>(attrib_name, mesh, data); break;
+            case 8 : fillMeshWithAttributePerNode<Scalar, 8>(attrib_name, mesh, data); break;
+            case 9 : fillMeshWithAttributePerNode<Scalar, 9>(attrib_name, mesh, data); break;
+            default : throw std::string("Dimension of custom attribute vector unsupported");
+            }
+        }
+        else
+        {
+            switch(attrib_dim)
+            {
+            case 1 : fillMeshWithAttributePerElement<Scalar, 1>(attrib_name, mesh, data); break;
+            case 2 : fillMeshWithAttributePerElement<Scalar, 2>(attrib_name, mesh, data); break;
+            case 3 : fillMeshWithAttributePerElement<Scalar, 3>(attrib_name, mesh, data); break;
+            case 4 : fillMeshWithAttributePerElement<Scalar, 4>(attrib_name, mesh, data); break;
+            case 5 : fillMeshWithAttributePerElement<Scalar, 5>(attrib_name, mesh, data); break;
+            case 6 : fillMeshWithAttributePerElement<Scalar, 6>(attrib_name, mesh, data); break;
+            case 7 : fillMeshWithAttributePerElement<Scalar, 7>(attrib_name, mesh, data); break;
+            case 8 : fillMeshWithAttributePerElement<Scalar, 8>(attrib_name, mesh, data); break;
+            case 9 : fillMeshWithAttributePerElement<Scalar, 9>(attrib_name, mesh, data); break;
+            default : throw std::string("Dimension of custom attribute vector unsupported");
+            }
+        }
+    }
+
+    template <typename Scalar, int Dimension/* = 1*/>
+    static void fillMeshWithAttributePerNode(const std::string & attrib_name, MeshType & mesh, const double * data)
+    {
+        typedef typename AttribTraits<Scalar, Dimension>::Type AttrType;
+        typedef typename MeshType::template PerVertexAttributeHandle<AttrType> AttrHandle;
+
+        AttrHandle handle = vcg::tetra::Allocator<MeshType>::template GetPerVertexAttribute<AttrType>(mesh, attrib_name);
+        size_t num_nodes = size_t(mesh.VN());
+
+        for (int i=0; i<int(num_nodes); ++i)
+            AttribHelper<AttrHandle, Scalar, Dimension>::assign(handle, i, data);
+    }
+
+    template <typename Scalar, int Dimension/* = 1*/>
+    static void fillMeshWithAttributePerElement(const std::string & attrib_name, MeshType & mesh, const double * data)
+    {
+        typedef typename AttribTraits<Scalar, Dimension>::Type AttrType;
+        typedef typename MeshType::template PerFaceAttributeHandle<AttrType> AttrHandle;
+
+        AttrHandle handle = vcg::tetra::Allocator<MeshType>::template GetPerFaceAttribute<AttrType>(mesh, attrib_name);
+        size_t num_elements = size_t(mesh.TN());
+
+        for (int i=0; i<int(num_elements); ++i)
+            AttribHelper<AttrHandle, Scalar, Dimension>::assign(handle, i, data);
+    }
+};
+
 template <class MeshType>
 class ImporterMSH
 {
@@ -266,12 +372,12 @@ class ImporterMSH
         }
     }
 
-    static int parseNodeData(MeshType &m, std::ifstream &fin, bool binary)
+    static int parseNodeData(MeshType &m, MshInfo<MeshType> & info, std::ifstream &fin, bool binary)
     {
         return parseDataField(m, fin, binary);
     }
 
-    static int parseElementData(MeshType &m, std::ifstream &fin, bool binary)
+    static int parseElementData(MeshType &m, MshInfo<MeshType> & info, std::ifstream &fin, bool binary)
     {
         return parseDataField(m, fin, binary);
     }
@@ -288,7 +394,7 @@ class ImporterMSH
             fin >> buf;
     }
 
-    static int parseMshMesh(MeshType &m, std::string &filename)
+    static int parseMshMesh(MeshType &m, std::string &filename, MshInfo<MeshType> & info)
     {
         std::ifstream fin(filename.c_str(), std::ios::in | std::ios::binary);
 
@@ -362,14 +468,14 @@ class ImporterMSH
             }
             else if (lookAhead == "$NodeData")
             {
-                parseNodeData(m, fin, binary);
+                parseNodeData(m, info, fin, binary);
                 fin >> lookAhead;
                 if (lookAhead != "$EndNodeData")
                     return INVALID_FORMAT;
             }
             else if (lookAhead == "$ElementData")
             {
-                parseElementData(m, fin, binary);
+                parseElementData(m, info, fin, binary);
                 fin >> lookAhead;
                 if (lookAhead != "$EndElementData")
                     return INVALID_FORMAT;
@@ -388,11 +494,17 @@ class ImporterMSH
         return 0;
     }
 
-  public:
+public:
     static int Open(MeshType &m, const char *filename, CallBackPos *cb = 0)
     {
+        MshInfo<MeshType> info;
+        return Open(m, filename, info, cb);
+    }
+
+    static int Open(MeshType &m, const char *filename, MshInfo<MeshType> & info, CallBackPos *cb = 0)
+    {
         std::string name(filename);
-        return parseMshMesh(m, name);
+        return parseMshMesh(m, name, info);
     }
 };
 } // namespace io
