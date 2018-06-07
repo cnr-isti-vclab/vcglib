@@ -98,11 +98,13 @@ public:
     inline int & IMark()      { assert(0); static int tmp=-1; return tmp;}
     inline int cIMark() const {return 0;}
 
+    inline bool IsMarkEnabled() const { return T::TetraType::HasMark(); }
+    
     static bool HasMark()     { return false; }
     static bool HasMarkOcc()  { return false; }
 
     //Empty Adjacency
-    typedef int VFAdjType;
+    typedef int VTAdjType;
     typename T::TetraPointer & VTp     ( const int )       { static typename T::TetraPointer tp=0; assert(0); return tp; }
     typename T::TetraPointer const cVTp( const int ) const { static typename T::TetraPointer const tp=0; assert(0); return tp; }
 

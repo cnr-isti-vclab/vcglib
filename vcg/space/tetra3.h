@@ -315,7 +315,8 @@ class Tetra
 		return edgesface[indexE0][indexE1];
 	}
 
-	// compute the barycenter
+        /** @brief Computes the tetrahedron barycenter
+         */
 	template <class TetraType>
 	static Point3<typename TetraType::ScalarType> Barycenter(const TetraType &t)
 	{
