@@ -36,29 +36,6 @@ namespace tetra {
 /** \addtogroup tetra */
 /*@{*/
 
-
-template <class TetraType>
-void VVStarVT( typename TetraType::VertexPointer vp, std::vector<typename TetraType::VertexPointer> & starVec)
-{
-    typedef typename TetraType::VertexPointer VertexPointer;
-
-    starVec.clear();
-
-    tetra::VTIterator<TetraType> vti(vp->VTp(), vp->VTi());
-
-    while (!vti.End())
-    {
-        starVec.push_back(vti.Vt()->V1(vti.Vi()));
-        starVec.push_back(vti.Vt()->V2(vti.Vi()));
-        starVec.push_back(vti.Vt()->V3(vti.Vi()));
-        ++vti;
-    }
-
-    std::sort(starVec.begin(), starVec.end());
-    typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
-    starVec.resize(new_end - starVec.begin());
-}
-
 /**  Class VTIterator.
  This is a vertex - tetrahedron iterator
                 @param MTTYPE (Template Parameter) Specifies the type of the tetrahedron.
@@ -119,6 +96,27 @@ public:
 
 };
 
+template <class TetraType>
+void VVStarVT( typename TetraType::VertexPointer vp, std::vector<typename TetraType::VertexPointer> & starVec)
+{
+    typedef typename TetraType::VertexPointer VertexPointer;
+
+    starVec.clear();
+
+    VTIterator<TetraType> vti(vp->VTp(), vp->VTi());
+
+    while (!vti.End())
+    {
+        starVec.push_back(vti.Vt()->V1(vti.Vi()));
+        starVec.push_back(vti.Vt()->V2(vti.Vi()));
+        starVec.push_back(vti.Vt()->V3(vti.Vi()));
+        ++vti;
+    }
+
+    std::sort(starVec.begin(), starVec.end());
+    typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
+    starVec.resize(new_end - starVec.begin());
+}
 
 /**  Templated over the class tetrahedron, it stores a \em position over a tetrahedron in a mesh.
         It contain a pointer to the current tetrahedron,
