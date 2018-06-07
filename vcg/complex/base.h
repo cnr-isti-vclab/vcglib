@@ -382,7 +382,7 @@ public:
       Clear();
     }
 
-     int Mem(const int & nv, const int & nf) const  {
+     int Mem(const int & nv, const int & nf, const int & nt) const  {
         typename std::set< PointerToAttribute>::const_iterator i;
         int size = 0;
         size += sizeof(TriMesh)+sizeof(VertexType)*nv+sizeof(FaceType)*nf;
@@ -394,7 +394,7 @@ public:
         for( i = face_attr.begin(); i != face_attr.end(); ++i)
             size +=  ((SimpleTempDataBase*)(*i)._handle)->SizeOf()*nf;
         for (i = tetra_attr.begin(); i != tetra_attr.end(); ++i)
-            size += ((SimpleTempDataBase *)(*i)._handle)->SizeOf() * tn;
+            size += ((SimpleTempDataBase *)(*i)._handle)->SizeOf() * nt;
         for( i = mesh_attr.begin(); i != mesh_attr.end(); ++i)
             size +=  ((SimpleTempDataBase*)(*i)._handle)->SizeOf();
 
