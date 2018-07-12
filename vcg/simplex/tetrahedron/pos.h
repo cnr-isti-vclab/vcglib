@@ -46,6 +46,7 @@ class VTIterator
 public:
     /// The tetrahedron type
     typedef  MTTYPE TetraType;
+    typedef typename TetraType::VertexType VertexType;
 private:
     /// Pointer to a tetrahedron
     TetraType *_vt;
@@ -54,11 +55,16 @@ private:
     /// Default Constructor
 public:
     VTIterator() : _vt(0), _vi(-1){}
-    /// Constructor which associates the EdgePos elementet with a face and its edge
+    /// Constructor
     VTIterator(TetraType  * const tp, int const zp)
     {
-        _vt=tp;
-        _vi=zp;
+        _vt=tp->V(zp)->VTp();
+        _vi=tp->V(zp)->VTi();
+    }
+    VTIterator(VertexType * const vp)
+    {
+        _vt = vp->VTp();
+        _vi = vp->VTi();
     }
 
     ~VTIterator(){};
@@ -117,6 +123,7 @@ void VVStarVT( typename TetraType::VertexPointer vp, std::vector<typename TetraT
     typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
     starVec.resize(new_end - starVec.begin());
 }
+
 
 /**  Templated over the class tetrahedron, it stores a \em position over a tetrahedron in a mesh.
         It contain a pointer to the current tetrahedron,
