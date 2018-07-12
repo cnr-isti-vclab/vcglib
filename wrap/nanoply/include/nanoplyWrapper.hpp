@@ -1250,6 +1250,7 @@ namespace nanoply
           {
             mesh.face[i].WT(j).U() = wedgeTexCoord[i][j * 2];
             mesh.face[i].WT(j).V() = wedgeTexCoord[i][j * 2 + 1];
+            mesh.face[i].WT(j).N() = mesh.face[i].WT(0).N();
           }
         }
       }
@@ -1426,7 +1427,7 @@ namespace nanoply
 			nameList.clear();
 			EdgeType::Name(nameList);
 			std::vector<PlyProperty> edgeProp;
-			ElementDescriptor edgeDescr(NNP_VERTEX_ELEM);
+			ElementDescriptor edgeDescr(NNP_EDGE_ELEM);
 			std::vector<vcg::Point2i> edgeIndex;
 			for (int i = 0; i < mesh.edge.size(); i++)
 				edgeIndex.push_back(vcg::Point2i(vcg::tri::Index(mesh, mesh.edge[i].V(0)), vcg::tri::Index(mesh, mesh.edge[i].V(1))));
@@ -1434,7 +1435,7 @@ namespace nanoply
 			{
 				if ((bitMask & BitMask::IO_EDGEINDEX) && EdgeType::HasVertexRef())
 				{
-					PushDescriport<vcg::Point2i, int, 1>(edgeProp, edgeDescr, NNP_EDGE_V1, &(*edgeIndex.begin()).V()[0]);
+        	PushDescriport<vcg::Point2i, int, 1>(edgeProp, edgeDescr, NNP_EDGE_V1, &(*edgeIndex.begin()).V()[0]);
 					PushDescriport<vcg::Point2i, int, 1>(edgeProp, edgeDescr, NNP_EDGE_V2, &(*edgeIndex.begin()).V()[1]);
 				}
 				if ((bitMask & BitMask::IO_EDGEQUALITY) && vcg::tri::HasPerEdgeQuality(mesh))

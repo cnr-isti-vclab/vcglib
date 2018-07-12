@@ -229,8 +229,8 @@ namespace nanoply
       { PlyEntity::NNP_CRGBA, NameVector({ "rgba", "diffuse_rgba" }) },
       { PlyEntity::NNP_DENSITY, NameVector({ "radius", "density" }) },
       { PlyEntity::NNP_SCALE, NameVector({ "scale", "value" }) },
-      { PlyEntity::NNP_TEXTUREU, NameVector({ "texture_u", "u", "s" }) },
-      { PlyEntity::NNP_TEXTUREV, NameVector({ "texture_v", "v", "t" }) },
+      { PlyEntity::NNP_TEXTUREU, NameVector({ "texture_u", "u", "s", "tx" }) },
+      { PlyEntity::NNP_TEXTUREV, NameVector({ "texture_v", "v", "t", "ty" }) },
       { PlyEntity::NNP_TEXTURE2D, NameVector({ "texture_uv", "uv" }) },
       { PlyEntity::NNP_TEXTUREW, NameVector({ "texture_w", "w" }) },
       { PlyEntity::NNP_TEXTURE3D, NameVector({ "texture_uvw", "uvw" }) },
@@ -1064,7 +1064,7 @@ namespace nanoply
     /**
     * Default Constructor
     */
-    inline PlyElement() :validToWrite(false){};
+    inline PlyElement() :validToWrite(false), cnt(0){};
 
     /**
     * Constructor that sets the name, the properties and the number of instances of the element.
@@ -1643,7 +1643,7 @@ namespace nanoply
     PlyElement* pe = GetElement(e);
     if (pe != NULL)
       return pe->cnt;
-    return -1;
+    return 0;
   }
 
 
@@ -1891,6 +1891,12 @@ namespace nanoply
               break;
             }
           }
+        }
+        else if ((dataDescriptor[i]->elem == PlyEntity::NNP_CRGB && prop.elem == PlyEntity::NNP_CRGBA) ||
+          (dataDescriptor[i]->elem == PlyEntity::NNP_CRGBA && prop.elem == PlyEntity::NNP_CRGB))
+        {
+          descr.push_back(dataDescriptor[i]);
+          break;
         }
       }
       if (i == dataDescriptor.size())
@@ -2364,7 +2370,7 @@ namespace nanoply
   template<class ContainerType, int VectorSize, typename ScalarType>
   bool DataDescriptor<ContainerType, VectorSize, ScalarType>::ReadElemBinary(PlyFile &file, PlyProperty &prop, bool fixEndian)
   {
-    if (prop.elem != elem)
+    if (prop.elem != elem && ((prop.elem != PlyEntity::NNP_CRGB && prop.elem != PlyEntity::NNP_CRGBA) || (prop.elem != PlyEntity::NNP_CRGBA && prop.elem != PlyEntity::NNP_CRGB)))
       return false;
     switch (prop.type)
     {
