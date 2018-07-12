@@ -102,11 +102,11 @@ public:
   
    	enum { 
 		
-		DELETED     = 0x00000001,		// Face is deleted from the mesh
-		NOTREAD     = 0x00000002,		// Face of the mesh is not readable
-		NOTWRITE    = 0x00000004,		// Face of the mesh is not writable
-                VISITED     = 0x00000010,		// Face has been visited. Usualy this is a per-algorithm used bit.
-		SELECTED    = 0x00000020,		// Face is selected. Algorithms should try to work only on selected face (if explicitly requested)
+		DELETED     = 0x00000001,		// Tet is deleted from the mesh
+		NOTREAD     = 0x00000002,		// Tet of the mesh is not readable
+		NOTWRITE    = 0x00000004,		// Tet of the mesh is not writable
+        VISITED     = 0x00000010,		// Tet has been visited. Usualy this is a per-algorithm used bit.
+		SELECTED    = 0x00000020,		// Tet is selected. Algorithms should try to work only on selected face (if explicitly requested)
 		// Border _flags, it is assumed that BORDERi = BORDER0<<i 
 		BORDER0     = 0x00000040,
 		BORDER1     = 0x00000080,
@@ -119,17 +119,17 @@ public:
 			};
 
  
- 	///  checks if the Face is deleted
+ 	///  checks if the Tet is deleted
         bool IsD() const {return (this->cFlags() & DELETED) != 0;}
-	///  checks if the Face is readable
+	///  checks if the Tet is readable
         bool IsR() const {return (this->cFlags() & NOTREAD) == 0;}
-	///  checks if the Face is modifiable
+	///  checks if the Tet is modifiable
         bool IsW() const {return (this->cFlags() & NOTWRITE)== 0;}
-	/// This funcion checks whether the Face is both readable and modifiable
+	/// This funcion checks whether the Tet is both readable and modifiable
         bool IsRW() const {return (this->cFlags() & (NOTREAD | NOTWRITE)) == 0;}
-	///  checks if the Face is Modified
+	///  checks if the Tet is Modified
         bool IsS() const {return (this->cFlags() & SELECTED) != 0;}
-	///  checks if the Face is Modified
+	///  checks if the Tet is Modified
         bool IsV() const {return (this->cFlags() & VISITED) != 0;}
 	
 	/** Set the flag value
@@ -142,25 +142,25 @@ public:
 	*/
 	void ClearFlags() {this->Flags()=0;}
 
-	///  deletes the Face from the mesh
+	///  deletes the Tet from the mesh
 	void SetD() {this->Flags() |=DELETED;}
-	///  un-delete a Face
+	///  un-delete a Tet
 	void ClearD() {this->Flags() &=(~DELETED);}
-	///  marks the Face as readable
+	///  marks the Tet as readable
 	void SetR() {this->Flags() &=(~NOTREAD);}
-	///  marks the Face as not readable
+	///  marks the Tet as not readable
 	void ClearR() {this->Flags() |=NOTREAD;}
-	///  marks the Face as writable
+	///  marks the Tet as writable
 	void SetW() {this->Flags() &=(~NOTWRITE);}
-	///  marks the Face as notwritable
+	///  marks the Tet as notwritable
 	void ClearW() {this->Flags() |=NOTWRITE;}
-	///  select the Face
+	///  select the Tet
 	void SetS()		{this->Flags() |=SELECTED;}
-	/// Un-select a Face
+	/// Un-select a Tet
   void ClearS()	{this->Flags() &= ~SELECTED;}
-	///  select the Face
+	///  select the Tet
 	void SetV()		{this->Flags() |=VISITED;}
-	/// Un-select a Face
+	/// Un-select a Tet
   void ClearV()	{this->Flags() &= ~VISITED;}
 	
 	/// This function checks if the face is border

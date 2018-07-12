@@ -52,312 +52,312 @@ template <class MeshType>
 class UpdateColor
 {
 public:
-  typedef typename MeshType::VertexType     VertexType;
-  typedef typename MeshType::VertexPointer  VertexPointer;
-  typedef typename MeshType::VertexIterator VertexIterator;
-  typedef typename MeshType::FaceType       FaceType;
-  typedef typename MeshType::FacePointer    FacePointer;
-  typedef typename MeshType::FaceIterator   FaceIterator;
-  typedef typename MeshType::EdgeIterator   EdgeIterator;
-  typedef typename MeshType::TetraType      TetraType;
-  typedef typename MeshType::TetraPointer   TetraPointer;
-  typedef typename MeshType::TetraIterator  TetraIterator;
+	typedef typename MeshType::VertexType     VertexType;
+	typedef typename MeshType::VertexPointer  VertexPointer;
+	typedef typename MeshType::VertexIterator VertexIterator;
+	typedef typename MeshType::FaceType       FaceType;
+	typedef typename MeshType::FacePointer    FacePointer;
+	typedef typename MeshType::FaceIterator   FaceIterator;
+	typedef typename MeshType::EdgeIterator   EdgeIterator;
+	typedef typename MeshType::TetraType      TetraType;
+	typedef typename MeshType::TetraPointer   TetraPointer;
+	typedef typename MeshType::TetraIterator  TetraIterator;
 
 
-  typedef typename MeshType::ScalarType     ScalarType;
-  typedef typename MeshType::CoordType      CoordType;
+	typedef typename MeshType::ScalarType     ScalarType;
+	typedef typename MeshType::CoordType      CoordType;
 
-  class ColorAvgInfo
-  {
-  public:
-    unsigned int r;
-    unsigned int g;
-    unsigned int b;
-    unsigned int a;
-    int cnt;
-  };
+	class ColorAvgInfo
+	{
+	public:
+		unsigned int r;
+		unsigned int g;
+		unsigned int b;
+		unsigned int a;
+		int cnt;
+	};
 
-  /*! \brief This function colors all (or the selected) the vertices of a mesh.
-    */
-  static int PerVertexConstant(MeshType &m, Color4b vs=Color4b::White,bool selected=false)
-  {
-    RequirePerVertexColor(m);
+	/*! \brief This function colors all (or the selected) the vertices of a mesh.
+	*/
+	static int PerVertexConstant(MeshType &m, Color4b vs=Color4b::White,bool selected=false)
+	{
+		RequirePerVertexColor(m);
 
-    int cnt=0;
-    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-      if(!(*vi).IsD()){
-        if(!selected || (*vi).IsS())
-        {
-          (*vi).C() = vs;
-          ++cnt;
-        }
-      }
-    return cnt;
-  }
+		int cnt=0;
+		for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+			if(!(*vi).IsD()){
+				if(!selected || (*vi).IsS())
+				{
+					(*vi).C() = vs;
+					++cnt;
+				}
+			}
+		return cnt;
+	}
 
-  /*! \brief This function colors all (or the selected) faces of a mesh.
+	/*! \brief This function colors all (or the selected) faces of a mesh.
   */
-  static int PerFaceConstant(MeshType &m, Color4b vs=Color4b::White,bool selected=false)
-  {
-    RequirePerFaceColor(m);
-    int cnt=0;
-    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-      if(!(*fi).IsD()){
-        if(!selected || (*fi).IsS())
-        {
-          (*fi).C() = vs;
-          ++cnt;
-        }
-      }
-    return cnt;
-  }
+	static int PerFaceConstant(MeshType &m, Color4b vs=Color4b::White,bool selected=false)
+	{
+		RequirePerFaceColor(m);
+		int cnt=0;
+		for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+			if(!(*fi).IsD()){
+				if(!selected || (*fi).IsS())
+				{
+					(*fi).C() = vs;
+					++cnt;
+				}
+			}
+		return cnt;
+	}
 
-  /*! \brief This function colors all (or the selected) tetras of a mesh.
+	/*! \brief This function colors all (or the selected) tetras of a mesh.
   */
-  static int PerTetraConstant(MeshType & m, Color4b vs = Color4b::White, bool selected = false)
-  {
-    RequirePerTetraColor(m);
-    int cnt = 0;
-    ForEachTetra(m, [&] (TetraType & t) {
-      if (!selected || t.IsS())
-      {
-        t.C() = vs;
-        ++cnt;
-      }
-    });
-    return cnt;
-  }
+	static int PerTetraConstant(MeshType & m, Color4b vs = Color4b::White, bool selected = false)
+	{
+		RequirePerTetraColor(m);
+		int cnt = 0;
+		ForEachTetra(m, [&] (TetraType & t) {
+			if (!selected || t.IsS())
+			{
+				t.C() = vs;
+				++cnt;
+			}
+		});
+		return cnt;
+	}
 
-  /** \brief Transfer tetra color onto vertex color
+	/** \brief Transfer tetra color onto vertex color
 
   Plain average of the color of the tetras incident on a given vertex.
   No adjacency required.
   */
- static void PerVertexFromTetra(MeshType & m)
- {
-   RequirePerTetraColor(m);
-   RequirePerVertexColor(m);
+	static void PerVertexFromTetra(MeshType & m)
+	{
+		RequirePerTetraColor(m);
+		RequirePerVertexColor(m);
 
-   ColorAvgInfo csi;
-   csi.r = csi.g = csi.b = csi.cnt = 0;
-   SimpleTempData<typename MeshType::VertContainer, ColorAvgInfo> TD(m.vert, csi);
+		ColorAvgInfo csi;
+		csi.r = csi.g = csi.b = csi.cnt = 0;
+		SimpleTempData<typename MeshType::VertContainer, ColorAvgInfo> TD(m.vert, csi);
 
-   ForEachTetra(m, [&] (TetraType & t) {
-     for (int i = 0; i < 4; ++i)
-     {
-       TD[t.V(i)].r += t.C()[0];
-       TD[t.V(i)].g += t.C()[1];
-       TD[t.V(i)].b += t.C()[2];
-       TD[t.V(i)].a += t.C()[3];
-       TD[t.V(i)].cnt += 1;
-     }
-   });
+		ForEachTetra(m, [&] (TetraType & t) {
+			for (int i = 0; i < 4; ++i)
+			{
+				TD[t.V(i)].r += t.C()[0];
+				TD[t.V(i)].g += t.C()[1];
+				TD[t.V(i)].b += t.C()[2];
+				TD[t.V(i)].a += t.C()[3];
+				TD[t.V(i)].cnt += 1;
+			}
+		});
 
-   ForEachVertex(m, [&] (VertexType & v) {
-     v.C()[0] = TD[v].r / TD[v].cnt;
-     v.C()[1] = TD[v].g / TD[v].cnt;
-     v.C()[2] = TD[v].b / TD[v].cnt;
-     v.C()[3] = TD[v].a / TD[v].cnt;
-   });
- }
+		ForEachVertex(m, [&] (VertexType & v) {
+			v.C()[0] = TD[v].r / TD[v].cnt;
+			v.C()[1] = TD[v].g / TD[v].cnt;
+			v.C()[2] = TD[v].b / TD[v].cnt;
+			v.C()[3] = TD[v].a / TD[v].cnt;
+		});
+	}
 
-  /** \brief Transfer face color onto vertex color
+	/** \brief Transfer face color onto vertex color
 
   Plain average of the color of the faces incident on a given vertex.
   No adjacency required.
   */
-  static void PerVertexFromFace( MeshType &m)
-  {
-    RequirePerFaceColor(m);
-    RequirePerVertexColor(m);
+	static void PerVertexFromFace( MeshType &m)
+	{
+		RequirePerFaceColor(m);
+		RequirePerVertexColor(m);
 
-    ColorAvgInfo csi;
-    csi.r=0; csi.g=0; csi.b=0; csi.cnt=0;
-    SimpleTempData<typename MeshType::VertContainer, ColorAvgInfo> TD(m.vert,csi);
+		ColorAvgInfo csi;
+		csi.r=0; csi.g=0; csi.b=0; csi.cnt=0;
+		SimpleTempData<typename MeshType::VertContainer, ColorAvgInfo> TD(m.vert,csi);
 
-    FaceIterator fi;
-    for(fi=m.face.begin();fi!=m.face.end();++fi)
-      if(!(*fi).IsD())
-        for(int j=0;j<3;++j)
-        {
-          TD[(*fi).V(j)].r+=(*fi).C()[0];
-          TD[(*fi).V(j)].g+=(*fi).C()[1];
-          TD[(*fi).V(j)].b+=(*fi).C()[2];
-          TD[(*fi).V(j)].a+=(*fi).C()[3];
-          ++TD[(*fi).V(j)].cnt;
-        }
+		FaceIterator fi;
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
+			if(!(*fi).IsD())
+				for(int j=0;j<3;++j)
+				{
+					TD[(*fi).V(j)].r+=(*fi).C()[0];
+					TD[(*fi).V(j)].g+=(*fi).C()[1];
+					TD[(*fi).V(j)].b+=(*fi).C()[2];
+					TD[(*fi).V(j)].a+=(*fi).C()[3];
+					++TD[(*fi).V(j)].cnt;
+				}
 
-    VertexIterator vi;
-    for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-      if(!(*vi).IsD() && TD[*vi].cnt>0 )
-      {
-        (*vi).C()[0] = TD[*vi].r / TD[*vi].cnt;
-        (*vi).C()[1] = TD[*vi].g / TD[*vi].cnt;
-        (*vi).C()[2] = TD[*vi].b / TD[*vi].cnt;
-        (*vi).C()[3] = TD[*vi].a / TD[*vi].cnt;
-      }
-  }
+		VertexIterator vi;
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+			if(!(*vi).IsD() && TD[*vi].cnt>0 )
+			{
+				(*vi).C()[0] = TD[*vi].r / TD[*vi].cnt;
+				(*vi).C()[1] = TD[*vi].g / TD[*vi].cnt;
+				(*vi).C()[2] = TD[*vi].b / TD[*vi].cnt;
+				(*vi).C()[3] = TD[*vi].a / TD[*vi].cnt;
+			}
+	}
 
-  /*! \brief Transfer vertex color onto face color
+	/*! \brief Transfer vertex color onto face color
   Plain average of the color of the vertexes on a given face.
   */
-  static void PerFaceFromVertex( MeshType &m)
-  {
-    RequirePerFaceColor(m);
-    RequirePerVertexColor(m);
+	static void PerFaceFromVertex( MeshType &m)
+	{
+		RequirePerFaceColor(m);
+		RequirePerVertexColor(m);
 
-    FaceIterator fi;
-    for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-    {
-      Color4f avg = (Color4f::Construct((*fi).V(0)->C()) +
-                     Color4f::Construct((*fi).V(1)->C()) +
-                     Color4f::Construct((*fi).V(2)->C()) )/ 3.0;
-      (*fi).C().Import(avg);
-    }
-  }
+		FaceIterator fi;
+		for(fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+		{
+			Color4f avg = (Color4f::Construct((*fi).V(0)->C()) +
+			               Color4f::Construct((*fi).V(1)->C()) +
+			               Color4f::Construct((*fi).V(2)->C()) )/ 3.0;
+			(*fi).C().Import(avg);
+		}
+	}
 
-  /*! \brief This function colores all the faces of a mesh with a hue color shade dependent on the quality.
-
-  If no range of quality is passed it is automatically computed.
-  */
-  static void PerVertexQualityRamp(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0.)
-  {
-    RequirePerVertexQuality(m);
-    RequirePerVertexColor(m);
-
-    if(minq == maxq)
-    {
-      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
-      minq=minmax.first;
-      maxq=minmax.second;
-    }
-    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-          if(!(*vi).IsD())
-              (*vi).C().SetColorRamp(minq,maxq,(*vi).Q());
-  }
-
-  
-  /*! \brief This function colores all the faces of a mesh with a hue color shade dependent on the quality.
+	/*! \brief This function colores all the faces of a mesh with a hue color shade dependent on the quality.
 
   If no range of quality is passed it is automatically computed.
   */
-  static void PerVertexQualityRampParula(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0.)
-  {
-    RequirePerVertexQuality(m);
-    RequirePerVertexColor(m);
+	static void PerVertexQualityRamp(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0.)
+	{
+		RequirePerVertexQuality(m);
+		RequirePerVertexColor(m);
 
-    if(minq == maxq)
-    {
-      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
-      minq=minmax.first;
-      maxq=minmax.second;
-    }
-    for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-          if(!(*vi).IsD())
-              (*vi).C().SetColorRampParula(minq, maxq, (*vi).Q());
-  }
-  
-    /*! \brief This function colores all the faces of a mesh with a hue color shade dependent on the quality.
+		if(minq == maxq)
+		{
+			std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
+			minq=minmax.first;
+			maxq=minmax.second;
+		}
+		for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+			if(!(*vi).IsD())
+				(*vi).C().SetColorRamp(minq,maxq,(*vi).Q());
+	}
 
-  If no range of quality is passed it is automatically computed.
-  */
-  static void PerTetraQualityRamp(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0., bool selected = false)
-  {
-    RequirePerTetraColor(m);
-    RequirePerTetraQuality(m);
 
-    if(minq == maxq)
-    {
-      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputerPerTetraQualityMinMax(m);
-      minq=minmax.first;
-      maxq=minmax.second;
-    }
-
-    ForEachTetra(m, [&] (TetraType & t){
-      if (!selected || t.IsS())
-        t.C().SetColorRamp(minq, maxq, t.Q());
-    });
-  }
-  /*! \brief This function colores all the faces of a mesh with a hue color shade dependent on the quality.
+	/*! \brief This function colores all the faces of a mesh with a hue color shade dependent on the quality.
 
   If no range of quality is passed it is automatically computed.
   */
-  static void PerFaceQualityRamp(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0, bool selected = false)
-  {
-    RequirePerFaceColor(m);
-    RequirePerFaceQuality(m);
+	static void PerVertexQualityRampParula(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0.)
+	{
+		RequirePerVertexQuality(m);
+		RequirePerVertexColor(m);
 
-    if(minq == maxq)
-    {
-      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerFaceQualityMinMax(m);
-      minq=minmax.first;
-      maxq=minmax.second;
-    }
-    for(FaceIterator fi = m.face.begin();fi != m.face.end(); ++fi) 
-      if(!(*fi).IsD())
-        if(!selected || (*fi).IsS())
-          (*fi).C().SetColorRamp(minq, maxq, (*fi).Q());
-  }
+		if(minq == maxq)
+		{
+			std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
+			minq=minmax.first;
+			maxq=minmax.second;
+		}
+		for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+			if(!(*vi).IsD())
+				(*vi).C().SetColorRampParula(minq, maxq, (*vi).Q());
+	}
 
-  /*! \brief This function colores all the edges of a mesh with a hue color shade dependent on the quality.
-
-  If no range of quality is passed it is automatically computed.
-  */
-  static void PerEdgeQualityRamp(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0, bool selected = false)
-  {
-    RequirePerEdgeColor(m);
-    RequirePerEdgeQuality(m);
-
-    if(minq == maxq)
-    {
-      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerEdgeQualityMinMax(m);
-      minq=minmax.first;
-      maxq=minmax.second;
-    }
-    for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei) if(!(*ei).IsD())
-      if(!selected || (*ei).IsS())
-        (*ei).C().SetColorRamp(minq,maxq,(*ei).Q());
-  }
-
-  /*! \brief This function colores all the vertices of a mesh with a gray shade dependent on the quality.
+	/*! \brief This function colores all the faces of a mesh with a hue color shade dependent on the quality.
 
   If no range of quality is passed it is automatically computed.
   */
-  static void PerVertexQualityGray(MeshType &m,  ScalarType minq = 0, ScalarType maxq = 0)
-  {
-    RequirePerVertexColor(m);
-    RequirePerVertexQuality(m);
-    if(minq==maxq)
-    {
-      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
-      minq=minmax.first;
-      maxq=minmax.second;
-    }
-    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-          if(!(*vi).IsD())
-              (*vi).C().SetGrayShade( ((*vi).Q()-minq)/(maxq-minq));
-  }
+	static void PerTetraQualityRamp(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0., bool selected = false)
+	{
+		RequirePerTetraColor(m);
+		RequirePerTetraQuality(m);
 
-  /*! \brief This function colores all the faces of a mesh with a gray shade dependent on the quality.
+		if(minq == maxq)
+		{
+			std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerTetraQualityMinMax(m);
+			minq=minmax.first;
+			maxq=minmax.second;
+		}
+
+		ForEachTetra(m, [&] (TetraType & t){
+			if (!selected || t.IsS())
+				t.C().SetColorRamp(minq, maxq, t.Q());
+		});
+	}
+	/*! \brief This function colores all the faces of a mesh with a hue color shade dependent on the quality.
 
   If no range of quality is passed it is automatically computed.
   */
-  static void PerFaceQualityGray(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0)
-  {
-    RequirePerFaceColor(m);
-    RequirePerFaceQuality(m);
+	static void PerFaceQualityRamp(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0, bool selected = false)
+	{
+		RequirePerFaceColor(m);
+		RequirePerFaceQuality(m);
 
-    if(minq==maxq)
-    {
-      std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerFaceQualityMinMax(m);
-      minq=minmax.first;
-      maxq=minmax.second;
-    }
-    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-          (*fi).C().SetGrayShade( ((*fi).Q()-minq)/(maxq-minq));
-  }
+		if(minq == maxq)
+		{
+			std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerFaceQualityMinMax(m);
+			minq=minmax.first;
+			maxq=minmax.second;
+		}
+		for(FaceIterator fi = m.face.begin();fi != m.face.end(); ++fi)
+			if(!(*fi).IsD())
+				if(!selected || (*fi).IsS())
+					(*fi).C().SetColorRamp(minq, maxq, (*fi).Q());
+	}
 
-  /** \brief Color the vertexes of the mesh that are on the border
+	/*! \brief This function colores all the edges of a mesh with a hue color shade dependent on the quality.
+
+  If no range of quality is passed it is automatically computed.
+  */
+	static void PerEdgeQualityRamp(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0, bool selected = false)
+	{
+		RequirePerEdgeColor(m);
+		RequirePerEdgeQuality(m);
+
+		if(minq == maxq)
+		{
+			std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerEdgeQualityMinMax(m);
+			minq=minmax.first;
+			maxq=minmax.second;
+		}
+		for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei) if(!(*ei).IsD())
+			if(!selected || (*ei).IsS())
+				(*ei).C().SetColorRamp(minq,maxq,(*ei).Q());
+	}
+
+	/*! \brief This function colores all the vertices of a mesh with a gray shade dependent on the quality.
+
+  If no range of quality is passed it is automatically computed.
+  */
+	static void PerVertexQualityGray(MeshType &m,  ScalarType minq = 0, ScalarType maxq = 0)
+	{
+		RequirePerVertexColor(m);
+		RequirePerVertexQuality(m);
+		if(minq==maxq)
+		{
+			std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerVertexQualityMinMax(m);
+			minq=minmax.first;
+			maxq=minmax.second;
+		}
+		for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+			if(!(*vi).IsD())
+				(*vi).C().SetGrayShade( ((*vi).Q()-minq)/(maxq-minq));
+	}
+
+	/*! \brief This function colores all the faces of a mesh with a gray shade dependent on the quality.
+
+  If no range of quality is passed it is automatically computed.
+  */
+	static void PerFaceQualityGray(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0)
+	{
+		RequirePerFaceColor(m);
+		RequirePerFaceQuality(m);
+
+		if(minq==maxq)
+		{
+			std::pair<ScalarType, ScalarType> minmax = Stat<MeshType>::ComputePerFaceQualityMinMax(m);
+			minq=minmax.first;
+			maxq=minmax.second;
+		}
+		for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+			(*fi).C().SetGrayShade( ((*fi).Q()-minq)/(maxq-minq));
+	}
+
+	/** \brief Color the vertexes of the mesh that are on the border
 
 It uses the information in the Vertex flags, and not necessarily any topology.
 So it just require that you have correctly computed the flags; one way could be the following one:
@@ -368,252 +368,252 @@ vcg::tri::UpdateFlags<Mesh>::VertexBorderFromFaceBorder (m.cm);
 vcg::tri::UpdateColor<Mesh>::PerVertexBorderFlag(m.cm);
 \endcode
 */
-  static void PerVertexBorderFlag( MeshType &m, Color4b BorderColor=Color4b::Blue, Color4b InternalColor=Color4b::White, Color4b MixColor=Color4b::Cyan)
-  {
-    RequirePerVertexColor(m);
+	static void PerVertexBorderFlag( MeshType &m, Color4b BorderColor=Color4b::Blue, Color4b InternalColor=Color4b::White, Color4b MixColor=Color4b::Cyan)
+	{
+		RequirePerVertexColor(m);
 
-    Color4b BaseColor = Color4b::Green;
+		Color4b BaseColor = Color4b::Green;
 
-    PerVertexConstant(m,BaseColor);
-    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
-      for(int j=0;j<3;++j)
-      {
-        if((*fi).IsB(j)){
-          if( (*fi).V(j)->C() == BaseColor)     (*fi).V(j)->C() = BorderColor;
-          if( (*fi).V(j)->C() == InternalColor) (*fi).V(j)->C() = MixColor;
-          if( (*fi).V1(j)->C() == BaseColor)     (*fi).V1(j)->C() = BorderColor;
-          if( (*fi).V1(j)->C() == InternalColor) (*fi).V1(j)->C() = MixColor;
-        } else
-        {
-          if( (*fi).V(j)->C() == BaseColor)     (*fi).V(j)->C() = InternalColor;
-          if( (*fi).V(j)->C() == BorderColor) (*fi).V(j)->C() = MixColor;
-          if( (*fi).V1(j)->C() == BaseColor)     (*fi).V1(j)->C() = InternalColor;
-          if( (*fi).V1(j)->C() == BorderColor) (*fi).V1(j)->C() = MixColor;
-        }
-      }
+		PerVertexConstant(m,BaseColor);
+		for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+			for(int j=0;j<3;++j)
+			{
+				if((*fi).IsB(j)){
+					if( (*fi).V(j)->C() == BaseColor)     (*fi).V(j)->C() = BorderColor;
+					if( (*fi).V(j)->C() == InternalColor) (*fi).V(j)->C() = MixColor;
+					if( (*fi).V1(j)->C() == BaseColor)     (*fi).V1(j)->C() = BorderColor;
+					if( (*fi).V1(j)->C() == InternalColor) (*fi).V1(j)->C() = MixColor;
+				} else
+				{
+					if( (*fi).V(j)->C() == BaseColor)     (*fi).V(j)->C() = InternalColor;
+					if( (*fi).V(j)->C() == BorderColor) (*fi).V(j)->C() = MixColor;
+					if( (*fi).V1(j)->C() == BaseColor)     (*fi).V1(j)->C() = InternalColor;
+					if( (*fi).V1(j)->C() == BorderColor) (*fi).V1(j)->C() = MixColor;
+				}
+			}
 
-  }
+	}
 
-  /*! \brief This function colores the faces of connected components of a mesh randomly.
+	/*! \brief This function colores the faces of connected components of a mesh randomly.
 
 It require FaceFace Adjacency becouse it relies on the output of the ConnecteComponents();
 */
-  static void PerFaceRandomConnectedComponent( MeshType &m)
-  {
-    RequirePerFaceColor(m);
-    RequireFFAdjacency(m);
+	static void PerFaceRandomConnectedComponent( MeshType &m)
+	{
+		RequirePerFaceColor(m);
+		RequireFFAdjacency(m);
 
-    std::vector< std::pair<int, typename MeshType::FacePointer> > CCV;
-    int ScatterSize= std::min (100,tri::Clean<MeshType>::ConnectedComponents(m, CCV)); // number of random color to be used. Never use too many.
+		std::vector< std::pair<int, typename MeshType::FacePointer> > CCV;
+		int ScatterSize= std::min (100,tri::Clean<MeshType>::ConnectedComponents(m, CCV)); // number of random color to be used. Never use too many.
 
-    ConnectedComponentIterator<MeshType> ci;
-    for(unsigned int i=0;i<CCV.size();++i)
-    {
-      Color4b BaseColor = Color4b::Scatter(ScatterSize, i%ScatterSize,.4f,.7f);
-      std::vector<typename MeshType::FacePointer> FPV;
-      for(ci.start(m,CCV[i].second);!ci.completed();++ci)
-        (*ci)->C()=BaseColor;
-    }
-  }
+		ConnectedComponentIterator<MeshType> ci;
+		for(unsigned int i=0;i<CCV.size();++i)
+		{
+			Color4b BaseColor = Color4b::Scatter(ScatterSize, i%ScatterSize,.4f,.7f);
+			std::vector<typename MeshType::FacePointer> FPV;
+			for(ci.start(m,CCV[i].second);!ci.completed();++ci)
+				(*ci)->C()=BaseColor;
+		}
+	}
 
-  /*! \brief This function colores the face of a mesh randomly.
+	/*! \brief This function colores the face of a mesh randomly.
 
 Note: The faux bit is used to color polygonal faces uniformly
 */
-  static void PerFaceRandom(MeshType &m)
-  {
-    RequirePerFaceColor(m);
-    FaceIterator fi;
-    Color4b BaseColor = Color4b::Black;
-    PerFaceConstant(m,BaseColor);
-    int id_num=0;
-    for(fi=m.face.begin();fi!=m.face.end();++fi)
-      if(!(*fi).IsD())
-      {
-        id_num++;
-        if((*fi).C() == BaseColor) (*fi).C() = Color4b::Scatter(50, id_num%50,.4f,.7f);
-        for(int j=0;j<3;++j)
-          if((*fi).IsF(j))
-          {
-            assert(!IsBorder((*fi),j));
-            (*fi).FFp(j)->C()= (*fi).C();
-          }
-      }
-  }
+	static void PerFaceRandom(MeshType &m)
+	{
+		RequirePerFaceColor(m);
+		FaceIterator fi;
+		Color4b BaseColor = Color4b::Black;
+		PerFaceConstant(m,BaseColor);
+		int id_num=0;
+		for(fi=m.face.begin();fi!=m.face.end();++fi)
+			if(!(*fi).IsD())
+			{
+				id_num++;
+				if((*fi).C() == BaseColor) (*fi).C() = Color4b::Scatter(50, id_num%50,.4f,.7f);
+				for(int j=0;j<3;++j)
+					if((*fi).IsF(j))
+					{
+						assert(!IsBorder((*fi),j));
+						(*fi).FFp(j)->C()= (*fi).C();
+					}
+			}
+	}
 
-/*! \brief Perlin Noise.
+	/*! \brief Perlin Noise.
 
 Simple Perlin noise. To make things weirder each color band can have its own offset and frequency.
 Period is expressed in absolute terms.
 So as period it is meaningful could be to use something in the range of 1/10 of the bbox diag.
 */
-static void PerVertexPerlinNoise(MeshType& m, CoordType period, CoordType offset = CoordType(0, 0, 0), bool onSelected = false)
-{
-	RequirePerVertexColor(m);
+	static void PerVertexPerlinNoise(MeshType& m, CoordType period, CoordType offset = CoordType(0, 0, 0), bool onSelected = false)
+	{
+		RequirePerVertexColor(m);
 
-	CoordType p[3];
-	
-	for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
-		if(!(*vi).IsD())
-			if ((!onSelected) || ((*vi).IsS()))
-			{
-				// perlin noise is defined in 022
-				p[0] = (vi->P()/period[0])+offset;
-				p[1] = (vi->P()/period[1])+offset;
-				p[2] = (vi->P()/period[2])+offset;
-				(*vi).C() = Color4b(	int(127+128.0*math::Perlin::Noise(p[0][0],p[0][1],p[0][2])),
-										int(127+128.0*math::Perlin::Noise(p[1][0],p[1][1],p[1][2])),
-										int(127+128.0*math::Perlin::Noise(p[2][0],p[2][1],p[2][2])),
-										255 );
-			}
+		CoordType p[3];
 
-}
+		for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
+			if(!(*vi).IsD())
+				if ((!onSelected) || ((*vi).IsS()))
+				{
+					// perlin noise is defined in 022
+					p[0] = (vi->P()/period[0])+offset;
+					p[1] = (vi->P()/period[1])+offset;
+					p[2] = (vi->P()/period[2])+offset;
+					(*vi).C() = Color4b(	int(127+128.0*math::Perlin::Noise(p[0][0],p[0][1],p[0][2])),
+					        int(127+128.0*math::Perlin::Noise(p[1][0],p[1][1],p[1][2])),
+					        int(127+128.0*math::Perlin::Noise(p[2][0],p[2][1],p[2][2])),
+					        255 );
+				}
+
+	}
 
 
-/*! \brief Perlin Color mixing.
+	/*! \brief Perlin Color mixing.
 
 Simple Perlin color mixing. Color 1 and 2 are mixed according the perlin noise function, with period and offset.
 */
-static void PerVertexPerlinColoring(MeshType& m, ScalarType period, CoordType offset = CoordType(0, 0, 0), Color4b color1 = Color4b::Black, Color4b color2 = Color4b::White, bool onSelected = false)
-{
-	RequirePerVertexColor(m);
-
-	CoordType p;
-
-	for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-	if (!(*vi).IsD())
-	if ((!onSelected) || ((*vi).IsS()))
+	static void PerVertexPerlinColoring(MeshType& m, ScalarType period, CoordType offset = CoordType(0, 0, 0), Color4b color1 = Color4b::Black, Color4b color2 = Color4b::White, bool onSelected = false)
 	{
-		// perlin noise is defined in 022
-		p = (vi->P() / period) + offset;
-		double factor = (math::Perlin::Noise(p[0], p[1], p[2]) + 1.0) / 2.0; 
+		RequirePerVertexColor(m);
 
-		int rr = (color1[0] * factor) + (color2[0] * (1.0 - factor));
-		int gg = (color1[1] * factor) + (color2[1] * (1.0 - factor));
-		int bb = (color1[2] * factor) + (color2[2] * (1.0 - factor));
-		int aa = (color1[3] * factor) + (color2[3] * (1.0 - factor));
+		CoordType p;
 
-		(*vi).C() = Color4b(rr, gg, bb, aa);
+		for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+			if (!(*vi).IsD())
+				if ((!onSelected) || ((*vi).IsS()))
+				{
+					// perlin noise is defined in 022
+					p = (vi->P() / period) + offset;
+					double factor = (math::Perlin::Noise(p[0], p[1], p[2]) + 1.0) / 2.0;
+
+					int rr = (color1[0] * factor) + (color2[0] * (1.0 - factor));
+					int gg = (color1[1] * factor) + (color2[1] * (1.0 - factor));
+					int bb = (color1[2] * factor) + (color2[2] * (1.0 - factor));
+					int aa = (color1[3] * factor) + (color2[3] * (1.0 - factor));
+
+					(*vi).C() = Color4b(rr, gg, bb, aa);
+				}
 	}
-}
 
-/*! \brief Simple Noise adding function.
+	/*! \brief Simple Noise adding function.
 It simply add signed noise to the color of the mesh. The noise has uniform distribution and the amplitude is +/-2^(noisebits-1).
 */
-static void PerVertexAddNoise(MeshType& m, int noiseBits, bool onSelected=false)
-{
-	RequirePerVertexColor(m);
+	static void PerVertexAddNoise(MeshType& m, int noiseBits, bool onSelected=false)
+	{
+		RequirePerVertexColor(m);
 
-	if(noiseBits>8) noiseBits = 8;
-	if(noiseBits<1) return;
+		if(noiseBits>8) noiseBits = 8;
+		if(noiseBits<1) return;
 
-	math::SubtractiveRingRNG randomGen = math::SubtractiveRingRNG(time(NULL));
-	for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
-		if(!(*vi).IsD())
-			if ((!onSelected) || ((*vi).IsS()))
+		math::SubtractiveRingRNG randomGen = math::SubtractiveRingRNG(time(NULL));
+		for(VertexIterator vi = m.vert.begin(); vi!=m.vert.end(); ++vi)
+			if(!(*vi).IsD())
+				if ((!onSelected) || ((*vi).IsS()))
+				{
+					(*vi).C()[0] = math::Clamp<int>((*vi).C()[0] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
+					(*vi).C()[1] = math::Clamp<int>((*vi).C()[1] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
+					(*vi).C()[2] = math::Clamp<int>((*vi).C()[2] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
+				}
+
+	}
+
+
+	/*! \brief Reduces vertex color the mesh to two colors according to a threshold.
+  */
+	static int PerVertexThresholding(MeshType &m, float threshold, const Color4b c1 = Color4<unsigned char>::Black, const Color4b c2 = Color4<unsigned char>::White, const bool ProcessSelected=false)
+	{
+		RequirePerVertexColor(m);
+
+		int counter=0;
+		VertexIterator vi;
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
 			{
-				(*vi).C()[0] = math::Clamp<int>((*vi).C()[0] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
-				(*vi).C()[1] = math::Clamp<int>((*vi).C()[1] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
-				(*vi).C()[2] = math::Clamp<int>((*vi).C()[2] + randomGen.generate(int(2*pow(2.0f,noiseBits))) - int(pow(2.0f,noiseBits)),0,255);
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					float value = ComputeLightness((*vi).C());
+
+					if(value<=threshold) (*vi).C() = c1;
+					else (*vi).C() = c2;
+					++counter;
+				}
 			}
-	
-}
+		}
+		return counter;
+	}
 
+	// Computes the lightness value for a specified color. lightness = 0.5*(Max(R,G,B)+Min(R,G,B))
+	static float ComputeLightness(Color4b c)
+	{
+		float min_rgb = (float)math::Min(c[0],c[1],c[2]);
+		float max_rgb = (float)math::Max(c[0],c[1],c[2]);
+		return (max_rgb + min_rgb)/2;
+	}
 
-/*! \brief Reduces vertex color the mesh to two colors according to a threshold.
+	/*! \brief Apply the brightness filter, with the given amount, to the mesh.
   */
-static int PerVertexThresholding(MeshType &m, float threshold, const Color4b c1 = Color4<unsigned char>::Black, const Color4b c2 = Color4<unsigned char>::White, const bool ProcessSelected=false)
-{
-  RequirePerVertexColor(m);
+	static int PerVertexBrightness(MeshType &m, float amount, const bool ProcessSelected=false)
+	{
+		RequirePerVertexColor(m);
 
-  int counter=0;
-  VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
-  {
-    if(!(*vi).IsD()) //if it has not been deleted...
-    {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-      {
-        float value = ComputeLightness((*vi).C());
+		int counter=0;
+		VertexIterator vi;
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
+			{
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					(*vi).C() = Color4b(
+					                math::Clamp(int((*vi).C()[0]+amount),0,255),
+					        math::Clamp(int((*vi).C()[1]+amount),0,255),
+					        math::Clamp(int((*vi).C()[2]+amount),0,255),
+					        255);
+					++counter;
+				}
+			}
+		}
+		return counter;
+	}
 
-        if(value<=threshold) (*vi).C() = c1;
-        else (*vi).C() = c2;
-        ++counter;
-      }
-    }
-  }
-  return counter;
-}
-
-// Computes the lightness value for a specified color. lightness = 0.5*(Max(R,G,B)+Min(R,G,B))
-static float ComputeLightness(Color4b c)
-{
-  float min_rgb = (float)math::Min(c[0],c[1],c[2]);
-  float max_rgb = (float)math::Max(c[0],c[1],c[2]);
-  return (max_rgb + min_rgb)/2;
-}
-
-/*! \brief Apply the brightness filter, with the given amount, to the mesh.
+	/*! \brief Apply Contrast filter to the mesh with the given contrast factor.
   */
-static int PerVertexBrightness(MeshType &m, float amount, const bool ProcessSelected=false)
-{
-  RequirePerVertexColor(m);
+	static int PerVertexContrast(MeshType &m, float factor, const bool ProcessSelected=false)
+	{
+		RequirePerVertexColor(m);
 
-  int counter=0;
-    VertexIterator vi;
-    for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
-    {
-        if(!(*vi).IsD()) //if it has not been deleted...
-        {
-            if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-      {
-        (*vi).C() = Color4b(
-                            math::Clamp(int((*vi).C()[0]+amount),0,255),
-                            math::Clamp(int((*vi).C()[1]+amount),0,255),
-                            math::Clamp(int((*vi).C()[2]+amount),0,255),
-                            255);
-        ++counter;
-      }
-    }
-  }
-    return counter;
-}
+		int counter=0;
+		VertexIterator vi;
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
+			{
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					(*vi).C() = ColorMul((*vi).C(),factor);
+					++counter;
+				}
+			}
+		}
+		return counter;
+	}
 
-/*! \brief Apply Contrast filter to the mesh with the given contrast factor.
-  */
-static int PerVertexContrast(MeshType &m, float factor, const bool ProcessSelected=false)
-{
-      RequirePerVertexColor(m);
+	//Performs contrast operations on color, i.e expands or compress the histogram around
+	//the midpoint value.  NewValue = (OldValue - 128) ◊ factor + 128
+	static Color4b ColorMul(Color4b c, float factor)
+	{
+		return Color4b( ValueMul(c[0], factor), ValueMul(c[1], factor), ValueMul(c[2], factor), 1);
+	}
 
-  int counter=0;
-  VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
-  {
-    if(!(*vi).IsD()) //if it has not been deleted...
-    {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-      {
-        (*vi).C() = ColorMul((*vi).C(),factor);
-        ++counter;
-      }
-    }
-  }
-  return counter;
-}
+	static int ValueMul(int value, float factor)
+	{
+		return math::Clamp<int>((int)((value - 128)*factor + 128), 0, 255);
+	}
 
-//Performs contrast operations on color, i.e expands or compress the histogram around
-//the midpoint value.  NewValue = (OldValue - 128) ◊ factor + 128
-static Color4b ColorMul(Color4b c, float factor)
-{
-  return Color4b( ValueMul(c[0], factor), ValueMul(c[1], factor), ValueMul(c[2], factor), 1);
-}
-
-static int ValueMul(int value, float factor)
-{
-  return math::Clamp<int>((int)((value - 128)*factor + 128), 0, 255);
-}
-
-/*! \brief Apply  Brightness and Contrast  filter to the mesh, with the given contrast factor and brightness amount.
+	/*! \brief Apply  Brightness and Contrast  filter to the mesh, with the given contrast factor and brightness amount.
 
 Performs contrast and brightness operations on color, i.e NewValue = (OldValue - 128) * contrast + 128 + amount
 The result is clamped just one time after all computations; this get a more accurate result.
@@ -621,109 +621,109 @@ The result is clamped just one time after all computations; this get a more accu
 The formula used here is the one of GIMP.
 
   */
-static int PerVertexBrightnessContrast(MeshType &m, float brightness, float contrast, const bool ProcessSelected=false)
-{
-      RequirePerVertexColor(m);
+	static int PerVertexBrightnessContrast(MeshType &m, float brightness, float contrast, const bool ProcessSelected=false)
+	{
+		RequirePerVertexColor(m);
 
-  int counter=0;
-  VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
-  {
-    if(!(*vi).IsD()) //if it has not been deleted...
-    {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-      {
-        (*vi).C() = ColorBrightnessContrast((*vi).C(),brightness,contrast);
-        ++counter;
-      }
-    }
-  }
-  return counter;
-}
+		int counter=0;
+		VertexIterator vi;
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
+			{
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					(*vi).C() = ColorBrightnessContrast((*vi).C(),brightness,contrast);
+					++counter;
+				}
+			}
+		}
+		return counter;
+	}
 
-static Color4b ColorBrightnessContrast(Color4b c, float brightness, float contrast)
-{
-  return Color4b( ValueBrightnessContrast(c[0], brightness, contrast),
-                                    ValueBrightnessContrast(c[1], brightness, contrast),
-                                    ValueBrightnessContrast(c[2], brightness, contrast), 1 );
-}
+	static Color4b ColorBrightnessContrast(Color4b c, float brightness, float contrast)
+	{
+		return Color4b( ValueBrightnessContrast(c[0], brightness, contrast),
+		        ValueBrightnessContrast(c[1], brightness, contrast),
+		        ValueBrightnessContrast(c[2], brightness, contrast), 1 );
+	}
 
-static int ValueBrightnessContrast(unsigned char ivalue, float brightness, float contrast)
-{
-    float value = float(ivalue)/255.0f;
-  if (brightness < 0.0)  value = value * ( 1.0 + brightness);
-                    else value = value + ((1.0 - value) * brightness);
-    value = (value - 0.5) * (tan ((contrast + 1) * M_PI/4) ) + 0.5;
-    return math::Clamp<int>(255.0*value, 0, 255);
-}
+	static int ValueBrightnessContrast(unsigned char ivalue, float brightness, float contrast)
+	{
+		float value = float(ivalue)/255.0f;
+		if (brightness < 0.0)  value = value * ( 1.0 + brightness);
+		else value = value + ((1.0 - value) * brightness);
+		value = (value - 0.5) * (tan ((contrast + 1) * M_PI/4) ) + 0.5;
+		return math::Clamp<int>(255.0*value, 0, 255);
+	}
 
-/*! \brief Invert the colors of the mesh.
+	/*! \brief Invert the colors of the mesh.
 
   \return the number of changed vertexes (the selected ones)
   */
-static int PerVertexInvert(MeshType &m, const bool ProcessSelected=false)
-{
-      RequirePerVertexColor(m);
+	static int PerVertexInvert(MeshType &m, const bool ProcessSelected=false)
+	{
+		RequirePerVertexColor(m);
 
-  int counter=0;
-  for(VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi) //scan all the vertex...
-  {
-    if(!(*vi).IsD()) //if it has not been deleted...
-    {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-      {
-        Color4b &c=(*vi).C();
-        c=Color4b( 255-c[0],255-c[1],255-c[2], 1);
-        ++counter;
-      }
-    }
-  }
-  return counter;
-}
+		int counter=0;
+		for(VertexIterator vi=m.vert.begin(); vi!=m.vert.end(); ++vi) //scan all the vertex...
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
+			{
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					Color4b &c=(*vi).C();
+					c=Color4b( 255-c[0],255-c[1],255-c[2], 1);
+					++counter;
+				}
+			}
+		}
+		return counter;
+	}
 
-/*! \brief Apply the gamma correction filter, with the given gamma exponet, to the mesh.
+	/*! \brief Apply the gamma correction filter, with the given gamma exponet, to the mesh.
   \return the number of changed vertexes (the selected ones)
   */
-static int PerVertexGamma(MeshType &m, float gamma, const bool ProcessSelected=false)
-{
-      RequirePerVertexColor(m);
+	static int PerVertexGamma(MeshType &m, float gamma, const bool ProcessSelected=false)
+	{
+		RequirePerVertexColor(m);
 
-  int counter=0;
+		int counter=0;
 
-  VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
-  {
-    if(!(*vi).IsD()) //if it has not been deleted...
-    {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-      {
-        (*vi).C() = ColorPow((*vi).C(), 1/gamma);
-        ++counter;
-      }
-    }
-  }
-  return counter;
-}
+		VertexIterator vi;
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
+			{
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					(*vi).C() = ColorPow((*vi).C(), 1/gamma);
+					++counter;
+				}
+			}
+		}
+		return counter;
+	}
 
-//computes the standard gamma transformation on a given color, according to NewVal = OldVal^(1/gamma)
-static Color4b ColorPow(Color4b c, float exponent)
-{
-  return vcg::Color4b(
-                      math::Clamp((int)( ValuePow(float(c[0])/255, exponent)*255), 0, 255),
-                      math::Clamp((int)( ValuePow(float(c[1])/255, exponent)*255), 0, 255),
-                      math::Clamp((int)( ValuePow(float(c[2])/255, exponent)*255), 0, 255),
-                      255);
-}
+	//computes the standard gamma transformation on a given color, according to NewVal = OldVal^(1/gamma)
+	static Color4b ColorPow(Color4b c, float exponent)
+	{
+		return vcg::Color4b(
+		            math::Clamp((int)( ValuePow(float(c[0])/255, exponent)*255), 0, 255),
+		        math::Clamp((int)( ValuePow(float(c[1])/255, exponent)*255), 0, 255),
+		        math::Clamp((int)( ValuePow(float(c[2])/255, exponent)*255), 0, 255),
+		        255);
+	}
 
-static float ValuePow(float value, float exponent)
-{
-  return powf(value, exponent);
-}
+	static float ValuePow(float value, float exponent)
+	{
+		return powf(value, exponent);
+	}
 
-//useful bit masks for RGB channels, used for Levels filter.
-enum rgbChMask {ALL_CHANNELS = 7, RED_CHANNEL = 4, GREEN_CHANNEL = 2, BLUE_CHANNEL = 1, NO_CHANNELS = 0 };
+	//useful bit masks for RGB channels, used for Levels filter.
+	enum rgbChMask {ALL_CHANNELS = 7, RED_CHANNEL = 4, GREEN_CHANNEL = 2, BLUE_CHANNEL = 1, NO_CHANNELS = 0 };
 
-/*! \brief Adjusts color levels of the mesh
+	/*! \brief Adjusts color levels of the mesh
 
   \return the number of changed vertexes (the selected ones)
 
@@ -731,94 +731,94 @@ Adjusts color levels of the mesh. Filter can be applied to all RGB channels or t
 in_min, gamma and in_max are respectively the black point, the gray point and the white point.
 out_min and out_max are the output level for black and white respectively.
 */
-static int PerVertexLevels(MeshType &m, float gamma, float in_min, float in_max, float out_min, float out_max, unsigned char rgbMask, const bool ProcessSelected=false)
-{
-      RequirePerVertexColor(m);
+	static int PerVertexLevels(MeshType &m, float gamma, float in_min, float in_max, float out_min, float out_max, unsigned char rgbMask, const bool ProcessSelected=false)
+	{
+		RequirePerVertexColor(m);
 
-  int counter=0;
-  VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
-  {
-    if(!(*vi).IsD()) //if it has not been deleted...
-    {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-      {
-        (*vi).C() = ColorLevels((*vi).C(), gamma, in_min, in_max, out_min, out_max, rgbMask);
-        ++counter;
-      }
-    }
-  }
-  return counter;
-}
+		int counter=0;
+		VertexIterator vi;
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
+			{
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					(*vi).C() = ColorLevels((*vi).C(), gamma, in_min, in_max, out_min, out_max, rgbMask);
+					++counter;
+				}
+			}
+		}
+		return counter;
+	}
 
-//Performs levels transformation on each channel set to 1 in the rgbMask.
-static Color4b ColorLevels(Color4b c, float gamma, float in_min, float in_max, float out_min, float out_max, unsigned char rgbMask)
-{
-  unsigned char r = c[0], g = c[1], b = c[2];
-  if(rgbMask & RED_CHANNEL) r = ValueLevels(c[0], gamma, in_min, in_max, out_min, out_max);
-  if(rgbMask & GREEN_CHANNEL) g = ValueLevels(c[1], gamma, in_min, in_max, out_min, out_max);
-  if(rgbMask & BLUE_CHANNEL) b = ValueLevels(c[2], gamma, in_min, in_max, out_min, out_max);
-  return Color4b(r, g, b, 255);
-}
+	//Performs levels transformation on each channel set to 1 in the rgbMask.
+	static Color4b ColorLevels(Color4b c, float gamma, float in_min, float in_max, float out_min, float out_max, unsigned char rgbMask)
+	{
+		unsigned char r = c[0], g = c[1], b = c[2];
+		if(rgbMask & RED_CHANNEL) r = ValueLevels(c[0], gamma, in_min, in_max, out_min, out_max);
+		if(rgbMask & GREEN_CHANNEL) g = ValueLevels(c[1], gamma, in_min, in_max, out_min, out_max);
+		if(rgbMask & BLUE_CHANNEL) b = ValueLevels(c[2], gamma, in_min, in_max, out_min, out_max);
+		return Color4b(r, g, b, 255);
+	}
 
-//Transform on levels
-static int ValueLevels(int value, float gamma, float in_min, float in_max, float out_min, float out_max)
-{
-  float fvalue = value/255.0f;
-  // normalize
-  fvalue = math::Clamp<float>(fvalue - in_min, 0.0f, 1.0f) / math::Clamp<float>(in_max - in_min, 1.0f/255.0f, 1.0f);
-  // transform gamma
-  fvalue = powf(fvalue,1/gamma);
-  // rescale range
-  fvalue = fvalue * (out_max - out_min) + out_min;
-  //back in interval [0,255] and clamp
-  return math::Clamp<int>((int)(fvalue * 255), 0, 255);
-}
+	//Transform on levels
+	static int ValueLevels(int value, float gamma, float in_min, float in_max, float out_min, float out_max)
+	{
+		float fvalue = value/255.0f;
+		// normalize
+		fvalue = math::Clamp<float>(fvalue - in_min, 0.0f, 1.0f) / math::Clamp<float>(in_max - in_min, 1.0f/255.0f, 1.0f);
+		// transform gamma
+		fvalue = powf(fvalue,1/gamma);
+		// rescale range
+		fvalue = fvalue * (out_max - out_min) + out_min;
+		//back in interval [0,255] and clamp
+		return math::Clamp<int>((int)(fvalue * 255), 0, 255);
+	}
 
-/*! \brief  Colorize the mesh toward a given color.
+	/*! \brief  Colorize the mesh toward a given color.
   \return the number of changed vertexes (the selected ones)
 
 Colors the mesh. Color is blended to the mesh with the given intensity (0..1 ranged).
   */
-static int PerVertexColourisation(MeshType &m, Color4b c, float intensity, const bool ProcessSelected=false)
-{
-      RequirePerVertexColor(m);
+	static int PerVertexColourisation(MeshType &m, Color4b c, float intensity, const bool ProcessSelected=false)
+	{
+		RequirePerVertexColor(m);
 
-  int counter=0;
-  VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-  {
-    if(!(*vi).IsD()) //if it has not been deleted...
-    {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-      {
-        (*vi).C() = ColorApplyDiff((*vi).C(), c, intensity);
-        ++counter;
-      }
-    }
-  }
-  return counter;
-}
+		int counter=0;
+		VertexIterator vi;
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi)
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
+			{
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					(*vi).C() = ColorApplyDiff((*vi).C(), c, intensity);
+					++counter;
+				}
+			}
+		}
+		return counter;
+	}
 
-// Perform colourisation operation.
-// For each channel C:
-// newC = origC + intensity * (newC - origC)
-static Color4b ColorApplyDiff(Color4b old_color, Color4b new_color, float intensity)
-{
-  return Color4b( ValueApplyDiff(old_color[0], new_color[0], intensity),
-                  ValueApplyDiff(old_color[1], new_color[1], intensity),
-                  ValueApplyDiff(old_color[2], new_color[2], intensity), 255);
-}
+	// Perform colourisation operation.
+	// For each channel C:
+	// newC = origC + intensity * (newC - origC)
+	static Color4b ColorApplyDiff(Color4b old_color, Color4b new_color, float intensity)
+	{
+		return Color4b( ValueApplyDiff(old_color[0], new_color[0], intensity),
+		        ValueApplyDiff(old_color[1], new_color[1], intensity),
+		        ValueApplyDiff(old_color[2], new_color[2], intensity), 255);
+	}
 
-static int ValueApplyDiff(int old_value, int new_value, float intensity)
-{
-  return  math::Clamp<int>((int)(old_value + intensity * (new_value - old_value)), 0, 255);
-}
+	static int ValueApplyDiff(int old_value, int new_value, float intensity)
+	{
+		return  math::Clamp<int>((int)(old_value + intensity * (new_value - old_value)), 0, 255);
+	}
 
-//An useful ENUM to hold all desaturation methods.
-enum DesaturationMethods {M_LIGHTNESS = 0, M_LUMINOSITY = 1, M_AVERAGE = 2};
+	//An useful ENUM to hold all desaturation methods.
+	enum DesaturationMethods {M_LIGHTNESS = 0, M_LUMINOSITY = 1, M_AVERAGE = 2};
 
-/*! \brief  Desaturates the mesh according the a chosen desaturation method
+	/*! \brief  Desaturates the mesh according the a chosen desaturation method
 
 \return the number of changed vertexes (the selected ones)
 
@@ -827,177 +827,177 @@ There are three possibilities
 - \c M_LUMINOSITY where luminosity = 0.21*R+0.71*G+0.7*B
 - \c M_AVERAGE Plain Average
   */
-static int PerVertexDesaturation(MeshType &m, int method, const bool ProcessSelected=false)
-{
-      RequirePerVertexColor(m);
+	static int PerVertexDesaturation(MeshType &m, int method, const bool ProcessSelected=false)
+	{
+		RequirePerVertexColor(m);
 
-  int counter=0;
-  VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
-  {
-    if(!(*vi).IsD()) //if it has not been deleted...
-    {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-      {
-        (*vi).C() = ColorDesaturate((*vi).C(), method);
-        ++counter;
-      }
-    }
-  }
-  return counter;
-}
+		int counter=0;
+		VertexIterator vi;
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
+			{
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					(*vi).C() = ColorDesaturate((*vi).C(), method);
+					++counter;
+				}
+			}
+		}
+		return counter;
+	}
 
-//Desature the color. Ausiliary functions to calculate lightness/luminosity/average.
-static Color4b ColorDesaturate(Color4b c, int method)
-{
-  switch(method){
-    case M_LIGHTNESS:{
-      int val = (int)ComputeLightness(c);
-      return Color4b( val, val, val, 255);
-    }
-    case M_AVERAGE:{
-      int val = (int)ComputeAvgLightness(c);
-      return Color4b( val, val, val, 255);
-    }
-    case M_LUMINOSITY:{
-      int val = (int)ComputeLuminosity(c);
-      return Color4b( val, val, val, 255);
-    }
-    default: assert(0);
-  }
-  return Color4b(255, 255, 255, 255);
-}
+	//Desature the color. Ausiliary functions to calculate lightness/luminosity/average.
+	static Color4b ColorDesaturate(Color4b c, int method)
+	{
+		switch(method){
+			case M_LIGHTNESS:{
+				int val = (int)ComputeLightness(c);
+				return Color4b( val, val, val, 255);
+			}
+			case M_AVERAGE:{
+				int val = (int)ComputeAvgLightness(c);
+				return Color4b( val, val, val, 255);
+			}
+			case M_LUMINOSITY:{
+				int val = (int)ComputeLuminosity(c);
+				return Color4b( val, val, val, 255);
+			}
+			default: assert(0);
+		}
+		return Color4b(255, 255, 255, 255);
+	}
 
-//ausiliary function to compute average lightness. value = (R+G+B)/3
-static float ComputeAvgLightness(Color4b c)
-{
-    return float(c[0]+c[1]+c[2])/3.0f;
-}
+	//ausiliary function to compute average lightness. value = (R+G+B)/3
+	static float ComputeAvgLightness(Color4b c)
+	{
+		return float(c[0]+c[1]+c[2])/3.0f;
+	}
 
-//ausiliary function to compute luminosity. value = 0.21*R+0.71*G+0.7*B
-static float ComputeLuminosity(Color4b c)
-{
-    return float(0.2126f*c[0]+0.7152f*c[1]+0.0722f*c[2]);
-}
+	//ausiliary function to compute luminosity. value = 0.21*R+0.71*G+0.7*B
+	static float ComputeLuminosity(Color4b c)
+	{
+		return float(0.2126f*c[0]+0.7152f*c[1]+0.0722f*c[2]);
+	}
 
-/*! \brief Histogram Color Equalization.
+	/*! \brief Histogram Color Equalization.
   \return the number of changed vertexes (the selected ones)
 
 Equalize the histogram of colors. It can equalize any combination of rgb channels or it can work on lightness.
   */
-static int PerVertexEqualize(MeshType &m, unsigned int rgbMask, const bool ProcessSelected=false)
-{
-      RequirePerVertexColor(m);
+	static int PerVertexEqualize(MeshType &m, unsigned int rgbMask, const bool ProcessSelected=false)
+	{
+		RequirePerVertexColor(m);
 
-  //declares , resets and set up 4 histograms, for Red, Green, Blue and Lightness
-  Histogramf Hl, Hr, Hg, Hb;
-  Hl.Clear(); Hr.Clear(); Hg.Clear(); Hb.Clear();
-  Hl.SetRange(0, 255, 255); Hr.SetRange(0, 255, 255); Hg.SetRange(0, 255, 255); Hb.SetRange(0, 255, 255);
+		//declares , resets and set up 4 histograms, for Red, Green, Blue and Lightness
+		Histogramf Hl, Hr, Hg, Hb;
+		Hl.Clear(); Hr.Clear(); Hg.Clear(); Hb.Clear();
+		Hl.SetRange(0, 255, 255); Hr.SetRange(0, 255, 255); Hg.SetRange(0, 255, 255); Hb.SetRange(0, 255, 255);
 
-  int counter=0;
-  VertexIterator vi;
+		int counter=0;
+		VertexIterator vi;
 
-  //Scan the mesh to build the histograms
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
-  {
-    if(!(*vi).IsD()) //if it has not been deleted...
-    {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, put it in the histograms
-      {
-        float v = ComputeLightness((*vi).C())+0.5; //compute and round lightness value
-        Hl.Add(v); Hr.Add((float)(*vi).C()[0]); Hg.Add((float)(*vi).C()[1]); Hb.Add((float)(*vi).C()[2]);
-      }
-    }
-  }
+		//Scan the mesh to build the histograms
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
+			{
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, put it in the histograms
+				{
+					float v = ComputeLightness((*vi).C())+0.5; //compute and round lightness value
+					Hl.Add(v); Hr.Add((float)(*vi).C()[0]); Hg.Add((float)(*vi).C()[1]); Hb.Add((float)(*vi).C()[2]);
+				}
+			}
+		}
 
-  //for each histogram, compute the cumulative distribution function, and build a lookup table
-    int cdf_l[256], cdf_r[256], cdf_g[256], cdf_b[256];
-    cdf_l[0] = Hl.BinCount(0); cdf_r[0] = Hr.BinCount(0); cdf_g[0] = Hg.BinCount(0); cdf_b[0] = Hb.BinCount(0);
-    for(int i=1; i<256; i++){
-    cdf_l[i] = Hl.BinCount(float(i)) + cdf_l[i-1];
-    cdf_r[i] = Hr.BinCount(float(i)) + cdf_r[i-1];
-    cdf_g[i] = Hg.BinCount(float(i)) + cdf_g[i-1];
-    cdf_b[i] = Hb.BinCount(float(i)) + cdf_b[i-1];
-  }
+		//for each histogram, compute the cumulative distribution function, and build a lookup table
+		int cdf_l[256], cdf_r[256], cdf_g[256], cdf_b[256];
+		cdf_l[0] = Hl.BinCount(0); cdf_r[0] = Hr.BinCount(0); cdf_g[0] = Hg.BinCount(0); cdf_b[0] = Hb.BinCount(0);
+		for(int i=1; i<256; i++){
+			cdf_l[i] = Hl.BinCount(float(i)) + cdf_l[i-1];
+			cdf_r[i] = Hr.BinCount(float(i)) + cdf_r[i-1];
+			cdf_g[i] = Hg.BinCount(float(i)) + cdf_g[i-1];
+			cdf_b[i] = Hb.BinCount(float(i)) + cdf_b[i-1];
+		}
 
-  //this loop aaplies the transformation to colors
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
-  {
-    if(!(*vi).IsD()) //if it has not been deleted...
-    {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-      {
-        (*vi).C()=ColorEqualize((*vi).C(), cdf_l, cdf_r, cdf_g, cdf_b, rgbMask);
-        ++counter;
-      }
-    }
-  }
-  return counter;
-}
+		//this loop aaplies the transformation to colors
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
+			{
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					(*vi).C()=ColorEqualize((*vi).C(), cdf_l, cdf_r, cdf_g, cdf_b, rgbMask);
+					++counter;
+				}
+			}
+		}
+		return counter;
+	}
 
-//Applies equalization to the components of the color according to rgbmask
-static Color4b ColorEqualize(Color4b c, int cdf_l[256], int cdf_r[256], int cdf_g[256], int cdf_b[256], unsigned int rgbMask)
-{
-  unsigned char r = c[0], g = c[1], b = c[2];
-  if(rgbMask == NO_CHANNELS) //in this case, equalization is done on lightness
-  {
-    int v = ValueEqualize(cdf_l[(int)(ComputeLightness(c)+0.5f)], cdf_l[0], cdf_l[255]);
-    return Color4b(v, v, v, 255); //return the equalized gray color
-  }
-  if(rgbMask & RED_CHANNEL) r = ValueEqualize(cdf_r[c[0]], cdf_r[0], cdf_r[255]); //Equalizes red
-  if(rgbMask & GREEN_CHANNEL) g = ValueEqualize(cdf_g[c[1]], cdf_g[0], cdf_g[255]); //Equalizes green
-  if(rgbMask & BLUE_CHANNEL) b = ValueEqualize(cdf_b[c[2]], cdf_b[0], cdf_b[255]); //Equalizes blue
-  return Color4b(r, g, b, 255); //return the equalized color
-}
+	//Applies equalization to the components of the color according to rgbmask
+	static Color4b ColorEqualize(Color4b c, int cdf_l[256], int cdf_r[256], int cdf_g[256], int cdf_b[256], unsigned int rgbMask)
+	{
+		unsigned char r = c[0], g = c[1], b = c[2];
+		if(rgbMask == NO_CHANNELS) //in this case, equalization is done on lightness
+		{
+			int v = ValueEqualize(cdf_l[(int)(ComputeLightness(c)+0.5f)], cdf_l[0], cdf_l[255]);
+			return Color4b(v, v, v, 255); //return the equalized gray color
+		}
+		if(rgbMask & RED_CHANNEL) r = ValueEqualize(cdf_r[c[0]], cdf_r[0], cdf_r[255]); //Equalizes red
+		if(rgbMask & GREEN_CHANNEL) g = ValueEqualize(cdf_g[c[1]], cdf_g[0], cdf_g[255]); //Equalizes green
+		if(rgbMask & BLUE_CHANNEL) b = ValueEqualize(cdf_b[c[2]], cdf_b[0], cdf_b[255]); //Equalizes blue
+		return Color4b(r, g, b, 255); //return the equalized color
+	}
 
-//Compute the equalized value
-static int ValueEqualize(int cdfValue, int cdfMin, int cdfMax)
-{
-  return int(float((cdfValue - cdfMin)/float(cdfMax - cdfMin)) * 255.0f);
-}
+	//Compute the equalized value
+	static int ValueEqualize(int cdfValue, int cdfMin, int cdfMax)
+	{
+		return int(float((cdfValue - cdfMin)/float(cdfMax - cdfMin)) * 255.0f);
+	}
 
-/*! \brief Simple white balancing filter.
+	/*! \brief Simple white balancing filter.
   \return the number of changed vertexes (the selected ones)
 
   It applies a simple white balancing filter. It may works on a provided user color that is supposed to be white.
   */
-static int PerVertexWhiteBalance(MeshType &m, Color4b userColor, const bool ProcessSelected=false)
-{
-      RequirePerVertexColor(m);
+	static int PerVertexWhiteBalance(MeshType &m, Color4b userColor, const bool ProcessSelected=false)
+	{
+		RequirePerVertexColor(m);
 
-  Color4b unbalancedWhite= userColor;
-  int counter=0;
-  VertexIterator vi;
+		Color4b unbalancedWhite= userColor;
+		int counter=0;
+		VertexIterator vi;
 
-  //in this loop the transformation is applied to the mesh
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
-  {
-    if(!(*vi).IsD()) //if it has not been deleted...
-    {
-      if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
-      {
-        (*vi).C()=ColorWhiteBalance((*vi).C(),unbalancedWhite);
-        ++counter;
-      }
-    }
-  }
-  return counter;
-}
+		//in this loop the transformation is applied to the mesh
+		for(vi=m.vert.begin();vi!=m.vert.end();++vi) //scan all the vertex...
+		{
+			if(!(*vi).IsD()) //if it has not been deleted...
+			{
+				if(!ProcessSelected || (*vi).IsS()) //if this vertex has been selected, do transormation
+				{
+					(*vi).C()=ColorWhiteBalance((*vi).C(),unbalancedWhite);
+					++counter;
+				}
+			}
+		}
+		return counter;
+	}
 
-//Balnce the white of the color, applying a correction factor based on the unbalancedWhite color.
-static Color4b ColorWhiteBalance(Color4b c, Color4b unbalancedWhite)
-{
-  //sanity check to avoid division by zero...
-  if(unbalancedWhite[0]==0) unbalancedWhite[0]=1;
-  if(unbalancedWhite[1]==0) unbalancedWhite[1]=1;
-  if(unbalancedWhite[2]==0) unbalancedWhite[2]=1;
+	//Balnce the white of the color, applying a correction factor based on the unbalancedWhite color.
+	static Color4b ColorWhiteBalance(Color4b c, Color4b unbalancedWhite)
+	{
+		//sanity check to avoid division by zero...
+		if(unbalancedWhite[0]==0) unbalancedWhite[0]=1;
+		if(unbalancedWhite[1]==0) unbalancedWhite[1]=1;
+		if(unbalancedWhite[2]==0) unbalancedWhite[2]=1;
 
-  return Color4b(
-                 math::Clamp<int>((int)(c[0]*(255.0f/unbalancedWhite[0])), 0, 255),
-                 math::Clamp<int>((int)(c[1]*(255.0f/unbalancedWhite[1])), 0, 255),
-                 math::Clamp<int>((int)(c[2]*(255.0f/unbalancedWhite[2])), 0, 255),
-                 255);
-}
+		return Color4b(
+		            math::Clamp<int>((int)(c[0]*(255.0f/unbalancedWhite[0])), 0, 255),
+		        math::Clamp<int>((int)(c[1]*(255.0f/unbalancedWhite[1])), 0, 255),
+		        math::Clamp<int>((int)(c[2]*(255.0f/unbalancedWhite[2])), 0, 255),
+		        255);
+	}
 
 };
 

@@ -108,7 +108,7 @@ public:
     return minmax;
   }
 
-  static void ComputerPerTetraQualityMinMax(MeshType & m, ScalarType & minQ, ScalarType & maxQ)
+  static void ComputePerTetraQualityMinMax(MeshType & m, ScalarType & minQ, ScalarType & maxQ)
   {
     std::pair<ScalarType, ScalarType> minmax = ComputerPerTetraQualityMinMax(m);
 
@@ -116,10 +116,10 @@ public:
     maxQ = minmax.second;
   }
 
-  static std::pair<ScalarType, ScalarType> ComputerPerTetraQualityMinMax(MeshType & m)
+  static std::pair<ScalarType, ScalarType> ComputePerTetraQualityMinMax(MeshType & m)
   {
     tri::RequirePerTetraQuality(m);
-    std::pair<ScalarType, ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(), -std::numeric_limits<ScalarType>::max());
+	std::pair<ScalarType, ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(), std::numeric_limits<ScalarType>::min());
 
     ForEachTetra(m, [&minmax] (TetraType & t) {
       if (t.Q() < minmax.first)  minmax.first  = t.Q();
@@ -329,7 +329,7 @@ public:
   static void ComputePerTetraQualityHistogram(MeshType & m, Histogram<ScalarType> & h, bool selectionOnly = false, int HistSize = 10000)
   {
     tri::RequirePerTetraQuality(m);
-    std::pair<ScalarType, ScalarType> minmax = tri::Stat<MeshType>::ComputePerFaceQualityMinMax(m);
+	std::pair<ScalarType, ScalarType> minmax = tri::Stat<MeshType>::ComputePerTetraQualityMinMax(m);
     
     h.Clear();
     h.SetRange(minmax.first, minmax.second, HistSize);
