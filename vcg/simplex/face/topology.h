@@ -794,19 +794,20 @@ void VFAppend(FaceType* & f, int z)
 template <class FaceType>
 void VVStarVF( typename FaceType::VertexType* vp, std::vector<typename FaceType::VertexType *> &starVec)
 {
-    typedef typename FaceType::VertexType* VertexPointer;
-    starVec.clear();
-    face::VFIterator<FaceType> vfi(vp);
-    while(!vfi.End())
-            {
-                starVec.push_back(vfi.F()->V1(vfi.I()));
-                starVec.push_back(vfi.F()->V2(vfi.I()));
-                ++vfi;
-            }
+	typedef typename FaceType::VertexType* VertexPointer;
+	starVec.clear();
+	face::VFIterator<FaceType> vfi(vp);
+	while(!vfi.End())
+	{
+		const int vn = vfi.F()->VN();
+		starVec.push_back(vfi.F()->V1(vfi.I()));
+		starVec.push_back(vfi.F()->V((vfi.I()+vn-1)%vn));
+		++vfi;
+	}
 
-    std::sort(starVec.begin(),starVec.end());
-    typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
-    starVec.resize(new_end-starVec.begin());
+	std::sort(starVec.begin(),starVec.end());
+	typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
+	starVec.resize(new_end-starVec.begin());
 }
 
 /*!
