@@ -407,6 +407,7 @@ protected:
 			pp.preGenFlag = true;
 			pp.bestSampleChoiceFlag = true;
 			pp.bestSamplePoolSize = 100;
+			pp.randomSeed = 7;
 			SurfaceFixSampler::PoissonDiskPruning(fix_sampler, montecarloMesh, samplingRadius, pp);
 
 		}
@@ -429,11 +430,12 @@ protected:
 
 		// TODO: rimettere a posto
 		// restricted relaxation with fixed points
-		vpp.seedPerturbationProbability = 0.2f;
-		vpp.seedPerturbationAmount      = 0.005f;
+//		vpp.seedPerturbationProbability = 0.2f; // old values
+//		vpp.seedPerturbationAmount      = 0.005f;
+//		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep, vpp);
+//		vpp.seedPerturbationProbability = 0.0f;
+//		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep/2, vpp);
 		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep, vpp);
-		vpp.seedPerturbationProbability = 0.0f;
-		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep/2, vpp);
 
 
 #ifdef DEBUG_VORO
