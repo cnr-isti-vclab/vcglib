@@ -24,6 +24,11 @@
 #ifndef VCG_UV_UTILS
 #define VCG_UV_UTILS
 
+#include <vcg/space/point2.h>
+#include <vcg/space/box2.h>
+#include <vcg/space/triangle2.h>
+#include <vcg/space/triangle3.h>
+
 namespace vcg {
 namespace tri{
 template <class MeshType>
