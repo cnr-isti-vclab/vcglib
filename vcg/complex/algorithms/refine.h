@@ -913,48 +913,48 @@ public:
   {
     vB->P() = Center(f);
 
-    //i tre vertici della faccia da dividere
+    //three vertices of the face to be split
     VertexType *V0,*V1,*V2;
     V0 = f->V(0);
     V1 = f->V(1);
     V2 = f->V(2);
 
-    //risistemo la faccia di partenza
+    //reupdate initial face
     (*f).V(2) = &(*vB);
-    //Faccia nuova #1
+    //new face #1
     (*f1).V(0) = &(*vB);
     (*f1).V(1) = V1;
     (*f1).V(2) = V2;
-    //Faccia nuova #2
+    //new face #2
     (*f2).V(0) = V0;
     (*f2).V(1) = &(*vB);
     (*f2).V(2) = V2;
 
     if(f->HasFFAdjacency())
     {
-      //adiacenza delle facce adiacenti a quelle aggiunte
+      //update adjacency
       f->FFp(1)->FFp(f->FFi(1)) = f1;
       f->FFp(2)->FFp(f->FFi(2)) = f2;
 
-      //adiacenza ff
+      // ff adjacency
       FaceType *  FF0,*FF1,*FF2;
       FF0 = f->FFp(0);
       FF1 = f->FFp(1);
       FF2 = f->FFp(2);
 
-      //Indici di adiacenza ff
+      //ff adjacency indexes
       char FFi0,FFi1,FFi2;
       FFi0 = f->FFi(0);
       FFi1 = f->FFi(1);
       FFi2 = f->FFi(2);
 
-      //adiacenza della faccia di partenza
+      //initial face
       (*f).FFp(1) = &(*f1);
       (*f).FFi(1) = 0;
       (*f).FFp(2) = &(*f2);
       (*f).FFi(2) = 0;
 
-      //adiacenza della faccia #1
+      //face #1
       (*f1).FFp(0) = f;
       (*f1).FFi(0) = 1;
 
@@ -964,7 +964,7 @@ public:
       (*f1).FFp(2) = &(*f2);
       (*f1).FFi(2) = 1;
 
-      //adiacenza della faccia #2
+      //face #2
       (*f2).FFp(0) = f;
       (*f2).FFi(0) = 2;
 
@@ -973,6 +973,23 @@ public:
 
       (*f2).FFp(2) = FF2;
       (*f2).FFi(2) = FFi2;
+    }
+    //update faceEdge Sel if needed
+    if (f->HasFlags())
+    {
+        bool IsFaceEdgeS[3];
+        //collect and clear
+        for (size_t i=0;i<3;i++)
+        {
+            IsFaceEdgeS[i]=(*f).IsFaceEdgeS(i);
+            (*f).ClearFaceEdgeS(i);
+            (*f1).ClearFaceEdgeS(i);
+            (*f2).ClearFaceEdgeS(i);
+        }
+        //set back
+        if (IsFaceEdgeS[0])(*f).SetFaceEdgeS(0);
+        if (IsFaceEdgeS[1])(*f1).SetFaceEdgeS(1);
+        if (IsFaceEdgeS[2])(*f2).SetFaceEdgeS(2);
     }
   }
 }; // end class TriSplit
