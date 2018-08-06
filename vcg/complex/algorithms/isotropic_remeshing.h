@@ -123,23 +123,24 @@ public:
           params.stat.Reset();
           
             if(cb) cb(100*i/params.iter, "Remeshing");
+
             if(params.splitFlag)
                 SplitLongEdges(toRemesh, params);
-                        
+
             if(params.swapFlag)
                 ImproveValence(toRemesh, params);
-            
+
             if(params.collapseFlag)
             {
                 CollapseShortEdges(toRemesh, params);
                 CollapseCrosses(toRemesh, params);
             }
+
             if(params.smoothFlag)
               ImproveByLaplacian(toRemesh, params);
             if(params.projectFlag)
               ProjectToSurface(toRemesh, t, mark);
             
-            printf("%4i %7i split %7i swap %7i collapse\n",i,params.stat.splitNum, params.stat.flipNum, params.stat.collapseNum);
         }
     }
 
@@ -154,7 +155,8 @@ private:
     static inline bool testCreaseEdge(PosType &p, ScalarType creaseCosineThr)
     {
         ScalarType angle = fastAngle(NormalizedTriangleNormal(*(p.F())), NormalizedTriangleNormal(*(p.FFlip())));
-        return (angle <= creaseCosineThr && angle >= -creaseCosineThr);
+		return angle <= creaseCosineThr;
+//        return (angle <= creaseCosineThr && angle >= -creaseCosineThr);
     }
     // this stores in minQ the value of the 10th percentile of the VertQuality distribution and in
     // maxQ the value of the 90th percentile.
@@ -277,6 +279,7 @@ private:
                 (newDist == oldDist && qNew > qOld * 1.f) || qNew > 1.5f * qOld;
     }
 
+
     // Edge swap step: edges are flipped in order to optimize valence and triangle quality across the mesh
     static void ImproveValence(MeshType &m, Params &params)
     {
@@ -285,7 +288,7 @@ private:
           if(p.FFlip() > p.F())
             if(((!params.selectedOnly) || (p.F()->IsS() && p.FFlip()->IsS())) &&
                testSwap(p, params.creaseAngleCosThr) &&
-               face::CheckFlipEdgeNormal(*p.F(), p.E(), math::ToRad(10.f)) &&
+			   face::CheckFlipEdgeNormal(*p.F(), p.E(), math::ToRad(10.f)) &&
                face::CheckFlipEdge(*p.F(), p.E()) )
             {
               face::FlipEdge(*p.F(), p.E());
@@ -398,8 +401,8 @@ private:
 
                 Point3<ScalarType> oldN = NormalizedTriangleNormal(*(pi.F()));
                 Point3<ScalarType> newN = Normal(mp, v1->P(), v2->P()).Normalize();
-                float div = fastAngle(oldN, newN);                
-                if(AngleN(oldN,newN) > math::ToRad(1.0)) return false;
+				float div = fastAngle(oldN, newN);
+//                if(AngleN(oldN,newN) > math::ToRad(1.0)) return false;
                 if(div <= params.creaseAngleCosThr )
                     return false;
 
@@ -651,7 +654,7 @@ private:
       if(params.selectedOnly) {
         ss.popAnd();        
       } 
-      tri::Smooth<MeshType>::VertexCoordPlanarLaplacian(m,1,params.creaseAngleRadThr,true);
+	  tri::Smooth<MeshType>::VertexCoordPlanarLaplacian(m,1, params.creaseAngleRadThr,true);
       tri::UpdateSelection<MeshType>::VertexClear(m);
       if(params.selectedOnly) {
         ss.pop();        
