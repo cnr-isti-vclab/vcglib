@@ -4,5 +4,5 @@ SOURCES += trimesh_import_fbx.cpp  \
   ../../../wrap/openfbx/src/ofbx.cpp \
   ../../../wrap/openfbx/src/miniz.c
 
-CONFIG += c++14
+CONFIG += c++11
 
