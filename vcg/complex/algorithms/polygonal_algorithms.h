@@ -798,13 +798,13 @@ public:
 
 
     template <class TriMeshType>
-    static void TriangulateToTriMesh(PolyMeshType &poly_m,TriMeshType &triangle_mesh)
+    static void TriangulateToTriMesh(PolyMeshType &poly_m,TriMeshType &triangle_mesh, bool alsoTriangles = true)
     {
         triangle_mesh.Clear();
 
         PolyMeshType PolySwap;
         vcg::tri::Append<PolyMeshType,PolyMeshType>::Mesh(PolySwap,poly_m);
-        Triangulate(PolySwap);
+        Triangulate(PolySwap, alsoTriangles);
 
         //then copy onto the triangle mesh
         vcg::tri::Append<TriMeshType,PolyMeshType>::Mesh(triangle_mesh,PolySwap);
@@ -1355,12 +1355,25 @@ public:
         }while (!NeedMerge.empty());
     }
 
-    static void Triangulate(PolyMeshType &poly_m)
-    {
-        size_t size0=poly_m.face.size();
-        for (size_t i=0;i<size0;i++)
-            Triangulate(poly_m,i);
-    }
+	static void Triangulate(PolyMeshType &poly_m, bool alsoTriangles = true)
+	{
+		size_t size0 = poly_m.face.size();
+		if (alsoTriangles)
+		{
+			for (size_t i=0; i<size0; i++)
+				Triangulate(poly_m, i);
+		}
+		else
+		{
+			for (size_t i=0; i<size0; i++)
+			{
+				if (poly_m.face[i].VN() > 3)
+				{
+					Triangulate(poly_m, i);
+				}
+			}
+		}
+	}
 
 };
 

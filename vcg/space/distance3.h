@@ -380,7 +380,7 @@ void SegmentSegmentDistance(const vcg::Segment3<ScalarType> &s0,
 	dist=(closest0-closest1).Norm();
 }
 
- /* @brief Computes the distance between a triangle and a point.
+/** @brief Computes the distance between a triangle and a point.
  *
  * @param t         reference to the triangle
  * @param q         point location
@@ -447,7 +447,7 @@ void TrianglePointDistance(const vcg::Triangle3<ScalarType> &t,
 }
 
 
-/*
+/**
 * return the distance between a triangle and a segment
 * @param[in] t				The input triangle
 * @param[in] s				The input segment
