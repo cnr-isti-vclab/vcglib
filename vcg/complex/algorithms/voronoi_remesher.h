@@ -430,12 +430,13 @@ protected:
 
 		// TODO: rimettere a posto
 		// restricted relaxation with fixed points
-//		vpp.seedPerturbationProbability = 0.2f; // old values
-//		vpp.seedPerturbationAmount      = 0.005f;
-//		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep, vpp);
-//		vpp.seedPerturbationProbability = 0.0f;
-//		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep/2, vpp);
+		Voronoi::RandomGenerator().initialize(5489u);
+		vpp.seedPerturbationProbability = 0.2f;
+		vpp.seedPerturbationAmount      = 0.005f;
 		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep, vpp);
+		vpp.seedPerturbationProbability = 0.0f;
+		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep/2, vpp);
+//		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep, vpp);
 
 
 #ifdef DEBUG_VORO

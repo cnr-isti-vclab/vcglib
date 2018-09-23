@@ -114,13 +114,13 @@ class VoronoiProcessing
   typedef typename MeshType::FaceContainer		FaceContainer;
   typedef typename tri::Geodesic<MeshType>::VertDist VertDist;
 
-  static math::MarsenneTwisterRNG &RandomGenerator()
-  {
-      static math::MarsenneTwisterRNG rnd;
-      return rnd;
-  }
 
 public:
+	static math::MarsenneTwisterRNG &RandomGenerator()
+    {
+        static math::MarsenneTwisterRNG rnd;
+        return rnd;
+    }
 
   typedef typename MeshType::template PerVertexAttributeHandle<VertexPointer> PerVertexPointerHandle;
   typedef typename MeshType::template PerVertexAttributeHandle<bool> PerVertexBoolHandle;
