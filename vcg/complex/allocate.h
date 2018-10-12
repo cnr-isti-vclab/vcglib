@@ -1285,7 +1285,7 @@ public:
     typename std::set<PointerToAttribute > ::iterator i;
     for( i = m.edge_attr.begin(); i !=  m.edge_attr.end(); ++i)
       if( (*i)._handle == h._handle ){
-        delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
+        delete ((SimpleTempData<EdgeContainer,ATTR_TYPE>*)(*i)._handle);
         m.edge_attr.erase(i);
         return;}
   }
