@@ -970,7 +970,7 @@ public:
 							bufstr = c.substr(num_cols.length()+1);
 							RangeGridCols = atoi(bufstr.c_str());
 						}
-						if( num_rows == c.substr(0,num_cols.length()) )
+						if( num_rows == c.substr(0,num_rows.length()) )
 						{
 							bufstr = c.substr(num_rows.length()+1);
 							RangeGridRows = atoi(bufstr.c_str());

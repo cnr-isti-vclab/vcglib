@@ -141,7 +141,7 @@ public:
 		  off_error_msg.resize(3);
 		  off_error_msg[0] = "No errors";
 		  off_error_msg[1] = "Can't open file";
-		  off_error_msg[1] = "Output Stream error";
+		  off_error_msg[2] = "Output Stream error";
 	  }
 
 	  if (error>2 || error<0) return "Unknown error";
