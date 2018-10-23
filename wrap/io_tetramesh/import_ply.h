@@ -28,8 +28,8 @@ Revision 1.1  2004/06/03 13:16:32  ganovelli
 created
 
 ****************************************************************************/
-#ifndef __VCGLIB_TETRAIMPORTERPLY
-#define __VCGLIB_TETRAIMPORTERPLY
+#ifndef __VCGLIB_TETRAIMPORTER_PLY
+#define __VCGLIB_TETRAIMPORTER_PLY
 
 #include<wrap/callback.h>
 #include<wrap/ply/plylib.h>
@@ -43,11 +43,11 @@ namespace io {
 template <class TYPE>
 int PlyType ()  { return 0;}
 
-template <> int PlyType <float >()  { return ply::T_FLOAT; }
-template <> int PlyType <double>()  { return ply::T_DOUBLE; }
-template <> int PlyType <int   >()  { return ply::T_INT; } 
-template <> int PlyType <short >()  { return ply::T_SHORT; }
-template <> int PlyType <unsigned char >()  { return ply::T_UCHAR; }
+template <> inline int PlyType <float >()  { return ply::T_FLOAT; }
+template <> inline int PlyType <double>()  { return ply::T_DOUBLE; }
+template <> inline int PlyType <int   >()  { return ply::T_INT; } 
+template <> inline int PlyType <short >()  { return ply::T_SHORT; }
+template <> inline int PlyType <unsigned char >()  { return ply::T_UCHAR; }
 
 /** 
 This class encapsulate a filter for opening ply meshes.

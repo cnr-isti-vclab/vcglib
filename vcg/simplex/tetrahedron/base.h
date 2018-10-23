@@ -210,10 +210,10 @@ public:
  template<class BoxType>
   void GetBBox( BoxType & bb ) const
   {
-	  bb.Set(this->P(0));
-	  bb.Add(this->P(1));
-	  bb.Add(this->P(2));
-	  bb.Add(this->P(3));
+	  bb.Set(this->cP(0));
+	  bb.Add(this->cP(1));
+	  bb.Add(this->cP(2));
+	  bb.Add(this->cP(3));
   }
 
 

@@ -392,6 +392,7 @@ class ImporterMSH
         std::string buf;
         while (buf != tagEnd && !fin.eof())
             fin >> buf;
+        return 0;
     }
 
     static int parseMshMesh(MeshType &m, std::string &filename, MshInfo<MeshType> & info)
