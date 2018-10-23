@@ -151,26 +151,36 @@ public:
     for (int i = 0; i < mesh_count; ++i)
     {
       baseVertexCount=m.vert.size();
+      int baseTextureIndexCount = m.textures.size();
+
       const ofbx::Mesh& mesh = *scene->getMesh(i);
       const ofbx::Geometry& geom = *mesh.getGeometry();
-      int materialId  = *geom.getMaterials();
-      const ofbx::Material *mat = mesh.getMaterial(materialId);
-      assert(mat);
-      const ofbx::Texture  *tex = mat->getTexture(ofbx::Texture::DIFFUSE); 
-      char buf[128];
-      int curTexId = m.textures.size();
-      if(tex){        
-        tex->getRelativeFileName().toString(buf);      
-        printf("Texture %s ",buf);  
-        m.textures.push_back(buf);
+      const int *materials = geom.getMaterials();
+
+      // Load textured materials. The mesh object has pointers to the materials,
+      // the geometry object instead has a vector of FN material indices
+      for (int mat_i = 0; mat_i < mesh.getMaterialCount(); ++mat_i) {
+        const ofbx::Material *mat = mesh.getMaterial(mat_i);
+        assert(mat);
+        const ofbx::Texture  *tex = mat->getTexture(ofbx::Texture::DIFFUSE);
+        char buf[1024];
+        if (tex) {
+          tex->getRelativeFileName().toString(buf); buf[1023] = 0;
+          if (std::string(buf) == "")
+              tex->getFileName().toString(buf); buf[1023] = 0;
+          printf("Texture %s\n", buf);
+          m.textures.push_back(buf);
+        }
       }
-      else printf ("mesh %i has no texture\n",i);
-      
+
       Matrix44d globTransfd(mesh.getGlobalTransform().m);
+      /*
       Matrix44f globTransf;
       globTransf.SetIdentity();
       globTransf.Import(globTransfd);
       Transpose(globTransf);
+      */
+      Transpose(globTransfd);
       int vertex_count = geom.getVertexCount();
       const ofbx::Vec3* vertices = geom.getVertices();
       const ofbx::Vec2* texcoords = geom.getUVs();
@@ -179,7 +189,8 @@ public:
       for (int j = 0; j < vertex_count; ++j)
       {
         ofbx::Vec3 vt = vertices[j];
-        CoordType v = globTransf*CoordType(vt.x, vt.y, vt.z);
+        Point3d vd = globTransfd*Point3d(vt.x, vt.y, vt.z);
+        CoordType v(vd.X(), vd.Y(), vd.Z());
         tri::Allocator<OpenMeshType>::AddVertex(m,v);
         if(cb && (m.vert.size()%1000) == 0 ) cb(m.vert.size() * 100 / totVert, "Vertex Loading");
       }
@@ -200,7 +211,7 @@ public:
             {
               m.face.back().WT(k).u() = texcoords[j*3+k].x;
               m.face.back().WT(k).v() = texcoords[j*3+k].y;
-              m.face.back().WT(k).n() = curTexId;
+              m.face.back().WT(k).n() = baseTextureIndexCount + materials[j];
             }
           }
         }
