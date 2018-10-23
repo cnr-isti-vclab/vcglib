@@ -109,7 +109,7 @@ void VVStarVT( typename TetraType::VertexPointer vp, std::vector<typename TetraT
 
     starVec.clear();
 
-    VTIterator<TetraType> vti(vp->VTp(), vp->VTi());
+	VTIterator<TetraType> vti(vp);
 
     while (!vti.End())
     {

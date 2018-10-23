@@ -25,6 +25,7 @@
 #define _VCG_TETRA_TOPOLOGY
 
 #include <vcg/complex/algorithms/update/topology.h> 
+#include <vcg/complex/algorithms/clean.h>
 
 namespace vcg {
 namespace tetrahedron {
@@ -77,7 +78,7 @@ inline void TriMeshFromBorder(TetraMesh & tetramesh, TriMesh & trimesh)
     
     for (int i = 0; i < verts.size(); i += 3)
     {
-        fi->Alloc(3);
+		fi->Alloc(3);
         
         vi->P() = verts[i + 0]->P();
         fi->V(0) = &*vi;
@@ -93,6 +94,10 @@ inline void TriMeshFromBorder(TetraMesh & tetramesh, TriMesh & trimesh)
 
         ++fi;
     }
+
+	//do it while you build the mehs
+	vcg::tri::Clean<TriMesh>::RemoveDuplicateVertex(trimesh);
+	vcg::tri::Allocator<TriMesh>::CompactEveryVector(trimesh);
 }
 
 }

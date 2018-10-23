@@ -315,6 +315,23 @@ class Tetra
 		return edgesface[indexE0][indexE1];
 	}
 
+	static int FoppositeV (const int & indexV)
+	{
+		assert(indexV < 4 && indexV >= 0);
+		static int oppFaces[4] = { 3, 2, 1, 0 };
+	
+		return oppFaces[indexV];
+	}
+
+	static int VoppositeF (const int & indexF)
+	{
+		assert(indexF < 4 && indexF >= 0);
+		static int oppVerts[4] = { 3, 2, 1, 0 };
+
+		return oppVerts[indexF];
+	}
+
+	// static int EoppositeE ()
         /** @brief Computes the tetrahedron barycenter
          */
 	template <class TetraType>
