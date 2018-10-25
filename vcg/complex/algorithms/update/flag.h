@@ -189,7 +189,7 @@ public:
             if(!(*ti).IsD())
                 for(int j = 0; j < 4; ++j)
                 {
-                    if (tetrahedron::IsBorder(*ti,j)) (*ti).SetB(j);
+                    if (IsTTBorder(*ti,j)) (*ti).SetB(j);
                     else (*ti).ClearB(j);
                 }
     }
@@ -205,7 +205,7 @@ public:
             if(!(*ti).IsD())
                 for(int j = 0; j < 4; ++j)
                 {
-                    if (tetrahedron::IsBorder(*ti,j))
+                    if (IsTTBorder(*ti,j))
                     {
                         for (int i = 0; i < 3; ++i)
                             ti->V(Tetra::VofF(j, i))->SetB();

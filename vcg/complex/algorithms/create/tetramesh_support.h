@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *
+* This program is free software; you can redistribute it and/or modify      *   
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -20,29 +20,36 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-
-#ifndef _VCG_TETRA_TOPOLOGY
-#define _VCG_TETRA_TOPOLOGY
+#ifndef TETRAMESH_SUPPORT_H
+#define TETRAMESH_SUPPORT_H
 
 namespace vcg {
-namespace tetrahedron {
-/** \addtogroup tetrahedron */
-/*@{*/
+namespace tri {
 
-/** Return a boolean that indicate if the j-th face of the tetra is a border.
-    @param j Index of the face
-    @return true if j is an face of border, false otherwise
-*/
-template <class TetraType>
-inline bool IsTTBorder(TetraType const & t,  const int j )
+template <class TetraMesh, class TriMesh>
+inline void CreateTriMeshFromTTBorder(TetraMesh & tetramesh, TriMesh & trimesh)
 {
-  if(TetraType::HasTTAdjacency())
-      return t.cTTp(j)==&t;
-  assert(0);
-  return true;
+    RequireTTAdjacency(tetramesh);
+    tri::UpdateTopology<TetraMesh>::TetraTetra(tetramesh);
+    trimesh.Clear();
+
+    typedef typename TetraMesh::TetraType TetraType;
+    ForEachTetra(tetramesh, [&] (TetraType & t) {
+        for (int i = 0; i < 4; ++i)
+            if (IsTTBorder(t, i))
+            {
+                tri::Allocator<TriMesh>::AddFace(trimesh, 
+                                                 t.V(Tetra::VofF(i, 0)),
+                                                 t.V(Tetra::VofF(i, 1)),
+                                                 t.V(Tetra::VofF(i, 2)));
+            }
+    });
+
+	vcg::tri::Clean<TriMesh>::RemoveDuplicateVertex(trimesh);
+	vcg::tri::Allocator<TriMesh>::CompactEveryVector(trimesh);
 }
 
-}
-}
+} // end namespace tri
+} // end namespace vcg
 
-#endif
+#endif // EXTRUDE_H
