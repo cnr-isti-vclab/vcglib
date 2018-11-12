@@ -173,7 +173,7 @@ namespace math {
 #endif
 
 template <class SCALAR>
-inline SCALAR  Clamp( const SCALAR & val, const SCALAR& minval, const SCALAR& maxval)
+inline SCALAR  Clamp(const SCALAR & val, const SCALAR& minval, const SCALAR& maxval)
 {
 	if(val < minval) return minval;
 	if(val > maxval) return maxval;
@@ -181,16 +181,16 @@ inline SCALAR  Clamp( const SCALAR & val, const SCALAR& minval, const SCALAR& ma
 }
 
 template <class SCALAR>
-inline SCALAR Lerp(SCALAR a, SCALAR b, SCALAR lambda)
+inline SCALAR Lerp(const SCALAR a, const SCALAR b, const SCALAR lambda)
 {
     return a * lambda + (1-lambda) * b;
 }
 
 template <class SCALAR>
-inline SCALAR ClampedLerp(SCALAR a, SCALAR b, SCALAR lambda)
+inline SCALAR ClampedLerp(const SCALAR a, const SCALAR b, const SCALAR lambda)
 {
-  math::Clamp(lambda, (SCALAR)0, (SCALAR)1);
-  return a * lambda + (1-lambda) * b;
+  const clampedLambda = math::Clamp(lambda, (SCALAR)0, (SCALAR)1);
+  return a * clampedLambda + ((SCALAR)1-clampedLambda) * b;
 }
                    
 
