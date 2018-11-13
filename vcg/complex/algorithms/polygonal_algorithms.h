@@ -780,9 +780,11 @@ public:
                     size_t sum=0;
                     for (size_t j=0;j<SharpEdge[i].size();j++)
                     {
+                        CoordType currPos;
+                        currPos.Import(testPos);
                         CoordType closest;
                         ScalarType dist;
-                        vcg::LinePointDistance(SharpEdge[i][j],testPos,closest,dist);
+                        vcg::LinePointDistance(SharpEdge[i][j],currPos,closest,dist);
                         av_closest+=closest;
                         sum++;
                     }
