@@ -598,14 +598,16 @@ public:
                                    int nstep=100,
                                    ScalarType Damp=0.5)
     {
-        typedef typename TriMeshType::FaceType FaceType;
-        typedef vcg::GridStaticPtr<FaceType, ScalarType> TriMeshGrid;
+        typedef typename TriMeshType::FaceType TriFaceType;
+        typedef typename TriMeshType::ScalarType TriScalarType;
+        typedef typename TriMeshType::CoordType TriCoordType;
+        typedef vcg::GridStaticPtr<TriFaceType, TriScalarType> TriMeshGrid;
         TriMeshGrid grid;
 
         //initialize the grid
         grid.Set(tri_mesh.face.begin(),tri_mesh.face.end());
 
-        ScalarType MaxD=tri_mesh.bbox.Diag();
+        TriScalarType MaxD=tri_mesh.bbox.Diag();
 
         for (int s=0;s<nstep;s++)
         {
@@ -622,15 +624,20 @@ public:
 
             for (size_t i=0;i<poly_m.vert.size();i++)
             {
-                CoordType testPos=poly_m.vert[i].P();
-                CoordType closestPt;
-                ScalarType minDist;
-                FaceType *f=NULL;
-                CoordType norm,ip;
+                TriCoordType testPos;
+                testPos.Import(poly_m.vert[i].P());
+                TriCoordType closestPt;
+                TriScalarType minDist;
+                TriFaceType *f=NULL;
+                TriCoordType norm,ip;
                 f=vcg::tri::GetClosestFaceBase(tri_mesh,grid,testPos,MaxD,minDist,closestPt,norm,ip);
+                CoordType closestImp;
+                closestImp.Import(closestPt);
                 poly_m.vert[i].P()=poly_m.vert[i].P()*Damp+
-                        closestPt*(1-Damp);
-                poly_m.vert[i].N()=norm;
+                                   closestImp*(1-Damp);
+                CoordType normalImp;
+                normalImp.Import(norm);
+                poly_m.vert[i].N()=normalImp;
             }
         }
 
@@ -648,7 +655,7 @@ public:
         vcg::tri::UpdateNormal<TempMesh>::PerVertexNormalizedPerFace(GuideSurf);
         vcg::tri::UpdateTopology<TempMesh>::FaceFace(GuideSurf);
         vcg::tri::UpdateFlags<TempMesh>::FaceBorderFromFF(GuideSurf);
-        LaplacianReproject(poly_m,GuideSurf,nstep,Damp=0.5);
+        LaplacianReproject<TempMesh>(poly_m,GuideSurf,nstep,Damp=0.5);
     }
 
     static void Laplacian(PolyMeshType &poly_m,
