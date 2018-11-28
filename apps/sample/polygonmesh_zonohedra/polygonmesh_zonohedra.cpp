@@ -42,7 +42,7 @@ class MyEdge : public vcg::Edge< MyUsedTypes > {};
 class MyFace : public vcg::Face< MyUsedTypes,
     vcg::face::FFAdj,
     vcg::face::VertexRef,
-  vcg::face::Normal3f,
+    vcg::face::Normal3f,
     vcg::face::BitFlags > {};
 
 // the main mesh class

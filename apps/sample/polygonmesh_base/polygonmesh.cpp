@@ -36,16 +36,11 @@
 using namespace vcg;
 using namespace std;
 
-// forward declarations
 class TFace;
 class TVertex;
 
 struct TUsedTypes: public vcg::UsedTypes< vcg::Use<TVertex>::AsVertexType, vcg::Use<TFace>::AsFaceType >{};
 
-
-
-/* Definition of a mesh of triangles
-*/
 class TVertex : public Vertex< TUsedTypes,
     vertex::BitFlags,
     vertex::Coord3f,
@@ -201,9 +196,8 @@ else
     TMesh tm1;
     vcg::tri::PolygonSupport<TMesh,PMesh>::ImportFromPolyMesh(tm1,pm);
 
-    vcg::tri::io::PlyInfo pi;
-    vcg::tri::io::ExporterPLY<TMesh>::Save(tm1,"converted_tri.ply",false,pi);
-    vcg::tri::io::ExporterPLY<PMesh>::Save(pm,"converted_poly.ply",false,pi);
+    vcg::tri::io::ExporterPLY<TMesh>::Save(tm1,"converted_tri.ply",false);
+    vcg::tri::io::ExporterPLY<PMesh>::Save(pm,"converted_poly.ply",false);
 }
 
 

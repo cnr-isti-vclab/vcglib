@@ -23,19 +23,14 @@
 
 #include <vcg/complex/complex.h>
 
-/*include the algorithms for updating: */
-#include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/update/normal.h>
-
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/create/platonic.h>
+#include <vcg/complex/algorithms/polygonal_algorithms.h>
 
 #include <wrap/io_trimesh/export_obj.h>
-#include <wrap/io_trimesh/import_obj.h>
-
-#include <vcg/complex/algorithms/dual_meshing.h>
-
-#include <vcg/complex/algorithms/polygon_support.h>
+#include <wrap/io_trimesh/import_ply.h>
+#include <wrap/io_trimesh/export_off.h>
+#include <wrap/io_trimesh/import_off.h>
 
 using namespace vcg;
 using namespace std;
@@ -58,6 +53,7 @@ class TFace   : public Face<   TUsedTypes,
     face::VertexRef,	// three pointers to vertices
     face::Normal3f,		// normal
     face::BitFlags,		// flags
+    face::Mark,     // incremental mark
     face::FFAdj			// three pointers to adjacent faces
 > {};
 
@@ -78,6 +74,7 @@ class PVertex:public vcg::Vertex<	PUsedTypes,
     vcg::vertex::Normal3f,
     vcg::vertex::Mark,
     vcg::vertex::Qualityf,
+    vcg::vertex::Mark,
     vcg::vertex::BitFlags>{} ;
 
 class PFace:public vcg::Face<
@@ -90,6 +87,7 @@ class PFace:public vcg::Face<
     ,vcg::face::PFFAdj	 // Pointer to edge-adjacent face (just like FFAdj )
     ,vcg::face::BitFlags // bit flags
     ,vcg::face::Qualityf // quality
+    ,vcg::face::Mark     // incremental mark
     ,vcg::face::Normal3f // normal
 > {};
 
@@ -99,24 +97,36 @@ class PMesh: public
     std::vector<PFace >     // the vector of faces
     >{};
 
-TMesh primalT;
-PMesh primal,dual;
+using namespace vcg;
 
-int	main(int argc, char *argv[])
+int	main(int, char **)
 {
-    (void)argc;
-    (void)argv;
-
-    vcg::tri::Sphere<TMesh>(primalT,2);
-    vcg::tri::PolygonSupport<TMesh,PMesh>::ImportFromTriMesh(primal,primalT);
-
-    vcg::tri::DualMeshing<PMesh>::MakeDual(primal,dual);
-    vcg::tri::io::ExporterOBJ<PMesh>::Save(dual,"./dual.obj",vcg::tri::io::Mask::IOM_BITPOLYGONAL);
-
-    vcg::tri::DualMeshing<PMesh>::MakeDual(dual,primal);
-    vcg::tri::io::ExporterOBJ<PMesh>::Save(primal,"./dual_dual.obj",vcg::tri::io::Mask::IOM_BITPOLYGONAL);
-
+  TMesh tm;
+  PMesh pm;
+  math::MarsenneTwisterRNG RndGen;
+  tri::io::ImporterOFF<PMesh>::Open(pm,"../../meshes/fertility_quad.off");
+  tri::UpdateBounding<PMesh>::Box(pm);
+  tri::UpdateSelection<PMesh>::VertexClear(pm);
+  // randomly displace half of the vertices
+  float randScale = pm.bbox.Diag()/200.0f;
+  ForEachVertex(pm,[&](PVertex &v){
+    if(v.P()[0] < pm.bbox.Center()[0]) 
+      v.P() += math::GeneratePointInUnitBallUniform<float,math::MarsenneTwisterRNG>(RndGen)*randScale;       
+  });
+  
+  // Select half of the vertices 
+  ForEachVertex(pm,[&](PVertex &v){
+    if(v.P()[2] < pm.bbox.Center()[2]) 
+      v.SetS();  
+  });
+  printf("Input quad mesh has %i %i (sel %i)\n",pm.VN(), pm.FN(), tri::UpdateSelection<PMesh>::VertexCount(pm) );
+  
+  tri::io::ImporterPLY<TMesh>::Open(tm,"../../meshes/fertility_tri.ply");
+  tri::UpdateNormal<TMesh>::PerVertexNormalizedPerFaceNormalized(tm);
+  printf("Input tri mesh has %i %i\n",tm.VN(), tm.FN());
+  tri::io::ExporterOFF<PMesh>::Save(pm,"./smooth.off");
+  PolygonalAlgorithm<PMesh>::LaplacianReproject(pm,tm,100,0.6,0.3,true);
+  tri::io::ExporterOFF<PMesh>::Save(pm,"./smooth2.off");  
 }
-
 
 
