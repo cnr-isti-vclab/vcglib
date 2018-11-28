@@ -261,11 +261,9 @@ template<class Scalar>
 template<class MeshType>
 void Zonohedron<Scalar>::createMesh(MeshType &m){
     typedef MeshType Mesh;
-    typedef typename Mesh::VertexPointer  MeshVertexPointer;
     typedef typename Mesh::VertexIterator MeshVertexIterator;
     typedef typename Mesh::FaceIterator   MeshFaceIterator;
-    typedef typename Mesh::FaceType   MeshFace;
-
+    
     createInternalMesh();
 
     m.Clear();
