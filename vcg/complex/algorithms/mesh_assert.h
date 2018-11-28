@@ -95,6 +95,18 @@ public:
     }
   }
 
+  /// \brief Throw vcg::MissingPreconditionException if Vertex Normals are not unit lenght
+  static void VertexNormalNormalized(MeshType &m)
+  {
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!vi->IsD())
+      {
+        if(fabs(vi->cN().Norm()-1.0)>0.000001)
+          throw vcg::MissingPreconditionException("Vertex Normal are not normalized");
+      }
+  }
+
+  
+  
   /// \brief Throw vcg::MissingPreconditionException if There are unreferenced vertices
   static void NoUnreferencedVertex(MeshType &m)
   {
