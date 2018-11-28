@@ -259,7 +259,7 @@ private:
                 //assert(W!=0);
                 for (size_t k=0;k<(size_t)poly_m.face[i].VN();k++)
                 {
-                    if (k==j)continue;
+                    if (k==j) continue;
                     int IndexV=vcg::tri::Index(poly_m,poly_m.face[i].V(k));
                     AvVert[IndexV]+=currP*W;
                     AvSum[IndexV]+=W;
@@ -596,14 +596,16 @@ public:
     static void LaplacianReproject(PolyMeshType &poly_m,
                                    TriMeshType &tri_mesh,
                                    int nstep=100,
-                                   ScalarType Damp=0.5)
+                                   ScalarType DampS=0.5,
+                                   ScalarType DampR=0.5,
+                                   bool OnlyOnSelected=false)
     {
         typedef typename TriMeshType::FaceType TriFaceType;
         typedef typename TriMeshType::ScalarType TriScalarType;
         typedef typename TriMeshType::CoordType TriCoordType;
         typedef vcg::GridStaticPtr<TriFaceType, TriScalarType> TriMeshGrid;
         TriMeshGrid grid;
-
+        tri::MeshAssert<TriMeshType>::VertexNormalNormalized(tri_mesh);
         //initialize the grid
         grid.Set(tri_mesh.face.begin(),tri_mesh.face.end());
 
@@ -616,14 +618,17 @@ public:
 
             for (size_t i=0;i<poly_m.vert.size();i++)
             {
-                if (poly_m.vert[i].IsB())continue;
-                poly_m.vert[i].P()=poly_m.vert[i].P()*Damp+
-                        AvVert[i]*(1-Damp);
+                if (poly_m.vert[i].IsB()) continue;
+                if (OnlyOnSelected && !poly_m.vert[i].IsS()) continue;
+                
+                poly_m.vert[i].P()=poly_m.vert[i].P()*DampS+
+                        AvVert[i]*(1-DampS);
             }
 
 
             for (size_t i=0;i<poly_m.vert.size();i++)
             {
+                if(OnlyOnSelected && !poly_m.vert[i].IsS()) continue;              
                 TriCoordType testPos;
                 testPos.Import(poly_m.vert[i].P());
                 TriCoordType closestPt;
@@ -633,8 +638,8 @@ public:
                 f=vcg::tri::GetClosestFaceBase(tri_mesh,grid,testPos,MaxD,minDist,closestPt,norm,ip);
                 CoordType closestImp;
                 closestImp.Import(closestPt);
-                poly_m.vert[i].P()=poly_m.vert[i].P()*Damp+
-                                   closestImp*(1-Damp);
+                poly_m.vert[i].P()=poly_m.vert[i].P()*DampR+
+                                   closestImp*(1-DampR);
                 CoordType normalImp;
                 normalImp.Import(norm);
                 poly_m.vert[i].N()=normalImp;
