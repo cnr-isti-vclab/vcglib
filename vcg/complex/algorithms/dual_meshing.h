@@ -127,6 +127,7 @@ public:
         vcg::tri::RequirePolygonalMesh(primal);
         vcg::tri::RequirePolygonalMesh(dual);
         vcg::tri::RequireFFAdjacency(primal);
+        vcg::tri::RequirePerFaceQuality(dual);
 
         vcg::tri::UpdateTopology<PolyMeshType>::FaceFace(primal);
         vcg::tri::UpdateFlags<PolyMeshType>::VertexBorderFromFaceAdj(primal);
