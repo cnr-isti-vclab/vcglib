@@ -187,8 +187,10 @@ public:
 
                 b[c] = n;
             }
-
-            A.svd().solve(b, &sol);
+            
+            Eigen::JacobiSVD<Eigen::MatrixXd> svd(A);
+            sol=svd.solve(b);
+//            A.svd().solve(b, &sol);
 
             vector<double> r(16);
 
@@ -435,7 +437,10 @@ public:
                     bm[c] = onedimensional[c];
                 }
 
-                Am.svd().solve(bm, &sol);
+                
+                // Am.svd().solve(bm, &sol);
+                Eigen::JacobiSVD<Eigen::MatrixXd> svd(Am);
+                sol=svd.solve(bm);
 
                 it->Q() = pow((double)sol[0],0.25);
 
