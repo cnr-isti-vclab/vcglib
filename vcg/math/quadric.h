@@ -87,6 +87,25 @@ public:
     c = -K*K + (ScalarType)(r.Origin()*r.Origin());
   }
 
+  /*
+   * Initializes the quadric as the squared distance from a given point.
+   *
+   */
+  template< class CoordType >
+  void ByPoint( const CoordType & p ) // Init dato un raggio
+  {
+    a[0] = 1; // a11
+    a[1] = 0; // a12 (=a21)
+    a[2] = 0; // a13 (=a31)
+    a[3] = 1; // a22
+    a[4] = 0; // a23 (=a32)
+    a[5] = 1; // a33
+    b[0] = (ScalarType)-2.0*((ScalarType)p.X());
+    b[1] = (ScalarType)-2.0*((ScalarType)p.Y());
+    b[2] = (ScalarType)-2.0*((ScalarType)p.Z());
+    c = pow(p.X(),2) + pow(p.Y(),2)+ pow(p.Z(),2);
+  }
+
   void SetZero()
   {
     a[0] = 0;
