@@ -43,6 +43,44 @@ class UV_Utils
     typedef typename vcg::Point2<ScalarType> UVCoordType;
 
 public:
+
+    ///calculate the area in UV space
+    static ScalarType PerVertUVArea(MeshType &m)
+    {
+        FaceIterator fi;
+        ScalarType Area=0;
+        for (fi=m.face.begin();fi!=m.face.end();fi++)
+        {
+            if ((*fi).IsD()) continue;
+            UVCoordType E0= (*fi).V(1)->T().P()-(*fi).V(0)->T().P();
+            UVCoordType E1= (*fi).V(2)->T().P()-(*fi).V(0)->T().P();
+            ScalarType doubleA=fabs(E0^E1);
+            Area+=doubleA/2;
+        }
+        return Area;
+    }
+
+    ///scale vert UV to match 3D area
+    static ScalarType ScaleVertUVToMatchArea(MeshType &m)
+    {
+        FaceIterator fi;
+        ScalarType Area3D=0;
+        for (fi=m.face.begin();fi!=m.face.end();fi++)
+        {
+            if ((*fi).IsD()) continue;
+            Area3D+=vcg::DoubleArea((*fi))/2;
+        }
+        ScalarType Area2D=PerVertUVArea(m);
+        ScalarType ScaleFact=sqrt( Area3D / Area2D );
+
+        VertexIterator vi;
+        for (vi=m.vert.begin();vi!=m.vert.end();vi++)
+        {
+            if ((*vi).IsD()) continue;
+            (*vi).T().P()*=ScaleFact;
+        }
+    }
+
     ///calculate the BBox in UV space
     static vcg::Box2<ScalarType> PerWedgeUVBox(MeshType &m)
     {
