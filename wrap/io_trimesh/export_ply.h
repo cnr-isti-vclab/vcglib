@@ -265,7 +265,7 @@ namespace vcg {
 
                     if( HasPerFaceQuality(m) && (pi.mask & Mask::IOM_FACEQUALITY) )
                     {
-                        const char* fqtp = vcg::tri::io::Precision<typename SaveMeshType::FaceType::ScalarType>::typeName();
+                        const char* fqtp = vcg::tri::io::Precision<typename SaveMeshType::FaceType::QualityType>::typeName();
                         fprintf(fpout,"property %s quality\n",fqtp);
                     }
 
