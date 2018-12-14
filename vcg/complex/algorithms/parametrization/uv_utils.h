@@ -61,7 +61,7 @@ public:
     }
 
     ///scale vert UV to match 3D area
-    static ScalarType ScaleVertUVToMatchArea(MeshType &m)
+    static void ScaleVertUVToMatchArea(MeshType &m)
     {
         FaceIterator fi;
         ScalarType Area3D=0;
