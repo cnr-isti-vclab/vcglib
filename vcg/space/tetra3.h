@@ -331,7 +331,11 @@ class Tetra
 		return oppVerts[indexF];
 	}
 
-	// static int EoppositeE ()
+	 static int EoppositeE (const int & indexE)
+	 {
+		 assert(indexE < 6 && indexE >= 0);
+		 return 5 - indexE;
+	 }
         /** @brief Computes the tetrahedron barycenter
          */
 	template <class TetraType>

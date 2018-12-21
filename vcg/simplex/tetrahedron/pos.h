@@ -103,12 +103,29 @@ public:
 };
 
 template <class TetraType>
+void VTStarVT( typename TetraType::VertexType* vp,
+               std::vector<TetraType *> &tetraVec,
+               std::vector<int> &indexes)
+{
+    tetraVec.clear();
+    indexes.clear();
+    tetraVec.reserve(16);
+    indexes.reserve(16);
+    tetra::VTIterator<TetraType> vti(vp);
+    while(!vti.End())
+    {
+        tetraVec.push_back(vti.Vt());
+        indexes.push_back(vti.Vi());
+        ++vti;
+    }
+}
+template <class TetraType>
 void VVStarVT( typename TetraType::VertexPointer vp, std::vector<typename TetraType::VertexPointer> & starVec)
 {
     typedef typename TetraType::VertexPointer VertexPointer;
 
     starVec.clear();
-
+    starVec.reserve(16);
 	VTIterator<TetraType> vti(vp);
 
     while (!vti.End())
