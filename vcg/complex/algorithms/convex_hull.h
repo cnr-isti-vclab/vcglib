@@ -166,8 +166,9 @@ public:
     "The quickhull algorithm for convex hulls" by C. Bradford Barber et al.
     ACM Transactions on Mathematical Software, Volume 22 Issue 4, Dec. 1996
   */
-  static bool ComputeConvexHull(InputMesh& mesh, CHMesh& convexHull)
+  static bool ComputeConvexHull(InputMesh& mesh, CHMesh& convexHull, ScalarType distTolerance = 0)
   {
+	assert(distTolerance >= 0);
     vcg::tri::RequireFFAdjacency(convexHull);
     vcg::tri::RequirePerFaceNormal(convexHull);
     vcg::tri::Allocator<InputMesh>::CompactVertexVector(mesh);
@@ -187,7 +188,7 @@ public:
       for (size_t j = 0; j < convexHull.face.size(); j++)
       {
         ScalarType dist = (mesh.vert[i].P() - convexHull.face[j].P(0)).dot(convexHull.face[j].N());
-        if (dist > 0)
+        if (dist > distTolerance)
         {
           listVertexPerFace[j].push_back(&mesh.vert[i]);
           if (dist > furthestVexterPerFace[j].second)
@@ -223,7 +224,7 @@ public:
             {
               int indexF = vcg::tri::Index(convexHull, nextF);
               ScalarType dist = (vertex->P() - nextF->P(0)).dot(nextF->N());
-              if (dist < 0)
+              if (dist < distTolerance)
               {
                 borderFace.push_back(indexF);
                 fp->SetB(ii);
@@ -294,7 +295,7 @@ public:
                 if (!(*vertexToTest[ii]).IsV())
                 {
                   float dist = ((*vertexToTest[ii]).P() - (*fi).P(0)).dot((*fi).N());
-                  if (dist > 0)
+                  if (dist > distTolerance)
                   {
                     tempVect.push_back(vertexToTest[ii]);
                     if (dist > newInfo.second)
