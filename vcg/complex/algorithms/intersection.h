@@ -281,7 +281,7 @@ bool IntersectionRayMesh(
 	/* Baricentric coord 1*/ ScalarType &bar1,
 	/* Baricentric coord 2*/ ScalarType &bar2,
 	/* Baricentric coord 3*/ ScalarType &bar3,
-	/* FacePointer */ typename TriMeshType::FacePointer fp
+	/* FacePointer */ typename TriMeshType::FacePointer & fp
 	)
 {
 	//typedef typename TriMeshType::FaceContainer FaceContainer;
