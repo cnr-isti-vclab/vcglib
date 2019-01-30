@@ -622,7 +622,7 @@ void RefineMontecarloVolumeSamplingNearSurface(MeshType &surfaceSamplingMesh, Sc
  * 
  *
  */
- void BuildVolumeSampling(int montecarloSampleNum, ScalarType &poissonRadius, int randSeed)
+ void BuildVolumeSampling(int montecarloSampleNum, ScalarType poissonRadius, int randSeed)
  {
    if(montecarloSampleNum >0) 
      this->BuildMontecarloVolumeSampling(montecarloSampleNum);
@@ -646,6 +646,6 @@ void RefineMontecarloVolumeSamplingNearSurface(MeshType &surfaceSamplingMesh, Sc
 }; // end class
 
 
-} // end namespace vcg
+} // end namespace tri
 } // end namespace vcg
 #endif // VORONOI_VOLUME_SAMPLING_H
