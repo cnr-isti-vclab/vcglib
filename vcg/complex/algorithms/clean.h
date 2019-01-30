@@ -419,7 +419,7 @@ public:
 
 
 		if(!DeleteVertexFlag)
-			return std::count(referredVec.begin(),referredVec.end(),true);
+			return std::count(referredVec.begin(),referredVec.end(),false);
 
 		for(auto vi=m.vert.begin();vi!=m.vert.end();++vi)
 			if( (!(*vi).IsD()) && (!referredVec[tri::Index(m,*vi)]) )
