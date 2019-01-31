@@ -52,7 +52,7 @@ public:
    */
   static ScalarType Outline2Area(const std::vector< Point2<ScalarType> > &outline2)
   {
-      float   area=0;
+      ScalarType   area=0;
       for (size_t i=0,j=outline2.size()-1; i<outline2.size(); i++) {
           area+=(outline2[j][0]+outline2[i][0])*(outline2[j][1]-outline2[i][1]);
           j=i;
@@ -67,12 +67,12 @@ public:
    */
   static ScalarType Outline2Perimeter(const std::vector< Point2<ScalarType>  > &outline2)
   {
-      float dd=0; int sz = outline2.size();
+      ScalarType dd=0; int sz = outline2.size();
 
       //sums all the distances between point i and point i+1 (modulus sz)
       for(int j=0; j<sz; ++j)
       {
-          dd += Distance (Point2f(outline2[j][0],outline2[j][1]),Point2f(outline2[(j+1)%sz][0],outline2[(j+1)%sz][1]));
+          dd += Distance (Point2<ScalarType>(outline2[j][0],outline2[j][1]),Point2<ScalarType>(outline2[(j+1)%sz][0],outline2[(j+1)%sz][1]));
       }
       return dd;
   }
@@ -114,16 +114,16 @@ public:
   }
 
 
-  static void BuildRandomOutlineVec(int outlineNum, std::vector< std::vector< Point2f > > &outline2Vec, int seed=0)
+  static void BuildRandomOutlineVec(int outlineNum, std::vector< std::vector< Point2<ScalarType> > > &outline2Vec, int seed=0)
   {
     vcg::math::MarsenneTwisterRNG rnd;
     if(seed==0) seed=time(0);
     rnd.initialize(seed);
     for(int i=0;i<outlineNum;++i)
     {
-      std::vector<Point2f> poly;
+      std::vector<Point2<ScalarType>> poly;
       for(int j=0;j<10;j++)
-        poly.push_back(Point2f(0.5+0.5*rnd.generate01(),2.0f*M_PI*rnd.generate01()));
+        poly.push_back(Point2<ScalarType>(0.5+0.5*rnd.generate01(),2.0f*M_PI*rnd.generate01()));
 
       std::sort(poly.begin(),poly.end());
 
@@ -141,7 +141,7 @@ public:
         poly[j].Polar2Cartesian();
       }
 
-      Point2f randTras(rnd.generateRange(-5,5),rnd.generateRange(-5,5));
+      Point2<ScalarType> randTras(rnd.generateRange(-5,5),rnd.generateRange(-5,5));
       for(size_t j=0;j<poly.size();j++)
         poly[j]+=randTras;
 
@@ -149,13 +149,13 @@ public:
     }
   }
 
-  static int LargestOutline2(const std::vector< std::vector< Point2f > > &outline2Vec)
+  static int LargestOutline2(const std::vector< std::vector< Point2<ScalarType> > > &outline2Vec)
   {
-    float maxArea =0;
+    ScalarType maxArea =0;
     int maxInd=-1;
     for(size_t i=0;i<outline2Vec.size();++i)
     {
-      float curArea = fabs(Outline2Area(outline2Vec[i]));
+      ScalarType curArea = fabs(Outline2Area(outline2Vec[i]));
       if(curArea > maxArea)
       {
         maxArea=curArea;
@@ -229,7 +229,7 @@ public:
     typedef typename MeshType::EdgeIterator EdgeIterator;
     typedef typename MeshType::VertexPointer VertexPointer;
     em.Clear();
-    std::vector< std::vector<Point3f> > outlines;
+    std::vector< std::vector<Point3<ScalarType>> > outlines;
     int nv = ConvertMeshBoundaryToOutlines(m,outlines);
     if (nv<2) return;
     VertexIterator vi=vcg::tri::Allocator<MeshType>::AddVertices(em,nv);
@@ -253,7 +253,7 @@ public:
   }
 
   template<class MeshType>
-  static bool ConvertOutline3VecToEdgeMesh(std::vector< std::vector< Point3f> > &outlineVec, MeshType &m)
+  static bool ConvertOutline3VecToEdgeMesh(std::vector< std::vector< Point3<ScalarType>> > &outlineVec, MeshType &m)
   {
     typedef typename MeshType::VertexPointer VertexPointer;
     typedef typename MeshType::EdgePointer EdgePointer;
@@ -266,7 +266,7 @@ public:
       {
         Indexes[i].push_back(m.vert.size());
         VertexPointer vp=&*tri::Allocator<MeshType>::AddVertices(m,1);
-        Point3f pp=Point3f(outlineVec[i][j][0],outlineVec[i][j][1],outlineVec[i][j][2]);
+        Point3<ScalarType> pp=Point3<ScalarType>(outlineVec[i][j][0],outlineVec[i][j][1],outlineVec[i][j][2]);
         vp->P()= pp;
       }
     }
@@ -283,9 +283,9 @@ public:
   }
 
   template<class MeshType>
-  static bool ConvertOutline3VecToEdgeMesh(std::vector< Point3f> &outline, MeshType &m)
+  static bool ConvertOutline3VecToEdgeMesh(std::vector< Point3<ScalarType>> &outline, MeshType &m)
   {
-    std::vector< std::vector< Point3f> > outlineVec;
+    std::vector< std::vector< Point3<ScalarType>> > outlineVec;
     outlineVec.push_back(outline);
     return Convert3DOutlinesToEdgeMesh(outlineVec,m);
   }
