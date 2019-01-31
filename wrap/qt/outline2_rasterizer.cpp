@@ -3,6 +3,8 @@
 #include <vcg/space/color4.h>
 #include <wrap/qt/col_qt_convert.h>
 
+#include <fstream>
+
 using namespace vcg;
 using namespace std;
 
@@ -10,8 +12,10 @@ void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
                                  float scale,
                                  int rast_i,
                                  int rotationNum,
-                                 int cellSize)
+                                 int gutterWidth)
 {
+
+    gutterWidth *= 2; // since the brush is centered on the outline multiply the given value by 2
 
     float rotRad = M_PI*2.0f*float(rast_i) / float(rotationNum);
 
@@ -24,20 +28,19 @@ void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
         bb.Add(pp);
     }
 
-    ///CREATE ITS GRID. The grid has to be a multiple of CELLSIZE because this grid's cells have size CELLSIZE
-    //we'll make so that sizeX and sizeY are multiples of CELLSIZE:
-    //1) we round it to the next integer
-    //2) add the number which makes it a multiple of CELLSIZE (only if it's not multiple already)
+    //create the polygon to print it
+    QVector<QPointF> points;
+    vector<Point2f> newpoints = poly.getPoints();
+    for (size_t i = 0; i < newpoints.size(); i++) {
+        points.push_back(QPointF(newpoints[i].X(), newpoints[i].Y()));
+    }
+
+    // Compute the raster space size by rounding up the scaled bounding box size
+    // and adding the gutter width.
     int sizeX = (int)ceil(bb.DimX()*scale);
     int sizeY = (int)ceil(bb.DimY()*scale);
-    if (sizeX % cellSize != 0) sizeX += (cellSize - ((int)ceil(bb.DimX()*scale) % cellSize));
-    if (sizeY % cellSize != 0) sizeY += (cellSize - ((int)ceil(bb.DimY()*scale) % cellSize));
-
-    //security measure: add a dummy column/row thus making the image bigger, and crop it afterwards
-    //(if it hasn't been filled with anything)
-    //this is due to the fact that if we have a rectangle which has bb 39.xxx wide, then it won't fit in a 40px wide QImage!! The right side will go outside of the image!! :/
-    sizeX+=cellSize;
-    sizeY+=cellSize;
+    sizeX += gutterWidth;
+    sizeY += gutterWidth;
 
     QImage img(sizeX,sizeY,QImage::Format_RGB32);
     QColor backgroundColor(Qt::transparent);
@@ -46,99 +49,154 @@ void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
     ///SETUP OF DRAWING PROCEDURE
     QPainter painter;
     painter.begin(&img);
-    QBrush br;
-    br.setStyle(Qt::SolidPattern);
-    QPen qp;
-    qp.setWidthF(0);
-    qp.setColor(Qt::yellow);
-    painter.setBrush(br);
-    painter.setPen(qp);
+    {
+        QBrush br;
+        br.setStyle(Qt::SolidPattern);
+        br.setColor(Qt::yellow);
 
-    painter.resetTransform();
-    painter.translate(QPointF(-(bb.min.X()*scale) , -(bb.min.Y()*scale) ));
-    painter.rotate(math::ToDeg(rotRad));
-    painter.scale(scale,scale);
+        QPen qp;
+        qp.setWidthF(0);
+        qp.setWidth(gutterWidth);
+        qp.setCosmetic(true);
+        qp.setColor(Qt::yellow);
+        qp.setJoinStyle(Qt::MiterJoin);
+        qp.setMiterLimit(0);
 
-    //create the polygon to print it
-    QVector<QPointF> points;
-    vector<Point2f> newpoints = poly.getPoints();
-    for (size_t i = 0; i < newpoints.size(); i++) {
-        points.push_back(QPointF(newpoints[i].X(), newpoints[i].Y()));
+        painter.setBrush(br);
+        painter.setPen(qp);
+
+        painter.resetTransform();
+        painter.translate(QPointF(-(bb.min.X()*scale) + gutterWidth/2.0f, -(bb.min.Y()*scale) + gutterWidth/2.0f));
+        painter.rotate(math::ToDeg(rotRad));
+        painter.scale(scale,scale);
+
+        painter.drawPolygon(QPolygonF(points));
     }
-    painter.drawPolygon(QPolygonF(points));
+    painter.end();
 
+    // workaround/hack to avoid ``disappearing'' primitives: use a cosmetic pen to
+    // draw the poly boundary.
+    // The proper way to do this would be to use conservative reasterization, which
+    // Qt doesn't seem to support
+    std::vector<QPointF> lines;
+    for (int i = 1; i < points.size(); ++i) {
+        lines.push_back(points[i-1]);
+        lines.push_back(points[i]);
+    }
+    lines.push_back(points.back());
+    lines.push_back(points.front());
 
-    //CROPPING: it is enough to check for the (end - cellSize - 1)th row/col of pixels, if they're all black we can eliminate the last 8columns/rows of pixels
-    bool cropX = true;
-    bool cropY = true;
-    for (int j=0; j<img.height(); j++) {
-        const uchar* line = img.scanLine(j);
-        if (j == img.height() - (cellSize - 1) - 1  ) {
-            for (int x=0; x<img.width(); x++) {
-                if (((QRgb*)line)[x] != backgroundColor.rgb()) {
-                    cropY = false;
-                    break;
-                }
+    painter.begin(&img);
+    {
+        QBrush br;
+        br.setStyle(Qt::SolidPattern);
+        br.setColor(Qt::yellow);
+
+        QPen qp;
+        qp.setWidthF(0);
+        qp.setWidth(std::max(1, gutterWidth));
+        qp.setCosmetic(true);
+        qp.setColor(Qt::yellow);
+
+        painter.setBrush(br);
+        painter.setPen(qp);
+
+        painter.resetTransform();
+        painter.translate(QPointF(-(bb.min.X()*scale) + gutterWidth/2.0f, -(bb.min.Y()*scale) + gutterWidth/2.0f));
+        painter.rotate(math::ToDeg(rotRad));
+        painter.scale(scale,scale);
+
+        //painter.drawPoints(QPolygonF(points));
+        painter.drawLines(lines.data(), lines.size()/2);
+    }
+    painter.end();
+
+    // Cropping
+
+    /*
+    // Slower version
+    int minX = img.width();
+    int minY = img.height();
+    int maxX = -1;
+    int maxY = -1;
+
+    for (int i = 0; i < img.height(); ++i) {
+        const QRgb *line = reinterpret_cast<const QRgb*>(img.scanLine(i));
+        for (int j = 0; j < img.width(); ++j) {
+            if (line[j] != backgroundColor.rgb()) {
+                if (j < minX) minX = j;
+                if (j > maxX) maxX = j;
+                if (i < minY) minY = i;
+                if (i > maxY) maxY = i;
             }
         }
-        else {
-            if (((QRgb*)line)[img.width() - (cellSize - 1) - 1] != backgroundColor.rgb()) {
-                cropX = false;
+    }
+    */
+
+    int minX = img.width();
+    int minY = img.height();
+    int maxX = 0;
+    int maxY = 0;
+
+    for (int i = 0; i < img.height(); ++i) {
+        const QRgb *line = reinterpret_cast<const QRgb*>(img.scanLine(i));
+        for (int j = 0; j < img.width(); ++j) {
+            if (line[j] != backgroundColor.rgb()) {
+                minY = i;
                 break;
             }
         }
-        if (!cropY) break;
+        if (minY < img.height()) break;
     }
 
-
-    if (cropX || cropY) {
-        painter.end();
-        img = img.copy(0, 0, img.width() - cellSize * cropX, img.height() - cellSize * cropY);
-        painter.begin(&img);
-        painter.setBrush(br);
-        painter.setPen(qp);
+    for (int i = img.height() - 1; i >= 0; --i) {
+        const QRgb *line = reinterpret_cast<const QRgb*>(img.scanLine(i));
+        for (int j = 0; j < img.width(); ++j) {
+            if (line[j] != backgroundColor.rgb()) {
+                maxY = i;
+                break;
+            }
+        }
+        if (maxY > 0) break;
     }
 
-
-    //draw the poly for the second time, this time it is centered to the image
-    img.fill(backgroundColor);
-
-    painter.resetTransform();
-    painter.translate(QPointF(-(bb.min.X()*scale) + (img.width() - ceil(bb.DimX()*scale))/2.0, -(bb.min.Y()*scale) + (img.height() - ceil(bb.DimY()*scale))/2.0));
-    painter.rotate(math::ToDeg(rotRad));
-    painter.scale(scale,scale);
-    //create the polygon to print it
-    QVector<QPointF> points2;
-    vector<Point2f> newpoints2 = poly.getPoints();
-    for (size_t i = 0; i < newpoints2.size(); i++) {
-        points2.push_back(QPointF(newpoints2[i].X(), newpoints2[i].Y()));
+    for (int i = minY; i <= maxY; ++i) {
+        const QRgb *line = reinterpret_cast<const QRgb*>(img.scanLine(i));
+        for (int j = 0; j < minX; ++j)
+            if (line[j] != backgroundColor.rgb() && j < minX) {
+                minX = j;
+                break;
+            }
+        for (int j = img.width() - 1; j >= maxX; --j)
+            if (line[j] != backgroundColor.rgb() && j > maxX) {
+                maxX = j;
+                break;
+            }
     }
-    painter.drawPolygon(QPolygonF(points2));
+
+    assert (minX <= maxX && minY <= maxY);
+
+    int imgW = (maxX - minX) + 1;
+    int imgH = (maxY - minY) + 1;
+
+    {
+        QImage imgcp = img.copy(0, 0, img.width(), img.height());
+        img = imgcp.copy(minX, minY, imgW, imgH);
+    }
 
     //create the first grid, which will then be rotated 3 times.
     //we will reuse this grid to create the rasterizations corresponding to this one rotated by 90/180/270°
     vector<vector<int> > tetrisGrid;
     QRgb yellow = QColor(Qt::yellow).rgb();
-    int gridWidth = img.width() / cellSize;
-    int gridHeight = img.height() / cellSize;
-    int x = 0;
-    tetrisGrid.resize(gridHeight);
-    for (int k = 0; k < gridHeight; k++) {
-        tetrisGrid[k].resize(gridWidth, 0);
+    tetrisGrid.resize(img.height());
+    for (int k = 0; k < img.height(); k++) {
+        tetrisGrid[k].resize(img.width(), 0);
     }
     for (int y = 0; y < img.height(); y++) {
-        int gridY = y / cellSize;
         const uchar* line = img.scanLine(y);
-        x = 0;
-        int gridX = 0;
-        while(x < img.width()) {
-            gridX = x/cellSize;
-            if (tetrisGrid[gridY][gridX] == 1) {
-                x+= cellSize - (x % cellSize); //align with the next x
-                continue;
-            }
-            if (((QRgb*)line)[x] == yellow) tetrisGrid[gridY][gridX] = 1;
-            ++x;
+        for(int x = 0; x < img.width(); ++x) {
+            if (((QRgb*)line)[x] == yellow)
+                tetrisGrid[y][x] = 1;
         }
     }
 
@@ -154,8 +212,6 @@ void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
         //initializes bottom/left/deltaX/deltaY vectors of the poly, for the current rasterization
         poly.initFromGrid(rast_i + rotationOffset*j);
     }
-
-    painter.end();
 }
 
 // rotates the grid 90 degree clockwise (by simple swap)

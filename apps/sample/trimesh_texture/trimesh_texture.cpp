@@ -123,8 +123,10 @@ int main(int ,char ** )
   RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Parameters packingParam;
   packingParam.costFunction  = RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Parameters::LowestHorizon;
   packingParam.doubleHorizon = true;
-  packingParam.cellSize = 4;
+  packingParam.innerHorizon = true;
+  packingParam.permutations = false;
   packingParam.rotationNum = 16; //number of rasterizations in 90°
+  packingParam.gutterWidth = 2;
 
   RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Pack(outline2Vec,containerSize,trVec,packingParam);
   Outline2Dumper::dumpOutline2VecPNG("PostPackRR.png",outline2Vec,trVec,pp);
