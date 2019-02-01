@@ -175,15 +175,16 @@ public:
 template <class ScalarType>
 class ComparisonFunctor
 {
+    typedef std::vector<vcg::Point2<ScalarType>> Outline2Type;
 
 public:
-    std::vector<RasterizedOutline2> & v;
-    inline ComparisonFunctor( std::vector<RasterizedOutline2> & nv ) : v(nv) { }
+    const std::vector<Outline2Type> & v;
+    inline ComparisonFunctor(const std::vector<Outline2Type> & nv ) : v(nv) { }
 
     inline bool operator() ( int a, int b )
     {
-        float area1 = tri::OutlineUtil<ScalarType>::Outline2Area(v[a].getPoints());
-        float area2 = tri::OutlineUtil<ScalarType>::Outline2Area(v[b].getPoints());
+        float area1 = tri::OutlineUtil<ScalarType>::Outline2Area(v[a]);
+        float area2 = tri::OutlineUtil<ScalarType>::Outline2Area(v[b]);
 
         return area1 > area2;
     }
@@ -702,7 +703,6 @@ public:
         float optimalScale = sqrt(gridArea / totalArea);
 
 
-        std::vector<std::vector<int>> trials;
 
         //create the vector of polys, starting for the poly points we received as parameter
         std::vector<RasterizedOutline2> polyVec(polyPointsVec.size());
@@ -710,36 +710,7 @@ public:
             polyVec[i].setPoints(polyPointsVec[i]);
         }
 
-        {
-            // Build a permutation that holds the indexes of the polys ordered by their area
-            std::vector<int> perm(polyVec.size());
-            for(size_t i = 0; i < polyVec.size(); i++)
-                perm[i] = i;
-            sort(perm.begin(), perm.end(), ComparisonFunctor<float>(polyVec));
-
-            trials.push_back(perm);
-
-            // if using permutations, determine the number of random permutations and compute them
-            if (packingPar.permutations) {
-                int minObjNum = std::min(5, int(perm.size()));
-                float largestArea = tri::OutlineUtil<SCALAR_TYPE>::Outline2Area(polyPointsVec[perm[0]]);
-                float thresholdArea = largestArea * 0.5;
-                std::size_t i;
-                for (i = 0; i < polyVec.size(); ++i)
-                    if (tri::OutlineUtil<SCALAR_TYPE>::Outline2Area(polyPointsVec[perm[i]]) < thresholdArea)
-                        break;
-                int numPermutedObjects = std::max(minObjNum, int(i));
-                //int permutationCount = numPermutedObjects < 5 ? 20 : numPermutedObjects * 20;
-                int permutationCount = numPermutedObjects * 5;
-                std::cout << "PACKING: trying " << permutationCount << " random permutations of the largest "
-                          << numPermutedObjects << " elements" << std::endl;
-                std::srand(12345);
-                for (int k = 0; k < permutationCount; ++k) {
-                    std::random_shuffle(perm.begin(), perm.begin() + numPermutedObjects);
-                    trials.push_back(perm);
-                }
-            }
-        }
+        std::vector<std::vector<int>> trials = InitializePermutationVectors(polyPointsVec, packingPar);
 
         double bestEfficiency = 0;
         for (std::size_t i = 0; i < trials.size(); ++i) {
@@ -803,12 +774,79 @@ public:
         return true;
     }
 
+    static std::vector<std::vector<int>>
+    InitializePermutationVectors(const std::vector<std::vector<Point2x>>& polyPointsVec,
+                                 const Parameters& packingPar)
+    {
+        std::vector<std::vector<int>> trials;
+
+        // Build a permutation that holds the indexes of the polys ordered by their area
+        std::vector<int> perm(polyPointsVec.size());
+        for(size_t i = 0; i < polyPointsVec.size(); i++)
+            perm[i] = i;
+        sort(perm.begin(), perm.end(), ComparisonFunctor<float>(polyPointsVec));
+
+        trials.push_back(perm);
+
+        // if packing with random permutations, compute a small number of randomized
+        // sequences. Each random sequence is generated from the initial permutation
+        // by shuffling only the larger polygons
+        if (packingPar.permutations) {
+            int minObjNum = std::min(5, int(perm.size()));
+            float largestArea = tri::OutlineUtil<SCALAR_TYPE>::Outline2Area(polyPointsVec[perm[0]]);
+            float thresholdArea = largestArea * 0.5;
+            std::size_t i;
+            for (i = 0; i < polyPointsVec.size(); ++i)
+                if (tri::OutlineUtil<SCALAR_TYPE>::Outline2Area(polyPointsVec[perm[i]]) < thresholdArea)
+                    break;
+            int numPermutedObjects = std::max(minObjNum, int(i));
+            int permutationCount = numPermutedObjects * 5;
+            //printf("PACKING: trying %d random permutations of the largest %d elements\n", permutationCount, numPermutedObjects);
+            for (int k = 0; k < permutationCount; ++k) {
+                std::random_shuffle(perm.begin(), perm.begin() + numPermutedObjects);
+                trials.push_back(perm);
+            }
+        }
+
+        return trials;
+    }
+
+    static bool PackAtFixedScale(std::vector<std::vector<Point2x>> &polyPointsVec,
+                     const std::vector<Point2i> &containerSizes,
+                     std::vector<Similarity2x> &trVec,
+                     std::vector<int> &polyToContainer,
+                     const Parameters &packingPar,
+                     float scale)
+    {
+        //create the vector of polys, starting for the poly points we received as parameter
+        std::vector<RasterizedOutline2> polyVec(polyPointsVec.size());
+        for(size_t i=0;i<polyVec.size();i++) {
+            polyVec[i].setPoints(polyPointsVec[i]);
+        }
+
+        std::vector<std::vector<int>> trials = InitializePermutationVectors(polyPointsVec, packingPar);
+
+        for (std::size_t i = 0; i < trials.size(); ++i) {
+            std::vector<Similarity2x> trVecIter;
+            std::vector<int> polyToContainerIter;
+            if (PolyPacking(polyPointsVec, containerSizes, trVecIter, polyToContainerIter, packingPar, scale, polyVec, trials[i])) {
+                trVec = trVecIter;
+                polyToContainer = polyToContainerIter;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /* Function parameters:
      *   outline2Vec (IN) vector of outlines to pack
      *   containerSizes (IN) vector of container (grid) sizes
      *   trVec (OUT) vector of transformations that must be applied to the objects
      *   polyToContainer (OUT) vector of outline-to-container mappings. If polyToContainer[i] == -1
      *     then outline i did not fit in the packing grids, and the transformation trVec[i] is meaningless
+     *
+     * Returns true if it packed at least one polygon into the container
      *
      * The idea is that this function packs what it can in the given space without transforming the
      * outlines, and returns enough information to the caller in order to decide what to do */
@@ -824,14 +862,23 @@ public:
             polyVec[i].setPoints(outline2Vec[i]);
         }
 
-        std::vector<int> perm(polyVec.size());
-        for(size_t i = 0; i < polyVec.size(); i++)
-            perm[i] = i;
-        sort(perm.begin(), perm.end(), ComparisonFunctor<float>(polyVec));
+        polyToContainer.resize(outline2Vec.size(), -1);
 
-        PolyPacking(outline2Vec, containerSizes, trVec, polyToContainer, packingPar, 1.0, polyVec, perm, true);
+        std::vector<std::vector<int>> trials = InitializePermutationVectors(outline2Vec, packingPar);
+        int bestNumPlaced = 0;
+        for (std::size_t i = 0; i < trials.size(); ++i) {
+            // TODO this should probably attempt at maximizing the occupancy and/or the number of placed polygons
+            std::vector<Similarity2x> trVecIter;
+            std::vector<int> polyToContainerIter;
+            PolyPacking(outline2Vec, containerSizes, trVecIter, polyToContainerIter, packingPar, 1.0, polyVec, trials[i], true);
+            int numPlaced = outline2Vec.size() - std::count(polyToContainerIter.begin(), polyToContainerIter.end(), -1);
+            if (numPlaced > bestNumPlaced) {
+                trVec = trVecIter;
+                polyToContainer = polyToContainerIter;
+            }
+        }
 
-        return true;
+        return bestNumPlaced > 0;
     }
 
     //tries to pack polygons using the given gridSize and scaleFactor
