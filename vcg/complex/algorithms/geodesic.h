@@ -514,7 +514,7 @@ It is just a simple wrapper of the basic Compute()
   static inline std::string parentsAttributeName(void) { return "parent"; }
 
   template <class DistanceFunctor>
-  static void PerFaceDijsktraCompute(MeshType &m, const std::vector<FacePointer> &seedVec,
+  static void PerFaceDijkstraCompute(MeshType &m, const std::vector<FacePointer> &seedVec,
                                      DistanceFunctor &distFunc,
                                      ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
                                      std::vector<FacePointer> *InInterval=NULL,
@@ -579,7 +579,7 @@ It is just a simple wrapper of the basic Compute()
 
 
   template <class DistanceFunctor>
-  static void PerVertexDijsktraCompute(MeshType &m, const std::vector<VertexPointer> &seedVec,
+  static void PerVertexDijkstraCompute(MeshType &m, const std::vector<VertexPointer> &seedVec,
                                        DistanceFunctor &distFunc,
                                      ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
                                      std::vector<VertexPointer> *InInterval=NULL,

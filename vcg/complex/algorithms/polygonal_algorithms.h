@@ -72,11 +72,12 @@ This class is used to performs varisous kind of geometric optimization on generi
 template <class PolyMeshType>
 class PolygonalAlgorithm
 {
-    typedef typename PolyMeshType::FaceType FaceType;
-    typedef typename PolyMeshType::VertexType VertexType;
-    typedef typename PolyMeshType::CoordType CoordType;
-    typedef typename PolyMeshType::ScalarType ScalarType;
-    typedef typename vcg::face::Pos<FaceType> PosType;
+	typedef typename PolyMeshType::FaceType      FaceType;
+	typedef typename PolyMeshType::VertexType    VertexType;
+	typedef typename PolyMeshType::VertexPointer VertexPointer;
+	typedef typename PolyMeshType::CoordType     CoordType;
+	typedef typename PolyMeshType::ScalarType    ScalarType;
+	typedef typename vcg::face::Pos<FaceType>    PosType;
 public:
     static bool CollapseEdges(PolyMeshType &poly_m,
                               const std::vector<PosType> &CollapsePos,
@@ -1257,42 +1258,42 @@ public:
         }
     }
 
-    static void Triangulate(PolyMeshType &poly_m,size_t IndexF)
-    {
+	/*! \brief Triangulate a polygonal face with a triangle fan.
+	 * \returns pointer to the newly added vertex.
+	 */
+	static VertexPointer Triangulate(PolyMeshType & poly_m, size_t IndexF)
+	{
 
-        CoordType bary=vcg::PolyBarycenter(poly_m.face[IndexF]);
-        size_t sizeV=poly_m.face[IndexF].VN();
+		const CoordType bary = vcg::PolyBarycenter(poly_m.face[IndexF]);
+		size_t sizeV = poly_m.face[IndexF].VN();
 
-        //add the new vertex
-        vcg::tri::Allocator<PolyMeshType>::AddVertex(poly_m,bary);
-        VertexType *newV=&poly_m.vert.back();
+		//add the new vertex
+		VertexPointer newV = &(*vcg::tri::Allocator<PolyMeshType>::AddVertex(poly_m,bary));
 
-        std::vector<size_t> ToUpdateF;
+		//then reupdate the faces
+		for (size_t j=0;j<(sizeV-1);j++)
+		{
+			VertexType * v0=poly_m.face[IndexF].V0(j);
+			VertexType * v1=poly_m.face[IndexF].V1(j);
+			VertexType * v2=newV;
 
-        //then reupdate the faces
-        for (size_t j=0;j<(sizeV-1);j++)
-        {
-            VertexType * v0=poly_m.face[IndexF].V0(j);
-            VertexType * v1=poly_m.face[IndexF].V1(j);
-            VertexType * v2=newV;
+			vcg::tri::Allocator<PolyMeshType>::AddFaces(poly_m,1);
 
-            vcg::tri::Allocator<PolyMeshType>::AddFaces(poly_m,1);
+			poly_m.face.back().Alloc(3);
+			poly_m.face.back().V(0)=v0;
+			poly_m.face.back().V(1)=v1;
+			poly_m.face.back().V(2)=v2;
+		}
 
-            poly_m.face.back().Alloc(3);
-            poly_m.face.back().V(0)=v0;
-            poly_m.face.back().V(1)=v1;
-            poly_m.face.back().V(2)=v2;
-            ToUpdateF.push_back(poly_m.face.size()-1);
-        }
-        VertexType * v0=poly_m.face[IndexF].V0((sizeV-1));
-        VertexType * v1=poly_m.face[IndexF].V1((sizeV-1));
-        poly_m.face[IndexF].Dealloc();
-        poly_m.face[IndexF].Alloc(3);
-        poly_m.face[IndexF].V(0)=v0;
-        poly_m.face[IndexF].V(1)=v1;
-        poly_m.face[IndexF].V(2)=newV;
-        ToUpdateF.push_back(IndexF);
-    }
+		VertexType * v0=poly_m.face[IndexF].V0((sizeV-1));
+		VertexType * v1=poly_m.face[IndexF].V1((sizeV-1));
+		poly_m.face[IndexF].Dealloc();
+		poly_m.face[IndexF].Alloc(3);
+		poly_m.face[IndexF].V(0)=v0;
+		poly_m.face[IndexF].V(1)=v1;
+		poly_m.face[IndexF].V(2)=newV;
+		return newV;
+	}
 
     static void ReorderFaceVert(FaceType &f,const size_t &StartI)
     {

@@ -84,7 +84,7 @@ int main( int argc, char **argv )
   printf("min %f max %f\n",minmax.first,minmax.second);
   tri::io::ExporterPLY<MyMesh>::Save(m,"base.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_VERTQUALITY);
   int t0=clock();
-  tri::Geodesic<MyMesh>::PerVertexDijsktraCompute(m,seedVec,ed);
+  tri::Geodesic<MyMesh>::PerVertexDijkstraCompute(m,seedVec,ed);
   int t1=clock();
   printf("Geodesic dijkstra %6.3f\n",float(t1-t0)/CLOCKS_PER_SEC);
   tri::UpdateColor<MyMesh>::PerVertexQualityRamp(m);
