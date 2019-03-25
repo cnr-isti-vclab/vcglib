@@ -382,6 +382,7 @@ public:
 	/// destructor
 	~TriMesh()
 	{
+		ClearAttributes();
 		Clear();
 	}
 
