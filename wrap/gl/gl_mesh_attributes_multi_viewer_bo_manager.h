@@ -2114,28 +2114,25 @@ namespace vcg
 
 		void fillchunkMap()
 		{
-			if (!vcg::tri::HasPerWedgeTexCoord(_mesh))
-				return;
 			_chunkmap.clear();
+			if (!vcg::tri::HasPerWedgeTexCoord(_mesh) || _mesh.face.size() == 0)
+				return;
 			typename MESH_TYPE::FaceIterator infrange = _mesh.face.begin();
-			short texind = std::numeric_limits<short>::max();
-			int hh = 0;
+			short texind = _mesh.face[0].WT(0).N();
 			for (typename MESH_TYPE::FaceIterator fit = _mesh.face.begin(); fit != _mesh.face.end(); ++fit)
 			{
-				if (fit->WT(0).N() != texind)
+				bool last = (fit == (_mesh.face.end() - 1));
+				if (fit->WT(0).N() != texind || last)
 				{
-					if ((texind != std::numeric_limits<short>::max()) || (fit == _mesh.face.end() - 1))
-					{
-						GLuint lowind = std::distance(_mesh.face.begin(), infrange);
-						GLuint topind = std::distance(_mesh.face.begin(), fit) - 1;
-						_chunkmap[texind].push_back(std::make_pair(lowind, topind));
-						infrange = fit;
-					}
+					int lowind = std::distance(_mesh.face.begin(), infrange);
+					int topind = std::distance(_mesh.face.begin(), fit) - 1;
+					if (last)
+						topind++;
+					_chunkmap[texind].push_back(std::make_pair((GLuint)lowind, (GLuint)topind));
+					infrange = fit;
 					texind = fit->WT(0).N();
 				}
-				++hh;
 			}
-			_chunkmap[texind].push_back(std::make_pair(std::distance(_mesh.face.begin(), infrange), std::distance(_mesh.face.begin(), _mesh.face.end() - 1)));
 		}
 
 		void debug(const InternalRendAtts& tobeallocated, const InternalRendAtts& tobedeallocated, const InternalRendAtts& tobeupdated)
