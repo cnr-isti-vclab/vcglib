@@ -547,7 +547,9 @@ public:
     }
 
     static void SmoothIterative(MeshType &mesh,int NDir=4,
-                                int NSteps=3,bool FixSelected=false)
+                                int NSteps=3,
+                                bool FixSelected=false,
+                                bool UseOnlyUnSelected=false)
     {
 
         typedef typename MeshType::FaceType FaceType;
@@ -569,6 +571,7 @@ public:
                 for (int j=0;j<f0->VN();j++)
                 {
                     FaceType *f1=f0->FFp(j);
+                    if (FixSelected && UseOnlyUnSelected && f1->IsS())continue;
                     assert(f1!=NULL);
                     if (f0==f1)continue;
                     TangVect.push_back(f1->PD1());
