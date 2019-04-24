@@ -651,7 +651,8 @@ public:
 
     static void LaplacianReproject(PolyMeshType &poly_m,
                                    int nstep=100,
-                                   ScalarType Damp=0.5)
+                                   ScalarType Damp=0.5,
+                                   bool OnlyOnSelected=false)
     {
         //transform into triangular
         TempMesh GuideSurf;
@@ -661,7 +662,7 @@ public:
         vcg::tri::UpdateNormal<TempMesh>::PerVertexNormalizedPerFace(GuideSurf);
         vcg::tri::UpdateTopology<TempMesh>::FaceFace(GuideSurf);
         vcg::tri::UpdateFlags<TempMesh>::FaceBorderFromFF(GuideSurf);
-        LaplacianReproject<TempMesh>(poly_m,GuideSurf,nstep,Damp=0.5);
+        LaplacianReproject<TempMesh>(poly_m,GuideSurf,nstep,Damp,0.5,OnlyOnSelected);
     }
 
     static void Laplacian(PolyMeshType &poly_m,
