@@ -1380,18 +1380,24 @@ public:
         }while (!NeedMerge.empty());
     }
 
-    static void Triangulate(PolyMeshType &poly_m, bool alsoTriangles = true)
+    static void Triangulate(PolyMeshType &poly_m,
+                            bool alsoTriangles = true,
+                            bool OnlyS=false)
     {
         size_t size0 = poly_m.face.size();
         if (alsoTriangles)
         {
             for (size_t i=0; i<size0; i++)
+            {
+                if ((OnlyS)&&(!poly_m.face[i].IsS()))continue;
                 Triangulate(poly_m, i);
+            }
         }
         else
         {
             for (size_t i=0; i<size0; i++)
             {
+                if ((OnlyS)&&(!poly_m.face[i].IsS()))continue;
                 if (poly_m.face[i].VN() > 3)
                 {
                     Triangulate(poly_m, i);
