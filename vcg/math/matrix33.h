@@ -518,7 +518,14 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
             rotM.SetIdentity();
             return rotM;
         }
-
+        if (dot<(-(S)1+epsilon))
+        {
+            rotM.SetZero();
+            rotM[0][0]=-1;
+            rotM[1][1]=-1;
+            rotM[2][2]=-1;
+            return (rotM);
+        }
         ///find the axis of rotation
         CoordType axis;
         axis=v0^v1;
