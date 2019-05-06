@@ -406,7 +406,8 @@ public:
 
         Eigen::MatrixXd PD1,PD2,PV1,PV2;
         MeshToMatrix<MeshType>::GetTriMeshData(mesh,F,V);
-        igl::principal_curvature(V,F,PD1,PD2,PV1,PV2,Nring);
+
+        igl::principal_curvature(V,F,PD1,PD2,PV1,PV2,Nring,true);
 
         //then copy curvature per vertex
         for (size_t i=0;i<mesh.vert.size();i++)
@@ -497,7 +498,6 @@ public:
 //             (SParam.curv_thr>0))
 
         InitByCurvature(mesh,SParam.curvRing);
-
         SelectConstraints(mesh,SParam);
         //then do the actual smooth
         SmoothDirections(mesh,SParam.Ndir,SParam.SmoothM,true,SParam.alpha_curv);
