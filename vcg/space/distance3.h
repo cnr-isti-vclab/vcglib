@@ -274,7 +274,7 @@ void SegmentPointSquaredDistance( const Segment3<ScalarType> &s,
 		ScalarType  t = ((p-s.P0())*e)/eSquaredNorm;
 		if(t<0)      t = 0;
 		else if(t>1) t = 1;
-		closest = s.P0()+e*t;
+		closest = s.P0() * (1.0 - t) + s.P1() * t;
 		sqr_dist = SquaredDistance(p,closest);
 		assert(!math::IsNAN(sqr_dist));
 	}
