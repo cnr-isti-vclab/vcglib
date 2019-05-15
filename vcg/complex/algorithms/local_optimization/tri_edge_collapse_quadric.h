@@ -606,7 +606,7 @@ public:
 
     if(pp->QualityWeight) // we map quality range into a squared 01 and than this into the 1..QualityWeightFactor range
     {
-      float minQ, maxQ;
+      ScalarType minQ, maxQ;
       tri::Stat<TriMeshType>::ComputePerVertexQualityMinMax(m,minQ,maxQ);      
       for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
         if( ! (*vi).IsD() && (*vi).IsW())
