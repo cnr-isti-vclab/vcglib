@@ -492,13 +492,21 @@ public:
     {
         //for the moment only cross and line field
 
-        //initialize direction by curvature if needed
-//        if ((SParam.alpha_curv>0)||
-//             (SParam.sharp_thr>0)||
-//             (SParam.curv_thr>0))
+//        //initialize direction by curvature if needed
+        if ((SParam.alpha_curv>0)||
+             (SParam.sharp_thr>0)||
+             (SParam.curv_thr>0))
+        {
+            InitByCurvature(mesh,SParam.curvRing);
+            SelectConstraints(mesh,SParam);
+        }
+        else
+        {
+            SelectConstraints(mesh,SParam);
+            vcg::tri::CrossField<MeshType>::PropagateFromSelF(mesh);
+        }
 
-        InitByCurvature(mesh,SParam.curvRing);
-        SelectConstraints(mesh,SParam);
+
         //then do the actual smooth
         SmoothDirections(mesh,SParam.Ndir,SParam.SmoothM,true,SParam.alpha_curv);
     }
