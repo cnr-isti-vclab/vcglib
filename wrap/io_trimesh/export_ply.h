@@ -489,7 +489,7 @@ namespace vcg {
                                 fprintf(fpout,"%.*g %.*g %.*g " ,DGT,vp->P()[0],DGT,vp->P()[1],DGT,vp->P()[2]);
 
                                 if( HasPerVertexNormal(m) && (pi.mask & Mask::IOM_VERTNORMAL) )
-                                    fprintf(fpout,"%.*g %.*g %.*g " ,DGT,double(vp->N()[0]),DGT,double(vp->N()[1]),DGT,double(vp->N()[2]));
+									fprintf(fpout,"%.*g %.*g %.*g " ,DGT,ScalarType(vp->N()[0]),DGT,ScalarType(vp->N()[1]),DGT,ScalarType(vp->N()[2]));
 
                                 if( HasPerVertexFlags(m) && (pi.mask & Mask::IOM_VERTFLAGS))
                                     fprintf(fpout,"%d ",vp->Flags());

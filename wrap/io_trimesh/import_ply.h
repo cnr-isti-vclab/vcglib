@@ -163,11 +163,12 @@ public:
 	static const  PropDescriptor &VertDesc(int i)
 	{
 		static const PropDescriptor pv[_VERTDESC_LAST_]={
+		    /****  { elename, propname,        storedtype1,     memtype1,         memoffset,                             */
 		    /*00*/ {"vertex", "x",             ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0  ,0},
 		    /*01*/ {"vertex", "y",             ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + sizeof(ScalarType),0,0,0,0,0  ,0},
 		    /*02*/ {"vertex", "z",             ply::T_FLOAT, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
 		    /*03*/ {"vertex", "flags",         ply::T_INT,   ply::T_INT,           offsetof(LoadPly_VertAux<ScalarType>,flags),0,0,0,0,0  ,0},
-		    /*04*/ {"vertex", "quality",       ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<float>,q),0,0,0,0,0  ,0},
+		    /*04*/ {"vertex", "quality",       ply::T_FLOAT, PlyType<ScalarType>(),         offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0},
 		    /*05*/ {"vertex", "red",           ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,r),0,0,0,0,0  ,0},
 		    /*06*/ {"vertex", "green",         ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,g),0,0,0,0,0  ,0},
 		    /*07*/ { "vertex", "blue",         ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,b),0,0,0,0,0  ,0},
@@ -195,7 +196,7 @@ public:
 		    /*28*/ {"vertex", "ny",            ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 1*sizeof(ScalarType),0,0,0,0,0  ,0},
 		    /*29*/ {"vertex", "nz",            ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,n) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
 		    /*30*/ {"vertex", "radius",        ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,radius),0,0,0,0,0  ,0},
-		    /*31*/ {"vertex", "quality",       ply::T_DOUBLE, ply::T_DOUBLE,offsetof(LoadPly_VertAux<double>,q),0,0,0,0,0  ,0}
+		    /*31*/ {"vertex", "quality",       ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0}
 		};
 		return pv[i];
 	}
@@ -209,7 +210,7 @@ public:
 		    /*      	                           on file       on memory                                                on file       on memory */
 		    /*  0 */	{"face", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux<ScalarType>,v),           1,0,ply::T_UCHAR, ply::T_UCHAR,offsetof(LoadPly_FaceAux<ScalarType>,size)   ,0},
 		    /*  1 */	{"face", "flags",          ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux<ScalarType>,flags),       0,0,0,0,0  ,0},
-		    /*  2 */	{"face", "quality",        ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux<ScalarType>,q),           0,0,0,0,0  ,0},
+		    /*  2 */	{"face", "quality",        ply::T_FLOAT, PlyType<ScalarType>(), offsetof(LoadPly_FaceAux<ScalarType>,q),           0,0,0,0,0  ,0},
 		    /*  3 */	{"face", "texcoord",       ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux<ScalarType>,texcoord),    1,0,ply::T_UCHAR, ply::T_UCHAR,offsetof(LoadPly_FaceAux<ScalarType>,ntexcoord) ,0},
 		    /*  4 */	{"face", "color",          ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_FaceAux<ScalarType>,colors),      1,0,ply::T_UCHAR, ply::T_UCHAR,offsetof(LoadPly_FaceAux<ScalarType>,ncolors)   ,0},
 		    /*  5 */	{"face", "texnumber",      ply::T_INT,   ply::T_INT,   offsetof(LoadPly_FaceAux<ScalarType>,texcoordind), 0,0,0,0,0  ,0},
@@ -234,7 +235,7 @@ public:
 		    /* 23 */	{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux<ScalarType>,v),           1,0,ply::T_UCHAR, ply::T_CHAR,offsetof(LoadPly_FaceAux<ScalarType>,size)   ,0},
 		    /* 24 */	{"face", "vertex_indices", ply::T_SHORT, ply::T_INT,   offsetof(LoadPly_FaceAux<ScalarType>,v),           1,0,ply::T_INT,   ply::T_CHAR,offsetof(LoadPly_FaceAux<ScalarType>,size)   ,0},
 		    // DOUBLE
-		    /* 25 */	{"face", "quality",    ply::T_DOUBLE, ply::T_DOUBLE,   offsetof(LoadPly_FaceAux<double>,q),               0,0,0,0,0  ,0},
+		    /* 25 */	{"face", "quality",    ply::T_DOUBLE, PlyType<ScalarType>(),   offsetof(LoadPly_FaceAux<ScalarType>,q),               0,0,0,0,0  ,0},
 		    /* 26 */	{"face", "nx",             ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_FaceAux<ScalarType>,n)                       ,0,0,0,0,0  ,0},
 		    /* 27 */	{"face", "ny",             ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_FaceAux<ScalarType>,n) + 1*sizeof(ScalarType),0,0,0,0,0  ,0},
 		    /* 28 */	{"face", "nz",             ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_FaceAux<ScalarType>,n) + 2*sizeof(ScalarType),0,0,0,0,0  ,0}
