@@ -100,6 +100,8 @@ public:
     ComputeQuality();
     ComputeAngle();
   }
+  // enforce virtual dtor for this class and all subclasses
+  virtual ~TrivialEar() = default;
 
   /// Compute the angle of the two edges of the ear.
   // it tries to make the computation in a precision safe way.
