@@ -85,10 +85,10 @@ static bool ReadHeader(FILE *fp,unsigned int &num_cams, unsigned int &num_points
     return true;
 }
 
-static bool ReadHeader(const char * filename,unsigned int &/*num_cams*/, unsigned int &/*num_points*/){
+static bool ReadHeader(const char * filename,unsigned int & num_cams , unsigned int & num_points ){
     FILE *fp = fopen(filename, "r");
     if(!fp) return false;
-    ReadHeader(fp);
+    ReadHeader(fp, num_cams, num_points);
     fclose(fp);
     return true;
 }
