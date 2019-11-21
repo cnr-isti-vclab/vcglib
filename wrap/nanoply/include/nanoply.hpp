@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <cstdio>
 #include <cmath>
+#include <cstring>
 #include <limits>
 #include <fstream>
 #include <sstream>
