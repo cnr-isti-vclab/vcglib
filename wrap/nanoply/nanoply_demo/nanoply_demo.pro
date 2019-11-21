@@ -1,6 +1,6 @@
 DEPENDPATH += ../include
 INCLUDEPATH += ../include
-CONFIG += stl c++11
+CONFIG += stl cmdline c++11
 CONFIG -= qt
 TEMPLATE = app
 SOURCES += main.cpp
