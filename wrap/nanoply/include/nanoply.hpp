@@ -1064,7 +1064,7 @@ namespace nanoply
     /**
     * Default Constructor
     */
-    inline PlyElement() :validToWrite(false), cnt(0){};
+    inline PlyElement() : cnt(0), validToWrite(false){}
 
     /**
     * Constructor that sets the name, the properties and the number of instances of the element.
@@ -1073,7 +1073,7 @@ namespace nanoply
     * @param prop		Vector of properties.
     * @param nElem		Number of instances.
     */
-    inline PlyElement(std::string& _name, std::vector<PlyProperty> &prop, size_t nElem) :name(_name), cnt(nElem), propVec(prop), plyElem(PlyElemEntity::NNP_UNKNOWN_ELEM), validToWrite(false){};
+    inline PlyElement(const std::string& _name, std::vector<PlyProperty> &prop, size_t nElem) :name(_name), plyElem(PlyElemEntity::NNP_UNKNOWN_ELEM), cnt(nElem), propVec(prop), validToWrite(false){}
 
     /**
     * Constructor that sets the entity, the properties and the number of instances of the element.
@@ -1082,7 +1082,7 @@ namespace nanoply
     * @param prop		Vector of properties.
     * @param nElem		Number of instances.
     */
-    inline PlyElement(PlyElemEntity ent, std::vector<PlyProperty> &prop, size_t nElem) :name(PlyElementName(ent)[0]), cnt(nElem), propVec(prop), plyElem(ent), validToWrite(false){};
+    inline PlyElement(PlyElemEntity ent, std::vector<PlyProperty> &prop, size_t nElem) :name(PlyElementName(ent)[0]), plyElem(ent), cnt(nElem), propVec(prop), validToWrite(false){}
 
     /**
     * Parse the input line and add the properties to the element.
@@ -1427,7 +1427,7 @@ namespace nanoply
     * @param name	Name of the element.
     * @return		The number of instances
     */
-    inline size_t GetElementCount(std::string& name);
+    inline size_t GetElementCount(const std::string& name);
 
     /**
     * Return the number of instances of the element with the input element type
@@ -1464,7 +1464,7 @@ namespace nanoply
     * @param name	Name of the element.
     * @return		The reference to the element
     */
-    inline PlyElement* GetElement(std::string& name);
+    inline PlyElement* GetElement(const std::string & name);
 
     /**
     * Return a reference to the element with a specific element type
@@ -1629,7 +1629,7 @@ namespace nanoply
   }
 
 
-  inline size_t Info::GetElementCount(std::string& name)
+  inline size_t Info::GetElementCount(const std::string & name)
   {
     PlyElement* pe = GetElement(name);
     if (pe != NULL)
@@ -1665,7 +1665,7 @@ namespace nanoply
   }
 
 
-  inline PlyElement* Info::GetElement(std::string& name)
+  inline PlyElement* Info::GetElement(const std::string& name)
   {
     for (int i = 0; i < elemVec.size(); i++)
     {
@@ -1728,7 +1728,7 @@ namespace nanoply
     * @param _e	Ply entity managed by the descriptor.
     * @param _b	Pointer to the memory location that contains the data of the property.
     */
-    inline DescriptorInterface(PlyEntity _e, void *_b) :curPos(0), elem(_e), base(_b), name(PlyPropertyName(_e)[0]){};
+    inline DescriptorInterface(PlyEntity _e, void *_b) :curPos(0), base(_b), elem(_e), name(PlyPropertyName(_e)[0]){}
 
     /**
     * Constructor of the descriptor.
@@ -1736,7 +1736,12 @@ namespace nanoply
     * @param _s		Name of the PlyProperty.
     * @param _b	Pointer to the memory location that contains the data of the property.
     */
-    inline DescriptorInterface(const std::string& _s, void *_b) :curPos(0), elem(PlyEntity::NNP_UNKNOWN_ENTITY), name(_s), base(_b){};
+    inline DescriptorInterface(const std::string& _s, void *_b) :curPos(0), base(_b), elem(PlyEntity::NNP_UNKNOWN_ENTITY), name(_s){}
+
+	/**
+    * Virtual destructor
+    */
+    virtual ~DescriptorInterface() {}
 
     /**
     * Restart the descriptor.
@@ -1802,14 +1807,14 @@ namespace nanoply
     *
     * @param _e		Ply Element entity managed by the descriptor.
     */
-    inline ElementDescriptor(PlyElemEntity _e) : elem(_e), name(PlyElementName(_e)[0]){};
+    inline ElementDescriptor(PlyElemEntity _e) : name(PlyElementName(_e)[0]), elem(_e){}
 
     /**
     * Constructor of the Ply element descriptor.
     *
     * @param _s		Name of the Ply element managed by the descriptor.
     */
-    inline ElementDescriptor(std::string &_s) : elem(PlyElemEntity::NNP_UNKNOWN_ELEM), name(_s){};
+    inline ElementDescriptor(const std::string &_s) : name(_s), elem(PlyElemEntity::NNP_UNKNOWN_ELEM){}
 
     /**
     * Read all the properties of the element from the binary file.
@@ -2366,151 +2371,191 @@ namespace nanoply
     this->curPos = 0;
   }
 
- 
-  template<class ContainerType, int VectorSize, typename ScalarType>
-  bool DataDescriptor<ContainerType, VectorSize, ScalarType>::ReadElemBinary(PlyFile &file, PlyProperty &prop, bool fixEndian)
-  {
-    if (prop.elem != elem && ((prop.elem != PlyEntity::NNP_CRGB && prop.elem != PlyEntity::NNP_CRGBA) || (prop.elem != PlyEntity::NNP_CRGBA && prop.elem != PlyEntity::NNP_CRGB)))
-      return false;
-    switch (prop.type)
-    {
-    case NNP_LIST_INT8_INT8:
-    case NNP_LIST_UINT8_INT8:
-    case NNP_INT8:				helper.ReadBinary<char>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_INT8_UINT8:
-    case NNP_LIST_UINT8_UINT8:
-    case NNP_UINT8:				helper.ReadBinary<unsigned char>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_INT8_INT16:
-    case NNP_LIST_UINT8_INT16:
-    case NNP_INT16:				helper.ReadBinary<short>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_INT8_UINT16:
-    case NNP_LIST_UINT8_UINT16:
-    case NNP_UINT16:			helper.ReadBinary<unsigned short>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_INT8_FLOAT32:
-    case NNP_LIST_UINT8_FLOAT32:
-    case NNP_FLOAT32:			helper.ReadBinary<float>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_UINT8_INT32:
-    case NNP_LIST_INT8_INT32:
-    case NNP_INT32:				helper.ReadBinary<int>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_UINT8_UINT32:
-    case NNP_LIST_INT8_UINT32:
-    case NNP_UINT32:			helper.ReadBinary<unsigned int>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_INT8_FLOAT64:
-    case NNP_LIST_UINT8_FLOAT64:
-    case NNP_FLOAT64:			helper.ReadBinary<double>(*this, file, prop, fixEndian); break;
-    }
-    return true;
-  }
+
+	template<class ContainerType, int VectorSize, typename ScalarType>
+	bool DataDescriptor<ContainerType, VectorSize, ScalarType>::ReadElemBinary(PlyFile &file, PlyProperty &prop, bool fixEndian)
+	{
+		if (prop.elem != elem && ((prop.elem != PlyEntity::NNP_CRGB && prop.elem != PlyEntity::NNP_CRGBA) || (prop.elem != PlyEntity::NNP_CRGBA && prop.elem != PlyEntity::NNP_CRGB)))
+			return false;
+		switch (prop.type)
+		{
+		case NNP_LIST_INT8_INT8:
+		case NNP_LIST_UINT8_INT8:
+		case NNP_INT8:
+			helper.template ReadBinary<char>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_INT8_UINT8:
+		case NNP_LIST_UINT8_UINT8:
+		case NNP_UINT8:
+			helper.template ReadBinary<unsigned char>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_INT8_INT16:
+		case NNP_LIST_UINT8_INT16:
+		case NNP_INT16:
+			helper.template ReadBinary<short>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_INT8_UINT16:
+		case NNP_LIST_UINT8_UINT16:
+		case NNP_UINT16:
+			helper.template ReadBinary<unsigned short>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_INT8_FLOAT32:
+		case NNP_LIST_UINT8_FLOAT32:
+		case NNP_FLOAT32:
+			helper.template ReadBinary<float>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_UINT8_INT32:
+		case NNP_LIST_INT8_INT32:
+		case NNP_INT32:
+			helper.template ReadBinary<int>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_UINT8_UINT32:
+		case NNP_LIST_INT8_UINT32:
+		case NNP_UINT32:
+			helper.template ReadBinary<unsigned int>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_INT8_FLOAT64:
+		case NNP_LIST_UINT8_FLOAT64:
+		case NNP_FLOAT64:
+			helper.template ReadBinary<double>(*this, file, prop, fixEndian); break;
+		case NNP_UNKNOWN_TYPE:
+			break;
+		}
+		return true;
+	}
 
 
-  template<class ContainerType, int VectorSize, typename ScalarType>
-  bool DataDescriptor<ContainerType, VectorSize, ScalarType>::ReadElemAscii(PlyFile &file, PlyProperty &prop)
-  {
-    if (prop.elem != elem)
-      return false;
-    switch (prop.type)
-    {
-    case NNP_LIST_UINT8_INT8:
-    case NNP_LIST_INT8_INT8:
-    case NNP_INT8:				helper.ReadAscii<int>(*this, file, prop); break;
-    case NNP_LIST_UINT8_UINT8:
-    case NNP_LIST_INT8_UINT8:
-    case NNP_UINT8:				helper.ReadAscii<unsigned int>(*this, file, prop); break;
-    case NNP_LIST_UINT8_INT16:
-    case NNP_LIST_INT8_INT16:
-    case NNP_INT16:				helper.ReadAscii<short>(*this, file, prop); break;
-    case NNP_LIST_UINT8_UINT16:
-    case NNP_LIST_INT8_UINT16:
-    case NNP_UINT16:			helper.ReadAscii<unsigned short>(*this, file, prop); break;
-    case NNP_LIST_UINT8_FLOAT32:
-    case NNP_LIST_INT8_FLOAT32:
-    case NNP_FLOAT32:			helper.ReadAscii<float>(*this, file, prop); break;
-    case NNP_LIST_UINT8_INT32:
-    case NNP_LIST_INT8_INT32:
-    case NNP_INT32:				helper.ReadAscii<int>(*this, file, prop); break;
-    case NNP_LIST_UINT8_UINT32:
-    case NNP_LIST_INT8_UINT32:
-    case NNP_UINT32:			helper.ReadAscii<unsigned int>(*this, file, prop); break;
-    case NNP_LIST_UINT8_FLOAT64:
-    case NNP_LIST_INT8_FLOAT64:
-    case NNP_FLOAT64:			helper.ReadAscii<double>(*this, file, prop); break;
-    }
-    return true;
-  }
+	template<class ContainerType, int VectorSize, typename ScalarType>
+	bool DataDescriptor<ContainerType, VectorSize, ScalarType>::ReadElemAscii(PlyFile &file, PlyProperty &prop)
+	{
+		if (prop.elem != elem)
+			return false;
+		switch (prop.type)
+		{
+		case NNP_LIST_UINT8_INT8:
+		case NNP_LIST_INT8_INT8:
+		case NNP_INT8:
+			helper.template ReadAscii<int>(*this, file, prop); break;
+		case NNP_LIST_UINT8_UINT8:
+		case NNP_LIST_INT8_UINT8:
+		case NNP_UINT8:
+			helper.template ReadAscii<unsigned int>(*this, file, prop); break;
+		case NNP_LIST_UINT8_INT16:
+		case NNP_LIST_INT8_INT16:
+		case NNP_INT16:
+			helper.template ReadAscii<short>(*this, file, prop); break;
+		case NNP_LIST_UINT8_UINT16:
+		case NNP_LIST_INT8_UINT16:
+		case NNP_UINT16:
+			helper.template ReadAscii<unsigned short>(*this, file, prop); break;
+		case NNP_LIST_UINT8_FLOAT32:
+		case NNP_LIST_INT8_FLOAT32:
+		case NNP_FLOAT32:
+			helper.template ReadAscii<float>(*this, file, prop); break;
+		case NNP_LIST_UINT8_INT32:
+		case NNP_LIST_INT8_INT32:
+		case NNP_INT32:
+			helper.template ReadAscii<int>(*this, file, prop); break;
+		case NNP_LIST_UINT8_UINT32:
+		case NNP_LIST_INT8_UINT32:
+		case NNP_UINT32:
+			helper.template ReadAscii<unsigned int>(*this, file, prop); break;
+		case NNP_LIST_UINT8_FLOAT64:
+		case NNP_LIST_INT8_FLOAT64:
+		case NNP_FLOAT64:
+			helper.template ReadAscii<double>(*this, file, prop); break;
+		case NNP_UNKNOWN_TYPE:
+			break;
+		}
+		return true;
+	}
 
 
-  template<class ContainerType, int VectorSize, typename ScalarType>
-  bool DataDescriptor<ContainerType, VectorSize, ScalarType>::WriteElemBinary(PlyFile &file, PlyProperty &prop, bool fixEndian)
-  {
-    if (prop.elem != elem)
-      return false;
-    switch (prop.type)
-    {
-    case NNP_LIST_INT8_INT8:
-    case NNP_LIST_UINT8_INT8:
-    case NNP_INT8:				helper.WriteBinary<char>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_INT8_UINT8:
-    case NNP_LIST_UINT8_UINT8:
-    case NNP_UINT8:				helper.WriteBinary<unsigned char>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_INT8_INT16:
-    case NNP_LIST_UINT8_INT16:
-    case NNP_INT16:				helper.WriteBinary<short>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_INT8_UINT16:
-    case NNP_LIST_UINT8_UINT16:
-    case NNP_UINT16:			helper.WriteBinary<unsigned short>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_INT8_FLOAT32:
-    case NNP_LIST_UINT8_FLOAT32:
-    case NNP_FLOAT32:			helper.WriteBinary<float>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_UINT8_INT32:
-    case NNP_LIST_INT8_INT32:
-    case NNP_INT32:				helper.WriteBinary<int>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_UINT8_UINT32:
-    case NNP_LIST_INT8_UINT32:
-    case NNP_UINT32:			helper.WriteBinary<unsigned int>(*this, file, prop, fixEndian); break;
-    case NNP_LIST_INT8_FLOAT64:
-    case NNP_LIST_UINT8_FLOAT64:
-    case NNP_FLOAT64:			helper.WriteBinary<double>(*this, file, prop, fixEndian); break;
-    }
-    return true;
-  }
+	template<class ContainerType, int VectorSize, typename ScalarType>
+	bool DataDescriptor<ContainerType, VectorSize, ScalarType>::WriteElemBinary(PlyFile &file, PlyProperty &prop, bool fixEndian)
+	{
+		if (prop.elem != elem)
+			return false;
+		switch (prop.type)
+		{
+		case NNP_LIST_INT8_INT8:
+		case NNP_LIST_UINT8_INT8:
+		case NNP_INT8:
+			helper.template WriteBinary<char>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_INT8_UINT8:
+		case NNP_LIST_UINT8_UINT8:
+		case NNP_UINT8:
+			helper.template WriteBinary<unsigned char>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_INT8_INT16:
+		case NNP_LIST_UINT8_INT16:
+		case NNP_INT16:
+			helper.template WriteBinary<short>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_INT8_UINT16:
+		case NNP_LIST_UINT8_UINT16:
+		case NNP_UINT16:
+			helper.template WriteBinary<unsigned short>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_INT8_FLOAT32:
+		case NNP_LIST_UINT8_FLOAT32:
+		case NNP_FLOAT32:
+			helper.template WriteBinary<float>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_UINT8_INT32:
+		case NNP_LIST_INT8_INT32:
+		case NNP_INT32:
+			helper.template WriteBinary<int>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_UINT8_UINT32:
+		case NNP_LIST_INT8_UINT32:
+		case NNP_UINT32:
+			helper.template WriteBinary<unsigned int>(*this, file, prop, fixEndian); break;
+		case NNP_LIST_INT8_FLOAT64:
+		case NNP_LIST_UINT8_FLOAT64:
+		case NNP_FLOAT64:
+			helper.template WriteBinary<double>(*this, file, prop, fixEndian); break;
+		case NNP_UNKNOWN_TYPE:
+			break;
+		}
+		return true;
+	}
 
 
-  template<class ContainerType, int VectorSize, typename ScalarType>
-  bool DataDescriptor<ContainerType, VectorSize, ScalarType>::WriteElemAscii(PlyFile &file, PlyProperty& prop)
-  {
-    if (prop.elem != elem)
-      return false;
-    if (prop.elem == PlyEntity::NNP_UNKNOWN_ENTITY && prop.name != name)
-      return false;
-    switch (prop.type)
-    {
-    case NNP_LIST_UINT8_INT8:
-    case NNP_LIST_INT8_INT8:
-    case NNP_INT8:				helper.WriteAscii<int>(*this, file, prop); break;
-    case NNP_LIST_UINT8_UINT8:
-    case NNP_LIST_INT8_UINT8:
-    case NNP_UINT8:				helper.WriteAscii<unsigned int>(*this, file, prop); break;
-    case NNP_LIST_UINT8_INT16:
-    case NNP_LIST_INT8_INT16:
-    case NNP_INT16:				helper.WriteAscii<short>(*this, file, prop); break;
-    case NNP_LIST_UINT8_UINT16:
-    case NNP_LIST_INT8_UINT16:
-    case NNP_UINT16:			helper.WriteAscii<unsigned short>(*this, file, prop); break;
-    case NNP_LIST_UINT8_FLOAT32:
-    case NNP_LIST_INT8_FLOAT32:
-    case NNP_FLOAT32:			helper.WriteAscii<float>(*this, file, prop); break;
-    case NNP_LIST_UINT8_INT32:
-    case NNP_LIST_INT8_INT32:
-    case NNP_INT32:				helper.WriteAscii<int>(*this, file, prop); break;
-    case NNP_LIST_UINT8_UINT32:
-    case NNP_LIST_INT8_UINT32:
-    case NNP_UINT32:			helper.WriteAscii<unsigned int>(*this, file, prop); break;
-    case NNP_LIST_UINT8_FLOAT64:
-    case NNP_LIST_INT8_FLOAT64:
-    case NNP_FLOAT64:			helper.WriteAscii<double>(*this, file, prop); break;
-    }
-    return true;
-  }
+	template<class ContainerType, int VectorSize, typename ScalarType>
+	bool DataDescriptor<ContainerType, VectorSize, ScalarType>::WriteElemAscii(PlyFile &file, PlyProperty& prop)
+	{
+		if (prop.elem != elem)
+			return false;
+		if (prop.elem == PlyEntity::NNP_UNKNOWN_ENTITY && prop.name != name)
+			return false;
+		switch (prop.type)
+		{
+		case NNP_LIST_UINT8_INT8:
+		case NNP_LIST_INT8_INT8:
+		case NNP_INT8:
+			helper.template WriteAscii<int>(*this, file, prop); break;
+		case NNP_LIST_UINT8_UINT8:
+		case NNP_LIST_INT8_UINT8:
+		case NNP_UINT8:
+			helper.template WriteAscii<unsigned int>(*this, file, prop); break;
+		case NNP_LIST_UINT8_INT16:
+		case NNP_LIST_INT8_INT16:
+		case NNP_INT16:
+			helper.template WriteAscii<short>(*this, file, prop); break;
+		case NNP_LIST_UINT8_UINT16:
+		case NNP_LIST_INT8_UINT16:
+		case NNP_UINT16:
+			helper.template WriteAscii<unsigned short>(*this, file, prop); break;
+		case NNP_LIST_UINT8_FLOAT32:
+		case NNP_LIST_INT8_FLOAT32:
+		case NNP_FLOAT32:
+			helper.template WriteAscii<float>(*this, file, prop); break;
+		case NNP_LIST_UINT8_INT32:
+		case NNP_LIST_INT8_INT32:
+		case NNP_INT32:
+			helper.template WriteAscii<int>(*this, file, prop); break;
+		case NNP_LIST_UINT8_UINT32:
+		case NNP_LIST_INT8_UINT32:
+		case NNP_UINT32:
+			helper.template WriteAscii<unsigned int>(*this, file, prop); break;
+		case NNP_LIST_UINT8_FLOAT64:
+		case NNP_LIST_INT8_FLOAT64:
+		case NNP_FLOAT64:
+			helper.template WriteAscii<double>(*this, file, prop); break;
+		case NNP_UNKNOWN_TYPE:
+			break;
+		}
+		return true;
+	}
 
 
 
