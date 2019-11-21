@@ -110,12 +110,12 @@ public:
 
 
 
-    /// Operatore di indicizzazione
+    /// Indexing operator
     inline S * operator [] ( const int i )
     {
         return a+i*3;
     }
-    /// Operatore const di indicizzazione
+    /// Const indexing operator
     inline const S * operator [] ( const int i ) const
     {
         return a+i*3;
