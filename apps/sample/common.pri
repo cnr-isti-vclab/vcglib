@@ -6,3 +6,8 @@ TEMPLATE = app
 CONFIG -= app_bundle
 
 QMAKE_CXXFLAGS += -std=c++11
+unix {
+	CONFIG(release, debug|release) {
+		DEFINES *= NDEBUG
+	}
+}

@@ -91,7 +91,7 @@ public:
     float norm[] = { 0.57735, 0.57735, 0.57735, -0.57735, 0.57735, -0.57735, -0.57735, -0.57735, 0.57735, 0.57735, -0.57735, -0.57735 };
     unsigned char color[] = { 68, 68, 68, 255, 177, 68, 177, 255, 177, 177, 68, 255, 68, 177, 177 };
     float density[] = { 3.5, 2.0, 4.0, 3.0 };
-    float materialId[] = { 1, 0, -1, 1 };
+    int materialId[] = { 1, 0, -1, 1 };
     float materialValue[] = { 0.2, 0.3, 0.2, 0.5, 0.5, 0.6, 20.0, 0.1, 0.1, 0.1, 0.7, 0.5, 0.4, 1.0 };
     coordVec.push_back(Point3f(pos, 3)); coordVec.push_back(Point3f(&pos[3], 3)); coordVec.push_back(Point3f(&pos[6], 3)); coordVec.push_back(Point3f(&pos[9], 3));
     normalVec.push_back(Point3f(norm, 3)); normalVec.push_back(Point3f(&norm[3], 3)); normalVec.push_back(Point3f(&norm[6], 3)); normalVec.push_back(Point3f(&norm[9], 3));
@@ -138,7 +138,7 @@ bool Load(const char* filename, MyMesh& mesh)
   mesh.infoVec.resize(vertCnt);
   int faceCnt = info.GetFaceCount();
   mesh.faceIndex.resize(faceCnt);
-  int materialCnt = info.GetElementCount(std::string("material"));
+  size_t materialCnt = info.GetElementCount(std::string("material"));
   mesh.material.resize(2);
 
   //Create the vertex properties descriptor (what ply property and where to save its data)
