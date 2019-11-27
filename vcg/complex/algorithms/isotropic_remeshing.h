@@ -65,8 +65,13 @@ public:
 		ScalarType minLength; // minimal admitted length: no edge should be shorter than this value (used when collapsing)
 		ScalarType maxLength; // maximal admitted length: no edge should be longer than this value  (used when refining)
 		ScalarType lengthThr;
-		ScalarType creaseAngleRadThr= math::ToRad(10.0) ;
-		ScalarType creaseAngleCosThr= cos(math::ToRad(10.0)) ;
+
+		ScalarType aspectRatioThr  = 0.05;                    //min aspect ratio: during relax bad triangles will be relaxed
+		ScalarType foldAngleCosThr = cos(math::ToRad(140.));   //min angle to be considered folding: during relax folded triangles will be relaxed
+
+		ScalarType creaseAngleRadThr = math::ToRad(10.0);
+		ScalarType creaseAngleCosThr = cos(math::ToRad(10.0)); //min angle to be considered crease: two faces with normals diverging more than thr share a crease edge
+
 		bool splitFlag    = true;
 		bool swapFlag     = true;
 		bool collapseFlag = true;
@@ -76,22 +81,25 @@ public:
 		bool adapt=false;
 		int iter=1;
 		Stat stat;
-		void SetTargetLen(ScalarType len)
+		void SetTargetLen(const ScalarType len)
 		{
-			minLength=len;
-			maxLength=len*2.0;
-			lengthThr=len*2.0;
+			//			minLength=len;
+			//			maxLength=len*2.0;
+			//			lengthThr=len*2.0;
+			minLength=len*4./5.;
+			maxLength=len*4./3.;
+			lengthThr=len*4./3.;
 		}
-		void SetFeatureAngleDeg(ScalarType angle)
+		void SetFeatureAngleDeg(const ScalarType angle)
 		{
 			creaseAngleRadThr =  math::ToRad(angle);
-			creaseAngleCosThr= cos(creaseAngleRadThr);
+			creaseAngleCosThr = cos(creaseAngleRadThr);
 		}
 
 
 	} Params;
 
-	static void Do(MeshType &toRemesh, Params params, vcg::CallBackPos * cb=0)
+	static void Do(MeshType &toRemesh, Params & params, vcg::CallBackPos * cb=0)
 	{
 		MeshType toProjectCopy;
 		tri::UpdateBounding<MeshType>::Box(toRemesh);
@@ -101,34 +109,38 @@ public:
 
 		Do(toRemesh,toProjectCopy,params,cb);
 	}
-	static void Do(MeshType &toRemesh, MeshType &toProject, Params params, vcg::CallBackPos * cb=0)
+	static void Do(MeshType &toRemesh, MeshType &toProject, Params & params, vcg::CallBackPos * cb=0)
 	{
+		//		std::cout << "Enter" << std::endl;
 		assert(&toRemesh != &toProject);
-		StaticGrid t;
 		params.stat.Reset();
-		t.Set(toProject.face.begin(), toProject.face.end());
+
+		StaticGrid t;
 		tri::FaceTmark<MeshType> mark;
-		mark.SetMesh(&toProject);
+
+		//avoid useless grid initializations...
+		if (params.projectFlag)
+		{
+			t.Set(toProject.face.begin(), toProject.face.end());
+			mark.SetMesh(&toProject);
+		}
 
 		tri::UpdateTopology<MeshType>::FaceFace(toRemesh);
 		tri::UpdateFlags<MeshType>::VertexBorderFromFaceAdj(toRemesh);
 
-		tri::MeshAssert<MeshType>::FFTwoManifoldEdge(toRemesh);
+		//		        tri::MeshAssert<MeshType>::FFTwoManifoldEdge(toRemesh);
 		tri::UpdateTopology<MeshType>::VertexFace(toRemesh);
-		computeQuality(toRemesh);
-		tri::UpdateQuality<MeshType>::VertexSaturate(toRemesh);
+//		computeQuality(toRemesh);
+		//		tri::UpdateQuality<MeshType>::VertexSaturate(toRemesh);
 
 		for(int i=0; i < params.iter; ++i)
 		{
-			params.stat.Reset();
+			//			params.stat.Reset();
 
 			if(cb) cb(100*i/params.iter, "Remeshing");
 
 			if(params.splitFlag)
 				SplitLongEdges(toRemesh, params);
-
-			if(params.swapFlag)
-				ImproveValence(toRemesh, params);
 
 			if(params.collapseFlag)
 			{
@@ -136,12 +148,16 @@ public:
 				CollapseCrosses(toRemesh, params);
 			}
 
+			if(params.swapFlag)
+				ImproveValence(toRemesh, params);
+
 			if(params.smoothFlag)
 				ImproveByLaplacian(toRemesh, params);
 			if(params.projectFlag)
 				ProjectToSurface(toRemesh, t, mark);
 
 		}
+		//		std::cout << "exit" << std::endl;
 	}
 
 private:
@@ -155,7 +171,7 @@ private:
 	static inline bool testCreaseEdge(PosType &p, ScalarType creaseCosineThr)
 	{
 		ScalarType angle = fastAngle(NormalizedTriangleNormal(*(p.F())), NormalizedTriangleNormal(*(p.FFlip())));
-		return angle <= creaseCosineThr;
+		return angle <= creaseCosineThr && angle >= -0.98;
 		//        return (angle <= creaseCosineThr && angle >= -creaseCosineThr);
 	}
 	// this stores in minQ the value of the 10th percentile of the VertQuality distribution and in
@@ -283,13 +299,15 @@ private:
 	// Edge swap step: edges are flipped in order to optimize valence and triangle quality across the mesh
 	static void ImproveValence(MeshType &m, Params &params)
 	{
-		tri::UpdateTopology<MeshType>::FaceFace(m); //collapser does not update FF
+		static ScalarType foldCheckRad = math::ToRad(5.);
+		tri::UpdateTopology<MeshType>::FaceFace(m);
 		ForEachFacePos(m, [&](PosType &p){
 			if(p.FFlip() > p.F())
 				if(((!params.selectedOnly) || (p.F()->IsS() && p.FFlip()->IsS())) &&
+				   face::CheckFlipEdge(*p.F(), p.E()) &&
 				   testSwap(p, params.creaseAngleCosThr) &&
-				   face::CheckFlipEdgeNormal(*p.F(), p.E(), math::ToRad(10.f)) &&
-				   face::CheckFlipEdge(*p.F(), p.E()) )
+				   face::CheckFlipEdgeNormal(*p.F(), p.E(), vcg::math::ToRad(5.))) // ? broken? //TODO: fix //BUG:fix
+					//				   face::CheckFlipEdgeNormal(*p.F(), p.E(), params.creaseAngleRadThr * 0.85)) // ? broken? //TODO: fix //BUG:fix
 				{
 					face::FlipEdge(*p.F(), p.E());
 					++params.stat.flipNum;
@@ -366,14 +384,17 @@ private:
 	//  -new face normal changes too much after collapse.
 	//  -new face has too long edges.
 	// TRY: if the vertex has valence 4 (cross vertex) we relax the check on length
-	static bool checkCollapseFacesAroundVert(PosType &p, Point3<ScalarType> &mp, Params & params, bool relaxed=false)
+	//TODO: Refine the crease preservance check when collapsing along boundary (or in general maybe) WORK on this
+	static bool checkCollapseFacesAroundVert(PosType &p, Point3<ScalarType> &mp, Params & params, bool relaxed=false, bool crease=false)
 	{
 		ScalarType minimalAdmittedArea = (params.minLength * params.minLength)/10000.0;
+
 		vector<FaceType*> ff;
 		vector<int> vi;
-
 		face::VFStarVF<FaceType>(p.V(), ff, vi);
+
 		bool allIncidentFaceSelected = true;
+
 		for(FaceType *f: ff)
 			if(!(*f).IsD() && f != p.F()) //i'm not a deleted face
 			{
@@ -388,6 +409,13 @@ private:
 				if( v1 == p.VFlip() || v2 == p.VFlip()) //i'm the other deleted face
 					continue;
 
+				//TODO: Fixme this is bug
+				{
+					ScalarType div = fastAngle(NormalizedTriangleNormal(*(p.F())), NormalizedTriangleNormal(*f));
+					if(div <= params.creaseAngleCosThr && div >= -0.93)
+						return false;
+				}
+
 				float area = DoubleArea(*(pi.F()))/2.f;
 
 				//quality and normal divergence checks
@@ -401,10 +429,9 @@ private:
 
 					Point3<ScalarType> oldN = NormalizedTriangleNormal(*(pi.F()));
 					Point3<ScalarType> newN = Normal(mp, v1->P(), v2->P()).Normalize();
+
 					float div = fastAngle(oldN, newN);
-					//                if(AngleN(oldN,newN) > math::ToRad(1.0)) return false;
-					if(div <= params.creaseAngleCosThr )
-						return false;
+					if(crease && div < 0.98) return false;
 
 					// we prevent collapse that makes edges too long (except for cross)
 					if(!relaxed)
@@ -412,6 +439,7 @@ private:
 							return false;
 				}
 			}
+
 		if(params.selectedOnly) return allIncidentFaceSelected;
 		return true;
 	}
@@ -428,8 +456,10 @@ private:
 		{
 			PosType pp = p; p.FlipV();
 			//check all faces around p() and p.vflip()
-			return checkCollapseFacesAroundVert(p,  mp, params, relaxed) &&
-			        checkCollapseFacesAroundVert(pp, mp, params, relaxed);
+			//TODO: check things here...need to define good check for creases (spikes, corners, edges)
+			bool crease = testCreaseEdge(p, params.creaseAngleCosThr);
+			return checkCollapseFacesAroundVert(p,  mp, params, relaxed, crease) &&
+			        checkCollapseFacesAroundVert(pp, mp, params, relaxed, crease);
 		}
 		return false;
 	}
@@ -444,13 +474,13 @@ private:
 		face::VVStarVF<FaceType>(p.V(), vv);
 
 		for(VertexType *v: vv)
-			if(!(*v).IsD() && (*v).IsB()) //ignore non border
+			if(!(*v).IsD() && (*v).IsB() && v != p.VFlip()) //ignore non border
 				collapsedNV0 = ((*v).P() - p.VFlip()->P()).normalized(); //edge vector after collapse
 
 		face::VVStarVF<FaceType>(p.VFlip(), vv);
 
 		for(VertexType *v: vv)
-			if(!(*v).IsD() && (*v).IsB()) //ignore non border
+			if(!(*v).IsD() && (*v).IsB() && v != p.V()) //ignore non border
 				collapsedNV1 = ((*v).P() - p.V()->P()).normalized(); //edge vector after collapse
 
 		float cosine = cos(math::ToRad(1.5f));
@@ -474,6 +504,7 @@ private:
 		if(params.adapt)
 			computeVQualityDistrMinMax(m, minQ, maxQ);
 
+		tri::UpdateTopology<MeshType>::FaceFace(m);
 		tri::UpdateTopology<MeshType>::VertexFace(m);
 		tri::UpdateFlags<MeshType>::FaceBorderFromVF(m);
 		tri::UpdateFlags<MeshType>::VertexBorderFromFaceBorder(m);
@@ -493,17 +524,17 @@ private:
 					if(pi.V()->IsB() == pi.VFlip()->IsB())
 					{
 						//if both border but not on border edge..abort..if chooseBoundaryCollapse can't find good collapse..abort..
-						if(pi.V()->IsB() && !fi->IsB(i) && !(boundary = chooseBoundaryCollapse(pi, bp)))
+						if(pi.V()->IsB() && !fi->IsB(pi.E()) && !(boundary = chooseBoundaryCollapse(pi, bp)))
 							continue;
 						mp = (pi.V()->IsB()) ? bp.V(1)->P() : (pi.V()->P()+pi.VFlip()->P())/2.f;
 
 					}
 					else //if only one is border...collapse on it!
 					{
+//						continue;
 						bp = (pi.V()->IsB()) ? VertexPair(pi.VFlip(), pi.V()) : VertexPair(pi.V(), pi.VFlip());
-						mp = (pi.V()->IsB()) ? pi.V()->P() : pi.VFlip()->P();
+						mp = (pi.VFlip()->IsB()) ? pi.V()->P() : pi.VFlip()->P();
 					}
-
 					if(testCollapse(pi, mp, minQ, maxQ, params, boundary) && Collapser::LinkConditions(bp))
 					{
 						Collapser::Do(m, bp, mp);
@@ -566,7 +597,6 @@ private:
 		face::VVStarVF<FaceType>(v2, vv2);
 		face::VVStarVF<FaceType>(v3, vv3);
 
-
 		int nv0 = vv0.size(), nv1 = vv1.size();
 		int nv2 = vv2.size(), nv3 = vv3.size();
 
@@ -587,6 +617,7 @@ private:
 	{
 		tri::UpdateTopology<MeshType>::ClearFaceFace(m);
 		tri::UpdateTopology<MeshType>::VertexFace(m);
+		tri::UpdateFlags<MeshType>::VertexBorderFromNone(m);
 		int count = 0;
 
 		for(auto fi=m.face.begin(); fi!=m.face.end(); ++fi)
@@ -624,7 +655,6 @@ private:
 	static int selectVertexFromCrease(MeshType &m, ScalarType creaseThr)
 	{
 		int count = 0;
-
 		ForEachFacePos(m, [&](PosType &p){
 			if((p.FFlip() > p.F()) && testCreaseEdge(p, creaseThr))
 			{
@@ -633,9 +663,126 @@ private:
 				++count;
 			}
 		});
+		return count;
+	}
+
+	static int selectVertexFromFold(MeshType &m, Params & params)
+	{
+		int count = 0;
+		std::vector<char> creaseVerts(m.VN(), 0);
+
+		vcg::tri::UpdateFlags<MeshType>::VertexClearV(m);
+		std::queue<PosType> creaseQueue;
+		ForEachFacePos(m, [&](PosType &p){
+			if((p.FFlip() > p.F()))
+			{
+				ScalarType angle = (NormalizedTriangleNormal(*p.F()) * NormalizedTriangleNormal(*(p.FFlip())));
+				if (angle <= params.creaseAngleCosThr && angle > -0.95)
+				{
+					p.F()->SetFaceEdgeS(p.E());
+					p.FFlip()->SetFaceEdgeS(p.F()->FFi(p.E()));
+					creaseQueue.push(p);
+				}
+			}
+		});
+
+		while (!creaseQueue.empty())
+		{
+			PosType & p = creaseQueue.front();
+			creaseQueue.pop();
+
+			std::stack<PosType> chainQueue;
+			std::vector<size_t> chainVerts;
+
+			if (!p.V()->IsV())
+			{
+				chainQueue.push(p);
+			}
+			p.FlipV();
+
+			if (!p.V()->IsV())
+			{
+				chainQueue.push(p);
+			}
+
+			while (!chainQueue.empty())
+			{
+				PosType p = chainQueue.top();
+				chainQueue.pop();
+
+				p.V()->SetV();
+				chainVerts.push_back(vcg::tri::Index(m, p.V()));
+
+				PosType pp = p;
+				auto count = 1;
+
+				//circle around vert in search for new crease edges
+				do {
+					pp.FlipF(); //jump adj face
+					pp.FlipE(); // this edge is already ok => jump to next
+					if (pp.IsEdgeS())
+					{
+						PosType nextPos = pp;
+						nextPos.FlipV(); // go to next vert in the chain
+						if (!nextPos.V()->IsV()) // if already visited...ignore
+						{
+							++count;
+							chainQueue.push(nextPos);
+						}
+					}
+				}
+				while (pp != p);
+
+			}
+
+			if (chainVerts.size() > 6)
+			{
+				for (auto vp : chainVerts)
+				{
+					creaseVerts[vp] = 1;
+				}
+			}
+		}
+		//store crease on V()
+
+		//this aspect ratio check doesn't work on cadish meshes (long thin triangles spanning whole mesh)
+		ForEachFace(m, [&] (FaceType & f) {
+			if (vcg::QualityRadii(f.cP(0), f.cP(1), f.cP(2)) < params.aspectRatioThr)
+			{
+				if (creaseVerts[vcg::tri::Index(m, f.V(0))] == 0)
+					f.V(0)->SetS();
+				if (creaseVerts[vcg::tri::Index(m, f.V(1))] == 0)
+					f.V(1)->SetS();
+				if (creaseVerts[vcg::tri::Index(m, f.V(2))] == 0)
+					f.V(2)->SetS();
+			}
+		});
+
+		ForEachFace(m, [&] (FaceType & f) {
+			for (int i = 0; i < 3; ++i)
+			{
+				if (f.FFp(i) > &f)
+				{
+					ScalarType angle = fastAngle(NormalizedTriangleNormal(f), NormalizedTriangleNormal(*(f.FFp(i))));
+					if (angle <= params.foldAngleCosThr)
+					{
+						if (creaseVerts[vcg::tri::Index(m, f.V0(i))] == 0)
+							f.V0(i)->SetS();
+						if (creaseVerts[vcg::tri::Index(m, f.V1(i))] == 0)
+							f.V1(i)->SetS();
+						if (creaseVerts[vcg::tri::Index(m, f.V2(i))] == 0)
+							f.V2(i)->SetS();
+						if (creaseVerts[vcg::tri::Index(m, f.FFp(i)->V2(f.FFi(i)))] == 0)
+							f.FFp(i)->V2(f.FFi(i))->SetS();
+					}
+				}
+			}
+		});
 
 		return count;
 	}
+
+	//	static int
 	/**
 	  * Simple Laplacian Smoothing step
 	  * Border and crease vertices are kept fixed.
@@ -660,8 +807,15 @@ private:
 		if(params.selectedOnly) {
 			ss.popAnd();
 		}
-		tri::Smooth<MeshType>::VertexCoordPlanarLaplacian(m,1, params.creaseAngleRadThr,true);
+		tri::Smooth<MeshType>::VertexCoordPlanarLaplacian(m, 1, math::ToRad(1.0), true);
+
 		tri::UpdateSelection<MeshType>::VertexClear(m);
+		selectVertexFromFold(m, params);
+
+		tri::Smooth<MeshType>::VertexCoordLaplacian(m, 1, true, true);
+
+		tri::UpdateSelection<MeshType>::VertexClear(m);
+
 		if(params.selectedOnly) {
 			ss.pop();
 		}
