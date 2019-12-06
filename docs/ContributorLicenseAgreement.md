@@ -19,13 +19,13 @@ If any entity institutes patent litigation - including cross-claim or countercla
 Your contribution is either your original creation, based upon previous work that, to the best of your knowledge, is covered under an appropriate open source license and you have the right under that license to submit that work with modifications, whether created in whole or in part by you, or you have clearly identified the source of the contribution and any license or other restriction (like related patents, trademarks, and license agreements) of which you are personally aware.
 
 ### 4. Details
-Name 
-
----
-Project Contributed
-
----
-Contribution (id of the pull request)
+ Name | github user name 
+--- | ---  
+Email | Address 
+ |
+Date of birth | Place of Birth 
+--- | ---
+Project Contributed |  Contribution (id of the pull request)
 
 ---
 Signature
