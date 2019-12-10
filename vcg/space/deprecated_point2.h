@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004-2016                                           \/)\/    *
+* Copyright(C) 2004-2019                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -65,25 +65,26 @@ namespace vcg {
 
 /** \addtogroup space */
 /*@{*/
-    /**
-        The templated class for representing a point in 2D space.
-        The class is templated over the ScalarType class that is used to represent coordinates.
-				All the usual operator overloading (* + - ...) is present.
-     */
-template <class P2ScalarType> class Point2
+/**
+   The templated class for representing a point in 2D space.
+   The class is templated over the ScalarType class that is used to represent coordinates.
+   All the usual operator overloading (* + - ...) is present.
+ */
+template <class P2ScalarType>
+class Point2
 {
 protected:
-  /// The only data member. Hidden to user.
+/// The only data member. Hidden to user.
 	P2ScalarType _v[2];
 public:
-	  /// the scalar type
+	/// the scalar type
 	typedef P2ScalarType ScalarType;
 	enum {Dimension = 2};
 
 //@{
 
-  /** @name Access to Coords.
-   access to coords is done by overloading of [] or explicit naming of coords (X,Y,)
+	/** @name Access to Coords.
+	 access to coords is done by overloading of [] or explicit naming of coords (X,Y,)
 	 ("p[0]" or "p.X()" are equivalent) **/
 	inline const ScalarType &X() const {return _v[0];}
 	inline const ScalarType &Y() const {return _v[1];}
@@ -118,86 +119,90 @@ public:
 		return _v[i];
 	}
 //@}
-	  /// empty constructor (does nothing)
+	/// empty constructor (does nothing)
 	inline Point2 () { }
-	  /// x,y constructor
+	/// x,y constructor
 	inline Point2 ( const ScalarType nx, const ScalarType ny )
 	{
-			_v[0] = nx; _v[1] = ny;
+		_v[0] = nx; _v[1] = ny;
 	}
-	  /// copy constructor
-	inline Point2 ( Point2 const & p)
+	/// copy constructor
+	inline Point2 ( const Point2 & p)
 	{
-			_v[0]= p._v[0];    _v[1]= p._v[1];
+		_v[0]= p._v[0];    _v[1]= p._v[1];
 	}
-	  /// copy
-	inline Point2 & operator =( Point2 const & p)
+	/// copy
+	inline Point2 & operator =( const Point2 & p)
 	{
-			_v[0]= p._v[0]; _v[1]= p._v[1];
-			return *this;
+		_v[0]= p._v[0]; _v[1]= p._v[1];
+		return *this;
 	}
-	  /// sets the point to (0,0)
+	/// sets the point to (0,0)
 	inline void SetZero()
 	{ _v[0] = 0;_v[1] = 0;}
-	  /// dot product
-	inline ScalarType operator * ( Point2 const & p ) const
+	/// dot product
+	inline ScalarType operator * ( const Point2 & p ) const
 	{
-			return ( _v[0]*p._v[0] + _v[1]*p._v[1] );
+		return ( _v[0]*p._v[0] + _v[1]*p._v[1] );
 	}
 	inline ScalarType dot( const Point2 & p ) const { return (*this) * p; }
-  /// cross product
-	inline ScalarType operator ^ ( Point2 const & p ) const
+	/// cross product
+	inline ScalarType operator ^ ( const Point2 & p ) const
 	{
-			return _v[0]*p._v[1] - _v[1]*p._v[0];
+		return _v[0]*p._v[1] - _v[1]*p._v[0];
 	}
 //@{
 	 /** @name Linearity for 2d points (operators +, -, *, /, *= ...) **/
-	inline Point2 operator + ( Point2 const & p) const
+	inline Point2 operator + ( const Point2 & p) const
 	{
-			return Point2<ScalarType>( _v[0]+p._v[0], _v[1]+p._v[1] );
+		return Point2<ScalarType>( _v[0]+p._v[0], _v[1]+p._v[1] );
 	}
-	inline Point2 operator - ( Point2 const & p) const
+	inline Point2 operator - ( const Point2 & p) const
 	{
-			return Point2<ScalarType>( _v[0]-p._v[0], _v[1]-p._v[1] );
+		return Point2<ScalarType>( _v[0]-p._v[0], _v[1]-p._v[1] );
 	}
 	inline Point2 operator * ( const ScalarType s ) const
 	{
-			return Point2<ScalarType>( _v[0] * s, _v[1] * s );
+		return Point2<ScalarType>( _v[0] * s, _v[1] * s );
 	}
 	inline Point2 operator / ( const ScalarType s ) const
 	{
-			return Point2<ScalarType>( _v[0] / s, _v[1] / s );
+		return Point2<ScalarType>( _v[0] / s, _v[1] / s );
 	}
-	inline Point2 & operator += ( Point2 const & p)
+	inline Point2 & operator += ( const Point2 & p)
 	{
-			_v[0] += p._v[0];    _v[1] += p._v[1];
-			return *this;
+		_v[0] += p._v[0];
+		_v[1] += p._v[1];
+		return *this;
 	}
-	inline Point2 & operator -= ( Point2 const & p)
+	inline Point2 & operator -= ( const Point2 & p)
 	{
-			_v[0] -= p._v[0];    _v[1] -= p._v[1];
-			return *this;
+		_v[0] -= p._v[0];
+		_v[1] -= p._v[1];
+		return *this;
 	}
 	inline Point2 & operator *= ( const ScalarType s )
 	{
-			_v[0] *= s;    _v[1] *= s;
-			return *this;
+		_v[0] *= s;
+		_v[1] *= s;
+		return *this;
 	}
 	inline Point2 & operator /= ( const ScalarType s )
 	{
-			_v[0] /= s;    _v[1] /= s;
-			return *this;
+		_v[0] /= s;
+		_v[1] /= s;
+		return *this;
 	}
  //@}
-	  /// returns the norm (Euclidian)
+	/// returns the norm (Euclidian)
 	inline ScalarType Norm( void ) const
 	{
 		return math::Sqrt( _v[0]*_v[0] + _v[1]*_v[1] );
 	}
-	  /// returns the squared norm (Euclidian)
+	/// returns the squared norm (Euclidian)
 	inline ScalarType SquaredNorm( void ) const
 	{
-			return ( _v[0]*_v[0] + _v[1]*_v[1] );
+		return ( _v[0]*_v[0] + _v[1]*_v[1] );
 	}
 	inline Point2 & Scale( const ScalarType sx, const ScalarType sy )
 	{
@@ -205,62 +210,65 @@ public:
 		_v[1] *= sy;
 		return * this;
 	}
-	  /// normalizes, and returns itself as result
+	/// normalizes, and returns itself as result
 	inline Point2 & Normalize( void )
 	{
-			ScalarType n = math::Sqrt(_v[0]*_v[0] + _v[1]*_v[1]);
-			if(n>0.0) {	_v[0] /= n;	_v[1] /= n; }
-			return *this;
+		ScalarType n = math::Sqrt(_v[0]*_v[0] + _v[1]*_v[1]);
+		if(n>0.0) {
+			_v[0] /= n; _v[1] /= n;
+		}
+		return *this;
 	}
-	  /// points equality
-	inline bool operator == ( Point2 const & p ) const
+	/// points equality
+	inline bool operator == ( const Point2 & p ) const
 	{
-			return (_v[0]==p._v[0] && _v[1]==p._v[1]);
+		return (_v[0]==p._v[0] && _v[1]==p._v[1]);
 	}
-	  /// disparity between points
-	inline bool operator != ( Point2 const & p ) const
+	/// disparity between points
+	inline bool operator != ( const Point2 & p ) const
 	{
-			return ( (_v[0]!=p._v[0]) || (_v[1]!=p._v[1]) );
+		return ( (_v[0]!=p._v[0]) || (_v[1]!=p._v[1]) );
 	}
-	  /// lexical ordering
-	inline bool operator <  ( Point2 const & p ) const
+	/// lexical ordering
+	inline bool operator <  ( const Point2 & p ) const
 	{
-			return	(_v[1]!=p._v[1])?(_v[1]<p._v[1]):
-							(_v[0]<p._v[0]);
+		return (_v[1]!=p._v[1])?(_v[1]<p._v[1]):
+		       (_v[0]<p._v[0]);
 	}
-	  /// lexical ordering
-	inline bool operator >  ( Point2 const & p ) const
+	/// lexical ordering
+	inline bool operator >  ( const Point2 & p ) const
 	{
-			return	(_v[1]!=p._v[1])?(_v[1]>p._v[1]):
-							(_v[0]>p._v[0]);
+		return (_v[1]!=p._v[1])?(_v[1]>p._v[1]):
+		       (_v[0]>p._v[0]);
 	}
-	  /// lexical ordering
-	inline bool operator <= ( Point2 const & p ) const
+	/// lexical ordering
+	inline bool operator <= ( const Point2 & p ) const
 	{
-			return	(_v[1]!=p._v[1])?(_v[1]< p._v[1]):
-							(_v[0]<=p._v[0]);
+		return (_v[1]!=p._v[1])?(_v[1]< p._v[1]):
+		       (_v[0]<=p._v[0]);
 	}
-	  /// lexical ordering
-	inline bool operator >= ( Point2 const & p ) const
+	/// lexical ordering
+	inline bool operator >= ( const Point2 & p ) const
 	{
-			return	(_v[1]!=p._v[1])?(_v[1]> p._v[1]):
-							(_v[0]>=p._v[0]);
+		return (_v[1]!=p._v[1])?(_v[1]> p._v[1]):
+		       (_v[0]>=p._v[0]);
 	}
-	  /// returns the distance to another point p
-	inline ScalarType Distance( Point2 const & p ) const
+	/// returns the distance to another point p
+	inline ScalarType Distance( const Point2 & p ) const
 	{
-			return Norm(*this-p);
+		return Norm(*this-p);
 	}
-	  /// returns the suqared distance to another point p
-	inline ScalarType SquaredDistance( Point2 const & p ) const
+	/// returns the suqared distance to another point p
+	inline ScalarType SquaredDistance( const Point2 & p ) const
 	{
-      return (*this-p).SquaredNorm();
+		return (*this-p).SquaredNorm();
 	}
-	  /// returns the angle with X axis (radiants, in [-PI, +PI] )
-	inline ScalarType Angle() const {
+	/// returns the angle with X axis (radiants, in [-PI, +PI] )
+	inline ScalarType Angle() const
+	{
 		return math::Atan2(_v[1],_v[0]);
 	}
-		/// transform the point in cartesian coords into polar coords
+	/// transform the point in cartesian coords into polar coords
 	inline Point2 & Cartesian2Polar()
 	{
 		ScalarType t = Angle();
@@ -268,7 +276,7 @@ public:
 		_v[1] = t;
 		return *this;
 	}
-		/// transform the point in polar coords into cartesian coords
+	/// transform the point in polar coords into cartesian coords
 	inline Point2 & Polar2Cartesian()
 	{
 		ScalarType l = _v[0];
@@ -276,7 +284,7 @@ public:
 		_v[1] = (ScalarType)(l*math::Sin(_v[1]));
 		return *this;
 	}
-		/// rotates the point of an angle (radiants, counterclockwise)
+	/// rotates the point of an angle (radiants, counterclockwise)
 	inline Point2 & Rotate( const ScalarType rad )
 	{
 		ScalarType t = _v[0];
@@ -284,23 +292,26 @@ public:
 		ScalarType c = math::Cos(rad);
 
 		_v[0] = _v[0]*c - _v[1]*s;
-		_v[1] =   t *s + _v[1]*c;
+		_v[1] =     t*s + _v[1]*c;
 
 		return *this;
 	}
 
-	/// Questa funzione estende il vettore ad un qualsiasi numero di dimensioni
-	/// paddando gli elementi estesi con zeri
+	/// This function extends the vector to any arbitrary domension
+	/// virtually padding missing elements with zeros
 	inline ScalarType Ext( const int i ) const
 	{
-		if(i>=0 && i<2) return _v[i];
-		else            return 0;
+		if(i>=0 && i<2)
+			return _v[i];
+		else
+			return 0;
 	}
-		/// imports from 2D points of different types
+	/// imports from 2D points of different types
 	template <class T>
 	inline void Import( const Point2<T> & b )
 	{
-		_v[0] = b.X(); _v[1] = b.Y();
+		_v[0] = ScalarType(b.X());
+		_v[1] = ScalarType(b.Y());
 	}
 	template <class EigenVector>
 	inline void FromEigenVector(const EigenVector & b)
@@ -314,24 +325,31 @@ public:
 		b[0]=_v[0];
 		b[1]=_v[1];
 	}
-		/// constructs a 2D points from an existing one of different type
+	/// constructs a 2D points from an existing one of different type
 	template <class T>
 	static Point2 Construct( const Point2<T> & b )
 	{
-    return Point2(b.X(),b.Y());
+		return Point2(ScalarType(b.X()), ScalarType(b.Y()));
+	}
+	static Point2 Construct( const Point2<ScalarType> & b )
+	{
+		return b;
+	}
+	template <class T>
+	static Point2 Construct( const T & x, const T & y)
+	{
+		return Point2(ScalarType(x), ScalarType(y));
 	}
 
 	static inline Point2 Zero(void)
-    {
-      return Point2(0,0);
-    }
+	{
+		return Point2(0,0);
+	}
 
-    static inline Point2 One(void)
-    {
-      return Point2(1,1);
-    }
-
-
+	static inline Point2 One(void)
+	{
+		return Point2(1,1);
+	}
 }; // end class definition
 
 
@@ -343,42 +361,42 @@ inline T Angle( Point2<T> const & p0, Point2<T> const & p1 )
 
 template <class T>
 inline Point2<T> operator - ( Point2<T> const & p ){
-    return Point2<T>( -p[0], -p[1] );
+	return Point2<T>( -p[0], -p[1] );
 }
 
 template <class T>
 inline Point2<T> operator * ( const T s, Point2<T> const & p ){
-    return Point2<T>( p[0] * s, p[1] * s  );
+	return Point2<T>( p[0] * s, p[1] * s );
 }
 
 template <class T>
 inline T Norm( Point2<T> const & p ){
-		return p.Norm();
+	return p.Norm();
 }
 
 template <class T>
 inline T SquaredNorm( Point2<T> const & p ){
-    return p.SquaredNorm();
+	return p.SquaredNorm();
 }
 
 template <class T>
 inline Point2<T> & Normalize( Point2<T> & p ){
-    return p.Normalize();
+	return p.Normalize();
 }
 
 template <class T>
 inline T Distance( Point2<T> const & p1,Point2<T> const & p2 ){
-    return Norm(p1-p2);
+	return Norm(p1-p2);
 }
 
 template <class T>
 inline T SquaredDistance( Point2<T> const & p1,Point2<T> const & p2 ){
-    return SquaredNorm(p1-p2);
+	return SquaredNorm(p1-p2);
 }
 
-template <class SCALARTYPE>
-inline Point2<SCALARTYPE> Abs(const Point2<SCALARTYPE> & p) {
-  return (Point2<SCALARTYPE>(math::Abs(p[0]), math::Abs(p[1])));
+template <class T>
+inline Point2<T> Abs(const Point2<T> & p) {
+	return (Point2<T>(math::Abs(p[0]), math::Abs(p[1])));
 }
 
 typedef Point2<short>  Point2s;
