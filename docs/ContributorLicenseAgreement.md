@@ -23,7 +23,7 @@ Your contribution is either your original creation, based upon previous work tha
  :---:|:---:
 **Full real world First and Last name** |  **github user name**
  &nbsp; |   &nbsp;
-**Email**  | **Phyisical home/office address**  
+**Email**  | **Physical home/office address**  
 &nbsp;|&nbsp;
 **Date of birth**  | **Place of birth** 
 &nbsp; | &nbsp;
