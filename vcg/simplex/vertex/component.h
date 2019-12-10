@@ -300,7 +300,7 @@ public:
         TexCoordType &T()       { return _t; }
         TexCoordType cT() const { return _t; }
     template < class RightValueType>
-    void ImportData(const RightValueType  & rVert ) { if(rVert.IsTexCoordEnabled())  T() = rVert.cT(); TT::ImportData( rVert); }
+    void ImportData(const RightValueType  & rVert ) { if(rVert.IsTexCoordEnabled()) T().Import(rVert.cT()); TT::ImportData(rVert); }
   static bool HasTexCoord()   { return true; }
     static void Name(std::vector<std::string> & name){name.push_back(std::string("TexCoord"));TT::Name(name);}
 
