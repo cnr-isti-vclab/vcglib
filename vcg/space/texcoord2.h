@@ -61,8 +61,8 @@ public:
 	inline const PointType &P() const { return _t[0]; }
 	inline PointType &P() { return _t[0]; }
 
-	inline const PointType &P(const int i) const { assert(i>0 && i<NMAX); return _t[i]; }
-	inline PointType &P(const int i) { assert(i>0 && i<NMAX); return _t[i]; }
+	inline const PointType &P(const int i) const { assert(i>=0 && i<NMAX); return _t[i]; }
+	inline PointType &P(const int i) { assert(i>=0 && i<NMAX); return _t[i]; }
 
 	/// Return a  reference to the u texture coordinate of the vertex
 	inline       T & U() { return _t[0][0]; }
@@ -72,18 +72,18 @@ public:
 	inline const T & U() const { return _t[0][0]; }
 	/// Return a const reference to the v texture coordinate of the vertex
 	inline const T & V() const { return _t[0][1]; }
-	inline       T & U( int i) { assert(i>0 && i<NMAX);  return _t[i][0]; }
-	inline       T & V( int i) { assert(i>0 && i<NMAX);  return _t[i][1]; }
-	inline const T & U( int i) const { assert(i>0 && i<NMAX); return _t[i][0]; }
-	inline const T & V( int i) const { assert(i>0 && i<NMAX); return _t[i][1]; }
+	inline       T & U( int i) { assert(i>=0 && i<NMAX);  return _t[i][0]; }
+	inline       T & V( int i) { assert(i>=0 && i<NMAX);  return _t[i][1]; }
+	inline const T & U( int i) const { assert(i>=0 && i<NMAX); return _t[i][0]; }
+	inline const T & V( int i) const { assert(i>=0 && i<NMAX); return _t[i][1]; }
 
 	/// Return a reference to the texture id of the vertex
 	inline short & N()       { return _n[0]; }
 	/// Return a const reference to the texture id of the vertex
 	inline short   N() const { return _n[0]; }
 
-	inline short & N(int i)       { assert(i>0 && i<NMAX); return _n[i]; }
-	inline short   N(int i) const { assert(i>0 && i<NMAX); return _n[i]; }
+	inline short & N(int i)       { assert(i>=0 && i<NMAX); return _n[i]; }
+	inline short   N(int i) const { assert(i>=0 && i<NMAX); return _n[i]; }
 
 	template <class S>
 	inline void Import( const TexCoord2<S> & tc )
