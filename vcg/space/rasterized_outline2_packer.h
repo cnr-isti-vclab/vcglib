@@ -241,6 +241,10 @@ public:
       //the width (in pixels) of the gutter added around the outline
       int gutterWidth;
 
+      // if false, then do not combine the costs when doubeHorizon is used. This
+      // can help to keep the packing area in a rectangular region
+      bool minmax;
+
       ///default constructor
       Parameters()
       {
@@ -250,6 +254,7 @@ public:
           permutations=false;
           rotationNum = 16;
           gutterWidth = 0;
+          minmax = false;
       }
   };
 
@@ -267,11 +272,7 @@ public:
       //the bottomHorizon stores the height of the i-th column in the current solution
       std::vector<int> mBottomHorizon;
 
-      // secondary horizons, these keep track of the space between the bottom of the
-      // grid and the already placed polygons
-      std::vector<int> mSecLeftHorizon;
-      std::vector<int> mSecBottomHorizon;
-
+      // inner horizons base and extent (number of free cells)
       std::vector<int> mInnerBottomHorizon;
       std::vector<int> mInnerBottomExtent;
 
@@ -289,9 +290,6 @@ public:
       {
           mBottomHorizon.resize(size.X(), 0);
           mLeftHorizon.resize(size.Y(), 0);
-
-          mSecBottomHorizon.resize(size.X(), size.Y() - 1);
-          mSecLeftHorizon.resize(size.Y(), size.X() - 1);
 
           mInnerBottomHorizon.resize(size.X(), 0);
           mInnerBottomExtent.resize(size.X(), 0);
@@ -351,33 +349,20 @@ public:
           for (size_t i = 0; i < bottom.size(); ++i) {
               int y = mInnerBottomHorizon[col + i] - bottom[i];
               if (y > y_max) {
-                  if (y + poly.gridHeight(rast_i) >= mSize.Y())
+                  if (y + poly.gridHeight(rast_i) >= mSize.Y()) {
                       return INVALID_POSITION;
+                  }
                   y_max = y;
               }
           }
           // check if the placement is feasible
           for (size_t i = 0; i < bottom.size(); ++i) {
               if (y_max + bottom[i] < mBottomHorizon[col + i]
-                      && y_max + bottom[i] + deltaY[i] > mInnerBottomHorizon[col + i] + mInnerBottomExtent[col + i])
+                      && y_max + bottom[i] + deltaY[i] > mInnerBottomHorizon[col + i] + mInnerBottomExtent[col + i]) {
                   return INVALID_POSITION;
+              }
           }
           return y_max;
-      }
-
-      int pushY(RasterizedOutline2& poly, int col, int rast_i) {
-          std::vector<int>& bottom = poly.getBottom(rast_i);
-          std::vector<int>& deltaY = poly.getDeltaY(rast_i);
-          int y_min = INT_MAX;
-          for (size_t i = 0; i < bottom.size(); ++i) {
-             int y = mSecBottomHorizon[col + i] - (bottom[i] + deltaY[i]);
-             if (y < y_min) {
-                 if (y < 0)
-                     return INVALID_POSITION;
-                 y_min = y;
-             }
-          }
-          return y_min;
       }
 
       //given a poly and the row at which it is placed,
@@ -416,21 +401,6 @@ public:
                   return INVALID_POSITION;
           }
           return x_max;
-      }
-
-      int pushX(RasterizedOutline2& poly, int row, int rast_i) {
-          std::vector<int>& left = poly.getLeft(rast_i);
-          std::vector<int>& deltaX = poly.getDeltaX(rast_i);
-          int x_min = INT_MAX;
-          for (size_t i = 0; i < left.size(); ++i) {
-              int x = mSecLeftHorizon[row + i] - (left[i] + deltaX[i]);
-              if (x < x_min) {
-                  if (x < 0)
-                      return INVALID_POSITION;
-                  x_min = x;
-              }
-          }
-          return x_min;
       }
 
       int costYWithPenaltyOnX(RasterizedOutline2& poly, Point2i pos, int rast_i) {
@@ -508,20 +478,20 @@ public:
       {
           //return pos.Y() + poly.gridHeight(rast_i);
 
-          int cost = -INT_MAX;
+          int maxY = -INT_MAX;
           std::vector<int>& bottom = poly.getBottom(rast_i);
           std::vector<int>& deltaY = poly.getDeltaY(rast_i);
           for (unsigned i = 0; i < bottom.size(); ++i) {
-              int currentCost;
+              int yi = 0;
               if (pos.Y() + bottom[i] + deltaY[i] < mBottomHorizon[pos.X() + i]) {
-                  currentCost = -(pos.Y() + bottom[i]);
+                  yi = -(pos.Y() + bottom[i]);
               } else {
-                  currentCost = pos.Y() + bottom[i] + deltaY[i];
+                  yi = pos.Y() + bottom[i] + deltaY[i];
               }
-              if (currentCost > cost)
-                  cost = currentCost;
+              if (yi > maxY)
+                  maxY = yi;
           }
-          return cost;
+          return maxY;
 
       }
 
@@ -529,20 +499,20 @@ public:
       {
           //return pos.X() + poly.gridWidth(rast_i);
 
-          int cost = -INT_MAX;
+          int maxX = -INT_MAX;
           std::vector<int>& left = poly.getLeft(rast_i);
           std::vector<int>& deltaX = poly.getDeltaX(rast_i);
           for (unsigned i = 0; i < left.size(); ++i) {
-              int currentCost = 0;
+              int xi = 0;
               if (pos.X() + left[i] + deltaX[i] < mLeftHorizon[pos.Y() + i]) {
-                  currentCost = -(pos.X() + left[i]);
+                  xi = -(pos.X() + left[i]);
               } else {
-                  currentCost = pos.X() + left[i] + deltaX[i];
+                  xi = pos.X() + left[i] + deltaX[i];
               }
-              if (currentCost > cost)
-                  currentCost = cost;
+              if (xi > maxX)
+                  maxX = xi;
           }
-          return cost;
+          return maxX;
       }
 
       /* Returns the number of empty cells between the poly's left side and the
@@ -614,15 +584,7 @@ public:
                   }
               }
 
-              int secBtmHor = pos.Y() + bottom[i];
-              if (secBtmHor < mSecBottomHorizon[pos.X() + i])
-                  mSecBottomHorizon[pos.X() + i] = secBtmHor;
           }
-
-          /*
-          if (params.costFunction != Parameters::MixedCost
-                  && !params.doubleHorizon) return;
-          */
 
           //update left horizon
           for (int i = 0; i < poly.gridHeight(rast_i); i++) {
@@ -656,10 +618,6 @@ public:
                       mInnerLeftExtent[pos.Y() + i] = 0;
                   }
               }
-
-              int secLeftHor = pos.X() + left[i];
-              if (secLeftHor < mSecLeftHorizon[pos.Y() + i])
-                  mSecLeftHorizon[pos.Y() + i] = secLeftHor;
           }
       }
   };
@@ -811,51 +769,36 @@ public:
         return trials;
     }
 
-    static bool PackAtFixedScale(std::vector<std::vector<Point2x>> &polyPointsVec,
-                     const std::vector<Point2i> &containerSizes,
-                     std::vector<Similarity2x> &trVec,
-                     std::vector<int> &polyToContainer,
-                     const Parameters &packingPar,
-                     float scale)
-    {
-        //create the vector of polys, starting for the poly points we received as parameter
-        std::vector<RasterizedOutline2> polyVec(polyPointsVec.size());
-        for(size_t i=0;i<polyVec.size();i++) {
-            polyVec[i].setPoints(polyPointsVec[i]);
-        }
-
-        std::vector<std::vector<int>> trials = InitializePermutationVectors(polyPointsVec, packingPar);
-
-        for (std::size_t i = 0; i < trials.size(); ++i) {
-            std::vector<Similarity2x> trVecIter;
-            std::vector<int> polyToContainerIter;
-            if (PolyPacking(polyPointsVec, containerSizes, trVecIter, polyToContainerIter, packingPar, scale, polyVec, trials[i])) {
-                trVec = trVecIter;
-                polyToContainer = polyToContainerIter;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /* Function parameters:
+    /*
+     * Pack charts using a best effort policy. The idea is that this function
+     * packs what it can in the given space without scaling the outlines.
+     *
+     * Returns the number of charts actually packed.
+     *
+     * Function parameters:
      *   outline2Vec (IN) vector of outlines to pack
      *   containerSizes (IN) vector of container (grid) sizes
      *   trVec (OUT) vector of transformations that must be applied to the objects
      *   polyToContainer (OUT) vector of outline-to-container mappings. If polyToContainer[i] == -1
      *     then outline i did not fit in the packing grids, and the transformation trVec[i] is meaningless
-     *
-     * Returns true if it packed at least one polygon into the container
-     *
-     * The idea is that this function packs what it can in the given space without transforming the
-     * outlines, and returns enough information to the caller in order to decide what to do */
-    static bool
+     * */
+    static int
     PackBestEffort(std::vector<std::vector<Point2x>> &outline2Vec,
                    const std::vector<Point2i> &containerSizes,
                    std::vector<Similarity2x> &trVec,
                    std::vector<int> &polyToContainer,
                    const Parameters &packingPar)
+    {
+        return PackBestEffortAtScale(outline2Vec, containerSizes, trVec, polyToContainer, packingPar, 1.0f);
+    }
+
+    /* Same as PackBestEffort() but allows to specify the outlines scaling factor */
+    static int
+    PackBestEffortAtScale(std::vector<std::vector<Point2x>> &outline2Vec,
+                          const std::vector<Point2i> &containerSizes,
+                          std::vector<Similarity2x> &trVec,
+                          std::vector<int> &polyToContainer,
+                          const Parameters &packingPar, float scaleFactor)
     {
         std::vector<RasterizedOutline2> polyVec(outline2Vec.size());
         for(size_t i=0;i<polyVec.size();i++) {
@@ -867,18 +810,18 @@ public:
         std::vector<std::vector<int>> trials = InitializePermutationVectors(outline2Vec, packingPar);
         int bestNumPlaced = 0;
         for (std::size_t i = 0; i < trials.size(); ++i) {
-            // TODO this should probably attempt at maximizing the occupancy and/or the number of placed polygons
             std::vector<Similarity2x> trVecIter;
             std::vector<int> polyToContainerIter;
-            PolyPacking(outline2Vec, containerSizes, trVecIter, polyToContainerIter, packingPar, 1.0, polyVec, trials[i], true);
+            PolyPacking(outline2Vec, containerSizes, trVecIter, polyToContainerIter, packingPar, scaleFactor, polyVec, trials[i], true);
             int numPlaced = outline2Vec.size() - std::count(polyToContainerIter.begin(), polyToContainerIter.end(), -1);
             if (numPlaced > bestNumPlaced) {
                 trVec = trVecIter;
                 polyToContainer = polyToContainerIter;
+                bestNumPlaced = numPlaced;
             }
         }
 
-        return bestNumPlaced > 0;
+        return bestNumPlaced;
     }
 
     //tries to pack polygons using the given gridSize and scaleFactor
@@ -942,27 +885,31 @@ public:
                     //look for the best position, dropping from top
                     for (int col = 0; col < maxCol; col++) {
                         int currPolyY;
-                        currPolyY = packingFields[grid_i].dropY(polyVec[i],col, rast_i);
-                        if (currPolyY != INVALID_POSITION) {
-                            assert(currPolyY + polyVec[i].gridHeight(rast_i) < gridSizes[grid_i].Y() && "drop");
-                            int currCost = packingFields[grid_i].getCostX(polyVec[i], Point2i(col, currPolyY), rast_i) +
-                                    packingFields[grid_i].getCostY(polyVec[i], Point2i(col, currPolyY), rast_i);
-                            if (currCost < bestCost) {
-                                bestContainer = grid_i;
-                                bestCost = currCost;
-                                bestRastIndex = rast_i;
-                                bestPolyX = col;
-                                bestPolyY = currPolyY;
-                                placedUsingSecondaryHorizon = false;
+                        if (!placedUsingSecondaryHorizon) {
+                            currPolyY = packingFields[grid_i].dropY(polyVec[i],col, rast_i);
+                            if (currPolyY != INVALID_POSITION) {
+                                assert(currPolyY + polyVec[i].gridHeight(rast_i) < gridSizes[grid_i].Y() && "drop");
+                                int currCost = packingFields[grid_i].getCostY(polyVec[i], Point2i(col, currPolyY), rast_i);
+                                if (packingPar.doubleHorizon && (packingPar.minmax == true))
+                                    currCost += packingFields[grid_i].getCostX(polyVec[i], Point2i(col, currPolyY), rast_i);
+                                if (currCost < bestCost) {
+                                    bestContainer = grid_i;
+                                    bestCost = currCost;
+                                    bestRastIndex = rast_i;
+                                    bestPolyX = col;
+                                    bestPolyY = currPolyY;
+                                    placedUsingSecondaryHorizon = false;
+                                }
                             }
                         }
                         if (packingPar.innerHorizon) {
                             currPolyY = packingFields[grid_i].dropYInner(polyVec[i],col, rast_i);
                             if (currPolyY != INVALID_POSITION) {
                                 assert(currPolyY + polyVec[i].gridHeight(rast_i) < gridSizes[grid_i].Y() && "drop_inner");
-                                int currCost = packingFields[grid_i].getCostX(polyVec[i], Point2i(col, currPolyY), rast_i) +
-                                        packingFields[grid_i].getCostY(polyVec[i], Point2i(col, currPolyY), rast_i);
-                                if (currCost < bestCost) {
+                                int currCost = packingFields[grid_i].getCostY(polyVec[i], Point2i(col, currPolyY), rast_i);
+                                if (packingPar.doubleHorizon && (packingPar.minmax == true))
+                                    currCost += packingFields[grid_i].getCostX(polyVec[i], Point2i(col, currPolyY), rast_i);
+                                if (!placedUsingSecondaryHorizon || currCost < bestCost) {
                                     bestContainer = grid_i;
                                     bestCost = currCost;
                                     bestRastIndex = rast_i;
@@ -979,28 +926,31 @@ public:
 
                     for (int row = 0; row < maxRow; row++) {
                         int currPolyX;
-                        currPolyX = packingFields[grid_i].dropX(polyVec[i],row, rast_i);
-                        if (currPolyX != INVALID_POSITION) {
-                            assert(currPolyX + polyVec[i].gridWidth(rast_i) < gridSizes[grid_i].X() && "drop");
-                            int currCost = packingFields[grid_i].getCostY(polyVec[i], Point2i(currPolyX, row), rast_i) +
-                                    packingFields[grid_i].getCostX(polyVec[i], Point2i(currPolyX, row), rast_i);
-                            if (currCost < bestCost) {
-                                bestContainer = grid_i;
-                                bestCost = currCost;
-                                bestRastIndex = rast_i;
-                                bestPolyX = currPolyX;
-                                bestPolyY = row;
-                                placedUsingSecondaryHorizon = false;
+                        if (!placedUsingSecondaryHorizon) {
+                            currPolyX = packingFields[grid_i].dropX(polyVec[i],row, rast_i);
+                            if (currPolyX != INVALID_POSITION) {
+                                assert(currPolyX + polyVec[i].gridWidth(rast_i) < gridSizes[grid_i].X() && "drop");
+                                int currCost = packingFields[grid_i].getCostX(polyVec[i], Point2i(currPolyX, row), rast_i);
+                                if (packingPar.doubleHorizon && (packingPar.minmax == true))
+                                    currCost += packingFields[grid_i].getCostY(polyVec[i], Point2i(currPolyX, row), rast_i);
+                                if (currCost < bestCost) {
+                                    bestContainer = grid_i;
+                                    bestCost = currCost;
+                                    bestRastIndex = rast_i;
+                                    bestPolyX = currPolyX;
+                                    bestPolyY = row;
+                                    placedUsingSecondaryHorizon = false;
+                                }
                             }
                         }
-
                         if (packingPar.innerHorizon) {
                             currPolyX = packingFields[grid_i].dropXInner(polyVec[i],row, rast_i);
                             if (currPolyX != INVALID_POSITION) {
                                 assert(currPolyX + polyVec[i].gridWidth(rast_i) < gridSizes[grid_i].X() && "drop_inner");
-                                int currCost = packingFields[grid_i].getCostY(polyVec[i], Point2i(currPolyX, row), rast_i) +
-                                        packingFields[grid_i].getCostX(polyVec[i], Point2i(currPolyX, row), rast_i);
-                                if (currCost < bestCost) {
+                                int currCost = packingFields[grid_i].getCostX(polyVec[i], Point2i(currPolyX, row), rast_i);
+                                if (packingPar.doubleHorizon && (packingPar.minmax == true))
+                                    currCost += packingFields[grid_i].getCostY(polyVec[i], Point2i(currPolyX, row), rast_i);
+                                if (!placedUsingSecondaryHorizon || currCost < bestCost) {
                                     bestContainer = grid_i;
                                     bestCost = currCost;
                                     bestRastIndex = rast_i;

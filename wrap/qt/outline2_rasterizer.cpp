@@ -39,8 +39,9 @@ void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
     // and adding the gutter width.
     int sizeX = (int)ceil(bb.DimX()*scale);
     int sizeY = (int)ceil(bb.DimY()*scale);
-    sizeX += gutterWidth;
-    sizeY += gutterWidth;
+    int safetyBuffer = 2;
+    sizeX += (gutterWidth + safetyBuffer);
+    sizeY += (gutterWidth + safetyBuffer);
 
     QImage img(sizeX,sizeY,QImage::Format_RGB32);
     QColor backgroundColor(Qt::transparent);
@@ -66,7 +67,7 @@ void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
         painter.setPen(qp);
 
         painter.resetTransform();
-        painter.translate(QPointF(-(bb.min.X()*scale) + gutterWidth/2.0f, -(bb.min.Y()*scale) + gutterWidth/2.0f));
+        painter.translate(QPointF(-(bb.min.X()*scale) + (gutterWidth + safetyBuffer)/2.0f, -(bb.min.Y()*scale) + (gutterWidth + safetyBuffer)/2.0f));
         painter.rotate(math::ToDeg(rotRad));
         painter.scale(scale,scale);
 
@@ -102,7 +103,7 @@ void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
         painter.setPen(qp);
 
         painter.resetTransform();
-        painter.translate(QPointF(-(bb.min.X()*scale) + gutterWidth/2.0f, -(bb.min.Y()*scale) + gutterWidth/2.0f));
+        painter.translate(QPointF(-(bb.min.X()*scale) + (gutterWidth + safetyBuffer)/2.0f, -(bb.min.Y()*scale) + (gutterWidth + safetyBuffer)/2.0f));
         painter.rotate(math::ToDeg(rotRad));
         painter.scale(scale,scale);
 
@@ -195,8 +196,9 @@ void QtOutline2Rasterizer::rasterize(RasterizedOutline2 &poly,
     for (int y = 0; y < img.height(); y++) {
         const uchar* line = img.scanLine(y);
         for(int x = 0; x < img.width(); ++x) {
-            if (((QRgb*)line)[x] == yellow)
+            if (((QRgb*)line)[x] == yellow) {
                 tetrisGrid[y][x] = 1;
+            }
         }
     }
 
