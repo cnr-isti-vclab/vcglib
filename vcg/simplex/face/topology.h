@@ -661,10 +661,10 @@ bool CheckFlipEdge(FaceType &f, int z)
 template <class FaceType>
 void FlipEdge(FaceType &f, const int z)
 {
-    assert(z>=0);
-    assert(z<3);
-    assert( !IsBorder(f,z) );
-    assert( face::IsManifold<FaceType>(f, z));
+	assert(z>=0);
+	assert(z<3);
+	assert( !IsBorder(f,z) );
+	assert( face::IsManifold<FaceType>(f, z));
 
     FaceType *g = f.FFp(z); // The other face 
     int	      w = f.FFi(z); // and other side
@@ -796,6 +796,7 @@ void VVStarVF( typename FaceType::VertexType* vp, std::vector<typename FaceType:
 {
 	typedef typename FaceType::VertexType* VertexPointer;
 	starVec.clear();
+    starVec.reserve(16);
 	face::VFIterator<FaceType> vfi(vp);
 	while(!vfi.End())
 	{
@@ -860,6 +861,8 @@ void VFStarVF( typename FaceType::VertexType* vp,
 {
     faceVec.clear();
     indexes.clear();
+	faceVec.reserve(16);
+	indexes.reserve(16);
     face::VFIterator<FaceType> vfi(vp);
     while(!vfi.End())
     {
@@ -988,6 +991,7 @@ void VVOrderedStarFF(Pos<FaceType> &startPos,
                      std::vector<typename FaceType::VertexType *> &vertexVec)
 {
   vertexVec.clear();
+  vertexVec.reserve(16);
   std::vector<Pos<FaceType> > posVec;
   VFOrderedStarFF(startPos,posVec);
   for(size_t i=0;i<posVec.size();++i)
@@ -1006,6 +1010,7 @@ void VFOrderedStarFF(const Pos<FaceType> &startPos,
                      std::vector<Pos<FaceType> > &posVec)
 {
   posVec.clear();
+  posVec.reserve(16);
   bool foundBorder=false;
   size_t firstBorderInd;
   Pos<FaceType> curPos=startPos;
@@ -1050,6 +1055,8 @@ void VFOrderedStarFF(const Pos<FaceType> &startPos,
   VFOrderedStarFF(startPos,posVec);
   faceVec.clear();
   edgeVec.clear();
+  faceVec.reserve(16);
+  edgeVec.reserve(16);
   for(size_t i=0;i<posVec.size();++i)
   {
     faceVec.push_back(posVec[i].F());
