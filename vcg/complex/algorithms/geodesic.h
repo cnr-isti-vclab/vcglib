@@ -176,13 +176,14 @@ public:
 
 
   struct DIJKDist{
-    DIJKDist(VertexPointer _v):v(_v){}
+	DIJKDist(VertexPointer _v):v(_v), q(_v->Q()){}
     VertexPointer v;
+	ScalarType q;
 
     bool operator < (const DIJKDist &o) const
     {
-      if( v->Q() != o.v->Q())
-        return v->Q() > o.v->Q();
+		if( q != o.q)
+		return q > o.q;
       return v<o.v;
     }
    };
@@ -600,6 +601,7 @@ It is just a simple wrapper of the basic Compute()
 
     std::vector<DIJKDist> Heap;
     tri::UnMarkAll(m);
+	tri::UnMarkAll(m);
 
     for(size_t i=0;i<seedVec.size();++i)
     {
