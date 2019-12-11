@@ -209,16 +209,38 @@ public:
   // Main Collapsing Function: the one that actually performs the collapse of the edge denoted by the VertexPair c
   // Remember that v[0] will be deleted and v[1] will survive with the position indicated by p
   // To do a collapse onto a vertex simply pass p as the position of the surviving vertex
-  static int Do(TriMeshType &m, VertexPair & c, const Point3<ScalarType> &p)
+  static int Do(TriMeshType &m, VertexPair & c, const Point3<ScalarType> &p, const bool preserveFaceEdgeS = false)
   {
     EdgeSet es;
     FindSets(c,es);
     
     int n_face_del=0 ;    
+
+	static int VtoE[3][3] = { -1,  0,  2,
+	                           0, -1,  1,
+	                           2,  1, -1 };
+
+//	bool toSel = false;
+
+	VertexType* top[2];
+	std::map <VertexPointer, bool> toSel;
+
+	std::vector<VertexPointer> v2s; v2s.reserve(2);
+
     for(auto i=es.AV01().begin();i!=es.AV01().end();++i)
     {
       FaceType  & f = *((*i).f);
       assert(f.V((*i).z) == c.V(0));
+
+	    if (preserveFaceEdgeS && f.IsFaceEdgeS(VtoE[((*i).z+1)%3][((*i).z+2)%3]))
+		{
+//			std::cout << "2 " <<std::endl;
+			if (f.V(((*i).z+1)%3) == c.V(1))
+				v2s.push_back(f.V(((*i).z+2)%3));
+			else
+				v2s.push_back(f.V(((*i).z+1)%3));
+		}
+
       vcg::face::VFDetach(f,((*i).z+1)%3);
       vcg::face::VFDetach(f,((*i).z+2)%3);
       Allocator<TriMeshType>::DeleteFace(m,f);
@@ -231,11 +253,30 @@ public:
     // - we prepend that face to the list of the faces incident on v[1]
     for(auto i=es.AV0().begin();i!=es.AV0().end();++i)
     {
+		      FaceType  & f = *((*i).f);
+
+		if (preserveFaceEdgeS)
+		{
+			for (size_t j = 0; j < v2s.size(); ++j)
+			{
+				if ((*i).f->V(((*i).z+1)%3) == v2s[j])
+				{
+					(*i).f->SetFaceEdgeS(VtoE[((*i).z)%3][((*i).z+1)%3]);
+					break;
+				}
+				if ((*i).f->V(((*i).z+2)%3) == v2s[j])
+				{
+					(*i).f->SetFaceEdgeS(VtoE[((*i).z)%3][((*i).z+2)%3]);
+					break;
+				}
+			}
+		}
       (*i).f->V((*i).z) = c.V(1);	// For each face in v0 we substitute v0 with v1
       (*i).f->VFp((*i).z) = c.V(1)->VFp(); 
       (*i).f->VFi((*i).z) = c.V(1)->VFi();
       c.V(1)->VFp() = (*i).f;
       c.V(1)->VFi() = (*i).z;
+
     }
     
     Allocator<TriMeshType>::DeleteVertex(m,*(c.V(0)));
