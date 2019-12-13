@@ -69,7 +69,7 @@ public:
   {
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!vi->IsD())
       {
-        if(vi->VFp().IsNull())
+        if(vi->VFp() == nullptr)
           throw vcg::MissingPreconditionException("VF adjacency is not initialized");
       }
   }
