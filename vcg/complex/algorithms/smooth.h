@@ -604,9 +604,11 @@ So if
 
             for (vi = m.vert.begin(); vi != m.vert.end(); ++vi)
             {
-                TD[*vi].dif /= (float)TD[*vi].cnt;
-                if (!SmoothSelected || (*vi).IsS())
-                    (*vi).P() = TD[*vi].sum - (TD[*vi].sum - (*vi).P()) * beta + (TD[*vi].dif) * (1.f - beta);
+				if (TD[*vi].cnt > 0){
+					TD[*vi].dif /= (float)TD[*vi].cnt;
+					if (!SmoothSelected || (*vi).IsS())
+						(*vi).P() = TD[*vi].sum - (TD[*vi].sum - (*vi).P()) * beta + (TD[*vi].dif) * (1.f - beta);
+				}
             }
         } // end for step
     };
