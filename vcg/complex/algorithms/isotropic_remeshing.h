@@ -111,6 +111,31 @@ public:
 
 	} Params;
 
+	static void debug_crease (MeshType & toRemesh, std::string  prepend, int i)
+	{
+		ForEachVertex(toRemesh, [] (VertexType & v) {
+			v.C() = Color4b::Gray;
+			v.Q() = 0;
+		});
+
+		ForEachFacePos(toRemesh, [&](PosType &p){
+			if (p.F()->IsFaceEdgeS(p.E()))
+			{
+				p.V()->Q() += 1;
+				p.VFlip()->Q() += 1;
+			}
+		});
+
+		ForEachVertex(toRemesh, [] (VertexType & v) {
+			if (v.Q() >= 4)
+				v.C() = Color4b::Green;
+			else if (v.Q() >= 2)
+				v.C() = Color4b::Red;
+		});
+		prepend += "_creases" + std::to_string(i) + ".ply";
+		vcg::tri::io::Exporter<MeshType>::Save(toRemesh, prepend.c_str(), vcg::tri::io::Mask::IOM_ALL);
+	}
+
 	static void Do(MeshType &toRemesh, Params & params, vcg::CallBackPos * cb=0)
 	{
 		MeshType toProjectCopy;
@@ -151,30 +176,11 @@ public:
 
 			if(cb) cb(100*i/params.iter, "Remeshing");
 
+//			debug_crease(toRemesh, std::string("pre_ref"), i);
 			if(params.splitFlag)
 				SplitLongEdges(toRemesh, params);
 #ifdef DEBUG_CREASE
-			ForEachVertex(toRemesh, [] (VertexType & v) {
-				v.C() = Color4b::Gray;
-				v.Q() = 0;
-			});
-
-			ForEachFacePos(toRemesh, [&](PosType &p){
-				if (p.F()->IsFaceEdgeS(p.E()))
-				{
-					p.V()->Q() += 1;
-					p.VFlip()->Q() += 1;
-				}
-			});
-
-			ForEachVertex(toRemesh, [] (VertexType & v) {
-				if (v.Q() >= 4)
-					v.C() = Color4b::Green;
-				else if (v.Q() >= 2)
-					v.C() = Color4b::Red;
-			});
-			std::string name = "creases" + std::to_string(i) + ".ply";
-			vcg::tri::io::Exporter<MeshType>::Save(toRemesh, name.c_str(), vcg::tri::io::Mask::IOM_ALL);
+		debug_crease(toRemesh, std::string("after_ref"), i);
 #endif
 
 			if(params.collapseFlag)
@@ -308,13 +314,21 @@ private:
 		vcg::tri::UpdateFlags<MeshType>::VertexClearV(m);
 		std::queue<PosType> creaseQueue;
 		ForEachFacePos(m, [&](PosType &p){
-			if((p.FFlip() > p.F()) || p.IsBorder())
+
+			if (p.IsBorder())
+				p.F()->SetFaceEdgeS(p.E());
+
+//			if((p.FFlip() > p.F()))
 			{
 				if (!params.userSelectedCreases && (testCreaseEdge(p, params.creaseAngleCosThr) || p.IsBorder()))
 				{
-					p.F()->SetFaceEdgeS(p.E());
-					p.FlipF();
-					p.F()->SetFaceEdgeS(p.E());
+					PosType pp = p;
+
+					do {
+						pp.F()->SetFaceEdgeS(pp.E());
+						pp.NextF();
+					} while (pp != p);
+
 					creaseQueue.push(p);
 				}
 			}
@@ -679,7 +693,7 @@ private:
 				Point3<ScalarType> newN = Normal(mp, v1->P(), v2->P()).Normalize();
 
 				float div = fastAngle(oldN, newN);
-				if(div < 0.0 ) return false;
+				if(div < .0f ) return false;
 
 //				//				check on new face distance from original mesh
 				if (params.surfDistCheck)
@@ -1097,7 +1111,7 @@ private:
 	{
 		int count = 0;
 		ForEachFacePos(m, [&](PosType &p){
-			if((p.FFlip() > p.F()) && p.IsEdgeS()/*testCreaseEdge(p, creaseThr)*/)
+			if(((p.FFlip() > p.F()) || p.IsBorder()) && p.IsEdgeS()/*testCreaseEdge(p, creaseThr)*/)
 			{
 				p.V()->SetS();
 				p.VFlip()->SetS();
