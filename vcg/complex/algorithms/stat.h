@@ -285,7 +285,7 @@ public:
 			for (int k=0; k<f.VN(); k++)
 				if (face::IsBorder(f, k))
 				{
-					sum += Distance(f.cP(k), f.cP(1));
+					sum += Distance(f.cP0(k), f.cP1(k));
 				}
 		});
 		return sum;
