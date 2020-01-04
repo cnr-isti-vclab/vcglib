@@ -176,11 +176,11 @@ public:
 
 			if(cb) cb(100*i/params.iter, "Remeshing");
 
-//			debug_crease(toRemesh, std::string("pre_ref"), i);
+			//			debug_crease(toRemesh, std::string("pre_ref"), i);
 			if(params.splitFlag)
 				SplitLongEdges(toRemesh, params);
 #ifdef DEBUG_CREASE
-		debug_crease(toRemesh, std::string("after_ref"), i);
+			debug_crease(toRemesh, std::string("after_ref"), i);
 #endif
 
 			if(params.collapseFlag)
@@ -318,7 +318,7 @@ private:
 			if (p.IsBorder())
 				p.F()->SetFaceEdgeS(p.E());
 
-//			if((p.FFlip() > p.F()))
+			//			if((p.FFlip() > p.F()))
 			{
 				if (!params.userSelectedCreases && (testCreaseEdge(p, params.creaseAngleCosThr) || p.IsBorder()))
 				{
@@ -528,6 +528,7 @@ private:
 						CoordType swapEdgeMidPoint = (f.cP2(i) + f.cFFp(i)->cP2(f.cFFi(i))) / 2.;
 						std::vector<CoordType> toCheck(1, swapEdgeMidPoint);
 
+
 						if(((!params.selectedOnly) || (f.IsS() && f.cFFp(i)->IsS())) &&
 						   face::IsManifold(f, i) && checkManifoldness(f, i) &&
 						   face::CheckFlipEdge(f, i) &&
@@ -640,22 +641,30 @@ private:
 
 		CoordType dEdgeVector = (p.V()->cP() - p.VFlip()->cP()).Normalize();
 
+		int incidentFeatures = 0;
+
 		for (size_t i = 0; i < faces.size(); ++i)
-		{
-			if (faces[i]->IsFaceEdgeS(VtoE(vIdxes[i], (vIdxes[i]+1)%3)))
-			{
-				CoordType movingEdgeVector0 = (faces[i]->cP1(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
-				if (std::fabs(movingEdgeVector0 * dEdgeVector) < 1.f)
-					return false;
-			}
-			if (faces[i]->IsFaceEdgeS(VtoE(vIdxes[i], (vIdxes[i]+2)%3)))
-			{
-				CoordType movingEdgeVector1 = (faces[i]->cP2(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
-				if (std::fabs(movingEdgeVector1 * dEdgeVector) < 1.f)
-					return false;
-			}
-			allIncidentFaceSelected &= faces[i]->IsS();
-		}
+//			if (faces[i] != p.F() && faces[i] != p.FFlip())
+		    {
+			    if (faces[i]->IsFaceEdgeS(VtoE(vIdxes[i], (vIdxes[i]+1)%3)))
+				{
+					incidentFeatures++;
+					CoordType movingEdgeVector0 = (faces[i]->cP1(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
+					if (std::fabs(movingEdgeVector0 * dEdgeVector) < .9f || !p.IsEdgeS())
+						return false;
+				}
+				if (faces[i]->IsFaceEdgeS(VtoE(vIdxes[i], (vIdxes[i]+2)%3)))
+				{
+					incidentFeatures++;
+					CoordType movingEdgeVector1 = (faces[i]->cP2(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
+					if (std::fabs(movingEdgeVector1 * dEdgeVector) < .9f || !p.IsEdgeS())
+						return false;
+				}
+				allIncidentFaceSelected &= faces[i]->IsS();
+		    }
+
+		if (incidentFeatures > 4)
+			return false;
 
 		return params.selectedOnly ? allIncidentFaceSelected : true;
 	}
@@ -693,9 +702,9 @@ private:
 				Point3<ScalarType> newN = Normal(mp, v1->P(), v2->P()).Normalize();
 
 				float div = fastAngle(oldN, newN);
-				if(div < .0f ) return false;
+				if(div < .8f ) return false;
 
-//				//				check on new face distance from original mesh
+				//				//				check on new face distance from original mesh
 				if (params.surfDistCheck)
 				{
 					std::vector<CoordType> points(4);
@@ -750,83 +759,83 @@ private:
 		return false;
 	}
 
-//	//Geometric check on feasibility of the collapse of the given pos
-//	//The check fails if:
-//	//  -new face has too bad quality.
-//	//  -new face normal changes too much after collapse.
-//	//  -new face has too long edges.
-//	// TRY: if the vertex has valence 4 (cross vertex) we relax the check on length
-//	//TODO: Refine the crease preservance check when collapsing along boundary (or in general maybe) WORK on this
-//	static bool checkCollapseFacesAroundVert(PosType &p, Point3<ScalarType> &mp, Params & params, bool relaxed=false, bool crease=false)
-//	{
-//		ScalarType minimalAdmittedArea = (params.minLength * params.minLength)/10000.0;
+	//	//Geometric check on feasibility of the collapse of the given pos
+	//	//The check fails if:
+	//	//  -new face has too bad quality.
+	//	//  -new face normal changes too much after collapse.
+	//	//  -new face has too long edges.
+	//	// TRY: if the vertex has valence 4 (cross vertex) we relax the check on length
+	//	//TODO: Refine the crease preservance check when collapsing along boundary (or in general maybe) WORK on this
+	//	static bool checkCollapseFacesAroundVert(PosType &p, Point3<ScalarType> &mp, Params & params, bool relaxed=false, bool crease=false)
+	//	{
+	//		ScalarType minimalAdmittedArea = (params.minLength * params.minLength)/10000.0;
 
-//		vector<FaceType*> ff;
-//		vector<int> vi;
-//		face::VFStarVF<FaceType>(p.V(), ff, vi);
+	//		vector<FaceType*> ff;
+	//		vector<int> vi;
+	//		face::VFStarVF<FaceType>(p.V(), ff, vi);
 
-//		bool allIncidentFaceSelected = true;
+	//		bool allIncidentFaceSelected = true;
 
-//		for(FaceType *f: ff)
-//			if(!(*f).IsD() && f != p.F()) //i'm not a deleted face
-//			{
-//				allIncidentFaceSelected &= f->IsS();
+	//		for(FaceType *f: ff)
+	//			if(!(*f).IsD() && f != p.F()) //i'm not a deleted face
+	//			{
+	//				allIncidentFaceSelected &= f->IsS();
 
-//				PosType pi(f, p.V()); //same vertex
+	//				PosType pi(f, p.V()); //same vertex
 
-//				VertexType *v0 = pi.V();
-//				VertexType *v1 = pi.F()->V1(pi.VInd());
-//				VertexType *v2 = pi.F()->V2(pi.VInd());
+	//				VertexType *v0 = pi.V();
+	//				VertexType *v1 = pi.F()->V1(pi.VInd());
+	//				VertexType *v2 = pi.F()->V2(pi.VInd());
 
-//				if( v1 == p.VFlip() || v2 == p.VFlip()) //i'm the other deleted face
-//					continue;
+	//				if( v1 == p.VFlip() || v2 == p.VFlip()) //i'm the other deleted face
+	//					continue;
 
-//				//check on new face area
-//				{
-//					float area = DoubleArea(*(pi.F()))/2.f;
+	//				//check on new face area
+	//				{
+	//					float area = DoubleArea(*(pi.F()))/2.f;
 
-//					if (area < params.minimalAdmittedArea)
-//						return false;
-//				}
+	//					if (area < params.minimalAdmittedArea)
+	//						return false;
+	//				}
 
 
 
-//				float area = DoubleArea(*(pi.F()))/2.f;
+	//				float area = DoubleArea(*(pi.F()))/2.f;
 
-//				//quality and normal divergence checks
-//				ScalarType newQ = Quality(mp,      v1->P(), v2->P());
-//				ScalarType oldQ = Quality(v0->P(), v1->P(), v2->P());
+	//				//quality and normal divergence checks
+	//				ScalarType newQ = Quality(mp,      v1->P(), v2->P());
+	//				ScalarType oldQ = Quality(v0->P(), v1->P(), v2->P());
 
-//				if(area > minimalAdmittedArea) // for triangles not too small
-//				{
-//					if( newQ <= 0.5*oldQ  )
-//						return false;
+	//				if(area > minimalAdmittedArea) // for triangles not too small
+	//				{
+	//					if( newQ <= 0.5*oldQ  )
+	//						return false;
 
-//					// we prevent collapse that makes edges too long (except for cross)
-//					if(!relaxed)
-//						if((Distance(mp, v1->P()) > params.maxLength || Distance(mp, v2->P()) > params.maxLength))
-//							return false;
+	//					// we prevent collapse that makes edges too long (except for cross)
+	//					if(!relaxed)
+	//						if((Distance(mp, v1->P()) > params.maxLength || Distance(mp, v2->P()) > params.maxLength))
+	//							return false;
 
-//					Point3<ScalarType> oldN = NormalizedTriangleNormal(*(pi.F()));
-//					Point3<ScalarType> newN = Normal(mp, v1->P(), v2->P()).Normalize();
-////					float div = fastAngle(oldN, newN);
-////					if(crease && div < 0.98) return false;
-////					{
-////						std::vector<CoordType> points(3);
-////						points[0] = (v1->cP() + v2->cP() + mp) / 3.;
-////						points[1] = (v1->cP() + v0->cP()) / 2.;
-////						points[2] = (v2->cP() + v0->cP()) / 2.;
+	//					Point3<ScalarType> oldN = NormalizedTriangleNormal(*(pi.F()));
+	//					Point3<ScalarType> newN = Normal(mp, v1->P(), v2->P()).Normalize();
+	////					float div = fastAngle(oldN, newN);
+	////					if(crease && div < 0.98) return false;
+	////					{
+	////						std::vector<CoordType> points(3);
+	////						points[0] = (v1->cP() + v2->cP() + mp) / 3.;
+	////						points[1] = (v1->cP() + v0->cP()) / 2.;
+	////						points[2] = (v2->cP() + v0->cP()) / 2.;
 
-////						if (!testHausdorff(*(params.mProject), params.grid, points, params.maxSurfDist))
-////							return false;
+	////						if (!testHausdorff(*(params.mProject), params.grid, points, params.maxSurfDist))
+	////							return false;
 
-////					}
-//				}
-//			}
+	////					}
+	//				}
+	//			}
 
-//		if(params.selectedOnly) return allIncidentFaceSelected;
-//		return true;
-//	}
+	//		if(params.selectedOnly) return allIncidentFaceSelected;
+	//		return true;
+	//	}
 
 	static bool testCollapse1(PosType &p, Point3<ScalarType> &mp, ScalarType minQ, ScalarType maxQ, Params &params, bool relaxed = false)
 	{
@@ -970,7 +979,7 @@ private:
 						v3 = fv1;
 						crease[3] = f->IsFaceEdgeS(VtoE(pi.VInd(), (pi.VInd()+1)%3));
 					}
-//					v3 = (fv1 == v0) ? fv2 : fv1;
+					//					v3 = (fv1 == v0) ? fv2 : fv1;
 				}
 
 				if(fv1 == v1 || fv2 == v1)
@@ -985,7 +994,7 @@ private:
 						v2 = fv1;
 						crease[2] = f->IsFaceEdgeS(VtoE(pi.VInd(), (pi.VInd()+1)%3));
 					}
-//					v2 = (fv1 == v1) ? fv2 : fv1;
+					//					v2 = (fv1 == v1) ? fv2 : fv1;
 				}
 			}
 
@@ -1005,22 +1014,22 @@ private:
 
 		if (crease[0] || crease[1] || crease[2] || crease[3])
 			return false;
-//		if (crease[0] && crease[1] && crease[2] && crease[3])
-//		{
-//			return false;
-//		}
+		//		if (crease[0] && crease[1] && crease[2] && crease[3])
+		//		{
+		//			return false;
+		//		}
 
-//		if (crease[0] || crease[2])
-//		{
-//			bp = VertexPair(p.V(), v0);
-//			return true;
-//		}
+		//		if (crease[0] || crease[2])
+		//		{
+		//			bp = VertexPair(p.V(), v0);
+		//			return true;
+		//		}
 
-//		if (crease[1] || crease[3])
-//		{
-//			bp = VertexPair(p.V(), v1);
-//			return true;
-//		}
+		//		if (crease[1] || crease[3])
+		//		{
+		//			bp = VertexPair(p.V(), v1);
+		//			return true;
+		//		}
 
 		//no crease
 		if(delta1 < delta2 && Q1 >= 0.6f*Q2)
@@ -1059,40 +1068,40 @@ private:
 						//if tricuspidis need whenever you have at least one crease => can't collapse anywhere
 						if(ff.size() == 4 || ff.size() == 3)
 						{
-//							VertexPair bp;
+							//							VertexPair bp;
 							VertexPair  bp = VertexPair(pi.V(), pi.VFlip());
 							Point3<ScalarType> mp = (pi.V()->P()+pi.VFlip()->P())/2.f;
 
-//							if (ff.size() == 4)
-//							{
-//								//avoid collapsing if creases don't allow to
-////								continue;
-//								if (!chooseBestCrossCollapse(pi, bp, ff))
-//									continue;
-//							}
-//							else //tricuspidis
-//							{
-//								bool collapse = true;
-//								for (int i = 0; i < ff.size(); ++i)
-//								{
-//									PosType pp(ff[i], pi.V());
+							//							if (ff.size() == 4)
+							//							{
+							//								//avoid collapsing if creases don't allow to
+							////								continue;
+							//								if (!chooseBestCrossCollapse(pi, bp, ff))
+							//									continue;
+							//							}
+							//							else //tricuspidis
+							//							{
+							//								bool collapse = true;
+							//								for (int i = 0; i < ff.size(); ++i)
+							//								{
+							//									PosType pp(ff[i], pi.V());
 
-//									if (pp.IsFaceS())
-//										collapse = false;
-//									pp.FlipE();
-//									if (pp.IsFaceS())
-//										collapse = false;
-//								}
-//								if (!collapse)
-//									continue;
-//								else bp =  VertexPair(pi.V(), pi.VFlip());
-//							}
+							//									if (pp.IsFaceS())
+							//										collapse = false;
+							//									pp.FlipE();
+							//									if (pp.IsFaceS())
+							//										collapse = false;
+							//								}
+							//								if (!collapse)
+							//									continue;
+							//								else bp =  VertexPair(pi.V(), pi.VFlip());
+							//							}
 
-////							VertexPair bp  = (ff.size() == 4) ? chooseBestCrossCollapse(pi, ff) : VertexPair(pi.V(), pi.VFlip());
-//							Point3<ScalarType> mp = bp.V(1)->P();
+							////							VertexPair bp  = (ff.size() == 4) ? chooseBestCrossCollapse(pi, ff) : VertexPair(pi.V(), pi.VFlip());
+							//							Point3<ScalarType> mp = bp.V(1)->P();
 
-//							//todo: think about if you should try doing the other collapse if test or link fails for this one
-//							if(testCrossCollapse(pi, ff, vi, mp, params) && Collapser::LinkConditions(bp))
+							//							//todo: think about if you should try doing the other collapse if test or link fails for this one
+							//							if(testCrossCollapse(pi, ff, vi, mp, params) && Collapser::LinkConditions(bp))
 							if(testCollapse1(pi, mp, 0, 0, params) && Collapser::LinkConditions(bp))
 							{
 								Collapser::Do(m, bp, mp, true);
@@ -1111,7 +1120,7 @@ private:
 	{
 		int count = 0;
 		ForEachFacePos(m, [&](PosType &p){
-			if(((p.FFlip() > p.F()) || p.IsBorder()) && p.IsEdgeS()/*testCreaseEdge(p, creaseThr)*/)
+			if(p.IsBorder() || p.IsEdgeS()/*testCreaseEdge(p, creaseThr)*/)
 			{
 				p.V()->SetS();
 				p.VFlip()->SetS();
@@ -1135,7 +1144,7 @@ private:
 
 		//this aspect ratio check doesn't work on cadish meshes (long thin triangles spanning whole mesh)
 		ForEachFace(m, [&] (FaceType & f) {
-			if (vcg::QualityRadii(f.cP(0), f.cP(1), f.cP(2)) < params.aspectRatioThr)
+			if (vcg::Quality(f.cP(0), f.cP(1), f.cP(2)) < params.aspectRatioThr)
 			{
 				if (creaseVerts[vcg::tri::Index(m, f.V(0))] == 0)
 					f.V(0)->SetS();
@@ -1171,14 +1180,18 @@ private:
 		return 0;
 	}
 
-	static void FoldRelax(MeshType &m, Params params, const int step)
+
+
+
+	static void FoldRelax(MeshType &m, Params params, const int step, const bool strict = true)
 	{
 		typename vcg::tri::Smooth<MeshType>::LaplacianInfo lpz(CoordType(0, 0, 0), 0);
 		SimpleTempData<typename MeshType::VertContainer, typename vcg::tri::Smooth<MeshType>::LaplacianInfo> TD(m.vert, lpz);
+		const ScalarType maxDist = (strict) ? params.maxSurfDist / 1000. : params.maxSurfDist;
 		for (int i = 0; i < step; ++i)
 		{
 			TD.Init(lpz);
-			vcg::tri::Smooth<MeshType>::AccumulateLaplacianInfo(m, TD, true);
+			vcg::tri::Smooth<MeshType>::AccumulateLaplacianInfo(m, TD, false);
 
 			for (auto fi = m.face.begin(); fi != m.face.end(); ++fi)
 			{
@@ -1200,8 +1213,11 @@ private:
 
 				if (moving)
 				{
+//					const CoordType oldN = vcg::NormalizedTriangleNormal(*fi);
+//					const CoordType newN = vcg::Normal(newPos[0], newPos[1], newPos[2]).Normalize();
+
 					newPos[3] = (newPos[0] + newPos[1] + newPos[2]) / 3.;
-					if (!params.surfDistCheck || testHausdorff(*params.mProject, params.grid, newPos, params.maxSurfDist))
+					if (/*(strict || oldN * newN > 0.99) &&*/ (!params.surfDistCheck || testHausdorff(*params.mProject, params.grid, newPos, maxDist)))
 					{
 						for (int j = 0; j < 3; ++j)
 							fi->V(j)->P() = newPos[j];
@@ -1235,12 +1251,15 @@ private:
 		if(params.selectedOnly) {
 			ss.popAnd();
 		}
-		tri::Smooth<MeshType>::VertexCoordPlanarLaplacian(m, 1, math::ToRad(1.0), true);
+//		FoldRelax(m, params, 1, false);
+
+//		                tri::Smooth<MeshType>::VertexCoordLaplacian(m, 1, true);
+		        tri::Smooth<MeshType>::VertexCoordPlanarLaplacian(m, 1, math::ToRad(1.0), true);
 
 		tri::UpdateSelection<MeshType>::VertexClear(m);
 
 		selectVertexFromFold(m, params);
-		FoldRelax(m, params, 3);
+		        FoldRelax(m, params, 2);
 
 		tri::UpdateSelection<MeshType>::VertexClear(m);
 
