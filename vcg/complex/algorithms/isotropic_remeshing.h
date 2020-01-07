@@ -320,10 +320,18 @@ private:
 
 			//			if((p.FFlip() > p.F()))
 			{
-				if (!params.userSelectedCreases && (testCreaseEdge(p, params.creaseAngleCosThr) || p.IsBorder()))
+				FaceType *ff    = p.F();
+				FaceType *ffAdj = p.FFlip();
+
+				double quality    = vcg::QualityRadii(ff->cP(0), ff->cP(1), ff->cP(2));
+				double qualityAdj = vcg::QualityRadii(ffAdj->cP(0), ffAdj->cP(1), ffAdj->cP(2));
+
+				bool qualityCheck = quality > 0.00000001 && qualityAdj > 0.00000001;
+				bool areaCheck    = vcg::DoubleArea(*ff) > 0.000001 && vcg::DoubleArea(*ffAdj) > 0.000001;
+
+				if (!params.userSelectedCreases && (testCreaseEdge(p, params.creaseAngleCosThr) && areaCheck && qualityCheck) || p.IsBorder())
 				{
 					PosType pp = p;
-
 					do {
 						pp.F()->SetFaceEdgeS(pp.E());
 						pp.NextF();
@@ -702,7 +710,7 @@ private:
 				Point3<ScalarType> newN = Normal(mp, v1->P(), v2->P()).Normalize();
 
 				float div = fastAngle(oldN, newN);
-				if(div < .8f ) return false;
+				if(div < .0f ) return false;
 
 				//				//				check on new face distance from original mesh
 				if (params.surfDistCheck)
@@ -1144,7 +1152,7 @@ private:
 
 		//this aspect ratio check doesn't work on cadish meshes (long thin triangles spanning whole mesh)
 		ForEachFace(m, [&] (FaceType & f) {
-			if (vcg::Quality(f.cP(0), f.cP(1), f.cP(2)) < params.aspectRatioThr)
+			if (vcg::Quality(f.cP(0), f.cP(1), f.cP(2)) < params.aspectRatioThr || vcg::DoubleArea(f) < 0.00001)
 			{
 				if (creaseVerts[vcg::tri::Index(m, f.V(0))] == 0)
 					f.V(0)->SetS();
