@@ -176,7 +176,6 @@ public:
 
 			if(cb) cb(100*i/params.iter, "Remeshing");
 
-			//			debug_crease(toRemesh, std::string("pre_ref"), i);
 			if(params.splitFlag)
 				SplitLongEdges(toRemesh, params);
 #ifdef DEBUG_CREASE
@@ -187,7 +186,6 @@ public:
 			{
 				CollapseShortEdges(toRemesh, params);
 				CollapseCrosses(toRemesh, params);
-
 			}
 
 			if(params.swapFlag)
@@ -1055,13 +1053,12 @@ private:
 	//and feature preservations tests.
 	static void CollapseCrosses(MeshType &m , Params &params)
 	{
-		tri::UpdateTopology<MeshType>::ClearFaceFace(m);
 		tri::UpdateTopology<MeshType>::VertexFace(m);
 		tri::UpdateFlags<MeshType>::VertexBorderFromNone(m);
 		int count = 0;
 
 		for(auto fi=m.face.begin(); fi!=m.face.end(); ++fi)
-			if(!(*fi).IsD() && (params.selectedOnly == false || fi->IsS()))
+			if(!(*fi).IsD() && (!params.selectedOnly || fi->IsS()))
 			{
 				for(auto i=0; i<3; ++i)
 				{
@@ -1110,8 +1107,9 @@ private:
 
 							//							//todo: think about if you should try doing the other collapse if test or link fails for this one
 							//							if(testCrossCollapse(pi, ff, vi, mp, params) && Collapser::LinkConditions(bp))
-							if(testCollapse1(pi, mp, 0, 0, params) && Collapser::LinkConditions(bp))
+							if(testCollapse1(pi, mp, 0, 0, params, true) && Collapser::LinkConditions(bp))
 							{
+								bp = VertexPair(pi.VFlip(), pi.V());
 								Collapser::Do(m, bp, mp, true);
 								++count;
 								break;
@@ -1234,6 +1232,61 @@ private:
 			}
 		}
 	}
+
+	static void VertexCoordPlanarLaplacian(MeshType &m, Params & params, int step)
+	{
+		typename vcg::tri::Smooth<MeshType>::LaplacianInfo lpz(CoordType(0, 0, 0), 0);
+		SimpleTempData<typename MeshType::VertContainer, typename vcg::tri::Smooth<MeshType>::LaplacianInfo> TD(m.vert, lpz);
+		for (int i = 0; i < step; ++i)
+		{
+			TD.Init(lpz);
+			vcg::tri::Smooth<MeshType>::AccumulateLaplacianInfo(m, TD, false);
+			// First normalize the AccumulateLaplacianInfo
+			for (auto vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+				if (!(*vi).IsD() && TD[*vi].cnt > 0)
+				{
+					if ((*vi).IsS())
+						TD[*vi].sum = ((*vi).P() + TD[*vi].sum) / (TD[*vi].cnt + 1);
+				}
+
+			for (auto fi = m.face.begin(); fi != m.face.end(); ++fi)
+			{
+				if (!(*fi).IsD())
+				{
+					for (int j = 0; j < 3; ++j)
+					{
+						if (Angle(Normal(TD[(*fi).V0(j)].sum, (*fi).P1(j), (*fi).P2(j)),
+						          Normal((*fi).P0(j), (*fi).P1(j), (*fi).P2(j))) > M_PI/2.)
+							TD[(*fi).V0(j)].sum = (*fi).P0(j);
+					}
+				}
+			}
+			for (auto fi = m.face.begin(); fi != m.face.end(); ++fi)
+			{
+				if (!(*fi).IsD())
+				{
+					for (int j = 0; j < 3; ++j)
+					{
+						if (Angle(Normal(TD[(*fi).V0(j)].sum, TD[(*fi).V1(j)].sum, (*fi).P2(j)),
+						          Normal((*fi).P0(j), (*fi).P1(j), (*fi).P2(j))) > M_PI/2.)
+						{
+							TD[(*fi).V0(j)].sum = (*fi).P0(j);
+							TD[(*fi).V1(j)].sum = (*fi).P1(j);
+						}
+					}
+				}
+			}
+
+			for (auto vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+				if (!(*vi).IsD() && TD[*vi].cnt > 0)
+				{
+					std::vector<CoordType> newPos(1, TD[*vi].sum);
+					if ((*vi).IsS() && testHausdorff(*params.mProject, params.grid, newPos, params.maxSurfDist))
+						(*vi).P() = TD[*vi].sum;
+				}
+		} // end step
+	}
+
 	//	static int
 	/**
 	  * Simple Laplacian Smoothing step
@@ -1259,15 +1312,13 @@ private:
 		if(params.selectedOnly) {
 			ss.popAnd();
 		}
-//		FoldRelax(m, params, 1, false);
 
-//		                tri::Smooth<MeshType>::VertexCoordLaplacian(m, 1, true);
-		        tri::Smooth<MeshType>::VertexCoordPlanarLaplacian(m, 1, math::ToRad(1.0), true);
+		VertexCoordPlanarLaplacian(m, params, 1);
 
 		tri::UpdateSelection<MeshType>::VertexClear(m);
 
 		selectVertexFromFold(m, params);
-		        FoldRelax(m, params, 2);
+		FoldRelax(m, params, 2);
 
 		tri::UpdateSelection<MeshType>::VertexClear(m);
 
