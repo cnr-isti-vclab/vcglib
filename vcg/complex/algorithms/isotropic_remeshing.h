@@ -325,9 +325,9 @@ private:
 				double qualityAdj = vcg::QualityRadii(ffAdj->cP(0), ffAdj->cP(1), ffAdj->cP(2));
 
 				bool qualityCheck = quality > 0.00000001 && qualityAdj > 0.00000001;
-				bool areaCheck    = vcg::DoubleArea(*ff) > 0.000001 && vcg::DoubleArea(*ffAdj) > 0.000001;
+//				bool areaCheck    = vcg::DoubleArea(*ff) > 0.000001 && vcg::DoubleArea(*ffAdj) > 0.000001;
 
-				if (!params.userSelectedCreases && (testCreaseEdge(p, params.creaseAngleCosThr) && areaCheck && qualityCheck) || p.IsBorder())
+				if (!params.userSelectedCreases && (testCreaseEdge(p, params.creaseAngleCosThr) /*&& areaCheck*//* && qualityCheck*/) || p.IsBorder())
 				{
 					PosType pp = p;
 					do {
@@ -1233,7 +1233,7 @@ private:
 		}
 	}
 
-	static void VertexCoordPlanarLaplacian(MeshType &m, Params & params, int step)
+	static void VertexCoordPlanarLaplacian(MeshType &m, Params & params, int step, ScalarType delta = 0.2)
 	{
 		typename vcg::tri::Smooth<MeshType>::LaplacianInfo lpz(CoordType(0, 0, 0), 0);
 		SimpleTempData<typename MeshType::VertContainer, typename vcg::tri::Smooth<MeshType>::LaplacianInfo> TD(m.vert, lpz);
@@ -1282,7 +1282,7 @@ private:
 				{
 					std::vector<CoordType> newPos(1, TD[*vi].sum);
 					if ((*vi).IsS() && testHausdorff(*params.mProject, params.grid, newPos, params.maxSurfDist))
-						(*vi).P() = TD[*vi].sum;
+						(*vi).P() = (*vi).P() * (1-delta) + TD[*vi].sum * (delta);
 				}
 		} // end step
 	}
@@ -1330,6 +1330,8 @@ private:
 		Reprojection step, this method reprojects each vertex on the original surface
 		sampling the nearest Point3 onto it using a uniform grid StaticGrid t
 	*/
+	//TODO: improve crease reprojection:
+	//		crease verts should reproject only on creases.
 	static void ProjectToSurface(MeshType &m, Params & params)
 	{
 		for(auto vi=m.vert.begin();vi!=m.vert.end();++vi)
