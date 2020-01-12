@@ -219,25 +219,30 @@ public:
     ///Load a 4 rosy format file as used by
     ///Interactive Visualization of Rotational Symmetry Fields on Surfaces
     ///Jonathan Palacios and Eugene Zhang
-    static void Load4ROSY(MeshType &mesh,
+    static bool Load4ROSY(MeshType &mesh,
                           const char *path)
     {
         FILE *f = fopen(path,"rt");
+        if (!f)
+        {
+            return false;
+        }
         int num,symm;
         fscanf(f,"%d",&num);
-        assert(num==mesh.vn);
+        assert(num==mesh.fn);
         fscanf(f,"%d\n",&symm);
         assert(symm==4);
-        for (unsigned int i=0;i<num;i++)
+        for (int i=0;i<num;i++)
         {
             float dirX,dirY,dirZ;
             fscanf(f,"%f %f %f \n",&dirX,&dirY,&dirZ);
-            mesh.vert[i].PD1()=CoordType(dirX,dirY,dirZ);
-            mesh.vert[i].PD2()=mesh.vert[i].PD1()^mesh.vert[i].N();
-            mesh.vert[i].PD1().Normalize();
-            mesh.vert[i].PD2().Normalize();
+            mesh.face[i].PD1()=CoordType(dirX,dirY,dirZ);
+            mesh.face[i].PD2()=mesh.face[i].PD1()^mesh.face[i].N();
+            mesh.face[i].PD1().Normalize();
+            mesh.face[i].PD2().Normalize();
         }
         fclose(f);
+        return true;
     }
 
 

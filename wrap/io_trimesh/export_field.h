@@ -94,15 +94,14 @@ public:
                         const char *path)
     {
         FILE *f = fopen(path,"wt");
-        fprintf(f,"%d\n",mesh.vn);
+        fprintf(f,"%d\n",mesh.fn);
         fprintf(f,"4\n");
-        for (unsigned int i=0;i<mesh.vert.size();i++)
+        for (unsigned int i=0;i<mesh.face.size();i++)
         {
-            float dirX=(float)mesh.vert[i].PD1().X();
-            float dirY=(float)mesh.vert[i].PD1().Y();
-            float dirZ=(float)mesh.vert[i].PD1().Z();
+            float dirX=(float)mesh.face[i].PD1().X();
+            float dirY=(float)mesh.face[i].PD1().Y();
+            float dirZ=(float)mesh.face[i].PD1().Z();
             fprintf(f,"%f %f %f \n",dirX,dirY,dirZ);
-
         }
         fclose(f);
     }
