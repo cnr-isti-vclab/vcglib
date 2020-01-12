@@ -226,7 +226,7 @@ public:
         //create the sphere
         vcg::tri::Sphere<TriMeshType>(*sphere,SubDirections);
         vcg::tri::UpdateBounding<TriMeshType>::Box(*sphere);
-		sphere->face.EnableMark();
+        //sphere->face.EnableMark();
 
         ///initialize grid
         GridSph.Set(sphere->face.begin(),sphere->face.end());
@@ -244,7 +244,7 @@ public:
         VotingPos.resize(radiusSph*sphere->fn);
 
         ///then count votes
-        for (size_t i=0;i<tri_mesh.vert.size();i++)
+        for (size_t i=0;i<tri_mesh.vert.size()-1;i++)
             for (size_t j=i+1;j<tri_mesh.vert.size();j++)
             {
                 VertexType *v0=&tri_mesh.vert[i];
@@ -252,7 +252,6 @@ public:
                 if ((OnlyBorder)&&(!((v0->IsB())&&(v1->IsB()))))continue;
                 Elect(v0->P(),v1->P());
             }
-
         SortedPlanes.resize(Votes.size());
         for (size_t i=0;i<Votes.size();i++)
             SortedPlanes[i]=std::pair<ScalarType,int>(Votes[i],i);
