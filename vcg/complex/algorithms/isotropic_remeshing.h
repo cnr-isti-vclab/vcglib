@@ -897,7 +897,7 @@ private:
 		if(params.adapt)
 			computeVQualityDistrMinMax(m, minQ, maxQ);
 
-		tri::UpdateTopology<MeshType>::FaceFace(m);
+//		tri::UpdateTopology<MeshType>::FaceFace(m);
 		tri::UpdateTopology<MeshType>::VertexFace(m);
 		tri::UpdateFlags<MeshType>::FaceBorderFromVF(m);
 		tri::UpdateFlags<MeshType>::VertexBorderFromFaceBorder(m);
@@ -925,7 +925,8 @@ private:
 
 				}
 			}
-		Allocator<MeshType>::CompactEveryVector(m);
+//		Allocator<MeshType>::CompactEveryVector(m);
+
 	}
 
 
@@ -1077,36 +1078,6 @@ private:
 							VertexPair  bp = VertexPair(pi.V(), pi.VFlip());
 							Point3<ScalarType> mp = (pi.V()->P()+pi.VFlip()->P())/2.f;
 
-							//							if (ff.size() == 4)
-							//							{
-							//								//avoid collapsing if creases don't allow to
-							////								continue;
-							//								if (!chooseBestCrossCollapse(pi, bp, ff))
-							//									continue;
-							//							}
-							//							else //tricuspidis
-							//							{
-							//								bool collapse = true;
-							//								for (int i = 0; i < ff.size(); ++i)
-							//								{
-							//									PosType pp(ff[i], pi.V());
-
-							//									if (pp.IsFaceS())
-							//										collapse = false;
-							//									pp.FlipE();
-							//									if (pp.IsFaceS())
-							//										collapse = false;
-							//								}
-							//								if (!collapse)
-							//									continue;
-							//								else bp =  VertexPair(pi.V(), pi.VFlip());
-							//							}
-
-							////							VertexPair bp  = (ff.size() == 4) ? chooseBestCrossCollapse(pi, ff) : VertexPair(pi.V(), pi.VFlip());
-							//							Point3<ScalarType> mp = bp.V(1)->P();
-
-							//							//todo: think about if you should try doing the other collapse if test or link fails for this one
-							//							if(testCrossCollapse(pi, ff, vi, mp, params) && Collapser::LinkConditions(bp))
 							if(testCollapse1(pi, mp, 0, 0, params, true) && Collapser::LinkConditions(bp))
 							{
 								bp = VertexPair(pi.VFlip(), pi.V());
@@ -1118,6 +1089,7 @@ private:
 					}
 				}
 			}
+//		vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
 		Allocator<MeshType>::CompactEveryVector(m);
 	}
 
