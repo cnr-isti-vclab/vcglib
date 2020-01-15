@@ -525,7 +525,7 @@ private:
 		tri::UpdateTopology<MeshType>::FaceFace(m);
 		tri::UpdateTopology<MeshType>::VertexFace(m);
 		ForEachFace(m, [&] (FaceType & f) {
-			if (face::IsManifold(f, 0) && face::IsManifold(f, 1) && face::IsManifold(f, 2))
+//			if (face::IsManifold(f, 0) && face::IsManifold(f, 1) && face::IsManifold(f, 2))
 				for (int i = 0; i < 3; ++i)
 				{
 					if (&f > f.cFFp(i))
@@ -536,8 +536,9 @@ private:
 
 
 						if(((!params.selectedOnly) || (f.IsS() && f.cFFp(i)->IsS())) &&
-						   face::IsManifold(f, i) && checkManifoldness(f, i) &&
-						   face::CheckFlipEdge(f, i) &&
+						   !face::IsBorder(f, i) &&
+						   face::IsManifold(f, i) && /*checkManifoldness(f, i) &&*/
+						   face::checkFlipEdgeNotManifold(f, i) &&
 						   testSwap(pi, params.creaseAngleCosThr) &&
 						   (!params.surfDistCheck || testHausdorff(*params.mProject, params.grid, toCheck, params.maxSurfDist)) &&
 						   face::CheckFlipEdgeNormal(f, i, vcg::math::ToRad(5.)))
@@ -549,7 +550,7 @@ private:
 							bool creaseF = g->IsFaceEdgeS((w + 1) % 3);
 							bool creaseG = f.IsFaceEdgeS((i + 1) % 3);
 
-							face::FlipEdge(f, i);
+							face::FlipEdgeNotManifold(f, i);
 
 							f.ClearFaceEdgeS((i + 1) % 3);
 							g->ClearFaceEdgeS((w + 1) % 3);
@@ -741,8 +742,8 @@ private:
 		face::VFStarVF<FaceType>(p1.V(), ff1, vi1);
 
 		//check crease-moveability
-		bool moveable0 = checkCanMoveOnCollapse(p0, ff0, vi0, params);
-		bool moveable1 = checkCanMoveOnCollapse(p1, ff1, vi1, params);
+		bool moveable0 = checkCanMoveOnCollapse(p0, ff0, vi0, params) && !p0.V()->IsS();
+		bool moveable1 = checkCanMoveOnCollapse(p1, ff1, vi1, params) && !p1.V()->IsS();
 
 		//if both moveable => go to midpoint
 		// else collapse on movable one
@@ -764,84 +765,6 @@ private:
 
 		return false;
 	}
-
-	//	//Geometric check on feasibility of the collapse of the given pos
-	//	//The check fails if:
-	//	//  -new face has too bad quality.
-	//	//  -new face normal changes too much after collapse.
-	//	//  -new face has too long edges.
-	//	// TRY: if the vertex has valence 4 (cross vertex) we relax the check on length
-	//	//TODO: Refine the crease preservance check when collapsing along boundary (or in general maybe) WORK on this
-	//	static bool checkCollapseFacesAroundVert(PosType &p, Point3<ScalarType> &mp, Params & params, bool relaxed=false, bool crease=false)
-	//	{
-	//		ScalarType minimalAdmittedArea = (params.minLength * params.minLength)/10000.0;
-
-	//		vector<FaceType*> ff;
-	//		vector<int> vi;
-	//		face::VFStarVF<FaceType>(p.V(), ff, vi);
-
-	//		bool allIncidentFaceSelected = true;
-
-	//		for(FaceType *f: ff)
-	//			if(!(*f).IsD() && f != p.F()) //i'm not a deleted face
-	//			{
-	//				allIncidentFaceSelected &= f->IsS();
-
-	//				PosType pi(f, p.V()); //same vertex
-
-	//				VertexType *v0 = pi.V();
-	//				VertexType *v1 = pi.F()->V1(pi.VInd());
-	//				VertexType *v2 = pi.F()->V2(pi.VInd());
-
-	//				if( v1 == p.VFlip() || v2 == p.VFlip()) //i'm the other deleted face
-	//					continue;
-
-	//				//check on new face area
-	//				{
-	//					float area = DoubleArea(*(pi.F()))/2.f;
-
-	//					if (area < params.minimalAdmittedArea)
-	//						return false;
-	//				}
-
-
-
-	//				float area = DoubleArea(*(pi.F()))/2.f;
-
-	//				//quality and normal divergence checks
-	//				ScalarType newQ = Quality(mp,      v1->P(), v2->P());
-	//				ScalarType oldQ = Quality(v0->P(), v1->P(), v2->P());
-
-	//				if(area > minimalAdmittedArea) // for triangles not too small
-	//				{
-	//					if( newQ <= 0.5*oldQ  )
-	//						return false;
-
-	//					// we prevent collapse that makes edges too long (except for cross)
-	//					if(!relaxed)
-	//						if((Distance(mp, v1->P()) > params.maxLength || Distance(mp, v2->P()) > params.maxLength))
-	//							return false;
-
-	//					Point3<ScalarType> oldN = NormalizedTriangleNormal(*(pi.F()));
-	//					Point3<ScalarType> newN = Normal(mp, v1->P(), v2->P()).Normalize();
-	////					float div = fastAngle(oldN, newN);
-	////					if(crease && div < 0.98) return false;
-	////					{
-	////						std::vector<CoordType> points(3);
-	////						points[0] = (v1->cP() + v2->cP() + mp) / 3.;
-	////						points[1] = (v1->cP() + v0->cP()) / 2.;
-	////						points[2] = (v2->cP() + v0->cP()) / 2.;
-
-	////						if (!testHausdorff(*(params.mProject), params.grid, points, params.maxSurfDist))
-	////							return false;
-
-	////					}
-	//				}
-	//			}
-
-	//		if(params.selectedOnly) return allIncidentFaceSelected;
-	//		return true;
-	//	}
 
 	static bool testCollapse1(PosType &p, Point3<ScalarType> &mp, ScalarType minQ, ScalarType maxQ, Params &params, bool relaxed = false)
 	{
@@ -897,36 +820,44 @@ private:
 		if(params.adapt)
 			computeVQualityDistrMinMax(m, minQ, maxQ);
 
-//		tri::UpdateTopology<MeshType>::FaceFace(m);
 		tri::UpdateTopology<MeshType>::VertexFace(m);
 		tri::UpdateFlags<MeshType>::FaceBorderFromVF(m);
 		tri::UpdateFlags<MeshType>::VertexBorderFromFaceBorder(m);
-		tri::UpdateFlags<MeshType>::FaceClearS(m);
 
-		for(auto fi=m.face.begin(); fi!=m.face.end(); ++fi)
-			if(!(*fi).IsD() && (params.selectedOnly == false || fi->IsS()))
-			{
-				for(auto i=0; i<3; ++i)
+		SelectionStack<MeshType> ss(m);
+		ss.push();
+
+		{
+			tri::UpdateTopology<MeshType>::FaceFace(m);
+			Clean<MeshType>::CountNonManifoldVertexFF(m,true);
+
+			//FROM NOW ON VSelection is NotManifold
+
+			for(auto fi=m.face.begin(); fi!=m.face.end(); ++fi)
+				if(!(*fi).IsD() && (params.selectedOnly == false || fi->IsS()))
 				{
-					PosType pi(&*fi, i);
-					++candidates;
-					VertexPair  bp = VertexPair(pi.V(), pi.VFlip());
-					Point3<ScalarType> mp = (pi.V()->P()+pi.VFlip()->P())/2.f;
-
-					if(testCollapse1(pi, mp, minQ, maxQ, params) && Collapser::LinkConditions(bp))
+					for(auto i=0; i<3; ++i)
 					{
-						//collapsing on pi.V()
-						bp = VertexPair(pi.VFlip(), pi.V());
+						PosType pi(&*fi, i);
+						++candidates;
+						VertexPair  bp = VertexPair(pi.V(), pi.VFlip());
+						Point3<ScalarType> mp = (pi.V()->P()+pi.VFlip()->P())/2.f;
 
-						Collapser::Do(m, bp, mp, true);
-						++params.stat.collapseNum;
-						break;
+						if(testCollapse1(pi, mp, minQ, maxQ, params) && Collapser::LinkConditions(bp))
+						{
+							//collapsing on pi.V()
+							bp = VertexPair(pi.VFlip(), pi.V());
+
+							Collapser::Do(m, bp, mp, true);
+							++params.stat.collapseNum;
+							break;
+						}
+
 					}
-
 				}
-			}
-//		Allocator<MeshType>::CompactEveryVector(m);
+		}
 
+		ss.pop();
 	}
 
 
@@ -1058,38 +989,50 @@ private:
 		tri::UpdateFlags<MeshType>::VertexBorderFromNone(m);
 		int count = 0;
 
-		for(auto fi=m.face.begin(); fi!=m.face.end(); ++fi)
-			if(!(*fi).IsD() && (!params.selectedOnly || fi->IsS()))
-			{
-				for(auto i=0; i<3; ++i)
+		SelectionStack<MeshType> ss(m);
+		ss.push();
+
+
+		{
+			tri::UpdateTopology<MeshType>::FaceFace(m);
+			Clean<MeshType>::CountNonManifoldVertexFF(m,true);
+
+			//From now on Selection on vertices is not manifoldness
+
+			for(auto fi=m.face.begin(); fi!=m.face.end(); ++fi)
+				if(!(*fi).IsD() && (!params.selectedOnly || fi->IsS()))
 				{
-					PosType pi(&*fi, i);
-					if(!pi.V()->IsB())
+					for(auto i=0; i<3; ++i)
 					{
-						vector<FaceType*> ff;
-						vector<int> vi;
-						face::VFStarVF<FaceType>(pi.V(), ff, vi);
-
-						//if cross need to check what creases you have and decide where to collapse accordingly
-						//if tricuspidis need whenever you have at least one crease => can't collapse anywhere
-						if(ff.size() == 4 || ff.size() == 3)
+						PosType pi(&*fi, i);
+						if(!pi.V()->IsB())
 						{
-							//							VertexPair bp;
-							VertexPair  bp = VertexPair(pi.V(), pi.VFlip());
-							Point3<ScalarType> mp = (pi.V()->P()+pi.VFlip()->P())/2.f;
+							vector<FaceType*> ff;
+							vector<int> vi;
+							face::VFStarVF<FaceType>(pi.V(), ff, vi);
 
-							if(testCollapse1(pi, mp, 0, 0, params, true) && Collapser::LinkConditions(bp))
+							//if cross need to check what creases you have and decide where to collapse accordingly
+							//if tricuspidis need whenever you have at least one crease => can't collapse anywhere
+							if(ff.size() == 4 || ff.size() == 3)
 							{
-								bp = VertexPair(pi.VFlip(), pi.V());
-								Collapser::Do(m, bp, mp, true);
-								++count;
-								break;
+								//							VertexPair bp;
+								VertexPair  bp = VertexPair(pi.V(), pi.VFlip());
+								Point3<ScalarType> mp = (pi.V()->P()+pi.VFlip()->P())/2.f;
+
+								if(testCollapse1(pi, mp, 0, 0, params, true) && Collapser::LinkConditions(bp))
+								{
+									bp = VertexPair(pi.VFlip(), pi.V());
+									Collapser::Do(m, bp, mp, true);
+									++count;
+									break;
+								}
 							}
 						}
 					}
 				}
-			}
-//		vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
+		}
+
+		ss.pop();
 		Allocator<MeshType>::CompactEveryVector(m);
 	}
 
@@ -1097,6 +1040,8 @@ private:
 	static int selectVertexFromCrease(MeshType &m, ScalarType creaseThr)
 	{
 		int count = 0;
+		Clean<MeshType>::CountNonManifoldVertexFF(m, true, false);
+
 		ForEachFacePos(m, [&](PosType &p){
 			if(p.IsBorder() || p.IsEdgeS()/*testCreaseEdge(p, creaseThr)*/)
 			{
