@@ -1014,10 +1014,10 @@ public:
 	   * e.g. the vertices with a non 2-manif. neighbourhood but that do not belong to not 2-manif edges.
 	   * typical situation two cones connected by one vertex.
 	   */
-	static int CountNonManifoldVertexFF( MeshType & m, bool selectVert = true )
+	static int CountNonManifoldVertexFF( MeshType & m, bool selectVert = true, bool clearSelection = true)
 	{
 		RequireFFAdjacency(m);
-		if(selectVert) UpdateSelection<MeshType>::VertexClear(m);
+		if(selectVert && clearSelection) UpdateSelection<MeshType>::VertexClear(m);
 
 		int nonManifoldCnt=0;
 		SimpleTempData<typename MeshType::VertContainer, int > TD(m.vert,0);
