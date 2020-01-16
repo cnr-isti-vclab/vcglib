@@ -689,30 +689,31 @@ public:
 		size_t selCnt=0;
 
 		for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-			if( !(*fi).IsD() && !(*fi).IsV() )
+			if( !(*fi).IsD() && !(*fi).IsV() && !(*fi).IsS())
 			{
 				UpdateFlags<MeshType>::FaceClearS(m);
 
 				std::deque<FacePointer> visitStack;
 				visitStack.push_back(&*fi);
 
+				assert(!(*fi).IsS());
+				assert(!(*fi).IsV());
+				(*fi).SetS();
+				(*fi).SetV();
+
 				while(!visitStack.empty())
 				{
 					FacePointer fp = visitStack.front();
 					visitStack.pop_front();
 
-					fp->SetS();
-
-					assert(!fp->IsV());
-					fp->SetV();
-
 					for(int i=0;i<fp->VN();++i) {
 						FacePointer ff = fp->FFp(i);
 
-						if(face::IsManifold(*fp, i) && !ff->IsS())
+						if(face::IsManifold(*fp, i) && !ff->IsS() && !ff->IsV())
 						{
+							ff->IsS();
+							ff->IsV();
 							visitStack.push_back(ff);
-							assert(!ff->IsV());
 						}
 					}
 				}
