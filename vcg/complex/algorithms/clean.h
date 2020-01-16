@@ -711,12 +711,13 @@ public:
 
 						if(face::IsManifold(*fp, i) && !ff->IsS() && !ff->IsV())
 						{
-							ff->IsS();
-							ff->IsV();
+							ff->SetS();
+							ff->SetS();
 							visitStack.push_back(ff);
 						}
 					}
 				}
+
 				Append<MeshType, MeshType>::Mesh(tmpMesh, m, true);
 				++selCnt;
 			}
