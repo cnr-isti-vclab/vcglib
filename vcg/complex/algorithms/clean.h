@@ -696,8 +696,6 @@ public:
 				std::deque<FacePointer> visitStack;
 				visitStack.push_back(&*fi);
 
-				assert(!(*fi).IsS());
-				assert(!(*fi).IsV());
 				(*fi).SetS();
 				(*fi).SetV();
 
@@ -712,7 +710,7 @@ public:
 						if(face::IsManifold(*fp, i) && !ff->IsS() && !ff->IsV())
 						{
 							ff->SetS();
-							ff->SetS();
+							ff->SetV();
 							visitStack.push_back(ff);
 						}
 					}
