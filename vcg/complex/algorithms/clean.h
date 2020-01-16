@@ -701,7 +701,6 @@ public:
 					FacePointer fp = visitStack.front();
 					visitStack.pop_front();
 
-					fp->Q() = selCnt;
 					fp->SetS();
 
 					assert(!fp->IsV());
