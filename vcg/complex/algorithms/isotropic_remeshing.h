@@ -23,15 +23,16 @@
 #ifndef _VCG_ISOTROPICREMESHING_H
 #define _VCG_ISOTROPICREMESHING_H
 
-#include<vcg/complex/algorithms/update/quality.h>
-#include<vcg/complex/algorithms/update/curvature.h>
-#include<vcg/complex/algorithms/update/normal.h>
-#include<vcg/complex/algorithms/refine.h>
-#include<vcg/complex/algorithms/stat.h>
-#include<vcg/complex/algorithms/smooth.h>
-#include<vcg/complex/algorithms/local_optimization/tri_edge_collapse.h>
-#include<vcg/space/index/spatial_hashing.h>
-
+#include <vcg/complex/algorithms/update/quality.h>
+#include <vcg/complex/algorithms/update/curvature.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/refine.h>
+#include <vcg/complex/algorithms/stat.h>
+#include <vcg/complex/algorithms/smooth.h>
+#include <vcg/complex/algorithms/local_optimization/tri_edge_collapse.h>
+#include <vcg/space/index/spatial_hashing.h>
+#include <vcg/complex/append.h>
+#include <vcg/complex/allocate.h>
 #include <wrap/io_trimesh/export.h>
 
 namespace vcg {
@@ -42,6 +43,7 @@ class IsotropicRemeshing
 public:
 	typedef TRI_MESH_TYPE MeshType;
 	typedef typename MeshType::FaceType FaceType;
+	typedef typename MeshType::FacePointer FacePointer;
 	typedef typename FaceType::VertexType VertexType;
 	typedef typename FaceType::VertexPointer VertexPointer;
 	typedef	typename VertexType::ScalarType ScalarType;
@@ -85,6 +87,7 @@ public:
 		bool smoothFlag=true;
 		bool projectFlag=true;
 		bool selectedOnly = false;
+		bool cleanFlag = true;
 
 		bool userSelectedCreases = false;
 		bool surfDistCheck = true;
@@ -111,6 +114,7 @@ public:
 
 	} Params;
 
+private:
 	static void debug_crease (MeshType & toRemesh, std::string  prepend, int i)
 	{
 		ForEachVertex(toRemesh, [] (VertexType & v) {
@@ -136,6 +140,88 @@ public:
 		vcg::tri::io::Exporter<MeshType>::Save(toRemesh, prepend.c_str(), vcg::tri::io::Mask::IOM_ALL);
 	}
 
+	static void removeColinearFaces(MeshType & m, Params & params)
+	{
+		vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
+
+		int count = 0;
+
+//		MeshType projectMesh;
+//		vcg::tri::Append<MeshType, MeshType>::MeshCopy(projectMesh, m);
+//		vcg::tri::UpdateBounding<MeshType>::Box(projectMesh);
+//		vcg::tri::UpdateNormal<MeshType>::PerVertexNormalizedPerFace(projectMesh);
+
+//		StaticGrid grid;
+//		grid.Set(projectMesh.face.begin(), projectMesh.face.end());
+
+		do
+		{
+			vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
+			vcg::tri::UnMarkAll(m);
+
+			count = 0;
+			for (size_t i = 0; i < size_t(m.FN()); ++i)
+			{
+				FaceType & f = m.face[i];
+
+				ScalarType quality = vcg::QualityRadii(f.cP(0), f.cP(1), f.cP(2));
+
+				if (quality <= 0.00000001)
+				{
+					//find longest edge
+					double edges[3];
+					edges[0] = vcg::Distance(f.cP(0), f.cP(1));
+					edges[1] = vcg::Distance(f.cP(1), f.cP(2));
+					edges[2] = vcg::Distance(f.cP(2), f.cP(0));
+					int longestIdx = std::find(edges, edges+3, std::max(std::max(edges[0], edges[1]), edges[2])) - (edges);
+
+					if (vcg::tri::IsMarked(m, f.V2(longestIdx)))
+						continue;
+
+
+					auto f1 = f.cFFp(longestIdx);
+					vcg::tri::Mark(m,f.V2(longestIdx));
+					if (!vcg::face::IsBorder(f, longestIdx) && vcg::face::IsManifold(f, longestIdx) && vcg::face::checkFlipEdgeNotManifold<FaceType>(f, longestIdx))  {
+
+						// Check if EdgeFlipping improves quality
+						FacePointer g = f.FFp(longestIdx); int k = f.FFi(longestIdx);
+						vcg::Triangle3<ScalarType> t1(f.P(longestIdx), f.P1(longestIdx), f.P2(longestIdx)), t2(g->P(k), g->P1(k), g->P2(k)),
+						        t3(f.P(longestIdx), g->P2(k), f.P2(longestIdx)), t4(g->P(k), f.P2(longestIdx), g->P2(k));
+
+						if ( std::min( QualityFace(t1), QualityFace(t2) ) <= std::min( QualityFace(t3), QualityFace(t4) ))
+						{
+							ScalarType dist;
+							CoordType closest;
+							auto fp0 = vcg::tri::GetClosestFaceBase(*params.mProject, params.grid, vcg::Barycenter(t3), 0.000001, dist, closest);
+							if (fp0 == NULL)
+								continue;
+
+							auto fp1 = vcg::tri::GetClosestFaceBase(*params.mProject, params.grid, vcg::Barycenter(t4), 0.000001, dist, closest);
+							if (fp1 == NULL)
+								continue;
+
+							vcg::face::FlipEdgeNotManifold<FaceType>(f, longestIdx);
+							++count;
+						}
+					}
+				}
+			}
+		} while (count);
+	}
+
+	static void cleanMesh(MeshType & m, Params & params)
+	{
+		vcg::tri::Clean<MeshType>::RemoveDuplicateFace(m);
+		vcg::tri::Clean<MeshType>::RemoveUnreferencedVertex(m);
+		vcg::tri::Allocator<MeshType>::CompactEveryVector(m);
+
+		vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
+		removeColinearFaces(m, params);
+		vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
+	}
+
+public:
+
 	static void Do(MeshType &toRemesh, Params & params, vcg::CallBackPos * cb=0)
 	{
 		MeshType toProjectCopy;
@@ -151,6 +237,7 @@ public:
 		assert(&toRemesh != &toProject);
 		params.stat.Reset();
 
+
 		tri::UpdateBounding<MeshType>::Box(toRemesh);
 
 		{
@@ -160,6 +247,9 @@ public:
 			params.mProject = &toProject;
 			params.grid.Set(toProject.face.begin(), toProject.face.end());
 		}
+
+		if (params.cleanFlag)
+			cleanMesh(toRemesh, params);
 
 		tri::UpdateTopology<MeshType>::FaceFace(toRemesh);
 		tri::UpdateFlags<MeshType>::VertexBorderFromFaceAdj(toRemesh);
@@ -173,7 +263,6 @@ public:
 		for(int i=0; i < params.iter; ++i)
 		{
 			//			params.stat.Reset();
-
 			if(cb) cb(100*i/params.iter, "Remeshing");
 
 			if(params.splitFlag)
@@ -1023,6 +1112,7 @@ private:
 								{
 									bp = VertexPair(pi.VFlip(), pi.V());
 									Collapser::Do(m, bp, mp, true);
+									++params.stat.collapseNum;
 									++count;
 									break;
 								}
