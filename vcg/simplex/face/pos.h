@@ -198,10 +198,9 @@ public:
         assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V((z))==v));
         FaceType *nf=f->FFp(z);
         int nz=f->FFi(z);
-        assert(nf->V(nf->Prev(nz))!=v && (nf->V(nf->Next(nz))==v || nf->V((nz))==v));
+        assert(nf->V(nf->Prev(nz))!=v && (nf->V(nf->Next(nz))==v || nf->V(nz)==v));
         f=nf;
         z=nz;
-        assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
     }
 
     /// Changes vertex maintaining the same face and the same edge
