@@ -16,6 +16,7 @@
 #define NANOPLY_WRAPPER_VCG_H
 
 #include <wrap/nanoply/include/nanoply.hpp>
+#include <vcg/complex/complex.h>
 #include <vcg/space/point.h>
 #include <map>
 
@@ -74,7 +75,7 @@ namespace nanoply
 
     typedef typename MeshType::FaceIterator                               FaceIterator;
 
-		template<class T> static PlyType getEntity() { return NNP_UNKNOWN_TYPE };
+		template<class T> static PlyType getEntity() { return NNP_UNKNOWN_TYPE; };
 		template<> static PlyType getEntity<unsigned char>(){ return NNP_UINT8; };
 		template<> static PlyType getEntity<char>(){ return NNP_INT8; };
 		template<> static PlyType getEntity<unsigned short>(){ return NNP_UINT16; };
@@ -114,7 +115,7 @@ namespace nanoply
 
 
 		template<class Container, class Type, int n>
-		inline static void PushDescriport(std::vector<PlyProperty>& prop, ElementDescriptor& elem, std::string& name, void* ptr)
+		inline static void PushDescriport(std::vector<PlyProperty>& prop, ElementDescriptor& elem, const std::string& name, void* ptr)
 		{
 			prop.push_back(PlyProperty(getEntity<Type>(), name));
 			DescriptorInterface* di = new DataDescriptor<Container, n, Type>(name, ptr);
@@ -123,7 +124,7 @@ namespace nanoply
 
 
 		template<class Container, class Type, int n>
-		inline static void PushDescriportList(std::vector<PlyProperty>& prop, ElementDescriptor& elem, std::string& name, void* ptr)
+		inline static void PushDescriportList(std::vector<PlyProperty>& prop, ElementDescriptor& elem, const std::string& name, void* ptr)
 		{
 			prop.push_back(PlyProperty(getEntityList<Type>(), name));
 			DescriptorInterface* di = new DataDescriptor<Container, n, Type>(name, ptr);
@@ -201,17 +202,17 @@ namespace nanoply
 			std::map<std::string, int> meshAttribCnt;
 
 
-			CustomAttributeDescriptor::~CustomAttributeDescriptor()
+			~CustomAttributeDescriptor()
 			{
-				for (int i = 0; i < vertexAttrib.size(); i++)
+				for (size_t i = 0; i < vertexAttrib.size(); i++)
 					delete vertexAttrib[i];
-				for (int i = 0; i < edgeAttrib.size(); i++)
+				for (size_t i = 0; i < edgeAttrib.size(); i++)
 					delete edgeAttrib[i];
-				for (int i = 0; i < faceAttrib.size(); i++)
+				for (size_t i = 0; i < faceAttrib.size(); i++)
 					delete faceAttrib[i];
 				CustomAttributeDescriptor::MapMeshAttribIter iter = meshAttrib.begin();
 				for (; iter != meshAttrib.end(); iter++)
-					for (int i = 0; i < (*iter).second.size(); i++)
+					for (size_t i = 0; i < (*iter).second.size(); i++)
 						delete (*iter).second[i];
 			}
 
@@ -235,13 +236,13 @@ namespace nanoply
 			}
 
 			template<class Container, class Type, int n>
-			void AddMeshAttribDescriptor(const std::string& nameAttrib, std::string& nameProp, PlyType type, void* ptr)
+			void AddMeshAttribDescriptor(const std::string& nameAttrib, const std::string& nameProp, PlyType type, void* ptr)
 			{
 				meshAttrib[nameAttrib].push_back(new DataDescriptor<Container, n, Type>(nameProp, ptr));
 				meshAttribProp[nameAttrib].push_back(PlyProperty(type, nameProp));
 			}
 
-			void AddMeshAttrib(std::string& name, int cnt)
+			void AddMeshAttrib(const std::string& name, int cnt)
 			{
 				meshAttribCnt[name] = cnt;
 			}
@@ -251,7 +252,7 @@ namespace nanoply
 				nanoply::Info info(filename);
 				if (info.errInfo == nanoply::NNP_OK)
 				{
-					for (int i = 0; i < info.elemVec.size(); i++)
+					for (size_t i = 0; i < info.elemVec.size(); i++)
 					{
 						if (info.elemVec[i].plyElem == NNP_UNKNOWN_ELEM && info.elemVec[i].name != "camera")
 							meshAttribCnt[info.elemVec[i].name] = info.elemVec[i].cnt;
@@ -281,12 +282,12 @@ namespace nanoply
 
       bool AddEdgeAttrib(MeshType& m, std::set<PointerToAttribute>& ptrAttrib, PlyElement* elem)
       {
-        return AddCustomAttrib<1>(m, ptrAttrib, elem, vertexAttrib);
+        return AddCustomAttrib<1>(m, ptrAttrib, elem, edgeAttrib);
       }
 
       bool AddFaceAttrib(MeshType& m, std::set<PointerToAttribute>& ptrAttrib, PlyElement* elem)
       {
-        return AddCustomAttrib<2>(m, ptrAttrib, elem, vertexAttrib);
+        return AddCustomAttrib<2>(m, ptrAttrib, elem, faceAttrib);
       }
 
      
@@ -315,7 +316,7 @@ namespace nanoply
 			template<class Container>
 			void AddPointAttribDescriptor(const PointerToAttribute* ptr, ElementDescriptor::PropertyDescriptor& attrib, std::vector<PlyProperty>& attribProp)
 			{
-				int size = typename Container::Dimension;
+				int size = int(Container::Dimension);
 				std::string name(ptr->_name);
 				Container* tmpPtr = (Container*)ptr->_handle->DataBegin();
 				for (int i = 0 ; i < size; i++)
@@ -325,7 +326,7 @@ namespace nanoply
 			template<class Container>
 			void AddColorAttribDescriptor(const PointerToAttribute* ptr, ElementDescriptor::PropertyDescriptor& attrib, std::vector<PlyProperty>& attribProp)
 			{
-				int size = typename Container::Dimension;
+				int size = int(Container::Dimension);
 				std::string name(ptr->_name);
 				Container* tmpPtr = (Container*)ptr->_handle->DataBegin();
 				for (int i = 0; i < size; i++)
@@ -415,17 +416,17 @@ namespace nanoply
       {
         if (ActionType == 0) //vertex
         {
-          auto h = vcg::tri::Allocator<MeshType>::GetPerVertexAttribute<Container>(m, name);
+          auto h = vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<Container>(m, name);
           AddVertexAttribDescriptor<Container, Container, 1>(name, type, h._handle->DataBegin());
         }
         else if (ActionType == 1) //Edge
         {
-          auto h = vcg::tri::Allocator<MeshType>::GetPerEdgeAttribute<Container>(m, name);
+          auto h = vcg::tri::Allocator<MeshType>::template GetPerEdgeAttribute<Container>(m, name);
           AddEdgeAttribDescriptor<Container, Container, 1>(name, type, h._handle->DataBegin());
         }
         else if (ActionType == 2) //Face
         {
-          auto h = vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<Container>(m, name);
+          auto h = vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<Container>(m, name);
           AddFaceAttribDescriptor<Container, Container, 1>(name, type, h._handle->DataBegin());
         }
       }
@@ -435,20 +436,20 @@ namespace nanoply
       {
         if (ActionType == 0) //vertex
         {
-          auto h = vcg::tri::Allocator<MeshType>::GetPerVertexAttribute<Container>(m, name);
-          for (int i = 0; i < prop.size(); i++)
+          auto h = vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<Container>(m, name);
+          for (size_t i = 0; i < prop.size(); i++)
             AddVertexAttribDescriptor<Container, typename Container::ScalarType, 1>(prop[i].name, prop[i].type, &h[0][i]);
         }
         else if (ActionType == 1) //Edge
         {
-          auto h = vcg::tri::Allocator<MeshType>::GetPerEdgeAttribute<Container>(m, name);
-          for (int i = 0; i < prop.size(); i++)
+          auto h = vcg::tri::Allocator<MeshType>::template GetPerEdgeAttribute<Container>(m, name);
+          for (size_t i = 0; i < prop.size(); i++)
             AddEdgeAttribDescriptor<Container, typename Container::ScalarType, 1>(prop[i].name, prop[i].type, &h[0][i]);
         }
         else if (ActionType == 2) //Face
         {
-          auto h = vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<Container>(m, name);
-          for (int i = 0; i < prop.size(); i++)
+          auto h = vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<Container>(m, name);
+          for (size_t i = 0; i < prop.size(); i++)
             AddFaceAttribDescriptor<Container, typename Container::ScalarType, 1>(prop[i].name, prop[i].type, &h[0][i]);
         }
       }
@@ -459,17 +460,17 @@ namespace nanoply
       {
         if (ActionType == 0) //vertex
         {
-          auto h = vcg::tri::Allocator<MeshType>::GetPerVertexAttribute<Container>(m, name);
+          auto h = vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<Container>(m, name);
           AddVertexAttribDescriptor<Container, Type, 0>(name, type, h._handle->DataBegin());
         }
         else if (ActionType == 1) //Edge
         {
-          auto h = vcg::tri::Allocator<MeshType>::GetPerEdgeAttribute<Container>(m, name);
+          auto h = vcg::tri::Allocator<MeshType>::template GetPerEdgeAttribute<Container>(m, name);
           AddEdgeAttribDescriptor<Container, Type, 0>(name, type, h._handle->DataBegin());
         }
         else if (ActionType == 2) //Face
         {
-          auto h = vcg::tri::Allocator<MeshType>::GetPerFaceAttribute<Container>(m, name);
+          auto h = vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<Container>(m, name);
           AddFaceAttribDescriptor<Container, Type, 0>(name, type, h._handle->DataBegin());
         }
       }
@@ -480,11 +481,11 @@ namespace nanoply
       {
         //Custom attribute with already a data descriptor
         std::set<std::string> validCustomAttrib;
-        for (int i = 0; i < attrib.size(); i++)
+        for (size_t i = 0; i < attrib.size(); i++)
         {
           if (attrib[i]->base == NULL)
           {
-            std::set<PointerToAttribute>::iterator ai;
+            typename std::set<PointerToAttribute>::iterator ai;
             for (ai = ptrAttrib.begin(); ai != ptrAttrib.end(); ++ai)
             {
               if (attrib[i]->name == (*ai)._name)
@@ -501,7 +502,7 @@ namespace nanoply
         //Get custom properties without a data descriptor 
         std::map<std::string, std::pair<std::vector<PlyProperty>, int>> customAttribName;
         std::vector<std::string> attribName((*elem).propVec.size());
-        for (int i = 0; i < (*elem).propVec.size(); i++)
+        for (size_t i = 0; i < (*elem).propVec.size(); i++)
         {
           if ((*elem).propVec[i].elem == NNP_UNKNOWN_ENTITY)
           {
@@ -534,7 +535,7 @@ namespace nanoply
           unsigned int bitType = 0;
           std::vector<PlyProperty> tempProp((*mapIter).second.first.size());
           int checkMask = (1 << (*mapIter).second.first.size()) - 1;
-          for (int i = 0; i < (*mapIter).second.first.size(); i++)
+          for (size_t i = 0; i < (*mapIter).second.first.size(); i++)
           {
             PlyProperty& p = (*mapIter).second.first[i];
             bitType |= p.type;
@@ -567,6 +568,7 @@ namespace nanoply
               case NNP_UINT8: AddPointAttrib<ActionType, vcg::Point2<unsigned char>>(m, (*mapIter).first, tempProp); break;
               case NNP_UINT16: AddPointAttrib<ActionType, vcg::Point2<unsigned short>>(m, (*mapIter).first, tempProp); break;
               case NNP_UINT32: AddPointAttrib<ActionType, vcg::Point2<unsigned int>>(m, (*mapIter).first, tempProp); break;
+			  default: assert(0);
               }
             }
             else if (tempProp.size() == 3)
@@ -581,6 +583,7 @@ namespace nanoply
               case NNP_UINT8: AddPointAttrib<ActionType, vcg::Point3<unsigned char>>(m, (*mapIter).first, tempProp); break;
               case NNP_UINT16: AddPointAttrib<ActionType, vcg::Point3<unsigned short>>(m, (*mapIter).first, tempProp); break;
               case NNP_UINT32: AddPointAttrib<ActionType, vcg::Point3<unsigned int>>(m, (*mapIter).first, tempProp); break;
+			  default: assert(0);
               }
             }
             else if (tempProp.size() == 4 && (*mapIter).second.second != (checkMask << 4))
@@ -595,6 +598,7 @@ namespace nanoply
               case NNP_UINT8: AddPointAttrib<ActionType, vcg::Point4<unsigned char>>(m, (*mapIter).first, tempProp); break;
               case NNP_UINT16: AddPointAttrib<ActionType, vcg::Point4<unsigned short>>(m, (*mapIter).first, tempProp); break;
               case NNP_UINT32: AddPointAttrib<ActionType, vcg::Point4<unsigned int>>(m, (*mapIter).first, tempProp); break;
+			  default: assert(0);
               }
             }
             else if (tempProp.size() == 4)
@@ -609,12 +613,13 @@ namespace nanoply
               case NNP_FLOAT32: AddPointAttrib<ActionType, vcg::Color4f>(m, (*mapIter).first, tempProp); break;
               case NNP_FLOAT64: AddPointAttrib<ActionType, vcg::Color4d>(m, (*mapIter).first, tempProp); break;
               case NNP_UINT8: AddPointAttrib<ActionType, vcg::Color4b>(m, (*mapIter).first, tempProp); break;
+			  default: assert(0);
               }
             }
           }
           else
           {
-            for (int i = 0; i < tempProp.size(); i++)
+            for (size_t i = 0; i < tempProp.size(); i++)
             {
               switch (tempProp[i].type)
               {
@@ -642,6 +647,7 @@ namespace nanoply
               case NNP_LIST_INT8_UINT16: AddListAttrib<ActionType, std::vector<unsigned short>, unsigned short>(m, tempProp[i].name, tempProp[i].type); break;
               case NNP_LIST_UINT8_INT16:
               case NNP_LIST_INT8_INT16: AddListAttrib<ActionType, std::vector<short>, short>(m, tempProp[i].name, tempProp[i].type); break;
+			  default: assert(0);
               }
             }
           }
@@ -828,12 +834,12 @@ namespace nanoply
     static unsigned int GetFileBitMask(nanoply::Info& info)
     {
       unsigned int mask = 0;
-      for (int j = 0; j < info.elemVec.size(); j++)
+      for (size_t j = 0; j < info.elemVec.size(); j++)
       {
         PlyElement& elem = info.elemVec[j];
         if (elem.plyElem == PlyElemEntity::NNP_VERTEX_ELEM)
         {
-          for (int i = 0; i < elem.propVec.size(); i++)
+          for (size_t i = 0; i < elem.propVec.size(); i++)
           {
             switch (elem.propVec[i].elem)
             {
@@ -853,12 +859,13 @@ namespace nanoply
             case NNP_K1DIR:
             case NNP_K2DIR: mask |= BitMask::IO_VERTCURVDIR; break;
             case NNP_UNKNOWN_ENTITY: mask |= BitMask::IO_VERTATTRIB; break;
+			default: assert(0);
             }
           }
         }
         else if (elem.plyElem == PlyElemEntity::NNP_EDGE_ELEM)
         {
-          for (int i = 0; i < elem.propVec.size(); i++)
+          for (size_t i = 0; i < elem.propVec.size(); i++)
           {
             switch (elem.propVec[i].elem)
             {
@@ -869,12 +876,13 @@ namespace nanoply
             case NNP_BITFLAG: mask |= BitMask::IO_EDGEFLAGS; break;
             case NNP_QUALITY: mask |= BitMask::IO_EDGEQUALITY; break;
             case NNP_UNKNOWN_ENTITY: mask |= BitMask::IO_EDGEATTRIB; break;
+			default: assert(0);
             }
           }
         }
         else if (elem.plyElem == PlyElemEntity::NNP_FACE_ELEM)
         {
-          for (int i = 0; i < elem.propVec.size(); i++)
+          for (size_t i = 0; i < elem.propVec.size(); i++)
           {
             switch (elem.propVec[i].elem)
             {
@@ -893,6 +901,7 @@ namespace nanoply
             case NNP_FACE_WEDGE_TEX: mask |= BitMask::IO_WEDGTEXCOORD; break;
             case NNP_TEXTUREINDEX: mask |= BitMask::IO_WEDGTEXMULTI; break;
             case NNP_UNKNOWN_ENTITY: mask |= BitMask::IO_FACEATTRIB; break;
+			default: assert(0);
             }
           }
         }
@@ -1032,7 +1041,7 @@ namespace nanoply
         if (bitMask & BitMask::IO_VERTATTRIB)
         {
           custom.AddVertexAttrib(mesh, mesh.vert_attr, info.GetVertexElement());
-          for (int i = 0; i < custom.vertexAttrib.size(); i++)
+          for (size_t i = 0; i < custom.vertexAttrib.size(); i++)
           {
             if ((*custom.vertexAttrib[i]).base != NULL)
               vertexDescr.dataDescriptor.push_back(custom.vertexAttrib[i]);
@@ -1064,7 +1073,7 @@ namespace nanoply
         if (bitMask & BitMask::IO_EDGEATTRIB)
         {
           custom.AddEdgeAttrib(mesh, mesh.edge_attr, info.GetEdgeElement());
-          for (int i = 0; i < custom.edgeAttrib.size(); i++)
+          for (size_t i = 0; i < custom.edgeAttrib.size(); i++)
           {
             if ((*custom.edgeAttrib[i]).base != NULL)
               edgeDescr.dataDescriptor.push_back(custom.edgeAttrib[i]);
@@ -1156,7 +1165,7 @@ namespace nanoply
         if (bitMask & BitMask::IO_FACEATTRIB)
         {
           custom.AddFaceAttrib(mesh, mesh.face_attr, info.GetFaceElement());
-          for (int i = 0; i < custom.faceAttrib.size(); i++)
+          for (size_t i = 0; i < custom.faceAttrib.size(); i++)
           {
             if ((*custom.faceAttrib[i]).base != NULL)
               faceDescr.dataDescriptor.push_back(custom.faceAttrib[i]);
@@ -1173,7 +1182,7 @@ namespace nanoply
 			//Mesh attribute
 			if ((bitMask & BitMask::IO_MESHATTRIB))
 			{
-				CustomAttributeDescriptor::MapMeshAttribIter iter = custom.meshAttrib.begin();
+				typename CustomAttributeDescriptor::MapMeshAttribIter iter = custom.meshAttrib.begin();
 				for (; iter != custom.meshAttrib.end(); iter++)
 				{
 					std::string name((*iter).first);
@@ -1192,7 +1201,7 @@ namespace nanoply
 			mesh.shot.SetViewPoint(tra);
 			mesh.shot.Extrinsics.SetRot(rot);
       bool triangleMesh = true;
-      for (int i = 0; i < faceIndex.size(); i++)
+      for (size_t i = 0; i < faceIndex.size(); i++)
         if (faceIndex[i].size() > 3)
           triangleMesh = false;
 
@@ -1202,7 +1211,7 @@ namespace nanoply
         bool hasFaceColor = (bitMask & BitMask::IO_FACECOLOR) && vcg::tri::HasPerFaceColor(mesh);
         bool hasFaceQuality = (bitMask & BitMask::IO_FACEQUALITY) && vcg::tri::HasPerFaceQuality(mesh);
         bool hasFaceNormal = (bitMask & BitMask::IO_FACENORMAL) && vcg::tri::HasPerFaceNormal(mesh);
-        for (int i = 0; i < faceIndex.size(); i++)
+        for (size_t i = 0; i < faceIndex.size(); i++)
         {
           if (faceIndex[i].size() >= 3)
           {
@@ -1211,7 +1220,7 @@ namespace nanoply
             if (hasFaceFlags)
               mesh.face[i].SetF(2);
             FaceIterator fi = vcg::tri::Allocator<MeshType>::AddFaces(mesh, faceIndex[i].size() - 3);
-            for (int j = 3; j < faceIndex[i].size(); j++)
+            for (size_t j = 3; j < faceIndex[i].size(); j++)
             {
               (*fi).V(0) = &mesh.vert[faceIndex[i][0]];
               (*fi).V(1) = &mesh.vert[faceIndex[i][j - 1]];
@@ -1238,13 +1247,13 @@ namespace nanoply
       }
       else
       {
-        for (int i = 0; i < faceIndex.size(); i++)
+        for (size_t i = 0; i < faceIndex.size(); i++)
         {
           mesh.face[i].Alloc(faceIndex[i].size());
-          for (int j = 0; j < faceIndex[i].size(); j++)
+          for (size_t j = 0; j < faceIndex[i].size(); j++)
             mesh.face[i].V(j) = &mesh.vert[faceIndex[i][j]];
         }
-        for (int i = 0; i < wedgeTexCoord.size(); i++)
+        for (size_t i = 0; i < wedgeTexCoord.size(); i++)
         {
           for (int j = 0; j < 3; j++)
           {
@@ -1255,21 +1264,21 @@ namespace nanoply
         }
       }
       
-      for (int i = 0; i < edgeIndex.size(); i++)
+      for (size_t i = 0; i < edgeIndex.size(); i++)
 			{
 				mesh.edge[i].V(0) = &mesh.vert[edgeIndex[i].X()];
 				mesh.edge[i].V(1) = &mesh.vert[edgeIndex[i].Y()];
 			}
 
-			for (int i = 0; i < cameraDescr.dataDescriptor.size(); i++)
+			for (size_t i = 0; i < cameraDescr.dataDescriptor.size(); i++)
 				delete cameraDescr.dataDescriptor[i];
-			for (int i = 0; i < vertexDescr.dataDescriptor.size(); i++)
+			for (size_t i = 0; i < vertexDescr.dataDescriptor.size(); i++)
 				if (vertexDescr.dataDescriptor[i]->elem != NNP_UNKNOWN_ENTITY)
 					delete vertexDescr.dataDescriptor[i];
-			for (int i = 0; i < edgeDescr.dataDescriptor.size(); i++)
+			for (size_t i = 0; i < edgeDescr.dataDescriptor.size(); i++)
 				if (edgeDescr.dataDescriptor[i]->elem != NNP_UNKNOWN_ENTITY)
 					delete edgeDescr.dataDescriptor[i];
-			for (int i = 0; i < faceDescr.dataDescriptor.size(); i++)
+			for (size_t i = 0; i < faceDescr.dataDescriptor.size(); i++)
 				if (faceDescr.dataDescriptor[i]->elem != NNP_UNKNOWN_ENTITY)
 					delete faceDescr.dataDescriptor[i];
 			mesh.textures = info.textureFile;
@@ -1399,7 +1408,7 @@ namespace nanoply
         }
         if ((bitMask & BitMask::IO_VERTATTRIB))
         {
-          std::set<PointerToAttribute>::iterator ai;
+          typename std::set<PointerToAttribute>::iterator ai;
           int userSize = custom.vertexAttrib.size();
           for (ai = mesh.vert_attr.begin(); ai != mesh.vert_attr.end(); ++ai)
           {
@@ -1415,7 +1424,7 @@ namespace nanoply
             if (!userDescr)
               custom.CreateVertexAttribDescriptor(&(*ai));
           }
-          for (int i = 0; i < custom.vertexAttrib.size(); i++)
+          for (size_t i = 0; i < custom.vertexAttrib.size(); i++)
           {
             vertexProp.push_back(custom.vertexAttribProp[i]);
             vertexDescr.dataDescriptor.push_back(custom.vertexAttrib[i]);
@@ -1429,7 +1438,7 @@ namespace nanoply
 			std::vector<PlyProperty> edgeProp;
 			ElementDescriptor edgeDescr(NNP_EDGE_ELEM);
 			std::vector<vcg::Point2i> edgeIndex;
-			for (int i = 0; i < mesh.edge.size(); i++)
+			for (size_t i = 0; i < mesh.edge.size(); i++)
 				edgeIndex.push_back(vcg::Point2i(vcg::tri::Index(mesh, mesh.edge[i].V(0)), vcg::tri::Index(mesh, mesh.edge[i].V(1))));
 			if (nameList.size() > 0 && mesh.edge.size() > 0)
 			{
@@ -1447,7 +1456,7 @@ namespace nanoply
 				
         if ((bitMask & BitMask::IO_EDGEATTRIB))
         {
-          std::set<PointerToAttribute>::iterator ai;
+          typename std::set<PointerToAttribute>::iterator ai;
           int userSize = custom.edgeAttrib.size();
           for (ai = mesh.edge_attr.begin(); ai != mesh.edge_attr.end(); ++ai)
           {
@@ -1463,7 +1472,7 @@ namespace nanoply
             if (!userDescr)
               custom.CreateEdgeAttribDescriptor(&(*ai));
           }
-          for (int i = 0; i < custom.edgeAttrib.size(); i++)
+          for (size_t i = 0; i < custom.edgeAttrib.size(); i++)
           {
             edgeProp.push_back(custom.edgeAttribProp[i]);
             edgeDescr.dataDescriptor.push_back(custom.edgeAttrib[i]);
@@ -1478,7 +1487,7 @@ namespace nanoply
 			ElementDescriptor faceDescr(NNP_FACE_ELEM);
 			std::vector<std::vector<unsigned int>> faceIndex;
 			std::vector<vcg::ndim::Point<6, FaceTexScalar>> wedgeTexCoord;
-      for (int i = 0; i < mesh.face.size(); i++)
+      for (size_t i = 0; i < mesh.face.size(); i++)
       {
         faceIndex.push_back(std::vector<unsigned int>());
         for (int j = 0; j < mesh.face[i].VN(); j++)
@@ -1486,7 +1495,7 @@ namespace nanoply
       }
 			if (((bitMask & BitMask::IO_WEDGTEXCOORD) || (bitMask & BitMask::IO_WEDGTEXMULTI)) && vcg::tri::HasPerWedgeTexCoord(mesh))
 			{
-				for (int i = 0; i < mesh.face.size(); i++)
+				for (size_t i = 0; i < mesh.face.size(); i++)
 				{
           wedgeTexCoord.push_back(vcg::ndim::Point<6, FaceTexScalar>());
 					for (int j = 0; j < 3; j++)
@@ -1565,7 +1574,7 @@ namespace nanoply
         }
         if ((bitMask & BitMask::IO_FACEATTRIB))
         {
-          std::set<PointerToAttribute>::iterator ai;
+          typename std::set<PointerToAttribute>::iterator ai;
           int userSize = custom.faceAttrib.size();
           for (ai = mesh.face_attr.begin(); ai != mesh.face_attr.end(); ++ai)
           {
@@ -1610,8 +1619,8 @@ namespace nanoply
 			//Mesh attribute
 			if ((bitMask & BitMask::IO_MESHATTRIB))
 			{
-				CustomAttributeDescriptor::MapMeshAttribIter iter = custom.meshAttrib.begin();
-				CustomAttributeDescriptor::MapMeshAttribPropIter iterProp = custom.meshAttribProp.begin();
+				typename CustomAttributeDescriptor::MapMeshAttribIter iter = custom.meshAttrib.begin();
+				typename CustomAttributeDescriptor::MapMeshAttribPropIter iterProp = custom.meshAttribProp.begin();
 				for (; iter != custom.meshAttrib.end(); iter++, iterProp++)
 				{
 					std::string name((*iter).first);
@@ -1624,15 +1633,15 @@ namespace nanoply
 			
 			bool flag = nanoply::SaveModel(infoSave.filename, meshDescr, infoSave);
 
-			for (int i = 0; i < cameraDescr.dataDescriptor.size(); i++)
+			for (size_t i = 0; i < cameraDescr.dataDescriptor.size(); i++)
 				delete cameraDescr.dataDescriptor[i];
-			for (int i = 0; i < vertexDescr.dataDescriptor.size(); i++)
+			for (size_t i = 0; i < vertexDescr.dataDescriptor.size(); i++)
 				if (vertexDescr.dataDescriptor[i]->elem != NNP_UNKNOWN_ENTITY)
 					delete vertexDescr.dataDescriptor[i];
-			for (int i = 0; i < edgeDescr.dataDescriptor.size(); i++)
+			for (size_t i = 0; i < edgeDescr.dataDescriptor.size(); i++)
 				if (edgeDescr.dataDescriptor[i]->elem != NNP_UNKNOWN_ENTITY)
 					delete edgeDescr.dataDescriptor[i];
-			for (int i = 0; i < faceDescr.dataDescriptor.size(); i++)
+			for (size_t i = 0; i < faceDescr.dataDescriptor.size(); i++)
 				if (faceDescr.dataDescriptor[i]->elem != NNP_UNKNOWN_ENTITY)
 					delete faceDescr.dataDescriptor[i];
 			

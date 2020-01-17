@@ -256,7 +256,7 @@ namespace nanoply
 
   /* Names used for the PlyElement */
   static ElementMap mapElem({
-      { PlyElemEntity::NNP_UNKNOWN_ELEM, NameVector({ "unknonw" }) },
+      { PlyElemEntity::NNP_UNKNOWN_ELEM, NameVector({ "unknown" }) },
       { PlyElemEntity::NNP_VERTEX_ELEM, NameVector({ "vertex" }) },
       { PlyElemEntity::NNP_EDGE_ELEM, NameVector({ "edge" }) },
       { PlyElemEntity::NNP_FACE_ELEM, NameVector({ "face" }) },
@@ -594,7 +594,7 @@ namespace nanoply
     * @param _t	Property type.
     * @param _e	Property entity.
     */
-    inline PlyProperty(PlyType _t, PlyEntity _e) :type(_t), elem(_e), name(PlyPropertyName(_e)[0]), validToWrite(false){}
+    inline PlyProperty(PlyType _t, PlyEntity _e) : name(PlyPropertyName(_e)[0]), type(_t), elem(_e), validToWrite(false){}
 
     /**
     * Constructor that sets the type, the entity and the name of a standard PLY property.
@@ -603,7 +603,7 @@ namespace nanoply
     * @param _e		Property entity.
     * @param _n		Property name.
     */
-    inline PlyProperty(PlyType _t, PlyEntity _e, std::string _n) :type(_t), elem(_e), name(_n), validToWrite(false){}
+    inline PlyProperty(PlyType _t, PlyEntity _e, std::string _n) : name(_n), type(_t), elem(_e), validToWrite(false){}
 
     /**
     * Constructor that sets the type and the name of a custom PLY property.
@@ -611,7 +611,7 @@ namespace nanoply
     * @param _t		Property type.
     * @param _n		Property name.
     */
-    inline PlyProperty(PlyType _t, std::string _n) :type(_t), elem(PlyEntity::NNP_UNKNOWN_ENTITY), name(_n), validToWrite(false){}
+    inline PlyProperty(PlyType _t, std::string _n) :name(_n), type(_t), elem(PlyEntity::NNP_UNKNOWN_ENTITY), validToWrite(false){}
 
     /**
     * Get the description string of the property entity.
@@ -947,6 +947,7 @@ namespace nanoply
       delete[] temp;
       break;
     }
+    default: assert(0);
     }
     return true;
   }
@@ -1036,7 +1037,7 @@ namespace nanoply
       v.push_back(name);
 
     }
-    for (int i = 0; i < v.size(); i++)
+    for (size_t i = 0; i < v.size(); i++)
     {
       std::stringstream s;
       s << "property " << type << " " << v[i] << "\n";
@@ -1255,7 +1256,7 @@ namespace nanoply
     temp << "element " << name << " " << cnt << "\n";
     if (file.WriteHeaderLine(temp.str()))
     {
-      for (int i = 0; i < propVec.size(); i++)
+      for (size_t i = 0; i < propVec.size(); i++)
         ok = propVec[i].WriteHeader(file);
     }
     else
@@ -1266,8 +1267,8 @@ namespace nanoply
 
   inline bool PlyElement::SkipAsciiElementsInFile(PlyFile &file)
   {
-    for (int i = 0; i < this->cnt; ++i)
-      for (int j = 0; j < this->propVec.size(); ++j)
+    for (size_t i = 0; i < this->cnt; ++i)
+      for (size_t j = 0; j < this->propVec.size(); ++j)
         this->propVec[j].SkipAsciiPropertyInFile(file);
     return true;
   }
@@ -1275,8 +1276,8 @@ namespace nanoply
 
   inline bool PlyElement::SkipBinaryElementsInFile(PlyFile &file)
   {
-    for (int i = 0; i < this->cnt; ++i)
-      for (int j = 0; j < this->propVec.size(); ++j)
+    for (size_t i = 0; i < this->cnt; ++i)
+      for (size_t j = 0; j < this->propVec.size(); ++j)
         this->propVec[j].SkipBinaryPropertyInFile(file);
     return true;
   }
@@ -1357,7 +1358,7 @@ namespace nanoply
 
   inline bool PlyElement::Contains(PlyEntity entity)
   {
-    for (int i = 0; i < propVec.size(); i++)
+    for (size_t i = 0; i < propVec.size(); i++)
     {
       if (propVec[i].elem == entity)
         return true;
@@ -1615,9 +1616,9 @@ namespace nanoply
     else
       ok = file.WriteHeaderLine(std::string("format ascii 1.0\n"));
     ok = file.WriteHeaderLine(std::string("comment nanoply generated\n"));
-    for (int i = 0; i < this->textureFile.size(); i++)
+    for (size_t i = 0; i < this->textureFile.size(); i++)
       ok = file.WriteHeaderLine(std::string("comment TextureFile ") + this->textureFile[i] + "\n");
-    for (int i = 0; i < this->elemVec.size(); i++)
+    for (size_t i = 0; i < this->elemVec.size(); i++)
       ok = this->elemVec[i].WriteHeader(file);
     ok = file.WriteHeaderLine(std::string("end_header\n"));
     return ok;
@@ -1668,7 +1669,7 @@ namespace nanoply
 
   inline PlyElement* Info::GetElement(const std::string& name)
   {
-    for (int i = 0; i < elemVec.size(); i++)
+    for (size_t i = 0; i < elemVec.size(); i++)
     {
       if (elemVec[i].name == name)
         return &elemVec[i];
@@ -1679,7 +1680,7 @@ namespace nanoply
 
   inline PlyElement* Info::GetElement(PlyElemEntity e)
   {
-    for (int i = 0; i < elemVec.size(); i++)
+    for (size_t i = 0; i < elemVec.size(); i++)
     {
       if (elemVec[i].plyElem == e)
         return &elemVec[i];
@@ -1872,10 +1873,10 @@ namespace nanoply
 
   inline void ElementDescriptor::ExtractDescriptor(PropertyDescriptor& descr, PlyElement &elem)
   {
-    for (int j = 0; j < elem.propVec.size(); j++)
+    for (size_t j = 0; j < elem.propVec.size(); j++)
     {
       PlyProperty& prop = elem.propVec[j];
-      int i = 0;
+      size_t i = 0;
       for (; i < dataDescriptor.size(); i++)
       {
         if (dataDescriptor[i]->elem == prop.elem)
@@ -1915,9 +1916,9 @@ namespace nanoply
   {
     PropertyDescriptor descr;
     ExtractDescriptor(descr, elem);
-    for (int i = 0; i < elem.cnt; i++)
+    for (size_t i = 0; i < elem.cnt; i++)
     {
-      for (int j = 0; j < elem.propVec.size(); j++)
+      for (size_t j = 0; j < elem.propVec.size(); j++)
       {
         PlyProperty& prop = elem.propVec[j];
         if (descr[j] != NULL)
@@ -1934,9 +1935,9 @@ namespace nanoply
   {
     PropertyDescriptor descr;
     ExtractDescriptor(descr, elem);
-    for (int i = 0; i < elem.cnt; i++)
+    for (size_t i = 0; i < elem.cnt; i++)
     {
-      for (int j = 0; j < elem.propVec.size(); j++)
+      for (size_t j = 0; j < elem.propVec.size(); j++)
       {
         PlyProperty& prop = elem.propVec[j];
         if (descr[j] != NULL)
@@ -1952,9 +1953,9 @@ namespace nanoply
   {
     PropertyDescriptor descr;
     ExtractDescriptor(descr, elem);
-    for (int i = 0; i < elem.cnt; i++)
+    for (size_t i = 0; i < elem.cnt; i++)
     {
-      for (int j = 0; j < elem.propVec.size(); j++)
+      for (size_t j = 0; j < elem.propVec.size(); j++)
       {
         if (descr[j] != NULL)
           (*descr[j]).WriteElemBinary(file, elem.propVec[j], fixEndian);
@@ -1967,10 +1968,10 @@ namespace nanoply
   {
     PropertyDescriptor descr;
     ExtractDescriptor(descr, elem);
-    for (int i = 0; i < elem.cnt; i++)
+    for (size_t i = 0; i < elem.cnt; i++)
     {
       bool first = true;
-      for (int j = 0; j < elem.propVec.size(); j++)
+      for (size_t j = 0; j < elem.propVec.size(); j++)
       {
         if (descr[j] != NULL)
         {
@@ -1997,7 +1998,7 @@ namespace nanoply
     elem.validToWrite = true;
     PropertyDescriptor descr;
     ExtractDescriptor(descr, elem);
-    for (int j = 0; j < elem.propVec.size(); j++)
+    for (size_t j = 0; j < elem.propVec.size(); j++)
     {
       if (descr[j] != NULL)
         elem.propVec[j].validToWrite = true;
@@ -2267,7 +2268,7 @@ namespace nanoply
 
       std::vector<C> data(count);
 
-      for (int i = 0; i < std::min(count, list->size()); i++)
+      for (size_t i = 0; i < std::min(count, list->size()); i++)
         data[i] = (C)((*list)[i]);
 
       if (sizeof(C) > 1 && fixEndian)
@@ -2275,7 +2276,7 @@ namespace nanoply
 
       file.WriteBinaryData(data.data(), sizeof(C)*std::min(count, list->size()));
       C temp = 0;
-      for (int i = 0; i < (count - list->size()); i++)
+      for (size_t i = 0; i < (count - list->size()); i++)
         file.WriteBinaryData(&temp, sizeof(C));
       ++(descr.curPos);
     }
@@ -2303,13 +2304,13 @@ namespace nanoply
       }
 
       std::vector<C> data(count);
-      for (int i = 0; i < std::min(count, list->size()); i++)
+      for (size_t i = 0; i < std::min(count, list->size()); i++)
         data[i] = (C)((*list)[i]);
 
-      for (int i = 0; i < (count - list->size()); i++)
+      for (size_t i = 0; i < (count - list->size()); i++)
         data[i] = 0;
 
-      for (int i = 0; i < count; i++)
+      for (size_t i = 0; i < count; i++)
       {
         file.WriteAsciiData(data[i]);
         if (i < count - 1)
@@ -2617,10 +2618,10 @@ namespace nanoply
 
     if (info.binary)
     {
-      for (int i = 0; i < info.elemVec.size(); ++i)
+      for (size_t i = 0; i < info.elemVec.size(); ++i)
       {
         PlyElement& pe = info.elemVec[i];
-        int j = 0;
+        size_t j = 0;
         for (; j < meshElements.size(); j++)
           if (ElemProcessing<0>(*meshElements[j], pe, file, fixEndian))
             break;
@@ -2632,10 +2633,10 @@ namespace nanoply
     }
     else
     {
-      for (int i = 0; i < info.elemVec.size(); ++i)
+      for (size_t i = 0; i < info.elemVec.size(); ++i)
       {
         PlyElement& pe = info.elemVec[i];
-        int j = 0;
+        size_t j = 0;
         for (; j < meshElements.size(); j++)
           if (ElemProcessing<1>(*meshElements[j], pe, file, false))
             break;
@@ -2665,10 +2666,10 @@ namespace nanoply
       info.errInfo = NNP_UNABLE_TO_OPEN;
       return false;
     }
-    for (int i = 0; i < info.elemVec.size(); ++i)
+    for (size_t i = 0; i < info.elemVec.size(); ++i)
     {
       PlyElement& pe = info.elemVec[i];
-      for (int j = 0; j < meshElements.size(); j++)
+      for (size_t j = 0; j < meshElements.size(); j++)
         if (ElemProcessing<4>(*meshElements[j], pe, file, false))
           break;
     }
@@ -2687,12 +2688,12 @@ namespace nanoply
 
     if (info.binary)
     {
-      for (int i = 0; i < info.elemVec.size(); ++i)
+      for (size_t i = 0; i < info.elemVec.size(); ++i)
       {
         PlyElement& pe = info.elemVec[i];
         if (pe.validToWrite)
         {
-          for (int j = 0; j < meshElements.size(); j++)
+          for (size_t j = 0; j < meshElements.size(); j++)
             if (ElemProcessing<2>(*meshElements[j], pe, file, false))
               break;
         }
@@ -2700,12 +2701,12 @@ namespace nanoply
     }
     else
     {
-      for (int i = 0; i < info.elemVec.size(); ++i)
+      for (size_t i = 0; i < info.elemVec.size(); ++i)
       {
         PlyElement& pe = info.elemVec[i];
         if (pe.validToWrite)
         {
-          for (int j = 0; j < meshElements.size(); j++)
+          for (size_t j = 0; j < meshElements.size(); j++)
             if (ElemProcessing<3>(*meshElements[j], pe, file, false))
               break;
         }
@@ -2732,6 +2733,7 @@ namespace nanoply
   template < typename TupleType, size_t N, size_t ActionType>
   inline bool TupleForEach(TupleType &tuple, PlyElement &elem, PlyFile& file, bool fixEndian, SizeT<N> t, SizeT<ActionType> a)
   {
+	  (void)t;
     typename std::tuple_element<N - 1, TupleType>::type &elemDescr = std::get<N - 1>(tuple);
     if ((elemDescr.elem != PlyElemEntity::NNP_UNKNOWN_ELEM && elemDescr.elem == elem.plyElem) ||
       (elemDescr.elem == PlyElemEntity::NNP_UNKNOWN_ELEM && elemDescr.name == elem.name))
