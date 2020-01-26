@@ -1330,7 +1330,7 @@ public:
           m.tetra[pos].ImportData(m.tetra[i]);
           //import vertex refs
           for (int j = 0; j < 4; ++j)
-            m.tetra[pos].V(j) = m.tetra[i].cV(j);
+            m.tetra[pos].V(j) = m.tetra[i].V(j);
           //import VT adj
           if (HasVTAdjacency(m))
             for (int j = 0; j < 4; ++j)
