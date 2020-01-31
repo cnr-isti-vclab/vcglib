@@ -1052,6 +1052,24 @@ int PlyFile::OpenRead( const char * filename )
 		error = E_UNESPECTEDEOF;
 		goto error;
 	}
+	
+	while (!strcmp(token, COMMENT))
+	{
+		comments.push_back(string(token + strlen(token) + 1));
+		if (pb_fgets(buf, MAXB - 1, gzfp) == 0)
+		{
+			error = E_UNESPECTEDEOF;
+			goto error;
+		}
+		header.append(buf);
+
+#ifdef __MINGW32__
+		token = strtok(buf, SEP);
+#else
+		token = strtok_r(buf, SEP, &tokenPtr);
+#endif
+	}
+
 	if( strcmp(token,FORMAT) )
 	{
 		error = E_NOFORMAT;
