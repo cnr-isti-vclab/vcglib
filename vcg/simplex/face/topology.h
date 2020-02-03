@@ -724,15 +724,6 @@ void FlipEdge(FaceType &f, const int z)
     assert( g->V2(w) != f.V1(z) );
     assert( g->V2(w) != f.V2(z) );
 
-	int fi1       = f.FFi(f.Next(z));
-	FaceType* fp1 = f.FFp(f.Next(z));
-
-	int gi1       = g->FFi(g->Next(w));
-	FaceType* gp1 = g->FFp(g->Next(w));
-
-//	FaceType* fp2 = f.FFp(f.Next(z));
-
-
     f.V1(z) = g->V2(w);
     g->V1(w) = f.V2(z);
 
