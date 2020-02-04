@@ -769,6 +769,34 @@ public:
         return trials;
     }
 
+    static bool PackAtFixedScale(std::vector<std::vector<Point2x>> &polyPointsVec,
+                     const std::vector<Point2i> &containerSizes,
+                     std::vector<Similarity2x> &trVec,
+                     std::vector<int> &polyToContainer,
+                     const Parameters &packingPar,
+                     float scale)
+    {
+        //create the vector of polys, starting for the poly points we received as parameter
+        std::vector<RasterizedOutline2> polyVec(polyPointsVec.size());
+        for(size_t i=0;i<polyVec.size();i++) {
+            polyVec[i].setPoints(polyPointsVec[i]);
+        }
+
+        std::vector<std::vector<int>> trials = InitializePermutationVectors(polyPointsVec, packingPar);
+
+        for (std::size_t i = 0; i < trials.size(); ++i) {
+            std::vector<Similarity2x> trVecIter;
+            std::vector<int> polyToContainerIter;
+            if (PolyPacking(polyPointsVec, containerSizes, trVecIter, polyToContainerIter, packingPar, scale, polyVec, trials[i], false)) {
+                trVec = trVecIter;
+                polyToContainer = polyToContainerIter;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /*
      * Pack charts using a best effort policy. The idea is that this function
      * packs what it can in the given space without scaling the outlines.
