@@ -313,7 +313,7 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
     }
 
   // phase 2.
-  // copy data from ml to its corresponding elements in ml and adjacencies
+  // copy data from mr to its corresponding elements in ml and adjacencies
 
   // vertex
   for(VertexIteratorRight vi=mr.vert.begin();vi!=mr.vert.end();++vi)
