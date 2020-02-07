@@ -289,6 +289,7 @@ void FFDetach(FaceType & f, const int e)
 }
 
 
+// TODO: deprecate the signature of the functions below and use references
 /** This function attach the face (via the edge z1) to another face (via the edge z2). It's possible to use it also in non-two manifold situation.
         The function cannot be applicated if the adjacencies among faces aren't define.
         @param z1 Index of the edge
@@ -296,7 +297,7 @@ void FFDetach(FaceType & f, const int e)
         @param z2 The edge of the face f2
 */
 template <class FaceType>
-void FFAttach(FaceType * &f, int z1, FaceType *&f2, int z2)
+void FFAttach(FaceType * f, int z1, FaceType * f2, int z2)
 {
 	//typedef FEdgePosB< FACE_TYPE > ETYPE;
 	vcg::face::Pos< FaceType > EPB(f2,z2);
@@ -336,7 +337,7 @@ void FFAttach(FaceType * &f, int z1, FaceType *&f2, int z2)
         @param z2 The edge of the face f2
 */
 template <class FaceType>
-void FFAttachManifold(FaceType * &f1, int z1, FaceType *&f2, int z2)
+void FFAttachManifold(FaceType * f1, int z1, FaceType * f2, int z2)
 {
   assert(IsBorder<FaceType>(*f1,z1) || f1->FFp(z1)==0);
   assert(IsBorder<FaceType>(*f2,z2) || f2->FFp(z2)==0);
@@ -350,7 +351,7 @@ void FFAttachManifold(FaceType * &f1, int z1, FaceType *&f2, int z2)
 
 // This one should be called only on uniitialized faces.
 template <class FaceType>
-void FFSetBorder(FaceType * &f1, int z1)
+void FFSetBorder(FaceType * f1, int z1)
 {
   assert(f1->FFp(z1)==0 || IsBorder(*f1,z1));
 
