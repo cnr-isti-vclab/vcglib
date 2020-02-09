@@ -50,7 +50,7 @@ public:
     /// max coordinate point
     Point3<BoxScalarType> max;
         /// The bounding box constructor
-    inline  Box3() { min.X()= 1;max.X()= -1;min.Y()= 1;max.Y()= -1;min.Z()= 1;max.Z()= -1;}
+    inline  Box3() { this->SetNull(); }
         /// Copy constructor
     inline  Box3( const Box3 & b ) { min=b.min; max=b.max; }
         /// Min Max constructor

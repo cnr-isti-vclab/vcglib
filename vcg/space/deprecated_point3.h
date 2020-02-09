@@ -186,6 +186,16 @@ public:
         b[1]=_v[1] ;
         b[2]=_v[2] ;
     }
+    template <class EigenVector>
+    inline EigenVector ToEigenVector(void) const
+    {
+        assert(EigenVector::RowsAtCompileTime == 3 || EigenVector::RowsAtCompileTime == 4);
+        EigenVector b = EigenVector::Zero();
+        b[0]=_v[0];
+        b[1]=_v[1];
+        b[2]=_v[2];
+        return b;
+    }
   template <class Q>
   static inline Point3 Construct( const Point3<Q> & b )
   {
