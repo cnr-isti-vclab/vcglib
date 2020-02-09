@@ -51,7 +51,7 @@ int main( int argc, char **argv )
   MyMesh baseMesh,voronoiMesh, voronoiPoly, delaunayMesh;
   if(argc < 6 )
   {
-    printf("Usage: trimesh_voronoi mesh [sampleNum] voronoiRelaxIter delaunayRefinementStep delaunayRelaxStep \n");
+    printf("Usage: trimesh_voronoi mesh sampleNum voronoiRelaxIter delaunayRefinementStep delaunayRelaxStep \n");
      return -1;
   }
   int sampleNum = atoi(argv[2]);
@@ -82,7 +82,7 @@ int main( int argc, char **argv )
   tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,pointVec,seedVec);
 
   int t2=clock();
-  printf("Preprocessed %30s (%7i vn %7i fn) Computed   %i seed (asked %i) (radius %f) in %6.3f\n",
+  printf("Preprocessed %30s (%7i vn %7i fn) Computed   %lu seed (asked %i) (radius %f) in %6.3f\n",
          argv[1],baseMesh.vn,baseMesh.fn, seedVec.size(), sampleNum, radius, float(t2-t1)/CLOCKS_PER_SEC);
 
   tri::EuclideanDistance<MyMesh> df;
