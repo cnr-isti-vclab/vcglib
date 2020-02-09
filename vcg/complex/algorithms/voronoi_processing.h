@@ -45,59 +45,43 @@ struct VoronoiProcessingParameter
     RegionArea=3
   };
 
-  VoronoiProcessingParameter()
-  {
-    colorStrategy = DistanceFromSeed;
-    areaThresholdPerc=0;
-    deleteUnreachedRegionFlag=false;
-    constrainSelectedSeed=false;
-    preserveFixedSeed=false;
-    collapseShortEdge=false;
-    collapseShortEdgePerc = 0.01f;
-    triangulateRegion=false;
-    unbiasedSeedFlag = true;
-    geodesicRelaxFlag = true;
-    relaxOnlyConstrainedFlag=false;
-    refinementRatio = 5.0f;
-    seedPerturbationProbability=0;
-    seedPerturbationAmount = 0.001f;
+  VoronoiProcessingParameter()  {}
+  
+  int colorStrategy=DistanceFromSeed;
 
-  }
-  int colorStrategy;
+  float areaThresholdPerc=0;
+  bool deleteUnreachedRegionFlag=false;
 
-  float areaThresholdPerc;
-  bool deleteUnreachedRegionFlag;
-
-  bool unbiasedSeedFlag;
-  bool constrainSelectedSeed;   /// If true the selected vertexes define a constraining domain:
+  bool unbiasedSeedFlag= true;
+  bool constrainSelectedSeed=false;   /// If true the selected vertexes define a constraining domain:
                                 /// During relaxation all selected seeds are constrained to move
                                 /// only on other selected vertices.
                                 /// In this way you can constrain some seed to move only on certain
                                 /// domains, for example moving only along some linear features
                                 /// like border of creases.
 
-  bool relaxOnlyConstrainedFlag;
+  bool relaxOnlyConstrainedFlag=false;
 
-  bool preserveFixedSeed;       /// If true the 'fixed' seeds are not moved during relaxation.
+  bool preserveFixedSeed=false;       /// If true the 'fixed' seeds are not moved during relaxation.
                                 /// \see MarkVertexVectorAsFixed function to see how to fix a set of seeds.
 
-  float refinementRatio;        /// It defines how much the input mesh has to be refined in order to have a supporting
+  float refinementRatio = 5.0f; /// It defines how much the input mesh has to be refined in order to have a supporting
                                 /// triangulation that is dense enough to well approximate the voronoi diagram.
                                 /// reasonable values are in the range 4..10. It is used by PreprocessForVoronoi and this value
                                 /// says how many triangles you should expect in a voronoi region of a given radius.
-  float seedPerturbationProbability;      /// if true at each iteration step each seed has the given probability to be perturbed a little.
-  float seedPerturbationAmount;      /// As a bbox diag fraction (e.g. in the 0..1 range).
+  float seedPerturbationProbability=0;      /// if true at each iteration step each seed has the given probability to be perturbed a little.
+  float seedPerturbationAmount = 0.001f;      /// As a bbox diag fraction (e.g. in the 0..1 range).
 
   // Convertion to Voronoi Diagram Parameters
 
-  bool triangulateRegion;       /// If true when building the voronoi diagram mesh each region is a
+  bool triangulateRegion=false; /// If true when building the voronoi diagram mesh each region is a
                                 /// triangulated polygon. Otherwise it each voronoi region is a star
                                 /// triangulation with the original seed in the center.
 
-  bool collapseShortEdge;
-  float collapseShortEdgePerc;
+  bool collapseShortEdge=false;
+  float collapseShortEdgePerc = 0.01f;
 
-  bool geodesicRelaxFlag;
+  bool geodesicRelaxFlag= true;
 };
 
 template <class MeshType, class DistanceFunctor = EuclideanDistance<MeshType> >
