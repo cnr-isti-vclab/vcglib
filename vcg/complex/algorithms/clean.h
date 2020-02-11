@@ -674,7 +674,7 @@ public:
 	}
 
 	/// \brief This function expand current selection to cover the whole connected component.
-	static size_t SplitManifoldComponents(MeshType &m)
+	static size_t SplitManifoldComponents(MeshType &m, const ScalarType moveThreshold = 0)
 	{
 		typedef typename MeshType::FacePointer FacePointer;
 		typedef typename MeshType::FaceIterator FaceIterator;
@@ -719,6 +719,30 @@ public:
 				Append<MeshType, MeshType>::Mesh(tmpMesh, m, true);
 				++selCnt;
 			}
+
+		vcg::tri::UpdateTopology<MeshType>::VertexFace(tmpMesh);
+		vcg::tri::UpdateFlags<MeshType>::VertexBorderFromNone(tmpMesh);
+		for (size_t i = 0; i < size_t(tmpMesh.VN()); ++i)
+		{
+			VertexType & v = tmpMesh.vert[i];
+
+			if (v.IsB())
+			{
+				std::vector<FacePointer> faceVec;
+				std::vector<int> idxVec;
+
+				vcg::face::VFStarVF(&v, faceVec, idxVec);
+
+				CoordType delta(0, 0, 0);
+				for (auto fp : faceVec)
+				{
+					delta += vcg::Barycenter(*fp) - v.cP();
+				}
+				delta /= faceVec.size();
+
+				v.P() += delta * moveThreshold;
+			}
+		}
 
 		UpdateSelection<MeshType>::Clear(tmpMesh);
 		Append<MeshType, MeshType>::MeshCopy(m, tmpMesh);

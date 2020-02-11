@@ -889,7 +889,7 @@ void VFDetach(FaceType & f, int z)
 
 /// Append a face in VF list of vertex f->V(z)
 template <class FaceType>
-void VFAppend(FaceType* & f, int z)
+void VFAppend(FaceType * f, int z)
 {
     typename FaceType::VertexType *v = f->V(z);
     if (v->VFp()!=0)
