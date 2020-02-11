@@ -58,7 +58,8 @@ int main( int argc, char **argv )
   MyMesh startMesh;
   if(argc < 2 )
   {
-    printf("Usage trimesh_voro mesh region_num\n");
+    printf("Usage trimesh_voro mesh samplingRadius\n"
+           "samplingRadius is in the same unit of the mesh and is approximately the expected edge length");
     return -1;
   }
   printf("Reading %s  \n",argv[1]);
