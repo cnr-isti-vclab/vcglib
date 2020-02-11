@@ -35,6 +35,7 @@
  * Example of usage:
  *    MeshType m;
  *    ...
+ *    vcg::tri::UpdateBounding<MeshType>::Box(m);
  *    vcg::tri::UpdateFlags<MeshType>::Clear(m);
  *    vcg::tri::UpdateFlags<MeshType>::VertexBorderFromNone(m);
  *    vcg::tri::OptimizeUV_ARAP(m);
