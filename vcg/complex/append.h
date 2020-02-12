@@ -147,11 +147,36 @@ public:
      for( int vi = 0; vi < fl.VN(); ++vi ){
        size_t idx = remap.face[Index(mr,fr.cFFp(vi))];
        if(idx!=Remap::InvalidIndex()){
+		 assert(idx >= 0 && idx < ml.face.size());
          fl.FFp(vi) = &ml.face[idx];
          fl.FFi(vi) = fr.cFFi(vi);
        }
      }
    }
+
+	// Vertex to Face Adj
+	if(HasPerFaceVFAdjacency(ml) && HasPerFaceVFAdjacency(mr))
+	{
+		assert(fl.VN() == fr.VN());
+		for (int vi = 0; vi < fl.VN(); ++vi)
+		{
+			const auto * fp     = fr.cVFp(vi);
+			const auto   vfindex = fr.cVFi(vi);
+			size_t fidx = (fp == nullptr) ? Remap::InvalidIndex() : remap.face[Index(mr,fp)];
+
+			if (fidx == Remap::InvalidIndex()) // end of VF chain (or not initialized)
+			{
+				fl.VFClear(vi);
+				assert(fl.cVFi(vi) == -1);
+			}
+			else
+			{
+				assert(fidx >= 0 && fidx < ml.face.size());
+				fl.VFp(vi) = &ml.face[fidx];
+				fl.VFi(vi) = vfindex;
+			}
+		}
+	}
 
    // Face to HEedge  Adj
    if(HasFHAdjacency(ml) && HasFHAdjacency(mr))
