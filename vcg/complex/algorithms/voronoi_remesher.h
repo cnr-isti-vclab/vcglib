@@ -45,11 +45,11 @@
 
 
 //#define DEBUG_VORO 1
-//#include <QElapsedTimer>
 
 #ifdef DEBUG_VORO
 #include <wrap/io_trimesh/export.h>
 #include <QString>
+#include <QElapsedTimer>
 #endif
 
 namespace vcg {
@@ -62,6 +62,7 @@ class VoroEdgeMeshAux
 	class EUsedTypes : public vcg::UsedTypes<vcg::Use<EmVertexType>::AsVertexType,
 	                                         vcg::Use<EmEdgeType>::AsEdgeType> {};
 	class EmVertexType : public vcg::Vertex<EUsedTypes
+       ,vcg::vertex::Normal3d
 	                          , vcg::vertex::Coord3d
 	                          , vcg::vertex::BitFlags
 	                          , vcg::vertex::VEAdj> {};
@@ -133,12 +134,12 @@ protected:
 	}
 
 public:
-	static const int VoroRelaxationStep = 40;
+	static const int VoroRelaxationStep = 10;
 
 	///
 	/// \brief Remesh the main function that remeshes a mesh preserving creases.
 	/// \param original the mesh
-	/// \param samplingRadius is the sampling ragius for remeshing
+	/// \param samplingRadius is the sampling radius for remeshing
 	/// \param borderCreaseAngleDeg is the angle treshold for preserving corner points on the mesh boundary
 	/// \param internalCreaseAngleDeg is the angle treshold for preserving creases on the mesh surface (if this value is < 0 it is set to borderCreaseAngleDeg)
 	/// \return the remeshed mesh
@@ -246,6 +247,7 @@ public:
 	}
 
 protected:
+  static bool debugCallBack(const int pos, const char * str) { printf("Processing: %s \n",str); fflush(stdout); return true;}
 
 	///
 	/// \brief RemeshOneCC the function that remeshes a single connected component mesh preserving its boundary (consistently for eventually adjacent meshes).
@@ -266,7 +268,7 @@ protected:
 //		timer.start();
 
 		(void)idx;
-
+    
 		RequireCompactness(original);
 		RequirePerFaceFlags(original);
 
@@ -355,7 +357,9 @@ protected:
 
 		// refine to obtain a base mesh
 		VoronoiProcessingParameter vpp;
-		vpp.refinementRatio = 8.0f;
+		vpp.refinementRatio = 5.0f;
+    vpp.lcb = debugCallBack;
+    
 		Voronoi::PreprocessForVoronoi(baseMesh, samplingRadius, vpp);
 
 		// Poisson sampling preserving border
@@ -406,7 +410,7 @@ protected:
 			pp.preGenMesh = &poissonEdgeMesh;
 			pp.preGenFlag = true;
 			pp.bestSampleChoiceFlag = true;
-			pp.bestSamplePoolSize = 100;
+			pp.bestSamplePoolSize = 10;
 			pp.randomSeed = 7;
 			SurfaceFixSampler::PoissonDiskPruning(fix_sampler, montecarloMesh, samplingRadius, pp);
 
@@ -461,7 +465,7 @@ protected:
 		// traditional
 //		Voronoi::ConvertDelaunayTriangulationToMesh(baseMesh, *finalMeshPtr, seedVertexVec, false);
 		// border-preserving
-		ThisType::ConvertDelaunayTriangulationExtendedToMesh(baseMesh, *finalMeshPtr, seedVertexVec);
+		Voronoi::ConvertDelaunayTriangulationExtendedToMesh(baseMesh, *finalMeshPtr, seedVertexVec);
 
 #ifdef DEBUG_VORO
 		io::ExporterPLY<MeshType>::Save(*finalMeshPtr, QString("voroMesh_%1.ply").arg(idx).toStdString().c_str());
@@ -623,145 +627,7 @@ protected:
 		}
 	}
   
-	static void ConvertDelaunayTriangulationExtendedToMesh(MeshType &m,
-	                                                       MeshType &outMesh,
-	                                                       std::vector<VertexType *> &seedVec)
-	{
-		typedef VoronoiProcessing<MeshType> Voronoi;
-
-		RequirePerVertexAttribute(m ,"sources");
-		RequireCompactness(m);
-		RequireVFAdjacency(m);
-
-		auto sources = Allocator<MeshType>::template GetPerVertexAttribute<VertexPointer> (m,"sources");
-
-		outMesh.Clear();
-		UpdateTopology<MeshType>::FaceFace(m);
-		UpdateFlags<MeshType>::FaceBorderFromFF(m);
-
-		std::map<VertexPointer, int> seedMap;  // It says if a given vertex of m is a seed (and its index in seedVec)
-		Voronoi::BuildSeedMap(m, seedVec, seedMap);
-
-		std::vector<FacePointer> innerCornerVec,   // Faces adjacent to three different regions
-		        borderCornerVec;  // Faces that are on the border and adjacent to at least two regions.
-		Voronoi::GetFaceCornerVec(m, sources, innerCornerVec, borderCornerVec);
-
-		// First add all the needed vertices: seeds and corners
-
-		for(size_t i=0;i<seedVec.size();++i)
-		{
-			Allocator<MeshType>::AddVertex(outMesh, seedVec[i]->P(), vcg::Color4b::White);
-		}
-
-		// Now just add one face for each inner corner
-		std::vector<std::array<VertexPointer, 3> > toAdd;
-		for(size_t i=0; i<innerCornerVec.size(); ++i)
-		{
-			VertexPointer s0 = sources[innerCornerVec[i]->V(0)];
-			VertexPointer s1 = sources[innerCornerVec[i]->V(1)];
-			VertexPointer s2 = sources[innerCornerVec[i]->V(2)];
-			assert ( (s0!=s1) && (s0!=s2) && (s1!=s2) );
-			VertexPointer v0 = & outMesh.vert[seedMap[s0]];
-			VertexPointer v1 = & outMesh.vert[seedMap[s1]];
-			VertexPointer v2 = & outMesh.vert[seedMap[s2]];
-			Allocator<MeshType>::AddFace(outMesh, v0, v1, v2);
-		}
-
-		// Now loop around the borders and find the missing delaunay triangles
-		// select border seed vertices only and pick one
-		UpdateFlags<Mesh>::VertexBorderFromFaceAdj(m);
-		UpdateFlags<Mesh>::VertexClearS(m);
-		UpdateFlags<Mesh>::VertexClearV(m);
-
-		std::vector<VertexPointer> borderSeeds;
-		for (auto & s : seedVec)
-		{
-			if (s->IsB())
-			{
-				s->SetS();
-				borderSeeds.emplace_back(s);
-			}
-		}
-
-		for (VertexPointer startBorderVertex : borderSeeds)
-		{
-			if (startBorderVertex->IsV())
-			{
-				continue;
-			}
-
-			// unvisited border seed found
-
-			// put the pos on the border
-			PosType pos(startBorderVertex->VFp(), startBorderVertex->VFi());
-			do {
-				pos.NextE();
-			} while (!pos.IsBorder() || (pos.VInd() != pos.E()));
-
-			// check all border edges between each consecutive border seeds pair
-			do {
-				std::vector<VertexPointer> edgeVoroVertices(1, sources[pos.V()]);
-				//	among all sources found
-				do {
-					pos.NextB();
-					VertexPointer source = sources[pos.V()];
-					if (edgeVoroVertices.empty() || edgeVoroVertices.back() != source)
-					{
-						edgeVoroVertices.push_back(source);
-					}
-				} while (!pos.V()->IsS());
-
-				pos.V()->SetV();
-
-//				assert(edgeVoroVertices.size() >= 2);
-
-
-				if (edgeVoroVertices.size() >= 3)
-				{
-					std::vector<VertexPointer> v;
-					for (size_t i=0; i<edgeVoroVertices.size(); i++)
-					{
-						v.push_back(&outMesh.vert[seedMap[edgeVoroVertices[i]]]);
-					}
-					// also handles N>3 vertices holes
-					for (size_t i=0; i<edgeVoroVertices.size()-2; i++)
-					{
-						Allocator<MeshType>::AddFace(outMesh, v[0],v[i+1],v[i+2]);
-					}
-//					if (edgeVoroVertices.size() > 3)
-//					{
-//						std::cout << "Weird case: " << edgeVoroVertices.size() << " voroseeds on one border" << std::endl;
-//					}
-				}
-//				// add face if 3 different voronoi regions are crossed by the edge
-//				if (edgeVoroVertices.size() == 3)
-//				{
-//					VertexPointer v0 = & outMesh.vert[seedMap[edgeVoroVertices[0]]];
-//					VertexPointer v1 = & outMesh.vert[seedMap[edgeVoroVertices[1]]];
-//					VertexPointer v2 = & outMesh.vert[seedMap[edgeVoroVertices[2]]];
-//					Allocator<MeshType>::AddFace(outMesh, v0,v1,v2);
-//				}
-//				else
-//				{
-//					std::cout << "Weird case!! " << edgeVoroVertices.size() << " voroseeds on one border" << std::endl;
-//					if (edgeVoroVertices.size() == 4)
-//					{
-//						VertexPointer v0 = & outMesh.vert[seedMap[edgeVoroVertices[0]]];
-//						VertexPointer v1 = & outMesh.vert[seedMap[edgeVoroVertices[1]]];
-//						VertexPointer v2 = & outMesh.vert[seedMap[edgeVoroVertices[2]]];
-//						VertexPointer v3 = & outMesh.vert[seedMap[edgeVoroVertices[3]]];
-//						Allocator<MeshType>::AddFace(outMesh, v0,v1,v2);
-//						Allocator<MeshType>::AddFace(outMesh, v0,v2,v3);
-//					}
-//				}
-
-			} while ((pos.V() != startBorderVertex));
-		}
-
-
-		Clean<MeshType>::RemoveUnreferencedVertex(outMesh);
-		Allocator<MeshType>::CompactVertexVector(outMesh);
-	}
+	
 
 	///
 	/// \brief The FixSampler class is used with poisson disk pruning to preserve selected vertices and
