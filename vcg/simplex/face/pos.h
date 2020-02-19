@@ -497,7 +497,10 @@ public:
         f = t->VFp(z);
         z = t->VFi(z);
     }
-
+	void operator++(int)
+	{
+		(*this)++;
+	}
 };
 
 /*@}*/
