@@ -415,60 +415,56 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
         // If the left mesh has attributes that are not in the right mesh, their values for the elements
         // of the right mesh will be uninitialized
 
-        unsigned int id_r;
-        typename std::set< PointerToAttribute  >::iterator al, ar;
+		unsigned int id_r;
+		typename std::set< PointerToAttribute >::iterator al, ar;
 
-        // per vertex attributes
-        for(al = ml.vert_attr.begin(); al != ml.vert_attr.end(); ++al)
-            if(!(*al)._name.empty()){
-                ar =    mr.vert_attr.find(*al);
-                if(ar!= mr.vert_attr.end()){
-                    id_r = 0;
-                    for(VertexIteratorRight vi=mr.vert.begin();vi!=mr.vert.end();++vi,++id_r)
-                        if( !(*vi).IsD() && (!selected || (*vi).IsS()))
-                            memcpy((*al)._handle->At(remap.vert[Index(mr,*vi)]),(*ar)._handle->At(id_r),
-                                (*al)._handle->SizeOf());
-                }
-            }
+		// per vertex attributes
+		for(al = ml.vert_attr.begin(); al != ml.vert_attr.end(); ++al)
+			if(!(*al)._name.empty()){
+				ar =    mr.vert_attr.find(*al);
+				if(ar!= mr.vert_attr.end()){
+					id_r = 0;
+					for(VertexIteratorRight vi=mr.vert.begin();vi!=mr.vert.end();++vi,++id_r)
+						if( !(*vi).IsD() && (!selected || (*vi).IsS()))
+							(*al)._handle->CopyValue(remap.vert[Index(mr,*vi)], id_r, (*ar)._handle);
+				}
+			}
 
-        // per edge attributes
-        for(al = ml.edge_attr.begin(); al != ml.edge_attr.end(); ++al)
-            if(!(*al)._name.empty()){
-                ar =    mr.edge_attr.find(*al);
-                if(ar!= mr.edge_attr.end()){
-                    id_r = 0;
-                    for(EdgeIteratorRight ei=mr.edge.begin();ei!=mr.edge.end();++ei,++id_r)
-                        if( !(*ei).IsD() && (!selected || (*ei).IsS()))
-                            memcpy((*al)._handle->At(remap.edge[Index(mr,*ei)]),(*ar)._handle->At(id_r),
-                                (*al)._handle->SizeOf());
-                }
-            }
+		// per edge attributes
+		for(al = ml.edge_attr.begin(); al != ml.edge_attr.end(); ++al)
+			if(!(*al)._name.empty()){
+				ar =    mr.edge_attr.find(*al);
+				if(ar!= mr.edge_attr.end()){
+					id_r = 0;
+					for(EdgeIteratorRight ei=mr.edge.begin();ei!=mr.edge.end();++ei,++id_r)
+						if( !(*ei).IsD() && (!selected || (*ei).IsS()))
+							(*al)._handle->CopyValue(remap.edge[Index(mr,*ei)], id_r, (*ar)._handle);
+				}
+			}
 
-        // per face attributes
-        for(al = ml.face_attr.begin(); al != ml.face_attr.end(); ++al)
-            if(!(*al)._name.empty()){
-                ar =    mr.face_attr.find(*al);
-                if(ar!= mr.face_attr.end()){
-                    id_r = 0;
-                    for(FaceIteratorRight fi=mr.face.begin();fi!=mr.face.end();++fi,++id_r)
-                        if( !(*fi).IsD() && (!selected || (*fi).IsS()))
-                            memcpy((*al)._handle->At(remap.face[Index(mr,*fi)]),(*ar)._handle->At(id_r),
-                                (*al)._handle->SizeOf());
-                }
-            }
+		// per face attributes
+		for(al = ml.face_attr.begin(); al != ml.face_attr.end(); ++al)
+			if(!(*al)._name.empty()){
+				ar =    mr.face_attr.find(*al);
+				if(ar!= mr.face_attr.end()){
+					id_r = 0;
+					for(FaceIteratorRight fi=mr.face.begin();fi!=mr.face.end();++fi,++id_r)
+						if( !(*fi).IsD() && (!selected || (*fi).IsS()))
+							(*al)._handle->CopyValue(remap.face[Index(mr,*fi)], id_r, (*ar)._handle);
+				}
+			}
 
-        // per tetra attributes
-        for(al = ml.tetra_attr.begin(); al != ml.tetra_attr.end(); ++al)
-            if(!(*al)._name.empty()){
-                ar =    mr.tetra_attr.find(*al);
-                if(ar!= mr.tetra_attr.end()){
-                    id_r = 0;
-                    for(TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti, ++id_r)
-                        if( !(*ti).IsD() && (!selected || (*ti).IsS()))
-                            memcpy((*al)._handle->At(remap.tetra[Index(mr, *ti)]),(*ar)._handle->At(id_r),
-                                (*al)._handle->SizeOf());
-                }
-            }
+		// per tetra attributes
+		for(al = ml.tetra_attr.begin(); al != ml.tetra_attr.end(); ++al)
+			if(!(*al)._name.empty()){
+				ar =    mr.tetra_attr.find(*al);
+				if(ar!= mr.tetra_attr.end()){
+					id_r = 0;
+					for(TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti, ++id_r)
+						if( !(*ti).IsD() && (!selected || (*ti).IsS()))
+							(*al)._handle->CopyValue(remap.tetra[Index(mr, *ti)], id_r, (*ar)._handle);
+				}
+			}
                 // per mesh attributes
                 // if both ml and mr have an attribute with the same name, no action is done
                 // if mr has an attribute that is NOT present in ml, the attribute is added to ml
