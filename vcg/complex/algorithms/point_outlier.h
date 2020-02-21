@@ -56,8 +56,8 @@ class OutlierRemoval
       typename MeshType::template PerVertexAttributeHandle<ScalarType> sigma =        tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType>(mesh, std::string("sigma"));
       typename MeshType::template PerVertexAttributeHandle<ScalarType> plof =         tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType>(mesh, std::string("plof"));
 
-#pragma omp parallel for schedule(dynamic, 10)
-      for (size_t i = 0; i < mesh.vert.size(); i++)
+#pragma omp parallel for schedule(dynamic, 10) //MSVC supports only OMP 2 -> no unsigned int allowed in parallel for...
+      for (int i = 0; i < (int)mesh.vert.size(); i++)
       {
         PriorityQueue queue;
         kdTree.doQueryK(mesh.vert[i].cP(), kNearest, queue);
@@ -70,7 +70,7 @@ class OutlierRemoval
 
       float mean = 0;
 #pragma omp parallel for reduction(+: mean) schedule(dynamic, 10)
-      for (size_t i = 0; i < mesh.vert.size(); i++)
+      for (int i = 0; i < (int)mesh.vert.size(); i++)
       {
         PriorityQueue queue;
         kdTree.doQueryK(mesh.vert[i].cP(), kNearest, queue);
@@ -86,7 +86,7 @@ class OutlierRemoval
       mean = sqrt(mean);
 
 #pragma omp parallel for schedule(dynamic, 10)
-      for (size_t i = 0; i < mesh.vert.size(); i++)
+      for (int i = 0; i < (int)mesh.vert.size(); i++)
       {
         ScalarType value = plof[i] / (mean * sqrt(2.0f));
         double dem = 1.0 + 0.278393 * value;
