@@ -719,6 +719,16 @@ public:
         }
       }
     }
+
+    // update the per vertex normals
+    if (normals.size() == m.vn)
+    {
+      for (int i = 0; i < m.vn; ++i)
+      {
+        m.vert[i].N() = normals[i];
+      }
+    }
+
     // final pass to manage the ZBrush PerVertex Color that are managed into comments
     if(vertexColorVector.size()>0)
     {
