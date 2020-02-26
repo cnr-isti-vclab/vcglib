@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG  -rdynamic CMakeFiles/tridecimator.dir/tridecimator.cpp.o CMakeFiles/tridecimator.dir/mnt/d/GIT/meshlab/vcglib/wrap/ply/plylib.cpp.o  -o tridecimator 

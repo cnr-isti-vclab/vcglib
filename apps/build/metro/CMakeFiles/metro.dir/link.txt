@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG  -rdynamic CMakeFiles/metro.dir/metro.cpp.o CMakeFiles/metro.dir/mnt/d/GIT/meshlab/vcglib/wrap/ply/plylib.cpp.o  -o metro 

@@ -1,0 +1,8 @@
+/mnt/d/GIT/meshlab/vcglib/apps/build/CMakeFiles/rebuild_cache.dir
+/mnt/d/GIT/meshlab/vcglib/apps/build/CMakeFiles/edit_cache.dir
+/mnt/d/GIT/meshlab/vcglib/apps/build/metro/CMakeFiles/rebuild_cache.dir
+/mnt/d/GIT/meshlab/vcglib/apps/build/metro/CMakeFiles/metro.dir
+/mnt/d/GIT/meshlab/vcglib/apps/build/metro/CMakeFiles/edit_cache.dir
+/mnt/d/GIT/meshlab/vcglib/apps/build/tridecimator/CMakeFiles/rebuild_cache.dir
+/mnt/d/GIT/meshlab/vcglib/apps/build/tridecimator/CMakeFiles/tridecimator.dir
+/mnt/d/GIT/meshlab/vcglib/apps/build/tridecimator/CMakeFiles/edit_cache.dir

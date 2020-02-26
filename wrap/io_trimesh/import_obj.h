@@ -21,7 +21,6 @@
 *                                                                           *
 ****************************************************************************/
 
-
 #ifndef __VCGLIB_IMPORT_OBJ
 #define __VCGLIB_IMPORT_OBJ
 
@@ -34,11 +33,9 @@
 #endif
 #include <vcg/space/color4.h>
 
-
 #include <fstream>
 #include <string>
 #include <vector>
-
 
 namespace vcg {
 namespace tri {
@@ -83,7 +80,6 @@ public:
     int numNormals;
     
   }; // end class
-  
   
   struct ObjIndexedFace
   {
@@ -385,14 +381,12 @@ public:
             }
           }
           
-          
           if (vertexesPerFace < 3) {
             // face with fewer than 3 vertices found: ignore this face
             extraTriangles--;
             result = E_LESS_THAN_3_VERT_IN_FACE;
             continue;
           }
-          
           
           if( (vertexesPerFace>3) && OpenMeshType::FaceType::HasPolyInfo() )
           {
@@ -442,7 +436,6 @@ public:
                   return E_BAD_VERT_NORMAL_INDEX;
                 }
             }
-            
             
             if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) // assigning face color
               ff.c = currentColor;
@@ -725,7 +718,12 @@ public:
     {
       for (int i = 0; i < m.vn; ++i)
       {
-        m.vert[i].N() = normals[i];
+        auto& vnDst = m.vert[i].N();
+        auto& vnSrc = normals[i];
+
+        vnDst[0] = vnSrc[0];
+        vnDst[1] = vnSrc[1];
+        vnDst[2] = vnSrc[2];
       }
     }
 
@@ -744,7 +742,6 @@ public:
     stream.close();
     return result;
   } // end of Open
-  
   
   /*!
   * Read the next valid line and parses it into "tokens" (e.g. groups like 234/234/234), allowing
@@ -1093,7 +1090,6 @@ public:
         }      
       }
     }
-    
     
     return true;
   }
