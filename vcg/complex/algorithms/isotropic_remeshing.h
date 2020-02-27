@@ -959,20 +959,22 @@ private:
 		return true;
 	}
 
-	//Choose the best way to collapse a cross based on the (external) cross vertices valence
-	//and resulting face quality
-	//                                      +0                   -1
-	//             v1                    v1                    v1
-	//            /| \                   /|\                  / \
-	//           / |  \                 / | \                /   \
-	//          /  |   \               /  |  \              /     \
-	//         / *p|    \           -1/   |   \ -1       +0/       \+0
-	//       v0-------- v2 ========> v0   |   v2    OR    v0-------v2
-	//        \    |    /             \   |   /            \       /
-	//         \   |   /               \  |  /              \     /
-	//          \  |  /                 \ | /                \   /
-	//           \ | /                   \|/ +0               \ / -1
-	//             v3                     v3                   v3
+	/*
+	 *Choose the best way to collapse a cross based on the (external) cross vertices valence
+	 *and resulting face quality
+	 *                                      +0                   -1
+	 *             v1                    v1                    v1
+	 *            /| \                   /|\                  / \
+	 *           / |  \                 / | \                /   \
+	 *          /  |   \               /  |  \              /     \
+	 *         / *p|    \           -1/   |   \ -1       +0/       \+0
+	 *       v0-------- v2 ========> v0   |   v2    OR    v0-------v2
+	 *        \    |    /             \   |   /            \       /
+	 *         \   |   /               \  |  /              \     /
+	 *          \  |  /                 \ | /                \   /
+	 *           \ | /                   \|/ +0               \ / -1
+	 *             v3                     v3                   v3
+	 */
 	static bool chooseBestCrossCollapse(PosType &p, VertexPair& bp, vector<FaceType*> &ff)
 	{
 		vector<VertexType*> vv0, vv1, vv2, vv3;

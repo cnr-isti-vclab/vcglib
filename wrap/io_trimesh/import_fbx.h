@@ -166,8 +166,9 @@ public:
         char buf[1024];
         if (tex) {
           tex->getRelativeFileName().toString(buf); buf[1023] = 0;
-          if (std::string(buf) == "")
-              tex->getFileName().toString(buf); buf[1023] = 0;
+          if (std::string(buf) == "")  {
+            tex->getFileName().toString(buf); buf[1023] = 0;
+          }
           printf("Texture %s\n", buf);
           m.textures.push_back(buf);
         }

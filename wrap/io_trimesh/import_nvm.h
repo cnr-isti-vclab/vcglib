@@ -67,10 +67,12 @@ typedef typename OpenMeshType::EdgeIterator EdgeIterator;
 static void readline(FILE *fp, char *line, int max=1000){
     int i=0;
     char c;
-    fscanf(fp, "%c", &c);
+    unsigned int rc = 0;
+    rc = fscanf(fp, "%c", &c);
     while( (c!=10) && (c!=13) && (i<max-1) ){
-        line[i++] = c;
-        fscanf(fp, "%c", &c);
+        if (rc == 1)
+            line[i++] = c;
+        rc = fscanf(fp, "%c", &c);
     }
     line[i] = '\0'; //end of string
 }
@@ -163,14 +165,18 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
   for(uint i = 0; i < num_points;++i,++vi){
     float x,y,z;
     unsigned int r,g,b,i_cam, key_sift,n_corr;
-    fscanf(fp,"%f %f %f ",&x,&y,&z);
+    uint readValues = fscanf(fp,"%f %f %f ",&x,&y,&z);
+    if (readValues < 3) qDebug() << "Point " << i << ": only " << readValues << " coordinates read!";
     (*vi).P() = vcg::Point3<typename OpenMeshType::ScalarType>(x,y,z);
-    fscanf(fp,"%d %d %d ",&r,&g,&b);
+    readValues = fscanf(fp,"%d %d %d ",&r,&g,&b);
+    if (readValues < 3) qDebug() << "Point " << i << ": only " << readValues << " color values read!";
     (*vi).C() = vcg::Color4b(r,g,b,255);
 
-    fscanf(fp,"%d ",&n_corr);
+    readValues = fscanf(fp,"%d ",&n_corr);
+    if (readValues < 1) qDebug() << "Point " << i << ": no n correspondences read!";
     for(uint j = 0; j < n_corr; ++j){
-      fscanf(fp,"%d %d %f %f ",&i_cam,&key_sift,&x,&y);
+      readValues = fscanf(fp,"%d %d %f %f ",&i_cam,&key_sift,&x,&y);
+      if (readValues != 3) qDebug() << "Point " << i << "; Corresp: " << j << ": only " << readValues << " values read!";
       Correspondence corr(i_cam,key_sift,x,y);
       ch[i].push_back(corr);
     }

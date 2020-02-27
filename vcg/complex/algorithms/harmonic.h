@@ -218,16 +218,18 @@ public:
         // get the adjacent face
         const FaceType * fp = f.cFFp(edge);
 
-        //       v0
-        //      /|\
-        //     / | \
-        //    /  |  \
-        //   /   |   \
-        // va\   |   /vb
-        //    \  |  /
-        //     \ | /
-        //      \|/
-        //       v1
+        /*
+         *       v0
+         *      /|\
+         *     / | \
+         *    /  |  \
+         *   /   |   \
+         * va\   |   /vb
+         *    \  |  /
+         *     \ | /
+         *      \|/
+         *       v1
+         */
 
         ScalarT cotA = 0;
         ScalarT cotB = 0;
@@ -255,16 +257,17 @@ public:
     template <typename ScalarT>
     static ScalarT ComputeAngle(const VertexType * a, const VertexType * b, const VertexType * c)
     {
-        //       a
-        //      /
-        //     /
-        //    /
-        //   /  ___ compute the angle in b
-        // b \
-        //    \
-        //     \
-        //      \
-        //       c
+        /*       a
+         *      /
+         *     /
+         *    /
+         *   /  ___ compute the angle in b
+         * b \
+         *    \
+         *     \
+         *      \
+         *       c
+         */
         assert(a != NULL && b != NULL && c != NULL);
         Point3<ScalarT> A,B,C;
         A.Import(a->P());
