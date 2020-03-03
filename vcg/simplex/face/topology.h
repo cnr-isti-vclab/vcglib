@@ -1108,13 +1108,34 @@ void VFExtendedStarVF(typename FaceType::VertexType* vp,
  *
 */
 template <class FaceType>
-void VVOrderedStarFF(Pos<FaceType> &startPos,
+void VVOrderedStarFF(const Pos<FaceType> &startPos,
                      std::vector<typename FaceType::VertexType *> &vertexVec)
 {
   vertexVec.clear();
   vertexVec.reserve(16);
   std::vector<Pos<FaceType> > posVec;
   VFOrderedStarFF(startPos,posVec);
+  for(size_t i=0;i<posVec.size();++i)
+    vertexVec.push_back(posVec[i].VFlip());
+}
+
+/*!
+ * \brief Compute the ordered set of vertices adjacent to a given vertex using FF adiacency
+ *
+ * \param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
+ * \param vertexVec a std::vector of VertexPtr filled vertices around the given vertex.
+ * \param ccw if true returns the vertexVec in countercounterclockwise order; if false in clockwise order.
+ *
+*/
+template <class FaceType>
+void VVOrderedStarFF(const Pos<FaceType> &startPos,
+                     std::vector<typename FaceType::VertexType *> &vertexVec,
+                     const bool ccw)
+{
+  vertexVec.clear();
+  vertexVec.reserve(16);
+  std::vector<Pos<FaceType> > posVec;
+  VFOrderedStarFF(startPos,posVec,ccw);
   for(size_t i=0;i<posVec.size();++i)
     vertexVec.push_back(posVec[i].VFlip());
 }
@@ -1156,6 +1177,27 @@ void VFOrderedStarFF(const Pos<FaceType> &startPos,
     posVec.erase(posVec.begin(),posVec.begin()+firstBorderInd+1);
     assert(posVec.size()==halfSize);
   }
+}
+
+/*!
+ * \brief Compute the ordered set of faces adjacent to a given vertex using FF adiacency
+ *
+ * \param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
+ * \param posVec a std::vector of Pos filled with Pos arranged around the passed vertex.
+ * \param ccw if true returns the posVec in countercounterclockwise order; if false in clockwise order.
+ *
+*/
+template <class FaceType>
+void VFOrderedStarFF(const Pos<FaceType> &startPos,
+                     std::vector<Pos<FaceType> > &posVec,
+                     const bool ccw)
+{
+	VFOrderedStarFF(startPos, posVec);
+	const auto & pos = posVec[0];
+	if (ccw != (pos.VFlip() == pos.F()->V(pos.F()->Prev(pos.VInd()))))
+	{
+		std::reverse(posVec.begin(), posVec.end());
+	}
 }
 
 /*!
