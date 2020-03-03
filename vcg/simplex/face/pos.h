@@ -499,7 +499,7 @@ public:
     }
 	void operator++(int)
 	{
-		(*this)++;
+		++(*this);
 	}
 };
 
