@@ -276,11 +276,14 @@ public:
     return area;
   }
 
-	static ScalarType ComputeBorderLength(MeshType & m)
+	static ScalarType ComputeBorderLength(MeshType & m, bool computeFFTopology = true)
 	{
 		RequireFFAdjacency(m);
 		ScalarType sum = 0;
-		tri::UpdateTopology<MeshType>::FaceFace(m);
+		if (computeFFTopology)
+		{
+			tri::UpdateTopology<MeshType>::FaceFace(m);
+		}
 		ForEachFace(m, [&](FaceType &f) {
 			for (int k=0; k<f.VN(); k++)
 				if (face::IsBorder(f, k))
