@@ -22,6 +22,7 @@
 ****************************************************************************/
 #include <vcg/math/histogram.h>
 #include <vcg/complex/algorithms/update/curvature.h>
+#include <wrap/io_trimesh/export.h>
 
 #ifndef VCG_TANGENT_FIELD_OPERATORS
 #define VCG_TANGENT_FIELD_OPERATORS
@@ -837,6 +838,7 @@ public:
                 ret=i;
             }
         }
+
         assert(ret!=-1);
 
         return ret;
@@ -1080,13 +1082,13 @@ public:
 
             if (fabs(rotatedDir*tF0)>fabs(rotatedDir*tF1))
             {
-                mag1+=fabs(f.V(i)->K1());
-                mag2+=fabs(f.V(i)->K2());
+                mag1+=(f.V(i)->K1());
+                mag2+=(f.V(i)->K2());
             }
             else
             {
-                mag1+=fabs(f.V(i)->K2());
-                mag2+=fabs(f.V(i)->K1());
+                mag1+=(f.V(i)->K2());
+                mag2+=(f.V(i)->K1());
             }
         }
 
@@ -1393,7 +1395,13 @@ public:
         for (size_t i=0;i<mesh.vert.size();i++)
         {
             if (mesh.vert[i].IsD())continue;
-            //if (mesh.vert[i].IsB())continue;
+
+            if (mesh.vert[i].IsB())
+            {
+                Handle_Singular[i]=false;
+                Handle_SingularIndex[i]=0;
+                continue;
+            }
 
             int missmatch;
             if (IsSingularByCross(mesh.vert[i],missmatch))
