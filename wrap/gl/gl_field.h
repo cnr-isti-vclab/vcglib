@@ -75,8 +75,10 @@ public:
                                       const bool oneside,
                                       const bool onlyPD1,
                                       const ScalarType maxN,
-                                      const ScalarType minN)
+                                      const ScalarType minN,
+                                      const bool UseK)
 	{
+        assert(maxN>=minN);
         CoordType center=(f.cP(0)+f.cP(1)+f.cP(2))/3;
         //CoordType normal=f.cN();
 		CoordType dir[4];
@@ -88,15 +90,59 @@ public:
         {
             ScalarType Norm0=dir[0].Norm();
             ScalarType Norm1=dir[1].Norm();
+            if (UseK)
+            {
+                Norm0=f.cK1();
+                Norm1=f.cK2();
+            }
             ScalarType MaxW=6;
             ScalarType MinW=0.5;
             ScalarType IntervW=MaxW-MinW;
             if (Norm0>maxN)Norm0=maxN;
             if (Norm1>maxN)Norm1=maxN;
-            vcg::Color4b Col0=vcg::Color4b::ColorRamp(minN,maxN,Norm0);
-            vcg::Color4b Col1=vcg::Color4b::ColorRamp(minN,maxN,Norm1);
-            ScalarType W0=(Norm0/(maxN-minN))*IntervW+MinW;
-            ScalarType W1=(Norm1/(maxN-minN))*IntervW+MinW;
+            if (Norm0<minN)Norm0=minN;
+            if (Norm1<minN)Norm1=minN;
+
+            vcg::Color4b Col0,Col1;
+            ScalarType W0,W1;
+            if (!UseK)
+            {
+               Col0=vcg::Color4b::ColorRamp(minN,maxN,Norm0);
+               Col1=vcg::Color4b::ColorRamp(minN,maxN,Norm1);
+               W0=(Norm0/(maxN-minN))*IntervW+MinW;
+               W1=(Norm1/(maxN-minN))*IntervW+MinW;
+            }
+            else
+            {
+               ScalarType MaxAbs=std::max(fabs(minN),fabs(maxN));
+               Col0=vcg::Color4b::ColorRamp(-MaxAbs,MaxAbs,Norm0);
+               Col1=vcg::Color4b::ColorRamp(-MaxAbs,MaxAbs,Norm1);
+//               if (Norm0<0)
+//               {
+//                   assert(minN<0);
+//                   //PUT green on ZERO
+//                   Col0=vcg::Color4b::ColorRamp(minN,fabs(minN),Norm0);
+
+//               }else
+//               {
+//                   //PUT green on ZERO
+//                   Col0=vcg::Color4b::ColorRamp(-maxN,maxN,Norm0);
+//               }
+
+//               if (Norm1<0)
+//               {
+//                   assert(minN<0);
+//                   //PUT green on ZERO
+//                   Col1=vcg::Color4b::ColorRamp(minN,fabs(minN),Norm1);
+//               }else
+//               {
+//                   //PUT green on ZERO
+//                   Col1=vcg::Color4b::ColorRamp(-maxN,maxN,Norm1);
+//               }
+               W0=(fabs(Norm0)/std::max(fabs(maxN),fabs(minN)))*IntervW+MinW;
+               W1=(fabs(Norm1)/std::max(fabs(maxN),fabs(minN)))*IntervW+MinW;
+
+            }
             GLDrawField(dir,center,size,W0,W1,Col0,Col1,oneside,onlyPD1);
         }
 	}
@@ -134,7 +180,8 @@ public:
                                 bool oneside,
                                 ScalarType GlobalScale=0.002,
                                 const ScalarType maxN=0,
-                                const ScalarType minN=0)
+                                const ScalarType minN=0,
+                                bool UseK=false)
 	{
 
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -146,7 +193,7 @@ public:
         for (unsigned int i=0;i<mesh.face.size();i++)
 		{
             if (mesh.face[i].IsD())continue;
-            GLDrawSingleFaceField(mesh.face[i],size,oneside,onlyPD1,maxN,minN);
+            GLDrawSingleFaceField(mesh.face[i],size,oneside,onlyPD1,maxN,minN,UseK);
 		}
 		glPopAttrib();
 	}
