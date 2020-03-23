@@ -78,7 +78,93 @@ class PolygonalAlgorithm
     typedef typename PolyMeshType::CoordType     CoordType;
     typedef typename PolyMeshType::ScalarType    ScalarType;
     typedef typename vcg::face::Pos<FaceType>    PosType;
+
+    static void SetFacePos(PolyMeshType &poly_m,
+                           int IndexF,std::vector<CoordType> &Pos)
+    {
+        poly_m.face[IndexF].Dealloc();
+        poly_m.face[IndexF].Alloc(Pos.size());
+        //std::cout<<Pos.size()<<std::endl;
+        int sizeV=poly_m.vert.size();
+        for (size_t i=0;i<Pos.size();i++)
+            vcg::tri::Allocator<PolyMeshType>::AddVertex(poly_m,Pos[i]);
+
+        for (size_t i=0;i<Pos.size();i++)
+            poly_m.face[IndexF].V(i)=&poly_m.vert[sizeV+i];
+    }
+
 public:
+
+    static void SubdivideStep(PolyMeshType &poly_m)
+    {
+        //get the barycenters
+        std::vector<CoordType> Bary;
+        for (size_t i=0;i<poly_m.face.size();i++)
+        {
+            CoordType bary(0,0,0);
+            for (size_t j=0;j<poly_m.face[i].VN();j++)
+                bary+=poly_m.face[i].P(j);
+
+            bary/=poly_m.face[i].VN();
+            Bary.push_back(bary);
+        }
+
+        //get center of edge
+        std::map<std::pair<CoordType,CoordType>, CoordType> EdgeVert;
+        for (size_t i=0;i<poly_m.face.size();i++)
+            for (size_t j=0;j<poly_m.face[i].VN();j++)
+            {
+                CoordType Pos0=poly_m.face[i].P0(j);
+                CoordType Pos1=poly_m.face[i].P1(j);
+                CoordType Avg=(Pos0+Pos1)/2;
+                std::pair<CoordType,CoordType> Key(std::min(Pos0,Pos1),std::max(Pos0,Pos1));
+                EdgeVert[Key]=Avg;
+            }
+
+        int sizeF=poly_m.face.size();
+        for (size_t i=0;i<sizeF;i++)
+        {
+            //retrieve the sequence of pos
+            std::vector<CoordType> Pos;
+            for (size_t j=0;j<poly_m.face[i].VN();j++)
+            {
+                CoordType Pos0=poly_m.face[i].P0(j);
+                CoordType Pos1=poly_m.face[i].P1(j);
+                std::pair<CoordType,CoordType> Key0(std::min(Pos0,Pos1),std::max(Pos0,Pos1));
+                Pos0=EdgeVert[Key0];
+                Pos.push_back(Pos0);
+                Pos.push_back(Pos1);
+            }
+            //get also the barycenter
+            CoordType BaryP=Bary[i];
+
+            //then retrieve the face
+            std::vector<CoordType> PosQ;
+            PosQ.push_back(Pos[0]);
+            PosQ.push_back(Pos[1]);
+            PosQ.push_back(Pos[2]);
+            PosQ.push_back(BaryP);
+            SetFacePos(poly_m,i,PosQ);
+
+            int sizeV=Pos.size();
+            //int start=0;
+            for (size_t j=2;j<sizeV;j+=2)
+            {
+                vcg::tri::Allocator<PolyMeshType>::AddFaces(poly_m,1);
+                std::vector<CoordType> PosQ;
+                PosQ.push_back(Pos[(j)%Pos.size()]);
+                PosQ.push_back(Pos[(j+1)%Pos.size()]);
+                PosQ.push_back(Pos[(j+2)%Pos.size()]);
+                PosQ.push_back(BaryP);
+                //start+=2;
+                SetFacePos(poly_m,poly_m.face.size()-1,PosQ);
+                //break;
+            }
+        }
+        vcg::tri::Clean<PolyMeshType>::RemoveDuplicateVertex(poly_m);
+        vcg::tri::Allocator<PolyMeshType>::CompactEveryVector(poly_m);
+    }
+
     static bool CollapseEdges(PolyMeshType &poly_m,
                               const std::vector<PosType> &CollapsePos,
                               const std::vector<CoordType> &InterpPos)
