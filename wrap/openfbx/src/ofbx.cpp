@@ -355,7 +355,7 @@ struct Property : IElementProperty
 };
 
 
-struct Element : IElement
+struct Element final : IElement
 {
 	IElement* getFirstChild() const override { return child; }
 	IElement* getSibling() const override { return sibling; }
