@@ -204,7 +204,8 @@ public:
       {
         printf("Geom has no skin\n");
         for (int j = 0; j < vertex_count/3; ++j)
-        {int curTriBase = baseVertexCount + j*3;
+        {
+          int curTriBase = baseVertexCount + j*3;
           tri::Allocator<OpenMeshType>::AddFace(m,curTriBase,curTriBase+1,curTriBase+2);   
           if(has_uvs) 
           {
@@ -212,7 +213,8 @@ public:
             {
               m.face.back().WT(k).u() = texcoords[j*3+k].x;
               m.face.back().WT(k).v() = texcoords[j*3+k].y;
-              m.face.back().WT(k).n() = baseTextureIndexCount + materials[j];
+              if (materials != nullptr)
+                m.face.back().WT(k).n() = baseTextureIndexCount + materials[j];
             }
           }
         }
