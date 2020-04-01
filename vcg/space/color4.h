@@ -184,8 +184,8 @@ public:
       h = modff(h,&dummy);
       if(h==1.0) h = 0.0;
 
-      int i   = int( floor(h*6.0) );
-      float f = float(h*6.0f - floor(h*6.0f));
+      int i   = int( floor(h*6.0f) );
+      float f = float(h*6.0f- floor(h*6.0f));
 
       float p = v*(1.0f-s);
       float q = v*(1.0f-s*f);
@@ -242,7 +242,8 @@ inline static Color4 Scatter(int range, int value,float Sat=.3f,float Val=.9f)
                 value -= (m+1)>>1;
                 m >>= 1;
             }
-    else m = (m+1)>>1;
+			else m = (m+1)>>1;
+
     if (r>range-b) r = range-b;
 
     //TRACE("Scatter range 0..%i, in %i out %i\n",n,a,b);
