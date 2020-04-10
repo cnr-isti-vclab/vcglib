@@ -1399,6 +1399,7 @@ public:
             poly_m.face.back().V(0)=v0;
             poly_m.face.back().V(1)=v1;
             poly_m.face.back().V(2)=v2;
+            poly_m.face.back().Q()=poly_m.face[IndexF].Q();
         }
 
         VertexType * v0=poly_m.face[IndexF].V0((sizeV-1));
