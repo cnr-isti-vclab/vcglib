@@ -637,7 +637,7 @@ namespace io {
                     QDomElement instGeomNode= geomNodeList.at(ch).toElement();
                     if(instGeomNode.parentNode()==node) // process only direct child
                     {
-                        QDEBUG("** instance_geometry with url %s (intial mesh size %i %i T = %i)",qPrintable(instGeomNode.attribute("url")),m.vn,m.fn,m.textures.size());
+                        QDEBUG("** instance_geometry with url %s (initial mesh size %i %i T = %i)",qPrintable(instGeomNode.attribute("url")),m.vn,m.fn,m.textures.size());
                         //assert(m.textures.size()>0 == HasPerWedgeTexCoord(m));
                         QString geomNode_url;
                         referenceToANodeAttribute(instGeomNode,"url",geomNode_url);
@@ -711,7 +711,7 @@ namespace io {
         }
 
 
-// Retrieve the transformation matrix that is defined in the childs of a node.
+// Retrieve the transformation matrix that is defined in the children of a node.
 // used during the recursive descent.
 static Matrix44f getTransfMatrixFromNode(const QDomElement parentNode)
 {
