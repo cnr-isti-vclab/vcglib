@@ -368,9 +368,8 @@ void ExternalProduct(const Point3<S> &a, const Point3<S> &b)
 ScalarType Norm()
 {
     ScalarType SQsum=0;
-    for(int i=0;i<3;++i)
-        for(int j=0;j<3;++j)
-             SQsum += a[i]*a[i];
+    for(int i=0;i<9;++i)
+        SQsum += a[i]*a[i];
     return (math::Sqrt(SQsum));
 }
 

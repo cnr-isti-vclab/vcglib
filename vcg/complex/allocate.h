@@ -1330,7 +1330,7 @@ public:
           m.tetra[pos].ImportData(m.tetra[i]);
           //import vertex refs
           for (int j = 0; j < 4; ++j)
-            m.tetra[pos].V(j) = m.tetra[i].cV(j);
+            m.tetra[pos].V(j) = m.tetra[i].V(j);
           //import VT adj
           if (HasVTAdjacency(m))
             for (int j = 0; j < 4; ++j)
@@ -1675,7 +1675,7 @@ public:
     typename std::set<PointerToAttribute > ::iterator i;
     for( i = m.edge_attr.begin(); i !=  m.edge_attr.end(); ++i)
       if( (*i)._handle == h._handle ){
-        delete ((SimpleTempData<FaceContainer,ATTR_TYPE>*)(*i)._handle);
+        delete ((SimpleTempData<EdgeContainer,ATTR_TYPE>*)(*i)._handle);
         m.edge_attr.erase(i);
         return;}
   }

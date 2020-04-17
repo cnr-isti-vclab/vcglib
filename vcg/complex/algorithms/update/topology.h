@@ -211,7 +211,7 @@ static void FillUniqueEdgeVector(MeshType &m, std::vector<PEdge> &edgeVec, bool 
             edgeVec[ i ].isBorder = true;
         for (size_t i=1; i<edgeVec.size(); i++) {
             if (edgeVec[i]==edgeVec[i-1])
-                edgeVec[i-1].isBorder = edgeVec[i-1].isBorder = false;
+                edgeVec[i].isBorder = edgeVec[i-1].isBorder = false;
         }
     }
 

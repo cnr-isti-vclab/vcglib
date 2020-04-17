@@ -96,7 +96,7 @@ namespace io {
 				"The importer assumes that the OpenMeshType uses a 3D point for the vertex position",
 				"There isn't any scene in Collada file",
 				"The input file is not compatible with COLLADA 1.41 standard format",
-				"Collada file is trying to referece an attribute that is not in the file",
+				"Collada file is trying to reference an attribute that is not in the file",
 				"This version of Collada Importer support only triangular and polygonal mesh file"
 			};
 
@@ -108,7 +108,7 @@ namespace io {
 		// For example 
 	  // <instance_geometry url="#shape0-lib">
 		// means that you have to search in the <library_geometries> for a node <geometry> with id = "shape0-lib"
-		// you have to call this function to get ther right refernece name
+		// you have to call this function to get the right reference name
 
 		inline static void referenceToANodeAttribute(const QDomNode n,const QString& attr,QString& url_st)
 		{
@@ -182,7 +182,7 @@ namespace io {
 			res = nd.simplified().split(" ",QString::SkipEmptyParts);
             if(res.empty())
                 {
-                    qDebug("Warning valueStringList returned and emtpy list. nothing inside element with tag '%s'", qPrintable(tag));
+                    qDebug("Warning valueStringList returned and empty list. nothing inside element with tag '%s'", qPrintable(tag));
                     return;
                 }
 			if (res.last() == "")
@@ -348,7 +348,7 @@ namespace io {
 		
 		
 		/* Very important procedure 
-			it has the task to finde the name of the image node corresponding to a given material id, 
+			it has the task to find the name of the image node corresponding to a given material id,
 			it assuemes that the material name that is passed have already been bound with the current bindings  
 		*/
 		
