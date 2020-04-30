@@ -95,6 +95,7 @@ public:
 		bool adapt=false;
 		int iter=1;
 		Stat stat;
+
 		void SetTargetLen(const ScalarType len)
 		{
 			minLength=len*4./5.;
@@ -102,6 +103,7 @@ public:
 			lengthThr=len*4./3.;
 			minimalAdmittedArea = (minLength * minLength)/1000.0;
 		}
+		
 		void SetFeatureAngleDeg(const ScalarType angle)
 		{
 			creaseAngleRadThr =  math::ToRad(angle);
@@ -140,20 +142,13 @@ private:
 		vcg::tri::io::Exporter<MeshType>::Save(toRemesh, prepend.c_str(), vcg::tri::io::Mask::IOM_ALL);
 	}
 
+
 	static void removeColinearFaces(MeshType & m, Params & params)
 	{
 		vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
 
 		int count = 0;
-
-//		MeshType projectMesh;
-//		vcg::tri::Append<MeshType, MeshType>::MeshCopy(projectMesh, m);
-//		vcg::tri::UpdateBounding<MeshType>::Box(projectMesh);
-//		vcg::tri::UpdateNormal<MeshType>::PerVertexNormalizedPerFace(projectMesh);
-
-//		StaticGrid grid;
-//		grid.Set(projectMesh.face.begin(), projectMesh.face.end());
-
+        int iter = 0;
 		do
 		{
 			vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
@@ -166,14 +161,16 @@ private:
 
 				ScalarType quality = vcg::QualityRadii(f.cP(0), f.cP(1), f.cP(2));
 
-				if (quality <= 0.00000001)
+                if (quality <= 0.001)
 				{
 					//find longest edge
 					double edges[3];
 					edges[0] = vcg::Distance(f.cP(0), f.cP(1));
 					edges[1] = vcg::Distance(f.cP(1), f.cP(2));
 					edges[2] = vcg::Distance(f.cP(2), f.cP(0));
-					int longestIdx = std::find(edges, edges+3, std::max(std::max(edges[0], edges[1]), edges[2])) - (edges);
+
+                    ScalarType smallestEdge = std::min(edges[0], std::min(edges[1], edges[2]));
+                    int longestIdx = std::find(edges, edges+3, std::max(std::max(edges[0], edges[1]), edges[2])) - (edges);
 
 					if (vcg::tri::IsMarked(m, f.V2(longestIdx)))
 						continue;
@@ -192,11 +189,11 @@ private:
 						{
 							ScalarType dist;
 							CoordType closest;
-							auto fp0 = vcg::tri::GetClosestFaceBase(*params.mProject, params.grid, vcg::Barycenter(t3), 0.000001, dist, closest);
+                            auto fp0 = vcg::tri::GetClosestFaceBase(*params.mProject, params.grid, vcg::Barycenter(t3), smallestEdge/4., dist, closest);
 							if (fp0 == NULL)
 								continue;
 
-							auto fp1 = vcg::tri::GetClosestFaceBase(*params.mProject, params.grid, vcg::Barycenter(t4), 0.000001, dist, closest);
+                            auto fp1 = vcg::tri::GetClosestFaceBase(*params.mProject, params.grid, vcg::Barycenter(t4), smallestEdge/4., dist, closest);
 							if (fp1 == NULL)
 								continue;
 
@@ -206,7 +203,7 @@ private:
 					}
 				}
 			}
-		} while (count);
+                } while (count && ++iter < 50);
 	}
 
 	static void cleanMesh(MeshType & m, Params & params)
