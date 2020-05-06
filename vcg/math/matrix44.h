@@ -85,7 +85,7 @@ public:
     */
     Matrix44() {}
     ~Matrix44() {}
-    Matrix44(const Matrix44 &m);
+    //Matrix44(const Matrix44 &m);
     Matrix44(const T v[]);
 
     T &ElementAt(const int row, const int col);
@@ -243,9 +243,9 @@ typedef Matrix44<double> Matrix44d;
 
 
 
-template <class T> Matrix44<T>::Matrix44(const Matrix44<T> &m) {
-    memcpy((T *)_a, (const T *)m._a, 16 * sizeof(T));
-}
+//template <class T> Matrix44<T>::Matrix44(const Matrix44<T> &m) {
+//    memcpy((T *)_a, (const T *)m._a, 16 * sizeof(T));
+//}
 
 template <class T> Matrix44<T>::Matrix44(const T v[]) {
     memcpy((T *)_a, v, 16 * sizeof(T));
