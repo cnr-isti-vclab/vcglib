@@ -129,12 +129,12 @@ public:
     }
 
     /// Assignment operator
-    inline PosType & operator = ( const PosType & h ){
-        f=h.f;
-        z=h.z;
-        v=h.v;
-        return *this;
-    }
+    //inline PosType & operator = ( const PosType & h ){
+    //    f=h.f;
+    //    z=h.z;
+    //    v=h.v;
+    //    return *this;
+    //}
 
     /// Set to null the half-edge
     void SetNull(){
