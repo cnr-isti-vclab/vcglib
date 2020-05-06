@@ -332,11 +332,11 @@ public:
 	public:
 		PerMeshAttributeHandle(){_handle=NULL;}
 		PerMeshAttributeHandle(void *ah,const int & n):_handle ( (Attribute<ATTR_TYPE> *)ah ),n_attr(n){}
-		PerMeshAttributeHandle operator = ( const PerMeshAttributeHandle & pva){
-			_handle = (Attribute<ATTR_TYPE> *)pva._handle;
-			n_attr = pva.n_attr;
-			return (*this);
-		}
+		//PerMeshAttributeHandle operator = ( const PerMeshAttributeHandle & pva){
+		//	_handle = (Attribute<ATTR_TYPE> *)pva._handle;
+		//	n_attr = pva.n_attr;
+		//	return (*this);
+		//}
 
 		Attribute<ATTR_TYPE> * _handle;
 		int n_attr;
