@@ -28,8 +28,6 @@
 #include <vcg/complex/algorithms/update/quality.h>
 #include <vcg/complex/algorithms/harmonic.h>
 
-using namespace std;
-
 namespace vcg {
 namespace tri {
 template < typename MeshType >
