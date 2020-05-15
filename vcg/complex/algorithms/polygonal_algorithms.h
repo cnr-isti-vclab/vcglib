@@ -507,7 +507,8 @@ public:
                           bool isotropic=true,
                           ScalarType smoothTerm=0.1,
                           bool fixB=true,
-                          bool WeightByQuality=false)
+                          bool WeightByQuality=false,
+                          const std::vector<bool> *IgnoreF=NULL)
     {
         (void)isotropic;
         typedef typename PolyMeshType::FaceType PolygonType;
@@ -524,6 +525,7 @@ public:
         if (WeightByQuality)
             UpdateQuality(poly_m,QTemplate);
 
+        if (IgnoreF!=NULL){assert((*IgnoreF).size()==poly_m.face.size());}
         for (size_t s=0;s<(size_t)relax_step;s++)
         {
             //initialize the accumulation vector
@@ -533,6 +535,7 @@ public:
 
             for (size_t i=0;i<poly_m.face.size();i++)
             {
+                if ((IgnoreF!=NULL)&&((*IgnoreF)[i]))continue;
                 std::vector<typename PolygonType::CoordType> TemplatePos;
                 GetRotatedTemplatePos(poly_m.face[i],TemplatePos);
                 //then cumulate the position per vertex
@@ -566,7 +569,15 @@ public:
                 //               if (alpha<0)alpha=0;
                 //               if (alpha>1)alpha=1;
                 //               if (isnan(alpha))alpha=1;
-                CoordType newP=avgPos[i]/weightSum[i];
+
+                CoordType newP=poly_m.vert[i].P();
+                //safety checks
+                if (weightSum[i]>0)
+                    newP=avgPos[i]/weightSum[i];
+                if (isnan(newP.X())||isnan(newP.Y())||isnan(newP.Z()))
+                     newP=poly_m.vert[i].P();
+                if ((newP-poly_m.vert[i].P()).Norm()>poly_m.bbox.Diag())
+                    newP=poly_m.vert[i].P();
                 //std::cout<<"W "<<weightSum[i]<<std::endl;
                 newP=newP*(1-alpha)+AvVert[i]*alpha;
                 //newP=AvVert[i];
