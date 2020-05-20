@@ -52,7 +52,7 @@ public:
         /// The bounding box constructor
     inline  Box3() { this->SetNull(); }
         /// Copy constructor
-    inline  Box3( const Box3 & b ) { min=b.min; max=b.max; }
+    //inline  Box3( const Box3 & b ) { min=b.min; max=b.max; }
         /// Min Max constructor
     inline  Box3( const Point3<BoxScalarType> & mi, const Point3<BoxScalarType> & ma ) { min = mi; max = ma; }
     /// Point Radius Constructor

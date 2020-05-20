@@ -202,7 +202,7 @@ public:
 	
 	private:
 	// Trackball must not be copied. Use Append (see vcg/complex/trimesh/append.h)
-	Trackball operator =(const Trackball &  /*m*/){ assert(0); return *this; }
+	Trackball operator =(const Trackball &  /*m*/) = delete;
 	public:
   /*!
     @brief Reset the trackball.
