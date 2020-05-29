@@ -1009,7 +1009,7 @@ namespace vcg
                 * \return
                 */
              inline bool operator[](const typename UniformGrid::CellCoordinate &at)	{ return m_Mask[at.X()][at.Y()][at.Z()]; }
-             inline bool& GetFlag(const int i, const int j, const int k)const				{ return m_Mask[i][j][k]; }
+			 inline const bool& GetFlag(const int i, const int j, const int k)const				{ return m_Mask[i][j][k]; }
              inline void  SetFlat(const int i, const int j, const int k)						{ m_Mask[i][j][k] = true; }
 
 
