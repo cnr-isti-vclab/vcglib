@@ -658,7 +658,7 @@ in
 		const int maxBeyondCnt = 3;
 		std::vector< Point3d > movvert;
 		std::vector< Point3d > movnorm;
-		std::vector<Point3d> Pmov; // vertici scelti dopo la trasf iniziale
+		std::vector<Point3d> pmov; // vertici scelti dopo la trasf iniziale
 		status = SUCCESS;
 		int tt0 = clock();
 
@@ -685,7 +685,7 @@ in
 			h.SetRange(0.0f, float(startMinDist), 512, 2.5f);
 			pfix.clear();
 			nfix.clear();
-			Pmov.clear();
+			pmov.clear();
 			opmov.clear();
 			onmov.clear();
 			int tts0 = clock();
@@ -732,7 +732,7 @@ in
 							closestNormal = f->N();
 						}
 						// The sample was accepted. Store it.
-						Pmov.push_back(movvert[i]);
+						pmov.push_back(movvert[i]);
 						opmov.push_back((*mov)[i].P());
 						onmov.push_back((*mov)[i].N());
 						nfix.push_back(closestNormal);
@@ -746,8 +746,8 @@ in
 				}
 			} // End for each pmov
 			int tts1 = clock();
-			//printf("Found %d pairs\n",(int)Pfix.size());
-			if (!choosePoints(pfix, nfix, Pmov, opmov, ap.PassHiFilter, h)) {
+			//printf("Found %d pairs\n",(int)pfix.size());
+			if (!choosePoints(pfix, nfix, pmov, opmov, ap.PassHiFilter, h)) {
 				if (int(pfix.size()) < ap.MinPointNum){
 					status = TOO_FEW_POINTS;
 					ii.Time = clock();
@@ -758,10 +758,10 @@ in
 			Matrix44d newout;
 			switch (ap.MatchMode){
 			case AlignPair::Param::MMSimilarity:
-				vcg::PointMatchingScale::computeRotoTranslationScalingMatchMatrix(newout, pfix, Pmov);
+				vcg::PointMatchingScale::computeRotoTranslationScalingMatchMatrix(newout, pfix, pmov);
 				break;
 			case AlignPair::Param::MMRigid:
-				ComputeRigidMatchMatrix(pfix, Pmov, newout);
+				ComputeRigidMatchMatrix(pfix, pmov, newout);
 				break;
 			default:
 				status = UNKNOWN_MODE;
@@ -772,17 +772,17 @@ in
 
 			//double sum_before=0;
 			//double sum_after=0;
-			//for(unsigned int iii=0;iii<Pfix.size();++iii){
-			//	sum_before+=Distance(Pfix[iii], out*OPmov[iii]);
-			//	sum_after+=Distance(Pfix[iii], newout*OPmov[iii]);
+			//for(unsigned int iii=0;iii<pfix.size();++iii){
+			//	sum_before+=Distance(pfix[iii], out*OPmov[iii]);
+			//	sum_after+=Distance(pfix[iii], newout*OPmov[iii]);
 			//}
-			//printf("Distance %f -> %f\n",sum_before/double(Pfix.size()),sum_after/double(Pfix.size()) ) ;
+			//printf("Distance %f -> %f\n",sum_before/double(pfix.size()),sum_after/double(pfix.size()) ) ;
 
 			// le passate successive utilizzano quindi come trasformazione iniziale questa appena trovata.
 			// Nei prossimi cicli si parte da questa matrice come iniziale.
 			out = newout * out;
 
-			assert(Pfix.size() == Pmov.size());
+			assert(pfix.size() == pmov.size());
 			int tts2 = clock();
 			ttsearch += tts1 - tts0;
 			ttleast += tts2 - tts1;
