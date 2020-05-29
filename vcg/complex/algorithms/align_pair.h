@@ -511,11 +511,14 @@ public:
 
 		return true;
 	}
+
 	/*
-	 * Una volta trovati <SampleNum> coppie di punti corrispondenti se ne sceglie
-	 * al piu' <PointNum> per calcolare la trasformazione che li fa coincidere.
-	 * La scelta viene fatta in base ai due parametri PassLo e PassHi;
-	 */
+	This function is used to choose remove outliers after each ICP iteration.
+	All the points with a distance over the given Percentile are discarded.
+	It uses two parameters
+	MaxPointNum an (unused) hard limit on the number of points that are chosen
+	MinPointNum the minimum number of points that have to be chosen to be usable
+	*/
 	inline bool choosePoints(
 		std::vector<Point3d> &ps, // vertici corrispondenti su fix (rossi)
 		std::vector<Point3d> &ns, // normali corrispondenti su fix (rossi)
@@ -625,6 +628,18 @@ in
 
 ************************************************************************************/
 
+	/*
+	The Main ICP alignment Function:
+	It assumes that:
+	we have two meshes:
+	- Fix the mesh that does not move and stays in the spatial indexing structure.
+	- Mov the mesh we 'move' e.g. the one for which we search the transforamtion.
+
+	requires normalize normals for vertices AND faces
+	Allinea due mesh;
+	Assume che:
+	la uniform grid sia gia' inizializzata con la mesh fix
+	*/
 	inline bool align(
 			A2Grid &u,
 			A2GridVert &uv,
@@ -666,7 +681,7 @@ in
 		do {
 			Stat::IterInfo ii;
 			Box3d movbox;
-			InitMov(movvert, movnorm, movbox, out);
+			initMov(movvert, movnorm, movbox, out);
 			h.SetRange(0.0f, float(startMinDist), 512, 2.5f);
 			pfix.clear();
 			nfix.clear();
@@ -810,22 +825,80 @@ in
 		return true;
 	}
 
-
-	bool InitMov(
+	/*
+	Funzione chiamata dalla Align ad ogni ciclo
+	Riempie i vettori <MovVert> e <MovNorm> con i coordinate e normali presi dal vettore di vertici mov
+	della mesh da muovere trasformata secondo la matrice <In>
+	Calcola anche il nuovo bounding box di tali vertici trasformati.
+	*/
+	inline bool initMov(
 			std::vector< Point3d > &movvert,
 			std::vector< Point3d > &movnorm,
 			Box3d &movbox,
-			const Matrix44d &in	);
+			const Matrix44d &in	)
+	{
+		Point3d pp, nn;
 
-	static bool InitFixVert(A2Mesh *fm,
-							AlignPair::Param &pp,
-							A2GridVert &u,
-							int PreferredGridSize=0);
+		movvert.clear();
+		movnorm.clear();
+		movbox.SetNull();
 
-	static bool InitFix(A2Mesh *fm,
-						AlignPair::Param &pp,
-						A2Grid &u,
-						int PreferredGridSize=0);
+		A2Mesh::VertexIterator vi;
+		for (vi = mov->begin(); vi != mov->end(); vi++) {
+			pp = in*(*vi).P();
+			nn = in*Point3d((*vi).P() + (*vi).N()) - pp;
+			nn.Normalize();
+			movvert.push_back(pp);
+			movnorm.push_back(nn);
+			movbox.Add(pp);
+		}
+		return true;
+	}
+
+	static inline bool InitFixVert(
+			A2Mesh *fm,
+			AlignPair::Param &pp,
+			A2GridVert &u,
+			int preferredGridSize=0)
+	{
+		Box3d bb2 = fm->bbox;
+		double minDist = pp.MinDistAbs*1.1;
+		//the bbox of the grid should be enflated of the mindist used in the ICP search
+		bb2.Offset(Point3d(minDist, minDist, minDist));
+
+		u.SetBBox(bb2);
+
+		//Inserisco la src nella griglia
+		if (preferredGridSize == 0)
+			preferredGridSize = int(fm->vert.size())*pp.UGExpansionFactor;
+		u.Set(fm->vert.begin(), fm->vert.end());//, PreferredGridSize);
+		printf("UG %i %i %i\n", u.siz[0], u.siz[1], u.siz[2]);
+		return true;
+	}
+
+	static inline bool initFix(
+			A2Mesh *fm,
+			AlignPair::Param &pp,
+			A2Grid &u,
+			int preferredGridSize=0)
+	{
+		tri::InitFaceIMark(*fm);
+
+		Box3d bb2 = fm->bbox;
+		//	double MinDist= fm->bbox.Diag()*pp.MinDistPerc;
+		double minDist = pp.MinDistAbs*1.1;
+		//gonfio della distanza utente il BBox della seconda mesh
+		bb2.Offset(Point3d(minDist, minDist, minDist));
+
+		u.SetBBox(bb2);
+
+		//Inserisco la src nella griglia
+		if (preferredGridSize == 0)
+			preferredGridSize = int(fm->face.size())*pp.UGExpansionFactor;
+		u.Set(fm->face.begin(), fm->face.end(), preferredGridSize);
+		printf("UG %i %i %i\n", u.siz[0], u.siz[1], u.siz[2]);
+		return true;
+	}
 
 }; // end class
 
