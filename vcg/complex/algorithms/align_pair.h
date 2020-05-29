@@ -44,6 +44,7 @@
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/point_matching_scale.h>
 
 
 namespace vcg {
@@ -56,6 +57,12 @@ Classe per gestire un allineamento tra DUE sole mesh.
 
 class AlignPair {
 public:
+
+	AlignPair()
+	{
+		clear();
+		myrnd.initialize(time(NULL));
+	}
 
 	enum ErrorCode {
 		SUCCESS,
@@ -334,7 +341,7 @@ public:
 		Stat as;
 		Param ap;
 		ErrorCode status;
-		bool IsValid()
+		bool isValid()
 		{
 			return status==SUCCESS;
 		}
@@ -392,12 +399,6 @@ public:
 		status=SUCCESS;
 	}
 
-	AlignPair()
-	{
-		clear();
-		myrnd.initialize(time(NULL));
-	}
-
 	/******* Data Members *********/
 
 	std::vector<A2Vertex> *mov;
@@ -443,22 +444,126 @@ public:
 		}
 	}
 
-	bool SampleMovVert(std::vector<A2Vertex> &vert, int SampleNum, AlignPair::Param::SampleModeEnum SampleMode);
-	bool SampleMovVertRandom(std::vector<A2Vertex> &vert, int SampleNum);
-	bool SampleMovVertNormalEqualized(std::vector<A2Vertex> &vert, int SampleNum);
-/*
-*Una volta trovati <SampleNum> coppie di punti corrispondenti se ne sceglie
-al piu' <PointNum> per calcolare la trasformazione che li fa coincidere.
-La scelta viene fatta in base ai due parametri PassLo e PassHi;
-*/
-	bool ChoosePoints(
-		std::vector<Point3d> &Ps, // vertici corrispondenti su fix (rossi)
-		std::vector<Point3d> &Ns, // normali corrispondenti su fix (rossi)
-		std::vector<Point3d> &Pt, // vertici scelti su mov (verdi)
-		std::vector<Point3d> &OPt,		// vertici scelti su mov (verdi)
+	inline bool sampleMovVert(
+			std::vector<A2Vertex> &vert,
+			int sampleNum,
+			AlignPair::Param::SampleModeEnum sampleMode)
+	{
+		switch (sampleMode)
+		{
+		case AlignPair::Param::SMRandom:
+			return SampleMovVertRandom(vert, sampleNum);
+		case AlignPair::Param::SMNormalEqualized:
+			return SampleMovVertNormalEqualized(vert, sampleNum);
+		default:
+			assert(0);
+			return false;
+		}
+	}
+
+	inline bool SampleMovVertRandom(std::vector<A2Vertex> &vert, int sampleNum)
+	{
+		if (int(vert.size()) <= sampleNum)
+			return true;
+		for (int i = 0; i < sampleNum; ++i) {
+			int pos = myrnd.generate(vert.size());
+			assert(pos >= 0 && pos < int(vert.size()));
+			std::swap(vert[i], vert[pos]);
+		}
+		vert.resize(sampleNum);
+		return true;
+	}
+
+	bool SampleMovVertNormalEqualized(std::vector<A2Vertex> &vert, int sampleNum)
+	{
+		std::vector<Point3d> NV;
+		if (NV.size() == 0) {
+			GenNormal<double>::Fibonacci(30, NV);
+			printf("Generated %i normals\n", int(NV.size()));
+		}
+		// Bucket vector dove, per ogni normale metto gli indici
+		// dei vertici ad essa corrispondenti
+		std::vector<std::vector <int> > BKT(NV.size());
+		for (size_t i = 0; i < vert.size(); ++i) {
+			int ind = GenNormal<double>::BestMatchingNormal(vert[i].N(), NV);
+			BKT[ind].push_back(int(i));
+		}
+
+		// vettore di contatori per sapere quanti punti ho gia' preso per ogni bucket
+		std::vector <int> BKTpos(BKT.size(), 0);
+
+		if (sampleNum >= int(vert.size()))
+			sampleNum = vert.size() - 1;
+
+		for (int i = 0; i < sampleNum;) {
+			int ind = myrnd.generate(BKT.size()); // Scelgo un Bucket
+			int &CURpos = BKTpos[ind];
+			std::vector<int> &CUR = BKT[ind];
+
+			if (CURpos<int(CUR.size())) {
+				std::swap(CUR[CURpos], CUR[CURpos + myrnd.generate(BKT[ind].size() - CURpos)]);
+				std::swap(vert[i], vert[CUR[CURpos]]);
+				++BKTpos[ind];
+				++i;
+			}
+		}
+		vert.resize(sampleNum);
+
+		return true;
+	}
+	/*
+	 * Una volta trovati <SampleNum> coppie di punti corrispondenti se ne sceglie
+	 * al piu' <PointNum> per calcolare la trasformazione che li fa coincidere.
+	 * La scelta viene fatta in base ai due parametri PassLo e PassHi;
+	 */
+	inline bool choosePoints(
+		std::vector<Point3d> &ps, // vertici corrispondenti su fix (rossi)
+		std::vector<Point3d> &ns, // normali corrispondenti su fix (rossi)
+		std::vector<Point3d> &pt, // vertici scelti su mov (verdi)
+		std::vector<Point3d> &opt,		// vertici scelti su mov (verdi)
 		//vector<Point3d> &Nt, 		// normali scelti su mov (verdi)
-		double PassHi,
-		Histogramf &H);
+		double passHi,
+		Histogramf &h)
+	{
+		const int N = ap.MaxPointNum;
+		double newmaxd = h.Percentile(float(passHi));
+		int sz = int(ps.size());
+		int fnd = 0;
+		int lastgood = sz - 1;
+		math::SubtractiveRingRNG myrnd;
+		while (fnd < N && fnd < lastgood) {
+			int index = fnd + myrnd.generate(lastgood - fnd);
+			double dd = Distance(ps[index], pt[index]);
+			if (dd <= newmaxd){
+				std::swap(ps[index], ps[fnd]);
+				std::swap(ns[index], ns[fnd]);
+				std::swap(pt[index], pt[fnd]);
+				std::swap(opt[index], opt[fnd]);
+				++fnd;
+			}
+			else {
+				std::swap(ps[index], ps[lastgood]);
+				std::swap(ns[index], ns[lastgood]);
+				std::swap(pt[index], pt[lastgood]);
+				std::swap(opt[index], opt[lastgood]);
+				lastgood--;
+			}
+		}
+		ps.resize(fnd);
+		ns.resize(fnd);
+		pt.resize(fnd);
+		opt.resize(fnd);
+
+		if ((int)ps.size() < ap.MinPointNum){
+			printf("Troppi pochi punti!\n");
+			ps.clear();
+			ns.clear();
+			pt.clear();
+			opt.clear();
+			return false;
+		}
+		return true;
+	}
 
 /*
 Minimo esempio di codice per l'uso della funzione di allineamento.
@@ -491,19 +596,26 @@ aa.Align(In,UG,res);                          // si spera :)
 res.as.Dump(stdout);
 */
 
-	bool Align(const Matrix44d &in, A2Grid &UG, A2GridVert &UGV, Result &res)
+	bool align(const Matrix44d &in, A2Grid &UG, A2GridVert &UGV, Result &res)
 	{
 		res.ap=ap;
 
-		bool ret=Align(UG, UGV, in, res.Tr, res.Pfix, res.Nfix, res.Pmov, res.Nmov, res.H, res.as);
+		bool ret=align(UG, UGV, in, res.Tr, res.Pfix, res.Nfix, res.Pmov, res.Nmov, res.H, res.as);
 
 		res.err=res.as.lastPcl50();
 		res.status=status;
 		return ret;
 	}
 
-	double Abs2Perc(double val, Box3d bb) const {return val/bb.Diag();}
-	double Perc2Abs(double val, Box3d bb) const {return val*bb.Diag();}
+	double abs2Perc(double val, Box3d bb) const
+	{
+		return val/bb.Diag();
+	}
+
+	double perc2Abs(double val, Box3d bb) const
+	{
+		return val*bb.Diag();
+	}
 
 /************************************************************************************
 Versione Vera della Align a basso livello.
@@ -513,17 +625,190 @@ in
 
 ************************************************************************************/
 
-	bool Align(
+	inline bool align(
 			A2Grid &u,
-			   A2GridVert &uv,
-			   const Matrix44d &in,					// trasformazione Iniziale che porta i punti di mov su fix
-			   Matrix44d &out,					// trasformazione calcolata
-			   std::vector<Point3d> &Pfix,		// vertici corrispondenti su src (rossi)
-			   std::vector<Point3d> &Nfix, 		// normali corrispondenti su src (rossi)
-			   std::vector<Point3d> &OPmov,		// vertici scelti su trg (verdi) prima della trasformazione in ingresso (Original Point Target)
-			   std::vector<Point3d> &ONmov, 		// normali scelti su trg (verdi)
-			   Histogramf &H,
-			   Stat &as);
+			A2GridVert &uv,
+			const Matrix44d &in,			// trasformazione Iniziale che porta i punti di mov su fix
+			Matrix44d &out,					// trasformazione calcolata
+			std::vector<Point3d> &pfix,		// vertici corrispondenti su src (rossi)
+			std::vector<Point3d> &nfix, 	// normali corrispondenti su src (rossi)
+			std::vector<Point3d> &opmov,	// vertici scelti su trg (verdi) prima della trasformazione in ingresso (Original Point Target)
+			std::vector<Point3d> &onmov, 	// normali scelti su trg (verdi)
+			Histogramf &h,
+			Stat &as)
+	{
+		std::vector<char> beyondCntVec; // vettore per marcare i movvert che sicuramente non si devono usare
+		// ogni volta che un vertice si trova a distanza oltre max dist viene incrementato il suo contatore;
+		// i movvert che sono stati scartati piu' di MaxCntDist volte non si guardano piu';
+		const int maxBeyondCnt = 3;
+		std::vector< Point3d > movvert;
+		std::vector< Point3d > movnorm;
+		std::vector<Point3d> Pmov; // vertici scelti dopo la trasf iniziale
+		status = SUCCESS;
+		int tt0 = clock();
+
+		out = in;
+
+		int i;
+
+		double cosAngleThr = cos(ap.MaxAngleRad);
+		double startMinDist = ap.MinDistAbs;
+		int tt1 = clock();
+		int ttsearch = 0;
+		int ttleast = 0;
+		int nc = 0;
+		as.clear();
+		as.StartTime = clock();
+
+		beyondCntVec.resize(mov->size(), 0);
+
+		/**************** BEGIN ICP LOOP ****************/
+		do {
+			Stat::IterInfo ii;
+			Box3d movbox;
+			InitMov(movvert, movnorm, movbox, out);
+			h.SetRange(0.0f, float(startMinDist), 512, 2.5f);
+			pfix.clear();
+			nfix.clear();
+			Pmov.clear();
+			opmov.clear();
+			onmov.clear();
+			int tts0 = clock();
+			ii.MinDistAbs = startMinDist;
+			int LocSampleNum = std::min(ap.SampleNum, int(movvert.size()));
+			Box3d fixbox;
+			if (u.Empty())
+				fixbox = uv.bbox;
+			else
+				fixbox = u.bbox;
+			for (i = 0; i < LocSampleNum; ++i) {
+				if (beyondCntVec[i] < maxBeyondCnt) {
+					if (fixbox.IsIn(movvert[i])) {
+						double error = startMinDist;
+						Point3d closestPoint, closestNormal;
+						double maxd = startMinDist;
+						ii.SampleTested++;
+						if (u.Empty()) {// using the point cloud grid{
+							A2Mesh::VertexPointer vp = tri::GetClosestVertex(*fix, uv, movvert[i], maxd, error);
+							if (error >= startMinDist) {
+								ii.DistanceDiscarded++; ++beyondCntVec[i]; continue;
+							}
+							if (movnorm[i].dot(vp->N()) < cosAngleThr) {
+								ii.AngleDiscarded++; continue;
+							}
+							closestPoint = vp->P();
+							closestNormal = vp->N();
+						}
+						else {// using the standard faces and grid
+							A2Mesh::FacePointer f = vcg::tri::GetClosestFaceBase<vcg::AlignPair::A2Mesh, vcg::AlignPair::A2Grid >(*fix, u, movvert[i], maxd, error, closestPoint);
+							if (error >= startMinDist) {
+								ii.DistanceDiscarded++; ++beyondCntVec[i]; continue;
+							}
+							if (movnorm[i].dot(f->N()) < cosAngleThr) {
+								ii.AngleDiscarded++; continue;
+							}
+							Point3d ip;
+							InterpolationParameters<A2Face, double>(*f, f->N(), closestPoint, ip);
+							const double IP_EPS = 0.00001;
+							// If ip[i] == 0 it means that we are on the edge opposite to i
+							if ((fabs(ip[0]) <= IP_EPS && f->IsB(1)) || (fabs(ip[1]) <= IP_EPS && f->IsB(2)) || (fabs(ip[2]) <= IP_EPS && f->IsB(0))){
+								ii.BorderDiscarded++;  continue;
+							}
+							closestNormal = f->N();
+						}
+						// The sample was accepted. Store it.
+						Pmov.push_back(movvert[i]);
+						opmov.push_back((*mov)[i].P());
+						onmov.push_back((*mov)[i].N());
+						nfix.push_back(closestNormal);
+						pfix.push_back(closestPoint);
+						h.Add(float(error));
+						ii.SampleUsed++;
+					}
+					else {
+						beyondCntVec[i] = maxBeyondCnt + 1;
+					}
+				}
+			} // End for each pmov
+			int tts1 = clock();
+			//printf("Found %d pairs\n",(int)Pfix.size());
+			if (!choosePoints(pfix, nfix, Pmov, opmov, ap.PassHiFilter, h)) {
+				if (int(pfix.size()) < ap.MinPointNum){
+					status = TOO_FEW_POINTS;
+					ii.Time = clock();
+					as.I.push_back(ii);
+					return false;
+				}
+			}
+			Matrix44d newout;
+			switch (ap.MatchMode){
+			case AlignPair::Param::MMSimilarity:
+				vcg::PointMatchingScale::computeRotoTranslationScalingMatchMatrix(newout, pfix, Pmov);
+				break;
+			case AlignPair::Param::MMRigid:
+				ComputeRigidMatchMatrix(pfix, Pmov, newout);
+				break;
+			default:
+				status = UNKNOWN_MODE;
+				ii.Time = clock();
+				as.I.push_back(ii);
+				return false;
+			}
+
+			//double sum_before=0;
+			//double sum_after=0;
+			//for(unsigned int iii=0;iii<Pfix.size();++iii){
+			//	sum_before+=Distance(Pfix[iii], out*OPmov[iii]);
+			//	sum_after+=Distance(Pfix[iii], newout*OPmov[iii]);
+			//}
+			//printf("Distance %f -> %f\n",sum_before/double(Pfix.size()),sum_after/double(Pfix.size()) ) ;
+
+			// le passate successive utilizzano quindi come trasformazione iniziale questa appena trovata.
+			// Nei prossimi cicli si parte da questa matrice come iniziale.
+			out = newout * out;
+
+			assert(Pfix.size() == Pmov.size());
+			int tts2 = clock();
+			ttsearch += tts1 - tts0;
+			ttleast += tts2 - tts1;
+			ii.pcl50 = h.Percentile(.5);
+			ii.pclhi = h.Percentile(float(ap.PassHiFilter));
+			ii.AVG = h.Avg();
+			ii.RMS = h.RMS();
+			ii.StdDev = h.StandardDeviation();
+			ii.Time = clock();
+			as.I.push_back(ii);
+			nc++;
+			// The distance of the next points to be considered is lowered according to the <ReduceFactor> parameter.
+			// We use 5 times the <ReduceFactor> percentile of the found points.
+			if (ap.ReduceFactorPerc<1)
+				startMinDist = std::max(ap.MinDistAbs*ap.MinMinDistPerc, std::min(startMinDist, 5.0*h.Percentile(float(ap.ReduceFactorPerc))));
+		} while (
+				nc <= ap.MaxIterNum &&
+				h.Percentile(.5) > ap.TrgDistAbs &&
+				(nc<ap.EndStepNum + 1 || !as.stable(ap.EndStepNum)) );
+
+		/**************** END ICP LOOP ****************/
+		int tt2 = clock();
+		out[3][0] = 0; out[3][1] = 0; out[3][2] = 0; out[3][3] = 1;
+		Matrix44d ResCopy = out;
+		Point3d scv, shv, rtv, trv;
+		Decompose(ResCopy, scv, shv, rtv, trv);
+		if ((ap.MatchMode == vcg::AlignPair::Param::MMRigid) && (math::Abs(1 - scv[0])>ap.MaxScale || math::Abs(1 - scv[1]) > ap.MaxScale || math::Abs(1 - scv[2]) > ap.MaxScale)) {
+			status = TOO_MUCH_SCALE;
+			return false;
+		}
+		if (shv[0] > ap.MaxShear || shv[1] > ap.MaxShear || shv[2] > ap.MaxShear) {
+			status = TOO_MUCH_SHEAR;
+			return false;
+		}
+		printf("Grid %i %i %i - fn %i\n", u.siz[0], u.siz[1], u.siz[2], fix->fn);
+		printf("Init %8.3f Loop %8.3f Search %8.3f least sqrt %8.3f\n",
+		float(tt1 - tt0) / CLOCKS_PER_SEC, float(tt2 - tt1) / CLOCKS_PER_SEC,
+		float(ttsearch) / CLOCKS_PER_SEC, float(ttleast) / CLOCKS_PER_SEC);
+
+		return true;
+	}
 
 
 	bool InitMov(

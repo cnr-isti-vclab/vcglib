@@ -21,6 +21,9 @@
 *                                                                           *
 ****************************************************************************/
 
+#ifndef VCG_POINT_MATCHING_SCALE
+#define VCG_POINT_MATCHING_SCALE
+
 #include <vcg/math/matrix44.h>
 #include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
@@ -132,3 +135,4 @@ public:
 
 }
 
+#endif
