@@ -88,7 +88,7 @@ public:
 		//bool Import(const char *filename) { Matrix44d Tr; Tr.SetIdentity(); return Import(filename,Tr);}
 		//bool Import(const char *filename, Matrix44d &Tr);
 
-		inline bool InitVert(const Matrix44d &Tr) {
+		inline bool initVert(const Matrix44d &Tr) {
 			Matrix44d Idn; Idn.SetIdentity();
 			if (Tr != Idn)
 				tri::UpdatePosition<A2Mesh>::Matrix(*this, Tr);
@@ -96,7 +96,7 @@ public:
 			tri::UpdateBounding<A2Mesh>::Box(*this);
 			return true;
 		}
-		inline bool Init(const Matrix44d &Tr) {
+		inline bool init(const Matrix44d &Tr) {
 			Matrix44d Idn; Idn.SetIdentity();
 			tri::Clean<A2Mesh>::RemoveUnreferencedVertex(*this);
 			if (Tr != Idn)
@@ -143,12 +143,12 @@ public:
 
 		std::vector<IterInfo> I;
 
-		double LastPcl50() const
+		double lastPcl50() const
 		{
 			return I.back().pcl50;
 		}
 
-		int LastSampleUsed() const {
+		int lastSampleUsed() const {
 			return I.back().SampleUsed;
 		}
 
@@ -156,11 +156,11 @@ public:
 		int FixVertNum;
 		int FixFaceNum;
 
-		int TotTime() {
+		int totTime() {
 			return I.back().Time-StartTime;
 		}
 
-		int IterTime(unsigned int i) const
+		int iterTime(unsigned int i) const
 		{
 			const int clock_per_ms = std::max<int>(CLOCKS_PER_SEC / 1000,1);
 			assert(i<I.size());
@@ -178,13 +178,13 @@ public:
 			FixFaceNum = 0;
 		}
 
-		inline void Dump(FILE *fp)
+		inline void dump(FILE *fp)
 		{
 			if (I.size() == 0) {
 				fprintf(fp, "Empty AlignPair::Stat\n");
 				return;
 			}
-			fprintf(fp, "Final Err %8.5f In %i iterations Total Time %ims\n", LastPcl50(), (int)I.size(), TotTime());
+			fprintf(fp, "Final Err %8.5f In %i iterations Total Time %ims\n", lastPcl50(), (int)I.size(), totTime());
 			fprintf(fp, "Mindist   Med   Hi    Avg  RMS   StdDev   Time Tested Used  Dist Bord Angl \n");
 			for (unsigned int qi = 0; qi < I.size(); ++qi)
 				fprintf(
@@ -193,14 +193,14 @@ public:
 							I[qi].MinDistAbs,
 							I[qi].pcl50, I[qi].pclhi,
 							I[qi].AVG, I[qi].RMS, I[qi].StdDev,
-							IterTime(qi),
+							iterTime(qi),
 							I[qi].SampleTested, I[qi].SampleUsed, I[qi].DistanceDiscarded, I[qi].BorderDiscarded, I[qi].AngleDiscarded);
 		}
 
 		// Scrive una tabella con tutti i valori
-		inline void HTMLDump(FILE *fp)
+		inline void htmlDump(FILE *fp)
 		{
-			fprintf(fp, "Final Err %8.5f In %i iterations Total Time %ims\n", LastPcl50(), (int)I.size(), TotTime());
+			fprintf(fp, "Final Err %8.5f In %i iterations Total Time %ims\n", lastPcl50(), (int)I.size(), totTime());
 			fprintf(fp, "<table border>\n");
 			fprintf(fp, "<tr> <th>Mindist</th><th>    50ile </th><th>  Hi </th><th>   Avg  </th><th> RMS </th><th>  StdDev  </th><th> Time </th><th> Tested </th><th> Used </th><th> Dist </th><th> Bord </th><th> Angl \n");
 			for (unsigned int qi = 0; qi < I.size(); ++qi)
@@ -209,14 +209,14 @@ public:
 							I[qi].MinDistAbs,
 							I[qi].pcl50, I[qi].pclhi,
 							I[qi].AVG, I[qi].RMS, I[qi].StdDev,
-							IterTime(qi),
+							iterTime(qi),
 							I[qi].SampleTested, I[qi].SampleUsed, I[qi].DistanceDiscarded, I[qi].BorderDiscarded, I[qi].AngleDiscarded);
 			fprintf(fp, "</table>\n");
 		}
 
 		// Restituisce true se nelle ultime <lastiter> iterazioni non e' diminuito
 		// l'errore
-		inline bool Stable(int lastiter)
+		inline bool stable(int lastiter)
 		{
 			if (I.empty())
 				return false;
@@ -304,7 +304,7 @@ public:
 		double MaxScale;
 		MatchModeEnum MatchMode;
 		SampleModeEnum SampleMode;
-		void Dump(FILE *fp,double BoxDiag);
+		//void Dump(FILE *fp,double BoxDiag);
 
 	};
 
@@ -334,7 +334,10 @@ public:
 		Stat as;
 		Param ap;
 		ErrorCode status;
-		bool IsValid() {return status==SUCCESS;}
+		bool IsValid()
+		{
+			return status==SUCCESS;
+		}
 		double err;
 		float area; // the overlapping area, a percentage as computed in Occupancy Grid.
 
@@ -345,12 +348,11 @@ public:
 		bool operator == (const Result & rr) const {return (err==rr.err);}
 		bool operator != (const Result & rr) const {return (err!=rr.err);}
 
-		std::pair<double,double> ComputeAvgErr() const
+		std::pair<double,double> computeAvgErr() const
 		{
 			double sum_before=0;
 			double sum_after=0;
-			for(unsigned int ii=0;ii<Pfix.size();++ii)
-			{
+			for(unsigned int ii=0;ii<Pfix.size();++ii) {
 				sum_before+=Distance(Pfix[ii],   Pmov[ii]);
 				sum_after+=Distance(Pfix[ii], Tr*Pmov[ii]);
 			}
@@ -361,9 +363,40 @@ public:
 
 	/******************* Fine Classi Accessorie ************************/
 
-	static const char *ErrorMsg( ErrorCode code);
-	void Clear(){status=SUCCESS;}
-	AlignPair() { Clear(); myrnd.initialize(time(NULL)); }
+	static inline const char* errorMsg(ErrorCode code)
+	{
+		switch (code){
+		case SUCCESS:
+			return "Success";
+		case NO_COMMON_BBOX:
+			return "No Common BBox";
+		case TOO_FEW_POINTS:
+			return "Too few points";
+		case LSQ_DIVERGE:
+			return "LSQ not converge";
+		case TOO_MUCH_SHEAR:
+			return "Too much shear";
+		case TOO_MUCH_SCALE:
+			return "Too much scale";
+		case UNKNOWN_MODE:
+			return "Unknown mode ";
+		default:
+			assert(0);
+			return "Catastrophic Error";
+		}
+		return 0;
+	}
+
+	void clear()
+	{
+		status=SUCCESS;
+	}
+
+	AlignPair()
+	{
+		clear();
+		myrnd.initialize(time(NULL));
+	}
 
 	/******* Data Members *********/
 
@@ -378,15 +411,14 @@ public:
 	/**** End Data Members *********/
 
 	template < class MESH >
-	void ConvertMesh(MESH &M1, A2Mesh &M2)
+	void convertMesh(MESH &M1, A2Mesh &M2)
 	{
 		tri::Append<A2Mesh,MESH>::MeshCopy(M2,M1);
 	}
 
 	template < class VERTEX >
-	void ConvertVertex(const std::vector<VERTEX> &vert1, std::vector<A2Vertex> &vert2, Box3d *Clip=0)
+	void convertVertex(const std::vector<VERTEX> &vert1, std::vector<A2Vertex> &vert2, Box3d *Clip=0)
 	{
-
 		vert2.clear();
 		typename std::vector<VERTEX>::const_iterator vi;
 		A2Vertex tv;
@@ -400,13 +432,15 @@ public:
 					vert2.push_back(tv);
 				}
 		}
-		else
-			for(vi=vert1.begin();vi<vert1.end();++vi)
+		else {
+			for(vi=vert1.begin();vi<vert1.end();++vi) {
 				if(!(*vi).IsD()){
 					tv.P().Import((*vi).cP());
 					tv.N().Import((*vi).cN());
 					vert2.push_back(tv);
 				}
+			}
+		}
 	}
 
 	bool SampleMovVert(std::vector<A2Vertex> &vert, int SampleNum, AlignPair::Param::SampleModeEnum SampleMode);
@@ -463,7 +497,7 @@ res.as.Dump(stdout);
 
 		bool ret=Align(UG, UGV, in, res.Tr, res.Pfix, res.Nfix, res.Pmov, res.Nmov, res.H, res.as);
 
-		res.err=res.as.LastPcl50();
+		res.err=res.as.lastPcl50();
 		res.status=status;
 		return ret;
 	}
