@@ -33,7 +33,7 @@ struct RotoTranslation
 {
 	RotoTranslation(){}
 	Scalar _v[6];
-	void ToMatrix(vcg::Matrix44<Scalar> & m)
+	void toMatrix(vcg::Matrix44<Scalar> & m)
 	{
 		vcg::Matrix44<Scalar> rot,tra;
 		rot.FromEulerAngles(_v[0],_v[1],_v[2]);
@@ -52,7 +52,7 @@ public:
 	/**
 	 * Compute a scaling transformation that bring PMov point as close as possible to Pfix
 	 */
-	static void ComputeScalingMatchMatrix(
+	static void computeScalingMatchMatrix(
 			vcg::Matrix44d &res,
 			std::vector<vcg::Point3d> &Pfix,
 			std::vector<vcg::Point3d> &Pmov)
@@ -73,7 +73,7 @@ public:
 	/**
 	 * Compute a rototranslation + scaling transformation that bring PMov point as close as possible to Pfix
 	 */
-	static void ComputeRotoTranslationScalingMatchMatrix(
+	static void computeRotoTranslationScalingMatchMatrix(
 			vcg::Matrix44d &res,
 			std::vector<vcg::Point3d> &Pfix,
 			std::vector<vcg::Point3d> &Pmov)
@@ -91,7 +91,7 @@ public:
 		RotoTranslation<double> rt;
 		vcg::Matrix44d rtm;
 		memcpy(&rt._v[0],&x[1],6*sizeof(double));
-		rt.ToMatrix(rtm);
+		rt.toMatrix(rtm);
 
 		// res= scaling w.r.t. barycenter
 		res.SetTranslate( b.Center()*(1.0-x[0]));
@@ -120,7 +120,7 @@ public:
 		RotoTranslation<double> rt;
 		vcg::Matrix44d m;
 		memcpy(&rt._v[0],&x[1],6*sizeof(double));
-		rt.ToMatrix(m);
+		rt.toMatrix(m);
 
 		for(; i !=  mov->end(); ++i,++ifix) {
 			dist += vcg::SquaredDistance(	 m*(((*i)-b.Center())*(x[0])+b.Center()),*ifix);
