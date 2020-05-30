@@ -192,7 +192,8 @@ public:
     template <class Q>
     static inline Matrix44 Construct( const Matrix44<Q> & b )
     {
-        Matrix44<T> tmp; tmp.FromMatrix(b);
+		Matrix44<T> tmp;
+		tmp.FromMatrix(b);
         return tmp;
     }
 
