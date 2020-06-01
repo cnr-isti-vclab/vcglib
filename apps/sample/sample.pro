@@ -10,7 +10,7 @@ SUBDIRS = \
 	polygonmesh_polychord_collapse \
 	#polygonmesh_quadsimpl \
 	polygonmesh_smooth \
-	polygonmesh_zonohedra \
+	#polygonmesh_zonohedra \
 	space_index_2d \
 	#space_minimal \
 	space_packer \
