@@ -36,7 +36,14 @@ This file contain a minimal example of the library
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
 
-#include "my_mesh.h"
+class MyFace;
+class MyVertex;
+
+struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<MyVertex>::AsVertexType,    vcg::Use<MyFace>::AsFaceType>{};
+
+class MyVertex  : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3d, vcg::vertex::Normal3d, vcg::vertex::Color4b, vcg::vertex::BitFlags  >{};
+class MyFace    : public vcg::Face < MyUsedTypes, vcg::face::VertexRef, vcg::face::Normal3d, vcg::face::FFAdj, vcg::face::Mark, vcg::face::BitFlags > {};
+class MyMesh    : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> > {};
 
 using namespace vcg;
 using namespace std;
@@ -62,28 +69,30 @@ int main(int argc,char ** argv)
 	}
 
 	//open second mesh
-	err = tri::io::Importer<MyMesh>::Open(m1,argv[2]);
+	err = tri::io::Importer<MyMesh>::Open(m2,argv[2]);
 	if(err) { // all the importers return 0 in case of success
 		printf("Error in reading %s: '%s'\n", argv[2], tri::io::Importer<MyMesh>::ErrorMsg(err));
 		exit(-1);
 	}
 
+	vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(m1);
+	vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(m2);
+
 	////PARAMS
 	/////TODO
-	vcg::Matrix44d MovM;
 	vcg::AlignPair::Result result;
 	vcg::AlignPair::Param ap;
 
 	//MovM
-	vcg::Matrix44d FixM=vcg::Matrix44d::Construct(m1.Tr);
-	MovM=vcg::Matrix44d::Construct(m2.Tr);
-	MovM = Inverse(FixM) * MovM;
+	//vcg::Matrix44d FixM=vcg::Matrix44d::Construct(m1.Tr);
+	//MovM=vcg::Matrix44d::Construct(m2.Tr);
+	//MovM = Inverse(FixM) * MovM;
 
 	vcg::AlignPair::A2Mesh fix;
 	vcg::AlignPair aa;
 
 	// 1) Convert fixed mesh and put it into the grid.
-	m1.face.EnableMark();
+	//m1.face.EnableMark();
 	aa.convertMesh<MyMesh>(m1,fix);
 
 	vcg::AlignPair::A2Grid UG;
@@ -101,7 +110,7 @@ int main(int argc,char ** argv)
 
 	// 2) Convert the second mesh and sample a <ap.SampleNum> points on it.
 	//MM(movId)->updateDataMask(MeshModel::MM_FACEMARK);
-	m2.face.EnableMark();
+	//m2.face.EnableMark();
 	std::vector<vcg::AlignPair::A2Vertex> tmpmv;
 	aa.convertVertex(m2.vert,tmpmv);
 	aa.sampleMovVert(tmpmv, ap.SampleNum, ap.SampleMode);
@@ -110,14 +119,13 @@ int main(int argc,char ** argv)
 	aa.fix=&fix;
 	aa.ap = ap;
 
-	vcg::Matrix44d In=MovM;
+	vcg::Matrix44d In;
+	In.SetIdentity();
 	// Perform the ICP algorithm
 	aa.align(In,UG,VG,result);
 
-	m2.Tr = result.Tr;
-	tri::UpdatePosition<MyMesh>::Matrix(m2, m2.Tr, true);
+	tri::UpdatePosition<MyMesh>::Matrix(m2, result.Tr, true);
 	tri::UpdateBounding<MyMesh>::Box(m2);
-	m2.Tr.SetIdentity();
 
 	//result.FixName=fixId;
 	//result.MovName=movId;

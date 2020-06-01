@@ -24,6 +24,7 @@
 #define VCG_ALIGN_PAIR_H
 
 #include <ctime>
+#include <stdio.h>
 #include <vcg/math/histogram.h>
 #include <vcg/math/matrix44.h>
 #include <vcg/math/random_generator.h>
@@ -643,22 +644,22 @@ in
 	inline bool align(
 			A2Grid &u,
 			A2GridVert &uv,
-			const Matrix44d &in,			// trasformazione Iniziale che porta i punti di mov su fix
-			Matrix44d &out,					// trasformazione calcolata
-			std::vector<Point3d> &pfix,		// vertici corrispondenti su src (rossi)
-			std::vector<Point3d> &nfix, 	// normali corrispondenti su src (rossi)
-			std::vector<Point3d> &opmov,	// vertici scelti su trg (verdi) prima della trasformazione in ingresso (Original Point Target)
-			std::vector<Point3d> &onmov, 	// normali scelti su trg (verdi)
+			const Matrix44d &in,			// starting transformation that matches mov points to fix mesh
+			Matrix44d &out,					// computed transformation
+			std::vector<Point3d> &pfix,		// (red) corresponding vertices on src
+			std::vector<Point3d> &nfix, 	// (red) corresponding normals on src
+			std::vector<Point3d> &opmov,	// chosen vertices on trg (verdi) before the input transormation (Original Point Target)
+			std::vector<Point3d> &onmov, 	// chosen normals on trg (verdi)
 			Histogramf &h,
 			Stat &as)
 	{
-		std::vector<char> beyondCntVec; // vettore per marcare i movvert che sicuramente non si devono usare
-		// ogni volta che un vertice si trova a distanza oltre max dist viene incrementato il suo contatore;
-		// i movvert che sono stati scartati piu' di MaxCntDist volte non si guardano piu';
+		std::vector<char> beyondCntVec; // flag vector to set the movverts that we should not use
+		// every time that a vertex is at a distance beyound max dist, its counter is incremented;
+		// movverts that has been discarded more than MaxCntDist times will not be considered anymore
 		const int maxBeyondCnt = 3;
 		std::vector< Point3d > movvert;
 		std::vector< Point3d > movnorm;
-		std::vector<Point3d> pmov; // vertici scelti dopo la trasf iniziale
+		std::vector<Point3d> pmov; // vertices chosen after the transformation
 		status = SUCCESS;
 		int tt0 = clock();
 
@@ -746,7 +747,7 @@ in
 				}
 			} // End for each pmov
 			int tts1 = clock();
-			//printf("Found %d pairs\n",(int)pfix.size());
+			printf("Found %d pairs\n",(int)pfix.size());
 			if (!choosePoints(pfix, nfix, pmov, opmov, ap.PassHiFilter, h)) {
 				if (int(pfix.size()) < ap.MinPointNum){
 					status = TOO_FEW_POINTS;
@@ -778,8 +779,8 @@ in
 			//}
 			//printf("Distance %f -> %f\n",sum_before/double(pfix.size()),sum_after/double(pfix.size()) ) ;
 
-			// le passate successive utilizzano quindi come trasformazione iniziale questa appena trovata.
-			// Nei prossimi cicli si parte da questa matrice come iniziale.
+			// the following tuns will use as a initial transformation, the one that has been just found.
+			// in the next loops the starting matrix will be this one.
 			out = newout * out;
 
 			assert(pfix.size() == pmov.size());
@@ -798,6 +799,7 @@ in
 			// We use 5 times the <ReduceFactor> percentile of the found points.
 			if (ap.ReduceFactorPerc<1)
 				startMinDist = std::max(ap.MinDistAbs*ap.MinMinDistPerc, std::min(startMinDist, 5.0*h.Percentile(float(ap.ReduceFactorPerc))));
+			//as.dump(stderr);
 		} while (
 				nc <= ap.MaxIterNum &&
 				h.Percentile(.5) > ap.TrgDistAbs &&
@@ -826,10 +828,11 @@ in
 	}
 
 	/*
-	Funzione chiamata dalla Align ad ogni ciclo
-	Riempie i vettori <MovVert> e <MovNorm> con i coordinate e normali presi dal vettore di vertici mov
-	della mesh da muovere trasformata secondo la matrice <In>
-	Calcola anche il nuovo bounding box di tali vertici trasformati.
+	 * Function called by Align at every cycle.
+	 * It fills the <MovVert> and <MovNorm> vectors with the coordinates and normals
+	 * taken from the the vertex vector "mov" of the mesh to move according to the
+	 * matrix <In>.
+	 * It computes also the new bounding box of the transformed vertices
 	*/
 	inline bool initMov(
 			std::vector< Point3d > &movvert,
