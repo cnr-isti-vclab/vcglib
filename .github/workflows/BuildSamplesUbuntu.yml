@@ -1,18 +1,18 @@
-name: BuildTestsMacOS
+name: BuildSamplesUbuntu
 
 on:
   [push, pull_request]
 
 jobs:
-  macos_build_tests:
-    name: Build Tests (MacOS)
-    runs-on: macos-latest
+  ubuntu_build_tests:
+    name: Build Samples (Ubuntu)
+    runs-on: ubuntu-latest #in order to deploy, need to use oldest supported version
 
     steps:
     - uses: actions/checkout@v2
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
-    - name: Build Tests
+    - name: Build Samples
       run: |
         qmake apps/sample/sample.pro
         make -j4
