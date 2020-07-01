@@ -183,6 +183,7 @@ public:
   static bool GoodObjIndex(int &index, const int maxVal)
   {
     if (index > maxVal)	return false;
+    if (index == 0) return false; // indices must start from 1
     if (index < 0)
     {
       index += maxVal+1;
