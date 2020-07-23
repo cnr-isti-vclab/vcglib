@@ -564,7 +564,13 @@ public:
 //    }
 
 
-    bool LoadMask(const char * filename, int &mask)
+    static bool LoadMask(const char * filename, int &mask)
+    {
+        PlyInfo pi;
+        return LoadMask(filename, mask, pi);
+    }
+
+    static bool LoadMask(const char * filename, int &mask, PlyInfo &pi)
     {
         mask=0;
         vcg::ply::PlyFile pf;
@@ -576,23 +582,35 @@ public:
 
         if( pf.AddToRead(VertDesc(0))!=-1 &&
             pf.AddToRead(VertDesc(1))!=-1 &&
-            pf.AddToRead(VertDesc(2))!=-1 )   mask |= vcg::tetra::io::Mask::IOM_VERTCOORD;
+            pf.AddToRead(VertDesc(2))!=-1 )
+            mask |= vcg::tetra::io::Mask::IOM_VERTCOORD;
 
-        if( pf.AddToRead(VertDesc(3))!=-1 )		mask |= vcg::tetra::io::Mask::IOM_VERTFLAGS;
-        if( pf.AddToRead(VertDesc(4))!=-1 )		mask |= vcg::tetra::io::Mask::IOM_VERTQUALITY;
+        if( pf.AddToRead(VertDesc(3))!=-1 )
+            mask |= vcg::tetra::io::Mask::IOM_VERTFLAGS;
+
+        if( pf.AddToRead(VertDesc(4))!=-1 )
+            mask |= vcg::tetra::io::Mask::IOM_VERTQUALITY;
+
         if( ( pf.AddToRead(VertDesc(5))!=-1 ) &&
             ( pf.AddToRead(VertDesc(6))!=-1 ) &&
             ( pf.AddToRead(VertDesc(7))!=-1 ) &&
-            ( pf.AddToRead(VertDesc(8))!=-1 )     )  mask |= vcg::tetra::io::Mask::IOM_VERTCOLOR;
+            ( pf.AddToRead(VertDesc(8))!=-1 ))
+            mask |= vcg::tetra::io::Mask::IOM_VERTCOLOR;
 
-        if( pf.AddToRead(TetraDesc(0))!=-1 ) mask |= vcg::tetra::io::Mask::IOM_TETRAINDEX;
-        if( pf.AddToRead(TetraDesc(1))!=-1 ) mask |= vcg::tetra::io::Mask::IOM_TETRAFLAGS;
+        if( pf.AddToRead(TetraDesc(0))!=-1 )
+            mask |= vcg::tetra::io::Mask::IOM_TETRAINDEX;
 
-        if( pf.AddToRead(TetraDesc(2))!=-1 ) mask |= vcg::tetra::io::Mask::IOM_TETRAQUALITY;
+        if( pf.AddToRead(TetraDesc(1))!=-1 )
+            mask |= vcg::tetra::io::Mask::IOM_TETRAFLAGS;
+
+        if( pf.AddToRead(TetraDesc(2))!=-1 )
+            mask |= vcg::tetra::io::Mask::IOM_TETRAQUALITY;
+
         if( ( pf.AddToRead(TetraDesc(6))!=-1 ) &&
             ( pf.AddToRead(TetraDesc(7))!=-1 ) &&
             ( pf.AddToRead(TetraDesc(8))!=-1 ) &&
-            ( pf.AddToRead(TetraDesc(9))!=-1 )    )  mask |= vcg::tetra::io::Mask::IOM_TETRACOLOR;
+            ( pf.AddToRead(TetraDesc(9))!=-1 ))
+            mask |= vcg::tetra::io::Mask::IOM_TETRACOLOR;
 
 
         return true;

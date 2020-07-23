@@ -23,33 +23,67 @@
 #ifndef TETRAMESH_SUPPORT_H
 #define TETRAMESH_SUPPORT_H
 
+#include <vcg/simplex/tetrahedron/topology.h>
 namespace vcg {
 namespace tri {
 
 template <class TetraMesh, class TriMesh>
 inline void CreateTriMeshFromTTBorder(TetraMesh & tetramesh, TriMesh & trimesh)
 {
-    RequireTTAdjacency(tetramesh);
-    tri::UpdateTopology<TetraMesh>::TetraTetra(tetramesh);
-    trimesh.Clear();
+        typedef typename TetraMesh::VertexPointer VertexPointer;
+        typedef typename TriMesh::FacePointer     FacePointer;
 
-    typedef typename TetraMesh::TetraType TetraType;
-    ForEachTetra(tetramesh, [&] (TetraType & t) {
-        for (int i = 0; i < 4; ++i)
-            if (IsTTBorder(t, i))
-            {
-                tri::Allocator<TriMesh>::AddFace(trimesh, 
-                                                 t.V(Tetra::VofF(i, 0)),
-                                                 t.V(Tetra::VofF(i, 1)),
-                                                 t.V(Tetra::VofF(i, 2)));
-            }
-    });
+        RequireTTAdjacency(tetramesh);
+        tri::UpdateTopology<TetraMesh>::TetraTetra(tetramesh);
 
-	vcg::tri::Clean<TriMesh>::RemoveDuplicateVertex(trimesh);
-	vcg::tri::Allocator<TriMesh>::CompactEveryVector(trimesh);
+        trimesh.Clear();
+
+        std::vector<VertexPointer> verts;
+
+        typedef typename TetraMesh::TetraType TetraType;
+
+        ForEachTetra(tetramesh, [&] (TetraType & t) {
+                for (int i = 0; i < 4; ++i)
+                        if (vcg::tetrahedron::IsTTBorder(t, i))
+                        {
+                                verts.push_back(t.V(Tetra::VofF(i, 0)));
+                                verts.push_back(t.V(Tetra::VofF(i, 1)));
+                                verts.push_back(t.V(Tetra::VofF(i, 2)));
+                        }
+        });
+
+        typedef typename TriMesh::VertexIterator VertexIterator;
+        typedef typename TriMesh::FaceIterator     FaceIterator;
+
+        VertexIterator vi = tri::Allocator<TriMesh>::AddVertices(trimesh, verts.size());
+        FaceIterator   fi = tri::Allocator<TriMesh>::AddFaces(trimesh, verts.size() / 3);
+
+        for (int i = 0; i < verts.size(); i += 3)
+        {
+                fi->Alloc(3);
+
+                vi->P() = verts[i + 0]->P();
+                fi->V(0) = &*vi;
+                ++vi;
+
+                vi->P() = verts[i + 1]->P();
+                fi->V(1) = &*vi;
+                ++vi;
+
+                vi->P() = verts[i + 2]->P();
+                fi->V(2) = &*vi;
+                ++vi;
+
+                ++fi;
+        }
+
+        //do it while you build the mesh
+        vcg::tri::Clean<TriMesh>::RemoveDuplicateVertex(trimesh);
+        vcg::tri::Allocator<TriMesh>::CompactEveryVector(trimesh);
 }
 
 } // end namespace tri
 } // end namespace vcg
+
 
 #endif // EXTRUDE_H
