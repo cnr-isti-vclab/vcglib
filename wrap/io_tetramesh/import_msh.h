@@ -94,7 +94,7 @@ class MshInfo
         typedef typename AttribTraits<Scalar, Dimension>::Type AttrType;
         typedef typename MeshType::template PerVertexAttributeHandle<AttrType> AttrHandle;
 
-        AttrHandle handle = vcg::tetra::Allocator<MeshType>::template GetPerVertexAttribute<AttrType>(mesh, attrib_name);
+        AttrHandle handle = vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<AttrType>(mesh, attrib_name);
         size_t num_nodes = size_t(mesh.VN());
 
         for (int i=0; i<int(num_nodes); ++i)
@@ -107,7 +107,7 @@ class MshInfo
         typedef typename AttribTraits<Scalar, Dimension>::Type AttrType;
         typedef typename MeshType::template PerFaceAttributeHandle<AttrType> AttrHandle;
 
-        AttrHandle handle = vcg::tetra::Allocator<MeshType>::template GetPerFaceAttribute<AttrType>(mesh, attrib_name);
+        AttrHandle handle = vcg::tri::Allocator<MeshType>::template GetPerFaceAttribute<AttrType>(mesh, attrib_name);
         size_t num_elements = size_t(mesh.TN());
 
         for (int i=0; i<int(num_elements); ++i)
