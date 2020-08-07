@@ -235,11 +235,11 @@ public:
     }
 
     template< class VecType >
-    static void PerVertexArea(MeshType &m, VecType &h)
+    static void PerVertexArea(const MeshType &m, VecType &h)
     {
         tri::RequireCompactness(m);
         h.resize(m.vn);
-        fill(h.begin(),h.end(),0);        
+        fill(h.begin(),h.end(),0);
         for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi)
         {
             ScalarType a = DoubleArea(*fi)/6.0;
@@ -249,7 +249,7 @@ public:
     }
 
     template< class VecType >
-    static void PerFaceArea(MeshType &m, VecType &h)
+    static void PerFaceArea(const MeshType &m, VecType &h)
     {
         tri::RequireCompactness(m);
         h.resize(m.fn);
