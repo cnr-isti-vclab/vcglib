@@ -240,11 +240,11 @@ public:
         tri::RequireCompactness(m);
         h.resize(m.vn);
         fill(h.begin(),h.end(),0);
-        for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi)
+        for (int i = 0; i < m.FN(); ++i)
         {
-            ScalarType a = DoubleArea(*fi)/6.0;
-            for(int j=0;j<fi->VN();++j)
-                h[tri::Index(m,fi->V(j))] += a;
+            ScalarType a = DoubleArea(m.face[i])/6.0;
+            for(int j=0;j<m.face[i].VN();++j)
+                h[tri::Index(m,m.face[i].cV(j))] += a;
         }
     }
 
