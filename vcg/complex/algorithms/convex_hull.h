@@ -345,7 +345,7 @@ public:
   * The algorithm used (Katz, Tal and Basri 2007) determines visibility without
   * reconstructing a surface or estimating normals.
   * A point is considered visible if its transformed point lies on the convex hull
-  * of a trasformed points cloud from the original mesh points.
+  * of a transformed points cloud from the original mesh points.
   *
   * @param m         The point cloud
   * @param visible   The mesh that will contain the visible hull
