@@ -151,7 +151,7 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
       max.Z() = std::max(max.Z(),p.Z()+radius);
     }
 }
-  /** Modify the current bbox to contain also the box b trasformed according to the matrix m
+  /** Modify the current bbox to contain also the box b transformed according to the matrix m
   */
     void Add( const Matrix44<BoxScalarType> &m, const Box3<BoxScalarType> & b )
     {
