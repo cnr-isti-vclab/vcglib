@@ -303,7 +303,7 @@ Given a mesh the following function refines it according to two functor objects:
 
 - a predicate that tells if a given edge must be splitted
 
-- a functor that gives you the new poistion of the created vertices (starting from an edge)
+- a functor that gives you the new position of the created vertices (starting from an edge)
 
 If RefineSelected is true only selected faces are taken into account for being splitted.
 

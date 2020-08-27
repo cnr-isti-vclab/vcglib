@@ -35,7 +35,7 @@ virtual void CreateSparse(std::vector<IndexType> Entries)
 virtual ScalarType &A(int row,int col)
 {return (_Ax[0]);}
 
-///return true if the rapresention of sparse matriz is symmetric
+///return true if the represention of sparse matriz is symmetric
 virtual bool IsSymmetric()
 {return false;}
 

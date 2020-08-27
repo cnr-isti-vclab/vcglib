@@ -71,7 +71,7 @@ public:
 	~GLArea();
 	void resetTrackBall();
     //unsigned int getId() const {return areaid;}
-	/// we choosed a subset of the avaible drawing modes
+	/// we chose a subset of the available drawing modes
 
 signals:
 		/// signal for setting the statusbar message

@@ -134,7 +134,7 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
          glVertex(position+arc_point);
       }
     glEnd(); 
-  } else if(moving && drawmoves){ // draw a traslation
+  } else if(moving && drawmoves){ // draw a translation
     Point3f ntra=manipulator->track.tra;
     ntra.Normalize();
     if(current_mode==movx){

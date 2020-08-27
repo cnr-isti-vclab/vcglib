@@ -160,7 +160,7 @@ mesh->Render();
 </pre>
 
   Note on the typical use:
-  - Perspective and glulookat are choosed to frame the origin centered 1-radius trackball.
+  - Perspective and glulookat are chosen to frame the origin centered 1-radius trackball.
   - The final scale and translate are just to fit a generic mesh to the 1sized origin centered where the trackball stays box.
   - The trackball works also on Orthographic projections \b but that are not centered around origin (just move it back along the Z)
 */

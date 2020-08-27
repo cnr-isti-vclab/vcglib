@@ -1518,7 +1518,7 @@ public:
 		std::vector< VertexPointer > minVertVec;
 		std::vector< VertexPointer > maxVertVec;
 
-		// The set of directions to be choosen
+		// The set of directions to be chosen
 		std::vector< CoordType > dirVec;
 		dirVec.push_back(CoordType(1,0,0));
 		dirVec.push_back(CoordType(0,1,0));

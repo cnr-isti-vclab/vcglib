@@ -73,7 +73,7 @@ public:
   // initializes on current geometry 
   virtual void TargetCurrentGeometry()=0;
   
-  // performs an interation. Returns largest movement.
+  // performs an iteration. Returns largest movement.
   virtual ScalarType Iterate()=0;
   
   // performs an iteration (faster, but it does not tell how close it is to stopping)
@@ -132,7 +132,7 @@ AREA PRESERVING TEXTURE OPTIMIZATION
 
 as in: Degener, P., Meseth, J., Klein, R. 
        "An adaptable surface parameterization method."
-       Proc. of the 12th International Meshing oundtable, 201–213 [2003].
+       Proc. of the 12th International Meshing oundtable, 201ï¿½213 [2003].
 
 Features:
   

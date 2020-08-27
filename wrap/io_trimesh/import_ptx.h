@@ -67,7 +67,7 @@ public:
       flipfaces		= false;
     }
 
-    /// a bit mask describing the field preesnt in the ply file
+    /// a bit mask describing the field present in the ply file
     int mask;
 
     /// index of mesh to be imported
