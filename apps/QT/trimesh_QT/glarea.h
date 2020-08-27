@@ -67,7 +67,7 @@ class GLArea:public QGLWidget
 Q_OBJECT 
 public:
   GLArea (QWidget * parent = 0);
-  /// we choosed a subset of the avaible drawing modes
+  /// we chose a subset of the available drawing modes
   enum DrawMode{SMOOTH=0,POINTS,WIRE,FLATWIRE,HIDDEN,FLAT};
 public slots:
   /// widget-based user interaction slots

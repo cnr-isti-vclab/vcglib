@@ -75,7 +75,7 @@ vcg::Trackball track;
 /// window size
 int width,height;
 
-/// we choosed a subset of the avaible drawing modes
+/// we chose a subset of the available drawing modes
 enum DrawMode{SMOOTH=0,PERPOINTS,WIRE,FLATWIRE,HIDDEN,FLAT};
 
 /// the current drawmode

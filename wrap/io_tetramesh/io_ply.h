@@ -74,7 +74,7 @@ public:
   }
   /// Store the error codes enconutered when parsing a ply
   int status;
-  /// It returns a bit mask describing the field preesnt in the ply file
+  /// It returns a bit mask describing the field present in the ply file
   int mask;  
 
   /// a Simple callback that can be used for long ply parsing. 
