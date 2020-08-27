@@ -151,7 +151,7 @@ public:
     ALNParser::ParseALN(rmaps, alnName);
     
     for(size_t i=0; i<rmaps.size(); i++)
-      AddSingleMesh(rmaps[i].filename.c_str(), rmaps[i].trasformation, rmaps[i].quality);
+      AddSingleMesh(rmaps[i].filename.c_str(), rmaps[i].transformation, rmaps[i].quality);
     
     return true;
   }
