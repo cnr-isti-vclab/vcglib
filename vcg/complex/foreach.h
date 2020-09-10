@@ -35,6 +35,22 @@ namespace tri {
 */
 
 template <class MeshType>
+inline void ForEachFacePos(const MeshType &m, std::function<void (const typename face::Pos<typename MeshType::FaceType>  &)> action)
+{
+  typedef typename face::Pos<typename MeshType::FaceType> PosType;
+
+    for(auto fi=m.face.begin();fi!=m.face.end();++fi)
+        if(!(*fi).IsD())
+        {
+            for(int i=0;i<3;++i)
+            {
+                PosType pi(&*fi,i);
+                action(pi);
+            }
+        }
+}
+
+template <class MeshType>
 inline void ForEachFacePos(MeshType &m, std::function<void (typename face::Pos<typename MeshType::FaceType>  &)> action)
 {
   typedef typename face::Pos<typename MeshType::FaceType> PosType;
@@ -109,6 +125,25 @@ inline void ForEachFace(MeshType &m, std::function<void (typename MeshType::Face
  */
 
 template <class MeshType>
+inline void ForEachVertex(const MeshType &m, std::function<void (const typename MeshType::VertexType &)> action)
+{
+  if(m.vn == (int) m.vert.size())
+  {
+    for(auto vi=m.vert.begin();vi!=m.vert.end();++vi) {
+      action(*vi);
+    }
+  }
+  else
+  {
+    for(auto vi=m.vert.begin();vi!=m.vert.end();++vi)
+      if(!(*vi).IsD())
+      {
+        action(*vi);
+      }
+  }
+}
+
+template <class MeshType>
 inline void ForEachVertex(MeshType &m, std::function<void (typename MeshType::VertexType &)> action)
 {
   if(m.vn == (int) m.vert.size())
@@ -128,6 +163,54 @@ inline void ForEachVertex(MeshType &m, std::function<void (typename MeshType::Ve
 }
 
 /**
+ * ForEachHEdge Helper
+ * to traverse all the half edges of a mesh you can simply write something like:
+ *
+ *      ForEachHEdge(m, [&](const HEdgeType &he){
+ *         MakeSomethingWithHEdge(he);
+ *      });
+ *
+ */
+
+template <class MeshType>
+inline void ForEachHEdge(const MeshType &m, std::function<void (const typename MeshType::HEdgeType &)> action)
+{
+  if(m.hn == (int) m.hedge.size())
+  {
+    for(auto hei=m.hedge.begin();hei!=m.hedge.end();++hei) {
+      action(*hei);
+    }
+  }
+  else
+  {
+    for(auto hei=m.hedge.begin();hei!=m.hedge.end();++hei)
+      if(!(*hei).IsD())
+      {
+        action(*hei);
+      }
+  }
+}
+
+template <class MeshType>
+inline void ForEachHEdge(MeshType &m, std::function<void (typename MeshType::HEdgeType &)> action)
+{
+  if(m.hn == (int) m.hedge.size())
+  {
+    for(auto hei=m.hedge.begin();hei!=m.hedge.end();++hei) {
+      action(*hei);
+    }
+  }
+  else
+  {
+    for(auto hei=m.hedge.begin();hei!=m.hedge.end();++hei)
+      if(!(*hei).IsD())
+      {
+        action(*hei);
+      }
+  }
+}
+
+/**
  * ForEachEdge Helper
  * to traverse all the vertexes of a mesh you can simply write something like:
  * 
@@ -136,6 +219,25 @@ inline void ForEachVertex(MeshType &m, std::function<void (typename MeshType::Ve
  *      });
  *  
  */
+
+template <class MeshType>
+inline void ForEachEdge(const MeshType &m, std::function<void (const typename MeshType::EdgeType &)> action)
+{
+  if(m.en == (int) m.edge.size())
+  {
+    for(auto ei=m.edge.begin();ei!=m.edge.end();++ei) {
+      action(*ei);
+    }
+  }
+  else
+  {
+    for(auto ei=m.edge.begin();ei!=m.edge.end();++ei)
+      if(!(*ei).IsD())
+      {
+        action(*ei);
+      }
+  }
+}
 
 template <class MeshType>
 inline void ForEachEdge(MeshType &m, std::function<void (typename MeshType::EdgeType &)> action)

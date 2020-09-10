@@ -514,16 +514,15 @@ static void MeshAppendConst(
   else
       vp=Allocator<MeshLeft>::AddVertices(ml,mr.vn);
 
-  for (auto v : mr.vert)
-  //for(VertexIteratorRight vi=mr.vert.begin(); vi!=mr.vert.end(); ++vi)
+  ForEachVertex(mr, [&](const VertexRight& v)
   {
-    if(!v.IsD() && (!selected || v.IsS()))
+    if(!selected || v.IsS())
     {
       size_t ind=Index(mr,v);
       remap.vert[ind]=int(Index(ml,*vp));
       ++vp;
     }
-  }
+  });
   // edge
   remap.edge.resize(mr.edge.size(), Remap::InvalidIndex());
   EdgeIteratorLeft ep;
@@ -531,13 +530,14 @@ static void MeshAppendConst(
   if(selected) ep=Allocator<MeshLeft>::AddEdges(ml,sen);
           else ep=Allocator<MeshLeft>::AddEdges(ml,mr.en);
 
-  for (auto e : mr.edge)
-  //for(EdgeIteratorRight ei=mr.edge.begin(); ei!=mr.edge.end(); ++ei)
-    if(!e.IsD() && (!selected || e.IsS())){
+  ForEachEdge(mr, [&](const EdgeRight& e)
+  {
+    if(!selected || e.IsS()){
       size_t ind=Index(mr,e);
       remap.edge[ind]=int(Index(ml,*ep));
       ++ep;
     }
+  });
 
   // face
   remap.face.resize(mr.face.size(), Remap::InvalidIndex());
@@ -546,52 +546,58 @@ static void MeshAppendConst(
   if(selected) fp=Allocator<MeshLeft>::AddFaces(ml,sfn);
           else fp=Allocator<MeshLeft>::AddFaces(ml,mr.fn);
 
-  for (auto f : mr.face)
-  //for(FaceIteratorRight fi=mr.face.begin(); fi!=mr.face.end(); ++fi)
-    if(!f.IsD() && (!selected || f.IsS())){
+  ForEachFace(mr, [&](const FaceRight& f)
+  {
+    if(!selected || f.IsS()){
       size_t ind=Index(mr,f);
       remap.face[ind]=int(Index(ml,*fp));
       ++fp;
     }
+  });
 
   // hedge
   remap.hedge.resize(mr.hedge.size(),Remap::InvalidIndex());
-  for (auto he : mr.hedge)
-  //for(HEdgeIteratorRight hi=mr.hedge.begin(); hi!=mr.hedge.end(); ++hi)
-    if(!he.IsD() && (!selected || he.IsS())){
+
+  ForEachHEdge(mr, [&](const HEdgeRight& he)
+  {
+    if(!selected || he.IsS()){
       size_t ind=Index(mr,he);
       assert(remap.hedge[ind]==Remap::InvalidIndex());
       HEdgeIteratorLeft hp = Allocator<MeshLeft>::AddHEdges(ml,1);
       (*hp).ImportData(he);
       remap.hedge[ind]=Index(ml,*hp);
     }
+  });
 
   remap.tetra.resize(mr.tetra.size(), Remap::InvalidIndex());
-  for (auto t : mr.tetra)
-  //for (TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti)
-    if (!t.IsD() && (!selected || t.IsS())) {
+
+  ForEachTetra(mr, [&](const TetraRight& t)
+  {
+    if (!selected || t.IsS()) {
       size_t idx = Index(mr, t);
       assert (remap.tetra[idx] == Remap::InvalidIndex());
       TetraIteratorLeft tp = Allocator<MeshLeft>::AddTetras(ml, 1);
       (*tp).ImportData(t);
       remap.tetra[idx] = Index(ml, *tp);
     }
+  });
 
   // phase 2.
   // copy data from mr to its corresponding elements in ml and adjacencies
 
   // vertex
-  for (auto v: mr.vert)
-  //for(VertexIteratorRight vi=mr.vert.begin();vi!=mr.vert.end();++vi)
-    if( !v.IsD() && (!selected || v.IsS())){
+  ForEachVertex(mr, [&](const VertexRight& v)
+  {
+    if(!selected || v.IsS()){
       ml.vert[remap.vert[Index(mr,v)]].ImportData(v);
       if(adjFlag) ImportVertexAdj(ml,mr,ml.vert[remap.vert[Index(mr,v)]],v,remap);
     }
+  });
 
   // edge
-  for (auto e: mr.edge)
-  //for(EdgeIteratorRight ei=mr.edge.begin();ei!=mr.edge.end();++ei)
-    if(!e.IsD() && (!selected || e.IsS())){
+  ForEachEdge(mr, [&](const EdgeRight& e)
+  {
+    if(!selected || e.IsS()){
       ml.edge[remap.edge[Index(mr,e)]].ImportData(e);
       // Edge to Vertex  Adj
       EdgeLeft &el = ml.edge[remap.edge[Index(mr,e)]];
@@ -601,13 +607,14 @@ static void MeshAppendConst(
       }
       if(adjFlag) ImportEdgeAdj(ml,mr,el,e,remap);
     }
+  });
 
   // face
   const size_t textureOffset =  ml.textures.size();
   bool WTFlag = HasPerWedgeTexCoord(mr) && (textureOffset>0);
-  for (auto f: mr.face)
-  //for(FaceIteratorRight fi=mr.face.begin();fi!=mr.face.end();++fi)
-    if(!f.IsD() && (!selected || f.IsS()))
+  ForEachFace(mr, [&](const FaceRight& f)
+  {
+    if(!selected || f.IsS())
     {
       FaceLeft &fl = ml.face[remap.face[Index(mr,f)]];
       fl.Alloc(f.VN());
@@ -622,19 +629,21 @@ static void MeshAppendConst(
       if(adjFlag)  ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,f)]],f,remap);
 
     }
+  });
 
   // hedge
-  for (auto he : mr.hedge)
-  //for(HEdgeIteratorRight hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
-    if(!he.IsD() && (!selected || he.IsS())){
+  ForEachHEdge(mr, [&](const HEdgeRight& he)
+  {
+    if(!selected || he.IsS()){
       ml.hedge[remap.hedge[Index(mr,he)]].ImportData(he);
       ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,he)]],he,remap,selected);
     }
+  });
 
   //tetra
-  for (auto t: mr.tetra)
-  //for(TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti)
-    if(!t.IsD() && (!selected || t.IsS()))
+  ForEachTetra(mr, [&](const TetraRight& t)
+  {
+    if(!selected || t.IsS())
     {
       TetraLeft &tl = ml.tetra[remap.tetra[Index(mr,t)]];
 
@@ -646,91 +655,89 @@ static void MeshAppendConst(
       if(adjFlag)  ImportTetraAdj(ml, mr, ml.tetra[remap.tetra[Index(mr,t)]], t, remap);
 
     }
+  });
 
-        // phase 3.
-        // take care of other per mesh data: textures,   attributes
+  // phase 3.
+  // take care of other per mesh data: textures,   attributes
 
-        // At the end concatenate the vector with texture names.
-        ml.textures.insert(ml.textures.end(),mr.textures.begin(),mr.textures.end());
+  // At the end concatenate the vector with texture names.
+  ml.textures.insert(ml.textures.end(),mr.textures.begin(),mr.textures.end());
 
-        // Attributes. Copy only those attributes that are present in both meshes
-        // Two attributes in different meshes are considered the same if they have the same
-        // name and the same type. This may be deceiving because they could in fact have
-        // different semantic, but this is up to the developer.
-        // If the left mesh has attributes that are not in the right mesh, their values for the elements
-        // of the right mesh will be uninitialized
+  // Attributes. Copy only those attributes that are present in both meshes
+  // Two attributes in different meshes are considered the same if they have the same
+  // name and the same type. This may be deceiving because they could in fact have
+  // different semantic, but this is up to the developer.
+  // If the left mesh has attributes that are not in the right mesh, their values for the elements
+  // of the right mesh will be uninitialized
 
-		unsigned int id_r;
-		typename std::set< PointerToAttribute >::iterator al, ar;
+  unsigned int id_r;
+  typename std::set< PointerToAttribute >::iterator al, ar;
 
-		// per vertex attributes
-		for(al = ml.vert_attr.begin(); al != ml.vert_attr.end(); ++al)
-			if(!(*al)._name.empty()){
-				ar =    mr.vert_attr.find(*al);
-				if(ar!= mr.vert_attr.end()){
-					id_r = 0;
-					for (auto v: mr.vert){
-					//for(VertexIteratorRight vi=mr.vert.begin();vi!=mr.vert.end();++vi,++id_r)
-						if( !v.IsD() && (!selected || v.IsS()))
-							(*al)._handle->CopyValue(remap.vert[Index(mr,v)], id_r, (*ar)._handle);
-						++id_r;
-					}
-				}
-			}
+  // per vertex attributes
+  for(al = ml.vert_attr.begin(); al != ml.vert_attr.end(); ++al)
+    if(!(*al)._name.empty()){
+      ar =    mr.vert_attr.find(*al);
+      if(ar!= mr.vert_attr.end()){
+        id_r = 0;
+        for (auto v: mr.vert){
+          if( !v.IsD() && (!selected || v.IsS()))
+            (*al)._handle->CopyValue(remap.vert[Index(mr,v)], id_r, (*ar)._handle);
+          ++id_r;
+        }
+      }
+    }
 
-		// per edge attributes
-		for(al = ml.edge_attr.begin(); al != ml.edge_attr.end(); ++al)
-			if(!(*al)._name.empty()){
-				ar =    mr.edge_attr.find(*al);
-				if(ar!= mr.edge_attr.end()){
-					id_r = 0;
-					for (auto e: mr.edge){
-					//for(EdgeIteratorRight ei=mr.edge.begin();ei!=mr.edge.end();++ei,++id_r)
-						if( !e.IsD() && (!selected || e.IsS()))
-							(*al)._handle->CopyValue(remap.edge[Index(mr,e)], id_r, (*ar)._handle);
-						++id_r;
-					}
-				}
-			}
+  // per edge attributes
+  for(al = ml.edge_attr.begin(); al != ml.edge_attr.end(); ++al)
+    if(!(*al)._name.empty()){
+      ar =    mr.edge_attr.find(*al);
+      if(ar!= mr.edge_attr.end()){
+        id_r = 0;
+        for (auto e: mr.edge){
+          if( !e.IsD() && (!selected || e.IsS()))
+            (*al)._handle->CopyValue(remap.edge[Index(mr,e)], id_r, (*ar)._handle);
+          ++id_r;
+        }
+      }
+    }
 
-		// per face attributes
-		for(al = ml.face_attr.begin(); al != ml.face_attr.end(); ++al)
-			if(!(*al)._name.empty()){
-				ar =    mr.face_attr.find(*al);
-				if(ar!= mr.face_attr.end()){
-					id_r = 0;
-					for (auto f: mr.face) {
-					//for(FaceIteratorRight fi=mr.face.begin();fi!=mr.face.end();++fi,++id_r)
-						if( !f.IsD() && (!selected || f.IsS()))
-							(*al)._handle->CopyValue(remap.face[Index(mr,f)], id_r, (*ar)._handle);
-						++id_r;
-					}
-				}
-			}
+  // per face attributes
+  for(al = ml.face_attr.begin(); al != ml.face_attr.end(); ++al)
+    if(!(*al)._name.empty()){
+      ar =    mr.face_attr.find(*al);
+      if(ar!= mr.face_attr.end()){
+        id_r = 0;
+        for (auto f: mr.face) {
+          if( !f.IsD() && (!selected || f.IsS()))
+            (*al)._handle->CopyValue(remap.face[Index(mr,f)], id_r, (*ar)._handle);
+          ++id_r;
+        }
+      }
+    }
 
-		// per tetra attributes
-		for(al = ml.tetra_attr.begin(); al != ml.tetra_attr.end(); ++al)
-			if(!(*al)._name.empty()){
-				ar =    mr.tetra_attr.find(*al);
-				if(ar!= mr.tetra_attr.end()){
-					id_r = 0;
-					for (auto t: mr.tetra) {
-					//for(TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti, ++id_r)
-						if( !t.IsD() && (!selected || t.IsS()))
-							(*al)._handle->CopyValue(remap.tetra[Index(mr, t)], id_r, (*ar)._handle);
-						++id_r;
-					}
-				}
-			}
-				// per mesh attributes
-				// if both ml and mr have an attribute with the same name, no action is done
-				// if mr has an attribute that is NOT present in ml, the attribute is added to ml
-				//for(ar = mr.mesh_attr.begin(); ar != mr.mesh_attr.end(); ++ar)
-				//        if(!(*ar)._name.empty()){
-				//                al =    ml.mesh_attr.find(*ar);
-				//                if(al== ml.mesh_attr.end())
-				//                        //...
-				//        }
+  // per tetra attributes
+  for(al = ml.tetra_attr.begin(); al != ml.tetra_attr.end(); ++al)
+    if(!(*al)._name.empty()){
+      ar =    mr.tetra_attr.find(*al);
+      if(ar!= mr.tetra_attr.end()){
+        id_r = 0;
+        for (auto t: mr.tetra) {
+          if( !t.IsD() && (!selected || t.IsS()))
+            (*al)._handle->CopyValue(remap.tetra[Index(mr, t)], id_r, (*ar)._handle);
+          ++id_r;
+        }
+      }
+    }
+
+  // per mesh attributes
+  // if both ml and mr have an attribute with the same name, no action is done
+  // if mr has an attribute that is NOT present in ml, the attribute is added to ml
+  //for(ar = mr.mesh_attr.begin(); ar != mr.mesh_attr.end(); ++ar)
+  //        if(!(*ar)._name.empty()){
+  //                al =    ml.mesh_attr.find(*ar);
+  //                if(al== ml.mesh_attr.end())
+  //                        //...
+  //        }
 }
 
 /*! \brief Copy the second mesh over the first one.
