@@ -272,8 +272,6 @@ static void Clear(MeshType &m)
 static size_t FaceCount(const MeshType &m)
 {
   size_t selCnt=0;
-  //for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-  //  if(!(*fi).IsD() && (*fi).IsS()) ++selCnt;
   for (auto f: m.face)
       if(!f.IsD() && f.IsS()) ++selCnt;
   return selCnt;
@@ -283,8 +281,6 @@ static size_t FaceCount(const MeshType &m)
 static size_t EdgeCount(const MeshType &m)
 {
   size_t selCnt=0;
-  //for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
-  //  if(!(*ei).IsD() && (*ei).IsS()) ++selCnt;
   for (auto e: m.edge)
       if(!e.IsD() && e.IsS()) ++selCnt;
   return selCnt;
@@ -294,8 +290,6 @@ static size_t EdgeCount(const MeshType &m)
 static size_t VertexCount(const MeshType &m)
 {
   size_t selCnt=0;
-  //for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-  //  if(!(*vi).IsD() && (*vi).IsS()) ++selCnt;
   for (auto v: m.vert)
       if(!v.IsD() && v.IsS()) ++selCnt;
   return selCnt;
@@ -305,7 +299,7 @@ static size_t VertexCount(const MeshType &m)
 static size_t TetraCount (const MeshType & m)
 {
   size_t selCnt = 0;
-  ForEachTetra(m, [&selCnt] (TetraType & t) {
+  ForEachTetra(m, [&selCnt] (const TetraType & t) {
     if (t.IsS()) 
       ++selCnt;
   });
