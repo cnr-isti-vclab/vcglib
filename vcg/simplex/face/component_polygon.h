@@ -136,6 +136,7 @@ public:
   typename T::FacePointer const  VFp(const int j) const  { assert(j>=0 && j<this->VN());  return _vfpP[j]; }
   typename T::FacePointer const cVFp(const int j) const  { assert(j>=0 && j<this->VN());  return _vfpP[j]; }
   char &VFi(const int j) {return _vfiP[j]; }
+  char VFi(const int j) const {return _vfiP[j]; }
   template <class LeftF>
   void ImportData(const LeftF & leftF){T::ImportData(leftF);}
   inline void Alloc(const int & ns) {

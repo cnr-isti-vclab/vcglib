@@ -285,6 +285,10 @@ public:
         assert((*this).Base().VFAdjacencyEnabled);
         return (*this).Base().AV[(*this).Index()]._zp;
     }
+    int  VFi() const {
+        assert((*this).Base().VFAdjacencyEnabled);
+        return (*this).Base().AV[(*this).Index()]._zp;
+    }
     int cVFi() const {
         if(! (*this).Base().VFAdjacencyEnabled ) return -1;
         return (*this).Base().AV[(*this).Index()]._zp;
