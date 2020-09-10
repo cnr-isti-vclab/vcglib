@@ -99,6 +99,7 @@ public:
   typename TT::TetraPointer &VTp()        { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
   typename TT::TetraPointer cVTp() const  { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
   int &VTi()       { static int z = 0; assert(0); return z; }
+  int  VTi() const { static int z = 0; assert(0); return z; }
   int cVTi() const { static int z = 0; assert(0); return z; }
   static bool HasVTAdjacency() { return false; }
   bool IsVTInitialized() const {return static_cast<const typename TT::VertexType *>(this)->cVTi()!=-1;}
@@ -112,6 +113,7 @@ public:
   typename TT::FacePointer &VFp()       { static typename TT::FacePointer fp=0;  assert(0); return fp; }
   typename TT::FacePointer cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
   int &VFi()       { static int z=-1; assert(0); return z;}
+  int  VFi() const { static int z=-1; assert(0); return z;}
   int cVFi() const { static int z=-1; assert(0); return z;}
   bool IsNull() const { return true; }
   static bool HasVFAdjacency()   { return false; }
@@ -126,6 +128,7 @@ public:
   typename TT::EdgePointer &VEp()       { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
   typename TT::EdgePointer cVEp() const { static typename TT::EdgePointer ep=0;  assert(0); return ep; }
   int &VEi()       { static int z=-1; return z;}
+  int  VEi() const { static int z=-1; return z;}
   int cVEi() const { static int z=-1; return z;}
   static bool HasVEAdjacency()   {   return false; }
   bool IsVEInitialized() const {return static_cast<const typename TT::VertexType *>(this)->cVEi()!=-1;}
@@ -138,6 +141,7 @@ public:
   typename TT::HEdgePointer &VHp()       { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
   typename TT::HEdgePointer cVHp() const { static typename TT::HEdgePointer ep=0;  assert(0); return ep; }
   int &VHi()       { static int z=0; return z;}
+  int  VHi() const { static int z=0; return z;}
   int cVHi() const { static int z=0; return z;}
   static bool HasVHAdjacency()   {   return false; }
 
@@ -531,6 +535,7 @@ public:
   typename T::EdgePointer &VEp()       {return _ep; }
   typename T::EdgePointer cVEp() const {return _ep; }
   int &VEi()       {return _zp; }
+  int  VEi() const {return _zp; }
   int cVEi() const {return _zp; }
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ) {  T::ImportData( rVert); }
@@ -559,6 +564,7 @@ Note that if you use this component it is expected that on the Face you use also
     typename T::FacePointer &VFp()        { return _fp; }
     typename T::FacePointer cVFp() const  { return _fp; }
     int &VFi()       { return _zp; }
+    int  VFi() const { return _zp; }
     int cVFi() const { return _zp; }
     bool IsNull() const { return _zp==-1;}
     template < class RightValueType>

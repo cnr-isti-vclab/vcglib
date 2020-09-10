@@ -47,7 +47,7 @@ public:
     //Empty vertexref
     inline typename T::VertexType *       & V( const int  )      {	assert(0);		static typename T::VertexType *vp=0; return vp; }
     inline typename T::VertexType * const & V( const int ) const {	assert(0);		static typename T::VertexType *vp=0; return vp; }
-    inline const typename T::VertexType *  cV( const int )       {	assert(0);		static typename T::VertexType *vp=0; return vp;	}
+    inline const typename T::VertexType *  cV( const int ) const {	assert(0);		static typename T::VertexType *vp=0; return vp;	}
     inline       typename T::CoordType & P( const int )          {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
     inline const typename T::CoordType & P( const int )    const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
     inline const typename T::CoordType &cP( const int )    const {	assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
@@ -112,6 +112,7 @@ public:
     typename T::TetraPointer const cTTp( const int ) const { static typename T::TetraPointer const tp=0; assert(0); return tp; }
 
     char & VTi( const int )       { static char z=0; assert(0); return z; }
+    char   VTi( const int ) const { static char z=0; assert(0); return z; }
     char  cVTi( const int ) const { static char z=0; assert(0); return z; }
     char & TTi( const int )       { static char z=0; assert(0); return z; }
     char  cTTi( const int ) const { static char z=0; assert(0); return z; }

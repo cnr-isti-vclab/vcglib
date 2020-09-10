@@ -78,6 +78,7 @@ public:
 	typename T::EdgePointer &VEp(const int &  ) { static typename T::EdgePointer ep=0;  assert(0); return ep; }
 	typename T::EdgePointer cVEp(const int & ) const { static typename T::EdgePointer ep=0;  assert(0); return ep; }
 	int &VEi(const int &){static int z=0; assert(0); return z;}
+	int  VEi(const int &) const {static int z=0; assert(0); return z;}
 	int cVEi(const int &) const {static int z=0; assert(0); return z;}
 	static bool HasVEAdjacency()   {   return false; }
 
@@ -278,6 +279,7 @@ public:
 	typename T::EdgePointer &VEp(const int & i) {return _ep[i]; }
 	typename T::EdgePointer cVEp(const int & i) const {return _ep[i]; }
 	int &VEi(const int & i){ return _zp[i];}
+	int  VEi(const int & i)const {return _zp[i];}
 	int cVEi(const int &i )const {return _zp[i];}
 
 	template < class LeftV>
