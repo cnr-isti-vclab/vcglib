@@ -63,12 +63,12 @@ public:
  typedef typename ConstMeshRight::FaceType       FaceRight;
  typedef typename ConstMeshRight::TetraType      TetraRight;
  typedef typename ConstMeshRight::TetraPointer   TetraPointerRight;
- typedef typename ConstMeshRight::ConstTetraIterator  TetraIteratorRight;
+ typedef typename ConstMeshRight::TetraIterator  TetraIteratorRight;
  typedef typename ConstMeshRight::VertexPointer  VertexPointerRight;
- typedef typename ConstMeshRight::ConstVertexIterator VertexIteratorRight;
- typedef typename ConstMeshRight::ConstEdgeIterator   EdgeIteratorRight;
- typedef typename ConstMeshRight::ConstHEdgeIterator  HEdgeIteratorRight;
- typedef typename ConstMeshRight::ConstFaceIterator   FaceIteratorRight;
+ typedef typename ConstMeshRight::VertexIterator VertexIteratorRight;
+ typedef typename ConstMeshRight::EdgeIterator   EdgeIteratorRight;
+ typedef typename ConstMeshRight::HEdgeIterator  HEdgeIteratorRight;
+ typedef typename ConstMeshRight::FaceIterator   FaceIteratorRight;
  typedef typename ConstMeshRight::FacePointer    FacePointerRight;
 
  struct Remap{
@@ -514,11 +514,12 @@ static void MeshAppendConst(
   else
       vp=Allocator<MeshLeft>::AddVertices(ml,mr.vn);
 
-  for(VertexIteratorRight vi=mr.vert.begin(); vi!=mr.vert.end(); ++vi)
+  for (auto v : mr.vert)
+  //for(VertexIteratorRight vi=mr.vert.begin(); vi!=mr.vert.end(); ++vi)
   {
-    if(!(*vi).IsD() && (!selected || (*vi).IsS()))
+    if(!v.IsD() && (!selected || v.IsS()))
     {
-      size_t ind=Index(mr,*vi);
+      size_t ind=Index(mr,v);
       remap.vert[ind]=int(Index(ml,*vp));
       ++vp;
     }
@@ -530,9 +531,10 @@ static void MeshAppendConst(
   if(selected) ep=Allocator<MeshLeft>::AddEdges(ml,sen);
           else ep=Allocator<MeshLeft>::AddEdges(ml,mr.en);
 
-  for(EdgeIteratorRight ei=mr.edge.begin(); ei!=mr.edge.end(); ++ei)
-    if(!(*ei).IsD() && (!selected || (*ei).IsS())){
-      size_t ind=Index(mr,*ei);
+  for (auto e : mr.edge)
+  //for(EdgeIteratorRight ei=mr.edge.begin(); ei!=mr.edge.end(); ++ei)
+    if(!e.IsD() && (!selected || e.IsS())){
+      size_t ind=Index(mr,e);
       remap.edge[ind]=int(Index(ml,*ep));
       ++ep;
     }
@@ -544,31 +546,34 @@ static void MeshAppendConst(
   if(selected) fp=Allocator<MeshLeft>::AddFaces(ml,sfn);
           else fp=Allocator<MeshLeft>::AddFaces(ml,mr.fn);
 
-  for(FaceIteratorRight fi=mr.face.begin(); fi!=mr.face.end(); ++fi)
-    if(!(*fi).IsD() && (!selected || (*fi).IsS())){
-      size_t ind=Index(mr,*fi);
+  for (auto f : mr.face)
+  //for(FaceIteratorRight fi=mr.face.begin(); fi!=mr.face.end(); ++fi)
+    if(!f.IsD() && (!selected || f.IsS())){
+      size_t ind=Index(mr,f);
       remap.face[ind]=int(Index(ml,*fp));
       ++fp;
     }
 
   // hedge
   remap.hedge.resize(mr.hedge.size(),Remap::InvalidIndex());
-  for(HEdgeIteratorRight hi=mr.hedge.begin(); hi!=mr.hedge.end(); ++hi)
-    if(!(*hi).IsD() && (!selected || (*hi).IsS())){
-      size_t ind=Index(mr,*hi);
+  for (auto he : mr.hedge)
+  //for(HEdgeIteratorRight hi=mr.hedge.begin(); hi!=mr.hedge.end(); ++hi)
+    if(!he.IsD() && (!selected || he.IsS())){
+      size_t ind=Index(mr,he);
       assert(remap.hedge[ind]==Remap::InvalidIndex());
       HEdgeIteratorLeft hp = Allocator<MeshLeft>::AddHEdges(ml,1);
-      (*hp).ImportData(*(hi));
+      (*hp).ImportData(he);
       remap.hedge[ind]=Index(ml,*hp);
     }
 
   remap.tetra.resize(mr.tetra.size(), Remap::InvalidIndex());
-  for (TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti)
-    if (!(*ti).IsD() && (!selected || (*ti).IsS())) {
-      size_t idx = Index(mr, *ti);
+  for (auto t : mr.tetra)
+  //for (TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti)
+    if (!t.IsD() && (!selected || t.IsS())) {
+      size_t idx = Index(mr, t);
       assert (remap.tetra[idx] == Remap::InvalidIndex());
       TetraIteratorLeft tp = Allocator<MeshLeft>::AddTetras(ml, 1);
-      (*tp).ImportData(*ti);
+      (*tp).ImportData(t);
       remap.tetra[idx] = Index(ml, *tp);
     }
 
@@ -576,64 +581,69 @@ static void MeshAppendConst(
   // copy data from mr to its corresponding elements in ml and adjacencies
 
   // vertex
-  for(VertexIteratorRight vi=mr.vert.begin();vi!=mr.vert.end();++vi)
-    if( !(*vi).IsD() && (!selected || (*vi).IsS())){
-      ml.vert[remap.vert[Index(mr,*vi)]].ImportData(*vi);
-      if(adjFlag) ImportVertexAdj(ml,mr,ml.vert[remap.vert[Index(mr,*vi)]],*vi,remap);
+  for (auto v: mr.vert)
+  //for(VertexIteratorRight vi=mr.vert.begin();vi!=mr.vert.end();++vi)
+    if( !v.IsD() && (!selected || v.IsS())){
+      ml.vert[remap.vert[Index(mr,v)]].ImportData(v);
+      if(adjFlag) ImportVertexAdj(ml,mr,ml.vert[remap.vert[Index(mr,v)]],v,remap);
     }
 
   // edge
-  for(EdgeIteratorRight ei=mr.edge.begin();ei!=mr.edge.end();++ei)
-    if(!(*ei).IsD() && (!selected || (*ei).IsS())){
-      ml.edge[remap.edge[Index(mr,*ei)]].ImportData(*ei);
+  for (auto e: mr.edge)
+  //for(EdgeIteratorRight ei=mr.edge.begin();ei!=mr.edge.end();++ei)
+    if(!e.IsD() && (!selected || e.IsS())){
+      ml.edge[remap.edge[Index(mr,e)]].ImportData(e);
       // Edge to Vertex  Adj
-      EdgeLeft &el = ml.edge[remap.edge[Index(mr,*ei)]];
+      EdgeLeft &el = ml.edge[remap.edge[Index(mr,e)]];
       if(HasEVAdjacency(ml) && HasEVAdjacency(mr)){
-        el.V(0) = &ml.vert[remap.vert[Index(mr,ei->cV(0))]];
-        el.V(1) = &ml.vert[remap.vert[Index(mr,ei->cV(1))]];
+        el.V(0) = &ml.vert[remap.vert[Index(mr,e.cV(0))]];
+        el.V(1) = &ml.vert[remap.vert[Index(mr,e.cV(1))]];
       }
-      if(adjFlag) ImportEdgeAdj(ml,mr,el,*ei,remap);
+      if(adjFlag) ImportEdgeAdj(ml,mr,el,e,remap);
     }
 
   // face
   const size_t textureOffset =  ml.textures.size();
   bool WTFlag = HasPerWedgeTexCoord(mr) && (textureOffset>0);
-  for(FaceIteratorRight fi=mr.face.begin();fi!=mr.face.end();++fi)
-    if(!(*fi).IsD() && (!selected || (*fi).IsS()))
+  for (auto f: mr.face)
+  //for(FaceIteratorRight fi=mr.face.begin();fi!=mr.face.end();++fi)
+    if(!f.IsD() && (!selected || f.IsS()))
     {
-      FaceLeft &fl = ml.face[remap.face[Index(mr,*fi)]];
-      fl.Alloc(fi->VN());
+      FaceLeft &fl = ml.face[remap.face[Index(mr,f)]];
+      fl.Alloc(f.VN());
       if(HasFVAdjacency(ml) && HasFVAdjacency(mr)){
         for(int i = 0; i < fl.VN(); ++i)
-          fl.V(i) = &ml.vert[remap.vert[Index(mr,fi->cV(i))]];
+          fl.V(i) = &ml.vert[remap.vert[Index(mr,f.cV(i))]];
       }
-      fl.ImportData(*fi);
+      fl.ImportData(f);
       if(WTFlag)
         for(int i = 0; i < fl.VN(); ++i)
           fl.WT(i).n() += short(textureOffset);
-      if(adjFlag)  ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,*fi)]],*fi,remap);
+      if(adjFlag)  ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,f)]],f,remap);
 
     }
 
   // hedge
-  for(HEdgeIteratorRight hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
-    if(!(*hi).IsD() && (!selected || (*hi).IsS())){
-      ml.hedge[remap.hedge[Index(mr,*hi)]].ImportData(*hi);
-      ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,*hi)]],*hi,remap,selected);
+  for (auto he : mr.hedge)
+  //for(HEdgeIteratorRight hi=mr.hedge.begin();hi!=mr.hedge.end();++hi)
+    if(!he.IsD() && (!selected || he.IsS())){
+      ml.hedge[remap.hedge[Index(mr,he)]].ImportData(he);
+      ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,he)]],he,remap,selected);
     }
 
   //tetra
-  for(TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti)
-    if(!(*ti).IsD() && (!selected || (*ti).IsS()))
+  for (auto t: mr.tetra)
+  //for(TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti)
+    if(!t.IsD() && (!selected || t.IsS()))
     {
-      TetraLeft &tl = ml.tetra[remap.tetra[Index(mr,*ti)]];
+      TetraLeft &tl = ml.tetra[remap.tetra[Index(mr,t)]];
 
       if(HasFVAdjacency(ml) && HasFVAdjacency(mr)){
         for(int i = 0; i < 4; ++i)
-          tl.V(i) = &ml.vert[remap.vert[Index(mr,ti->cV(i))]];
+          tl.V(i) = &ml.vert[remap.vert[Index(mr,t.cV(i))]];
       }
-        tl.ImportData(*ti);
-      if(adjFlag)  ImportTetraAdj(ml, mr, ml.tetra[remap.tetra[Index(mr,*ti)]], *ti, remap);
+        tl.ImportData(t);
+      if(adjFlag)  ImportTetraAdj(ml, mr, ml.tetra[remap.tetra[Index(mr,t)]], t, remap);
 
     }
 
@@ -659,9 +669,12 @@ static void MeshAppendConst(
 				ar =    mr.vert_attr.find(*al);
 				if(ar!= mr.vert_attr.end()){
 					id_r = 0;
-					for(VertexIteratorRight vi=mr.vert.begin();vi!=mr.vert.end();++vi,++id_r)
-						if( !(*vi).IsD() && (!selected || (*vi).IsS()))
-							(*al)._handle->CopyValue(remap.vert[Index(mr,*vi)], id_r, (*ar)._handle);
+					for (auto v: mr.vert){
+					//for(VertexIteratorRight vi=mr.vert.begin();vi!=mr.vert.end();++vi,++id_r)
+						if( !v.IsD() && (!selected || v.IsS()))
+							(*al)._handle->CopyValue(remap.vert[Index(mr,v)], id_r, (*ar)._handle);
+						++id_r;
+					}
 				}
 			}
 
@@ -671,9 +684,12 @@ static void MeshAppendConst(
 				ar =    mr.edge_attr.find(*al);
 				if(ar!= mr.edge_attr.end()){
 					id_r = 0;
-					for(EdgeIteratorRight ei=mr.edge.begin();ei!=mr.edge.end();++ei,++id_r)
-						if( !(*ei).IsD() && (!selected || (*ei).IsS()))
-							(*al)._handle->CopyValue(remap.edge[Index(mr,*ei)], id_r, (*ar)._handle);
+					for (auto e: mr.edge){
+					//for(EdgeIteratorRight ei=mr.edge.begin();ei!=mr.edge.end();++ei,++id_r)
+						if( !e.IsD() && (!selected || e.IsS()))
+							(*al)._handle->CopyValue(remap.edge[Index(mr,e)], id_r, (*ar)._handle);
+						++id_r;
+					}
 				}
 			}
 
@@ -683,9 +699,12 @@ static void MeshAppendConst(
 				ar =    mr.face_attr.find(*al);
 				if(ar!= mr.face_attr.end()){
 					id_r = 0;
-					for(FaceIteratorRight fi=mr.face.begin();fi!=mr.face.end();++fi,++id_r)
-						if( !(*fi).IsD() && (!selected || (*fi).IsS()))
-							(*al)._handle->CopyValue(remap.face[Index(mr,*fi)], id_r, (*ar)._handle);
+					for (auto f: mr.face) {
+					//for(FaceIteratorRight fi=mr.face.begin();fi!=mr.face.end();++fi,++id_r)
+						if( !f.IsD() && (!selected || f.IsS()))
+							(*al)._handle->CopyValue(remap.face[Index(mr,f)], id_r, (*ar)._handle);
+						++id_r;
+					}
 				}
 			}
 
@@ -695,9 +714,12 @@ static void MeshAppendConst(
 				ar =    mr.tetra_attr.find(*al);
 				if(ar!= mr.tetra_attr.end()){
 					id_r = 0;
-					for(TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti, ++id_r)
-						if( !(*ti).IsD() && (!selected || (*ti).IsS()))
-							(*al)._handle->CopyValue(remap.tetra[Index(mr, *ti)], id_r, (*ar)._handle);
+					for (auto t: mr.tetra) {
+					//for(TetraIteratorRight ti = mr.tetra.begin(); ti != mr.tetra.end(); ++ti, ++id_r)
+						if( !t.IsD() && (!selected || t.IsS()))
+							(*al)._handle->CopyValue(remap.tetra[Index(mr, t)], id_r, (*ar)._handle);
+						++id_r;
+					}
 				}
 			}
 				// per mesh attributes
