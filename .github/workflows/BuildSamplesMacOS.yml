@@ -1,0 +1,18 @@
+name: BuildSamplesMacOS
+
+on:
+  [push, pull_request]
+
+jobs:
+  macos_build_tests:
+    name: Build Samples (MacOS)
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2
+    - name: Build Samples
+      run: |
+        qmake apps/sample/sample.pro
+        make -j4

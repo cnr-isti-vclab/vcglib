@@ -1,0 +1,18 @@
+name: BuildSamplesUbuntu
+
+on:
+  [push, pull_request]
+
+jobs:
+  ubuntu_build_tests:
+    name: Build Samples (Ubuntu)
+    runs-on: ubuntu-latest #in order to deploy, need to use oldest supported version
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2
+    - name: Build Samples
+      run: |
+        qmake apps/sample/sample.pro
+        make -j4
