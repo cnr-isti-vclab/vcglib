@@ -183,6 +183,7 @@ typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
 typedef typename MeshType::EdgeIterator   EdgeIterator;
+typedef typename MeshType::EdgeType       EdgeType;
 typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
@@ -272,8 +273,9 @@ static void Clear(MeshType &m)
 static size_t FaceCount(const MeshType &m)
 {
   size_t selCnt=0;
-  for (auto f: m.face)
-      if(!f.IsD() && f.IsS()) ++selCnt;
+  ForEachFace(m, [&](const FaceType& f){
+    if(f.IsS()) ++selCnt;
+  });
   return selCnt;
 }
 
@@ -281,8 +283,9 @@ static size_t FaceCount(const MeshType &m)
 static size_t EdgeCount(const MeshType &m)
 {
   size_t selCnt=0;
-  for (auto e: m.edge)
-      if(!e.IsD() && e.IsS()) ++selCnt;
+  ForEachEdge(m, [&](const EdgeType& e){
+    if(e.IsS()) ++selCnt;
+  });
   return selCnt;
 }
 
@@ -290,8 +293,9 @@ static size_t EdgeCount(const MeshType &m)
 static size_t VertexCount(const MeshType &m)
 {
   size_t selCnt=0;
-  for (auto v: m.vert)
-      if(!v.IsD() && v.IsS()) ++selCnt;
+  ForEachVertex(m, [&](const VertexType& v){
+    if(v.IsS()) ++selCnt;
+  });
   return selCnt;
 }
 
@@ -299,9 +303,8 @@ static size_t VertexCount(const MeshType &m)
 static size_t TetraCount (const MeshType & m)
 {
   size_t selCnt = 0;
-  ForEachTetra(m, [&selCnt] (const TetraType & t) {
-    if (t.IsS()) 
-      ++selCnt;
+  ForEachTetra(m, [&] (const TetraType & t) {
+    if (t.IsS()) ++selCnt;
   });
 
   return selCnt;
