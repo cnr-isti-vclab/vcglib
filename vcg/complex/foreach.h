@@ -34,8 +34,8 @@ namespace tri {
 @{
 */
 
-template <class MeshType>
-inline void ForEachFacePos(const MeshType &m, std::function<void (const typename face::Pos<typename MeshType::FaceType>  &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachFacePos(const MeshType &m, Callable action)
 {
   typedef typename face::Pos<typename MeshType::FaceType> PosType;
 
@@ -50,8 +50,8 @@ inline void ForEachFacePos(const MeshType &m, std::function<void (const typename
         }
 }
 
-template <class MeshType>
-inline void ForEachFacePos(MeshType &m, std::function<void (typename face::Pos<typename MeshType::FaceType>  &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachFacePos(MeshType &m, Callable action)
 {
   typedef typename face::Pos<typename MeshType::FaceType> PosType;
   
@@ -76,8 +76,8 @@ inline void ForEachFacePos(MeshType &m, std::function<void (typename face::Pos<t
  *  
  */
 
-template <class MeshType>
-inline void ForEachFace(const MeshType &m, std::function<void (const typename MeshType::FaceType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachFace(const MeshType &m, Callable action)
 {
   if(m.fn == (int) m.face.size())
   {
@@ -95,8 +95,8 @@ inline void ForEachFace(const MeshType &m, std::function<void (const typename Me
   }
 }
 
-template <class MeshType>
-inline void ForEachFace(MeshType &m, std::function<void (typename MeshType::FaceType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachFace(MeshType &m, Callable action)
 {
   if(m.fn == (int) m.face.size())
   {
@@ -124,8 +124,8 @@ inline void ForEachFace(MeshType &m, std::function<void (typename MeshType::Face
  *  
  */
 
-template <class MeshType>
-inline void ForEachVertex(const MeshType &m, std::function<void (const typename MeshType::VertexType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachVertex(const MeshType &m, Callable action)
 {
   if(m.vn == (int) m.vert.size())
   {
@@ -143,8 +143,8 @@ inline void ForEachVertex(const MeshType &m, std::function<void (const typename 
   }
 }
 
-template <class MeshType>
-inline void ForEachVertex(MeshType &m, std::function<void (typename MeshType::VertexType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachVertex(MeshType &m, Callable action)
 {
   if(m.vn == (int) m.vert.size())
   {
@@ -172,8 +172,8 @@ inline void ForEachVertex(MeshType &m, std::function<void (typename MeshType::Ve
  *
  */
 
-template <class MeshType>
-inline void ForEachHEdge(const MeshType &m, std::function<void (const typename MeshType::HEdgeType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachHEdge(const MeshType &m, Callable action)
 {
   if(m.hn == (int) m.hedge.size())
   {
@@ -191,8 +191,8 @@ inline void ForEachHEdge(const MeshType &m, std::function<void (const typename M
   }
 }
 
-template <class MeshType>
-inline void ForEachHEdge(MeshType &m, std::function<void (typename MeshType::HEdgeType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachHEdge(MeshType &m, Callable action)
 {
   if(m.hn == (int) m.hedge.size())
   {
@@ -220,8 +220,8 @@ inline void ForEachHEdge(MeshType &m, std::function<void (typename MeshType::HEd
  *  
  */
 
-template <class MeshType>
-inline void ForEachEdge(const MeshType &m, std::function<void (const typename MeshType::EdgeType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachEdge(const MeshType &m, Callable action)
 {
   if(m.en == (int) m.edge.size())
   {
@@ -239,8 +239,8 @@ inline void ForEachEdge(const MeshType &m, std::function<void (const typename Me
   }
 }
 
-template <class MeshType>
-inline void ForEachEdge(MeshType &m, std::function<void (typename MeshType::EdgeType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachEdge(MeshType &m, Callable action)
 {
   if(m.en == (int) m.edge.size())
   {
@@ -268,8 +268,8 @@ inline void ForEachEdge(MeshType &m, std::function<void (typename MeshType::Edge
  *  
  */
 
-template <class MeshType>
-inline void ForEachTetra(const MeshType &m, std::function<void (const typename MeshType::TetraType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachTetra(const MeshType &m, Callable action)
 {
   if(m.tn == (int) m.tetra.size())
   {
@@ -287,8 +287,8 @@ inline void ForEachTetra(const MeshType &m, std::function<void (const typename M
   }
 }
 
-template <class MeshType>
-inline void ForEachTetra(MeshType &m, std::function<void (typename MeshType::TetraType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachTetra(MeshType &m, Callable action)
 {
   if(m.tn == (int) m.tetra.size())
   {
