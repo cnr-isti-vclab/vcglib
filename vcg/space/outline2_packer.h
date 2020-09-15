@@ -45,29 +45,29 @@ class PolyPacker
 
 public:
 
-  static Box2f getPolyBB(const std::vector<Point2x> &poly)
+  static Box2x getPolyBB(const std::vector<Point2x> &poly)
   {
-    Box2f bb;
+    Box2x bb;
     for(size_t i=0;i<poly.size();++i)
       bb.Add(poly[i]);
 
     return bb;
   }
 
-  static Box2f getPolyOOBB(const std::vector<Point2x> &poly, float &rot)
+  static Box2x getPolyOOBB(const std::vector<Point2x> &poly, float &rot)
   {
     const int stepNum=32;
     float bestAngle;
     float bestArea = std::numeric_limits<float>::max();
-    Box2f bestBB;
+    Box2x bestBB;
 
     for(int i=0;i<stepNum;++i)
     {
       float angle = float(i)*(M_PI/2.0)/float(stepNum);
-      Box2f bb;
+      Box2x bb;
       for(size_t j=0;j<poly.size();++j)
       {
-        Point2f pp=poly[j];
+        Point2x pp=poly[j];
         pp.Rotate(angle);
         bb.Add(pp);
       }
@@ -96,7 +96,7 @@ static  bool PackAsEqualSquares(const std::vector< std::vector<Point2x> > &polyV
 
   trVec.clear();
   trVec.resize(polyVec.size());
-  Box2f bbMax;
+  Box2x bbMax;
   std::vector<Box2x> bbVec;
   for(size_t i=0;i<polyVec.size();++i)
   {
@@ -137,7 +137,7 @@ static bool PackAsAxisAlignedRect(const std::vector< std::vector<Point2x> > &pol
     assert(polyVec[i].size()>0);
     bbVec.push_back(getPolyBB(polyVec[i]));
   }
-  return RectPacker<float>::Pack(bbVec,containerSizeX,trVec,coveredContainer);
+  return RectPacker<SCALAR_TYPE>::Pack(bbVec,containerSizeX,trVec,coveredContainer);
 }
 
 static bool PackAsObjectOrientedRect(const std::vector< std::vector<Point2x> > &polyVec,
@@ -148,7 +148,7 @@ static bool PackAsObjectOrientedRect(const std::vector< std::vector<Point2x> > &
   trVec.clear();
   trVec.resize(polyVec.size());
   std::vector<Box2x> bbVec;
-  std::vector<float> rotVec;
+  std::vector<SCALAR_TYPE> rotVec;
   for(size_t i=0;i<polyVec.size();++i)
   {
     float rot;
@@ -156,7 +156,7 @@ static bool PackAsObjectOrientedRect(const std::vector< std::vector<Point2x> > &
     rotVec.push_back(rot);
   }
 
-  bool ret= RectPacker<float>::Pack(bbVec,containerSizeX,trVec,coveredContainer);
+  bool ret= RectPacker<SCALAR_TYPE>::Pack(bbVec,containerSizeX,trVec,coveredContainer);
 
   for(size_t i=0;i<polyVec.size();++i)
   {
