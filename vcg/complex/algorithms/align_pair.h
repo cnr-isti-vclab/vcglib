@@ -49,12 +49,9 @@
 
 
 namespace vcg {
-/*************************************************************************
-								 AlignPair
-
-Classe per gestire un allineamento tra DUE sole mesh.
-
-**************************************************************************/
+/**
+Class for aligning pair of meshes using ICP (iterated closest point)
+*/
 
 class AlignPair {
 public:
@@ -77,7 +74,7 @@ public:
 		UNKNOWN_MODE };
 
 
-	/*********************** Classi Accessorie ****************************/
+	/*********************** Utility classes ****************************/
 
 	class A2Vertex;
 
@@ -138,14 +135,14 @@ public:
 			int DistanceDiscarded;
 			int AngleDiscarded;
 			int BorderDiscarded;
-			int SampleTested;  // quanti punti ho testato con la mindist
-			int SampleUsed;    // quanti punti ho scelto per la computematrix
+			int SampleTested;  // how many points have been tested 
+			int SampleUsed;    // how many points have been actually used to compute the transformation
 			double pcl50;
 			double pclhi;
 			double AVG;
 			double RMS;
 			double StdDev;
-			int Time;  // quando e' finita questa iterazione
+			int Time;  // Ending time of this iteration
 
 		};
 
@@ -205,7 +202,7 @@ public:
 							I[qi].SampleTested, I[qi].SampleUsed, I[qi].DistanceDiscarded, I[qi].BorderDiscarded, I[qi].AngleDiscarded);
 		}
 
-		// Scrive una tabella con tutti i valori
+		//! Write a HTML table with the values
 		inline void htmlDump(FILE *fp)
 		{
 			fprintf(fp, "Final Err %8.5f In %i iterations Total Time %ims\n", lastPcl50(), (int)I.size(), totTime());
@@ -249,64 +246,46 @@ public:
 
 		Param()
 		{
-			SampleNum    = 2000;
-			MaxPointNum  = 100000;
-			MinPointNum  = 30;
-
-			MaxIterNum   = 75;
-			TrgDistAbs   = 0.005f;
-
-			MinDistAbs   = 10;
-			MaxAngleRad  = math::ToRad(45.0);
-			MaxShear     = 0.5;
-			MaxScale     = 0.5; // significa che lo scale deve essere compreso tra 1-MaxScale e 1+MaxScale
-			PassHiFilter = 0.75;
-			ReduceFactorPerc = 0.80;
-			MinMinDistPerc = 0.01;
-			EndStepNum   = 5;
-			MatchMode    = MMRigid;
-			SampleMode   = SMNormalEqualized;
-			UGExpansionFactor=10;
-			MinFixVertNum=20000;
-			MinFixVertNumPerc=.25;
-			UseVertexOnly = false;
+			SampleNum         = 2000;
+			MaxPointNum       = 100000;
+			MinPointNum       = 30;
+			MaxIterNum        = 75;
+			TrgDistAbs        = 0.005f;
+			MinDistAbs        = 10;
+			MaxAngleRad       = math::ToRad(45.0);
+			MaxShear          = 0.5;
+			MaxScale          = 0.5; // means that the scale must be between 1-MaxScale and 1+MaxScale
+			PassHiFilter      = 0.75;
+			ReduceFactorPerc  = 0.80;
+			MinMinDistPerc    = 0.01;
+			EndStepNum        = 5;
+			MatchMode         = MMRigid;
+			SampleMode        = SMNormalEqualized;
+			UGExpansionFactor = 10;
 		}
 
-		int SampleNum;			// numero di sample da prendere sulla mesh fix, utilizzando
-		// il SampleMode scelto tra cui poi sceglierne al piu' <MaxPointNum>
-		// e almeno <MinPointNum> da usare per l'allineamento.
-		int MaxPointNum;		// numero di coppie di punti da usare quando si calcola la matrice
-		// di allienamento e che poi si mettono da parte per il globale;
-		// di solito non usato
-		int MinPointNum;		// minimo numero di coppie di punti ammissibile perche' sia considerato
-		// valido l'allineamento
-		double MinDistAbs;	// distanza minima iniziale perche due punti vengano presi in
-		// considerazione. NON e' piu espressa in percentuale sul bbox della mesh nella ug.
-		// Ad ogni passo puo essere ridotta per
-		// accellerare usando ReduceFactor
-		double MaxAngleRad;	// massimo angolo in radianti tra due normali perche' i due
-		// punti vengano presi in considerazione.
-
-		int MaxIterNum;			// massimo numero di iterazioni da fare in align
-		double TrgDistAbs;			// distanza obiettivo entro la quale devono stare almeno la meta'
-		// dei campioni scelti; di solito non entra in gioco perche' ha un default molto basso
-
-		int EndStepNum; // numero di iterazioni da considerare per decidere se icp ha converso.
-
-		//double PassLoFilter; // Filtraggio utilizzato per decidere quali punti scegliere tra quello trovati abbastanza
-		double PassHiFilter;   // vicini. Espresso in percentili. Di solito si scarta il quelli sopra il 75 e quelli sotto il 5
-		double ReduceFactorPerc; // At each step we discard the points farther than a given threshold. The threshold is iterativeley reduced;
-		// StartMinDist= min(StartMinDist, 5.0*H.Percentile(ap.ReduceFactorPerc))
+		int SampleNum;        //! The intial number of samples that are chosen on the fix mesh.
+		int MaxPointNum;      //! Maximum number off point used to compute the transforamtion matrix (rarely used)
+		int MinPointNum;      //! Minimal number of point that we have to find to consider the resulting alignment valid
+		double MinDistAbs;    //! Minimal distance for ICP points. Only points that are closer than this threshold are chosen. 
+		                      //! This threshold is iteratively lowered by the ReduceFactor parameter 
+		
+		double MaxAngleRad;	  //! Max angle (in radiant) for ICP points. Only points whose normal differ less than this threshold are considered
+		
+		int MaxIterNum;       //! Maximum number of iteration to be done during aligning
+		double TrgDistAbs;    //! Target distance (half of the samples should be below this distance to consider the icp reach convergence)
+		int EndStepNum;       //! max number of ICP iterations
+		  
+		double PassHiFilter;     //! Percentile filtering threshold. Usually we discard the farthest quartile of the matched points
+		double ReduceFactorPerc; //! At each step we discard the points farther than a given threshold. The threshold is iterativeley reduced;
+		                         //! StartMinDist= min(StartMinDist, 5.0*H.Percentile(ap.ReduceFactorPerc))
 
 
-		double MinMinDistPerc;	// Ratio between initial starting distance (MinDistAbs) and what can reach by the application of the ReduceFactor.
+		double MinMinDistPerc;	//! Ratio between initial starting distance (MinDistAbs) and what can reach by the application of the ReduceFactor.
 
-		int UGExpansionFactor; // Grandezza della UG per la mesh fix come rapporto del numero di facce della mesh fix
+		int UGExpansionFactor;  //! Size of the uniform grid as a ration of the fix mesh size
 
-		// Nel caso si usi qualche struttura multiresolution
-		int MinFixVertNum;			// Gli allineamenti si fanno mettendo nella ug come mesh fix una semplificata;
-		float MinFixVertNumPerc;  // si usa il max tra MinFixVertNum e OrigMeshSize*MinFixVertNumPerc
-		bool UseVertexOnly;       // if true all the Alignment pipeline ignores faces and works over point clouds.
+		bool UseVertexOnly;     //! if true all the Alignment pipeline ignores faces and works over point clouds.
 
 		double MaxShear;
 		double MaxScale;
@@ -316,14 +295,13 @@ public:
 
 	};
 
-	// Classe per memorizzare il risultato di un allineamento tra due mesh
-	// i punti si intendono nel sistema di riferimento iniziale delle due mesh.
-	//
-	// se le mesh hanno una trasformazione di base in ingresso,
-	// questa appare solo durante la A2Mesh::Import e poi e' per sempre dimenticata.
-	// Questi punti sono quindi nei sistemi di riferimento costruiti durante la Import
-	// la matrice Tr quella che
-	//
+  // Class to store the result of an alignment between two meshes
+  // the points are intended in the initial reference system of the two meshes.
+  //
+  // if the meshes have a basic transformation in input,
+  // this appears only during the A2Mesh::Import and then is forever forgotten.
+  // These points are therefore in the reference systems built during the Import
+  // the matrix Tr that which
 	// Tr*Pmov[i]== Pfix
 
 
@@ -334,10 +312,10 @@ public:
 		int FixName;
 
 		Matrix44d Tr;
-		std::vector<Point3d> Pfix;		// vertici corrispondenti su fix (rossi)
-		std::vector<Point3d> Nfix; 		// normali corrispondenti su fix (rossi)
-		std::vector<Point3d> Pmov;		// vertici scelti su mov (verdi) prima della trasformazione in ingresso (Original Point Target)
-		std::vector<Point3d> Nmov; 		// normali scelti su mov (verdi)
+		std::vector<Point3d> Pfix;  // Corresponding Points on the Fix Mesh (red)
+		std::vector<Point3d> Nfix;  // Corresponding Normals  on the Fix Mesh (red)
+		std::vector<Point3d> Pmov;  // Chosen Points on the Mov Mesh (green) before the transformation
+		std::vector<Point3d> Nmov;  // Chosen Normals on the Mov Mesh (green)
 		Histogramf H;
 		Stat as;
 		Param ap;
@@ -369,7 +347,7 @@ public:
 
 	};
 
-	/******************* Fine Classi Accessorie ************************/
+	/******************* End utility classes ************************/
 
 	static inline const char* errorMsg(ErrorCode code)
 	{
@@ -570,32 +548,32 @@ public:
 	}
 
 /*
-Minimo esempio di codice per l'uso della funzione di allineamento.
+Minimal example of code for using the align.
 
-AlignPair::A2Mesh Mov,Fix;										// le due mesh da allineare
-vector<AlignPair::A2Vertex> MovVert;					// i punti sulla mov da usare per l'allineamento
-Matrix44d In;	In.SetIdentity();               // la trasformazione iniziale che applicata a mov la porterebbe su fix.
+AlignPair::A2Mesh Mov,Fix;                   // The two meshes to be alligned. Mov will moved. 
+vector<AlignPair::A2Vertex> MovVert;         // Points chosen on Mov Mesh to compute the alignment
+Matrix44d In;	In.SetIdentity();            // Initial transformation to be applied to Mov mesh to bring it over the Fix mesh.
 
-AlignPair aa;                                 // l'oggetto principale.
+AlignPair aa;                                // The main align class
 AlignPair::Param ap;
 UGrid< AlignPair::A2Mesh::face_container > UG;
 
-Fix.LoadPly("FixMesh.ply");										// Standard ply loading
-Mov.LoadPly("MovMesh.ply");
-Fix.Init( Ident, false);											// Inizializzazione necessaria (normali per vert,
-Mov.Init( Ident, false);                      // info per distanza punto faccia ecc)
-
-AlignPair::InitFix(&Fix, ap, UG);             // la mesh fix viene messa nella ug.
-
-aa.ConvertVertex(Mov.vert,MovVert);           // si campiona la mesh Mov per trovare un po' di vertici.
+Fix.LoadPly("FixMesh.ply");                             // Standard ply loading
+Mov.LoadPly("MovMesh.ply");                        
+Fix.Init( Ident, false);                                // Basic init (computation of normals)
+Mov.Init( Ident, false);                                
+                                                   
+AlignPair::InitFix(&Fix, ap, UG);                       // Init UG for quick search
+                                                   
+aa.ConvertVertex(Mov.vert,MovVert);                     // Sample the Mov vertex in order to find good samples to be used. 
 aa.SampleMovVert(MovVert, ap.SampleNum, ap.SampleMode);
 
-aa.mov=&MovVert;                              // si assegnano i membri principali dell'oggetto align pair
-aa.fix=&Fix;
-aa.ap = ap;
+aa.mov=&MovVert;                                        // basic init of the align class with the chosen vert and the fix mesh
+aa.fix=&Fix;                                        
+aa.ap = ap;                                         
 
-aa.Align(In,UG,res);                          // si spera :)
-											  // il risultato sta nella matrice res.Tr;
+aa.Align(In,UG,res);                                    // Main ICP algorithm
+                                                        // the matrix containing the computed alignment is in res.Tr;
 
 res.as.Dump(stdout);
 */
@@ -629,7 +607,7 @@ in
 
 ************************************************************************************/
 
-	/*
+	/**
 	The Main ICP alignment Function:
 	It assumes that:
 	we have two meshes:
@@ -637,9 +615,6 @@ in
 	- Mov the mesh we 'move' e.g. the one for which we search the transforamtion.
 
 	requires normalize normals for vertices AND faces
-	Allinea due mesh;
-	Assume che:
-	la uniform grid sia gia' inizializzata con la mesh fix
 	*/
 	inline bool align(
 			A2Grid &u,
@@ -653,13 +628,13 @@ in
 			Histogramf &h,
 			Stat &as)
 	{
-		std::vector<char> beyondCntVec; // flag vector to set the movverts that we should not use
-		// every time that a vertex is at a distance beyound max dist, its counter is incremented;
-		// movverts that has been discarded more than MaxCntDist times will not be considered anymore
+		std::vector<char> beyondCntVec;  // flag vector to set the movverts that we should not use
+		                                 // every time that a vertex is at a distance beyound max dist, its counter is incremented;
+		                                 // movverts that has been discarded more than MaxCntDist times will not be considered anymore
 		const int maxBeyondCnt = 3;
 		std::vector< Point3d > movvert;
 		std::vector< Point3d > movnorm;
-		std::vector<Point3d> pmov; // vertices chosen after the transformation
+		std::vector<Point3d> pmov;       // vertices chosen after the transformation
 		status = SUCCESS;
 		int tt0 = clock();
 
@@ -704,7 +679,7 @@ in
 						Point3d closestPoint, closestNormal;
 						double maxd = startMinDist;
 						ii.SampleTested++;
-						if (u.Empty()) {// using the point cloud grid{
+						if (u.Empty()) {  // using the point cloud grid 
 							A2Mesh::VertexPointer vp = tri::GetClosestVertex(*fix, uv, movvert[i], maxd, error);
 							if (error >= startMinDist) {
 								ii.DistanceDiscarded++; ++beyondCntVec[i]; continue;
@@ -715,7 +690,7 @@ in
 							closestPoint = vp->P();
 							closestNormal = vp->N();
 						}
-						else {// using the standard faces and grid
+						else {			// using the standard faces and grid
 							A2Mesh::FacePointer f = vcg::tri::GetClosestFaceBase<vcg::AlignPair::A2Mesh, vcg::AlignPair::A2Grid >(*fix, u, movvert[i], maxd, error, closestPoint);
 							if (error >= startMinDist) {
 								ii.DistanceDiscarded++; ++beyondCntVec[i]; continue;
