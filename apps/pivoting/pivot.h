@@ -15,14 +15,13 @@ namespace tri {
 struct Hinge { 
       int v0, v1, v2;   //v0, v1 represent the Hinge, v2 the other vertex in the face
                         //this Hinge belongs to
-      int face;        //corresponding face
-      Point3f center;  //center of the sphere touching the face
-      int count;   //test delay touch Hinges.  
+      int face;         //corresponding face
+      Point3f center;   //center of the sphere touching the face
+      short count;      //test delay touch Hinges.  
       
       //the loops in the front are mantained as a double linked list
-      std::list<Hinge>::iterator next;            
-      std::list<Hinge>::iterator previous;
-    
+      std::list<Hinge>::iterator next,iterator previous;         
+  
       Hinge() {}
       Hinge(int _v0, int _v1, int _v2, int _face, Point3f &_center): 
                v0(_v0), v1(_v1), v2(_v2), 
@@ -37,8 +36,6 @@ class Pivot {
 //    typedef CMesh MESH;
     typedef GridStaticPtr<typename MESH::VertexType, typename MESH::ScalarType > StaticGrid;
     
-    
-
     float radius;  //default 1 (not meaningful
     float mindist; //minimum distance between points in the mesh (% of radius)   
     float crease;  // -0.5 
@@ -53,17 +50,16 @@ class Pivot {
        to the end of the list
        the new Hinges are inserted to the back (before dead_begin) */
        
-    std::list<Hinge> front;   
-    std::list<Hinge> deads;
+    std::list<Hinge> front,deads;
     std::vector<int> nb; //number of fronts a vertex is into,
                          //this is used for the Visited and Border flags
                          //but adding topology may not be needed anymode
-
-      
+     
     Pivot(MESH &_mesh, float _radius, float _mindist = 0.05, float _crease = -0.5): 
        mesh(_mesh), radius(_radius), mindist(_mindist), crease(_crease) {
     
-      //Compute bounding box. (this may be passed as a parameter?
+      //Compute bounding box.Whether this may be passed as a parameter?
+      int i1;
       for(int i = 0; i < mesh.vert.size(); i++)
         box.Add(mesh.vert[i].P());
      
@@ -73,12 +69,10 @@ class Pivot {
       grid.Set(mesh.vert.begin(), mesh.vert.end(), box);
       nb.clear();
       nb.resize(mesh.vert.size(), 0);
-      for(int i = 0; i < mesh.vert.size(); i++) 
-         mesh.vert[i].ClearFlags();
-      
+      for(i1 = 0; i1 < mesh.vert.size(); i1++) 
+         mesh.vert[i1].ClearFlags();
     }
-    
-    
+   
     /* select a vertex at random, a small group of nearby vertices and looks
        for a sphere that touches 3 and contains none.
        Use the center of the box to get a sphere inside (or outside) the model 
@@ -101,6 +95,7 @@ class Pivot {
       bool found = false;
       //find a triplet that does not contains any other point
       Point3f center;
+      int k,j,t;
       for(int i = 0; i < n; i++) {
         v0 = targets[i];
         CVertex &vv0 = mesh.vert[v0];
@@ -109,14 +104,14 @@ class Pivot {
         Point3f out = (p0 - box.Center());
         if(!outside) out = -out;
     
-        for(int k = i+1; k < n; k++) {
+        for(k = i+1; k < n; k++) {
           v1 = targets[k];            
           CVertex &vv1 = mesh.vert[v1];
           if(vv1.IsD() || vv1.IsB() || vv1.IsV()) continue;
           Point3f &p1 = mesh.vert[v1].P();            
           if((p1 - p0).Norm() < mindist*radius) continue;
     
-          for(int j = k+1; j < n; j++) {
+          for(j = k+1; j < n; j++) {
             v2 = targets[j];
             CVertex &vv2 = mesh.vert[v2];
             if(vv2.IsD() || vv2.IsB() || vv2.IsV()) continue;
@@ -130,7 +125,7 @@ class Pivot {
             
             bool failed = false;
             //check no other point inside
-            for(int t = 0; t < n; t++) {
+            for(t = 0; t < n; t++) {
               Point3f &p = mesh.vert[targets[t]].P();
               if((center - p).Norm() <= radius) {
                 failed = true;
@@ -148,16 +143,20 @@ class Pivot {
         return false;
       
       assert(!front.size());
-      //TODO: should i check the Hinges too?
+      //TODO: should i check the Hinges too?(maybe be useful, how the Hindge is represented and which check to code?)
+      //Hinge hn(v0, v1, v2, 0, center);
+      //hn.prev =?,,hn.next = ?
+      //to compute center from v0,v1,v2, if((hn.center.x == v0.x+v1.x+v2.x)/3)&&(hn.center.y == v0.y+v1.y+v2.y)/3)&&(hn.center.z == v0.z+v1.z+v2.z)/3)) //->okay;
+      
       addFace(v0, v1, v2);
       
       //create the border of the first face  
-      std::list<Hinge>::iterator e = front.end();
-      std::list<Hinge>::iterator last;
-      for(int i = 0; i < 3; i++) {
-        int v0 = (int)(mesh.face.back().V0(i));
-        int v1 = (int)(mesh.face.back().V1(i));    
-        int v2 = (int)(mesh.face.back().V2(i));    
+      std::list<Hinge>::iterator e = front.end(),last;
+      int v0,v1,v2;
+      for(short i = 0; i < 3; i++) {
+        v0 = (int)(mesh.face.back().V0(i));
+        v1 = (int)(mesh.face.back().V1(i));    
+        v2 = (int)(mesh.face.back().V2(i));    
         nb[v0] = 1;
         assert(!mesh.vert[v0].IsB());
         mesh.vert[v0].SetB();
@@ -166,7 +165,6 @@ class Pivot {
         e = front.insert(front.begin(), Hinge);
         if(i == 0) last = e;
         (*Hinge.previous).next = e;
-        
         cluster(v0);
       } 
     
@@ -185,7 +183,7 @@ class Pivot {
     int addFace() {
       //We try to seed again
       if(!mesh.face.size()) {
-        for(int i = 0; i < 100; i++) 
+        for(short i = 0; i < 100; i++) 
           if(seed()) return 1;
         return -1;
       }
@@ -208,14 +206,14 @@ class Pivot {
       Hinge &next = *e.next;  
       int v0 = e.v0, v1 = e.v1;
     
-      //last triangle missing. or it is the first?
+      //last triangle is missing or it is the first?
       if(0 &&next.next == e.previous) {  
     
         int v[3] = { previous.v0, next.v0, e.v0 };
         int c[3] = { 0, 0, 0 };
-            
-        for(int k = 0; k < 3; k++) {
-          int vert = v[k];
+        int vert;    
+        for(short k = 0; k < 3; k++) {
+          vert = v[k];
           nb[vert]--;
           if(nb[vert] == 0) {       
             mesh.vert[vert].SetV();
@@ -329,9 +327,7 @@ class Pivot {
                       /         V
                  ----v0 - - - > v1---------
                           e                         */           
-          std::list<Hinge>::iterator left = touch;
-          std::list<Hinge>::iterator right = (*touch).previous;      
-          std::list<Hinge>::iterator up = ei;
+          std::list<Hinge>::iterator left = touch,right = (*touch).previous,up = ei;
           
           if(v1 == (*right).v0 || v0 == (*left).v1) {
 //            cout << "Bad join.\n";
@@ -358,9 +354,6 @@ class Pivot {
           (*up).center = center;
           moveBack(ei);
         }                         
-    
-              
-      
       } else {
         assert(!mesh.vert[v2].IsB()); //fatal error! a new point is already a border?
     
@@ -392,26 +385,19 @@ class Pivot {
       return 1;
     }        
     
-
-    
     /* return new vertex and the center of the new sphere pivoting from Hinge
        if the vertex belongs to another Hinge, touch points to it. */
     bool pivot(Hinge &Hinge, int &candidate, Point3f &end_pivot, std::vector<int> &targets) {
-        Point3f v0 = mesh.vert[Hinge.v0].P();
-        Point3f v1 = mesh.vert[Hinge.v1].P();  
-        Point3f v2 = mesh.vert[Hinge.v2].P();  
+        Point3f v0 = mesh.vert[Hinge.v0].P(),v1 = mesh.vert[Hinge.v1].P(),v2 = mesh.vert[Hinge.v2].P();
+       
         /* TODO why using the face normals everything goes wrong? should be
            exactly the same................................................
            Check if the e.face is correct.
            Point3f &normal = mesh.face[Hinge.face].N();
         */
     
-        Point3f normal = ((v1 - v0)^(v2 - v0)).Normalize();
-        
-        Point3f middle = (v0 + v1)/2;    
-        Point3f start_pivot = Hinge.center - middle;          
-        Point3f axis = (v1 - v0);
-        
+        Point3f normal = ((v1 - v0)^(v2 - v0)).Normalize(),middle = (v0 + v1)/2,start_pivot = Hinge.center - middle,axis = (v1 - v0);   
+             
         float axis_len = axis.SquaredNorm();
         if(axis_len > 4*radius*radius) return false;
         axis.Normalize();
@@ -419,7 +405,6 @@ class Pivot {
         // r is the radius of the thorus of all possible spheres passing throug v0 and v1
         float r = sqrt(radius*radius - axis_len/4);
         
-    
         std::vector<float> dists;    
         getInSphere(middle, r + radius, targets, dists);
     
@@ -428,15 +413,13 @@ class Pivot {
         candidate = -1;
         float minangle = 0;
         Point3f center;  //to be computed for each sample
+        id targets;
         for(int i = 0; i < targets.size(); i++) {      
-          int id = targets[i];
-          
+          id = targets[i];
           if(id == Hinge.v0 || id == Hinge.v1 || id == Hinge.v2) continue;
-    
           if(mesh.vert[id].IsD()) {
             continue;      
           }
-    
     
           Point3f p = mesh.vert[id].P();
     
@@ -446,7 +429,6 @@ class Pivot {
             continue;               
           }
           
-    
           /* Find the sphere through v0, p, v1 (store center on end_pivot */
           if(!findSphere(v0, p, v1, center)) {
             continue;      
@@ -465,10 +447,9 @@ class Pivot {
           
           if(alpha > 2*M_PI - 0.8) {               
             // Angle between old center and new *point* 
-            //TODO is this really overshooting? shouldbe enough to alpha -= 2*M_PI
+            //TODO is this really overshooting? should be enough to alpha -= 2*M_PI
             Point3f proj = p - axis * (axis * p - axis * middle);
             float beta = angle(start_pivot, proj - middle, axis);
-          
             if(alpha > beta) alpha -= 2*M_PI; 
           }
           if(candidate == -1 || alpha < minangle) {        
@@ -492,12 +473,12 @@ class Pivot {
      std::list<Hinge>::iterator newHinge(Hinge e) {                  
        return front.insert(front.end(), e);
      }     
-     //move an Hinge among the dead ones
+     //move a Hinge among the dead ones
      void killHinge(std::list<Hinge>::iterator e) {
        deads.splice(deads.end(), front, e);
      }
 
-     //move an Hinge to the back of the queue
+     //move a Hinge to the back of the queue
      void moveBack(std::list<Hinge>::iterator e) {
        front.splice(front.end(), front, e);          
      }
@@ -507,13 +488,13 @@ class Pivot {
      }
     bool checkHinge(int v0, int v1) {
       int tot = 0;
-      //HACK to speed up things until i can use a seach structure
+      //HACK to speed up things until I can use a search structure
       int i = mesh.face.size() - 2*(front.size());
     //  i = 0;
       if(i < 0) i = 0;
       for(; i < mesh.face.size(); i++) { 
         CFace &f = mesh.face[i];
-        for(int k = 0; k < 3; k++) {
+        for(short k = 0; k < 3; k++) {
           if(v1== (int)f.V(k) && v0 == (int)f.V((k+1)%3)) ++tot;
           else if(v0 == (int)f.V(k) && v1 == (int)f.V((k+1)%3)) { //orientation non constistent
              return false;
@@ -532,11 +513,10 @@ class Pivot {
         std::vector<int> targets;
         std::vector<float> dists;    
         getInSphere(mesh.vert[v].P(), mindist*radius, targets, dists);
-        
+        int id;
         for(int i = 0; i < targets.size(); i++) {
-          int id = targets[i];
-          if(id == v) continue;
-    
+          id = targets[i];
+          if(id == v) continue;   
           CVertex &v = mesh.vert[id];
           if(v.IsD() || v.IsV() || v.IsB()) continue;
           v.SetD();
@@ -553,8 +533,7 @@ class Pivot {
     bool Pivot::glue(std::list<Hinge>::iterator a, std::list<Hinge>::iterator b) {
       if((*a).v0 != (*b).v1) return false; 
       
-      std::list<Hinge>::iterator previous = (*a).previous;
-      std::list<Hinge>::iterator next = (*b).next;
+      std::list<Hinge>::iterator previous = (*a).previous,next = (*b).next;
       (*previous).next = next;
       (*next).previous = previous;
       detach((*a).v1);
@@ -571,8 +550,7 @@ class Pivot {
         mesh.vert[v].ClearB();      
       }
     }
-
-          
+    
     /* compute angle from p to q, using axis for orientation */
     float angle(Point3f p, Point3f q, Point3f &axis) {
       p.Normalize();
@@ -617,7 +595,7 @@ class Pivot {
     }             
 
 
-    /* return all point in a given ball, notice as i want the index
+    /* return all point in a given ball, notice as I want the index
        of the vertices not the pointers... this may change in future */
     unsigned int getInSphere(vcg::Point3f &p, float distance, 
                              std::vector<int> &results,
@@ -633,11 +611,9 @@ class Pivot {
 
     
     /* returns the sphere touching p0, p1, p2 of radius r such that
-       the normal of the face points toward the center of the sphere */
+       the normal of the face points towards the center of the sphere */
     bool findSphere(Point3f &p0, Point3f &p1, Point3f &p2, Point3f &center) {
-      Point3f q1 = p1 - p0;
-      Point3f q2 = p2 - p0;  
-    
+      Point3f q1 = p1 - p0,q2 = p2 - p0;       
       Point3f up = q1^q2;
       float uplen = up.Norm();
     
@@ -645,14 +621,9 @@ class Pivot {
       if(uplen < 0.001*q1.Norm()*q2.Norm()) return false;
       up /= uplen;
       
-    
-      float a11 = q1*q1;
-      float a12 = q1*q2;
-      float a22 = q2*q2;
-    
-      float m = 4*(a11*a22 - a12*a12);
-      float l1 = 2*(a11*a22 - a22*a12)/m;
-      float l2 = 2*(a11*a22 - a12*a11)/m;
+      float a11 = q1*q1,a12 = q1*q2,a22 = q2*q2;
+      
+      float m = 4*(a11*a22 - a12*a12),l1 = 2*(a11*a22 - a22*a12)/m,l2 = 2*(a11*a22 - a12*a11)/m;
     
       center = q1*l1 + q2*l2;
       float circle_r = center.Norm();
@@ -700,8 +671,7 @@ class Pivot {
     
       return touch;
     }                              
-    
-    
+      
  public:
         
  };
@@ -710,7 +680,6 @@ class Pivot {
 }//namespace
 }//namespace
 /*  CODE FOR PIVOTING IN  A TOUCH SITUATION not used now.
-
     //if touch we want to check the ball could really pivot around that point
     if(touch != front.end() && touch != (*Hinge.next).next && touch != Hinge.previous) {
       Point3f &hinge = mesh.vert[min].P();      
@@ -720,9 +689,7 @@ class Pivot {
         return false;
       }
       
-      
-
-      if(d < 0.5) { //they are far enough so test .
+      if(d < 0.5) { //they are far enough so test.
         Point3f naxis = (target ^ start_pivot).Normalize();
         Point3f d1 = naxis^start_pivot;
         Point3f d2 = target^naxis;          
@@ -733,7 +700,6 @@ class Pivot {
           if(mesh.vert[id].IsD()) {
             continue;
           }
-
           Point3f intruder = mesh.vert[targets[i]].P() - hinge;
           float h = intruder*naxis;
           if(fabs(h) > radius) continue;
