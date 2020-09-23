@@ -25,7 +25,7 @@
 #define SMOOTHER_FIELD_H
 
 //eigen stuff
-#include <eigenlib/Eigen/Sparse>
+#include <Eigen/Sparse>
 
 //vcg stuff
 #include <vcg/complex/algorithms/update/color.h>
@@ -34,10 +34,14 @@
 #include <vcg/complex/algorithms/mesh_to_matrix.h>
 
 //igl related stuff
+
 #include <igl/n_polyvector.h>
 #include <igl/principal_curvature.h>
 #include <igl/igl_inline.h>
-#include <igl/comiso/nrosy.h>
+
+#ifdef COMISO_FIELD
+#include <igl/copyleft/comiso/nrosy.h>
+#endif
 
 namespace vcg {
 namespace tri {
@@ -228,7 +232,7 @@ class FieldSmoother
                           ScalarType alpha_soft,
                           int Ndir)
     {
-
+#ifdef COMISO_FIELD
         assert((Ndir==2)||(Ndir==4));
         Eigen::MatrixXi F;
         Eigen::MatrixXd V;
@@ -238,7 +242,7 @@ class FieldSmoother
         Eigen::MatrixXd output_field;
         Eigen::VectorXd output_sing;
 
-        igl::nrosy(V,F,HardI,HardD,SoftI,SoftW,SoftD,Ndir,alpha_soft,output_field,output_sing);
+        igl::copyleft::comiso::nrosy(V,F,HardI,HardD,SoftI,SoftW,SoftD,Ndir,alpha_soft,output_field,output_sing);
 
         //finally update the principal directions
         for (size_t i=0;i<mesh.face.size();i++)
@@ -258,6 +262,9 @@ class FieldSmoother
             mesh.face[i].PD1()=dir1*Norm1;
             mesh.face[i].PD2()=dir2*Norm2;
         }
+#else
+        assert(0);
+#endif
     }
 
     static void SmoothNPoly(MeshType &mesh,
@@ -341,11 +348,8 @@ public:
             Ndir=4;
             curvRing=2;
             alpha_curv=0.0;
-
             align_borders=false;
-
             SmoothM=SMMiq;
-
             sharp_thr=0.0;
             curv_thr=0.4;
         }
@@ -372,7 +376,7 @@ public:
             AddBorderConstraints(mesh);
 
         //aff final constraints
-        for (int i=0;i<SParam.AddConstr.size();i++)
+        for (size_t i=0;i<SParam.AddConstr.size();i++)
         {
             int indexF=SParam.AddConstr[i].first;
             CoordType dir=SParam.AddConstr[i].second;
@@ -391,7 +395,7 @@ public:
 
 
     static void InitByCurvature(MeshType & mesh,
-                                int Nring,
+                                unsigned Nring,
                                 bool UpdateFaces=true)
     {
 
@@ -402,7 +406,8 @@ public:
 
         Eigen::MatrixXd PD1,PD2,PV1,PV2;
         MeshToMatrix<MeshType>::GetTriMeshData(mesh,F,V);
-        igl::principal_curvature(V,F,PD1,PD2,PV1,PV2,Nring);
+
+        igl::principal_curvature(V,F,PD1,PD2,PV1,PV2,Nring,true);
 
         //then copy curvature per vertex
         for (size_t i=0;i<mesh.vert.size();i++)
@@ -487,13 +492,21 @@ public:
     {
         //for the moment only cross and line field
 
-        //initialize direction by curvature if needed
+//        //initialize direction by curvature if needed
         if ((SParam.alpha_curv>0)||
              (SParam.sharp_thr>0)||
              (SParam.curv_thr>0))
+        {
             InitByCurvature(mesh,SParam.curvRing);
+            SelectConstraints(mesh,SParam);
+        }
+        else
+        {
+            SelectConstraints(mesh,SParam);
+            vcg::tri::CrossField<MeshType>::PropagateFromSelF(mesh);
+        }
 
-        SelectConstraints(mesh,SParam);
+
         //then do the actual smooth
         SmoothDirections(mesh,SParam.Ndir,SParam.SmoothM,true,SParam.alpha_curv);
     }

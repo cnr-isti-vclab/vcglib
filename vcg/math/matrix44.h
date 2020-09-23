@@ -30,8 +30,8 @@
 #include <vcg/space/point4.h>
 #include <vector>
 #include <iostream>
-#include <eigenlib/Eigen/Core>
-#include <eigenlib/Eigen/LU>
+#include <Eigen/Core>
+#include <Eigen/LU>
 
 namespace vcg {
 
@@ -85,7 +85,7 @@ public:
     */
     Matrix44() {}
     ~Matrix44() {}
-    Matrix44(const Matrix44 &m);
+    //Matrix44(const Matrix44 &m);
     Matrix44(const T v[]);
 
     T &ElementAt(const int row, const int col);
@@ -192,7 +192,8 @@ public:
     template <class Q>
     static inline Matrix44 Construct( const Matrix44<Q> & b )
     {
-        Matrix44<T> tmp; tmp.FromMatrix(b);
+		Matrix44<T> tmp;
+		tmp.FromMatrix(b);
         return tmp;
     }
 
@@ -243,9 +244,9 @@ typedef Matrix44<double> Matrix44d;
 
 
 
-template <class T> Matrix44<T>::Matrix44(const Matrix44<T> &m) {
-    memcpy((T *)_a, (const T *)m._a, 16 * sizeof(T));
-}
+//template <class T> Matrix44<T>::Matrix44(const Matrix44<T> &m) {
+//    memcpy((T *)_a, (const T *)m._a, 16 * sizeof(T));
+//}
 
 template <class T> Matrix44<T>::Matrix44(const T v[]) {
     memcpy((T *)_a, v, 16 * sizeof(T));

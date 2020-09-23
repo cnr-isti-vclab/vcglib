@@ -171,7 +171,7 @@ int Outline2Dumper::getMaxMaskRadius(int x,int y,QImage &img)
 	int Max_radius=std::min(Max_radiusX,Max_radiusY);
 	int val=qGray(img.pixel(x,y));
 	///if is outside
-	assert(val!=255);
+	assert(val!=255); (void)val;
 
 	int curr_radius=1;
 	while (curr_radius<Max_radius)

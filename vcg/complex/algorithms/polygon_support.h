@@ -166,14 +166,23 @@ namespace tri {
     {
         vs.clear();
         fs.clear();
+        if(tfp->IsV()) return;
+        
+        // all faux edges return an empty vertex vector!
+        if(  tfp->IsF(0)  &&   tfp->IsF(1)  &&   tfp->IsF(2)) return;
+        // all NON faux edges just return triangle!
+        if((!tfp->IsF(0)) && (!tfp->IsF(1)) && (!tfp->IsF(2))) 
+        {
+          vs.push_back(tfp->V(0)); vs.push_back(tfp->V(1)); vs.push_back(tfp->V(2));
+          fs.push_back(tfp);
+          return;
+        }
+        
         // find a non faux edge
         int se = -1;
         for(int i=0; i<3; i++) if (!( tfp->IsF(i))) { se = i; break;}
-
-        // all faux edges return an empty vertex vector!
-        if(se==-1) return;
-        if(tfp->IsV()) return;
-
+        assert(se !=-1);
+      
         // initialize a pos on the first non faux edge
         face::Pos<typename TriMeshType::FaceType> start(tfp,se,tfp->V(se));
         face::Pos<typename TriMeshType::FaceType> p(start);

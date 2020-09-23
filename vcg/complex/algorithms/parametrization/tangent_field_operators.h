@@ -22,8 +22,7 @@
 ****************************************************************************/
 #include <vcg/math/histogram.h>
 #include <vcg/complex/algorithms/update/curvature.h>
-#include <vcg/complex/algorithms/update/flag.h>
-#include <algorithm>
+#include <wrap/io_trimesh/export.h>
 
 #ifndef VCG_TANGENT_FIELD_OPERATORS
 #define VCG_TANGENT_FIELD_OPERATORS
@@ -90,7 +89,7 @@ vcg::Point3<ScalarType> InterpolateNRosy3D(const std::vector<vcg::Point3<ScalarT
                                            const vcg::Point3<ScalarType> &TargetN)
 {
     typedef typename vcg::Point3<ScalarType> CoordType;
-    ///create a reference frame along TargetN
+    //create a reference frame along TargetN
     CoordType TargetZ=TargetN;
     TargetZ.Normalize();
     CoordType U=CoordType(1,0,0);
@@ -126,6 +125,13 @@ vcg::Point3<ScalarType> InterpolateNRosy3D(const std::vector<vcg::Point3<ScalarT
 
         ///trassform to the reference frame
         rotV=RotFrame*rotV;
+//        if (isnan(rotV.X())||isnan(rotV.Y()))
+//        {
+//            std::cout << "V[i] " << V[i].X() << " " << V[i].Y() << std::endl << std::flush;
+//            std::cout << "Norm[i] " << Norm[i].X() << " " << Norm[i].Y() << " " << Norm[i].Z()<< std::endl;
+//            std::cout << "TargetN " << TargetN.X() << " " << TargetN.Y() << " " << TargetN.Z()<< std::endl<< std::flush;
+//        }
+
         assert(!isnan(rotV.X()));
         assert(!isnan(rotV.Y()));
 
@@ -154,6 +160,8 @@ class CrossField
     typedef typename vcg::Triangle3<ScalarType> TriangleType;
 
 private:
+
+
 
     static void SubDivideDir(const CoordType &Edge0,
                              const CoordType &Edge1,
@@ -201,7 +209,7 @@ private:
 
         //push the first one
         SubDEdges.push_back(Edge0);
-        for (size_t i=1;i<Nsub;i++)
+        for (int i=1;i<Nsub;i++)
         {
             //find angle interval
             ScalarType B=StepAngle*(ScalarType)i;
@@ -221,9 +229,9 @@ private:
     }
 
     static void FindSubDir(vcg::Triangle3<ScalarType> T3,
-                             size_t Nvert,
-                             std::vector<CoordType> &SubDEdges,
-                             int Nsub)
+                           size_t Nvert,
+                           std::vector<CoordType> &SubDEdges,
+                           int Nsub)
     {
         CoordType P0=T3.P0(Nvert);
         CoordType P1=T3.P1(Nvert);
@@ -236,9 +244,9 @@ private:
     }
 
     static void SubdivideTris(vcg::Triangle3<ScalarType> T3,
-                             size_t Nvert,
-                             std::vector<vcg::Triangle3<ScalarType> > &SubTris,
-                             int Nsub)
+                              size_t Nvert,
+                              std::vector<vcg::Triangle3<ScalarType> > &SubTris,
+                              int Nsub)
     {
         std::vector<CoordType> SplittedPos;
         FindSubDir(T3,Nvert,SplittedPos,Nsub);
@@ -246,8 +254,8 @@ private:
         //then create the triangles
         for (size_t j=0;j<SplittedPos.size()-1;j++)
         {
-           TriangleType T(P0,SplittedPos[j+1],SplittedPos[j]);
-           SubTris.push_back(T);
+            TriangleType T(P0,SplittedPos[j+1],SplittedPos[j]);
+            SubTris.push_back(T);
         }
     }
 
@@ -330,20 +338,20 @@ private:
                 alpha=1-(ScalarType)(sub_int+MiddlePos)/(ScalarType)SubDivisionSize;
             }
             else
-            if (sub_int>MiddlePos)
-            {
-                IndexF0=interval;
-                IndexF1=(interval+1) % OriginalFace.size();
-                alpha=1-(sub_int-MiddlePos)/(ScalarType)SubDivisionSize;
-            }
-            else //sub_int==MiddlePos
-            {
-                IndexF0=interval;
-                IndexF1=(interval+1) % OriginalFace.size();
-                alpha=1;
-            }
-            assert((IndexF0>=0)&&(IndexF0<OriginalFace.size()));
-            assert((IndexF1>=0)&&(IndexF1<OriginalFace.size()));
+                if (sub_int>MiddlePos)
+                {
+                    IndexF0=interval;
+                    IndexF1=(interval+1) % OriginalFace.size();
+                    alpha=1-(sub_int-MiddlePos)/(ScalarType)SubDivisionSize;
+                }
+                else //sub_int==MiddlePos
+                {
+                    IndexF0=interval;
+                    IndexF1=(interval+1) % OriginalFace.size();
+                    alpha=1;
+                }
+            assert((IndexF0>=0)&&(IndexF0<(int)OriginalFace.size()));
+            assert((IndexF1>=0)&&(IndexF1<(int)OriginalFace.size()));
 
             FaceType* F0=OriginalFace[IndexF0];
             FaceType* F1=OriginalFace[IndexF1];
@@ -396,82 +404,82 @@ private:
                                const TriangleType &t0,
                                const TriangleType &t1,
                                CoordType &Interpolated,
-                               size_t &Face)
+                               int &Face)
     {
-       //find smallest edge
-       ScalarType smallestE=std::numeric_limits<ScalarType>::max();
-       for (int j=0;j<3;j++)
-       {
-          ScalarType L0=(t0.P0(j)-t0.P1(j)).Norm();
-          ScalarType L1=(t1.P0(j)-t1.P1(j)).Norm();
-          if (L0<smallestE) smallestE=L0;
-          if (L1<smallestE) smallestE=L1;
-       }
+        //find smallest edge
+        ScalarType smallestE=std::numeric_limits<ScalarType>::max();
+        for (int j=0;j<3;j++)
+        {
+            ScalarType L0=(t0.P0(j)-t0.P1(j)).Norm();
+            ScalarType L1=(t1.P0(j)-t1.P1(j)).Norm();
+            if (L0<smallestE) smallestE=L0;
+            if (L1<smallestE) smallestE=L1;
+        }
 
-       //safety check
-       assert(t0.P(0)==t1.P(0));
+        //safety check
+        assert(t0.P(0)==t1.P(0));
 
-       CoordType Origin=t0.P(0);
-       TriangleType T0Rot(CoordType(0,0,0),t0.P(1)-Origin,t0.P(2)-Origin);
-       TriangleType T1Rot(CoordType(0,0,0),t1.P(1)-Origin,t1.P(2)-Origin);
+        CoordType Origin=t0.P(0);
+        TriangleType T0Rot(CoordType(0,0,0),t0.P(1)-Origin,t0.P(2)-Origin);
+        TriangleType T1Rot(CoordType(0,0,0),t1.P(1)-Origin,t1.P(2)-Origin);
 
-       //then rotate normal of T0 to match with normal of T1
-       CoordType N0=vcg::Normal(T0Rot.cP(0),T0Rot.cP(1),T0Rot.P(2));
-       CoordType N1=vcg::Normal(T1Rot.cP(0),T1Rot.cP(1),T1Rot.cP(2));
-       N0.Normalize();
-       N1.Normalize();
-       vcg::Matrix33<ScalarType> rotation=vcg::RotationMatrix(N0,N1);
+        //then rotate normal of T0 to match with normal of T1
+        CoordType N0=vcg::Normal(T0Rot.cP(0),T0Rot.cP(1),T0Rot.P(2));
+        CoordType N1=vcg::Normal(T1Rot.cP(0),T1Rot.cP(1),T1Rot.cP(2));
+        N0.Normalize();
+        N1.Normalize();
+        vcg::Matrix33<ScalarType> rotation=vcg::RotationMatrix(N0,N1);
 
-       //transform the first triangle
-       T0Rot.P(1)=rotation*T0Rot.P(1);
-       T0Rot.P(2)=rotation*T0Rot.P(2);
+        //transform the first triangle
+        T0Rot.P(1)=rotation*T0Rot.P(1);
+        T0Rot.P(2)=rotation*T0Rot.P(2);
 
-       //also rotate the directions
-       CoordType Dir0Rot=rotation*Dir0;
-       CoordType Dir1Rot=Dir1;
-       CoordType Sep0Rot=rotation*Sep0;
-       CoordType Sep1Rot=Sep1;
+        //also rotate the directions
+        CoordType Dir0Rot=rotation*Dir0;
+        CoordType Dir1Rot=Dir1;
+        CoordType Sep0Rot=rotation*Sep0;
+        CoordType Sep1Rot=Sep1;
 
-       //find the interpolation angles
-       ScalarType Angle0=vcg::Angle(Dir0Rot,Sep0Rot);
-       ScalarType Angle1=vcg::Angle(Dir1Rot,Sep1Rot);
-       assert(Angle0>=0);
-       assert(Angle1>=0);
-       assert(Angle0<=(M_PI/2));
-       assert(Angle1<=(M_PI/2));
-       ScalarType alpha=0.5;//Angle0/(Angle0+Angle1);
+        //find the interpolation angles
+        ScalarType Angle0=vcg::Angle(Dir0Rot,Sep0Rot);
+        ScalarType Angle1=vcg::Angle(Dir1Rot,Sep1Rot);
+        assert(Angle0>=0);
+        assert(Angle1>=0);
+        assert(Angle0<=(M_PI/2));
+        assert(Angle1<=(M_PI/2));
+        ScalarType alpha=0.5;//Angle0/(Angle0+Angle1);
 
-       //then interpolate the direction
-       //CoordType Interp=Dir0Rot*(1-alpha)+Dir1Rot*alpha;
-       Interpolated=Sep0Rot*(1-alpha)+Sep1Rot*alpha;
-       Interpolated.Normalize();
-       Interpolated*=smallestE;
+        //then interpolate the direction
+        //CoordType Interp=Dir0Rot*(1-alpha)+Dir1Rot*alpha;
+        Interpolated=Sep0Rot*(1-alpha)+Sep1Rot*alpha;
+        Interpolated.Normalize();
+        Interpolated*=smallestE;
 
-       //then find the triangle which falls into
-       CoordType bary0,bary1;
-       bool Inside0=vcg::InterpolationParameters(T0Rot,Interpolated,bary0);
-       bool Inside1=vcg::InterpolationParameters(T1Rot,Interpolated,bary1);
-       assert(Inside0 || Inside1);
-//       if (!(Inside0 || Inside1))
-//       {
-//           std::cout << "Not Inside " << Interpolated.X() << "," << Interpolated.Y() << "," << Interpolated.Z() << std::endl;
-//           std::cout << "bary0 " << bary0.X() << "," << bary0.Y() << "," << bary0.Z() << std::endl;
-//           std::cout << "bary1 " << bary1.X() << "," << bary1.Y() << "," << bary1.Z() << std::endl;
-//           std::cout << "Diff0 " << fabs(bary0.Norm() - 1) << std::endl;
-//           std::cout << "Diff1 " << fabs(bary1.Norm() - 1) << std::endl;
-//       }
+        //then find the triangle which falls into
+        CoordType bary0,bary1;
+        bool Inside0=vcg::InterpolationParameters(T0Rot,Interpolated,bary0);
+        bool Inside1=vcg::InterpolationParameters(T1Rot,Interpolated,bary1);
+        assert(Inside0 || Inside1);
+        //       if (!(Inside0 || Inside1))
+        //       {
+        //           std::cout << "Not Inside " << Interpolated.X() << "," << Interpolated.Y() << "," << Interpolated.Z() << std::endl;
+        //           std::cout << "bary0 " << bary0.X() << "," << bary0.Y() << "," << bary0.Z() << std::endl;
+        //           std::cout << "bary1 " << bary1.X() << "," << bary1.Y() << "," << bary1.Z() << std::endl;
+        //           std::cout << "Diff0 " << fabs(bary0.Norm() - 1) << std::endl;
+        //           std::cout << "Diff1 " << fabs(bary1.Norm() - 1) << std::endl;
+        //       }
 
-       if (Inside0)
-       {
-           Interpolated=t0.P(0)*bary0.X()+t0.P(1)*bary0.Y()+t0.P(2)*bary0.Z();
-           Interpolated-=Origin;
-           Face=0;
-       }
-       else
-           Face=1;
+        if (Inside0)
+        {
+            Interpolated=t0.P(0)*bary0.X()+t0.P(1)*bary0.Y()+t0.P(2)*bary0.Z();
+            Interpolated-=Origin;
+            Face=0;
+        }
+        else
+            Face=1;
 
-       //otherwise is already in the tangent space of t0
-       Interpolated.Normalize();
+        //otherwise is already in the tangent space of t0
+        Interpolated.Normalize();
     }
 
     static void ReduceOneDirectionField(std::vector<CoordType> &directions,
@@ -513,7 +521,7 @@ private:
         directions.clear();
         faces.clear();
 
-        for (size_t i=0;i<SwapV.size();i++)
+        for (int i=0;i<(int)SwapV.size();i++)
         {
             if (i==IndexDel)continue;
             directions.push_back(SwapV[i]);
@@ -523,12 +531,125 @@ private:
 
 public:
 
+    static void InitBorderField(MeshType & mesh)
+    {
+        typedef typename MeshType::FaceType FaceType;
+//        typedef typename MeshType::VertexType VertexType;
+        typedef typename MeshType::CoordType CoordType;
+//        typedef typename MeshType::ScalarType ScalarType;
+
+        vcg::tri::UpdateTopology<MeshType>::FaceFace(mesh);
+        for (size_t i=0;i<mesh.face.size();i++)
+            for (int j=0;j<mesh.face[i].VN();j++)
+            {
+                FaceType *f0=&mesh.face[i];
+                FaceType *f1=f0->FFp(j);
+                assert(f1!=NULL);
+                if (f0!=f1)continue;
+
+                CoordType dir=f0->P0(j)-f0->P1(j);
+                dir.Normalize();
+                f0->PD1()=dir;
+                f0->PD2()=f0->N()^dir;
+            }
+    }
+
+    static void SmoothIterative(MeshType &mesh,int NDir=4,
+                                int NSteps=3,
+                                bool FixSelected=false,
+                                bool UseOnlyUnSelected=false)
+    {
+
+        typedef typename MeshType::FaceType FaceType;
+        //typedef typename MeshType::VertexType VertexType;
+        typedef typename MeshType::CoordType CoordType;
+        typedef typename MeshType::ScalarType ScalarType;
+
+        vcg::tri::UpdateTopology<MeshType>::FaceFace(mesh);
+
+        for (size_t s=0;s<NSteps;s++)
+        {
+            std::vector<CoordType> NewPD1(mesh.face.size(),CoordType(0,0,0));
+            for (size_t i=0;i<mesh.face.size();i++)
+            {
+                if ((FixSelected)&&(mesh.face[i].IsS()))continue;
+                std::vector<CoordType> TangVect;
+                std::vector<CoordType> Norms;
+                FaceType *f0=&mesh.face[i];
+                for (int j=0;j<f0->VN();j++)
+                {
+                    FaceType *f1=f0->FFp(j);
+                    if (FixSelected && UseOnlyUnSelected && f1->IsS())continue;
+                    assert(f1!=NULL);
+                    if (f0==f1)continue;
+                    TangVect.push_back(f1->PD1());
+                    Norms.push_back(f1->N());
+                }
+                assert(Norms.size()>0);
+                std::vector<ScalarType> Weights;
+                Weights.resize(Norms.size(),1/(ScalarType)Norms.size());
+                NewPD1[i]=InterpolateCrossField(TangVect,Weights,Norms,f0->N(),NDir);
+            }
+            for (size_t i=0;i<mesh.face.size();i++)
+            {
+                if ((FixSelected)&&(mesh.face[i].IsS()))continue;
+                assert(NewPD1[i]!=CoordType(0,0,0));
+                mesh.face[i].PD1()=NewPD1[i];
+                mesh.face[i].PD2()=mesh.face[i].N()^mesh.face[i].PD1();
+            }
+        }
+    }
+
+    static void PropagateFromSelF(MeshType &mesh)
+    {
+        vcg::tri::UpdateTopology<MeshType>::FaceFace(mesh);
+
+        //typedef typename std::pair<FaceType*,FaceType*> FacePair;
+        std::vector<int> queue;
+        std::vector<int> Sel0;
+        //initialize the queue
+        for (int i=0; i<(int)mesh.face.size(); i++)
+        {
+            FaceType *f=&(mesh.face[i]);
+            if (f->IsD())continue;
+            if (!f->IsS())continue;
+            queue.push_back(i);
+        }
+        Sel0=queue;
+        assert(queue.size()>0);
+        do
+        {
+            std::vector<int> new_queue;
+            for (int i=0; i<queue.size(); i++)
+            {
+                FaceType *f0=&(mesh.face[queue[i]]);
+                assert(!f0->IsD());
+                for (int i=0;i<f0->VN();i++)
+                {
+                    FaceType *f1=f0->FFp(i);
+                    if (f1==f0)continue;
+                    if (f1->IsS())continue;
+                    f1->PD1()=Rotate(*f0,*f1,f0->PD1());
+                    f1->PD2()=f1->PD1()^f1->N();
+                    f1->SetS();
+                    new_queue.push_back(vcg::tri::Index(mesh,f1));
+                }
+            }
+            queue=new_queue;
+        }while (queue.size()>0);
+
+        //restore selected flag
+        vcg::tri::UpdateFlags<MeshType>::FaceClearS(mesh);
+        for (int i=0; i<(int)Sel0.size(); i++)
+           mesh.face[Sel0[i]].SetS();
+    }
+
     static size_t FindSeparatrices(const typename vcg::face::Pos<FaceType> &vPos,
-                                std::vector<CoordType> &directions,
-                                std::vector<FaceType*> &faces,
-                                std::vector<TriangleType> &WrongTris,
-                                int expVal=-1,
-                                int numSub=3)
+                                   std::vector<CoordType> &directions,
+                                   std::vector<FaceType*> &faces,
+                                   std::vector<TriangleType> &WrongTris,
+                                   int expVal=-1,
+                                   int numSub=3)
     {
 
         directions.clear();
@@ -621,7 +742,7 @@ public:
 
 
             CoordType InterpDir;
-            size_t tri_Index=-1;
+            int tri_Index=-1;
             if ((versef0D1 * versef1D1) < ScalarType(0))
             {
                 InterpolateDir(Dir1F0,Dir1F1,Bary0,Bary1,t0,t1,InterpDir,tri_Index);
@@ -629,7 +750,7 @@ public:
             else
             {
                 if ((versef0D2 * versef1D2 )< ScalarType(0))
-                InterpolateDir(Dir2F0,Dir2F1,Bary0,Bary1,t0,t1,InterpDir,tri_Index);
+                    InterpolateDir(Dir2F0,Dir2F1,Bary0,Bary1,t0,t1,InterpDir,tri_Index);
             }
             //no separatrix found continue
             if (tri_Index==-1)continue;
@@ -638,7 +759,7 @@ public:
             assert((tri_Index==0)||(tri_Index==1));
             int OrigFIndex=((i+tri_Index)%SubFaces.size())/numSub;
             assert(OrigFIndex>=0);
-            assert(OrigFIndex<OriginalFaces.size());
+            assert(OrigFIndex<(int)OriginalFaces.size());
 
             FaceType* currF=OriginalFaces[OrigFIndex];
             //add the data
@@ -646,7 +767,7 @@ public:
             faces.push_back(currF);
         }
         if (expVal==-1)return directions.size();
-        if (directions.size()<=expVal)return directions.size();
+        if ((int)directions.size()<=expVal)return directions.size();
 
         size_t sampledDir=directions.size();
         int to_erase=directions.size()-expVal;
@@ -702,7 +823,7 @@ public:
         CoordType dirS=CrossVector(f0,dir0);
         CoordType dirR=vcg::tri::CrossField<MeshType>::Rotate(f0,f1,dirS);
         ///then get the closest upf to K*PI/2 rotations
-        CoordType dir1=f1.cPD1();
+        //CoordType dir1=f1.cPD1();
         //int ret=I_K_PI(dir1,dirR,f1.cN());
         CoordType dir[4];
         CrossVector(f1,dir);
@@ -717,6 +838,7 @@ public:
                 ret=i;
             }
         }
+
         assert(ret!=-1);
 
         return ret;
@@ -743,9 +865,6 @@ public:
     ///by the cross field (where Z=0)
     static vcg::Matrix33<ScalarType> TransformationMatrix(const FaceType &f)
     {
-        typedef typename FaceType::CoordType CoordType;
-        typedef typename FaceType::ScalarType ScalarType;
-
         ///transform to 3d
         CoordType axis0=f.cPD1();
         CoordType axis1=f.cPD2();//axis0^f.cN();
@@ -847,22 +966,22 @@ public:
                                    const ScalarType &alpha2,
                                    int RefEdge=1)
     {
-          CoordType axis0=f.cP1(RefEdge)-f.cP0(RefEdge);
-          axis0.Normalize();
-          CoordType axis2=f.cN();
-          axis2.Normalize();
-          CoordType axis1=axis2^axis0;
-          axis1.Normalize();
+        CoordType axis0=f.cP1(RefEdge)-f.cP0(RefEdge);
+        axis0.Normalize();
+        CoordType axis2=f.cN();
+        axis2.Normalize();
+        CoordType axis1=axis2^axis0;
+        axis1.Normalize();
 
-          vcg::Matrix33<ScalarType> Trans=vcg::TransformationMatrix(axis0,axis1,axis2);
-          vcg::Matrix33<ScalarType> InvTrans=Inverse(Trans);
+        vcg::Matrix33<ScalarType> Trans=vcg::TransformationMatrix(axis0,axis1,axis2);
+        vcg::Matrix33<ScalarType> InvTrans=Inverse(Trans);
 
-          CoordType PD1=CoordType(cos(alpha1),sin(alpha1),0);
-          CoordType PD2=CoordType(cos(alpha2),sin(alpha2),0);
+        CoordType PD1=CoordType(cos(alpha1),sin(alpha1),0);
+        CoordType PD2=CoordType(cos(alpha2),sin(alpha2),0);
 
-          //then transform and store in the face
-          f.PD1()=(InvTrans*PD1);
-          f.PD2()=(InvTrans*PD2);
+        //then transform and store in the face
+        f.PD1()=(InvTrans*PD1);
+        f.PD2()=(InvTrans*PD2);
     }
 
     ///return the 4 directiona of the cross field in 3D
@@ -941,8 +1060,8 @@ public:
         const CoordType &t1=f.V(1)->PD1();
         const CoordType &t2=f.V(2)->PD1();
         const CoordType &N0=f.V(0)->N();
-        const CoordType &N1=f.V(0)->N();
-        const CoordType &N2=f.V(0)->N();
+        const CoordType &N1=f.V(1)->N();
+        const CoordType &N2=f.V(2)->N();
         const CoordType &NF=f.N();
         const CoordType bary=CoordType(0.33333,0.33333,0.33333);
         CoordType tF0,tF1;
@@ -953,22 +1072,24 @@ public:
         SetCrossVector(f,tF0,tF1);
 
         //then set the magnitudo
-        ScalarType mag1,mag2;
+        ScalarType mag1=0;
+        ScalarType mag2=0;
+
         for (int i=0;i<3;i++)
         {
-           vcg::Matrix33<ScalarType> rotN=vcg::RotationMatrix(f.V(i)->N(),f.N());
-           CoordType rotatedDir=rotN*f.V(i)->PD1();
+            vcg::Matrix33<ScalarType> rotN=vcg::RotationMatrix(f.V(i)->N(),f.N());
+            CoordType rotatedDir=rotN*f.V(i)->PD1();
 
-           if (fabs(rotatedDir*tF0)>fabs(rotatedDir*tF1))
-           {
-               mag1+=fabs(f.V(i)->K1());
-               mag2+=fabs(f.V(i)->K2());
-           }
-           else
-           {
-               mag1+=fabs(f.V(i)->K2());
-               mag2+=fabs(f.V(i)->K1());
-           }
+            if (fabs(rotatedDir*tF0)>fabs(rotatedDir*tF1))
+            {
+                mag1+=(f.V(i)->K1());
+                mag2+=(f.V(i)->K2());
+            }
+            else
+            {
+                mag1+=(f.V(i)->K2());
+                mag2+=(f.V(i)->K1());
+            }
         }
 
         f.K1()=mag1/(ScalarType)3;
@@ -986,7 +1107,7 @@ public:
         }
     }
 
-    ///set the face cross vector from vertex one
+    ///set the vert cross vector from the faces
     static void SetVertCrossVectorFromFace(VertexType &v)
     {
         std::vector<FaceType *> faceVec;
@@ -1097,10 +1218,11 @@ public:
     static  CoordType InterpolateCrossField(const std::vector<CoordType> &TangVect,
                                             const std::vector<ScalarType> &Weight,
                                             const std::vector<CoordType> &Norms,
-                                            const CoordType &BaseNorm)
+                                            const CoordType &BaseNorm,
+                                            int NDir=4)
     {
 
-        CoordType sum=InterpolateNRosy3D(TangVect,Norms,Weight,4,BaseNorm);
+        CoordType sum=InterpolateNRosy3D(TangVect,Norms,Weight,NDir,BaseNorm);
         return sum;
     }
 
@@ -1138,7 +1260,7 @@ public:
     ///return the difference of two cross field, values between [0,1]
     static typename FaceType::ScalarType DifferenceLineField(const typename FaceType::CoordType &t0,
                                                              const typename FaceType::CoordType &t1,
-                                                             const typename FaceType::CoordType &n)
+                                                             const typename FaceType::CoordType &/*n*/)
     {
         CoordType trans0=t0;
         CoordType trans1=t1;
@@ -1156,23 +1278,23 @@ public:
         CoordType t03D=CoordType(t0.X(),t0.Y(),0);
         CoordType t13D=CoordType(t1.X(),t1.Y(),0);
         CoordType Norm=CoordType(0,0,1);
-//        CoordType n=CoordType(0,0,1);
-//        CoordType trans1=K_PI(t13D,t03D,n);
-//        ScalarType diff=vcg::AngleN(trans0,trans1)/(M_PI_4);
+        //        CoordType n=CoordType(0,0,1);
+        //        CoordType trans1=K_PI(t13D,t03D,n);
+        //        ScalarType diff=vcg::AngleN(trans0,trans1)/(M_PI_4);
         //ScalarType diff = 1-fabs(trans0*trans1);
         return DifferenceCrossField(t03D,t13D,Norm);
     }
 
     ///return the difference of two cross field, values between [0,1]
     static typename FaceType::ScalarType DifferenceLineField(const typename vcg::Point2<ScalarType> &t0,
-                                                              const typename vcg::Point2<ScalarType> &t1)
+                                                             const typename vcg::Point2<ScalarType> &t1)
     {
         CoordType t03D=CoordType(t0.X(),t0.Y(),0);
         CoordType t13D=CoordType(t1.X(),t1.Y(),0);
         CoordType Norm=CoordType(0,0,1);
-//        CoordType n=CoordType(0,0,1);
-//        CoordType trans1=K_PI(t13D,t03D,n);
-//        ScalarType diff=vcg::AngleN(trans0,trans1)/(M_PI_4);
+        //        CoordType n=CoordType(0,0,1);
+        //        CoordType trans1=K_PI(t13D,t03D,n);
+        //        ScalarType diff=vcg::AngleN(trans0,trans1)/(M_PI_4);
         //ScalarType diff = 1-fabs(trans0*trans1);
         return DifferenceLineField(t03D,t13D,Norm);
     }
@@ -1273,7 +1395,13 @@ public:
         for (size_t i=0;i<mesh.vert.size();i++)
         {
             if (mesh.vert[i].IsD())continue;
-            //if (mesh.vert[i].IsB())continue;
+
+            if (mesh.vert[i].IsB())
+            {
+                Handle_Singular[i]=false;
+                Handle_SingularIndex[i]=0;
+                continue;
+            }
 
             int missmatch;
             if (IsSingularByCross(mesh.vert[i],missmatch))
@@ -1289,6 +1417,13 @@ public:
         }
     }
 
+    static bool IsSingular(MeshType &mesh,const VertexType &v)
+    {
+        assert(vcg::tri::HasPerVertexAttribute(mesh,std::string("Singular")));
+        typename MeshType::template PerVertexAttributeHandle<bool> Handle_Singular;
+        Handle_Singular = vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<bool>(mesh,std::string("Singular"));
+        return (Handle_Singular[v]);
+    }
 
     static void GradientToCross(const FaceType &f,
                                 const vcg::Point2<ScalarType> &UV0,
@@ -1316,8 +1451,8 @@ public:
         dirU=PosT0*Bary0.X()+PosT1*Bary0.Y()+PosT2*Bary0.Z();
         dirV=PosT0*Bary1.X()+PosT1*Bary1.Y()+PosT2*Bary1.Z();
 
-//        dirU-=Origin3D;
-//        dirV-=Origin3D;
+        //        dirU-=Origin3D;
+        //        dirV-=Origin3D;
         dirU.Normalize();
         dirV.Normalize();
         //orient coherently
@@ -1325,36 +1460,36 @@ public:
         CoordType NTarget=vcg::Normal(f.cP(0),f.cP(1),f.cP(2));
         if ((Ntest*NTarget)<0)dirV=-dirV;
 
-//        //then make them orthogonal
-//        CoordType dirAvg=dirU^dirV;
+        //        //then make them orthogonal
+        //        CoordType dirAvg=dirU^dirV;
         CoordType dirVTarget=NTarget^dirU;
         CoordType dirUTarget=NTarget^dirV;
 
-         dirUTarget.Normalize();
-         dirVTarget.Normalize();
-         if ((dirUTarget*dirU)<0)dirUTarget=-dirUTarget;
-         if ((dirVTarget*dirV)<0)dirVTarget=-dirVTarget;
+        dirUTarget.Normalize();
+        dirVTarget.Normalize();
+        if ((dirUTarget*dirU)<0)dirUTarget=-dirUTarget;
+        if ((dirVTarget*dirV)<0)dirVTarget=-dirVTarget;
 
-         dirU=(dirU+dirUTarget)/2;
-         dirV=(dirV+dirVTarget)/2;
+        dirU=(dirU+dirUTarget)/2;
+        dirV=(dirV+dirVTarget)/2;
 
-         dirU.Normalize();
-         dirV.Normalize();
+        dirU.Normalize();
+        dirV.Normalize();
 
-//        ///compute non normalized normal
-//        CoordType n  =  f.cN();
+        //        ///compute non normalized normal
+        //        CoordType n  =  f.cN();
 
-//        CoordType p0 =f.cP(1) - f.cP(0);
-//        CoordType p1 =f.cP(2) - f.cP(1);
-//        CoordType p2 =f.cP(0) - f.cP(2);
+        //        CoordType p0 =f.cP(1) - f.cP(0);
+        //        CoordType p1 =f.cP(2) - f.cP(1);
+        //        CoordType p2 =f.cP(0) - f.cP(2);
 
-//        CoordType t[3];
-//        t[0] =  -(p0 ^ n);
-//        t[1] =  -(p1 ^ n);
-//        t[2] =  -(p2 ^ n);
+        //        CoordType t[3];
+        //        t[0] =  -(p0 ^ n);
+        //        t[1] =  -(p1 ^ n);
+        //        t[2] =  -(p2 ^ n);
 
-//        dirU = t[1]*UV0.X() + t[2]*UV1.X() + t[0]*UV2.X();
-//        dirV = t[1]*UV0.Y() + t[2]*UV1.Y() + t[0]*UV2.Y();
+        //        dirU = t[1]*UV0.X() + t[2]*UV1.X() + t[0]*UV2.X();
+        //        dirV = t[1]*UV0.Y() + t[2]*UV1.Y() + t[0]*UV2.Y();
     }
 
     static void MakeDirectionFaceCoherent(FaceType *f0,
@@ -1504,16 +1639,41 @@ public:
     {
         for (size_t i=0;i<mesh.face.size();i++)
         {
-            vcg::Point2<ScalarType> UV0=mesh.face[i].WT(0).P();
-            vcg::Point2<ScalarType> UV1=mesh.face[i].WT(1).P();
-            vcg::Point2<ScalarType> UV2=mesh.face[i].WT(2).P();
-            GradientToCross(mesh.face[i],UV0,UV1,UV2,
-                            CoordType::Construct(mesh.face[i].PD1()),
-                            CoordType::Construct(mesh.face[i].PD2()) );
+            vcg::Point2<ScalarType> UV0 = vcg::Point2<ScalarType>::Construct(mesh.face[i].WT(0).P());
+            vcg::Point2<ScalarType> UV1 = vcg::Point2<ScalarType>::Construct(mesh.face[i].WT(1).P());
+            vcg::Point2<ScalarType> UV2 = vcg::Point2<ScalarType>::Construct(mesh.face[i].WT(2).P());
+            CoordType uDir = CoordType::Construct(mesh.face[i].PD1());
+            CoordType vDir = CoordType::Construct(mesh.face[i].PD2());
+            GradientToCross(mesh.face[i],UV0,UV1,UV2, uDir, vDir);
         }
         OrientDirectionFaceCoherently(mesh);
     }
 
+    static size_t expectedValence(MeshType &mesh,
+                                  const VertexType &v) {
+
+        // query if an attribute is present or not
+        assert(vcg::tri::HasPerVertexAttribute(mesh,std::string("Singular")));
+        assert(vcg::tri::HasPerVertexAttribute(mesh,std::string("SingularIndex")));
+        typename MeshType::template PerVertexAttributeHandle<bool> Handle_Singular;
+        Handle_Singular = vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<bool>(mesh,std::string("Singular"));
+        typename MeshType::template PerVertexAttributeHandle<int> Handle_SingularIndex;
+        Handle_SingularIndex = vcg::tri::Allocator<MeshType>::template GetPerVertexAttribute<int>(mesh,std::string("SingularIndex"));
+        if (!Handle_Singular[v])
+            return 4;
+        switch (Handle_SingularIndex[v]) {
+        case 1:
+            return 5;
+        case 2:
+            return 6;
+        case 3:
+            return 3;
+        case 4:
+            return 2;
+        default:
+            return 4;
+        }
+    }
 };///end class
 } //End Namespace Tri
 } // End Namespace vcg

@@ -24,13 +24,12 @@
 #define __VCG_MESH_RESAMPLER
 
 #include <vcg/complex/algorithms/update/normal.h>
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/update/component_ep.h>
 #include <vcg/complex/algorithms/create/marching_cubes.h>
-#include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/complex/algorithms/closest.h>
-#include <vcg/space/box3.h>
+//#include <vcg/space/index/grid_static_ptr.h>
+//#include <vcg/complex/algorithms/closest.h>
+#include <vcg/space/index/kdtree/kdtree_face.h>
 
 namespace vcg {
 namespace tri {
@@ -65,13 +64,15 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
   {
   private:
     typedef int VertexIndex;
-    typedef typename vcg::GridStaticPtr<OldFaceType, OldScalarType> GridType;
+    //typedef typename vcg::GridStaticPtr<OldFaceType, OldScalarType> GridType;
+    typedef vcg::KdTreeFace<OldMeshType> GridType;
 
   protected:
 
     int SliceSize;
     int	CurrentSlice;
-    typedef tri::FaceTmark<OldMeshType> MarkerFace;
+    //typedef tri::FaceTmark<OldMeshType> MarkerFace;
+    typedef vcg::tri::EmptyTMark<OldMeshType> MarkerFace;
     MarkerFace markerFunctor;
 
     VertexIndex *_x_cs; // indici dell'intersezioni della superficie lungo gli Xedge della fetta corrente
@@ -161,6 +162,7 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
       OldCoordType closestPt;
       DISTFUNCTOR PDistFunct;
       OldFaceType *f = _g.GetClosest(PDistFunct,markerFunctor,testPt,max_dist,dist,closestPt);
+                 
       if (f==NULL) return field_value(false,0);
       if(AbsDistFlag) return field_value(true,dist);
       assert(!f->IsD());
@@ -232,6 +234,7 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
     /// the distance of the bb
     void ComputeSliceValues(int slice,field_value *slice_values)
     {
+#pragma omp parallel for schedule(dynamic, 10)
       for (int i=0; i<=this->siz.X(); i++)
       {
         for (int k=0; k<=this->siz.Z(); k++)

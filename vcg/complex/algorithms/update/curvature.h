@@ -25,14 +25,12 @@
 #define VCGLIB_UPDATE_CURVATURE_
 
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/simplex/face/topology.h>
-#include <vcg/simplex/face/pos.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/point_sampling.h>
 #include <vcg/complex/algorithms/intersection.h>
 #include <vcg/complex/algorithms/inertia.h>
-#include <eigenlib/Eigen/Core>
+#include <Eigen/Core>
 
 namespace vcg {
 namespace tri {
@@ -402,6 +400,7 @@ For further details, please, refer to: \n
 static void MeanAndGaussian(MeshType & m)
 {
   tri::RequireFFAdjacency(m);
+  tri::RequirePerVertexCurvature(m);
 
   float area0, area1, area2, angle0, angle1, angle2;
   FaceIterator fi;
@@ -542,6 +541,7 @@ static void MeanAndGaussian(MeshType & m)
         while (!vfi.End()) {
             if (!vfi.F()->IsD()) {
                 FacePointer f = vfi.F();
+                CoordType nf = TriangleNormal(*f);
                 int i = vfi.I();
                 VertexPointer v0 = f->V0(i), v1 = f->V1(i), v2 = f->V2(i);
 
@@ -566,8 +566,8 @@ static void MeanAndGaussian(MeshType & m)
                 v->Kg() -= ang0;
 
                 // mean curvature update
-                ang1 = math::Abs(Angle(f->N(), v1->N()));
-                ang2 = math::Abs(Angle(f->N(), v2->N()));
+                ang1 = math::Abs(Angle(nf, v1->N()));
+                ang2 = math::Abs(Angle(nf, v2->N()));
                 v->Kh() += ( (math::Sqrt(s01) / 2.0) * ang1 +
                              (math::Sqrt(s02) / 2.0) * ang2 );
             }
@@ -614,7 +614,6 @@ static void MeanAndGaussian(MeshType & m)
     static void PrincipalDirectionsNormalCycle(MeshType & m){
       tri::RequireVFAdjacency(m);
       tri::RequireFFAdjacency(m);
-      tri::RequirePerFaceNormal(m);
 
         typename MeshType::VertexIterator vi;
 
@@ -631,8 +630,8 @@ static void MeanAndGaussian(MeshType & m)
                     Point3<ScalarType> normalized_edge = p.F()->V(p.F()->Next(p.VInd()))->cP() - (*vi).P();
                     ScalarType edge_length = normalized_edge.Norm();
                     normalized_edge/=edge_length;
-                    Point3<ScalarType> n1 = p.F()->cN();n1.Normalize();
-                    Point3<ScalarType> n2 = p.FFlip()->cN();n2.Normalize();
+                    Point3<ScalarType> n1 = NormalizedTriangleNormal(*(p.F()));
+                    Point3<ScalarType> n2 = NormalizedTriangleNormal(*(p.FFlip()));
                     ScalarType n1n2 = (n1 ^ n2).dot(normalized_edge);
                     n1n2 = std::max(std::min( ScalarType(1.0),n1n2),ScalarType(-1.0));
                     ScalarType beta = math::Asin(n1n2);

@@ -37,7 +37,6 @@ struct MyUsedTypes: public UsedTypes<Use<MyVertex>::AsVertexType,Use<MyEdge>::As
 class MyVertex  : public Vertex< MyUsedTypes,
     vertex::VFAdj,
     vertex::Coord3f,
-    vertex::Normal3f,
     vertex::Mark,
     vertex::Qualityf,
     vertex::BitFlags  >{
@@ -81,14 +80,16 @@ void Usage()
           "Where opt can be:\n"\
           "     -e# QuadricError threshold  (range [0,inf) default inf)\n"
           "     -b# Boundary Weight (default .5)\n"
+          "     -p# Quality quadric Weight (default .5)\n"
           "     -q# Quality threshold (range [0.0, 0.866],  default .3 )\n"
           "     -n# Normal threshold  (degree range [0,180] default 90)\n"
           "     -w# Quality weight factor  (10)\n"
           "     -E# Minimal admitted quadric value (default 1e-15, must be >0)\n"
           "     -Q[y|n]  Use or not Face Quality Threshold (default yes)\n"
-          "     -P[y|n]  Add or not QualityQuadric (default no)\n"
+          "     -H[y|n]  Use or not HardQualityCheck (default no)\n"
           "     -N[y|n]  Use or not Face Normal Threshold (default no)\n"
-          "     -A[y|n]  Use or not Area Weighted Quadrics (default yes)\n"
+          "     -P[y|n]  Add or not QualityQuadric (default no)\n"
+          "     -A[y|n]  Use or not Area Checking (default no)\n"
           "     -O[y|n]  Use or not vertex optimal placement (default yes)\n"
           "     -S[y|n]  Use or not Scale Independent quadric measure(default yes) \n"
           "     -B[y|n]  Preserve or not mesh boundary (default no)\n"
@@ -116,7 +117,7 @@ int main(int argc ,char**argv)
 
   TriEdgeCollapseQuadricParameter qparams;
   qparams.QualityThr  =.3;
-  float TargetError=std::numeric_limits<float>::max();
+  double TargetError=std::numeric_limits<double >::max();
   bool CleaningFlag =false;
      // parse command line.
     for(int i=4; i < argc;)
@@ -124,36 +125,41 @@ int main(int argc ,char**argv)
       if(argv[i][0]=='-')
         switch(argv[i][1])
       {
-        case 'Q' : if(argv[i][2]=='y') { qparams.QualityCheck	= true;  printf("Using Quality Checking\n");	}
-                                  else { qparams.QualityCheck	= false; printf("NOT Using Quality Checking\n");	}                break;
-        case 'N' : if(argv[i][2]=='y') { qparams.NormalCheck	= true;  printf("Using Normal Deviation Checking\n");	}
-                                  else { qparams.NormalCheck	= false; printf("NOT Using Normal Deviation Checking\n");	}        break;
-        case 'O' : if(argv[i][2]=='y') { qparams.OptimalPlacement	= true;  printf("Using OptimalPlacement\n");	}
-                                  else { qparams.OptimalPlacement	= false; printf("NOT Using OptimalPlacement\n");	}        break;
-        case 'S' : if(argv[i][2]=='y') { qparams.ScaleIndependent	= true;  printf("Using ScaleIndependent\n");	}
-                                  else { qparams.ScaleIndependent	= false; printf("NOT Using ScaleIndependent\n");	}        break;
-        case 'B' : if(argv[i][2]=='y') { qparams.PreserveBoundary	= true;  printf("Preserving Boundary\n");	}
-                                  else { qparams.PreserveBoundary	= false; printf("NOT Preserving Boundary\n");	}        break;
-        case 'T' : if(argv[i][2]=='y') { qparams.PreserveTopology	= true;  printf("Preserving Topology\n");	}
-                                  else { qparams.PreserveTopology	= false; printf("NOT Preserving Topology\n");	}        break;
-        case 'P' : if(argv[i][2]=='y') { qparams.QualityQuadric 	= true;  printf("Adding Quality Quadrics\n");	}
-                                  else { qparams.QualityQuadric 	= false; printf("NOT Adding Quality Quadrics\n");	}        break;
-        case 'W' : if(argv[i][2]=='y') { qparams.QualityWeight 	= true;  printf("Using per vertex Quality as Weight\n");	}
-                                  else { qparams.QualityWeight 	= false; printf("NOT Using per vertex Quality as Weight\n");	}        break;
-        case 'w' :	qparams.QualityWeightFactor	= atof(argv[i]+2);	           printf("Setting Quality Weight factor to %f\n",atof(argv[i]+2)); 	 break;
-        case 'q' :	qparams.QualityThr	= atof(argv[i]+2);	           printf("Setting Quality Thr to %f\n",atof(argv[i]+2)); 	 break;
-        case 'n' :	qparams.NormalThrRad = math::ToRad(atof(argv[i]+2));  printf("Setting Normal Thr to %f deg\n",atof(argv[i]+2)); break;
-        case 'b' :	qparams.BoundaryWeight  = atof(argv[i]+2);			printf("Setting Boundary Weight to %f\n",atof(argv[i]+2)); break;
-        case 'e' :	TargetError = float(atof(argv[i]+2));			printf("Setting TargetError to %g\n",atof(argv[i]+2)); break;
-        case 'C' :	CleaningFlag=true;  printf("Cleaning mesh before simplification\n"); break;
+        case 'Q' : if(argv[i][2]=='y') { qparams.QualityCheck     = true;  printf("Using Quality Checking\n"); }
+                                  else { qparams.QualityCheck     = false; printf("NOT Using Quality Checking\n"); }          break;
+        case 'H' : if(argv[i][2]=='y') { qparams.HardQualityCheck = true;  printf("Using HardQualityCheck Checking\n");	}
+                                  else { qparams.HardQualityCheck = false; printf("NOT Using HardQualityCheck Checking\n");	}  break;
+        case 'N' : if(argv[i][2]=='y') { qparams.NormalCheck      = true;  printf("Using Normal Deviation Checking\n");	}
+                                  else { qparams.NormalCheck      = false; printf("NOT Using Normal Deviation Checking\n");	}  break;
+        case 'A' : if(argv[i][2]=='y') { qparams.AreaCheck        = true;  printf("Using Area Checking\n");	}
+                                  else { qparams.AreaCheck        = false; printf("NOT Using Area Checking\n");	}              break;          
+        case 'O' : if(argv[i][2]=='y') { qparams.OptimalPlacement = true;  printf("Using OptimalPlacement\n"); }
+                                  else { qparams.OptimalPlacement = false; printf("NOT Using OptimalPlacement\n");}            break;
+        case 'S' : if(argv[i][2]=='y') { qparams.ScaleIndependent = true;  printf("Using ScaleIndependent\n"); }
+                                  else { qparams.ScaleIndependent = false; printf("NOT Using ScaleIndependent\n");	}          break;
+        case 'B' : if(argv[i][2]=='y') { qparams.PreserveBoundary = true;  printf("Preserving Boundary\n");	}
+                                  else { qparams.PreserveBoundary = false; printf("NOT Preserving Boundary\n");	}              break;
+        case 'T' : if(argv[i][2]=='y') { qparams.PreserveTopology = true;  printf("Preserving Topology\n");	}
+                                  else { qparams.PreserveTopology = false; printf("NOT Preserving Topology\n");	}              break;
+        case 'P' : if(argv[i][2]=='y') { qparams.QualityQuadric   = true;  printf("Adding Quality Quadrics\n");	}
+                                  else { qparams.QualityQuadric   = false; printf("NOT Adding Quality Quadrics\n");	}          break;
+        case 'W' : if(argv[i][2]=='y') { qparams.QualityWeight    = true;  printf("Using per vertex Quality as Weight\n");	}
+                                  else { qparams.QualityWeight    = false; printf("NOT Using per vertex Quality as Weight\n");	}        break;
+        case 'p' : qparams.QualityQuadricWeight   = atof(argv[i]+2);       printf("Setting QualityQuadricWeight factor to %f\n",atof(argv[i]+2)); 	 break;
+        case 'w' : qparams.QualityWeightFactor	   = atof(argv[i]+2);      printf("Setting Quality Weight factor to %f\n",atof(argv[i]+2)); 	 break;
+        case 'q' : qparams.QualityThr             = atof(argv[i]+2);       printf("Setting Quality Thr to %f\n",atof(argv[i]+2)); 	 break;
+        case 'h' : qparams.HardQualityThr         = atof(argv[i]+2);       printf("Setting HardQuality Thr to %f\n",atof(argv[i]+2)); 	 break;
+        case 'n' : qparams.NormalThrRad    = math::ToRad(atof(argv[i]+2)); printf("Setting Normal Thr to %f deg\n",atof(argv[i]+2)); break;
+        case 'b' : qparams.BoundaryQuadricWeight  = atof(argv[i]+2);       printf("Setting Boundary Weight to %f\n",atof(argv[i]+2)); break;
+        case 'E' : qparams.QuadricEpsilon         = atof(argv[i]+2);       printf("Setting QuadricEpsilon to %f\n",atof(argv[i]+2)); break;
+        case 'e' : TargetError                    = atof(argv[i]+2);       printf("Setting TargetError to %g\n",atof(argv[i]+2)); break;
+        case 'C' : CleaningFlag=true;  printf("Cleaning mesh before simplification\n"); break;
 
         default  :  printf("Unknown option '%s'\n", argv[i]);
           exit(0);
       }
       i++;
     }
-
-
 
   if(CleaningFlag){
       int dup = tri::Clean<MyMesh>::RemoveDuplicateVertex(mesh);
@@ -176,15 +182,15 @@ int main(int argc ,char**argv)
 
   DeciSession.SetTargetSimplices(FinalSize);
   DeciSession.SetTimeBudget(0.5f);
+  DeciSession.SetTargetOperations(100000);
   if(TargetError< std::numeric_limits<float>::max() ) DeciSession.SetTargetMetric(TargetError);
 
   while(DeciSession.DoOptimization() && mesh.fn>FinalSize && DeciSession.currMetric < TargetError)
-    printf("Current Mesh size %7i heap sz %9i err %9g \r",mesh.fn, int(DeciSession.h.size()),DeciSession.currMetric);
+    printf("Current Mesh size %7i heap sz %9i err %9g \n",mesh.fn, int(DeciSession.h.size()),DeciSession.currMetric);
 
   int t3=clock();
   printf("mesh  %d %d Error %g \n",mesh.vn,mesh.fn,DeciSession.currMetric);
   printf("\nCompleted in (%5.3f+%5.3f) sec\n",float(t2-t1)/CLOCKS_PER_SEC,float(t3-t2)/CLOCKS_PER_SEC);
-
   vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh,argv[2]);
     return 0;
 

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <QTime>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -21,7 +20,7 @@
 int num_test = 1000;
 int kNearest = 256;
 float queryDist = 0.0037;
-float ratio = 1000.0f;
+float bboxratio = 1000.0f;
 
 
 class CVertex;
@@ -34,6 +33,10 @@ class CFace			: public vcg::Face < CUsedTypes, vcg::face::VertexRef>{};
 
 class CMesh			: public vcg::tri::TriMesh < std::vector< CVertex >, std::vector< CFace > > {};
 
+int elapsed(int t)
+{
+  return ((clock()-t)*1000.0)/CLOCKS_PER_SEC;
+}
 
 template <typename T>
 struct PointCloud
@@ -72,21 +75,19 @@ void testKDTree(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::vecto
 {
     std::cout << "==================================================="<< std::endl;
     std::cout << "KDTree" << std::endl;
-    QTime time;
-    time.start();
-
+    int t0=clock();
     // Construction of the kdTree
     vcg::ConstDataWrapper<CMesh::VertexType::CoordType> wrapperVcg(&mesh.vert[0].P(), mesh.vert.size(), size_t(mesh.vert[1].P().V()) - size_t(mesh.vert[0].P().V()));
     vcg::KdTree<CMesh::ScalarType> kdTreeVcg(wrapperVcg);
-    std::cout << "Build: " << time.elapsed() <<  " ms" << std::endl;
+    std::cout << "Build: " << elapsed(t0) <<  " ms" << std::endl;
     int nn=1;
     // Computation of the point radius
     float mAveragePointSpacing = 0;
-    time.restart();
+    t0=clock();
     #pragma omp parallel for reduction(+: mAveragePointSpacing) schedule(dynamic, 10)
     for (int i = 0; i < mesh.vert.size(); i++)
     {
-#ifdef #ifdef _OPENMP
+#ifdef _OPENMP
       nn =omp_get_num_threads();
 #endif
         vcg::KdTree<CMesh::ScalarType>::PriorityQueue queue;
@@ -98,7 +99,7 @@ void testKDTree(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::vecto
     std::cout << "Num trhread " << nn << std::endl;
     mAveragePointSpacing /= mesh.vert.size();
     std::cout << "Average point radius (OpenMP with" << nn << " threads) " << mAveragePointSpacing << std::endl;
-    std::cout << "Time (OpenMP): " << time.elapsed() << " ms" << std::endl;
+    std::cout << "Time (OpenMP): " << elapsed(t0) << " ms" << std::endl;
 
     queryDist = mAveragePointSpacing * 150;
 
@@ -107,11 +108,11 @@ void testKDTree(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::vecto
     float avgTime = 0.0f;
     for (int ii = 0; ii < num_test; ii++)
     {
-        time.restart();
+        int t0=clock();
         std::vector<unsigned int> indeces;
         std::vector<float> dists;
         kdTreeVcg.doQueryDist(mesh.vert[test_indeces[ii]].cP(), queryDist, indeces, dists);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time (radius = " << queryDist << "): " << avgTime << " ms (mean " << avgTime / num_test << "ms)"  << std::endl;
 
@@ -120,10 +121,10 @@ void testKDTree(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::vecto
     avgTime = 0.0f;
     for (int ii = 0; ii < num_test * 10; ii++)
     {
-        time.restart();
+      int t0=clock();
         vcg::KdTree<CMesh::ScalarType>::PriorityQueue queue;
         kdTreeVcg.doQueryK(mesh.vert[test_indeces[ii]].cP(), kNearest, queue);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time (k = " << kNearest << "): " << avgTime << " ms (mean " << avgTime / (num_test * 10) << "ms)"  << std::endl;
 
@@ -132,11 +133,11 @@ void testKDTree(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::vecto
     avgTime = 0.0f;
     for (int ii = 0; ii < num_test * 10; ii++)
     {
-        time.restart();
+      int t0=clock();
         unsigned int index;
         float minDist;
         kdTreeVcg.doQueryClosest(randomSamples[ii], index, minDist);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time : " << avgTime << " ms (mean " << avgTime / (num_test * 10) << "ms)"  << std::endl << std::endl;
 }
@@ -163,11 +164,10 @@ void testNanoFLANN(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::ve
         > my_kd_tree_t;
 
     // Construction of the nanoFLANN KDtree
-    QTime time;
-    time.start();
+    int t0=clock();
     my_kd_tree_t   index(3, cloud, nanoflann::KDTreeSingleIndexAdaptorParams(16) );
     index.buildIndex();
-    std::cout << "Build nanoFlann: " << time.elapsed() <<  " ms" << std::endl;
+    std::cout << "Build nanoFlann: " << elapsed(t0) <<  " ms" << std::endl;
 
     // Test with the radius search
     std::cout << "Radius search (" << num_test << " tests)"<< std::endl;
@@ -176,9 +176,9 @@ void testNanoFLANN(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::ve
     nanoflann::SearchParams params;
     for (int ii = 0; ii < num_test; ii++)
     {
-        time.restart();
+        t0=clock();
         const size_t nMatches = index.radiusSearch(mesh.vert[test_indeces[ii]].P().V(), queryDist, ret_matches, params);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time (radius = " << queryDist << "): " << avgTime << " ms (mean " << avgTime / num_test << "ms)"  << std::endl;
 
@@ -189,9 +189,9 @@ void testNanoFLANN(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::ve
     std::vector<float> out_dist_sqr(kNearest);
     for (int ii = 0; ii < num_test * 10; ii++)
     {
-        time.restart();
+        t0=clock();
         index.knnSearch(mesh.vert[test_indeces[ii]].P().V(), kNearest, &ret_index[0], &out_dist_sqr[0]);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time (k = " << kNearest << "): " << avgTime << " ms (mean " << avgTime / (num_test * 10) << "ms)"  << std::endl;
 
@@ -202,9 +202,9 @@ void testNanoFLANN(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::ve
     std::vector<float> out_dist_sqr_clos(1);
     for (int ii = 0; ii < num_test * 10; ii++)
     {
-        time.restart();
+        t0=clock();
         index.knnSearch(randomSamples[ii].V(), 1, &ret_index_clos[0], &out_dist_sqr_clos[0]);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time : " << avgTime << " ms (mean " << avgTime / (num_test * 10) << "ms)"  << std::endl << std::endl;
 }
@@ -214,26 +214,25 @@ void testUniformGrid(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::
 {
     std::cout << "==================================================="<< std::endl;
     std::cout << "Uniform Grid" << std::endl;
-    QTime time;
-    time.start();
+    int t0=clock();
 
     // Construction of the uniform grid
     typedef vcg::GridStaticPtr<CMesh::VertexType, CMesh::VertexType::ScalarType> MeshGrid;
     MeshGrid uniformGrid;
     uniformGrid.Set(mesh.vert.begin(), mesh.vert.end());
-    std::cout << "Build: " << time.elapsed() <<  " ms" << std::endl;
+    std::cout << "Build: " << elapsed(t0) <<  " ms" << std::endl;
 
     // Test with the radius search
     std::cout << "Radius search (" << num_test << " tests)"<< std::endl;
     float  avgTime = 0.0f;
     for (int ii = 0; ii < num_test; ii++)
     {
-        time.restart();
+      t0=clock();
         std::vector<CMesh::VertexPointer> vertexPtr;
         std::vector<CMesh::VertexType::CoordType> points;
         std::vector<float> dists;
         vcg::tri::GetInSphereVertex(mesh, uniformGrid, mesh.vert[test_indeces[ii]].cP(), queryDist, vertexPtr, dists, points);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time (radius = " << queryDist << "): " << avgTime << " ms (mean " << avgTime / num_test << "ms)"  << std::endl;
 
@@ -242,12 +241,12 @@ void testUniformGrid(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::
     avgTime = 0.0f;
     for (int ii = 0; ii < num_test * 10; ii++)
     {
-        time.restart();
+        t0=clock();
         std::vector<CMesh::VertexPointer> vertexPtr;
         std::vector<CMesh::VertexType::CoordType> points;
         std::vector<float> dists;
         vcg::tri::GetKClosestVertex(mesh, uniformGrid, kNearest, mesh.vert[test_indeces[ii]].cP(), mesh.bbox.Diag(), vertexPtr, dists, points);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time (k = " << kNearest << "): " << avgTime << " ms (mean " << avgTime / (num_test * 10) << "ms)"  << std::endl;
 
@@ -256,10 +255,10 @@ void testUniformGrid(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::
     avgTime = 0.0f;
     for (int ii = 0; ii < num_test * 10; ii++)
     {
-        time.restart();
+        t0=clock();
         float minDist;
         vcg::tri::GetClosestVertex(mesh, uniformGrid, randomSamples[ii], mesh.bbox.Diag(), minDist);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time : " << avgTime << " ms (mean " << avgTime / (num_test * 10) << "ms)"  << std::endl << std::endl;
 }
@@ -270,26 +269,25 @@ void testSpatialHashing(CMesh& mesh, std::vector<unsigned int>& test_indeces, st
 {
     std::cout << "==================================================="<< std::endl;
     std::cout << "Spatial Hashing" << std::endl;
-    QTime time;
-    time.start();
+    int t0=clock();
 
     // Construction of the uniform grid
     typedef vcg::SpatialHashTable<CMesh::VertexType, CMesh::VertexType::ScalarType> MeshGrid;
     MeshGrid uniformGrid;
     uniformGrid.Set(mesh.vert.begin(), mesh.vert.end());
-    std::cout << "Build: " << time.elapsed() <<  " ms" << std::endl;
+    std::cout << "Build: " << elapsed(t0) <<  " ms" << std::endl;
 
     // Test with the radius search
     std::cout << "Radius search (" << num_test << " tests)"<< std::endl;
     float  avgTime = 0.0f;
     for (int ii = 0; ii < num_test; ii++)
     {
-        time.restart();
+        t0=clock();
         std::vector<CMesh::VertexPointer> vertexPtr;
         std::vector<CMesh::VertexType::CoordType> points;
         std::vector<float> dists;
         vcg::tri::GetInSphereVertex(mesh, uniformGrid, mesh.vert[test_indeces[ii]].cP(), queryDist, vertexPtr, dists, points);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time (radius = " << queryDist << "): " << avgTime << " ms (mean " << avgTime / num_test << "ms)"  << std::endl;
 
@@ -298,12 +296,12 @@ void testSpatialHashing(CMesh& mesh, std::vector<unsigned int>& test_indeces, st
     avgTime = 0.0f;
     for (int ii = 0; ii < num_test * 10; ii++)
     {
-        time.restart();
+        t0=clock();
         std::vector<CMesh::VertexPointer> vertexPtr;
         std::vector<CMesh::VertexType::CoordType> points;
         std::vector<float> dists;
         vcg::tri::GetKClosestVertex(mesh, uniformGrid, kNearest, mesh.vert[test_indeces[ii]].cP(), mesh.bbox.Diag(), vertexPtr, dists, points);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time (k = " << kNearest << "): " << avgTime << " ms (mean " << avgTime / (num_test * 10) << "ms)"  << std::endl;
 
@@ -312,10 +310,10 @@ void testSpatialHashing(CMesh& mesh, std::vector<unsigned int>& test_indeces, st
     avgTime = 0.0f;
     for (int ii = 0; ii < num_test * 10; ii++)
     {
-        time.restart();
+        t0=clock();
         float minDist;
         vcg::tri::GetClosestVertex(mesh, uniformGrid, randomSamples[ii], mesh.bbox.Diag(), minDist);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time : " << avgTime << " ms (mean " << avgTime / (num_test * 10) << "ms)"  << std::endl << std::endl;
 }
@@ -326,26 +324,25 @@ void testPerfectSpatialHashing(CMesh& mesh, std::vector<unsigned int>& test_inde
 {
     std::cout << "==================================================="<< std::endl;
     std::cout << "Perfect Spatial Hashing" << std::endl;
-    QTime time;
-    time.start();
+    int t0=clock();
 
     // Construction of the uniform grid
     typedef vcg::SpatialHashTable<CMesh::VertexType, CMesh::VertexType::ScalarType> MeshGrid;
     MeshGrid uniformGrid;
     uniformGrid.Set(mesh.vert.begin(), mesh.vert.end());
-    std::cout << "Build: " << time.elapsed() <<  " ms" << std::endl;
+    std::cout << "Build: " << elapsed(t0) <<  " ms" << std::endl;
 
     // Test with the radius search
     std::cout << "Radius search (" << num_test << " tests)"<< std::endl;
     float  avgTime = 0.0f;
     for (int ii = 0; ii < num_test; ii++)
     {
-        time.restart();
+        t0=clock();
         std::vector<CMesh::VertexPointer> vertexPtr;
         std::vector<CMesh::VertexType::CoordType> points;
         std::vector<float> dists;
         vcg::tri::GetInSphereVertex(mesh, uniformGrid, mesh.vert[test_indeces[ii]].cP(), queryDist, vertexPtr, dists, points);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time (radius = " << queryDist << "): " << avgTime << " ms (mean " << avgTime / num_test << "ms)"  << std::endl << std::endl;
 }
@@ -355,26 +352,25 @@ void testOctree(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::vecto
 {
     std::cout << "==================================================="<< std::endl;
     std::cout << "Octree" << std::endl;
-    QTime time;
-    time.start();
+    int t0=clock();
 
     // Construction of the uniform grid
     typedef vcg::Octree<CMesh::VertexType, CMesh::VertexType::ScalarType> MeshGrid;
     MeshGrid uniformGrid;
     uniformGrid.Set(mesh.vert.begin(), mesh.vert.end());
-    std::cout << "Build: " << time.elapsed() <<  " ms" << std::endl;
+    std::cout << "Build: " << elapsed(t0) <<  " ms" << std::endl;
 
     // Test with the radius search
     std::cout << "Radius search (" << num_test << " tests)"<< std::endl;
     float  avgTime = 0.0f;
     for (int ii = 0; ii < num_test; ii++)
     {
-        time.restart();
+        t0=clock();
         std::vector<CMesh::VertexPointer> vertexPtr;
         std::vector<CMesh::VertexType::CoordType> points;
         std::vector<float> dists;
         vcg::tri::GetInSphereVertex(mesh, uniformGrid, mesh.vert[test_indeces[ii]].cP(), queryDist, vertexPtr, dists, points);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time (radius = " << queryDist << "): " << avgTime << " ms (mean " << avgTime / num_test << "ms)"  << std::endl;
 
@@ -383,12 +379,12 @@ void testOctree(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::vecto
     avgTime = 0.0f;
     for (int ii = 0; ii < num_test * 10; ii++)
     {
-        time.restart();
+        t0=clock();
         std::vector<CMesh::VertexPointer> vertexPtr;
         std::vector<CMesh::VertexType::CoordType> points;
         std::vector<float> dists;
         vcg::tri::GetKClosestVertex(mesh, uniformGrid, kNearest, mesh.vert[test_indeces[ii]].cP(), mesh.bbox.Diag(), vertexPtr, dists, points);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time (k = " << kNearest << "): " << avgTime << " ms (mean " << avgTime / (num_test * 10) << "ms)"  << std::endl;
 
@@ -397,10 +393,10 @@ void testOctree(CMesh& mesh, std::vector<unsigned int>& test_indeces, std::vecto
     avgTime = 0.0f;
     for (int ii = 0; ii < num_test * 10; ii++)
     {
-        time.restart();
+        t0=clock();
         float minDist;
         vcg::tri::GetClosestVertex(mesh, uniformGrid, randomSamples[ii], mesh.bbox.Diag(), minDist);
-        avgTime += time.elapsed();
+        avgTime += elapsed(t0);
     }
     std::cout << "Time : " << avgTime << " ms (mean " << avgTime / (num_test * 10) << "ms)"  << std::endl << std::endl;
 }
@@ -424,7 +420,7 @@ int main( int argc, char * argv[] )
     randGen.initialize(0);
     std::vector<vcg::Point3f> randomSamples;
     for (int i = 0; i < num_test * 10; i++)
-        randomSamples.push_back(vcg::math::GeneratePointOnUnitSphereUniform<float>(randGen) * randGen.generate01() * mesh.bbox.Diag() / ratio);
+        randomSamples.push_back(vcg::math::GeneratePointOnUnitSphereUniform<float>(randGen) * randGen.generate01() * mesh.bbox.Diag() / bboxratio);
 
     std::vector<unsigned int> test_indeces;
     for (int i = 0; i < num_test * 10; i++)

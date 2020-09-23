@@ -21,12 +21,13 @@
 *                                                                           *
 ****************************************************************************/
 
-// This sample require gl.
+// This sample requires gl.
 #ifndef GLU_VERSIONS
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #else
 #ifdef _WIN32
+#define NOMINMAX
   #include <windows.h>
 #endif
 #include <GL/gl.h>
@@ -34,16 +35,12 @@
 #endif
 
 #include<vcg/complex/complex.h>
-#include<vcg/complex/append.h>
 
 // input output
 #include<wrap/io_trimesh/import.h>
 #include<wrap/io_trimesh/export.h>
 
 // topology computation
-#include<vcg/complex/algorithms/update/topology.h>
-#include<vcg/complex/algorithms/update/bounding.h>
-#include<vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/position.h>
 #include <vcg/complex/algorithms/update/quality.h>
 #include <vcg/complex/algorithms/stat.h>

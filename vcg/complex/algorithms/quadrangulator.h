@@ -135,7 +135,7 @@ private:
     {
         ScalarType minTolerance=precisionQ;
         //first add all eddge
-        for (int i=0;i<to_split.face.size();i++)
+        for (size_t i=0;i<to_split.face.size();i++)
         {
             TriFaceType *f=&to_split.face[i];
             for (int j =0;j<3;j++)
@@ -158,7 +158,7 @@ private:
         }
     }
 
-    void RoundSplits(TriMesh &to_split,int dir)
+    void RoundSplits(TriMesh &to_split)//,int dir)
     {
         ScalarType minTolerance=precisionQ;
         //first add all eddge
@@ -191,14 +191,13 @@ private:
         }
     }
 
-    void InitSplitMap(TriMesh &to_split,
-                      int dir)
+    void InitSplitMap(TriMesh &to_split,int dir)
     {
-       assert((dir==0)||(dir==1));
+       //assert((dir==0)||(dir==1));
        InterpMap.clear();
        //printf("direction %d\n",dir );
        //first add all eddge
-       for (int i=0;i<to_split.face.size();i++)
+       for (size_t i=0;i<to_split.face.size();i++)
        {
            TriFaceType *f=&to_split.face[i];
            for (int j =0;j<3;j++)
@@ -311,7 +310,7 @@ private:
            }
        }
 
-       RoundSplits(to_split,dir);
+       RoundSplits(to_split);//,dir);
     }
 
     // Basic subdivision class
@@ -353,6 +352,8 @@ private:
         vcg::TexCoord2<ScalarType> WedgeInterp(vcg::TexCoord2<ScalarType> &t0,
                                                vcg::TexCoord2<ScalarType> &t1)
         {
+            (void)t0;
+            (void)t1;
             return (vcg::TexCoord2<ScalarType>(0,0));
         }
 
@@ -440,7 +441,7 @@ private:
         for (int dir=0;dir<2;dir++)
         {
             ScalarType val0=uv.V(dir);
-            int integer0=floor(val0+0.5);
+            //int integer0=floor(val0+0.5);
             //if ((fabs(val0-(ScalarType)integer0))<UVtolerance)onIntegerL++;
             if (val0==(ScalarType)floor(val0))onIntegerL++;
         }
@@ -510,7 +511,7 @@ private:
         poly.push_back(currPos.V());
 
         //retrieve UV
-        int indexV0=currPos.E();
+        //int indexV0=currPos.E();
 
         short int Align=AlignmentEdge(currPos.F(),currPos.E());
 
@@ -606,7 +607,7 @@ private:
 
     void ConvertWTtoVT(TriMesh &Tmesh)
     {
-        int vn = Tmesh.vn;
+        //int vn = Tmesh.vn;
         vcg::tri::AttributeSeam::SplitVertex(Tmesh, ExtractVertex, CompareVertex);
         vcg::tri::UpdateTopology<TriMesh>::FaceFace(Tmesh);
        // vcg::tri::UpdateFlags<TriMesh>::FaceBorderFromFF(Tmesh);
@@ -671,7 +672,8 @@ public:
 
     void Quadrangulate(TriMesh &Tmesh,
                        PolyMesh &Pmesh,
-                       std::vector< std::vector< short int> > &UV)
+                       std::vector< std::vector< short int> > &UV,
+                       bool preserve_border_corner=true)
     {
         UV.clear();
         Pmesh.Clear();
@@ -711,8 +713,11 @@ public:
 
         InitIntegerEdgesVert(Tmesh);
 
-        for (int i=0;i<Tmesh.face.size();i++)
+        for (size_t i=0;i<Tmesh.face.size();i++)
             Tmesh.face[i].C()=vcg::Color4b(255,255,255,255);
+
+        if (preserve_border_corner)
+            vcg::tri::UpdateSelection<TriMesh>::VertexCornerBorder(Tmesh,math::ToRad(150.0),true);
 
         std::vector<std::vector<TriVertexType *> > polygons;
         FindPolygons(Tmesh,polygons,UV);

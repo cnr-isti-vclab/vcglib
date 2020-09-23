@@ -177,7 +177,6 @@ class AttributeSeam
             typedef typename src_trimesh_t::VertexIterator  src_vertex_i;
             typedef typename src_trimesh_t::FaceType        src_face_t;
             typedef typename src_trimesh_t::FaceIterator    src_face_i;
-            typedef typename src_trimesh_t::VertContainer   src_vertex_container_t;
 
             typedef vcg::tri::Allocator<src_trimesh_t>      src_mesh_allocator_t;
             typedef typename src_mesh_allocator_t :: template PointerUpdater<typename src_trimesh_t::VertexPointer> src_pointer_updater_t;
@@ -263,7 +262,6 @@ class AttributeSeam
             typedef typename src_trimesh_t::FaceType             src_face_t;
             typedef typename src_trimesh_t::ConstFaceIterator    src_face_ci;
 
-            typedef typename dst_trimesh_t::VertContainer        dst_vertex_container_t;
             typedef typename dst_trimesh_t::VertexType           dst_vertex_t;
             typedef typename dst_trimesh_t::VertexIterator       dst_vertex_i;
             typedef typename dst_trimesh_t::FaceType             dst_face_t;

@@ -110,12 +110,12 @@ public:
 
 
 
-    /// Operatore di indicizzazione
+    /// Indexing operator
     inline S * operator [] ( const int i )
     {
         return a+i*3;
     }
-    /// Operatore const di indicizzazione
+    /// Const indexing operator
     inline const S * operator [] ( const int i ) const
     {
         return a+i*3;
@@ -368,9 +368,8 @@ void ExternalProduct(const Point3<S> &a, const Point3<S> &b)
 ScalarType Norm()
 {
     ScalarType SQsum=0;
-    for(int i=0;i<3;++i)
-        for(int j=0;j<3;++j)
-             SQsum += a[i]*a[i];
+    for(int i=0;i<9;++i)
+        SQsum += a[i]*a[i];
     return (math::Sqrt(SQsum));
 }
 
@@ -519,11 +518,38 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
             return rotM;
         }
 
-        ///find the axis of rotation
+        //find the axis of rotation
         CoordType axis;
-        axis=v0^v1;
-        axis.Normalize();
 
+        //if dot = -1 rotating to opposite vertex
+        //the problem is underdefined, so choose axis such that division is more stable
+        //alternative solution at http://cs.brown.edu/research/pubs/pdfs/1999/Moller-1999-EBA.pdf
+        if (dot < (S)-1 + epsilon)
+        {
+            S max = std::numeric_limits<S>::min();
+            int maxInd = 0;
+            for (int i = 0; i < 3; ++i)
+            {
+                if (v0[i] > max)
+                {
+                    max    = v0[i];
+                    maxInd = i;
+                }
+            }
+
+            axis[maxInd] = - (v0[(maxInd+2) % 3] / v0[maxInd]);
+            axis[(maxInd+1) % 3] = 0;
+            axis[(maxInd+2) % 3] = 1;
+
+            dot = (S)-1;
+        } 
+        else 
+        {
+            axis=v0^v1;
+        }
+
+        axis.Normalize();
+    
         ///construct rotation matrix
         S u=axis.X();
         S v=axis.Y();

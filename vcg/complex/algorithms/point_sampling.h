@@ -42,12 +42,11 @@ sampling strategies (montecarlo, stratified etc).
 #include <vcg/complex/algorithms/hole.h>
 #include <vcg/complex/algorithms/stat.h>
 #include <vcg/complex/algorithms/create/platonic.h>
-#include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/space/segment2.h>
 #include <vcg/space/index/grid_static_ptr.h>
+
 namespace vcg
 {
 namespace tri
@@ -63,8 +62,7 @@ namespace tri
  For example if you just want to get a vector with positions over the surface You have just to write
 
      vector<Point3f> myVec;
-     TrivialSampler<MyMesh> ts(myVec);
-     SurfaceSampling<MyMesh, TrivialSampler<MyMesh> >::Montecarlo(M, ts, SampleNum);
+     SurfaceSampling<MyMesh, TrivialSampler<MyMesh> >::Montecarlo(M, TrivialSampler<MyMesh>(myVec), SampleNum);
 
 **/
 
@@ -137,8 +135,10 @@ template <class MeshType>
 class TrivialPointerSampler
 {
 public:
+  typedef typename MeshType::ScalarType  ScalarType;
   typedef typename MeshType::CoordType  CoordType;
   typedef typename MeshType::VertexType VertexType;
+  typedef typename MeshType::EdgeType EdgeType;
   typedef typename MeshType::FaceType   FaceType;
 
   TrivialPointerSampler() {}
@@ -156,6 +156,15 @@ public:
   {
     sampleVec.push_back(&p);
   }
+
+  void AddEdge(const EdgeType& e, ScalarType u ) // u==0 -> v(0) u==1 -> v(1);
+  {
+    if( u < 0.5 )
+      sampleVec.push_back(e.cV(0));
+    else 
+      sampleVec.push_back(e.cV(1));
+  }
+  
   // This sampler should be used only for getting vertex pointers. Meaningless in other case.
   void AddFace(const FaceType &, const CoordType &)   { assert(0); }
   void AddTextureSample(const FaceType &, const CoordType &, const Point2i &, float ) { assert(0); }
@@ -197,7 +206,7 @@ public:
     if(tri::HasPerVertexQuality(m) )
        m.vert.back().Q() = f.cV(0)->Q()*p[0] + f.cV(1)->Q()*p[1] + f.cV(2)->Q()*p[2];
   }
-}; // end class BaseSampler
+}; // end class MeshSampler
 
 
 
@@ -746,14 +755,27 @@ static void VertexUniform(MeshType & m, VertexSampler &ps, int sampleNum)
 }
 
 
+///
+/// \brief The EdgeSamplingStrategy enum determines the sampling strategy for edge meshes.
+/// Given a sampling radius 'r', and the total length of the edge mesh 'L',
+/// the number of generated samples is: op(L/r) (+ 1 if the mesh is not a loop)
+/// where op is (floor | round | ceil)
+///
+enum EdgeSamplingStrategy
+{
+	Floor = 0,
+	Round,
+	Ceil,
+};
+
 /// Perform an uniform sampling over an EdgeMesh.
 ///
 /// It assumes that the mesh is 1-manifold.
 /// each connected component is sampled in a independent way.
-/// For each component of lenght <L> we place on it floor(L/radius)+1 samples.
+/// For each component of length <L> we place on it floor(L/radius)+1 samples.
 /// (if conservative argument is false we place ceil(L/radius)+1 samples)
 ///
-static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool conservative = true)
+static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, EdgeSamplingStrategy strategy = Floor)
 {
 	tri::RequireEEAdjacency(m);
 	tri::RequireCompactness(m);
@@ -761,14 +783,14 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 	tri::RequirePerVertexFlags(m);
 	tri::UpdateTopology<MeshType>::EdgeEdge(m);
 	tri::UpdateFlags<MeshType>::EdgeClearV(m);
+	tri::MeshAssert<MeshType>::EEOneManifold(m);
 
 	for (EdgeIterator ei = m.edge.begin(); ei != m.edge.end(); ++ei)
 	{
 		if (!ei->IsV())
 		{
 			edge::Pos<EdgeType> ep(&*ei,0);
-			edge::Pos<EdgeType> startep     = ep;
-			VertexPointer       startVertex = 0;
+			edge::Pos<EdgeType> startep = ep;
 			do // first loop to search a boundary component.
 			{
 				ep.NextE();
@@ -778,10 +800,33 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 			if (!ep.IsBorder())
 			{
 				// it's a loop
-				startVertex = ep.V();
+				assert(ep == startep);
+
+				// to keep the uniform resampling order-independent:
+				// 1) start from the 'lowest' point...
+				edge::Pos<EdgeType> altEp = ep;
+				altEp.NextE();
+				while (altEp != startep) {
+					if (altEp.V()->cP() < ep.V()->cP())
+					{
+						ep = altEp;
+					}
+					altEp.NextE();
+				}
+
+				// 2) ... with consistent direction
+				const auto dir0 = ep.VFlip()->cP() - ep.V()->cP();
+				ep.FlipE();
+				const auto dir1 = ep.VFlip()->cP() - ep.V()->cP();
+				if (dir0 < dir1)
+				{
+					ep.FlipE();
+				}
 			}
 			else
 			{
+				// not a loop
+
 				// to keep the uniform resampling order-independent
 				// start from the border with 'lowest' point
 				edge::Pos<EdgeType> altEp = ep;
@@ -797,18 +842,38 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 
 			ScalarType totalLen = 0;
 			ep.FlipV();
-			// second loop to compute length of the chain.
+			// second loop to compute the length of the chain.
 			do
 			{
 				ep.E()->SetV();
 				totalLen += Distance(ep.V()->cP(), ep.VFlip()->cP());
 				ep.NextE();
-			} while (!ep.IsBorder() && ep.V() != startVertex);
-			ep.E()->SetV();
-			totalLen += Distance(ep.V()->cP(), ep.VFlip()->cP());
+			} while (!ep.E()->IsV() && !ep.IsBorder());
+			if (ep.IsBorder())
+			{
+				ep.E()->SetV();
+				totalLen += Distance(ep.V()->cP(), ep.VFlip()->cP());
+			}
 
-			// Third loop actually perform the sampling.
-			int sampleNum = conservative ? floor(totalLen / radius) : ceil(totalLen / radius);
+			VertexPointer startVertex = ep.V();
+
+			// Third loop actually performs the sampling.
+			int sampleNum = -1;
+			{
+				double div = double(totalLen) / radius;
+				switch (strategy) {
+				case Round:
+					sampleNum = int(round(div));
+					break;
+				case Ceil:
+					sampleNum = int(ceil(div));
+					break;
+				default: // Floor
+					sampleNum = int(floor(div));
+					break;
+				};
+			}
+			assert(sampleNum >= 0);
 
 			ScalarType sampleDist = totalLen / sampleNum;
 //			printf("Found a chain of %f with %i samples every %f (%f)\n", totalLen, sampleNum, sampleDist, radius);
@@ -816,11 +881,11 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 			ScalarType curLen = 0;
 			int sampleCnt     = 1;
 			ps.AddEdge(*(ep.E()), ep.VInd() == 0 ? 0.0 : 1.0);
-			do
-			{
+
+			do {
 				ep.NextE();
 				assert(ep.E()->IsV());
-				ScalarType edgeLen = Distance(ep.V()->cP(), ep.VFlip()->cP());
+				ScalarType edgeLen = Distance(ep.VFlip()->cP(), ep.V()->cP());
 				ScalarType d0      = curLen;
 				ScalarType d1      = d0 + edgeLen;
 
@@ -835,7 +900,9 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 			} while(!ep.IsBorder() && ep.V() != startVertex);
 
 			if(ep.V() != startVertex)
+			{
 				ps.AddEdge(*(ep.E()), ep.VInd() == 0 ? 0.0 : 1.0);
+			}
 		}
 	}
 }
@@ -845,30 +912,14 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, bool c
 ///
 /// It assumes that the border flag have been set over the mesh both for vertex and for faces.
 /// All the vertices on the border where the edges of the boundary of the surface forms an angle smaller than the given threshold are sampled.
-///
-static void VertexBorderCorner(MeshType & m, VertexSampler &ps, float angleRad)
+/// It assumes that the Per-Vertex border Flag has been set.
+static void VertexBorderCorner(MeshType & m, VertexSampler &ps, ScalarType angleRad)
 {
-  typename MeshType::template PerVertexAttributeHandle<float> angleSumH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m);
-
-  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-    angleSumH[vi]=0;
-
-  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-  {
-    for(int i=0;i<3;++i)
+    vcg::tri::UpdateSelection<MeshType>::VertexCornerBorder(m,angleRad);
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
     {
-      angleSumH[fi->V(i)] += vcg::Angle(fi->P2(i) - fi->P0(i),fi->P1(i) - fi->P0(i));
+      if(vi->IsS()) ps.AddVert(*vi);
     }
-  }
-
-  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-  {
-    if((angleSumH[vi]<angleRad && vi->IsB())||
-       (angleSumH[vi]>(360-angleRad) && vi->IsB()))
-        ps.AddVert(*vi);
-  }
-
-  tri::Allocator<MeshType>:: template DeletePerVertexAttribute<float> (m,angleSumH);
 }
 
 /// \brief Sample all the border vertices
@@ -2260,7 +2311,7 @@ void PoissonPruning(MeshType &m, // the mesh that has to be pruned
   tri::UpdateBounding<MeshType>::Box(m);
   BaseSampler pdSampler;
   tri::SurfaceSampling<MeshType,BaseSampler>::PoissonDiskPruning(pdSampler, m, radius,pp);
-  std::swap(pdSampler.sampleVec,poissonSamples);
+  poissonSamples = pdSampler.sampleVec;
 }
 
 

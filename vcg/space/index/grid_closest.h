@@ -232,23 +232,30 @@ namespace vcg{
       {
         int ix,iy,iz;
         for (ix=ibbox.min[0]; ix<=ibbox.max[0]; ix++)
+        {
           for (iy=ibbox.min[1]; iy<=ibbox.max[1]; iy++)
+          {
             for (iz=ibbox.min[2]; iz<=ibbox.max[2]; iz++)
             {
               _Si.Grid( ix, iy, iz, first, last );
               for(l=first;l!=last;++l)
+              {
                 if (!(**l).IsD())
                 {
                   typename SPATIALINDEXING::ObjPtr elem=&(**l);
                   vcg::Box3<typename SPATIALINDEXING::ScalarType> box_elem;
                   elem->GetBBox(box_elem);
-                  if(( ! _marker.IsMarked(elem))&&(box_elem.Collide(_bbox))){
+                  if(( ! _marker.IsMarked(elem))&&(box_elem.Collide(_bbox)))
+                  {
                     _objectPtrs.push_back(elem);
                     _marker.Mark(elem);
                   }
                 }
+              }
             }
-            return (static_cast<unsigned int>(_objectPtrs.size()));
+          }
+        }
+        return (static_cast<unsigned int>(_objectPtrs.size()));
       }
     }
 

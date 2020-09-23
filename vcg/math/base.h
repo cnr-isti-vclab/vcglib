@@ -173,14 +173,26 @@ namespace math {
 #endif
 
 template <class SCALAR>
-inline SCALAR  Clamp( const SCALAR & val, const SCALAR& minval, const SCALAR& maxval)
+inline SCALAR  Clamp(const SCALAR & val, const SCALAR& minval, const SCALAR& maxval)
 {
 	if(val < minval) return minval;
 	if(val > maxval) return maxval;
 	return val;
 }
 
+template <class SCALAR>
+inline SCALAR Lerp(const SCALAR a, const SCALAR b, const SCALAR lambda)
+{
+    return a * lambda + (1-lambda) * b;
+}
 
+template <class SCALAR>
+inline SCALAR ClampedLerp(const SCALAR a, const SCALAR b, const SCALAR lambda)
+{
+  const SCALAR clampedLambda = math::Clamp(lambda, (SCALAR)0, (SCALAR)1);
+  return a * clampedLambda + ((SCALAR)1-clampedLambda) * b;
+}
+                   
 
 inline float   ToDeg(const float &a){return a*180.0f/float(M_PI);}
 inline float   ToRad(const float &a){return float(M_PI)*a/180.0f;}

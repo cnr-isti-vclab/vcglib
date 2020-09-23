@@ -94,15 +94,14 @@ public:
                         const char *path)
     {
         FILE *f = fopen(path,"wt");
-        fprintf(f,"%d\n",mesh.vn);
+        fprintf(f,"%d\n",mesh.fn);
         fprintf(f,"4\n");
-        for (unsigned int i=0;i<mesh.vert.size();i++)
+        for (unsigned int i=0;i<mesh.face.size();i++)
         {
-            float dirX=(float)mesh.vert[i].PD1().X();
-            float dirY=(float)mesh.vert[i].PD1().Y();
-            float dirZ=(float)mesh.vert[i].PD1().Z();
+            float dirX=(float)mesh.face[i].PD1().X();
+            float dirY=(float)mesh.face[i].PD1().Y();
+            float dirZ=(float)mesh.face[i].PD1().Z();
             fprintf(f,"%f %f %f \n",dirX,dirY,dirZ);
-
         }
         fclose(f);
     }
@@ -122,6 +121,27 @@ public:
             fprintf(f,"%d %f %f \n",i,alpha1,alpha2);
         }
         fclose(f);
+    }
+
+    static void SaveCSVField(MeshType &mesh,
+                             const std::string &field_1,
+                             const std::string &field_2)
+    {
+        FILE *f1=NULL;
+        FILE *f2=NULL;
+        f1=fopen(field_1.c_str(),"wt");
+        f2=fopen(field_2.c_str(),"wt");
+        for (size_t i=0;i<mesh.face.size();i++)
+        {
+            typename MeshType::CoordType PD1=mesh.face[i].PD1();
+            typename MeshType::CoordType PD2=mesh.face[i].PD2();
+            fprintf(f1,"%e,%e,%e\n",PD1.X(),PD1.Y(),PD1.Z());
+            fprintf(f2,"%e,%e,%e\n",PD2.X(),PD2.Y(),PD2.Z());
+        }
+
+        //then color by quality
+        fclose(f1);
+        fclose(f2);
     }
 
 }; // end class

@@ -18,59 +18,133 @@ class GLField
 public:
 
 	static void GLDrawField(CoordType dir[4],
-							CoordType center,
-                            ScalarType &size,
-                            bool onlyPD1=false,
-                            bool oneside=false)
-	{
-        ScalarType size1=size;
-        ScalarType size2=size;
-        if (oneside)size2=0;
+                            const CoordType &center,
+                            const ScalarType &size,
+                            const ScalarType &Width0,
+                            const ScalarType &Width1,
+                            const vcg::Color4b &Color0,
+                            const vcg::Color4b &Color1,
+                            bool oneside,
+                            bool onlyPD1)
+    {
+        CoordType dirN[4];
+        for (size_t i=0;i<4;i++)
+        {
+            dirN[i]=dir[i];
+            dirN[i].Normalize();
+        }
 
-        glLineWidth(2);
-        //vcg::glColor(vcg::Color4b(0,0,255,255));
-        vcg::glColor(vcg::Color4b(0,0,0,255));
+        ScalarType size1=size;
+        if (oneside)size1=0;
+
+        glLineWidth(Width0);
+        vcg::glColor(Color0);
         glBegin(GL_LINES);
-            glVertex(center+dir[0]*size1);
-            glVertex(center-dir[0]*size2);
+            glVertex(center+dirN[0]*size);
+            glVertex(center+dirN[2]*size1);
         glEnd();
 
         if (onlyPD1)return;
-        glLineWidth(2);
-        //vcg::glColor(vcg::Color4b(0,255,0,255));
-        vcg::glColor(vcg::Color4b(0,0,0,255));
+
+        glLineWidth(Width1);
+        vcg::glColor(Color1);
         glBegin(GL_LINES);
-            glVertex(center+dir[1]*size1);
-            glVertex(center-dir[1]*size2);
+            glVertex(center+dirN[1]*size);
+            glVertex(center+dirN[3]*size1);
         glEnd();
 
 	}
 
-    ///draw the cross field of a given face in a given position
-    static void GLDrawSingleFaceField(const FaceType &f,
-                                CoordType pos,
-                                ScalarType &size,
-                                bool onlyPD1=false,
-                                bool oneside=false)
-    {
-        CoordType center=pos;
-        CoordType normal=f.cN();
-        CoordType dir[4];
-        vcg::tri::CrossField<MeshType>::CrossVector(f,dir);
-        GLDrawField(dir,center,size,onlyPD1,oneside);
-    }
+//    ///draw the cross field of a given face in a given position
+//    static void GLDrawSingleFaceField(const FaceType &f,
+//                                     CoordType pos,
+//                                     ScalarType &size,
+//                                     bool onlyPD1,
+//                                     bool oneside)
+//    {
+//        CoordType center=pos;
+//        CoordType normal=f.cN();
+//        CoordType dir[4];
+//        vcg::tri::CrossField<MeshType>::CrossVector(f,dir);
+//        GLDrawField(dir,center,size,onlyPD1,oneside);
+//    }
 
 	///draw the cross field of a given face
     static void GLDrawSingleFaceField(const FaceType &f,
-                                ScalarType &size,
-                                bool onlyPD1=false,
-                                bool oneside=false)
+                                      const ScalarType &size,
+                                      const bool oneside,
+                                      const bool onlyPD1,
+                                      const ScalarType maxN,
+                                      const ScalarType minN,
+                                      const bool UseK)
 	{
+        assert(maxN>=minN);
         CoordType center=(f.cP(0)+f.cP(1)+f.cP(2))/3;
-		CoordType normal=f.cN();
+        //CoordType normal=f.cN();
 		CoordType dir[4];
 		vcg::tri::CrossField<MeshType>::CrossVector(f,dir);
-        GLDrawField(dir,center,size,onlyPD1,oneside);
+
+        if (maxN<=0)
+            GLDrawField(dir,center,size,2,2,vcg::Color4b(0,0,0,255),vcg::Color4b(0,0,0,255),oneside,onlyPD1);
+        else
+        {
+            ScalarType Norm0=dir[0].Norm();
+            ScalarType Norm1=dir[1].Norm();
+            if (UseK)
+            {
+                Norm0=f.cK1();
+                Norm1=f.cK2();
+            }
+            ScalarType MaxW=6;
+            ScalarType MinW=0.5;
+            ScalarType IntervW=MaxW-MinW;
+            if (Norm0>maxN)Norm0=maxN;
+            if (Norm1>maxN)Norm1=maxN;
+            if (Norm0<minN)Norm0=minN;
+            if (Norm1<minN)Norm1=minN;
+
+            vcg::Color4b Col0,Col1;
+            ScalarType W0,W1;
+            if (!UseK)
+            {
+               Col0=vcg::Color4b::ColorRamp(minN,maxN,Norm0);
+               Col1=vcg::Color4b::ColorRamp(minN,maxN,Norm1);
+               W0=(Norm0/(maxN-minN))*IntervW+MinW;
+               W1=(Norm1/(maxN-minN))*IntervW+MinW;
+            }
+            else
+            {
+               ScalarType MaxAbs=std::max(fabs(minN),fabs(maxN));
+               Col0=vcg::Color4b::ColorRamp(-MaxAbs,MaxAbs,Norm0);
+               Col1=vcg::Color4b::ColorRamp(-MaxAbs,MaxAbs,Norm1);
+//               if (Norm0<0)
+//               {
+//                   assert(minN<0);
+//                   //PUT green on ZERO
+//                   Col0=vcg::Color4b::ColorRamp(minN,fabs(minN),Norm0);
+
+//               }else
+//               {
+//                   //PUT green on ZERO
+//                   Col0=vcg::Color4b::ColorRamp(-maxN,maxN,Norm0);
+//               }
+
+//               if (Norm1<0)
+//               {
+//                   assert(minN<0);
+//                   //PUT green on ZERO
+//                   Col1=vcg::Color4b::ColorRamp(minN,fabs(minN),Norm1);
+//               }else
+//               {
+//                   //PUT green on ZERO
+//                   Col1=vcg::Color4b::ColorRamp(-maxN,maxN,Norm1);
+//               }
+               W0=(fabs(Norm0)/std::max(fabs(maxN),fabs(minN)))*IntervW+MinW;
+               W1=(fabs(Norm1)/std::max(fabs(maxN),fabs(minN)))*IntervW+MinW;
+
+            }
+            GLDrawField(dir,center,size,W0,W1,Col0,Col1,oneside,onlyPD1);
+        }
 	}
 	
 //    static void GLDrawFaceSeams(const FaceType &f,
@@ -97,14 +171,17 @@ public:
         CoordType normal=v.cN();
         CoordType dir[4];
         vcg::tri::CrossField<MeshType>::CrossVector(v,dir);
-        GLDrawField(dir,center,size);
+        GLDrawField(dir,center,size,2,2,vcg::Color4b(0,0,0,255),vcg::Color4b(0,0,0,255),false,false);
     }
 
 
     static void GLDrawFaceField(const MeshType &mesh,
-                                bool onlyPD1=false,
-                                bool oneside=false,
-                                ScalarType scale=0.002)
+                                bool onlyPD1,
+                                bool oneside,
+                                ScalarType GlobalScale=0.002,
+                                const ScalarType maxN=0,
+                                const ScalarType minN=0,
+                                bool UseK=false)
 	{
 
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -112,11 +189,11 @@ public:
 		glEnable(GL_COLOR_MATERIAL);
         glDisable(GL_LIGHTING);
         glDisable(GL_BLEND);
-        ScalarType size=mesh.bbox.Diag()*scale;
+        ScalarType size=mesh.bbox.Diag()*GlobalScale;
         for (unsigned int i=0;i<mesh.face.size();i++)
 		{
             if (mesh.face[i].IsD())continue;
-            GLDrawSingleFaceField(mesh.face[i],size,onlyPD1,oneside);
+            GLDrawSingleFaceField(mesh.face[i],size,oneside,onlyPD1,maxN,minN,UseK);
 		}
 		glPopAttrib();
 	}

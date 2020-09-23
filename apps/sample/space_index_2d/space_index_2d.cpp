@@ -23,10 +23,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <vcg/space/distance2.h>
-#include<vcg/space/segment2.h>
-#include<vcg/space/index/grid_static_ptr2d.h>
-#include<vcg/space/index/grid_closest2d.h>
-#include<vcg/space/intersection2.h>
+#include <vcg/space/segment2.h>
+#include <vcg/space/index/grid_static_ptr2d.h>
+#include <vcg/space/index/grid_closest2d.h>
+#include <vcg/space/intersection2.h>
 
 typedef double MyScalarType;
 typedef vcg::Point2<MyScalarType> MyCoordType;

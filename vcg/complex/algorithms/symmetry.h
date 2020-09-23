@@ -44,34 +44,15 @@ class ExtrinsicPlaneSymmetry
     typedef typename TriMeshType::CoordType CoordType;
     typedef typename TriMeshType::ScalarType ScalarType;
 
-//    struct SphereUsedTypes : public vcg::UsedTypes<	vcg::Use<SphereVertex>::AsVertexType,
-//                                                    vcg::Use<SphereFace>::AsFaceType>{};
-
-//    class SphereVertex  : public vcg::Vertex< SphereUsedTypes,
-//                                             vcg::vertex::Coord<CoordType,ScalarType>,
-//                                             vcg::vertex::Normal<CoordType,ScalarType>,
-//                                            vcg::vertex::BitFlags>{};
-
-//    class SphereFace    : public vcg::Face< SphereUsedTypes, vcg::face::VertexRef,
-//                                            vcg::vertex::Normal<vcg::Point3<ScalarType>,ScalarType>,
-//                                            vcg::face::Mark,
-//                                            vcg::face::BitFlags,vcg::face::FFAdj> {};
-
-//    class SphereMesh : public vcg::tri::TriMesh< std::vector<SphereVertex>, std::vector<SphereFace> > {};
-
-
 
     TriMeshType &tri_mesh;
 
     CoordType AlignZeroTr;
 
     std::vector<std::vector< ScalarType > > Weight;
-    //std::vector<std::vector<std::pair<VertexType*,VertexType*> > > VotingVertx;
     std::vector<std::vector<std::pair<CoordType,CoordType>  > > VotingPos;
 
     std::vector<ScalarType> Votes;
-
-
 
     TriMeshType *sphere;
 
@@ -226,7 +207,7 @@ public:
         //create the sphere
         vcg::tri::Sphere<TriMeshType>(*sphere,SubDirections);
         vcg::tri::UpdateBounding<TriMeshType>::Box(*sphere);
-		sphere->face.EnableMark();
+        //sphere->face.EnableMark();
 
         ///initialize grid
         GridSph.Set(sphere->face.begin(),sphere->face.end());
@@ -244,7 +225,7 @@ public:
         VotingPos.resize(radiusSph*sphere->fn);
 
         ///then count votes
-        for (size_t i=0;i<tri_mesh.vert.size();i++)
+        for (size_t i=0;i<tri_mesh.vert.size()-1;i++)
             for (size_t j=i+1;j<tri_mesh.vert.size();j++)
             {
                 VertexType *v0=&tri_mesh.vert[i];
@@ -252,7 +233,6 @@ public:
                 if ((OnlyBorder)&&(!((v0->IsB())&&(v1->IsB()))))continue;
                 Elect(v0->P(),v1->P());
             }
-
         SortedPlanes.resize(Votes.size());
         for (size_t i=0;i<Votes.size();i++)
             SortedPlanes[i]=std::pair<ScalarType,int>(Votes[i],i);

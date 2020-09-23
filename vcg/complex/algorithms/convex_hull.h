@@ -25,8 +25,7 @@
 
 #include <queue>
 #include <unordered_map>
-#include <algorithm>
-#include <vcg/complex/allocate.h>
+#include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/clean.h>
 
 namespace vcg
@@ -167,8 +166,9 @@ public:
     "The quickhull algorithm for convex hulls" by C. Bradford Barber et al.
     ACM Transactions on Mathematical Software, Volume 22 Issue 4, Dec. 1996
   */
-  static bool ComputeConvexHull(InputMesh& mesh, CHMesh& convexHull)
+  static bool ComputeConvexHull(InputMesh& mesh, CHMesh& convexHull, ScalarType distTolerance = 0)
   {
+	assert(distTolerance >= 0);
     vcg::tri::RequireFFAdjacency(convexHull);
     vcg::tri::RequirePerFaceNormal(convexHull);
     vcg::tri::Allocator<InputMesh>::CompactVertexVector(mesh);
@@ -188,7 +188,7 @@ public:
       for (size_t j = 0; j < convexHull.face.size(); j++)
       {
         ScalarType dist = (mesh.vert[i].P() - convexHull.face[j].P(0)).dot(convexHull.face[j].N());
-        if (dist > 0)
+        if (dist > distTolerance)
         {
           listVertexPerFace[j].push_back(&mesh.vert[i]);
           if (dist > furthestVexterPerFace[j].second)
@@ -224,7 +224,7 @@ public:
             {
               int indexF = vcg::tri::Index(convexHull, nextF);
               ScalarType dist = (vertex->P() - nextF->P(0)).dot(nextF->N());
-              if (dist < 0)
+              if (dist < distTolerance)
               {
                 borderFace.push_back(indexF);
                 fp->SetB(ii);
@@ -295,7 +295,7 @@ public:
                 if (!(*vertexToTest[ii]).IsV())
                 {
                   float dist = ((*vertexToTest[ii]).P() - (*fi).P(0)).dot((*fi).N());
-                  if (dist > 0)
+                  if (dist > distTolerance)
                   {
                     tempVect.push_back(vertexToTest[ii]);
                     if (dist > newInfo.second)
@@ -345,7 +345,7 @@ public:
   * The algorithm used (Katz, Tal and Basri 2007) determines visibility without
   * reconstructing a surface or estimating normals.
   * A point is considered visible if its transformed point lies on the convex hull
-  * of a trasformed points cloud from the original mesh points.
+  * of a transformed points cloud from the original mesh points.
   *
   * @param m         The point cloud
   * @param visible   The mesh that will contain the visible hull
@@ -399,7 +399,7 @@ public:
      {
        visible.vert[i].P() = m.vert[ind].P();
        m.vert[ind].SetS();
-       m.vert[ind].C() = Color4b::LightBlue;
+       //m.vert[ind].C() = Color4b::LightBlue;
        selCnt++;
      }
    }
@@ -417,6 +417,8 @@ public:
 
    tri::Allocator<CHMesh>::CompactEveryVector(visible);
    tri::Clean<CHMesh>::FlipMesh(visible);
+   tri::UpdateNormal<CHMesh>::PerFaceNormalized(visible);
+   tri::UpdateNormal<CHMesh>::PerVertexNormalized(visible);
 
  }
 };

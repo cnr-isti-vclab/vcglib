@@ -105,7 +105,7 @@ class GetOpt {
   void allowUnlimitedArguments(bool allow) { unlimitedArgs = allow; }
 
   //set help if someone uses -h or --help option
-  void setHelp(QString &_help) { help = _help; }
+  void setHelp(const QString &_help) { help = _help; }
 
   //parses the command line and fill variables or print an error message and exits
   void parse();

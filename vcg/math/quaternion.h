@@ -20,88 +20,6 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.18  2007/07/03 16:07:09  corsini
-add DCM to Euler Angles method (to implement)
-
-Revision 1.17  2007/02/06 12:24:07  tarini
-added a missing "Quaternion<S>::" in "FromEulerAngles"
-
-Revision 1.16  2007/02/05 13:55:21  corsini
-add euler angle to quaternion conversion
-
-Revision 1.15  2006/06/22 08:00:26  ganovelli
-toMatrix with matrix33 added
-
-Revision 1.14  2005/04/17 21:57:03  ganovelli
-tolto il const a interpolate
-
-Revision 1.13  2005/04/15 09:19:50  ponchio
-Typo: Point3 -> Point4
-
-Revision 1.12  2005/04/14 17:22:34  ponchio
-*** empty log message ***
-
-Revision 1.11  2005/04/14 11:35:09  ponchio
-*** empty log message ***
-
-Revision 1.10  2004/12/15 18:45:50  tommyfranken
-*** empty log message ***
-
-Revision 1.9  2004/10/22 14:35:42  ponchio
-m.element(x, y) -> m[x][y]
-
-Revision 1.8  2004/10/07 13:54:03  ganovelli
-added SetIdentity
-
-Revision 1.7  2004/04/07 10:48:37  cignoni
-updated access to matrix44 elements through V() instead simple []
-
-Revision 1.6  2004/03/25 14:57:49  ponchio
-Microerror. ($LOG$ -> $Log: not supported by cvs2svn $
-Microerror. ($LOG$ -> Revision 1.18  2007/07/03 16:07:09  corsini
-Microerror. ($LOG$ -> add DCM to Euler Angles method (to implement)
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.17  2007/02/06 12:24:07  tarini
-Microerror. ($LOG$ -> added a missing "Quaternion<S>::" in "FromEulerAngles"
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.16  2007/02/05 13:55:21  corsini
-Microerror. ($LOG$ -> add euler angle to quaternion conversion
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.15  2006/06/22 08:00:26  ganovelli
-Microerror. ($LOG$ -> toMatrix with matrix33 added
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.14  2005/04/17 21:57:03  ganovelli
-Microerror. ($LOG$ -> tolto il const a interpolate
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.13  2005/04/15 09:19:50  ponchio
-Microerror. ($LOG$ -> Typo: Point3 -> Point4
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.12  2005/04/14 17:22:34  ponchio
-Microerror. ($LOG$ -> *** empty log message ***
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.11  2005/04/14 11:35:09  ponchio
-Microerror. ($LOG$ -> *** empty log message ***
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.10  2004/12/15 18:45:50  tommyfranken
-Microerror. ($LOG$ -> *** empty log message ***
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.9  2004/10/22 14:35:42  ponchio
-Microerror. ($LOG$ -> m.element(x, y) -> m[x][y]
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.8  2004/10/07 13:54:03  ganovelli
-Microerror. ($LOG$ -> added SetIdentity
-Microerror. ($LOG$ ->
-Microerror. ($LOG$ -> Revision 1.7  2004/04/07 10:48:37  cignoni
-Microerror. ($LOG$ -> updated access to matrix44 elements through V() instead simple []
-Microerror. ($LOG$ ->
-
-
-****************************************************************************/
-
 
 #ifndef QUATERNION_H
 #define QUATERNION_H
@@ -133,7 +51,6 @@ public:
   void Invert();
 	Quaternion<S> Inverse() const;
   
-	
 	void SetIdentity();
 
   void FromAxis(const S phi, const Point3<S> &a);
@@ -269,32 +186,34 @@ template <class S> Point3<S> Quaternion<S>::Rotate(const Point3<S> p) const {
 
 
 template<class S, class M> void QuaternionToMatrix(const Quaternion<S> &q, M &m) {
-  float x2 = q.V(1) + q.V(1);
-  float y2 = q.V(2) + q.V(2);
-  float z2 = q.V(3) + q.V(3);
+  typedef typename M::ScalarType MScalarType;
+  
+  MScalarType x2 = q.V(1) + q.V(1);
+  MScalarType y2 = q.V(2) + q.V(2);
+  MScalarType z2 = q.V(3) + q.V(3);
   {
-    float xx2 = q.V(1) * x2;
-    float yy2 = q.V(2) * y2;
-    float zz2 = q.V(3) * z2;
+    MScalarType xx2 = q.V(1) * x2;
+    MScalarType yy2 = q.V(2) * y2;
+    MScalarType zz2 = q.V(3) * z2;
     m[0][0] = 1.0f - yy2 - zz2;
     m[1][1] = 1.0f - xx2 - zz2;
     m[2][2] = 1.0f - xx2 - yy2;
   }
   {
-    float yz2 = q.V(2) * z2;
-    float wx2 = q.V(0) * x2;
+    MScalarType yz2 = q.V(2) * z2;
+    MScalarType wx2 = q.V(0) * x2;
     m[1][2] = yz2 - wx2;
     m[2][1] = yz2 + wx2;
   }
   {
-    float xy2 = q.V(1) * y2;
-    float wz2 = q.V(0) * z2;
+    MScalarType xy2 = q.V(1) * y2;
+    MScalarType wz2 = q.V(0) * z2;
     m[0][1] = xy2 - wz2;
     m[1][0] = xy2 + wz2;
   }
   {
-    float xz2 = q.V(1) * z2;
-    float wy2 = q.V(0) * y2;
+    MScalarType xz2 = q.V(1) * z2;
+    MScalarType wy2 = q.V(0) * y2;
     m[2][0] = xz2 - wy2;
     m[0][2] = xz2 + wy2;
   }

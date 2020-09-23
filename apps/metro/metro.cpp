@@ -20,91 +20,14 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.23  2007/05/04 16:50:23  ganovelli
-added plus types version (#ifdef _PLUS_TYPES_ to use it ).
-
-Revision 1.22  2006/10/25 12:40:19  fiorin
-Added possibility to use Octree as search structure:
-
-Revision 1.21  2006/05/03 21:22:39  cignoni
-added missing Include
-
-Revision 1.20  2006/04/20 08:30:24  cignoni
-small GCC compiling issues
-
-Revision 1.19  2006/03/27 04:17:07  cignoni
-moved to generic export.h
-
-Revision 1.18  2006/01/10 13:20:40  cignoni
-Changed ply::PlyMask to io::Mask
-
-Revision 1.17  2005/10/02 23:11:00  cignoni
-Version 4.06, Added possibility of using three different search structures UG Hash and AABB
-
-Revision 1.16  2005/09/16 11:52:14  cignoni
-removed wrong %v in vertex number printing
-
-Revision 1.15  2005/04/04 10:36:36  cignoni
-Release 4.05
-Added saving of Error Histogram
-
-Revision 1.14  2005/01/26 22:45:34  cignoni
-Release 4.04
-final updates for gcc compiling issues
-
-Revision 1.13  2005/01/24 15:46:48  cignoni
-Release 4.04
-Moved to the library core the code for computing min distance froma a point to a mesh using a uniform grid.
-Slightly faster.
-
-Revision 1.12  2005/01/03 11:28:52  cignoni
-Release 4.03
-Better ply compatibility, and improved error reporting
-
-Revision 1.11  2004/11/29 09:07:04  cignoni
-Release 4.02
-removed bug in printing Hausdorf distance,
-removed bug in command line parsing,
-upgraded import mesh library to support off format
-
-Revision 1.10  2004/09/21 23:52:50  cignoni
-Release 4.01
-
-Revision 1.9  2004/09/20 16:29:08  ponchio
-Minimal changes.
-
-Revision 1.8  2004/09/20 15:17:28  cignoni
-Removed bug in displays msec and better usage messages
-
-Revision 1.7  2004/09/09 22:59:15  cignoni
-Removed many small warnings
-
-Revision 1.6  2004/07/15 00:15:16  cignoni
-inflate -> offset
-
-Revision 1.5  2004/06/24 09:08:31  cignoni
-Official Release of Metro 4.00
-
-Revision 1.4  2004/05/14 13:53:12  ganovelli
-GPL  added
-
-****************************************************************************/
-
-// -----------------------------------------------------------------------------------------------
 
 // standard libraries
 #include <time.h>
-
-
 #include <vcg/math/histogram.h>
 #include <vcg/complex/complex.h>
-#include <vcg/simplex/face/component_ep.h>
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export.h>
+#include <vcg/simplex/face/component_ep.h>
 #include <vcg/complex/algorithms/update/component_ep.h>
 #include <vcg/complex/algorithms/update/bounding.h>
 #include "sampling.h"
@@ -218,7 +141,7 @@ int main(int argc, char**argv)
     printf("-------------------------------\n"
            "         Metro V.4.07 \n"
            "     http://vcg.isti.cnr.it\n"
-           "   release date: "__DATE__"\n"
+           "   release date: " __DATE__ "\n"
            "-------------------------------\n\n");
 
     if(argc <= 2)    Usage();
@@ -373,15 +296,14 @@ int main(int argc, char**argv)
     // save error files.
     if(flags & SamplingFlags::SAVE_ERROR)
     {
-      vcg::tri::io::PlyInfo p;
-      p.mask|=vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY /* | vcg::ply::PLYMask::PM_VERTQUALITY*/ ;
+      int saveMask = vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY /* | vcg::ply::PLYMask::PM_VERTQUALITY*/ ;
       //p.mask|=vcg::ply::PLYMask::PM_VERTCOLOR|vcg::ply::PLYMask::PM_VERTQUALITY;
       if(ColorMax!=0 || ColorMin != 0){
         vcg::tri::UpdateColor<CMesh>::PerVertexQualityRamp(S1,ColorMin,ColorMax);
         vcg::tri::UpdateColor<CMesh>::PerVertexQualityRamp(S2,ColorMin,ColorMax);
       }
-      tri::io::ExporterPLY<CMesh>::Save( S1,S1NewName.c_str(),true,p);
-      tri::io::ExporterPLY<CMesh>::Save( S2,S2NewName.c_str(),true,p);
+      tri::io::ExporterPLY<CMesh>::Save( S1,S1NewName.c_str(),saveMask);
+      tri::io::ExporterPLY<CMesh>::Save( S2,S2NewName.c_str(),saveMask);
     }
 
     // save error files.

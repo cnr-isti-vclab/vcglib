@@ -24,23 +24,18 @@
 #ifndef _VCG_EDGE_TOPOLOGY
 #define _VCG_EDGE_TOPOLOGY
 
-#include <vector>
-#include <algorithm>
-#include <vcg/simplex/edge/pos.h>
-
 namespace vcg {
 namespace edge {
 /** \addtogroup edge */
-/*@{*/template <class EdgeType>
-inline bool IsEdgeManifoldFF( EdgeType const & e, const int j )
-{
-  assert(e.cFFp(j) != 0); // never try to use this on uncomputed topology
+/*@{*/
 
-  if(EdgeType::HasFFAdjacency())
-    return ( e.cFFp(j) == &e || &e == e.cFFp(j)->cFFp(e.cFFi(j)) );
-  else
-    return true;
+
+template <class EdgeType>
+inline bool IsEdgeManifold( EdgeType const & e, const int j )
+{
+  return ( e.cEEp(j) == &e || &e == e.cEEp(j)->cEEp(e.cEEi(j)) );
 }
+
 
 /** Return a boolean that indicate if the j-th edge of the face is a border.
   @param j Index of the edge
@@ -208,8 +203,10 @@ void VEEdgeSplit(MeshType &poly, typename MeshType::EdgeType *e, typename MeshTy
   edge::VEDetach(*e,1);
   e->V(1) = &v;
   edge::VEAppend(e,1);
-//  tri::Allocator<MeshType>:: template PointerUpdater<typename MeshType::EdgePointer> pu;
-  typename MeshType::EdgeIterator ei = tri::Allocator<MeshType>::AddEdges(poly, 1);
+  typename tri::Allocator<MeshType>::template PointerUpdater<typename MeshType::EdgePointer> pu;
+  typename MeshType::EdgeIterator ei = tri::Allocator<MeshType>::AddEdges(poly, 1, pu);
+  pu.Update(e);
+  ei->ImportData(*e);
   ei->V(0)=&v;
   ei->V(1)=v1;
   edge::VEAppend(&*ei,0);

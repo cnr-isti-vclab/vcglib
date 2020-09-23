@@ -23,11 +23,10 @@
 #ifndef __VCG_HISTOGRAM
 #define __VCG_HISTOGRAM
 
-#include <vector>
-#include <algorithm>
 #include <assert.h>
 #include <string>
 #include <limits>
+#include <vector>
 #include <vcg/math/base.h>
 #include <stdio.h>
 

@@ -21,11 +21,6 @@
 *                                                                           *
 ****************************************************************************/
 #include<vcg/complex/complex.h>
-
-#include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/normal.h>
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/create/ball_pivoting.h>
 
 // input output
@@ -107,8 +102,7 @@ int  main(int argc, char **argv)
   printf("Output mesh vn:%i fn:%i\n",m.VN(),m.FN());
   printf("Created in :%i msec (%i+%i)\n",t2-t0,t1-t0,t2-t1);
 
-  vcg::tri::io::PlyInfo pi;
-  vcg::tri::io::ExporterPLY<MyMesh>::Save(m,argv[2],pi.mask);
+  vcg::tri::io::ExporterPLY<MyMesh>::Save(m,argv[2]);
   return 0;
 
 }

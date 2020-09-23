@@ -1,3 +1,7 @@
+# Please do not add here all kind of intermediate files just by extension. 
+# Try whenever possible to match folder and to try to use 
+# building rules that put all the generated files into separate folders
+
 # QTCreator user prefs
 *.user
 
@@ -10,3 +14,14 @@ release/
 
 # Intermediate Files
 *.bc
+
+# Visual Studio Project files
+*.vcxproj
+*.vcxproj.filters
+*.suo
+*.ply
+wrap/nanoply/nanoply_vcg/nanoply_vcg.sln
+*.db
+wrap/nanoply/nanoply_vcg/nanoply_vcg.VC.VC.opendb
+wrap/nanoply/nanoply_vcg/.vs/nanoply_vcg/v15/ipch/AutoPCH/NANOPLY_VCG-1b6b1a83/MAIN-5f62d91f/MAIN.ipch
+*.sln

@@ -25,7 +25,6 @@
 #define _VCG_FACE_TOPOLOGY
 
 #include <vcg/simplex/face/pos.h>
-#include <set>
 
 namespace vcg {
 namespace face {
@@ -110,6 +109,16 @@ inline typename FaceType::ScalarType DihedralAngleRad(FaceType & f,  const int i
 
   if(sign > 0 ) return angleRad;
   else return -angleRad;
+}
+
+/// Return the internal angle (in radians) of the i-th wedge of the triangle.
+template <class FaceType>
+inline typename FaceType::ScalarType WedgeAngleRad(FaceType & f,  const int i )
+{
+  auto &P0=f.P(i);
+  auto &P1=f.P(f.Next(i));
+  auto &P2=f.P(f.Prev(i));
+  return vcg::Angle(P2 - P0,P1 - P0);  
 }
 
 /// Count border edges of the face
@@ -237,50 +246,50 @@ void FFDetachManifold(FaceType & f, const int e)
 template <class FaceType>
 void FFDetach(FaceType & f, const int e)
 {
-    assert(FFCorrectness<FaceType>(f,e));
-    assert(!IsBorder<FaceType>(f,e));  // Never try to detach a border edge!
-    int complexity=ComplexSize(f,e);
-    (void) complexity;
-    assert(complexity>0);
+	assert(FFCorrectness<FaceType>(f,e));
+	assert(!IsBorder<FaceType>(f,e));  // Never try to detach a border edge!
+	int complexity=ComplexSize(f,e);
+	(void) complexity;
+	assert(complexity>0);
+	vcg::face::Pos<FaceType> FirstFace(&f,e);  // Build the half edge
+	vcg::face::Pos<FaceType> LastFace(&f,e);  // Build the half edge
+	FirstFace.NextF();
+	LastFace.NextF();
+	int cnt=0;
 
-    Pos< FaceType > FirstFace(&f,e);  // Build the half edge
-    Pos< FaceType > LastFace(&f,e);  // Build the half edge
-    FirstFace.NextF();
-    LastFace.NextF();
-    int cnt=0;
+//	 then in case of non manifold face continue to advance LastFace
+//	 until I find it become the one that
+//	 preceed the face I want to erase
 
-    // then in case of non manifold face continue to advance LastFace
-    // until I find it become the one that
-    // preceed the face I want to erase
+	while ( LastFace.f->FFp(LastFace.z) != &f)
+	{
+		assert(ComplexSize(*LastFace.f,LastFace.z)==complexity);
+		assert(!LastFace.IsManifold());   // We enter in this loop only if we are on a non manifold edge
+		assert(!LastFace.IsBorder());
+		LastFace.NextF();
+		cnt++;
+		assert(cnt<100);
+	}
 
-    while ( LastFace.f->FFp(LastFace.z) != &f)
-    {
-        assert(ComplexSize(*LastFace.f,LastFace.z)==complexity);
-        assert(!LastFace.IsManifold());   // We enter in this loop only if we are on a non manifold edge
-        assert(!LastFace.IsBorder());
-        LastFace.NextF();
-        cnt++;
-        assert(cnt<100);
-    }
+	assert(LastFace.f->FFp(LastFace.z)==&f);
+	assert(f.FFp(e)== FirstFace.f);
 
-    assert(LastFace.f->FFp(LastFace.z)==&f);
-    assert(f.FFp(e)== FirstFace.f);
+	// Now we link the last one to the first one, skipping the face to be detached;
+	LastFace.f->FFp(LastFace.z) = FirstFace.f;
+	LastFace.f->FFi(LastFace.z) = FirstFace.z;
+	assert(ComplexSize(*LastFace.f,LastFace.z)==complexity-1);
 
-    // Now we link the last one to the first one, skipping the face to be detached;
-    LastFace.f->FFp(LastFace.z) = FirstFace.f;
-    LastFace.f->FFi(LastFace.z) = FirstFace.z;
-    assert(ComplexSize(*LastFace.f,LastFace.z)==complexity-1);
+	// At the end selfconnect the chosen edge to make a border.
+	f.FFp(e) = &f;
+	f.FFi(e) = e;
+	assert(ComplexSize(f,e)==1);
 
-    // At the end selfconnect the chosen edge to make a border.
-    f.FFp(e) = &f;
-    f.FFi(e) = e;
-    assert(ComplexSize(f,e)==1);
-
-    assert(FFCorrectness<FaceType>(*LastFace.f,LastFace.z));
-    assert(FFCorrectness<FaceType>(f,e));
+	assert(FFCorrectness<FaceType>(*LastFace.f,LastFace.z));
+	assert(FFCorrectness<FaceType>(f,e));
 }
 
 
+// TODO: deprecate the signature of the functions below and use references
 /** This function attach the face (via the edge z1) to another face (via the edge z2). It's possible to use it also in non-two manifold situation.
         The function cannot be applicated if the adjacencies among faces aren't define.
         @param z1 Index of the edge
@@ -288,27 +297,36 @@ void FFDetach(FaceType & f, const int e)
         @param z2 The edge of the face f2
 */
 template <class FaceType>
-void FFAttach(FaceType * &f, int z1, FaceType *&f2, int z2)
+void FFAttach(FaceType * f, int z1, FaceType * f2, int z2)
 {
-    //typedef FEdgePosB< FACE_TYPE > ETYPE;
-    Pos< FaceType > EPB(f2,z2);
-    Pos< FaceType > TEPB;
-    TEPB = EPB;
-    EPB.NextF();
-    while( EPB.f != f2)  //Alla fine del ciclo TEPB contiene la faccia che precede f2
-    {
-        TEPB = EPB;
-        EPB.NextF();
-    }
-    //Salvo i dati di f1 prima di sovrascrivere
+	//typedef FEdgePosB< FACE_TYPE > ETYPE;
+	vcg::face::Pos< FaceType > EPB(f2,z2);
+	vcg::face::Pos< FaceType > TEPB;
+	TEPB = EPB;
+	EPB.NextF();
+	while( EPB.f != f2)  //Alla fine del ciclo TEPB contiene la faccia che precede f2
+	{
+		TEPB = EPB;
+		EPB.NextF();
+	}
+	//Salvo i dati di f1 prima di sovrascrivere
   FaceType *f1prec = f->FFp(z1);
-  int z1prec = f->FFi(z1);
+  int z1prec       = f->FFi(z1);
+
     //Aggiorno f1
+  assert(f1prec == f);
+  assert(TEPB.f->FFp(TEPB.z) == f2);
+
     f->FFp(z1) = TEPB.f->FFp(TEPB.z);
-    f->FFi(z1) = TEPB.f->FFi(TEPB.z);
-    //Aggiorno la faccia che precede f2
-    TEPB.f->FFp(TEPB.z) = f1prec;
-    TEPB.f->FFi(TEPB.z) = z1prec;
+	f->FFi(z1) = TEPB.f->FFi(TEPB.z);
+
+	//Aggiorno la faccia che precede f2
+	TEPB.f->FFp(TEPB.z) = f1prec;
+	TEPB.f->FFi(TEPB.z) = z1prec;
+
+	assert(FFCorrectness<FaceType>(*f,z1));
+	assert(FFCorrectness<FaceType>(*TEPB.f, TEPB.z));
+
 }
 
 /** This function attach the face (via the edge z1) to another face (via the edge z2).
@@ -319,7 +337,7 @@ void FFAttach(FaceType * &f, int z1, FaceType *&f2, int z2)
         @param z2 The edge of the face f2
 */
 template <class FaceType>
-void FFAttachManifold(FaceType * &f1, int z1, FaceType *&f2, int z2)
+void FFAttachManifold(FaceType * f1, int z1, FaceType * f2, int z2)
 {
   assert(IsBorder<FaceType>(*f1,z1) || f1->FFp(z1)==0);
   assert(IsBorder<FaceType>(*f2,z2) || f2->FFp(z2)==0);
@@ -333,7 +351,7 @@ void FFAttachManifold(FaceType * &f1, int z1, FaceType *&f2, int z2)
 
 // This one should be called only on uniitialized faces.
 template <class FaceType>
-void FFSetBorder(FaceType * &f1, int z1)
+void FFSetBorder(FaceType * f1, int z1)
 {
   assert(f1->FFp(z1)==0 || IsBorder(*f1,z1));
 
@@ -618,13 +636,52 @@ bool CheckFlipEdge(FaceType &f, int z)
   PosType startPos=pos;
     do
     {
-        pos.NextE();
-    if (g_v2 == pos.VFlip())
-            return false;
+	    pos.NextE();
+		if (g_v2 == pos.VFlip())
+			return false;
     }
   while (pos != startPos);
 
     return true;
+}
+
+template <class FaceType>
+bool checkFlipEdgeNotManifold (FaceType &f, const int z)
+{
+	typedef typename FaceType::VertexType VertexType;
+	typedef typename vcg::face::Pos< FaceType > PosType;
+	if (z<0 || z>2)  return false;
+
+	// boundary edges cannot be flipped
+	if (vcg::face::IsBorder(f, z)) return false;
+
+	FaceType *g = f.FFp(z);
+	int       w = f.FFi(z);
+
+	// check if the vertices of the edge are the same
+	// e.g. the mesh has to be well oriented
+	if (g->V(w)!=f.V1(z) || g->V1(w)!=f.V(z) )
+		return false;
+
+	// check if the flipped edge is already present in the mesh
+	// f_v2 and g_v2 are the vertices of the new edge
+	VertexType *f_v2 = f.V2(z);
+	VertexType *g_v2 = g->V2(w);
+
+	PosType pos(&f, (z+2)%3, f_v2);
+	PosType startPos=pos;
+	do
+	{
+		pos.FlipE();
+		pos.NextF();
+//		if (g_v2 == pos.F()->V((pos.E()+1) % 3))
+		if (g_v2 == pos.VFlip())
+			return false;
+	}
+	while (pos != startPos);
+
+	return true;
+
 }
 
 /*!
@@ -654,10 +711,10 @@ bool CheckFlipEdge(FaceType &f, int z)
 template <class FaceType>
 void FlipEdge(FaceType &f, const int z)
 {
-    assert(z>=0);
-    assert(z<3);
-    assert( !IsBorder(f,z) );
-    assert( face::IsManifold<FaceType>(f, z));
+	assert(z>=0);
+	assert(z<3);
+	assert( !IsBorder(f,z) );
+	assert( face::IsManifold<FaceType>(f, z));
 
     FaceType *g = f.FFp(z); // The other face 
     int	      w = f.FFi(z); // and other side
@@ -671,37 +728,124 @@ void FlipEdge(FaceType &f, const int z)
     f.V1(z) = g->V2(w);
     g->V1(w) = f.V2(z);
 
-    f.FFp(z)				= g->FFp((w+1)%3);
-    f.FFi(z)				= g->FFi((w+1)%3);
-    g->FFp(w)				= f.FFp((z+1)%3);
-    g->FFi(w)				= f.FFi((z+1)%3);
-    f.FFp((z+1)%3)				= g;
-    f.FFi((z+1)%3)	= (w+1)%3;
-    g->FFp((w+1)%3)			= &f;
-    g->FFi((w+1)%3) = (z+1)%3;
+	//topology update
 
-    if(f.FFp(z)==g)
-    {
-        f.FFp(z) = &f;
-        f.FFi(z) = z;
-    }
-    else
-    {
-        f.FFp(z)->FFp( f.FFi(z) ) = &f;
-        f.FFp(z)->FFi( f.FFi(z) ) = z;
-    }
-    if(g->FFp(w)==&f)
-    {
-        g->FFp(w)=g;
-        g->FFi(w)=w;
-    }
-    else
-    {
-        g->FFp(w)->FFp( g->FFi(w) ) = g;
-        g->FFp(w)->FFi( g->FFi(w) ) = w;
-    }
+
+	f.FFp(z)       = g->FFp((w+1)%3);
+	f.FFi(z)       = g->FFi((w+1)%3);
+	g->FFp(w)      = f.FFp((z+1)%3);
+	g->FFi(w)      = f.FFi((z+1)%3);
+
+	f.FFp((z+1)%3)  = g;
+	f.FFi((z+1)%3)  = (w+1)%3;
+	g->FFp((w+1)%3) = &f;
+	g->FFi((w+1)%3) = (z+1)%3;
+
+	if(f.FFp(z)==g)
+	{
+		f.FFp(z) = &f;
+		f.FFi(z) = z;
+	}
+	else
+	{
+		f.FFp(z)->FFp( f.FFi(z) ) = &f;
+		f.FFp(z)->FFi( f.FFi(z) ) = z;
+	}
+	if(g->FFp(w)==&f)
+	{
+		g->FFp(w)=g;
+		g->FFi(w)=w;
+	}
+	else
+	{
+		g->FFp(w)->FFp( g->FFi(w) ) = g;
+		g->FFp(w)->FFi( g->FFi(w) ) = w;
+	}
     
 }
+
+/*!
+* Flip the z-th edge of the face f.
+* Check for topological correctness first using <CODE>CheckFlipEdge()</CODE>.
+*	\param f	pointer to the face
+*	\param z	the edge index
+*
+* Note: For <em>edge flip</em> we intend the swap of the diagonal of the quadrilater
+*       formed by the face \a f and the face adjacent to the specified edge.
+*
+*        0__________ 2        0__________2
+*   -> 1|\          |         |          /|1
+*       |  \     g  |         |  g     /  |
+*       |    \      |         |w     /    |
+*       |  f  z\w   |         |    /  f  z|
+*       |        \  |         |  /        |
+*       |__________\|1 <-    1|/__________|
+*      2            0          2           0
+*
+* Note that, after an operation FlipEdge(f,z)
+* to topologically revert it should be sufficient to do FlipEdge(f,z+1)
+* (even if the mesh is actually different: f and g will be swapped)
+*
+*/
+template <class FaceType>
+void FlipEdgeNotManifold(FaceType &f, const int z)
+{
+	assert(z>=0);
+	assert(z<3);
+	assert( !IsBorder(f,z) );
+	assert( face::IsManifold<FaceType>(f, z));
+
+	FaceType *g = f.FFp(z); // The other face
+	int	      w = f.FFi(z); // and other side
+
+	assert( g->V0(w) == f.V1(z) );
+	assert( g->V1(w) == f.V0(z) );
+	assert( g->V2(w) != f.V0(z) );
+	assert( g->V2(w) != f.V1(z) );
+	assert( g->V2(w) != f.V2(z) );
+
+	int fi1       = f.FFi(f.Next(z));
+	FaceType* fp1 = f.FFp(f.Next(z));
+
+	int gi1       = g->FFi(g->Next(w));
+	FaceType* gp1 = g->FFp(g->Next(w));
+
+
+	FFDetach(f, z);
+	if (!IsBorder(f, (z+1)%3))
+		FFDetach(f, (z+1)%3);
+	if (!IsBorder(*g, (w+1)%3))
+		FFDetach(*g, (w+1)%3);
+
+	f.V1(z) = g->V2(w);
+	g->V1(w) = f.V2(z);
+
+	//topology update
+	FaceType* ftmp = &f;
+
+	if (gp1 != g)
+		FFAttach(ftmp, z, gp1, gi1);
+	if (fp1 != &f)
+		FFAttach(g, w, fp1, fi1);
+
+	FFAttachManifold(ftmp, (z+1)%3, g, (w+1)%3);
+}
+
+template <class FaceType>
+void TriSplit(FaceType *fToSplit, FaceType *newf0, FaceType *newf1, typename FaceType::VertexType *newVert)
+{
+  typedef typename FaceType::VertexType VertexType;
+  
+  VertexType *vp0 = fToSplit->V(0);
+  VertexType *vp1 = fToSplit->V(1);
+  VertexType *vp2 = fToSplit->V(2);
+  
+  fToSplit->V(0) = vp0; fToSplit->V(1) = vp1; fToSplit->V(2) = newVert;
+  newf0->V(0) = vp1; newf0->V(1) = vp2; newf0->V(2) = newVert;
+  newf1->V(0) = vp2; newf1->V(1) = vp0; newf1->V(2) = newVert;    
+}
+
+
 
 template <class FaceType>
 void VFDetach(FaceType & f)
@@ -745,7 +889,7 @@ void VFDetach(FaceType & f, int z)
 
 /// Append a face in VF list of vertex f->V(z)
 template <class FaceType>
-void VFAppend(FaceType* & f, int z)
+void VFAppend(FaceType * f, int z)
 {
     typename FaceType::VertexType *v = f->V(z);
     if (v->VFp()!=0)
@@ -771,19 +915,21 @@ void VFAppend(FaceType* & f, int z)
 template <class FaceType>
 void VVStarVF( typename FaceType::VertexType* vp, std::vector<typename FaceType::VertexType *> &starVec)
 {
-    typedef typename FaceType::VertexType* VertexPointer;
-    starVec.clear();
-    face::VFIterator<FaceType> vfi(vp);
-    while(!vfi.End())
-            {
-                starVec.push_back(vfi.F()->V1(vfi.I()));
-                starVec.push_back(vfi.F()->V2(vfi.I()));
-                ++vfi;
-            }
+	typedef typename FaceType::VertexType* VertexPointer;
+	starVec.clear();
+    starVec.reserve(16);
+	face::VFIterator<FaceType> vfi(vp);
+	while(!vfi.End())
+	{
+		const int vn = vfi.F()->VN();
+		starVec.push_back(vfi.F()->V1(vfi.I()));
+		starVec.push_back(vfi.F()->V((vfi.I()+vn-1)%vn));
+		++vfi;
+	}
 
-    std::sort(starVec.begin(),starVec.end());
-    typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
-    starVec.resize(new_end-starVec.begin());
+	std::sort(starVec.begin(),starVec.end());
+	typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
+	starVec.resize(new_end-starVec.begin());
 }
 
 /*!
@@ -836,6 +982,8 @@ void VFStarVF( typename FaceType::VertexType* vp,
 {
     faceVec.clear();
     indexes.clear();
+	faceVec.reserve(16);
+	indexes.reserve(16);
     face::VFIterator<FaceType> vfi(vp);
     while(!vfi.End())
     {
@@ -960,12 +1108,34 @@ void VFExtendedStarVF(typename FaceType::VertexType* vp,
  *
 */
 template <class FaceType>
-void VVOrderedStarFF(Pos<FaceType> &startPos,
+void VVOrderedStarFF(const Pos<FaceType> &startPos,
                      std::vector<typename FaceType::VertexType *> &vertexVec)
 {
   vertexVec.clear();
+  vertexVec.reserve(16);
   std::vector<Pos<FaceType> > posVec;
   VFOrderedStarFF(startPos,posVec);
+  for(size_t i=0;i<posVec.size();++i)
+    vertexVec.push_back(posVec[i].VFlip());
+}
+
+/*!
+ * \brief Compute the ordered set of vertices adjacent to a given vertex using FF adiacency
+ *
+ * \param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
+ * \param vertexVec a std::vector of VertexPtr filled vertices around the given vertex.
+ * \param ccw if true returns the vertexVec in countercounterclockwise order; if false in clockwise order.
+ *
+*/
+template <class FaceType>
+void VVOrderedStarFF(const Pos<FaceType> &startPos,
+                     std::vector<typename FaceType::VertexType *> &vertexVec,
+                     const bool ccw)
+{
+  vertexVec.clear();
+  vertexVec.reserve(16);
+  std::vector<Pos<FaceType> > posVec;
+  VFOrderedStarFF(startPos,posVec,ccw);
   for(size_t i=0;i<posVec.size();++i)
     vertexVec.push_back(posVec[i].VFlip());
 }
@@ -982,6 +1152,7 @@ void VFOrderedStarFF(const Pos<FaceType> &startPos,
                      std::vector<Pos<FaceType> > &posVec)
 {
   posVec.clear();
+  posVec.reserve(16);
   bool foundBorder=false;
   size_t firstBorderInd;
   Pos<FaceType> curPos=startPos;
@@ -1012,6 +1183,27 @@ void VFOrderedStarFF(const Pos<FaceType> &startPos,
  * \brief Compute the ordered set of faces adjacent to a given vertex using FF adiacency
  *
  * \param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
+ * \param posVec a std::vector of Pos filled with Pos arranged around the passed vertex.
+ * \param ccw if true returns the posVec in countercounterclockwise order; if false in clockwise order.
+ *
+*/
+template <class FaceType>
+void VFOrderedStarFF(const Pos<FaceType> &startPos,
+                     std::vector<Pos<FaceType> > &posVec,
+                     const bool ccw)
+{
+	VFOrderedStarFF(startPos, posVec);
+	const auto & pos = posVec[0];
+	if (ccw != (pos.VFlip() == pos.F()->V(pos.F()->Prev(pos.VInd()))))
+	{
+		std::reverse(posVec.begin(), posVec.end());
+	}
+}
+
+/*!
+ * \brief Compute the ordered set of faces adjacent to a given vertex using FF adiacency
+ *
+ * \param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
  * \param faceVec a std::vector of Face pointer that is filled with the adjacent faces.
  * \param edgeVec a std::vector of indexes filled with the indexes of the corresponding edges shared between the faces.
  *
@@ -1026,6 +1218,8 @@ void VFOrderedStarFF(const Pos<FaceType> &startPos,
   VFOrderedStarFF(startPos,posVec);
   faceVec.clear();
   edgeVec.clear();
+  faceVec.reserve(16);
+  edgeVec.reserve(16);
   for(size_t i=0;i<posVec.size();++i)
   {
     faceVec.push_back(posVec[i].F());

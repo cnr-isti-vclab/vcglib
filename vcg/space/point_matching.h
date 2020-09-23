@@ -27,8 +27,8 @@
 #include <vcg/math/quaternion.h>
 #include <vcg/math/matrix44.h>
 
-#include <eigenlib/Eigen/Dense>
-#include <eigenlib/Eigen/Eigenvalues>
+#include <Eigen/Dense>
+#include <Eigen/Eigenvalues>
 #include  <iostream>
 
 namespace vcg
@@ -50,26 +50,26 @@ void ComputeCrossCovarianceMatrix(const std::vector<Point3<S> > &spVec, Point3<S
                                   const std::vector<Point3<S> > &tpVec, Point3<S> &tpBarycenter,
                                   Eigen::Matrix3d &m)
 {
-    assert(spVec.size()==tpVec.size());
-    m.setZero();
-    spBarycenter.SetZero();
-    tpBarycenter.SetZero();
-    Eigen::Vector3d spe;
-    Eigen::Vector3d tpe;
-    typename std::vector <Point3<S> >::const_iterator si,ti;
-    for(si=spVec.begin(),ti=tpVec.begin();si!=spVec.end();++si,++ti){
-        spBarycenter+=*si;
-        tpBarycenter+=*ti;
-         si->ToEigenVector(spe);
-         ti->ToEigenVector(tpe);
-        m+=spe*tpe.transpose();
-    }
-    spBarycenter/=spVec.size();
-    tpBarycenter/=tpVec.size();
-    spBarycenter.ToEigenVector(spe);
-    tpBarycenter.ToEigenVector(tpe);
-    m/=spVec.size();
-    m-=spe*tpe.transpose();
+	assert(spVec.size() == tpVec.size());
+	m.setZero();
+	spBarycenter.SetZero();
+	tpBarycenter.SetZero();
+	Eigen::Vector3d spe;
+	Eigen::Vector3d tpe;
+	typename std::vector <Point3<S> >::const_iterator si, ti;
+	for (si = spVec.begin(), ti = tpVec.begin(); si != spVec.end(); ++si, ++ti){
+		spBarycenter += *si;
+		tpBarycenter += *ti;
+		si->ToEigenVector(spe);
+		ti->ToEigenVector(tpe);
+		m += spe*tpe.transpose();
+	}
+	spBarycenter /= double(spVec.size());
+	tpBarycenter /= double(tpVec.size());
+	spBarycenter.ToEigenVector(spe);
+	tpBarycenter.ToEigenVector(tpe);
+	m /= double(spVec.size());
+	m -= spe*tpe.transpose();
 }
 
 /*! \brief Compute the roto-translation that applied to PMov bring them onto Pfix
@@ -159,6 +159,58 @@ void ComputeRigidMatchMatrix(std::vector<Point3<S> > &Pfix,
     Trn.SetTranslate(tr);
 
     res=Trn*Rot;
+}
+
+/*! \brief Computes the best fitting rigid transformations to align two sets of corresponding points
+ *
+ * Ref:
+ * Olga Sorkine-Hornung and Michael Rabinovich
+ * Least-Squares Rigid Motion Using SVD
+ */
+template <class S>
+Matrix44<S> ComputeLeastSquaresRigidMotion(std::vector<Point3<S> > &pFix,
+                                           std::vector<Point3<S> > &pMov)
+{
+	if (pFix.size() != pMov.size() || pFix.size() < 3)
+		return Matrix44<S>::Identity();
+
+	Eigen::Matrix3Xd p(3, pMov.size()); // moving
+	Eigen::MatrixX3d q(pFix.size(), 3); // fixed
+
+	for (size_t i=0; i<pMov.size(); i++)
+	{
+		Eigen::Vector3d v;
+		pMov[i].ToEigenVector(v);
+		p.col(i) = v;
+	}
+	Eigen::Vector3d avgP = p.rowwise().mean();
+	p.colwise() -= avgP;
+
+	for (size_t i=0; i<pFix.size(); i++)
+	{
+		Eigen::Vector3d v;
+		pFix[i].ToEigenVector(v);
+		q.row(i) = v;
+	}
+	Eigen::Vector3d avgQ = q.colwise().mean();
+	q.rowwise() -= avgQ.transpose();
+
+	Eigen::Matrix3d cov = p * q;
+	Eigen::JacobiSVD<Eigen::Matrix3d> svd;
+	svd.compute(cov, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+	Eigen::Matrix3d d = Eigen::Matrix3d::Identity();
+	d(2,2) = (svd.matrixV() * svd.matrixU().transpose()).determinant() > 0 ? 1 : -1;
+
+	Eigen::Matrix3d R = (svd.matrixV() * d * svd.matrixU().transpose());
+	Eigen::Vector3d t = avgQ - R * avgP;
+
+	Eigen::Matrix4d res = Eigen::Matrix4d::Identity();
+	res.block<3,3>(0,0) = R;
+	res.block<3,1>(0,3) = t;
+	Matrix44<S> ret;
+	ret.FromEigenMatrix(res);
+	return ret;
 }
 
 

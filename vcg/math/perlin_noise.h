@@ -24,6 +24,8 @@
 #ifndef __VCGLIB_PERLIN_NOISE
 #define __VCGLIB_PERLIN_NOISE
 
+#include <cmath>
+
 namespace vcg
 {
  namespace math {

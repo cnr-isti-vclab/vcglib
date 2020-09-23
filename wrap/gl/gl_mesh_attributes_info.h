@@ -217,6 +217,20 @@ namespace vcg
                 return res;
             }
 
+            size_t serialize(std::string& str) const 
+            {
+              for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
+                str.append(((_atts[ii]) ? "1" : "0"));
+              return ATT_NAMES_DERIVED_CLASS::enumArity();
+            }
+
+            void deserialize(const std::string& str)
+            {
+              std::bitset<ATT_NAMES_DERIVED_CLASS::ATT_ARITY> bset(str);
+              for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
+                _atts[ATT_NAMES_DERIVED_CLASS::enumArity() - ii - 1] = bset[ii];
+            }
+
             //template<typename MESHTYPE>
             //static void computeARequestedAttributesSetCompatibleWithMesh(const MESHTYPE& mesh,const PRIMITIVE_MODALITY_MASK,RenderingAtts<ATT_NAMES_DERIVED_CLASS>& rqatt)
             //{
@@ -330,6 +344,8 @@ namespace vcg
         class InternalRendAtts : public RenderingAtts<INT_ATT_NAMES>
         {
         public:
+          typedef INT_ATT_NAMES AttName;
+
             InternalRendAtts()
                 :RenderingAtts<INT_ATT_NAMES>()
             {

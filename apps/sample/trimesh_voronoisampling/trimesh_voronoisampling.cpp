@@ -120,7 +120,7 @@ int main( int argc, char **argv )
       // Now save the corner as Fixed Seeds for later...
       std::vector<MyVertex *> fixedSeedVec;
       tri::VoronoiProcessing<MyMesh>::SeedToVertexConversion(baseMesh,sampleVec,fixedSeedVec);
-      tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::FixVertexVector(baseMesh,fixedSeedVec);
+      tri::VoronoiProcessing<MyMesh, tri::EuclideanDistance<MyMesh> >::MarkVertexVectorAsFixed(baseMesh,fixedSeedVec);
       vpp.preserveFixedSeed=true;
     }
 

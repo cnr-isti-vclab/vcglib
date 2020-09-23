@@ -60,8 +60,6 @@ public:
 
 	template <class OBJRAYISECTFUNCT>
 	static inline ObjPtr Ray(TreeType & tree, OBJRAYISECTFUNCT & rayIntersection, const Ray3<ScalarType> & ray, const ScalarType & maxDist, ScalarType & t) {
-		typedef std::vector<NodeType *> NodePtrVector;
-		typedef typename NodePtrVector::const_iterator NodePtrVector_ci;
 
 		NodeType * pRoot = tree.pRoot;
 

@@ -64,7 +64,7 @@ namespace vcg{
 
     /** Spatial Hash Table
     Spatial Hashing as described in
-    "Optimized Spatial Hashing for Coll	ision Detection of Deformable Objects",
+    "Optimized Spatial Hashing for Collision Detection of Deformable Objects",
     Matthias Teschner and Bruno Heidelberger and Matthias Muller and Danat Pomeranets and Markus Gross
     */
     template < typename ObjType,class FLT=double>
@@ -206,7 +206,7 @@ protected:
                     inSphVec.push_back(hi);
                 }
               }
-          return inSphVec.size();
+          return int(inSphVec.size());
         }
 
         size_t RemoveInSphere(const Point3<ScalarType> &p, const ScalarType radius)

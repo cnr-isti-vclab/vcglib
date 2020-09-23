@@ -57,7 +57,7 @@ static void buildRandRectSet(int rectNum, vector<Box2f> &rectVec)
   }
 }
 
-int main( int argc, char **argv )
+int main( int /*argc*/, char **/*argv*/ )
 {
   vector<Similarity2f> trVec;
   vector<Similarity2f> trPolyVec;
@@ -115,7 +115,6 @@ int main( int argc, char **argv )
 
   packingParam.costFunction  = RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Parameters::LowestHorizon;
   packingParam.doubleHorizon = true;
-  packingParam.cellSize = 4;
   packingParam.rotationNum = 16; //number of rasterizations in 90°
 
   RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Pack(outline2Vec,containerSize,trVec,packingParam);

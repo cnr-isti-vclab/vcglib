@@ -31,8 +31,6 @@ This file contain a minimal example of the library, showing how to load a mesh a
 
 #include<vcg/complex/complex.h>
 #include<wrap/io_trimesh/import_off.h>
-#include<vcg/complex/algorithms/update/topology.h>
-#include<vcg/complex/algorithms/update/normal.h>
 
 class MyVertex; class MyEdge; class MyFace;
 struct MyUsedTypes : public vcg::UsedTypes<vcg::Use<MyVertex>   ::AsVertexType,

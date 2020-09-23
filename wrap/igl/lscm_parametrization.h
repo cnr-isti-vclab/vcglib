@@ -69,7 +69,7 @@ void OptimizeUV_LSCM( MeshType& m ,
     vcg::tri::MeshToMatrix< MeshType >::GetTriMeshData( m, F, V );
 
     // build fixed points data
-    int nFixed = 0;
+    size_t nFixed = 0;
     for (int i=0; i<(int)m.vert.size(); i++) {
         if (m.vert[i].Flags()&fixedMask) nFixed++;
     }

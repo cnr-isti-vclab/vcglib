@@ -24,8 +24,6 @@
 #ifndef __VCGLIB_UGRID
 #define __VCGLIB_UGRID
 
-#include <vector>
-#include <algorithm>
 #include <stdio.h>
 
 #include <vcg/space/box3.h>

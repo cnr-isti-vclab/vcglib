@@ -27,7 +27,6 @@
 #include<vcg/complex/complex.h>
 #include<vcg/complex/algorithms/closest.h>
 #include<vcg/complex/algorithms/update/quality.h>
-#include<vcg/complex/algorithms/update/selection.h>
 
 
 #ifndef __VCGLIB_INTERSECTION_TRI_MESH
@@ -139,8 +138,8 @@ bool IntersectionPlaneMeshOld(TriMeshType & m,
 */
 template < typename  TriMeshType, typename EdgeMeshType, class ScalarType >
 bool IntersectionPlaneMesh(TriMeshType & m,
-									Plane3<ScalarType>  pl,
-									EdgeMeshType & em)
+                           Plane3<ScalarType>  pl,
+                           EdgeMeshType & em)
 {
   std::vector<Point3<ScalarType> > ptVec;
   std::vector<Point3<ScalarType> > nmVec;
@@ -148,9 +147,8 @@ bool IntersectionPlaneMesh(TriMeshType & m,
   typename TriMeshType::template PerVertexAttributeHandle < ScalarType > qH =
       tri::Allocator<TriMeshType> :: template AddPerVertexAttribute < ScalarType >(m,"TemporaryPlaneDistance");
 
-  typename TriMeshType::VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-    qH[vi] =SignedDistancePlanePoint(pl,(*vi).cP());
+  for(auto vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+    qH[vi] = SignedDistancePlanePoint(pl,(*vi).cP());
 
   for(size_t i=0;i<m.face.size();i++)
     if(!m.face[i].IsD())
@@ -175,11 +173,11 @@ bool IntersectionPlaneMesh(TriMeshType & m,
          Point3<ScalarType> nn =(n0*fabs(q1) + n1*fabs(q0))/fabs(q0-q1);
          nmVec.push_back(nn);
        }
-	   if (qH[m.face[i].V(j)] == 0)
-	   {
-		   ptVec.push_back(m.face[i].V(j)->cP());
-		   nmVec.push_back(m.face[i].V(j)->cN());
-	   }
+       if (qH[m.face[i].V(j)] == 0)
+       {
+         ptVec.push_back(m.face[i].V(j)->cP());
+         nmVec.push_back(m.face[i].V(j)->cN());
+       }
       }
       if(ptVec.size()>=2)
       {
@@ -283,7 +281,7 @@ bool IntersectionRayMesh(
 	/* Baricentric coord 1*/ ScalarType &bar1,
 	/* Baricentric coord 2*/ ScalarType &bar2,
 	/* Baricentric coord 3*/ ScalarType &bar3,
-	/* FacePointer */ typename TriMeshType::FacePointer fp
+	/* FacePointer */ typename TriMeshType::FacePointer & fp
 	)
 {
 	//typedef typename TriMeshType::FaceContainer FaceContainer;

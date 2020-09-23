@@ -76,8 +76,6 @@ protected:
 public:
 	template <class OBJPOINTDISTANCEFUNCT, class OBJPTRCONTAINERTYPE, class DISTCONTAINERTYPE, class POINTCONTAINERTYPE>
 	static inline unsigned int KClosest(TreeType & tree, OBJPOINTDISTANCEFUNCT & getPointDistance, const unsigned int k, const CoordType & p, const ScalarType & maxDist, OBJPTRCONTAINERTYPE & objects, DISTCONTAINERTYPE & distances, POINTCONTAINERTYPE & points) {
-		typedef std::vector<NodeType *> NodePtrVector;
-		typedef typename NodePtrVector::const_iterator NodePtrVector_ci;
 
 		if (k == 0) {
 			return (0);

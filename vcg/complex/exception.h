@@ -83,6 +83,21 @@ public:
     }
 };
 
+class MissingTetrahedralRequirementException : public std::runtime_error
+{
+public:
+  MissingTetrahedralRequirementException(const std::string &err):std::runtime_error(err)
+  {
+    std::cout << "Mesh has to be composed by tetrahedras -" << err << "- \n";
+  }
+
+    virtual const char *what() const throw ()
+    {
+      static char buf[128]="Mesh has to be composed by tetrahedras";
+      return buf;
+    }
+};
+
 class MissingPreconditionException : public std::runtime_error
 {
 public:

@@ -1,15 +1,30 @@
-#include <vector>
+/****************************************************************************
+* VCGLib                                                            o o     *
+* Visual and Computer Graphics Library                            o     o   *
+*                                                                _   O  _   *
+* Copyright(C) 2004-2016                                           \/)\/    *
+* Visual Computing Lab                                            /\/|      *
+* ISTI - Italian National Research Council                           |      *
+*                                                                    \      *
+* All rights reserved.                                                      *
+*                                                                           *
+* This program is free software; you can redistribute it and/or modify      *
+* it under the terms of the GNU General Public License as published by      *
+* the Free Software Foundation; either version 2 of the License, or         *
+* (at your option) any later version.                                       *
+*                                                                           *
+* This program is distributed in the hope that it will be useful,           *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+* GNU General Public License (http://www.gnu.org/licenses/gpl.txt)          *
+* for more details.                                                         *
+*                                                                           *
+****************************************************************************/
 
-using namespace std;
-
-// VCG headers for triangular mesh processing
 #include <vcg/complex/complex.h>
-#include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/component_ep.h>
-#include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/update/quality.h>
 #include <vcg/complex/algorithms/update/color.h>
-#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/complex/algorithms/stat.h>
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/intersection.h>
@@ -21,6 +36,7 @@ using namespace std;
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
 
+using namespace std;
 using namespace vcg;
 
 class MyFace;

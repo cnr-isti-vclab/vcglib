@@ -25,11 +25,37 @@
 #define VCG_PARAM_DISTORTION
 #include <vcg/complex/algorithms/parametrization/uv_utils.h>
 #include <vcg/complex/algorithms/parametrization/tangent_field_operators.h>
+#include <Eigen/Dense>
 
 namespace vcg {
-namespace tri{
-template <class MeshType, bool PerWedgeFlag>
+namespace tri {
 
+
+template <class MeshType, bool PerWedge>
+struct UVHelper {};
+
+template <class MeshType>
+struct UVHelper<MeshType, true>
+{
+	typedef typename MeshType::FaceType                FaceType;
+    typedef typename FaceType::TexCoordType::PointType TexCoordType;
+	static TexCoordType Coord(const FaceType *f, int i)
+	{
+		return f->cWT(i).P();
+	}
+};
+
+template <class MeshType>
+struct UVHelper<MeshType, false>
+{
+	typedef typename MeshType::FaceType                  FaceType;
+	typedef typename MeshType::VertexType                VertexType;
+	typedef typename VertexType::TexCoordType::PointType TexCoordType;
+	static TexCoordType Coord(const FaceType *f, int i)
+	{
+		return f->cV(i)->T().P();
+	}
+};
 
 /*
  *  Energy types:
@@ -44,12 +70,19 @@ template <class MeshType, bool PerWedgeFlag>
  *    LInfStretch : as above, but WORST case
  *                  (returns the worst stretch on any position and direction)
  *                  Described in [1]
+ *    ARAPEnergy : 0 for isometric mappings
+ *                 Described in [2]
  *
  * [1] Sander, P. V., Snyder, J., Gortler, S. J., & Hoppe, H.
  *     "Texture mapping progressive meshes."
  *      In Proc. ACM SIGGRAPH (pp. 409-416). 2001
+ *
+ * [2] Liu, L., Zhang, L., Xu, Y., Gotsman, C., & Gortler, S. J. (2008, July).
+ *     A local/global approach to mesh parameterization.
+ *     Computer Graphics Forum (Vol. 27, No. 5, pp. 1495-1504). Blackwell Publishing Ltd.
  */
 
+template <class MeshType, bool PerWedgeFlag>
 class Distortion
 {
 public:
@@ -58,8 +91,14 @@ public:
     typedef typename MeshType::CoordType CoordType;
     typedef typename MeshType::ScalarType ScalarType;
     typedef typename MeshType::FaceType::CurVecType CurVecType;
-    typedef typename MeshType::FaceType::TexCoordType::ScalarType TexScalarType;
-    typedef Point2<TexScalarType> TexCoordType;
+    typedef UVHelper<MeshType, PerWedgeFlag>          UV;
+    typedef typename UV::TexCoordType                 TexCoordType;
+	typedef typename TexCoordType::ScalarType         TexScalarType;
+
+	static TexCoordType UVCoord(const FaceType *f, int i)
+	{
+		return UV::Coord(f, i);
+	}
 
     static ScalarType Area3D(const FaceType *f)
     {
@@ -68,16 +107,9 @@ public:
 
     static ScalarType AreaUV(const FaceType *f)
     {
-        TexCoordType uv0,uv1,uv2;
-        if(PerWedgeFlag) {
-            uv0=f->cWT(0).P();
-            uv1=f->cWT(1).P();
-            uv2=f->cWT(2).P();
-        } else {
-            uv0=f->cV(0)->T().P();
-            uv1=f->cV(1)->T().P();
-            uv2=f->cV(2)->T().P();
-        }
+		TexCoordType uv0 = UVCoord(f, 0);
+		TexCoordType uv1 = UVCoord(f, 1);
+		TexCoordType uv2 = UVCoord(f, 2);
         ScalarType AreaUV=((uv1-uv0)^(uv2-uv0))/2.0;
         return AreaUV;
     }
@@ -92,14 +124,8 @@ public:
     static ScalarType EdgeLenghtUV(const FaceType *f,int e)
     {
         assert((e>=0)&&(e<3));
-        Point2<TexScalarType> uv0,uv1;
-        if(PerWedgeFlag) {
-            uv0=f->cWT(e+0).P();
-            uv1=f->cWT((e+1)%3).P();
-        } else {
-            uv0=f->cV0(e)->T().P();
-            uv1=f->cV1(e)->T().P();
-        }
+		TexCoordType uv0 = UVCoord(f, e+0);
+		TexCoordType uv1 = UVCoord(f, (e+1)%3);
         ScalarType UVlength=Distance(uv0,uv1);
         return UVlength;
     }
@@ -110,7 +136,6 @@ public:
         CoordType p0=f->P((e+2)%3);
         CoordType p1=f->P(e);
         CoordType p2=f->P((e+1)%3);
-        typedef typename CoordType::ScalarType ScalarType;
         CoordType dir0=p2-p1;
         CoordType dir1=p0-p1;
         dir0.Normalize();
@@ -121,16 +146,9 @@ public:
 
     static ScalarType AngleCosUV(const FaceType *f,int e)
     {
-        Point2<ScalarType> uv0,uv1,uv2;
-        if(PerWedgeFlag) {
-            uv0=f->cWT((e+2)%3).P();
-            uv1=f->cWT((e+0)%3).P();
-            uv2=f->cWT((e+1)%3).P();
-        } else {
-            uv0=f->V2(e)->T().P();
-            uv1=f->V0(e)->T().P();
-            uv2=f->V1(e)->T().P();
-        }
+		TexCoordType uv0 = UVCoord(f, (e+2)%3);
+		TexCoordType uv1 = UVCoord(f,  e);
+		TexCoordType uv2 = UVCoord(f, (e+1)%3);
         vcg::Point2<ScalarType> dir0=uv2-uv1;
         vcg::Point2<ScalarType> dir1=uv0-uv1;
         dir0.Normalize();
@@ -145,7 +163,6 @@ public:
         CoordType p0=f->cP((e+2)%3);
         CoordType p1=f->cP(e);
         CoordType p2=f->cP((e+1)%3);
-        typedef typename CoordType::ScalarType ScalarType;
         CoordType dir0=p2-p1;
         CoordType dir1=p0-p1;
         return Angle(dir0,dir1);
@@ -153,16 +170,9 @@ public:
 
     static ScalarType AngleRadUV(const FaceType *f,int e)
     {
-        Point2<TexScalarType> uv0,uv1,uv2;
-        if(PerWedgeFlag) {
-            uv0=f->cWT((e+2)%3).P();
-            uv1=f->cWT((e+0)%3).P();
-            uv2=f->cWT((e+1)%3).P();
-        } else {
-            uv0=f->cV2(e)->T().P();
-            uv1=f->cV0(e)->T().P();
-            uv2=f->cV1(e)->T().P();
-        }
+		TexCoordType uv0 = UVCoord(f, (e+2)%3);
+		TexCoordType uv1 = UVCoord(f,  e);
+		TexCoordType uv2 = UVCoord(f, (e+1)%3);
         vcg::Point2<TexScalarType> dir0=uv2-uv1;
         vcg::Point2<TexScalarType> dir1=uv0-uv1;
         dir0.Normalize();
@@ -175,7 +185,7 @@ public:
 
 
 public:
-    enum DistType{AreaDist,EdgeDist,AngleDist,CrossDist,L2Stretch,LInfStretch};
+    enum DistType{AreaDist,EdgeDist,AngleDist,CrossDist,L2Stretch,LInfStretch,ARAPDist};
 
     ///return the absolute difference between angle in 3D space and texture space
     ///Actually the difference in cos space
@@ -259,9 +269,9 @@ public:
     static ScalarType L2StretchEnergySquared(const FaceType *f,
                                              ScalarType AreaScaleVal)
     {
-        TexCoordType p0 = (PerWedgeFlag)? f->cWT(0).P() :  f->cV(0)->T().P() ;
-        TexCoordType p1 = (PerWedgeFlag)? f->cWT(1).P() :  f->cV(1)->T().P() ;
-        TexCoordType p2 = (PerWedgeFlag)? f->cWT(2).P() :  f->cV(2)->T().P() ;
+		TexCoordType p0 = UVCoord(f, 0);
+		TexCoordType p1 = UVCoord(f, 1);
+		TexCoordType p2 = UVCoord(f, 2);
 
         CoordType q0 = f->cP(0);
         CoordType q1 = f->cP(1);
@@ -284,9 +294,9 @@ public:
 
     static ScalarType LInfStretchEnergy(const FaceType *f,  ScalarType AreaScaleVal)
     {
-        TexCoordType p0 = (PerWedgeFlag)? f->cWT(0).P() :  f->cV(0)->T().P() ;
-        TexCoordType p1 = (PerWedgeFlag)? f->cWT(1).P() :  f->cV(1)->T().P() ;
-        TexCoordType p2 = (PerWedgeFlag)? f->cWT(2).P() :  f->cV(2)->T().P() ;
+		TexCoordType p0 = UVCoord(f, 0);
+		TexCoordType p1 = UVCoord(f, 1);
+		TexCoordType p2 = UVCoord(f, 2);
 
         CoordType q0 = f->cP(0);
         CoordType q1 = f->cP(1);
@@ -309,9 +319,73 @@ public:
         return G;
     }
 
+	static ScalarType ARAPEnergy(const FaceType *f)
+	{
+		if (f == NULL)
+		{
+			return std::numeric_limits<ScalarType>::infinity();
+		}
+
+		const Eigen::Matrix2d F = mappingTransform2D(*f);
+		const Eigen::Vector2d singular = svd2x2(F);
+		const double a = singular(0) - 1;
+		const double b = singular(1) - 1;
+		return ScalarType(0.5 * (a*a + b*b));
+	}
+
+	static Eigen::Matrix2d mappingTransform2D(const FaceType & triangle)
+	{
+		typedef  Eigen::Matrix<double, 3, 2> Matrix32;
+		typedef  Eigen::Matrix2d             Matrix22;
+
+
+		Matrix22 param3d, param2d;
+		// 3D
+		{
+			Matrix32 edges3D, P3D;
+			Eigen::Vector3d e0, e1;
+			(triangle.cP(1) - triangle.cP(0)).ToEigenVector(e0); // 0->1
+			(triangle.cP(2) - triangle.cP(0)).ToEigenVector(e1); // 0->2
+			edges3D.col(0) = e0;
+			edges3D.col(1) = e1;
+
+			// Projection/frame change matrix
+			P3D.col(0) = edges3D.col(0).normalized(); // 0->1 normalized                                 e0 basis
+			P3D.col(1) = (edges3D.col(1) - edges3D.col(1).dot(P3D.col(0)) * P3D.col(0)).normalized(); // e1 basis orthogonal to e0
+
+			param3d = (P3D.transpose() * edges3D);
+		}
+
+		// 2D
+		{
+			Matrix22 edges2D, P2D;
+			TexCoordType uv0 = UVCoord(&triangle, 0);
+			TexCoordType uv1 = UVCoord(&triangle, 1);
+			TexCoordType uv2 = UVCoord(&triangle, 2);
+
+			const TexCoordType e0 = (uv1 - uv0); // 0->1
+			const TexCoordType e1 = (uv2 - uv0); // 0->2
+			param2d << e0.X(), e1.X(),
+			           e0.Y(), e1.Y();
+		}
+
+		return param2d * param3d.inverse(); // transf mapping
+	}
+
+	// svd 2x2 matrix (singular values only)
+	static Eigen::Vector2d svd2x2(const Eigen::Matrix2d & M)
+	{
+		const double a=M(0,0), b=M(0,1), c=M(1,0), d=M(1,1);
+		const double tmp1 = a*a + b*b;
+		const double tmp2 = c*c + d*d;
+		const double s1 = tmp1 + tmp2;
+		const double s2 = std::sqrt(std::pow((tmp1 -tmp2), 2.0) + 4 * std::pow(a*c + b*d, 2.0));
+		return Eigen::Vector2d(std::sqrt((s1+s2)/2.0), std::sqrt((s1-s2)/2.0));
+	}
+
 
     ///return the number of folded faces
-    static bool Folded(const FaceType *f)
+    static bool IsFolded(const FaceType *f)
     {
         ScalarType areaUV=AreaUV(f);
         /*if (areaUV<0)
@@ -319,32 +393,30 @@ public:
         return (areaUV<0);
     }
 
-    static int Folded(const MeshType &m)
+    static int FoldedNum(const MeshType &m)
     {
         int folded=0;
-        for (size_t i=0;i<m.face.size();i++)
-        {
-            if (m.face[i].IsD())continue;
-            if(Folded(&m.face[i]))folded++;
-        }
+
+        ForEachFace(m, std::function<void (const FaceType&)>([&folded](const FaceType &f){
+          if(IsFolded(&f)) folded++;
+        }));
+        
         return folded;
     }
 
     static bool GloballyUnFolded(const MeshType &m)
     {
-        int num=Folded(m);
+        int num=FoldedNum(m);
         return (num>(m.fn)/2);
     }
 
     static ScalarType MeshAngleDistortion(const MeshType &m)
     {
         ScalarType UDdist=0;
-        for (int i=0;i<m.face.size();i++)
-        {
-            if (m.face[i].IsD())continue;
-            const FaceType *f=&(m.face[i]);
-            UDdist+=AngleDistortion(f)*Area3D(f);
-        }
+        ForEachFace(m, std::function<void (const FaceType&)>([&UDdist](const FaceType &f){
+          UDdist += AngleDistortion(f)*Area3D(f);
+        }));
+        
         return UDdist;
     }
 
@@ -410,10 +482,10 @@ public:
         ScalarType edge_scale,area_scale;
         MeshScalingFactor(m,area_scale,edge_scale);
 
-        float tot = 0;
-        float totA = 0;
+        ScalarType tot = 0;
+        ScalarType totA = 0;
 
-        for (int i=0;i<m.face.size();i++)
+        for (size_t i=0;i<m.face.size();i++)
         {
             if (m.face[i].IsD())continue;
             ScalarType q;
@@ -438,6 +510,9 @@ public:
                 break;
             case LInfStretch:
                 q = LInfStretchEnergy( &m.face[i],area_scale );
+                break;
+            case ARAPDist:
+                q = ARAPEnergy(&m.face[i]);
                 break;
             }
 

@@ -28,6 +28,7 @@
 #include <algorithm>
 #include "gl_type_name.h"
 
+
 namespace vcg{
 
 template <class MESH_TYPE>
@@ -41,9 +42,8 @@ class GLPickTri
   typedef typename MESH_TYPE::VertexPointer  VertexPointer;
   typedef typename MESH_TYPE::VertexType  VertexType;
 
-private:
-
- static CoordType Proj(const Eigen::Matrix<ScalarType,4,4> &M, const ScalarType * viewport, const CoordType &p)
+public:
+ static CoordType glProject(const Eigen::Matrix<ScalarType,4,4> &M, const ScalarType * viewport, const CoordType &p)
   {
     const ScalarType vx=viewport[0];
     const ScalarType vy=viewport[1];
@@ -67,7 +67,7 @@ private:
     pVec.resize(m.vert.size());
     for(size_t i=0;i<m.vert.size();++i) if(!m.vert[i].IsD())
     {
-      pVec[i] = Proj(M, viewportF,CoordType::Construct(m.vert[i].P()));
+      pVec[i] = GLPickTri<MESH_TYPE>::glProject(M, viewportF,CoordType::Construct(m.vert[i].P()));
     }
   }
 
@@ -109,7 +109,7 @@ public:
     for(size_t i=0;i<m.face.size();++i) if(!m.face[i].IsD())
     {
       CoordType bary = vcg::Barycenter(m.face[i]);
-      CoordType bz = Proj(M, viewportF,bary);
+      CoordType bz = glProject(M, viewportF,bary);
 
       if(bz[2]<bzmin && reg.IsIn(bz))
       {
@@ -132,7 +132,7 @@ public:
 
     for(size_t i=0;i<m.vert.size();++i) if(!m.vert[i].IsD())
     {
-      CoordType bz = Proj(M, viewportF,m.vert[i].P());
+      CoordType bz = glProject(M, viewportF,m.vert[i].P());
       if(bz[2]<bzmin && reg.IsIn(bz))
       {
         bzmin=bz[2];
@@ -170,38 +170,40 @@ public:
      return result.size();
    }
 
-  static int PickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width=4, int height=4)
+  static int PickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width = 4, int height = 4)
   {
-    static Eigen::Matrix<ScalarType,4,4> lastM;
-    static MESH_TYPE *lastm=0;
+    static Eigen::Matrix<ScalarType, 4, 4> lastM;
+    static MESH_TYPE *lastm = 0;
     static std::vector<CoordType> pVec;
 
     ScalarType viewportF[4];
-    Eigen::Matrix<ScalarType,4,4> M;
-    glGetMatrixAndViewport(M,viewportF);
+    Eigen::Matrix<ScalarType, 4, 4> M;
+    glGetMatrixAndViewport(M, viewportF);
     result.clear();
     Box3<ScalarType> reg;
-    reg.Add(CoordType(x-width/ScalarType(2.0),y-height/ScalarType(2.0),ScalarType(-1.0)));
-    reg.Add(CoordType(x+width/ScalarType(2.0),y+height/ScalarType(2.0),ScalarType(1.0)));
+    reg.Add(CoordType(x - width / ScalarType(2.0), y - height / ScalarType(2.0), ScalarType(-1.0)));
+    reg.Add(CoordType(x + width / ScalarType(2.0), y + height / ScalarType(2.0), ScalarType(1.0)));
 
-    if((M!=lastM) || (&m != lastm) || (pVec.size() != m.VN()))
+    
+    if ((M != lastM) || (&m != lastm) || (pVec.size() != m.VN()))
     {
-      FillProjectedVector(m,pVec,M,viewportF);
+      FillProjectedVector(m, pVec, M, viewportF);
       lastM = M;
       lastm = &m;
     }
 
-	for (size_t i = 0; i < m.face.size(); ++i)
-	{
-		if (!m.face[i].IsD())
-		{
-			const CoordType &p0 = pVec[tri::Index(m, m.face[i].V(0))];
-			const CoordType &p1 = pVec[tri::Index(m, m.face[i].V(1))];
-			const CoordType &p2 = pVec[tri::Index(m, m.face[i].V(2))];
-			if ((p0[2] > -1.0f) && (p1[2] > -1.0f) && (p2[2] > -1.0f) && IntersectionTriangleBox(reg, p0, p1, p2))
-				result.push_back(&m.face[i]);
-		}
-	}
+    for (size_t i = 0; i < m.face.size(); ++i)
+    {
+      if (!m.face[i].IsD())
+      {
+        const CoordType &p0 = pVec[tri::Index(m, m.face[i].V(0))];
+        const CoordType &p1 = pVec[tri::Index(m, m.face[i].V(1))];
+        const CoordType &p2 = pVec[tri::Index(m, m.face[i].V(2))];
+
+        if (!(abs(p0[2]) > 1 || abs(p1[2]) > 1 || abs(p2[2]) > 1) && IntersectionTriangleBox(reg, p0, p1, p2))
+          result.push_back(&m.face[i]);
+      }
+    }
     return result.size();
   }
 
@@ -224,10 +226,10 @@ public:
     //err = glGetError();
     std::vector<FacePointer> result;
     PickFace(x,y,m,result,width,height);
-    ScalarType LocalEpsilon(0.001);
+	ScalarType LocalEpsilon(ScalarType(0.001));
     for(size_t i =0;i<result.size();++i)
     {
-      CoordType p = Proj(M,vp,CoordType::Construct(Barycenter(*(result[i])))) ;
+      CoordType p = glProject(M,vp,CoordType::Construct(Barycenter(*(result[i])))) ;
       if(p[0] >=0 && p[0]<screenW && p[1] >=0 && p[1]<screenH)
       {
         ScalarType bufZ(buffer[int(p[0])+int(p[1])*screenW]);
@@ -242,7 +244,7 @@ public:
   }
 
 
-
+#ifdef _I_REALLY_NEED_OLD_GL_PICK_
  // Same of above but it also assumes that you want only visible faces.
  // Visibility is computed according to the current depth buffer.
     static int OldPickFaceVisible(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &resultZ, int width=4, int height=4, bool sorted=true)
@@ -286,7 +288,6 @@ public:
         delete [] buffer;
         return resultZ.size();
     }
-
 
     static int OldPickFace(int x, int y, MESH_TYPE &m, std::vector<FacePointer> &result, int width=4, int height=4,bool sorted=true)
       {
@@ -419,9 +420,10 @@ public:
         delete [] selectBuf;
         return result.size();
     }
+#endif // _I_REALLY_NEED_OLD_GL_PICK_
 
 };
 
-}
+} // end namespace vcg
 
 #endif

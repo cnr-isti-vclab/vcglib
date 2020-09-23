@@ -84,66 +84,66 @@ static const char *ErrorMsg(int error)
 */
 static int Open( MESH_TYPE &m, const char * filename, CallBackPos *cb=0, bool triangulate=false, int lineskip=0)
 {
-    FILE *fp;
-    fp = fopen(filename, "r");
-    if(fp == NULL)
-    {
-			qDebug("Failed opening of %s",filename);
-      return E_CANTOPEN;
-    }
-		long currentPos = ftell(fp);
-		fseek(fp,0L,SEEK_END);
-		long fileLen = ftell(fp);
-		fseek(fp,currentPos,SEEK_SET);
+	FILE *fp;
+	fp = fopen(filename, "r");
+	if(fp == NULL)
+	{
+		qDebug("Failed opening of %s",filename);
+		return E_CANTOPEN;
+	}
+	long currentPos = ftell(fp);
+	fseek(fp,0L,SEEK_END);
+	long fileLen = ftell(fp);
+	fseek(fp,currentPos,SEEK_SET);
 
-    m.Clear();
-  
-    Point3f pp;
-		float q;
-    size_t cnt=0;
-		int ret;
-		char buf[1024];
+	m.Clear();
 
-		// skip the first <lineskip> lines
-		for(int i=0;i<lineskip;++i)
-				fgets(buf,1024,fp);
+	Point3f pp;
+	float q;
+	size_t cnt=0;
+	int ret;
+	char buf[1024];
 
-    /* Read a single triplet of coords from an ASCII file of coords*/
-    while(!feof(fp))
-    {
-      if(cb && (++cnt)%1000) cb( (ftell(fp)*100)/fileLen, "ASC Mesh Loading");	
-			if(feof(fp)) break;
-            bool fgetOut=fgets(buf,1024,fp);
-            if( fgetOut == 0 ) continue;
-			ret=sscanf(buf, "%f, %f, %f, %f\n", &pp.X(), &pp.Y(), &pp.Z(),&q);
-			if(ret==1) // lets try also non comma separated values
-				ret=sscanf(buf, "%f %f %f %f\n", &pp.X(), &pp.Y(), &pp.Z(),&q);
+	// skip the first <lineskip> lines
+	for(int i=0;i<lineskip;++i)
+		fgets(buf,1024,fp);
+
+	/* Read a single triplet of coords from an ASCII file of coords*/
+	while(!feof(fp))
+	{
+		if(cb && (++cnt)%1000) cb( (ftell(fp)*100)/fileLen, "ASC Mesh Loading");
+		if(feof(fp)) break;
+		bool fgetOut=fgets(buf,1024,fp);
+		if( fgetOut == 0 ) continue;
+		ret=sscanf(buf, "%f, %f, %f, %f\n", &pp.X(), &pp.Y(), &pp.Z(),&q);
+		if(ret==1) // lets try also non comma separated values
+			ret=sscanf(buf, "%f %f %f %f\n", &pp.X(), &pp.Y(), &pp.Z(),&q);
 			
-			if(ret>=3)
-				{
-					VertexIterator vi=Allocator<MESH_TYPE>::AddVertices(m,1);
-					(*vi).P().Import(pp); 
-					if(ret==4) 	(*vi).Q()=q; 
-				}			
-    }
-		
-    fclose(fp);
-		if(m.vn==0) return E_NO_POINTS;
-		if(!triangulate) return E_NOERROR;
-		// now try to triangulate.
-		// search for the first jump
-		float baseY = m.vert[0].P().Y();
-		int i;
-		for(i=1;i<m.vert.size();++i)
-				{
-				 if(m.vert[i].P().Y()!= baseY)  break;
-				}
-		cnt=m.vert.size();
-		qDebug("Grid is %i x %i = %i (%i) ",i,cnt/i,i* (cnt/i),cnt);
-		tri::FaceGrid(m,i,int(cnt/i));
-		tri::Clean<MESH_TYPE>::FlipMesh(m);
-    return E_NOERROR;
-  }
+		if(ret>=3)
+		{
+			VertexIterator vi=Allocator<MESH_TYPE>::AddVertices(m,1);
+			(*vi).P().Import(pp);
+			if(ret==4) 	(*vi).Q()=q;
+		}
+	}
+
+	fclose(fp);
+	if(m.vn==0) return E_NO_POINTS;
+	if(!triangulate) return E_NOERROR;
+	// now try to triangulate.
+	// search for the first jump
+	float baseY = m.vert[0].P().Y();
+	unsigned int i;
+	for(i=1;i<m.vert.size();++i)
+	{
+		if(m.vert[i].P().Y()!= baseY)  break;
+	}
+	cnt=m.vert.size();
+	qDebug("Grid is %i x %i = %i (%zu) ",i,cnt/i,i* (cnt/i),cnt);
+	tri::FaceGrid(m,i,int(cnt/i));
+	tri::Clean<MESH_TYPE>::FlipMesh(m);
+	return E_NOERROR;
+}
 
 }; // end class
 } // end Namespace tri

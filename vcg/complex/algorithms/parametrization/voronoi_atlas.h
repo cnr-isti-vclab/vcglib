@@ -129,11 +129,11 @@ public:
    bool overlap;
    Stat vas;
    int maxIterNum;
+   CallBackPos *cb=vcg::CErrCallBackPos;
  };
 
  // Main parametrization function:
  // it takes a startMesh, copy it and
-
 
   static void Build( MeshType &startMesh, MeshType &paraMesh, VoronoiAtlasParam &pp)
   {
@@ -159,7 +159,7 @@ public:
     tri::PoissonSampling(m,PoissonSamples,pp.sampleNum,diskRadius);
     int st1=clock();
     pp.vas.samplingTime+= st1-st0;
-//    qDebug("Sampling created a new mesh of %lu points\n",PoissonSamples.size());
+    pp.cb(50,StrFormat("Sampling created a new mesh of %lu points\n",PoissonSamples.size()));
     EuclideanDistance<VoroMesh> edFunc;
     std::vector<VertexType *> seedVec;
     tri::VoronoiProcessing<VoroMesh>::SeedToVertexConversion(m,PoissonSamples,seedVec);
@@ -174,7 +174,7 @@ public:
     {
       VoroMesh *rm = new VoroMesh();
       int selCnt = tri::VoronoiProcessing<VoroMesh>::FaceSelectAssociateRegion(m,seedVec[i]);
-      //qDebug("Region %i of %i faces",i,selCnt);
+       pp.cb(50,StrFormat("Region %i of %i faces",i,selCnt));
       if(selCnt==0) continue;
       assert(selCnt>0);
       if(pp.overlap){
@@ -184,7 +184,8 @@ public:
       tri::Append<VoroMesh,VoroMesh>::Mesh(*rm, m, true);
       int tp0=clock();
       tri::PoissonSolver<VoroMesh> PS(*rm);
-      if(PS.IsFeaseable())
+      tri::UpdateBounding<VoroMesh>::Box(*rm);
+      if(PS.IsFeasible())
       {
         PS.Init();
         PS.FixDefaultVertices();
@@ -196,7 +197,7 @@ public:
         CollectUVBorder(rm,uvBorder);
         meshRegionVec.push_back(rm);
         uvBorders.push_back(uvBorder);
-        int foldedCnt = tri::Distortion<VoroMesh,false>::Folded(*rm);
+        int foldedCnt = tri::Distortion<VoroMesh,false>::FoldedNum(*rm);
         if( foldedCnt > rm->fn/10)
         {
           badRegionVec.push_back(rm);

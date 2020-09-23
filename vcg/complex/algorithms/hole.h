@@ -100,6 +100,8 @@ public:
     ComputeQuality();
     ComputeAngle();
   }
+  // enforce virtual dtor for this class and all subclasses
+  virtual ~TrivialEar() = default;
 
   /// Compute the angle of the two edges of the ear.
   // it tries to make the computation in a precision safe way.
@@ -283,7 +285,7 @@ public:
 template<class MESH> class MinimumWeightEar : public TrivialEar<MESH>
 {
 public:
-  static float &DiedralWeight() { static float _dw=0.1; return _dw;}
+  static float &DiedralWeight() { static float _dw=0.1f; return _dw;}
   typedef TrivialEar<MESH> TE;
   typename MESH::ScalarType dihedralRad;
   typename MESH::ScalarType aspectRatio;
@@ -378,7 +380,7 @@ public:
         {
           int e0,e1;
           bool ret=face::FindSharedEdge(f,*it,e0,e1);
-          assert(ret);
+          assert(ret); (void)ret;
           if(!face::IsBorder(**it,e1))
             return false;
         }

@@ -20,32 +20,10 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.4  2006/09/27 08:49:32  spinelli
-bug fix, add return type to Init
-
-Revision 1.3  2006/08/23 15:20:14  marfr960
-corrected minor bugs
-
-Revision 1.2  2005/12/02 00:29:00  cignoni
-updated the templates of BasicGrid
-
-Revision 1.1  2005/07/28 08:41:00  cignoni
-First working version
-
-Revision 1.13  2005/04/14 17:23:08  ponchio
-*** empty log message ***
-
-****************************************************************************/
 
 #ifndef __VCGLIB_UGRID_OBJ
 #define __VCGLIB_UGRID_OBJ
 
-#include <vector>
-#include <algorithm>
 #include <stdio.h>
 
 #include <vcg/space/box3.h>

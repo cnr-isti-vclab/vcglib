@@ -20,24 +20,27 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#include <QtOpenGL/QtOpenGL>
-
 #include<vcg/complex/complex.h>
 
 // input output
 #include <wrap/io_trimesh/import_ply.h>
 #include <wrap/io_trimesh/export_ply.h>
 
-#include<vcg/complex/algorithms/update/topology.h>
 #include<vcg/complex/algorithms/outline_support.h>
-
-#include<vcg/simplex/face/pos.h>
 
 #include <vcg/space/outline2_packer.h>
 #include <wrap/qt/outline2_rasterizer.h>
 
 #include <vcg/space/rasterized_outline2_packer.h>
 #include <wrap/qt/Outline2ToQImage.h>
+/*! \file trimesh_texture.cpp
+\ingroup code_sample
+
+\brief a small example about packing texture regions
+
+It takes a sample mesh as input, computes the connected
+components of its parametrization and pack them again using two different strategies
+*/
 
 using namespace vcg;
 
@@ -56,27 +59,26 @@ int main(int ,char ** )
   MyMesh m,tm;
   tri::io::ImporterPLY<MyMesh>::Open(m,"../../meshes/bunny10k_textured.ply");
 
-  tri::Allocator<MyMesh>::AddVertices(tm,m.fn*3);
-  tri::Allocator<MyMesh>::AddFaces(tm,m.fn);
-
-  for(size_t i=0;i<m.fn;++i)
+  // 1) Build a mesh with tex coords as coords. 
+  
+  for( auto &&f : m.face)
   {
-    for(int j=0;j<3;++j)
-    {
-      tm.face[i].V(j)=&tm.vert[i*3+j];
-      tm.vert[i*3+j].P()[0] = m.face[i].WT(j).U();
-      tm.vert[i*3+j].P()[1] = m.face[i].WT(j).V();
-      tm.vert[i*3+j].P()[2] = 0;
-    }
+   tri::Allocator<MyMesh>::AddFace(tm,
+                                   Point3f(f.WT(0).U(),f.WT(0).V(),0),
+                                   Point3f(f.WT(1).U(),f.WT(1).V(),0),
+                                   Point3f(f.WT(2).U(),f.WT(2).V(),0));
   }
+  
+  // 2) compute connected components (e.g. texture regions in an atlas)
   tri::Clean<MyMesh>::RemoveDuplicateVertex(tm);
-  std::vector<std::pair<int,MyMesh::FacePointer> > fpVec;
   tri::UpdateTopology<MyMesh>::FaceFace(tm);
+  std::vector<std::pair<int,MyMesh::FacePointer> > fpVec;
   tri::Clean<MyMesh>::ConnectedComponents(tm,fpVec);
   printf("Mesh has %lu texture components\n",fpVec.size());
   tri::io::ExporterPLY<MyMesh>::Save(tm,"out.ply");
   std::vector< std::vector<Point2f> > outline2Vec;
-
+  
+  // build the 2D outlines of each regions
   for(size_t i=0; i<fpVec.size();++i)
   {
     tri::UpdateSelection<MyMesh>::FaceClear(tm);
@@ -106,24 +108,28 @@ int main(int ,char ** )
   sim.sca=1024.0f;
   std::vector<Similarity2f> trVec(outline2Vec.size(),sim);
   printf("Mesh has %lu texture components\n",outline2Vec.size());
+  
+  // Dump the original parametrization as a png
   Outline2Dumper::dumpOutline2VecPNG("PrePack.png",outline2Vec,trVec,pp);
 
+  // Pack using Axis Aligned Rect
   const Point2i containerSize(1024,1024);
   Point2f finalSize(1024,1024);
   PolyPacker<float>::PackAsAxisAlignedRect(outline2Vec,containerSize,trVec,finalSize);
 
   Outline2Dumper::dumpOutline2VecPNG("PostPack.png",outline2Vec,trVec,pp);
 
+   // Pack using Oriented Rect
   RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Parameters packingParam;
-
   packingParam.costFunction  = RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Parameters::LowestHorizon;
   packingParam.doubleHorizon = true;
-  packingParam.cellSize = 4;
+  packingParam.innerHorizon = true;
+  packingParam.permutations = false;
   packingParam.rotationNum = 16; //number of rasterizations in 90°
+  packingParam.gutterWidth = 2;
 
   RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Pack(outline2Vec,containerSize,trVec,packingParam);
   Outline2Dumper::dumpOutline2VecPNG("PostPackRR.png",outline2Vec,trVec,pp);
-
 
   return 0;
 }

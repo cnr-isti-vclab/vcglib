@@ -388,7 +388,7 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class T> class WedgeColor4f: public WedgeColor<vcg::Color4f, T> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("WedgeColor4f"));T::Name(name);}
 };
-template <class T> class Color4b: public Color<vcg::Color4b, T> { public:
+template <class T> class Color4b: public Color<vcg::Color4b, T> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Color4b"));T::Name(name);}
 };
 
@@ -613,9 +613,9 @@ face of the ring of faces incident on a edge.
 template <class T> class FFAdj: public T {
 public:
   FFAdj(){
-    _ffp[0]=0;
-    _ffp[1]=0;
-    _ffp[2]=0;
+    _ffp[0]=nullptr; // null == not initialized
+    _ffp[1]=nullptr;
+    _ffp[2]=nullptr;
   }
   typename T::FacePointer &FFp(const int j)        { assert(j>=0 && j<3);  return _ffp[j]; }
   typename T::FacePointer cFFp(const int j) const  { assert(j>=0 && j<3);  return _ffp[j]; }

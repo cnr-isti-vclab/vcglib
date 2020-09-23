@@ -48,6 +48,7 @@ typedef typename MeshType::VertexIterator VertexIterator;
 typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
+typedef typename vcg::Point2<ScalarType> UVCoordType;
 
 static void WedgeTexFromPlane(ComputeMeshType &m, const Point3<ScalarType> &uVec, const Point3<ScalarType> &vVec, bool aspectRatio, ScalarType sideGutter=0.0)
 {
@@ -70,7 +71,7 @@ static void WedgeTexFromPlane(ComputeMeshType &m, const Point3<ScalarType> &uVec
 
 	if (sideGutter>0.0)
 	{
-		ScalarType deltaGutter = std::min(wideU, wideV) * min(sideGutter, (ScalarType)0.5);
+		ScalarType deltaGutter = std::min(wideU, wideV) * std::min(sideGutter, (ScalarType)0.5);
 
 		bb.max[0] += deltaGutter;
 		bb.min[0] -= deltaGutter;
@@ -97,21 +98,16 @@ static void WedgeTexFromPlane(ComputeMeshType &m, const Point3<ScalarType> &uVec
 	}
 }
 
-static void WedgeTexFromCamera(ComputeMeshType &m, Plane3<ScalarType> &pl)
-{
-	
-}
-
 static void WedgeTexFromVertexTex(ComputeMeshType &m)
 {
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
           if(!(*fi).IsD())
               {
-               for(int i=0;i<3;++i)
+               for(int i=0;i<fi->VN();++i)
                {
                  (*fi).WT(i).U() = (*fi).V(i)->T().U();
                  (*fi).WT(i).V() = (*fi).V(i)->T().V();
-				 (*fi).WT(i).N() = 0;
+                 (*fi).WT(i).N() = 0;
                }
               }
 }
@@ -142,6 +138,40 @@ static void WedgeTexRemoveNull(ComputeMeshType &m, const std::string &texturenam
 			(*fi).WT(2).N() = nullId;			
 		}											
 			
+}
+/** \brief Merge supposedly wrong texcoords 
+ * It can happens that for rounding errors texcoords on different wedges but on the same vertex have different tex coords.
+ * This function merges them according a threshold. It requires initialized VF adjacency. 
+ * the default for merging is if two textures dist less than one 16th of texel on a 4k texture...
+*/
+
+static int WedgeTexMergeClose(ComputeMeshType &m, ScalarType mergeThr = ScalarType(1.0/65536.0) )
+{
+  tri::RequireVFAdjacency(m);
+  int mergedCnt=0;
+  ForEachVertex(m, [&](VertexType &v){
+    face::VFIterator<FaceType> vfi(&v);
+    std::vector<UVCoordType> clusterVec;
+    clusterVec.push_back(vfi.F()->WT(vfi.I()).P());
+    ++vfi;
+    while(!vfi.End())
+    {
+      UVCoordType cur= vfi.F()->WT(vfi.I()).P();
+      bool merged=false;
+      for(auto p:clusterVec) {
+        if(p!=cur && Distance(p,cur) < mergeThr){ 
+          vfi.F()->WT(vfi.I()).P()=p;
+          ++mergedCnt;
+          merged=true;
+        }
+      }
+      if(!merged) 
+        clusterVec.push_back(cur);
+      
+      ++vfi;      
+    }
+  });
+  return mergedCnt;
 }
 
 }; // end class

@@ -26,9 +26,7 @@
 
 #include<vcg/math/base.h>
 #include<vcg/complex/algorithms/refine.h>
-#include<vcg/complex/algorithms/update/flag.h>
 #include<vcg/complex/algorithms/update/position.h>
-#include<vcg/complex/algorithms/update/topology.h>
 #include<vcg/complex/algorithms/update/bounding.h>
 #include<vcg/complex/algorithms/clean.h>
 #include<vcg/complex/algorithms/polygon_support.h>
@@ -44,7 +42,7 @@ namespace tri {
         that represent surfaces of platonic solids,
                 and other simple shapes.
 
-                 The 1st parameter is the mesh that will
+                 The 1st parameter is usually the mesh that will
                 be filled with the solid.
         */
 template <class TetraMeshType>
@@ -75,7 +73,7 @@ void Tetrahedron(TetraMeshType &in)
 
 
 /// builds a Dodecahedron,
-/// (each pentagon is composed of 5 triangles)
+/// (each pentagonal face is composed by 5 triangles)
 template <class DodMeshType>
 void Dodecahedron(DodMeshType & in)
 {
@@ -524,6 +522,42 @@ void Cone( MeshType& in,
         }
 }
 
+template <class MeshType>
+void OrientedCone(MeshType & m,
+                  const typename MeshType::CoordType origin,
+                  const typename MeshType::CoordType end,
+                  const typename MeshType::ScalarType r1,
+                  const typename MeshType::ScalarType r2,
+                  const int SubDiv = 36  )
+{
+  typedef typename MeshType::ScalarType ScalarType;
+  typedef typename MeshType::CoordType CoordType;
+  typedef Matrix44<typename MeshType::ScalarType> Matrix44x;
+  Cone(m,r1,r2,Distance(origin,end),SubDiv);
+
+  tri::UpdatePosition<MeshType>::Translate(m,CoordType(0,Distance(origin,end)/2,0));
+
+  CoordType norm = end-origin;
+  ScalarType angleRad = Angle(CoordType(0,1,0),norm);
+  const ScalarType Delta= 0.000000001;
+  Matrix44x rotM;
+  if (fabs(angleRad)<Delta)
+      rotM.SetIdentity();
+  else
+  if (fabs(angleRad-M_PI)<Delta)
+  {
+      CoordType axis = CoordType(0,0,1)^norm;
+      rotM.SetRotateRad(angleRad,axis);
+  }
+  else
+  {
+    CoordType axis = CoordType(0,1,0)^norm;
+    rotM.SetRotateRad(angleRad,axis);
+  }
+  tri::UpdatePosition<MeshType>::Matrix(m,rotM);
+  tri::UpdatePosition<MeshType>::Translate(m,origin);
+}
+
 
 template <class MeshType >
 void Box(MeshType &in, const typename MeshType::BoxType & bb )
@@ -699,8 +733,6 @@ template <class MeshType, class InCoordType, class InFaceIndexType >
 void BuildMeshFromCoordVectorIndexVector(MeshType & in, const std::vector<InCoordType> & v, const std::vector<InFaceIndexType> & f)
 {
   typedef typename MeshType::CoordType CoordType;
-  typedef typename MeshType::VertexPointer  VertexPointer;
-  typedef typename MeshType::VertexIterator VertexIterator;
 
   in.Clear();
   Allocator<MeshType>::AddVertices(in,v.size());
@@ -711,25 +743,16 @@ void BuildMeshFromCoordVectorIndexVector(MeshType & in, const std::vector<InCoor
     const InCoordType &vv = v[i];
     in.vert[i].P() = CoordType( vv[0],vv[1],vv[2]);
   }
-
-  std::vector<VertexPointer> index(in.vn);
-  VertexIterator j;
-  int k;
-  for(k=0,j=in.vert.begin();j!=in.vert.end();++j,++k)
-    index[k] = &*j;
-
+ 
   for(size_t i=0;i<f.size();++i)
   {
     const InFaceIndexType &ff= f[i];
-    assert( ff[0]>=0 );
-    assert( ff[1]>=0 );
-    assert( ff[2]>=0 );
-    assert( ff[0]<in.vn );
-    assert( ff[1]<in.vn );
-    assert( ff[2]<in.vn );
+    assert( ff[0]>=0 && ff[0]<in.vn);
+    assert( ff[1]>=0 && ff[1]<in.vn);
+    assert( ff[2]>=0 && ff[2]<in.vn);
     in.face[i].V(0) = &in.vert[ ff[0] ];
-    in.face[i].V(1) = &in.vert[ ff[0] ];
-    in.face[i].V(2) = &in.vert[ ff[0] ];
+    in.face[i].V(1) = &in.vert[ ff[1] ];
+    in.face[i].V(2) = &in.vert[ ff[2] ];
   }
 
   tri::UpdateBounding<MeshType>::Box(in);
@@ -745,11 +768,11 @@ void BuildMeshFromCoordVector( MeshType & in, const V & v)
 
 
 template <class TriMeshType,class EdgeMeshType >
-void BuildFromNonFaux(TriMeshType &in, EdgeMeshType &out)
+void BuildFromFaceEdgeSel(TriMeshType &in, EdgeMeshType &out)
 {
   tri::RequireCompactness(in);
   std::vector<typename tri::UpdateTopology<TriMeshType>::PEdge> edgevec;
-  tri::UpdateTopology<TriMeshType>::FillUniqueEdgeVector(in, edgevec, false);
+  tri::UpdateTopology<TriMeshType>::FillSelectedFaceEdgeVector(in, edgevec);
   out.Clear();
   for(size_t i=0;i<in.vert.size();++i)
     tri::Allocator<EdgeMeshType>::AddVertex(out, in.vert[i].P());
@@ -1013,9 +1036,21 @@ void OrientedEllipticPrism(MeshType & m, const typename MeshType::CoordType orig
   tri::UpdatePosition<MeshType>::Scale(m,CoordType(radius,height,radius));
   CoordType norm = end-origin;
   ScalarType angleRad = Angle(CoordType(0,1,0),norm);
-  CoordType axis = CoordType(0,1,0)^norm;
+  const ScalarType Delta= 0.000000001;
   Matrix44x rotM;
-  rotM.SetRotateRad(angleRad,axis);
+  if (fabs(angleRad)<Delta)
+      rotM.SetIdentity();
+  else
+  if (fabs(angleRad-M_PI)<Delta)
+  {
+      CoordType axis = CoordType(0,0,1)^norm;
+      rotM.SetRotateRad(angleRad,axis);
+  }
+  else
+  {
+    CoordType axis = CoordType(0,1,0)^norm;
+    rotM.SetRotateRad(angleRad,axis);
+  }
   tri::UpdatePosition<MeshType>::Matrix(m,rotM);
   tri::UpdatePosition<MeshType>::Translate(m,origin);
 
@@ -1094,7 +1129,7 @@ class _SphMesh    : public tri::TriMesh< vector<_SphVertex>, vector<_SphFace>   
 
 
 template <class MeshType>
-void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float inset=0, bool smoothFlag=true  )
+void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float inset=0, bool smoothFlag=false  )
 {
   typedef typename MeshType::VertexPointer VertexPointer;
   typedef typename MeshType::FacePointer FacePointer;
@@ -1103,6 +1138,8 @@ void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float in
   if(inset==0) inset = mIn.bbox.Diag()/200.0f;
   tri::UpdateTopology<MeshType>::FaceFace(mIn);
   tri::UpdateFlags<MeshType>::FaceClearV(mIn);
+  tri::UpdateNormal<MeshType>::PerVertexNormalizedPerFace(mIn);
+  
   for(size_t i=0;i<mIn.face.size();++i) if(!mIn.face[i].IsV())
   {
     MeshType faceM;
@@ -1113,7 +1150,7 @@ void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float in
 
     CoordType nf(0,0,0);
     for(size_t j=0;j<faceVec.size();++j)
-      nf+=faceVec[j]->N().Normalize() * DoubleArea(*faceVec[j]);
+      nf+=vcg::NormalizedTriangleNormal(*faceVec[j]) * DoubleArea(*faceVec[j]);
     nf.Normalize();
     nf = nf*height/2.0f;
 
@@ -1123,14 +1160,14 @@ void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float in
     bary/=float(faceVec.size());
 
     // Add vertices (alternated top and bottom)
-    tri::Allocator<MeshType>::AddVertex(faceM, bary-nf);
     tri::Allocator<MeshType>::AddVertex(faceM, bary+nf);
+    tri::Allocator<MeshType>::AddVertex(faceM, bary-nf);
     for(size_t j=0;j<vn;++j){
       CoordType delta = (vertVec[j]->P() - bary);
       delta.Normalize();
       delta = delta*inset;
-      tri::Allocator<MeshType>::AddVertex(faceM, vertVec[j]->P()-delta-nf);
       tri::Allocator<MeshType>::AddVertex(faceM, vertVec[j]->P()-delta+nf);
+      tri::Allocator<MeshType>::AddVertex(faceM, vertVec[j]->P()-delta-nf);
     }
 
     // Build top and bottom faces
@@ -1152,7 +1189,6 @@ void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float in
 
     if(smoothFlag)
     {
-      faceM.face.EnableFFAdjacency();
       tri::UpdateTopology<MeshType>::FaceFace(faceM);
       tri::UpdateFlags<MeshType>::FaceBorderFromFF(faceM);
       tri::Refine(faceM, MidPoint<MeshType>(&faceM),0,true);

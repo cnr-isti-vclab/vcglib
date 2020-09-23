@@ -139,7 +139,7 @@ void Rubberband::Render(QGLWidget* gla)
   assert(!glGetError());
 }
 
-void Rubberband::RenderLine(QGLWidget* gla, Point3f AA, Point3f BB)
+void Rubberband::RenderLine(QGLWidget* /*gla*/, Point3f AA, Point3f BB)
 {
 	// Drawing of the line from AA to BB
 	glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT | GL_LINE_BIT | GL_POINT_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT | GL_COLOR_BUFFER_BIT);

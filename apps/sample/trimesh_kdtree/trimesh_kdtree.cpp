@@ -56,7 +56,7 @@ class MyMesh    : public tri::TriMesh< vector<MyVertex>, vector<MyFace> , vector
 
 int main( int argc, char **argv )
 {
-  if(argc<2) argv[1]="../../meshes/torus_irregular.ply";
+  if(argc<2) argv[1]=(char *)"../../meshes/torus_irregular.ply";
 
   MyMesh m;
   if(tri::io::Importer<MyMesh>::Open(m,argv[1])!=0)

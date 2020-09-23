@@ -42,7 +42,7 @@ class MyEdge : public vcg::Edge< MyUsedTypes > {};
 class MyFace : public vcg::Face< MyUsedTypes,
     vcg::face::FFAdj,
     vcg::face::VertexRef,
-  vcg::face::Normal3f,
+    vcg::face::Normal3f,
     vcg::face::BitFlags > {};
 
 // the main mesh class
@@ -89,7 +89,7 @@ void example2(){
             z.addVector(a,b,c);
         }
 
-        printf("Building %s from %d vectors...\n",fullMeshFilename, z.vectors().size() );
+        printf("Building %s from %lu vectors...\n",fullMeshFilename, z.vectors().size() );
 
         MyMesh m;
         z.createMesh(m);
@@ -106,7 +106,7 @@ void example2(){
 
 }
 
-int main(int argc, char *argv[]){
+int main(int , char **){
     example1();
     example2();
     return 0;

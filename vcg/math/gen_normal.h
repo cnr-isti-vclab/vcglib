@@ -29,8 +29,6 @@ $Log: gen_normal.h,v $
 #ifndef __VCG_GEN_NORMAL
 #define __VCG_GEN_NORMAL
 
-#include <algorithm>
-
 namespace vcg {
 
 template <class ScalarType>
@@ -94,7 +92,7 @@ static void UniformCone(int vn, std::vector<Point3<ScalarType > > &NN, ScalarTyp
 
   printf("----------AngleRad %f Angledeg %f ratio %f vn %i vn2 %i \n",AngleRad,math::ToDeg(AngleRad),Ratio,vn,int(vn/Ratio));
   Fibonacci(vn/Ratio,NNT);
-  printf("asked %i got %i (expecting %i instead of %i)\n", int(vn/Ratio), NNT.size(), int(NNT.size()*Ratio), vn);
+  printf("asked %i got %i (expecting %i instead of %i)\n", int(vn/Ratio), int(NNT.size()), int(NNT.size()*Ratio), vn);
   typename std::vector<Point3<ScalarType> >::iterator vi;
 
   ScalarType cosAngle = cos(AngleRad);

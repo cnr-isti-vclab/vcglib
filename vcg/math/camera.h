@@ -229,7 +229,7 @@ public:
     vcg::Matrix44<S> GetMatrix(S nearVal, S farVal);
 
     /// returns the frustum
-    inline void GetFrustum(S & sx, S & dx, S & bt, S & tp, S & nr);
+    inline void GetFrustum(S & sx, S & dx, S & bt, S & tp, S & nr) const;
 
     //--- Space transformation methods
 
@@ -549,7 +549,7 @@ void Camera<S>::SetIsometric(S sx, S dx, S bt, S tp, S Focal, vcg::Point2<int> V
 
 /// returns the frustum
 template<class S>
-void Camera<S>:: GetFrustum( S & sx, S & dx, S & bt, S & tp, S & nr)
+void Camera<S>:: GetFrustum( S & sx, S & dx, S & bt, S & tp, S & nr) const
 {
     dx = CenterPx.X()* PixelSizeMm.X();			//scaled center
     sx = -( (S)ViewportPx.X() - CenterPx.X() ) * PixelSizeMm.X();

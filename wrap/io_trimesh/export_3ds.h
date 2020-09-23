@@ -234,7 +234,7 @@ namespace io {
 							if(AddDuplexVertexCoord(ListOfDuplexVert,Key(i,t)))
 							{
 								VectorOfVertexType.push_back((*(*fi).V(k)));
-								ListOfDuplexVert[Key(i,t)] = VectorOfVertexType.size()-1;
+								ListOfDuplexVert[Key(i,t)] = int(VectorOfVertexType.size()-1);
 								count++;
 							}
 						}
@@ -362,7 +362,7 @@ namespace io {
 
 				if((mask & vcg::tri::io::Mask::IOM_FACECOLOR) | (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD))
 				{
-					int material_index = vcg::tri::io::Materials<SaveMeshType>::CreateNewMaterial(m, materials, 0, fi);
+					int material_index = vcg::tri::io::Materials<SaveMeshType>::CreateNewMaterial(m, materials, fi);
 					if(material_index == (int)materials.size())
 					{
 						Lib3dsMaterial *material = lib3ds_material_new();//creates a new material

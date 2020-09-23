@@ -50,9 +50,9 @@ public:
     /// max coordinate point
     Point3<BoxScalarType> max;
         /// The bounding box constructor
-    inline  Box3() { min.X()= 1;max.X()= -1;min.Y()= 1;max.Y()= -1;min.Z()= 1;max.Z()= -1;}
+    inline  Box3() { this->SetNull(); }
         /// Copy constructor
-    inline  Box3( const Box3 & b ) { min=b.min; max=b.max; }
+    //inline  Box3( const Box3 & b ) { min=b.min; max=b.max; }
         /// Min Max constructor
     inline  Box3( const Point3<BoxScalarType> & mi, const Point3<BoxScalarType> & ma ) { min = mi; max = ma; }
     /// Point Radius Constructor
@@ -151,7 +151,7 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
       max.Z() = std::max(max.Z(),p.Z()+radius);
     }
 }
-  /** Modify the current bbox to contain also the box b trasformed according to the matrix m
+  /** Modify the current bbox to contain also the box b transformed according to the matrix m
   */
     void Add( const Matrix44<BoxScalarType> &m, const Box3<BoxScalarType> & b )
     {
@@ -323,6 +323,7 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
 
 template <class T> Box3<T> Point3<T>::GetBBox(Box3<T> &bb) const {
  bb.Set( *this );
+ return bb;
 }
 
 

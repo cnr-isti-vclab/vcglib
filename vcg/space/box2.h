@@ -24,8 +24,6 @@
 #ifndef __VCGLIB_BOX2
 #define __VCGLIB_BOX2
 
-#include <assert.h>
-#include <algorithm>
 #include <vcg/math/base.h>
 #include <vcg/space/point2.h>
 
@@ -274,6 +272,22 @@ public:
     max = c + PointType(radius, radius);
     min = c - PointType(radius, radius);
   }
+
+	inline unsigned char MaxDim() const {
+		int i=1;
+		PointType diag = max-min;
+		if (diag[0] > diag[1])
+			i=0;
+		return i;
+	}
+
+	inline unsigned char MinDim() const {
+		int i=1;
+		PointType diag =  max-min;
+		if (diag[0] < diag[1])
+			i=0;
+		return i;
+	}
 	
 }; // end class definition
 

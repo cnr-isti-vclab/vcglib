@@ -28,6 +28,7 @@
 #include <vcg/space/fitting3.h>
 #include <vcg/space/point_matching.h>
 #include <vcg/math/matrix33.h>
+#include <vcg/space/distance3.h>
 
 namespace vcg {
 
@@ -79,7 +80,7 @@ typename CoordType::ScalarType Area(const std::vector<CoordType> &Pos)
 {
     typedef typename CoordType::ScalarType ScalarType;
     CoordType bary=CoordType(0,0,0);
-    for (int i=0;i<Pos.size();i++)
+    for (size_t i=0;i<Pos.size();i++)
         bary+=Pos[i];
 
     bary/=Pos.size();
@@ -125,9 +126,12 @@ typename PolygonType::ScalarType PolyArea(const PolygonType &F)
     typedef typename PolygonType::CoordType CoordType;
     typedef typename PolygonType::ScalarType ScalarType;
 
+	if (F.VN() == 3)
+		return vcg::DoubleArea(F) / 2;
+
     CoordType bary=PolyBarycenter(F);
     ScalarType Area=0;
-    for (size_t i=0;i<F.VN();i++)
+    for (size_t i=0;i<(size_t)F.VN();i++)
     {
         CoordType p0=F.cP0(i);
         CoordType p1=F.cP1(i);
@@ -425,13 +429,13 @@ void GetPolyTemplatePos(const PolygonType &F,
         dirX.Normalize();
         dirY.Normalize();
         dirZ.Normalize();
-//        CoordType dirXN=dirX;dirXN.Normalize();
-//        CoordType dirYN=dirY;dirYN.Normalize();
-//        CoordType dirZN=dirZ;dirZN.Normalize();
+        //        CoordType dirXN=dirX;dirXN.Normalize();
+        //        CoordType dirYN=dirY;dirYN.Normalize();
+        //        CoordType dirZN=dirZ;dirZN.Normalize();
 
-//        dirX=dirX*0.8+dirXN*0.2;
-//        dirY=dirY*0.8+dirYN*0.2;
-//        dirZ=dirZ*0.8+dirZN*0.2;
+        //        dirX=dirX*0.8+dirXN*0.2;
+        //        dirY=dirY*0.8+dirYN*0.2;
+        //        dirZ=dirZ*0.8+dirZN*0.2;
     }
 
     ///set the Rotation matrix
@@ -456,10 +460,10 @@ void GetPolyTemplatePos(const PolygonType &F,
     ScalarType AreaTemplate=Area(TemplatePos);
     ScalarType AreaUniform=Area(UniformPos);
 
-//    if (TargetArea>0)
-//    {
-//        AreaUniform*=(AreaUniform/TargetArea);
-//    }
+    //    if (TargetArea>0)
+    //    {
+    //        AreaUniform*=(AreaUniform/TargetArea);
+    //    }
 
     ScalarType Scale=sqrt(AreaTemplate/AreaUniform);
 
@@ -528,6 +532,150 @@ typename PolygonType::ScalarType PolyAspectRatio(const PolygonType &F,
         diff+=pow((TemplatePos[i]-F.cP(i)).Norm(),2)/AreaP;
 
     return(diff);
+}
+
+
+template<class PolygonType>
+typename PolygonType::ScalarType PolygonPointDistance(const PolygonType &F,
+                                                      const vcg::Point3<typename PolygonType::ScalarType> &pos,
+                                                      vcg::Point3<typename PolygonType::ScalarType> &ClosestP,
+                                                      typename PolygonType::ScalarType minD = std::numeric_limits<typename PolygonType::ScalarType>::max())
+{
+    typedef typename PolygonType::ScalarType ScalarType;
+    typedef typename PolygonType::CoordType CoordType;
+
+    CoordType bary=vcg::PolyBarycenter(F);
+    for (size_t j=0;j<F.VN();j++)
+    {
+        vcg::Triangle3<ScalarType> T(F.cP0(j),F.cP1(j),bary);
+        ScalarType dist;
+        CoordType closest;
+        vcg::TrianglePointDistance(T,pos,dist,closest);
+        if (dist>minD)continue;
+        minD=dist;
+        ClosestP=closest;
+    }
+    return minD;
+}
+
+template<class PolygonType>
+vcg::Box3<typename PolygonType::ScalarType> PolygonBox(const PolygonType &F)
+{
+    typedef typename PolygonType::ScalarType ScalarType;
+    vcg::Box3<ScalarType> bb;
+    for (size_t j=0;j<F.VN();j++)
+        bb.Add(F.V(j)->P());
+    return bb;
+}
+
+template<class PolygonType>
+typename PolygonType::ScalarType PolygonTorsion(const PolygonType &F,int side)
+{
+    typedef typename PolygonType::CoordType CoordType;
+    typedef typename PolygonType::ScalarType ScalarType;
+
+    assert(side>=0);
+    assert(side<2);
+    assert(F.VN()==4);
+
+    //get firts two edges directions
+    CoordType Dir0,Dir1;
+    if (side==0)
+    {
+        Dir0=F.cP(1)-F.cP(0);
+        Dir1=F.cP(2)-F.cP(3);
+    }
+    else
+    {
+        Dir0=F.cP(2)-F.cP(1);
+        Dir1=F.cP(3)-F.cP(0);
+    }
+
+    Dir0.Normalize();
+    Dir1.Normalize();
+
+    //then make them lying on face's Normal
+    CoordType DirPlane0=Dir0*0.5+Dir1*0.5;
+    CoordType DirPlane1=F.cN();
+    CoordType NormPlane=DirPlane0^DirPlane1;
+    NormPlane.Normalize();
+    CoordType subV0=NormPlane*(NormPlane*Dir0);
+    CoordType subV1=NormPlane*(NormPlane*Dir1);
+    Dir0-=subV0;
+    Dir1-=subV1;
+    Dir0.Normalize();
+    Dir1.Normalize();
+    ScalarType AngleVal=vcg::Angle(Dir0,Dir1);
+    return AngleVal;
+}
+
+template<class PolygonType>
+typename PolygonType::ScalarType PolygonBending(const PolygonType &F,int side)
+{
+    typedef typename PolygonType::CoordType CoordType;
+    typedef typename PolygonType::ScalarType ScalarType;
+
+    assert(side>=0);
+    assert(side<2);
+    assert(F.VN()==4);
+
+    //get firts two edges directions
+    CoordType Norm0,Norm1;
+    CoordType Avg0,Avg1;
+    if (side==0)
+    {
+        Norm0=F.V(0)->N()*0.5+F.V(1)->N()*0.5;
+        Avg0=F.cP(0)*0.5+F.cP(1)*0.5;
+        Norm1=F.V(2)->N()*0.5+F.V(3)->N()*0.5;
+        Avg1=F.cP(2)*0.5+F.cP(3)*0.5;
+    }
+    else
+    {
+        Norm0=F.V(2)->N()*0.5+F.V(1)->N()*0.5;
+        Avg0=F.cP(2)*0.5+F.cP(1)*0.5;
+        Norm1=F.V(3)->N()*0.5+F.V(0)->N()*0.5;
+        Avg1=F.cP(3)*0.5+F.cP(0)*0.5;
+    }
+
+    Norm0.Normalize();
+    Norm1.Normalize();
+
+    //then make them lying on face's Normal
+    CoordType DirPlane0=Avg0-Avg1;
+    DirPlane0.Normalize();
+    CoordType DirPlane1=F.cN();
+    CoordType NormPlane=DirPlane0^DirPlane1;
+    NormPlane.Normalize();
+    CoordType subV0=NormPlane*(NormPlane*Norm0);
+    CoordType subV1=NormPlane*(NormPlane*Norm1);
+    Norm0-=subV0;
+    Norm1-=subV1;
+    Norm0.Normalize();
+    Norm1.Normalize();
+    ScalarType AngleVal=vcg::Angle(Norm0,Norm1);
+    return AngleVal;
+}
+
+template<class PolygonType>
+typename PolygonType::ScalarType PolygonBending(const PolygonType &F)
+{
+    typedef typename PolygonType::ScalarType ScalarType;
+    ScalarType Bend0=PolygonBending(F,0);
+    ScalarType Bend1=PolygonBending(F,1);
+    assert(Bend0>=0);
+    assert(Bend1>=0);
+    return (std::max(Bend0,Bend1));
+}
+
+template<class PolygonType>
+typename PolygonType::ScalarType PolygonTorsion(const PolygonType &F)
+{
+    typedef typename PolygonType::ScalarType ScalarType;
+    ScalarType Torsion0=PolygonTorsion(F,0);
+    ScalarType Torsion1=PolygonTorsion(F,1);
+    assert(Torsion0>=0);
+    assert(Torsion1>=0);
+    return (std::max(Torsion0,Torsion1));
 }
 
 }

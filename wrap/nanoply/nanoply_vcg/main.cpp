@@ -45,7 +45,7 @@ public:
   {
     vertexMaterial = vcg::tri::Allocator<MyMesh>::AddPerVertexAttribute<int>(*this, std::string("materialId"));
     faceBarycenter = vcg::tri::Allocator<MyMesh>::AddPerFaceAttribute<MyVertex::CoordType>(*this, std::string("barycenter"));
-    material = vcg::tri::Allocator<MyMesh>::AddPerMeshAttribute<std::vector<Material>>(*this, std::string("material"));
+    material = vcg::tri::Allocator<MyMesh>::AddPerMeshAttribute<std::vector<Material> >(*this, std::string("material"));
   }
 
   void FillMesh()
@@ -55,7 +55,7 @@ public:
     vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalized(*this);
 
     int tempC = 255 / vert.size();
-    for (int i = 0; i < vert.size(); i++)
+    for (size_t i = 0; i < vert.size(); i++)
     {
       if (i < 2)
         vertexMaterial[i] = -1;
@@ -67,7 +67,7 @@ public:
       vert[i].C() = vcg::Color4b(tempC*i, tempC*i, tempC*i, 255);
     }
 
-    for (int i = 0; i < face.size(); i++)
+    for (size_t i = 0; i < face.size(); i++)
      faceBarycenter[i] = vcg::Barycenter(face[i]);
 
     material().resize(2);
@@ -149,5 +149,5 @@ int main()
   MyMesh mesh2, mesh3;
   Load("example_ascii.ply", mesh2);
   Load("example_binary.ply", mesh3);
-  return true;
+  return 0;
 }

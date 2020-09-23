@@ -30,6 +30,7 @@
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/triangle3.h>
 #include <vcg/space/polygon3.h>
+#include <vcg/space/tetra3.h>
 
 #include <vcg/container/derivation_chain.h>
 #include <vcg/complex/all_types.h>
@@ -42,6 +43,8 @@
 #include <vcg/simplex/face/base.h>
 #include <vcg/simplex/edge/component.h>
 #include <vcg/simplex/edge/base.h>
+#include <vcg/simplex/tetrahedron/component.h>
+#include <vcg/simplex/tetrahedron/base.h>
 #include <vcg/connectors/hedge_component.h>
 #include <vcg/connectors/hedge.h>
 
@@ -52,13 +55,14 @@ namespace vcg{
 struct _Vertex;
 struct _Edge  ;
 struct _Face  ;
+struct _Tetra ;
 struct _HEdge ;
 
 struct DummyTypes{
         typedef _Vertex VertexType; 		// simplex types
         typedef _Edge EdgeType;
         typedef _Face FaceType;
-        typedef char TetraType;
+        typedef _Tetra TetraType;
         typedef _HEdge HEdgeType; 		// connector types
 
         typedef vcg::Point3<bool> CoordType;
@@ -88,10 +92,11 @@ template <template <typename> class A = DefaultDeriver, template <typename> clas
                     template <typename> class C = DefaultDeriver, template <typename> class D = DefaultDeriver,
                     template <typename> class E = DefaultDeriver, template <typename> class F = DefaultDeriver,
                     template <typename> class G = DefaultDeriver, template <typename> class H = DefaultDeriver >
-                    class UsedTypes: public Arity12<DummyTypes,
-                                Use<  Vertex	<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsVertexType,
+                    class UsedTypes: public Arity13<DummyTypes,
+                                Use<  Vertex            <UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsVertexType,
                                 Use<  Edge		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsEdgeType,
                                 Use<  Face		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsFaceType,
+                                Use<  TetraSimp		<UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsTetraType,
                                 Use<  HEdge	  <UsedTypes< A, B, C, D , E, F, G, H > > > :: template AsHEdgeType,
                             A, B, C, D, E, F, G, H
                     >  {
@@ -105,12 +110,14 @@ struct _UsedTypes: public UsedTypes<
     Use<_Vertex>::AsVertexType,
     Use<_Edge  >::AsEdgeType,
     Use<_Face  >::AsFaceType,
+    Use<_Tetra >::AsTetraType,
     Use<_HEdge >::AsHEdgeType
 >{};
 
 struct _Vertex: public  Vertex<_UsedTypes>{};
 struct _Edge  : public  Edge<_UsedTypes>{};
 struct _Face  : public  Face<_UsedTypes>{};
+struct _Tetra : public  TetraSimp<_UsedTypes>{};
 struct _HEdge : public  HEdge<_UsedTypes>{};
 
 };

@@ -99,7 +99,7 @@ public:
         DELETED     = 0x00000001,		// Face is deleted from the mesh
         NOTREAD     = 0x00000002,		// Face of the mesh is not readable
         NOTWRITE    = 0x00000004,		// Face of the mesh is not writable
-    VISITED     = 0x00000010,		// Face has been visited. Usualy this is a per-algorithm used bit.
+        VISITED     = 0x00000010,		// Face has been visited. Usualy this is a per-algorithm used bit.
         SELECTED    = 0x00000020,		// Face is selected. Algorithms should try to work only on selected face (if explicitly requested)
         // Border _flags, it is assumed that BORDERi = BORDER0<<i
         BORDER0     = 0x00000040,
@@ -110,10 +110,11 @@ public:
         NORMX				= 0x00000200,
         NORMY				= 0x00000400,
         NORMZ				= 0x00000800,
-        // Crease _flags,  it is assumed that CREASEi = CREASE0<<i
-        CREASE0    = 0x00008000,
-        CREASE1    = 0x00010000,
-        CREASE2    = 0x00020000,
+        // Face-Edge Selection Flags
+        FACEEDGESEL0    = 0x00008000,
+        FACEEDGESEL1    = 0x00010000,
+        FACEEDGESEL2    = 0x00020000,
+        FACEEDGESEL012     = FACEEDGESEL0 | FACEEDGESEL1 | FACEEDGESEL2 ,
         // Faux edges. (semantics: when a mesh is polygonal, edges which are inside a polygonal face are "faux"
         FAUX0       = 0x00040000,
         FAUX1       = 0x00080000,
@@ -175,12 +176,12 @@ public:
     /// This funcion execute the inverse operation of SetS()
     void ClearB(int i)	{this->Flags() &= (~(BORDER0<<i));}
 
-    /// This function checks if the face is selected
-    bool IsCrease(int i) const {return (this->cFlags() & (CREASE0<<i)) != 0;}
-    /// This function select the face
-    void SetCrease(int i){this->Flags() |=(CREASE0<<i);}
-    /// This funcion execute the inverse operation of SetS()
-    void ClearCrease(int i)	{this->Flags() &= (~(CREASE0<<i));}
+    /// This function checks if the i-th face-edge is selected
+    bool IsFaceEdgeS(int i) const {return (this->cFlags() & (FACEEDGESEL0<<i)) != 0;}
+    /// This function select the i-th face-edge
+    void SetFaceEdgeS(int i){this->Flags() |=(FACEEDGESEL0<<i);}
+    /// This function de-select the i-th face-edge
+    void ClearFaceEdgeS(int i)	{this->Flags() &= (~(FACEEDGESEL0<<i));}
 
     /// This function checks if a given side of the face is a feature/internal edge
     /// it is used by some importer to mark internal

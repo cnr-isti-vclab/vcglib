@@ -26,7 +26,7 @@
 #include <vcg/space/point3.h>
 #include <vcg/space/plane3.h>
 #include <vcg/math/matrix33.h>
-#include <eigenlib/Eigen/Core>
+#include <Eigen/Core>
 
 namespace vcg {
 namespace math {
@@ -85,6 +85,25 @@ public:
     b[1] = (ScalarType)2.0*(r.Direction()[1]*K - r.Origin()[1]);
     b[2] = (ScalarType)2.0*(r.Direction()[2]*K - r.Origin()[2]);
     c = -K*K + (ScalarType)(r.Origin()*r.Origin());
+  }
+
+  /*
+   * Initializes the quadric as the squared distance from a given point.
+   *
+   */
+  template< class CoordType >
+  void ByPoint( const CoordType & p ) // Init dato un raggio
+  {
+    a[0] = 1; // a11
+    a[1] = 0; // a12 (=a21)
+    a[2] = 0; // a13 (=a31)
+    a[3] = 1; // a22
+    a[4] = 0; // a23 (=a32)
+    a[5] = 1; // a33
+    b[0] = (ScalarType)-2.0*((ScalarType)p.X());
+    b[1] = (ScalarType)-2.0*((ScalarType)p.Y());
+    b[2] = (ScalarType)-2.0*((ScalarType)p.Z());
+    c = pow(p.X(),2) + pow(p.Y(),2)+ pow(p.Z(),2);
   }
 
   void SetZero()
@@ -197,135 +216,32 @@ public:
   }
   
   
+  template <class ReturnScalarType>
+  bool MinimumClosestToPoint(Point3<ReturnScalarType> &x, const Point3<ReturnScalarType> &pt)
+  {
+    const double qeps = 1e-3;
+    Eigen::Matrix3d A;
+    Eigen::Vector3d be;
+    A << a[0], a[1], a[2],
+         a[1], a[3], a[4],
+         a[2], a[4], a[5];
+    be << -b[0]/2, -b[1]/2, -b[2]/2;
   
-  
-  
-// spostare..risolve un sistema 3x3
-template<class FLTYPE>
-bool Gauss33( FLTYPE x[], FLTYPE C[3][3+1] )
-{
-    const FLTYPE keps = (FLTYPE)1e-3;
-    int i,j,k;
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Eigen::Vector3d s = svd.singularValues();
+    for(int i=1;i<3;++i) 
+      if(s[i]/s[0] > qeps) s[i]=1/s[i];
+      else s[i]=0;
+    s[0]=1/s[0];
+    
+    Eigen::Vector3d xp;  
+    pt.ToEigenVector(xp);
+    Eigen::Vector3d xe = xp + (svd.matrixV()*s.asDiagonal()*(svd.matrixU().transpose())) *(be - A*xp);
 
-    FLTYPE eps;					// Determina valore cond.
-		eps = math::Abs(C[0][0]);
-    for(i=1;i<3;++i)
-    {
-		FLTYPE t = math::Abs(C[i][i]);
-		if( eps<t ) eps = t;
-    }
-    eps *= keps;
-
-    for (i = 0; i < 3 - 1; ++i)    		// Ciclo di riduzione
-    {
-        int ma = i;				// Ricerca massimo pivot
-        FLTYPE vma = math::Abs( C[i][i] );
-        for (k = i + 1; k < 3; k++)
-        {
-            FLTYPE t = math::Abs( C[k][i] );
-            if (t > vma)
-            {
-                vma = t;
-                ma  = k;
-            }
-        }
-        if (vma<eps)
-            return false;        			// Matrice singolare
-        if(i!=ma)				// Swap del massimo pivot
-            for(k=0;k<=3;k++)
-            {
-                FLTYPE t = C[i][k];
-                C[i][k] = C[ma][k];
-                C[ma][k] = t;
-            }
-        for (k = i + 1; k < 3; k++)        	//  Riduzione
-        {
-            FLTYPE s;
-            s = C[k][i] / C[i][i];
-            for (j = i+1; j <= 3; j++)
-                C[k][j] -= C[i][j] * s;
-            C[k][i] = 0.0;
-        }
-    }
-
-        // Controllo finale singolarita'
-    if( math::Abs(C[3-1][3- 1])<eps)
-        return false;
-
-    for (i=3-1; i>=0; i--)			// Sostituzione
-    {
-        FLTYPE t;
-        for (t = 0.0, j = i + 1; j < 3; j++)
-            t += C[i][j] * x[j];
-        x[i] = (C[i][3] - t) / C[i][i];
-    }
-
+    x.FromEigenVector(xe);
     return true;
-}
-
-
-
-template <class ReturnScalarType>
-bool MinimumOld(Point3<ReturnScalarType> &x)
-{
-		ReturnScalarType C[3][4];
-		C[0][0]=a[0]; C[0][1]=a[1]; C[0][2]=a[2];
-		C[1][0]=a[1]; C[1][1]=a[3]; C[1][2]=a[4];
-		C[2][0]=a[2]; C[2][1]=a[4]; C[2][2]=a[5];
-
-		C[0][3]=-b[0]/2;
-		C[1][3]=-b[1]/2;
-		C[2][3]=-b[2]/2;
-		return Gauss33(&(x[0]),C);
-}
-
-// determina il punto di errore minimo vincolato nel segmento (a,b)
-bool Minimum(Point3<ScalarType> &x,Point3<ScalarType> &pa,Point3<ScalarType> &pb){
-ScalarType	t1,t2, t4, t5, t8, t9,
-	t11,t12,t14,t15,t17,t18,t25,t26,t30,t34,t35,
-	t41,t42,t44,t45,t50,t52,t54,
-	t56,t21,t23,t37,t64,lambda;
-
-	  t1 = a[4]*pb.z();
-	  t2 = t1*pa.y();
-      t4 = a[1]*pb.y();
-      t5 = t4*pa.x();
-      t8 = a[1]*pa.y();
-      t9 = t8*pa.x();
-      t11 = a[4]*pa.z();
-      t12 = t11*pa.y();
-      t14 = pa.z()*pa.z();
-      t15 = a[5]*t14;
-      t17 = a[2]*pa.z();
-      t18 = t17*pa.x();
-      t21 = 2.0*t11*pb.y();
-      t23 = a[5]*pb.z()*pa.z();
-      t25 = a[2]*pb.z();
-      t26 = t25*pa.x();
-      t30 = a[0]*pb.x()*pa.x();
-      t34 = 2.0*a[3]*pb.y()*pa.y();
-      t35 = t17*pb.x();
-      t37 = t8*pb.x();
-      t41 = pa.x()*pa.x();
-      t42 = a[0]*t41;
-      t44 = pa.y()*pa.y();
-      t45 = a[3]*t44;
-      t50 = 2.0*t30+t34+2.0*t35+2.0*t37-(-b[2]/2)*pa.z()-(-b[0]/2)*pa.x()-2.0*t42-2.0*t45+(-b[1]/2)*pb.y()
-+(-b[0]/2)*pb.x()-(-b[1]/2)*pa.y();
-      t52 = pb.y()*pb.y();
-      t54 = pb.z()*pb.z();
-      t56 = pb.x()*pb.x();
-      t64 = t5+t37-t9+t30-t18+t35+t26-t25*pb.x()+t2-t1*pb.y()+t23;
-      lambda = (2.0*t2+2.0*t5+(-b[2]/2)*pb.z()-4.0*t9-4.0*t12-2.0*t15-4.0*t18+t21+2.0*t23+
-2.0*t26+t50)/(-t45-a[3]*t52-a[5]*t54-a[0]*t56-t15-t42+t34-2.0*t12+t21-2.0*t4*pb.x()+
-2.0*t64)/2.0;
-
-	  if(lambda<0)  lambda=0;  else	  if(lambda>1)   lambda = 1;
-
-		 x = pa*(1.0-lambda)+pb*lambda;
-		 return true;
-	}
-
+  }
+  
 };
 
 typedef Quadric<short>  Quadrics;

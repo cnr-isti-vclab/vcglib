@@ -128,6 +128,16 @@ public:
     return Point4(T(b[0]),T(b[1]),T(b[2]),T(b[3]));
   }
 
+  static inline Point4 Zero(void)
+  {
+    return Point4(0,0,0,0);
+  }
+
+  static inline Point4 One(void)
+  {
+    return Point4(1,1,1,1);
+  }
+
 //@}
 
 //@{

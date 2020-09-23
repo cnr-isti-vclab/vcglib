@@ -24,6 +24,10 @@
 #ifndef VCG_UV_UTILS
 #define VCG_UV_UTILS
 
+#include <vcg/space/point2.h>
+#include <vcg/space/box2.h>
+#include <vcg/space/triangle2.h>
+#include <vcg/space/triangle3.h>
 
 namespace vcg {
 namespace tri{
@@ -39,6 +43,44 @@ class UV_Utils
     typedef typename vcg::Point2<ScalarType> UVCoordType;
 
 public:
+
+    ///calculate the area in UV space
+    static ScalarType PerVertUVArea(MeshType &m)
+    {
+        FaceIterator fi;
+        ScalarType Area=0;
+        for (fi=m.face.begin();fi!=m.face.end();fi++)
+        {
+            if ((*fi).IsD()) continue;
+            UVCoordType E0= (*fi).V(1)->T().P()-(*fi).V(0)->T().P();
+            UVCoordType E1= (*fi).V(2)->T().P()-(*fi).V(0)->T().P();
+            ScalarType doubleA=fabs(E0^E1);
+            Area+=doubleA/2;
+        }
+        return Area;
+    }
+
+    ///scale vert UV to match 3D area
+    static void ScaleVertUVToMatchArea(MeshType &m)
+    {
+        FaceIterator fi;
+        ScalarType Area3D=0;
+        for (fi=m.face.begin();fi!=m.face.end();fi++)
+        {
+            if ((*fi).IsD()) continue;
+            Area3D+=vcg::DoubleArea((*fi))/2;
+        }
+        ScalarType Area2D=PerVertUVArea(m);
+        ScalarType ScaleFact=sqrt( Area3D / Area2D );
+
+        VertexIterator vi;
+        for (vi=m.vert.begin();vi!=m.vert.end();vi++)
+        {
+            if ((*vi).IsD()) continue;
+            (*vi).T().P()*=ScaleFact;
+        }
+    }
+
     ///calculate the BBox in UV space
     static vcg::Box2<ScalarType> PerWedgeUVBox(MeshType &m)
     {
@@ -109,6 +151,26 @@ public:
         {
             ScalarType distAV=(*vi).T().P().X()-XAv;
             (*vi).T().P().X()=XAv-distAV;
+        }
+    }
+
+    static void GloballyRotate(MeshType &m,ScalarType Angle)
+    {
+        vcg::Box2<ScalarType> BB=PerWedgeUVBox(m);
+        UVCoordType Origin=BB.Center();
+        typename MeshType::FaceIterator fi;
+        for (fi=m.face.begin();fi!=m.face.end();fi++)
+        {
+            if ((*fi).IsD()) continue;
+            for (int i=0;i<3;i++)
+            {
+                (*fi).WT(i).P()-=Origin;
+                ScalarType X1=(*fi).WT(i).P().X()*cos(Angle)-(*fi).WT(i).P().Y()*sin(Angle);
+                ScalarType Y1=(*fi).WT(i).P().X()*cos(Angle)+(*fi).WT(i).P().Y()*sin(Angle);
+                (*fi).WT(i).P().X()=X1;
+                (*fi).WT(i).P().Y()=Y1;
+                (*fi).WT(i).P()+=Origin;
+            }
         }
     }
 

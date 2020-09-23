@@ -81,7 +81,9 @@ protected:
 			parent = NULL;
 			level  = -1;
 		}
-
+    
+    virtual ~Node() {}
+    
 		// Constructor: create a new Node
 		Node(NodePointer parent, int level)
 		{
@@ -106,7 +108,7 @@ protected:
 	*/
 	struct InnerNode : public Node
 	{
-		InnerNode() : Node() {};
+		InnerNode() : Node() {}
 		InnerNode(NodePointer parent, int level) : Node(parent, level)
 		{
 			memset(&sons[0], 0, 8*sizeof(Node*));
@@ -131,7 +133,7 @@ protected:
 	*/
 	struct Leaf : public Node
 	{
-		Leaf() : Node() {};
+		Leaf() : Node() {}
 		Leaf(NodePointer parent, int level) : Node(parent, level) {}
 
 		inline NodePointer &Son(int /*sonIndex*/)

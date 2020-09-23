@@ -23,19 +23,11 @@
 
 #include <vcg/complex/complex.h>
 
-/*include the algorithms for updating: */
-#include <vcg/complex/algorithms/update/topology.h>
-#include <vcg/complex/algorithms/update/bounding.h>
-#include <vcg/complex/algorithms/update/normal.h>
-
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/create/platonic.h>
 
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh/export_ply.h>
-
-/* include the support for polygon meshes (function to convert from/to trimesh)*/
-//#include <vcg/complex/algorithms/polygon_support.h>
 
 /* include the support for half edges */
 #include <vcg/complex/algorithms/update/halfedge_indexed.h>
@@ -44,16 +36,11 @@
 using namespace vcg;
 using namespace std;
 
-// forward declarations
 class TFace;
 class TVertex;
 
 struct TUsedTypes: public vcg::UsedTypes< vcg::Use<TVertex>::AsVertexType, vcg::Use<TFace>::AsFaceType >{};
 
-
-
-/* Definition of a mesh of triangles
-*/
 class TVertex : public Vertex< TUsedTypes,
     vertex::BitFlags,
     vertex::Coord3f,
@@ -126,7 +113,7 @@ class PMesh: public
 PMesh pm;
 TMesh tm0;
 
-int	main(int argc, char *argv[]) {
+int	main(int /*argc*/, char *argv[]) {
 
     int loadmask;
 
@@ -209,9 +196,8 @@ else
     TMesh tm1;
     vcg::tri::PolygonSupport<TMesh,PMesh>::ImportFromPolyMesh(tm1,pm);
 
-    vcg::tri::io::PlyInfo pi;
-    vcg::tri::io::ExporterPLY<TMesh>::Save(tm1,"converted_tri.ply",false,pi);
-    vcg::tri::io::ExporterPLY<PMesh>::Save(pm,"converted_poly.ply",false,pi);
+    vcg::tri::io::ExporterPLY<TMesh>::Save(tm1,"converted_tri.ply",false);
+    vcg::tri::io::ExporterPLY<PMesh>::Save(pm,"converted_poly.ply",false);
 }
 
 
