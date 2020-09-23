@@ -14,11 +14,9 @@
 using namespace std;
 using namespace vcg;
 
-
-
 string MYbasename = "plymcout";
 string VolumeBaseName;
-string subtag=""; // la stringa da appendere al nome di file per generare i nomi di file relativi a vari sottopezzi
+string subtag=""; // the string to be appended to the filename to generate filenames for various fragments
 string alnfile;
 
 /************ Command Line Parameters *******/
@@ -44,7 +42,7 @@ void usage()
       " -W#     Set distance field Exp. as an absolute dist (override -w)\n"
       " -a#     Set angle threshold for distance field expansion (default 30)\n"
       " -f#     Set the fill threshold (default 12: all voxel having less \n"
-      "         than 12 adjacent are not automaticall filled)\n"
+      "         than 12 adjacent are not automatically filled)\n"
       " -L#     Set Number of smoothing passes to be done after merging of all meshes\n"
       " -R#     Set Number of Refill passes to be done after merging of all meshes\n"
       " -l#     Make a single smoothing step after each expansion\n"
@@ -66,9 +64,9 @@ void usage()
 
       "A partition in the working volume is defined using 3 integers, that \n"
       "specify the subdivision along the three axis.\n"
-      "To automatically compute ALL subvolumes of a given subdivision use '-S' \n"
+      "To automatically compute all subvolumes of a given subdivision use '-S' \n"
       "-S 1 1 1 default no subdivision at all\n"
-      "-S 2 2 2 compute all the octant of a octree-like subdivision\n"
+      "-S 2 2 2 compute all the octant of an octree-like subdivision\n"
       "-S 1 1 4 compute four Z-slices\n\n"
 
       "To work only on a SINGLE subvolume of the partition you have to specify \n"
@@ -200,8 +198,6 @@ int main(int argc, char *argv[])
     }
     ++i;
   }
-
-
 
   Matrix44f Identity;
   Identity.SetIdentity();
