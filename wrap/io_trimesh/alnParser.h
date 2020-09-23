@@ -30,14 +30,14 @@
 
 struct RangeMap
 {
-    RangeMap()
-    {
-        quality = 1.0f;
-    }
-
-    std::string			filename;
-    Matrix44m	trasformation;
-    float						quality;
+	RangeMap()
+	{
+		quality = 1.0f;
+	}
+	
+	std::string filename;
+	Matrix44m   transformation;
+	float       quality;
 };
 
 class ALNParser
@@ -66,7 +66,7 @@ public:
         {
             (*rm).filename = (*it);
             (*rm).quality  = 1.0f;
-            (*rm).trasformation.SetIdentity();
+            (*rm).transformation.SetIdentity();
         }
         files.clear();
         return NoError;
@@ -106,10 +106,10 @@ public:
                 rm.quality = (float) atof(occurrence+2);
             assert(rm.quality>0);
 
-            fscanf(stream,"%f %f %f %f \n",&(rm.trasformation[0][0]),&(rm.trasformation[0][1]),&(rm.trasformation[0][2]),&(rm.trasformation[0][3]));
-            fscanf(stream,"%f %f %f %f \n",&(rm.trasformation[1][0]),&(rm.trasformation[1][1]),&(rm.trasformation[1][2]),&(rm.trasformation[1][3]));
-            fscanf(stream,"%f %f %f %f \n",&(rm.trasformation[2][0]),&(rm.trasformation[2][1]),&(rm.trasformation[2][2]),&(rm.trasformation[2][3]));
-            fscanf(stream,"%f %f %f %f \n",&(rm.trasformation[3][0]),&(rm.trasformation[3][1]),&(rm.trasformation[3][2]),&(rm.trasformation[3][3]));
+            fscanf(stream,"%f %f %f %f \n",&(rm.transformation[0][0]),&(rm.transformation[0][1]),&(rm.transformation[0][2]),&(rm.transformation[0][3]));
+            fscanf(stream,"%f %f %f %f \n",&(rm.transformation[1][0]),&(rm.transformation[1][1]),&(rm.transformation[1][2]),&(rm.transformation[1][3]));
+            fscanf(stream,"%f %f %f %f \n",&(rm.transformation[2][0]),&(rm.transformation[2][1]),&(rm.transformation[2][2]),&(rm.transformation[2][3]));
+            fscanf(stream,"%f %f %f %f \n",&(rm.transformation[3][0]),&(rm.transformation[3][1]),&(rm.transformation[3][2]),&(rm.transformation[3][3]));
 
             rangemaps.push_back(rm);
         }
