@@ -18,7 +18,7 @@ using namespace vcg;
 
 string MYbasename = "plymcout";
 string VolumeBaseName;
-string subtag=""; // la stringa da appendere al nome di file per generare i nomi di file relativi a vari sottopezzi
+string subtag=""; // the string to be appended to the filename to generate filenames for various sub-pieces
 string alnfile;
 
 /************ Command Line Parameters *******/
@@ -38,13 +38,13 @@ void usage()
       " -V#     Set the required voxel size (override -c)\n"
       " -s...   Compute only a subvolume (specify 6 integers) \n"
       " -S...   Compute all the subvolumes of a partition (specify 3 int) \n"
-      " -X...   Compute a range of the the subvolumes of a partition (specify 9 int)\n"
+      " -X...   Compute a range of the subvolumes of a partition (specify 9 int)\n"
       " -M      Apply a 'safe' simplification step that removes only the unecessary triangles\n"
       " -w#     Set distance field Expansion factor in voxel (default 3)\n"
       " -W#     Set distance field Exp. as an absolute dist (override -w)\n"
       " -a#     Set angle threshold for distance field expansion (default 30)\n"
       " -f#     Set the fill threshold (default 12: all voxel having less \n"
-      "         than 12 adjacent are not automaticall filled)\n"
+      "         than 12 adjacent are not automatically filled)\n"
       " -L#     Set Number of smoothing passes to be done after merging of all meshes\n"
       " -R#     Set Number of Refill passes to be done after merging of all meshes\n"
       " -l#     Make a single smoothing step after each expansion\n"
@@ -94,8 +94,8 @@ void usage()
       "and the last three which is the last subvolume to be computed.\n"
       "the process will compute all blocks with x,y,z index included in the interval\n"
       "specified: Xstart<=X<=Xend Ystart<=Y<=Yend Zstart<=Z<=Zend\n"
-      "-X 3 3 3 0 0 0 2 2 2 three subdivision on each axis, all subvolumes\n"
-      "-X 2 2 2 1 0 0 1 1 1 three subdivision on each axis, only the 'right' part\n\n"
+      "-X 3 3 3 0 0 0 2 2 2 three subdivisions on each axis, all subvolumes\n"
+      "-X 2 2 2 1 0 0 1 1 1 three subdivisions on each axis, only the 'right' part\n\n"
       );
   exit(-1);
 }
@@ -200,8 +200,6 @@ int main(int argc, char *argv[])
     }
     ++i;
   }
-
-
 
   Matrix44f Identity;
   Identity.SetIdentity();
