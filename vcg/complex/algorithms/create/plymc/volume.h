@@ -61,48 +61,39 @@ public:
     Volume(){
         SetDefaultParam();
     }
-    // I dati veri e propri
-    // Sono contenuti in un vettore di blocchi.
+    // The actual data
+    // They are contained in a block vector.
     std::vector<  std::vector<VOX_TYPE>  > rv;
     Box3x   bbox;
 
         _int64 AskedCells;
-    Point3x dim;  /// Dimensione spaziale (lunghezza lati) del bbox
-
-    Point3i sz;   /// Dimensioni griglia come numero di celle per lato
-
-    Point3i ssz;  /// Dimensioni sottoblocco in esame come numero di celle per lato
-
-    Point3i rsz;  /// Dimensioni macro griglia dei blocchi in cui e' suddiviso il volume (ogni blocco e' BLOCKSIDE()^3 celle)
-
-    Point3i asz;  /// Dimensioni macro griglia dei blocchi relativa al sottoblocco in questione (quello allocato davvero!)
+    Point3x dim;  /// Spatial dimension (side length) of the bbox
+    Point3i sz;   /// Grid size as the number of cells per side
+    Point3i ssz;  /// Sub-block dimensions under consideration as the number of cells per side
+    Point3i rsz;  /// Macro grid dimensions of the blocks into which the volume is divided (each block is BLOCKSIDE () ^ 3 cells)
+    Point3i asz;  /// Macro dimensions of the block grid relative to the sub-block in question (the one really allocated!)
+    Point3x voxel; /// Size of a cell
 
 
-    Point3x voxel; /// Dimensioni di una cella
-
-
-    int WN,WP; // di quanti vox mi devo allargare per settare la manhattan distance in neg e pos
-  int DeltaVoxelSafe; // di quanti vox mi devo allargare per stare sicuro nel fare solo una sottoparte.
+    int WN,WP; // How many voxels I have to widen to set the manhattan distance in neg and pos
+    int DeltaVoxelSafe; // How many voxes I have to expand to be sure in making only a subpart.
 
   const Point3i ISize() { return sz; }
 private :
-    // offset e distanze varie precalcolate una volta per tutte
-    Point3f nnf[26];
-    Point3i nni[26];
-    float len[26];
-    float slen[26];
+    // Various offsets and distances pre-calculated once and for all
+    Point3f nnf[26],nni[26];
+    float len[26],slen[26];
 
-        /// Gestione sottoparte
-    Point3i div;
-    Point3i pos;
+    /// Subpart management
+    Point3i div,pos;
 public:
-    Box3i	  SubPart;                 // Sottoparte del volume da considerare ufficialmente
-    Box3x     SubBox;                  // BBox della sottoparte del volume da considerare in coord assolute
-    Box3i	  SubPartSafe;             // come sopra ma aumentati per sicurezza.
+    Box3i	  SubPart;                 // Subpart of the volume to be officially considered
+    Box3x     SubBox;                  // BBox of the subpart of the volume to be considered in absolute coordinates
+    Box3i	  SubPartSafe;             // as above but increased for safety.
     Box3x     SubBoxSafe;
 
  FILE *LogFP;
-bool Verbose; // se true stampa un sacco di info in piu su logfp;
+ bool Verbose; // if true print a lot of extra info on logfp;
 
     void SetDefaultParam(){
          WN=0;
@@ -123,7 +114,7 @@ bool Verbose; // se true stampa un sacco di info in piu su logfp;
     Init(VV.AskedCells,VV.bbox,VV.div,VV.pos);
     }
 
-        void Init(_int64 cells, Box3x bb, Point3i _div=Point3i(1,1,1), Point3i _pos=Point3i(0,0,0))
+        void Init(__int64 cells, Box3x bb, Point3i _div=Point3i(1,1,1), Point3i _pos=Point3i(0,0,0))
     {
         Point3d voxdim;voxdim.Import(bb.max-bb.min);
         AskedCells=cells;
@@ -133,14 +124,14 @@ bool Verbose; // se true stampa un sacco di info in piu su logfp;
         printf("grid of ~%i kcells: %d x %d x %d \n",int(cells/1000),sz[0],sz[1],sz[2]);
         printf("grid voxel size of %f %f %f\n",voxdim[0]/sz[0],voxdim[1]/sz[1],voxdim[2]/sz[2]);
 */
-        // il box deve essere multipli di BLOCKSIDE()
-      sz=((sz/BLOCKSIDE())+Point3i(1,1,1))*BLOCKSIDE();
+        // the box must be multiples of BLOCKSIDE()
+        sz=((sz/BLOCKSIDE())+Point3i(1,1,1))*BLOCKSIDE();
 
 
         rsz=sz/BLOCKSIDE();
         if(sz!=rsz*BLOCKSIDE()) {
-            assert(0); // il box deve essere multipli di BLOCKSIDE()
-      exit(-1);
+            assert(0); // the box must be multiples of BLOCKSIDE()
+            exit(-1);
         }
 
         dim=bbox.max-bbox.min;
@@ -160,7 +151,7 @@ bool Verbose; // se true stampa un sacco di info in piu su logfp;
 
 private:
 
-    // Da chiamare sempre DOPO la resize...
+    // Always to be called AFTER the resize...
     void SetDim(const Box3x & /*bb*/)
     {
 
@@ -183,15 +174,15 @@ private:
     }
 
 /*
-Parametri
-div indica il numero di blocchi da fare lungo i vari assi (sempre >=1)
-pos indicano la coord del subbox da prendere in considerazione (sempre >=0 &&  < xdiv,ydiv,zdiv)
+Parameters
+div indicates the number of blocks to be made along the various axes (always> = 1)
+pos indicates the coord of the subbox to be taken into consideration (always> = 0 && <xdiv, ydiv, zdiv)
 */
 
 void SetSubPart(Point3i _div, Point3i _pos)
 {
-    int k;
-    // Controllo correttezza parametri.
+    // Parameter correctness check.
+    short k;
     for(k=0;k<3;++k)
         {
             assert(_div[k]>0);
@@ -313,7 +304,7 @@ public:
      */
     bool Pos(const int &_x,const int &_y,const int &_z, int & rpos,int &lpos) const
     {
-        int x=_x-SubPartSafe.min[0];		int y=_y-SubPartSafe.min[1];		int z=_z-SubPartSafe.min[2];
+        int x=_x-SubPartSafe.min[0],y=_y-SubPartSafe.min[1],z=_z-SubPartSafe.min[2];
 
         assert(_x>=SubPartSafe.min[0] && _x<SubPartSafe.max[0] &&
                _y>=SubPartSafe.min[1] && _y<SubPartSafe.max[1] &&
@@ -321,31 +312,31 @@ public:
 
     //	assert(x>=0 && x<sz[0] && y>=0 && y<sz[1] && z>=0 && z<sz[2]);
 
-        int rx=x/BLOCKSIDE();		int ry=y/BLOCKSIDE();		int rz=z/BLOCKSIDE();
+        int rx=x/BLOCKSIDE(),ry=y/BLOCKSIDE(),rz=z/BLOCKSIDE();
         assert(rx>=0 && rx<asz[0] && ry>=0 && ry<asz[1] && rz>=0 && rz<asz[2]);
         rpos = rz*asz[0]*asz[1]+ry*asz[0]+rx;
         assert(rpos < int(rv.size()));
-        int lx = x%BLOCKSIDE();		int ly = y%BLOCKSIDE();		int lz = z % BLOCKSIDE();
+        int lx = x%BLOCKSIDE(),ly = y%BLOCKSIDE(),lz = z % BLOCKSIDE();
         lpos = lz*BLOCKSIDE()*BLOCKSIDE()+ly*BLOCKSIDE()+lx;
         if(rv[rpos].empty()) return false;
         return true;
      }
 
-    /*
-    Funzione inversa della precedente
-    Date due posizioni rpos e lpos  restituisce x,y,z assoluti
+    /* 
+    Reverse function of the previous one
+    Given two positions rpos and lpos returns absolute x, y, z
     */
     bool IPos(int &x,int &y,int &z, const int & rpos, const int &lpos) const
     {
         assert (rpos>=0 && lpos  >=0);
 
-        int rz =   rpos / (asz[0]*asz[1]);	int remainder =  rpos % (asz[0]*asz[1]);
+        int rz =   rpos / (asz[0]*asz[1]),remainder =  rpos % (asz[0]*asz[1]);
         int ry = ( remainder ) / asz[0] ;
         int rx =   remainder % asz[0];
 
         assert(rx>=0 && rx<asz[0] && ry>=0 && ry<asz[1] && rz>=0 && rz<asz[2]);
 
-        int lz =   lpos / (BLOCKSIDE()*BLOCKSIDE());	int lemaindel =  lpos % (BLOCKSIDE()*BLOCKSIDE());
+        int lz =   lpos / (BLOCKSIDE()*BLOCKSIDE()),lemaindel =  lpos % (BLOCKSIDE()*BLOCKSIDE());
         int ly = ( lemaindel ) / BLOCKSIDE();
         int lx =   lemaindel % BLOCKSIDE();
 
@@ -370,7 +361,7 @@ public:
         rv[rpos].resize(BLOCKSIDE()*BLOCKSIDE()*BLOCKSIDE(),zeroval);
     }
     /************************************/
-    // Funzioni di accesso ai dati
+    // Data access functions
   bool ValidCell(const Point3i &p1, const Point3i &p2) const
   {
      if(!cV(p1.X(),p1.Y(),p1.Z()).B() ) return false;
@@ -433,9 +424,9 @@ void Fill(VOX_TYPE const p)
 }
 
 
-// Copia sul volume corrente una versione smoothed del volume in ingresso S.
-// il parametro serve a specificare il range di valori di campo vicini allo zero che non vanno mediati!
-// questo perche se si smootha anche sullo zero si smoota anche dove e' bene allineato
+// Copies a smoothed version of the incoming volume to the current volume S.
+// the parameter is used to specify the range of field values close to zero that should not be averaged!
+// this is because if you smooth even on zero you also smooth where it is well aligned
 
 void CopySmooth( Volume<VOX_TYPE> &S, scalar SafeZone=1, scalar SafeQuality=0)
 {
@@ -450,8 +441,8 @@ void CopySmooth( Volume<VOX_TYPE> &S, scalar SafeZone=1, scalar SafeQuality=0)
  vi.FirstNotEmpty();
  // const Voxelf *VC;
  while(vi.IsValid())
-     // scandisci il volume in ingresso, per ogni voxel non vuoto del volume
-     // in ingresso calcola la media con gli adiacenti
+     // scan the input volume, for each non-empty voxel of the volume
+     // in input it calculates the average with the neighbors
     {
         if((*vi).B())
         {
@@ -460,7 +451,7 @@ void CopySmooth( Volume<VOX_TYPE> &S, scalar SafeZone=1, scalar SafeQuality=0)
             if(Bound1(x,y,z))
                 {
                   VOX_TYPE &VC =  V(x,y,z);
-                    for(int i=0;i<26;++i)
+                    for(short int i=0;i<26;++i)
                     {
                         VOX_TYPE &VV= S.V(x+nni[i][0],y+nni[i][1],z+nni[i][2]);
                         if(VV.B()) VC+=VV;
@@ -487,31 +478,30 @@ void CopySmooth( Volume<VOX_TYPE> &S, scalar SafeZone=1, scalar SafeQuality=0)
 
     }
  // Step 2,
- // dopo aver calcolato la media,
+ // after calculating the average,
 
  VolumeIterator< Volume > svi(*this);
  svi.Restart();
  svi.FirstNotEmpty();
- int smoothcnt=0;
- int preservedcnt=0;
- int blendedcnt=0;
- const float FieldBorder = 1; // dove finisce la transizione tra la zona safe e quella smoothed
+ int smoothcnt=0,preservedcnt=0,blendedcnt=0;
+ 
+ const float FieldBorder = 1; // where the transition between the safe and smoothed zone ends
  const float EndFBorderZone = SafeZone+FieldBorder;
  const float EndQBorderZone = SafeQuality*1.5;
- const float QBorder = EndQBorderZone-SafeQuality; // dove finisce la transizione tra la zona safe e quella smoothed
+ const float QBorder = EndQBorderZone-SafeQuality; // where the transition between the safe and smoothed zone ends
  while(svi.IsValid())
     {
         if((*svi).Cnt()>0)
         {
             VOX_TYPE &sv=S.rv[svi.rpos][svi.lpos];
-            (*svi).Normalize(1); // contiene il valore mediato
+            (*svi).Normalize(1); // contains the averaged value
             float SafeThr = fabs(sv.V());
 
-            // Se la qualita' e' bassa o se siamo distanti si smootha sempre
-            // se siamo vicini allo zero e con buona qualita' si deve fare attenzione
+            // If the quality is low or if we are distant we always smoothes
+            // if we are close to zero and with good quality, we must be careful
             if(SafeThr<EndFBorderZone && sv.Q() > EndQBorderZone)
-            {		// se il voxel corrente aveva un valore < safezone E qualita' > SafeQuality
-                    // allora si copia il valore originale di S
+            {		// if the current voxel had a value <safezone AND quality> SafeQuality
+                    // then copy the original value of S
                     if((SafeThr <= SafeZone) && sv.Q() > SafeQuality )
                         {
                             (*svi)=sv;
@@ -519,10 +509,10 @@ void CopySmooth( Volume<VOX_TYPE> &S, scalar SafeZone=1, scalar SafeQuality=0)
                             ++preservedcnt;
                         }
                         else
-                        {	// Siamo nella zona di transizione o per field o per quality
+                        {	// We are in the transition zone either by field or by quality
                             float blendq= std::max(0.0f,std::min(1.0f,(EndQBorderZone-sv.Q())/QBorder));
                             float blendf= std::max(0.0f,std::min(1.0f,(EndFBorderZone-SafeThr)/FieldBorder));
-                            float BlendFactor = 1.0-std::max(blendf,blendq); // quanto del voxel originale <sv> si prende;
+                            float BlendFactor = 1.0-std::max(blendf,blendq); // how much of the original voxel <sv> you take;
                             (*svi).Blend(sv,BlendFactor);
                             ++blendedcnt;
                         }
@@ -547,7 +537,7 @@ void Merge(Volume<VOX_TYPE> &S)
     {
      if((*svi).B())
          {
-          int x,y,z;
+            int x,y,z;
             IPos(x,y,z,svi.rpos,svi.lpos);
             if(cV(x,y,z).B())	V(x,y,z).Merge( (*svi));
                     else {
@@ -567,7 +557,7 @@ void Merge(Volume<VOX_TYPE> &S)
 
 void Interize( Point3x & vert ) const // OK
 {
-    for(int j=0;j<3;++j)
+    for(short j=0;j<3;++j)
     {
         assert(vert[j]>=bbox.min[j]);
         assert(vert[j]<=bbox.max[j]);
@@ -578,7 +568,7 @@ void Interize( Point3x & vert ) const // OK
 
 void DeInterize( Point3x & vert ) const	// OK
 {
-    for(int j=0;j<3;++j)
+    for(short j=0;j<3;++j)
         vert[j] = vert[j] * (bbox.max[j] - bbox.min[j]) / sz[j] + bbox.min[j];
 }
 
@@ -586,7 +576,7 @@ bool SplatVert( const Point3x & v0, double quality, const Point3x & nn, Color4b 
 {
     Box3i ibox;
 
-  assert(math::Abs(SquaredNorm(nn) - 1.0) < 0.0001); // Just a safety check that the vertex normals are NORMALIZED!
+    assert(math::Abs(SquaredNorm(nn) - 1.0) < 0.0001); // Just a safety check that the vertex normals are NORMALIZED!
     ibox.min=Point3i(floor(v0[0]),floor(v0[1]),floor(v0[2]));
     ibox.max=Point3i( ceil(v0[0]), ceil(v0[1]), ceil(v0[2]));
     ibox.Intersect(SubPartSafe);
@@ -626,9 +616,7 @@ template <const int CoordZ>
                         const Point3x &d10, const Point3x &d21, const Point3x &d02)
 {
   const scalar EPS     = scalar(1e-12);
-  const int crd0 = CoordZ;
-  const int crd1 = (CoordZ+1)%3;
-  const int crd2 = (CoordZ+2)%3;
+  const int crd0 = CoordZ,crd1 = (CoordZ+1)%3,crd2 = (CoordZ+2)%3;
   assert(fabs(norm[crd0])+0.001 > fabs(norm[crd1]));
   assert(fabs(norm[crd0])+0.001 > fabs(norm[crd2]));
   scalar x,y;
@@ -649,14 +637,14 @@ template <const int CoordZ>
         }
 }
 
-// Si sa che la faccia ha una intercetta sull'asse z-dir di coord xy alla posizione z;
-// quindi si setta nei 2 vertici prima e 2 dopo la distanza corrispondente.
+// The face is known to have an intercept on the z-dir axis of coord xy at position z;
+// then set the corresponding distance in the 2 vertices before and 2 after.
 template<int CoordZ>
         void AddIntercept( const int x, const int y, const scalar z, const scalar q, const Point3f &n )
 {
     scalar esgn = (n[CoordZ] > 0 ? -1 : 1);
     int  zint = floor(z);
-    scalar dist=z-zint;  // sempre positivo e compreso tra zero e uno
+    scalar dist=z-zint;  // always positive and between zero and one
 
     for(int k=WN;k<=WP;k++)
     {
@@ -674,24 +662,24 @@ template<int CoordZ>
     }
 }
 
-// assume che i punti della faccia in ingresso siano stati interized
+// assumes that the points of the incoming face have been interized
 bool ScanFace2( const Point3x & v0, const Point3x & v1, const Point3x & v2,
                        scalar quality, const Point3x & norm)//, const int name )	// OK
 {
 
-    Box3x fbox;		// Bounding Box della faccia (double)
-    Box3i ibox;		// Bounding Box della faccia (int)
-    int sx,sy,sz;	// Bounding Box intero
+    Box3x fbox;		// Bounding Box of the face (double)
+    Box3i ibox;		// Bounding Box of the face (int)
+    int sx,sy,sz;	// Bounding Box whole
     int ex,ey,ez;
 
-        // Calcolo bbox della faccia
+    // Bbox calculation of the face
     fbox.Set(v0);
     fbox.Add(v1);
     fbox.Add(v2);
 
-    // BBox intero (nota che il cast a int fa truncation (funge solo perche' v0,v1,v2 sono positivi)
+    // BBox integer (note that the cast to int does truncation (it only works because v0, v1, v2 are positive)
 
-    ibox.min[0] =sx = floor(fbox.min[0]); if( ((scalar)sx)!=fbox.min[0] ) ++sx; // necessario se il punto e'approx a .9999
+    ibox.min[0] =sx = floor(fbox.min[0]); if( ((scalar)sx)!=fbox.min[0] ) ++sx; // necessary if the point is close to .9999
     ibox.min[1] =sy = floor(fbox.min[1]); if( ((scalar)sy)!=fbox.min[1] ) ++sy;
     ibox.min[2] =sz = floor(fbox.min[2]); if( ((scalar)sz)!=fbox.min[2] ) ++sz;
     ibox.max[0] =ex = floor(fbox.max[0]);
@@ -709,9 +697,9 @@ bool ScanFace2( const Point3x & v0, const Point3x & v1, const Point3x & v2,
     scalar  dist = norm * v0;
 
 
-        /**** Rasterizzazione bbox ****/
+        /**** Rasterization bbox ****/
 
-    // Clamping dei valori di rasterizzazione al subbox corrente
+    // Clamping of the rasterization values to the current subbox
     sx = std::max(SubPartSafe.min[0],sx); ex = std::min(SubPartSafe.max[0]-1,ex);
     sy = std::max(SubPartSafe.min[1],sy); ey = std::min(SubPartSafe.max[1]-1,ey);
     sz = std::max(SubPartSafe.min[2],sz); ez = std::min(SubPartSafe.max[2]-1,ez);
@@ -724,7 +712,7 @@ bool ScanFace2( const Point3x & v0, const Point3x & v1, const Point3x & v2,
 return true;
 }
 
-// assume che i punti della faccia in ingresso siano stati interized
+// assumes that the points of the incoming face have been interized
 bool ScanFace( const Point3x & v0, const Point3x & v1, const Point3x & v2,
                        double quality, const Point3x & nn)//, const int name )	// OK
 {
@@ -742,19 +730,19 @@ bool ScanFace( const Point3x & v0, const Point3x & v1, const Point3x & v2,
 
 //	++nfaces;
 
-    Box3x fbox;		// Bounding Box della faccia (double)
-    Box3i ibox;		// Bounding Box della faccia (int)
-    int sx,sy,sz;	// Bounding Box intero
+    Box3x fbox;		// Bounding Box of the face (double)
+    Box3i ibox;		// Bounding Box of the face (int)
+    int sx,sy,sz;	// Bounding Box whole
     int ex,ey,ez;
 
-        // Calcolo bbox della faccia
+        // Face bbox calculation
     fbox.Set(v0);
     fbox.Add(v1);
     fbox.Add(v2);
 
-    // BBox intero (nota che il cast a int fa truncation (funge solo perche' v0,v1,v2 sono positivi)
+    // Integer BBox (note that the cast to int does truncation (it only works because v0, v1, v2 are positive)
 
-    ibox.min[0] =sx = floor(fbox.min[0]); if( ((scalar)sx)!=fbox.min[0] ) ++sx; // necessario se il punto e'approx a .9999
+    ibox.min[0] =sx = floor(fbox.min[0]); if( ((scalar)sx)!=fbox.min[0] ) ++sx; // necessary if the point is approx a .9999
     ibox.min[1] =sy = floor(fbox.min[1]); if( ((scalar)sy)!=fbox.min[1] ) ++sy;
     ibox.min[2] =sz = floor(fbox.min[2]); if( ((scalar)sz)!=fbox.min[2] ) ++sz;
     ibox.max[0] =ex = floor(fbox.max[0]);
@@ -763,31 +751,30 @@ bool ScanFace( const Point3x & v0, const Point3x & v1, const Point3x & v2,
      // Skip faces not colliding current subvolume.
     if(!ibox.Collide(SubPartSafe)) return false;
 
-        /**** Dati per controllo intersezione ****/
+        /**** Data for intersection control ****/
 
-        // Versori degli spigoli della faccia
+        // Versors of the edges of the face
 
     Point3x d10 = v1 - v0;
     Point3x d21 = v2 - v1;
     Point3x d02 = v0 - v2;
 
-        // Normale al piano della faccia e distanza origine
+        // Normal to face plane and origin distance
 
     Point3x norm = d10 ^ d21;
     norm.Normalize();
     double  dist = norm * v0;
 
-        /**** Rasterizzazione bbox ****/
+        /**** Rasterization bbox ****/
 
     int x,y,z;
 
-
-    // Clamping dei valori di rasterizzazione al subbox corrente
+    // Clamping of the rasterization values to the current subbox
     sx = std::max(SubPartSafe.min[0],sx); ex = std::min(SubPartSafe.max[0]-1,ex);
     sy = std::max(SubPartSafe.min[1],sy); ey = std::min(SubPartSafe.max[1]-1,ey);
     sz = std::max(SubPartSafe.min[2],sz); ez = std::min(SubPartSafe.max[2]-1,ez);
 
-        // Rasterizzazione xy
+        // Rasterization xy
 
     if(fabs(norm[2])>EPS_INT)
     for(x=sx;x<=ex;++x)
@@ -806,7 +793,7 @@ bool ScanFace( const Point3x & v0, const Point3x & v1, const Point3x & v2,
             }
         }
 
-        // Rasterizzazione xz
+        // Rasterization xz
 
     if(fabs(norm[1])>EPS_INT)
     for(x=sx;x<=ex;++x)
@@ -825,7 +812,7 @@ bool ScanFace( const Point3x & v0, const Point3x & v1, const Point3x & v2,
             }
         }
 
-            // Rasterizzazione yz
+            // Rasterization yz
 
     if(fabs(norm[0])>EPS_INT)
     for(y=sy;y<=ey;++y)
@@ -845,12 +832,12 @@ bool ScanFace( const Point3x & v0, const Point3x & v1, const Point3x & v2,
         }
         return true;
 }
-// Si sa che la faccia ha una intercetta sull'asse z-dir di coord xy alla posizione z;
-// quindi si setta nei 2 vertici prima e 2 dopo la distanza corrispondente.
+// The face is known to have an intercept on the z-dir axis of coord xy at position z;
+// then set the corresponding distance in the 2 vertices before and 2 after.
 
 void AddXYInt( const int x, const int y, const double z, const double sgn, const double q, const Point3f &n )
 { double esgn = (sgn<0 ? -1 : 1);//*max(fabs(sgn),0.001);
-    double dist=z-floor(z);  // sempre positivo e compreso tra zero e uno
+    double dist=z-floor(z);  // always positive and between zero and one
     int  zint = floor(z);
     for(int k=WN;k<=WP;k++)
         if(zint+k >= SubPartSafe.min[2] && zint+k < SubPartSafe.max[2])
@@ -864,7 +851,7 @@ void AddXYInt( const int x, const int y, const double z, const double sgn, const
 }
 void AddYZInt( const int y, const int z, const double x, const double sgn, const double q, const Point3f &n  )
 { double esgn = (sgn<0 ? -1 : 1);//*max(fabs(sgn),0.001);
-    double dist=x-floor(x);  // sempre positivo e compreso tra zero e uno
+    double dist=x-floor(x);  // always positive and between zero and one
     int  xint = int(floor(x));
     for(int k=WN;k<=WP;k++)
         if(xint+k >= SubPartSafe.min[0] && xint+k < SubPartSafe.max[0])
@@ -878,7 +865,7 @@ void AddYZInt( const int y, const int z, const double x, const double sgn, const
 }
 void AddXZInt( const int x, const int z, const double y, const double sgn, const double q, const Point3f &n  )
 { double esgn = (sgn<0 ? -1 : 1);//*max(fabs(sgn),0.001);
-    double dist=y-scalar(floor(y));  // sempre positivo e compreso tra zero e uno
+    double dist=y-scalar(floor(y));  // always positive and between zero and one
     int  yint = floor(y);
     for(int k=WN;k<=WP;k++)
         if(yint+k >= SubPartSafe.min[1] && yint+k < SubPartSafe.max[1])
@@ -890,8 +877,6 @@ void AddXZInt( const int x, const int z, const double y, const double sgn, const
             }
         }
 }
-
-
 
  void Dump(FILE *fp)
  {
@@ -929,18 +914,18 @@ bool Bound1(const int x, const int y, const int z)
 }
 
 /*
-Note sull'algoritmo di espansione:
+Notes on the expansion algorithm:
 
-Si riempie i voxel vuoti
+It fills the empty voxels
 
-Se il volume e' inizialmente riempito con ii valori delle intercette alla superficie
-nei 2 vertici immediatamente adiacenti all'edge intersecato dalla superficie
-si deve espadnere tale coampo in maniera sensata.
+If the volume is initially filled with the values of the surface intercepts
+in the 2 vertices immediately adjacent to the edge intersected by the surface
+you have to expand this component in a sensible way.
 
-Notare che e' importante che non tutto il campo sia riempito con un approx ella distanza di hausdorf:
-il campo deve essere "tagliato" sui bordi della superficie per evitare pasticci. Levoy riempie il campo
-solo lungo la direzione dello scanner, io invece riempio lungo la normale alla superficie. In questo modo
-si evita il problema che l'espansione e' legata all'acquisizione iniziale
+Note that it is important that not the whole field is filled with approx. Hausdorf distance:
+the field must be "cut" on the edges of the surface to avoid mess. Levoy fills the field
+only along the direction of the scanner, I instead fill along the normal to the surface. In this way
+the problem that the expansion is linked to the initial acquisition is avoided
 
 */
 
@@ -958,20 +943,20 @@ void Expand(scalar AngleThrRad)
  vi.FirstNotEmpty();
  while(vi.IsValid())
  {
-     if((*vi).B()) // si espande solo i voxel con valori "validi"
+     if((*vi).B()) // expands only voxels with "valid" values
         {
             int x,y,z;
             IPos(x,y,z,vi.rpos,vi.lpos);
             Point3f n=(*vi).N();
-      VOX_TYPE vtmp =  (*vi);
+            VOX_TYPE vtmp =  (*vi);
             if(Bound1(x,y,z))
             for(i=0;i<26;++i)
                         {
-                            float angle = -(nnf[i]*n);    // cos angolo tra la normale alla superficie e la direzione di espansione
+                            float angle = -(nnf[i]*n);    // cos angle between surface normal and expansion direction
                             if( fabs(angle)> CosThr )
                                         {
                                             //bbfloat tt=(*vi).V();
-                                            vtmp.SetV((*vi).V()+len[i]*angle);   // la nuova distanza e' la distanza rispetto al piano passante per il punto a cui si riferisce VV;
+                                            vtmp.SetV((*vi).V()+len[i]*angle);   // the new distance is the distance from the plane passing through the point to which VV refers;
                                             VOX_TYPE &VV= V(x+nni[i][0],y+nni[i][1],z+nni[i][2]);
                                             if(!VV.B()){
                                                 VV+=vtmp;
@@ -987,10 +972,11 @@ void Expand(scalar AngleThrRad)
  Normalize(1);
 }
 
-// filla i buchi vuoti di un volume;
-// scorre tutti i voxel pieni e aggiunge agli adiacenti vuoti tale valore;
-// si riscorre tutti i voxel vuoti e se si sono sommati almeno thr valori sitiene.
-// in pratica maggiore il valore di thr meno buchi si riempiono.
+
+// filter the empty holes of a volume;
+// iterates all the filled voxels and adds this value to the adjacent empty ones;
+// check all empty voxels and if at least thr kept values have been added.
+// basically the higher the value of thr the fewer holes you fill.
 
 void Refill(const int thr,float maxdistance = std::numeric_limits<float>::max() )
 {
@@ -1007,7 +993,7 @@ void Refill(const int thr,float maxdistance = std::numeric_limits<float>::max() 
             IPos(x,y,z,vi.rpos,vi.lpos);
             if(Bound1(x,y,z))
                 {
-                    for(int i=0;i<26;++i)
+                    for(short i=0;i<26;++i)
                     {
                         VOX_TYPE &VC= V(x+nni[i][0],y+nni[i][1],z+nni[i][2]);
                         if(!VC.B()){
@@ -1025,18 +1011,18 @@ void Refill(const int thr,float maxdistance = std::numeric_limits<float>::max() 
 
     }
  printf("ReFill  %8i ",lcnt);
-Normalize(thr,maxdistance);
+ Normalize(thr,maxdistance);
 }
 
 /*
-Attraversa il volume e modifica il valore di campo in modo da creare una offset surface che si connetta
-bene con la superficie originale
-il parametro specifica dove dovrebbe passare l'offset surface
+Traverse the volume and change the field value to create an offset surface that connects
+well with the original surface
+the parameter specifies where the offset surface should pass
 
-L'idea e' quella di fare un altro zero del distance field al threshold specificato
+The idea is to make another zero of the distance field at the specified threshold
 
-La cosa deve essere smooth
-quindi scelgo una funzione che abbia 2 zeri (in zero e in thr) e
+The thing must be smooth
+so I choose a function that has 2 zeros (in zero and in thr) and
 */
 void Offset(const float thr)
 {
@@ -1066,9 +1052,9 @@ void Offset(const float thr)
  Normalize(thr);
 }
 
-// prende un volume e mette a true il campo b di tutti i voxel che hanno un valore significativo.
-// thr indica il numero minimo di valori che si devono essere sommati sul voxel;
-// di solito e' uguale a 1;
+// takes a volume and sets field b of all voxels that have a significant value to true.
+// thr indicates the minimum number of values that must be added on the voxel;
+// usually equals 1;
 int  Normalize(int thr, float maxdistance=std::numeric_limits<float>::max() )
 {
  VolumeIterator< Volume > vi(*this);
@@ -1092,14 +1078,13 @@ int  Normalize(int thr, float maxdistance=std::numeric_limits<float>::max() )
 
 
 
-// Salva
+// Save
 void SlicedPPMQ( const char * filename,const char *tag,int SliceNum)
     {
-        std::string basename=filename;
-        std::string name;
+        std::string basename=filename,name;
         int ix,iy,iz;
         Color4b Tab[100];
-        for(int ii=1;ii<100;++ii)
+        for(short ii=1;ii<100;++ii)
             Tab[ii].SetColorRamp(0,100,ii);
         Tab[0]=Color4b::Gray;
 
@@ -1160,10 +1145,9 @@ void SlicedPPMQ( const char * filename,const char *tag,int SliceNum)
 
 void SlicedPPM( const char * filename,const char *tag,int SliceNum=1)
     {
-        std::string basename=filename;
-        std::string name;
+        std::string basename=filename,name;
         int ix,iy,iz;
-    int ZStep=sz[2]/(SliceNum+1);
+        int ZStep=sz[2]/(SliceNum+1);
         for(iz=ZStep;iz<sz[2];iz+=ZStep)
         if(iz>=SubPartSafe.min[2] && iz<SubPartSafe.max[2])
         {
@@ -1255,7 +1239,6 @@ void GetZIntercept(const vcg::Point3i &p1, const vcg::Point3i &p2, VertexPointer
   v->Q()=cV(p1.X(), p1.Y(), p1.Z()).Q();
   v->C()=cV(p1.X(), p1.Y(), p1.Z()).C4b();
 }
-
 };
 
 
@@ -1270,10 +1253,9 @@ class VolumeIterator
 
      //Point3i curPos;
     int rpos;
-  int lpos;
-
+    int lpos;
     void Restart(){rpos=0;lpos=0;}
- private :
+ private:
  public:
 
 
@@ -1301,7 +1283,7 @@ class VolumeIterator
                 lpos=0;
             }
             typename std::vector<typename VOL::voxel_type>::iterator lvi= (*rvi).begin()+lpos;
-            // un voxel e' non vuoto se ha b!=0;
+            // a voxel is non-empty if it has b! = 0;
             while(lvi!=(*rvi).end() && !((*lvi).B() || (*lvi).Cnt()>0)) {
                 ++lvi;
             }
@@ -1356,8 +1338,6 @@ class VolumeIterator
         V.IPos(x,y,z,rpos,lpos);
         printf("Iterator r %4i l %4i (%3i %3i %3i)\n",rpos,lpos,x,y,z);
     }
-
-
 };
 }
 #endif
