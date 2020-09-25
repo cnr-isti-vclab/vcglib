@@ -27,10 +27,9 @@ of Greg Turk and on the work of Claudio Rocchini
 
 ****************************************************************************/
 
-
 // Note that on ppc mac (the only bigendian machine around)
 // the preprocessor def __BIG_ENDIAN__ is always defined.
-// Otherwise we should be on  a little endian machine (intel/amd based)
+// Otherwise we should be on a little endian machine (intel/amd based)
 #ifndef __BIG_ENDIAN__
 #define LITTLE_MACHINE
 #endif
@@ -107,7 +106,7 @@ typedef unsigned int uint;
 */
 
 
-	// Funzioni statiche per la lettura di un elemento
+	// Static functions for reading an element
 int ReadBin  ( XFILE * fp, const PlyProperty * pr, void * mem, int fmt );
 int ReadAscii( XFILE * fp, const PlyProperty * pr, void * mem, int fmt );
 
@@ -160,14 +159,14 @@ static char CrossType[9][9]=
 };
 
 // ******************************************************
-	// Funzioni di supporto per la lettura/scrittura dei dati
-	// ******************************************************
+// Support functions for reading / writing data
+// ******************************************************
 
 		// Big-little endian
 
 static inline void SwapShort( ushort * s )
 {
-	assert(s);
+    assert(s);
     *s = ushort( (int(*s)>>8) | (int(*s)<<8) );
 }
 
@@ -185,12 +184,12 @@ static inline void SwapInt( uint * x )
 
 static inline void SwapDouble( double * /*d*/ )
 {
-	// Come si fa?
+	// How you do it?
 	assert(0);
 }
 
 
-	// Lettura tipi binari
+	// Reading binary types
 
 static inline int ReadCharB( XFILE * fp, char * c, int /*format*/ )
 {
@@ -243,7 +242,6 @@ static inline int ReadUCharB( XFILE * fp, uchar * uc, int /*format*/ )
 {
 	assert(fp);
 	assert(uc);
-
 	return pb_fread(uc,1,1,fp);
 }
 
@@ -323,7 +321,7 @@ static inline int ReadDoubleB( XFILE * fp, double * d, int format )
 	return r;
 }
 
-	// --- simulazione di scanf ------
+	// --- scanf simulation ------
 
 //static bool sbuffer_ok = false;
 //static const int SBUFFERSIZE = 4096;
@@ -446,7 +444,7 @@ static inline int ReadDouble( XFILE * fp, double & d )
 }
 
 
-	// Lettura tipi ascii
+	// Reading ascii types
 
 static inline int ReadCharA( XFILE * fp, char * c )
 {
@@ -531,9 +529,7 @@ static inline int ReadDoubleA( XFILE * fp, double * d )
 	return ReadDouble(fp,*d);
 }
 
-
-
-	// Memorizza il valore val nella variabile mem di tipo tm
+	// Stores the value val in the mem variable of type tm
 
 static inline void StoreInt( void * mem, const int tm, const int val )
 {
@@ -553,7 +549,7 @@ static inline void StoreInt( void * mem, const int tm, const int val )
 	}
 }
 
-	// Salta un valore nel file
+	// Skip a value in the file
 
 static inline int SkipScalarA( XFILE * fp, const int tf )
 {
@@ -594,18 +590,17 @@ static int ReadScalarB( XFILE * fp, void * mem, const int tf, const int tm, int 
 {
   char		ch;
   short	sh;
-  int		in;
+  int		in,r=0;
   uchar	uc;
   ushort	us;
   uint		ui;
   float	fl;
   double	dd;
 
-	int r = 0;
 
 	switch(tf)
 	{
-	case T_CHAR:	//================== Lettura char
+	case T_CHAR:	//================== Reading char
 		r = ReadCharB(fp,&ch,fmt);
 		switch(tm)
 		{
@@ -620,7 +615,7 @@ static int ReadScalarB( XFILE * fp, void * mem, const int tf, const int tm, int 
 		default: assert(0);
 		}
 		break;
-	case T_SHORT:	//================== Lettura short
+	case T_SHORT:	//================== Reading char
 		r = ReadShortB(fp,&sh,fmt);
 		switch(tm)
 		{
@@ -635,7 +630,7 @@ static int ReadScalarB( XFILE * fp, void * mem, const int tf, const int tm, int 
 		default: assert(0);
 		}
 		break;
-	case T_INT:		//================== Lettura int
+	case T_INT:		//================== Reading char
 		r = ReadIntB(fp,&in,fmt);
 		switch(tm)
 		{
@@ -650,7 +645,7 @@ static int ReadScalarB( XFILE * fp, void * mem, const int tf, const int tm, int 
 		default: assert(0);
 		}
 		break;
-	case T_UCHAR:	//================== Lettura uchar
+	case T_UCHAR:	//================== Reading char
 		r = ReadUCharB(fp,&uc,fmt);
 		switch(tm)
 		{
@@ -665,7 +660,7 @@ static int ReadScalarB( XFILE * fp, void * mem, const int tf, const int tm, int 
 		default: assert(0);
 		}
 		break;
-	case T_USHORT:	//================== Lettura ushort
+	case T_USHORT:	//================== Reading ushort
 		r = ReadUShortB(fp,&us,fmt);
 		switch(tm)
 		{
@@ -680,7 +675,7 @@ static int ReadScalarB( XFILE * fp, void * mem, const int tf, const int tm, int 
 		default: assert(0);
 		}
 		break;
-	case T_UINT:	//================== Lettura uint
+	case T_UINT:	//================== Reading uint
 		r = ReadUIntB(fp,&ui,fmt);
 		switch(tm)
 		{
@@ -695,7 +690,7 @@ static int ReadScalarB( XFILE * fp, void * mem, const int tf, const int tm, int 
 		default: assert(0);
 		}
 		break;
-	case T_FLOAT:	//================== Lettura float
+	case T_FLOAT:	//================== Reading float
 		r = ReadFloatB(fp,&fl,fmt);
 		switch(tm)
 		{
@@ -704,7 +699,7 @@ static int ReadScalarB( XFILE * fp, void * mem, const int tf, const int tm, int 
 		default: assert(0);
 		}
 		break;
-	case T_DOUBLE:	//================== Lettura double
+	case T_DOUBLE:	//================== Reading double
 		r = ReadDoubleB(fp,&dd,fmt);
 		switch(tm)
 		{
@@ -720,24 +715,22 @@ static int ReadScalarB( XFILE * fp, void * mem, const int tf, const int tm, int 
 	return r;
 }
 
-	// Legge un valore di tipo tf e lo memorizza col tipo tm
+	// Reads a value of type tf and stores it with type tm
 
 static int ReadScalarA( XFILE * fp, void * mem, const int tf, const int tm )
 {
   char		ch;
   short	sh;
-  int		in;
+  int		in,r = 0;
   uchar	uc;
   ushort	us;
   uint		ui;
   float	fl;
   double	dd;
 
-	int r = 0;
-
 	switch(tf)
 	{
-	case T_CHAR:	//================== Lettura char
+	case T_CHAR:	//================== Reading char
 		r = ReadCharA(fp,&ch);
 		switch(tm)
 		{
@@ -752,7 +745,7 @@ static int ReadScalarA( XFILE * fp, void * mem, const int tf, const int tm )
 		default: assert(0);
 		}
 		break;
-	case T_SHORT:	//================== Lettura short
+	case T_SHORT:	//================== Short reading
 		r = ReadShortA(fp,&sh);
 		switch(tm)
 		{
@@ -767,7 +760,7 @@ static int ReadScalarA( XFILE * fp, void * mem, const int tf, const int tm )
 		default: assert(0);
 		}
 		break;
-	case T_INT:		//================== Lettura int
+	case T_INT:		//================== Reading int
 		r = ReadIntA(fp,&in);
 		switch(tm)
 		{
@@ -782,7 +775,7 @@ static int ReadScalarA( XFILE * fp, void * mem, const int tf, const int tm )
 		default: assert(0);
 		}
 		break;
-	case T_UCHAR:	//================== Lettura uchar
+	case T_UCHAR:	//================== Reading uchar
 		r = ReadUCharA(fp,&uc);
 		switch(tm)
 		{
@@ -797,7 +790,7 @@ static int ReadScalarA( XFILE * fp, void * mem, const int tf, const int tm )
 		default: assert(0);
 		}
 		break;
-	case T_USHORT:	//================== Lettura ushort
+	case T_USHORT:	//================== Reading ushort
 		r = ReadUShortA(fp,&us);
 		switch(tm)
 		{
@@ -812,7 +805,7 @@ static int ReadScalarA( XFILE * fp, void * mem, const int tf, const int tm )
 		default: assert(0);
 		}
 		break;
-	case T_UINT:	//================== Lettura uint
+	case T_UINT:	//================== Reading uint
 		r = ReadUIntA(fp,&ui);
 		switch(tm)
 		{
@@ -827,7 +820,7 @@ static int ReadScalarA( XFILE * fp, void * mem, const int tf, const int tm )
 		default: assert(0);
 		}
 		break;
-	case T_FLOAT:	//================== Lettura float
+	case T_FLOAT:	//================== Reading float
 		r = ReadFloatA(fp,&fl);
 		switch(tm)
 		{
@@ -836,7 +829,7 @@ static int ReadScalarA( XFILE * fp, void * mem, const int tf, const int tm )
 		default: assert(0);
 		}
 		break;
-	case T_DOUBLE:	//================== Lettura double
+	case T_DOUBLE:	//================== Reading double
 		r = ReadDoubleA(fp,&dd);
 		switch(tm)
 		{
@@ -887,15 +880,13 @@ int PlyElement::AddToRead(
 		int stotype2,
 		int memtype2,
 		size_t offset2
-	)	// Vedi struttura PropDescriptor
+	)	// See PropDescriptor structure
 {
 	assert(propname);
 
 	PlyProperty * p = FindProp(propname);
 	if(p==0)
-	{
 		return E_PROPNOTFOUND;
-	}
 	
 	if( stotype1<1 || stotype1>=T_MAXTYPE ||
 		memtype1<1 || memtype1>=T_MAXTYPE )
@@ -938,7 +929,7 @@ int PlyElement::AddToRead(
 
 
 
-//####################### Classe PlyFile
+//####################### Class PlyFile
 
 PlyFile::PlyFile( void )
 {
@@ -982,7 +973,7 @@ void PlyFile::Destroy( void )
 
 int PlyFile::OpenRead( const char * filename )
 {
-		// Tokens dell'intestazione
+		// Header tokens
 
   const char * SEP			= " \t\n\r";
   const char * HEADER		= "ply";
@@ -1002,10 +993,10 @@ int PlyFile::OpenRead( const char * filename )
 	char * token;
 	PlyElement * curelement;
 
-		// Predistruzione
+		// Predestruction
 
 	Destroy();
-		// Apertura file
+		// File opening
 
 	gzfp = pb_fopen(filename,"rb");
 	if(gzfp==0)
@@ -1018,7 +1009,7 @@ int PlyFile::OpenRead( const char * filename )
   header.reserve(1536);
 		// ********* Parsing header ***********
 
-			// Controllo header
+			// Control header
 	if( pb_fgets(buf,MAXB-1,gzfp)==0 )
 	{
 		error = E_UNESPECTEDEOF;
@@ -1033,7 +1024,7 @@ int PlyFile::OpenRead( const char * filename )
 	}
 	
 
-			// Lettura tipo e versione
+			// Reading type and version
 
 	if( pb_fgets(buf,MAXB-1,gzfp)==0 )
 	{
@@ -1107,7 +1098,7 @@ int PlyFile::OpenRead( const char * filename )
 		goto error;
 	}
 	version = float(atof(token));
-		//************* Ciclo lettura elementi ****************
+		//************* Elements reading cycle ****************
 
 	curelement = 0;
 	for(;;)
@@ -1146,7 +1137,7 @@ int PlyFile::OpenRead( const char * filename )
 		}
 		else if( !strcmp(token,ELEMENT) )
 		{
-				// Lettura nome elemento
+				// Read item name
 #ifdef __MINGW32__
       char * name = strtok(0,SEP);
 #else
@@ -1157,7 +1148,7 @@ int PlyFile::OpenRead( const char * filename )
 				error = E_SYNTAX;
 				goto error;
 			}
-				// Lettura numero di elementi
+				// Reading number of elements
 #ifdef __MINGW32__
       token = strtok(0,SEP);
 #else
@@ -1235,7 +1226,7 @@ int PlyFile::OpenRead( const char * filename )
 					error = E_SYNTAX;
 					goto error;
 				}
-				//curelement->AddProp(token,t1,1,t2); prima del 5/9/03 era cosi' ma swappava i due tipi.
+				//curelement->AddProp(token,t1,1,t2); before 5/9/03 it was like this but it swapped the two types.
 				curelement->AddProp(token,t1,1,t2);
 			}
 			else
@@ -1282,20 +1273,19 @@ error:
 
 int PlyFile::OpenWrite( const char * /*filename*/ )
 {
-		// Per ora non implementato
+		// For now not implemented
 	assert(0);
 	return -1;
 }
 
 
-//################# Funzioni di supporto
+//################# Support functions
 
 int PlyFile::FindType( const char * name ) const
 {
-	int i;
 	assert(name);
 
-	for(i=1;i<9;++i)
+	for(short i=1;i<9;++i)
 		if( !strcmp(name,typenames[i]) || !strcmp(name,newtypenames[i]))
 			return i;
 	return -1;
@@ -1323,7 +1313,7 @@ int PlyFile::AddToRead(
 		int stotype2,
 		int memtype2,
 		size_t offset2
-	)	// Vedi struttura PropDescriptor
+	)	// See PropDescriptor structure
 {
 	assert(elemname);
 	PlyElement * e = FindElement(elemname);
@@ -1553,9 +1543,6 @@ static bool cb_read_shdo( GZFILE fp, void * mem, PropDescriptor * d )
 	return true;
 }
 
-
-
-
 static bool cb_read_inch( GZFILE fp, void * mem, PropDescriptor * d )
 {
 	int c; if( ReadIntB(fp,&c,d->format)==0 ) return false;
@@ -1619,8 +1606,6 @@ static bool cb_read_indo( GZFILE fp, void * mem, PropDescriptor * d )
 	*(double *)(((char *)mem)+d->offset1) = double(c);
 	return true;
 }
-
-
 
 static bool cb_read_ucch( GZFILE fp, void * mem, PropDescriptor * d )
 {
@@ -1686,9 +1671,6 @@ static bool cb_read_ucdo( GZFILE fp, void * mem, PropDescriptor * d )
 	return true;
 }
 
-
-
-
 static bool cb_read_usch( GZFILE fp, void * mem, PropDescriptor * d )
 {
 	ushort c; if( ReadUShortB(fp,&c,d->format)==0) return false;
@@ -1752,9 +1734,6 @@ static bool cb_read_usdo( GZFILE fp, void * mem, PropDescriptor * d )
 	*(double *)(((char *)mem)+d->offset1) = double(c);
 	return true;
 }
-
-
-
 
 static bool cb_read_uich( GZFILE fp, void * mem, PropDescriptor * d )
 {
@@ -1820,8 +1799,6 @@ static bool cb_read_uido( GZFILE fp, void * mem, PropDescriptor * d )
 	return true;
 }
 
-
-
 static bool cb_read_flfl( GZFILE fp, void * mem, PropDescriptor * d )
 {
 	float c; if( ReadFloatB(fp,&c,d->format)==0 ) return false;
@@ -1855,7 +1832,7 @@ static bool cb_read_dodo( GZFILE fp, void * mem, PropDescriptor * d )
 }
 
 
-	// NON OTTIMIZZATO!!
+	// Not optimized!
 static bool cb_read_ascii( GZFILE fp, void * mem, PropDescriptor * d )
 {
 	return ReadScalarA(fp, ((char *)mem)+d->offset1, d->stotype1, d->memtype1)!=0;
@@ -1868,7 +1845,7 @@ static bool cb_skip_list_bin1( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/
 {
   char skip_buf[SKIP_MAX_BUF];
   uchar n;
-		// Solo indici uchar
+		// Indexes only uchar
 	if( pb_fread(&n,1,1,fp)==0 ) return false;
 
 	if( pb_fread(skip_buf,1,n,fp)==0) return false;
@@ -1879,7 +1856,7 @@ static bool cb_skip_list_bin2( GZFILE fp, void * /*mem*/, PropDescriptor * /*d*/
 {
   char skip_buf[SKIP_MAX_BUF];
   uchar n;
-		// Solo indici uchar
+		// Indexes only uchar
 	if( pb_fread(&n,1,1,fp)==0 ) return false;
 
 	if( pb_fread(skip_buf,2,n,fp)==0) return false;
@@ -1914,7 +1891,7 @@ static bool cb_skip_list_ascii ( GZFILE fp, void * /*mem*/, PropDescriptor * /*d
 
 	if( !ReadScalarA(fp,&n,T_INT, T_INT) )return false;
 	for(i=0;i<n;++i)
-		//if( !SkipScalarA(fp,T_INT) ) // Cambiato come segue il 12/2/03 altrimenti se trova un float lo salta. Invece se si chiede un float va sempre bene
+		//if( !SkipScalarA(fp,T_INT) ) // Changed as follows on 12/2/03 otherwise if he finds a float he will skip it. On the other hand, asking for a float is always good
 			if( !SkipScalarA(fp,T_FLOAT) ) 
 			return false;
 	return true;
@@ -1927,11 +1904,11 @@ static bool cb_read_list_ascii( GZFILE fp, void * mem, PropDescriptor * d )
 
 	if( ReadIntA(fp,&n)==0) return false;
 
-		// Lettura con memorizzazione
+		// Reading with memorization
 	char * store;
 
 	StoreInt( ((char *)mem)+d->offset2, d->memtype2, n);
-		// Determinazione memoria vettore
+		// Vector memory determination
 	if(d->alloclist)
 	{
 		store = (char *)calloc(n,TypeSize[d->memtype1]);
@@ -2332,9 +2309,6 @@ static bool cb_read_list_shdo( GZFILE fp, void * mem, PropDescriptor * d )
 	return true;
 }
 
-
-
-
 static bool cb_read_list_inch( GZFILE fp, void * mem, PropDescriptor * d )
 {
 	uchar n,i;
@@ -2383,7 +2357,7 @@ static bool cb_read_list_insh( GZFILE fp, void * mem, PropDescriptor * d )
 
 static bool cb_read_list_inin( GZFILE fp, void * mem, PropDescriptor * d )
 {
-//	uchar n,i; prima del 5/9/03 era cosi'
+//	uchar n,i; before 5/9/03 it was like this'
 // if( pb_fread(&n,1,1,fp)==0 ) return false;
 	int n=0,i;
 	switch(d->stotype2)
@@ -2713,9 +2687,6 @@ static bool cb_read_list_ucdo( GZFILE fp, void * mem, PropDescriptor * d )
 	}
 	return true;
 }
-
-
-
 
 static bool cb_read_list_usch( GZFILE fp, void * mem, PropDescriptor * d )
 {
@@ -3186,7 +3157,7 @@ static bool cb_read_list_dodo( GZFILE fp, void * mem, PropDescriptor * d )
 
 void PlyFile::compile( PlyProperty * p )
 {
-	p->desc.format = format;		// copiatura formato
+	p->desc.format = format;		// format copying
 
 	if(format==F_ASCII)
 	{
@@ -3232,7 +3203,8 @@ void PlyFile::compile( PlyProperty * p )
 			{
 				switch(p->desc.stotype1)
 				{
-				case T_CHAR:	//================== Lettura char
+				case T_CHAR:	//================== Reading char
+
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_list_chch; break;
@@ -3246,7 +3218,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_SHORT:	//================== Lettura short
+				case T_SHORT:	//================== Reading short
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_list_shch; break;
@@ -3260,7 +3232,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_INT:		//================== Lettura int
+				case T_INT:		//================== Reading int
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_list_inch; break;
@@ -3274,7 +3246,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_UCHAR:	//================== Lettura uchar
+				case T_UCHAR:	//================== Reading uchar
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_list_ucch; break;
@@ -3288,7 +3260,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_USHORT:	//================== Lettura ushort
+				case T_USHORT:	//================== Reading ushort
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_list_usch; break;
@@ -3302,7 +3274,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_UINT:	//================== Lettura uint
+				case T_UINT:	//================== Reading uint
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_list_uich; break;
@@ -3316,7 +3288,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_FLOAT:	//================== Lettura float
+				case T_FLOAT:	//================== Reading float
 					switch(p->desc.memtype1)
 					{
 					case T_FLOAT:  p->cb = cb_read_list_flfl; break;
@@ -3324,7 +3296,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_DOUBLE:	//================== Lettura double
+				case T_DOUBLE:	//================== Reading double
 					switch(p->desc.memtype1)
 					{
 					case T_FLOAT:  p->cb = cb_read_list_dofl; break;
@@ -3354,7 +3326,7 @@ void PlyFile::compile( PlyProperty * p )
 			{
 				switch(p->desc.stotype1)
 				{
-				case T_CHAR:	//================== Lettura char
+				case T_CHAR:	//================== Reading char
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_chch; break;
@@ -3368,7 +3340,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_SHORT:	//================== Lettura short
+				case T_SHORT:	//================== Reading short
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_shch; break;
@@ -3382,7 +3354,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_INT:		//================== Lettura int
+				case T_INT:		//================== Reading int
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_inch; break;
@@ -3396,7 +3368,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_UCHAR:	//================== Lettura uchar
+				case T_UCHAR:	//================== Reading uchar
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_ucch; break;
@@ -3410,7 +3382,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_USHORT:	//================== Lettura ushort
+				case T_USHORT:	//================== Reading ushort
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_usch; break;
@@ -3424,7 +3396,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_UINT:	//================== Lettura uint
+				case T_UINT:	//================== Reading uint
 					switch(p->desc.memtype1)
 					{
 					case T_CHAR:	p->cb = cb_read_uich; break;
@@ -3438,7 +3410,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_FLOAT:	//================== Lettura float
+				case T_FLOAT:	//================== Reading float
 					switch(p->desc.memtype1)
 					{
 					case T_FLOAT:  p->cb = cb_read_flfl; break;
@@ -3446,7 +3418,7 @@ void PlyFile::compile( PlyProperty * p )
 					default: assert(0);
 					}
 					break;
-				case T_DOUBLE:	//================== Lettura double
+				case T_DOUBLE:	//================== Reading double
 					switch(p->desc.memtype1)
 					{
 					case T_FLOAT:  p->cb = cb_read_dofl; break;
@@ -3480,15 +3452,12 @@ void PlyFile::compile( PlyElement * e )
 		compile(&*i);
 }
 
-	
-
-	
-	// Funzioni statiche per la lettura di un elemento
+	// Static functions for reading an element
 int ReadBin  ( XFILE * fp, const PlyProperty * pr, void * mem, int fmt )
 {
 	assert(pr);
 
-		// Lettura di una lista
+		// Reading a list
 	if(pr->islist)
 	{
 		int i,n;
@@ -3496,15 +3465,15 @@ int ReadBin  ( XFILE * fp, const PlyProperty * pr, void * mem, int fmt )
 		if( !ReadScalarB(fp,&n,pr->tipoindex, T_INT, fmt) )
 			return 0;
 
-		assert(n<12);	// Valore abbastanza aleatorio
+		assert(n<12);	// Fairly random value
 
-			// Lettura con memorizzazione
+			// Reading with memorization
 		if(pr->bestored)
 		{
 			char * store;
 
 			StoreInt( ((char *)mem)+pr->desc.offset2, pr->desc.memtype2, n);
-				// Determinazione memoria vettore
+				// Vector memory determination
 			if(pr->desc.alloclist)
 			{
 				store = (char *)calloc(n,TypeSize[pr->desc.memtype1]);
@@ -3528,7 +3497,7 @@ int ReadBin  ( XFILE * fp, const PlyProperty * pr, void * mem, int fmt )
 					return 0;
 			}
 		}
-			// Lettura senza memorizzazione
+			// Reading without saving
 		else
 		{
 			for(i=0;i<n;i++)
@@ -3536,10 +3505,10 @@ int ReadBin  ( XFILE * fp, const PlyProperty * pr, void * mem, int fmt )
 					return 0;
 		}
 	}
-		// Lettura di uno scalare
+		// Reading of a scalar
 	else
 	{
-			// Lettura con memorizzazione
+			// Reading with memorization
 		if(pr->bestored)
 			return ReadScalarB(
 				fp, 
@@ -3547,7 +3516,7 @@ int ReadBin  ( XFILE * fp, const PlyProperty * pr, void * mem, int fmt )
 				pr->desc.stotype1, pr->desc.memtype1,
 				fmt
 			);
-			// Lettura senza memorizzazione
+			// Reading without saving
 		else
 			return SkipScalarB(fp,pr->tipo);
 	}
@@ -3562,7 +3531,7 @@ int ReadAscii( XFILE * fp, const PlyProperty * pr, void * mem, int /*fmt*/ )
 	assert(mem);
 
 
-		// Lettura di una lista
+		// Reading a list
 	if(pr->islist)
 	{
 		int i,n;
@@ -3570,15 +3539,15 @@ int ReadAscii( XFILE * fp, const PlyProperty * pr, void * mem, int /*fmt*/ )
 		if( !ReadScalarA(fp,&n,pr->tipoindex, T_INT) )
 			return 0;
 
-		assert(n<12);	// Valore abbastanza aleatorio
+		assert(n<12);	// Fairly random value
 
-			// Lettura con memorizzazione
+			// Reading with memorization
 		if(pr->bestored)
 		{
 			char * store;
 
 			StoreInt( ((char *)mem)+pr->desc.offset2, pr->desc.memtype2, n);
-				// Determinazione memoria vettore
+				// Vector memory determination
 			if(pr->desc.alloclist)
 			{
 				store = (char *)calloc(n,TypeSize[pr->desc.memtype1]);
@@ -3601,7 +3570,7 @@ int ReadAscii( XFILE * fp, const PlyProperty * pr, void * mem, int /*fmt*/ )
 					return 0;
 			}
 		}
-			// Lettura senza memorizzazione
+			// Reading without saving
 		else
 		{
 			for(i=0;i<n;++i)
@@ -3609,17 +3578,17 @@ int ReadAscii( XFILE * fp, const PlyProperty * pr, void * mem, int /*fmt*/ )
 					return 0;
 		}
 	}
-		// Lettura scalare
+		// Scalar reading
 	else
 	{
-					// Lettura con memorizzazione
+					// Reading with memorization
 		if(pr->bestored)
 			return ReadScalarA(
 				fp, 
 				((char *)mem)+pr->desc.offset1,
 				pr->desc.stotype1, pr->desc.memtype1
 			);
-			// Lettura senza memorizzazione
+			// Reading without saving
 		else
 			return SkipScalarA(fp,pr->tipo);
 	}
@@ -3663,8 +3632,8 @@ void interpret_texture_name(const char*a, const char*fn, char*output){
 				{
 					// substitute "<this>" with filename:
 					// 1) remove path from filename 
-					int lastbar=0;
-					int ifn=0;
+					int lastbar=0,ifn=0;
+
 					while (fn[ifn]!=0) { if ((fn[ifn]=='/') || (fn[ifn]=='\\')) lastbar=ifn+1; ifn++;}
 					ifn=lastbar;
 					char fn2[255];
