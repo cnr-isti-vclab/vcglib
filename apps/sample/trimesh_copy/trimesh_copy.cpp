@@ -41,7 +41,7 @@ class OcfVertex  : public vcg::Vertex< OcfUsedTypes,vcg::vertex::InfoOcf,vcg::ve
 
 
 // The Main Edge Class
-// Currently it does not contains anything.
+// Currently it does not contain anything.
 class OcfEdge : public vcg::Edge<OcfUsedTypes>
 {
 };
@@ -66,8 +66,7 @@ void Usage()
 template <class MeshType>
 bool UnitTest_Append(const char *filename1, const char *filename2)
 {
-  MeshType mr;
-  MeshType ml;
+  MeshType mr,ml;
 
   int startOpen=clock();
   int err=vcg::tri::io::Importer<MeshType>::Open(mr,filename1);
