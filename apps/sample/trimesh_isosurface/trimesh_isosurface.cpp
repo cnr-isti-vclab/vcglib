@@ -69,6 +69,11 @@ int main(int /*argc*/ , char **/*argv*/)
 	printf("[MARCHING CUBES] Building mesh...");
 	MyMarchingCubes					mc(mc_mesh, walker);
 	walker.BuildMesh<MyMarchingCubes>(mc_mesh, volume, mc, 20*20);
+	
+	//Optional:
+	int dv=tri::Clean<MyMesh>::RemoveDuplicateVertex(mc_mesh);
+        printf("Removed %i duplicated vertices\n",dv);
+	
 	vcg::tri::io::ExporterPLY<MyMesh>::Save( mc_mesh, "marching_cubes.ply");
 
 	printf("OK!\n");
