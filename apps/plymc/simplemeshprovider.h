@@ -18,7 +18,7 @@ template<class TriMeshType>
         Pair(){used=0;}
         TriMeshType *M;
         std::string Name;
-        int used; // 'data' dell'ultimo accesso. si butta fuori quello lru
+        int used; // 'data' of last access. throw out that lru
     };
 
     std::list<Pair> MV;
@@ -32,14 +32,13 @@ public:
         for(mi=MV.begin();mi!=MV.end();++mi)
             delete (*mi).M;
     }
-// Restituisce true se la mesh e' in cache;
-// restituisce in ogni caso il puntatore dove sta (o dovrebbe stare) la mesh
-// Gestione LRU
+// Returns true if the mesh is cached;
+// returns in any case the pointer to where the mesh is (or should be)
+// LRU management
 
     bool Find(std::string &name,  TriMeshType * &sm)
     {
-    typename std::list<Pair>::iterator mi;
-    typename std::list<Pair>::iterator oldest; // quello che e' piu' tempo che non viene acceduto.
+    typename std::list<Pair>::iterator oldest, mi;// what is the most time that is not accessed.
     int last;
 
     last = std::numeric_limits<int>::max();
@@ -74,8 +73,6 @@ public:
     }
     return false;
 }
-
-
     size_t MaxSize;
     size_t size() const {return MV.size();}
 };
@@ -85,8 +82,8 @@ template<class TriMeshType>
 {
     std::vector< std::string > meshnames;
     std::vector<vcg::Matrix44f> TrV;
-    std::vector<float> WV;		        // vettore con i pesi da applicare alla mesh.
-    std::vector<vcg::Box3f> BBV;	    // vettore con i bbox trasformati delle mesh da scannare.
+    std::vector<float> WV;		        // vector with weights to apply to the mesh.
+    std::vector<vcg::Box3f> BBV;	        // vector with the transformed bboxes of the meshes to be scanned.
     vcg::Box3f fullBBox;
     MeshCache<TriMeshType> MC;
 
@@ -158,12 +155,11 @@ template<class TriMeshType>
     {
       fullBBox.SetNull();
 
-      for(int i=0;i<int(meshnames.size());++i)
+      for(size_t i=0;i<meshnames.size();++i)
       {
             Box3d b;
             bool ret;
-            Matrix44f mt;
-            Matrix44f Id; Id.SetIdentity();
+            Matrix44f Id,mt; Id.SetIdentity();
             mt.Import(TrV[i]);
             printf("bbox scanning %4i/%i [%16s]      \r",i+1,(int)meshnames.size(), meshnames[i].c_str());
             if(tri::io::Importer<TriMeshType>::FileExtension(meshnames[i],"PLY") || tri::io::Importer<TriMeshType>::FileExtension(meshnames[i],"ply"))
@@ -182,7 +178,7 @@ template<class TriMeshType>
                 tri::UpdateBounding<TriMeshType>::Box(m);
                 BBV[i].Import(m.bbox);
             }
-            if( ! ret)
+            if(!ret)
             {
                 printf("\n\nwarning:\n file '%s' not found\n",meshnames[i].c_str());fflush(stdout);
                 continue;
@@ -191,13 +187,11 @@ template<class TriMeshType>
         }
         return true;
     }
-
 };
 
         class SVertex;
         class SFace;
-				class SUsedTypes: public vcg::UsedTypes < vcg::Use<SVertex>::AsVertexType,
-                                                  vcg::Use<SFace  >::AsFaceType >{};
+	class SUsedTypes: public vcg::UsedTypes <vcg::Use<SVertex>::AsVertexType,vcg::Use<SFace>::AsFaceType >{};
 
 class SVertex     : public Vertex< SUsedTypes, vertex::Coord3f, vertex::Normal3f,vertex::VFAdj, vertex::BitFlags, vertex::Color4b, vertex::Qualityf>{};
 class SFace       : public Face< SUsedTypes, face::VertexRef, face::Normal3f,face::Qualityf, face::VFAdj, face::BitFlags> {};
