@@ -136,7 +136,7 @@ if(true){
     assert(vcg::tri::Clean<TMesh>::CountNonManifoldEdgeFF(tm0)==0);
     assert(vcg::tri::Clean<TMesh>::CountNonManifoldVertexFF(tm0)==0);
 
-    // create a polygon meshe from a trimesh with tagged faces
+    // create a polygon mesh from a trimesh with tagged faces
     vcg::tri::PolygonSupport<TMesh,PMesh>::ImportFromTriMesh(pm,tm0);
 }
 else
@@ -151,7 +151,6 @@ else
     assert(vcg::tri::Clean<PMesh>::CountNonManifoldEdgeFF(pm));
 }
 
-
     // compute the half edges because I'm a half-edge programmer
     vcg::tri::UpdateHalfEdges<PMesh>::FromIndexed(pm);
 
@@ -162,7 +161,7 @@ else
 
     int size =  pm.face.size();
 
-    // add a face to each face with more than 3 vertices ( just one pass)
+    // add a face to each face with more than 3 vertices (just one pass)
 
     for(int i = 0; i < size; ++i)
         if(!(pm.face[i].IsD()))
