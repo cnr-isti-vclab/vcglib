@@ -6,5 +6,6 @@ CONFIG -= app_bundle
 TEMPLATE = app
 
 SOURCES += ../../wrap/ply/plylib.cpp \
+    simplemeshprovider.h \
     plymc_main.cpp
 
