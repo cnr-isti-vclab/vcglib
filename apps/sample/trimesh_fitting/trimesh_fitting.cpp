@@ -75,14 +75,16 @@ int main( )
   float scaleFac = m.bbox.Diag()/10.0f;
   printf("ScaleFac %f\n\n",scaleFac);
   vcg::math::MarsenneTwisterRNG rnd;
+  std::vector<vcg::Point3f> ExactVec,PerturbVec;
+  std::vector<float> WeightVec;
+  vcg::Plane3f pl;
   for(int i=0;i<m.FN();++i)
   {
-    std::vector<vcg::Point3f> ExactVec;
-    std::vector<vcg::Point3f> PerturbVec;
-    std::vector<float> WeightVec;
-    vcg::Plane3f pl;
+    ExactVec.clear();
+    PerturbVec.clear();
+    WeightVec.clear();
     pl.Init(vcg::Barycenter(m.face[i]),m.face[i].N());
-    for(int j=0;j<200;++j)
+    for(short j=0;j<200;++j)
     {
       vcg::Point3f p = vcg::tri::SurfaceSampling<MyMesh>::RandomPointInTriangle(m.face[i]);
       ExactVec.push_back(p);
