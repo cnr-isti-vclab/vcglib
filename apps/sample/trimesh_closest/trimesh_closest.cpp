@@ -115,8 +115,7 @@ bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc, std:
   for(size_t i=0;i<MontecarloSamples.size();++i)
   {
     Point3f pp(rnd.generate01(),rnd.generate01(),rnd.generate01());
-    pp = (pp+Point3f(-0.5f,-0.5f,-0.5f))*2.0f;
-    pp*=rnd.generate01()*dispAbs;
+    pp = (pp+Point3f(-0.5f,-0.5f,-0.5f))*2.0f*rnd.generate01()*dispAbs;
     MontecarloSamples[i]+=pp;
   }
   int endSampling = clock();
@@ -126,9 +125,7 @@ bool UnitTest_Closest(const char *filename1, int sampleNum, float dispPerc, std:
   int startGridInit = clock();
   TriMeshGrid TRGrid;
   if(useFaceNumForGrid)
-  {
     TRGrid.Set(mr.face.begin(),mr.face.end(),mr.FN()*2);
-  }
   else
   {
     float avgEdge = tri::Stat<MeshType>::ComputeEdgeLengthAverage(mr);
@@ -196,12 +193,8 @@ int main(int argc ,char**argv)
   if(argc<3) Usage();
   float dispPerc = atof(argv[3]);
   int sampleNum = atoi(argv[2]);
-  std::vector<int> resultVecRT11;
-  std::vector<int> resultVecRT01;
-  std::vector<int> resultVecRT00;
-  std::vector<int> resultVecRT10;
-  std::vector<int> resultVecBS01;
-  std::vector<int> resultVecBS00;
+  std::vector<int> resultVecRT11,resultVecRT01,resultVecRT00,resultVecRT10,resultVecBS01,resultVecBS00;
+  
   UnitTest_Closest<RTMesh, true,  true,  true>     (argv[1],sampleNum,dispPerc,resultVecRT11);
   UnitTest_Closest<RTMesh, true,  true,  false>    (argv[1],sampleNum,dispPerc,resultVecRT11);
   UnitTest_Closest<RTMesh, true,  false, true>    (argv[1],sampleNum,dispPerc,resultVecRT01);
