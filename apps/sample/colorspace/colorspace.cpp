@@ -47,10 +47,8 @@ int main(int argc,char ** argv)
 		exit(-2);
 	}
 
-	double r = static_cast<double>(atof(argv[1]));
-	double g = static_cast<double>(atof(argv[2]));
-	double b = static_cast<double>(atof(argv[3]));
-
+	double r = static_cast<double>(atof(argv[1])),g = static_cast<double>(atof(argv[2])),b = static_cast<double>(atof(argv[3]));
+	
 	// RGB components have to be in the range [0.0, 1.0]
 	vcg::Color4<double> color(r/255.0, g/255.0, b/255.0, 0.0);
 
@@ -75,7 +73,7 @@ int main(int argc,char ** argv)
 	cout << "  * RGB <--> HSL conversion" << endl << endl;
 
 	vcg::Color4<double> hsl = ColorSpace::RGBtoHSL(color);
-	cout << "  RGB --> HSL: " << hsl[0]*360.0 << "° " << hsl[1]*100.0 << "% " << hsl[2]*100.0 << "% " << endl;
+	cout << "  RGB --> HSL: " << hsl[0]*360.0 << "Â° " << hsl[1]*100.0 << "% " << hsl[2]*100.0 << "% " << endl;
 
 	rgb = ColorSpace::HSLtoRGB(hsl);
 	rgb *= 255.0;
@@ -88,7 +86,7 @@ int main(int argc,char ** argv)
 	cout << "  * RGB <--> HSV conversion" << endl << endl;
 
 	vcg::Color4<double> hsv = ColorSpace::RGBtoHSV(color);
-	cout << "  RGB --> HSV: " << hsv[0]*360.0 << "° " << hsv[1]*100.0 << "% " << hsv[2]*100.0 << "% " <<  endl;
+	cout << "  RGB --> HSV: " << hsv[0]*360.0 << "Â° " << hsv[1]*100.0 << "% " << hsv[2]*100.0 << "% " <<  endl;
 
 	rgb = ColorSpace::HSVtoRGB(hsv);
 	rgb *= 255.0;
@@ -108,8 +106,6 @@ int main(int argc,char ** argv)
 	rgb = ColorSpace::XYZtoRGB(xyz, ColorSpace::refIlluminant(ColorSpace::SRGB), ColorSpace::SRGB);
 	rgb *= 255.0;
 	cout << "  CIELab --> RGB: " << rgb[0] << " " << rgb[1] << " " << rgb[2] << endl << endl;
-
-
 
 	// RGB <--> XYZ
 	///////////////////////////////////////////////
