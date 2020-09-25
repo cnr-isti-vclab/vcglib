@@ -74,8 +74,7 @@ int main(int argc, char **argv)
     params.gutterWidth   = 2;      /* 2 pixels gutter */
     params.minmax        = false;  /* do not combine costs of the two horizons when evaluating placements */
 
-    int totPacked = 0;
-    int nc = 0; /* current container index */
+    int totPacked = 0, nc = 0; /* current container index */
     while (true) {
 
         std::cout << "Packing into container " << nc << std::endl;
