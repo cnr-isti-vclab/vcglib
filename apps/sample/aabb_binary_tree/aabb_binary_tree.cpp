@@ -53,7 +53,6 @@ static AIndex gIndex;
 
 static void CreateMesh(void) {
 	vcg::tri::Dodecahedron<AMesh>(gMesh);
-
 	vcg::tri::UpdateFlags<AMesh>::Clear(gMesh);
 	vcg::tri::UpdateNormal<AMesh>::PerVertexNormalized(gMesh);
 	vcg::tri::UpdateComponentEP<AMesh>::Set(gMesh);
@@ -89,7 +88,7 @@ static void TestClosest(void) {
 
 static void TestKClosest(void) {
 	vcg::face::PointDistanceEPFunctor<AIndex::ScalarType> getPtDist;
-	const unsigned int k = 10;
+	const short k = 10;
 	const AIndex::CoordType queryPoint((AIndex::ScalarType)0, (AIndex::ScalarType)0, (AIndex::ScalarType)0);
 	const AIndex::ScalarType maxDist = std::numeric_limits<AIndex::ScalarType>::max();
 
