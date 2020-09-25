@@ -40,11 +40,7 @@ using namespace std;
 static void buildRandRectSet(int rectNum, vector<Box2f> &rectVec)
 {
   math::MarsenneTwisterRNG rnd;
-  float exp=3.0f;
-  float ratioMin=0.2;
-  float ratioMax=0.9;
-  float sizeMin=0.1;
-  float sizeMax=1.0f;
+  float exp=3.0f,ratioMin=0.2,ratioMax=0.9,sizeMin=0.1,sizeMax=1.0f;
   rnd.initialize(time(0));
   for(int i=0;i<rectNum;++i)
   {
@@ -59,10 +55,8 @@ static void buildRandRectSet(int rectNum, vector<Box2f> &rectVec)
 
 int main( int /*argc*/, char **/*argv*/ )
 {
-  vector<Similarity2f> trVec;
-  vector<Similarity2f> trPolyVec;
-  vector< vector<Point2f> > outline2Vec;
-  vector< vector<Point2f> > multiPolySet;
+  vector<Similarity2f> trVec,trPolyVec;
+  vector< vector<Point2f> > outline2Vec,multiPolySet;
   Point2f finalSize;
   std::vector<Point2f> finalSizeVec;
   const Point2i containerSize(1024,1024);
@@ -77,28 +71,21 @@ int main( int /*argc*/, char **/*argv*/ )
   printf("RectPacker attempt %i time %5.3f %5.3f\n",s.pack_attempt_num,s.pack_total_time,s.pack_attempt_time);
 
 //  Outline2Dumper::rectSetToPolySet(rectVec,polySet);
-
 //  Outline2Dumper::multiRectSetToSinglePolySet(rectVec,trVec,contInd,0,polySet,trPolyVec);
 //  Outline2Dumper::dumpPolySetPNG("testpolyEq0.png",polySet,trPolyVec,pp);
 //  Outline2Dumper::multiRectSetToSinglePolySet(rectVec,trVec,contInd,1,polySet,trPolyVec);
 //  Outline2Dumper::dumpPolySetPNG("testpolyEq1.png",polySet,trPolyVec,pp);
 //  Outline2Dumper::multiRectSetToSinglePolySet(rectVec,trVec,contInd,2,polySet,trPolyVec);
 //  Outline2Dumper::dumpPolySetPNG("testpolyEq2.png",polySet,trPolyVec,pp);
-
-
 //   buildRandPolySet(100,polySet);
 //   PolyPacker<float>::PackMultiAsObjectOrientedRect(polySet,containerSize,3,trVec,contInd,finalSizeVec);
-
 //   Outline2Dumper::multiPolySetToSinglePolySet(polySet,trVec,contInd,0,multiPolySet,trPolyVec);
 //   Outline2Dumper::dumpPolySetPNG("testpolyEq0.png",multiPolySet,trPolyVec,pp);
-
 //   Outline2Dumper::multiPolySetToSinglePolySet(polySet,trVec,contInd,1,multiPolySet,trPolyVec);
 //   Outline2Dumper::dumpPolySetPNG("testpolyEq1.png",multiPolySet,trPolyVec,pp);
-
 //   Outline2Dumper::multiPolySetToSinglePolySet(polySet,trVec,contInd,2,multiPolySet,trPolyVec);
 //   Outline2Dumper::dumpPolySetPNG("testpolyEq2.png",multiPolySet,trPolyVec,pp);
-
-   //  Outline2Dumper::dumpPolySetPNG("testpolyOO.png",polySet,trVec,pp);
+//  Outline2Dumper::dumpPolySetPNG("testpolyOO.png",polySet,trVec,pp);
 
   vcg::tri::OutlineUtil<float>::BuildRandomOutlineVec(25,outline2Vec);
 
@@ -115,11 +102,10 @@ int main( int /*argc*/, char **/*argv*/ )
 
   packingParam.costFunction  = RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Parameters::LowestHorizon;
   packingParam.doubleHorizon = true;
-  packingParam.rotationNum = 16; //number of rasterizations in 90°
+  packingParam.rotationNum = 16; //number of rasterizations in 90°, rotation number can depend on other polygon parameters
 
   RasterizedOutline2Packer<float, QtOutline2Rasterizer>::Pack(outline2Vec,containerSize,trVec,packingParam);
   Outline2Dumper::dumpOutline2VecPNG("testpolyRR.png",outline2Vec,trVec,pp);
-
 
   return 0;
 }
