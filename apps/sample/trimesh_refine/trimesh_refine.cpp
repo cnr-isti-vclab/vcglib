@@ -69,7 +69,7 @@ int  main(int argc, char **argv)
       "     -l  use loop subdivision scheme \n"
       "     -o  use one-quad-per-edge schema (*) \n"
       "     -c  use Catmull-Clark (*) \n"
-      "     -e# refine only if the the edge is longer than #(default 0.0)\n"
+      "     -e# refine only if the edge is longer than #(default 0.0)\n"
       "Info:\n"
       "     (*) produces quad-only meshes, but updates topology only, \n"
       "         and leaves geometry unaffected \n"
@@ -77,8 +77,8 @@ int  main(int argc, char **argv)
     exit(2);
 	}
 
-	int RefMode = FLAT	;
-  int i=4; int n_steps; float length=0;
+	int RefMode = FLAT;
+        int i=4; int n_steps; float length=0;
 	while(i<argc)
 		{
 			if(argv[i][0]!='-')
