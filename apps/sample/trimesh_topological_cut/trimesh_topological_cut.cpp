@@ -43,13 +43,18 @@ class MyFace    : public Face  < MyUsedTypes, face::VertexRef,  face::Normal3f, 
 class MyMesh : public tri::TriMesh< std::vector<MyVertex>, std::vector<MyEdge>, std::vector<MyFace> >{};
 
 /**
- * In this sample we take a torus we compute a poly line on it that open it into a disk and we open it. 
+ * In this sample we take a torus we compute a poly line on it that opens it into a disk and we open it. 
  * Then using the COM (Curve On Manifold) framework we smooth this polyline keeping 
  * it on the surface of the torus and then first we refine the torus surface with this 
  * smooth polyline and then we open it along these new edges. 
  * 
  * Optionally you can use your own mesh and polyline by passing them as parameters. 
  */
+
+#define SURFACE_DISTANCE_THRESHOLD 100.0f
+#define MAX_SIMPLE_EDGE_LENGTH 50.0f
+#define MIN_REF_EDGE_LENGTH 100.0f
+
 int main(int argc,char ** argv )
 {
   MyMesh base, basecopy, poly;
@@ -85,16 +90,16 @@ int main(int argc,char ** argv )
   
   // Two smoothing runs,
   // the first that allows fast movement over the surface (long edges that can skim surface details)
-  cc.par.surfDistThr = base.bbox.Diag()/100.0f;
-  cc.par.maxSimpEdgeLen = base.bbox.Diag()/50.0f;
-  cc.par.minRefEdgeLen = base.bbox.Diag()/100.0f;
+  cc.par.surfDistThr = base.bbox.Diag()/SURFACE_DISTANCE_THRESHOLD;
+  cc.par.maxSimpEdgeLen = base.bbox.Diag()/MAX_SIMPLE_EDGE_LENGTH;
+  cc.par.minRefEdgeLen = base.bbox.Diag()/MIN_REF_EDGE_LENGTH;
   cc.SmoothProject(poly,30,0.7f,.3f);
   tri::io::ExporterPLY<MyMesh>::Save(poly,"1_poly_smooth.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
 
-  // The second smooting run more accurate to adapt to the surface
-  cc.par.surfDistThr = base.bbox.Diag()/1000.0f;
-  cc.par.maxSimpEdgeLen = base.bbox.Diag()/1000.0f;
-  cc.par.minRefEdgeLen = base.bbox.Diag()/2000.0f;
+  // The second smoothing run more accurate to adapt to the surface
+  cc.par.surfDistThr = base.bbox.Diag()/(10*SURFACE_DISTANCE_THRESHOLD);
+  cc.par.maxSimpEdgeLen = base.bbox.Diag()/(20*MAX_SIMPLE_EDGE_LENGTH);
+  cc.par.minRefEdgeLen = base.bbox.Diag()/(20*MIN_REF_EDGE_LENGTH);
   cc.SmoothProject(poly,10,0.01f,.99f);
   tri::io::ExporterPLY<MyMesh>::Save(poly,"2_poly_smooth.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
 
