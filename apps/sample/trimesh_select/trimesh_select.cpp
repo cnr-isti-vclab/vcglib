@@ -47,16 +47,10 @@ int main(int ,char ** )
   // build a 10x10 grid of 100 vertices and 200 faces. 
   tri::Grid(m,10,10,1.0f,1.0f);
   tri::UpdateFlags<MyMesh>::VertexBorderFromNone(m);
-  int cornerNum = tri::UpdateSelection<MyMesh>::VertexCornerBorder(m,math::ToRad(100.0f));
+  int cornerNum = tri::UpdateSelection<MyMesh>::VertexCornerBorder(m,math::ToRad(100.0f)),borderNum = tri::UpdateSelection<MyMesh>::VertexFromBorderFlag(m),internalNum = tri::UpdateSelection<MyMesh>::VertexInvert(m),faceNotOnBoundaryNum = tri::UpdateSelection<MyMesh>::FaceFromVertexStrict(m),innerFacesNum = tri::UpdateSelection<MyMesh>::FaceErode(m);
   printf("Mesh has %i vertexes  %i faces and %i corners\n",m.VN(),m.FN(),cornerNum);
-  
-  int borderNum = tri::UpdateSelection<MyMesh>::VertexFromBorderFlag(m);
-  int internalNum = tri::UpdateSelection<MyMesh>::VertexInvert(m);
-  int faceNotOnBoundaryNum = tri::UpdateSelection<MyMesh>::FaceFromVertexStrict(m);
   printf("%i vertexes are on the boundary and %i internal and internal faces are %i \n",borderNum,internalNum,faceNotOnBoundaryNum);
-  int innerFacesNum = tri::UpdateSelection<MyMesh>::FaceErode(m);
   printf("Eroding the face selection of on ring of faces bring it to %i faces\n",innerFacesNum);
-  
   
   return 0;
 }
