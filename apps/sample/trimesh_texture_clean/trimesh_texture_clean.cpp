@@ -57,9 +57,10 @@ int main(int ,char ** )
   tri::io::ExporterOBJ<MyMesh>::Save(m,"grid_0.obj",mask);
   
   // randomly perturb a few coord textures introducing fake seams
+  short i;
   for(MyFace &f : m.face)
   {
-    for(int i=0;i<3;++i)
+    for(i=0;i<3;++i)
       if(rand()%20==0)
       {
         f.WT(i).U()+=0.0000001;
