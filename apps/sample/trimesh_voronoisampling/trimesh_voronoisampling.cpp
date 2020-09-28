@@ -70,9 +70,8 @@ int main( int argc, char **argv )
   int sampleNum = atoi(argv[2]);
   int iterNum   = atoi(argv[3]);
 
-  bool fixCornerFlag=true;
-  bool uniformEdgeSamplingFlag = true;
-
+  bool fixCornerFlag=true,uniformEdgeSamplingFlag = true;
+ 
   printf("Reading %s and sampling %i points with %i iteration\n",argv[1],sampleNum,iterNum);
   int ret= tri::io::ImporterPLY<MyMesh>::Open(baseMesh,argv[1]);
   if(ret!=0)
@@ -94,7 +93,6 @@ int main( int argc, char **argv )
   tri::UpdateFlags<MyMesh>::FaceBorderFromVF(baseMesh);
   tri::UpdateFlags<MyMesh>::VertexBorderFromFaceBorder(baseMesh);
 
-
   // -- Build a sampling with just corners (Poisson filtered)
   MyMesh poissonCornerMesh;
   std::vector<Point3f> sampleVec;
@@ -105,12 +103,7 @@ int main( int argc, char **argv )
   sampleVec.clear();
   MyMesh borderMesh,poissonBorderMesh;
 
-
-  if(uniformEdgeSamplingFlag)
-  {
-
-  }
-  else
+  if(!uniformEdgeSamplingFlag)
   {
     if(fixCornerFlag)
     {
@@ -130,7 +123,7 @@ int main( int argc, char **argv )
   tri::BuildMeshFromCoordVector(borderMesh,sampleVec);
   tri::io::ExporterPLY<MyMesh>::Save(borderMesh,"borderMesh.ply");
 
-  // -- and then prune the border sampling with poisson strategy using the precomputed corner vertexes.
+  // -- and then prune the border sampling with Poisson strategy using the precomputed corner vertexes.
   pp.preGenMesh = &poissonCornerMesh;
   pp.preGenFlag=true;
   sampleVec.clear();
@@ -140,14 +133,14 @@ int main( int argc, char **argv )
 
   tri::io::ExporterPLY<MyMesh>::Save(poissonBorderMesh,"PoissonEdgeMesh.ply");
 
-  // -- Build the montercarlo sampling of the surface
+  // -- Build the Monte Carlo sampling of the surface
   MyMesh MontecarloSurfaceMesh;
   sampleVec.clear();
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::Montecarlo(baseMesh,mps,50000);
   tri::BuildMeshFromCoordVector(MontecarloSurfaceMesh,sampleVec);
   tri::io::ExporterPLY<MyMesh>::Save(MontecarloSurfaceMesh,"MontecarloSurfaceMesh.ply");
 
-  // -- Prune the montecarlo sampling with poisson strategy using the precomputed vertexes on the border.
+  // -- Prune the Monte Carlo sampling with Poisson strategy using the precomputed vertexes on the border.
   pp.preGenMesh = &poissonBorderMesh;
   sampleVec.clear();
   tri::SurfaceSampling<MyMesh,tri::TrivialSampler<MyMesh> >::PoissonDiskPruning(mps, MontecarloSurfaceMesh, radius, pp);
@@ -179,11 +172,11 @@ int main( int argc, char **argv )
   int t1=clock();
 
   MyMesh voroMesh, voroPoly, delaMesh;
-  // Get the result in some pleasant form converting it to a real voronoi diagram.
+  // Get the result in some pleasant form converting it to a real Voronoi diagram.
   if(tri::VoronoiProcessing<MyMesh>::CheckVoronoiTopology(baseMesh,seedVec))
      tri::VoronoiProcessing<MyMesh>::ConvertVoronoiDiagramToMesh(baseMesh,voroMesh,voroPoly,seedVec, vpp);
   else
-    printf("WARNING some voronoi region are not disk like; the resulting delaunay triangulation is not manifold.\n");
+    printf("WARNING some Voronoi region are not disk like; the resulting Delaunay triangulation is not manifold.\n");
 
   tri::io::ExporterPLY<MyMesh>::Save(baseMesh,"base.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
   tri::io::ExporterPLY<MyMesh>::Save(voroMesh,"voroMesh.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_FLAGS );
@@ -194,7 +187,6 @@ int main( int argc, char **argv )
   tri::VoronoiProcessing<MyMesh>::RelaxRefineTriangulationSpring(baseMesh,delaMesh,2,10);
   tri::io::ExporterPLY<MyMesh>::Save(delaMesh,"delaMeshRef.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
 
-
 //  tri::io::ImporterPLY<MyMesh>::Open(baseMesh,argv[1]);
 //  tri::UpdateTopology<MyMesh>::VertexFace(baseMesh);
 //  tri::PoissonSampling<MyMesh>(baseMesh,pointVec,sampleNum,radius,radiusVariance);
@@ -202,7 +194,6 @@ int main( int argc, char **argv )
 //  tri::IsotropicDistance<MyMesh> id(baseMesh,radiusVariance);
 //  tri::VoronoiProcessing<MyMesh, tri::IsotropicDistance<MyMesh> >::VoronoiRelaxing(baseMesh, seedVec, iterNum,id,vpp);
 //  tri::VoronoiProcessing<MyMesh, tri::IsotropicDistance<MyMesh> >::ConvertVoronoiDiagramToMesh(baseMesh,outMesh,polyMesh,seedVec, id, vpp);
-
 //  tri::io::ExporterPLY<MyMesh>::Save(outMesh,"outW.ply",tri::io::Mask::IOM_VERTCOLOR );
 //  tri::io::ExporterPLY<MyMesh>::Save(polyMesh,"polyW.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_EDGEINDEX,false);
 //  tri::io::ExporterDXF<MyMesh>::Save(polyMesh,"outW.dxf");
