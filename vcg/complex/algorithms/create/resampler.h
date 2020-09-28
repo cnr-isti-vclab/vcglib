@@ -75,26 +75,26 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
     typedef vcg::tri::EmptyTMark<OldMeshType> MarkerFace;
     MarkerFace markerFunctor;
 
-    VertexIndex *_x_cs; // indici dell'intersezioni della superficie lungo gli Xedge della fetta corrente
-    VertexIndex	*_y_cs; // indici dell'intersezioni della superficie lungo gli Yedge della fetta corrente
-    VertexIndex *_z_cs; // indici dell'intersezioni della superficie lungo gli Zedge della fetta corrente
-    VertexIndex *_x_ns; // indici dell'intersezioni della superficie lungo gli Xedge della prossima fetta
-    VertexIndex *_z_ns; // indici dell'intersezioni della superficie lungo gli Zedge della prossima fetta
+    VertexIndex *_x_cs; // indices of the intersection of the surface along the X edges of the current slice
+    VertexIndex	*_y_cs; // indices of the intersection of the surface along the Y edges of the current slice
+    VertexIndex *_z_cs; // indices of the intersection of the surface along the Z edges of the current slice
+    VertexIndex *_x_ns; // indices of the intersection of the surface along the X edges of the next slice
+    VertexIndex *_z_ns; // indices of the intersection of the surface along the Z edges of the next slice
+
 
     //float *_v_cs;///values of distance fields for each direction in current slice
     //float *_v_ns;///values of distance fields for each direction in next slice
 
     typedef typename  std::pair<bool,float> field_value;
-    field_value* _v_cs;
-    field_value* _v_ns;
-
+    field_value* _v_cs,v_ns;
+    
     NewMeshType	*_newM;
     OldMeshType	*_oldM;
     GridType _g;
 
   public:
     NewScalarType max_dim; // the limit value of the search (that takes into account of the offset)
-    NewScalarType offset;    // an offset value that is always added to the returned value. Useful for extrarting isosurface  at a different threshold
+    NewScalarType offset;    // an offset value that is always added to the returned value. Useful for extrarting isosurface at a different threshold
     bool DiscretizeFlag; // if the extracted surface should be discretized or not.
     bool MultiSampleFlag;
     bool AbsDistFlag; // if true the Distance Field computed is no more a signed one.
@@ -168,7 +168,7 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
       assert(!f->IsD());
       bool retIP;
 
-      // To compute the interpolated normal we use the more robust function that require to know what is the most orhogonal direction of the face.
+      // To compute the interpolated normal we use the more robust function that requires to know what is the most orthogonal direction of the face.
       OldCoordType pip(-1,-1,-1);
       retIP=InterpolationParameters(*f,(*f).cN(),closestPt, pip);
       assert(retIP); // this should happen only if the starting mesh has degenerate faces.
@@ -189,7 +189,7 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
       // Compute test if the point see the surface normal from inside or outside
       // Surface normal for improved robustness is computed both by face and interpolated from vertices.
       OldCoordType closestNormV, closestNormF;
-      if(zeroCnt>0) // we Not are in the middle of the face so the face normal is NOT reliable.
+      if(zeroCnt>0) // we are not in the middle of the face so the face normal is NOT reliable.
       {
         closestNormV =  (f->V(0)->cN())*pip[0] + (f->V(1)->cN())*pip[1] + (f->V(2)->cN())*pip[2] ;
         signBest =  dir.dot(closestNormV) ;
@@ -255,20 +255,19 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
     void ComputeConsensus(int /*slice*/, field_value *slice_values)
     {
       float max_dist = min(min(this->voxel[0],this->voxel[1]),this->voxel[2]);
-      int flippedCnt=0;
-      int flippedTot=0;
-      int flippedTimes=0;
+      int flippedCnt=0,flippedTot=0,flippedTimes=0,k,goodCnt,badCnt,index_l,index_r,index_u,index_d,index;
+     
       do
       {
         flippedCnt=0;
         for (int i=0; i<=this->siz.X(); i++)
         {
-          for (int k=0; k<=this->siz.Z(); k++)
+          for (k=0; k<=this->siz.Z(); k++)
           {
-            int goodCnt=0;
-            int badCnt=0;
-            int index=GetSliceIndex(i,k);
-            int index_l,index_r,index_u,index_d;
+            goodCnt=0;
+            badCnt=0;
+            index=GetSliceIndex(i,k);
+          
             if(slice_values[index].first)
             {
               float curVal= slice_values[index].second;
@@ -303,16 +302,19 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
     template<class EXTRACTOR_TYPE>
     void ProcessSlice(EXTRACTOR_TYPE &extractor)
     {
+    int k;
+    short ii,jj,kk;
       for (int i=0; i<this->siz.X(); i++)
       {
-        for (int k=0; k<this->siz.Z(); k++)
+        for (k=0; k<this->siz.Z(); k++)
         {
           bool goodCell=true;
           Point3i p1(i,CurrentSlice,k);
           Point3i p2=p1+Point3i(1,1,1);
-          for(int ii=0;ii<2;++ii)
-            for(int jj=0;jj<2;++jj)
-              for(int kk=0;kk<2;++kk)
+          
+          for(ii=0;ii<2;++ii)
+            for(jj=0;jj<2;++jj)
+              for(kk=0;kk<2;++kk)
                 goodCell &= VV(p1[0]+ii,p1[1]+jj,p1[2]+kk).first;
 
           if(goodCell) extractor.ProcessCell(p1, p2);
@@ -348,9 +350,7 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
       extractor.Finalize();
       for(NewVertexIterator vi=new_mesh.vert.begin();vi!=new_mesh.vert.end();++vi)
         if(!(*vi).IsD())
-        {
           this->IPfToPf((*vi).cP(),(*vi).P());
-        }
     }
 
     //return the index of a vertex in slide as it was stored
@@ -371,7 +371,6 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
 
       std::swap(_x_cs, _x_ns);
       std::swap(_z_cs, _z_ns);
-
       std::swap(_v_cs, _v_ns);
 
       CurrentSlice ++;
@@ -406,7 +405,7 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
 
       //VertexIndex index =GetSliceIndex(//
       int v_ind = 0;
-      if (p1.X()!=p2.X()) //intersezione della superficie con un Xedge
+      if (p1.X()!=p2.X()) //intersection of the surface with an X edge
       {
         if (p1.Y()==CurrentSlice)
         {
@@ -417,7 +416,6 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
             assert(!v->IsD());
             return true;
           }
-
         }
         else
         {
@@ -432,7 +430,7 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
         v = NULL;
         return false;
       }
-      else if (p1.Y()!=p2.Y()) //intersezione della superficie con un Yedge
+      else if (p1.Y()!=p2.Y()) //intersection of the surface with a Y edge
       {
         if (_y_cs[index]!=-1)
         {
@@ -449,7 +447,7 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
 
       }
       else if (p1.Z()!=p2.Z())
-        //intersezione della superficie con un Zedge
+        //intersection of the surface with a Z edge
       {
         if (p1.Y()==CurrentSlice)
         {
@@ -482,9 +480,7 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
     ///interpolate
     NewCoordType Interpolate(const vcg::Point3i &p1, const vcg::Point3i &p2,int dir)
     {
-      NewScalarType f1 = V(p1);
-      NewScalarType f2 = V(p2);
-      NewScalarType u =  f1/(f1-f2);
+      NewScalarType f1 = V(p1),f2 = V(p2),u =  f1/(f1-f2);
       NewCoordType ret(p1.V(0),p1.V(1),p1.V(2));
       ret.V(dir) = p1.V(dir)*(1.f-u) + u*p2.V(dir);
       return (ret);
