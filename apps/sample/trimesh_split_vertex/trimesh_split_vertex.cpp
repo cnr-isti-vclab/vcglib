@@ -11,7 +11,6 @@
 using namespace vcg;
 
 #define TEST_IN_PLACE_SPLIT
-
 #ifdef TEST_IN_PLACE_SPLIT
 
 class SrcVertex;
@@ -19,7 +18,6 @@ class SrcFace;
 
 struct ScrUsedTypes : public UsedTypes<	Use<SrcVertex>::AsVertexType,
 																				Use<SrcFace>::AsFaceType>{};
-
 class SrcVertex : public vcg::Vertex
 <	ScrUsedTypes,
 	vcg::vertex::InfoOcf,
@@ -83,7 +81,7 @@ inline void ExtractVertex(const SrcMesh & srcMesh, const SrcFace & f, int whichW
 }
 
 // sample compare functor.
-// given two destination vertices, this functor tells if they are identical in all relevan attributes.
+// given two destination vertices, this functor tells if they are identical in all relevant attributes.
 // source and destination meshes are provided to allow for attribute presence checking (.Is*Enabled()).
 inline bool CompareVertex(const DstMesh & m, const DstVertex & vA, const DstVertex & vB)
 {
@@ -93,7 +91,7 @@ inline bool CompareVertex(const DstMesh & m, const DstVertex & vA, const DstVert
 }
 
 // sample copy functor.
-// given two destination vertices, this functor is asked to copy all relevan attributes.
+// given two destination vertices, this functor is asked to copy all relevant attributes.
 // source and destination meshes are provided to allow for attribute presence checking (.Is*Enabled()).
 inline void CopyVertex(const DstMesh & m, const DstVertex & vSrc, DstVertex & vDst)
 {
