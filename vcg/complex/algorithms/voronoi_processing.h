@@ -243,8 +243,7 @@ static void FaceAssociateRegion(MeshType &m)
     }
   }
   tri::UpdateTopology<MeshType>::FaceFace(m);
-  int unassCnt=0;
-  short i;
+  int unassCnt;
   do
   {
     unassCnt=0;
@@ -299,11 +298,13 @@ static int FaceSelectRegion(MeshType &m, VertexPointer vp)
   PerVertexPointerHandle sources =  tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   assert(tri::Allocator<MeshType>::IsValidHandle(m,sources));
   tri::UpdateSelection<MeshType>::Clear(m);
-  int selCnt=0;
+  int selCnt=0,minInd = 0;
   short i;
+  float minVal;
+  
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
   {
-    int minInd = 0; float minVal=std::numeric_limits<float>::max();
+    minInd=0; minVal=std::numeric_limits<float>::max();
     for(i=0;i<3;++i)
     {
       if((*fi).V(i)->Q()<minVal)
@@ -338,6 +339,7 @@ static void GetAreaAndFrontier(MeshType &m, PerVertexPointerHandle &sources,
   frontierVec.clear();
   VertexPointer s0,s1,s2;
   short i;
+  int seedIndex;
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
   {
     s0 = sources[(*fi).V(0)];
@@ -358,7 +360,7 @@ static void GetAreaAndFrontier(MeshType &m, PerVertexPointerHandle &sources,
     {
       if(s0 != 0)
       {
-        int seedIndex = tri::Index(m,s0);
+        seedIndex = tri::Index(m,s0);
         regionArea[seedIndex].first+=DoubleArea(*fi)*0.5f;
         regionArea[seedIndex].second=s0;
       }
