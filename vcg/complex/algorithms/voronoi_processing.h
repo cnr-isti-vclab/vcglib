@@ -457,7 +457,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
     VertexPointer curSeed=seedVec[i];
     vector<CoordType> pt;
     short qq,jj;
-    float angle, curangle;
+    float angle, curAngle;
     for(size_t j=0;j<innerCornerVec.size();++j)
       for(qq=0;qq<3;qq++)
         if(sources[innerCornerVec[j]->V(qq)] == curSeed)
@@ -640,7 +640,6 @@ static void ConvertVoronoiDiagramToMeshOld(MeshType &m,
   // Loop build all the triangles connecting seeds with internal corners
   // we loop over the all the voronoi corners (triangles with three different sources)
   // we build
-  short j;
   VertexPointer v0,v1,s0,s1,corner0,corner1,curReg,curSeed;
   for(size_t i=0;i<innerCornerVec.size();++i)
   {
@@ -1524,7 +1523,7 @@ static bool CheckVoronoiTopology(MeshType& m,std::vector<VertexType *> &seedVec)
 
   // Very basic check: each vertex must have a source that is a seed.
   VertexPointer vp;
-  int seedInd,i,vi0,vi1,vi2,i;
+  int seedInd,i,vi0,vi1,vi2;
   for(i=0;i<m.vn;++i)
   {
     vp = sources[i];
@@ -1552,6 +1551,7 @@ static bool CheckVoronoiTopology(MeshType& m,std::vector<VertexType *> &seedVec)
   }
 
   bool AllDiskRegion=true;
+  int NNmanifoldE,G,numholes;
   for(size_t i=0; i< seedVec.size();i++)
   {
     MeshType &rm = *(regionVec[i]);
@@ -1560,11 +1560,11 @@ static bool CheckVoronoiTopology(MeshType& m,std::vector<VertexType *> &seedVec)
     tri::UpdateTopology<MeshType>::FaceFace(rm);
     //    char buf[100]; sprintf(buf,"disk%04i.ply",i); tri::io::ExporterPLY<MeshType>::Save(rm,buf,tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
 
-    int NNmanifoldE=tri::Clean<MeshType>::CountNonManifoldEdgeFF(rm);
+    NNmanifoldE=tri::Clean<MeshType>::CountNonManifoldEdgeFF(rm);
     if (NNmanifoldE!=0)
       AllDiskRegion= false;
-    int G=tri::Clean<MeshType>::MeshGenus(rm);
-    int numholes=tri::Clean<MeshType>::CountHoles(rm);
+    G=tri::Clean<MeshType>::MeshGenus(rm);
+    numholes=tri::Clean<MeshType>::CountHoles(rm);
     if (numholes!=1)
       AllDiskRegion= false;
     if(G!=0) AllDiskRegion= false;
