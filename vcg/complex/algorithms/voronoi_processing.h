@@ -594,7 +594,7 @@ static void ConvertVoronoiDiagramToMeshOld(MeshType &m,
     seedMap[seedVec[i]]=i;
 
   // Consistency Checks
-  short ind,;
+  short ind,j;
   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
   {
     assert(sources[vi] != 0);  // all vertices mush have a source must be seeds.
@@ -686,7 +686,6 @@ static void ConvertVoronoiDiagramToMeshOld(MeshType &m,
   // Final pass
   tri::UpdateFlags<MeshType>::FaceClearV(m);
   bool AllFaceVisited = false;
-  short j;
   int otherCorner0,otherCorner1;
   while(!AllFaceVisited)
   {
@@ -1583,7 +1582,7 @@ static bool CheckVoronoiTopology(MeshType& m,std::vector<VertexType *> &seedVec)
     tri::Allocator<MeshType>::AddVertex(delaMesh, seedVec[i]->P());
 
   // Now just add one face for each inner corner
-  VertexPointer v0,v1,v2
+  VertexPointer v0,v1,v2;
   for(size_t i=0;i<innerCornerVec.size();++i)
   {
     v0 = & delaMesh.vert[seedMap[sources[innerCornerVec[i]->V(0)]]];
