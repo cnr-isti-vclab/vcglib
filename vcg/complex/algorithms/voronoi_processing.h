@@ -457,6 +457,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
     VertexPointer curSeed=seedVec[i];
     vector<CoordType> pt;
     short qq,jj;
+    float angle, curangle;
     for(size_t j=0;j<innerCornerVec.size();++j)
       for(qq=0;qq<3;qq++)
         if(sources[innerCornerVec[j]->V(qq)] == curSeed)
@@ -485,7 +486,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
     for(size_t j=0;j<pt.size();++j)
     {
       CoordType p = (pt[j]-curSeed->P()).Normalize();
-      float angle = 180.0f+math::ToDeg(atan2(p*nY,p*nX));
+      angle = 180.0f+math::ToDeg(atan2(p*nY,p*nX));
       angleVec[j] = make_pair(angle,j);
     }
     std::sort(angleVec.begin(),angleVec.end());
@@ -496,7 +497,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
       tri::Allocator<MeshType>::AddVertex(outMesh,pt[angleVec[j].second],Color4b::LightGray);
 
     for(size_t j=0;j<pt.size();++j){
-      float curAngle = angleVec[(j+1)%pt.size()].first - angleVec[j].first;
+      curAngle = angleVec[(j+1)%pt.size()].first - angleVec[j].first;
 //      printf("seed %4i (%i) - face %i angle %5.1f %5.1f %5.1f\n",i,curRegionStart,j,angleVec[j].first,angleVec[(j+1)%pt.size()].first,curAngle);
       if(curAngle < 0) curAngle += 360.0;
       if(curAngle < 170.0)
@@ -510,7 +511,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   } // end for each seed.
   tri::Clean<MeshType>::RemoveDuplicateVertex(outMesh);
   tri::UpdateTopology<MeshType>::FaceFace(outMesh);
-  bool oriented,orientable;
+  bool oriented,orientable,b0,b1;
   tri::Clean<MeshType>::OrientCoherentlyMesh(outMesh,oriented,orientable);
   tri::UpdateTopology<MeshType>::FaceFace(outMesh);
 
@@ -529,13 +530,12 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   {
     tri::UpdateFlags<MeshType>::FaceBorderFromFF(outMesh);
     tri::UpdateFlags<MeshType>::VertexBorderFromFaceBorder(outMesh);
-    short i;
     for(FaceIterator fi=outMesh.face.begin();fi!=outMesh.face.end();++fi) if(!fi->IsD())
     {
       for(i=0;i<3;++i)
       {
-        bool b0 = fi->V0(i)->IsB();
-        bool b1 = fi->V1(i)->IsB();
+        b0 = fi->V0(i)->IsB();
+        b1 = fi->V1(i)->IsB();
         if( ((b0  && b1) || (fi->IsF(i) && !b0) ) &&
             tri::Index(outMesh,fi->V0(i))<seedVec.size())
         {
@@ -553,13 +553,13 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   // Now a plain conversion of the non faux edges into a polygonal mesh
   tri::UpdateTopology<MeshType>::FillUniqueEdgeVector(outMesh,EdgeVec,false);
   tri::UpdateTopology<MeshType>::AllocateEdge(outMesh);
-  size_t i,e0,e1;
-  for(i=0;i<outMesh.vert.size();++i)
-    tri::Allocator<MeshType>::AddVertex(outPoly,outMesh.vert[i].P());
-  for(i=0;i<EdgeVec.size();++i)
+  size_t i1,e0,e1;
+  for(i1=0;i1<outMesh.vert.size();++i1)
+    tri::Allocator<MeshType>::AddVertex(outPoly,outMesh.vert[i1].P());
+  for(i1=0;i1<EdgeVec.size();++i1)
   {
-    e0 = tri::Index(outMesh,EdgeVec[i].v[0]);
-    e1 = tri::Index(outMesh,EdgeVec[i].v[1]);
+    e0 = tri::Index(outMesh,EdgeVec[i1].v[0]);
+    e1 = tri::Index(outMesh,EdgeVec[i1].v[1]);
     assert(e0<outPoly.vert.size());
     tri::Allocator<MeshType>::AddEdge(outPoly,&(outPoly.vert[e0]),&(outPoly.vert[e1]));
   }
