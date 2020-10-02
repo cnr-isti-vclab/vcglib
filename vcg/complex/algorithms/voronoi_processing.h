@@ -499,7 +499,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   std::vector< typename tri::UpdateTopology<MeshType>::PEdge> EdgeVec;
 
   // ******************* star to tri conversion *********
-  // If requested the voronoi regions are converted from a star arragned polygon
+  // If requested the voronoi regions are converted from a star arranged polygon
   // with vertex on the seed to a simple triangulated polygon by mean of a simple edge collapse
   if(vpp.triangulateRegion)
   {
@@ -1287,6 +1287,7 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
   PerVertexPointerHandle sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
   PerVertexBoolHandle fixed = tri::Allocator<MeshType>:: template GetPerVertexAttribute<bool> (m,"fixed");
   int iter;
+	std::vector<VertexPointer> frontierVec,newSeedVec;
   for(iter=0;iter<relaxIter;++iter)
   {
     if(cb) cb(iter*100/relaxIter,"Voronoi Lloyd Relaxation: First Partitioning");
@@ -1301,7 +1302,7 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
     if(vpp.deleteUnreachedRegionFlag)  DeleteUnreachedRegions(m,sources);
     std::pair<float,VertexPointer> zz(0.0f,static_cast<VertexPointer>(NULL));
     std::vector< std::pair<float,VertexPointer> > regionArea(m.vert.size(),zz);
-    std::vector<VertexPointer> frontierVec;
+   
 
     GetAreaAndFrontier(m, sources,  regionArea, frontierVec);
     assert(frontierVec.size()>0);
@@ -1311,8 +1312,7 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
     //    qDebug("We have found %i regions range (%f %f), avg area is %f, Variance is %f 10perc is %f",(int)seedVec.size(),H.Min(),H.Max(),H.Avg(),H.StandardDeviation(),areaThreshold);
 
     if(cb) cb(iter*100/relaxIter,"Voronoi Lloyd Relaxation: Searching New Seeds");
-    std::vector<VertexPointer> newSeedVec;
-
+    
     bool changed;
     if(vpp.geodesicRelaxFlag)
       changed = GeodesicRelax(m,seedVec, frontierVec, newSeedVec, df,vpp);
