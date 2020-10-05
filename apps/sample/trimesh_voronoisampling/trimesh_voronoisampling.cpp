@@ -218,7 +218,6 @@ int main( int argc, char **argv )
    // To remove the elements marked as deleted use
   vcg::tri::Allocator<MyMesh>::CompactFaceVector(voroMesh);
 
-  std::vector<std::pair<int,MyMesh::FacePointer> > fpVec;
   tri::UpdateTopology<MyMesh>::FaceFace(voroMesh);
 
   tri::Clean<MyMesh>::ConnectedComponents(voroMesh,fpVec);
