@@ -80,10 +80,33 @@ int main( int argc, char **argv )
     printf("Unable to open %s for '%s'\n",argv[1],tri::io::ImporterPLY<MyMesh>::ErrorMsg(ret));
     return -1;
   }
+  
+  //Experimental additions:
+  int dv=tri::Clean<MyMesh>::RemoveDuplicateVertex(baseMesh);
+  printf("Removed %i duplicated vertices in input mesh\n",dv);
+
+  int unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(baseMesh);
+  printf("Removed %i unreferenced vertices from input mesh %s\n",unref,argv[1]);
+  
+   // To remove the elements marked as deleted use
+  vcg::tri::Allocator<MyMesh>::CompactFaceVector(baseMesh);
+
+  std::vector<std::pair<int,MyMesh::FacePointer> > fpVec;
+  tri::UpdateTopology<MyMesh>::FaceFace(baseMesh);
+
+  tri::Clean<MyMesh>::ConnectedComponents(baseMesh,fpVec);
+  
+  tri::UpdateSelection<MyMesh>::FaceConnectedFF(baseMesh);
+  tri::UpdateSelection<MyMesh>::VertexClear(baseMesh);
+  tri::UpdateSelection<MyMesh>::VertexFromFaceLoose(baseMesh);
+  
+  printf("Mesh has %lu texture components\n",fpVec.size());
+  //End Of Experimental Additions.
+  
+  vcg::tri::Allocator<MyMesh>::CompactVertexVector(baseMesh);
 
   tri::VoronoiProcessingParameter vpp;
 
-  tri::Clean<MyMesh>::RemoveUnreferencedVertex(baseMesh);
   tri::Allocator<MyMesh>::CompactEveryVector(baseMesh);
   tri::UpdateTopology<MyMesh>::VertexFace(baseMesh);
 
@@ -184,7 +207,29 @@ int main( int argc, char **argv )
      tri::VoronoiProcessing<MyMesh>::ConvertVoronoiDiagramToMesh(baseMesh,voroMesh,voroPoly,seedVec, vpp);
   else
     printf("WARNING some voronoi region are not disk like; the resulting delaunay triangulation is not manifold.\n");
+  
+  //Experimental additions:
+  dv=tri::Clean<MyMesh>::RemoveDuplicateVertex(voroMesh);
+  printf("Removed %i duplicated vertices in Voronoi alg. processed mesh\n",dv);
 
+  unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(voroMesh);
+  printf("Removed %i unreferenced vertices from Voronoi alg. processed mesh %s\n",unref,argv[1]);
+  
+   // To remove the elements marked as deleted use
+  vcg::tri::Allocator<MyMesh>::CompactFaceVector(voroMesh);
+
+  std::vector<std::pair<int,MyMesh::FacePointer> > fpVec;
+  tri::UpdateTopology<MyMesh>::FaceFace(voroMesh);
+
+  tri::Clean<MyMesh>::ConnectedComponents(voroMesh,fpVec);
+  
+  tri::UpdateSelection<MyMesh>::FaceConnectedFF(voroMesh);
+  tri::UpdateSelection<MyMesh>::VertexClear(voroMesh);
+  tri::UpdateSelection<MyMesh>::VertexFromFaceLoose(voroMesh);
+  
+  printf("Mesh has %lu texture components\n",fpVec.size());
+  //End Of Experimental Additions.
+  
   tri::io::ExporterPLY<MyMesh>::Save(baseMesh,"base.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
   tri::io::ExporterPLY<MyMesh>::Save(voroMesh,"voroMesh.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_FLAGS );
   tri::io::ExporterPLY<MyMesh>::Save(voroPoly,"voroPoly.ply",tri::io::Mask::IOM_VERTCOLOR| tri::io::Mask::IOM_EDGEINDEX ,false);
