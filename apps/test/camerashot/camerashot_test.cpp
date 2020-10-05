@@ -42,9 +42,8 @@ bool test1(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
   p1proj = shot1.Project(p1);
   p2proj = shot2.Project(p2);
 
-  vcg::Point2d p1test(633.58101456110933, 327.22860336234237);
-  vcg::Point2d p2test(289.02943695191425, 315.42715619973069);
-
+  vcg::Point2d p1test(633.58101456110933, 327.22860336234237),p2test(289.02943695191425, 315.42715619973069);
+  
   if (dist2(p1proj,p1test) > precision)
     return false;
 
@@ -63,8 +62,7 @@ bool test2(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
   p1proj = shot1.Project(p1);
   p2proj = shot2.Project(p2);
 
-  vcg::Point3d p1unproj, p2unproj;
-  vcg::Point3d pcam1, pcam2;
+  vcg::Point3d p1unproj, p2unproj,pcam1, pcam2;
 
   pcam1 = shot1.ConvertWorldToCameraCoordinates(p1);
   p1unproj = shot1.UnProject(p1proj, pcam1[2]);
@@ -91,9 +89,8 @@ bool test3(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
 
   vcg::Point3d p1unproj, p2unproj;
 
-  double depth1 = shot1.Depth(p1);
-  double depth2 = shot2.Depth(p2);
-
+  double depth1 = shot1.Depth(p1),depth2 = shot2.Depth(p2);
+ 
   p1unproj = shot1.UnProject(p1proj, depth1);
   p2unproj = shot2.UnProject(p2proj, depth2);
 
@@ -204,10 +201,8 @@ bool test6(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2)
   if (checkIdentity(I4) > precision)
     return false;
 
-  vcg::Point3d axisX(1.0, 0.0, 0.0);
-  vcg::Point3d axisY(0.0, 1.0, 0.0);
-  vcg::Point3d axisZ(0.0, 0.0, 1.0);
-
+  vcg::Point3d axisX(1.0, 0.0, 0.0),axisY(0.0, 1.0, 0.0),axisZ(0.0, 0.0, 1.0);
+ 
   vcg::Point3d vx = EtoW1 * axisX;
   vcg::Point3d vy = EtoW1 * axisY;
   vcg::Point3d vz = EtoW1 * axisZ;
@@ -420,11 +415,9 @@ bool test10(vcg::Shotd shot1, vcg::Shotd shot2, vcg::Point3d p1, vcg::Point3d p2
 
 int main()
 {
-  vcg::Point3d p1(20.0, 25.0, 10.0);
-  vcg::Point3d p2(-6.0, 25.0, 50.0);
-  vcg::Shotd shot1;
-  vcg::Shotd shot2;
-
+  vcg::Point3d p1(20.0, 25.0, 10.0),p2(-6.0, 25.0, 50.0);
+  vcg::Shotd shot1,shot2;
+  
   // Initialize camera 1 (C1)
   shot1.Intrinsics.cameraType = vcg::Camera<double>::PERSPECTIVE;
   shot1.Intrinsics.FocalMm = 30.0;
@@ -470,7 +463,6 @@ int main()
   shot2.Intrinsics.DistorCenterPx[0] = shot2.Intrinsics.DistorCenterPx[1] = 0.0;
   shot2.Intrinsics.k[0] = 0.0; shot2.Intrinsics.k[1] = 0.0; shot2.Intrinsics.k[2] = 0.0; shot2.Intrinsics.k[3] = 0.0;
 
-
   vcg::Matrix44d R2; // 18 degree around Y axis (+ 180 degree for the correct orientation of the camera)
   R2.ElementAt(0,0) = vcg::math::Cos(-45.0*deg2rad);
   R2.ElementAt(0,1) = 0.0;
@@ -493,105 +485,65 @@ int main()
   shot2.Extrinsics.SetTra(T2);
   shot2.Extrinsics.SetRot(R2);
 
-
   // TEST 1 - project a 3D point in World coordinates on the image plane
   if (test1(shot1, shot2, p1, p2))
-  {
     std::cout << "TEST 1 (projection) - PASSED(!)" << std::endl;
-  }
   else
     std::cout << "TEST 1 (projection) - FAILED(!)" << std::endl;
 
   // TEST 2 - projection and unprojection
   if (test2(shot1, shot2, p1, p2))
-  {
     std::cout << "TEST 2 (unprojection) - PASSED(!)" << std::endl;
-  }
   else
-  {
     std::cout << "TEST 2 (unprojection) - FAILED(!)" << std::endl;
-  }
 
   // TEST 3 - DEPTH COMPUTATION
   if (test3(shot1, shot2, p1, p2))
-  {
     std::cout << "TEST 3 (depth computation) - PASSED(!)" << std::endl;
-  }
   else
-  {
     std::cout << "TEST 3 (depth computation) - FAILED(!)" << std::endl;
-  }
-
 
   // TEST 4 - CAMERA CONVERSION - CONVERT FOCAL IN PIXELS IN FOCAL IN MM
   if (test4(shot1, p1))
-  {
     std::cout << "TEST 4 (focal in px to focal in mm) - PASSED(!)" << std::endl;
-  }
   else
-  {
     std::cout << "TEST 4 (focal in px to focal in mm) - FAILED(!)" << std::endl;
-  }
 
   // TEST 5 - CAMERA-SHOT MODIFICATION - CHANGE SCALE FACTOR OF THE WORLD
   if (test5(shot1, p1, p2))
-  {
     std::cout << "TEST 5 (scaling the World) - PASSED(!)" << std::endl;
-  }
   else
-  {
     std::cout << "TEST 5 (scaling the World) - FAILED(!)" << std::endl;
-  }
 
   // TEST 6 - WORLD-TO-EXTRINSICS AND EXTRINSICS-TO-WORLD TRANSFORMATIONS
   if (test6(shot1, shot2, p1, p2))
-  {
     std::cout << "TEST 6 (World-to-Extrinsics and Extrinsics-to-World) - PASSED(!)" << std::endl;
-  }
   else
-  {
     std::cout << "TEST 6 (World-to-Extrinsics and Extrinsics-to-World) - FAILE(!)" << std::endl;
-  }
 
   // TEST 7 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
   if (test7(shot1, p1, p2))
-  {
     std::cout << "TEST 7 (roto-translation of the Shot coordinates system) - PASSED(!)" << std::endl;
-  }
   else
-  {
     std::cout << "TEST 7 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
-  }
 
   // TEST 7 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
   if (test8(shot1, shot2, p1, p2))
-  {
     std::cout << "TEST 8 (roto-translation of the Shot coordinates system) - PASSED(!)" << std::endl;
-  }
   else
-  {
     std::cout << "TEST 8 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
-  }
 
   // TEST 9 - SHOT MODIFICATION - ROTO-TRANSLATION OF THE SHOT COORDINATES SYSTEM
   if (test9(shot1, shot2, p1, p2))
-  {
     std::cout << "TEST 9 (roto-translation of the Shot coordinates system) - PASSED(!)" << std::endl;
-  }
   else
-  {
     std::cout << "TEST 9 (roto-translation of the Shot coordinates system) - FAILED(!)" << std::endl;
-  }
 
   // TEST 10 - SHOT MODIFICATION - SIMILARITY TRANSFORMATION
   if (test10(shot1, shot2, p1, p2))
-  {
     std::cout << "TEST 10 (similarity transform of the Shot coordinates system) - PASSED(!)" << std::endl;
-  }
   else
-  {
     std::cout << "TEST 10 (similarity transform of the Shot coordinates system) - FAILED(!)" << std::endl;
-  }
 
   return 0;
 }
