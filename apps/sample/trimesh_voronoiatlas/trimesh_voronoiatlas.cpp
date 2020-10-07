@@ -72,7 +72,7 @@ int main( int argc, char **argv )
   //    dv=tri::Clean<MyMesh>::RemoveDuplicateVertex(paraMesh);
   //    printf("Removed in paraMesh %i duplicated vertices\n",dv);
 
-    unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(paraMesh);
+    int unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(paraMesh);
     printf("Removed %i unreferenced vertices from paraMesh %i\n",unref);
 
     //tri::Clean<MyMesh>::ConnectedComponents(paraMesh,fpVec);
@@ -80,7 +80,7 @@ int main( int argc, char **argv )
     //faceconff = tri::UpdateSelection<MyMesh>::FaceConnectedFF(paraMesh);
     //cout<<"faceconff = "<<faceconff<<endl;
 
-    vertcl = tri::UpdateSelection<MyMesh>::VertexClear(paraMesh);
+    int vertcl = tri::UpdateSelection<MyMesh>::VertexClear(paraMesh);
     cout<<"vertex clear = "<<vertcl<<endl;
 
     vertcl = tri::UpdateSelection<MyMesh>::VertexFromFaceLoose(paraMesh);
