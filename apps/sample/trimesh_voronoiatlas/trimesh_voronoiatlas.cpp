@@ -68,7 +68,29 @@ int main( int argc, char **argv )
   pp.overlap=false;
 
   tri::VoronoiAtlas<MyMesh>::Build(startMesh,paraMesh,pp);
+  
+  //    dv=tri::Clean<MyMesh>::RemoveDuplicateVertex(paraMesh);
+  //    printf("Removed in paraMesh %i duplicated vertices\n",dv);
 
-  tri::io::ExporterPLY<MyMesh>::Save(paraMesh,"Full.ply",tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );
-  return 0;
+    unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(paraMesh);
+    printf("Removed %i unreferenced vertices from paraMesh %i\n",unref);
+
+    //tri::Clean<MyMesh>::ConnectedComponents(paraMesh,fpVec);
+
+    //faceconff = tri::UpdateSelection<MyMesh>::FaceConnectedFF(paraMesh);
+    //cout<<"faceconff = "<<faceconff<<endl;
+
+    vertcl = tri::UpdateSelection<MyMesh>::VertexClear(paraMesh);
+    cout<<"vertex clear = "<<vertcl<<endl;
+
+    vertcl = tri::UpdateSelection<MyMesh>::VertexFromFaceLoose(paraMesh);
+    cout<<"vertex from face loose = "<<vertcl<<endl;
+
+    //printf("Mesh has %lu texture components\n",fpVec.size());
+
+    // To remove the elements marked as deleted use
+    vcg::tri::Allocator<MyMesh>::CompactFaceVector(paraMesh);
+
+    tri::io::ExporterPLY<MyMesh>::Save(paraMesh,"Full.ply",tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );
+    return 0;
 }
