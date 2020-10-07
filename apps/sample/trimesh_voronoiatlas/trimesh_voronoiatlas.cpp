@@ -25,6 +25,8 @@
 
 #include<wrap/io_trimesh/import_ply.h>
 #include<wrap/io_trimesh/export_ply.h>
+#include<wrap/io_trimesh/export_stl.h>
+
 #include<vcg/complex/algorithms/parametrization/voronoi_atlas.h>
 #include<vcg/space/outline2_packer.h>
 
@@ -66,9 +68,24 @@ int main( int argc, char **argv )
   tri::VoronoiAtlas<MyMesh>::VoronoiAtlasParam pp;
   pp.sampleNum =sampleNum;
   pp.overlap=false;
+  pp.maxIterNum = 100;
+  
+  int dv=tri::Clean<MyMesh>::RemoveDuplicateVertex(startMesh);
+  printf("Removed %i duplicated vertices from input mesh\n",dv);
+
+  int unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(startMesh);
+  printf("Removed %i unreferenced vertices from input mesh\n",unref);
 
   tri::VoronoiAtlas<MyMesh>::Build(startMesh,paraMesh,pp);
+  
+  dv=tri::Clean<MyMesh>::RemoveDuplicateVertex(paraMesh);
+  printf("Removed in paraMesh %i duplicated vertices\n",dv);
+
+  unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(paraMesh);
+  printf("Removed %i unreferenced vertices from paraMesh %i\n",unref);
 
   tri::io::ExporterPLY<MyMesh>::Save(paraMesh,"Full.ply",tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );
+  tri::io::ExporterSTL<MyMesh>::Save(paraMesh,"paraMesh.stl");
+  
   return 0;
 }
