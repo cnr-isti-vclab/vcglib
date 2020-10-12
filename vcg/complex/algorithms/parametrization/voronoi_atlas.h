@@ -135,12 +135,14 @@ public:
  // Main parametrization function:
  // it takes a startMesh, copy it and
 
- static void Build( MeshType &startMesh, MeshType &paraMesh, VoronoiAtlasParam &pp,short fccoef,short fnLim)
+ //static void Build( MeshType &startMesh, MeshType &paraMesh, VoronoiAtlasParam &pp,short fccoef,short fnLim)
+  static void Build( MeshType &startMesh, MeshType &paraMesh, VoronoiAtlasParam &pp)
   {
 
     pp.vas.clear();
 
     int t0=clock();
+    short fccoef = 10,short fnLim = 50;
 
   VoroMesh m;  // the mesh used for the processing is a copy of the passed one.
   tri::Append<VoroMesh, MeshType>::Mesh(m, startMesh);
