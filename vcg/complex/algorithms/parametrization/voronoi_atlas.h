@@ -142,7 +142,7 @@ public:
     pp.vas.clear();
 
     int t0=clock();
-    short fccoef = 10,short fnLim = 50;
+    short fccoef = 10,fnLim = 50;
 
   VoroMesh m;  // the mesh used for the processing is a copy of the passed one.
   tri::Append<VoroMesh, MeshType>::Mesh(m, startMesh);
