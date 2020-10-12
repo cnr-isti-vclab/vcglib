@@ -64,7 +64,7 @@ public:
     tri::UpdateFlags<VoroMesh>::FaceClearV(*rm);
     for(FaceIterator fi=rm->face.begin();fi!=rm->face.end();++fi)
     {
-      for(int j=0;j<3;++j)
+      for(short j=0;j<3;++j)
         if(face::IsBorder(*fi,j) && !(fi->IsV()))
         {
           face::Pos<FaceType> pp(&*fi,j,fi->V(j));
@@ -97,7 +97,7 @@ public:
 
     for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
     {
-      for(int j=0;j<3;++j)
+      for(short j=0;j<3;++j)
         fi->WT(j).P() = (fi->WT(j).P()-UVBox.min) *ratio;
     }
   }
@@ -135,10 +135,13 @@ public:
  // Main parametrization function:
  // it takes a startMesh, copy it and
 
-  static void Build( MeshType &startMesh, MeshType &paraMesh, VoronoiAtlasParam &pp)
+ static void Build( MeshType &startMesh, MeshType &paraMesh, VoronoiAtlasParam &pp,short fccoef,short fnLim)
   {
+
     pp.vas.clear();
-   int t0=clock();
+
+    int t0=clock();
+
   VoroMesh m;  // the mesh used for the processing is a copy of the passed one.
   tri::Append<VoroMesh, MeshType>::Mesh(m, startMesh);
   tri::Clean<VoroMesh>::RemoveUnreferencedVertex(m);
@@ -149,42 +152,78 @@ public:
   std::vector<VoroMesh *> meshRegionVec;
   std::vector< std::vector<Point2f> > uvBorders;
 
+  std::vector<Point3f> PoissonSamples;
+  int st0,st1,st2,tp0,tp1,selCnt,foldedCnt;
+  float diskRadius;
+  std::vector<VertexType *> seedVec;
+  std::vector<VoroMesh *> badRegionVec;
+  std::vector<Point2f> uvBorder;
+  //std::unique_ptr<VoroMesh> rm;
+  //VoroMesh *rm;
+
   // Main processing loop
   do
   {
-//    qDebug("************ ITERATION %i sampling mesh of %i with %i ************",pp.vas.iterNum,m.fn,pp.sampleNum);
-    int st0=clock();
-    std::vector<Point3f> PoissonSamples;
-    float diskRadius=0;
+    printf("ITERATION %i sampling mesh of %i with %i *\n",pp.vas.iterNum,m.fn,pp.sampleNum);
+
+    st0=clock();
+
+    PoissonSamples.clear();
+    diskRadius=0;
     tri::PoissonSampling(m,PoissonSamples,pp.sampleNum,diskRadius);
-    int st1=clock();
+
+    st1=clock();
+
     pp.vas.samplingTime+= st1-st0;
     pp.cb(50,StrFormat("Sampling created a new mesh of %lu points\n",PoissonSamples.size()));
+
+    printf("Sampling created a new mesh of %lu points\n",PoissonSamples.size());
+
     EuclideanDistance<VoroMesh> edFunc;
-    std::vector<VertexType *> seedVec;
+
+    seedVec.clear();
+
     tri::VoronoiProcessing<VoroMesh>::SeedToVertexConversion(m,PoissonSamples,seedVec);
     tri::UpdateTopology<VoroMesh>::VertexFace(m);
     tri::VoronoiProcessing<VoroMesh>::ComputePerVertexSources(m,seedVec,edFunc);
     tri::VoronoiProcessing<VoroMesh>::FaceAssociateRegion(m);
     tri::VoronoiProcessing<VoroMesh>::VoronoiColoring(m,true);
-    std::vector<VoroMesh *> badRegionVec;
-    int st2=clock();
+
+    badRegionVec.clear();
+
+    st2=clock();
+
     pp.vas.voronoiTime+=st2-st1;
+
+    printf("Voronoi prepr.1 time = %i\n",pp.vas.voronoiTime);
+    printf("seedVec.size() = %i\n",seedVec.size());
+
     for(size_t i=0; i<seedVec.size();++i)
     {
+
+      //rm = new VoroMesh();
+      //rm.reset(new VoroMesh());
       VoroMesh *rm = new VoroMesh();
-      int selCnt = tri::VoronoiProcessing<VoroMesh>::FaceSelectAssociateRegion(m,seedVec[i]);
-       pp.cb(50,StrFormat("Region %i of %i faces",i,selCnt));
+
+      selCnt = tri::VoronoiProcessing<VoroMesh>::FaceSelectAssociateRegion(m,seedVec[i]);
+
+      pp.cb(50,StrFormat("Region %i of %i faces\n",i,selCnt));
+
+      printf("Region %i of %i faces\n",i,selCnt);
+
       if(selCnt==0) continue;
       assert(selCnt>0);
+
       if(pp.overlap){
       tri::UpdateSelection<VoroMesh>::VertexFromFaceLoose(m);
       tri::UpdateSelection<VoroMesh>::FaceFromVertexLoose(m);
       }
+
       tri::Append<VoroMesh,VoroMesh>::Mesh(*rm, m, true);
-      int tp0=clock();
+      tp0=clock();
       tri::PoissonSolver<VoroMesh> PS(*rm);
       tri::UpdateBounding<VoroMesh>::Box(*rm);
+
       if(PS.IsFeasible())
       {
         PS.Init();
@@ -193,50 +232,84 @@ public:
         tri::UpdateTexture<VoroMesh>::WedgeTexFromVertexTex(*rm);
         RegularizeTexArea(*rm);
 
-        std::vector<Point2f> uvBorder;
+        uvBorder.clear();
+        //CollectUVBorder(rm.get(),uvBorder);
+        //meshRegionVec.push_back(rm.get());
         CollectUVBorder(rm,uvBorder);
         meshRegionVec.push_back(rm);
         uvBorders.push_back(uvBorder);
-        int foldedCnt = tri::Distortion<VoroMesh,false>::FoldedNum(*rm);
-        if( foldedCnt > rm->fn/10)
-        {
-          badRegionVec.push_back(rm);
-//          qDebug("-- region %i Parametrized but with %i fold on %i!",i,foldedCnt,rm->fn);
-        }
-//        else qDebug("-- region %i Parametrized!",i);
+        foldedCnt = tri::Distortion<VoroMesh,false>::FoldedNum(*rm);
 
-      } else
+        if( foldedCnt > rm->fn/fccoef)
+        {
+            //badRegionVec.push_back(rm.get());
+            badRegionVec.push_back(rm);
+          printf("-- region %i Parametrized but with %i fold on %i\n",i,foldedCnt,rm->fn);
+        }
+        else printf("-- region %i Parametrized\n",i);
+      }
+      else
       {
-//        qDebug("-- region %i is NOT homeomorphic to a disk\n",i);
+        printf("-- region %i is NOT homeomorphic to a disk\n",i);
+        //badRegionVec.push_back(rm.get());
         badRegionVec.push_back(rm);
       }
-      int tp1=clock();
+
+      tp1=clock();
       pp.vas.unwrapTime +=tp1-tp0;
       ++pp.vas.iterNum;
+
+      printf("unwrapTime = %i,",pp.vas.unwrapTime);
+      //printf("1. rm = %i\n",rm.get());
+      //printf("1. rm = %i\n",rm);
+      //Why if next line is uncommented next subsequent operation fails with bad vector length:  tri::Append<VoroMesh,VoroMesh>::Mesh(m, *badRegionVec[i], false);
+      //delete rm;
+
     }
-//    qDebug("\n -- Completed (%i bad regions) -- \n", badRegionVec.size());
+
+    printf("\n -- Completed (%i bad regions) -- \n", badRegionVec.size());
+
+    //rm = new VoroMesh();
     VoroMesh *rm = new VoroMesh();
+    //rm.reset(new VoroMesh());
+
     tri::VoronoiProcessing<VoroMesh>::FaceSelectAssociateRegion(m,0);
+
     tri::Append<VoroMesh,VoroMesh>::Mesh(*rm, m, true);
 
     if(rm->fn>0)
     {
-//      qDebug("ACH - unreached faces %i fn\n",rm->fn);
+      printf("ACH - unreached faces %i fn\n",rm->fn);
+      //badRegionVec.push_back(rm.get());
       badRegionVec.push_back(rm);
     }
+
     m.Clear();
-    pp.sampleNum = 10;
+    pp.sampleNum = fccoef;
+
+    printf("badRegionVec.size() = %i\n",badRegionVec.size());
+
     if(!badRegionVec.empty())
     {
       for(size_t i=0;i<badRegionVec.size();++i)
-        if(badRegionVec[i]->fn>50)
-          tri::Append<VoroMesh,VoroMesh>::Mesh(m, *badRegionVec[i], false);
+        {
+          printf("badRegionVec[i]->fn = %i\n",badRegionVec[i]->fn);
+        if(badRegionVec[i]->fn>fnLim)
+          {
+            tri::Append<VoroMesh,VoroMesh>::Mesh(m, *badRegionVec[i], false);
+          }
+      }
 
       tri::Clean<VoroMesh>::RemoveDuplicateFace(m);
       tri::Clean<VoroMesh>::RemoveUnreferencedVertex(m);
       tri::Allocator<VoroMesh>::CompactVertexVector(m);
       tri::Allocator<VoroMesh>::CompactFaceVector(m);
     }
+
+    //printf("rm = %i\n",rm.get());
+    printf("rm = %i\n",rm);
+
+    delete rm;
   } while (m.fn>0);
 
   std::vector<Similarity2f> trVec;
@@ -245,14 +318,21 @@ public:
   PolyPacker<float>::PackAsObjectOrientedRect(uvBorders,Point2i(1024,1024),trVec,finalSize);
 //  RasterizedOutline2Packer<float,QtOutline2Rasterizer>::Parameters prp;
 //  RasterizedOutline2Packer<float,QtOutline2Rasterizer>::Pack(uvBorders,Point2i(1024,1024),trVec,prp);
+
   // loop again over all the patches
   pp.vas.regionNum=meshRegionVec.size();
+  printf("meshRegionVec.size() = %i\n",meshRegionVec.size());
+
+  //VoroMesh *rm;
   for(size_t i=0; i<meshRegionVec.size();++i)
   {
-    VoroMesh *rm = meshRegionVec[i];
-    for(FaceIterator fi=rm->face.begin();fi!=rm->face.end();++fi)
+    //rm.reset(meshRegionVec[i]);
+
+    printf("rm->face.size() = %i||",meshRegionVec[i]->face.size());
+
+    for(FaceIterator fi=meshRegionVec[i]->face.begin();fi!=meshRegionVec[i]->face.end();++fi)
     {
-      for(int j=0;j<3;++j)
+      for(short j=0;j<3;++j)
       {
         Point2f pp(fi->WT(j).U(),fi->WT(j).V());
         Point2f newpp=trVec[i]*pp;
@@ -260,10 +340,14 @@ public:
         fi->WT(j).V()=newpp[1]/1024.0f;
       }
     }
-    tri::Append<MeshType,VoroMesh>::Mesh(paraMesh, *rm, false);
+    //tri::Append<MeshType,VoroMesh>::Mesh(paraMesh, *rm, false);
+    tri::Append<MeshType,VoroMesh>::Mesh(paraMesh, *(meshRegionVec[i]), false);
+
   }
   int t2=clock();
   pp.vas.totalTime=t2-t0;
+
+  printf("\n pp.vas.totalTime = %i\n",pp.vas.totalTime);
 }
 }; //end
 
@@ -273,3 +357,4 @@ public:
 
 
 #endif // VORONOI_ATLAS_H
+
