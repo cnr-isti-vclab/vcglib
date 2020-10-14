@@ -170,7 +170,6 @@ public:
 
     st0=clock();
 
-    PoissonSamples.clear();
     diskRadius=0;
     tri::PoissonSampling(m,PoissonSamples,pp.sampleNum,diskRadius);
 
@@ -183,18 +182,12 @@ public:
 
     EuclideanDistance<VoroMesh> edFunc;
 
-    seedVec.clear();
-
     tri::VoronoiProcessing<VoroMesh>::SeedToVertexConversion(m,PoissonSamples,seedVec);
     tri::UpdateTopology<VoroMesh>::VertexFace(m);
     tri::VoronoiProcessing<VoroMesh>::ComputePerVertexSources(m,seedVec,edFunc);
     tri::VoronoiProcessing<VoroMesh>::FaceAssociateRegion(m);
     tri::VoronoiProcessing<VoroMesh>::VoronoiColoring(m,true);
-
-    badRegionVec.clear();
-
     st2=clock();
-
     pp.vas.voronoiTime+=st2-st1;
 
     printf("Voronoi prepr.1 time = %i\n",pp.vas.voronoiTime);
@@ -263,10 +256,7 @@ public:
 
       printf("unwrapTime = %i,",pp.vas.unwrapTime);
       //printf("1. rm = %i\n",rm.get());
-      //printf("1. rm = %i\n",rm);
-      //Why if next line is uncommented next subsequent operation fails with bad vector length:  tri::Append<VoroMesh,VoroMesh>::Mesh(m, *badRegionVec[i], false);
-      //delete rm;
-
+      //printf("1. rm = %i\n",rm);    
     }
 
     printf("\n -- Completed (%i bad regions) -- \n", badRegionVec.size());
@@ -312,6 +302,9 @@ public:
     printf("rm = %i\n",rm);
 
     delete rm;
+    badRegionVec.clear();
+    seedVec.clear();
+    PoissonSamples.clear();
   } while (m.fn>0);
 
   std::vector<Similarity2f> trVec;
