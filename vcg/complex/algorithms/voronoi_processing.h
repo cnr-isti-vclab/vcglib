@@ -980,7 +980,7 @@ struct QuadricSumDistance
 
   ScalarType Eval(CoordType p) const
   {
-    ScalarType d = a*p*p + b*p + c;
+    ScalarType d = a*(p*p) + b*p + c;
     assert(d>=0);
     return d;
   }
