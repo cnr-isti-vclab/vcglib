@@ -34,8 +34,24 @@ namespace tri {
 @{
 */
 
-template <class MeshType>
-inline void ForEachFacePos(MeshType &m, std::function<void (typename face::Pos<typename MeshType::FaceType>  &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachFacePos(const MeshType &m, Callable action)
+{
+  typedef typename face::Pos<typename MeshType::FaceType> PosType;
+
+    for(auto fi=m.face.begin();fi!=m.face.end();++fi)
+        if(!(*fi).IsD())
+        {
+            for(int i=0;i<3;++i)
+            {
+                PosType pi(&*fi,i);
+                action(pi);
+            }
+        }
+}
+
+template <class MeshType, typename Callable>
+inline void ForEachFacePos(MeshType &m, Callable action)
 {
   typedef typename face::Pos<typename MeshType::FaceType> PosType;
   
@@ -60,8 +76,8 @@ inline void ForEachFacePos(MeshType &m, std::function<void (typename face::Pos<t
  *  
  */
 
-template <class MeshType>
-inline void ForEachFace(const MeshType &m, std::function<void (const typename MeshType::FaceType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachFace(const MeshType &m, Callable action)
 {
   if(m.fn == (int) m.face.size())
   {
@@ -79,8 +95,8 @@ inline void ForEachFace(const MeshType &m, std::function<void (const typename Me
   }
 }
 
-template <class MeshType>
-inline void ForEachFace(MeshType &m, std::function<void (typename MeshType::FaceType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachFace(MeshType &m, Callable action)
 {
   if(m.fn == (int) m.face.size())
   {
@@ -108,8 +124,27 @@ inline void ForEachFace(MeshType &m, std::function<void (typename MeshType::Face
  *  
  */
 
-template <class MeshType>
-inline void ForEachVertex(MeshType &m, std::function<void (typename MeshType::VertexType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachVertex(const MeshType &m, Callable action)
+{
+  if(m.vn == (int) m.vert.size())
+  {
+    for(auto vi=m.vert.begin();vi!=m.vert.end();++vi) {
+      action(*vi);
+    }
+  }
+  else
+  {
+    for(auto vi=m.vert.begin();vi!=m.vert.end();++vi)
+      if(!(*vi).IsD())
+      {
+        action(*vi);
+      }
+  }
+}
+
+template <class MeshType, typename Callable>
+inline void ForEachVertex(MeshType &m, Callable action)
 {
   if(m.vn == (int) m.vert.size())
   {
@@ -128,6 +163,54 @@ inline void ForEachVertex(MeshType &m, std::function<void (typename MeshType::Ve
 }
 
 /**
+ * ForEachHEdge Helper
+ * to traverse all the half edges of a mesh you can simply write something like:
+ *
+ *      ForEachHEdge(m, [&](const HEdgeType &he){
+ *         MakeSomethingWithHEdge(he);
+ *      });
+ *
+ */
+
+template <class MeshType, typename Callable>
+inline void ForEachHEdge(const MeshType &m, Callable action)
+{
+  if(m.hn == (int) m.hedge.size())
+  {
+    for(auto hei=m.hedge.begin();hei!=m.hedge.end();++hei) {
+      action(*hei);
+    }
+  }
+  else
+  {
+    for(auto hei=m.hedge.begin();hei!=m.hedge.end();++hei)
+      if(!(*hei).IsD())
+      {
+        action(*hei);
+      }
+  }
+}
+
+template <class MeshType, typename Callable>
+inline void ForEachHEdge(MeshType &m, Callable action)
+{
+  if(m.hn == (int) m.hedge.size())
+  {
+    for(auto hei=m.hedge.begin();hei!=m.hedge.end();++hei) {
+      action(*hei);
+    }
+  }
+  else
+  {
+    for(auto hei=m.hedge.begin();hei!=m.hedge.end();++hei)
+      if(!(*hei).IsD())
+      {
+        action(*hei);
+      }
+  }
+}
+
+/**
  * ForEachEdge Helper
  * to traverse all the vertexes of a mesh you can simply write something like:
  * 
@@ -137,8 +220,27 @@ inline void ForEachVertex(MeshType &m, std::function<void (typename MeshType::Ve
  *  
  */
 
-template <class MeshType>
-inline void ForEachEdge(MeshType &m, std::function<void (typename MeshType::EdgeType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachEdge(const MeshType &m, Callable action)
+{
+  if(m.en == (int) m.edge.size())
+  {
+    for(auto ei=m.edge.begin();ei!=m.edge.end();++ei) {
+      action(*ei);
+    }
+  }
+  else
+  {
+    for(auto ei=m.edge.begin();ei!=m.edge.end();++ei)
+      if(!(*ei).IsD())
+      {
+        action(*ei);
+      }
+  }
+}
+
+template <class MeshType, typename Callable>
+inline void ForEachEdge(MeshType &m, Callable action)
 {
   if(m.en == (int) m.edge.size())
   {
@@ -166,8 +268,8 @@ inline void ForEachEdge(MeshType &m, std::function<void (typename MeshType::Edge
  *  
  */
 
-template <class MeshType>
-inline void ForEachTetra(const MeshType &m, std::function<void (const typename MeshType::TetraType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachTetra(const MeshType &m, Callable action)
 {
   if(m.tn == (int) m.tetra.size())
   {
@@ -185,8 +287,8 @@ inline void ForEachTetra(const MeshType &m, std::function<void (const typename M
   }
 }
 
-template <class MeshType>
-inline void ForEachTetra(MeshType &m, std::function<void (typename MeshType::TetraType &)> action)
+template <class MeshType, typename Callable>
+inline void ForEachTetra(MeshType &m, Callable action)
 {
   if(m.tn == (int) m.tetra.size())
   {

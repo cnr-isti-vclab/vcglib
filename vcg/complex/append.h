@@ -76,7 +76,7 @@ public:
         std::vector<size_t> vert, face, edge, hedge, tetra;
  };
 
- static void ImportVertexAdj(MeshLeft &ml, ConstMeshRight &mr, VertexLeft &vl,   VertexRight &vr, Remap &remap ){
+ static void ImportVertexAdj(MeshLeft &ml, const ConstMeshRight &mr, VertexLeft &vl,   const VertexRight &vr, Remap &remap ){
    // Vertex to Edge Adj
    if(HasVEAdjacency(ml) && HasVEAdjacency(mr) && vr.cVEp() != 0){
      size_t i = Index(mr,vr.cVEp());
@@ -105,7 +105,7 @@ public:
    }
  }
 
- static void ImportEdgeAdj(MeshLeft &ml, ConstMeshRight &mr, EdgeLeft &el, const EdgeRight &er, Remap &remap)
+ static void ImportEdgeAdj(MeshLeft &ml, const ConstMeshRight &mr, EdgeLeft &el, const EdgeRight &er, Remap &remap)
  {
      // Edge to Edge  Adj
      if(HasEEAdjacency(ml) && HasEEAdjacency(mr))
@@ -129,7 +129,7 @@ public:
  }
 
 
- static void ImportFaceAdj(MeshLeft &ml, ConstMeshRight &mr, FaceLeft &fl, const FaceRight &fr, Remap &remap )
+ static void ImportFaceAdj(MeshLeft &ml, const ConstMeshRight &mr, FaceLeft &fl, const FaceRight &fr, Remap &remap )
  {
    // Face to Edge  Adj
    if(HasFEAdjacency(ml) && HasFEAdjacency(mr)){
@@ -183,7 +183,7 @@ public:
      fl.FHp() = &ml.hedge[remap.hedge[Index(mr,fr.cFHp())]];
  }
 
- static void ImportHEdgeAdj(MeshLeft &ml, ConstMeshRight &mr, HEdgeLeft &hl, const HEdgeRight &hr, Remap &remap, bool /*sel*/ ){
+ static void ImportHEdgeAdj(MeshLeft &ml, const ConstMeshRight &mr, HEdgeLeft &hl, const HEdgeRight &hr, Remap &remap, bool /*sel*/ ){
    // HEdge to Vertex  Adj
    if(HasHVAdjacency(ml) && HasHVAdjacency(mr))
      hl.HVp() = &ml.vert[remap.vert[Index(mr,hr.cHVp())]];
@@ -214,7 +214,7 @@ public:
      hl.HPp() = &ml.hedge[remap.hedge[Index(mr,hr.cHPp())]];
  }
 
-  static void ImportTetraAdj(MeshLeft &ml, ConstMeshRight &mr, TetraLeft &tl, const TetraRight &tr, Remap &remap )
+  static void ImportTetraAdj(MeshLeft &ml, const ConstMeshRight &mr, TetraLeft &tl, const TetraRight &tr, Remap &remap )
  {
    // Tetra to Tetra  Adj
    if(HasTTAdjacency(ml) && HasTTAdjacency(mr)){
@@ -476,6 +476,270 @@ static void Mesh(MeshLeft& ml, ConstMeshRight& mr, const bool selected = false, 
                 //        }
 }
 
+/**
+ * @brief MeshAppendConst
+ * @param ml
+ * @param mr
+ *
+ * This is function is similar with the Mesh function, but does not
+ * never update selections. In some cases, after the append,
+ * selection of vertices may be inconsistent with face selection,
+ * as explained above.
+ * To avoid this, before using this function, call the following functions:
+ *
+ * \code{.cpp}
+ * vcg::tri::UpdateSelection<MyMesh>::VertexFromEdgeLoose(mr,true);
+ * vcg::tri::UpdateSelection<MyMesh>::VertexFromFaceLoose(mr,true);
+ * \endcode
+ *
+ * or, use the Mesh function that takes a non-const Right Mesh argument.
+ */
+static void MeshAppendConst(
+        MeshLeft& ml,
+        const ConstMeshRight& mr,
+        const bool selected = false,
+        const bool adjFlag = false)
+{
+  // phase 1. allocate on ml vert,edge,face, hedge to accomodat those of mr
+  // and build the remapping for all
+
+  Remap remap;
+
+  // vertex
+  remap.vert.resize(mr.vert.size(), Remap::InvalidIndex());
+  VertexIteratorLeft vp;
+  size_t svn = UpdateSelection<ConstMeshRight>::VertexCount(mr);
+  if(selected)
+      vp=Allocator<MeshLeft>::AddVertices(ml,int(svn));
+  else
+      vp=Allocator<MeshLeft>::AddVertices(ml,mr.vn);
+
+  ForEachVertex(mr, [&](const VertexRight& v)
+  {
+    if(!selected || v.IsS())
+    {
+      size_t ind=Index(mr,v);
+      remap.vert[ind]=int(Index(ml,*vp));
+      ++vp;
+    }
+  });
+  // edge
+  remap.edge.resize(mr.edge.size(), Remap::InvalidIndex());
+  EdgeIteratorLeft ep;
+  size_t sen = UpdateSelection<ConstMeshRight>::EdgeCount(mr);
+  if(selected) ep=Allocator<MeshLeft>::AddEdges(ml,sen);
+          else ep=Allocator<MeshLeft>::AddEdges(ml,mr.en);
+
+  ForEachEdge(mr, [&](const EdgeRight& e)
+  {
+    if(!selected || e.IsS()){
+      size_t ind=Index(mr,e);
+      remap.edge[ind]=int(Index(ml,*ep));
+      ++ep;
+    }
+  });
+
+  // face
+  remap.face.resize(mr.face.size(), Remap::InvalidIndex());
+  FaceIteratorLeft fp;
+  size_t sfn = UpdateSelection<ConstMeshRight>::FaceCount(mr);
+  if(selected) fp=Allocator<MeshLeft>::AddFaces(ml,sfn);
+          else fp=Allocator<MeshLeft>::AddFaces(ml,mr.fn);
+
+  ForEachFace(mr, [&](const FaceRight& f)
+  {
+    if(!selected || f.IsS()){
+      size_t ind=Index(mr,f);
+      remap.face[ind]=int(Index(ml,*fp));
+      ++fp;
+    }
+  });
+
+  // hedge
+  remap.hedge.resize(mr.hedge.size(),Remap::InvalidIndex());
+
+  ForEachHEdge(mr, [&](const HEdgeRight& he)
+  {
+    if(!selected || he.IsS()){
+      size_t ind=Index(mr,he);
+      assert(remap.hedge[ind]==Remap::InvalidIndex());
+      HEdgeIteratorLeft hp = Allocator<MeshLeft>::AddHEdges(ml,1);
+      (*hp).ImportData(he);
+      remap.hedge[ind]=Index(ml,*hp);
+    }
+  });
+
+  remap.tetra.resize(mr.tetra.size(), Remap::InvalidIndex());
+
+  ForEachTetra(mr, [&](const TetraRight& t)
+  {
+    if (!selected || t.IsS()) {
+      size_t idx = Index(mr, t);
+      assert (remap.tetra[idx] == Remap::InvalidIndex());
+      TetraIteratorLeft tp = Allocator<MeshLeft>::AddTetras(ml, 1);
+      (*tp).ImportData(t);
+      remap.tetra[idx] = Index(ml, *tp);
+    }
+  });
+
+  // phase 2.
+  // copy data from mr to its corresponding elements in ml and adjacencies
+
+  // vertex
+  ForEachVertex(mr, [&](const VertexRight& v)
+  {
+    if(!selected || v.IsS()){
+      ml.vert[remap.vert[Index(mr,v)]].ImportData(v);
+      if(adjFlag) ImportVertexAdj(ml,mr,ml.vert[remap.vert[Index(mr,v)]],v,remap);
+    }
+  });
+
+  // edge
+  ForEachEdge(mr, [&](const EdgeRight& e)
+  {
+    if(!selected || e.IsS()){
+      ml.edge[remap.edge[Index(mr,e)]].ImportData(e);
+      // Edge to Vertex  Adj
+      EdgeLeft &el = ml.edge[remap.edge[Index(mr,e)]];
+      if(HasEVAdjacency(ml) && HasEVAdjacency(mr)){
+        el.V(0) = &ml.vert[remap.vert[Index(mr,e.cV(0))]];
+        el.V(1) = &ml.vert[remap.vert[Index(mr,e.cV(1))]];
+      }
+      if(adjFlag) ImportEdgeAdj(ml,mr,el,e,remap);
+    }
+  });
+
+  // face
+  const size_t textureOffset =  ml.textures.size();
+  bool WTFlag = HasPerWedgeTexCoord(mr) && (textureOffset>0);
+  ForEachFace(mr, [&](const FaceRight& f)
+  {
+    if(!selected || f.IsS())
+    {
+      FaceLeft &fl = ml.face[remap.face[Index(mr,f)]];
+      fl.Alloc(f.VN());
+      if(HasFVAdjacency(ml) && HasFVAdjacency(mr)){
+        for(int i = 0; i < fl.VN(); ++i)
+          fl.V(i) = &ml.vert[remap.vert[Index(mr,f.cV(i))]];
+      }
+      fl.ImportData(f);
+      if(WTFlag)
+        for(int i = 0; i < fl.VN(); ++i)
+          fl.WT(i).n() += short(textureOffset);
+      if(adjFlag)  ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,f)]],f,remap);
+
+    }
+  });
+
+  // hedge
+  ForEachHEdge(mr, [&](const HEdgeRight& he)
+  {
+    if(!selected || he.IsS()){
+      ml.hedge[remap.hedge[Index(mr,he)]].ImportData(he);
+      ImportHEdgeAdj(ml,mr,ml.hedge[remap.hedge[Index(mr,he)]],he,remap,selected);
+    }
+  });
+
+  //tetra
+  ForEachTetra(mr, [&](const TetraRight& t)
+  {
+    if(!selected || t.IsS())
+    {
+      TetraLeft &tl = ml.tetra[remap.tetra[Index(mr,t)]];
+
+      if(HasFVAdjacency(ml) && HasFVAdjacency(mr)){
+        for(int i = 0; i < 4; ++i)
+          tl.V(i) = &ml.vert[remap.vert[Index(mr,t.cV(i))]];
+      }
+        tl.ImportData(t);
+      if(adjFlag)  ImportTetraAdj(ml, mr, ml.tetra[remap.tetra[Index(mr,t)]], t, remap);
+
+    }
+  });
+
+  // phase 3.
+  // take care of other per mesh data: textures,   attributes
+
+  // At the end concatenate the vector with texture names.
+  ml.textures.insert(ml.textures.end(),mr.textures.begin(),mr.textures.end());
+
+  // Attributes. Copy only those attributes that are present in both meshes
+  // Two attributes in different meshes are considered the same if they have the same
+  // name and the same type. This may be deceiving because they could in fact have
+  // different semantic, but this is up to the developer.
+  // If the left mesh has attributes that are not in the right mesh, their values for the elements
+  // of the right mesh will be uninitialized
+
+  unsigned int id_r;
+  typename std::set< PointerToAttribute >::iterator al, ar;
+
+  // per vertex attributes
+  for(al = ml.vert_attr.begin(); al != ml.vert_attr.end(); ++al)
+    if(!(*al)._name.empty()){
+      ar =    mr.vert_attr.find(*al);
+      if(ar!= mr.vert_attr.end()){
+        id_r = 0;
+        for (auto v: mr.vert){
+          if( !v.IsD() && (!selected || v.IsS()))
+            (*al)._handle->CopyValue(remap.vert[Index(mr,v)], id_r, (*ar)._handle);
+          ++id_r;
+        }
+      }
+    }
+
+  // per edge attributes
+  for(al = ml.edge_attr.begin(); al != ml.edge_attr.end(); ++al)
+    if(!(*al)._name.empty()){
+      ar =    mr.edge_attr.find(*al);
+      if(ar!= mr.edge_attr.end()){
+        id_r = 0;
+        for (auto e: mr.edge){
+          if( !e.IsD() && (!selected || e.IsS()))
+            (*al)._handle->CopyValue(remap.edge[Index(mr,e)], id_r, (*ar)._handle);
+          ++id_r;
+        }
+      }
+    }
+
+  // per face attributes
+  for(al = ml.face_attr.begin(); al != ml.face_attr.end(); ++al)
+    if(!(*al)._name.empty()){
+      ar =    mr.face_attr.find(*al);
+      if(ar!= mr.face_attr.end()){
+        id_r = 0;
+        for (auto f: mr.face) {
+          if( !f.IsD() && (!selected || f.IsS()))
+            (*al)._handle->CopyValue(remap.face[Index(mr,f)], id_r, (*ar)._handle);
+          ++id_r;
+        }
+      }
+    }
+
+  // per tetra attributes
+  for(al = ml.tetra_attr.begin(); al != ml.tetra_attr.end(); ++al)
+    if(!(*al)._name.empty()){
+      ar =    mr.tetra_attr.find(*al);
+      if(ar!= mr.tetra_attr.end()){
+        id_r = 0;
+        for (auto t: mr.tetra) {
+          if( !t.IsD() && (!selected || t.IsS()))
+            (*al)._handle->CopyValue(remap.tetra[Index(mr, t)], id_r, (*ar)._handle);
+          ++id_r;
+        }
+      }
+    }
+
+  // per mesh attributes
+  // if both ml and mr have an attribute with the same name, no action is done
+  // if mr has an attribute that is NOT present in ml, the attribute is added to ml
+  //for(ar = mr.mesh_attr.begin(); ar != mr.mesh_attr.end(); ++ar)
+  //        if(!(*ar)._name.empty()){
+  //                al =    ml.mesh_attr.find(*ar);
+  //                if(al== ml.mesh_attr.end())
+  //                        //...
+  //        }
+}
+
 /*! \brief Copy the second mesh over the first one.
   The first mesh is destroyed. If requested only the selected elements are copied.
 */
@@ -483,6 +747,13 @@ static void MeshCopy(MeshLeft& ml, ConstMeshRight& mr, bool selected=false, cons
 {
   ml.Clear();
   Mesh(ml,mr,selected,adjFlag);
+  ml.bbox.Import(mr.bbox);
+}
+
+static void MeshCopyConst(MeshLeft& ml, const ConstMeshRight& mr, bool selected=false, const bool adjFlag = false)
+{
+  ml.Clear();
+  MeshAppendConst(ml,mr,selected,adjFlag);
   ml.bbox.Import(mr.bbox);
 }
 /*! \brief %Append only the selected elements of second mesh to the first one.

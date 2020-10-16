@@ -408,6 +408,11 @@ public:
     return (*this).Base().AV[(*this).Index()]._zp[j];
   }
 
+  char VFi(const int j) const {
+    assert((*this).Base().VFAdjacencyEnabled);
+    return (*this).Base().AV[(*this).Index()]._zp[j];
+  }
+
   char cVFi(const int j) const {
     assert((*this).Base().VFAdjacencyEnabled);
     return (*this).Base().AV[(*this).Index()]._zp[j];

@@ -183,6 +183,7 @@ typedef typename MeshType::VertexType     VertexType;
 typedef typename MeshType::VertexPointer  VertexPointer;
 typedef typename MeshType::VertexIterator VertexIterator;
 typedef typename MeshType::EdgeIterator   EdgeIterator;
+typedef typename MeshType::EdgeType       EdgeType;
 typedef typename MeshType::FaceType       FaceType;
 typedef typename MeshType::FacePointer    FacePointer;
 typedef typename MeshType::FaceIterator   FaceIterator;
@@ -269,39 +270,41 @@ static void Clear(MeshType &m)
 }
 
 /// \brief This function returns the number of selected faces.
-static size_t FaceCount(MeshType &m)
+static size_t FaceCount(const MeshType &m)
 {
   size_t selCnt=0;
-  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-    if(!(*fi).IsD() && (*fi).IsS()) ++selCnt;
+  ForEachFace(m, [&](const FaceType& f){
+    if(f.IsS()) ++selCnt;
+  });
   return selCnt;
 }
 
 /// \brief This function returns the number of selected edges.
-static size_t EdgeCount(MeshType &m)
+static size_t EdgeCount(const MeshType &m)
 {
   size_t selCnt=0;
-  for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)
-    if(!(*ei).IsD() && (*ei).IsS()) ++selCnt;
+  ForEachEdge(m, [&](const EdgeType& e){
+    if(e.IsS()) ++selCnt;
+  });
   return selCnt;
 }
 
 /// \brief This function returns the number of selected vertices.
-static size_t VertexCount(MeshType &m)
+static size_t VertexCount(const MeshType &m)
 {
   size_t selCnt=0;
-  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-    if(!(*vi).IsD() && (*vi).IsS()) ++selCnt;
+  ForEachVertex(m, [&](const VertexType& v){
+    if(v.IsS()) ++selCnt;
+  });
   return selCnt;
 }
 
 /// \brief This function returns the number of selected tetras.
-static size_t TetraCount (MeshType & m)
+static size_t TetraCount (const MeshType & m)
 {
   size_t selCnt = 0;
-  ForEachTetra(m, [&selCnt] (TetraType & t) {
-    if (t.IsS()) 
-      ++selCnt;
+  ForEachTetra(m, [&] (const TetraType & t) {
+    if (t.IsS()) ++selCnt;
   });
 
   return selCnt;

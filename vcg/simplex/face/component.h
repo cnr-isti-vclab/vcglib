@@ -114,6 +114,7 @@ public:
   typename T::HEdgePointer &FHp()       { static typename T::HEdgePointer fp=0; assert(0); return fp; }
   typename T::HEdgePointer cFHp() const { static typename T::HEdgePointer fp=0; assert(0); return fp; }
   char &VFi(int)       { static char z=0; assert(0); return z;}
+  char  VFi(int) const { static char z=0; assert(0); return z;}
   char &FFi(int)       { static char z=0; assert(0); return z;}
   char cVFi(int) const { static char z=0; assert(0); return z;}
   char cFFi(int) const { static char z=0; assert(0); return z;}
