@@ -318,7 +318,7 @@ private:
     // In this implemenation we simply put the new vertex in the MidPoint position.
     // Color and TexCoords are interpolated accordingly.
     template<class MESH_TYPE>
-    struct SplitMidPoint : public   std::unary_function<vcg::face::Pos<typename MESH_TYPE::FaceType> ,  typename MESH_TYPE::CoordType >
+    struct SplitMidPoint
     {
         typedef typename MESH_TYPE::VertexType VertexType;
         typedef typename MESH_TYPE::FaceType FaceType;

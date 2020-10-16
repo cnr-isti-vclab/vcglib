@@ -733,6 +733,7 @@ public:
 		return Point4( _v[0]*s, _v[1]*s , _v[2]*s , _v[3]*s ); }
 
 	inline PointType operator ^ ( PointType const & p ) const {
+		(void)p;
 		assert(0);
 		return *this;
 	}
