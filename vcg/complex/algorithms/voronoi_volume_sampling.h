@@ -88,9 +88,10 @@ public:
     surfGrid.SetWithRadius(baseMesh.face.begin(),baseMesh.face.end(),poissonRadiusSurface);
     mf.SetMesh(&baseMesh);
   }
-    // Compute the signed distance from the surface exploting both a kdtree and a ugrid 
+    // Compute the signed distance from the surface exploiting both a kdtree and a ugrid 
     // for a query point p first we use the kdtree with a good poisson sampling of the surface;
-    // to get the nearest point on the surface, then if the point is far from the surface we can use the point point distance, while if it is near (e.g. less than 3*poisson radius) we rely on point face distance with a grid.
+    // to get the nearest point on the surface, then if the point is far from the surface we can use the point distance, while if it is near (e.g. less than 3*poisson radius) 
+    // we rely on point face distance with a grid.
   ScalarType DistanceFromSurface(const CoordType &q, CoordType &closestP)
   {
     ScalarType squaredDist;
@@ -127,7 +128,6 @@ public:
  * To make things simpler and more controllable we estabilish since the beginning a Domain where we can choose the points.
  * 
  */
-
 
 
 template< class MeshType>
@@ -198,8 +198,6 @@ public:
     
   }
 
-
-
 ScalarType DistanceFromVoronoiSeed(const CoordType &p_point)
 {
   ScalarType squaredDist;
@@ -245,7 +243,7 @@ ScalarType DistanceFromVoronoiInternalEdge(const CoordType &p_point)
     Plane3<ScalarType>  pl02; pl02.Init((p0+p2)/2.0f,p0-p2);
     Line3<ScalarType>   voroLine;
 
-    // Calculating the line R that intersect the planes pl01 and pl02
+    // Calculating the line R that intersects the planes pl01 and pl02
     vcg::IntersectionPlanePlane(pl01,pl02,voroLine);
     // Calculating the distance k between the point p_point and the line R.
     CoordType closestPt;
@@ -270,8 +268,7 @@ ScalarType DistanceFromVoronoiSurfaceEdge(const CoordType &p_point, const CoordT
   Plane3<ScalarType>  pl12; pl12.Init((p1+p2)/2.0f,p1-p2);
   Line3<ScalarType>   voroLine;
   
-    
-    // Calculating the line R that intersect the planes pl01 and pl02
+    // Calculating the line R that intersects the planes pl01 and pl02
     vcg::IntersectionPlanePlane(pl01,pl02,voroLine);
     // Calculating the distance k between the point p_point and the line R.
     CoordType closestPt;
@@ -304,7 +301,7 @@ ScalarType DistanceFromVoronoiCorner(const CoordType &p_point)
     Plane3<ScalarType>  pl03; pl03.Init((p0+p3)/2.0f,p0-p3);
     Line3<ScalarType>   voroLine;
     
-    // Calculating the line R that intersect the planes pl01 and pl02
+    // Calculating the line R that intersects the planes pl01 and pl02
     vcg::IntersectionPlanePlane(pl01,pl02,voroLine);
     CoordType intersectionPt;
     vcg::IntersectionLinePlane(voroLine,pl03,intersectionPt);
@@ -323,7 +320,7 @@ void BarycentricRelaxVoronoiSamples(int relaxStep)
     
     std::vector<std::pair<int,CoordType> > sumVec(seedMesh.vn,std::make_pair(0,CoordType(0,0,0)));
     
-    // First accumulate for each seed the coord of all the samples that are closest to him.
+    // First accumulate for each seed the coord of all the samples that are closest to it.
     for(typename MeshType::VertexIterator vi=montecarloVolumeMesh.vert.begin();vi!=montecarloVolumeMesh.vert.end();++vi)
     {
       unsigned int seedInd;
@@ -538,8 +535,6 @@ void BuildScaffoldingMesh(MeshType &scaffoldingMesh, const Param &pp)
         else volume.Val(i,j,k) = nearVal;
       }
 
-  
-  
   int t1=clock();
   VVSWalker    walker;
   VVSMarchingCubes	 mc(scaffoldingMesh, walker);
@@ -552,24 +547,18 @@ void BuildScaffoldingMesh(MeshType &scaffoldingMesh, const Param &pp)
 
 void OptimizeIsosurf(MeshType &m, const Param &pp)
 {
-  int t0=clock();
-  int flipCnt=0;
+  int t0=clock(),flipCnt=0;
   tri::Allocator<MeshType>::CompactEveryVector(m);
   tri::UpdateTopology<MeshType>::FaceFace(m);
   for(int i=0;i<m.fn;++i)
   {
-    for(int j=0;j<3;++j)
+    for(short j=0;j<3;++j)
     {
       FaceType &f=m.face[i];
       if(face::CheckFlipEdge(f,j))        
       {
-        CoordType midOld = (f.P0(j)+f.P1(j))/2.0;
-        FaceType *fop = f.FFp(j);
-        int foi= f.FFi(j);
-        CoordType midNew = (f.P2(j)+fop->P2(foi))/2.0;
-        
-        ScalarType oldVal = ImplicitFunction(midOld,pp);
-        ScalarType newVal = ImplicitFunction(midNew,pp);
+        CoordType midOld = (f.P0(j)+f.P1(j))/2.0,midNew = (f.P2(j)+f.FFp(j)->P2(f.FFi(j)))/2.0;
+        ScalarType oldVal = ImplicitFunction(midOld,pp),newVal = ImplicitFunction(midNew,pp);
         if(fabs(oldVal)-fabs(newVal) > pp.voxelSide/4.0)
         {
           face::FlipEdge(f,j);
@@ -583,7 +572,7 @@ void OptimizeIsosurf(MeshType &m, const Param &pp)
 }
 
 /** Given a surface sampling it adds to the montecarloVolumeMesh, a number of near surface samples. 
- * For each surface it try to add a sample generated as a point in the half ball of <radius> centered on the sample.
+ * For each surface it tries to add a sample generated as a point in the half ball of <radius> centered on the sample.
 */
 
 void RefineMontecarloVolumeSamplingNearSurface(MeshType &surfaceSamplingMesh, ScalarType radius, int perSampleNum)
