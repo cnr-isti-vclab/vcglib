@@ -43,6 +43,7 @@
 #include <array>
 #include <utility>
 
+#define RANDGENSEED 5489u //Random Generator Seed
 
 //#define DEBUG_VORO 1
 
@@ -173,7 +174,7 @@ public:
 		}
 
 		// Mark the non manifold border vertices as visited on the input mesh
-		// TODO maybe optimize this
+		// TODO: maybe to optimize this
 		{
 			// extract border mesh
 			EdgeMeshType em;
@@ -206,6 +207,7 @@ public:
 
 				typedef EdgeMeshType::CoordType Coord;
 				EdgeMeshType::ScalarType dist_upper_bound = bbox.Diag()/1000.0;
+				
 				for (VertexType & v : original.vert)
 				{
 					EdgeMeshType::ScalarType dist;
@@ -357,8 +359,8 @@ protected:
 
 		// refine to obtain a base mesh
 		VoronoiProcessingParameter vpp;
-		vpp.refinementRatio = 5.0f;
-    vpp.lcb = debugCallBack;
+		//vpp.refinementRatio = 5.0f; the same as default and so this line can be removed
+                vpp.lcb = debugCallBack;
     
 		Voronoi::PreprocessForVoronoi(baseMesh, samplingRadius, vpp);
 
@@ -372,7 +374,7 @@ protected:
 		BaseSampler mps(sampleVec);
 
 		// NOTE in order to make the results consistent the random sampling generator is initialized with the same value
-		SurfaceSampler::SamplingRandomGenerator().initialize(5489u);
+		SurfaceSampler::SamplingRandomGenerator().initialize(RANDGENSEED);
 
 		// Montecarlo oversampling
 		Mesh montecarloMesh;
@@ -432,9 +434,9 @@ protected:
 			return std::make_shared<Mesh>();
 		}
 
-		// TODO: rimettere a posto
+		// TODO: return to its proper place
 		// restricted relaxation with fixed points
-		Voronoi::RandomGenerator().initialize(5489u);
+		Voronoi::RandomGenerator().initialize(RANDGENSEED);
 		vpp.seedPerturbationProbability = 0.2f;
 		vpp.seedPerturbationAmount      = 0.005f;
 		Voronoi::RestrictedVoronoiRelaxing(baseMesh, seedPointVec, seedFixedVec, VoroRelaxationStep, vpp);
