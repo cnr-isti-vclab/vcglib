@@ -66,11 +66,10 @@ int main(int ,char ** )
   UnMarkAll(m);
 
   // Now a simple search and trace of all the borders of the mesh
-  int BorderEdgeNum=0;
-  int HoleNum=0;
+  int BorderEdgeNum=0,HoleNum=0;
   for(MyMesh::FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
   {
-    for(int j=0;j<3;j++)
+    for(short j=0;j<3;j++)
     {
       if ( face::IsBorder(*fi,j) && !tri::IsMarked(m,&*fi))
       {
