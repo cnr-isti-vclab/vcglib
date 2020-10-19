@@ -59,7 +59,7 @@ int main(int ,char ** )
   // randomly perturb a few coord textures introducing fake seams
   for(MyFace &f : m.face)
   {
-    for(int i=0;i<3;++i)
+    for(short i=0;i<3;++i)
       if(rand()%20==0)
       {
         f.WT(i).U()+=0.0000001;
