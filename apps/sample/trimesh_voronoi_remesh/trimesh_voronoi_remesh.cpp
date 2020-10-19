@@ -23,6 +23,7 @@
 #include<vcg/complex/complex.h>
 #include<wrap/io_trimesh/import.h>
 #include<wrap/io_trimesh/export_ply.h>
+#include<wrap/io_trimesh/export_stl.h>
 #include <vcg/complex/algorithms/voronoi_remesher.h>
 
 using namespace vcg;
@@ -56,10 +57,8 @@ class MyMesh   : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<My
 int main( int argc, char **argv )
 {
   MyMesh startMesh;
-  if(argc < 2 )
+  if(argc < 1 )
   {
-    printf("Usage trimesh_voro mesh samplingRadius\n"
-           "samplingRadius is in the same unit of the mesh and is approximately the expected edge length");
     return -1;
   }
   printf("Reading %s  \n",argv[1]);
@@ -69,19 +68,51 @@ int main( int argc, char **argv )
     printf("Unable to open %s: '%s'\n",argv[1],tri::io::ImporterPLY<MyMesh>::ErrorMsg(ret));
     return -1;
   }
+		
+  float srcoeff = 0.005f,bordercrangle=70,internalcrangle=30;
+
+  printf("Remeshing, Enter samplingRadius coefficient: \n");
+
+  cin>>srcoeff;
+
+  printf("Enter Border Crease Angle in degrees: \n");
+
+  cin>>bordercrangle;
+
+  printf("Enter Internal Crease Angle in degrees: \n");
+
+  cin>>internalcrangle;
+
+  int dv=tri::Clean<MyMesh>::RemoveDuplicateVertex(startMesh);
+  printf("Removed in startMesh %i duplicated vertices\n",dv);
+
+  int unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(startMesh);
+  printf("Removed %i unreferenced vertices from mesh\n",unref);
+
   tri::UpdateBounding<MyMesh>::Box(startMesh);
 
-  float samplingRadius = startMesh.bbox.Diag() * 0.005f;
-  if (argc == 3)
-  {
-	  try {
-		samplingRadius = stof(string(argv[2]));
-	  } catch (exception &) {}
-  }
+  float samplingRadius = startMesh.bbox.Diag() * srcoeff;
+
+  printf("startMesh.bbox.Diag() = %i\n",startMesh.bbox.Diag());
+
   std::cout << "Remeshing using sampling radius: " << samplingRadius << std::endl;
-  auto remeshed = Remesher<MyMesh>::Remesh(startMesh, samplingRadius, 70.0);
+
+  auto remeshed = Remesher<MyMesh>::Remesh(startMesh,samplingRadius,bordercrangle,internalcrangle);
+
+  dv=tri::Clean<MyMesh>::RemoveDuplicateVertex(*remeshed);
+  printf("Removed in remeshed %i duplicated vertices\n",dv);
+
+  unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(*remeshed);
+  printf("Removed %i unreferenced vertices from remeshed \n",unref);
   
-  
-  tri::io::ExporterPLY<MyMesh>::Save(*remeshed,"Full.ply",tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );
+  tri::io::ExporterPLY<MyMesh>::Save(*remeshed,"Remeshed.ply",tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );
+
+  tri::io::ExporterSTL<MyMesh>::Save(*remeshed,"Remeshed.stl",tri::io::Mask::IOM_VERTCOLOR|tri::io::Mask::IOM_WEDGTEXCOORD );
+
+  printf("The end of the application, pls. enter any written symbol(rune) and press Enter to exit.");
+
+  char c;
+  cin>>c;
+	
   return 0;
 }
