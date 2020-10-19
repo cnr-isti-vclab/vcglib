@@ -206,21 +206,10 @@ int main(int argc,char ** argv)
     return 1;
   }
 
-  std::string inp,outp;
+  printf("Executing img_filters over all images in \"%s\", ouput is in \"%s\"\n",  argv[1], argv[2]);
 
-  printf("R&D Work: Enter input directory: \n");
-
-  std::cin>>inp;
-
-  printf("R&D Work: Enter output directory: \n");
-
-  std::cin>>outp;
-
-  //printf("Executing img_filters over all images in \"%s\", ouput is in \"%s\"\n",inp, outp);
-
-  QString input_dir(inp.c_str());
-  QString output_dir(outp.c_str());
-
+  QString input_dir(argv[1]);
+  QString output_dir(argv[2]);
 
   QStringList readable_image_extensions = QStringList()
        << "*.bmp" << "*.gif" << "*.jpg" << "*.jpeg"
@@ -234,7 +223,7 @@ int main(int argc,char ** argv)
     foreach(QString image, image_list)
       img_filters(input_dir,image,output_dir);  
   } catch (img::ImageException& e) {
-    qDebug() << "caught ImageException, message:" << e.message;
+    std::cout << "caught ImageException, message:" << e.message;
   }
 
   printf("The end of the application, pls. enter any written symbol(rune) and press Enter to exit.");
