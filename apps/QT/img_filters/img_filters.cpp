@@ -4,7 +4,7 @@
  *                                                                _   O  _   *
  * Copyright(C) 2009                                                \/)\/    *
  * Visual Computing Lab                                            /\/|      *
- * ISTI - Italian National Research Council                           |      *
+ * ISTI - Italian National Research Council+                           |      *
  *                                                                    \      *
  * All rights reserved.                                                      *
  *                                                                           *
@@ -23,6 +23,9 @@
 
 #include <QtCore>
 #include "wrap/qt/img_qt.h"
+#include <utility>
+
+using namespace std;
 
 void sample001_open_save_color(QString input_file, QString output_file)
 {
@@ -50,7 +53,7 @@ void sample004_boxfilter(QString input_file, QString output_file)
 {
   img::Image<> image;
   img::openQtRGB(input_file, image);
-  int radius=3;
+  short radius=3;
   img::saveQtRGB(img::getBoxFiltered(image,radius), output_file);
 }
 
@@ -58,7 +61,7 @@ void sample005_gaussiansmooth(QString input_file, QString output_file)
 {
   img::Image<> image;
   img::openQtRGB(input_file, image);
-  int radius=4;
+  short radius=4;
   img::saveQtRGB(img::getGaussianSmoothed(image,radius), output_file);
 }
 
@@ -66,7 +69,7 @@ void sample006_medianfilter(QString input_file, QString output_file)
 {
   img::Image<> image;
   img::openQtRGB(input_file, image);
-  int radius=5;
+  short radius=5;
   img::saveQtRGB(img::getMedianFiltered(image,radius), output_file);
 }
 
@@ -75,8 +78,8 @@ void sample007_unsharpmask(QString input_file, QString output_file)
   img::Image<> image;
   img::openQtRGB(input_file, image);
 
-  int radius=4;
-  double factor=0.6;
+  short radius=4;
+  float factor=0.6;
 
   img::saveQtRGB(img::getUnsharpMasked(image,radius,factor), output_file);
 }
@@ -95,7 +98,7 @@ void sample009_logfilter(QString input_file, QString output_file)
 {
   img::Image<> image;
   img::openQtRGB(input_file, image);
-  int radius=5;
+  short radius=5;
   img::Image<> logfiltered;
   img::LoGFilter(image,logfiltered,radius);
   img::saveQtRGB(img::getNormalized(logfiltered), output_file);
@@ -106,8 +109,7 @@ void sample010_dogfilter(QString input_file, QString output_file)
   img::Image<> image;
   img::openQtRGB(input_file, image);
   // must be radius1 < radius2
-  int radius1=2; 
-  int radius2=4;
+  short radius1=2, radius2=4;
   img::Image<> dogfiltered;
   img::DoGFilter(image,dogfiltered,radius1,radius2);
 
@@ -119,49 +121,58 @@ void sample011_general_convolutions(QString input_file, QString output_dir,QStri
   img::Image<> image;
   img::openQtRGB(input_file, image);
 
-  QVector< QPair< double*, QPair< QPair< int, int > , QString> > > mm;
-  double *f;
+  QVector< pair<float*, QPair< QPair< int, int > , QString> > > mm;
 
-  f=new double[9];
-  f[0]= 0.0f; f[1]= 0.0f; f[2]= 0.0f;
-  f[3]=-1.0f; f[4]= 1.0f; f[5]= 0.0f;
-  f[6]= 0.0f, f[7]= 0.0f; f[8]= 0.0f;
-  mm.push_back(qMakePair(f,qMakePair(qMakePair(3,3),QString("edge_enhance"))));    
+  //float *f;
+  //f=new float[9];
+  //f[0]= 0.0f; f[1]= 0.0f; f[2]= 0.0f;
+  //f[3]=-1.0f; f[4]= 1.0f; f[5]= 0.0f;
+  //f[6]= 0.0f, f[7]= 0.0f; f[8]= 0.0f;
 
-  f=new double[9];
-  f[0]= 2.0f; f[1]= 0.0f; f[2]= 0.0f;
-  f[3]= 0.0f; f[4]=-1.0f; f[5]= 0.0f;
-  f[6]= 0.0f, f[7]= 0.0f; f[8]=-1.0f;
-  mm.push_back(qMakePair(f,qMakePair(qMakePair(3,3),QString("embross"))));    
+  float f[9] = {0.0f,0.0f,0.0f,-1.0f,1.0f,0.0f,0.0f,0.0f,0.0f};
+  mm.push_back(make_pair(f,qMakePair(qMakePair(3,3),QString("edge_enhance"))));
 
-  f=new double[15];
-  f[0] = 1.0f; f[1] = 2.0f; f[2] =  0.0f; f[3] = 2.0f; f[4] = 1.0f;
-  f[5] = 1.0f; f[6] = 2.0f; f[7] =-18.0f; f[8] = 2.0f; f[9] = 1.0f;
-  f[10]= 1.0f; f[11]= 2.0f; f[12]=  0.0f; f[13]= 2.0f; f[14]= 1.0f;
-  mm.push_back(qMakePair(f,qMakePair(qMakePair(5,3),QString("my_vert_edges"))));
+//  f=new float[9];
+//  f[0]= 2.0f; f[1]= 0.0f; f[2]= 0.0f;
+//  f[3]= 0.0f; f[4]=-1.0f; f[5]= 0.0f;
+//  f[6]= 0.0f, f[7]= 0.0f; f[8]=-1.0f;
 
-  f=new double[15];
-  f[0] = 1.0f; f[1] =  1.0f; f[2] = 1.0f; 
-  f[3] = 2.0f; f[4] =  2.0f; f[5] = 2.0f; 
-  f[6] = 0.0f; f[7] =-18.0f; f[8] = 0.0f; 
-  f[9] = 2.0f; f[10]=  2.0f; f[11]= 2.0f; 
-  f[12]= 1.0f; f[13]=  1.0f; f[14]= 1.0f;
-  mm.push_back(qMakePair(f,qMakePair(qMakePair(3,5),QString("my_horiz_edges"))));
+  float f1[9] = {2.0f,0.0f,0.0f,0.0f,-1.0f,0.0f,0.0f,0.0f,-1.0f};
+  mm.push_back(make_pair(f1,qMakePair(qMakePair(3,3),QString("embross"))));
 
-  QPair< double*, QPair< QPair< int, int > , QString> > m;
+//  f=new float[15];
+//  f[0] = 1.0f; f[1] = 2.0f; f[2] =  0.0f; f[3] = 2.0f; f[4] = 1.0f;
+//  f[5] = 1.0f; f[6] = 2.0f; f[7] =-18.0f; f[8] = 2.0f; f[9] = 1.0f;
+//  f[10]= 1.0f; f[11]= 2.0f; f[12]=  0.0f; f[13]= 2.0f; f[14]= 1.0f;
+
+  float f2[15] = {1.0f,2.0f,0.0f,2.0f,1.0f,1.0f,2.0f,-18.0f,2.0f,1.0f,1.0f,2.0f,0.0f,2.0f,1.0f};
+  mm.push_back(make_pair(f2,qMakePair(qMakePair(5,3),QString("my_vert_edges"))));
+
+//  f=new float[15];
+//  f[0] = 1.0f; f[1] =  1.0f; f[2] = 1.0f;
+//  f[3] = 2.0f; f[4] =  2.0f; f[5] = 2.0f;
+//  f[6] = 0.0f; f[7] =-18.0f; f[8] = 0.0f;
+//  f[9] = 2.0f; f[10]=  2.0f; f[11]= 2.0f;
+//  f[12]= 1.0f; f[13]=  1.0f; f[14]= 1.0f;
+
+  float f3[15] = {1.0f,1.0f,1.0f,2.0f,2.0f,2.0f,0.0f,-18.0f,0.0f,2.0f,2.0f,2.0f,1.0f,1.0f,1.0f};
+  mm.push_back(make_pair(f3,qMakePair(qMakePair(3,5),QString("my_horiz_edges"))));
+
+  pair< float*, QPair< QPair< int, int > , QString> > m;
+
 
   foreach(m,mm){
-    double* matrix=m.first;
-    int matrix_width=((m.second).first).first;
-    int matrix_height=((m.second).first).second;
+
+    int matrix_width=((m.second).first).first,matrix_height=((m.second).first).second;
+
     QString matrix_name=(m.second).second;
 
     img::Image<> convolved;
-    img::convolution(image,convolved,matrix,matrix_width,matrix_height);
 
-    delete [] matrix; 
+    img::convolution(image,convolved,(double*)m.first,matrix_width,matrix_height);
 
     bool normalize=(img::minValue(convolved)<0.0f)||(img::maxValue(convolved)>=255.0f);
+
     QString output_file(output_dir+"/011_general_convolution_"+matrix_name+
                         "_"+(normalize?" normalized_":"")+output_suffix);
 
@@ -170,11 +181,14 @@ void sample011_general_convolutions(QString input_file, QString output_dir,QStri
     else
       img::saveQtRGB(convolved,output_file);
   }
+
+  //delete f;
 }
 
 void img_filters(QString input_dir,QString image,QString output_dir)
 {
   QString input_file(input_dir+"/"+image);
+
   sample001_open_save_color(input_file, output_dir+"/001-open_save_color_"+image);
 
   sample002_open_save_grayscale(input_file, output_dir+"/002-open_save_grayscale_"+image);
@@ -198,7 +212,7 @@ void img_filters(QString input_dir,QString image,QString output_dir)
   sample011_general_convolutions(input_file, output_dir,image);
 }
 
-bool clean_dir(QDir dir); // utility, unrelated with the sample 
+bool clean_dir(QDir dir); // utility, unrelated with the sample
 
 int main(int argc,char ** argv)
 {
@@ -224,30 +238,30 @@ int main(int argc,char ** argv)
     foreach(QString image, image_list)
       img_filters(input_dir,image,output_dir);  
   } catch (img::ImageException& e) {
-    qDebug() << "caught ImageException, message:" << e.message;
+    cout << "caught ImageException, message:" << e.message;
   }
   return 0;
 }
 
 bool clean_dir(QDir dir){ // utility, unrelated with the sample
   if(!dir.exists()){
-    qDebug() << QString("dir \"%1\" does not exists\n").arg(dir.path());
+    cout << QString("dir \"%1\" does not exists\n").arg(dir.path()).toStdString();
     return false;
   }
   foreach(QString e,dir.entryList(QDir::NoDotAndDotDot|QDir::Dirs|QDir::Files)){
     QFileInfo i(QString("%1/%2").arg(dir.path(),e));
     if(i.isDir()){
       if(!clean_dir(QDir(QString("%1/%2").arg(dir.path(),e)))){
-        qDebug() << QString("cannot clean \"%1/%2\"\n").arg(dir.path(),e);
+          cout << QString("cannot clean \"%1/%2\"\n").arg(dir.path(),e).toStdString();
         return false;
       }
       if(!dir.rmdir(e)){
-        qDebug() << QString("cannot remove \"%1/%2\"\n").arg(dir.path(),e);
+          cout << QString("cannot remove \"%1/%2\"\n").arg(dir.path(),e).toStdString();
         return false;
       }
     }else{
       if(!dir.remove(e)){
-        qDebug() << QString("cannot remove \"%1/%2\"\n").arg(dir.path(),e);
+          cout << QString("cannot remove \"%1/%2\"\n").arg(dir.path(),e).toStdString();
        return false;
       }
     }
