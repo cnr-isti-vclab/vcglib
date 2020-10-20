@@ -55,29 +55,28 @@ inline void convolution(const Image<Channels,SrcScalarType,SrcSafe> &source,Imag
   destination.setZero(source.width(),source.height()); 
   destination.attributes=source.attributes;
   
-  int x_radius=(matrix_width-1)/2;
-  int y_radius=(matrix_height-1)/2;
+  int x_radius=(matrix_width-1)/2,y_radius=(matrix_height-1)/2;
+  
+  // for each channel
+  for(int channel=0; channel < Channels ;channel++){ // image channels
 
-  // per ogni canale
-  for(int channel=0; channel < Channels ;channel++){ // canali immagine
+    // for each row
+    for (int y = 0; y < source.height(); y++){ // image lines
 
-    // per ogni riga
-    for (int y = 0; y < source.height(); y++){ // righe immagine
-
-      // per ogni pixel nella riga
-      for (int x = 0; x < source.width(); x++){ // colonne immagine
+      // for each pixel in the row
+      for (int x = 0; x < source.width(); x++){ // image columns
       DestScalarType sum=0.0f;
       int offset=0;
       
-      for(int my = y-y_radius; my <= y+y_radius; my++) // righe matrice
-        for(int mx = x-x_radius; mx <= x+x_radius; mx++) //colonne matrice
+      for(int my = y-y_radius; my <= y+y_radius; my++) // matrix rows
+        for(int mx = x-x_radius; mx <= x+x_radius; mx++) //column matrix
           sum += matrix[offset++] * static_cast<DestScalarType>(source.getValueAsClamped(mx,my,channel));
       
      destination.setValue(x,y,channel,sum);
 
-      } // colonne immagine
-    } // righe immagine
-  } // canali immagine
+      } // image columns
+    } // image lines
+  } // image channels
 }
 
 template<int Channels, typename ScalarType, bool Safe> // get[filter]ed() functions constrain return type to be the same of the parameter 
@@ -95,10 +94,9 @@ inline void boxFilter(const Image<Channels,SrcScalarType,SrcSafe> &source,Image<
   if(SrcSafe || DestSafe){
     if(radius <= 0) throw ImageException("Nonpositive radius");
   }
-  int matrix_side=2*radius+1;
-  int matrix_size=matrix_side*matrix_side;
-  DestScalarType* matrix=new DestScalarType[matrix_size];
-  DestScalarType val=1.0f/matrix_size;
+  int matrix_side=2*radius+1,matrix_size=matrix_side*matrix_side;
+  DestScalarType* matrix=new DestScalarType[matrix_size],val=1.0f/matrix_size;
+
   for(int i=0; i<matrix_size; i++)
     matrix[i]=val;
   convolution(source,destination,matrix,matrix_side,matrix_side);
@@ -128,12 +126,8 @@ inline void _gaussian(const int &radius,const ScalarType &sigma,ScalarType * &ma
     for(int x = -radius;x <= radius; x++) 
       matrix[offset++] = exp( (x*x+y*y)*c );
 
-  // porto la matrice a somma 1
-  ScalarType sum=0.0f;
-  for(int i=0;i<matrix_size;i++)
-    sum+=matrix[i];
-  for(int i=0;i<matrix_size;i++)
-    matrix[i]/=sum;
+  // sum over elements of the matrix and its normalization 1
+  pr_matrix(matrix);
 }
 
 template<int Channels, typename SrcScalarType, bool SrcSafe,typename DestScalarType, bool DestSafe> 
@@ -187,7 +181,7 @@ inline void _laplacian_of_gaussian(const int &radius,const ScalarType &sigma,Sca
   int matrix_size=matrix_side*matrix_side;
   matrix=new ScalarType[matrix_size];
   
-  // calcolo la matrice
+  // calculations on the matrix
   int offset=0;
     
   const ScalarType c1 = -0.5f/(sigma*sigma);
@@ -199,12 +193,8 @@ inline void _laplacian_of_gaussian(const int &radius,const ScalarType &sigma,Sca
       matrix[offset++] = (1+c) * exp(c);
     }
       
-  // porto la matrice a somma 1
-  ScalarType sum=0.0f;
-  for(int i=0;i<matrix_size;i++)
-    sum+=matrix[i];
-  for(int i=0;i<matrix_size;i++)
-    matrix[i]/=sum;
+  // sum over elements of the matrix and its normalization 1
+  pr_matrix(matrix);
 }
 
 template<int Channels, typename SrcScalarType, bool SrcSafe,typename DestScalarType, bool DestSafe> 
@@ -246,33 +236,36 @@ inline void DoGFilter(const Image<Channels,SrcScalarType,SrcSafe> &source,Image<
   int matrix_side=0;
 
   DestScalarType *m1=NULL,*m2=NULL;
-  const DestScalarType sigma1=radius1/3.0f;
-  const DestScalarType sigma2=radius2/3.0f;
+  const DestScalarType sigma1=radius1/3.0f,DestScalarType sigma2=radius2/3.0f;
   
-  // ottengo la prima gaussiana (col radius della seconda)
+  // I get the first Gaussian (with the radius of the second)
   _gaussian(radius2,sigma1,m1,matrix_side);
-  // ottengo la seconda gaussiana
+  // I get the second Gaussian
   _gaussian(radius2,sigma2,m2,matrix_side);
   
   int matrix_size=matrix_side*matrix_side;
   
-  
-  // sottraggo alla prima gaussiana la seconda
+  // subtracting the second from the first Gaussian
   for(int i=0;i<matrix_size;i++)
       m1[i] -= m2[i];
 
-  // riporto la matrice a somma 1
-  DestScalarType sum=0.0f;
-  for(int i=0;i<matrix_size;i++)
-    sum+=m1[i];
-  for(int i=0;i<matrix_size;i++)
-    m1[i]/=sum;
+  // carrying over the matrix to sum
+  pr_matrix(m1);
  
   convolution(source,destination,m1,matrix_side,matrix_side);
   delete [] m1; 
   delete [] m2; 
 }
 
+void pr_matrix(DestScalarType *matrix,int matrix_size)
+  {
+  DestScalarType sum=0.0f;
+  for(int i=0;i<matrix_size;i++)
+    sum+=matrix[i];
+  for(int i=0;i<matrix_size;i++)
+    matrix[i]/=sum; 
+  }
+  
 template<int Channels, typename ScalarType, bool Safe> // get[filter]ed() functions constrain return type to be the same of the parameter 
 inline Image<Channels,ScalarType,Safe> getDoGFiltered(const Image<Channels,ScalarType,Safe> &image,int radius1,int radius2)
 { 
@@ -290,14 +283,14 @@ inline void UnsharpMask(const Image<Channels,SrcScalarType,SrcSafe> &source,Imag
     if(radius <= 0.0f) throw ImageException("Nonpositive radius");
     if(factor <= 0.0f) throw ImageException("Nonpositive factor");
   }
-  // metto l'immagine smoothata in destination
+  // putting the smoothing image in destination
   GaussianSmooth(source,destination,radius);
   
   DestScalarType* source_array = source.dataValues();
   DestScalarType* destination_array = destination.dataValues();
   int length = source.dataValuesSize();
  
-  // unsharpo destination in loco
+  // unsharp destination on site
   for(int offset=0;offset<length;offset++)
       destination_array[offset] = source_array[offset]+factor*(source_array[offset]-destination_array[offset]);
 
@@ -323,23 +316,23 @@ inline void medianFilter(const Image<Channels,SrcScalarType,SrcSafe> &source,Ima
   destination.setZero(source.width(),source.height()); 
   destination.attributes=source.attributes;
  
-  // per ogni canale
-  for(int channel=0; channel < Channels;channel++){ // canali immagine
+  // for each channel
+  for(int channel=0; channel < Channels;channel++){ // channel of the image
 
-    // per ogni riga
-    for (int y = 0; y < source.height(); y++){ // righe immagine
+    // for each row
+    for (int y = 0; y < source.height(); y++){ // image lines
 
-      // per ogni pixel nella riga
-      for (int x = 0; x < source.width(); x++){ // colonne immagine
+      // for each pixel in the row
+      for (int x = 0; x < source.width(); x++){ // image columns
         
-        // memorizzo i valori dell'intorno
+      // memorizing the surrounding values
       std::vector<DestScalarType> v;
-      for(int my = y-radius; my <= y+radius; my++) // righe intorno
-        for(int mx = x-radius; mx <= x+radius; mx++) //colonne intorno
+      for(int my = y-radius; my <= y+radius; my++) // lines around
+        for(int mx = x-radius; mx <= x+radius; mx++) //columns around
           if (source.isInside(mx,my))
           v.push_back(static_cast<DestScalarType>(source.getValue(mx,my,channel)));
          
-      // ottengo la mediana 
+      // getting median 
       int s=v.size();
       assert(s>0);
       nth_element (v.begin(), v.begin()+(s/2), v.end());
@@ -348,12 +341,12 @@ inline void medianFilter(const Image<Channels,SrcScalarType,SrcSafe> &source,Ima
       nth_element (v.begin(), v.begin()+(s/2)+1, v.end());
         median = ( *(v.begin()+(s/2)+1) + median ) /2.0f;
       }      
-     // aggiorno il valore alla mediana dell'intorno
+     // updating the value to the median of the neighborhood
      destination.setValue(x,y,channel,median);
 
-      } // colonne immagine
-    } // righe immagine
-  } // canali immagine
+      } // image columns
+    } // image lines
+  } // image channels
 }
 
 template<int Channels, typename ScalarType, bool Safe> // get[filter]ed() functions constrain return type to be the same of the parameter 
