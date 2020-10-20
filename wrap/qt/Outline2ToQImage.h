@@ -75,18 +75,18 @@ public:
       }
   };
 private:
-	///this class draw a black mask fora given polygon, cenetered and scaled to fit with
-	///the image size, it return the transformation to tranform back the polygon to 2D space
+	///this class drawa a black mask for a given polygon, cenetered and scaled to fit with
+	///the image size, it returna the transformation to tranform back the polygon to 2D space
 	static void DrawPolygonMask(const std::vector< std::vector<vcg::Point2f> > &polyVec,QImage &img,
 								vcg::Similarity2f &ret,const vcg::Similarity2f &trans);
 
-	///return the max radius of a point inside a polygon ,given the mask image
-	///actually it evaluate the maximum bounding box
+	///returna the max radius of a point inside a polygon ,given the mask image
+	///actually it evaluatea the maximum bounding box
 	static int getMaxMaskRadius(int x,int y,QImage &img);
 public:
 
-	///return the point inside the polygon with the bigger distance to the border,
-	///this is used to write labels within the polygon, it handle polygons with holes too
+	///returna the point inside the polygon with the bigger distance to the border,
+	///this is used to write labels within the polygon, it handles polygons with holes too
 	static vcg::Point2f GetIncenter(const std::vector< std::vector<vcg::Point2f> > &polyVec,
 										const vcg::Similarity2f &tra1, float &radius, int resolution=100);
 
@@ -96,12 +96,12 @@ public:
 	static void multiOutline2VecToSingleOutline2Vec(const std::vector<std::vector<vcg::Point2f> > &multipolyVec,  const std::vector<vcg::Similarity2f> &trVec, const std::vector<int> &indVec,
 												 int ind, std::vector< std::vector< vcg::Point2f> > &polyVec, std::vector< vcg::Similarity2f> &trPolyVec);
 
-	///write a polygon on a PNG file, format of the polygon is vector of vector of contours...nested contours are holes
+	///writes a polygon on a PNG file, format of the polygon is a vector of vectors of contours...nested contours are holes
 	///takes the name of the image in input, the set of polygons, the set of per polygons transformation,
 	///the label to be written and the global parameter for drawing style
 	static void dumpOutline2VecPNG(const char * imageName, std::vector< std::vector< std::vector<vcg::Point2f> > > &polyVecVec,
 							std::vector<vcg::Similarity2f> &trVec, std::vector<std::vector<std::string> > &labelVecVec, Param &pp);
-	//write a polygon on a SVG file, format of the polygon is vector of vector of contours...nested contours are holes
+	///writes a polygon on a SVG file, format of the polygon is a vector of vectors of contours...nested contours are holes
 	///takes the name of the image in input, the set of polygons, the set of per polygons transformation,
 	///the label to be written and the global parameter for drawing style
 	static void dumpOutline2VecSVG(const char * imageName, std::vector< std::vector< std::vector<vcg::Point2f> > > &polyVecVec,
