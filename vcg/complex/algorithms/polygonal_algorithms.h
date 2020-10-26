@@ -416,6 +416,7 @@ public:
     static void UpdateFaceNormals(PolyMeshType &poly_m)
     {
         for (size_t i=0;i<poly_m.face.size();i++)
+            if (!poly_m.face[i].IsD())
             UpdateNormal(poly_m.face[i]);
     }
 
@@ -424,6 +425,7 @@ public:
     static void UpdateFaceNormalByFitting(PolyMeshType &poly_m)
     {
         for (size_t i=0;i<poly_m.face.size();i++)
+            if (!poly_m.face[i].IsD())
             UpdateNormalByFitting(poly_m.face[i]);
     }
 
