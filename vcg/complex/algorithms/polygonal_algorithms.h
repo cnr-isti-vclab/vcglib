@@ -740,8 +740,7 @@ public:
             for (size_t i=0;i<poly_m.vert.size();i++)
             {
                 if (poly_m.vert[i].IsB()) continue;
-                if (OnlyOnSelected && !poly_m.vert[i].IsS()) continue;
-                
+                if(poly_m.vert[i].IsD() || (OnlyOnSelected && !poly_m.vert[i].IsS())) continue;
                 poly_m.vert[i].P()=poly_m.vert[i].P()*DampS+
                         AvVert[i]*(1-DampS);
             }
@@ -749,7 +748,7 @@ public:
 
             for (size_t i=0;i<poly_m.vert.size();i++)
             {
-                if(OnlyOnSelected && !poly_m.vert[i].IsS()) continue;
+                if(poly_m.vert[i].IsD() || (OnlyOnSelected && !poly_m.vert[i].IsS())) continue;
                 TriCoordType testPos;
                 testPos.Import(poly_m.vert[i].P());
                 TriCoordType closestPt;
