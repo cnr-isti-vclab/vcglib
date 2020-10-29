@@ -334,7 +334,10 @@ private:
         AvVert.clear();
         AvVert.resize(poly_m.vert.size(),CoordType(0,0,0));
         std::vector<ScalarType> AvSum(poly_m.vert.size(),0);
-        for (size_t i=0;i<poly_m.face.size();i++)
+        for (size_t i=0;i<poly_m.face.size();i++) {
+            if (poly_m.face[i].IsD())
+                continue;
+
             for (size_t j=0;j<(size_t)poly_m.face[i].VN();j++)
             {
                 //get current vertex
@@ -352,14 +355,19 @@ private:
                     AvSum[IndexV]+=W;
                 }
             }
+        }
 
         //average step
         for (size_t i=0;i<poly_m.vert.size();i++)
         {
+            if (poly_m.vert[i].IsD())
+                continue;
+
             if (AvSum[i]==0)continue;
             AvVert[i]/=AvSum[i];
         }
     }
+
 
 
 
