@@ -387,6 +387,30 @@ private:
             F.N()=PlF.Direction();
     }
 
+    static void DisplaceBySelected(FaceType &f,std::vector<CoordType> &TemplatePos,
+                                   bool FixS,bool FixB)
+    {
+        CoordType AvPosF(0,0,0);
+        CoordType AvPosT(0,0,0);
+        size_t Num=0;
+        for (size_t i=0;i<f.VN();i++)
+        {
+            bool AddVal=false;
+            AddVal|=((FixS)&&(f.V(i)->IsS()));
+            AddVal|=((FixB)&&(f.V(i)->IsB()));
+            if (!AddVal)continue;
+            Num++;
+            AvPosF+=f.V(i)->P();
+            AvPosT+=TemplatePos[i];
+        }
+        if (Num==0)return;
+        AvPosF/=(ScalarType)Num;
+        AvPosT/=(ScalarType)Num;
+        CoordType Displ=AvPosF-AvPosT;
+        for (size_t i=0;i<TemplatePos.size();i++)
+            TemplatePos[i]+=Displ;
+    }
+
 public:
 
     static void SelectIrregularInternal(PolyMeshType &poly_m)
@@ -548,6 +572,9 @@ public:
                 if ((IgnoreF!=NULL)&&((*IgnoreF)[i]))continue;
                 std::vector<typename PolygonType::CoordType> TemplatePos;
                 GetRotatedTemplatePos(poly_m.face[i],TemplatePos);
+                if ((FixS)||(fixB))
+                    DisplaceBySelected(poly_m.face[i],TemplatePos,FixS,fixB);
+
                 //then cumulate the position per vertex
                 ScalarType val=vcg::PolyArea(poly_m.face[i]);
                 if (val<(AvgArea*0.00001))
@@ -564,7 +591,6 @@ public:
                     //sum up contributes
                     avgPos[IndexV]+=Pos*W;
                     weightSum[IndexV]+=W;
-
                 }
 
             }
