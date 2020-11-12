@@ -685,6 +685,8 @@ public:
 		UpdateFlags<MeshType>::FaceClearS(m);
 
 		MeshType tmpMesh;
+		tmpMesh.vert.EnableVFAdjacency();
+		tmpMesh.face.EnableVFAdjacency();
 
 		size_t selCnt=0;
 
