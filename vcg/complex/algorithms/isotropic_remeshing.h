@@ -407,7 +407,7 @@ private:
             FaceType* fp = GetClosestFaceBase(m, grid, v, maxD, dist, closest);
 
             //you can't use this kind of orientation check, since when you stand on edges it fails
-            if (fp == NULL /*|| (checkOrientation != CoordType(0,0,0) && checkOrientation * fp->N() < 0.5)*/)
+            if (fp == NULL || (checkOrientation != CoordType(0,0,0) && checkOrientation * fp->N() < 0.7))
             {
                 return false;
             }
@@ -563,9 +563,9 @@ private:
                           /  \                   /|\
                          /    \                 / | \
                         /      \               /  |  \
-                   /     _*p\           -1/   |   \ -1
-                  v2--------v0 ========> v2   |   v0
-                   \        /             \   |   /
+                       /     _*p\           -1/   |   \ -1
+                      v2--------v0 ========> v2   |   v0
+                       \        /             \   |   /
                         \      /               \  |  /
                          \    /                 \ | /
                           \  /                   \|/ +1
@@ -761,18 +761,21 @@ private:
 
         int incidentFeatures = 0;
 
+        vcg::tri::UnMarkAll(*params.m);
+
         for (size_t i = 0; i < faces.size(); ++i)
-            //			if (faces[i] != p.F() && faces[i] != p.FFlip())
         {
-            if (faces[i]->IsFaceEdgeS(VtoE(vIdxes[i], (vIdxes[i]+1)%3)))
+            if (faces[i]->IsFaceEdgeS(VtoE(vIdxes[i], (vIdxes[i]+1)%3)) && !vcg::tri::IsMarked(*params.m, faces[i]->cV1(vIdxes[i])))
             {
+                vcg::tri::Mark(*params.m,faces[i]->cV1(vIdxes[i]));
                 incidentFeatures++;
                 CoordType movingEdgeVector0 = (faces[i]->cP1(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
                 if (std::fabs(movingEdgeVector0 * dEdgeVector) < .9f || !p.IsEdgeS())
                     return false;
             }
-            if (faces[i]->IsFaceEdgeS(VtoE(vIdxes[i], (vIdxes[i]+2)%3)))
+            if (faces[i]->IsFaceEdgeS(VtoE(vIdxes[i], (vIdxes[i]+2)%3)) && !vcg::tri::IsMarked(*params.m, faces[i]->cV2(vIdxes[i])))
             {
+                vcg::tri::Mark(*params.m,faces[i]->cV2(vIdxes[i]));
                 incidentFeatures++;
                 CoordType movingEdgeVector1 = (faces[i]->cP2(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
                 if (std::fabs(movingEdgeVector1 * dEdgeVector) < .9f || !p.IsEdgeS())
@@ -781,7 +784,7 @@ private:
             allIncidentFaceSelected &= faces[i]->IsS();
         }
 
-        if (incidentFeatures > 4)
+        if (incidentFeatures > 2)
             return false;
 
         return params.selectedOnly ? allIncidentFaceSelected : true;
@@ -821,18 +824,23 @@ private:
 
 //                float div = fastAngle(oldN, newN);
 //                if(div < .9f ) return false;
-                if (oldN * newN < 0.8f)
+                if (oldN * newN < 0.5f)
                     return false;
 
                 //				//				check on new face distance from original mesh
                 if (params.surfDistCheck)
                 {
-                    std::vector<CoordType> points(4);
-                    points[0] = (v1->cP() + v2->cP() + mp) / 3.;
-                    points[1] = (v1->cP() + mp) / 2.;
-                    points[2] = (v2->cP() + mp) / 2.;
-                    points[3] = mp;
-                    if (!testHausdorff(*(params.mProject), params.grid, points, params.maxSurfDist, newN))
+                    std::vector<CoordType> points(3);
+                    std::vector<CoordType> baryP(1);
+
+                    baryP[0] = (v1->cP() + v2->cP() + mp) / 3.;
+
+                    points[0] = (v1->cP() + mp) / 2.;
+                    points[1] = (v2->cP() + mp) / 2.;
+                    points[2] = mp;
+
+                    if (!testHausdorff(*(params.mProject), params.grid, points, params.maxSurfDist) ||
+                            !testHausdorff(*(params.mProject), params.grid, baryP, params.maxSurfDist, newN))
                         return false;
                 }
             }
@@ -842,7 +850,7 @@ private:
 
 
     //TODO: Refactor code and implement the correct set up of crease info when collapsing towards a crease edge
-    static bool checkCollapseFacesAroundVert1(PosType &p, Point3<ScalarType> &mp, Params &params, bool relaxed)
+    static bool checkCollapseFacesAroundVert1(PosType &p, VertexPair & pair, Point3<ScalarType> &mp, Params &params, bool relaxed)
     {
         PosType p0 = p, p1 = p;
 
@@ -863,6 +871,8 @@ private:
         if (!moveable0 && !moveable1)
             return false;
 
+        pair = moveable0 ? VertexPair(p0.V(), p1.V()) : VertexPair(p1.V(), p0.V());
+
         //casting int(true) is always 1 and int(false) = =0
         assert(int(true) == 1);
         assert(int(false) == 0);
@@ -874,7 +884,7 @@ private:
         return false;
     }
 
-    static bool testCollapse1(PosType &p, Point3<ScalarType> &mp, ScalarType minQ, ScalarType maxQ, Params &params, bool relaxed = false)
+    static bool testCollapse1(PosType &p, VertexPair & pair, Point3<ScalarType> &mp, ScalarType minQ, ScalarType maxQ, Params &params, bool relaxed = false)
     {
         ScalarType mult = (params.adapt) ? math::ClampedLerp((ScalarType)0.5,(ScalarType)1.5, (((math::Abs(p.V()->Q())+math::Abs(p.VFlip()->Q()))/(ScalarType)2.0)/(maxQ-minQ))) : (ScalarType)1;
         ScalarType dist = Distance(p.V()->P(), p.VFlip()->P());
@@ -882,7 +892,7 @@ private:
         ScalarType area = DoubleArea(*(p.F()))/2.f;
         if(relaxed || (dist < thr || area < params.minLength*params.minLength/100.f))//if to collapse
         {
-            return checkCollapseFacesAroundVert1(p, mp, params, relaxed);
+            return checkCollapseFacesAroundVert1(p, pair, mp, params, relaxed);
         }
         return false;
     }
@@ -951,11 +961,8 @@ private:
                         VertexPair  bp = VertexPair(pi.V(), pi.VFlip());
                         Point3<ScalarType> mp = (pi.V()->P()+pi.VFlip()->P())/2.f;
 
-                        if(testCollapse1(pi, mp, minQ, maxQ, params) && Collapser::LinkConditions(bp))
+                        if(testCollapse1(pi, bp, mp, minQ, maxQ, params) && Collapser::LinkConditions(bp))
                         {
-                            //collapsing on pi.V()
-                            bp = VertexPair(pi.VFlip(), pi.V());
-
                             Collapser::Do(m, bp, mp, true);
                             ++params.stat.collapseNum;
                             break;
@@ -964,7 +971,6 @@ private:
                     }
                 }
         }
-
         ss.pop();
     }
 
@@ -1129,9 +1135,8 @@ private:
                                 VertexPair  bp = VertexPair(pi.V(), pi.VFlip());
                                 Point3<ScalarType> mp = (pi.V()->P()+pi.VFlip()->P())/2.f;
 
-                                if(testCollapse1(pi, mp, 0, 0, params, true) && Collapser::LinkConditions(bp))
+                                if(testCollapse1(pi, bp, mp, 0, 0, params, true) && Collapser::LinkConditions(bp))
                                 {
-                                    bp = VertexPair(pi.VFlip(), pi.V());
                                     Collapser::Do(m, bp, mp, true);
                                     ++params.stat.collapseNum;
                                     ++count;
