@@ -159,7 +159,7 @@ static bool IsSTLBinary(const char * filename, bool &binaryFlag)
   fseek(fp, STL_LABEL_SIZE, SEEK_SET);
   fread(&facenum, sizeof(unsigned int), 1, fp);
   
-  int expected_file_size=STL_LABEL_SIZE + 4 + (sizeof(short)+sizeof(STLFacet) )*facenum ;
+  long expected_file_size=STL_LABEL_SIZE + 4 + (sizeof(short)+sizeof(STLFacet) )*facenum ;
   if(file_size ==  expected_file_size) 
   {
     binaryFlag = true;
