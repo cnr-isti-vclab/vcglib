@@ -127,14 +127,20 @@ public:
 		_v[0] = nx; _v[1] = ny;
 	}
 	/// copy constructor
-	inline Point2 ( const Point2 & p)
+	inline Point2 ( const Point2 & p) = default;
+	/// copy constructor
+	template<class Q>
+	inline Point2 ( const Point2<Q> & p)
 	{
-		_v[0]= p._v[0];    _v[1]= p._v[1];
+		_v[0]= p[0];    _v[1]= p[1];
 	}
 	/// copy
-	inline Point2 & operator =( const Point2 & p)
+	inline Point2 & operator =( const Point2 & p) = default;
+	/// copy
+	template<class Q>
+	inline Point2 & operator =( const Point2<Q> & p)
 	{
-		_v[0]= p._v[0]; _v[1]= p._v[1];
+		_v[0]= p[0]; _v[1]= p[1];
 		return *this;
 	}
 	/// sets the point to (0,0)
