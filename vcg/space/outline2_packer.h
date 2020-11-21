@@ -143,7 +143,8 @@ static bool PackAsAxisAlignedRect(const std::vector< std::vector<Point2x> > &pol
 static bool PackAsObjectOrientedRect(const std::vector< std::vector<Point2x> > &polyVec,
                   const Point2i containerSizeX,
                   std::vector<Similarity2x> &trVec,
-                  Point2x &coveredContainer)
+                  Point2x &coveredContainer,
+                  SCALAR_TYPE border=0)
 {
   trVec.clear();
   trVec.resize(polyVec.size());
@@ -153,6 +154,8 @@ static bool PackAsObjectOrientedRect(const std::vector< std::vector<Point2x> > &
   {
     float rot;
     bbVec.push_back(getPolyOOBB(polyVec[i],rot));
+    if (border>0)
+        bbVec.back().Offset(border);
     rotVec.push_back(rot);
   }
 
