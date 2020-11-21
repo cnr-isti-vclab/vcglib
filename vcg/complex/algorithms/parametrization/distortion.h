@@ -185,7 +185,7 @@ public:
 
 
 public:
-    enum DistType{AreaDist,EdgeDist,AngleDist,CrossDist,L2Stretch,LInfStretch,ARAPDist};
+    enum DistType{AreaDist,EdgeDist,EdgeComprStretch,AngleDist,CrossDist,L2Stretch,LInfStretch,ARAPDist};
 
     ///return the absolute difference between angle in 3D space and texture space
     ///Actually the difference in cos space
@@ -242,12 +242,19 @@ public:
     ///the needed scaling factor EdgeScaleVal may be calculated
     ///by using the ScalingFactor function
     static ScalarType EdgeDistortion(const FaceType *f,int e,
-                                     ScalarType EdgeScaleVal)
+                                     ScalarType EdgeScaleVal,
+                                     bool AbsValue=true)
     {
         ScalarType edgeUV=EdgeLenghtUV(f,e)*EdgeScaleVal;
         ScalarType edge3D=EdgeLenght3D(f,e);
         assert(edge3D > 0);
-        ScalarType diff=fabs(edge3D-edgeUV)/edge3D;
+
+        ScalarType diff=0;
+        if (AbsValue)
+            diff=fabs(edge3D-edgeUV)/edge3D;
+        else
+            diff=(edge3D-edgeUV)/edge3D;
+
         assert(!math::IsNAN(diff));
         return diff;
     }
@@ -504,6 +511,11 @@ public:
                 q =( EdgeDistortion(&m.face[i],0,edge_scale)+
                      EdgeDistortion(&m.face[i],1,edge_scale)+
                      EdgeDistortion(&m.face[i],2,edge_scale) )/3;
+                break;
+            case EdgeComprStretch:
+                q =( EdgeDistortion(&m.face[i],0,edge_scale,false)+
+                     EdgeDistortion(&m.face[i],1,edge_scale,false)+
+                     EdgeDistortion(&m.face[i],2,edge_scale,false) )/3;
                 break;
             case L2Stretch:
                 q = L2StretchEnergySquared( &m.face[i],area_scale );
