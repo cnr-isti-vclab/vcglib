@@ -51,7 +51,7 @@ MainWindow::MainWindow (QWidget * parent)
 	shared->setHidden(true);
     shared->myInitGL();
 
-    for(unsigned int ii = 0;ii < 2;++ii)
+    for(uint8_t ii = 0;ii < 2;++ii)
 	{
         rendbox[ii] = new QComboBox(this);
         for(QMap<MyDrawMode,QString>::iterator it = stringrendtable.begin();it != stringrendtable.end();++it)
@@ -91,14 +91,14 @@ void MainWindow::chooseMesh()
     QFileInfo fi(fileName);
     QTime loadingtime;
     loadingtime.start();
-	int err=0;
+	uint8_t err=0;
     
     if (fi.suffix() == plyext)
         err=vcg::tri::io::ImporterPLY<CMeshO>::Open(mesh,(fileName.toStdString()).c_str(),qCallBack);
     else 
         if (fi.suffix() == objext)
         {
-             int loadmask;
+             uint8_t loadmask;
              err=vcg::tri::io::ImporterOBJ<CMeshO>::Open(mesh,(fileName.toStdString()).c_str(),loadmask,qCallBack);
         }
     int msec = loadingtime.elapsed();
@@ -135,7 +135,7 @@ void MainWindow::initMesh(QString& message)
 	vcg::tri::UpdateNormal<CMeshO>::PerVertexNormalizedPerFaceNormalized(mesh);
     QTime rdsetuptime;
     rdsetuptime.start();
-    for(unsigned int ii = 0;ii < 2;++ii)
+    for(uint8_t ii = 0;ii < 2;++ii)
 		if ((glar[ii] != NULL) && (rendbox[ii] != NULL))
         {
             glar[ii]->resetTrackBall();
@@ -146,7 +146,7 @@ void MainWindow::initMesh(QString& message)
             shared->setPerViewRendAtts(glar[ii]->context(),it.value().first,it.value().second);
         }
     shared->manageBuffers();
-    for(unsigned int ii = 0;ii < 2;++ii)
+    for(uint8_t ii = 0;ii < 2;++ii)
         glar[ii]->updateGL();
     qb->reset();
     int msec = rdsetuptime.elapsed();
@@ -173,13 +173,13 @@ void MainWindow::updateRenderModality( GLArea* area,int clickedindex )
         return;
     shared->setPerViewRendAtts(area->context(),it.value().first,it.value().second);
     shared->manageBuffers();
-    for(unsigned int ii = 0;ii < 2;++ii)
+    for(uint8_t ii = 0;ii < 2;++ii)
         glar[ii]->updateGL();
 }
 
 MainWindow::~MainWindow()
 {
-    for(int ii = 0;ii < 2;++ii)
+    for(uint8_t ii = 0;ii < 2;++ii)
 		delete glar[ii];
 	delete shared;
 }
@@ -219,7 +219,7 @@ void MainWindow::initTable()
 
 bool MainWindow::qCallBack(const int pos, const char * str)
 {
-    int static lastPos=-1;
+    uint8_t static lastPos=-1;
     if(pos==lastPos) return true;
     lastPos=pos;
 
