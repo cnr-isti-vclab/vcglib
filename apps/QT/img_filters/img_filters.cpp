@@ -23,6 +23,7 @@
 
 #include <QtCore>
 #include "wrap/qt/img_qt.h"
+#include <cstdint>
 
 void sample001_open_save_color(QString input_file, QString output_file)
 {
@@ -50,7 +51,7 @@ void sample004_boxfilter(QString input_file, QString output_file)
 {
   img::Image<> image;
   img::openQtRGB(input_file, image);
-  int radius=3;
+  uint8_t radius=3;
   img::saveQtRGB(img::getBoxFiltered(image,radius), output_file);
 }
 
@@ -58,7 +59,7 @@ void sample005_gaussiansmooth(QString input_file, QString output_file)
 {
   img::Image<> image;
   img::openQtRGB(input_file, image);
-  int radius=4;
+  uint8_t radius=4;
   img::saveQtRGB(img::getGaussianSmoothed(image,radius), output_file);
 }
 
@@ -66,7 +67,7 @@ void sample006_medianfilter(QString input_file, QString output_file)
 {
   img::Image<> image;
   img::openQtRGB(input_file, image);
-  int radius=5;
+  uint8_t radius=5;
   img::saveQtRGB(img::getMedianFiltered(image,radius), output_file);
 }
 
@@ -75,8 +76,8 @@ void sample007_unsharpmask(QString input_file, QString output_file)
   img::Image<> image;
   img::openQtRGB(input_file, image);
 
-  int radius=4;
-  double factor=0.6;
+  uint8_t radius=4;
+  float factor=0.6;
 
   img::saveQtRGB(img::getUnsharpMasked(image,radius,factor), output_file);
 }
@@ -95,7 +96,7 @@ void sample009_logfilter(QString input_file, QString output_file)
 {
   img::Image<> image;
   img::openQtRGB(input_file, image);
-  int radius=5;
+  uint8_t radius=5;
   img::Image<> logfiltered;
   img::LoGFilter(image,logfiltered,radius);
   img::saveQtRGB(img::getNormalized(logfiltered), output_file);
@@ -106,8 +107,7 @@ void sample010_dogfilter(QString input_file, QString output_file)
   img::Image<> image;
   img::openQtRGB(input_file, image);
   // must be radius1 < radius2
-  int radius1=2; 
-  int radius2=4;
+  uint8_t radius1=2,radius2=4; 
   img::Image<> dogfiltered;
   img::DoGFilter(image,dogfiltered,radius1,radius2);
 
@@ -119,7 +119,7 @@ void sample011_general_convolutions(QString input_file, QString output_dir,QStri
   img::Image<> image;
   img::openQtRGB(input_file, image);
 
-  QVector< QPair< double*, QPair< QPair< int, int > , QString> > > mm;
+  QVector< QPair< double*, QPair< QPair< uint8_t, uint8_t > , QString> > > mm;
   double *f;
 
   f=new double[9];
@@ -148,12 +148,11 @@ void sample011_general_convolutions(QString input_file, QString output_dir,QStri
   f[12]= 1.0f; f[13]=  1.0f; f[14]= 1.0f;
   mm.push_back(qMakePair(f,qMakePair(qMakePair(3,5),QString("my_horiz_edges"))));
 
-  QPair< double*, QPair< QPair< int, int > , QString> > m;
+  QPair< double*, QPair< QPair< uint8_t, uint8_t > , QString> > m;
 
   foreach(m,mm){
     double* matrix=m.first;
-    int matrix_width=((m.second).first).first;
-    int matrix_height=((m.second).first).second;
+    uint8_t matrix_width=((m.second).first).first,matrix_height=((m.second).first).second;
     QString matrix_name=(m.second).second;
 
     img::Image<> convolved;
@@ -209,9 +208,8 @@ int main(int argc,char ** argv)
   }
   printf("Executing img_filters over all images in \"%s\", ouput is in \"%s\"\n",  argv[1], argv[2]);
 
-  QString input_dir(argv[1]);
-  QString output_dir(argv[2]);
-
+  QString input_dir(argv[1]),output_dir(argv[2]);
+ 
   QStringList readable_image_extensions = QStringList()
        << "*.bmp" << "*.gif" << "*.jpg" << "*.jpeg"
        << "*.png" << "*.pbm" << "*.pgm" << "*.ppm"
