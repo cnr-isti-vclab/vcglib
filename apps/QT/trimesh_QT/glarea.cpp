@@ -36,6 +36,7 @@ Initial release.
 #include <QKeyEvent>
 #include <QWheelEvent>
 #include <wrap/qt/trackball.h>
+#include <cstdint>
 
 GLArea::GLArea (QWidget * parent)
           :QGLWidget (parent)
@@ -194,7 +195,7 @@ void GLArea::mouseReleaseEvent (QMouseEvent * e)
 
 void GLArea::wheelEvent (QWheelEvent * e)
 {
-  const int WHEEL_STEP = 120;
+  static const uint8_t WHEEL_STEP = 120;
   track.MouseWheel (e->delta () / float (WHEEL_STEP), QTWheel2VCG (e->modifiers ()));
   updateGL ();
 }
