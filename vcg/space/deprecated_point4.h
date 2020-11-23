@@ -121,6 +121,22 @@ public:
 		_v[2] = T(b[2]);
 		_v[3] = T(b[3]);
 	}
+	template <class EigenVector>
+	inline void ToEigenVector( EigenVector & b ) const
+	{
+		b[0]=_v[0];
+		b[1]=_v[1];
+		b[2]=_v[2];
+		b[3]=_v[3];
+	}
+	template <class EigenVector>
+	inline EigenVector ToEigenVector(void) const
+	{
+		assert(EigenVector::RowsAtCompileTime == 4);
+		EigenVector b;
+		b << _v[0], _v[1], _v[2], _v[3];
+		return b;
+	}
 	/// constructor that imports from different Point4 types
   template <class Q>
   static inline Point4 Construct( const Point4<Q> & b )
