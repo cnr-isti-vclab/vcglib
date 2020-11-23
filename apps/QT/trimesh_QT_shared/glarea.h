@@ -43,6 +43,7 @@ Initial release.
 #include <wrap/qt/qt_thread_safe_mesh_attributes_multi_viewer_bo_manager.h>
 #include <wrap/gl/trimesh.h>
 #include "mesh.h"
+#include <cstdint>
 
 class MainWindow;
 
