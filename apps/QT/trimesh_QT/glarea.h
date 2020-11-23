@@ -57,7 +57,7 @@ class CVertex;
 struct MyUsedTypes : public UsedTypes<	Use<CVertex>		::AsVertexType,
 																				Use<CFace>			::AsFaceType>{};
 
-/// compositing wanted proprieties
+/// compositing wanted properties
 class CVertex : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags>{};
 class CFace   : public vcg::Face<  MyUsedTypes, vcg::face::VertexRef, vcg::face::Normal3f, vcg::face::BitFlags > {};
 class CMesh   : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFace> > {};
@@ -67,7 +67,7 @@ class GLArea:public QGLWidget
 Q_OBJECT 
 public:
   GLArea (QWidget * parent = 0);
-  /// we choosed a subset of the avaible drawing modes
+  /// we choosed a subset of the available drawing modes
   enum DrawMode{SMOOTH=0,POINTS,WIRE,FLATWIRE,HIDDEN,FLAT};
 public slots:
   /// widget-based user interaction slots
