@@ -40,6 +40,7 @@ cvs problem during frist committ. repeated
 #include <QtOpenGL>
 
 #include <math.h>
+#include <cstdint>
 #include "glwidget.h"
 #include <wrap/io_trimesh/import_PLY.h>
 #include <wrap/gl/picking.h>
@@ -97,7 +98,6 @@ void GLWidget::LoadTriMesh(QString &namefile)
 void GLWidget::OpenFile(){
 	QStringList filters;
 	
-
 	QString	fileName = QFileDialog::getOpenFileName(this,tr("Open File"),".", filters.join("\n"));
 	
 	if (fileName.isEmpty())	return;
@@ -170,7 +170,7 @@ void GLWidget::paintGL()
 		 	if(doPickPos)
 		 	{
 				std::vector<MyStraightMesh::FaceType*> res;
-				int yes = vcg::Pick<MyStraightMesh::FaceContainer>(pic_x,ScreenH-pic_y+1,mesh.face,res,vcg::glTriangle3<MyStraightMesh::FaceType>,1,1);
+				uint8_t yes = vcg::Pick<MyStraightMesh::FaceContainer>(pic_x,ScreenH-pic_y+1,mesh.face,res,vcg::glTriangle3<MyStraightMesh::FaceType>,1,1);
 				if(yes) 
 					{fp = res[0];
 						pos.Set(fp,0,fp->V(0));
@@ -180,7 +180,7 @@ void GLWidget::paintGL()
 		 	if(doPickVfIte)
 			{
 				std::vector<MyStraightMesh::VertexType*> res;
-				int yes = vcg::Pick<MyStraightMesh::VertContainer>(pic_x,ScreenH-pic_y+1,mesh.vert,res,drawVertex<MyStraightMesh::VertexType>,3,3);
+				uint8_t yes = vcg::Pick<MyStraightMesh::VertContainer>(pic_x,ScreenH-pic_y+1,mesh.vert,res,drawVertex<MyStraightMesh::VertexType>,3,3);
 				if(yes) 
 					{vp = res[0];
 MyStraightMesh::FaceType* g  = vp->VFp();
@@ -274,7 +274,6 @@ void GLWidget::mouseMoveEvent(QMouseEvent *e)
 			gluPerspective(45,ScreenW/(float)ScreenH,0.01,5);
 		}
  void GLWidget::wheelEvent ( QWheelEvent * e ){
-			int v =  e->delta()/(float) 120;
-			track.MouseWheel(v);
+			track.MouseWheel(e->delta()/(float)120);
 			repaint();
 		}
