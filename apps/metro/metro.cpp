@@ -102,7 +102,7 @@ void Usage()
 }
 
 
-// simple aux function that compute the name for the file containing the stored computations
+// simple aux function that computes the name for the file containing the stored computations
 std::string SaveFileName(const std::string &filename)
 {
  int pos=filename.find_last_of('.',filename.length());
