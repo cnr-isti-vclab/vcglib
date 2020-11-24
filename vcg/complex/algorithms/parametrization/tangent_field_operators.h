@@ -821,7 +821,12 @@ public:
     {
         ///first it rotate dir to match with f1
         CoordType dirS=CrossVector(f0,dir0);
-        CoordType dirR=vcg::tri::CrossField<MeshType>::Rotate(f0,f1,dirS);
+        ScalarType DotN=(f0.cN()*f1.cN());
+        CoordType dirR;
+        if (DotN<(-0.99999))
+            dirR=-dirS;
+        else
+            dirR=vcg::tri::CrossField<MeshType>::Rotate(f0,f1,dirS);
         ///then get the closest upf to K*PI/2 rotations
         //CoordType dir1=f1.cPD1();
         //int ret=I_K_PI(dir1,dirR,f1.cN());
@@ -838,7 +843,6 @@ public:
                 ret=i;
             }
         }
-
         assert(ret!=-1);
 
         return ret;
@@ -1347,13 +1351,14 @@ public:
     }
 
 
+
     ///return true if a given vertex is singular,
     ///return also the missmatch
-    static bool IsSingularByCross(const VertexType &v,int &missmatch)
+    static bool IsSingularByCross(const VertexType &v,int &missmatch,bool BorderSing=false)
     {
         typedef typename VertexType::FaceType FaceType;
         ///check that is on border..
-        if (v.IsB())return false;
+        if (v.IsB()&& (!BorderSing))return false;
 
         std::vector<face::Pos<FaceType> > posVec;
         //SortedFaces(v,faces);
@@ -1374,7 +1379,7 @@ public:
     }
 
     ///select singular vertices
-    static void UpdateSingularByCross(MeshType &mesh)
+    static void UpdateSingularByCross(MeshType &mesh,bool addBorderSing=false)
     {
         bool hasSingular = vcg::tri::HasPerVertexAttribute(mesh,std::string("Singular"));
         bool hasSingularIndex = vcg::tri::HasPerVertexAttribute(mesh,std::string("SingularIndex"));
@@ -1395,16 +1400,8 @@ public:
         for (size_t i=0;i<mesh.vert.size();i++)
         {
             if (mesh.vert[i].IsD())continue;
-
-            if (mesh.vert[i].IsB())
-            {
-                Handle_Singular[i]=false;
-                Handle_SingularIndex[i]=0;
-                continue;
-            }
-
             int missmatch;
-            if (IsSingularByCross(mesh.vert[i],missmatch))
+            if (IsSingularByCross(mesh.vert[i],missmatch,addBorderSing))
             {
                 Handle_Singular[i]=true;
                 Handle_SingularIndex[i]=missmatch;
