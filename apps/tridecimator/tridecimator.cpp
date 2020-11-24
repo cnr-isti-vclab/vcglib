@@ -15,7 +15,7 @@ using namespace tri;
 /**********************************************************
 Mesh Classes for Quadric Edge collapse based simplification
 
-For edge collpases we need verteses with:
+For edge collpases we need vertices with:
 - V->F adjacency
 - per vertex incremental mark
 - per vertex Normal
@@ -23,7 +23,7 @@ For edge collpases we need verteses with:
 
 Moreover for using a quadric based collapse the vertex class
 must have also a Quadric member Q();
-Otherwise the user have to provide an helper function object
+Otherwise the user have to provide a helper function object
 to recover the quadric.
 
 ******************************************************/
@@ -106,8 +106,8 @@ int main(int argc ,char**argv)
 
   MyMesh mesh;
   
-  int FinalSize=atoi(argv[3]);
-  int err=vcg::tri::io::Importer<MyMesh>::Open(mesh,argv[1]);
+  uint8_t FinalSize=atoi(argv[3]);
+  uint8_t err=vcg::tri::io::Importer<MyMesh>::Open(mesh,argv[1]);
   if(err)
   {
     printf("Unable to open mesh %s : '%s'\n",argv[1],vcg::tri::io::Importer<MyMesh>::ErrorMsg(err));
@@ -120,7 +120,7 @@ int main(int argc ,char**argv)
   double TargetError=std::numeric_limits<double >::max();
   bool CleaningFlag =false;
      // parse command line.
-    for(int i=4; i < argc;)
+    for(uint8_t i=4; i < argc;)
     {
       if(argv[i][0]=='-')
         switch(argv[i][1])
@@ -192,6 +192,6 @@ int main(int argc ,char**argv)
   printf("mesh  %d %d Error %g \n",mesh.vn,mesh.fn,DeciSession.currMetric);
   printf("\nCompleted in (%5.3f+%5.3f) sec\n",float(t2-t1)/CLOCKS_PER_SEC,float(t3-t2)/CLOCKS_PER_SEC);
   vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh,argv[2]);
-    return 0;
+  return 0;
 
 }
