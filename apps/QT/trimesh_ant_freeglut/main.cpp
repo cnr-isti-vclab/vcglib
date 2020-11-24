@@ -34,6 +34,7 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <stdio.h>
+#include <cstdint>
 
 /// vcg imports
 #include <vcg/simplex/vertex/base.h>
@@ -49,7 +50,6 @@
 #include <wrap/gui/trackball.h>
 
 /// declaring edge and face type
-
 using namespace vcg;
 class CFace;
 class CVertex;
@@ -84,7 +84,7 @@ DrawMode drawmode;
 /// Takes a GLUT MouseButton and returns the equivalent Trackball::Button
 static vcg::Trackball::Button GLUT2VCG (int glut_button, int )
 {
-	int vcgbt = vcg::Trackball::BUTTON_NONE;
+	uint8_t vcgbt = vcg::Trackball::BUTTON_NONE;
 
 	switch(glut_button){
 		case GLUT_LEFT_BUTTON: vcgbt |= vcg::Trackball::BUTTON_LEFT;	break;
@@ -102,10 +102,6 @@ static vcg::Trackball::Button GLUT2VCG (int glut_button, int )
 }
 
  
-
-
-
-
 void Display(){
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -168,15 +164,16 @@ void Display(){
 void Reshape(int _width,int _height){
 	width =  _width ;
 	height = _height;
-   TwWindowSize(width, height);
+        TwWindowSize(width, height);
 }
+
 void Terminate(){}
 
 void initMesh()
 {
-	// update bounding box
+	// Update bounding box
 	vcg::tri::UpdateBounding<CMesh>::Box(mesh);
-	// update Normals
+	// Update Normals
 	vcg::tri::UpdateNormals<CMesh>::PerVertexNormalizedPerFace(mesh);
 	vcg::tri::UpdateNormals<CMesh>::PerFaceNormalized(mesh);
 	// Initialize the opengl wrapper
@@ -187,12 +184,12 @@ void initMesh()
 void  TW_CALL loadMesh(void *)
 {	
 	if(filename==0) return;
-   int err=vcg::tri::io::ImporterPLY<CMesh>::Open(mesh,(char*)filename);
+        uint8_t err=vcg::tri::io::ImporterPLY<CMesh>::Open(mesh,(char*)filename);
 	if(err!=0){
 	  const char* errmsg=vcg::tri::io::ImporterPLY<CMesh>::ErrorMsg(err);
 	}
 	else
-		initMesh();
+          initMesh();
 }
 
 void  TW_CALL loadTetrahedron(void *){
@@ -244,7 +241,7 @@ void mouseMoveEvent (int x, int y )
 	    track.MouseMove ( x  , height  -  y  );
 }
 
-  //void mouseReleaseEvent(QMouseEvent*e);
+//void mouseReleaseEvent(QMouseEvent*e);
 void wheelEvent(int wheel, int direction, int x, int y ){
 	track.MouseWheel(wheel*direction);
 }
@@ -252,9 +249,8 @@ void wheelEvent(int wheel, int direction, int x, int y ){
 
 void TW_CALL CopyCDStringToClient(char **destPtr, const char *src)
 {
-    size_t srcLen = (src!=NULL) ? strlen(src) : 0;
-    size_t destLen = (*destPtr!=NULL) ? strlen(*destPtr) : 0;
-
+    size_t srcLen = (src!=NULL) ? strlen(src) : 0,destLen = (*destPtr!=NULL) ? strlen(*destPtr) : 0;
+   
     // Alloc or realloc dest memory block if needed
     if( *destPtr==NULL )
         *destPtr = (char *)malloc(srcLen+1);
@@ -264,13 +260,13 @@ void TW_CALL CopyCDStringToClient(char **destPtr, const char *src)
     // Copy src
     if( srcLen>0 )
         strncpy(*destPtr, src, srcLen);
-    (*destPtr)[srcLen] = '\0'; // null-terminated string
+        (*destPtr)[srcLen] = '\0'; // null-terminated string
 }
 
 int main(int argc, char *argv[])
 {
 
-	TwBar *bar; // Pointer to the tweak bar
+    TwBar *bar; // Pointer to the tweak bar
 
     // Initialize AntTweakBar
     // (note that AntTweakBar could also be intialized after GLUT, no matter)
@@ -281,7 +277,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-	glutInit(&argc, argv);
+    glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(640, 480);
     glutCreateWindow("AntTweakBar simple example using GLUT");
@@ -298,7 +294,7 @@ int main(int argc, char *argv[])
 
 	    // Set GLUT event callbacks
     // - Directly redirect GLUT mouse button events to AntTweakBar
-	glutMouseFunc((GLUTmousebuttonfun)mousePressEvent);
+    glutMouseFunc((GLUTmousebuttonfun)mousePressEvent);
     // - Directly redirect GLUT mouse motion events to AntTweakBar
     glutMotionFunc((GLUTmousemotionfun)mouseMoveEvent);
     // - Directly redirect GLUT mouse "passive" motion events to AntTweakBar (same as MouseMotion)
@@ -313,7 +309,7 @@ int main(int argc, char *argv[])
 
 	 	
 	glutMouseWheelFunc(wheelEvent);
-    bar = TwNewBar("TweakBar");
+        bar = TwNewBar("TweakBar");
 
 	TwCopyCDStringToClientFunc (CopyCDStringToClient);
 	
@@ -321,7 +317,6 @@ int main(int argc, char *argv[])
 	TwAddButton(bar,"Load from file",loadMesh,0,	" label='Load Mesh' group=SetMesh help=`load the mesh` ");
 	TwAddButton(bar,"Use tetrahedron",loadTetrahedron,0,	" label='Make Tetrahedron' group=SetMesh help=`use tetrahedron.` ");
 	TwAddButton(bar,"Use dodecahedron",loadDodecahedron,0,	" label='Make Dodecahedron' group=SetMesh help=`use dodecahedron.` ");
-
 
 	// ShapeEV associates Shape enum values with labels that will be displayed instead of enum values
 	TwEnumVal drawmodes[6] = { {SMOOTH, "Smooth"}, {PERPOINTS, "Per Points"}, {WIRE, "Wire"}, {FLATWIRE, "FlatWire"},{HIDDEN, "Hidden"},{FLAT, "Flat"}};
