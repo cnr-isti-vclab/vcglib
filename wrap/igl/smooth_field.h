@@ -235,9 +235,10 @@ class FieldSmoother
 #ifdef COMISO_FIELD
         assert((Ndir==2)||(Ndir==4));
         Eigen::MatrixXi F;
-        Eigen::MatrixXd V;
+        typename vcg::tri::MeshToMatrix<MeshType>::MatrixXm Vf;
 
-        MeshToMatrix<MeshType>::GetTriMeshData(mesh,F,V);
+        MeshToMatrix<MeshType>::GetTriMeshData(mesh,F,Vf);
+        Eigen::MatrixXd V = Vf.template cast<double>();
 
         Eigen::MatrixXd output_field;
         Eigen::VectorXd output_sing;
@@ -275,12 +276,14 @@ class FieldSmoother
         assert((Ndir==2)||(Ndir==4));
 
         Eigen::MatrixXi F;
-        Eigen::MatrixXd V;
+        typename vcg::tri::MeshToMatrix<MeshType>::MatrixXm Vf;
+        //Eigen::MatrixXd V;
 
-        MeshToMatrix<MeshType>::GetTriMeshData(mesh,F,V);
-
+        MeshToMatrix<MeshType>::GetTriMeshData(mesh,F,Vf);
+        //then cast
+        Eigen::MatrixXd V = Vf.template cast<double>();
         Eigen::MatrixXd output_field;
-        Eigen::VectorXd output_sing;
+        //Eigen::VectorXd output_sing;
 
         igl::n_polyvector(V,F,HardI,HardD,output_field);
 
@@ -402,10 +405,11 @@ public:
         tri::RequirePerVertexCurvatureDir(mesh);
 
         Eigen::MatrixXi F;
-        Eigen::MatrixXd V;
+        typename vcg::tri::MeshToMatrix<MeshType>::MatrixXm Vf;
 
         Eigen::MatrixXd PD1,PD2,PV1,PV2;
-        MeshToMatrix<MeshType>::GetTriMeshData(mesh,F,V);
+        MeshToMatrix<MeshType>::GetTriMeshData(mesh,F,Vf);
+        Eigen::MatrixXd V = Vf.template cast<double>();
 
         igl::principal_curvature(V,F,PD1,PD2,PV1,PV2,Nring,true);
 
