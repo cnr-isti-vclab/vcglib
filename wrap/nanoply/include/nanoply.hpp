@@ -2728,12 +2728,16 @@ namespace nanoply
   }
 
   template < typename TupleType, size_t ActionType>
-  inline bool TupleForEach(TupleType &tuple, PlyElement &elem, PlyFile& file, bool fixEndian, SizeT<0> t, SizeT<ActionType> a) { return false; }
+  inline bool TupleForEach(TupleType &tuple, PlyElement &elem, PlyFile& file, bool fixEndian, SizeT<0> t, SizeT<ActionType> a)
+  {
+    (void)tuple; (void)elem; (void)file; (void)fixEndian; (void)t; (void)a;
+    return false;
+  }
 
   template < typename TupleType, size_t N, size_t ActionType>
   inline bool TupleForEach(TupleType &tuple, PlyElement &elem, PlyFile& file, bool fixEndian, SizeT<N> t, SizeT<ActionType> a)
   {
-	  (void)t;
+    (void)t;
     typename std::tuple_element<N - 1, TupleType>::type &elemDescr = std::get<N - 1>(tuple);
     if ((elemDescr.elem != PlyElemEntity::NNP_UNKNOWN_ELEM && elemDescr.elem == elem.plyElem) ||
       (elemDescr.elem == PlyElemEntity::NNP_UNKNOWN_ELEM && elemDescr.name == elem.name))

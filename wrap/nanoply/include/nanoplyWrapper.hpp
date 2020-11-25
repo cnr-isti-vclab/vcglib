@@ -553,7 +553,7 @@ namespace nanoply
             else
               tempProp[i] = p;
           }
-          unsigned int r = (bitType & (~tempProp[0].type));
+          unsigned int r = (bitType & (~tempProp[0].type)); (void)r;
           if (tempProp.size() > 1  && ((bitType & (~tempProp[0].type)) == 0))
           {
             if (tempProp.size() == 2)
@@ -670,6 +670,7 @@ namespace nanoply
 
       template <bool f = std::is_same<typename T::VertContainer, vcg::vertex::vector_ocf<VType>>::value>
       static unsigned int EnableVertexOcf(typename T::VertContainer& cont, unsigned int mask) {
+        (void)cont; (void)mask;
         return 0;
       }
 
@@ -718,6 +719,7 @@ namespace nanoply
 
       template <bool f = std::is_same<typename T::FaceContainer, vcg::face::vector_ocf<FType>>::value>
       static unsigned int EnableFaceOcf(typename T::FaceContainer& cont, unsigned int mask) {
+        (void)cont; (void)mask;
         return 0;
       }
 
@@ -773,6 +775,7 @@ namespace nanoply
 
       template <bool f = std::is_same<typename T::VertContainer, vcg::vertex::vector_ocf<VType>>::value>
       static unsigned int VertexOcfMask(typename T::VertContainer& cont) {
+        (void)cont;
         return 0;
       }
 
@@ -800,6 +803,7 @@ namespace nanoply
 
       template <bool f = std::is_same<typename T::FaceContainer, vcg::face::vector_ocf<FType>>::value>
       static unsigned int FaceOcfMask(typename T::FaceContainer& cont) {
+        (void)cont;
         return 0;
       }
 
@@ -1590,7 +1594,7 @@ namespace nanoply
             if (!userDescr)
               custom.CreateFaceAttribDescriptor(&(*ai));
           }
-          for (int i = 0; i < custom.faceAttrib.size(); i++)
+          for (size_t i = 0; i < custom.faceAttrib.size(); i++)
           {
             faceProp.push_back(custom.faceAttribProp[i]);
             faceDescr.dataDescriptor.push_back(custom.faceAttrib[i]);
