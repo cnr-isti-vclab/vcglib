@@ -30,6 +30,7 @@
 #include <vcg/complex/algorithms/stat.h>
 #include <vcg/complex/algorithms/smooth.h>
 #include <vcg/complex/algorithms/local_optimization/tri_edge_collapse.h>
+#include <vcg/complex/algorithms/geodesic.h>
 #include <vcg/space/index/spatial_hashing.h>
 #include <vcg/complex/append.h>
 #include <vcg/complex/allocate.h>
@@ -194,7 +195,7 @@ private:
                         auto areaRatio = vcg::DoubleArea(biggestSmallest.first) / vcg::DoubleArea(biggestSmallest.second);
 
                         bool normalCheck = true;
-//                        if (n1.Norm() > 0.001 && n2.Norm() > 0.001)
+                        //                        if (n1.Norm() > 0.001 && n2.Norm() > 0.001)
                         {
                             auto referenceNormal = vcg::NormalizedTriangleNormal(biggestSmallest.first);
 
@@ -276,15 +277,17 @@ public:
         tri::UpdateFlags<MeshType>::VertexBorderFromFaceAdj(toRemesh);
         tri::UpdateTopology<MeshType>::VertexFace(toRemesh);
 
-        //		computeQuality(toRemesh);
-        //		tri::UpdateQuality<MeshType>::VertexSaturate(toRemesh);
-
         tagCreaseEdges(toRemesh, params);
 
         for(int i=0; i < params.iter; ++i)
         {
-            //			params.stat.Reset();
             if(cb) cb(100*i/params.iter, "Remeshing");
+
+            if (params.adapt)
+            {
+                computeQualityDistFromCrease(toRemesh);
+                tri::Smooth<MeshType>::VertexQualityLaplacian(toRemesh, 2);
+            }
 
             if(params.splitFlag)
                 SplitLongEdges(toRemesh, params);
@@ -354,7 +357,7 @@ private:
             if(!(*vi).IsD())
             {
                 vector<FaceType*> ff;
-                face::VFExtendedStarVF(&*vi, 0, ff);
+                face::VFExtendedStarVF(&*vi, 2, ff);
 
                 ScalarType tot = 0.f;
                 auto it = ff.begin();
@@ -368,6 +371,35 @@ private:
                 vi->Q() = tot / (ScalarType)(std::max(1, ((int)ff.size()-1)));
                 vi->SetV();
             }
+        tri::Smooth<MeshType>::VertexQualityLaplacian(m, 3);
+    }
+
+    static void computeQualityDistFromCrease(MeshType & m)
+    {
+        tri::RequirePerVertexQuality(m);
+        tri::UpdateTopology<MeshType>::FaceFace(m);
+//        tri::UpdateFlags<MeshType>::VertexClearV(m);
+
+        std::vector<VertexPointer> seeds;
+        ForEachFace(m, [&] (FaceType & f) {
+           for (int i = 0; i < 3; ++i)
+           {
+               if (f.IsFaceEdgeS(i))
+               {
+                   seeds.push_back(f.V0(i));
+                   seeds.push_back(f.V1(i));
+               }
+           }
+        });
+
+        tri::EuclideanDistance<MeshType> eu;
+        tri::Geodesic<MeshType>::PerVertexDijkstraCompute(m, seeds, eu);
+        tri::Smooth<MeshType>::VertexQualityLaplacian(m, 2);
+
+        ForEachVertex(m, [] (VertexType & v) {
+            v.Q()  = 1 / (v.Q() + 1);
+        });
+
     }
 
     /*
@@ -422,6 +454,7 @@ private:
 
         vcg::tri::UpdateFlags<MeshType>::VertexClearV(m);
         std::queue<PosType> creaseQueue;
+
         ForEachFacePos(m, [&](PosType &p){
 
             if (p.IsBorder())
@@ -441,10 +474,29 @@ private:
                 if (!params.userSelectedCreases && (testCreaseEdge(p, params.creaseAngleCosThr) /*&& areaCheck*//* && qualityCheck*/) || p.IsBorder())
                 {
                     PosType pp = p;
+                    std::vector<FacePointer> faces;
+                    std::vector<int> edges;
+                    bool allOk = true;
+
                     do {
-                        pp.F()->SetFaceEdgeS(pp.E());
+                        faces.push_back(pp.F());
+                        edges.push_back(pp.E());
+                        //                        pp.F()->SetFaceEdgeS(pp.E());
+                        if (vcg::QualityRadii(pp.F()->cP(0), pp.F()->cP(1), pp.F()->cP(2)) <= 0.0001)
+                        {
+                            allOk = false;
+                            break;
+                        }
                         pp.NextF();
                     } while (pp != p);
+
+                    if (allOk)
+                    {
+                        for (int i = 0; i < faces.size(); ++i)
+                        {
+                            faces[i]->SetFaceEdgeS(edges[i]);
+                        }
+                    }
 
                     creaseQueue.push(p);
                 }
@@ -687,9 +739,9 @@ private:
         ScalarType length, lengthThr, minQ, maxQ;
         bool operator()(PosType &ep)
         {
-            ScalarType mult = math::ClampedLerp((ScalarType)0.5,(ScalarType)1.5, (((math::Abs(ep.V()->Q())+math::Abs(ep.VFlip()->Q()))/(ScalarType)2.0)/(maxQ-minQ)));
+            ScalarType mult = math::ClampedLerp((ScalarType)0.25,(ScalarType)4, (((math::Abs(ep.V()->Q())+math::Abs(ep.VFlip()->Q()))/(ScalarType)2.0)/(maxQ-minQ)));
             ScalarType dist = Distance(ep.V()->P(), ep.VFlip()->P());
-            if(dist > std::max(mult*length,lengthThr*2))
+            if(dist > mult * length)
             {
                 ++count;
                 return true;
@@ -731,7 +783,7 @@ private:
             ep.maxQ      = maxQ;
             ep.length    = params.maxLength;
             ep.lengthThr = params.lengthThr;
-            tri::RefineE(m,midFunctor,ep);
+            tri::RefineMidpoint(m,ep, params.selectedOnly);
             params.stat.splitNum+=ep.count;
         }
         else {
@@ -822,12 +874,19 @@ private:
                 Point3<ScalarType> oldN = NormalizedTriangleNormal(*(pi.F()));
                 Point3<ScalarType> newN = Normal(mp, v1->P(), v2->P()).Normalize();
 
-//                float div = fastAngle(oldN, newN);
-//                if(div < .9f ) return false;
+                //                float div = fastAngle(oldN, newN);
+                //                if(div < .9f ) return false;
                 if (oldN * newN < 0.5f)
                     return false;
 
-                //				//				check on new face distance from original mesh
+
+                std::vector<CoordType> baryP(1);
+                baryP[0] = (v1->cP() + v2->cP() + mp) / 3.;
+
+                if (!testHausdorff(*(params.mProject), params.grid, baryP, params.maxSurfDist, newN))
+                    return false;
+
+                //check on new face distance from original mesh
                 if (params.surfDistCheck)
                 {
                     std::vector<CoordType> points(3);
@@ -839,8 +898,8 @@ private:
                     points[1] = (v2->cP() + mp) / 2.;
                     points[2] = mp;
 
-                    if (!testHausdorff(*(params.mProject), params.grid, points, params.maxSurfDist) ||
-                            !testHausdorff(*(params.mProject), params.grid, baryP, params.maxSurfDist, newN))
+                    if (!testHausdorff(*(params.mProject), params.grid, points, params.maxSurfDist))// ||
+//                            !testHausdorff(*(params.mProject), params.grid, baryP, params.maxSurfDist, newN))
                         return false;
                 }
             }
@@ -886,7 +945,7 @@ private:
 
     static bool testCollapse1(PosType &p, VertexPair & pair, Point3<ScalarType> &mp, ScalarType minQ, ScalarType maxQ, Params &params, bool relaxed = false)
     {
-        ScalarType mult = (params.adapt) ? math::ClampedLerp((ScalarType)0.5,(ScalarType)1.5, (((math::Abs(p.V()->Q())+math::Abs(p.VFlip()->Q()))/(ScalarType)2.0)/(maxQ-minQ))) : (ScalarType)1;
+        ScalarType mult = (params.adapt) ? math::ClampedLerp((ScalarType)0.25,(ScalarType)4, (((math::Abs(p.V()->Q())+math::Abs(p.VFlip()->Q()))/(ScalarType)2.0)/(maxQ-minQ))) : (ScalarType)1;
         ScalarType dist = Distance(p.V()->P(), p.VFlip()->P());
         ScalarType thr = mult*params.minLength;
         ScalarType area = DoubleArea(*(p.F()))/2.f;
@@ -1182,17 +1241,17 @@ private:
 
 
         //this aspect ratio check doesn't work on cadish meshes (long thin triangles spanning whole mesh)
-//        ForEachFace(m, [&] (FaceType & f) {
-//            if (vcg::Quality(f.cP(0), f.cP(1), f.cP(2)) < params.aspectRatioThr || vcg::DoubleArea(f) < 0.00001)
-//            {
-//                if (creaseVerts[vcg::tri::Index(m, f.V(0))] == 0)
-//                    f.V(0)->SetS();
-//                if (creaseVerts[vcg::tri::Index(m, f.V(1))] == 0)
-//                    f.V(1)->SetS();
-//                if (creaseVerts[vcg::tri::Index(m, f.V(2))] == 0)
-//                    f.V(2)->SetS();
-//            }
-//        });
+        //        ForEachFace(m, [&] (FaceType & f) {
+        //            if (vcg::Quality(f.cP(0), f.cP(1), f.cP(2)) < params.aspectRatioThr || vcg::DoubleArea(f) < 0.00001)
+        //            {
+        //                if (creaseVerts[vcg::tri::Index(m, f.V(0))] == 0)
+        //                    f.V(0)->SetS();
+        //                if (creaseVerts[vcg::tri::Index(m, f.V(1))] == 0)
+        //                    f.V(1)->SetS();
+        //                if (creaseVerts[vcg::tri::Index(m, f.V(2))] == 0)
+        //                    f.V(2)->SetS();
+        //            }
+        //        });
 
 
         ForEachFace(m, [&] (FaceType & f) {
