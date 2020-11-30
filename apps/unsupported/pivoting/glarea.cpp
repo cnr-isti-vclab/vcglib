@@ -7,7 +7,7 @@
 #include <QtGui/QMessageBox>
 #include <QtGui/QImage>
 #include <QtGui/QFileDialog>
-
+#include <cstdint>
 #include "glarea.h"
 #include "cmesh.h"
 #include <wrap/io_trimesh/import.h>
@@ -18,10 +18,6 @@
 
 #include <vcg/space/normal_extrapolation.h>
 //#include "curvature.h"
-
-
-
-
 
 using namespace std;
 using namespace vcg;
@@ -39,6 +35,7 @@ bool GLArea::loadModel(const QString &file) {
      updateGL();
      return true;
 }
+
 void GLArea::open() {
   QString file = QFileDialog::getOpenFileName(this, "Select a ply file", "", "*.ply");
   if(!file.size()) return;
@@ -61,7 +58,6 @@ void GLArea::init(QString file, float ballsize = 1.2) {
   box = Box3f();  
   for(int i = 0; i < mesh.vert.size(); i++)
     box.Add(mesh.vert[i].P());
-  
   
   float r = sqrt((box.Diag()*box.Diag())/mesh.vn);
 
@@ -97,7 +93,7 @@ void GLArea::addFace() {
 }
 
 void GLArea::add10Faces() { 
-     for(int i =0; i < 10; i++)
+     for(uint8_t i =0; i < 10; i++)
         if(-1 == pivot->addFace()) return;
 
      updateGL(); 
@@ -105,27 +101,27 @@ void GLArea::add10Faces() {
 
 
 void GLArea::add100Faces() { 
-     for(int i =0; i < 100; i++)
+     for(uint8_t i =0; i < 100; i++)
         if(-1 == pivot->addFace()) return;
      updateGL(); 
 }
 
 void GLArea::add1000Faces() { 
-     for(int i =0; i < 1000; i++)
+     for(uint8_t i =0; i < 1000; i++)
         if(-1 == pivot->addFace()) return;
      updateGL(); 
 }
 
 void GLArea::addAll() { 
   while(1) {
-    for(int i = 0; i < 1000; i++) 
+    for(uint8_t i = 0; i < 1000; i++) 
       if(0 > pivot->addFace()) return;
     updateGL(); 
   }
 }
 
 void GLArea::addTot() { 
-  for(int i = 0; i < tot; i++) 
+  for(uint8_t i = 0; i < tot; i++) 
     if(0 > pivot->addFace()) return;
   updateGL(); 
 }
@@ -150,7 +146,7 @@ void GLArea::initializeGL() {
    glColor4f(1, 1, 1, 1);   
 
    glEnable(GL_LIGHTING);
-   double st = 4; //1/sqrt(3);
+   float st = 4; //1/sqrt(3);
    float lpos[4];
    lpos[0] = lpos[1] = lpos[2] = st;
    lpos[3] = 1;
@@ -171,7 +167,6 @@ void GLArea::resizeGL(int w, int h) {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();  
   
-
   float r = w/(float)h;
   gluPerspective(60, r, 1, 4);
 
@@ -215,23 +210,19 @@ void GLArea::paintGL() {
      glColor4f(1, 0, 1, 0.1);
       glLineWidth(5);
       Pivot<CMesh>::Edgex &ee=pivot->front.front();
-     int v0=ee.v0;
-     int v1=ee.v1;
-   glBegin(GL_LINES);
+     uint8_t v0=ee.v0;
+     uint8_t v1=ee.v1;
+    glBegin(GL_LINES);
     glVertex3fv(mesh.vert[v0].P().V());
     glVertex3fv(mesh.vert[v1].P().V());
-   glEnd();
-  glLineWidth(1);
+    glEnd();
+    glLineWidth(1);
    }
    glEnable(GL_LIGHTING);
    glColor3f(0, 1, 0); 
-        
-        
-           
-   
-   
+                           
    glBegin(GL_TRIANGLES);
-  for(int i = 0; i < mesh.face.size(); i++) {
+  for(uint8_t i = 0; i < mesh.face.size(); i++) {
     CFace &face = mesh.face[i];
     CVertex *v[3];
     v[0] = face.V(0);
@@ -242,7 +233,7 @@ void GLArea::paintGL() {
     //Point3f &n = face.N();
     glNormal3fv(&(n[0]));
   
-    for(int k = 0; k < 3; k++) {      
+    for(uint8_t k = 0; k < 3; k++) {      
       glVertex3fv((float *)&(v[k]->P()));
     }
   }
@@ -325,17 +316,9 @@ void GLArea::paintGL() {
     glVertex3f(q[0], q[1], q[2]);
   }
   glEnd();
-  
-  
- 
-
-
+    
   glDisable(GL_POLYGON_OFFSET_LINE);
    
-   
-   
-   
-
    glDisable(GL_LIGHTING);
    glPopMatrix();
 
