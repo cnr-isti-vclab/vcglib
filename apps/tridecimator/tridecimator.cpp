@@ -9,6 +9,8 @@
 #include <vcg/complex/algorithms/local_optimization.h>
 #include <vcg/complex/algorithms/local_optimization/tri_edge_collapse_quadric.h>
 
+#include <cstdint>
+
 using namespace vcg;
 using namespace tri;
 
@@ -19,7 +21,6 @@ For edge collpases we need verteses with:
 - V->F adjacency
 - per vertex incremental mark
 - per vertex Normal
-
 
 Moreover for using a quadric based collapse the vertex class
 must have also a Quadric member Q();
@@ -71,8 +72,8 @@ void Usage()
     printf(
           "---------------------------------\n"
           "        TriDecimator 1.0 \n"
-          "     http://vcg.isti.cnr.it\n"
-          "   release date: " __DATE__ 
+          "        http://vcg.isti.cnr.it\n"
+          "        release date: " __DATE__ 
           "\n---------------------------------\n\n"
           "Copyright 2003-2016 Visual Computing Lab I.S.T.I. C.N.R.\n"
           "\nUsage:  "\
@@ -120,7 +121,7 @@ int main(int argc ,char**argv)
   double TargetError=std::numeric_limits<double >::max();
   bool CleaningFlag =false;
      // parse command line.
-    for(int i=4; i < argc;)
+    for(uint8_t i=4; i < argc;)
     {
       if(argv[i][0]=='-')
         switch(argv[i][1])
@@ -162,11 +163,9 @@ int main(int argc ,char**argv)
     }
 
   if(CleaningFlag){
-      int dup = tri::Clean<MyMesh>::RemoveDuplicateVertex(mesh);
-      int unref =  tri::Clean<MyMesh>::RemoveUnreferencedVertex(mesh);
+      uint8_t dup = tri::Clean<MyMesh>::RemoveDuplicateVertex(mesh),unref =  tri::Clean<MyMesh>::RemoveUnreferencedVertex(mesh);
       printf("Removed %i duplicate and %i unreferenced vertices from mesh \n",dup,unref);
   }
-
 
   printf("reducing it to %i\n",FinalSize);
 
