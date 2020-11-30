@@ -30,8 +30,10 @@ A number of applications have been developed using the vcglib:
 
 ## Contributing
 In case of bugs please report them [here](https://github.com/cnr-isti-vclab/vcglib/issues).
-Copyright of the library is fully owned by CNR. Contributing means signing an appropriate license agreement. 
-Pull request about trivial, small, questionable updates (e.g. small stylistic changes will int -> uint8_t) will be rejected without discussion. 
+
+Copyright of the library is fully owned by CNR. Contributing means signing an appropriate [license agreement](https://github.com/cnr-isti-vclab/vcglib/blob/master/docs/ContributorLicenseAgreement.pdf) . 
+
+Pull requests about trivial, small, questionable updates (e.g. small stylistic changes like int -> uint8_t) will be rejected without discussion. 
 
 
 ## Contacts
