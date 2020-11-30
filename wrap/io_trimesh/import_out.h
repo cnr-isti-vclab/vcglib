@@ -32,7 +32,7 @@
 #include <wrap/io_trimesh/io_mask.h>
 #include <QImageReader>
 #include <QFileInfo>
-#include <exif.h> //external easyexif lib
+#include "exif.h" //external easyexif lib
 
 namespace vcg {
 namespace tri {
