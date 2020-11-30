@@ -28,10 +28,15 @@ A number of applications have been developed using the vcglib:
 - Metro, the tool for measuring differences between meshes
 - The first high quality out-of-core mesh simplifier that was used by the Stanford Digital Michelangelo project to process their huge 3D scanned models.
 
+## Contributing
+In case of bugs please report them [here](https://github.com/cnr-isti-vclab/vcglib/issues).
+Copyright of the library is fully owned by CNR. Contributing means signing an appropriate license agreement. 
+Pull request about trivial, small, questionable updates (e.g. small stylistic changes will int -> uint8_t) will be rejected without discussion. 
+
+
 ## Contacts
 
 For any info about licensing (portion of) the library please contact us:
 Paolo Cignoni (p.cignoni@isti.cnr.it) 
 Visual Computing Lab of the Italian National Research Council - ISTI
 
-In case of bugs please report them [here](https://github.com/cnr-isti-vclab/vcglib/issues) .
