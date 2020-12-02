@@ -1175,8 +1175,6 @@ void VFOrderedStarFF(const Pos<FaceType> &startPos,
     assert((posVec.size()%2)==0);
     posVec.erase(posVec.begin()+firstBorderInd+1+halfSize, posVec.end());
     posVec.erase(posVec.begin(),posVec.begin()+firstBorderInd+1);
-    //reverse because canceled on ccw dir
-    std::reverse(posVec.begin(), posVec.end());
     assert(posVec.size()==halfSize);
   }
 }
