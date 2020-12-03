@@ -28,7 +28,6 @@
 #include <vcg/space/polygon3.h>
 #include <vcg/complex/algorithms/update/color.h>
 #include <vcg/complex/algorithms/closest.h>
-#include <vcg/complex/algorithms/point_sampling.h>
 #include <vcg/complex/algorithms/update/quality.h>
 #include <wrap/io_trimesh/export_obj.h>
 
