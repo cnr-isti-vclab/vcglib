@@ -1363,7 +1363,7 @@ public:
         std::vector<face::Pos<FaceType> > posVec;
         //SortedFaces(v,faces);
         face::Pos<FaceType> pos(v.cVFp(), v.cVFi());
-        vcg::face::VFOrderedStarFF(pos, posVec);
+        vcg::face::VFOrderedStarFF(pos, posVec,true);
 
         int curr_dir=0;
         for (unsigned int i=0;i<posVec.size();i++)
