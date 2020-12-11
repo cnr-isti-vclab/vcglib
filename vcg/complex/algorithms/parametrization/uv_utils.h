@@ -174,6 +174,23 @@ public:
         }
     }
 
+    static void GloballyRotatePerVert(MeshType &m,ScalarType Angle)
+    {
+        vcg::Box2<ScalarType> BB=PerVertUVBox(m);
+        UVCoordType Origin=BB.Center();
+        typename MeshType::VertexIterator vi;
+        for (vi=m.vert.begin();vi!=m.vert.end();vi++)
+        {
+            if ((*vi).IsD()) continue;
+            (*vi).T().P()-=Origin;
+            ScalarType X1=(*vi).T().P().X()*cos(Angle)-(*vi).T().P().Y()*sin(Angle);
+            ScalarType Y1=(*vi).T().P().X()*cos(Angle)+(*vi).T().P().Y()*sin(Angle);
+            (*vi).T().P().X()=X1;
+            (*vi).T().P().Y()=Y1;
+            (*vi).T().P()+=Origin;
+        }
+    }
+
     static void LaplacianUVVert(MeshType &m,bool fix_borders=false,int steps=3)
     {
         FaceIterator fi;
