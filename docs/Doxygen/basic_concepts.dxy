@@ -92,9 +92,15 @@ This class is part of a kernel of classes with name UpdateValue that compute the
 #include <vcg/simplex/face/base.h>
 #include <vcg/simplex/face/component.h>
 
-#include <vcg/complex/trimesh/base.h>
-#include <vcg/complex/trimesh/update/normals.h>     //class UpdateNormals
-#include <vcg/complex/trimesh/update/curvature.h>   //class UpdateCurvature
+//old version of files structure of vcglib(like: https://github.com/virtualritz/vcglib/tree/c324fb41287a791d8e11b6e2cb232c8abba5fc70)
+//#include <vcg/complex/trimesh/base.h>
+//#include <vcg/complex/trimesh/update/normals.h>     //class UpdateNormals
+//#include <vcg/complex/trimesh/update/curvature.h>   //class UpdateCurvature
+
+//for latest version of vcglib source files structure:
+#include <vcg/complex/base.h>
+#include <vcg/complex/algorithms/update/normal.h>//class UpdateNormals
+#include <vcg/complex/algorithms/update/curvature.h> //class UpdateCurvature
 
 class MyVertex;
 class MyFace;
