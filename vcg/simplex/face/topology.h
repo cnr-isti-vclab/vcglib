@@ -1194,7 +1194,8 @@ void VFOrderedStarFF(const Pos<FaceType> &startPos,
 {
 	VFOrderedStarFF(startPos, posVec);
 	const auto & pos = posVec[0];
-	if (ccw != (pos.VFlip() == pos.F()->V(pos.F()->Prev(pos.VInd()))))
+    //if (ccw != (pos.VFlip() == pos.F()->V(pos.F()->Prev(pos.VInd()))))
+    if ((ccw) == (pos.V()!=pos.F()->V(pos.E())))
 	{
 		std::reverse(posVec.begin(), posVec.end());
 	}
