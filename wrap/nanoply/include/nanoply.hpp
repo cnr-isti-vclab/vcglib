@@ -557,6 +557,30 @@ namespace nanoply
     return true;
   }
 
+	template <>
+	inline bool PlyFile::WriteAsciiData<double>(const double & src)
+	{
+		if (mode != 1)
+			return false;
+		const auto precision = fileStream.precision();
+		fileStream << std::setprecision(std::numeric_limits<double>::max_digits10)
+		           << src
+		           << std::setprecision(precision);
+		return true;
+	}
+
+	template <>
+	inline bool PlyFile::WriteAsciiData<float>(const float & src)
+	{
+		if (mode != 1)
+			return false;
+		const auto precision = fileStream.precision();
+		fileStream << std::setprecision(std::numeric_limits<float>::max_digits10)
+		           << src
+		           << std::setprecision(precision);
+		return true;
+  }
+
   inline void PlyFile::SetBufferSize(int64_t size)
   {
     maxSize = size;
