@@ -349,7 +349,7 @@ public:
         SmoothParam()
         {
             Ndir=4;
-            curvRing=2;
+            curvRing=3;
             alpha_curv=0.0;
             align_borders=false;
             SmoothM=SMMiq;
