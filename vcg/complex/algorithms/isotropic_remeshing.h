@@ -379,6 +379,8 @@ private:
         tri::RequirePerVertexQuality(m);
         tri::UpdateTopology<MeshType>::FaceFace(m);
 //        tri::UpdateFlags<MeshType>::VertexClearV(m);
+        for (size_t i=0;i<m.vert.size();i++)
+            m.vert[i].IMark()=0;
 
         std::vector<VertexPointer> seeds;
         ForEachFace(m, [&] (FaceType & f) {
@@ -391,6 +393,10 @@ private:
                }
            }
         });
+
+        std::sort(seeds.begin(),seeds.end());
+        auto last=std::unique(seeds.begin(),seeds.end());
+        seeds.erase(last, seeds.end());
 
         tri::EuclideanDistance<MeshType> eu;
         tri::Geodesic<MeshType>::PerVertexDijkstraCompute(m, seeds, eu);
