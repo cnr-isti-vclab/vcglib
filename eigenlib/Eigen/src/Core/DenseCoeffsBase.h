@@ -107,7 +107,7 @@ class DenseCoeffsBase<Derived,ReadOnlyAccessors> : public EigenBase<Derived>
                    colIndexByOuterInner(outer, inner));
     }
 
-    /** \returns the coefficient at given the given row and column.
+    /** \returns the coefficient at the given row and column.
       *
       * \sa operator()(Index,Index), operator[](Index)
       */
@@ -352,7 +352,7 @@ class DenseCoeffsBase<Derived, WriteAccessors> : public DenseCoeffsBase<Derived,
                       colIndexByOuterInner(outer, inner));
     }
 
-    /** \returns a reference to the coefficient at given the given row and column.
+    /** \returns a reference to the coefficient at the given row and column.
       *
       * \sa operator[](Index)
       */
