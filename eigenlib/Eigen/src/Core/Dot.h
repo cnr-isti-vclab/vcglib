@@ -19,12 +19,7 @@ namespace internal {
 // looking at the static assertions. Thus this is a trick to get better compile errors.
 template<typename T, typename U,
 // the NeedToTranspose condition here is taken straight from Assign.h
-         bool NeedToTranspose = T::IsVectorAtCompileTime
-                && U::IsVectorAtCompileTime
-                && ((int(T::RowsAtCompileTime) == 1 && int(U::ColsAtCompileTime) == 1)
-                      |  // FIXME | instead of || to please GCC 4.4.0 stupid warning "suggest parentheses around &&".
-                         // revert to || as soon as not needed anymore.
-                    (int(T::ColsAtCompileTime) == 1 && int(U::RowsAtCompileTime) == 1))
+         bool NeedToTranspose = (T::IsVectorAtCompileTime)&&(U::IsVectorAtCompileTime)&&((int(T::RowsAtCompileTime)==1)&&(int(U::ColsAtCompileTime)==1))||((int(T::ColsAtCompileTime)==1)&&(int(U::RowsAtCompileTime) == 1))
 >
 struct dot_nocheck
 {
@@ -76,7 +71,7 @@ MatrixBase<Derived>::dot(const MatrixBase<OtherDerived>& other) const
   EIGEN_CHECK_BINARY_COMPATIBILIY(func,Scalar,typename OtherDerived::Scalar);
 #endif
   
-  eigen_assert(size() == other.size());
+  eigen_assert(size()==other.size());
 
   return internal::dot_nocheck<Derived,OtherDerived>::run(*this, other);
 }
@@ -84,7 +79,7 @@ MatrixBase<Derived>::dot(const MatrixBase<OtherDerived>& other) const
 //---------- implementation of L2 norm and related functions ----------
 
 /** \returns, for vectors, the squared \em l2 norm of \c *this, and for matrices the Frobenius norm.
-  * In both cases, it consists in the sum of the square of all the matrix entries.
+  * In both cases, it consists of the sum of the square of all the matrix entries.
   * For vectors, this is also equals to the dot product of \c *this with itself.
   *
   * \sa dot(), norm(), lpNorm()
@@ -173,7 +168,7 @@ MatrixBase<Derived>::stableNormalized() const
     return n;
 }
 
-/** Normalizes the vector while avoid underflow and overflow
+/** Normalizes the vector while avoiding underflow and overflow
   *
   * \only_for_vectors
   *
