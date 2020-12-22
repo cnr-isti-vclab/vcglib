@@ -283,9 +283,10 @@ public:
         {
             if(cb) cb(100*i/params.iter, "Remeshing");
 
+
             if (params.adapt)
             {
-                computeQualityDistFromCrease(toRemesh);
+                computeQualityDistFromRadii(toRemesh);
                 tri::Smooth<MeshType>::VertexQualityLaplacian(toRemesh, 2);
             }
 
@@ -405,8 +406,71 @@ private:
         ForEachVertex(m, [] (VertexType & v) {
             v.Q()  = 1 / (v.Q() + 1);
         });
-
     }
+
+    static void computeQualityDistFromRadii(MeshType & m)
+    {
+        tri::RequirePerVertexQuality(m);
+        tri::RequirePerFaceQuality(m);
+
+        ScalarType maxV = 0;
+        ScalarType minV = 10;
+
+        ForEachFace(m, [&] (FaceType & f) {
+            f.Q() = 1. - vcg::QualityRadii(f.cP(0), f.cP(1), f.cP(2));
+            maxV = std::max(maxV, f.Q());
+            minV = std::min(minV, f.Q());
+        });
+
+        //normalize
+        ForEachFace(m, [&] (FaceType & f) {
+            f.Q() = std::pow((f.Q() - minV) / (maxV - minV), 2.);
+        });
+
+        std::vector<ScalarType> vertMax(m.VN(), 0);
+        std::vector<ScalarType> vertMin(m.VN(), 10);
+
+        ForEachFace(m, [&] (FaceType & f) {
+            for (int i = 0; i < 3; ++i)
+            {
+                auto vidx = vcg::tri::Index(m, f.V(i));
+                vertMax[vidx] = std::max(vertMax[vidx], f.Q());
+                vertMin[vidx] = std::min(vertMin[vidx], f.Q());
+            }
+        });
+
+        for (size_t v = 0; v < m.VN(); ++v)
+        {
+            m.vert[v].Q() = vertMax[v] - vertMin[v];
+        }
+       
+//        tri::UpdateQuality<MeshType>::VertexFromFace(m);
+    }
+
+    static void computeQualityDistFromHeight(MeshType & m, const ScalarType lowerBound, const ScalarType higherBound)
+    {
+        tri::RequirePerVertexQuality(m);
+        tri::RequirePerFaceQuality(m);
+
+        ScalarType maxV = 0;
+        ScalarType minV = 10;
+
+
+        ForEachFace(m, [&] (FaceType & f) {
+            ScalarType minH = std::numeric_limits<ScalarType>::max();
+            for (int i = 0; i < 3; ++i)
+            {
+                CoordType closest;
+                ScalarType dist = 0;
+                vcg::Segment3<ScalarType> seg(f.cP1(i), f.cP2(i));
+                vcg::SegmentPointDistance(seg, f.cP0(i), closest, dist);
+                minH = std::min(minH, dist);
+            }
+
+            f.Q() = math::Clamp(minH, lowerBound, higherBound);
+        });
+    }
+
 
     /*
          Computes the ideal valence for the vertex in pos p:
@@ -745,7 +809,10 @@ private:
         ScalarType length, lengthThr, minQ, maxQ;
         bool operator()(PosType &ep)
         {
-            ScalarType mult = math::ClampedLerp((ScalarType)0.25,(ScalarType)4, (((math::Abs(ep.V()->Q())+math::Abs(ep.VFlip()->Q()))/(ScalarType)2.0)/(maxQ-minQ)));
+            ScalarType quality = (((math::Abs(ep.V()->Q())+math::Abs(ep.VFlip()->Q()))/(ScalarType)2.0)-minQ)/(maxQ-minQ);
+            ScalarType mult = math::ClampedLerp((ScalarType)0.4,(ScalarType)2.5, quality);
+//            ScalarType mult = 1;
+//            length = (ep.V()->Q() + ep.VFlip()->Q())/2.0;
             ScalarType dist = Distance(ep.V()->P(), ep.VFlip()->P());
             if(dist > mult * length)
             {
@@ -951,9 +1018,14 @@ private:
 
     static bool testCollapse1(PosType &p, VertexPair & pair, Point3<ScalarType> &mp, ScalarType minQ, ScalarType maxQ, Params &params, bool relaxed = false)
     {
-        ScalarType mult = (params.adapt) ? math::ClampedLerp((ScalarType)0.25,(ScalarType)4, (((math::Abs(p.V()->Q())+math::Abs(p.VFlip()->Q()))/(ScalarType)2.0)/(maxQ-minQ))) : (ScalarType)1;
-        ScalarType dist = Distance(p.V()->P(), p.VFlip()->P());
+        ScalarType quality = (((math::Abs(p.V()->Q())+math::Abs(p.VFlip()->Q()))/(ScalarType)2.0)-minQ)/(maxQ-minQ);
+        ScalarType mult = (params.adapt) ? math::ClampedLerp((ScalarType)0.4,(ScalarType)2.5, quality) : (ScalarType)1;
         ScalarType thr = mult*params.minLength;
+
+//                    ScalarType mult = 1;
+//                    ScalarType thr = (p.V()->Q() + p.VFlip()->Q())/2.0;
+
+        ScalarType dist = Distance(p.V()->P(), p.VFlip()->P());
         ScalarType area = DoubleArea(*(p.F()))/2.f;
         if(relaxed || (dist < thr || area < params.minLength*params.minLength/100.f))//if to collapse
         {
