@@ -75,6 +75,24 @@ void VEStarVE(const typename EdgeType::VertexType* vp, std::vector<EdgeType *> &
       }
 }
 
+template <class EdgeType>
+void VEStarVE(const typename EdgeType::VertexType * vp,
+              std::vector<EdgeType *> &starVec,
+              std::vector<int> & indices)
+{
+	starVec.clear();
+	indices.clear();
+	starVec.reserve(16);
+	indices.reserve(16);
+	edge::VEIterator<EdgeType> vei(vp);
+	while(!vei.End())
+	{
+		starVec.push_back(vei.E());
+		indices.push_back(vei.I());
+		++vei;
+	}
+}
+
 /// Completely detach an edge from the VE adjacency. Useful before deleting it 
 template <class EdgeType>
 void VEDetach(EdgeType & e)
