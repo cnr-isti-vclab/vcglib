@@ -73,6 +73,9 @@ public:
         ScalarType maxLength; // maximal admitted length: no edge should be longer than this value  (used when refining)
         ScalarType lengthThr;
 
+        ScalarType minAdaptiveMult = 1;
+        ScalarType maxAdaptiveMult = 1;
+
         ScalarType minimalAdmittedArea;
         ScalarType maxSurfDist;
 
@@ -277,7 +280,8 @@ public:
         tri::UpdateFlags<MeshType>::VertexBorderFromFaceAdj(toRemesh);
         tri::UpdateTopology<MeshType>::VertexFace(toRemesh);
 
-        tagCreaseEdges(toRemesh, params);
+        if (!params.userSelectedCreases)
+            tagCreaseEdges(toRemesh, params);
 
         for(int i=0; i < params.iter; ++i)
         {
@@ -313,6 +317,69 @@ public:
         }
     }
 
+    static int tagCreaseEdges(MeshType &m, Params & params, bool forceTag = false)
+    {
+        int count = 0;
+        std::vector<char> creaseVerts(m.VN(), 0);
+
+        vcg::tri::UpdateFlags<MeshType>::VertexClearV(m);
+        std::queue<PosType> creaseQueue;
+
+        //if we are forcing the crease taggin or we are not using user creases...reset the faceedgeS...
+        if ((forceTag || !params.userSelectedCreases))
+            vcg::tri::UpdateFlags<MeshType>::FaceClearFaceEdgeS(m);
+
+        ForEachFacePos(m, [&](PosType &p){
+
+            if (p.IsBorder())
+                p.F()->SetFaceEdgeS(p.E());
+
+            //			if((p.F1Flip() > p.F()))
+            {
+                FaceType *ff    = p.F();
+                FaceType *ffAdj = p.FFlip();
+
+                double quality    = vcg::QualityRadii(ff->cP(0), ff->cP(1), ff->cP(2));
+                double qualityAdj = vcg::QualityRadii(ffAdj->cP(0), ffAdj->cP(1), ffAdj->cP(2));
+
+                bool qualityCheck = quality > 0.00000001 && qualityAdj > 0.00000001;
+                //				bool areaCheck    = vcg::DoubleArea(*ff) > 0.000001 && vcg::DoubleArea(*ffAdj) > 0.000001;
+
+                if ((forceTag || !params.userSelectedCreases) && (testCreaseEdge(p, params.creaseAngleCosThr) /*&& areaCheck*//* && qualityCheck*/) || p.IsBorder())
+                {
+                    PosType pp = p;
+                    std::vector<FacePointer> faces;
+                    std::vector<int> edges;
+                    bool allOk = true;
+
+                    do {
+                        faces.push_back(pp.F());
+                        edges.push_back(pp.E());
+                        //                        pp.F()->SetFaceEdgeS(pp.E());
+                        if (vcg::QualityRadii(pp.F()->cP(0), pp.F()->cP(1), pp.F()->cP(2)) <= 0.0001)
+                        {
+                            allOk = false;
+                            break;
+                        }
+                        pp.NextF();
+                    } while (pp != p);
+
+                    if (allOk)
+                    {
+                        for (int i = 0; i < faces.size(); ++i)
+                        {
+                            faces[i]->SetFaceEdgeS(edges[i]);
+                        }
+                    }
+
+                    creaseQueue.push(p);
+                }
+            }
+        });
+        return count;
+    }
+
+
 private:
     /*
                 TODO: Add better crease support: detect all creases at starting time, saving it on facedgesel flags
@@ -345,6 +412,11 @@ private:
 
         maxQ = distr.Percentile(0.9f);
         minQ = distr.Percentile(0.1f);
+    }
+
+    static inline ScalarType computeLengthThrMult(const Params & params, const ScalarType & quality)
+    {
+        return (params.adapt) ? math::ClampedLerp(params.minAdaptiveMult, params.maxAdaptiveMult, quality) : (ScalarType) 1;
     }
 
     //Computes PerVertexQuality as a function of the 'deviation' of the normals taken from
@@ -517,160 +589,6 @@ private:
         return true;
     }
 
-    static int tagCreaseEdges(MeshType &m, Params & params)
-    {
-        int count = 0;
-        std::vector<char> creaseVerts(m.VN(), 0);
-
-        vcg::tri::UpdateFlags<MeshType>::VertexClearV(m);
-        std::queue<PosType> creaseQueue;
-
-        ForEachFacePos(m, [&](PosType &p){
-
-            if (p.IsBorder())
-                p.F()->SetFaceEdgeS(p.E());
-
-            //			if((p.FFlip() > p.F()))
-            {
-                FaceType *ff    = p.F();
-                FaceType *ffAdj = p.FFlip();
-
-                double quality    = vcg::QualityRadii(ff->cP(0), ff->cP(1), ff->cP(2));
-                double qualityAdj = vcg::QualityRadii(ffAdj->cP(0), ffAdj->cP(1), ffAdj->cP(2));
-
-                bool qualityCheck = quality > 0.00000001 && qualityAdj > 0.00000001;
-                //				bool areaCheck    = vcg::DoubleArea(*ff) > 0.000001 && vcg::DoubleArea(*ffAdj) > 0.000001;
-
-                if (!params.userSelectedCreases && (testCreaseEdge(p, params.creaseAngleCosThr) /*&& areaCheck*//* && qualityCheck*/) || p.IsBorder())
-                {
-                    PosType pp = p;
-                    std::vector<FacePointer> faces;
-                    std::vector<int> edges;
-                    bool allOk = true;
-
-                    do {
-                        faces.push_back(pp.F());
-                        edges.push_back(pp.E());
-                        //                        pp.F()->SetFaceEdgeS(pp.E());
-                        if (vcg::QualityRadii(pp.F()->cP(0), pp.F()->cP(1), pp.F()->cP(2)) <= 0.0001)
-                        {
-                            allOk = false;
-                            break;
-                        }
-                        pp.NextF();
-                    } while (pp != p);
-
-                    if (allOk)
-                    {
-                        for (int i = 0; i < faces.size(); ++i)
-                        {
-                            faces[i]->SetFaceEdgeS(edges[i]);
-                        }
-                    }
-
-                    creaseQueue.push(p);
-                }
-            }
-        });
-
-        //		//now all creases are checked...
-        //		//prune false positive (too small) (count + scale?)
-
-        //		while (!creaseQueue.empty())
-        //		{
-        //			PosType & p = creaseQueue.front();
-        //			creaseQueue.pop();
-
-        //			std::stack<PosType> chainQueue;
-        //			std::vector<size_t> chainVerts;
-
-        //			if (!p.V()->IsV())
-        //			{
-        //				chainQueue.push(p);
-        //			}
-
-        //			p.FlipV();
-        //			p.NextEdgeS();
-
-        //			if (!p.V()->IsV())
-        //			{
-        //				chainQueue.push(p);
-        //			}
-
-        //			while (!chainQueue.empty())
-        //			{
-        //				PosType p = chainQueue.top();
-        //				chainQueue.pop();
-
-        //				p.V()->SetV();
-        //				chainVerts.push_back(vcg::tri::Index(m, p.V()));
-
-        //				PosType pp = p;
-
-        //				//circle around vert in search for new crease edges
-        //				do {
-        //					pp.NextF(); //jump adj face
-        //					pp.FlipE(); // this edge is already ok => jump to next
-        //					if (pp.IsEdgeS())
-        //					{
-        //						PosType nextPos = pp;
-        //						nextPos.FlipV(); // go to next vert in the chain
-        //						if (!nextPos.V()->IsV()) // if already visited...ignore
-        //						{
-        //							chainQueue.push(nextPos);
-        //						}
-        //					}
-        //				}
-        //				while (pp != p);
-
-        //			}
-
-        //			if (chainVerts.size() > 5)
-        //			{
-        //				for (auto vp : chainVerts)
-        //				{
-        //					creaseVerts[vp] = 1;
-        //				}
-        //			}
-        //		}
-        //		//store crease on V()
-
-        //		//this aspect ratio check doesn't work on cadish meshes (long thin triangles spanning whole mesh)
-        //		ForEachFace(m, [&] (FaceType & f) {
-        //			if (vcg::QualityRadii(f.cP(0), f.cP(1), f.cP(2)) < params.aspectRatioThr)
-        //			{
-        //				if (creaseVerts[vcg::tri::Index(m, f.V(0))] == 0)
-        //					f.V(0)->SetS();
-        //				if (creaseVerts[vcg::tri::Index(m, f.V(1))] == 0)
-        //					f.V(1)->SetS();
-        //				if (creaseVerts[vcg::tri::Index(m, f.V(2))] == 0)
-        //					f.V(2)->SetS();
-        //			}
-        //		});
-
-        //		ForEachFace(m, [&] (FaceType & f) {
-        //			for (int i = 0; i < 3; ++i)
-        //			{
-        //				if (f.FFp(i) > &f)
-        //				{
-        //					ScalarType angle = fastAngle(NormalizedTriangleNormal(f), NormalizedTriangleNormal(*(f.FFp(i))));
-        //					if (angle <= params.foldAngleCosThr)
-        //					{
-        //						//						if (creaseVerts[vcg::tri::Index(m, f.V0(i))] == 0)
-        //						f.V0(i)->SetS();
-        //						//						if (creaseVerts[vcg::tri::Index(m, f.V1(i))] == 0)
-        //						f.V1(i)->SetS();
-        //						//						if (creaseVerts[vcg::tri::Index(m, f.V2(i))] == 0)
-        //						f.V2(i)->SetS();
-        //						//						if (creaseVerts[vcg::tri::Index(m, f.FFp(i)->V2(f.FFi(i)))] == 0)
-        //						f.FFp(i)->V2(f.FFi(i))->SetS();
-        //					}
-        //				}
-        //			}
-        //		});
-
-        return count;
-    }
 
 
     /*
@@ -773,8 +691,9 @@ private:
                             face::IsManifold(f, i) && /*checkManifoldness(f, i) &&*/
                             face::checkFlipEdgeNotManifold(f, i) &&
                             testSwap(pi, params.creaseAngleCosThr) &&
-                            (!params.surfDistCheck || testHausdorff(*params.mProject, params.grid, toCheck, params.maxSurfDist)) &&
-                            face::CheckFlipEdgeNormal(f, i, vcg::math::ToRad(5.)))
+//                            face::CheckFlipEdge(f, i) &&
+                            face::CheckFlipEdgeNormal(f, i, params.creaseAngleRadThr) && //vcg::math::ToRad(5.)) &&
+                            (!params.surfDistCheck || testHausdorff(*params.mProject, params.grid, toCheck, params.maxSurfDist)))
                     {
                         //When doing the swap we need to preserve and update the crease info accordingly
                         FaceType* g = f.cFFp(i);
@@ -807,12 +726,14 @@ private:
     public:
         int count = 0;
         ScalarType length, lengthThr, minQ, maxQ;
+        const Params & params;
+
+        EdgeSplitAdaptPred(const Params & p) : params(p) {};
+
         bool operator()(PosType &ep)
         {
             ScalarType quality = (((math::Abs(ep.V()->Q())+math::Abs(ep.VFlip()->Q()))/(ScalarType)2.0)-minQ)/(maxQ-minQ);
-            ScalarType mult = math::ClampedLerp((ScalarType)0.4,(ScalarType)2.5, quality);
-//            ScalarType mult = 1;
-//            length = (ep.V()->Q() + ep.VFlip()->Q())/2.0;
+            ScalarType mult = computeLengthThrMult(params, quality);
             ScalarType dist = Distance(ep.V()->P(), ep.VFlip()->P());
             if(dist > mult * length)
             {
@@ -851,12 +772,12 @@ private:
         ScalarType minQ,maxQ;
         if(params.adapt){
             computeVQualityDistrMinMax(m, minQ, maxQ);
-            EdgeSplitAdaptPred ep;
+            EdgeSplitAdaptPred ep(params);
             ep.minQ      = minQ;
             ep.maxQ      = maxQ;
             ep.length    = params.maxLength;
             ep.lengthThr = params.lengthThr;
-            tri::RefineMidpoint(m,ep, params.selectedOnly);
+            tri::RefineMidpoint(m, ep, params.selectedOnly);
             params.stat.splitNum+=ep.count;
         }
         else {
@@ -947,11 +868,8 @@ private:
                 Point3<ScalarType> oldN = NormalizedTriangleNormal(*(pi.F()));
                 Point3<ScalarType> newN = Normal(mp, v1->P(), v2->P()).Normalize();
 
-                //                float div = fastAngle(oldN, newN);
-                //                if(div < .9f ) return false;
-                if (oldN * newN < 0.5f)
-                    return false;
-
+//                if (oldN * newN < 0.5f)
+//                    return false;
 
                 std::vector<CoordType> baryP(1);
                 baryP[0] = (v1->cP() + v2->cP() + mp) / 3.;
@@ -1019,11 +937,8 @@ private:
     static bool testCollapse1(PosType &p, VertexPair & pair, Point3<ScalarType> &mp, ScalarType minQ, ScalarType maxQ, Params &params, bool relaxed = false)
     {
         ScalarType quality = (((math::Abs(p.V()->Q())+math::Abs(p.VFlip()->Q()))/(ScalarType)2.0)-minQ)/(maxQ-minQ);
-        ScalarType mult = (params.adapt) ? math::ClampedLerp((ScalarType)0.4,(ScalarType)2.5, quality) : (ScalarType)1;
+        ScalarType mult = computeLengthThrMult(params, quality);
         ScalarType thr = mult*params.minLength;
-
-//                    ScalarType mult = 1;
-//                    ScalarType thr = (p.V()->Q() + p.VFlip()->Q())/2.0;
 
         ScalarType dist = Distance(p.V()->P(), p.VFlip()->P());
         ScalarType area = DoubleArea(*(p.F()))/2.f;
@@ -1318,20 +1233,6 @@ private:
         });
 
 
-        //this aspect ratio check doesn't work on cadish meshes (long thin triangles spanning whole mesh)
-        //        ForEachFace(m, [&] (FaceType & f) {
-        //            if (vcg::Quality(f.cP(0), f.cP(1), f.cP(2)) < params.aspectRatioThr || vcg::DoubleArea(f) < 0.00001)
-        //            {
-        //                if (creaseVerts[vcg::tri::Index(m, f.V(0))] == 0)
-        //                    f.V(0)->SetS();
-        //                if (creaseVerts[vcg::tri::Index(m, f.V(1))] == 0)
-        //                    f.V(1)->SetS();
-        //                if (creaseVerts[vcg::tri::Index(m, f.V(2))] == 0)
-        //                    f.V(2)->SetS();
-        //            }
-        //        });
-
-
         ForEachFace(m, [&] (FaceType & f) {
             for (int i = 0; i < 3; ++i)
             {
@@ -1419,33 +1320,33 @@ private:
                         TD[*vi].sum = ((*vi).P() + TD[*vi].sum) / (TD[*vi].cnt + 1);
                 }
 
-            for (auto fi = m.face.begin(); fi != m.face.end(); ++fi)
-            {
-                if (!(*fi).IsD())
-                {
-                    for (int j = 0; j < 3; ++j)
-                    {
-                        if (Angle(Normal(TD[(*fi).V0(j)].sum, (*fi).P1(j), (*fi).P2(j)),
-                                  Normal((*fi).P0(j), (*fi).P1(j), (*fi).P2(j))) > M_PI/2.)
-                            TD[(*fi).V0(j)].sum = (*fi).P0(j);
-                    }
-                }
-            }
-            for (auto fi = m.face.begin(); fi != m.face.end(); ++fi)
-            {
-                if (!(*fi).IsD())
-                {
-                    for (int j = 0; j < 3; ++j)
-                    {
-                        if (Angle(Normal(TD[(*fi).V0(j)].sum, TD[(*fi).V1(j)].sum, (*fi).P2(j)),
-                                  Normal((*fi).P0(j), (*fi).P1(j), (*fi).P2(j))) > M_PI/2.)
-                        {
-                            TD[(*fi).V0(j)].sum = (*fi).P0(j);
-                            TD[(*fi).V1(j)].sum = (*fi).P1(j);
-                        }
-                    }
-                }
-            }
+//            for (auto fi = m.face.begin(); fi != m.face.end(); ++fi)
+//            {
+//                if (!(*fi).IsD())
+//                {
+//                    for (int j = 0; j < 3; ++j)
+//                    {
+//                        if (Angle(Normal(TD[(*fi).V0(j)].sum, (*fi).P1(j), (*fi).P2(j)),
+//                                  Normal((*fi).P0(j), (*fi).P1(j), (*fi).P2(j))) > M_PI/2.)
+//                            TD[(*fi).V0(j)].sum = (*fi).P0(j);
+//                    }
+//                }
+//            }
+//            for (auto fi = m.face.begin(); fi != m.face.end(); ++fi)
+//            {
+//                if (!(*fi).IsD())
+//                {
+//                    for (int j = 0; j < 3; ++j)
+//                    {
+//                        if (Angle(Normal(TD[(*fi).V0(j)].sum, TD[(*fi).V1(j)].sum, (*fi).P2(j)),
+//                                  Normal((*fi).P0(j), (*fi).P1(j), (*fi).P2(j))) > M_PI/2.)
+//                        {
+//                            TD[(*fi).V0(j)].sum = (*fi).P0(j);
+//                            TD[(*fi).V1(j)].sum = (*fi).P1(j);
+//                        }
+//                    }
+//                }
+//            }
 
             for (auto vi = m.vert.begin(); vi != m.vert.end(); ++vi)
                 if (!(*vi).IsD() && TD[*vi].cnt > 0)
