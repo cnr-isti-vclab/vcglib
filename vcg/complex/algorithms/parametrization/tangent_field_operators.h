@@ -110,31 +110,35 @@ vcg::Point3<ScalarType> InterpolateNRosy3D(const std::vector<vcg::Point3<ScalarT
         NF.Normalize();
         CoordType Vect=V[i];
         Vect.Normalize();
-        //ScalarType Dot=fabs(Vect*NF);
-        //std::cout << "V[i] " << V[i].X() << " " << V[i].Y() << std::endl << std::flush;
+        ScalarType Dot=(Norm[i]*TargetN);
+        CoordType rotV=V[i];
+        //std::cout << "Dot " <<Dot<<std::endl;
+        if (Dot>-0.99999)
+        {
+            //std::cout << "V[i] " << V[i].X() << " " << V[i].Y() << std::endl << std::flush;
 
-        ///rotate the vector to become tangent to the reference plane
-        vcg::Matrix33<ScalarType> RotNorm=vcg::RotationMatrix(Norm[i],TargetN);
-        //std::cout << "Norm[i] " << Norm[i].X() << " " << Norm[i].Y() << " " << Norm[i].Z()<< std::endl;
-        //std::cout << "TargetN " << TargetN.X() << " " << TargetN.Y() << " " << TargetN.Z()<< std::endl<< std::flush;
+            ///rotate the vector to become tangent to the reference plane
+            vcg::Matrix33<ScalarType> RotNorm=vcg::RotationMatrix(Norm[i],TargetN);
+//                    std::cout << "Norm[i] " << Norm[i].X() << " " << Norm[i].Y() << " " << Norm[i].Z()<< std::endl;
+//                    std::cout << "TargetN " << TargetN.X() << " " << TargetN.Y() << " " << TargetN.Z()<< std::endl<< std::flush;
 
-        CoordType rotV=RotNorm*V[i];
-        //assert(fabs(rotV*TargetN)<0.000001);
-        rotV.Normalize();
-        //std::cout << "rotV " << rotV.X() << " " << rotV.Y() << " " << rotV.Z()<< std::endl<< std::flush;
+            rotV=RotNorm*V[i];
+            //assert(fabs(rotV*TargetN)<0.000001);
+            rotV.Normalize();
+            //std::cout << "rotV " << rotV.X() << " " << rotV.Y() << " " << rotV.Z()<< std::endl<< std::flush;
 
-        ///trassform to the reference frame
-        rotV=RotFrame*rotV;
-//        if (isnan(rotV.X())||isnan(rotV.Y()))
-//        {
-//            std::cout << "V[i] " << V[i].X() << " " << V[i].Y() << std::endl << std::flush;
-//            std::cout << "Norm[i] " << Norm[i].X() << " " << Norm[i].Y() << " " << Norm[i].Z()<< std::endl;
-//            std::cout << "TargetN " << TargetN.X() << " " << TargetN.Y() << " " << TargetN.Z()<< std::endl<< std::flush;
-//        }
+            ///trassform to the reference frame
+            rotV=RotFrame*rotV;
+            //        if (isnan(rotV.X())||isnan(rotV.Y()))
+            //        {
+            //            std::cout << "V[i] " << V[i].X() << " " << V[i].Y() << std::endl << std::flush;
+            //            std::cout << "Norm[i] " << Norm[i].X() << " " << Norm[i].Y() << " " << Norm[i].Z()<< std::endl;
+            //            std::cout << "TargetN " << TargetN.X() << " " << TargetN.Y() << " " << TargetN.Z()<< std::endl<< std::flush;
+            //        }
 
-        assert(!isnan(rotV.X()));
-        assert(!isnan(rotV.Y()));
-
+            assert(!isnan(rotV.X()));
+            assert(!isnan(rotV.Y()));
+        }
         //it's 2D from now on
         Cross2D.push_back(vcg::Point2<ScalarType>(rotV.X(),rotV.Y()));
 
@@ -534,9 +538,9 @@ public:
     static void InitBorderField(MeshType & mesh)
     {
         typedef typename MeshType::FaceType FaceType;
-//        typedef typename MeshType::VertexType VertexType;
+        //        typedef typename MeshType::VertexType VertexType;
         typedef typename MeshType::CoordType CoordType;
-//        typedef typename MeshType::ScalarType ScalarType;
+        //        typedef typename MeshType::ScalarType ScalarType;
 
         vcg::tri::UpdateTopology<MeshType>::FaceFace(mesh);
         for (size_t i=0;i<mesh.face.size();i++)
@@ -641,7 +645,7 @@ public:
         //restore selected flag
         vcg::tri::UpdateFlags<MeshType>::FaceClearS(mesh);
         for (int i=0; i<(int)Sel0.size(); i++)
-           mesh.face[Sel0[i]].SetS();
+            mesh.face[Sel0[i]].SetS();
     }
 
     static size_t FindSeparatrices(const typename vcg::face::Pos<FaceType> &vPos,
