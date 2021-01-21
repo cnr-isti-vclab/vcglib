@@ -159,6 +159,15 @@ public:
     }
 
     template <class EigenMatrix44Type>
+    EigenMatrix44Type ToEigenMatrix() const {
+        EigenMatrix44Type m;
+        for(int i = 0; i < 4; i++)
+            for(int j = 0; j < 4; j++)
+                m(i,j)=(*this)[i][j];
+        return m;
+    }
+
+    template <class EigenMatrix44Type>
     void FromEigenMatrix(const EigenMatrix44Type & m){
         for(int i = 0; i < 4; i++)
             for(int j = 0; j < 4; j++)

@@ -76,11 +76,22 @@ public:
     }
 
     template <class EigenMatrix33Type>
+    EigenMatrix33Type ToEigenMatrix() const {
+      EigenMatrix33Type m;
+      for(int i = 0; i < 3; i++)
+        for(int j = 0; j < 3; j++)
+          m(i,j)=(*this)[i][j];
+      return m;
+    }
+
+    template <class EigenMatrix33Type>
     void FromEigenMatrix(const EigenMatrix33Type & m){
       for(int i = 0; i < 3; i++)
         for(int j = 0; j < 3; j++)
           (*this)[i][j]=m(i,j);
     }
+
+
 
     static inline const Matrix33 &Identity( )
     {
