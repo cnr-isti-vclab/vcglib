@@ -186,7 +186,7 @@ namespace io {
         static DAEError	LoadPolygonalListMesh(QDomNodeList& polylist,ColladaMesh& m,const size_t offset,InfoDAE& info,QMap<QString,QString> &materialBinding)
         {
             if(polylist.isEmpty()) return E_NOERROR;
-            QDEBUG("****** LoadPolygonalListMesh (initial mesh size %i %i)",m.vert.size(),m.fn);
+            QDEBUG("****** LoadPolygonalListMesh (initial mesh size %li %i)",m.vert.size(),m.fn);
             for(int tript = 0; tript < polylist.size();++tript)
             {
                 QString materialId =  polylist.at(tript).toElement().attribute(QString("material"));
@@ -271,7 +271,7 @@ namespace io {
                 }
 
             }
-            QDEBUG("****** LoadPolygonalListMesh (final  mesh size vn %i vertsize %i - fn %i facesize %i)",m.vn,m.vert.size(),m.fn,m.face.size());
+            QDEBUG("****** LoadPolygonalListMesh (final  mesh size vn %i vertsize %li - fn %i facesize %li)",m.vn,m.vert.size(),m.fn,m.face.size());
             return E_NOERROR;
         }
 
@@ -435,12 +435,12 @@ namespace io {
                         if( ! ( (m.face[ff].V(0) != m.face[ff].V(1)) &&
                                         (m.face[ff].V(0) != m.face[ff].V(2)) &&
                                         (m.face[ff].V(1) != m.face[ff].V(2)) )  )
-                                        QDEBUG("********* WARNING face %i, (%i %i %i) is a DEGENERATE FACE!",ff, m.face[ff].V(0) - &m.vert.front(), m.face[ff].V(1) - &m.vert.front(), m.face[ff].V(2) - &m.vert.front());
+                                        QDEBUG("********* WARNING face %i, (%li %li %li) is a DEGENERATE FACE!",ff, m.face[ff].V(0) - &m.vert.front(), m.face[ff].V(1) - &m.vert.front(), m.face[ff].V(2) - &m.vert.front());
 
                     }
                 }
             }
-            QDEBUG("****** LoadTriangularMesh (final  mesh size %i %i - %i %i)",m.vn,m.vert.size(),m.fn,m.face.size());
+            QDEBUG("****** LoadTriangularMesh (final  mesh size %i %li - %i %li)",m.vn,m.vert.size(),m.fn,m.face.size());
             return E_NOERROR;
         }
 
@@ -602,7 +602,7 @@ namespace io {
                     if (err != E_NOERROR)
                         return err;
                 }
-            QDEBUG("**** Loading a Geometry Mesh **** (final   mesh size %i %i - %i %i)",m.vn,m.vert.size(),m.fn,m.face.size());
+            QDEBUG("**** Loading a Geometry Mesh **** (final   mesh size %i %li - %i %li)",m.vn,m.vert.size(),m.fn,m.face.size());
             return E_NOERROR;
         }
 
@@ -637,7 +637,7 @@ namespace io {
                     QDomElement instGeomNode= geomNodeList.at(ch).toElement();
                     if(instGeomNode.parentNode()==node) // process only direct child
                     {
-                        QDEBUG("** instance_geometry with url %s (initial mesh size %i %i T = %i)",qPrintable(instGeomNode.attribute("url")),m.vn,m.fn,m.textures.size());
+                        QDEBUG("** instance_geometry with url %s (initial mesh size %i %i T = %li)",qPrintable(instGeomNode.attribute("url")),m.vn,m.fn,m.textures.size());
                         //assert(m.textures.size()>0 == HasPerWedgeTexCoord(m));
                         QString geomNode_url;
                         referenceToANodeAttribute(instGeomNode,"url",geomNode_url);
@@ -654,7 +654,7 @@ namespace io {
                         LoadGeometry(newMesh, info, refNode.toElement(),materialBindingMap);
                         tri::UpdatePosition<ColladaMesh>::Matrix(newMesh,curTr);
                         tri::Append<ColladaMesh,ColladaMesh>::Mesh(m,newMesh);
-                        QDEBUG("** instance_geometry with url %s (final mesh size %i %i - %i %i)",qPrintable(instGeomNode.attribute("url")),m.vn,m.vert.size(),m.fn,m.face.size());
+                        QDEBUG("** instance_geometry with url %s (final mesh size %i %li - %i %li)",qPrintable(instGeomNode.attribute("url")),m.vn,m.vert.size(),m.fn,m.face.size());
                     }
                 }
 
