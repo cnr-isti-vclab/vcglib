@@ -174,6 +174,7 @@ public:
   typedef typename T::VertexType::ScalarType ScalarType;
 
   inline typename T::VertexType * &V( const int j )       { assert(j>=0 && j<3); return v[j]; } /// \brief The pointer to the i-th vertex
+  inline const typename T::VertexType * V (const int j) const { assert(j>=0 && j<3); return v[j]; }
   inline typename T::VertexType * cV( const int j ) const { assert(j>=0 && j<3);	return v[j]; }
 
   inline CoordType &P( const int j ) 	    {	assert(j>=0 && j<3);		return v[j]->P();	} /// \brief Shortcut: the position of the  i-th vertex (equivalent to \c V(i)->P() )
@@ -182,6 +183,9 @@ public:
   inline typename T::VertexType * & V0( const int j )       { return V(j);}        /** \brief Return the pointer to the j-th vertex of the face. */
   inline typename T::VertexType * & V1( const int j )       { return V((j+1)%3);}  /** \brief Return the pointer to the ((j+1)%3)-th vertex of the face. */
   inline typename T::VertexType * & V2( const int j )       { return V((j+2)%3);}  /** \brief Return the pointer to the ((j+2)%3)-th vertex of the face. */
+  inline const typename T::VertexType * V0( const int j ) const { return V(j);}        /** \brief Return the pointer to the j-th vertex of the face. */
+  inline const typename T::VertexType * V1( const int j ) const { return V((j+1)%3);}  /** \brief Return the pointer to the ((j+1)%3)-th vertex of the face. */
+  inline const typename T::VertexType * V2( const int j ) const { return V((j+2)%3);}  /** \brief Return the pointer to the ((j+2)%3)-th vertex of the face. */
   inline typename T::VertexType *  cV0( const int j ) const { return cV(j);}
   inline typename T::VertexType *  cV1( const int j ) const { return cV((j+1)%3);}
   inline typename T::VertexType *  cV2( const int j ) const { return cV((j+2)%3);}
@@ -214,6 +218,7 @@ template <class A, class T> class NormalAbs: public T {
 public:
   typedef A NormalType;
   inline NormalType &N() { return _norm; }
+  inline const NormalType &N() const { return _norm; }
   inline NormalType cN() const { return _norm; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF)

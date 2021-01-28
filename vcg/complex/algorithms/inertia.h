@@ -91,7 +91,7 @@ public:
  Inertia(MeshType &m) {Compute(m);}
 
 /* compute various integrations over projection of face */
- void compProjectionIntegrals(FaceType &f)
+ void compProjectionIntegrals(const FaceType &f)
 {
   double a0, a1, da;
   double b0, b1, db;
@@ -148,7 +148,7 @@ public:
 }
 
 
-void CompFaceIntegrals(FaceType &f)
+void CompFaceIntegrals(const FaceType &f)
 {
 	Point3<ScalarType>  n;
 	ScalarType w;
@@ -196,9 +196,8 @@ void Compute(MeshType &m)
   T0 = T1[X] = T1[Y] = T1[Z]
      = T2[X] = T2[Y] = T2[Z]
      = TP[X] = TP[Y] = TP[Z] = 0;
-    FaceIterator fi;
-    for (fi=m.face.begin(); fi!=m.face.end();++fi) if(!(*fi).IsD() && vcg::DoubleArea(*fi)>std::numeric_limits<float>::min()) {
-        FaceType &f=(*fi);
+    for (auto fi=m.face.begin(); fi!=m.face.end();++fi) if(!(*fi).IsD() && vcg::DoubleArea(*fi)>std::numeric_limits<float>::min()) {
+        const FaceType &f=(*fi);
 
     nx = fabs(f.N()[0]);
     ny = fabs(f.N()[1]);
