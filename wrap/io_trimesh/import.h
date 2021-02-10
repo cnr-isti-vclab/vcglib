@@ -115,7 +115,12 @@ static int Open(OpenMeshType &m, const char *filename, CallBackPos *cb=0)
 static int Open(OpenMeshType &m, const char *filename, int &loadmask, CallBackPos *cb=0)
 {
 	int err;
-	if(FileExtension(filename,"ply"))
+	if (strlen(filename) < 3)
+	{
+		err = -1;
+		LastType()=KT_UNKNOWN;
+	}
+	else if(FileExtension(filename,"ply"))
 	{
 		err = ImporterPLY<OpenMeshType>::Open(m, filename, loadmask, cb);
 		LastType()=KT_PLY;
@@ -140,7 +145,7 @@ static int Open(OpenMeshType &m, const char *filename, int &loadmask, CallBackPo
         err = ImporterVMI<OpenMeshType>::Open(m, filename, loadmask, cb);
         LastType()=KT_VMI;
     }
-  else {
+	else {
 		err=1;
 		LastType()=KT_UNKNOWN;
 	}
@@ -152,7 +157,7 @@ static bool ErrorCritical(int error)
 {
   switch(LastType())
   {
-    case KT_PLY : return (error>0); break;
+    case KT_PLY : return ImporterPLY<OpenMeshType>::ErrorCritical(error); break;
     case KT_STL : return (error>0); break;
     case KT_OFF : return (error>0); break;
     case KT_OBJ : return ImporterOBJ<OpenMeshType>::ErrorCritical(error); break;
