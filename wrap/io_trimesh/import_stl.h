@@ -150,7 +150,7 @@ static bool IsSTLColored(const char * filename, bool &coloredFlag, bool &magicsM
 static bool IsSTLBinary(const char * filename, bool &binaryFlag)
 {
   binaryFlag=false;
-  FILE *fp = fopen(filename, "r");
+  FILE *fp = fopen(filename, "rb");
   /* Find size of file */
   fseek(fp, 0, SEEK_END);
   long file_size = ftell(fp);
