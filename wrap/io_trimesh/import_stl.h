@@ -24,7 +24,7 @@
 #ifndef __VCGLIB_IMPORT_STL
 #define __VCGLIB_IMPORT_STL
 #include <stdio.h>
-#include<algorithm>
+#include <algorithm>
 #include <wrap/io_trimesh/io_mask.h>
 
 namespace vcg {
@@ -153,13 +153,13 @@ static bool IsSTLBinary(const char * filename, bool &binaryFlag)
   FILE *fp = fopen(filename, "rb");
   /* Find size of file */
   fseek(fp, 0, SEEK_END);
-  long file_size = ftell(fp);
+  unsigned long file_size = ftell(fp);
   unsigned int facenum;
   /* Check for binary or ASCII file */
   fseek(fp, STL_LABEL_SIZE, SEEK_SET);
   fread(&facenum, sizeof(unsigned int), 1, fp);
   
-  long expected_file_size=STL_LABEL_SIZE + 4 + (sizeof(short)+sizeof(STLFacet) )*facenum ;
+  unsigned long expected_file_size=STL_LABEL_SIZE + 4 + (sizeof(short)+sizeof(STLFacet) )*facenum ;
   if(file_size ==  expected_file_size) 
   {
     binaryFlag = true;
@@ -169,15 +169,16 @@ static bool IsSTLBinary(const char * filename, bool &binaryFlag)
   // second check, sometimes the size is a bit wrong, 
   // lets'make a test to check that we find only ascii stuff before assuming it is ascii
   unsigned char tmpbuf[1000];
-  int byte_to_read = std::min(int(sizeof(tmpbuf)), int(file_size - 80));
+  unsigned long byte_to_read = std::min(sizeof(tmpbuf), file_size - 80);
   fread(tmpbuf, byte_to_read,1,fp);
   fclose(fp);
-  for(int i = 0; i < byte_to_read; i++)
+  for(unsigned long i = 0; i < byte_to_read; i++)
     {
       if(tmpbuf[i] > 127)
           {
             binaryFlag=true; 
-            if(abs(file_size-expected_file_size) > file_size/20 )
+			unsigned long diff = (file_size > expected_file_size) ? file_size-expected_file_size : expected_file_size-file_size;
+            if(diff > file_size/20 )
               return false; // 
             break;
           }
