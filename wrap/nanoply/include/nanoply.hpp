@@ -30,6 +30,7 @@
 #include <sstream>
 #include <stdint.h>
 #include <string>
+#include <iomanip>
 
 
 // Avoid conflicting declaration of min/max macros in windows headers
