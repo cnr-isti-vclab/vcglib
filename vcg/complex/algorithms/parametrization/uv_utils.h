@@ -96,11 +96,10 @@ public:
     }
 
     ///calculate the BBox in UV space
-    static vcg::Box2<ScalarType> PerVertUVBox(MeshType &m)
+    static vcg::Box2<ScalarType> PerVertUVBox(const MeshType &m)
     {
         vcg::Box2<ScalarType> UVBox;
-        VertexIterator vi;
-        for (vi=m.vert.begin();vi!=m.vert.end();vi++)
+        for (auto vi=m.vert.begin();vi!=m.vert.end();vi++)
         {
             if ((*vi).IsD()) continue;
             UVBox.Add((*vi).T().P());
