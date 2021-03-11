@@ -713,7 +713,7 @@ static void	FillAndShuffleFacePointerVector(MeshType & m, std::vector<FacePointe
     assert((int)faceVec.size()==m.fn);
 
     unsigned int (*p_myrandom)(unsigned int) = RandomInt;
-    std::random_shuffle(faceVec.begin(),faceVec.end(), p_myrandom);
+    std::shuffle(faceVec.begin(),faceVec.end(), p_myrandom);
 }
 static void	FillAndShuffleVertexPointerVector(MeshType & m, std::vector<VertexPointer> &vertVec)
 {
@@ -723,7 +723,7 @@ static void	FillAndShuffleVertexPointerVector(MeshType & m, std::vector<VertexPo
     assert((int)vertVec.size()==m.vn);
 
     unsigned int (*p_myrandom)(unsigned int) = RandomInt;
-    std::random_shuffle(vertVec.begin(),vertVec.end(), p_myrandom);
+    std::shuffle(vertVec.begin(),vertVec.end(), p_myrandom);
 }
 
 /// Sample the vertices in a uniform way. Each vertex has the same probabiltiy of being chosen.
@@ -1929,7 +1929,7 @@ static void PoissonDiskPruning(VertexSampler &ps, MeshType &montecarloMesh,
         InitRadiusHandleFromQuality(montecarloMesh, rH, diskRadius, pp.radiusVariance, pp.invertQuality);
 
     unsigned int (*p_myrandom)(unsigned int) = RandomInt;
-    std::random_shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
+    std::shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
     int t1 = clock();
     pp.pds.montecarloSampleNum = montecarloMesh.vn;
     pp.pds.sampleNum =0;
@@ -2063,7 +2063,7 @@ static void HierarchicalPoissonDisk(MeshType &origMesh, VertexSampler &ps, MeshT
         }
         // shuffle active cells
         unsigned int (*p_myrandom)(unsigned int) = RandomInt;
-        std::random_shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
+        std::shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
 
         // generate a sample inside C by choosing one of the contained pre-generated samples
         //////////////////////////////////////////////////////////////////////////////////////////
