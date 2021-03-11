@@ -494,6 +494,18 @@ static math::MarsenneTwisterRNG &SamplingRandomGenerator()
     return rnd;
 }
 
+class MarsenneTwisterURBG
+{
+public:
+    MarsenneTwisterURBG(unsigned int max) : _max(max) {}
+    typedef unsigned int result_type;
+    unsigned int min() const {return 0;}
+    unsigned int max() const {return _max;}
+    unsigned int operator()() {return RandomInt(_max);}
+private:
+    unsigned int _max;
+};
+
 // Returns an integer random number in the [0,i-1] interval using the improve Marsenne-Twister method.
 // this functor is needed for passing it to the std functions.
 static unsigned int RandomInt(unsigned int i)
@@ -712,8 +724,8 @@ static void	FillAndShuffleFacePointerVector(MeshType & m, std::vector<FacePointe
 
     assert((int)faceVec.size()==m.fn);
 
-    unsigned int (*p_myrandom)(unsigned int) = RandomInt;
-    std::shuffle(faceVec.begin(),faceVec.end(), p_myrandom);
+    //unsigned int (*p_myrandom)(unsigned int) = RandomInt;
+    std::shuffle(faceVec.begin(),faceVec.end(), MarsenneTwisterURBG(faceVec.size()));
 }
 static void	FillAndShuffleVertexPointerVector(MeshType & m, std::vector<VertexPointer> &vertVec)
 {
@@ -722,8 +734,8 @@ static void	FillAndShuffleVertexPointerVector(MeshType & m, std::vector<VertexPo
 
     assert((int)vertVec.size()==m.vn);
 
-    unsigned int (*p_myrandom)(unsigned int) = RandomInt;
-    std::shuffle(vertVec.begin(),vertVec.end(), p_myrandom);
+    //unsigned int (*p_myrandom)(unsigned int) = RandomInt;
+    std::shuffle(vertVec.begin(),vertVec.end(), MarsenneTwisterURBG(vertVec.size()));
 }
 
 /// Sample the vertices in a uniform way. Each vertex has the same probabiltiy of being chosen.
@@ -1928,8 +1940,8 @@ static void PoissonDiskPruning(VertexSampler &ps, MeshType &montecarloMesh,
     if(pp.adaptiveRadiusFlag)
         InitRadiusHandleFromQuality(montecarloMesh, rH, diskRadius, pp.radiusVariance, pp.invertQuality);
 
-    unsigned int (*p_myrandom)(unsigned int) = RandomInt;
-    std::shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
+    //unsigned int (*p_myrandom)(unsigned int) = RandomInt;
+    std::shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), MarsenneTwisterURBG(montecarloSHT.AllocatedCells.size()));
     int t1 = clock();
     pp.pds.montecarloSampleNum = montecarloMesh.vn;
     pp.pds.sampleNum =0;
@@ -2062,8 +2074,8 @@ static void HierarchicalPoissonDisk(MeshType &origMesh, VertexSampler &ps, MeshT
             montecarloSHT.UpdateAllocatedCells();
         }
         // shuffle active cells
-        unsigned int (*p_myrandom)(unsigned int) = RandomInt;
-        std::shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), p_myrandom);
+        //unsigned int (*p_myrandom)(unsigned int) = RandomInt;
+        std::shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), MarsenneTwisterURBG(montecarloSHT.AllocatedCells.size()));
 
         // generate a sample inside C by choosing one of the contained pre-generated samples
         //////////////////////////////////////////////////////////////////////////////////////////
