@@ -259,8 +259,8 @@ inline static Color4 ColorRamp(const float &minf,const float  &maxf ,float v )
   return rc;
 }
 
-inline static unsigned short ToUnsignedB5G5R5(Color4 &) { return 0;}
-inline static unsigned short ToUnsignedR5G5B5(Color4 &) { return 0;}
+inline static unsigned short ToUnsignedB5G5R5(const Color4 &) { return 0;}
+inline static unsigned short ToUnsignedR5G5B5(const Color4 &) { return 0;}
 
 inline static Color4 FromUnsignedB5G5R5(unsigned short)
 {
@@ -420,7 +420,7 @@ typedef Color4<double>         Color4d;
 
 
 template<>
-inline unsigned short Color4<unsigned char>::ToUnsignedB5G5R5(Color4<unsigned char> &cc)
+inline unsigned short Color4<unsigned char>::ToUnsignedB5G5R5(const Color4<unsigned char> &cc)
 {
   unsigned short r = cc[0]/8;
   unsigned short g = cc[1]/8;
@@ -430,7 +430,7 @@ inline unsigned short Color4<unsigned char>::ToUnsignedB5G5R5(Color4<unsigned ch
 }
 
 template<>
-inline unsigned short Color4<unsigned char>::ToUnsignedR5G5B5(Color4<unsigned char> &cc)
+inline unsigned short Color4<unsigned char>::ToUnsignedR5G5B5(const Color4<unsigned char> &cc)
 {
   unsigned short r = cc[0]/8;
   unsigned short g = cc[1]/8;

@@ -75,14 +75,14 @@ public:
 typedef typename SaveMeshType::FaceType FaceType;
 typedef unsigned short CallBackSTLFaceAttribute(const SaveMeshType &m, const FaceType &f);
 
-static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos *)
+static int Save(const SaveMeshType &m, const char * filename, const int &mask, CallBackPos *)
 {
  return Save(m,filename,true,mask);
 }
 
-static int Save(SaveMeshType &m, const char * filename , bool binary =true, int mask=0, const char *objectname=0, bool magicsMode=0)
+static int Save(const SaveMeshType &m, const char * filename , bool binary =true, int mask=0, const char *objectname=0, bool magicsMode=0)
 {
-  typedef typename SaveMeshType::FaceIterator FaceIterator;
+  typedef typename SaveMeshType::ConstFaceIterator FaceIterator;
     FILE *fp;
 
     fp = fopen(filename,"wb");
