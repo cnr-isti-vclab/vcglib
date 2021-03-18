@@ -85,7 +85,8 @@ struct Material
 template <class SaveMeshType>
 class Materials
 {
-public:	
+public:
+  typedef typename SaveMeshType::FaceType FaceType;
   typedef typename SaveMeshType::FaceIterator FaceIterator;
   typedef typename SaveMeshType::VertexIterator VertexIterator;
   typedef typename SaveMeshType::VertexType VertexType;
@@ -93,20 +94,20 @@ public:
   /*
       creates a new meterial
     */
-  inline static int CreateNewMaterial(SaveMeshType &m, std::vector<Material> &materials, FaceIterator &fi)
-  {			
+  inline static int CreateNewMaterial(const SaveMeshType &m, std::vector<Material> &materials, const FaceType& f)
+  {
     Material mtl;
-            
+
     if(HasPerFaceColor(m)){
-      mtl.Kd = Point3f((float)((*fi).C()[0])/255.0f,(float)((*fi).C()[1])/255.0f,(float)((*fi).C()[2])/255.0f);//diffuse
-      mtl.Tr = (float)((*fi).C()[3])/255.0f;//alpha
+      mtl.Kd = Point3f((float)(f.C()[0])/255.0f,(float)(f.C()[1])/255.0f,(float)(f.C()[2])/255.0f);//diffuse
+      mtl.Tr = (float)(f.C()[3])/255.0f;//alpha
     }
-    
-    if(m.textures.size() && (*fi).WT(0).n() >=0 ) 
-      mtl.map_Kd = m.textures[(*fi).WT(0).n()];
+
+    if(m.textures.size() && f.WT(0).n() >=0 )
+      mtl.map_Kd = m.textures[f.WT(0).n()];
     else
       mtl.map_Kd = "";
-    
+
     int matInd = MaterialsCompare(materials,mtl);
     if(matInd == -1)
     {

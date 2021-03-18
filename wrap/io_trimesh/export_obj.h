@@ -218,7 +218,7 @@ public:
       {
         int index=-1;
         if(useMaterialAttribute) index = materialIndexHandle[fi];
-        else                     index = Materials<SaveMeshType>::CreateNewMaterial(m,materialVec,fi);
+        else                     index = Materials<SaveMeshType>::CreateNewMaterial(m,materialVec,*fi);
                   
         if(index != curMatIndex) {
           fprintf(fp,"\nusemtl material_%d\n", index);
