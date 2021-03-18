@@ -114,16 +114,16 @@ public:
     typedef SimpleTempData<STL_CONT, ATTR_TYPE> SimpTempDataType;
     typedef ATTR_TYPE AttrType;
 
-    STL_CONT &c;
+    const STL_CONT &c;
     VectorNBW<ATTR_TYPE> data;
     int padding;
 
-    SimpleTempData(STL_CONT &_c) : c(_c), padding(0)
+    SimpleTempData(const STL_CONT &_c) : c(_c), padding(0)
     {
         data.reserve(c.capacity());
         data.resize(c.size());
     };
-    SimpleTempData(STL_CONT &_c, const ATTR_TYPE &val) : c(_c)
+    SimpleTempData(const STL_CONT &_c, const ATTR_TYPE &val) : c(_c)
     {
         data.reserve(c.capacity());
         data.resize(c.size());
@@ -142,11 +142,13 @@ public:
     // access to data
     ATTR_TYPE &operator[](const typename STL_CONT::value_type &v)  { return data[&v - &*c.begin()]; }
     ATTR_TYPE &operator[](const typename STL_CONT::value_type *v)  { return data[v - &*c.begin()]; }
+    ATTR_TYPE &operator[](const typename STL_CONT::const_iterator &cont) { return data[&(*cont) - &*c.begin()]; }
     ATTR_TYPE &operator[](const typename STL_CONT::iterator &cont) { return data[&(*cont) - &*c.begin()]; }
     ATTR_TYPE &operator[](size_t i) { return data[i]; }
 
     const ATTR_TYPE &operator[](const typename STL_CONT::value_type &v)  const { return data[&v - &*c.begin()]; }
     const ATTR_TYPE &operator[](const typename STL_CONT::value_type *v)  const { return data[v - &*c.begin()]; }
+    const ATTR_TYPE &operator[](const typename STL_CONT::const_iterator &cont) const { return data[&(*cont) - &*c.begin()]; }
     const ATTR_TYPE &operator[](const typename STL_CONT::iterator &cont) const { return data[&(*cont) - &*c.begin()]; }
     const ATTR_TYPE &operator[](size_t i) const { return data[i]; }
 

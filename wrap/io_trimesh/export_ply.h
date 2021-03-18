@@ -70,30 +70,30 @@ namespace vcg {
 
             public:
                 typedef ::vcg::ply::PropDescriptor PropDescriptor ;
-                typedef typename SaveMeshType::VertexPointer VertexPointer;
+                typedef typename SaveMeshType::ConstVertexPointer VertexPointer;
                 typedef typename SaveMeshType::ScalarType ScalarType;
                 typedef typename SaveMeshType::VertexType VertexType;
                 typedef typename SaveMeshType::FaceType FaceType;
-                typedef typename SaveMeshType::FacePointer FacePointer;
-                typedef typename SaveMeshType::VertexIterator VertexIterator;
-                typedef typename SaveMeshType::FaceIterator FaceIterator;
-                typedef typename SaveMeshType::EdgeIterator EdgeIterator;
+                typedef typename SaveMeshType::ConstFacePointer FacePointer;
+                typedef typename SaveMeshType::ConstVertexIterator VertexIterator;
+                typedef typename SaveMeshType::ConstFaceIterator FaceIterator;
+                typedef typename SaveMeshType::ConstEdgeIterator EdgeIterator;
                 typedef typename vcg::Shot<ScalarType>::ScalarType ShotScalarType;
 
-                static int Save(SaveMeshType &m, const char * filename, bool binary=true)
+                static int Save(const SaveMeshType &m, const char * filename, bool binary=true)
                 {
                     PlyInfo pi;
                     return Save(m,filename,binary,pi);
                 }
 
-                static int Save(SaveMeshType &m,  const char * filename, int savemask, bool binary = true, CallBackPos *cb=0 )
+                static int Save(const SaveMeshType &m,  const char * filename, int savemask, bool binary = true, CallBackPos *cb=0 )
                 {
                     PlyInfo pi;
                     pi.mask=savemask;
                     return Save(m,filename,binary,pi,cb);
                 }
 
-                static int Save(SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi, CallBackPos *cb=0)	// V1.0
+                static int Save(const SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi, CallBackPos *cb=0)	// V1.0
                 {
                     FILE * fpout;
                     const char * hbin = "binary_little_endian";
@@ -437,14 +437,20 @@ namespace vcg {
                                 if( HasPerVertexFlags(m) && (pi.mask & Mask::IOM_VERTFLAGS) )
                                     fwrite(&(vp->Flags()),sizeof(int),1,fpout);
 
-                                if( HasPerVertexColor(m) && (pi.mask & Mask::IOM_VERTCOLOR) )
-                                    fwrite(&( vp->C() ),sizeof(char),4,fpout);
+                                if( HasPerVertexColor(m) && (pi.mask & Mask::IOM_VERTCOLOR) ){
+                                    auto c = vp->C();
+                                    fwrite(&c,sizeof(char),4,fpout);
+                                }
 
-                                if( HasPerVertexQuality(m) && (pi.mask & Mask::IOM_VERTQUALITY) )
-                                    fwrite(&( vp->Q() ),sizeof(typename VertexType::QualityType),1,fpout);
+                                if( HasPerVertexQuality(m) && (pi.mask & Mask::IOM_VERTQUALITY) ){
+                                    auto q = vp->Q();
+                                    fwrite(&q, sizeof(typename VertexType::QualityType),1,fpout);
+                                }
 
-                                if( HasPerVertexRadius(m) && (pi.mask & Mask::IOM_VERTRADIUS) )
-                                    fwrite(&( vp->R() ),sizeof(typename VertexType::RadiusType),1,fpout);
+                                if( HasPerVertexRadius(m) && (pi.mask & Mask::IOM_VERTRADIUS) ){
+                                    auto r = vp->R();
+                                    fwrite(&r,sizeof(typename VertexType::RadiusType),1,fpout);
+                                }
 
                                 if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) )
                                 {
@@ -489,7 +495,7 @@ namespace vcg {
                                 fprintf(fpout,"%.*g %.*g %.*g " ,DGT,vp->P()[0],DGT,vp->P()[1],DGT,vp->P()[2]);
 
                                 if( HasPerVertexNormal(m) && (pi.mask & Mask::IOM_VERTNORMAL) )
-									fprintf(fpout,"%.*g %.*g %.*g " ,DGT,ScalarType(vp->N()[0]),DGT,ScalarType(vp->N()[1]),DGT,ScalarType(vp->N()[2]));
+                                    fprintf(fpout,"%.*g %.*g %.*g " ,DGT,ScalarType(vp->N()[0]),DGT,ScalarType(vp->N()[1]),DGT,ScalarType(vp->N()[2]));
 
                                 if( HasPerVertexFlags(m) && (pi.mask & Mask::IOM_VERTFLAGS))
                                     fprintf(fpout,"%d ",vp->Flags());
@@ -571,8 +577,10 @@ namespace vcg {
                             fwrite(&b3char,sizeof(char),1,fpout);
                             fwrite(vv,sizeof(int),3,fpout);
 
-                            if(HasPerFaceFlags(m)&&( pi.mask & Mask::IOM_FACEFLAGS) )
-                                fwrite(&(fp->Flags()),sizeof(int),1,fpout);
+                            if(HasPerFaceFlags(m)&&( pi.mask & Mask::IOM_FACEFLAGS) ){
+                                auto fl = fp->Flags();
+                                fwrite(&fl,sizeof(int),1,fpout);
+                            }
 
                             if( HasPerVertexTexCoord(m) && (!HasPerWedgeTexCoord(m)) && (pi.mask & Mask::IOM_WEDGTEXCOORD) )  // Note that you can save VT as WT if you really want it...
                             {
