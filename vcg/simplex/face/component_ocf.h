@@ -398,6 +398,11 @@ public:
     return (*this).Base().AV[(*this).Index()]._fp[j];
   }
 
+  typename T::FacePointer  VFp(const int j) const {
+    if(! (*this).Base().VFAdjacencyEnabled ) return 0;
+    else return (*this).Base().AV[(*this).Index()]._fp[j];
+  }
+
   typename T::FacePointer cVFp(const int j) const {
     if(! (*this).Base().VFAdjacencyEnabled ) return 0;
     else return (*this).Base().AV[(*this).Index()]._fp[j];
@@ -436,6 +441,11 @@ public:
     return (*this).Base().AF[(*this).Index()]._fp[j];
   }
 
+  typename T::FacePointer  FFp(const int j) const {
+    if(! (*this).Base().FFAdjacencyEnabled ) return 0;
+    else return (*this).Base().AF[(*this).Index()]._fp[j];
+  }
+
   typename T::FacePointer cFFp(const int j) const {
     if(! (*this).Base().FFAdjacencyEnabled ) return 0;
     else return (*this).Base().AF[(*this).Index()]._fp[j];
@@ -445,6 +455,12 @@ public:
     assert((*this).Base().FFAdjacencyEnabled);
     return (*this).Base().AF[(*this).Index()]._zp[j];
   }
+
+  char  FFi(const int j) const {
+    assert((*this).Base().FFAdjacencyEnabled);
+    return (*this).Base().AF[(*this).Index()]._zp[j];
+  }
+
   char cFFi(const int j) const {
     assert((*this).Base().FFAdjacencyEnabled);
     return (*this).Base().AF[(*this).Index()]._zp[j];
@@ -452,11 +468,14 @@ public:
 
   typename T::FacePointer  &FFp1( const int j )       { return FFp((j+1)%3);}
   typename T::FacePointer  &FFp2( const int j )       { return FFp((j+2)%3);}
+  typename T::FacePointer   FFp1( const int j ) const { return FFp((j+1)%3);}
+  typename T::FacePointer   FFp2( const int j ) const { return FFp((j+2)%3);}
   typename T::FacePointer  cFFp1( const int j ) const { return FFp((j+1)%3);}
   typename T::FacePointer  cFFp2( const int j ) const { return FFp((j+2)%3);}
 
   typename T::FacePointer  &Neigh( const int j )		{ return FFp(j);}
-  typename T::FacePointer  cNeigh( const int j ) const { return cFFp(j);}
+  typename T::FacePointer   Neigh( const int j ) const { return  FFp(j);}
+  typename T::FacePointer  cNeigh( const int j ) const { return  FFp(j);}
   unsigned int SizeNeigh(){return 3;}
 
   template <class RightFaceType>
@@ -479,7 +498,13 @@ public:
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
     assert((*this).Base().NormalEnabled);
     return (*this).Base().NV[(*this).Index()];  }
-  NormalType cN() const {
+
+  const NormalType&  N() const {
+    // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
+    assert((*this).Base().NormalEnabled);
+    return (*this).Base().NV[(*this).Index()];  }
+
+  const NormalType& cN() const {
     // you cannot use Normals before enabling them with: yourmesh.face.EnableNormal()
     assert((*this).Base().NormalEnabled);
     return (*this).Base().NV[(*this).Index()];  }
@@ -518,13 +543,17 @@ public:
 
   CurVecType &PD1()       { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].max_dir; }
   CurVecType &PD2()       { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].min_dir; }
-  CurVecType cPD1() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].max_dir; }
-  CurVecType cPD2() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].min_dir; }
+  const CurVecType&  PD1() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].max_dir; }
+  const CurVecType&  PD2() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].min_dir; }
+  const CurVecType& cPD1() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].max_dir; }
+  const CurVecType& cPD2() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].min_dir; }
 
   CurScalarType &K1()       { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k1; }
   CurScalarType &K2()       { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k2; }
-  CurScalarType cK1() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k1; }
-  CurScalarType cK2() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k2; }
+  const CurScalarType&  K1() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k1; }
+  const CurScalarType&  K2() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k2; }
+  const CurScalarType& cK1() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k1; }
+  const CurScalarType& cK2() const { assert((*this).Base().CurvatureDirEnabled); return (*this).Base().CDV[(*this).Index()].k2; }
 
   template <class RightFaceType>
   void ImportData(const RightFaceType & rightF){
@@ -554,7 +583,11 @@ public:
     assert((*this).Base().QualityEnabled);
     return (*this).Base().QV[(*this).Index()];
   }
-  QualityType cQ() const  {
+  const QualityType& Q() const  {
+    assert((*this).Base().QualityEnabled);
+    return (*this).Base().QV[(*this).Index()];
+  }
+  const QualityType& cQ() const  {
     assert((*this).Base().QualityEnabled);
     return (*this).Base().QV[(*this).Index()];
   }
@@ -580,7 +613,11 @@ public:
     assert((*this).Base()._ColorEnabled);
     return (*this).Base().CV[(*this).Index()];
   }
-  ColorType cC() const  {
+  const ColorType& C() const  {
+    assert((*this).Base()._ColorEnabled);
+    return (*this).Base().CV[(*this).Index()];
+  }
+  const ColorType& cC() const  {
     assert((*this).Base()._ColorEnabled);
     return (*this).Base().CV[(*this).Index()];
   }
@@ -602,6 +639,10 @@ template <class T> class Color4bOcf: public ColorOcf<vcg::Color4b, T> {};
 template <class T> class MarkOcf: public T {
 public:
   inline int &IMark()       {
+    assert((*this).Base().MarkEnabled);
+    return (*this).Base().MV[(*this).Index()];
+  }
+  inline int  IMark() const {
     assert((*this).Base().MarkEnabled);
     return (*this).Base().MV[(*this).Index()];
   }
@@ -628,7 +669,8 @@ public:
   WedgeTexCoordOcf(){ }
   typedef A TexCoordType;
   TexCoordType &WT(const int i)       { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
-  TexCoordType cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
+  const TexCoordType&  WT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
+  const TexCoordType& cWT(const int i) const { assert((*this).Base().WedgeTexEnabled); return (*this).Base().WTV[(*this).Index()].wt[i]; }
   template <class RightFaceType>
   void ImportData(const RightFaceType & rightF){
     if(this->IsWedgeTexCoordEnabled() && rightF.IsWedgeTexCoordEnabled())
@@ -648,7 +690,8 @@ public:
   WedgeColorOcf(){ }
   typedef A WedgeColorType;
   WedgeColorType &WC(const int i)              { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
-  const WedgeColorType cWC(const int i) const { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
+  const WedgeColorType&  WC(const int i) const { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
+  const WedgeColorType& cWC(const int i) const { assert((*this).Base().WedgeColorEnabled); return (*this).Base().WCV[(*this).Index()].wc[i]; }
   template <class RightFaceType>
   void ImportData(const RightFaceType & rightF){
     if(this->IsWedgeColorEnabled() && rightF.IsWedgeColorEnabled())
@@ -668,7 +711,8 @@ public:
   WedgeNormalOcf(){ }
   typedef A WedgeNormalType;
   WedgeNormalType &WN(const int i)              { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
-  WedgeNormalType const &cWN(const int i) const { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
+  const WedgeNormalType  & WN(const int i) const { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
+  const WedgeNormalType &cWN(const int i) const { assert((*this).Base().WedgeNormalEnabled); return (*this).Base().WNV[(*this).Index()].wn[i]; }
   template <class RightFaceType>
   void ImportData(const RightFaceType & rightF){
     if(this->IsWedgeNormalEnabled() && rightF.IsWedgeNormalEnabled())
