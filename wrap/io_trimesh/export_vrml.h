@@ -57,15 +57,15 @@ namespace vcg {
 			class ExporterWRL
 			{
 			public:
-				typedef typename SaveMeshType::VertexPointer VertexPointer;
+				typedef typename SaveMeshType::ConstVertexPointer VertexPointer;
 				typedef typename SaveMeshType::ScalarType ScalarType;
 				typedef typename SaveMeshType::VertexType VertexType;
 				typedef typename SaveMeshType::FaceType FaceType;
-				typedef typename SaveMeshType::VertexIterator VertexIterator;
-				typedef typename SaveMeshType::FaceIterator FaceIterator;
+				typedef typename SaveMeshType::ConstVertexIterator VertexIterator;
+				typedef typename SaveMeshType::ConstFaceIterator FaceIterator;
 				
 				///Standard call for saving a mesh
-				static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos * /*cb=0*/)
+				static int Save(const SaveMeshType &m, const char * filename, const int &mask, CallBackPos * /*cb=0*/)
 				{					
 					FILE *fp;
 					fp = fopen(filename,"wb");
