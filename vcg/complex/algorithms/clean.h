@@ -168,6 +168,7 @@ public:
 	typedef CleanMeshType MeshType;
 	typedef typename MeshType::VertexType           VertexType;
 	typedef typename MeshType::VertexPointer        VertexPointer;
+	typedef typename MeshType::ConstVertexPointer   ConstVertexPointer;
 	typedef typename MeshType::VertexIterator       VertexIterator;
 	typedef typename MeshType::ConstVertexIterator  ConstVertexIterator;
 	typedef typename MeshType::EdgeIterator         EdgeIterator;
@@ -931,30 +932,38 @@ public:
 	}
 
 	/**
-  * The number of polygonal faces is
-  *  FN - EN_f (each faux edge hides exactly one triangular face or in other words a polygon of n edges has n-3 faux edges.)
-  * In the general case where a The number of polygonal faces is
-  *	 FN - EN_f + VN_f
-  *	where:
-  *	 EN_f is the number of faux edges.
-  *	 VN_f is the number of faux vertices (e.g vertices completely surrounded by faux edges)
-  * as a intuitive proof think to a internal vertex that is collapsed onto a border of a polygon:
-  * it deletes 2 faces, 1 faux edges and 1 vertex so to keep the balance you have to add back the removed vertex.
-  */
-	static int CountBitLargePolygons(MeshType &m)
+	* The number of polygonal faces is
+	*  FN - EN_f (each faux edge hides exactly one triangular face or in other words a polygon of n edges has n-3 faux edges.)
+	* In the general case where a The number of polygonal faces is
+	*	 FN - EN_f + VN_f
+	*	where:
+	*	 EN_f is the number of faux edges.
+	*	 VN_f is the number of faux vertices (e.g vertices completely surrounded by faux edges)
+	* as a intuitive proof think to a internal vertex that is collapsed onto a border of a polygon:
+	* it deletes 2 faces, 1 faux edges and 1 vertex so to keep the balance you have to add back the removed vertex.
+	*/
+	static int CountBitLargePolygons(const MeshType &m)
 	{
-		tri::RequirePerFaceFlags(m);
-		UpdateFlags<MeshType>::VertexSetV(m);
+		//note - using unordered_map to set visited vertices because
+		//the mesh is const (before, the function used vertex flags...).
+		//could be used std::vector<bool> if the vertex has the Index()
+		//member function...
+		std::unordered_map<ConstVertexPointer, bool> vertVisited;
+		for (ConstVertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+			if (!vi->IsD()) vertVisited[&(*vi)] = true;
+
 		// First loop Clear all referenced vertices
-		for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+		for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
 			if (!fi->IsD())
-				for(int i=0;i<3;++i) fi->V(i)->ClearV();
+				for(int i=0;i<3;++i){
+					vertVisited[fi->V(i)] = false;
+				}
 
 
 		// Second Loop, count (twice) faux edges and mark all vertices touched by non faux edges
 		// (e.g vertexes on the boundary of a polygon)
 		int countE = 0;
-		for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+		for (ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
 			if (!fi->IsD())  {
 				for(int i=0;i<3;++i)
 				{
@@ -962,16 +971,16 @@ public:
 						countE++;
 					else
 					{
-						fi->V0(i)->SetV();
-						fi->V1(i)->SetV();
+						vertVisited[fi->V0(i)] = true;
+						vertVisited[fi->V1(i)] = true;
 					}
 				}
 			}
 		// Third Loop, count the number of referenced vertexes that are completely surrounded by faux edges.
 
 		int countV = 0;
-		for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-			if (!vi->IsD() && !vi->IsV()) countV++;
+		for (ConstVertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+			if (!vi->IsD() && !(vertVisited[&(*vi)])) countV++;
 
 		return m.fn - countE/2 + countV ;
 	}
