@@ -1550,7 +1550,7 @@ public:
       \returns the name of all attributes with a non-empy name.
       */
   template <class ATTR_TYPE>
-  static void GetAllPerVertexAttribute(MeshType & m, std::vector<std::string> &all){
+  static void GetAllPerVertexAttribute(const MeshType & m, std::vector<std::string> &all){
     all.clear();
     typename std::set<PointerToAttribute > ::const_iterator i;
     for(i = m.vert_attr.begin(); i != m.vert_attr.end(); ++i )
@@ -1847,7 +1847,7 @@ public:
   }
 
   template <class ATTR_TYPE>
-  static void GetAllPerFaceAttribute(MeshType & m, std::vector<std::string> &all){
+  static void GetAllPerFaceAttribute(const MeshType & m, std::vector<std::string> &all){
     all.clear();
     typename std::set<PointerToAttribute > :: const_iterator i;
     for(i = m.face_attr.begin(); i != m.face_attr.end(); ++i )
