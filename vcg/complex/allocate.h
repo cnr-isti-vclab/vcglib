@@ -2123,6 +2123,15 @@ public:
 
   template <class ATTR_TYPE>
   static
+  bool IsValidHandle(const MeshType & m,  const typename MeshType::template ConstPerMeshAttributeHandle<ATTR_TYPE> & a){
+    if(a._handle == nullptr) return false;
+    for(AttrIterator i = m.mesh_attr.begin(); i!=m.mesh_attr.end();++i)
+      if ( (*i).n_attr == a.n_attr ) return true;
+    return false;
+  }
+
+  template <class ATTR_TYPE>
+  static
   typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
   AddPerMeshAttribute( MeshType & m, std::string name){
     PAIte i;
@@ -2161,6 +2170,13 @@ public:
 
   template <class ATTR_TYPE>
   static
+  typename MeshType::template ConstPerMeshAttributeHandle<ATTR_TYPE>
+  GetPerMeshAttribute(const MeshType & m, std::string name = std::string("")){
+    return FindPerMeshAttribute<ATTR_TYPE>(m,name);
+  }
+
+  template <class ATTR_TYPE>
+  static
   typename MeshType::template PerMeshAttributeHandle<ATTR_TYPE>
   FindPerMeshAttribute( MeshType & m, const std::string & name){
     assert(!name.empty());
@@ -2183,6 +2199,24 @@ public:
       }
 
     return typename MeshType:: template PerMeshAttributeHandle<ATTR_TYPE>(nullptr,0);
+  }
+
+  template <class ATTR_TYPE>
+  static
+  typename MeshType::template ConstPerMeshAttributeHandle<ATTR_TYPE>
+  FindPerMeshAttribute( const MeshType & m, const std::string & name){
+    if (!name.empty()){
+      PointerToAttribute h1; h1._name = name;
+      typename std::set<PointerToAttribute > ::iterator i;
+      i =m.mesh_attr.find(h1);
+      if(i!=m.mesh_attr.end()){
+        if((*i)._sizeof == sizeof(ATTR_TYPE)  ){
+          return typename MeshType::template ConstPerMeshAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+        }
+      }
+    }
+
+    return typename MeshType:: template ConstPerMeshAttributeHandle<ATTR_TYPE>(nullptr,0);
   }
 
   template <class ATTR_TYPE>

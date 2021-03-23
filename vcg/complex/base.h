@@ -387,7 +387,18 @@ public:
 
 		Attribute<ATTR_TYPE> * _handle;
 		int n_attr;
-		ATTR_TYPE & operator ()(){ return *((ATTR_TYPE*)((Attribute<ATTR_TYPE> *)_handle)->DataBegin());}
+		ATTR_TYPE & operator ()(){ return *((ATTR_TYPE*) (_handle->DataBegin()));}
+	};
+
+	template <class ATTR_TYPE>
+	class ConstPerMeshAttributeHandle{
+	public:
+		ConstPerMeshAttributeHandle(){_handle=nullptr;}
+		ConstPerMeshAttributeHandle(const void *ah,const int & n):_handle ( (const Attribute<ATTR_TYPE> *)ah ),n_attr(n){}
+
+		const Attribute<ATTR_TYPE> * _handle;
+		int n_attr;
+		const ATTR_TYPE & operator ()(){ return *((const ATTR_TYPE*)(_handle->DataBegin()));}
 	};
 
 	// Some common Handle typedefs to simplify use
