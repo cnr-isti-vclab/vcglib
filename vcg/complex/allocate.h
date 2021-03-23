@@ -1958,6 +1958,17 @@ public:
   }
 
   template <class ATTR_TYPE>
+  static bool IsValidHandle(const MeshType & m, const typename MeshType::template ConstPerTetraAttributeHandle<ATTR_TYPE> & a)
+  {
+    if (a._handle == nullptr)
+      return false;
+    for (AttrIterator i = m.tetra_attr.begin(); i != m.tetra_attr.end(); ++i)
+      if ((*i).n_attr == a.n_attr)
+        return true;
+    return false;
+  }
+
+  template <class ATTR_TYPE>
   static typename MeshType::template PerTetraAttributeHandle<ATTR_TYPE> AddPerTetraAttribute(MeshType & m, std::string name)
   {
     PAIte i;
@@ -2003,6 +2014,12 @@ public:
   }
 
   template <class ATTR_TYPE>
+  static typename MeshType::template ConstPerTetraAttributeHandle<ATTR_TYPE> GetPerTetraAttribute(const MeshType &m, std::string name = std::string(""))
+  {
+    return FindPerTetraAttribute<ATTR_TYPE>(m, name);
+  }
+
+  template <class ATTR_TYPE>
   static typename MeshType::template PerTetraAttributeHandle<ATTR_TYPE> FindPerTetraAttribute(MeshType &m, const std::string &name)
   {
     assert(!name.empty());
@@ -2029,14 +2046,33 @@ public:
   }
 
   template <class ATTR_TYPE>
-  static void GetAllPerTetraAttribute(MeshType &m, std::vector<std::string> &all)
+  static typename MeshType::template ConstPerTetraAttributeHandle<ATTR_TYPE> FindPerTetraAttribute(MeshType &m, const std::string &name)
+  {
+    if(!name.empty()){
+      PointerToAttribute h1;
+      h1._name = name;
+      typename std::set<PointerToAttribute>::iterator i;
+
+      i = m.tetra_attr.find(h1);
+      if (i != m.tetra_attr.end()){
+        if ((*i)._sizeof == sizeof(ATTR_TYPE))
+        {
+          return typename MeshType::template ConstPerTetraAttributeHandle<ATTR_TYPE>((*i)._handle, (*i).n_attr);
+        }
+      }
+    }
+    return typename MeshType::template ConstPerTetraAttributeHandle<ATTR_TYPE>(nullptr, 0);
+  }
+
+  template <class ATTR_TYPE>
+  static void GetAllPerTetraAttribute(const MeshType &m, std::vector<std::string> &all)
   {
     all.clear();
     typename std::set<PointerToAttribute>::const_iterator i;
     for (i = m.tetra_attr.begin(); i != m.tetra_attr.end(); ++i)
       if (!(*i)._name.empty())
       {
-        typename MeshType::template PerTetraAttributeHandle<ATTR_TYPE> hh;
+        typename MeshType::template ConstPerTetraAttributeHandle<ATTR_TYPE> hh;
         hh = Allocator<MeshType>::template FindPerTetraAttribute<ATTR_TYPE>(m, (*i)._name);
         if (IsValidHandle<ATTR_TYPE>(m, hh))
           all.push_back((*i)._name);
