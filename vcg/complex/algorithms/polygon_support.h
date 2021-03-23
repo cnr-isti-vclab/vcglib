@@ -141,7 +141,8 @@ namespace tri {
         {
             std::vector<typename TriMeshType::VertexPointer> vs;// vertices of the polygon
             ExtractPolygon(&*tfi,vs);
-            std::reverse(vs.begin(),vs.end());
+			if (vs.size() > 3)
+				std::reverse(vs.begin(), vs.end());
             //now vs  contains all the vertices of the polygon (still in the trimesh)
             if (vs.size()==0)continue;
             typename PolyMeshType::FaceIterator pfi =  tri::Allocator<PolyMeshType>::AddFaces(pm,1);
