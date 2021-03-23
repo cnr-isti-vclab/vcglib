@@ -2207,7 +2207,7 @@ public:
     pa._padding = 0;
   }
 
-    template <class ATTR_TYPE>
+  template <class ATTR_TYPE>
   static void FixPaddedPerTetraAttribute(MeshType &m, PointerToAttribute &pa)
   {
 
@@ -2245,7 +2245,7 @@ public:
 
     // copy the padded container in the new one
     char * ptr = (char*)( ((Attribute<ATTR_TYPE> *)pa._handle)->DataBegin());
-    memcpy((void*)_handle->attribute ,(void*) &(ptr[0]) ,sizeof(ATTR_TYPE));
+    memcpy((void*)_handle->DataBegin() ,(void*) &(ptr[0]) ,sizeof(ATTR_TYPE));
 
     // remove the padded container
     delete ( (Attribute<ATTR_TYPE> *) pa._handle);

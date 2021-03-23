@@ -41,6 +41,7 @@ public:
     virtual void Reorder(std::vector<size_t> &newVertIndex) = 0;
     virtual size_t SizeOf() const = 0;
     virtual void *DataBegin() = 0;
+    virtual const void* DataBegin() const = 0;
 
     virtual void       *At(size_t i) = 0;
     virtual const void *At(size_t i) const = 0;
@@ -56,12 +57,12 @@ template <class ...p>
 class VectorNBW<bool, p...>
 {
 public:
-    VectorNBW() : data(nullptr), datasize(0), datareserve(0) {}
+    VectorNBW() : booldata(nullptr), datasize(0), datareserve(0) {}
 
     ~VectorNBW()
     {
-        if (data)
-            delete[] data;
+        if (booldata)
+            delete[] booldata;
     }
 
     void reserve(size_t sz)
@@ -70,8 +71,8 @@ public:
             return;
         bool *newdataLoc = new bool[sz];
         if (datasize != 0)
-            memcpy(newdataLoc, data, sizeof(bool) * sizeof(datasize));
-        std::swap(data, newdataLoc);
+            memcpy(newdataLoc, booldata, sizeof(bool) * sizeof(datasize));
+        std::swap(booldata, newdataLoc);
         if (newdataLoc != 0)
             delete[] newdataLoc;
         datareserve = sz;
@@ -85,12 +86,12 @@ public:
         if (sz > datareserve)
             reserve(sz);
         datasize = sz;
-        memset(&data[oldDatasize], 0, datasize - oldDatasize);
+        memset(&booldata[oldDatasize], 0, datasize - oldDatasize);
     }
     void push_back(const bool &v)
     {
         resize(datasize + 1);
-        data[datasize] = v;
+        booldata[datasize] = v;
     }
 
     void clear() { datasize = 0; }
@@ -99,14 +100,14 @@ public:
 
     bool empty() const { return datasize == 0; }
 
-    bool* begin() {return data;}
-    const bool *begin() const { return data; }
+    bool* data() {return booldata;}
+    const bool *data() const { return booldata; }
 
-    bool &operator[](size_t i) { return data[i]; }
-    const bool &operator[](size_t i) const { return data[i]; }
+    bool &operator[](size_t i) { return booldata[i]; }
+    const bool &operator[](size_t i) const { return booldata[i]; }
 
 private:
-    bool *data;
+    bool *booldata;
     size_t datasize;
     size_t datareserve;
 };
@@ -184,7 +185,7 @@ public:
 
     void Reorder(std::vector<size_t> &newVertIndex)
     {
-        for (unsigned int i = 0; i < data.size(); ++i)
+        for (size_t i = 0; i < data.size(); ++i)
         {
             if (newVertIndex[i] != (std::numeric_limits<size_t>::max)())
                 data[newVertIndex[i]] = data[i];
@@ -192,7 +193,8 @@ public:
     }
 
     size_t SizeOf() const { return sizeof(ATTR_TYPE); }
-    void *DataBegin() { return data.empty() ? NULL : &(*data.begin()); }
+    void *DataBegin() { return data.empty() ? nullptr : data.data(); }
+    const void *DataBegin() const { return data.empty() ? nullptr : data.data(); }
 };
 
 template <class ATTR_TYPE>
@@ -200,11 +202,11 @@ class Attribute : public SimpleTempDataBase
 {
 public:
     typedef ATTR_TYPE AttrType;
-    AttrType *attribute;
     Attribute() { attribute = new ATTR_TYPE(); }
     ~Attribute() { delete attribute; }
     size_t SizeOf() const { return sizeof(ATTR_TYPE); }
     void *DataBegin() { return attribute; }
+    const void* DataBegin() const {return attribute;}
 
     void Resize(size_t) { assert(0); }
     void Reorder(std::vector<size_t> &) { assert(0); }
@@ -220,6 +222,8 @@ public:
         return (void *)0;
     }
     void CopyValue(const size_t, const size_t, const SimpleTempDataBase *) { assert(0); }
+private:
+    AttrType *attribute;
 };
 
 } // end namespace vcg

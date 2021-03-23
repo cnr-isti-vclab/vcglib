@@ -340,7 +340,7 @@ public:
 
 		Attribute<ATTR_TYPE> * _handle;
 		int n_attr;
-		ATTR_TYPE & operator ()(){ return *((Attribute<ATTR_TYPE> *)_handle)->attribute;}
+		ATTR_TYPE & operator ()(){ return *((ATTR_TYPE*)((Attribute<ATTR_TYPE> *)_handle)->DataBegin());}
 	};
 
 	// Some common Handle typedefs to simplify use
