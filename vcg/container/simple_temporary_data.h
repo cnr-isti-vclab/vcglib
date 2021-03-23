@@ -24,6 +24,11 @@
 #ifndef __VCGLIB_SIMPLE__
 #define __VCGLIB_SIMPLE__
 
+#include <string.h>
+#include <limits>
+#include <vector>
+#include <assert.h>
+
 namespace vcg
 {
 
@@ -42,16 +47,16 @@ public:
     virtual void CopyValue(const size_t to, const size_t from, const SimpleTempDataBase *other) = 0;
 };
 
-template <class TYPE>
-class VectorNBW : public std::vector<TYPE>
+template <class TYPE, class ...p>
+class VectorNBW : public std::vector<TYPE, p...>
 {
 };
 
-template <>
-class VectorNBW<bool>
+template <class ...p>
+class VectorNBW<bool, p...>
 {
 public:
-    VectorNBW() : data(0), datasize(0), datareserve(0) {}
+    VectorNBW() : data(nullptr), datasize(0), datareserve(0) {}
 
     ~VectorNBW()
     {
@@ -59,22 +64,20 @@ public:
             delete[] data;
     }
 
-    bool *data;
-
-    void reserve(const int &sz)
+    void reserve(size_t sz)
     {
         if (sz <= datareserve)
             return;
         bool *newdataLoc = new bool[sz];
         if (datasize != 0)
-            memcpy(newdataLoc, data, sizeof(datasize));
+            memcpy(newdataLoc, data, sizeof(bool) * sizeof(datasize));
         std::swap(data, newdataLoc);
         if (newdataLoc != 0)
             delete[] newdataLoc;
         datareserve = sz;
     }
 
-    void resize(const int &sz)
+    void resize(size_t sz)
     {
         int oldDatasize = datasize;
         if (sz <= oldDatasize)
@@ -96,14 +99,16 @@ public:
 
     bool empty() const { return datasize == 0; }
 
-    bool *begin() const { return data; }
+    bool* begin() {return data;}
+    const bool *begin() const { return data; }
 
-    bool &operator[](const int &i) { return data[i]; }
-    const bool &operator[](const int &i) const { return data[i]; }
+    bool &operator[](size_t i) { return data[i]; }
+    const bool &operator[](size_t i) const { return data[i]; }
 
 private:
-    int datasize;
-    int datareserve;
+    bool *data;
+    size_t datasize;
+    size_t datareserve;
 };
 
 template <class STL_CONT, class ATTR_TYPE>
