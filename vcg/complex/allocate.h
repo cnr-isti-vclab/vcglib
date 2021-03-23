@@ -1630,6 +1630,15 @@ public:
 
   template <class ATTR_TYPE>
   static
+  bool IsValidHandle( const MeshType & m,  const typename MeshType::template ConstPerEdgeAttributeHandle<ATTR_TYPE> & a){
+    if(a._handle == nullptr) return false;
+    for(AttrIterator i = m.edge_attr.begin(); i!=m.edge_attr.end();++i)
+      if ( (*i).n_attr == a.n_attr ) return true;
+    return false;
+  }
+
+  template <class ATTR_TYPE>
+  static
   typename MeshType::template PerEdgeAttributeHandle<ATTR_TYPE>
   AddPerEdgeAttribute( MeshType & m, std::string name){
     PAIte i;
@@ -1674,6 +1683,12 @@ public:
     return AddPerEdgeAttribute<ATTR_TYPE>(m,name);
   }
 
+  template <class ATTR_TYPE>
+  static
+  typename MeshType::template ConstPerEdgeAttributeHandle<ATTR_TYPE>
+  GetPerEdgeAttribute( const MeshType & m, std::string name = std::string("")){
+    return FindPerEdgeAttribute<ATTR_TYPE>(m,name);
+  }
 
   template <class ATTR_TYPE>
   static
@@ -1701,13 +1716,31 @@ public:
   }
 
   template <class ATTR_TYPE>
+  static
+  typename MeshType::template ConstPerEdgeAttributeHandle<ATTR_TYPE>
+  FindPerEdgeAttribute( const MeshType & m, const std::string & name){
+    if(!name.empty()){
+      PointerToAttribute h1; h1._name = name;
+      typename std::set<PointerToAttribute > ::const_iterator i;
+
+      i =m.edge_attr.find(h1);
+      if(i!=m.edge_attr.end()){
+        if((*i)._sizeof == sizeof(ATTR_TYPE) ){
+          return typename MeshType::template ConstPerEdgeAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+        }
+      }
+    }
+    return typename MeshType:: template ConstPerEdgeAttributeHandle<ATTR_TYPE>(nullptr,0);
+  }
+
+  template <class ATTR_TYPE>
   static void GetAllPerEdgeAttribute(const MeshType & m, std::vector<std::string> &all){
     all.clear();
     typename std::set<PointerToAttribute > :: const_iterator i;
     for(i = m.edge_attr.begin(); i != m.edge_attr.end(); ++i )
       if(!(*i)._name.empty())
       {
-        typename MeshType:: template PerEdgeAttributeHandle<ATTR_TYPE> hh;
+        typename MeshType:: template ConstPerEdgeAttributeHandle<ATTR_TYPE> hh;
         hh = Allocator<MeshType>:: template  FindPerEdgeAttribute <ATTR_TYPE>(m,(*i)._name);
         if(IsValidHandle<ATTR_TYPE>(m,hh))
           all.push_back((*i)._name);
