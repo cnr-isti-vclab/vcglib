@@ -1423,8 +1423,9 @@ public:
 
 public:
 
-  /*! \brief Check if an handle to a Per-Vertex Attribute is valid
-    */
+  /**
+   * @brief Checks if a handle to a Per-Vertex Attribute is valid
+   */
   template <class ATTR_TYPE>
   static
   bool IsValidHandle( const MeshType & m,  const typename MeshType::template PerVertexAttributeHandle<ATTR_TYPE> & a){
@@ -1434,8 +1435,9 @@ public:
     return false;
   }
 
-  /*! \brief Check if a const handle to a Per-Vertex Attribute is valid
-    */
+  /**
+   * @brief Checks if a const handle to a Per-Vertex Attribute is valid
+   */
   template <class ATTR_TYPE>
   static
   bool IsValidHandle( const MeshType & m,  const typename MeshType::template ConstPerVertexAttributeHandle<ATTR_TYPE> & a){
@@ -1501,12 +1503,8 @@ public:
   template <class ATTR_TYPE>
   static
   typename MeshType::template ConstPerVertexAttributeHandle<ATTR_TYPE>
-  GetConstPerVertexAttribute( const MeshType & m, std::string name = std::string("")){
-    typename MeshType::template ConstPerVertexAttributeHandle<ATTR_TYPE> h;
-    if(!name.empty()){
-      return FindConstPerVertexAttribute<ATTR_TYPE>(m,name);
-    }
-    return typename MeshType:: template ConstPerVertexAttributeHandle<ATTR_TYPE>(nullptr,0);
+  GetPerVertexAttribute( const MeshType & m, std::string name = std::string("")){
+    return FindPerVertexAttribute<ATTR_TYPE>(m,name);
   }
 
   /*! \brief Try to retrieve an handle to an attribute with a given name and ATTR_TYPE
@@ -1537,23 +1535,26 @@ public:
   }
 
   /**
-   * Same as the one above, but without modifying the attribute if it is found.
-   * (A "find" function should never modify the container in which is looking for..)
-   * Input mesh is const.
+   * @brief Try to retrieve a const handle to an attribute with a given name
+   * and ATTR_TYPE, from the given const mesh.
+   * If not found, an invalid handle will be returned.
+   * Check it with the function IsValidHandle
    */
   template <class ATTR_TYPE>
   static typename MeshType::template ConstPerVertexAttributeHandle<ATTR_TYPE>
-  FindConstPerVertexAttribute( const MeshType & m, const std::string & name)
+  FindPerVertexAttribute( const MeshType & m, const std::string & name)
   {
-    assert(!name.empty());
-    PointerToAttribute h1; h1._name = name;
-    typename std::set<PointerToAttribute > :: iterator i;
+    if(!name.empty()){
+      PointerToAttribute h1; h1._name = name;
+      typename std::set<PointerToAttribute > :: iterator i;
 
-    i =m.vert_attr.find(h1);
-    if(i!=m.vert_attr.end())
-      if((*i)._sizeof == sizeof(ATTR_TYPE) ){
-        return typename MeshType::template ConstPerVertexAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+      i =m.vert_attr.find(h1);
+      if(i!=m.vert_attr.end()){
+        if((*i)._sizeof == sizeof(ATTR_TYPE) ){
+          return typename MeshType::template ConstPerVertexAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+        }
       }
+    }
     return typename MeshType:: template ConstPerVertexAttributeHandle<ATTR_TYPE>(nullptr,0);
   }
 
@@ -1568,7 +1569,7 @@ public:
       if(!(*i)._name.empty())
       {
         typename MeshType:: template ConstPerVertexAttributeHandle<ATTR_TYPE> hh;
-        hh = Allocator<MeshType>:: template  FindConstPerVertexAttribute <ATTR_TYPE>(m,(*i)._name);
+        hh = Allocator<MeshType>:: template  FindPerVertexAttribute <ATTR_TYPE>(m,(*i)._name);
         if(IsValidHandle<ATTR_TYPE>(m,hh))
           all.push_back((*i)._name);
       }
@@ -1742,9 +1743,24 @@ public:
   }
 
   /// Per Face Attributes
+  /**
+   * @brief Checks if a handle to a Per-Face attribute is valid
+   */
   template <class ATTR_TYPE>
   static
   bool IsValidHandle( const MeshType & m,  const typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE> & a){
+    if(a._handle == nullptr) return false;
+    for(AttrIterator i = m.face_attr.begin(); i!=m.face_attr.end();++i)
+      if ( (*i).n_attr == a.n_attr ) return true;
+    return false;
+  }
+
+  /**
+   * @brief Checks if a const handle to a Per-Face attribute is valid
+   */
+  template <class ATTR_TYPE>
+  static
+  bool IsValidHandle( const MeshType & m,  const typename MeshType::template ConstPerFaceAttributeHandle<ATTR_TYPE> & a){
     if(a._handle == nullptr) return false;
     for(AttrIterator i = m.face_attr.begin(); i!=m.face_attr.end();++i)
       if ( (*i).n_attr == a.n_attr ) return true;
@@ -1803,13 +1819,9 @@ public:
       */
   template <class ATTR_TYPE>
   static
-  typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
+  typename MeshType::template ConstPerFaceAttributeHandle<ATTR_TYPE>
   GetPerFaceAttribute( const MeshType & m, std::string name = std::string("")){
-    typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE> h;
-    if(!name.empty()){
-      return FindPerFaceAttribute<ATTR_TYPE>(m,name);
-    }
-    return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(nullptr,0);
+    return FindPerFaceAttribute<ATTR_TYPE>(m,name);
   }
 
   template <class ATTR_TYPE>
@@ -1823,7 +1835,7 @@ public:
     i =m.face_attr.find(h1);
     if(i!=m.face_attr.end())
       if((*i)._sizeof == sizeof(ATTR_TYPE) ){
-        if(	(*i)._padding != 0 ){
+        if( (*i)._padding != 0 ){
           PointerToAttribute attr = (*i);											// copy the PointerToAttribute
           m.face_attr.erase(i);											// remove it from the set
           FixPaddedPerFaceAttribute<ATTR_TYPE>(m,attr);
@@ -1837,24 +1849,27 @@ public:
   }
   
   /**
-   * Same as the one above, but without modifying the attribute if it is found.
-   * (A "find" function should never modify the container in which is looking for..)
-   * Input mesh is const.
+   * @brief Try to retrieve a const handle to an attribute with a given name
+   * and ATTR_TYPE, from the given const mesh.
+   * If not found, an invalid handle will be returned.
+   * Check it with the function IsValidHandle
    */
   template <class ATTR_TYPE>
   static
-  typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>
+  typename MeshType::template ConstPerFaceAttributeHandle<ATTR_TYPE>
   FindPerFaceAttribute( const MeshType & m, const std::string & name){
-    assert(!name.empty());
-    PointerToAttribute h1; h1._name = name;
-    typename std::set<PointerToAttribute > ::iterator i;
+    if(!name.empty()){
+      PointerToAttribute h1; h1._name = name;
+      typename std::set<PointerToAttribute > ::iterator i;
 
-    i =m.face_attr.find(h1);
-    if(i!=m.face_attr.end())
-      if((*i)._sizeof == sizeof(ATTR_TYPE) ){
-        return typename MeshType::template PerFaceAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+      i =m.face_attr.find(h1);
+      if(i!=m.face_attr.end()){
+        if((*i)._sizeof == sizeof(ATTR_TYPE) ){
+          return typename MeshType::template ConstPerFaceAttributeHandle<ATTR_TYPE>((*i)._handle,(*i).n_attr);
+        }
       }
-    return typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE>(nullptr,0);
+    }
+    return typename MeshType:: template ConstPerFaceAttributeHandle<ATTR_TYPE>(nullptr,0);
   }
 
   template <class ATTR_TYPE>
@@ -1864,7 +1879,7 @@ public:
     for(i = m.face_attr.begin(); i != m.face_attr.end(); ++i )
       if(!(*i)._name.empty())
       {
-        typename MeshType:: template PerFaceAttributeHandle<ATTR_TYPE> hh;
+        typename MeshType:: template ConstPerFaceAttributeHandle<ATTR_TYPE> hh;
         hh = Allocator<MeshType>:: template  FindPerFaceAttribute <ATTR_TYPE>(m,(*i)._name);
         if(IsValidHandle<ATTR_TYPE>(m,hh))
           all.push_back((*i)._name);

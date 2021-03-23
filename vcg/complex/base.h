@@ -330,12 +330,18 @@ public:
 		ConstPerVertexAttributeHandle( const void *ah,const int & n):ConstAttributeHandle<ATTR_TYPE,VertContainer>(ah,n){}
 	};
 
-
 	template <class ATTR_TYPE>
 	class PerFaceAttributeHandle: public AttributeHandle<ATTR_TYPE,FaceContainer>{
 	public:
 		PerFaceAttributeHandle():AttributeHandle<ATTR_TYPE,FaceContainer>(){}
 		PerFaceAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,FaceContainer>(ah,n){}
+	};
+
+	template <class ATTR_TYPE>
+	class ConstPerFaceAttributeHandle: public ConstAttributeHandle<ATTR_TYPE,FaceContainer>{
+	public:
+		ConstPerFaceAttributeHandle():ConstAttributeHandle<ATTR_TYPE,FaceContainer>(){}
+		ConstPerFaceAttributeHandle( void *ah,const int & n):ConstAttributeHandle<ATTR_TYPE,FaceContainer>(ah,n){}
 	};
 
 	template <class ATTR_TYPE>
@@ -346,11 +352,26 @@ public:
 	};
 
 	template <class ATTR_TYPE>
+	class ConstPerEdgeAttributeHandle:  public ConstAttributeHandle<ATTR_TYPE,EdgeContainer>{
+	public:
+		ConstPerEdgeAttributeHandle():ConstAttributeHandle<ATTR_TYPE,EdgeContainer>(){}
+		ConstPerEdgeAttributeHandle( void *ah,const int & n):ConstAttributeHandle<ATTR_TYPE,EdgeContainer>(ah,n){}
+	};
+
+	template <class ATTR_TYPE>
 	class PerTetraAttributeHandle : public AttributeHandle<ATTR_TYPE, TetraContainer>
 	{
 	public:
 		PerTetraAttributeHandle() : AttributeHandle<ATTR_TYPE, TetraContainer>() {}
 		PerTetraAttributeHandle(void *ah, const int &n) : AttributeHandle<ATTR_TYPE, TetraContainer>(ah, n) {}
+	};
+
+	template <class ATTR_TYPE>
+	class ConstPerTetraAttributeHandle : public ConstAttributeHandle<ATTR_TYPE, TetraContainer>
+	{
+	public:
+		ConstPerTetraAttributeHandle() : ConstAttributeHandle<ATTR_TYPE, TetraContainer>() {}
+		ConstPerTetraAttributeHandle(void *ah, const int &n) : ConstAttributeHandle<ATTR_TYPE, TetraContainer>(ah, n) {}
 	};
 
 	template <class ATTR_TYPE>

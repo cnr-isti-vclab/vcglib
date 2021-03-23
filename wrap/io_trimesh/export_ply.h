@@ -374,22 +374,22 @@ namespace vcg {
                         assert(vcg::tri::HasPerVertexAttribute(m,pi.VertAttrNameVec[i]));
                         switch (pi.VertDescriptorVec[i].stotype1)
                         {
-                        case ply::T_FLOAT  : thfv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<float>(m,pi.VertAttrNameVec[i]); break;
-                        case ply::T_DOUBLE : thdv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<double>(m,pi.VertAttrNameVec[i]); break;
-                        case ply::T_INT    : thiv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<int   >(m,pi.VertAttrNameVec[i]); break;
-                        case ply::T_SHORT  : thsv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<short >(m,pi.VertAttrNameVec[i]); break;
-                        case ply::T_CHAR   : thcv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<char>(m,pi.VertAttrNameVec[i]); break;
-                        case ply::T_UCHAR  : thuv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<unsigned char>(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_FLOAT  : thfv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<float>(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_DOUBLE : thdv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<double>(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_INT    : thiv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<int   >(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_SHORT  : thsv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<short >(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_CHAR   : thcv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<char>(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_UCHAR  : thuv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<unsigned char>(m,pi.VertAttrNameVec[i]); break;
                         default : assert(0);
                         }
                       }                      
                     }                    
-                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<float > > thff(pi.FaceDescriptorVec.size());
-                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<double> > thdf(pi.FaceDescriptorVec.size());
-                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<int   > > thif(pi.FaceDescriptorVec.size());
-                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<short > > thsf(pi.FaceDescriptorVec.size());
-                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<char  > > thcf(pi.FaceDescriptorVec.size());
-                    std::vector<typename SaveMeshType:: template PerFaceAttributeHandle<unsigned char> >  thuf(pi.FaceDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerFaceAttributeHandle<float > > thff(pi.FaceDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerFaceAttributeHandle<double> > thdf(pi.FaceDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerFaceAttributeHandle<int   > > thif(pi.FaceDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerFaceAttributeHandle<short > > thsf(pi.FaceDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerFaceAttributeHandle<char  > > thcf(pi.FaceDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerFaceAttributeHandle<unsigned char> >  thuf(pi.FaceDescriptorVec.size());
                     
                     for(size_t i=0;i<pi.FaceDescriptorVec.size();i++)
                     {
