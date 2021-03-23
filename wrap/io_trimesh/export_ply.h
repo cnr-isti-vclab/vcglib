@@ -93,7 +93,7 @@ namespace vcg {
                     return Save(m,filename,binary,pi,cb);
                 }
 
-                static int Save(const SaveMeshType &m,  const char * filename, bool binary, PlyInfo &pi, CallBackPos *cb=0)	// V1.0
+                static int Save(const SaveMeshType &m,  const char * filename, bool binary, const PlyInfo &pi, CallBackPos *cb=0)	// V1.0
                 {
                     FILE * fpout;
                     const char * hbin = "binary_little_endian";
@@ -112,7 +112,7 @@ namespace vcg {
 
                     fpout = fopen(filename,"wb");
                     if(fpout==NULL)	{
-                        pi.status=::vcg::ply::E_CANTOPEN;
+                        //pi.status=::vcg::ply::E_CANTOPEN;
                         return ::vcg::ply::E_CANTOPEN;
                     }
                     fprintf(fpout,
@@ -360,12 +360,12 @@ namespace vcg {
                     VertexIterator vi;
                     SimpleTempData<typename SaveMeshType::VertContainer,int> indices(m.vert);
                    
-                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<float > > thfv(pi.VertDescriptorVec.size());
-                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<double> > thdv(pi.VertDescriptorVec.size());
-                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<int   > > thiv(pi.VertDescriptorVec.size());
-                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<short > > thsv(pi.VertDescriptorVec.size());
-                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<char  > > thcv(pi.VertDescriptorVec.size());
-                    std::vector<typename SaveMeshType:: template PerVertexAttributeHandle<unsigned char> >  thuv(pi.VertDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerVertexAttributeHandle<float > > thfv(pi.VertDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerVertexAttributeHandle<double> > thdv(pi.VertDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerVertexAttributeHandle<int   > > thiv(pi.VertDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerVertexAttributeHandle<short > > thsv(pi.VertDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerVertexAttributeHandle<char  > > thcv(pi.VertDescriptorVec.size());
+                    std::vector<typename SaveMeshType:: template ConstPerVertexAttributeHandle<unsigned char> >  thuv(pi.VertDescriptorVec.size());
                     
                     for(size_t i=0;i<pi.VertDescriptorVec.size();i++)
                     {
@@ -374,12 +374,12 @@ namespace vcg {
                         assert(vcg::tri::HasPerVertexAttribute(m,pi.VertAttrNameVec[i]));
                         switch (pi.VertDescriptorVec[i].stotype1)
                         {
-                        case ply::T_FLOAT  : thfv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<float>(m,pi.VertAttrNameVec[i]); break;
-                        case ply::T_DOUBLE : thdv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<double>(m,pi.VertAttrNameVec[i]); break; 
-                        case ply::T_INT    : thiv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<int   >(m,pi.VertAttrNameVec[i]); break;
-                        case ply::T_SHORT  : thsv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<short >(m,pi.VertAttrNameVec[i]); break;
-                        case ply::T_CHAR   : thcv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<char>(m,pi.VertAttrNameVec[i]); break;
-                        case ply::T_UCHAR  : thuv[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerVertexAttribute<unsigned char>(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_FLOAT  : thfv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<float>(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_DOUBLE : thdv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<double>(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_INT    : thiv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<int   >(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_SHORT  : thsv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<short >(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_CHAR   : thcv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<char>(m,pi.VertAttrNameVec[i]); break;
+                        case ply::T_UCHAR  : thuv[i] = vcg::tri::Allocator<SaveMeshType>::template FindConstPerVertexAttribute<unsigned char>(m,pi.VertAttrNameVec[i]); break;
                         default : assert(0);
                         }
                       }                      

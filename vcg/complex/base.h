@@ -297,11 +297,37 @@ public:
 		void resize(size_t /*size*/) { };
 	};
 
+	template <class ATTR_TYPE, class CONT>
+	class ConstAttributeHandle{
+	public:
+		ConstAttributeHandle(){_handle=(SimpleTempData<CONT,ATTR_TYPE> *)nullptr;}
+		ConstAttributeHandle( const void *ah,const int & n):_handle ( (const SimpleTempData<CONT,ATTR_TYPE> *)ah ),n_attr(n){}
+
+
+		//pointer to the SimpleTempData that stores the attribute
+		const SimpleTempData<CONT,ATTR_TYPE> * _handle;
+
+		// its attribute number
+		int n_attr;
+
+		// access function
+		template <class RefType>
+		const ATTR_TYPE & operator [](const RefType  & i) const {return (*_handle)[i];}
+		void resize(size_t /*size*/) { };
+	};
+
 	template <class ATTR_TYPE>
 	class PerVertexAttributeHandle: public AttributeHandle<ATTR_TYPE,VertContainer>{
 	public:
 		PerVertexAttributeHandle():AttributeHandle<ATTR_TYPE,VertContainer>(){}
 		PerVertexAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,VertContainer>(ah,n){}
+	};
+
+	template <class ATTR_TYPE>
+	class ConstPerVertexAttributeHandle: public ConstAttributeHandle<ATTR_TYPE,VertContainer>{
+	public:
+		ConstPerVertexAttributeHandle():ConstAttributeHandle<ATTR_TYPE,VertContainer>(){}
+		ConstPerVertexAttributeHandle( const void *ah,const int & n):ConstAttributeHandle<ATTR_TYPE,VertContainer>(ah,n){}
 	};
 
 
