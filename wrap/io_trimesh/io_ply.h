@@ -69,8 +69,8 @@ public:
   void AddPerElemFloatAttribute(int elemType, const char *attrName, const char * propName=0)
   {
     static const char *elemStr[2]={"vertex","face"};
-    static std::vector<PropDescriptor> *elemDescVec[2]={&(this->VertDescriptorVec), &(this->FaceDescriptorVec)};
-    static std::vector<std::string   > *elemNameVec[2]={&(this->VertAttrNameVec),   &(this->FaceAttrNameVec)};
+    std::vector<PropDescriptor> *elemDescVec[2]={&(this->VertDescriptorVec), &(this->FaceDescriptorVec)};
+    std::vector<std::string   > *elemNameVec[2]={&(this->VertAttrNameVec),   &(this->FaceAttrNameVec)};
         
     if(propName==0) propName=attrName;
     elemDescVec[elemType]->push_back(PropDescriptor());
