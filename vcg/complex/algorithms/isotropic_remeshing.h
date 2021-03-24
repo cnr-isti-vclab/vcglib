@@ -813,7 +813,7 @@ private:
         {
             if (faces[i]->IsFaceEdgeS(VtoE(vIdxes[i], (vIdxes[i]+1)%3)) && !vcg::tri::IsMarked(*params.m, faces[i]->cV1(vIdxes[i])))
             {
-                vcg::tri::Mark(*params.m,faces[i]->cV1(vIdxes[i]));
+				vcg::tri::Mark(*params.m,faces[i]->V1(vIdxes[i]));
                 incidentFeatures++;
                 CoordType movingEdgeVector0 = (faces[i]->cP1(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
                 if (std::fabs(movingEdgeVector0 * dEdgeVector) < .9f || !p.IsEdgeS())
@@ -821,7 +821,7 @@ private:
             }
             if (faces[i]->IsFaceEdgeS(VtoE(vIdxes[i], (vIdxes[i]+2)%3)) && !vcg::tri::IsMarked(*params.m, faces[i]->cV2(vIdxes[i])))
             {
-                vcg::tri::Mark(*params.m,faces[i]->cV2(vIdxes[i]));
+				vcg::tri::Mark(*params.m,faces[i]->V2(vIdxes[i]));
                 incidentFeatures++;
                 CoordType movingEdgeVector1 = (faces[i]->cP2(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
                 if (std::fabs(movingEdgeVector1 * dEdgeVector) < .9f || !p.IsEdgeS())

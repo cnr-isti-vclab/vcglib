@@ -219,15 +219,22 @@ public:
     }
 
     /// return the vertex that it should have if we make FlipV;
-    VertexType *VFlip() const
+	VertexType *VFlip()
     {
-        assert(f->cV(f->Prev(z))!=v && (f->cV(f->Next(z))==v || f->cV(z)==v));
-        if(f->cV(f->Next(z))==v)	return f->cV(z);
-        else			return f->cV(f->Next(z));
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
+		if(f->V(f->Next(z))==v)	return f->V(z);
+		else			return f->V(f->Next(z));
     }
 
+	const VertexType *VFlip() const
+	{
+		assert(f->V(f->Prev(z))!=v && (f->V(f->Next(z))==v || f->V(z)==v));
+		if(f->V(f->Next(z))==v)	return f->V(z);
+		else			return f->V(f->Next(z));
+	}
+
     /// return the face that it should have if we make FlipF;
-    FaceType *FFlip() const
+	FaceType *FFlip()
     {
         //        assert( f->FFp(z)->FFp(f->FFi(z))==f );
         //        assert(f->V(f->Prev(z))!=v);
@@ -235,6 +242,15 @@ public:
         FaceType *nf=f->FFp(z);
         return nf;
     }
+
+	const FaceType *FFlip() const
+	{
+		//        assert( f->FFp(z)->FFp(f->FFi(z))==f );
+		//        assert(f->V(f->Prev(z))!=v);
+		//        assert(f->V(f->Next(z))==v || f->V((z+0)%f->VN())==v);
+		const FaceType *nf=f->FFp(z);
+		return nf;
+	}
 
 
     // Trova il prossimo half-edge di bordo (nhe)

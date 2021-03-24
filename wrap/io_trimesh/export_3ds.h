@@ -448,7 +448,7 @@ namespace io {
 		/*
 			returns index of the vertex
 		*/
-		inline static int GetIndexVertex(const SaveMeshType &m, VertexType *p)
+		inline static int GetIndexVertex(const SaveMeshType &m, const VertexType *p)
 		{
 			return p-&*(m.vert.begin());
 		}
