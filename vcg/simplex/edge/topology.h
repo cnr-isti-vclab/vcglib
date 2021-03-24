@@ -24,6 +24,9 @@
 #ifndef _VCG_EDGE_TOPOLOGY
 #define _VCG_EDGE_TOPOLOGY
 
+#include <vector>
+#include <vcg/complex/allocate.h>
+
 namespace vcg {
 namespace edge {
 /** \addtogroup edge */

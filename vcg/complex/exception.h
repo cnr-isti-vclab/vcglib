@@ -23,6 +23,9 @@
 #ifndef __VCG_EXCEPTION_H
 #define __VCG_EXCEPTION_H
 
+#include <stdexcept>
+#include <iostream>
+
 namespace vcg
 {
 class MissingComponentException : public std::runtime_error
