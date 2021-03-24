@@ -30,10 +30,6 @@
 
 #include "used_types.h"
 
-//#ifndef __VCG_MESH
-//#error "This file should not be included alone. It is automatically included by complex.h"
-//#endif
-
 namespace vcg {
 namespace tri {
 /** \addtogroup trimesh

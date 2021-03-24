@@ -25,9 +25,7 @@
 OCF = Optional Component Fast (hopefully)
 compare with OCC(Optional Component Compact)
 */
-//#ifndef __VCG_MESH
-//#error "This file should not be included alone. It is automatically included by complex.h"
-//#endif
+
 #ifndef __VCG_VERTEX_PLUS_COMPONENT_OCF
 #define __VCG_VERTEX_PLUS_COMPONENT_OCF
 

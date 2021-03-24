@@ -22,9 +22,6 @@
 ****************************************************************************/
 #ifndef __VCG_FACE_PLUS_COMPONENT_OCF
 #define __VCG_FACE_PLUS_COMPONENT_OCF
-//#ifndef __VCG_MESH
-//#error "This file should not be included alone. It is automatically included by complex.h"
-//#endif
 
 #include <vector>
 #include <string>

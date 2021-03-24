@@ -30,9 +30,7 @@ added
 
 
 ****************************************************************************/
-// #ifndef __VCG_TETRA_MESH
-// #error "This file should not be included alone. It is automatically included by complex.h"
-// #endif
+
 #ifndef __VCG_TETRA_PLUS
 #define __VCG_TETRA_PLUS
 
