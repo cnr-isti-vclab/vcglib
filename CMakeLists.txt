@@ -272,6 +272,9 @@ set(VCG_HEADERS
 	vcg/connectors/halfedge_pos.h
 	vcg/connectors/hedge.h
 	vcg/connectors/hedge_component.h
+
+	#wrap
+	wrap/callback.h
 )
 
 set(SOURCES
