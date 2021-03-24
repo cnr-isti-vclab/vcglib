@@ -26,6 +26,8 @@
 #include <vector>
 #include <set>
 
+#include <vcg/container/simple_temporary_data.h>
+
 #include "used_types.h"
 
 //#ifndef __VCG_MESH

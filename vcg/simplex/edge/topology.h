@@ -27,6 +27,9 @@
 #include <vector>
 #include <vcg/complex/allocate.h>
 
+#include "pos.h"
+#include "component.h"
+
 namespace vcg {
 namespace edge {
 /** \addtogroup edge */

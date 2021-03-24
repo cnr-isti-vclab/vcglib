@@ -24,9 +24,11 @@
 #ifndef VCG__FOREACH_H
 #define VCG__FOREACH_H
 
-#ifndef __VCG_MESH
-#error "This file should not be included alone. It is automatically included by complex.h"
-#endif
+//#ifndef __VCG_MESH
+//#error "This file should not be included alone. It is automatically included by complex.h"
+//#endif
+
+#include <vcg/simplex/face/pos.h>
 
 namespace vcg {
 namespace tri {

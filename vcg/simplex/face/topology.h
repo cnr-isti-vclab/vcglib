@@ -24,6 +24,8 @@
 #ifndef _VCG_FACE_TOPOLOGY
 #define _VCG_FACE_TOPOLOGY
 
+#include "pos.h"
+
 #include <vcg/complex/allocate.h>
 
 namespace vcg {

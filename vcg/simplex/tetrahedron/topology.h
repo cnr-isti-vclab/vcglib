@@ -24,6 +24,8 @@
 #ifndef _VCG_TETRA_TOPOLOGY
 #define _VCG_TETRA_TOPOLOGY
 
+#include <cassert>
+
 namespace vcg {
 namespace tetrahedron {
 /** \addtogroup tetrahedron */

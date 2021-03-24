@@ -30,6 +30,11 @@
 #ifndef __VCG_TETRA_POS
 #define __VCG_TETRA_POS
 
+#include <vector>
+#include <algorithm>
+
+#include "component.h"
+
 namespace vcg {
 namespace tetra {
 
@@ -87,7 +92,7 @@ public:
         return _vi;
     }
 
-    inline bool End(){return (Vt()==NULL);}
+	inline bool End(){return (Vt()==nullptr);}
 
     /// move on the next tetrahedron that share the vertex
     void operator++()
@@ -97,7 +102,7 @@ public:
         Vt() = tw->VTp(vi);
         Vi() = tw->VTi(vi);
 
-        assert((Vt()==NULL)||((tw->V(vi))==(Vt()->V(Vi()))));
+		assert((Vt()==nullptr)||((tw->V(vi))==(Vt()->V(Vi()))));
     }
 
 };
