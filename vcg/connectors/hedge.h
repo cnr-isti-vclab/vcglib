@@ -20,10 +20,17 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#include <vcg/complex/complex.h>
 
 #ifndef __VCG_HEDGE_ 
 #define __VCG_HEDGE_ 
+
+#include <vector>
+#include <string>
+
+#include <vcg/complex/all_types.h>
+#include <vcg/container/derivation_chain.h>
+
+#include "hedge_component.h"
 
 namespace vcg {
 

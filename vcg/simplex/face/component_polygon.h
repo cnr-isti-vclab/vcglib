@@ -24,6 +24,10 @@
 #ifndef __VCG_POLYGON_COMPONENT
 #define __VCG_POLYGON_COMPONENT
 
+#include <cassert>
+#include <vector>
+#include <string>
+
 namespace vcg {
 namespace face {
 
@@ -60,7 +64,7 @@ public:
   typedef typename  T::VertexType::ScalarType ScalarType;
   typedef typename  T::VertexType VertexType;
 
-  PFVAdj(){ _vpoly = NULL; }
+  PFVAdj(){ _vpoly = nullptr; }
   /* Note: the destructor will not be called in general because there are no virtual destructors.
    * Instead, the job of deallocating the memory will be done by the face allocator.
    * This destructor is only done for those who istance a face alone (outside a mesh)

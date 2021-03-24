@@ -34,6 +34,8 @@ added
 #define __VCG_TETRAHEDRON_PLUS_COMPONENT
 
 #include <vector>
+
+#include <vcg/space/color4.h>
 #include <vcg/space/tetra3.h>
 
 namespace vcg {
