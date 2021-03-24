@@ -24,6 +24,12 @@
 #ifndef __VCG_TRI_UPDATE_TOPOLOGY
 #define __VCG_TRI_UPDATE_TOPOLOGY
 
+#include <cassert>
+
+#include <vcg/complex/base.h>
+#include <vcg/simplex/face/topology.h>
+#include <vcg/simplex/edge/pos.h>
+
 namespace vcg {
 namespace tri {
 /// \ingroup trimesh

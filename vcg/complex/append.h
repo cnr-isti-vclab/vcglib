@@ -23,9 +23,8 @@
 #ifndef __VCGLIB_APPEND
 #define __VCGLIB_APPEND
 
-#ifndef __VCG_MESH
-#error "This file should not be included alone. It is automatically included by complex.h"
-#endif
+#include <vcg/complex/allocate.h>
+#include <vcg/complex/algorithms/update/selection.h>
 
 namespace vcg {
 namespace tri {
