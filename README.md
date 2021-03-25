@@ -1,6 +1,6 @@
 The **_Visualization and Computer Graphics Library_** (VCGlib for short) is a open source, portable, C++, templated, no dependency, library for manipulation, processing, cleaning, simplifying triangle meshes.
 
-![BuilExamplesLinux](https://github.com/cnr-isti-vclab/vcglib/workflows/BuilExamplesLinux/badge.svg)
+![BuildExamplesLinux](https://github.com/cnr-isti-vclab/vcglib/workflows/BuildExamplesLinux/badge.svg)
 ![BuildExamplesMacOS](https://github.com/cnr-isti-vclab/vcglib/workflows/BuildExamplesMacOS/badge.svg)
 ![BuildExamplesWindows](https://github.com/cnr-isti-vclab/vcglib/workflows/BuildExamplesWindows/badge.svg)
 
