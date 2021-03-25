@@ -60,4 +60,4 @@ SUBDIRS = \
 	trimesh_voronoi \
 	trimesh_voronoiatlas \
 	trimesh_voronoiclustering \
-	trimesh_voronoisampling \
+	trimesh_voronoisampling

@@ -1,17 +1,16 @@
 cmake_minimum_required(VERSION 3.13)
-project (tridecimator)
+project(trimesh_intersection_mesh)
 
 if (VCG_HEADER_ONLY)
 	set(SOURCES
-		tridecimator.cpp
-		${VCG_INCLUDE_DIRS}/wrap/ply/plylib.cpp)
+		trimesh_intersection_mesh.cpp)
 endif()
 
-add_executable(tridecimator
+add_executable(trimesh_intersection_mesh
 	${SOURCES})
 
 target_link_libraries(
-	tridecimator
+	trimesh_intersection_mesh
 	PUBLIC
 		vcglib
 	)

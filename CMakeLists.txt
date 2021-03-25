@@ -13,6 +13,9 @@ option(ALLOW_SYSTEM_EIGEN "Allow use of system-provided Eigen" ON)
 option(VCG_HEADER_ONLY "Use VCG library in header only mode" ON)
 option(VCG_BUILD_EXAMPLES "Build a set of examples of the library" OFF)
 
+set (VCG_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR})
+set (VCG_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR} PARENT_SCOPE)
+
 # Prefer GLVND
 if(POLICY CMP0072)
 	cmake_policy(SET CMP0072 NEW)
@@ -296,4 +299,5 @@ endif()
 
 if(VCG_BUILD_EXAMPLES)
 	#TODO make the list of samples to build
+	add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/apps)
 endif()

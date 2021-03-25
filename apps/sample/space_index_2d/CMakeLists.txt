@@ -1,17 +1,16 @@
 cmake_minimum_required(VERSION 3.13)
-project (tridecimator)
+project(space_index_2d)
 
 if (VCG_HEADER_ONLY)
 	set(SOURCES
-		tridecimator.cpp
-		${VCG_INCLUDE_DIRS}/wrap/ply/plylib.cpp)
+		space_index_2d.cpp)
 endif()
 
-add_executable(tridecimator
+add_executable(space_index_2d
 	${SOURCES})
 
 target_link_libraries(
-	tridecimator
+	space_index_2d
 	PUBLIC
 		vcglib
 	)

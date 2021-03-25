@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.13)
-project (tridecimator)
+project(trimesh_optional)
 
 if (VCG_HEADER_ONLY)
 	set(SOURCES
-		tridecimator.cpp
+		trimesh_optional.cpp
 		${VCG_INCLUDE_DIRS}/wrap/ply/plylib.cpp)
 endif()
 
-add_executable(tridecimator
+add_executable(trimesh_optional
 	${SOURCES})
 
 target_link_libraries(
-	tridecimator
+	trimesh_optional
 	PUBLIC
 		vcglib
 	)
