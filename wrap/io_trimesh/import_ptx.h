@@ -67,7 +67,7 @@ public:
       flipfaces		= false;
     }
 
-    /// a bit mask describing the field preesnt in the ply file
+    /// a bit mask describing the field present in the ply file
     int mask;
 
     /// index of mesh to be imported
@@ -189,8 +189,8 @@ public:
 
     if ( ( colnum <=0 ) || ( rownum <=0 ) ) return false;
     // initial 4 lines
-	if (!fscanf(fp, "%lf %lf %lf\n", &xx, &yy, &zz)) return false; // scanner registered position 
-	if (!fscanf(fp, "%lf %lf %lf\n", &xx, &yy, &zz)) return false; // scanner registered axis 'X' 
+	if (!fscanf(fp, "%lf %lf %lf\n", &xx, &yy, &zz)) return false; // scanner registered position
+	if (!fscanf(fp, "%lf %lf %lf\n", &xx, &yy, &zz)) return false; // scanner registered axis 'X'
 	if (!fscanf(fp, "%lf %lf %lf\n", &xx, &yy, &zz)) return false; // scanner registered axis 'Y'
 	if (!fscanf(fp, "%lf %lf %lf\n", &xx, &yy, &zz)) return false; // scanner registered axis 'Z'
     // now the transformation matrix
@@ -434,7 +434,7 @@ public:
         tri::Clean<OpenMeshType>::RemoveUnreferencedVertex(m);
       }
     }
-    Matrix44x tr; 
+    Matrix44x tr;
     tr.Import(currtrasf);
     tri::UpdatePosition<OpenMeshType>::Matrix(m,tr,true);
     tri::Allocator<OpenMeshType>::CompactVertexVector(m);

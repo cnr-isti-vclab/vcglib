@@ -15,10 +15,10 @@ public:
 	std::vector<int> _Ap;
 	std::vector<int> _Ai;
 	std::vector<double> _Ax;
-	
+
 	typedef typename std::pair<int,int> IndexType;
-	
-	int _dimension;	
+
+	int _dimension;
 
 public:
 
@@ -26,16 +26,16 @@ public:
 virtual void Initalize(int dimension)
 {_dimension=dimension;}
 
-///create a sparse matrix given a set of entries as vector 
+///create a sparse matrix given a set of entries as vector
 ///of pair of int
 virtual void CreateSparse(std::vector<IndexType> Entries)
 {}
 
-///return the value of the matrix 
+///return the value of the matrix
 virtual ScalarType &A(int row,int col)
 {return (_Ax[0]);}
 
-///return true if the rapresention of sparse matriz is symmetric
+///return true if the represention of sparse matriz is symmetric
 virtual bool IsSymmetric()
 {return false;}
 

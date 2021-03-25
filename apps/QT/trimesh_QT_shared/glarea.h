@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -65,13 +65,13 @@ public:
 
 class GLArea:public QGLWidget
 {
-	Q_OBJECT 
+	Q_OBJECT
 public:
     GLArea (SharedDataOpenGLContext* sharedcontext,MainWindow* parent);
 	~GLArea();
 	void resetTrackBall();
     //unsigned int getId() const {return areaid;}
-	/// we choosed a subset of the avaible drawing modes
+	/// we chose a subset of the available drawing modes
 
 signals:
 		/// signal for setting the statusbar message
@@ -88,7 +88,7 @@ protected:
 	void mousePressEvent(QMouseEvent*e);
 	void mouseMoveEvent(QMouseEvent*e);
 	void mouseReleaseEvent(QMouseEvent*e);
-	void wheelEvent(QWheelEvent*e); 
+	void wheelEvent(QWheelEvent*e);
 
 private:
     MainWindow* parwin;

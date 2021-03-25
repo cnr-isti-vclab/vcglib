@@ -68,16 +68,16 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
   manipulator->center=position;
   manipulator->GetView();
   manipulator->Apply();
-   
+
   MovableCoordinateFrame::Render(glw);
-  
+
   // got nothing to draw
   if(!drawmoves && !drawrotations){
     glPopMatrix();
-    return;  
+    return;
   }
 
-  int current_mode=manipulator->current_button;  
+  int current_mode=manipulator->current_button;
   bool rotating=(current_mode==rotx)||(current_mode==roty)||(current_mode==rotz);
   bool moving=(current_mode==movx)||(current_mode==movy)||(current_mode==movz);
 
@@ -89,18 +89,18 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_POINT_SMOOTH);
-  
+
   QString message("this should never be seen");
   char axis_name;
   float verse;
-  
+
   if(current_mode==x_modifier){
     glColor(xcolor); message = QString("move or rotate on X axis");
   } else if(current_mode==y_modifier){
     glColor(ycolor); message = QString("move or rotate on Y axis");
   } else if(current_mode==z_modifier){
     glColor(zcolor); message = QString("move or rotate on Z axis");
-  } else 
+  } else
   if(rotating && drawrotations){ // draw a rotation
     Point3f axis, arc_point;
     float angle;
@@ -126,15 +126,15 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
                       .arg(axis_name);
     Quaternionf arc_rot;
     arc_rot.FromAxis(angle/18.0,axis);
-    glBegin(GL_POLYGON);   
+    glBegin(GL_POLYGON);
       glVertex(position);
       glVertex(position+arc_point);
       for(int i=0;i<18;i++){
       	 arc_point = arc_rot.Rotate(arc_point);
          glVertex(position+arc_point);
       }
-    glEnd(); 
-  } else if(moving && drawmoves){ // draw a traslation
+    glEnd();
+  } else if(moving && drawmoves){ // draw a translation
     Point3f ntra=manipulator->track.tra;
     ntra.Normalize();
     if(current_mode==movx){
@@ -159,11 +159,11 @@ void ActiveCoordinateFrame::Render(QGLWidget* glw)
     glEnd();
     glBegin(GL_POINTS);
       glVertex(old_pos);
-    glEnd();    
+    glEnd();
   } else { // got nothing to draw
     glPopAttrib();
     glPopMatrix();
-    return;  
+    return;
   }
   // draw message below cursor
   font.setBold(true);
@@ -179,7 +179,7 @@ void ActiveCoordinateFrame::Reset(bool reset_position,bool reset_alignment)
 {
   MovableCoordinateFrame::Reset(reset_position, reset_alignment);
   Update();
-  manipulator->Reset();  
+  manipulator->Reset();
 }
 
 void ActiveCoordinateFrame::SetPosition(const Point3f newpos)
@@ -215,7 +215,7 @@ void ActiveCoordinateFrame::MouseMove(int x, int y)
   manipulator->MouseMove(x,y);
 }
 
-void ActiveCoordinateFrame::MouseUp(int x, int y, /*Button */ int button) 
+void ActiveCoordinateFrame::MouseUp(int x, int y, /*Button */ int button)
 {
   Move(manipulator->track);
   manipulator->Reset();
@@ -263,9 +263,9 @@ void ActiveCoordinateFrame::Update()
   x_axis=r.Rotate(Point3f(1,0,0));
   y_axis=r.Rotate(Point3f(0,1,0));
   z_axis=r.Rotate(Point3f(0,0,1));
-  
+
   manipulator->ClearModes();
-  manipulator->modes[0] = NULL;    
+  manipulator->modes[0] = NULL;
   manipulator->modes[movx] = new AxisMode(p,x_axis);
   manipulator->modes[movy] = new AxisMode(p,y_axis);
   manipulator->modes[movz] = new AxisMode(p,z_axis);

@@ -164,8 +164,8 @@ public:
 		if(min.X()>max.X() || min.Y()>max.Y()) SetNull();
 	}
 
-    /** Traslate the bounding box by a vectore
-      @param p The transolation vector
+    /** Translate the bounding box by a vector
+      @param p The translation vector
 		*/
 	void Translate( const PointType & p )
 	{
@@ -205,7 +205,7 @@ public:
 		bb.Intersect(b);
 		return bb.IsValid();
 	}
-    /** Check if emptry.
+	/** Check if empty.
       @return True iff empty
 		*/
 	inline bool IsNull() const { return min.X()>max.X() || min.Y()>max.Y(); }
@@ -215,7 +215,7 @@ public:
 		*/
 	inline bool IsValid() const { return min.X()<max.X() && min.Y()<max.Y(); }
 
-    /** Check if emptry.
+    /** Check if empty.
       @return True iff empty
 		*/
 	inline bool IsEmpty() const { return min==max; }

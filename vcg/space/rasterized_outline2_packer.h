@@ -305,7 +305,7 @@ public:
       std::vector<int>& leftHorizon() { return mLeftHorizon; }
       vcg::Point2i& size() { return mSize; }
 
-      //returns the score relative to the left horizon of that poly in that particular position, taking into account the choosen algo
+      //returns the score relative to the left horizon of that poly in that particular position, taking into account the chosen algo
       int getCostX(RasterizedOutline2& poly, Point2i pos, int rast_i) {
           switch (params.costFunction) {
           case CostFuncEnum::MinWastedSpace: return emptyCellBetweenPolyAndLeftHorizon(poly, pos, rast_i);
@@ -315,7 +315,7 @@ public:
           return 0;
       }
 
-      //returns the score relative to the bottom horizon of that poly in that particular position, taking into account the choosen algo
+      //returns the score relative to the bottom horizon of that poly in that particular position, taking into account the chosen algo
       int getCostY(RasterizedOutline2& poly, Point2i pos, int rast_i) {
           switch (params.costFunction) {
           case CostFuncEnum::MinWastedSpace: return emptyCellBetweenPolyAndBottomHorizon(poly, pos, rast_i);

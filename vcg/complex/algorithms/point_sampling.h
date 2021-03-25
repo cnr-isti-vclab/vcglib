@@ -1005,7 +1005,7 @@ static void AllEdge(MeshType & m, VertexSampler &ps)
 
 // Regular Uniform Edge sampling
 // Each edge is subdivided in a number of pieces proprtional to its length
-// Sample are choosen without touching the vertices.
+// Samples are chosen without touching the vertices.
 
 static void EdgeUniform(MeshType & m, VertexSampler &ps,int sampleNum, bool sampleFauxEdge=true)
 {
