@@ -49,7 +49,7 @@ First working release.
 #ifndef __VCGLIB_BOX
 #define __VCGLIB_BOX
 
-#include <vcg/space/point.h>
+#include <vcg/space/point3.h>
 #include <vcg/space/space.h>
 #include <vcg/math/linear.h>
 

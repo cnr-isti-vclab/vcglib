@@ -25,6 +25,8 @@
 #define __VCG_COMPLEX_BASE
 
 #include <typeindex>
+#include <set>
+
 #include <vcg/container/simple_temporary_data.h>
 
 #include "used_types.h"
@@ -599,7 +601,7 @@ template <class MeshType> inline bool IsMarked(const MeshType & m,typename MeshT
 	@param m the mesh containing the element
 	@param t tetra pointer */
 template <class MeshType>
-inline bool IsMarked(MeshType &m, typename MeshType::ConstTetraPointer t) { return t->cIMark() == m.imark; }
+inline bool IsMarked(const MeshType &m, typename MeshType::ConstTetraPointer t) { return t->cIMark() == m.imark; }
 
 /** \brief Set the vertex incremental mark of the vertex to the one of the mesh.
 	@param m the mesh containing the element

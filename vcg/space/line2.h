@@ -167,7 +167,7 @@ public:
 	Line2 (const Line2<ScalarType,!NORM > &r) 
 	{ Import(r); };
 		/// assignment
-	inline LineType & operator = ( Line2<ScalarType,!NORM> const &r) 
+	inline LineType & operator = ( const Line2<ScalarType,!NORM> &r)
 	{ Import(r); return *this; };
 //@}
 
