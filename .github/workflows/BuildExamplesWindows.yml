@@ -1,10 +1,10 @@
-name: BuildSamplesWindows
+name: BuildExamplesWindows
 
 on: [push, pull_request]
 
 jobs:
   windows_build_tests:
-    name: Build Samples (Windows)
+    name: Build Examples (Windows)
     runs-on: windows-latest
 
     steps:
@@ -25,5 +25,7 @@ jobs:
       uses: jurplel/install-qt-action@v2
     - name: Build Samples
       run: |
-        qmake apps/sample/sample.pro
+        mkdir build
+        cd build
+        cmake -G "NMake Makefiles" -DVCG_BUILD_EXAMPLES=ON ..
         jom -j4
