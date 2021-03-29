@@ -8,7 +8,7 @@
  *                                                                    \      *
  * All rights reserved.                                                      *
  *                                                                           *
- * This program is free software; you can redistribute it and/or modify      *   
+ * This program is free software; you can redistribute it and/or modify      *
  * it under the terms of the GNU General Public License as published by      *
  * the Free Software Foundation; either version 2 of the License, or         *
  * (at your option) any later version.                                       *
@@ -64,10 +64,10 @@ class CMesh   : public vcg::tri::TriMesh< std::vector<CVertex>, std::vector<CFac
 
 class GLArea:public QGLWidget
 {
-Q_OBJECT 
+Q_OBJECT
 public:
   GLArea (QWidget * parent = 0);
-  /// we choosed a subset of the avaible drawing modes
+  /// we chose a subset of the available drawing modes
   enum DrawMode{SMOOTH=0,POINTS,WIRE,FLATWIRE,HIDDEN,FLAT};
 public slots:
   /// widget-based user interaction slots
@@ -89,7 +89,7 @@ protected:
   void mousePressEvent(QMouseEvent*e);
   void mouseMoveEvent(QMouseEvent*e);
   void mouseReleaseEvent(QMouseEvent*e);
-  void wheelEvent(QWheelEvent*e); 
+  void wheelEvent(QWheelEvent*e);
 private:
   /// the active mesh instance
   CMesh mesh;

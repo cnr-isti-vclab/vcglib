@@ -1,8 +1,8 @@
 The **_Visualization and Computer Graphics Library_** (VCGlib for short) is a open source, portable, C++, templated, no dependency, library for manipulation, processing, cleaning, simplifying triangle meshes.
 
-![BuildSamplesUbuntu](https://github.com/cnr-isti-vclab/vcglib/workflows/BuildSamplesUbuntu/badge.svg)
-![BuildSamplesMacOS](https://github.com/cnr-isti-vclab/vcglib/workflows/BuildSamplesMacOS/badge.svg)
-![BuildSamplesWindows](https://github.com/cnr-isti-vclab/vcglib/workflows/BuildSamplesWindows/badge.svg)
+![BuildExamplesLinux](https://github.com/cnr-isti-vclab/vcglib/workflows/BuildExamplesLinux/badge.svg)
+![BuildExamplesMacOS](https://github.com/cnr-isti-vclab/vcglib/workflows/BuildExamplesMacOS/badge.svg)
+![BuildExamplesWindows](https://github.com/cnr-isti-vclab/vcglib/workflows/BuildExamplesWindows/badge.svg)
 
 The library, composed by more than 100k lines of code, is released under the GPL license, and it is the base of most of the software tools of the [Visual Computing Lab](http://vcg.isti.cnr.it) of the Italian National Research Council Institute ISTI, like MeshLab, metro and many others.
 
@@ -28,17 +28,10 @@ A number of applications have been developed using the vcglib:
 - Metro, the tool for measuring differences between meshes
 - The first high quality out-of-core mesh simplifier that was used by the Stanford Digital Michelangelo project to process their huge 3D scanned models.
 
-## Contributing
-In case of bugs please report them [here](https://github.com/cnr-isti-vclab/vcglib/issues).
-
-Copyright of the library is fully owned by CNR. Contributing means signing an appropriate [license agreement](https://github.com/cnr-isti-vclab/vcglib/blob/master/docs/ContributorLicenseAgreement.pdf) . 
-
-Pull requests about trivial, small, questionable updates (e.g. small stylistic changes like int -> uint8_t) will be rejected without discussion. 
-
-
 ## Contacts
 
 For any info about licensing (portion of) the library please contact us:
 Paolo Cignoni (p.cignoni@isti.cnr.it) 
 Visual Computing Lab of the Italian National Research Council - ISTI
 
+In case of bugs please report them [here](https://github.com/cnr-isti-vclab/vcglib/issues) .

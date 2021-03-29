@@ -207,7 +207,7 @@ public:
     }
 
   /*  multiply the current reference frame for the matrix passed
-   note: it is up to the caller to check the the matrix passed is a pure rototraslation
+   note: it is up to the caller to check the the matrix passed is a pure rototranslation
    */
   void MultMatrix(    vcg::Matrix44<S>    m44)
   {
@@ -218,7 +218,7 @@ public:
   }
 
   /*  multiply the current reference frame for the similarity passed
-   note: it is up to the caller to check the the matrix passed is a pure rototraslation
+   note: it is up to the caller to check the the matrix passed is a pure rototranslation
    */
   void MultSimilarity( const Similarity<S> & s){ MultMatrix(s.Matrix());}
 

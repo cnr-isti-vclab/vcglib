@@ -24,6 +24,8 @@
 #ifndef __VCG_EDGE_POS
 #define __VCG_EDGE_POS
 
+#include <cassert>
+
 namespace vcg {
 namespace edge {
 

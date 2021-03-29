@@ -24,10 +24,11 @@
 #ifndef __VCGLIB_SIMPLE__
 #define __VCGLIB_SIMPLE__
 
-#include <string.h>
+#include <string>
+#include <cstring>
 #include <limits>
 #include <vector>
-#include <assert.h>
+#include <cassert>
 
 namespace vcg
 {

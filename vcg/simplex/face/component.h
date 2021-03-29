@@ -20,12 +20,16 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#ifndef __VCG_MESH
-#error "This file should not be included alone. It is automatically included by complex.h"
-#endif
+
 #ifndef __VCG_FACE_PLUS_COMPONENT
 #define __VCG_FACE_PLUS_COMPONENT
 
+#include <cassert>
+#include <vector>
+#include <string>
+
+#include <vcg/space/color4.h>
+#include <vcg/space/texcoord2.h>
 
 namespace vcg {
 namespace face {
@@ -36,15 +40,15 @@ namespace face {
 
 template <class T> class EmptyCore: public T {
 public:
-  inline typename T::VertexType * &V( const int )       { assert(0);		static typename T::VertexType *vp=0; return vp; }
-  inline typename T::VertexType *  V( const int ) const { assert(0);		static typename T::VertexType *vp=0; return vp;	}
-  inline typename T::VertexType * cV( const int ) const { assert(0);		static typename T::VertexType *vp=0; return vp;	}
-  inline typename T::VertexType * &FVp( const int i )       {	return this->V(i); }
-  inline typename T::VertexType *  FVp( const int i ) const {	return this->cV(i); }
-  inline typename T::VertexType * cFVp( const int i ) const {	return this->cV(i); }
-  inline typename T::CoordType &P( const int ) 	     { assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
-  inline typename T::CoordType  P( const int ) const { assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
-  inline typename T::CoordType cP( const int ) const { assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
+  inline       typename T::VertexType * &V( const int )       { assert(0);		static typename T::VertexType *vp=0; return vp; }
+  inline const typename T::VertexType *  V( const int ) const { assert(0);		static typename T::VertexType *vp=0; return vp;	}
+  inline const typename T::VertexType * cV( const int ) const { assert(0);		static typename T::VertexType *vp=0; return vp;	}
+  inline       typename T::VertexType * &FVp( const int i )       {	return this->V(i); }
+  inline const typename T::VertexType *  FVp( const int i ) const {	return this->cV(i); }
+  inline const typename T::VertexType * cFVp( const int i ) const {	return this->cV(i); }
+  inline       typename T::CoordType &P( const int ) 	     { assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
+  inline       typename T::CoordType  P( const int ) const { assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
+  inline       typename T::CoordType cP( const int ) const { assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 
   static bool HasVertexRef()   { return false; }
   static bool HasFVAdjacency()   { return false; }
@@ -196,7 +200,7 @@ public:
 
   inline typename T::VertexType * &V( const int j )       { assert(j>=0 && j<3); return v[j]; } /// \brief The pointer to the i-th vertex
   inline const typename T::VertexType * V (const int j) const { assert(j>=0 && j<3); return v[j]; }
-  inline typename T::VertexType * cV( const int j ) const { assert(j>=0 && j<3);	return v[j]; }
+  inline const typename T::VertexType * cV( const int j ) const { assert(j>=0 && j<3);	return v[j]; }
 
   inline       CoordType &P( const int j )      	{	assert(j>=0 && j<3);		return v[j]->P();	} /// \brief Shortcut: the position of the  i-th vertex (equivalent to \c V(i)->P() )
   inline const CoordType &P( const int j ) const	{	assert(j>=0 && j<3);		return v[j]->P();	}
@@ -208,9 +212,9 @@ public:
   inline const typename T::VertexType * V0( const int j ) const { return V(j);}        /** \brief Return the pointer to the j-th vertex of the face. */
   inline const typename T::VertexType * V1( const int j ) const { return V((j+1)%3);}  /** \brief Return the pointer to the ((j+1)%3)-th vertex of the face. */
   inline const typename T::VertexType * V2( const int j ) const { return V((j+2)%3);}  /** \brief Return the pointer to the ((j+2)%3)-th vertex of the face. */
-  inline typename T::VertexType *  cV0( const int j ) const { return cV(j);}
-  inline typename T::VertexType *  cV1( const int j ) const { return cV((j+1)%3);}
-  inline typename T::VertexType *  cV2( const int j ) const { return cV((j+2)%3);}
+  inline const typename T::VertexType *  cV0( const int j ) const { return cV(j);}
+  inline const typename T::VertexType *  cV1( const int j ) const { return cV((j+1)%3);}
+  inline const typename T::VertexType *  cV2( const int j ) const { return cV((j+2)%3);}
 
   inline       CoordType &  P0( const int j )       { return V(j)->P();}
   inline       CoordType &  P1( const int j )       { return V((j+1)%3)->P();}

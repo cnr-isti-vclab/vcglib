@@ -140,6 +140,7 @@ static bool IsSTLColored(const char * filename, bool &coloredFlag, bool &magicsM
      }
    }
 
+   fclose(fp);
    return true;
 }
 
@@ -163,6 +164,7 @@ static bool IsSTLBinary(const char * filename, bool &binaryFlag)
   if(file_size ==  expected_file_size) 
   {
     binaryFlag = true;
+    fclose(fp);
     return true;
   }
   

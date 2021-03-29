@@ -110,9 +110,9 @@ public:
   /// A trackball stores a transformation called 'track' that effectively rototranslate the object.
   Similarityf track;
   /// track position in model space.
-  Point3f center; 
+  Point3f center;
   /// size of the widget in model space.
-  float radius; 
+  float radius;
 };
 
 /*!
@@ -160,7 +160,7 @@ mesh->Render();
 </pre>
 
   Note on the typical use:
-  - Perspective and glulookat are choosed to frame the origin centered 1-radius trackball.
+  - Perspective and glulookat are chosen to frame the origin centered 1-radius trackball.
   - The final scale and translate are just to fit a generic mesh to the 1sized origin centered where the trackball stays box.
   - The trackball works also on Orthographic projections \b but that are not centered around origin (just move it back along the Z)
 */
@@ -199,7 +199,7 @@ public:
     @warning The destructor <b>does not</b> deallocate the memory allocated by setDefaultMapping(), because the application can change the modes map. This can lead to small memory leaks, so please explicitally delete any manipulator in the modes map if you are going to repeatly allocate and deallocate Trackball instances.
   */
   ~Trackball();
-	
+
 	private:
 	// Trackball must not be copied. Use Append (see vcg/complex/trimesh/append.h)
 	Trackball operator =(const Trackball &  /*m*/) = delete;
@@ -273,7 +273,7 @@ public:
   void ApplyInverse();
   // DrawIcon() has been moved to trackutils.h
   //void DrawIcon();
-  
+
   // T(c) S R T(t) T(-c) => S R T(S^(-1) R^(-1)(c) + t - c)
   Matrix44f Matrix() const;
   Matrix44f InverseMatrix() const;
@@ -315,7 +315,7 @@ public:
     @param x The horizontal coordinate of the mouse pointer.
     @param y The vertical coordinate of the mouse pointer.
   */
-  void MouseMove(int x, int y); 
+  void MouseMove(int x, int y);
   /*!
     @brief Interface function relative to mouse down event in QT/SDL.
 
@@ -323,7 +323,7 @@ public:
     @param y The vertical coordinate of the mouse pointer.
     @param button The new state.
   */
-  void MouseUp(int x, int y, /*Button */ int button); 
+  void MouseUp(int x, int y, /*Button */ int button);
   /*!
     @brief Old interface function relative to mouse down event in QT/SDL.
 
@@ -367,9 +367,9 @@ public:
 
   void SetSpinnable(bool on);
 
-	
+
 	// returns if it is animating or not
-	// 
+	//
 	bool IsAnimating(unsigned int msec=0);
 
 	// Animate: either takes an absolute time (if default not specified, then it is automeasured)
@@ -424,7 +424,7 @@ public:
 /*    //internals  // commented out no more used this stuff!
     enum Action { NONE = 0,
 		  VIEW_ROTATE = 1,
-		  // Axis Constrained Rotation 
+		  // Axis Constrained Rotation
 		  TRACK_ROTATE_X = 3, TRACK_ROTATE_Y = 4, TRACK_ROTATE_Z = 5,
 		  // Drag constrained to an axis (trackball axis)
 		  DRAG_X = 6,   DRAG_Y = 7,   DRAG_Z = 8,
@@ -469,9 +469,9 @@ public:
 
   /// The inactive manipulator. It is drawn when Trackball is inactive.
   TrackMode *inactive_mode;
-  
+
   // The manipulator to deal with timer events and key events
-  TrackMode *idle_and_keys_mode; 
+  TrackMode *idle_and_keys_mode;
   /*!
     @brief Reset modes to default mapping.
 
@@ -493,7 +493,7 @@ public:
   /// Transformation before current user action.
   Similarityf last_track;
   /// track after an Undo() call.
-  Similarityf undo_track; 
+  Similarityf undo_track;
   /// Currently not in use.
   Similarityf last_view;
   /// Mouse cursor coordinates before current action.

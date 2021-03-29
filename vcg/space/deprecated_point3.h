@@ -253,7 +253,7 @@ public:
         assert(i>=0 && i<3);
         return _v[i];
     }
-  inline const P3ScalarType &X() const { return _v[0]; }
+    inline const P3ScalarType &X() const { return _v[0]; }
     inline const P3ScalarType &Y() const { return _v[1]; }
     inline const P3ScalarType &Z() const { return _v[2]; }
     inline P3ScalarType &X() { return _v[0]; }

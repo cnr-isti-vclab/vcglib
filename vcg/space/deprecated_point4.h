@@ -97,10 +97,8 @@ public:
 	{
 		_v[0] = p[0]; _v[1]= p[1]; _v[2] = p[2]; _v[3]= p[3];
 	}
-	inline Point4 ( const Point4 & p )
-	{
-		_v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2]; _v[3]= p._v[3];
-	}
+	inline Point4 ( const Point4 & p ) = default;
+
 	inline void SetZero()
 	{
 		_v[0] = _v[1] = _v[2] = _v[3]= 0;

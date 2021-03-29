@@ -566,7 +566,7 @@ bool Decompose(Matrix44<T> &M, Point3<T> &ScaleV, Point3<T> &ShearV, Point3<T> &
         return false;
     if(math::Abs(M.Determinant())<1e-10) return false; // matrix should be at least invertible...
 
-    // First Step recover the traslation
+    // First Step recover the translation
     TranV=M.GetColumn3(3);
 
     // Second Step Recover Scale and Shearing interleaved

@@ -23,6 +23,10 @@
 #ifndef __VCGLIB_MESH_ASSERT
 #define __VCGLIB_MESH_ASSERT
 
+#include <vcg/complex/exception.h>
+#include <vcg/simplex/edge/pos.h>
+#include <vcg/complex/algorithms/update/flag.h>
+
 namespace vcg {
 namespace tri {
 /**

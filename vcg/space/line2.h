@@ -108,7 +108,7 @@ public:
 	{ if (NORM) return ScalarType((p-_ori).dot(_dir));
 		else      return ScalarType((p-_ori).dot(_dir)/_dir.SquaredNorm());
 	}
-	  /// returns wheter this type is normalized or not
+	  /// returns whether this type is normalized or not
 	static bool IsNormalized() {return NORM;};
 	  /// calculates the point of parameter t on the line.
 	inline PointType P( const ScalarType t ) const
@@ -167,7 +167,7 @@ public:
 	Line2 (const Line2<ScalarType,!NORM > &r) 
 	{ Import(r); };
 		/// assignment
-	inline LineType & operator = ( Line2<ScalarType,!NORM> const &r) 
+	inline LineType & operator = ( const Line2<ScalarType,!NORM> &r)
 	{ Import(r); return *this; };
 //@}
 

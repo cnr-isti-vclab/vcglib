@@ -8,7 +8,7 @@
  *                                                                    \      *
  * All rights reserved.                                                      *
  *                                                                           *
- * This program is free software; you can redistribute it and/or modify      *   
+ * This program is free software; you can redistribute it and/or modify      *
  * it under the terms of the GNU General Public License as published by      *
  * the Free Software Foundation; either version 2 of the License, or         *
  * (at your option) any later version.                                       *
@@ -24,7 +24,7 @@
 /**
  * Minimal   trimesh viewer made with AntTweakBar and freglut
  *
- * This sample shows how to use togheter: 
+ * This sample shows how to use togheter:
  * - the trimesh loading and initialization
  * - basic usage of the default manipulators (the "Trackball")
  */
@@ -75,7 +75,7 @@ vcg::Trackball track;
 /// window size
 int width,height;
 
-/// we choosed a subset of the avaible drawing modes
+/// we chose a subset of the available drawing modes
 enum DrawMode{SMOOTH=0,PERPOINTS,WIRE,FLATWIRE,HIDDEN,FLAT};
 
 /// the current drawmode
@@ -101,7 +101,7 @@ static vcg::Trackball::Button GLUT2VCG (int glut_button, int )
 	return vcg::Trackball::Button (vcgbt);
 }
 
- 
+
 
 
 
@@ -124,29 +124,29 @@ void Display(){
 		glPushMatrix();
 		float d=1.0f/mesh.bbox.Diag();
 		vcg::glScale(d);
-		glTranslate(-glWrap.m->bbox.Center());	
+		glTranslate(-glWrap.m->bbox.Center());
 		// the trimesh drawing calls
 		switch(drawmode)
 		{
-		  case SMOOTH: 
+		  case SMOOTH:
 	  		glWrap.Draw<vcg::GLW::DMSmooth,   vcg::GLW::CMNone,vcg::GLW::TMNone> ();
 	  		break;
-		  case PERPOINTS: 
+		  case PERPOINTS:
 	  		glWrap.Draw<vcg::GLW::DMPoints,   vcg::GLW::CMNone,vcg::GLW::TMNone> ();
 	  		break;
-		  case WIRE: 
+		  case WIRE:
 			glWrap.Draw<vcg::GLW::DMWire,     vcg::GLW::CMNone,vcg::GLW::TMNone> ();
 			break;
-		  case FLATWIRE: 
+		  case FLATWIRE:
 	  		glWrap.Draw<vcg::GLW::DMFlatWire, vcg::GLW::CMNone,vcg::GLW::TMNone> ();
 	  		break;
-		  case HIDDEN: 
+		  case HIDDEN:
 	  		glWrap.Draw<vcg::GLW::DMHidden,   vcg::GLW::CMNone,vcg::GLW::TMNone> ();
 	  		break;
-		  case FLAT: 
+		  case FLAT:
 	  		glWrap.Draw<vcg::GLW::DMFlat,     vcg::GLW::CMNone,vcg::GLW::TMNone> ();
 	  		break;
-		  default: 
+		  default:
 	  		break;
 		}
 
@@ -185,7 +185,7 @@ void initMesh()
 }
 
 void  TW_CALL loadMesh(void *)
-{	
+{
 	if(filename==0) return;
    int err=vcg::tri::io::ImporterPLY<CMesh>::Open(mesh,(char*)filename);
 	if(err!=0){
@@ -276,7 +276,7 @@ int main(int argc, char *argv[])
     // (note that AntTweakBar could also be intialized after GLUT, no matter)
     if( !TwInit(TW_OPENGL, NULL) )
     {
-        // A fatal error occured    
+        // A fatal error occured
         fprintf(stderr, "AntTweakBar initialization failed: %s\n", TwGetLastError());
         return 1;
     }
@@ -311,12 +311,12 @@ int main(int argc, char *argv[])
 	glutKeyboardFunc(keyPressEvent);
 	glutKeyboardUpFunc(keyReleaseEvent);
 
-	 	
+
 	glutMouseWheelFunc(wheelEvent);
     bar = TwNewBar("TweakBar");
 
 	TwCopyCDStringToClientFunc (CopyCDStringToClient);
-	
+
 	TwAddVarRW(bar,"Input",TW_TYPE_CDSTRING,&filename," label='Filepath' group=SetMesh help=` Name of the file to load` ");
 	TwAddButton(bar,"Load from file",loadMesh,0,	" label='Load Mesh' group=SetMesh help=`load the mesh` ");
 	TwAddButton(bar,"Use tetrahedron",loadTetrahedron,0,	" label='Make Tetrahedron' group=SetMesh help=`use tetrahedron.` ");

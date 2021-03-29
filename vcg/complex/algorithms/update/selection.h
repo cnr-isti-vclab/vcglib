@@ -23,6 +23,13 @@
 #ifndef __VCG_TRI_UPDATE_SELECTION
 #define __VCG_TRI_UPDATE_SELECTION
 
+#include <deque>
+
+#include <vcg/complex/base.h>
+#include <vcg/simplex/face/topology.h>
+
+#include "flag.h"
+
 namespace vcg {
 namespace tri {
 /// \ingroup trimesh
