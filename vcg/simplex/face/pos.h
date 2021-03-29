@@ -68,19 +68,19 @@ public:
     /// Index of the edge
     int z;
     /// Pointer to the vertex
-    VertexType *v;
+    VertexType * v;
 
     /// Default constructor
     Pos() : f(0), z(-1), v(0) {}
     /// Constructor which associates the half-edge element with a face, its edge and its vertex
     /// \note that the input must be consistent, e.g. it should hold that \c vp==fp->V0(zp) or \c vp==fp->V1(zp)
-    Pos(FaceType * const fp, int const zp, VertexType * const vp)
+    Pos(FaceType * fp, int zp, VertexType * vp)
     {
         f=fp; z=zp; v=vp;
         assert((vp==fp->V0(zp))||(vp==fp->V1(zp)));
     }
-    Pos(FaceType * const fp, int const zp){f=fp; z=zp; v=f->V(zp);}
-    Pos(FaceType * const fp, VertexType * const vp)
+    Pos(FaceType * fp, int zp){f=fp; z=zp; v=f->V(zp);}
+    Pos(FaceType * fp, VertexType * vp)
     {
         f = fp;
         v = vp;
