@@ -71,9 +71,9 @@ public:
    */
 //  ~PFVAdj(){ __Dealloc(); }
 
-  inline typename T::VertexType * &  V( const int j )       { assert(j>=0 && j<this->VN()); return _vpoly[j]; }
-  inline typename T::VertexType *    V( const int j ) const { assert(j>=0 && j<this->VN()); return _vpoly[j]; }
-  inline typename T::VertexType *   cV( const int j ) const { assert(j>=0 && j<this->VN()); return _vpoly[j]; }
+  inline       typename T::VertexType * &  V( const int j )       { assert(j>=0 && j<this->VN()); return _vpoly[j]; }
+  inline const typename T::VertexType *    V( const int j ) const { assert(j>=0 && j<this->VN()); return _vpoly[j]; }
+  inline const typename T::VertexType *   cV( const int j ) const { assert(j>=0 && j<this->VN()); return _vpoly[j]; }
 
 
   /** Return the pointer to the ((j+1)%3)-th vertex of the face.
@@ -90,11 +90,15 @@ public:
   inline const  VertexType *   cV2( const int j ) const { return cV((j+2)%this->VN());}
 
   inline        CoordType &P( const int j )       {	assert(j>=0 && j<this->VN());		return _vpoly[j]->P();	}
+  inline        CoordType  P( const int j ) const {	assert(j>=0 && j<this->VN());		return _vpoly[j]->cP(); }
   inline        CoordType cP( const int j ) const {	assert(j>=0 && j<this->VN());		return _vpoly[j]->cP(); }
 
   inline        CoordType & P0( const int j )       { return V(j)->P();}
   inline        CoordType & P1( const int j )       { return V((j+1)%this->VN())->P();}
   inline        CoordType & P2( const int j )       { return V((j+2)%this->VN())->P();}
+  inline        CoordType   P0( const int j ) const { return cV(j)->P();}
+  inline        CoordType   P1( const int j ) const { return cV((j+1)%this->VN())->P();}
+  inline        CoordType   P2( const int j ) const { return cV((j+2)%this->VN())->P();}
   inline        CoordType  cP0( const int j ) const { return cV(j)->P();}
   inline        CoordType  cP1( const int j ) const { return cV((j+1)%this->VN())->P();}
   inline        CoordType  cP2( const int j ) const { return cV((j+2)%this->VN())->P();}
