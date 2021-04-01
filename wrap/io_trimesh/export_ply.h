@@ -844,7 +844,7 @@ namespace vcg {
                     capability |= vcg::tri::io::Mask::IOM_WEDGTEXMULTI ;
                     capability |= vcg::tri::io::Mask::IOM_WEDGNORMAL   ;
                     capability |= vcg::tri::io::Mask::IOM_CAMERA   ;
-                    capability |= vcg::tri::io::Mask::IOM_BITPOLYGONAL;
+                    //capability |= vcg::tri::io::Mask::IOM_BITPOLYGONAL;
                     return capability;
                 }
 
