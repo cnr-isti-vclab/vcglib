@@ -41,6 +41,8 @@ Initial commit
 #define __VCGLIB_IOTRIMESH_IO_PLY
 
 
+#include <vcg/complex/allocate.h>
+
 /**
 @name Load and Save in Ply format
 */
@@ -64,37 +66,65 @@ This class can be passed to the ImporterPLY::Open() function for
 class PlyInfo
 {
 public:
-  typedef ::vcg::ply::PropDescriptor PropDescriptor ;
+	typedef ::vcg::ply::PropDescriptor PropDescriptor ;
 
-  void AddPerElemFloatAttribute(int elemType, const char *attrName, const char * propName=0)
-  {
-    static const char *elemStr[2]={"vertex","face"};
-    std::vector<PropDescriptor> *elemDescVec[2]={&(this->VertDescriptorVec), &(this->FaceDescriptorVec)};
-    std::vector<std::string   > *elemNameVec[2]={&(this->VertAttrNameVec),   &(this->FaceAttrNameVec)};
+	void addPerElemScalarAttribute(int elemType, vcg::ply::PlyTypes propertyType, const std::string& attrName, std::string propName="")
+	{
+		if(propName=="")
+			propName=attrName;
 
-    if(propName==0) propName=attrName;
-    elemDescVec[elemType]->push_back(PropDescriptor());
-    elemNameVec[elemType]->push_back(attrName);
-    elemDescVec[elemType]->back().elemname=elemStr[elemType];
-    elemDescVec[elemType]->back().propname=strdup(propName);
-    elemDescVec[elemType]->back().stotype1 = vcg::ply::T_FLOAT;
-    elemDescVec[elemType]->back().memtype1 = vcg::ply::T_FLOAT;
-  }
+		if (elemType == 0){ //vertex
+			VertDescriptorVec.push_back(PropDescriptor());
+			VertAttrNameVec.push_back(attrName);
+			VertDescriptorVec.back().elemname="vertex";
+			VertDescriptorVec.back().propname=propName;
+			VertDescriptorVec.back().stotype1 = propertyType;
+			VertDescriptorVec.back().memtype1 = propertyType;
+		}
+		else if (elemType == 1){ //face
+			FaceDescriptorVec.push_back(PropDescriptor());
+			FaceAttrNameVec.push_back(attrName);
+			FaceDescriptorVec.back().elemname="face";
+			FaceDescriptorVec.back().propname=propName;
+			FaceDescriptorVec.back().stotype1 = propertyType;
+			FaceDescriptorVec.back().memtype1 = propertyType;
+		}
+	}
 
-  void AddPerVertexFloatAttribute(const char *attrName, const char *propName=0) {
-    AddPerElemFloatAttribute(0,attrName,propName);
-  }
-  void AddPerFaceFloatAttribute(const char *attrName, const char *propName=0) {
-    AddPerElemFloatAttribute(1,attrName,propName);
-  }
+	void AddPerElemFloatAttribute(int elemType, const std::string& attrName, std::string propName="")
+	{
+		addPerElemScalarAttribute(elemType, vcg::ply::T_FLOAT, attrName, propName);
+	}
+
+	void AddPerElemDoubleAttribute(int elemType, const std::string& attrName, std::string propName="")
+	{
+		addPerElemScalarAttribute(elemType, vcg::ply::T_DOUBLE, attrName, propName);
+	}
+
+	void addPerVertexScalarAttribute(const std::string& attrName, vcg::ply::PlyTypes attrType, std::string propName="") {
+		addPerElemScalarAttribute(0,attrType, attrName,propName);
+	}
+
+	void AddPerVertexFloatAttribute(const std::string& attrName, std::string propName="") {
+		AddPerElemFloatAttribute(0,attrName,propName);
+	}
+
+	void addPerFaceScalarAttribute(const std::string& attrName,  vcg::ply::PlyTypes attrType, std::string propName="") {
+		addPerElemScalarAttribute(1,attrType, attrName,propName);
+	}
+
+	void AddPerFaceFloatAttribute(const std::string& attrName, std::string propName="") {
+		AddPerElemFloatAttribute(1,attrName,propName);
+	}
 
 
   /* Note that saving a per vertex point3 attribute is a mess.
    * Actually require to allocate 3 float attribute and save them. And they are never deallocated... */
   template<class MeshType>
-  void AddPerVertexPoint3fAttribute(MeshType &m, const char *attrName, const char *propName="")
+  void AddPerVertexPoint3fAttribute(MeshType &m, const std::string& attrName, std::string propName="")
   {
-    if(propName==0) propName=attrName;
+    if(propName=="")
+        propName=attrName;
 
     const char *attrxyz[3] = {
       strdup((std::string(attrName)+std::string("_x")).c_str()),
@@ -151,7 +181,7 @@ public:
 
 enum Error
 {
-		// Funzioni superiori
+	// Funzioni superiori
 	E_NO_VERTEX       = ply::E_MAXPLYERRORS+1,       // 15
 	E_NO_FACE         = ply::E_MAXPLYERRORS+2,       // 16
 	E_SHORTFILE       = ply::E_MAXPLYERRORS+3,       // 17

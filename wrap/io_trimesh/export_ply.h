@@ -211,7 +211,7 @@ namespace vcg {
                             );
                     }
                     for(size_t i=0;i<pi.VertDescriptorVec.size();i++)
-                        fprintf(fpout,"property %s %s\n",pi.VertDescriptorVec[i].stotypename(),pi.VertDescriptorVec[i].propname);
+                        fprintf(fpout,"property %s %s\n",pi.VertDescriptorVec[i].stotypename(),pi.VertDescriptorVec[i].propname.c_str());
 
                     fprintf(fpout,
                         "element face %d\n"
@@ -278,7 +278,7 @@ namespace vcg {
                     }
 
                     for(size_t i=0;i<pi.FaceDescriptorVec.size();i++)
-                        fprintf(fpout,"property %s %s\n",pi.FaceDescriptorVec[i].stotypename(),pi.FaceDescriptorVec[i].propname);
+                        fprintf(fpout,"property %s %s\n",pi.FaceDescriptorVec[i].stotypename(),pi.FaceDescriptorVec[i].propname.c_str());
                     // Saving of edges is enabled if requested
                     if( m.en>0 && (pi.mask & Mask::IOM_EDGEINDEX) )
                         fprintf(fpout,
