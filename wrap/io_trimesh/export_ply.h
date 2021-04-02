@@ -416,7 +416,7 @@ public:
 				{
 				case ply::T_FLOAT  : thff[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<float>(m,pi.FaceAttrNameVec[i]); break;
 				case ply::T_DOUBLE : thdf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<double>(m,pi.FaceAttrNameVec[i]); break;
-				case ply::T_INT	: thif[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<int   >(m,pi.FaceAttrNameVec[i]); break;
+				case ply::T_INT    : thif[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<int   >(m,pi.FaceAttrNameVec[i]); break;
 				case ply::T_SHORT  : thsf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<short >(m,pi.FaceAttrNameVec[i]); break;
 				case ply::T_CHAR   : thcf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<char>(m,pi.FaceAttrNameVec[i]); break;
 				case ply::T_UCHAR  : thuf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<unsigned char>(m,pi.FaceAttrNameVec[i]); break;
@@ -482,7 +482,7 @@ public:
 								{
 								case ply::T_FLOAT  : tf=thfv[i][vp]; fwrite(&tf, sizeof(float),1,fpout); break;
 								case ply::T_DOUBLE : td=thdv[i][vp]; fwrite(&td, sizeof(double),1,fpout); break;
-								case ply::T_INT	: ti=thiv[i][vp]; fwrite(&ti, sizeof(int),1,fpout); break;
+								case ply::T_INT    : ti=thiv[i][vp]; fwrite(&ti, sizeof(int),1,fpout); break;
 								case ply::T_SHORT  : ts=thsv[i][vp]; fwrite(&ts, sizeof(short),1,fpout); break;
 								case ply::T_CHAR   : tc=thcv[i][vp]; fwrite(&tc, sizeof(char),1,fpout); break;
 								case ply::T_UCHAR  : tu=thuv[i][vp]; fwrite(&tu,sizeof(unsigned char),1,fpout); break;
@@ -490,18 +490,18 @@ public:
 								}
 							}
 							else { //it is a Poin3f or a Point3d attribute. Saving it as a list
-								static const unsigned int psize = 3;
+								static const unsigned char psize = 3;
 								switch (pi.VertDescriptorVec[i].stotype1)
 								{
 								case ply::T_FLOAT  :
-									fwrite(&psize, sizeof(unsigned int), 1,fpout);
+									fwrite(&psize, sizeof(unsigned char), 1,fpout);
 									fwrite(&thp3fv[i][vp][0], sizeof(float), 1,fpout);
 									fwrite(&thp3fv[i][vp][1], sizeof(float), 1,fpout);
 									fwrite(&thp3fv[i][vp][2], sizeof(float), 1,fpout);
 									break;
 									//fprintf(fpout,"%d %f %f %f", 3, thp3fv[i][vp][0], thp3fv[i][vp][1], thp3fv[i][vp][2]); break;
 								case ply::T_DOUBLE :
-									fwrite(&psize, sizeof(unsigned int), 1,fpout);
+									fwrite(&psize, sizeof(unsigned char), 1,fpout);
 									fwrite(&thp3dv[i][vp][0], sizeof(double), 1,fpout);
 									fwrite(&thp3dv[i][vp][1], sizeof(double), 1,fpout);
 									fwrite(&thp3dv[i][vp][2], sizeof(double), 1,fpout);

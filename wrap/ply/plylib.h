@@ -176,7 +176,7 @@ public:
 	int	   bestored;			// 1 se va storata
 	PropDescriptor desc;		// Descrittore di memorizzazione
 
-	readelemcb	cb;				// Callback di lettura
+	readelemcb	cb = nullptr;				// Callback di lettura
 };
 
 

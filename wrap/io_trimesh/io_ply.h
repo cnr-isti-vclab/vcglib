@@ -130,8 +130,8 @@ public:
 		p.stotype1 = propertyType;
 		p.memtype1 = propertyType;
 		p.islist = true;
-		p.stotype2 = vcg::ply::PlyTypes::T_UINT;
-		p.stotype2 = vcg::ply::PlyTypes::T_UINT;
+		p.memtype2 = vcg::ply::PlyTypes::T_UCHAR;
+		p.stotype2 = vcg::ply::PlyTypes::T_UCHAR;
 
 		if (elemType == 0){ //vertex
 			VertAttrNameVec.push_back(attrName);
