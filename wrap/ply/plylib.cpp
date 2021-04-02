@@ -143,8 +143,12 @@ static int TypeSize[] = {
 
 size_t PropDescriptor::memtypesize() const {return TypeSize[memtype1];}
 size_t PropDescriptor::stotypesize() const {return TypeSize[stotype1];}
+size_t PropDescriptor::memtype2size() const {return TypeSize[memtype2];}
+size_t PropDescriptor::stotype2size() const {return TypeSize[stotype2];}
 const char *PropDescriptor::memtypename() const {return PlyFile::typenames[memtype1];}
 const char *PropDescriptor::stotypename() const {return PlyFile::typenames[stotype1];}
+const char *PropDescriptor::memtype2name() const {return PlyFile::typenames[memtype2];}
+const char *PropDescriptor::stotype2name() const {return PlyFile::typenames[stotype2];}
 
 static char CrossType[9][9]=
 {

@@ -133,6 +133,10 @@ public:
 	size_t memtypesize() const; // per sapere quanto e'grande un dato descrittore in memoria
 	const char* memtypename() const;
 	const char* stotypename() const;
+	size_t stotype2size() const; // per sapere quanto e'grande un dato descrittore sul file
+	size_t memtype2size() const; // per sapere quanto e'grande un dato descrittore in memoria
+	const char* memtype2name() const;
+	const char* stotype2name() const;
 };
 
 // Reading Callback (used to copy a data prop)

@@ -100,20 +100,64 @@ public:
 		addPerElemScalarAttribute(elemType, vcg::ply::T_DOUBLE, attrName, propName);
 	}
 
-	void addPerVertexScalarAttribute(const std::string& attrName, vcg::ply::PlyTypes attrType, std::string propName="") {
+	void addPerVertexScalarAttribute(const std::string& attrName, vcg::ply::PlyTypes attrType, std::string propName="")
+	{
 		addPerElemScalarAttribute(0,attrType, attrName,propName);
 	}
 
-	void AddPerVertexFloatAttribute(const std::string& attrName, std::string propName="") {
+	void AddPerVertexFloatAttribute(const std::string& attrName, std::string propName="")
+	{
 		AddPerElemFloatAttribute(0,attrName,propName);
 	}
 
-	void addPerFaceScalarAttribute(const std::string& attrName,  vcg::ply::PlyTypes attrType, std::string propName="") {
+	void addPerFaceScalarAttribute(const std::string& attrName,  vcg::ply::PlyTypes attrType, std::string propName="")
+	{
 		addPerElemScalarAttribute(1,attrType, attrName,propName);
 	}
 
-	void AddPerFaceFloatAttribute(const std::string& attrName, std::string propName="") {
+	void AddPerFaceFloatAttribute(const std::string& attrName, std::string propName="")
+	{
 		AddPerElemFloatAttribute(1,attrName,propName);
+	}
+
+	void addPerElemPointAttribute(int elemType, vcg::ply::PlyTypes propertyType, const std::string& attrName, std::string propName="")
+	{
+		if(propName=="")
+			propName=attrName;
+
+		PropDescriptor p;
+		p.propname=propName;
+		p.stotype1 = propertyType;
+		p.memtype1 = propertyType;
+		p.islist = true;
+		p.stotype2 = vcg::ply::PlyTypes::T_UINT;
+		p.stotype2 = vcg::ply::PlyTypes::T_UINT;
+
+		if (elemType == 0){ //vertex
+			VertAttrNameVec.push_back(attrName);
+			p.elemname="vertex";
+			VertDescriptorVec.push_back(p);
+		}
+		else if (elemType == 1){ //face
+			FaceAttrNameVec.push_back(attrName);
+			p.elemname="face";
+			FaceDescriptorVec.push_back(p);
+		}
+	}
+
+	void addPerVertexPoint3mAttribute(const std::string& attrName, vcg::ply::PlyTypes attrType, std::string propName="")
+	{
+		addPerElemPointAttribute(0,attrType, attrName,propName);
+	}
+
+	void addPerVertexPoint3fAttribute(const std::string& attrName, std::string propName="")
+	{
+		addPerElemPointAttribute(0,vcg::ply::PlyTypes::T_FLOAT, attrName,propName);
+	}
+
+	void addPerVertexPoint3dAttribute(const std::string& attrName, std::string propName="")
+	{
+		addPerElemPointAttribute(0,vcg::ply::PlyTypes::T_DOUBLE, attrName,propName);
 	}
 
   /* Note that saving a per vertex point3 attribute is a mess.
