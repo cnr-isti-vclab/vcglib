@@ -73,21 +73,20 @@ public:
 		if(propName=="")
 			propName=attrName;
 
+		PropDescriptor p;
+		p.propname=propName;
+		p.stotype1 = propertyType;
+		p.memtype1 = propertyType;
+
 		if (elemType == 0){ //vertex
-			VertDescriptorVec.push_back(PropDescriptor());
 			VertAttrNameVec.push_back(attrName);
-			VertDescriptorVec.back().elemname="vertex";
-			VertDescriptorVec.back().propname=propName;
-			VertDescriptorVec.back().stotype1 = propertyType;
-			VertDescriptorVec.back().memtype1 = propertyType;
+			p.elemname="vertex";
+			VertDescriptorVec.push_back(p);
 		}
 		else if (elemType == 1){ //face
-			FaceDescriptorVec.push_back(PropDescriptor());
 			FaceAttrNameVec.push_back(attrName);
-			FaceDescriptorVec.back().elemname="face";
-			FaceDescriptorVec.back().propname=propName;
-			FaceDescriptorVec.back().stotype1 = propertyType;
-			FaceDescriptorVec.back().memtype1 = propertyType;
+			p.elemname="face";
+			FaceDescriptorVec.push_back(p);
 		}
 	}
 
@@ -116,7 +115,6 @@ public:
 	void AddPerFaceFloatAttribute(const std::string& attrName, std::string propName="") {
 		AddPerElemFloatAttribute(1,attrName,propName);
 	}
-
 
   /* Note that saving a per vertex point3 attribute is a mess.
    * Actually require to allocate 3 float attribute and save them. And they are never deallocated... */
