@@ -284,8 +284,24 @@ public:
 			fprintf(fpout,"property %s quality\n",fqtp);
 		}
 
-		for(size_t i=0;i<pi.FaceDescriptorVec.size();i++)
-			fprintf(fpout,"property %s %s\n",pi.FaceDescriptorVec[i].stotypename(),pi.FaceDescriptorVec[i].propname.c_str());
+		for(size_t i=0;i<pi.FaceDescriptorVec.size();i++) {
+			if (!pi.FaceDescriptorVec[i].islist){
+				fprintf(
+					fpout,
+					"property %s %s\n",
+					pi.FaceDescriptorVec[i].stotypename(),
+					pi.FaceDescriptorVec[i].propname.c_str());
+			}
+			else {
+				fprintf(
+					fpout,
+					"property list %s %s %s\n",
+					pi.FaceDescriptorVec[i].stotype2name(),
+					pi.FaceDescriptorVec[i].stotypename(),
+					pi.FaceDescriptorVec[i].propname.c_str());
+			}
+		}
+
 		// Saving of edges is enabled if requested
 		if( m.en>0 && (pi.mask & Mask::IOM_EDGEINDEX) )
 			fprintf(
@@ -406,21 +422,33 @@ public:
 		std::vector<typename SaveMeshType:: template ConstPerFaceAttributeHandle<short > > thsf(pi.FaceDescriptorVec.size());
 		std::vector<typename SaveMeshType:: template ConstPerFaceAttributeHandle<char  > > thcf(pi.FaceDescriptorVec.size());
 		std::vector<typename SaveMeshType:: template ConstPerFaceAttributeHandle<unsigned char> >  thuf(pi.FaceDescriptorVec.size());
+		std::vector<typename SaveMeshType:: template ConstPerFaceAttributeHandle<vcg::Point3f> > thp3ff(pi.FaceDescriptorVec.size());
+		std::vector<typename SaveMeshType:: template ConstPerFaceAttributeHandle<vcg::Point3d> > thp3df(pi.FaceDescriptorVec.size());
 
 		for(size_t i=0;i<pi.FaceDescriptorVec.size();i++)
 		{
 			if(!pi.FaceAttrNameVec.empty() && !pi.FaceAttrNameVec[i].empty())
 			{ // trying to use named attribute to retrieve the value to store
 				assert(vcg::tri::HasPerFaceAttribute(m,pi.FaceAttrNameVec[i]));
-				switch (pi.FaceDescriptorVec[i].stotype1)
-				{
-				case ply::T_FLOAT  : thff[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<float>(m,pi.FaceAttrNameVec[i]); break;
-				case ply::T_DOUBLE : thdf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<double>(m,pi.FaceAttrNameVec[i]); break;
-				case ply::T_INT    : thif[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<int   >(m,pi.FaceAttrNameVec[i]); break;
-				case ply::T_SHORT  : thsf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<short >(m,pi.FaceAttrNameVec[i]); break;
-				case ply::T_CHAR   : thcf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<char>(m,pi.FaceAttrNameVec[i]); break;
-				case ply::T_UCHAR  : thuf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<unsigned char>(m,pi.FaceAttrNameVec[i]); break;
-				default : assert(0);
+				if (!pi.FaceDescriptorVec[i].islist) {
+					switch (pi.FaceDescriptorVec[i].stotype1)
+					{
+					case ply::T_FLOAT  : thff[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<float>(m,pi.FaceAttrNameVec[i]); break;
+					case ply::T_DOUBLE : thdf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<double>(m,pi.FaceAttrNameVec[i]); break;
+					case ply::T_INT    : thif[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<int   >(m,pi.FaceAttrNameVec[i]); break;
+					case ply::T_SHORT  : thsf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<short >(m,pi.FaceAttrNameVec[i]); break;
+					case ply::T_CHAR   : thcf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<char>(m,pi.FaceAttrNameVec[i]); break;
+					case ply::T_UCHAR  : thuf[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<unsigned char>(m,pi.FaceAttrNameVec[i]); break;
+					default : assert(0);
+					}
+				}
+				else {
+					switch (pi.FaceDescriptorVec[i].stotype1)
+					{
+					case ply::T_FLOAT  : thp3ff[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<vcg::Point3f>(m,pi.FaceAttrNameVec[i]); break;
+					case ply::T_DOUBLE : thp3df[i] = vcg::tri::Allocator<SaveMeshType>::template FindPerFaceAttribute<vcg::Point3d>(m,pi.FaceAttrNameVec[i]); break;
+					default : assert(0);
+					}
 				}
 			}
 		}
@@ -579,12 +607,12 @@ public:
 						{
 							switch (pi.VertDescriptorVec[i].memtype1)
 							{
-							case ply::T_FLOAT	 :		tf=*( (float  *)		(((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%f ",tf); break;
-							case ply::T_DOUBLE :	td=*( (double *)		(((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%lf ",tf); break;
-							case ply::T_INT		 :		ti=*( (int	*)		(((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
-							case ply::T_SHORT	 :		ti=*( (short  *)		(((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
-							case ply::T_CHAR	 :		ti=*( (char   *)		(((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
-							case ply::T_UCHAR	 :		ti=*( (unsigned char *) (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
+							case ply::T_FLOAT  : tf=*( (float  *)        (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%f ",tf); break;
+							case ply::T_DOUBLE : td=*( (double *)        (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%lf ",tf); break;
+							case ply::T_INT    : ti=*( (int	*)           (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
+							case ply::T_SHORT  : ti=*( (short  *)        (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
+							case ply::T_CHAR   : ti=*( (char   *)        (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
+							case ply::T_UCHAR  : ti=*( (unsigned char *) (((char *)vp)+pi.VertDescriptorVec[i].offset1)); fprintf(fpout,"%i ",ti); break;
 							default : assert(0);
 							}
 						}
@@ -692,15 +720,35 @@ public:
 						if(!pi.FaceAttrNameVec.empty() && !pi.FaceAttrNameVec[i].empty())
 						{ // trying to use named attribute to retrieve the value to store
 							assert(vcg::tri::HasPerFaceAttribute(m,pi.FaceAttrNameVec[i]));
-							switch (pi.FaceDescriptorVec[i].stotype1)
-							{
-							case ply::T_FLOAT  : tf=thff[i][fp]; fwrite(&tf, sizeof(float),1,fpout); break;
-							case ply::T_DOUBLE : td=thdf[i][fp]; fwrite(&td, sizeof(double),1,fpout); break;
-							case ply::T_INT	: ti=thif[i][fp]; fwrite(&ti, sizeof(int),1,fpout); break;
-							case ply::T_SHORT  : ts=thsf[i][fp]; fwrite(&ts, sizeof(short),1,fpout); break;
-							case ply::T_CHAR   : tc=thcf[i][fp]; fwrite(&tc, sizeof(char),1,fpout); break;
-							case ply::T_UCHAR  : tu=thuf[i][fp]; fwrite(&tu,sizeof(unsigned char),1,fpout); break;
-							default : assert(0);
+							if (!pi.FaceDescriptorVec[i].islist){
+								switch (pi.FaceDescriptorVec[i].stotype1)
+								{
+								case ply::T_FLOAT  : tf=thff[i][fp]; fwrite(&tf, sizeof(float),1,fpout); break;
+								case ply::T_DOUBLE : td=thdf[i][fp]; fwrite(&td, sizeof(double),1,fpout); break;
+								case ply::T_INT    : ti=thif[i][fp]; fwrite(&ti, sizeof(int),1,fpout); break;
+								case ply::T_SHORT  : ts=thsf[i][fp]; fwrite(&ts, sizeof(short),1,fpout); break;
+								case ply::T_CHAR   : tc=thcf[i][fp]; fwrite(&tc, sizeof(char),1,fpout); break;
+								case ply::T_UCHAR  : tu=thuf[i][fp]; fwrite(&tu,sizeof(unsigned char),1,fpout); break;
+								default : assert(0);
+								}
+							}
+							else {
+								static const unsigned char psize = 3;
+								switch (pi.FaceDescriptorVec[i].stotype1)
+								{
+								case ply::T_FLOAT  :
+									fwrite(&psize, sizeof(unsigned char), 1,fpout);
+									fwrite(&thp3ff[i][fp][0], sizeof(float), 1,fpout);
+									fwrite(&thp3ff[i][fp][1], sizeof(float), 1,fpout);
+									fwrite(&thp3ff[i][fp][2], sizeof(float), 1,fpout);
+									break;
+								case ply::T_DOUBLE :
+									fwrite(&psize, sizeof(unsigned char), 1,fpout);
+									fwrite(&thp3df[i][fp][0], sizeof(double), 1,fpout);
+									fwrite(&thp3df[i][fp][1], sizeof(double), 1,fpout);
+									fwrite(&thp3df[i][fp][2], sizeof(double), 1,fpout);
+								default : assert(0);
+								}
 							}
 						}
 						else
@@ -777,15 +825,25 @@ public:
 						if(!pi.FaceAttrNameVec.empty() && !pi.FaceAttrNameVec[i].empty())
 						{ // trying to use named attribute to retrieve the value to store
 							assert(vcg::tri::HasPerFaceAttribute(m,pi.FaceAttrNameVec[i]));
-							switch (pi.FaceDescriptorVec[i].stotype1)
-							{
-							case ply::T_FLOAT  : tf=thff[i][fp]; fprintf(fpout,"%f ",tf); break;
-							case ply::T_DOUBLE : td=thdf[i][fp]; fprintf(fpout,"%g ",td); break;
-							case ply::T_INT	: ti=thif[i][fp]; fprintf(fpout,"%i ",ti); break;
-							case ply::T_SHORT  : ti=thsf[i][fp]; fprintf(fpout,"%i ",ti); break;
-							case ply::T_CHAR   : ti=thcf[i][fp]; fprintf(fpout,"%i ",ti); break;
-							case ply::T_UCHAR  : ti=thuf[i][fp]; fprintf(fpout,"%i ",ti); break;
-							default : assert(0);
+							if(!pi.FaceDescriptorVec[i].islist) {
+								switch (pi.FaceDescriptorVec[i].stotype1)
+								{
+								case ply::T_FLOAT  : tf=thff[i][fp]; fprintf(fpout,"%f ",tf); break;
+								case ply::T_DOUBLE : td=thdf[i][fp]; fprintf(fpout,"%g ",td); break;
+								case ply::T_INT	: ti=thif[i][fp]; fprintf(fpout,"%i ",ti); break;
+								case ply::T_SHORT  : ti=thsf[i][fp]; fprintf(fpout,"%i ",ti); break;
+								case ply::T_CHAR   : ti=thcf[i][fp]; fprintf(fpout,"%i ",ti); break;
+								case ply::T_UCHAR  : ti=thuf[i][fp]; fprintf(fpout,"%i ",ti); break;
+								default : assert(0);
+								}
+							}
+							else {
+								switch (pi.FaceDescriptorVec[i].stotype1)
+								{
+								case ply::T_FLOAT  : fprintf(fpout,"%d %f %f %f", 3, thp3ff[i][fp][0], thp3ff[i][fp][1], thp3ff[i][fp][2]); break;
+								case ply::T_DOUBLE : fprintf(fpout,"%d %lf %lf %lf", 3, thp3df[i][fp][0], thp3df[i][fp][1], thp3df[i][fp][2]); break;
+								default : assert(0);
+								}
 							}
 						}
 						else

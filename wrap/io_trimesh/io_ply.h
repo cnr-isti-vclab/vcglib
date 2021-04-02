@@ -160,6 +160,21 @@ public:
 		addPerElemPointAttribute(0,vcg::ply::PlyTypes::T_DOUBLE, attrName,propName);
 	}
 
+	void addPerFacePoint3mAttribute(const std::string& attrName, vcg::ply::PlyTypes attrType, std::string propName="")
+	{
+		addPerElemPointAttribute(1,attrType, attrName,propName);
+	}
+
+	void addPerFacePoint3fAttribute(const std::string& attrName, std::string propName="")
+	{
+		addPerElemPointAttribute(1,vcg::ply::PlyTypes::T_FLOAT, attrName,propName);
+	}
+
+	void addPerFacePoint3dAttribute(const std::string& attrName, std::string propName="")
+	{
+		addPerElemPointAttribute(1,vcg::ply::PlyTypes::T_DOUBLE, attrName,propName);
+	}
+
   /* Note that saving a per vertex point3 attribute is a mess.
    * Actually require to allocate 3 float attribute and save them. And they are never deallocated... */
   template<class MeshType>
