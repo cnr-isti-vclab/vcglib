@@ -25,6 +25,8 @@
 #ifndef __VCGLIB_IMPORT_OBJ
 #define __VCGLIB_IMPORT_OBJ
 
+#include <vcg/complex/allocate.h>
+
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <wrap/io_trimesh/io_material.h>
@@ -1057,8 +1059,8 @@ public:
           // adding texture name into textures vector (if not already present)
           // avoid adding the same name twice
           auto it = std::find(textures.begin(), textures.end(), textureName);
-          if(it==textures.end()) {            
-            currentMaterial.index = textures.size();            
+          if(it==textures.end()) {
+            currentMaterial.index = textures.size();
             textures.push_back(textureName);
           } else {
             currentMaterial.index = std::distance(textures.begin(),it);
@@ -1080,7 +1082,7 @@ public:
         {
           materials[i].map_Kd=textures[0];
           materials[i].index=0;
-        }      
+        }
       }
     }
     
