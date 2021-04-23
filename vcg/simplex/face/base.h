@@ -156,7 +156,7 @@ public:
 
     ///  deletes the Face from the mesh
     void SetD() {this->Flags() |=DELETED;}
-    ///  un-delete a Face
+    ///  undelete the Face
     void ClearD() {this->Flags() &=(~DELETED);}
     ///  marks the Face as readable
     void SetR() {this->Flags() &=(~NOTREAD);}
@@ -168,14 +168,14 @@ public:
     void ClearW() {this->Flags() |=NOTWRITE;}
     ///  select the Face
     void SetS()		{this->Flags() |=SELECTED;}
-    /// Un-select a Face
+    /// unselect the Face
 	void ClearS()	{this->Flags() &= ~SELECTED;}
-    ///  select the Face
+	///  set as visited the Face
     void SetV()		{this->Flags() |=VISITED;}
-    /// Un-select a Face
+    /// set as unvisited the Face
 	void ClearV()	{this->Flags() &= ~VISITED;}
 
-    /// This function checks if the face is selected
+    /// This function checks if the face is border
     bool IsB(int i) const {return (this->cFlags() & (BORDER0<<i)) != 0;}
     /// This function select the face
 	void SetB(int i)		{this->Flags() |=(BORDER0<<i);}
