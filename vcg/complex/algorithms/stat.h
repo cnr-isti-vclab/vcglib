@@ -41,64 +41,67 @@ class Stat
 {
 public:
   typedef StatMeshType MeshType;
-  typedef typename MeshType::ScalarType			ScalarType;
-  typedef typename MeshType::VertexType     VertexType;
-  typedef typename MeshType::VertexPointer  VertexPointer;
-  typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::ScalarType	         ScalarType;
+  typedef typename MeshType::VertexType          VertexType;
+  typedef typename MeshType::VertexPointer       VertexPointer;
+  typedef typename MeshType::VertexIterator      VertexIterator;
   typedef typename MeshType::ConstVertexIterator ConstVertexIterator;
-  typedef typename MeshType::EdgeType       EdgeType;
-  typedef typename MeshType::EdgeIterator   EdgeIterator;
-  typedef typename MeshType::FaceType       FaceType;
-  typedef typename MeshType::FacePointer    FacePointer;
-  typedef typename MeshType::FaceIterator   FaceIterator;
-  typedef typename MeshType::FaceContainer  FaceContainer;
-  typedef typename MeshType::TetraType      TetraType;
-  typedef typename MeshType::TetraPointer   TetraPointer;
-  typedef typename MeshType::TetraIterator  TetraIterator;
-  typedef typename MeshType::TetraContainer TetraContainer;
-  typedef typename vcg::Box3<ScalarType>  Box3Type;
+  typedef typename MeshType::EdgeType            EdgeType;
+  typedef typename MeshType::EdgeIterator        EdgeIterator;
+  typedef typename MeshType::FaceType            FaceType;
+  typedef typename MeshType::FacePointer         FacePointer;
+  typedef typename MeshType::FaceIterator        FaceIterator;
+  typedef typename MeshType::ConstFaceIterator   ConstFaceIterator;
+  typedef typename MeshType::FaceContainer       FaceContainer;
+  typedef typename MeshType::TetraType           TetraType;
+  typedef typename MeshType::TetraPointer        TetraPointer;
+  typedef typename MeshType::TetraIterator       TetraIterator;
+  typedef typename MeshType::TetraContainer      TetraContainer;
+  typedef typename vcg::Box3<ScalarType>         Box3Type;
 
-  static void ComputePerVertexQualityMinMax(MeshType & m, ScalarType &minV, ScalarType &maxV)
+  static void ComputePerVertexQualityMinMax(const MeshType & m, ScalarType &minV, ScalarType &maxV)
   {
     std::pair<ScalarType, ScalarType> pp = ComputePerVertexQualityMinMax(m);
     
     minV=pp.first;
     maxV=pp.second;
   }
-  static std::pair<ScalarType, ScalarType> ComputePerVertexQualityMinMax(MeshType & m)
+  static std::pair<ScalarType, ScalarType> ComputePerVertexQualityMinMax(const MeshType & m)
   {
 //    assert(0);
     tri::RequirePerVertexQuality(m);
-    typename MeshType::template PerMeshAttributeHandle  < std::pair<ScalarType, ScalarType> > mmqH;
-    mmqH = tri::Allocator<MeshType>::template GetPerMeshAttribute <std::pair<ScalarType, ScalarType> >(m,"minmaxQ");
+    /** Please if you need to create an attribute called minmaxQ, implement an
+        explicit function that does it. This function should take a const Mesh. **/
+    //typename MeshType::template PerMeshAttributeHandle  < std::pair<ScalarType, ScalarType> > mmqH;
+    //mmqH = tri::Allocator<MeshType>::template GetPerMeshAttribute <std::pair<ScalarType, ScalarType> >(m,"minmaxQ");
 
     std::pair<ScalarType, ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(), -std::numeric_limits<ScalarType>::max());
 
-    for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+    for(ConstVertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
       if(!(*vi).IsD())
       {
         if( (*vi).Q() < minmax.first)  minmax.first  = (*vi).Q();
         if( (*vi).Q() > minmax.second) minmax.second = (*vi).Q();
       }
 
-    mmqH() = minmax;
+    //mmqH() = minmax;
     return minmax;
   }
 
 
-  static void ComputePerFaceQualityMinMax(MeshType & m, ScalarType &minV, ScalarType &maxV)
+  static void ComputePerFaceQualityMinMax(const MeshType & m, ScalarType &minV, ScalarType &maxV)
   {
     std::pair<ScalarType, ScalarType> pp = ComputePerFaceQualityMinMax(m);
     minV=pp.first; 
     maxV=pp.second;
   }
 
-  static std::pair<ScalarType,ScalarType> ComputePerFaceQualityMinMax( MeshType & m)
+  static std::pair<ScalarType,ScalarType> ComputePerFaceQualityMinMax( const MeshType & m)
   {
     tri::RequirePerFaceQuality(m);
     std::pair<ScalarType,ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(),-std::numeric_limits<ScalarType>::max());
 
-    FaceIterator fi;
+    ConstFaceIterator fi;
     for(fi = m.face.begin(); fi != m.face.end(); ++fi)
       if(!(*fi).IsD())
       {
@@ -141,12 +144,12 @@ public:
     return avgQ /= (ScalarType) m.TN();
   }
 
-  static ScalarType ComputePerFaceQualityAvg(MeshType & m)
+  static ScalarType ComputePerFaceQualityAvg(const MeshType & m)
   {
     tri::RequirePerFaceQuality(m);
     ScalarType AvgQ = 0;
 
-    FaceIterator fi;
+    ConstFaceIterator fi;
     size_t num=0;
     for(fi = m.face.begin(); fi != m.face.end(); ++fi)
     {
@@ -221,11 +224,11 @@ public:
     Works for any triangulated model (no problem with open, nonmanifold selfintersecting models).
     Useful for computing the barycenter of 2D planar figures.
     */
-  static Point3<ScalarType> ComputeShellBarycenter(MeshType & m)
+  static Point3<ScalarType> ComputeShellBarycenter(const MeshType & m)
   {
     Point3<ScalarType> barycenter(0,0,0);
     ScalarType areaSum=0;
-    FaceIterator fi;
+    ConstFaceIterator fi;
     for(fi = m.face.begin(); fi != m.face.end(); ++fi)
       if(!(*fi).IsD())
       {
@@ -264,11 +267,11 @@ public:
     return area/ScalarType(2.0);
   }
 
-  static ScalarType ComputePolyMeshArea(MeshType & m)
+  static ScalarType ComputePolyMeshArea(const MeshType & m)
   {
     ScalarType area=0;
 
-    for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+    for(ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
       if(!(*fi).IsD())
         area += PolyArea(*fi);
 
@@ -293,10 +296,10 @@ public:
 		return sum;
 	}
 
-  static void ComputePerVertexQualityDistribution(MeshType & m, Distribution<ScalarType> & h, bool selectionOnly = false)    // V1.0
+  static void ComputePerVertexQualityDistribution(const MeshType & m, Distribution<ScalarType> & h, bool selectionOnly = false)    // V1.0
   {
     tri::RequirePerVertexQuality(m);
-    for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+    for(ConstVertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
       if(!(*vi).IsD() &&  ((!selectionOnly) || (*vi).IsS()) )
       {
         assert(!math::IsNAN((*vi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
@@ -304,11 +307,11 @@ public:
       }
   }
 
-  static void ComputePerFaceQualityDistribution( MeshType & m,  Distribution<typename MeshType::ScalarType> &h,
+  static void ComputePerFaceQualityDistribution( const MeshType & m,  Distribution<typename MeshType::ScalarType> &h,
                                                  bool selectionOnly = false)    // V1.0
   {
     tri::RequirePerFaceQuality(m);
-    for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+    for(ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
       if(!(*fi).IsD() &&  ((!selectionOnly) || (*fi).IsS()) )
       {
         assert(!math::IsNAN((*fi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
@@ -345,27 +348,27 @@ public:
     });
   }
 
-  static void ComputePerFaceQualityHistogram( MeshType & m, Histogram<ScalarType> &h, bool selectionOnly=false,int HistSize=10000 )
+  static void ComputePerFaceQualityHistogram( const MeshType & m, Histogram<ScalarType> &h, bool selectionOnly=false,int HistSize=10000 )
   {
     tri::RequirePerFaceQuality(m);
     std::pair<ScalarType, ScalarType> minmax = tri::Stat<MeshType>::ComputePerFaceQualityMinMax(m);
     h.Clear();
     h.SetRange( minmax.first,minmax.second, HistSize );
-    for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+    for(ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
       if(!(*fi).IsD() &&  ((!selectionOnly) || (*fi).IsS()) ){
         assert(!math::IsNAN((*fi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
         h.Add((*fi).Q());
       }
   }
 
-  static void ComputePerVertexQualityHistogram( MeshType & m, Histogram<ScalarType> &h, bool selectionOnly = false, int HistSize=10000 )    // V1.0
+  static void ComputePerVertexQualityHistogram( const MeshType & m, Histogram<ScalarType> &h, bool selectionOnly = false, int HistSize=10000 )    // V1.0
   {
     tri::RequirePerVertexQuality(m);
     std::pair<ScalarType, ScalarType> minmax = ComputePerVertexQualityMinMax(m);
 
     h.Clear();
     h.SetRange( minmax.first,minmax.second, HistSize);
-    for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+    for(ConstVertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
       if(!(*vi).IsD() &&  ((!selectionOnly) || (*vi).IsS()) )
       {
         assert(!math::IsNAN((*vi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
@@ -381,7 +384,7 @@ public:
     {
       std::vector<ScalarType> QV;
       QV.reserve(m.vn);
-      for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+      for(ConstVertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
         if(!(*vi).IsD()) QV.push_back((*vi).Q());
 
       std::nth_element(QV.begin(),QV.begin()+m.vn/100,QV.end());
@@ -391,7 +394,7 @@ public:
 
       h.Clear();
       h.SetRange(newmin, newmax, HistSize*50);
-      for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+      for(ConstVertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
         if(!(*vi).IsD() && ((!selectionOnly) || (*vi).IsS()) )
           h.Add((*vi).Q());
     }
