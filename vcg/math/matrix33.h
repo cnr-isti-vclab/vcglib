@@ -523,7 +523,7 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
         }
         S dot=(v0*v1);
         ///control if there is no rotation
-        if (dot>((S)1-epsilon))
+        if (dot>(S(1)-epsilon))
         {
             rotM.SetIdentity();
             return rotM;
@@ -535,13 +535,13 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
         //if dot = -1 rotating to opposite vertex
         //the problem is underdefined, so choose axis such that division is more stable
         //alternative solution at http://cs.brown.edu/research/pubs/pdfs/1999/Moller-1999-EBA.pdf
-        if (dot < (S)-1 + epsilon)
+        if (dot < S(-1) + epsilon)
         {
-            S max = std::numeric_limits<S>::min();
+            S max = std::numeric_limits<S>::lowest();
             int maxInd = 0;
             for (int i = 0; i < 3; ++i)
             {
-                if (v0[i] > max)
+                if (std::abs(v0[i]) > max)
                 {
                     max    = v0[i];
                     maxInd = i;
@@ -552,7 +552,7 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
             axis[(maxInd+1) % 3] = 0;
             axis[(maxInd+2) % 3] = 1;
 
-            dot = (S)-1;
+            dot = S(-1);
         } 
         else 
         {
