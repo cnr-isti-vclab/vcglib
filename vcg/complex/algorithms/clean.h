@@ -689,6 +689,9 @@ public:
 		tmpMesh.vert.EnableVFAdjacency();
 		tmpMesh.face.EnableVFAdjacency();
 
+		if (m.face.IsWedgeTexCoordEnabled())
+			tmpMesh.face.EnableWedgeTexCoord();
+
 		size_t selCnt=0;
 
 		for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
