@@ -16,11 +16,6 @@ option(VCG_BUILD_EXAMPLES "Build a set of examples of the library" OFF)
 set (VCG_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR})
 set (VCG_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR} PARENT_SCOPE)
 
-# Prefer GLVND
-if(POLICY CMP0072)
-	cmake_policy(SET CMP0072 NEW)
-endif()
-
 ### Build settings
 set(CMAKE_CXX_STANDARD 11)
 
