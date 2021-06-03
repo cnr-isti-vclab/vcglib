@@ -401,11 +401,24 @@ static void MeshAppendConst(
 	// copy data from mr to its corresponding elements in ml and adjacencies
 
 	// vertex
+	bool vertTexFlag = HasPerVertexTexCoord(mr);
 	ForEachVertex(mr, [&](const VertexRight& v)
 	{
 		if(!selected || v.IsS()){
-			ml.vert[remap.vert[Index(mr,v)]].ImportData(v);
-			if(adjFlag) ImportVertexAdj(ml,mr,ml.vert[remap.vert[Index(mr,v)]],v,remap);
+			VertexLeft &vl = ml.vert[remap.vert[Index(mr,v)]];
+			vl.ImportData(v);
+			if(adjFlag)
+				ImportVertexAdj(ml,mr,vl,v,remap);
+			if (vertTexFlag){
+				if (v.T().n() < mappingTextures.size()) {
+					//standard case: the texture is contained in the mesh
+					vl.T().n() = mappingTextures[v.T().n()];
+				}
+				else {
+					//the mesh has tex coords, but not the texture...
+					vl.T().n() = v.T().n();
+				}
+			}
 		}
 	});
 
@@ -425,7 +438,7 @@ static void MeshAppendConst(
 	});
 
 	// face
-	bool WTFlag = HasPerWedgeTexCoord(mr);
+	bool wedgeTexFlag = HasPerWedgeTexCoord(mr);
 	ForEachFace(mr, [&](const FaceRight& f)
 	{
 		if(!selected || f.IsS())
@@ -437,9 +450,18 @@ static void MeshAppendConst(
 					fl.V(i) = &ml.vert[remap.vert[Index(mr,f.cV(i))]];
 			}
 			fl.ImportData(f);
-			if(WTFlag)
-				for(int i = 0; i < fl.VN(); ++i)
-					fl.WT(i).n() = mappingTextures[f.WT(i).n()];
+			if(wedgeTexFlag) {
+				for(int i = 0; i < fl.VN(); ++i){
+					if (f.WT(i).n() < mappingTextures.size()){
+						//standard case: the texture is contained in the mesh
+						fl.WT(i).n() = mappingTextures[f.WT(i).n()];
+					}
+					else {
+						//the mesh has tex coords, but not the texture...
+						fl.WT(i).n() = f.WT(i).n();
+					}
+				}
+			}
 			if(adjFlag)  ImportFaceAdj(ml,mr,ml.face[remap.face[Index(mr,f)]],f,remap);
 
 		}
