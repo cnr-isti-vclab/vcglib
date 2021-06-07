@@ -1,6 +1,10 @@
 #ifndef SHOT_QT_H
 #define SHOT_QT_H
 
+#include <QDomDocument>
+#include <QStringList>
+
+#include <vcg/math/shot.h>
 
 /** This function read a shot from a parsed XML node.
 
