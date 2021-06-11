@@ -1141,7 +1141,7 @@ public:
     }
 };
 
-struct EdgePointSplit : public std::unary_function<face::Pos<FaceType> ,  CoordType>
+struct EdgePointSplit
 {
 public:
   std::map<std::pair<CoordType,CoordType>, VertexPointer> &edgeToPolyVertMap;
