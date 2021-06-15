@@ -33,17 +33,6 @@ class TranspositionsBase
       indices() = other.indices();
       return derived();
     }
-    
-    #ifndef EIGEN_PARSED_BY_DOXYGEN
-    /** This is a special case of the templated operator=. Its purpose is to
-      * prevent a default operator= from hiding the templated operator=.
-      */
-    Derived& operator=(const TranspositionsBase& other)
-    {
-      indices() = other.indices();
-      return derived();
-    }
-    #endif
 
     /** \returns the number of transpositions */
     Index size() const { return indices().size(); }
@@ -171,12 +160,6 @@ class Transpositions : public TranspositionsBase<Transpositions<SizeAtCompileTim
     inline Transpositions(const TranspositionsBase<OtherDerived>& other)
       : m_indices(other.indices()) {}
 
-    #ifndef EIGEN_PARSED_BY_DOXYGEN
-    /** Standard copy constructor. Defined only to prevent a default copy constructor
-      * from hiding the other templated constructor */
-    inline Transpositions(const Transpositions& other) : m_indices(other.indices()) {}
-    #endif
-
     /** Generic constructor from expression of the transposition indices. */
     template<typename Other>
     explicit inline Transpositions(const MatrixBase<Other>& indices) : m_indices(indices)
@@ -188,17 +171,6 @@ class Transpositions : public TranspositionsBase<Transpositions<SizeAtCompileTim
     {
       return Base::operator=(other);
     }
-
-    #ifndef EIGEN_PARSED_BY_DOXYGEN
-    /** This is a special case of the templated operator=. Its purpose is to
-      * prevent a default operator= from hiding the templated operator=.
-      */
-    Transpositions& operator=(const Transpositions& other)
-    {
-      m_indices = other.m_indices;
-      return *this;
-    }
-    #endif
 
     /** Constructs an uninitialized permutation matrix of given size.
       */
@@ -306,17 +278,6 @@ class TranspositionsWrapper
       return Base::operator=(other);
     }
 
-    #ifndef EIGEN_PARSED_BY_DOXYGEN
-    /** This is a special case of the templated operator=. Its purpose is to
-      * prevent a default operator= from hiding the templated operator=.
-      */
-    TranspositionsWrapper& operator=(const TranspositionsWrapper& other)
-    {
-      m_indices = other.m_indices;
-      return *this;
-    }
-    #endif
-
     /** const version of indices(). */
     const IndicesType& indices() const { return m_indices; }
 
@@ -384,7 +345,7 @@ class Transpose<TranspositionsBase<TranspositionsDerived> >
     const Product<OtherDerived, Transpose, AliasFreeProduct>
     operator*(const MatrixBase<OtherDerived>& matrix, const Transpose& trt)
     {
-      return Product<OtherDerived, Transpose, AliasFreeProduct>(matrix.derived(), trt.derived());
+      return Product<OtherDerived, Transpose, AliasFreeProduct>(matrix.derived(), trt);
     }
 
     /** \returns the \a matrix with the inverse transpositions applied to the rows.

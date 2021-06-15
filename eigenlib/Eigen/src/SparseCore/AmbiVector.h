@@ -28,7 +28,7 @@ class AmbiVector
     typedef typename NumTraits<Scalar>::Real RealScalar;
 
     explicit AmbiVector(Index size)
-      : m_buffer(0), m_zero(0), m_size(0), m_allocatedSize(0), m_allocatedElements(0), m_mode(-1)
+      : m_buffer(0), m_zero(0), m_size(0), m_end(0), m_allocatedSize(0), m_allocatedElements(0), m_mode(-1)
     {
       resize(size);
     }
@@ -94,7 +94,7 @@ class AmbiVector
       Index allocSize = m_allocatedElements * sizeof(ListEl);
       allocSize = (allocSize + sizeof(Scalar) - 1)/sizeof(Scalar);
       Scalar* newBuffer = new Scalar[allocSize];
-      memcpy(newBuffer,  m_buffer,  copyElements * sizeof(ListEl));
+      std::memcpy(newBuffer,  m_buffer,  copyElements * sizeof(ListEl));
       delete[] m_buffer;
       m_buffer = newBuffer;
     }
@@ -147,7 +147,8 @@ template<typename _Scalar,typename _StorageIndex>
 void AmbiVector<_Scalar,_StorageIndex>::init(int mode)
 {
   m_mode = mode;
-  if (m_mode==IsSparse)
+  // This is only necessary in sparse mode, but we set these unconditionally to avoid some maybe-uninitialized warnings
+  // if (m_mode==IsSparse)
   {
     m_llSize = 0;
     m_llStart = -1;
@@ -336,7 +337,7 @@ class AmbiVector<_Scalar,_StorageIndex>::Iterator
       {
         do {
           ++m_cachedIndex;
-        } while (m_cachedIndex<m_vector.m_end && abs(m_vector.m_buffer[m_cachedIndex])<m_epsilon);
+        } while (m_cachedIndex<m_vector.m_end && abs(m_vector.m_buffer[m_cachedIndex])<=m_epsilon);
         if (m_cachedIndex<m_vector.m_end)
           m_cachedValue = m_vector.m_buffer[m_cachedIndex];
         else
@@ -347,7 +348,7 @@ class AmbiVector<_Scalar,_StorageIndex>::Iterator
         ListEl* EIGEN_RESTRICT llElements = reinterpret_cast<ListEl*>(m_vector.m_buffer);
         do {
           m_currentEl = llElements[m_currentEl].next;
-        } while (m_currentEl>=0 && abs(llElements[m_currentEl].value)<m_epsilon);
+        } while (m_currentEl>=0 && abs(llElements[m_currentEl].value)<=m_epsilon);
         if (m_currentEl<0)
         {
           m_cachedIndex = -1;
@@ -363,9 +364,9 @@ class AmbiVector<_Scalar,_StorageIndex>::Iterator
 
   protected:
     const AmbiVector& m_vector; // the target vector
-    StorageIndex m_currentEl;            // the current element in sparse/linked-list mode
+    StorageIndex m_currentEl;   // the current element in sparse/linked-list mode
     RealScalar m_epsilon;       // epsilon used to prune zero coefficients
-    StorageIndex m_cachedIndex;          // current coordinate
+    StorageIndex m_cachedIndex; // current coordinate
     Scalar m_cachedValue;       // current value
     bool m_isDense;             // mode of the vector
 };

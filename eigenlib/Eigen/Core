@@ -14,6 +14,22 @@
 // first thing Eigen does: stop the compiler from committing suicide
 #include "src/Core/util/DisableStupidWarnings.h"
 
+#if defined(__CUDACC__) && !defined(EIGEN_NO_CUDA)
+  #define EIGEN_CUDACC __CUDACC__
+#endif
+
+#if defined(__CUDA_ARCH__) && !defined(EIGEN_NO_CUDA)
+  #define EIGEN_CUDA_ARCH __CUDA_ARCH__
+#endif
+
+#if defined(__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ >= 9)
+#define EIGEN_CUDACC_VER  ((__CUDACC_VER_MAJOR__ * 10000) + (__CUDACC_VER_MINOR__ * 100))
+#elif defined(__CUDACC_VER__)
+#define EIGEN_CUDACC_VER __CUDACC_VER__
+#else
+#define EIGEN_CUDACC_VER 0
+#endif
+
 // Handle NVCC/CUDA/SYCL
 #if defined(__CUDACC__) || defined(__SYCL_DEVICE_ONLY__)
   // Do not try asserts on CUDA and SYCL!
@@ -37,9 +53,9 @@
     #endif
 
     #define EIGEN_DEVICE_FUNC __host__ __device__
-    // We need math_functions.hpp to ensure that that EIGEN_USING_STD_MATH macro
+    // We need cuda_runtime.h to ensure that that EIGEN_USING_STD_MATH macro
     // works properly on the device side
-    #include <math_functions.hpp>
+    #include <cuda_runtime.h>
   #else
     #define EIGEN_DEVICE_FUNC
   #endif
@@ -155,6 +171,9 @@
       #ifdef __AVX512DQ__
         #define EIGEN_VECTORIZE_AVX512DQ
       #endif
+      #ifdef __AVX512ER__
+        #define EIGEN_VECTORIZE_AVX512ER
+      #endif
     #endif
 
     // include files
@@ -229,7 +248,7 @@
 #if defined __CUDACC__
   #define EIGEN_VECTORIZE_CUDA
   #include <vector_types.h>
-  #if defined __CUDACC_VER__ && __CUDACC_VER__ >= 70500
+  #if EIGEN_CUDACC_VER >= 70500
     #define EIGEN_HAS_CUDA_FP16
   #endif
 #endif
@@ -260,7 +279,10 @@
 #include <cmath>
 #include <cassert>
 #include <functional>
-#include <iosfwd>
+#include <sstream>
+#ifndef EIGEN_NO_IO
+  #include <iosfwd>
+#endif
 #include <cstring>
 #include <string>
 #include <limits>
@@ -321,11 +343,15 @@ inline static const char *SimdInstructionSetsInUse(void) {
 #error Eigen2-support is only available up to version 3.2. Please go to "http://eigen.tuxfamily.org/index.php?title=Eigen2" for further information
 #endif
 
+namespace Eigen {
+
 // we use size_t frequently and we'll never remember to prepend it with std:: everytime just to
 // ensure QNX/QCC support
 using std::size_t;
 // gcc 4.6.0 wants std:: for ptrdiff_t
 using std::ptrdiff_t;
+
+}
 
 /** \defgroup Core_Module Core module
   * This is the main module of Eigen providing dense matrix and vector support
@@ -348,10 +374,13 @@ using std::ptrdiff_t;
 #include "src/Core/MathFunctions.h"
 #include "src/Core/GenericPacketMath.h"
 #include "src/Core/MathFunctionsImpl.h"
+#include "src/Core/arch/Default/ConjHelper.h"
 
 #if defined EIGEN_VECTORIZE_AVX512
   #include "src/Core/arch/SSE/PacketMath.h"
+  #include "src/Core/arch/SSE/MathFunctions.h"
   #include "src/Core/arch/AVX/PacketMath.h"
+  #include "src/Core/arch/AVX/MathFunctions.h"
   #include "src/Core/arch/AVX512/PacketMath.h"
   #include "src/Core/arch/AVX512/MathFunctions.h"
 #elif defined EIGEN_VECTORIZE_AVX
@@ -363,6 +392,7 @@ using std::ptrdiff_t;
   #include "src/Core/arch/AVX/MathFunctions.h"
   #include "src/Core/arch/AVX/Complex.h"
   #include "src/Core/arch/AVX/TypeCasting.h"
+  #include "src/Core/arch/SSE/TypeCasting.h"
 #elif defined EIGEN_VECTORIZE_SSE
   #include "src/Core/arch/SSE/PacketMath.h"
   #include "src/Core/arch/SSE/MathFunctions.h"
@@ -405,6 +435,7 @@ using std::ptrdiff_t;
 // on CUDA devices
 #include "src/Core/arch/CUDA/Complex.h"
 
+#include "src/Core/IO.h"
 #include "src/Core/DenseCoeffsBase.h"
 #include "src/Core/DenseBase.h"
 #include "src/Core/MatrixBase.h"
@@ -452,7 +483,6 @@ using std::ptrdiff_t;
 #include "src/Core/Redux.h"
 #include "src/Core/Visitor.h"
 #include "src/Core/Fuzzy.h"
-#include "src/Core/IO.h"
 #include "src/Core/Swap.h"
 #include "src/Core/CommaInitializer.h"
 #include "src/Core/GeneralProduct.h"

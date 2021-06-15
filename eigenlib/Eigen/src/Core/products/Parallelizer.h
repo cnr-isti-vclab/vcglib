@@ -17,7 +17,8 @@ namespace internal {
 /** \internal */
 inline void manage_multi_threading(Action action, int* v)
 {
-  static EIGEN_UNUSED int m_maxThreads = -1;
+  static int m_maxThreads = -1;
+  EIGEN_UNUSED_VARIABLE(m_maxThreads);
 
   if(action==SetAction)
   {
@@ -75,7 +76,7 @@ template<typename Index> struct GemmParallelInfo
 {
   GemmParallelInfo() : sync(-1), users(0), lhs_start(0), lhs_length(0) {}
 
-  int volatile sync;
+  Index volatile sync;
   int volatile users;
 
   Index lhs_start;
@@ -104,13 +105,14 @@ void parallelize_gemm(const Functor& func, Index rows, Index cols, Index depth, 
   // - the sizes are large enough
 
   // compute the maximal number of threads from the size of the product:
-  // FIXME this has to be fine tuned
+  // This first heuristic takes into account that the product kernel is fully optimized when working with nr columns at once.
   Index size = transpose ? rows : cols;
-  Index pb_max_threads = std::max<Index>(1,size / 32);
+  Index pb_max_threads = std::max<Index>(1,size / Functor::Traits::nr);
+
   // compute the maximal number of threads from the total amount of work:
   double work = static_cast<double>(rows) * static_cast<double>(cols) *
       static_cast<double>(depth);
-  double kMinTaskSize = 50000;  // Heuristic.
+  double kMinTaskSize = 50000;  // FIXME improve this heuristic.
   pb_max_threads = std::max<Index>(1, std::min<Index>(pb_max_threads, work / kMinTaskSize));
 
   // compute the number of threads we are going to use
@@ -149,8 +151,10 @@ void parallelize_gemm(const Functor& func, Index rows, Index cols, Index depth, 
     info[i].lhs_start = r0;
     info[i].lhs_length = actualBlockRows;
 
-    if(transpose) func(c0, actualBlockCols, 0, rows, info);
-    else          func(0, rows, c0, actualBlockCols, info);
+    if(transpose)
+      func(c0, actualBlockCols, 0, rows, info);
+    else
+      func(0, rows, c0, actualBlockCols, info);
   }
 #endif
 }

@@ -40,7 +40,7 @@ static inline void check_DenseIndex_is_signed() {
   */
 template<typename Derived> class DenseBase
 #ifndef EIGEN_PARSED_BY_DOXYGEN
-  : public DenseCoeffsBase<Derived>
+  : public DenseCoeffsBase<Derived, internal::accessors_level<Derived>::value>
 #else
   : public DenseCoeffsBase<Derived,DirectWriteAccessors>
 #endif // not EIGEN_PARSED_BY_DOXYGEN
@@ -71,7 +71,7 @@ template<typename Derived> class DenseBase
     typedef Scalar value_type;
     
     typedef typename NumTraits<Scalar>::Real RealScalar;
-    typedef DenseCoeffsBase<Derived> Base;
+    typedef DenseCoeffsBase<Derived, internal::accessors_level<Derived>::value> Base;
 
     using Base::derived;
     using Base::const_cast_derived;
@@ -296,7 +296,7 @@ template<typename Derived> class DenseBase
     EIGEN_DEVICE_FUNC
     Derived& operator=(const ReturnByValue<OtherDerived>& func);
 
-    /** \ínternal
+    /** \internal
       * Copies \a other into *this without evaluating other. \returns a reference to *this.
       * \deprecated */
     template<typename OtherDerived>
@@ -463,7 +463,17 @@ template<typename Derived> class DenseBase
     EIGEN_DEVICE_FUNC
     void visit(Visitor& func) const;
 
-    inline const WithFormat<Derived> format(const IOFormat& fmt) const;
+    /** \returns a WithFormat proxy object allowing to print a matrix the with given
+      * format \a fmt.
+      *
+      * See class IOFormat for some examples.
+      *
+      * \sa class IOFormat, class WithFormat
+      */
+    inline const WithFormat<Derived> format(const IOFormat& fmt) const
+    {
+      return WithFormat<Derived>(derived(), fmt);
+    }
 
     /** \returns the unique coefficient of a 1x1 expression */
     EIGEN_DEVICE_FUNC
@@ -474,9 +484,9 @@ template<typename Derived> class DenseBase
       return derived().coeff(0,0);
     }
 
-    bool all() const;
-    bool any() const;
-    Index count() const;
+    EIGEN_DEVICE_FUNC bool all() const;
+    EIGEN_DEVICE_FUNC bool any() const;
+    EIGEN_DEVICE_FUNC Index count() const;
 
     typedef VectorwiseOp<Derived, Horizontal> RowwiseReturnType;
     typedef const VectorwiseOp<const Derived, Horizontal> ConstRowwiseReturnType;
@@ -577,11 +587,12 @@ template<typename Derived> class DenseBase
     }
 
   protected:
+    EIGEN_DEFAULT_COPY_CONSTRUCTOR(DenseBase)
     /** Default constructor. Do nothing. */
     EIGEN_DEVICE_FUNC DenseBase()
     {
       /* Just checks for self-consistency of the flags.
-       * Only do it when debugging Eigen, as this borders on paranoiac and could slow compilation down
+       * Only do it when debugging Eigen, as this borders on paranoia and could slow compilation down
        */
 #ifdef EIGEN_INTERNAL_DEBUGGING
       EIGEN_STATIC_ASSERT((EIGEN_IMPLIES(MaxRowsAtCompileTime==1 && MaxColsAtCompileTime!=1, int(IsRowMajor))

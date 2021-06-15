@@ -39,7 +39,7 @@ public:
   enum {
     DstAlignment = DstEvaluator::Alignment,
     SrcAlignment = SrcEvaluator::Alignment,
-    DstHasDirectAccess = DstFlags & DirectAccessBit,
+    DstHasDirectAccess = (DstFlags & DirectAccessBit) == DirectAccessBit,
     JointAlignment = EIGEN_PLAIN_ENUM_MIN(DstAlignment,SrcAlignment)
   };
 
@@ -83,7 +83,7 @@ private:
                        && int(OuterStride)!=Dynamic && int(OuterStride)%int(InnerPacketSize)==0
                        && (EIGEN_UNALIGNED_VECTORIZE  || int(JointAlignment)>=int(InnerRequiredAlignment)),
     MayLinearize = bool(StorageOrdersAgree) && (int(DstFlags) & int(SrcFlags) & LinearAccessBit),
-    MayLinearVectorize = bool(MightVectorize) && MayLinearize && DstHasDirectAccess
+    MayLinearVectorize = bool(MightVectorize) && bool(MayLinearize) && bool(DstHasDirectAccess)
                        && (EIGEN_UNALIGNED_VECTORIZE || (int(DstAlignment)>=int(LinearRequiredAlignment)) || MaxSizeAtCompileTime == Dynamic),
       /* If the destination isn't aligned, we have to do runtime checks and we don't unroll,
          so it's only good for large enough sizes. */
@@ -515,7 +515,7 @@ struct dense_assignment_loop<Kernel, LinearTraversal, CompleteUnrolling>
 template<typename Kernel>
 struct dense_assignment_loop<Kernel, SliceVectorizedTraversal, NoUnrolling>
 {
-  EIGEN_DEVICE_FUNC static inline void run(Kernel &kernel)
+  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE void run(Kernel &kernel)
   {
     typedef typename Kernel::Scalar Scalar;
     typedef typename Kernel::PacketType PacketType;
@@ -563,7 +563,7 @@ struct dense_assignment_loop<Kernel, SliceVectorizedTraversal, NoUnrolling>
 template<typename Kernel>
 struct dense_assignment_loop<Kernel, SliceVectorizedTraversal, InnerUnrolling>
 {
-  EIGEN_DEVICE_FUNC static inline void run(Kernel &kernel)
+  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE void run(Kernel &kernel)
   {
     typedef typename Kernel::DstEvaluatorType::XprType DstXprType;
     typedef typename Kernel::PacketType PacketType;
@@ -701,6 +701,26 @@ protected:
 * Part 5 : Entry point for dense rectangular assignment
 ***************************************************************************/
 
+template<typename DstXprType,typename SrcXprType, typename Functor>
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+void resize_if_allowed(DstXprType &dst, const SrcXprType& src, const Functor &/*func*/)
+{
+  EIGEN_ONLY_USED_FOR_DEBUG(dst);
+  EIGEN_ONLY_USED_FOR_DEBUG(src);
+  eigen_assert(dst.rows() == src.rows() && dst.cols() == src.cols());
+}
+
+template<typename DstXprType,typename SrcXprType, typename T1, typename T2>
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+void resize_if_allowed(DstXprType &dst, const SrcXprType& src, const internal::assign_op<T1,T2> &/*func*/)
+{
+  Index dstRows = src.rows();
+  Index dstCols = src.cols();
+  if(((dst.rows()!=dstRows) || (dst.cols()!=dstCols)))
+    dst.resize(dstRows, dstCols);
+  eigen_assert(dst.rows() == dstRows && dst.cols() == dstCols);
+}
+
 template<typename DstXprType, typename SrcXprType, typename Functor>
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void call_dense_assignment_loop(DstXprType& dst, const SrcXprType& src, const Functor &func)
 {
@@ -711,10 +731,7 @@ EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void call_dense_assignment_loop(DstXprType
 
   // NOTE To properly handle A = (A*A.transpose())/s with A rectangular,
   // we need to resize the destination after the source evaluator has been created.
-  Index dstRows = src.rows();
-  Index dstCols = src.cols();
-  if((dst.rows()!=dstRows) || (dst.cols()!=dstCols))
-    dst.resize(dstRows, dstCols);
+  resize_if_allowed(dst, src, func);
 
   DstEvaluatorType dstEvaluator(dst);
     
