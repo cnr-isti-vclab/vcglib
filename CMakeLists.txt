@@ -279,14 +279,18 @@ set(SOURCES
 )
 
 if (VCG_HEADER_ONLY)
-	add_library(vcglib INTERFACE)
-	target_include_directories(
-		vcglib INTERFACE
-		${CMAKE_CURRENT_LIST_DIR}
-		${EIGEN_INCLUDE_DIRS})
+	if (NOT TARGET vcglib) # to be sure that vcglib target is created just one time
+		add_library(vcglib INTERFACE)
+		target_include_directories(
+			vcglib INTERFACE
+			${CMAKE_CURRENT_LIST_DIR}
+			${EIGEN_INCLUDE_DIRS})
 
-	#just to show headers in ide
-	add_custom_target(vcglib_ide SOURCES ${VCG_HEADERS})
+		#just to show headers in ide
+		add_custom_target(vcglib_ide SOURCES ${VCG_HEADERS})
+	else()
+		message(STATUS "- VCGLib - jumped - already included")
+	endif()
 else()
 	#TODO make vcglib that includes all the wrap sources, checking everytime
 	# if the the required targets (e.g. qt, gl, glew...) exists
