@@ -152,7 +152,7 @@ namespace vcg {
 	glVertex3f((float)b.min[0],(float)b.max[1],(float)b.max[2]);
 	glEnd();
 	glPopAttrib();
-};
+}
 template <class T>
 	/// Funzione di utilita' per la visualizzazione in OpenGL (flat shaded)
 inline void glBoxFlat(Box3<T> const & b)
@@ -190,7 +190,7 @@ inline void glBoxFlat(Box3<T> const & b)
   glVertex3f(b.min[0], b.min[1], b.max[2]);
   glEnd();
 	glPopAttrib();
-};
+}
 
 
 template <class T>
@@ -228,7 +228,7 @@ inline void glBoxClip(const Box3<T>  & b)
   glEnd();
 
 	glPopAttrib();
-};
+}
  template <class T>
 	inline void glPlane3( Plane3<T>   p, Point3<T>  c, T size )  {
 		Point3<T> w = p.Direction();

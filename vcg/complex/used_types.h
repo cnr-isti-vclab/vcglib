@@ -119,6 +119,6 @@ struct _Face  : public  Face<_UsedTypes>{};
 struct _Tetra : public  TetraSimp<_UsedTypes>{};
 struct _HEdge : public  HEdge<_UsedTypes>{};
 
-};
+}
 
 #endif // USED_TYPES_H

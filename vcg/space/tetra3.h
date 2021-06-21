@@ -379,7 +379,7 @@ class Tetra
 		CoordType n1 = ((p2 - p0) ^ (p1 - p0)).normalized();
 
 		return M_PI - double(acos(n0 * n1));
-	};
+	}
 
 	template <class TetraType>
 	static typename TetraType::ScalarType SolidAngle(const TetraType &t, const size_t vidx)
@@ -390,7 +390,7 @@ class Tetra
 		ScalarType a2 = DihedralAngle(t, Tetra::EofV(vidx, 2));
 
 		return (a0 + a1 + a2) - M_PI;
-	};
+	}
 
 	template <class TetraType>
 	static typename TetraType::ScalarType AspectRatio(const TetraType &t)
