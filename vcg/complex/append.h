@@ -410,7 +410,7 @@ static void MeshAppendConst(
 			if(adjFlag)
 				ImportVertexAdj(ml,mr,vl,v,remap);
 			if (vertTexFlag){
-				if (v.T().n() < mappingTextures.size()) {
+				if (size_t(v.T().n()) < mappingTextures.size()) {
 					//standard case: the texture is contained in the mesh
 					vl.T().n() = mappingTextures[v.T().n()];
 				}
@@ -452,7 +452,7 @@ static void MeshAppendConst(
 			fl.ImportData(f);
 			if(wedgeTexFlag) {
 				for(int i = 0; i < fl.VN(); ++i){
-					if (f.WT(i).n() < mappingTextures.size()){
+					if (size_t(f.WT(i).n()) < mappingTextures.size()){
 						//standard case: the texture is contained in the mesh
 						fl.WT(i).n() = mappingTextures[f.WT(i).n()];
 					}
