@@ -400,8 +400,10 @@ static void MeshAppendConst(
 	// phase 2.
 	// copy data from mr to its corresponding elements in ml and adjacencies
 
+	//vtexcoords - can copy only if they are enabled both on l and r
+	bool vertTexFlag = HasPerVertexTexCoord(ml) && HasPerVertexTexCoord(mr);
+
 	// vertex
-	bool vertTexFlag = HasPerVertexTexCoord(mr);
 	ForEachVertex(mr, [&](const VertexRight& v)
 	{
 		if(!selected || v.IsS()){
@@ -437,8 +439,10 @@ static void MeshAppendConst(
 		}
 	});
 
+	//ftexcoords - can copy only if they are enabled both on l and r
+	bool wedgeTexFlag = HasPerWedgeTexCoord(ml) && HasPerWedgeTexCoord(mr);
+
 	// face
-	bool wedgeTexFlag = HasPerWedgeTexCoord(mr);
 	ForEachFace(mr, [&](const FaceRight& f)
 	{
 		if(!selected || f.IsS())
