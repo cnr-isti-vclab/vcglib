@@ -24,6 +24,9 @@
 #ifndef __VCGLIB_POLYGON_SUPPORT
 #define __VCGLIB_POLYGON_SUPPORT
 
+#include <vcg/complex/allocate.h>
+#include <vcg/complex/base.h>
+#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/space/planar_polygon_tessellation.h>
 
@@ -141,8 +144,8 @@ namespace tri {
         {
             std::vector<typename TriMeshType::VertexPointer> vs;// vertices of the polygon
             ExtractPolygon(&*tfi,vs);
-			if (vs.size() > 3)
-				std::reverse(vs.begin(), vs.end());
+            if (vs.size() > 3)
+              std::reverse(vs.begin(), vs.end());
             //now vs  contains all the vertices of the polygon (still in the trimesh)
             if (vs.size()==0)continue;
             typename PolyMeshType::FaceIterator pfi =  tri::Allocator<PolyMeshType>::AddFaces(pm,1);
