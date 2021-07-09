@@ -443,7 +443,7 @@ public:
 	}
 
 	/// destructor
-	~TriMesh()
+	virtual ~TriMesh()
 	{
 //		ClearAttributes();
 		Clear();
@@ -481,13 +481,14 @@ public:
 		face.clear();
 		edge.clear();
 		tetra.clear();
-		//    textures.clear();
-		//    normalmaps.clear();
+		textures.clear();
+		normalmaps.clear();
 		vn = 0;
 		en = 0;
 		fn = 0;
 		hn = 0;
 		tn = 0;
+		attrn = 0;
 		imark = 0;
 		C()=Color4b::Gray;
 	}
