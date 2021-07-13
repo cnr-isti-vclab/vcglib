@@ -95,13 +95,13 @@ struct GlShot {
 	typedef GlCamera<typename ShotType::CameraType> GlCameraType;
 
 /// returns the OpenGL 4x4 MODELVIEW matrix that describes the shot position and orientation (extrinsics)
-static void MatrixGL(ShotType & shot,vcg::Matrix44<ScalarType> & m) 
+static void MatrixGL(const ShotType & shot,vcg::Matrix44<ScalarType> & m)
 {
 	m = shot.GetWorldToExtrinsicsMatrix();
 }
 
 /// set the OpenGL MODELVIEW matrix to match the shot (extrinsics)
-static void TransformGL(vcg::Shot<ScalarType> & shot)
+static void TransformGL(const vcg::Shot<ScalarType> & shot)
 {
 	vcg::Matrix44<ScalarType> m;
 	MatrixGL(shot,m);
@@ -109,7 +109,7 @@ static void TransformGL(vcg::Shot<ScalarType> & shot)
 }
 
 /// set the OpenGL PROJECTION and MODELVIEW matrix to match camera+shot. requires near and far plane
-static void SetView(vcg::Shot<ScalarType> & shot, ScalarType nearDist, ScalarType farDist)
+static void SetView(const vcg::Shot<ScalarType> & shot, ScalarType nearDist, ScalarType farDist)
 {
 	assert(glGetError() == 0);
 	glMatrixMode(GL_PROJECTION);
@@ -170,7 +170,7 @@ static ScalarType GetFarPlane(vcg::Shot<ScalarType> & shot, vcg::Box3<ScalarType
 
 
 /// given a shot and the mesh bounding box, return near and far plane (exact)
-static void GetNearFarPlanes(vcg::Shot<ScalarType> & shot, vcg::Box3<ScalarType> bbox, ScalarType &nr, ScalarType &fr)
+static void GetNearFarPlanes(const vcg::Shot<ScalarType> & shot, vcg::Box3<ScalarType> bbox, ScalarType &nr, ScalarType &fr)
 {
   vcg::Point3<ScalarType> zaxis = shot.Axis(2); 
   ScalarType offset = zaxis * shot.GetViewPoint();

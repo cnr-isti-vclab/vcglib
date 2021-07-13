@@ -139,35 +139,35 @@ static void SetGLIsometricProj(float x1, float x2, float y1, float y2, float z1,
 }
 
 /// get OpenGL-like frustum from a vcg camera (intrinsics)
-static void GetFrustum(vcg::Camera<S> & intrinsics, S & sx,S & dx,S & bt,S & tp,S & f)
+static void GetFrustum(const vcg::Camera<S> & intrinsics, S & sx,S & dx,S & bt,S & tp,S & f)
 {
 	intrinsics.GetFrustum(sx,dx,bt,tp,f);
 }
 
 /// set the OpenGL PROJECTION matrix to match the camera (intrinsics). requires near and far plane
-static void TransformGL(vcg::Camera<S> & camera, S nearDist, S farDist ) 
+static void TransformGL(const vcg::Camera<S> & camera, S nearDist, S farDist )
 {
 	S sx,dx,bt,tp,nr;
 	camera.GetFrustum(sx,dx,bt,tp,nr);
 
-  if(camera.cameraType == CameraType::PERSPECTIVE) {
-    S ratio = nearDist/nr;
-    sx *= ratio;
-    dx *= ratio;
-    bt *= ratio;
-    tp *= ratio;
-  }
+	if(camera.cameraType == CameraType::PERSPECTIVE) {
+		S ratio = nearDist/nr;
+		sx *= ratio;
+		dx *= ratio;
+		bt *= ratio;
+		tp *= ratio;
+	}
 
 	assert(glGetError()==0);
 	
-	switch(camera.cameraType) 
+	switch(camera.cameraType)
 	{
-   case CameraType::PERSPECTIVE: glFrustum(sx,dx,bt,tp,nearDist,farDist);	break;
-   case CameraType::ORTHO:       glOrtho(sx,dx,bt,tp,nearDist,farDist); break;
-   case CameraType::ISOMETRIC:   SetGLIsometricProj(sx,dx,bt,tp,nearDist,farDist); 	break;
-   case CameraType::CAVALIERI:   SetGLCavalieriProj(sx,dx,bt,tp,nearDist,farDist); 	break;
+	case CameraType::PERSPECTIVE: glFrustum(sx,dx,bt,tp,nearDist,farDist);	break;
+	case CameraType::ORTHO:       glOrtho(sx,dx,bt,tp,nearDist,farDist); break;
+	case CameraType::ISOMETRIC:   SetGLIsometricProj(sx,dx,bt,tp,nearDist,farDist); 	break;
+	case CameraType::CAVALIERI:   SetGLCavalieriProj(sx,dx,bt,tp,nearDist,farDist); 	break;
 	}
-       
+
 	assert(glGetError()==0);
 };
 
