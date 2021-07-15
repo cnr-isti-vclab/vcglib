@@ -35,7 +35,7 @@
 #include <wrap/gl/math.h>
 #include <vcg/space/color4.h>
 #include <vcg/math/matrix44.h>
-#include<wrap/system/memory_info.h>
+#include <wrap/system/memory_info.h>
 #include <wrap/gl/gl_mesh_attributes_info.h>
 
 
@@ -1158,23 +1158,25 @@ namespace vcg
 					triangles += cit->second - cit->first + 1;
 				}
 
-				if ((attributestobeupdated[INT_ATT_NAMES::ATT_EDGEINDICES]) && (_edge.size() > 0))
-				{
-					for (typename std::vector<EdgeVertInd>::iterator it = _edge.begin(); it != _edge.end(); ++it)
-					{
-						it->_v[0] = vpatlas[it->_v[0]];
-						it->_v[1] = vpatlas[it->_v[1]];
-					}
-
-					GLBufferObject* buffobj = _bo[INT_ATT_NAMES::ATT_EDGEINDICES];
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffobj->_bohandle);
-					glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, buffobj->_components * buffobj->getSizeOfGLType() * _edge.size(), &_edge[0]);
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-				}
-
 				if (attributestobeupdated[INT_ATT_NAMES::ATT_WEDGETEXTURE] || attributestobeupdated[INT_ATT_NAMES::ATT_VERTTEXTURE])
 					_texindnumtriangles[t] = std::make_pair(mit->first, triangles);
 				++t;
+			}
+
+			if ((attributestobeupdated[INT_ATT_NAMES::ATT_EDGEINDICES]) && (_edge.size() > 0))
+			{
+				unsigned int i = 0;
+				for (EdgeVertInd& e : _edge)
+				{
+					e._v[0] = vpatlas[e._v[0]];
+					e._v[1] = vpatlas[e._v[1]];
+					++i;
+				}
+
+				GLBufferObject* buffobj = _bo[INT_ATT_NAMES::ATT_EDGEINDICES];
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffobj->_bohandle);
+				glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, buffobj->_components * buffobj->getSizeOfGLType() * _edge.size(), &_edge[0]);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 			}
 
 			//return (k != tn)
