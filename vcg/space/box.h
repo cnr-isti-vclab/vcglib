@@ -49,7 +49,7 @@ First working release.
 #ifndef __VCGLIB_BOX
 #define __VCGLIB_BOX
 
-#include <vcg/space/point.h>
+#include <vcg/space/point3.h>
 #include <vcg/space/space.h>
 #include <vcg/math/linear.h>
 
@@ -107,7 +107,7 @@ public:
 	{
 		return _min!=p._min || _max!=p._max;
 	}
-		/** Infaltes the box of a percentage..
+		/** Infltes the box of a percentage..
 			@param s Scalar value. E.g if s=0.1 the box enlarges of 10% in every direction 
 			       if S==0.5 box doubles (+50% in every direction)
 			       if S < 0 box shrinks 
@@ -133,12 +133,12 @@ public:
 		_min -= delta;
 		_max += delta;
 	}
-		/// Initializing the  box
+		/// Initializing the box
 	void Set( const PointType & p )
 	{
 		_min = _max = p;
 	}
-		/// Set the  box to a null value
+		/// Set the box to a null value
 	void SetNull()
 	{
 		_min.X()= 1; _max.X()= -1;
@@ -147,7 +147,7 @@ public:
 	}
 		/** Add two  boxex: 
 		    Returns minimal box that contains both operands.
-			@param b The  box to add
+			@param b The box to add
 		*/
 	void Add( Box const & b )
 	{
@@ -174,7 +174,7 @@ public:
 			};
 		}
 	}
-		/** Coputes intersection of Boxes: the minimal box containing both operands.
+		/** Computes intersection of Boxes: the minimal box containing both operands.
 			@param b The other operand
 		*/
 	void Intersect( const Box & b )
@@ -190,7 +190,7 @@ public:
 		if(_min.X()>_max.X() || _min.Y()>_max.Y() ) SetNull();
 		else if (N>2) if (_min.Z()>_max.Z()) SetNull();
 	}
-		/** Traslalate the  box.
+		/** Translalate the box.
 			@param p: the translation vector
 		*/
 	void Translate( const PointType & p )
@@ -198,7 +198,7 @@ public:
 		_min += p;
 		_max += p;
 	}
-		/** Check wheter a point is inside box.
+		/** Check whether a point is inside box.
 			@param p The point
 			@returns True if inside, false otherwise
 		*/
@@ -214,7 +214,7 @@ public:
 			_min.Z() <= p.Z() && p.Z() <= _max.Z()
 		); 	
 	}
-		/** Check wheter a point is inside box, open at left and closed at right [min..max)
+		/** Check whether a point is inside box, open at left and closed at right [min..max)
 			@param p The point 3D
 			@returns True if inside, false otherwise
 		*/
@@ -283,7 +283,7 @@ public:
 		  (p[2]-_min[2])/(_max[2]-_min[2])
 			);
 	}
-		/// Computes the Volume for the  box.
+		/// Computes the Volume for the box.
 	inline S Volume() const
 	{
 		if (N==2) return (_max.X()-_min.X())*(_max.Y()-_min.Y());
@@ -356,7 +356,7 @@ public:
 //@}
 
 //@{
- /** @name Iporters (for boxes in different spaces and with different scalar types)
+ /** @name Importers (for boxes in different spaces and with different scalar types)
 	**/
 
 	/// imports the box

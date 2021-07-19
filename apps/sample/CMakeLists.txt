@@ -1,0 +1,64 @@
+cmake_minimum_required(VERSION 3.13)
+project(VCGExamples)
+
+set(VCG_EXAMPLE_PROJECTS
+	aabb_binary_tree
+	colorspace
+	polygonmesh_base
+	polygonmesh_dual
+	polygonmesh_optimize
+	polygonmesh_polychord_collapse
+	polygonmesh_smooth
+	space_index_2d
+	space_packer
+	space_rasterized_packer
+	trimesh_align_pair
+	trimesh_allocate
+	trimesh_attribute
+	trimesh_attribute_saving
+	trimesh_ball_pivoting
+	trimesh_base
+	trimesh_closest
+	trimesh_clustering
+	trimesh_color
+	trimesh_copy
+	trimesh_create
+	trimesh_curvature
+	trimesh_cylinder_clipping
+	trimesh_disk_parametrization
+	trimesh_fitting
+	trimesh_geodesic
+	trimesh_harmonic
+	trimesh_hole
+	trimesh_implicit_smooth
+	trimesh_indexing
+	trimesh_inertia
+	trimesh_intersection_plane
+	trimesh_intersection_mesh
+	trimesh_isosurface
+	trimesh_join
+	trimesh_kdtree
+	trimesh_montecarlo_sampling
+	trimesh_normal
+	trimesh_optional
+	trimesh_pointmatching
+	trimesh_pointcloud_sampling
+	trimesh_ray
+	trimesh_refine
+	trimesh_remeshing
+	trimesh_sampling
+	trimesh_select
+	trimesh_smooth
+	trimesh_split_vertex
+	trimesh_texture
+	trimesh_texture_clean
+	trimesh_topology
+	trimesh_topological_cut
+	trimesh_voronoi
+	trimesh_voronoiatlas
+	trimesh_voronoiclustering
+	trimesh_voronoisampling)
+
+foreach(VCG_EXAMPLE ${VCG_EXAMPLE_PROJECTS})
+	add_subdirectory(${VCG_EXAMPLE})
+endforeach()

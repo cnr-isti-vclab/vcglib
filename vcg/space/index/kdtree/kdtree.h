@@ -123,7 +123,7 @@ namespace vcg {
 
     void doQueryK(const VectorType& queryPoint, int k, PriorityQueue& mNeighborQueue);
 
-    void doQueryDist(const VectorType& queryPoint, float dist, std::vector<unsigned int>& points, std::vector<Scalar>& sqrareDists);
+    void doQueryDist(const VectorType& queryPoint, Scalar dist, std::vector<unsigned int>& points, std::vector<Scalar>& sqrareDists);
 
     void doQueryClosest(const VectorType& queryPoint, unsigned int& index, Scalar& dist);
 
@@ -140,7 +140,7 @@ namespace vcg {
 
     // used to build the tree: split the subset [start..end[ according to dim and splitValue,
     // and returns the index of the first element of the second subset
-    unsigned int split(int start, int end, unsigned int dim, float splitValue);
+    unsigned int split(int start, int end, unsigned int dim, Scalar splitValue);
 
     int createTree(unsigned int nodeId, unsigned int start, unsigned int end, unsigned int level);
 
@@ -211,7 +211,7 @@ namespace vcg {
 
     std::vector<QueryNode> mNodeStack(numLevel + 1);
     mNodeStack[0].nodeId = 0;
-    mNodeStack[0].sq = 0.f;
+    mNodeStack[0].sq = 0.;
     unsigned int count = 1;
 
     while (count)
@@ -242,7 +242,7 @@ namespace vcg {
         else
         {
           // the new offset is the distance between the searched point and the actual split coordinate
-          float new_off = queryPoint[node.dim] - node.splitValue;
+          Scalar new_off = queryPoint[node.dim] - node.splitValue;
 
           //left sub-tree
           if (new_off < 0.)
@@ -279,14 +279,14 @@ namespace vcg {
   * and the vector of the squared distances from the query point.
   */
   template<typename Scalar>
-  void KdTree<Scalar>::doQueryDist(const VectorType& queryPoint, float dist, std::vector<unsigned int>& points, std::vector<Scalar>& sqrareDists)
+  void KdTree<Scalar>::doQueryDist(const VectorType& queryPoint, Scalar dist, std::vector<unsigned int>& points, std::vector<Scalar>& sqrareDists)
   {
     std::vector<QueryNode> mNodeStack(numLevel + 1);
     mNodeStack[0].nodeId = 0;
-    mNodeStack[0].sq = 0.f;
+    mNodeStack[0].sq = 0.;
     unsigned int count = 1;
 
-    float sqrareDist = dist*dist;
+    Scalar sqrareDist = dist*dist;
     while (count)
     {
       QueryNode& qnode = mNodeStack[count - 1];
@@ -300,7 +300,7 @@ namespace vcg {
           unsigned int end = node.start + node.size;
           for (unsigned int i = node.start; i < end; ++i)
           {
-            float pointSquareDist = vcg::SquaredNorm(queryPoint - mPoints[i]);
+            Scalar pointSquareDist = vcg::SquaredNorm(queryPoint - mPoints[i]);
             if (pointSquareDist < sqrareDist)
             {
               points.push_back(mIndices[i]);
@@ -311,7 +311,7 @@ namespace vcg {
         else
         {
           // replace the stack top by the farthest and push the closest
-          float new_off = queryPoint[node.dim] - node.splitValue;
+          Scalar new_off = queryPoint[node.dim] - node.splitValue;
           if (new_off < 0.)
           {
             mNodeStack[count].nodeId = node.firstChildId;
@@ -346,7 +346,7 @@ namespace vcg {
   {
     std::vector<QueryNode> mNodeStack(numLevel + 1);
     mNodeStack[0].nodeId = 0;
-    mNodeStack[0].sq = 0.f;
+    mNodeStack[0].sq = 0.;
     unsigned int count = 1;
 
     int minIndex = mIndices.size() / 2;
@@ -366,7 +366,7 @@ namespace vcg {
           unsigned int end = node.start + node.size;
           for (unsigned int i = node.start; i < end; ++i)
           {
-            float pointSquareDist = vcg::SquaredNorm(queryPoint - mPoints[i]);
+            Scalar pointSquareDist = vcg::SquaredNorm(queryPoint - mPoints[i]);
             if (pointSquareDist < minDist)
             {
               minDist = pointSquareDist;
@@ -377,7 +377,7 @@ namespace vcg {
         else
         {
           // replace the stack top by the farthest and push the closest
-          float new_off = queryPoint[node.dim] - node.splitValue;
+          Scalar new_off = queryPoint[node.dim] - node.splitValue;
           if (new_off < 0.)
           {
             mNodeStack[count].nodeId = node.firstChildId;
@@ -411,7 +411,7 @@ namespace vcg {
   * using the "dim" coordinate [0 = x, 1 = y, 2 = z].
   */
   template<typename Scalar>
-  unsigned int KdTree<Scalar>::split(int start, int end, unsigned int dim, float splitValue)
+  unsigned int KdTree<Scalar>::split(int start, int end, unsigned int dim, Scalar splitValue)
   {
     int l(start), r(end - 1);
     for (; l < r; ++l, --r)

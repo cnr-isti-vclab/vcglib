@@ -1,11 +1,11 @@
-name: BuildSamplesMacOS
+name: BuildExamplesMacOS
 
 on:
   [push, pull_request]
 
 jobs:
   macos_build_tests:
-    name: Build Samples (MacOS)
+    name: Build Examples (MacOS)
     runs-on: macos-latest
 
     steps:
@@ -14,5 +14,7 @@ jobs:
       uses: jurplel/install-qt-action@v2
     - name: Build Samples
       run: |
-        qmake apps/sample/sample.pro
+        mkdir build
+        cd build
+        cmake -DVCG_BUILD_EXAMPLES=ON .. 
         make -j4

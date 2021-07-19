@@ -96,11 +96,10 @@ public:
     }
 
     ///calculate the BBox in UV space
-    static vcg::Box2<ScalarType> PerVertUVBox(MeshType &m)
+    static vcg::Box2<ScalarType> PerVertUVBox(const MeshType &m)
     {
         vcg::Box2<ScalarType> UVBox;
-        VertexIterator vi;
-        for (vi=m.vert.begin();vi!=m.vert.end();vi++)
+        for (auto vi=m.vert.begin();vi!=m.vert.end();vi++)
         {
             if ((*vi).IsD()) continue;
             UVBox.Add((*vi).T().P());
@@ -171,6 +170,23 @@ public:
                 (*fi).WT(i).P().Y()=Y1;
                 (*fi).WT(i).P()+=Origin;
             }
+        }
+    }
+
+    static void GloballyRotatePerVert(MeshType &m,ScalarType Angle)
+    {
+        vcg::Box2<ScalarType> BB=PerVertUVBox(m);
+        UVCoordType Origin=BB.Center();
+        typename MeshType::VertexIterator vi;
+        for (vi=m.vert.begin();vi!=m.vert.end();vi++)
+        {
+            if ((*vi).IsD()) continue;
+            (*vi).T().P()-=Origin;
+            ScalarType X1=(*vi).T().P().X()*cos(Angle)-(*vi).T().P().Y()*sin(Angle);
+            ScalarType Y1=(*vi).T().P().X()*cos(Angle)+(*vi).T().P().Y()*sin(Angle);
+            (*vi).T().P().X()=X1;
+            (*vi).T().P().Y()=Y1;
+            (*vi).T().P()+=Origin;
         }
     }
 

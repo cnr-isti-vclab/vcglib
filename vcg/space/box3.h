@@ -46,29 +46,27 @@ public:
     typedef BoxScalarType ScalarType;
 
     /// min coordinate point
-  Point3<BoxScalarType> min;
+    Point3<BoxScalarType> min;
     /// max coordinate point
     Point3<BoxScalarType> max;
         /// The bounding box constructor
     inline  Box3() { this->SetNull(); }
-        /// Copy constructor
-    //inline  Box3( const Box3 & b ) { min=b.min; max=b.max; }
         /// Min Max constructor
     inline  Box3( const Point3<BoxScalarType> & mi, const Point3<BoxScalarType> & ma ) { min = mi; max = ma; }
     /// Point Radius Constructor
-  inline Box3(const Point3<BoxScalarType> & center, const BoxScalarType & radius) {
-    min = center-Point3<BoxScalarType>(radius,radius,radius);
-    max = center+Point3<BoxScalarType>(radius,radius,radius);
-  }
+    inline Box3(const Point3<BoxScalarType> & center, const BoxScalarType & radius) {
+        min = center-Point3<BoxScalarType>(radius,radius,radius);
+        max = center+Point3<BoxScalarType>(radius,radius,radius);
+    }
         /// The bounding box distructor
     inline ~Box3() { }
         /// Operator to compare two bounding box
-    inline bool operator == ( Box3<BoxScalarType> const & p ) const
+    inline bool operator == ( const Box3<BoxScalarType> & p ) const
     {
         return min==p.min && max==p.max;
     }
         /// Operator to dispare two bounding box
-    inline bool operator != ( Box3<BoxScalarType> const & p ) const
+    inline bool operator != ( const Box3<BoxScalarType> & p ) const
     {
         return min!=p.min || max!=p.max;
     }
@@ -103,7 +101,7 @@ public:
         /** Modify the current bbox to contain also the passed box.
          *  Adding a null bounding box does nothing
         */
-    void Add( Box3<BoxScalarType> const & b )
+    void Add( const Box3<BoxScalarType> & b )
     {
         if(b.IsNull()) return; // Adding a null bbox should do nothing
         if(IsNull()) *this=b;
@@ -137,20 +135,20 @@ public:
 
     /** Modify the current bbox to contain also the passed sphere
     */
-void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
-{
-    if(IsNull()) Set(p);
-    else
+    void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
     {
-      min.X() = std::min(min.X(),p.X()-radius);
-      min.Y() = std::min(min.Y(),p.Y()-radius);
-      min.Z() = std::min(min.Z(),p.Z()-radius);
+        if(IsNull()) Set(p);
+        else
+        {
+          min.X() = std::min(min.X(),p.X()-radius);
+          min.Y() = std::min(min.Y(),p.Y()-radius);
+          min.Z() = std::min(min.Z(),p.Z()-radius);
 
-      max.X() = std::max(max.X(),p.X()+radius);
-      max.Y() = std::max(max.Y(),p.Y()+radius);
-      max.Z() = std::max(max.Z(),p.Z()+radius);
+          max.X() = std::max(max.X(),p.X()+radius);
+          max.Y() = std::max(max.Y(),p.Y()+radius);
+          max.Z() = std::max(max.Z(),p.Z()+radius);
+        }
     }
-}
   /** Modify the current bbox to contain also the box b transformed according to the matrix m
   */
     void Add( const Matrix44<BoxScalarType> &m, const Box3<BoxScalarType> & b )
@@ -193,7 +191,7 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
     }
         /** true if the point belong to the closed box 
         */
-    bool IsIn( Point3<BoxScalarType> const & p ) const
+    bool IsIn( const Point3<BoxScalarType> & p ) const
     {
         return (
             min.X() <= p.X() && p.X() <= max.X() &&
@@ -204,7 +202,7 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
         /** true if the point belong to the open box (open on the max side) 
          * e.g. if p in [min,max)
         */
-    bool IsInEx( Point3<BoxScalarType> const & p ) const
+    bool IsInEx( const Point3<BoxScalarType> & p ) const
     {
         return (
             min.X() <= p.X() && p.X() < max.X() &&
@@ -225,7 +223,7 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
         return bb.IsValid();
     }
     */
-    bool Collide(Box3<BoxScalarType> const &b) const
+    bool Collide( const Box3<BoxScalarType> &b) const
     {
         return b.min.X()<max.X() && b.max.X()>min.X() &&
                b.min.Y()<max.Y() && b.max.Y()>min.Y() &&
@@ -259,14 +257,14 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
         return (max-min);
     }
       /// Returns global coords of a local point expressed in [0..1]^3
-    Point3<BoxScalarType> LocalToGlobal(Point3<BoxScalarType> const & p) const{
+    Point3<BoxScalarType> LocalToGlobal(const Point3<BoxScalarType> & p) const{
         return Point3<BoxScalarType>(
             min[0] + p[0]*(max[0]-min[0]),
             min[1] + p[1]*(max[1]-min[1]),
             min[2] + p[2]*(max[2]-min[2]));
     }
       /// Returns local coords expressed in [0..1]^3 of a point in 3D
-    Point3<BoxScalarType> GlobalToLocal(Point3<BoxScalarType> const & p) const{
+    Point3<BoxScalarType> GlobalToLocal(const Point3<BoxScalarType> & p) const{
         return Point3<BoxScalarType>(
           (p[0]-min[0])/(max[0]-min[0]),
           (p[1]-min[1])/(max[1]-min[1]),
@@ -313,7 +311,7 @@ void Add( const Point3<BoxScalarType> & p, const BoxScalarType radius )
     }
 
         /// gives the ith box vertex in order: (x,y,z),(X,y,z),(x,Y,z),(X,Y,z),(x,y,Z),(X,y,Z),(x,Y,Z),(X,Y,Z)
-    Point3<BoxScalarType> P(const int & i) const {
+    Point3<BoxScalarType> P(int i) const {
             return Point3<BoxScalarType>(
                 min[0]+ (i%2) * DimX(),
                 min[1]+ ((i / 2)%2) * DimY(),

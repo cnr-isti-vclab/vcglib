@@ -340,7 +340,7 @@ struct LS3Projection {
 };
 
 template<class MESH_TYPE, class METHOD_TYPE=Centroid<MESH_TYPE>, class WEIGHT_TYPE=LoopWeight<typename MESH_TYPE::ScalarType> >
-struct OddPointLoopGeneric : public std::unary_function<face::Pos<typename MESH_TYPE::FaceType> , typename MESH_TYPE::VertexType>
+struct OddPointLoopGeneric
 {
   typedef METHOD_TYPE Projection;
   typedef WEIGHT_TYPE Weight;
@@ -427,7 +427,7 @@ struct OddPointLoopGeneric : public std::unary_function<face::Pos<typename MESH_
 };
 
 template<class MESH_TYPE, class METHOD_TYPE=Centroid<MESH_TYPE>, class WEIGHT_TYPE=LoopWeight<typename MESH_TYPE::ScalarType> >
-struct EvenPointLoopGeneric : public std::unary_function<face::Pos<typename MESH_TYPE::FaceType> , typename MESH_TYPE::VertexType>
+struct EvenPointLoopGeneric
 {
     typedef METHOD_TYPE Projection;
     typedef WEIGHT_TYPE Weight;

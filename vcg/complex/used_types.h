@@ -23,7 +23,6 @@
 #ifndef VCG_USED_TYPES_H
 #define VCG_USED_TYPES_H
 
-#include <vcg/space/point3.h>
 #include <vcg/space/box3.h>
 #include <vcg/space/color4.h>
 #include <vcg/math/shot.h>
@@ -120,6 +119,6 @@ struct _Face  : public  Face<_UsedTypes>{};
 struct _Tetra : public  TetraSimp<_UsedTypes>{};
 struct _HEdge : public  HEdge<_UsedTypes>{};
 
-};
+}
 
 #endif // USED_TYPES_H

@@ -25,6 +25,8 @@
 #ifndef __VCGLIB_IMPORT_OBJ
 #define __VCGLIB_IMPORT_OBJ
 
+#include <vcg/complex/allocate.h>
+
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <wrap/io_trimesh/io_material.h>
@@ -958,136 +960,136 @@ public:
     return ret;
   }
   
-  static bool LoadMaterials(const char * filename, std::vector<Material> &materials, std::vector<std::string> &textures)
-  {
-    // assumes we are in the right directory
-    
-    std::ifstream stream(filename);
-    if (stream.fail())
-      return false;
-    
-    std::vector< std::string > tokens;
-    std::string line;
-    std::string	header;
-    
-    materials.clear();
-    Material currentMaterial;
-    
-    // Fill in some default values for the material
-    currentMaterial.index = (unsigned int)(-1);
-    currentMaterial.Ka = Point3f(0.2, 0.2, 0.2);
-    currentMaterial.Kd = Point3f(1, 1, 1);
-    currentMaterial.Ks = Point3f(1, 1, 1);
-    currentMaterial.Tr = 1;
-    currentMaterial.Ns = 0;
-    currentMaterial.illum = 2;
-    
-    bool first = true;
-    while (!stream.eof())
-    {
-      tokens.clear();
-      TokenizeNextLine(stream, tokens, line, 0);
-      
-      if (tokens.size() > 0)
-      {
-        header.clear();
-        header = tokens[0];
-        
-        if (header.compare("newmtl")==0)
-        {
-          if (!first)
-          {
-            materials.push_back(currentMaterial);
-            currentMaterial = Material();
-            currentMaterial.index = (unsigned int)(-1);
-          }
-          else
-            first = false;
-          //strcpy(currentMaterial.name, tokens[1].c_str());
-          if(tokens.size() < 2)
-            return false;
-          else if (tokens.size() == 2)
-            currentMaterial.materialName = tokens[1]; //play it safe
-          else
-            currentMaterial.materialName = line.substr(7); //space in the name, get everything after "newmtl "
-        }
-        else if (header.compare("Ka")==0)
-        {
-          if (tokens.size() < 4)  return false;
-          currentMaterial.Ka = Point3fFrom3Tokens(tokens,1);
-        }
-        else if (header.compare("Kd")==0)
-        {
-          if (tokens.size() < 4) return false;
-          currentMaterial.Kd = Point3fFrom3Tokens(tokens,1);
-        }
-        else if (header.compare("Ks")==0)
-        {
-          if (tokens.size() < 4) return false;
-          currentMaterial.Ks = Point3fFrom3Tokens(tokens,1);
-        }
-        else if (	(header.compare("d")==0) ||
-                    (header.compare("Tr")==0)	)	// alpha
-        {
-          if (tokens.size() < 2) return false;
-          currentMaterial.Tr = (float) atof(tokens[1].c_str());
-        }
-        else if (header.compare("Ns")==0)  // shininess
-        {
-          if (tokens.size() < 2) return false;
-          currentMaterial.Ns = float(atoi(tokens[1].c_str()));
-        }
-        else if (header.compare("illum")==0)	// specular illumination on/off
-        {
-          if (tokens.size() < 2)   return false;
-          currentMaterial.illum = atoi(tokens[1].c_str());;
-        }
-        else if(header.compare("map_Kd")==0) // texture name
-        {
-          std::string textureName; 
-          if (tokens.size() < 2)
-            return false;
-          else if (tokens.size() == 2)
-            textureName = tokens[1]; //play it safe
-          else
-            textureName = line.substr(7); //get everything after "map_Kd "
-          
-          currentMaterial.map_Kd=textureName;
-          
-          // adding texture name into textures vector (if not already present)
-          // avoid adding the same name twice
-          auto it = std::find(textures.begin(), textures.end(), textureName);
-          if(it==textures.end()) {            
-            currentMaterial.index = textures.size();            
-            textures.push_back(textureName);
-          } else {
-            currentMaterial.index = std::distance(textures.begin(),it);
-          }         
-        }
-        // we simply ignore other situations
-      }
-    }
-    materials.push_back(currentMaterial);  // add last read material
-    
-    stream.close();
-    // Sometimes some materials have texture and no texture
-    // in this case for sake of uniformity we just use the first texture.
-    if(!textures.empty())
-    {
-      for(size_t i=0;i<materials.size();++i)
-      {
-        if(materials[i].map_Kd.empty())
-        {
-          materials[i].map_Kd=textures[0];
-          materials[i].index=0;
-        }      
-      }
-    }
-    
-    
-    return true;
-  }
-  
+	static bool LoadMaterials(const char * filename, std::vector<Material> &materials, std::vector<std::string> &textures)
+	{
+		// assumes we are in the right directory
+
+		std::ifstream stream(filename);
+		if (stream.fail())
+			return false;
+
+		std::vector< std::string > tokens;
+		std::string line;
+		std::string	header;
+
+		materials.clear();
+		Material currentMaterial;
+
+		// Fill in some default values for the material
+		currentMaterial.index = (unsigned int)(-1);
+		currentMaterial.Ka = Point3f(0.2, 0.2, 0.2);
+		currentMaterial.Kd = Point3f(1, 1, 1);
+		currentMaterial.Ks = Point3f(1, 1, 1);
+		currentMaterial.Tr = 1;
+		currentMaterial.Ns = 0;
+		currentMaterial.illum = 2;
+
+		bool first = true;
+		while (!stream.eof())
+		{
+			tokens.clear();
+			TokenizeNextLine(stream, tokens, line, 0);
+
+			if (tokens.size() > 0)
+			{
+				header.clear();
+				header = tokens[0];
+
+				if (header.compare("newmtl")==0)
+				{
+					if (!first)
+					{
+						materials.push_back(currentMaterial);
+						currentMaterial = Material();
+						currentMaterial.index = (unsigned int)(-1);
+					}
+					else
+						first = false;
+					//strcpy(currentMaterial.name, tokens[1].c_str());
+					if(tokens.size() < 2)
+						return false;
+					else if (tokens.size() == 2)
+						currentMaterial.materialName = tokens[1]; //play it safe
+					else
+						currentMaterial.materialName = line.substr(7); //space in the name, get everything after "newmtl "
+				}
+				else if (header.compare("Ka")==0)
+				{
+					if (tokens.size() < 4)  return false;
+					currentMaterial.Ka = Point3fFrom3Tokens(tokens,1);
+				}
+				else if (header.compare("Kd")==0)
+				{
+					if (tokens.size() < 4) return false;
+					currentMaterial.Kd = Point3fFrom3Tokens(tokens,1);
+				}
+				else if (header.compare("Ks")==0)
+				{
+					if (tokens.size() < 4) return false;
+					currentMaterial.Ks = Point3fFrom3Tokens(tokens,1);
+				}
+				else if (	(header.compare("d")==0) ||
+						(header.compare("Tr")==0)	)	// alpha
+				{
+					if (tokens.size() < 2) return false;
+					currentMaterial.Tr = (float) atof(tokens[1].c_str());
+				}
+				else if (header.compare("Ns")==0)  // shininess
+				{
+					if (tokens.size() < 2) return false;
+					currentMaterial.Ns = float(atoi(tokens[1].c_str()));
+				}
+				else if (header.compare("illum")==0)	// specular illumination on/off
+				{
+					if (tokens.size() < 2)   return false;
+					currentMaterial.illum = atoi(tokens[1].c_str());;
+				}
+				else if(header.compare("map_Kd")==0) // texture name
+				{
+					std::string textureName;
+					if (tokens.size() < 2)
+						return false;
+					else {
+						//the tex name is the last one (after any option)
+						textureName = tokens[tokens.size()-1];
+					}
+
+					currentMaterial.map_Kd=textureName;
+
+					// adding texture name into textures vector (if not already present)
+					// avoid adding the same name twice
+					auto it = std::find(textures.begin(), textures.end(), textureName);
+					if(it==textures.end()) {
+						currentMaterial.index = textures.size();
+						textures.push_back(textureName);
+					} else {
+						 currentMaterial.index = std::distance(textures.begin(),it);
+					}
+				}
+				// we simply ignore other situations
+			}
+		}
+		materials.push_back(currentMaterial);  // add last read material
+
+		stream.close();
+		// Sometimes some materials have texture and no texture
+		// in this case for sake of uniformity we just use the first texture.
+		if(!textures.empty())
+		{
+			for(size_t i=0;i<materials.size();++i)
+			{
+				if(materials[i].map_Kd.empty())
+				{
+					materials[i].map_Kd=textures[0];
+					materials[i].index=0;
+				}
+			}
+		}
+
+
+		return true;
+	}
+
 }; // end class
 } // end Namespace tri
 } // end Namespace io

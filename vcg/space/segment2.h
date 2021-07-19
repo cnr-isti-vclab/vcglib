@@ -142,7 +142,7 @@ typedef Segment2<float>  Segment2f;
 typedef Segment2<double> Segment2d;
 
 template <class ScalarType>
-Point2<ScalarType> ClosestPoint( Segment2<ScalarType> s, const Point2<ScalarType> & p)
+Point2<ScalarType> ClosestPoint(const Segment2<ScalarType> & s, const Point2<ScalarType> & p)
 {
 	vcg::Line2<ScalarType, true> l;
 	l.Set(s.P0(),s.P1()-s.P0());
@@ -155,6 +155,12 @@ Point2<ScalarType> ClosestPoint( Segment2<ScalarType> s, const Point2<ScalarType
 		return s.P1();
 	else
 		return clos;
+}
+
+template <class ScalarType>
+ScalarType Distance(const Segment2<ScalarType> & s, const Point2<ScalarType> & p) {
+  const Point2<ScalarType> c = ClosestPoint(s, p);
+  return (c - p).Norm();
 }
 
 template <class S>

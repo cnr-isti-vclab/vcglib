@@ -28,7 +28,6 @@
 #include <vcg/space/polygon3.h>
 #include <vcg/complex/algorithms/update/color.h>
 #include <vcg/complex/algorithms/closest.h>
-#include <vcg/complex/algorithms/point_sampling.h>
 #include <vcg/complex/algorithms/update/quality.h>
 #include <wrap/io_trimesh/export_obj.h>
 
@@ -334,7 +333,10 @@ private:
         AvVert.clear();
         AvVert.resize(poly_m.vert.size(),CoordType(0,0,0));
         std::vector<ScalarType> AvSum(poly_m.vert.size(),0);
-        for (size_t i=0;i<poly_m.face.size();i++)
+        for (size_t i=0;i<poly_m.face.size();i++) {
+            if (poly_m.face[i].IsD())
+                continue;
+
             for (size_t j=0;j<(size_t)poly_m.face[i].VN();j++)
             {
                 //get current vertex
@@ -352,14 +354,19 @@ private:
                     AvSum[IndexV]+=W;
                 }
             }
+        }
 
         //average step
         for (size_t i=0;i<poly_m.vert.size();i++)
         {
+            if (poly_m.vert[i].IsD())
+                continue;
+
             if (AvSum[i]==0)continue;
             AvVert[i]/=AvSum[i];
         }
     }
+
 
 
 
@@ -377,6 +384,30 @@ private:
             F.N()=-PlF.Direction();
         else
             F.N()=PlF.Direction();
+    }
+
+    static void DisplaceBySelected(FaceType &f,std::vector<CoordType> &TemplatePos,
+                                   bool FixS,bool FixB)
+    {
+        CoordType AvPosF(0,0,0);
+        CoordType AvPosT(0,0,0);
+        size_t Num=0;
+        for (size_t i=0;i<f.VN();i++)
+        {
+            bool AddVal=false;
+            AddVal|=((FixS)&&(f.V(i)->IsS()));
+            AddVal|=((FixB)&&(f.V(i)->IsB()));
+            if (!AddVal)continue;
+            Num++;
+            AvPosF+=f.V(i)->P();
+            AvPosT+=TemplatePos[i];
+        }
+        if (Num==0)return;
+        AvPosF/=(ScalarType)Num;
+        AvPosT/=(ScalarType)Num;
+        CoordType Displ=AvPosF-AvPosT;
+        for (size_t i=0;i<TemplatePos.size();i++)
+            TemplatePos[i]+=Displ;
     }
 
 public:
@@ -416,6 +447,7 @@ public:
     static void UpdateFaceNormals(PolyMeshType &poly_m)
     {
         for (size_t i=0;i<poly_m.face.size();i++)
+            if (!poly_m.face[i].IsD())
             UpdateNormal(poly_m.face[i]);
     }
 
@@ -424,6 +456,7 @@ public:
     static void UpdateFaceNormalByFitting(PolyMeshType &poly_m)
     {
         for (size_t i=0;i<poly_m.face.size();i++)
+            if (!poly_m.face[i].IsD())
             UpdateNormalByFitting(poly_m.face[i]);
     }
 
@@ -538,6 +571,9 @@ public:
                 if ((IgnoreF!=NULL)&&((*IgnoreF)[i]))continue;
                 std::vector<typename PolygonType::CoordType> TemplatePos;
                 GetRotatedTemplatePos(poly_m.face[i],TemplatePos);
+                if ((FixS)||(fixB))
+                    DisplaceBySelected(poly_m.face[i],TemplatePos,FixS,fixB);
+
                 //then cumulate the position per vertex
                 ScalarType val=vcg::PolyArea(poly_m.face[i]);
                 if (val<(AvgArea*0.00001))
@@ -554,7 +590,6 @@ public:
                     //sum up contributes
                     avgPos[IndexV]+=Pos*W;
                     weightSum[IndexV]+=W;
-
                 }
 
             }
@@ -738,8 +773,7 @@ public:
             for (size_t i=0;i<poly_m.vert.size();i++)
             {
                 if (poly_m.vert[i].IsB()) continue;
-                if (OnlyOnSelected && !poly_m.vert[i].IsS()) continue;
-                
+                if(poly_m.vert[i].IsD() || (OnlyOnSelected && !poly_m.vert[i].IsS())) continue;
                 poly_m.vert[i].P()=poly_m.vert[i].P()*DampS+
                         AvVert[i]*(1-DampS);
             }
@@ -747,7 +781,7 @@ public:
 
             for (size_t i=0;i<poly_m.vert.size();i++)
             {
-                if(OnlyOnSelected && !poly_m.vert[i].IsS()) continue;
+                if(poly_m.vert[i].IsD() || (OnlyOnSelected && !poly_m.vert[i].IsS())) continue;
                 TriCoordType testPos;
                 testPos.Import(poly_m.vert[i].P());
                 TriCoordType closestPt;

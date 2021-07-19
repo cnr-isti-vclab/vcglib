@@ -24,7 +24,12 @@
 #ifndef __VCG_TRI_UPDATE_NORMALS
 #define __VCG_TRI_UPDATE_NORMALS
 
+#include <vcg/space/triangle3.h>
+#include <vcg/complex/base.h>
+
 #include <vcg/complex/algorithms/polygon_support.h>
+
+#include "flag.h"
 
 namespace vcg {
 namespace tri {

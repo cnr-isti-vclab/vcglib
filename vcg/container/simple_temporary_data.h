@@ -24,6 +24,12 @@
 #ifndef __VCGLIB_SIMPLE__
 #define __VCGLIB_SIMPLE__
 
+#include <string>
+#include <cstring>
+#include <limits>
+#include <vector>
+#include <cassert>
+
 namespace vcg
 {
 
@@ -36,45 +42,44 @@ public:
     virtual void Reorder(std::vector<size_t> &newVertIndex) = 0;
     virtual size_t SizeOf() const = 0;
     virtual void *DataBegin() = 0;
+    virtual const void* DataBegin() const = 0;
 
     virtual void       *At(size_t i) = 0;
     virtual const void *At(size_t i) const = 0;
     virtual void CopyValue(const size_t to, const size_t from, const SimpleTempDataBase *other) = 0;
 };
 
-template <class TYPE>
-class VectorNBW : public std::vector<TYPE>
+template <class TYPE, class ...p>
+class VectorNBW : public std::vector<TYPE, p...>
 {
 };
 
-template <>
-class VectorNBW<bool>
+template <class ...p>
+class VectorNBW<bool, p...>
 {
 public:
-    VectorNBW() : data(0), datasize(0), datareserve(0) {}
+    VectorNBW() : booldata(nullptr), datasize(0), datareserve(0) {}
 
     ~VectorNBW()
     {
-        if (data)
-            delete[] data;
+        if (booldata)
+            delete[] booldata;
     }
 
-    bool *data;
-
-    void reserve(const int &sz)
+    void reserve(size_t sz)
     {
         if (sz <= datareserve)
             return;
         bool *newdataLoc = new bool[sz];
         if (datasize != 0)
-            memcpy(newdataLoc, data, sizeof(datasize));
-        std::swap(data, newdataLoc);
+            memcpy(newdataLoc, booldata, sizeof(bool) * sizeof(datasize));
+        std::swap(booldata, newdataLoc);
         if (newdataLoc != 0)
             delete[] newdataLoc;
         datareserve = sz;
     }
 
-    void resize(const int &sz)
+    void resize(size_t sz)
     {
         int oldDatasize = datasize;
         if (sz <= oldDatasize)
@@ -82,12 +87,12 @@ public:
         if (sz > datareserve)
             reserve(sz);
         datasize = sz;
-        memset(&data[oldDatasize], 0, datasize - oldDatasize);
+        memset(&booldata[oldDatasize], 0, datasize - oldDatasize);
     }
     void push_back(const bool &v)
     {
         resize(datasize + 1);
-        data[datasize] = v;
+        booldata[datasize] = v;
     }
 
     void clear() { datasize = 0; }
@@ -96,14 +101,16 @@ public:
 
     bool empty() const { return datasize == 0; }
 
-    bool *begin() const { return data; }
+    bool* data() {return booldata;}
+    const bool *data() const { return booldata; }
 
-    bool &operator[](const int &i) { return data[i]; }
-    const bool &operator[](const int &i) const { return data[i]; }
+    bool &operator[](size_t i) { return booldata[i]; }
+    const bool &operator[](size_t i) const { return booldata[i]; }
 
 private:
-    int datasize;
-    int datareserve;
+    bool *booldata;
+    size_t datasize;
+    size_t datareserve;
 };
 
 template <class STL_CONT, class ATTR_TYPE>
@@ -114,16 +121,16 @@ public:
     typedef SimpleTempData<STL_CONT, ATTR_TYPE> SimpTempDataType;
     typedef ATTR_TYPE AttrType;
 
-    STL_CONT &c;
+    const STL_CONT &c;
     VectorNBW<ATTR_TYPE> data;
     int padding;
 
-    SimpleTempData(STL_CONT &_c) : c(_c), padding(0)
+    SimpleTempData(const STL_CONT &_c) : c(_c), padding(0)
     {
         data.reserve(c.capacity());
         data.resize(c.size());
     };
-    SimpleTempData(STL_CONT &_c, const ATTR_TYPE &val) : c(_c)
+    SimpleTempData(const STL_CONT &_c, const ATTR_TYPE &val) : c(_c)
     {
         data.reserve(c.capacity());
         data.resize(c.size());
@@ -142,11 +149,13 @@ public:
     // access to data
     ATTR_TYPE &operator[](const typename STL_CONT::value_type &v)  { return data[&v - &*c.begin()]; }
     ATTR_TYPE &operator[](const typename STL_CONT::value_type *v)  { return data[v - &*c.begin()]; }
+    ATTR_TYPE &operator[](const typename STL_CONT::const_iterator &cont) { return data[&(*cont) - &*c.begin()]; }
     ATTR_TYPE &operator[](const typename STL_CONT::iterator &cont) { return data[&(*cont) - &*c.begin()]; }
     ATTR_TYPE &operator[](size_t i) { return data[i]; }
 
     const ATTR_TYPE &operator[](const typename STL_CONT::value_type &v)  const { return data[&v - &*c.begin()]; }
     const ATTR_TYPE &operator[](const typename STL_CONT::value_type *v)  const { return data[v - &*c.begin()]; }
+    const ATTR_TYPE &operator[](const typename STL_CONT::const_iterator &cont) const { return data[&(*cont) - &*c.begin()]; }
     const ATTR_TYPE &operator[](const typename STL_CONT::iterator &cont) const { return data[&(*cont) - &*c.begin()]; }
     const ATTR_TYPE &operator[](size_t i) const { return data[i]; }
 
@@ -177,7 +186,7 @@ public:
 
     void Reorder(std::vector<size_t> &newVertIndex)
     {
-        for (unsigned int i = 0; i < data.size(); ++i)
+        for (size_t i = 0; i < data.size(); ++i)
         {
             if (newVertIndex[i] != (std::numeric_limits<size_t>::max)())
                 data[newVertIndex[i]] = data[i];
@@ -185,7 +194,8 @@ public:
     }
 
     size_t SizeOf() const { return sizeof(ATTR_TYPE); }
-    void *DataBegin() { return data.empty() ? NULL : &(*data.begin()); }
+    void *DataBegin() { return data.empty() ? nullptr : data.data(); }
+    const void *DataBegin() const { return data.empty() ? nullptr : data.data(); }
 };
 
 template <class ATTR_TYPE>
@@ -193,11 +203,11 @@ class Attribute : public SimpleTempDataBase
 {
 public:
     typedef ATTR_TYPE AttrType;
-    AttrType *attribute;
     Attribute() { attribute = new ATTR_TYPE(); }
     ~Attribute() { delete attribute; }
     size_t SizeOf() const { return sizeof(ATTR_TYPE); }
     void *DataBegin() { return attribute; }
+    const void* DataBegin() const {return attribute;}
 
     void Resize(size_t) { assert(0); }
     void Reorder(std::vector<size_t> &) { assert(0); }
@@ -213,6 +223,8 @@ public:
         return (void *)0;
     }
     void CopyValue(const size_t, const size_t, const SimpleTempDataBase *) { assert(0); }
+private:
+    AttrType *attribute;
 };
 
 } // end namespace vcg

@@ -21,7 +21,7 @@ namespace Eigen {
   * \param MatrixType the type of the object in which we are taking a sub/main/super diagonal
   * \param DiagIndex the index of the sub/super diagonal. The default is 0 and it means the main diagonal.
   *              A positive value means a superdiagonal, a negative value means a subdiagonal.
-  *              You can also use Dynamic so the index can be set at runtime.
+  *              You can also use DynamicIndex so the index can be set at runtime.
   *
   * The matrix is not required to be square.
   *
@@ -70,7 +70,10 @@ template<typename MatrixType, int _DiagIndex> class Diagonal
     EIGEN_DENSE_PUBLIC_INTERFACE(Diagonal)
 
     EIGEN_DEVICE_FUNC
-    explicit inline Diagonal(MatrixType& matrix, Index a_index = DiagIndex) : m_matrix(matrix), m_index(a_index) {}
+    explicit inline Diagonal(MatrixType& matrix, Index a_index = DiagIndex) : m_matrix(matrix), m_index(a_index)
+    {
+      eigen_assert( a_index <= m_matrix.cols() && -a_index <= m_matrix.rows() );
+    }
 
     EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Diagonal)
 

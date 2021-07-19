@@ -20,11 +20,17 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#ifndef __VCG_MESH
-#error "This file should not be included alone. It is automatically included by complex.h"
-#endif
+
 #ifndef __VCG_FACE_PLUS
 #define __VCG_FACE_PLUS
+
+#include <vector>
+#include <string>
+
+#include <vcg/complex/all_types.h>
+#include <vcg/container/derivation_chain.h>
+
+#include "component.h"
 
 namespace vcg {
 
@@ -150,7 +156,7 @@ public:
 
     ///  deletes the Face from the mesh
     void SetD() {this->Flags() |=DELETED;}
-    ///  un-delete a Face
+    ///  undelete the Face
     void ClearD() {this->Flags() &=(~DELETED);}
     ///  marks the Face as readable
     void SetR() {this->Flags() &=(~NOTREAD);}
@@ -162,17 +168,17 @@ public:
     void ClearW() {this->Flags() |=NOTWRITE;}
     ///  select the Face
     void SetS()		{this->Flags() |=SELECTED;}
-    /// Un-select a Face
-  void ClearS()	{this->Flags() &= ~SELECTED;}
-    ///  select the Face
+    /// unselect the Face
+	void ClearS()	{this->Flags() &= ~SELECTED;}
+	///  set as visited the Face
     void SetV()		{this->Flags() |=VISITED;}
-    /// Un-select a Face
-  void ClearV()	{this->Flags() &= ~VISITED;}
+    /// set as unvisited the Face
+	void ClearV()	{this->Flags() &= ~VISITED;}
 
-    /// This function checks if the face is selected
+    /// This function checks if the face is border
     bool IsB(int i) const {return (this->cFlags() & (BORDER0<<i)) != 0;}
     /// This function select the face
-  void SetB(int i)		{this->Flags() |=(BORDER0<<i);}
+	void SetB(int i)		{this->Flags() |=(BORDER0<<i);}
     /// This funcion execute the inverse operation of SetS()
     void ClearB(int i)	{this->Flags() &= (~(BORDER0<<i));}
 

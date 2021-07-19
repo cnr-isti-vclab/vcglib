@@ -1,0 +1,31 @@
+name: BuildExamplesWindows
+
+on: [push, pull_request]
+
+jobs:
+  windows_build_tests:
+    name: Build Examples (Windows)
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Download Jom
+      run: |
+        Invoke-WebRequest -Uri "http://mirrors.ukfast.co.uk/sites/qt.io/official_releases/jom/jom_1_1_3.zip" -OutFile "jom_1_1_3.zip"
+        New-Item -Name "jom" -ItemType "directory"
+        Expand-Archive -Path jom_1_1_3.zip -DestinationPath .\jom
+        echo "$(Get-Location)\jom" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    - name: Setup env variables
+      id: envs
+      run: |
+        echo "VCINSTALLDIR=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC" >> $GITHUB_ENV
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2
+    - name: Build Samples
+      run: |
+        mkdir build
+        cd build
+        cmake -G "NMake Makefiles" -DVCG_BUILD_EXAMPLES=ON ..
+        jom -j4

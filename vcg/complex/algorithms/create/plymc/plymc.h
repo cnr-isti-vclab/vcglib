@@ -340,7 +340,7 @@ public:
 
 bool Process(vcg::CallBackPos *cb=0)
 {
-  sprintf(errorMessage,"");
+  sprintf(errorMessage,"%s", "");
   printf("bbox scanning...\n"); fflush(stdout);
   Matrix44f Id; Id.SetIdentity();
   MP.InitBBox();

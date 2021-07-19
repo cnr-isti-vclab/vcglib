@@ -20,12 +20,16 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#ifndef __VCG_MESH
-#error "This file should not be included alone. It is automatically included by complex.h"
-#endif
+
 #ifndef __VCG_FACE_PLUS_COMPONENT
 #define __VCG_FACE_PLUS_COMPONENT
 
+#include <cassert>
+#include <vector>
+#include <string>
+
+#include <vcg/space/color4.h>
+#include <vcg/space/texcoord2.h>
 
 namespace vcg {
 namespace face {
@@ -36,12 +40,15 @@ namespace face {
 
 template <class T> class EmptyCore: public T {
 public:
-  inline typename T::VertexType * &V( const int )       { assert(0);		static typename T::VertexType *vp=0; return vp; }
-  inline typename T::VertexType * cV( const int ) const { assert(0);		static typename T::VertexType *vp=0; return vp;	}
-  inline typename T::VertexType * &FVp( const int i )       {	return this->V(i); }
-  inline typename T::VertexType * cFVp( const int i ) const {	return this->cV(i); }
-  inline typename T::CoordType &P( const int ) 	     { assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
-  inline typename T::CoordType cP( const int ) const { assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
+  inline       typename T::VertexType * &V( const int )       { assert(0);		static typename T::VertexType *vp=0; return vp; }
+  inline const typename T::VertexType *  V( const int ) const { assert(0);		static typename T::VertexType *vp=0; return vp;	}
+  inline const typename T::VertexType * cV( const int ) const { assert(0);		static typename T::VertexType *vp=0; return vp;	}
+  inline       typename T::VertexType * &FVp( const int i )       {	return this->V(i); }
+  inline const typename T::VertexType *  FVp( const int i ) const {	return this->cV(i); }
+  inline const typename T::VertexType * cFVp( const int i ) const {	return this->cV(i); }
+  inline       typename T::CoordType &P( const int ) 	     { assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
+  inline       typename T::CoordType  P( const int ) const { assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
+  inline       typename T::CoordType cP( const int ) const { assert(0);		static typename T::CoordType coord(0, 0, 0); return coord;	}
 
   static bool HasVertexRef()   { return false; }
   static bool HasFVAdjacency()   { return false; }
@@ -49,23 +56,28 @@ public:
   typedef typename T::VertexType::NormalType NormalType;
   typedef NormalType WedgeNormalType;
   NormalType &N() { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
-  NormalType cN() const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  const NormalType&  N() const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  const NormalType& cN() const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
   WedgeNormalType &WN(int) { static NormalType dummy_normal(0, 0, 0);  assert(0); return dummy_normal; }
-  WedgeNormalType cWN(int) const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  const WedgeNormalType&  WN(int) const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  const WedgeNormalType& cWN(int) const { static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
 
 
   typedef int WedgeTexCoordType;
   typedef vcg::TexCoord2<float,1> TexCoordType;
   TexCoordType &WT(const int) { static TexCoordType dummy_texture;  assert(0); return dummy_texture;}
-  TexCoordType const &cWT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
+  const TexCoordType & WT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
+  const TexCoordType &cWT(const int) const { static TexCoordType dummy_texture; return dummy_texture;}
 
   typedef int FlagType;
   int &Flags() { static int dummyflags(0);  assert(0); return dummyflags; }
+  int  Flags() const { return 0; }
   int cFlags() const { return 0; }
   static bool HasFlags()   { return false; }
 
   inline void InitIMark()    {  }
   inline int &IMark()       { assert(0); static int tmp=-1; return tmp;}
+  inline int  IMark() const { return 0;}
   inline int cIMark() const { return 0;}
 
   typedef int MarkType;
@@ -74,13 +86,17 @@ public:
   typedef vcg::Color4b ColorType;
   typedef ColorType WedgeColorType;
   ColorType &C()       { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
-  ColorType cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  const ColorType&  C() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  const ColorType& cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   WedgeColorType &WC(const int)       { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
-  WedgeColorType cWC(const int) const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  const WedgeColorType&  WC(const int) const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  const WedgeColorType& cWC(const int) const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   QualityType &Q()       { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
-  QualityType cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+  const QualityType&  Q() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
+  const QualityType& cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
   Quality3Type &Q3()       { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
-  Quality3Type cQ3() const { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
+  const Quality3Type&  Q3() const { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
+  const Quality3Type& cQ3() const { static Quality3Type dummyQuality3(0,0,0);  assert(0); return dummyQuality3; }
 
   static bool HasColor()   { return false; }
   static bool HasQuality()   { return false; }
@@ -106,16 +122,22 @@ public:
 
   typedef int VFAdjType;
   typename T::FacePointer &VFp(int)       { static typename T::FacePointer fp=0; assert(0); return fp; }
+  typename T::FacePointer  VFp(int) const { static typename T::FacePointer fp=0; assert(0); return fp; }
   typename T::FacePointer cVFp(int) const { static typename T::FacePointer fp=0; assert(0); return fp; }
   typename T::FacePointer &FFp(int)       { static typename T::FacePointer fp=0; assert(0); return fp; }
+  typename T::FacePointer  FFp(int) const { static typename T::FacePointer fp=0; assert(0); return fp; }
   typename T::FacePointer cFFp(int) const { static typename T::FacePointer fp=0; assert(0); return fp; }
   typename T::EdgePointer &FEp(int)       { static typename T::EdgePointer fp=0; assert(0); return fp; }
+  typename T::EdgePointer  FEp(int) const { static typename T::EdgePointer fp=0; assert(0); return fp; }
   typename T::EdgePointer cFEp(int) const { static typename T::EdgePointer fp=0; assert(0); return fp; }
   typename T::HEdgePointer &FHp()       { static typename T::HEdgePointer fp=0; assert(0); return fp; }
+  typename T::HEdgePointer  FHp() const { static typename T::HEdgePointer fp=0; assert(0); return fp; }
   typename T::HEdgePointer cFHp() const { static typename T::HEdgePointer fp=0; assert(0); return fp; }
   char &VFi(int)       { static char z=0; assert(0); return z;}
-  char &FFi(int)       { static char z=0; assert(0); return z;}
+  char  VFi(int) const { static char z=0; assert(0); return z;}
   char cVFi(int) const { static char z=0; assert(0); return z;}
+  char &FFi(int)       { static char z=0; assert(0); return z;}
+  char  FFi(int) const { static char z=0; assert(0); return z;}
   char cFFi(int) const { static char z=0; assert(0); return z;}
   bool IsVFInitialized(const int j) const {return  static_cast<const typename T::FaceType *>(this)->cVFi(j)!=-1;}
   void VFClear(int j) {
@@ -134,13 +156,17 @@ public:
   typedef typename T::ScalarType CurScalarType;
   CurVecType &PD1()       { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
   CurVecType &PD2()       { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
-  CurVecType cPD1() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
-  CurVecType cPD2() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
+  const CurVecType&  PD1() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
+  const CurVecType&  PD2() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
+  const CurVecType& cPD1() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
+  const CurVecType& cPD2() const { static typename T::CoordType dummy(0, 0, 0); assert(0); return dummy; }
 
   CurScalarType &K1()      { static typename T::ScalarType dummy(0); assert(0); return dummy; }
   CurScalarType &K2()      { static typename T::ScalarType dummy(0); assert(0); return dummy; }
-  CurScalarType cK1() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
-  CurScalarType cK2() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
+  const CurScalarType&  K1() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
+  const CurScalarType&  K2() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
+  const CurScalarType& cK1() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
+  const CurScalarType& cK2() const { static typename T::ScalarType dummy(0); assert(0); return dummy; }
 
   static bool HasCurvatureDir()   { return false; }
 
@@ -173,21 +199,29 @@ public:
   typedef typename T::VertexType::ScalarType ScalarType;
 
   inline typename T::VertexType * &V( const int j )       { assert(j>=0 && j<3); return v[j]; } /// \brief The pointer to the i-th vertex
-  inline typename T::VertexType * cV( const int j ) const { assert(j>=0 && j<3);	return v[j]; }
+  inline const typename T::VertexType * V (const int j) const { assert(j>=0 && j<3); return v[j]; }
+  inline const typename T::VertexType * cV( const int j ) const { assert(j>=0 && j<3);	return v[j]; }
 
-  inline CoordType &P( const int j ) 	    {	assert(j>=0 && j<3);		return v[j]->P();	} /// \brief Shortcut: the position of the  i-th vertex (equivalent to \c V(i)->P() )
-  inline CoordType cP( const int j ) const	{	assert(j>=0 && j<3);		return v[j]->cP(); }
+  inline       CoordType &P( const int j )      	{	assert(j>=0 && j<3);		return v[j]->P();	} /// \brief Shortcut: the position of the  i-th vertex (equivalent to \c V(i)->P() )
+  inline const CoordType &P( const int j ) const	{	assert(j>=0 && j<3);		return v[j]->P();	}
+  inline       CoordType cP( const int j ) const	{	assert(j>=0 && j<3);		return v[j]->cP(); }
 
   inline typename T::VertexType * & V0( const int j )       { return V(j);}        /** \brief Return the pointer to the j-th vertex of the face. */
   inline typename T::VertexType * & V1( const int j )       { return V((j+1)%3);}  /** \brief Return the pointer to the ((j+1)%3)-th vertex of the face. */
   inline typename T::VertexType * & V2( const int j )       { return V((j+2)%3);}  /** \brief Return the pointer to the ((j+2)%3)-th vertex of the face. */
-  inline typename T::VertexType *  cV0( const int j ) const { return cV(j);}
-  inline typename T::VertexType *  cV1( const int j ) const { return cV((j+1)%3);}
-  inline typename T::VertexType *  cV2( const int j ) const { return cV((j+2)%3);}
+  inline const typename T::VertexType * V0( const int j ) const { return V(j);}        /** \brief Return the pointer to the j-th vertex of the face. */
+  inline const typename T::VertexType * V1( const int j ) const { return V((j+1)%3);}  /** \brief Return the pointer to the ((j+1)%3)-th vertex of the face. */
+  inline const typename T::VertexType * V2( const int j ) const { return V((j+2)%3);}  /** \brief Return the pointer to the ((j+2)%3)-th vertex of the face. */
+  inline const typename T::VertexType *  cV0( const int j ) const { return cV(j);}
+  inline const typename T::VertexType *  cV1( const int j ) const { return cV((j+1)%3);}
+  inline const typename T::VertexType *  cV2( const int j ) const { return cV((j+2)%3);}
 
   inline       CoordType &  P0( const int j )       { return V(j)->P();}
   inline       CoordType &  P1( const int j )       { return V((j+1)%3)->P();}
   inline       CoordType &  P2( const int j )       { return V((j+2)%3)->P();}
+  inline const CoordType &  P0( const int j ) const { return V(j)->P();}
+  inline const CoordType &  P1( const int j ) const { return V((j+1)%3)->P();}
+  inline const CoordType &  P2( const int j ) const { return V((j+2)%3)->P();}
   inline const CoordType & cP0( const int j ) const { return cV(j)->P();}
   inline const CoordType & cP1( const int j ) const { return cV((j+1)%3)->P();}
   inline const CoordType & cP2( const int j ) const { return cV((j+2)%3)->P();}
@@ -213,6 +247,7 @@ template <class A, class T> class NormalAbs: public T {
 public:
   typedef A NormalType;
   inline NormalType &N() { return _norm; }
+  inline const NormalType &N() const { return _norm; }
   inline NormalType cN() const { return _norm; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF)
@@ -234,7 +269,8 @@ template <class T> class WedgeNormal: public T {
 public:
   typedef typename T::VertexType::NormalType WedgeNormalType;
   inline WedgeNormalType &WN(int j)       { return _wnorm[j]; }
-  inline WedgeNormalType cWN(int j) const { return _wnorm[j]; }
+  inline const WedgeNormalType&  WN(int j) const { return _wnorm[j]; }
+  inline const WedgeNormalType& cWN(int j) const { return _wnorm[j]; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){ if(rightF.IsWedgeNormalEnabled()) for (int i=0; i<3; ++i) { WN(i) = rightF.cWN(i); } T::ImportData(rightF);}
   inline void Alloc(const int & ns){T::Alloc(ns);}
@@ -250,7 +286,8 @@ template <class A, class T> class WedgeRealNormal: public T {
 public:
   typedef A WedgeNormalType;
   inline WedgeNormalType &WN(int i)       { return _wn[i]; }
-  inline WedgeNormalType cWN(int i) const { return _wn[i]; }
+  inline const WedgeNormalType&  WN(int i) const { return _wn[i]; }
+  inline const WedgeNormalType& cWN(int i) const { return _wn[i]; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){ if(RightValueType::HasWedgeNormal()) for (int i=0; i<3; ++i) { WN(i) = rightF.cWN(i); } T::ImportData(rightF);}
   inline void Alloc(const int & ns){T::Alloc(ns);}
@@ -287,7 +324,8 @@ public:
   typedef int WedgeTexCoordType;
   typedef A TexCoordType;
   TexCoordType &WT(const int i)       { return _wt[i]; }
-  TexCoordType cWT(const int i) const { return _wt[i]; }
+  const TexCoordType&  WT(const int i) const { return _wt[i]; }
+  const TexCoordType& cWT(const int i) const { return _wt[i]; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
     if(rightF.IsWedgeTexCoordEnabled())
@@ -323,6 +361,7 @@ public:
   BitFlags():_flags(0) {}
   typedef int FlagType;
   int &Flags()       {return _flags; }
+  int  Flags() const {return _flags; }
   int cFlags() const {return _flags; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
@@ -345,7 +384,8 @@ public:
   typedef A ColorType;
   Color():_color(vcg::Color4b::White) {}
   ColorType &C()       { return _color; }
-  ColorType cC() const { return _color; }
+  const ColorType& C() const { return _color; }
+  const ColorType& cC() const { return _color; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
     if(rightF.IsColorEnabled()) C() = rightF.cC();
@@ -364,7 +404,8 @@ template <class A, class T> class WedgeColor: public T {
 public:
   typedef A WedgeColorType;
   WedgeColorType &WC(int i) { return _color[i]; }
-  WedgeColorType cWC(int i) const { return _color[i]; }
+  const WedgeColorType&  WC(int i) const { return _color[i]; }
+  const WedgeColorType& cWC(int i) const { return _color[i]; }
 
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
@@ -398,7 +439,8 @@ public:
   typedef A QualityType;
   Quality():_quality(0) {}
   QualityType &Q()       { return _quality; }
-  QualityType cQ() const { return _quality; }
+  const QualityType&  Q() const { return _quality; }
+  const QualityType& cQ() const { return _quality; }
     template <class RightValueType>
     void ImportData(const RightValueType & rightF){
       if(rightF.IsQualityEnabled())
@@ -428,7 +470,8 @@ template <class A, class T> class Quality3: public T {
 public:
   typedef vcg::Point3<A> Quality3Type;
   Quality3Type &Q3()       { return _quality; }
-  Quality3Type cQ3() const { return _quality; }
+  const Quality3Type& Q3() const { return _quality; }
+  const Quality3Type& cQ3() const { return _quality; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){
     if(rightF.IsQuality3Enabled()) Q3() = rightF.cQ3();
@@ -462,6 +505,7 @@ template <class T> class Mark: public T {
 public:
   Mark():_imark(0){}
   inline int &IMark()       { return _imark;}
+  inline int  IMark() const { return _imark;}
   inline int cIMark() const { return _imark;}
   inline void InitIMark()    { _imark = 0; }
   static bool HasMark()      { return true; }
@@ -495,11 +539,15 @@ public:
 
   CurVecType &PD1()       { return _curv.max_dir;}
   CurVecType &PD2()       { return _curv.min_dir;}
+  const CurVecType &PD1() const { return _curv.max_dir;}
+  const CurVecType &PD2() const { return _curv.min_dir;}
   CurVecType cPD1() const { return _curv.max_dir;}
   CurVecType cPD2() const { return _curv.min_dir;}
 
   CurScalarType &K1()       { return _curv.k1;}
   CurScalarType &K2()       { return _curv.k2;}
+  const CurScalarType &K1() const { return _curv.k1;}
+  const CurScalarType &K2() const { return _curv.k2;}
   CurScalarType cK1() const {return _curv.k1;}
   CurScalarType cK2() const {return _curv.k2;}
   template < class RightValueType>
@@ -554,8 +602,10 @@ public:
         _vfi[2]=-1;
     }
   typename T::FacePointer &VFp(const int j)        { assert(j>=0 && j<3);  return _vfp[j]; }
+  typename T::FacePointer  VFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
   typename T::FacePointer cVFp(const int j) const  { assert(j>=0 && j<3);  return _vfp[j]; }
   char &VFi(const int j) {return _vfi[j]; }
+  char  VFi(const int j)const {return _vfi[j]; }
   char cVFi(const int j)const {return _vfi[j]; }
     template <class RightValueType>
     void ImportData(const RightValueType & rightF){T::ImportData(rightF);}
@@ -583,6 +633,7 @@ public:
   typename T::FacePointer &EFp(const int j)       { assert(j>=0 && j<3);  return _efp[j]; }
   typename T::FacePointer cEFp(const int j) const { assert(j>=0 && j<3);  return _efp[j]; }
   char &VFi(const int j) {return _efi[j]; }
+  char  VFi(const int j) const {return _efi[j]; }
   template <class RightValueType>
   void ImportData(const RightValueType & rightF){T::ImportData(rightF);}
   inline void Alloc(const int & ns){T::Alloc(ns);}
@@ -618,12 +669,16 @@ public:
     _ffp[2]=nullptr;
   }
   typename T::FacePointer &FFp(const int j)        { assert(j>=0 && j<3);  return _ffp[j]; }
+  typename T::FacePointer  FFp(const int j) const  { assert(j>=0 && j<3);  return _ffp[j]; }
   typename T::FacePointer cFFp(const int j) const  { assert(j>=0 && j<3);  return _ffp[j]; }
   char &FFi(const int j)       { return _ffi[j]; }
+  char  FFi(const int j) const { return _ffi[j]; }
   char cFFi(const int j) const { return _ffi[j]; }
 
   typename T::FacePointer &FFp1( const int j )       { return FFp((j+1)%3);}
   typename T::FacePointer &FFp2( const int j )       { return FFp((j+2)%3);}
+  typename T::FacePointer  FFp1( const int j ) const { return FFp((j+1)%3);}
+  typename T::FacePointer  FFp2( const int j ) const { return FFp((j+2)%3);}
   typename T::FacePointer cFFp1( const int j ) const { return FFp((j+1)%3);}
   typename T::FacePointer cFFp2( const int j ) const { return FFp((j+2)%3);}
 
@@ -651,6 +706,7 @@ public:
   }
 
   typename T::EdgePointer &FEp( int j)        { assert(j>=0 && j<3);  return _fep[j]; }
+  typename T::EdgePointer  FEp( int j) const  { assert(j>=0 && j<3);  return _fep[j]; }
   typename T::EdgePointer cFEp( int j) const  { assert(j>=0 && j<3);  return _fep[j]; }
 
   typename T::EdgePointer &FEp1( int j )       { return FEp((j+1)%3);}
@@ -676,6 +732,7 @@ template <class T> class FHAdj: public T {
 public:
   FHAdj(){_fh=0;}
   typename T::HEdgePointer &FHp( )       { return _fh; }
+  typename T::HEdgePointer  FHp( ) const { return _fh; }
   typename T::HEdgePointer cFHp( ) const { return _fh; }
 
   template <class RightValueType>

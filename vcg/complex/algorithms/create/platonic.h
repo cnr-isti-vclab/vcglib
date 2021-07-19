@@ -639,11 +639,11 @@ void Torus(MeshType &m, float hRingRadius, float vRingRadius, int hRingDiv=24, i
 template <class ScalarType>
 static  ScalarType _SQfnC(ScalarType a, ScalarType b){
   return math::Sgn(cos(a))*pow(fabs(cos(a)),b);
-};
+}
 template <class ScalarType>
 static ScalarType _SQfnS(ScalarType a, ScalarType b){
   return math::Sgn(sin(a))*pow(fabs(sin(a)),b);
-};
+}
 
 
 /**

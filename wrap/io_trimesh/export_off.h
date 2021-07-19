@@ -104,10 +104,17 @@ public:
       tri::UpdateFlags<SaveMeshType>::FaceClearV(m);
       for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if (!fi->IsD()) if (!fi->IsV()) {
         vcg::tri::PolygonSupport<SaveMeshType,SaveMeshType>::ExtractPolygon(&*fi,polygon);
+        //not sure why this std::reverse is needed. ExtractPolygon is used in
+        //many other functions, and nobody complained. however, this list is
+        //clockwise wrt fi normal.
+        std::reverse(polygon.begin(), polygon.end());
         if(!polygon.empty())
         {
           fprintf(fpout,"%d ", int(polygon.size()) );
-          for (size_t i=0; i<polygon.size(); i++) fprintf(fpout,"%d ", polygon[i]->Flags() );
+          for (size_t i=0; i<polygon.size(); i++)
+            fprintf(fpout,"%lu ", tri::Index(m,polygon[i]));
+          if( tri::HasPerFaceColor(m)  && (mask & io::Mask::IOM_FACECOLOR) )
+            fprintf(fpout,"%i %i %i", fi->C()[0],fi->C()[1],fi->C()[2] );
           fprintf(fpout,"\n");
         }
       }

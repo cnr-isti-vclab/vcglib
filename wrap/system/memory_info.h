@@ -112,6 +112,6 @@ namespace vcg
 			return (_currentfreememory >= mem);
 		}
 	};
-};
+}
 
 #endif

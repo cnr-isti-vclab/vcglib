@@ -13,7 +13,7 @@
 
 #define EIGEN_WORLD_VERSION 3
 #define EIGEN_MAJOR_VERSION 3
-#define EIGEN_MINOR_VERSION 2
+#define EIGEN_MINOR_VERSION 9
 
 #define EIGEN_VERSION_AT_LEAST(x,y,z) (EIGEN_WORLD_VERSION>x || (EIGEN_WORLD_VERSION>=x && \
                                       (EIGEN_MAJOR_VERSION>y || (EIGEN_MAJOR_VERSION>=y && \
@@ -80,8 +80,8 @@
 //  2015   14      1900
 //  "15"   15      1900
 
-/// \internal EIGEN_COMP_MSVC_STRICT set to 1 if the compiler is really Microsoft Visual C++ and not ,e.g., ICC
-#if EIGEN_COMP_MSVC && !(EIGEN_COMP_ICC)
+/// \internal EIGEN_COMP_MSVC_STRICT set to 1 if the compiler is really Microsoft Visual C++ and not ,e.g., ICC or clang-cl
+#if EIGEN_COMP_MSVC && !(EIGEN_COMP_ICC || EIGEN_COMP_LLVM || EIGEN_COMP_CLANG)
   #define EIGEN_COMP_MSVC_STRICT _MSC_VER
 #else
   #define EIGEN_COMP_MSVC_STRICT 0
@@ -380,7 +380,8 @@
 #if EIGEN_MAX_CPP_VER>=11 && \
     ((defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901))       \
   || (defined(__GNUC__) && defined(_GLIBCXX_USE_C99)) \
-  || (defined(_LIBCPP_VERSION) && !defined(_MSC_VER)))
+  || (defined(_LIBCPP_VERSION) && !defined(_MSC_VER)) \
+  || (EIGEN_COMP_MSVC >= 1900) )
   #define EIGEN_HAS_C99_MATH 1
 #else
   #define EIGEN_HAS_C99_MATH 0
@@ -396,10 +397,24 @@
 #endif
 #endif
 
+// Does the compiler support type_traits?
+// - full support of type traits was added only to GCC 5.1.0.
+// - 20150626 corresponds to the last release of 4.x libstdc++
+#ifndef EIGEN_HAS_TYPE_TRAITS
+#if EIGEN_MAX_CPP_VER>=11 && (EIGEN_HAS_CXX11 || EIGEN_COMP_MSVC >= 1700) \
+  && ((!EIGEN_COMP_GNUC_STRICT) || EIGEN_GNUC_AT_LEAST(5, 1)) \
+  && ((!defined(__GLIBCXX__))   || __GLIBCXX__ > 20150626)
+#define EIGEN_HAS_TYPE_TRAITS 1
+#define EIGEN_INCLUDE_TYPE_TRAITS
+#else
+#define EIGEN_HAS_TYPE_TRAITS 0
+#endif
+#endif
+
 // Does the compiler support variadic templates?
 #ifndef EIGEN_HAS_VARIADIC_TEMPLATES
 #if EIGEN_MAX_CPP_VER>=11 && (__cplusplus > 199711L || EIGEN_COMP_MSVC >= 1900) \
-  && ( !defined(__NVCC__) || !EIGEN_ARCH_ARM_OR_ARM64 || (defined __CUDACC_VER__ && __CUDACC_VER__ >= 80000) )
+  && (!defined(__NVCC__) || !EIGEN_ARCH_ARM_OR_ARM64 || (EIGEN_CUDACC_VER >= 80000) )
     // ^^ Disable the use of variadic templates when compiling with versions of nvcc older than 8.0 on ARM devices:
     //    this prevents nvcc from crashing when compiling Eigen on Tegra X1
 #define EIGEN_HAS_VARIADIC_TEMPLATES 1
@@ -413,7 +428,7 @@
 
 #ifdef __CUDACC__
 // Const expressions are supported provided that c++11 is enabled and we're using either clang or nvcc 7.5 or above
-#if EIGEN_MAX_CPP_VER>=14 && (__cplusplus > 199711L && defined(__CUDACC_VER__) && (EIGEN_COMP_CLANG || __CUDACC_VER__ >= 70500))
+#if EIGEN_MAX_CPP_VER>=14 && (__cplusplus > 199711L && (EIGEN_COMP_CLANG || EIGEN_CUDACC_VER >= 70500))
   #define EIGEN_HAS_CONSTEXPR 1
 #endif
 #elif EIGEN_MAX_CPP_VER>=14 && (__has_feature(cxx_relaxed_constexpr) || (defined(__cplusplus) && __cplusplus >= 201402L) || \
@@ -487,10 +502,12 @@
 // EIGEN_STRONG_INLINE is a stronger version of the inline, using __forceinline on MSVC,
 // but it still doesn't use GCC's always_inline. This is useful in (common) situations where MSVC needs forceinline
 // but GCC is still doing fine with just inline.
+#ifndef EIGEN_STRONG_INLINE
 #if EIGEN_COMP_MSVC || EIGEN_COMP_ICC
 #define EIGEN_STRONG_INLINE __forceinline
 #else
 #define EIGEN_STRONG_INLINE inline
+#endif
 #endif
 
 // EIGEN_ALWAYS_INLINE is the stronget, it has the effect of making the function inline and adding every possible
@@ -812,7 +829,8 @@ namespace Eigen {
 // just an empty macro !
 #define EIGEN_EMPTY
 
-#if EIGEN_COMP_MSVC_STRICT && (EIGEN_COMP_MSVC < 1900 ||  __CUDACC_VER__) // for older MSVC versions, as well as 1900 && CUDA 8, using the base operator is sufficient (cf Bugs 1000, 1324)
+#if EIGEN_COMP_MSVC_STRICT && (EIGEN_COMP_MSVC < 1900 || EIGEN_CUDACC_VER>0)
+  // for older MSVC versions, as well as 1900 && CUDA 8, using the base operator is sufficient (cf Bugs 1000, 1324)
   #define EIGEN_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Derived) \
     using Base::operator =;
 #elif EIGEN_COMP_CLANG // workaround clang bug (see http://forum.kde.org/viewtopic.php?f=74&t=102653)
@@ -832,11 +850,48 @@ namespace Eigen {
 #endif
 
 
+/**
+ * \internal
+ * \brief Macro to explicitly define the default copy constructor.
+ * This is necessary, because the implicit definition is deprecated if the copy-assignment is overridden.
+ */
+#if EIGEN_HAS_CXX11
+#define EIGEN_DEFAULT_COPY_CONSTRUCTOR(CLASS) EIGEN_DEVICE_FUNC CLASS(const CLASS&) = default;
+#else
+#define EIGEN_DEFAULT_COPY_CONSTRUCTOR(CLASS)
+#endif
+
+
+
 /** \internal
  * \brief Macro to manually inherit assignment operators.
  * This is necessary, because the implicitly defined assignment operator gets deleted when a custom operator= is defined.
+ * With C++11 or later this also default-implements the copy-constructor
  */
-#define EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Derived) EIGEN_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Derived)
+#define EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Derived)  \
+    EIGEN_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Derived) \
+    EIGEN_DEFAULT_COPY_CONSTRUCTOR(Derived)
+
+/** \internal
+ * \brief Macro to manually define default constructors and destructors.
+ * This is necessary when the copy constructor is re-defined.
+ * For empty helper classes this should usually be protected, to avoid accidentally creating empty objects.
+ *
+ * Hiding the default destructor lead to problems in C++03 mode together with boost::multiprecision
+ */
+#if EIGEN_HAS_CXX11
+#define EIGEN_DEFAULT_EMPTY_CONSTRUCTOR_AND_DESTRUCTOR(Derived)  \
+    EIGEN_DEVICE_FUNC Derived() = default; \
+    EIGEN_DEVICE_FUNC ~Derived() = default;
+#else
+#define EIGEN_DEFAULT_EMPTY_CONSTRUCTOR_AND_DESTRUCTOR(Derived)  \
+    EIGEN_DEVICE_FUNC Derived() {}; \
+    /* EIGEN_DEVICE_FUNC ~Derived() {}; */
+#endif
+
+
+
+
 
 /**
 * Just a side note. Commenting within defines works only by documenting
@@ -986,7 +1041,13 @@ namespace Eigen {
 #   define EIGEN_NOEXCEPT
 #   define EIGEN_NOEXCEPT_IF(x)
 #   define EIGEN_NO_THROW throw()
-#   define EIGEN_EXCEPTION_SPEC(X) throw(X)
+#   if EIGEN_COMP_MSVC
+      // MSVC does not support exception specifications (warning C4290),
+      // and they are deprecated in c++11 anyway.
+#     define EIGEN_EXCEPTION_SPEC(X) throw()
+#   else
+#     define EIGEN_EXCEPTION_SPEC(X) throw(X)
+#   endif
 #endif
 
 #endif // EIGEN_MACROS_H

@@ -20,11 +20,16 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#ifndef __VCG_MESH
-#error "This file should not be included alone. It is automatically included by complex.h"
-#endif
+
 #ifndef __VCG_COMPLEX_BASE
 #define __VCG_COMPLEX_BASE
+
+#include <typeindex>
+#include <set>
+
+#include <vcg/container/simple_temporary_data.h>
+
+#include "used_types.h"
 
 namespace vcg {
 
@@ -297,6 +302,25 @@ public:
 		void resize(size_t /*size*/) { };
 	};
 
+	template <class ATTR_TYPE, class CONT>
+	class ConstAttributeHandle{
+	public:
+		ConstAttributeHandle(){_handle=(SimpleTempData<CONT,ATTR_TYPE> *)nullptr;}
+		ConstAttributeHandle( const void *ah,const int & n):_handle ( (const SimpleTempData<CONT,ATTR_TYPE> *)ah ),n_attr(n){}
+
+
+		//pointer to the SimpleTempData that stores the attribute
+		const SimpleTempData<CONT,ATTR_TYPE> * _handle;
+
+		// its attribute number
+		int n_attr;
+
+		// access function
+		template <class RefType>
+		const ATTR_TYPE & operator [](const RefType  & i) const {return (*_handle)[i];}
+		void resize(size_t /*size*/) { };
+	};
+
 	template <class ATTR_TYPE>
 	class PerVertexAttributeHandle: public AttributeHandle<ATTR_TYPE,VertContainer>{
 	public:
@@ -304,12 +328,25 @@ public:
 		PerVertexAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,VertContainer>(ah,n){}
 	};
 
+	template <class ATTR_TYPE>
+	class ConstPerVertexAttributeHandle: public ConstAttributeHandle<ATTR_TYPE,VertContainer>{
+	public:
+		ConstPerVertexAttributeHandle():ConstAttributeHandle<ATTR_TYPE,VertContainer>(){}
+		ConstPerVertexAttributeHandle( const void *ah,const int & n):ConstAttributeHandle<ATTR_TYPE,VertContainer>(ah,n){}
+	};
 
 	template <class ATTR_TYPE>
 	class PerFaceAttributeHandle: public AttributeHandle<ATTR_TYPE,FaceContainer>{
 	public:
 		PerFaceAttributeHandle():AttributeHandle<ATTR_TYPE,FaceContainer>(){}
 		PerFaceAttributeHandle( void *ah,const int & n):AttributeHandle<ATTR_TYPE,FaceContainer>(ah,n){}
+	};
+
+	template <class ATTR_TYPE>
+	class ConstPerFaceAttributeHandle: public ConstAttributeHandle<ATTR_TYPE,FaceContainer>{
+	public:
+		ConstPerFaceAttributeHandle():ConstAttributeHandle<ATTR_TYPE,FaceContainer>(){}
+		ConstPerFaceAttributeHandle( void *ah,const int & n):ConstAttributeHandle<ATTR_TYPE,FaceContainer>(ah,n){}
 	};
 
 	template <class ATTR_TYPE>
@@ -320,11 +357,26 @@ public:
 	};
 
 	template <class ATTR_TYPE>
+	class ConstPerEdgeAttributeHandle:  public ConstAttributeHandle<ATTR_TYPE,EdgeContainer>{
+	public:
+		ConstPerEdgeAttributeHandle():ConstAttributeHandle<ATTR_TYPE,EdgeContainer>(){}
+		ConstPerEdgeAttributeHandle( void *ah,const int & n):ConstAttributeHandle<ATTR_TYPE,EdgeContainer>(ah,n){}
+	};
+
+	template <class ATTR_TYPE>
 	class PerTetraAttributeHandle : public AttributeHandle<ATTR_TYPE, TetraContainer>
 	{
 	public:
 		PerTetraAttributeHandle() : AttributeHandle<ATTR_TYPE, TetraContainer>() {}
 		PerTetraAttributeHandle(void *ah, const int &n) : AttributeHandle<ATTR_TYPE, TetraContainer>(ah, n) {}
+	};
+
+	template <class ATTR_TYPE>
+	class ConstPerTetraAttributeHandle : public ConstAttributeHandle<ATTR_TYPE, TetraContainer>
+	{
+	public:
+		ConstPerTetraAttributeHandle() : ConstAttributeHandle<ATTR_TYPE, TetraContainer>() {}
+		ConstPerTetraAttributeHandle(void *ah, const int &n) : ConstAttributeHandle<ATTR_TYPE, TetraContainer>(ah, n) {}
 	};
 
 	template <class ATTR_TYPE>
@@ -340,7 +392,18 @@ public:
 
 		Attribute<ATTR_TYPE> * _handle;
 		int n_attr;
-		ATTR_TYPE & operator ()(){ return *((Attribute<ATTR_TYPE> *)_handle)->attribute;}
+		ATTR_TYPE & operator ()(){ return *((ATTR_TYPE*) (_handle->DataBegin()));}
+	};
+
+	template <class ATTR_TYPE>
+	class ConstPerMeshAttributeHandle{
+	public:
+		ConstPerMeshAttributeHandle(){_handle=nullptr;}
+		ConstPerMeshAttributeHandle(const void *ah,const int & n):_handle ( (const Attribute<ATTR_TYPE> *)ah ),n_attr(n){}
+
+		const Attribute<ATTR_TYPE> * _handle;
+		int n_attr;
+		const ATTR_TYPE & operator ()(){ return *((const ATTR_TYPE*)(_handle->DataBegin()));}
 	};
 
 	// Some common Handle typedefs to simplify use
@@ -380,7 +443,7 @@ public:
 	}
 
 	/// destructor
-	~TriMesh()
+	virtual ~TriMesh()
 	{
 //		ClearAttributes();
 		Clear();
@@ -418,13 +481,14 @@ public:
 		face.clear();
 		edge.clear();
 		tetra.clear();
-		//    textures.clear();
-		//    normalmaps.clear();
+		textures.clear();
+		normalmaps.clear();
 		vn = 0;
 		en = 0;
 		fn = 0;
 		hn = 0;
 		tn = 0;
+		attrn = 0;
 		imark = 0;
 		C()=Color4b::Gray;
 	}
@@ -538,7 +602,7 @@ template <class MeshType> inline bool IsMarked(const MeshType & m,typename MeshT
 	@param m the mesh containing the element
 	@param t tetra pointer */
 template <class MeshType>
-inline bool IsMarked(MeshType &m, typename MeshType::ConstTetraPointer t) { return t->cIMark() == m.imark; }
+inline bool IsMarked(const MeshType &m, typename MeshType::ConstTetraPointer t) { return t->cIMark() == m.imark; }
 
 /** \brief Set the vertex incremental mark of the vertex to the one of the mesh.
 	@param m the mesh containing the element

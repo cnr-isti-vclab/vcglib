@@ -166,17 +166,17 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
     float x,y,z;
     unsigned int r,g,b,i_cam, key_sift,n_corr;
     uint readValues = fscanf(fp,"%f %f %f ",&x,&y,&z);
-    if (readValues < 3) qDebug() << "Point " << i << ": only " << readValues << " coordinates read!";
+    if (readValues < 3) std::cerr << "Point " << i << ": only " << readValues << " coordinates read!";
     (*vi).P() = vcg::Point3<typename OpenMeshType::ScalarType>(x,y,z);
     readValues = fscanf(fp,"%d %d %d ",&r,&g,&b);
-    if (readValues < 3) qDebug() << "Point " << i << ": only " << readValues << " color values read!";
+    if (readValues < 3) std::cerr << "Point " << i << ": only " << readValues << " color values read!";
     (*vi).C() = vcg::Color4b(r,g,b,255);
 
     readValues = fscanf(fp,"%d ",&n_corr);
-    if (readValues < 1) qDebug() << "Point " << i << ": no n correspondences read!";
+    if (readValues < 1) std::cerr << "Point " << i << ": no n correspondences read!";
     for(uint j = 0; j < n_corr; ++j){
       readValues = fscanf(fp,"%d %d %f %f ",&i_cam,&key_sift,&x,&y);
-      if (readValues != 3) qDebug() << "Point " << i << "; Corresp: " << j << ": only " << readValues << " values read!";
+      if (readValues != 3) std::cerr << "Point " << i << "; Corresp: " << j << ": only " << readValues << " values read!";
       Correspondence corr(i_cam,key_sift,x,y);
       ch[i].push_back(corr);
     }

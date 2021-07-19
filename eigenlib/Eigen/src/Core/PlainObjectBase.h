@@ -41,7 +41,7 @@ template<> struct check_rows_cols_for_overflow<Dynamic> {
   {
     // http://hg.mozilla.org/mozilla-central/file/6c8a909977d3/xpcom/ds/CheckedInt.h#l242
     // we assume Index is signed
-    Index max_index = (size_t(1) << (8 * sizeof(Index) - 1)) - 1; // assume Index is signed
+    Index max_index = (std::size_t(1) << (8 * sizeof(Index) - 1)) - 1; // assume Index is signed
     bool error = (rows == 0 || cols == 0) ? false
                : (rows > max_index / cols);
     if (error)
@@ -577,6 +577,10 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
       * while the AlignedMap() functions return aligned Map objects and thus should be called only with 16-byte-aligned
       * \a data pointers.
       *
+      * Here is an example using strides:
+      * \include Matrix_Map_stride.cpp
+      * Output: \verbinclude Matrix_Map_stride.out
+      *
       * \see class Map
       */
     //@{
@@ -733,8 +737,10 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
     EIGEN_DEVICE_FUNC
     EIGEN_STRONG_INLINE void _init2(Index rows, Index cols, typename internal::enable_if<Base::SizeAtCompileTime!=2,T0>::type* = 0)
     {
-      EIGEN_STATIC_ASSERT(bool(NumTraits<T0>::IsInteger) &&
-                          bool(NumTraits<T1>::IsInteger),
+      const bool t0_is_integer_alike = internal::is_valid_index_type<T0>::value;
+      const bool t1_is_integer_alike = internal::is_valid_index_type<T1>::value;
+      EIGEN_STATIC_ASSERT(t0_is_integer_alike &&
+                          t1_is_integer_alike,
                           FLOATING_POINT_ARGUMENT_PASSED__INTEGER_WAS_EXPECTED)
       resize(rows,cols);
     }
@@ -769,9 +775,9 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
                                                                               && ((!internal::is_same<typename internal::traits<Derived>::XprKind,ArrayXpr>::value || Base::SizeAtCompileTime==Dynamic)),T>::type* = 0)
     {
       // NOTE MSVC 2008 complains if we directly put bool(NumTraits<T>::IsInteger) as the EIGEN_STATIC_ASSERT argument.
-      const bool is_integer = NumTraits<T>::IsInteger;
-      EIGEN_UNUSED_VARIABLE(is_integer);
-      EIGEN_STATIC_ASSERT(is_integer,
+      const bool is_integer_alike = internal::is_valid_index_type<T>::value;
+      EIGEN_UNUSED_VARIABLE(is_integer_alike);
+      EIGEN_STATIC_ASSERT(is_integer_alike,
                           FLOATING_POINT_ARGUMENT_PASSED__INTEGER_WAS_EXPECTED)
       resize(size);
     }
@@ -812,6 +818,13 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
       this->_set_noalias(other);
     }
 
+    // Initialize an arbitrary matrix from an object convertible to the Derived type.
+    template<typename T>
+    EIGEN_DEVICE_FUNC
+    EIGEN_STRONG_INLINE void _init1(const Derived& other){
+      this->_set_noalias(other);
+    }
+
     // Initialize an arbitrary matrix from a generic Eigen expression
     template<typename T, typename OtherDerived>
     EIGEN_DEVICE_FUNC
@@ -834,7 +847,7 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
       this->derived() = r;
     }
     
-    // For fixed -size arrays:
+    // For fixed-size Array<Scalar,...>
     template<typename T>
     EIGEN_DEVICE_FUNC
     EIGEN_STRONG_INLINE void _init1(const Scalar& val0,
@@ -846,6 +859,7 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
       Base::setConstant(val0);
     }
     
+    // For fixed-size Array<Index,...>
     template<typename T>
     EIGEN_DEVICE_FUNC
     EIGEN_STRONG_INLINE void _init1(const Index& val0,

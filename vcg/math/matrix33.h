@@ -76,11 +76,22 @@ public:
     }
 
     template <class EigenMatrix33Type>
+    EigenMatrix33Type ToEigenMatrix() const {
+      EigenMatrix33Type m;
+      for(int i = 0; i < 3; i++)
+        for(int j = 0; j < 3; j++)
+          m(i,j)=(*this)[i][j];
+      return m;
+    }
+
+    template <class EigenMatrix33Type>
     void FromEigenMatrix(const EigenMatrix33Type & m){
       for(int i = 0; i < 3; i++)
         for(int j = 0; j < 3; j++)
           (*this)[i][j]=m(i,j);
     }
+
+
 
     static inline const Matrix33 &Identity( )
     {
@@ -512,7 +523,7 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
         }
         S dot=(v0*v1);
         ///control if there is no rotation
-        if (dot>((S)1-epsilon))
+        if (dot>(S(1)-epsilon))
         {
             rotM.SetIdentity();
             return rotM;
@@ -524,13 +535,13 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
         //if dot = -1 rotating to opposite vertex
         //the problem is underdefined, so choose axis such that division is more stable
         //alternative solution at http://cs.brown.edu/research/pubs/pdfs/1999/Moller-1999-EBA.pdf
-        if (dot < (S)-1 + epsilon)
+        if (dot < S(-1) + epsilon)
         {
-            S max = std::numeric_limits<S>::min();
+            S max = std::numeric_limits<S>::lowest();
             int maxInd = 0;
             for (int i = 0; i < 3; ++i)
             {
-                if (v0[i] > max)
+                if (std::abs(v0[i]) > max)
                 {
                     max    = v0[i];
                     maxInd = i;
@@ -541,7 +552,7 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
             axis[(maxInd+1) % 3] = 0;
             axis[(maxInd+2) % 3] = 1;
 
-            dot = (S)-1;
+            dot = S(-1);
         } 
         else 
         {
@@ -574,16 +585,12 @@ Matrix33<S> RotationMatrix(vcg::Point3<S> v0,vcg::Point3<S> v1,bool normalized=t
 ///return the rotation matrix along axis
 template <class S>
 Matrix33<S> RotationMatrix(const vcg::Point3<S> &axis,
-                           const float &angleRad)
-    {
-        vcg::Matrix44<S> matr44;
-        vcg::Matrix33<S> matr33;
-        matr44.SetRotateRad(angleRad,axis);
-        for (int i=0;i<3;i++)
-            for (int j=0;j<3;j++)
-                matr33[i][j]=matr44[i][j];
-        return matr33;
-    }
+                           const S &angleRad)
+{
+	vcg::Matrix44<S> matr44;
+	matr44.SetRotateRad(angleRad,axis);
+	return vcg::Matrix33<S>(matr44, 3);
+}
 
 /// return a random rotation matrix, from the paper:
 /// Fast Random Rotation Matrices, James Arvo

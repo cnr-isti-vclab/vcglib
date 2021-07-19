@@ -276,7 +276,7 @@ public:
     }
   };
 
-  class CylMidPoint : public   std::unary_function<PosType, CoordType>
+  class CylMidPoint
   {
   private:
     CylMidPoint() {assert(0);}

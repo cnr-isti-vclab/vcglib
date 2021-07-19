@@ -38,9 +38,9 @@
 template<typename POINTTYPE>
 struct CoordNumber{public:	static unsigned int coord()	{		return 0; 	}};
 
-template<> struct CoordNumber<vcg::Point2f> { public:	static unsigned int coord() { return 2;	} };
-template<> struct CoordNumber<vcg::Point3f> { public:	static unsigned int coord() {	return 3;	} };
-template<> struct CoordNumber<vcg::Point4f> { public: static unsigned int coord() {	return 4;	} };
+template<typename Scalar> struct CoordNumber<vcg::Point2<Scalar>> { public:	static unsigned int coord() {	return 2;	} };
+template<typename Scalar> struct CoordNumber<vcg::Point3<Scalar>> { public:	static unsigned int coord() {	return 3;	} };
+template<typename Scalar> struct CoordNumber<vcg::Point4<Scalar>> { public:	static unsigned int coord() {	return 4;	} };
 
 template<> struct CoordNumber<vcg::Color4b> { public:	static unsigned int coord() { return 4;	} };
 

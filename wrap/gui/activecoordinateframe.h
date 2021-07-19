@@ -87,7 +87,7 @@ public:
     @param new_rotation the new rotation of the coordinate frame.
   */
   virtual void SetRotation(const Quaternionf rotation);
-  
+
   /*!
     @brief Align the coordinate frame to one or two directions.
 
@@ -99,8 +99,8 @@ public:
 
     @param primary the primary direction of alignment.
     @param secondary the secondary direction of alignment.
-    @param axis_1 the name of the axis to align to the primary direction, must be a char choosen from 'X', 'Y' and 'Z'
-    @param axis_2 the name of the axis to align to the secondary direction, must be different from axis_1 and must be a char choosen from 'X', 'Y', 'Z' and ' '; if the char is ' ' the axis is choosen automatically.
+    @param axis_1 the name of the axis to align to the primary direction, must be a char chosen from 'X', 'Y' and 'Z'
+    @param axis_2 the name of the axis to align to the secondary direction, must be different from axis_1 and must be a char chosen from 'X', 'Y', 'Z' and ' '; if the char is ' ' the axis is chosen automatically.
   */
   virtual void AlignWith(const Point3f primary, const Point3f secondary, const char axis_1, const char axis_2);
 
@@ -119,7 +119,7 @@ public:
     @param x the x coordinate of the cursor.
     @param y the y coordinate of the cursor.
   */
-  void MouseMove(int x, int y); 
+  void MouseMove(int x, int y);
 
   /*!
     @brief Interface function relative to mouse up event in QT.
@@ -143,20 +143,20 @@ public:
     @param button the keyboard modifiers state.
   */
   void ButtonDown(int button);
-  
+
   /*!
     @brief Set rotational snap value.
-  
+
     @param value the new rotational snap value, in degrees.
   */
   void SetSnap(float value);
 
   /// The eulerian trackball.
   Trackball *manipulator;
-  
+
   /// The flag that enables moves feedback rendering
   bool drawmoves;
-  
+
   /// The flag that enables rotations feedback rendering
   bool drawrotations;
 protected:
@@ -165,7 +165,7 @@ protected:
   const int x_modifier,y_modifier,z_modifier;
   Point3f x_axis,y_axis,z_axis;
   float rot_snap_rad,mov_snap;
-  // functions: 
+  // functions:
   virtual void Move(const Similarityf);
   void Update();
 private:

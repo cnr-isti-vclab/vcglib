@@ -41,7 +41,7 @@ class ExporterDXF
   typedef typename SaveMeshType::CoordType CoordType;
 public:
   ///Standard call for saving a mesh
-  static int Save(SaveMeshType &m, const char * filename)
+  static int Save(const SaveMeshType &m, const char * filename)
   {
     if(m.fn==0 && m.en != 0) return SaveEdge(m,filename);
 
@@ -55,7 +55,7 @@ public:
     fprintf(o,"2\n");
     fprintf(o,"ENTITIES\n");
 
-    typename SaveMeshType::FaceIterator fi;
+    typename SaveMeshType::ConstFaceIterator fi;
     for(fi=m.face.begin(); fi!=m.face.end(); ++fi)
     {
       if (!fi->IsD())
@@ -109,7 +109,7 @@ public:
   }
 
 
-  static bool SaveEdge(SaveMeshType  &m, const char * filename)
+  static bool SaveEdge(const SaveMeshType  &m, const char * filename)
   {
     FILE * o = fopen(filename,"w");
     if(o==NULL)	return 1;
@@ -121,7 +121,7 @@ public:
     fprintf(o,"2\n");
     fprintf(o,"ENTITIES\n");
 
-    typename SaveMeshType::EdgeIterator ei;
+    typename SaveMeshType::ConstEdgeIterator ei;
     for(ei=m.edge.begin(); ei!=m.edge.end();++ei)
     {
       CoordType p1 = (*ei).V(0)->P();
@@ -155,7 +155,7 @@ public:
     return true;
   }
 
-  static bool writeHeader(FILE* o, SaveMeshType  &mp)
+  static bool writeHeader(FILE* o, const SaveMeshType  &mp)
   {
 	  // standard DXF header
 	  // most of data is meaningless, but required by a lot of importers

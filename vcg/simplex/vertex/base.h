@@ -20,11 +20,14 @@
 * for more details.                                                         *
 *                                                                           *
 ****************************************************************************/
-#ifndef __VCG_MESH
-#error "This file should not be included alone. It is automatically included by complex.h"
-#endif
+
 #ifndef __VCG_VERTEX_PLUS
 #define __VCG_VERTEX_PLUS
+
+#include <vcg/complex/all_types.h>
+#include <vcg/container/derivation_chain.h>
+
+#include "component.h"
 
 namespace vcg {
 

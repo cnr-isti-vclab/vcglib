@@ -30,6 +30,7 @@
 #include <sstream>
 #include <stdint.h>
 #include <string>
+#include <iomanip>
 
 
 // Avoid conflicting declaration of min/max macros in windows headers
@@ -555,6 +556,30 @@ namespace nanoply
       return false;
     fileStream << src;
     return true;
+  }
+
+	template <>
+	inline bool PlyFile::WriteAsciiData<double>(const double & src)
+	{
+		if (mode != 1)
+			return false;
+		const auto precision = fileStream.precision();
+		fileStream << std::setprecision(std::numeric_limits<double>::max_digits10)
+		           << src
+		           << std::setprecision(precision);
+		return true;
+	}
+
+	template <>
+	inline bool PlyFile::WriteAsciiData<float>(const float & src)
+	{
+		if (mode != 1)
+			return false;
+		const auto precision = fileStream.precision();
+		fileStream << std::setprecision(std::numeric_limits<float>::max_digits10)
+		           << src
+		           << std::setprecision(precision);
+		return true;
   }
 
   inline void PlyFile::SetBufferSize(int64_t size)
@@ -2728,12 +2753,16 @@ namespace nanoply
   }
 
   template < typename TupleType, size_t ActionType>
-  inline bool TupleForEach(TupleType &tuple, PlyElement &elem, PlyFile& file, bool fixEndian, SizeT<0> t, SizeT<ActionType> a) { return false; }
+  inline bool TupleForEach(TupleType &tuple, PlyElement &elem, PlyFile& file, bool fixEndian, SizeT<0> t, SizeT<ActionType> a)
+  {
+    (void)tuple; (void)elem; (void)file; (void)fixEndian; (void)t; (void)a;
+    return false;
+  }
 
   template < typename TupleType, size_t N, size_t ActionType>
   inline bool TupleForEach(TupleType &tuple, PlyElement &elem, PlyFile& file, bool fixEndian, SizeT<N> t, SizeT<ActionType> a)
   {
-	  (void)t;
+    (void)t;
     typename std::tuple_element<N - 1, TupleType>::type &elemDescr = std::get<N - 1>(tuple);
     if ((elemDescr.elem != PlyElemEntity::NNP_UNKNOWN_ELEM && elemDescr.elem == elem.plyElem) ||
       (elemDescr.elem == PlyElemEntity::NNP_UNKNOWN_ELEM && elemDescr.name == elem.name))

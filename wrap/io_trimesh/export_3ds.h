@@ -149,7 +149,7 @@ namespace io {
 		/*
 			function which saves in 3DS file format
 		*/
-		static int SaveBinary(SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
+		static int SaveBinary(const SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
 		{
 			if(m.vn > MAX_POLYGONS)//check max polygons
 				return E_NOTNUMBERVERTVALID;
@@ -222,28 +222,29 @@ namespace io {
 			int nface = 0;
 			if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) )
 			{
-				FaceIterator fi;
-				for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
-				{
-					for(unsigned int k=0;k<3;k++)
+				for(const auto& f : m.face) {
+					if( !f.IsD() )
 					{
-						int i = GetIndexVertex(m, (*fi).V(k));
-						vcg::TexCoord2<float> t = (*fi).WT(k);
-						if(!m.vert[i].IsD())
+						for(unsigned int k=0;k<3;k++)
 						{
-							if(AddDuplexVertexCoord(ListOfDuplexVert,Key(i,t)))
+							int i = GetIndexVertex(m, f.cV(k));
+							vcg::TexCoord2<float> t = f.cWT(k);
+							if(!m.vert[i].IsD())
 							{
-								VectorOfVertexType.push_back((*(*fi).V(k)));
-								ListOfDuplexVert[Key(i,t)] = int(VectorOfVertexType.size()-1);
-								count++;
+								if(AddDuplexVertexCoord(ListOfDuplexVert,Key(i,t)))
+								{
+									VectorOfVertexType.push_back((*f.V(k)));
+									ListOfDuplexVert[Key(i,t)] = int(VectorOfVertexType.size()-1);
+									count++;
+								}
 							}
 						}
-					}
 
-					if (cb !=NULL)
-						(*cb)(100.0 * (float)++nface/(float)m.face.size(), "calc duplex vertex ...");
-					else
-						return E_ABORTED;
+						if (cb !=NULL)
+							(*cb)(100.0 * (float)++nface/(float)m.face.size(), "calc duplex vertex ...");
+						else
+							return E_ABORTED;
+					}
 				}
 			}
 
@@ -267,7 +268,6 @@ namespace io {
 				lib3ds_mesh_new_texel_list(mesh,m.vn + number_vertex_to_duplicate); //set number of textures
 
 			int v_index = 0;
-			VertexIterator vi;
 			//saves vert
 			if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ))
 			{
@@ -288,134 +288,139 @@ namespace io {
 			}
 			else
 			{
-        VertRemap.resize(m.vert.size(),-1);
-				for(vi=m.vert.begin(); vi!=m.vert.end(); ++vi) if( !(*vi).IsD() )
-				{
-					Lib3dsPoint point;
-					point.pos[0] = (*vi).P()[0];
-					point.pos[1] = (*vi).P()[1];
-					point.pos[2] = (*vi).P()[2];
+				VertRemap.resize(m.vert.size(),-1);
+				unsigned int vi = 0;
+				for(const auto& v : m.vert) {
+					if( !v.IsD() )
+					{
+						Lib3dsPoint point;
+						point.pos[0] = v.P()[0];
+						point.pos[1] = v.P()[1];
+						point.pos[2] = v.P()[2];
 
-					mesh->pointL[v_index] = point;		
-          VertRemap[vi-m.vert.begin()]=v_index;
-					if (cb !=NULL)
-						(*cb)(100.0 * (float)++current/(float)max, "writing vertices ");
-					else
-						return E_ABORTED;
-					v_index++;
+						mesh->pointL[v_index] = point;
+						VertRemap[vi]=v_index;
+						if (cb !=NULL)
+							(*cb)(100.0 * (float)++current/(float)max, "writing vertices ");
+						else
+							return E_ABORTED;
+						v_index++;
+					}
+					vi++;
 				}
 			}
 
 			lib3ds_mesh_new_face_list (mesh, m.face.size());//set number of faces
 			int f_index = 0;//face index
 			//int t_index = 0;//texture index
-			FaceIterator fi;
-			for(fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
-			{
-        vcg::TexCoord2<float> t0(0,0),t1(0,0),t2(0,0);
-				int i0 = GetIndexVertex(m, (*fi).V(0));
-				int i1 = GetIndexVertex(m, (*fi).V(1));
-				int i2 = GetIndexVertex(m, (*fi).V(2));
-				if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) )
+			for(const auto& f : m.face) {
+				if( !f.IsD() )
 				{
-					t0 = (*fi).WT(0);
-					t1 = (*fi).WT(1);
-					t2 = (*fi).WT(2);
-				}
-
-				Lib3dsFace face;
-				if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ))
-				{
-					face.points[0] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i0,t0));
-					face.points[1] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i1,t1));
-					face.points[2] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i2,t2));
-				}
-				else
-				{
-					face.points[0] = VertRemap[i0];
-					face.points[1] = VertRemap[i1];
-					face.points[2] = VertRemap[i2];
-				}
-				
-				//saves coord textures
-				if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) )
-				{
-					mesh->texelL[face.points[0]][0] = t0.u();
-					mesh->texelL[face.points[0]][1] = t0.v();
-					mesh->texelL[face.points[1]][0] = t1.u();
-					mesh->texelL[face.points[1]][1] = t1.v();
-					mesh->texelL[face.points[2]][0] = t2.u();
-					mesh->texelL[face.points[2]][1] = t2.v();
-				}
-
-				if(mask & vcg::tri::io::Mask::IOM_FACEFLAGS)
-					face.flags = 0;
-				
-				face.smoothing = 10;
-
-				if((mask & vcg::tri::io::Mask::IOM_FACENORMAL) | (mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) )
-				{
-					face.normal[0] = (*fi).N()[0];
-					face.normal[1] = (*fi).N()[1];
-					face.normal[2] = (*fi).N()[2];
-				}
-
-				if((mask & vcg::tri::io::Mask::IOM_FACECOLOR) | (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD))
-				{
-					int material_index = vcg::tri::io::Materials<SaveMeshType>::CreateNewMaterial(m, materials, fi);
-					if(material_index == (int)materials.size())
+					vcg::TexCoord2<float> t0(0,0),t1(0,0),t2(0,0);
+					int i0 = GetIndexVertex(m, f.cV(0));
+					int i1 = GetIndexVertex(m, f.cV(1));
+					int i2 = GetIndexVertex(m, f.cV(2));
+					if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) )
 					{
-						Lib3dsMaterial *material = lib3ds_material_new();//creates a new material
-						
-						std::string name = qnamematerial.arg(material_index-1).toStdString();
-						strcpy(material->name,name.c_str());//copy new name of material
+						t0 = f.cWT(0);
+						t1 = f.cWT(1);
+						t2 = f.cWT(2);
+					}
 
-						if(mask & vcg::tri::io::Mask::IOM_FACECOLOR)
-						{
-							//ambient
-							material->ambient[0] = materials[materials.size()-1].Ka[0];
-							material->ambient[1] = materials[materials.size()-1].Ka[1];
-							material->ambient[2] = materials[materials.size()-1].Ka[2];
-							material->ambient[3] = materials[materials.size()-1].Tr;
-
-							//diffuse
-							material->diffuse[0] = materials[materials.size()-1].Kd[0];
-							material->diffuse[1] = materials[materials.size()-1].Kd[1];
-							material->diffuse[2] = materials[materials.size()-1].Kd[2];
-							material->diffuse[3] = materials[materials.size()-1].Tr;
-
-							//specular
-							material->specular[0] = materials[materials.size()-1].Ks[0];
-							material->specular[1] = materials[materials.size()-1].Ks[1];
-							material->specular[2] = materials[materials.size()-1].Ks[2];
-							material->specular[3] = materials[materials.size()-1].Tr;
-
-							//shininess
-							material->shininess = materials[materials.size()-1].Ns;
-						}
-											
-						//texture
-				    if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) )
-							strcpy(material->texture1_map.name,materials[materials.size()-1].map_Kd.c_str());
-
-						lib3ds_file_insert_material(file,material);//inserts the material inside the file
-						strcpy(face.material,name.c_str());
+					Lib3dsFace face;
+					if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ))
+					{
+						face.points[0] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i0,t0));
+						face.points[1] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i1,t1));
+						face.points[2] = GetIndexDuplexVertex(ListOfDuplexVert,Key(i2,t2));
 					}
 					else
-					{	
-						std::string name = qnamematerial.arg(material_index).toStdString();
-						strcpy(face.material,name.c_str());//set name of material
+					{
+						face.points[0] = VertRemap[i0];
+						face.points[1] = VertRemap[i1];
+						face.points[2] = VertRemap[i2];
 					}
+
+					//saves coord textures
+					if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) )
+					{
+						mesh->texelL[face.points[0]][0] = t0.u();
+						mesh->texelL[face.points[0]][1] = t0.v();
+						mesh->texelL[face.points[1]][0] = t1.u();
+						mesh->texelL[face.points[1]][1] = t1.v();
+						mesh->texelL[face.points[2]][0] = t2.u();
+						mesh->texelL[face.points[2]][1] = t2.v();
+					}
+
+					if(mask & vcg::tri::io::Mask::IOM_FACEFLAGS)
+						face.flags = 0;
+
+					face.smoothing = 10;
+
+					if((mask & vcg::tri::io::Mask::IOM_FACENORMAL) | (mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) )
+					{
+						face.normal[0] = f.cN()[0];
+						face.normal[1] = f.cN()[1];
+						face.normal[2] = f.cN()[2];
+					}
+
+					if((mask & vcg::tri::io::Mask::IOM_FACECOLOR) | (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD))
+					{
+						int material_index = vcg::tri::io::Materials<SaveMeshType>::CreateNewMaterial(m, materials, f);
+						if(material_index == (int)materials.size())
+						{
+							Lib3dsMaterial *material = lib3ds_material_new();//creates a new material
+
+							std::string name = qnamematerial.arg(material_index-1).toStdString();
+							strcpy(material->name,name.c_str());//copy new name of material
+
+							if(mask & vcg::tri::io::Mask::IOM_FACECOLOR)
+							{
+								//ambient
+								material->ambient[0] = materials[materials.size()-1].Ka[0];
+								material->ambient[1] = materials[materials.size()-1].Ka[1];
+								material->ambient[2] = materials[materials.size()-1].Ka[2];
+								material->ambient[3] = materials[materials.size()-1].Tr;
+
+								//diffuse
+								material->diffuse[0] = materials[materials.size()-1].Kd[0];
+								material->diffuse[1] = materials[materials.size()-1].Kd[1];
+								material->diffuse[2] = materials[materials.size()-1].Kd[2];
+								material->diffuse[3] = materials[materials.size()-1].Tr;
+
+								//specular
+								material->specular[0] = materials[materials.size()-1].Ks[0];
+								material->specular[1] = materials[materials.size()-1].Ks[1];
+								material->specular[2] = materials[materials.size()-1].Ks[2];
+								material->specular[3] = materials[materials.size()-1].Tr;
+
+								//shininess
+								material->shininess = materials[materials.size()-1].Ns;
+							}
+
+							//texture
+							if(HasPerWedgeTexCoord(m) && (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD ) )
+								strcpy(material->texture1_map.name,materials[materials.size()-1].map_Kd.c_str());
+
+							lib3ds_file_insert_material(file,material);//inserts the material inside the file
+							strcpy(face.material,name.c_str());
+						}
+						else
+						{
+							std::string name = qnamematerial.arg(material_index).toStdString();
+							strcpy(face.material,name.c_str());//set name of material
+						}
+					}
+
+					mesh->faceL[f_index]=face;
+
+					if (cb !=NULL)
+						(*cb)(100.0 * (float)++current/(float)max, "writing faces ");
+					else
+						return E_ABORTED;
+					f_index++;
+
 				}
-
-				mesh->faceL[f_index]=face;
-
-				if (cb !=NULL)
-					(*cb)(100.0 * (float)++current/(float)max, "writing faces ");
-				else 
-					return E_ABORTED;
-				f_index++;
-				
 			}
 
 			lib3ds_file_insert_mesh(file, mesh);//inserts the Mesh into file
@@ -435,7 +440,7 @@ namespace io {
 		/*
 			function which saves in 3DS format
 		*/
-		static int Save(SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
+		static int Save(const SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
 		{
 			return SaveBinary(m,filename,mask,cb);	
 		}
@@ -443,7 +448,7 @@ namespace io {
 		/*
 			returns index of the vertex
 		*/
-		inline static int GetIndexVertex(SaveMeshType &m, VertexType *p)
+		inline static int GetIndexVertex(const SaveMeshType &m, const VertexType *p)
 		{
 			return p-&*(m.vert.begin());
 		}

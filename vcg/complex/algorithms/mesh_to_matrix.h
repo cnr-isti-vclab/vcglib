@@ -42,8 +42,9 @@ class MeshToMatrix
     typedef typename MeshType::VertexIterator VertexIterator;
     typedef typename MeshType::CoordType CoordType;
     typedef typename MeshType::ScalarType ScalarType;
+public:
     typedef typename Eigen::Matrix<ScalarType, Eigen::Dynamic, Eigen::Dynamic> MatrixXm;
-
+private:
     static void GetTriEdgeAdjacency(const MatrixXm& V,
                                     const Eigen::MatrixXi& F,
                                     Eigen::MatrixXi& EV,

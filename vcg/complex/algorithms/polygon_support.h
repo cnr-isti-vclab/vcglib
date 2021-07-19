@@ -24,6 +24,9 @@
 #ifndef __VCGLIB_POLYGON_SUPPORT
 #define __VCGLIB_POLYGON_SUPPORT
 
+#include <vcg/complex/allocate.h>
+#include <vcg/complex/base.h>
+#include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/simplex/face/jumping_pos.h>
 #include <vcg/space/planar_polygon_tessellation.h>
 
@@ -71,46 +74,63 @@ namespace tri {
         }
     }
 
-    /**
-    Import a  trianglemesh from a polygon mesh
-    **/
-    static void ImportFromPolyMesh(TriMeshType & tm,  PolyMeshType & pm)
-    {
-      tri::RequirePolygonalMesh(pm);
-      std::vector<typename PolyMeshType::CoordType> points;
+	/**
+	 * @brief Import a  trianglemesh from a polygon mesh
+	 * @param tm: output triangle mesh
+	 * @param pm: input polygonal mesh
+	 * @param birthFaces: a mapping that tells, for each face of the triangle mesh,
+	 * which one is its birth face in the polygonal mesh.
+	 */
+	static void ImportFromPolyMesh(TriMeshType& tm, PolyMeshType& pm, std::vector<unsigned int>& birthFaces)
+	{
+		birthFaces.clear();
+		birthFaces.reserve(pm.FN()); //at least the same face number of the polymesh
+		tri::RequirePolygonalMesh(pm);
+		std::vector<typename PolyMeshType::CoordType> points;
 
-      // the vertices are the same, simply import them
-      PolyVertexIterator vi;
-      TriVertexIterator tvi = Allocator<TriMeshType>::AddVertices(tm,pm.vert.size());
-      int cnt = 0;
-      for(tvi = tm.vert.begin(),vi = pm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt)
-        if(!(*vi).IsD()) (*tvi).ImportData(*vi); else tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
+		// the vertices are the same, simply import them
+		PolyVertexIterator vi;
+		TriVertexIterator tvi = Allocator<TriMeshType>::AddVertices(tm,pm.vert.size());
+		int cnt = 0;
+		for(tvi = tm.vert.begin(),vi = pm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt)
+			if(!(*vi).IsD()) (*tvi).ImportData(*vi); else tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
 
-      for(PolyFaceIterator fi = pm.face.begin(); fi != pm.face.end(); ++fi)
-      {
-        if(!((*fi).IsD())){
-          points.clear();
-          for(int i  = 0; i < (*fi).VN(); ++i) {
-            typename	PolyMeshType::VertexType * v = (*fi).V(i);
-            points.push_back(v->P());
-          }
-          std::vector<int> faces;
-          TessellatePlanarPolygon3(points,faces);
-          for(size_t i = 0; i<faces.size();i+=3){
-            TriFaceIterator tfi = Allocator<TriMeshType>::AddFace(tm,
-                  tri::Index(pm,(*fi).V( faces[i+0] )),
-                  tri::Index(pm,(*fi).V( faces[i+1] )),
-                  tri::Index(pm,(*fi).V( faces[i+2] )) );
+		for(PolyFaceIterator fi = pm.face.begin(); fi != pm.face.end(); ++fi)
+		{
+			if(!((*fi).IsD())){
+				points.clear();
+				for(int i  = 0; i < (*fi).VN(); ++i) {
+					typename	PolyMeshType::VertexType * v = (*fi).V(i);
+					points.push_back(v->P());
+				}
+				std::vector<int> faces;
+				TessellatePlanarPolygon3(points,faces);
 
-            tfi->ImportData(*fi);
-            // set the F flags
-            if( (faces[i  ]+1)%points.size() != size_t(faces[i+1])) (*tfi).SetF(0);
-            if( (faces[i+1]+1)%points.size() != size_t(faces[i+2])) (*tfi).SetF(1);
-            if( (faces[i+2]+1)%points.size() != size_t(faces[i  ])) (*tfi).SetF(2);
-          }
-        }
-      }
-    }
+				//all the faces we add in tm have as a birth face fi
+				birthFaces.insert(birthFaces.end(), faces.size()/3, tri::Index(pm, *fi));
+
+				for(size_t i = 0; i<faces.size();i+=3){
+					TriFaceIterator tfi = Allocator<TriMeshType>::AddFace(
+							tm,
+							tri::Index(pm,(*fi).V( faces[i+0] )),
+							tri::Index(pm,(*fi).V( faces[i+1] )),
+							tri::Index(pm,(*fi).V( faces[i+2] )) );
+
+					tfi->ImportData(*fi);
+					// set the F flags
+					if( (faces[i  ]+1)%points.size() != size_t(faces[i+1])) (*tfi).SetF(0);
+					if( (faces[i+1]+1)%points.size() != size_t(faces[i+2])) (*tfi).SetF(1);
+					if( (faces[i+2]+1)%points.size() != size_t(faces[i  ])) (*tfi).SetF(2);
+				}
+			}
+		}
+	}
+
+	static void ImportFromPolyMesh(TriMeshType & tm,  PolyMeshType & pm)
+	{
+		std::vector<unsigned int> dummyVector;
+		ImportFromPolyMesh(tm, pm, dummyVector);
+	}
 
 
     /**
@@ -141,7 +161,8 @@ namespace tri {
         {
             std::vector<typename TriMeshType::VertexPointer> vs;// vertices of the polygon
             ExtractPolygon(&*tfi,vs);
-            std::reverse(vs.begin(),vs.end());
+            if (vs.size() > 3)
+              std::reverse(vs.begin(), vs.end());
             //now vs  contains all the vertices of the polygon (still in the trimesh)
             if (vs.size()==0)continue;
             typename PolyMeshType::FaceIterator pfi =  tri::Allocator<PolyMeshType>::AddFaces(pm,1);

@@ -42,7 +42,9 @@ class ExporterOBJ
 {
 public:
   typedef typename SaveMeshType::FaceIterator FaceIterator;
+  typedef typename SaveMeshType::ConstFaceIterator ConstFaceIterator;
   typedef typename SaveMeshType::EdgeIterator EdgeIterator;
+  typedef typename SaveMeshType::ConstEdgeIterator ConstEdgeIterator;
   typedef typename SaveMeshType::VertexIterator VertexIterator;
   typedef typename SaveMeshType::VertexType VertexType;
   typedef typename SaveMeshType::ScalarType ScalarType;
@@ -212,13 +214,13 @@ public:
     int curMatIndex = -1;
     std::vector<Material> materialVec; //used if we do not have material attributes 
     
-    for(FaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
+    for(ConstFaceIterator fi=m.face.begin(); fi!=m.face.end(); ++fi) if( !(*fi).IsD() )
     {
       if((mask & Mask::IOM_FACECOLOR) || (mask & Mask::IOM_WEDGTEXCOORD) || (mask & Mask::IOM_VERTTEXCOORD))
       {
         int index=-1;
         if(useMaterialAttribute) index = materialIndexHandle[fi];
-        else                     index = Materials<SaveMeshType>::CreateNewMaterial(m,materialVec,fi);
+        else                     index = Materials<SaveMeshType>::CreateNewMaterial(m,materialVec,*fi);
                   
         if(index != curMatIndex) {
           fprintf(fp,"\nusemtl material_%d\n", index);
@@ -269,7 +271,7 @@ public:
 
     } // end for faces
 
-    for(EdgeIterator ei=m.edge.begin(); ei!=m.edge.end(); ++ei) if( !(*ei).IsD() )
+    for(ConstEdgeIterator ei=m.edge.begin(); ei!=m.edge.end(); ++ei) if( !(*ei).IsD() )
     {
       fprintf(fp,"l %i %i\n",
               VertexId[tri::Index(m, (*ei).V(0))] + 1,
@@ -312,7 +314,7 @@ public:
   /*
             returns index of the vertex normal
         */
-  inline static int GetIndexVertexNormal(SaveMeshType &/*m*/, std::map<CoordType,int> &mapNormToInt, const CoordType &norm )
+  inline static int GetIndexVertexNormal(const SaveMeshType &/*m*/, std::map<CoordType,int> &mapNormToInt, const CoordType &norm )
   {
     typename std::map<CoordType,int>::iterator iter= mapNormToInt.find(norm);
     if(iter != mapNormToInt.end()) return (*iter).second;
@@ -358,7 +360,7 @@ public:
             adds a new index to the normal per vertex if it is the first time
             which is otherwise met does not execute anything
         */
-  inline static bool AddNewNormalVertex(typename std::map<CoordType,int> &m, CoordType &n ,int value)
+  inline static bool AddNewNormalVertex(typename std::map<CoordType,int> &m, const CoordType &n ,int value)
   {
     int index = m[n];
     if(index==0){m[n]=value;return true;}

@@ -164,14 +164,14 @@ public:
 	}
   inline const S &X() const { return _v[0]; }
     inline const S &Y() const { return _v[1]; }
-    inline const S &Z() const { static_assert(N>2); return _v[2]; }
+    inline const S &Z() const { static_assert(N>2, "wrong point dimension"); return _v[2]; }
      /// W is in any case the last coordinate.
      /// (in a 2D point, W() == Y(). In a 3D point, W()==Z()
      ///  in a 4D point, W() is a separate component)
     inline const S &W() const { return _v[N-1]; }
     inline S &X() { return _v[0]; }
     inline S &Y() { return _v[1]; }
-    inline S &Z() { static_assert(N>2); return _v[2]; }
+    inline S &Z() { static_assert(N>2, "wrong point dimension"); return _v[2]; }
     inline S &W() { return _v[N-1]; }
     inline const S * V() const
     {
@@ -359,7 +359,7 @@ public:
     (provided for uniformity with other spatial classes. trivial for points)
    **/
 
-	inline PointType LocalToGlobal(ParamType p) const{
+	inline PointType LocalToGlobal(ParamType /*p*/) const{
 		return *this; }
 
   inline ParamType GlobalToLocal(PointType /*p*/) const{
@@ -733,6 +733,7 @@ public:
 		return Point4( _v[0]*s, _v[1]*s , _v[2]*s , _v[3]*s ); }
 
 	inline PointType operator ^ ( PointType const & p ) const {
+		(void)p;
 		assert(0);
 		return *this;
 	}
@@ -797,7 +798,7 @@ public:
 		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	_v[0]*=n;	_v[1]*=n;	_v[2]*=n; _v[3]*=n; }
 		return *this;};
 
-	template <class PT>  PointType & Normalize(const PT &p){
+	template <class PT>  PointType & Normalize(const PT &/*p*/){
 		PointType n = Norm(); if(n!=0.0) { n=1.0/n;	V(0)*=n;	V(1)*=n;	V(2)*=n; V(3)*=n; }
 		return *this;};
 

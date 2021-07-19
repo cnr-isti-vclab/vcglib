@@ -24,7 +24,9 @@
 #ifndef _VCG_FACE_TOPOLOGY
 #define _VCG_FACE_TOPOLOGY
 
-#include <vcg/simplex/face/pos.h>
+#include "pos.h"
+
+#include <vcg/complex/allocate.h>
 
 namespace vcg {
 namespace face {
@@ -1194,7 +1196,8 @@ void VFOrderedStarFF(const Pos<FaceType> &startPos,
 {
 	VFOrderedStarFF(startPos, posVec);
 	const auto & pos = posVec[0];
-	if (ccw != (pos.VFlip() == pos.F()->V(pos.F()->Prev(pos.VInd()))))
+    //if (ccw != (pos.VFlip() == pos.F()->V(pos.F()->Prev(pos.VInd()))))
+    if ((ccw) == (pos.V()!=pos.F()->V(pos.E())))
 	{
 		std::reverse(posVec.begin(), posVec.end());
 	}

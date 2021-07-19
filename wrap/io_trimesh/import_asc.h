@@ -139,7 +139,7 @@ static int Open( MESH_TYPE &m, const char * filename, CallBackPos *cb=0, bool tr
 		if(m.vert[i].P().Y()!= baseY)  break;
 	}
 	cnt=m.vert.size();
-	qDebug("Grid is %i x %i = %i (%zu) ",i,cnt/i,i* (cnt/i),cnt);
+	qDebug("Grid is %i x %li = %li (%zu) ",i,cnt/i,i* (cnt/i),cnt);
 	tri::FaceGrid(m,i,int(cnt/i));
 	tri::Clean<MESH_TYPE>::FlipMesh(m);
 	return E_NOERROR;

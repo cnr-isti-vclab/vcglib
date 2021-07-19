@@ -97,10 +97,8 @@ public:
 	{
 		_v[0] = p[0]; _v[1]= p[1]; _v[2] = p[2]; _v[3]= p[3];
 	}
-	inline Point4 ( const Point4 & p )
-	{
-		_v[0]= p._v[0]; _v[1]= p._v[1]; _v[2]= p._v[2]; _v[3]= p._v[3];
-	}
+	inline Point4 ( const Point4 & p ) = default;
+
 	inline void SetZero()
 	{
 		_v[0] = _v[1] = _v[2] = _v[3]= 0;
@@ -120,6 +118,22 @@ public:
 		_v[1] = T(b[1]);
 		_v[2] = T(b[2]);
 		_v[3] = T(b[3]);
+	}
+	template <class EigenVector>
+	inline void ToEigenVector( EigenVector & b ) const
+	{
+		b[0]=_v[0];
+		b[1]=_v[1];
+		b[2]=_v[2];
+		b[3]=_v[3];
+	}
+	template <class EigenVector>
+	inline EigenVector ToEigenVector(void) const
+	{
+		assert(EigenVector::RowsAtCompileTime == 4);
+		EigenVector b;
+		b << _v[0], _v[1], _v[2], _v[3];
+		return b;
 	}
 	/// constructor that imports from different Point4 types
   template <class Q>

@@ -23,6 +23,10 @@
 #ifndef __VCG_TRI_UPDATE_FLAGS
 #define __VCG_TRI_UPDATE_FLAGS
 
+#include <vcg/simplex/face/pos.h>
+#include <vcg/simplex/tetrahedron/pos.h>
+#include <vcg/simplex/edge/pos.h>
+
 namespace vcg {
 namespace tri {
 /// \ingroup trimesh

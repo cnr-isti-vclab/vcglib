@@ -133,21 +133,34 @@ public:
         _v[1] = ny;
         _v[2] = nz;
     }
-    inline Point3 ( Point3 const & p )
+	
+	/** Default copy constructor */
+	inline Point3 ( Point3 const & p ) = default;
+	
+	/** Copy from Point with different template */
+	template<class Q>
+	inline Point3 ( Point3<Q> const & p )
     {
-        _v[0]= p._v[0];
-        _v[1]= p._v[1];
-        _v[2]= p._v[2];
+        _v[0]= p[0];
+        _v[1]= p[1];
+        _v[2]= p[2];
     }
+    
     inline Point3 ( const P3ScalarType nv[3] )
     {
         _v[0] = nv[0];
         _v[1] = nv[1];
         _v[2] = nv[2];
     }
-    inline Point3 & operator =(Point3 const & p)
+	
+	/** Default copy assignment */
+    inline Point3 & operator =(Point3 const & p) = default;
+	
+	/** Copy assignment from Point with different template */
+	template<class Q>
+	inline Point3 & operator =(Point3<Q> const & p)
     {
-      _v[0] = p._v[0]; _v[1] = p._v[1]; _v[2] = p._v[2];
+      _v[0] = p[0]; _v[1] = p[1]; _v[2] = p[2];
       return *this;
     }
     inline void SetZero()
@@ -240,7 +253,7 @@ public:
         assert(i>=0 && i<3);
         return _v[i];
     }
-  inline const P3ScalarType &X() const { return _v[0]; }
+    inline const P3ScalarType &X() const { return _v[0]; }
     inline const P3ScalarType &Y() const { return _v[1]; }
     inline const P3ScalarType &Z() const { return _v[2]; }
     inline P3ScalarType &X() { return _v[0]; }

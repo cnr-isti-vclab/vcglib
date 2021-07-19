@@ -112,33 +112,31 @@ typedef FILE * GZFILE;
 #endif
 
 
-	// Messaggio di errore
-//extern const char * ply_error_msg[];
-
-	// TIPO FILE
-
-
-// Descrittore esterno di propieta'
+// Ply Property descriptor
 class PropDescriptor
 {
 public:
-	const char * elemname;			// Nome dell'elemento
-	const char * propname;			// Nome della propieta'
-	int	stotype1;				// Tipo dell'elemento su file    (se lista tipo degli elementi della lista)
-	int memtype1;				// Tipo dell'elemento in memoria (se lista tipo degli elementi della lista)
-	size_t offset1;				// Offset del valore in memoria
-	int islist;					// 1 se lista, 0 altrimenti
-	int alloclist;		  // 1 se alloca lista, 0 se preallocata
-	int stotype2;				// Tipo del numero di elementi della lista su file
-	int memtype2;				// Tipo del numero di elementi della lista in memoria
-	size_t offset2;				// Offset valore memoria
+	std::string elemname; // name of the element (e.g. vertex)
+	std::string propname; // name of the property (e.g. x, y, red...)
+	int	stotype1; // Type of the property in the file
+	int memtype1; // Type of the property in memory
+	size_t offset1; // Offset in memory
+	bool islist; // true if the property is a list
+	bool alloclist; // 1 se alloca lista, 0 se preallocata
+	int stotype2; // Type of the number of elements of the list in the file
+	int memtype2; // Type of the number of elements of the list in memory
+	size_t offset2; // Offset valore memoria
 
-	int format;					// duplicazione del formato
+	int format; // duplicazione del formato
 	
-	size_t			stotypesize() const; // per sapere quanto e'grande un dato descrittore sul file
-	size_t			memtypesize() const; // per sapere quanto e'grande un dato descrittore in memoria
-	const char *memtypename() const; 
-	const char *stotypename() const;
+	size_t stotypesize() const; // per sapere quanto e'grande un dato descrittore sul file
+	size_t memtypesize() const; // per sapere quanto e'grande un dato descrittore in memoria
+	const char* memtypename() const;
+	const char* stotypename() const;
+	size_t stotype2size() const; // per sapere quanto e'grande un dato descrittore sul file
+	size_t memtype2size() const; // per sapere quanto e'grande un dato descrittore in memoria
+	const char* memtype2name() const;
+	const char* stotype2name() const;
 };
 
 // Reading Callback (used to copy a data prop)
@@ -178,7 +176,7 @@ public:
 	int	   bestored;			// 1 se va storata
 	PropDescriptor desc;		// Descrittore di memorizzazione
 
-	readelemcb	cb;				// Callback di lettura
+	readelemcb	cb = nullptr;				// Callback di lettura
 };
 
 
@@ -231,7 +229,7 @@ public:
 	std::string name;				// Nome dell'elemento
 	int    number;				// Numero di elementi di questo tipo
 
-  std::vector<PlyProperty> props;	// Vettore dinamico delle property
+	std::vector<PlyProperty> props;	// Vettore dinamico delle property
 };
 
 
@@ -273,7 +271,7 @@ public:
 		// Come sopra ma con descrittore
 	inline int AddToRead( const PropDescriptor & p )
 	{
-		return AddToRead(p.elemname,p.propname,p.stotype1,
+		return AddToRead(p.elemname.c_str(),p.propname.c_str(),p.stotype1,
 			p.memtype1,p.offset1,p.islist,p.alloclist,p.stotype2,
 			p.memtype2,p.offset2
 		);

@@ -3,6 +3,7 @@
 #include <QImage>
 #include <QSvgGenerator>
 #include <QPainter>
+#include <QPainterPath>
 #include <vcg/space/point2.h>
 #include <vcg/space/color4.h>
 #include <vcg/space/box2.h>
