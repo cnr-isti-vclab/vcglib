@@ -128,9 +128,10 @@ public:
 	inline typename T::VertexType * const & V( const int j ) const { assert(j>=0 && j<2); return v[j]; }
 	inline typename T::VertexType *  cV( const int j ) const { assert(j>=0 && j<2);	return v[j]; }
 
-	// Shortcut per accedere ai punti delle facce
-	inline       CoordType & P( const int j ) 	    {	assert(j>=0 && j<2);		return v[j]->P();	}
-	inline const CoordType &cP( const int j ) const	{	assert(j>=0 && j<2);		return v[j]->P(); }
+	/// Shortcuts to access points
+	inline       CoordType &  P( const int j )       { assert(j>=0 && j<2); return v[j]->P();}
+	inline const CoordType &  P( const int j ) const { assert(j>=0 && j<2); return v[j]->P();}
+	inline const CoordType & cP( const int j ) const { assert(j>=0 && j<2); return v[j]->P();}
 
 	/** Return the pointer to the ((j+1)%3)-th vertex of the face.
 		@param j Index of the face vertex.
@@ -142,7 +143,7 @@ public:
 	inline const typename T::VertexType * const & cV0( const int j ) const { return cV(j);}
 	inline const typename T::VertexType * const & cV1( const int j ) const { return cV((j+1)%2);}
 
-	/// Shortcut per accedere ai punti delle facce
+	/// Shortcuts to access points
 	inline       CoordType &  P0( const int j )       { return V(j)->P();}
 	inline       CoordType &  P1( const int j )       { return V((j+1)%2)->P();}
 	inline const CoordType &  P0( const int j ) const { return V(j)->P();}
