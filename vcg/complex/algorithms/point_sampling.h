@@ -1948,8 +1948,10 @@ static void PoissonDiskPruning(VertexSampler &ps, MeshType &montecarloMesh,
         InitRadiusHandleFromQuality(montecarloMesh, rH, diskRadius, pp.radiusVariance, pp.invertQuality);
 
     //unsigned int (*p_myrandom)(unsigned int) = RandomInt;
-    std::random_device rd;
-    std::mt19937 g(rd());
+//    std::random_device rd;
+//    std::mt19937 g(rd());
+//    std::shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), g);
+    MarsenneTwisterURBG g(montecarloSHT.AllocatedCells.size());
     std::shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), g);
     int t1 = clock();
     pp.pds.montecarloSampleNum = montecarloMesh.vn;
@@ -2085,7 +2087,9 @@ static void HierarchicalPoissonDisk(MeshType &origMesh, VertexSampler &ps, MeshT
         // shuffle active cells
         //unsigned int (*p_myrandom)(unsigned int) = RandomInt;
         std::random_device rd;
-        std::mt19937 g(rd());
+//        std::mt19937 g(rd());
+//        std::shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), g);
+        MarsenneTwisterURBG g(montecarloSHT.AllocatedCells.size());
         std::shuffle(montecarloSHT.AllocatedCells.begin(),montecarloSHT.AllocatedCells.end(), g);
 
         // generate a sample inside C by choosing one of the contained pre-generated samples
