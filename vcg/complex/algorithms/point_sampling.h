@@ -502,6 +502,18 @@ static unsigned int RandomInt(unsigned int i)
     return (SamplingRandomGenerator().generate(i));
 }
 
+class MarsenneTwisterURBG
+{
+public:
+	typedef unsigned int result_type;
+	MarsenneTwisterURBG(result_type max) : _max(max) {}
+	result_type min() const {return 0;}
+	result_type max() const {return _max;}
+	result_type operator()() {return SamplingRandomGenerator().generate(_max);}
+private:
+	result_type _max;
+};
+
 // Returns a random number in the [0,1) real interval using the improved Marsenne-Twister method.
 static double RandomDouble01()
 {
@@ -714,8 +726,9 @@ static void	FillAndShuffleFacePointerVector(MeshType & m, std::vector<FacePointe
     assert((int)faceVec.size()==m.fn);
 
     //unsigned int (*p_myrandom)(unsigned int) = RandomInt;
-    std::random_device rd;
-    std::mt19937 g(rd());
+    //std::random_device rd;
+    //std::mt19937 g(rd());
+    MarsenneTwisterURBG g(faceVec.size());
     std::shuffle(faceVec.begin(),faceVec.end(), g);
 }
 static void	FillAndShuffleVertexPointerVector(MeshType & m, std::vector<VertexPointer> &vertVec)
@@ -726,8 +739,9 @@ static void	FillAndShuffleVertexPointerVector(MeshType & m, std::vector<VertexPo
     assert((int)vertVec.size()==m.vn);
 
     //unsigned int (*p_myrandom)(unsigned int) = RandomInt;
-    std::random_device rd;
-    std::mt19937 g(rd());
+    //std::random_device rd;
+    //std::mt19937 g(rd());
+    MarsenneTwisterURBG g(vertVec.size());
     std::shuffle(vertVec.begin(),vertVec.end(), g);
 }
 
