@@ -9,12 +9,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Download Jom
-      run: |
-        Invoke-WebRequest -Uri "http://mirrors.ukfast.co.uk/sites/qt.io/official_releases/jom/jom_1_1_3.zip" -OutFile "jom_1_1_3.zip"
-        New-Item -Name "jom" -ItemType "directory"
-        Expand-Archive -Path jom_1_1_3.zip -DestinationPath .\jom
-        echo "$(Get-Location)\jom" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     - name: Setup env variables
       id: envs
       run: |
@@ -27,5 +21,5 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -G "NMake Makefiles" -DVCG_BUILD_EXAMPLES=ON ..
-        jom -j4
+        cmake -GNinja -DVCG_BUILD_EXAMPLES=ON ..
+        ninja
