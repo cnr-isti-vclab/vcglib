@@ -507,8 +507,8 @@ class MarsenneTwisterURBG
 public:
 	typedef unsigned int result_type;
 	MarsenneTwisterURBG(result_type max){_max = max;}
-	static result_type min() {return 0;}
-	static result_type max() {return std::numeric_limits<result_type>::max();}
+	static constexpr result_type min() {return 0;}
+	static constexpr result_type max() {return std::numeric_limits<result_type>::max();}
 	result_type operator()() {return SamplingRandomGenerator().generate(_max);}
 private:
 	result_type _max;
