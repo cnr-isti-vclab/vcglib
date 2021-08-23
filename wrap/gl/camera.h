@@ -79,9 +79,6 @@ creation
 // VCG
 #include <vcg/math/camera.h>
 
-// opengl
-#include <GL/glew.h>
-
 template <class CameraType>
 struct GlCamera{
 
