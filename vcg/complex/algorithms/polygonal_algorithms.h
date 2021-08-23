@@ -23,8 +23,8 @@
 #ifndef __VCGLIB_POLY_MESH_ALGORITHM
 #define __VCGLIB_POLY_MESH_ALGORITHM
 
-#include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/update/normal.h>
 #include <vcg/space/polygon3.h>
 #include <vcg/complex/algorithms/update/color.h>
 #include <vcg/complex/algorithms/closest.h>
