@@ -1181,6 +1181,14 @@ public:
             for (int j=0;j<poly_m.face[i].VN();j++)
                 valenceVertH[poly_m.face[i].V(j)]++;
 
+        //cannot collapse triangular vertices otherwise will collapse to a segment
+        for (size_t i=0;i<poly_m.face.size();i++)
+        {
+            if (poly_m.face[i].VN()>3)continue;
+            for (int j=0;j<poly_m.face[i].VN();j++)
+                valenceVertH[poly_m.face[i].V(j)]=3;
+        }
+
         //then re-elaborate the faces
         for (size_t i=0;i<poly_m.face.size();i++)
         {
