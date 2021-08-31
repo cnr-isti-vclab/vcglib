@@ -264,6 +264,14 @@ class FieldSmoother
             mesh.face[i].PD2()=dir2*Norm2;
         }
 #else
+        (void)mesh;
+        (void)HardI;
+        (void)HardD;
+        (void)SoftI;
+        (void)SoftD;
+        (void)SoftW;
+        (void)alpha_soft;
+        (void)Ndir;
         assert(0);
 #endif
     }
