@@ -1,10 +1,10 @@
 #include <bitset>
 
+// #include <wrap/ply/plystuff.h>
+#include <wrap/io_trimesh/import.h>
+
 #include <vcg/complex/algorithms/align_pair.h>
 #include <vcg/space/index/grid_static_obj.h>
-
-#include <wrap/ply/plystuff.h>
-#include <wrap/io_trimesh/import.h>
 
 #ifndef VCGLIB_OCCUPANCY_GRID_H
 #define VCGLIB_OCCUPANCY_GRID_H
@@ -78,7 +78,7 @@ namespace vcg {
                 size_t ii = 0;
 
                 while (ii < MeshCounter::MaxVal()){
-                    if (cnt[ii]!=c.cnt[ii]) {
+                    if (cnt[ii] != c.cnt[ii]) {
                         return cnt[ii] < c.cnt[ii];
                     }
                     ++ii;
@@ -197,10 +197,10 @@ namespace vcg {
             bb.SetNull();
             totalbb.SetNull();
 
-            std::fprintf(stdout, "OG::AddMesh:Scanning BBoxex\n");
+            std::fprintf(stdout, "OG::AddMesh:Scanning BBoxes\n");
 
             for (std::size_t i = 0; i < names.size(); ++i) {
-                vcg::ply::ScanBBox(names[i].c_str(),bb);
+                // vcg::ply::ScanBBox(names[i].c_str(), bb, true);
                 totalbb.Add(trv[i], bb);
             }
 
@@ -208,7 +208,7 @@ namespace vcg {
 
             for (std::size_t i = 0; i < names.size(); ++i) {
                 std::fprintf(stdout, "OG::AddMesh:Adding Mesh %i '%s'\n", i, names[i].c_str());
-                Add(names[i].c_str(),trv[i],i);
+                Add(names[i].c_str(), trv[i], i);
             }
         }
 
@@ -220,7 +220,7 @@ namespace vcg {
             for (auto vi = std::begin(mesh.vert); vi != std::end(mesh.vert); ++vi) {
 
                 if (!(*vi).IsD()) {
-                    G.Grid( Trf * Point3f::Construct((*vi).P()) ).Set(ind);
+                    G.Grid(Trf * Point3f::Construct((*vi).P())).Set(ind);
                 }
             }
 
@@ -230,7 +230,7 @@ namespace vcg {
 
         void RemoveMesh(int id) {
 
-            MeshCounter *GridEnd = G.grid+G.size();
+            MeshCounter *GridEnd = G.grid + G.size();
 
             for (MeshCounter* ig = G.grid; ig != GridEnd; ++ig) {
                 ig->UnSet(id);
@@ -294,7 +294,7 @@ namespace vcg {
                     int m_s = vi->first.first;
                     int m_t = vi->first.second;
                     int area = vi->second;
-                    SVA.push_back( OGArcInfo (m_s,m_t,area,float(area)/float(min(VM[m_s].area,VM[m_t].area)) ));
+                    SVA.push_back( OGArcInfo (m_s,m_t,area,float(area)/float(std::min(VM[m_s].area,VM[m_t].area)) ));
                 }
             }
 
@@ -398,7 +398,7 @@ namespace vcg {
 
             std::fprintf(fp, "Computed %lu Arcs :\n", SVA.size());
 
-            for (std::size_t i = 0; i <SVA.size() && SVA[i].norm_area > .1; ++i) {
+            for (std::size_t i = 0; i < SVA.size() && SVA[i].norm_area > .1; ++i) {
                 std::fprintf(fp, "%4i -> %4i Area:%5i NormArea:%5.3f\n", SVA[i].s, SVA[i].t, SVA[i].area, SVA[i].norm_area);
             }
 
