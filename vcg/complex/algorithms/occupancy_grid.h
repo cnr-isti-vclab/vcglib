@@ -3,6 +3,9 @@
 #include <vcg/complex/algorithms/align_pair.h>
 #include <vcg/space/index/grid_static_obj.h>
 
+#include <wrap/ply/plystuff.h>
+#include <wrap/io_trimesh/import.h>
+
 #ifndef VCGLIB_OCCUPANCY_GRID_H
 #define VCGLIB_OCCUPANCY_GRID_H
 
@@ -62,7 +65,7 @@ namespace vcg {
                 v.clear();
 
                 for (size_t i = 0; i < MeshCounter::MaxVal(); ++i) {
-                    if (cnt.test(i) {
+                    if (cnt.test(i)) {
                         v.push_back(i);
                     }
                 }
@@ -132,17 +135,35 @@ namespace vcg {
                 DEGREE
             };
 
-            int s,t; // source and target (come indici nel gruppo corrente)
+            int s, t; // source and target (come indici nel gruppo corrente)
             int area;  //
             float norm_area;
 
             OGArcInfo(int _s, int _t, int _area, float _n) : s{_s}, t{_t}, area{_area}, norm_area{_n} {}
-            OGArcInfo(int _s, int _t, int _area) s{_s}, t{_t}, area{_area} {}
+            OGArcInfo(int _s, int _t, int _area) : s{_s}, t{_t}, area{_area} {}
 
             bool operator <  (const OGArcInfo &p) const {
                 return norm_area <  p.norm_area;
             }
         };
+
+        GridStaticObj<MeshCounter, float> G;
+
+        int mn;
+        int TotalArea;
+        /**
+         * Maximum number of meshes that cross a cell
+         */
+        int MaxCount;
+
+        /**
+         * SortedVisual Arcs
+         */
+        std::vector<OGArcInfo>  SVA;  // SortedVirtual Arcs;
+        /**
+         * High level information for each mesh. Mapped by mesh id
+         */
+        std::map<int, OGMeshInfo> VM;
 
         bool Init(int _mn, Box3d bb, int size) {
 
@@ -163,8 +184,8 @@ namespace vcg {
 
             AlignPair::A2Mesh M;
 
-            vcg::tri::io::Importer<A2Mesh>::Open(M,MeshName);
-            vcg::tri::Clean<A2Mesh>::RemoveUnreferencedVertex(M);
+            vcg::tri::io::Importer<AlignPair::A2Mesh>::Open(M, MeshName);
+            vcg::tri::Clean<AlignPair::A2Mesh>::RemoveUnreferencedVertex(M);
 
             AddMesh(M,Tr,id);
         }
@@ -179,7 +200,7 @@ namespace vcg {
             std::fprintf(stdout, "OG::AddMesh:Scanning BBoxex\n");
 
             for (std::size_t i = 0; i < names.size(); ++i) {
-                ply::ScanBBox(names[i].c_str(),bb);
+                vcg::ply::ScanBBox(names[i].c_str(),bb);
                 totalbb.Add(trv[i], bb);
             }
 
@@ -196,7 +217,7 @@ namespace vcg {
             Matrix44f Trf;
             Trf.Import(Tr);
 
-            for (auto vi = std::begin(M.vert); vi != std::end(M.vert); ++vi) {
+            for (auto vi = std::begin(mesh.vert); vi != std::end(mesh.vert); ++vi) {
 
                 if (!(*vi).IsD()) {
                     G.Grid( Trf * Point3f::Construct((*vi).P()) ).Set(ind);
@@ -405,26 +426,6 @@ namespace vcg {
 
             TotalArea = ccnt;
         }
-
-    private:
-
-        GridStaticObj<MeshCounter, float> G;
-
-        int mn;
-        int TotalArea;
-        /**
-         * Maximum number of meshes that cross a cell
-         */
-        int MaxCount;
-
-        /**
-         * SortedVisual Arcs
-         */
-        std::vector<OGArcInfo>  SVA;  // SortedVirtual Arcs;
-        /**
-         * High level information for each mesh. Mapped by mesh id
-         */
-        std::map<int, OGMeshInfo> VM;
 
     };
 }
