@@ -73,6 +73,7 @@ set(VCG_HEADERS
 	vcg/complex/algorithms/inertia.h
 	vcg/complex/algorithms/mesh_assert.h
 	vcg/complex/algorithms/occupancy_grid.h
+	vcg/complex/algorithms/meshtree.h.h
 	vcg/complex/algorithms/cut_tree.h
 	vcg/complex/algorithms/nring.h
 	vcg/complex/algorithms/tetra/tetfuse_collapse.h
