@@ -13,26 +13,6 @@ namespace vcg {
     template<class MeshType>
     class OccupancyGrid {
 
-    private:
-
-        GridStaticObj<MeshCounter, float> G;
-
-        int mn;
-        int TotalArea;
-        /**
-         * Maximum number of meshes that cross a cell
-         */
-        int MaxCount;
-
-        /**
-         * SortedVisual Arcs
-         */
-        std::vector<OGArcInfo>  SVA;  // SortedVirtual Arcs;
-        /**
-         * High level information for each mesh. Mapped by mesh id
-         */
-        std::map<int, OGMeshInfo> VM;
-
     public:
 
         /**
@@ -425,6 +405,26 @@ namespace vcg {
 
             TotalArea = ccnt;
         }
+
+    private:
+
+        GridStaticObj<MeshCounter, float> G;
+
+        int mn;
+        int TotalArea;
+        /**
+         * Maximum number of meshes that cross a cell
+         */
+        int MaxCount;
+
+        /**
+         * SortedVisual Arcs
+         */
+        std::vector<OGArcInfo>  SVA;  // SortedVirtual Arcs;
+        /**
+         * High level information for each mesh. Mapped by mesh id
+         */
+        std::map<int, OGMeshInfo> VM;
 
     };
 }
