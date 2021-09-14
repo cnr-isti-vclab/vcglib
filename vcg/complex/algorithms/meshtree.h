@@ -11,7 +11,7 @@
 
 namespace vcg {
 
-    template<class MeshType>
+    template<class MeshType, class ScalarType>
     class MeshTree {
 
     public:
@@ -24,11 +24,11 @@ namespace vcg {
 
             MeshNode(MeshType *_m) : m{_m}, glued{false} {}
 
-            vcg::Matrix44d &tr() {
+            vcg::Matrix44<ScalarType> &tr() {
                 return m->cm.Tr;
             }
 
-            const vcg::Box3d &bbox() const {
+            const vcg::Box3<ScalarType> &bbox() const {
                 return m->cm.bbox;
             }
 
@@ -47,7 +47,7 @@ namespace vcg {
         std::map<int, MeshNode*> nodeMap;
         std::vector<vcg::AlignPair::Result> resultList;
 
-        vcg::OccupancyGrid<CMeshO> OG;
+        vcg::OccupancyGrid<CMeshO, ScalarType> OG;
         vcg::CallBackPos * cb;
 
         MeshType *MM(unsigned int i) {
@@ -137,12 +137,12 @@ namespace vcg {
             std::sprintf(buf, "Computing Overlaps %i glued meshes...\n", gluedNum());
             cb(0, buf);
 
-            OG.Init(static_cast<int>(nodeMap.size()), vcg::Box3d::Construct(gluedBBox()), mtp.OGSize);
+            OG.Init(static_cast<int>(nodeMap.size()), vcg::Box3<ScalarType>::Construct(gluedBBox()), mtp.OGSize);
 
             for(auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
                 MeshTree::MeshNode *mn = ni->second;
                 if (mn->glued) {
-                    OG.AddMesh(mn->m->cm, vcg::Matrix44d::Construct(mn->tr()), mn->Id());
+                    OG.AddMesh(mn->m->cm, vcg::Matrix44<ScalarType>::Construct(mn->tr()), mn->Id());
                 }
             }
 
@@ -357,22 +357,22 @@ namespace vcg {
             result.MovName=movId;
         }
 
-        inline vcg::Box3d bbox() {
+        inline vcg::Box3<ScalarType> bbox() {
 
-            vcg::Box3d FullBBox;
+            vcg::Box3<ScalarType> FullBBox;
             for (auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
                 FullBBox.Add(vcg::Matrix44d::Construct(ni->second->tr()),ni->second->bbox());
             }
             return FullBBox;
         }
 
-        inline vcg::Box3d gluedBBox() {
+        inline vcg::Box3<ScalarType> gluedBBox() {
 
-            vcg::Box3d FullBBox;
+            vcg::Box3<ScalarType> FullBBox;
 
             for (auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
                 if (ni->second->glued) {
-                    FullBBox.Add(vcg::Matrix44d::Construct(ni->second->tr()), ni->second->bbox());
+                    FullBBox.Add(vcg::Matrix44<ScalarType>::Construct(ni->second->tr()), ni->second->bbox());
                 }
             }
             return FullBBox;

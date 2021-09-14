@@ -13,7 +13,7 @@
 #define OG_MESH_INFO_MAX_STAT 64
 
 namespace vcg {
-    template<class MeshType>
+    template<class MeshType, class ScalarType>
     class OccupancyGrid {
 
     public:
@@ -165,7 +165,7 @@ namespace vcg {
          */
         std::map<int, OGMeshInfo> VM;
 
-        bool Init(int _mn, Box3d bb, int size) {
+        bool Init(int _mn, Box3<ScalarType> bb, int size) {
 
             // the number of meshes (including all the unused ones; eg it is the range of the possible id)
             mn = _mn;
@@ -180,7 +180,7 @@ namespace vcg {
             return true;
         }
 
-        void Add(const char *MeshName, Matrix44d &Tr, int id) {
+        void Add(const char *MeshName, Matrix44<ScalarType> &Tr, int id) {
 
             AlignPair::A2Mesh M;
 
@@ -190,9 +190,9 @@ namespace vcg {
             AddMesh(M,Tr,id);
         }
 
-        void AddMeshes(std::vector<std::string> &names, std::vector<Matrix44d> &trv,int size) {
+        void AddMeshes(std::vector<std::string> &names, std::vector<Matrix44<ScalarType>> &trv,int size) {
 
-            Box3d bb, totalbb;
+            Box3<ScalarType> bb, totalbb;
 
             bb.SetNull();
             totalbb.SetNull();
@@ -212,7 +212,7 @@ namespace vcg {
             }
         }
 
-        void AddMesh(MeshType &mesh, const Matrix44d &Tr, int ind) {
+        void AddMesh(MeshType &mesh, const Matrix44<ScalarType> &Tr, int ind) {
 
             Matrix44f Trf;
             Trf.Import(Tr);
