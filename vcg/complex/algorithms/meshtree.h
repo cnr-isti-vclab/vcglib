@@ -1,9 +1,17 @@
 #ifndef VCGLIB_MESHTREE_H
 #define VCGLIB_MESHTREE_H
 
+#include <vcg/complex/algorithms/align_pair.h>
+#include <vcg/complex/algorithms/align_global.h>
+#include <vcg/complex/algorithms/occupancy_grid.h>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace vcg {
 
-    template<class MeshType, class ScalarType>
+    template<class MeshType>
     class MeshTree {
 
     public:
@@ -16,11 +24,11 @@ namespace vcg {
 
             MeshNode(MeshType *_m) : m{_m}, glued{false} {}
 
-            vcg::Matrix44<ScalarType> &tr() {
+            vcg::Matrix44d &tr() {
                 return m->cm.Tr;
             }
 
-            const vcg::Box3<ScalarType> &bbox() const {
+            const vcg::Box3d &bbox() const {
                 return m->cm.bbox;
             }
 
@@ -36,8 +44,8 @@ namespace vcg {
             float recalcThreshold = 0.1f;
         };
 
-        std::map<int, MeshType*> nodeMap;
-        std::list<vcg::AlignPair::Result> resultList;
+        std::map<int, MeshNode*> nodeMap;
+        std::vector<vcg::AlignPair::Result> resultList;
 
         vcg::OccupancyGrid<CMeshO> OG;
         vcg::CallBackPos * cb;
@@ -46,7 +54,9 @@ namespace vcg {
             return nodeMap[i]->m;
         }
 
-        MeshTree();
+        MeshTree() {}
+
+        MeshTree(vcg::CallBackPos* _cb) : cb{_cb} {}
 
         void clear() {
 
@@ -116,13 +126,16 @@ namespace vcg {
             return cnt;
         }
 
-        void Process(vcg::AlignPair::Param &ap, Param &mtp) {
+        void Process(vcg::AlignPair::Param &ap, MeshTree::Param &mtp) {
 
-            // QString buf;
-            // cb(0,qUtf8Printable(buf.sprintf("Starting Processing of %i glued meshes out of %zu meshes\n",gluedNum(),nodeMap.size())));
+            char buf[1024];
+            std::sprintf(buf, "Starting Processing of %i glued meshes out of %zu meshes\n", gluedNum(), nodeMap.size());
+            cb(0, buf);
 
             /******* Occupancy Grid Computation *************/
-            // cb(0,qUtf8Printable(buf.sprintf("Computing Overlaps %i glued meshes...\n",gluedNum() )));
+            std::memset(buf, '\0', 1024);
+            std::sprintf(buf, "Computing Overlaps %i glued meshes...\n", gluedNum());
+            cb(0, buf);
 
             OG.Init(static_cast<int>(nodeMap.size()), vcg::Box3d::Construct(gluedBBox()), mtp.OGSize);
 
@@ -140,8 +153,8 @@ namespace vcg {
             /*************** The long loop of arc computing **************/
 
             // count existing arcs within current error threshold
-            float percentileThr = 0f;
-            if (resultList.size() > 0) {
+            float percentileThr = 0;
+            if (!resultList.empty()) {
 
                 vcg::Distribution<float> H;
                 for (auto li = std::begin(resultList); li != std::end(resultList); ++li) {
@@ -176,20 +189,27 @@ namespace vcg {
 
             //if there are no arcs at all complain and return
             if (totalArcNum == 0) {
-                // cb(0, qUtf8Printable(buf.sprintf("\n Failure. There are no overlapping meshes?\n No candidate alignment arcs. Nothing Done.\n")));
+                std::memset(buf, '\0', 1024);
+                std::sprintf(buf, "\n Failure. There are no overlapping meshes?\n No candidate alignment arcs. Nothing Done.\n");
+                cb(0, buf);
                 return;
             }
 
             int num_max_thread = 1;
-            #ifdef _OPENMP
+#ifdef _OPENMP
             if (totalArcNum > 32) num_max_thread = omp_get_max_threads();
-            #endif
-            // cb(0,qUtf8Printable(buf.sprintf("Arc with good overlap %6zu (on  %6zu)\n",totalArcNum,OG.SVA.size())));
-            // cb(0,qUtf8Printable(buf.sprintf(" %6i preserved %i Recalc \n",preservedArcNum,recalcArcNum)));
+#endif
+            std::memset(buf, '\0', 1024);
+            std::sprintf(buf, "Arc with good overlap %6zu (on  %6zu)\n", totalArcNum, OG.SVA.size());
+            cb(0, buf);
+
+            std::memset(buf, '\0', 1024);
+            std::sprintf(buf, " %6i preserved %i Recalc \n", preservedArcNum, recalcArcNum);
+            cb(0, buf);
 
             bool hasValidAlign = false;
 
-            #pragma omp parallel for schedule(dynamic, 1) num_threads(num_max_thread)
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_max_thread)
 
             // on windows, omp does not support unsigned types for indices on cycles
             for (int i = 0 ;i < static_cast<int>(totalArcNum); ++i)  {
@@ -206,19 +226,26 @@ namespace vcg {
                     if (curResult->isValid()) {
                         hasValidAlign = true;
                         std::pair<double, double> dd = curResult->computeAvgErr();
-                        #pragma omp critical
-                        //cb(0,qUtf8Printable(buf.sprintf("(%3i/%3zu) %2i -> %2i Aligned AvgErr dd=%f -> dd=%f \n",i+1,totalArcNum,OG.SVA[i].s,OG.SVA[i].t,dd.first,dd.second)));
+#pragma omp critical
+
+                        std::memset(buf, '\0', 1024);
+                        std::sprintf(buf, "(%3i/%3zu) %2i -> %2i Aligned AvgErr dd=%f -> dd=%f \n", i+1,totalArcNum,OG.SVA[i].s,OG.SVA[i].t,dd.first,dd.second);
+                        cb(0, buf);
                     }
                     else {
-                        #pragma omp critical
-                        //cb(0,qUtf8Printable(buf.sprintf( "(%3i/%3zu) %2i -> %2i Failed Alignment of one arc %s\n",i+1,totalArcNum,OG.SVA[i].s,OG.SVA[i].t,vcg::AlignPair::errorMsg(curResult->status))));
+#pragma omp critical
+                        std::memset(buf, '\0', 1024);
+                        std::sprintf(buf, "(%3i/%3zu) %2i -> %2i Failed Alignment of one arc %s\n",i+1,totalArcNum,OG.SVA[i].s,OG.SVA[i].t,vcg::AlignPair::errorMsg(curResult->status));
+                        cb(0, buf);
                     }
                 }
             }
 
             //if there are no valid arcs complain and return
             if (!hasValidAlign) {
-                // cb(0,qUtf8Printable(buf.sprintf("\n Failure. No successful arc among candidate Alignment arcs. Nothing Done.\n")));
+                std::memset(buf, '\0', 1024);
+                std::sprintf(buf, "\n Failure. No successful arc among candidate Alignment arcs. Nothing Done.\n");
+                cb(0, buf);
                 return;
             }
 
@@ -229,7 +256,9 @@ namespace vcg {
                 }
             }
 
-            //cb(0,qUtf8Printable(buf.sprintf("Completed Mesh-Mesh Alignment: Avg Err %5.3f; Median %5.3f; 90%% %5.3f\n", H.Avg(), H.Percentile(0.5f), H.Percentile(0.9f))));
+            std::memset(buf, '\0', 1024);
+            std::sprintf(buf, "Completed Mesh-Mesh Alignment: Avg Err %5.3f; Median %5.3f; 90%% %5.3f\n", H.Avg(), H.Percentile(0.5f), H.Percentile(0.9f));
+            cb(0, buf);
 
             ProcessGlobal(ap);
         }
@@ -262,7 +291,7 @@ namespace vcg {
             AG.BuildGraph(ResVecPtr, GluedTrVec, GluedIdVec);
 
             float StartGlobErr = 0.001f;
-            while (!AG.GlobalAlign(names, StartGlobErr, 100, ap.MatchMode==vcg::AlignPair::Param::MMRigid, stdout)){
+            while (!AG.GlobalAlign(names, StartGlobErr, 100, ap.MatchMode == vcg::AlignPair::Param::MMRigid, stdout, cb)) {
                 StartGlobErr *= 2;
                 AG.BuildGraph(ResVecPtr,GluedTrVec, GluedIdVec);
             }
@@ -286,16 +315,16 @@ namespace vcg {
             vcg::Matrix44d MovM = vcg::Matrix44d::Construct(find(movId)->tr());
             vcg::Matrix44d MovToFix = Inverse(FixM) * MovM;
 
-            ProcessArc(fixId,movId,MovToFix,result,ap);
+            ProcessArc(fixId, movId, MovToFix, result, ap);
         }
 
-        void ProcessArc(int fixId, int movId, vcg::Matrix44d &MovToFix, vcg::AlignPair::Result &result, vcg::AlignPair::Param ap) {
+        void ProcessArc(int fixId, int movId, vcg::Matrix44d &MovM, vcg::AlignPair::Result &result, vcg::AlignPair::Param ap) {
 
             vcg::AlignPair::A2Mesh Fix;
             vcg::AlignPair aa;
 
             // 1) Convert fixed mesh and put it into the grid.
-            MM(fixId)->updateDataMask(MeshModel::MM_FACEMARK);
+            MM(fixId)->updateDataMask(MeshType::MeshModel::MM_FACEMARK);
             aa.convertMesh<CMeshO>(MM(fixId)->cm,Fix);
 
             vcg::AlignPair::A2Grid UG;
@@ -311,7 +340,7 @@ namespace vcg {
             }
 
             // 2) Convert the second mesh and sample a <ap.SampleNum> points on it.
-            MM(movId)->updateDataMask(MeshModel::MM_FACEMARK);
+            MM(movId)->updateDataMask(MeshType::MeshModel::MM_FACEMARK);
             std::vector<vcg::AlignPair::A2Vertex> tmpmv;
             aa.convertVertex(MM(movId)->cm.vert,tmpmv);
             aa.sampleMovVert(tmpmv, ap.SampleNum, ap.SampleMode);
@@ -320,7 +349,7 @@ namespace vcg {
             aa.fix=&Fix;
             aa.ap = ap;
 
-            vcg::Matrix44d In=MovM;
+            vcg::Matrix44d In = MovM;
             // Perform the ICP algorithm
             aa.align(In,UG,VG,result);
 
@@ -328,19 +357,22 @@ namespace vcg {
             result.MovName=movId;
         }
 
-        inline Box3m bbox() {
-            Box3m FullBBox;
+        inline vcg::Box3d bbox() {
+
+            vcg::Box3d FullBBox;
             for (auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
-                FullBBox.Add(Matrix44m::Construct(ni->second->tr()),ni->second->bbox());
+                FullBBox.Add(vcg::Matrix44d::Construct(ni->second->tr()),ni->second->bbox());
             }
             return FullBBox;
         }
 
-        inline Box3m gluedBBox() {
-            Box3m FullBBox;
+        inline vcg::Box3d gluedBBox() {
+
+            vcg::Box3d FullBBox;
+
             for (auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
                 if (ni->second->glued) {
-                    FullBBox.Add(Matrix44m::Construct(ni->second->tr()), ni->second->bbox());
+                    FullBBox.Add(vcg::Matrix44d::Construct(ni->second->tr()), ni->second->bbox());
                 }
             }
             return FullBBox;
