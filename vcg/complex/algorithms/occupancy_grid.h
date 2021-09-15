@@ -73,9 +73,9 @@ namespace vcg {
 
             bool operator < (const MeshCounter &c) const {
 
-                if (cnt==c.cnt) return false;
+                if (cnt == c.cnt) return false;
 
-                size_t ii = 0;
+                std::size_t ii = 0;
 
                 while (ii < MeshCounter::MaxVal()){
                     if (cnt[ii] != c.cnt[ii]) {
@@ -95,9 +95,9 @@ namespace vcg {
 
         public:
 
-            int id;        // the id of the mesh
-            int area;      // number of voxels in the OG touched by this mesh
-            int coverage;  // quanto e' ricoperta da altre mesh eccetto se stessa (eg: se ho due mesh di 1000 con overlap al 30% la covrg e' 300)
+            int id {-1};        // the id of the mesh
+            int area {0};      // number of voxels in the OG touched by this mesh
+            int coverage {0};  // quanto e' ricoperta da altre mesh eccetto se stessa (eg: se ho due mesh di 1000 con overlap al 30% la covrg e' 300)
 
             bool used = false;
 
@@ -106,12 +106,8 @@ namespace vcg {
             // are covered by <i> othermeshes. Sum(densityDistribution) == area;
             // if densityDistribution[1] > 0 means that this mesh is the unique to cover some portion of the space.
 
-            OGMeshInfo() {
-                Init(-1);
-            }
-
             void Init(int _id) {
-                coverage=0;area=0; id=_id;
+                id=_id;
             }
 
             bool operator < (OGMeshInfo &o) const {
@@ -251,7 +247,7 @@ namespace vcg {
             std::vector<int> VA; // virtual arcs
             VA.resize(mn * mn, 0);
 
-            std::map<std::pair<int,int>, int> VAMap;
+            std::map<std::pair<int, int>, int> VAMap;
 
             // First Loop:
             // Scan the grid and update possible arc count
@@ -412,7 +408,7 @@ namespace vcg {
             int ccnt = 0;
             MaxCount = 0;
 
-            int sz=G.size();
+            int sz = G.size();
 
             for (int i = 0; i < sz; ++i)
 
