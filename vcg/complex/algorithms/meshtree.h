@@ -22,7 +22,7 @@ namespace vcg {
             bool glued;
             MeshType *m;
 
-            MeshNode(MeshType *_m) : m{_m}, glued{false} {}
+            explicit MeshNode(MeshType *_m) : m{_m}, glued{false} {}
 
             vcg::Matrix44<ScalarType> &tr() {
                 return m->cm.Tr;
@@ -47,21 +47,19 @@ namespace vcg {
         std::map<int, MeshNode*> nodeMap;
         std::vector<vcg::AlignPair::Result> resultList;
 
-        vcg::OccupancyGrid<CMeshO, ScalarType> OG;
-        vcg::CallBackPos * cb;
+        vcg::OccupancyGrid<CMeshO, ScalarType> OG{};
+        vcg::CallBackPos* cb = vcg::DummyCallBackPos;
 
         MeshType *MM(unsigned int i) {
             return nodeMap[i]->m;
         }
 
-        MeshTree() {}
-
-        MeshTree(vcg::CallBackPos* _cb) : cb{_cb} {}
+        MeshTree() = default;
 
         void clear() {
 
-            for (auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
-                delete ni->second;
+            for (auto& ni : nodeMap) {
+                delete ni.second;
             }
 
             nodeMap.clear();
@@ -73,8 +71,8 @@ namespace vcg {
             auto li = std::begin(resultList);
             while (li != resultList.end()) {
 
-                if (li->MovName==mp->Id() || li->FixName==mp->Id()) {
-                    li=resultList.erase(li);
+                if (li->MovName == mp->Id() || li->FixName == mp->Id()) {
+                    li = resultList.erase(li);
                 }
                 else {
                     ++li;
@@ -84,21 +82,21 @@ namespace vcg {
 
         vcg::AlignPair::Result* findResult(int id1, int id2) {
 
-            for (auto li = std::begin(resultList); li != std::end(resultList); ++li) {
-                if ((li->MovName==id1 && li->FixName==id2) || (li->MovName==id2 && li->FixName==id1) ) {
-                    return &*li;
+            for (auto& li : resultList) {
+                if ((li.MovName == id1 && li.FixName == id2) || (li.MovName == id2 && li.FixName == id1) ) {
+                    return &li;
                 }
             }
 
-            return 0;
+            return nullptr;
         }
 
         MeshTree::MeshNode *find(int id) {
 
             MeshTree::MeshNode *mp = nodeMap[id];
 
-            if (mp==0 || mp->Id()!=id) {
-                assert("You are trying to find an unexistent mesh"==0);
+            if (mp == nullptr || mp->Id() != id) {
+                assert("You are trying to find a non existent mesh" == nullptr);
             }
 
             return mp;
@@ -106,24 +104,23 @@ namespace vcg {
 
         MeshTree::MeshNode *find(MeshType *m) {
 
-            for (auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
-                if (ni->second->m==m) return ni->second;
+            for (auto& ni : nodeMap) {
+                if (ni.second->m == m) return ni.second;
             }
 
-            assert("You are trying to find an unexistent mesh" ==0);
-            return 0;
+            assert("You are trying to find a non existent mesh" == nullptr);
+            return nullptr;
         }
 
         int gluedNum() {
 
-            int cnt = 0;
+            int count = 0;
 
-            for (auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
-                MeshTree::MeshNode *mn=ni->second;
-                if (mn->glued) ++cnt;
+            for (auto& ni : nodeMap) {
+                if (ni.second->glued) ++count;
             }
 
-            return cnt;
+            return count;
         }
 
         void Process(vcg::AlignPair::Param &ap, MeshTree::Param &mtp) {
@@ -139,8 +136,8 @@ namespace vcg {
 
             OG.Init(static_cast<int>(nodeMap.size()), vcg::Box3<ScalarType>::Construct(gluedBBox()), mtp.OGSize);
 
-            for(auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
-                MeshTree::MeshNode *mn = ni->second;
+            for (auto& ni : nodeMap) {
+                MeshTree::MeshNode *mn = ni.second;
                 if (mn->glued) {
                     OG.AddMesh(mn->m->cm, vcg::Matrix44<ScalarType>::Construct(mn->tr()), mn->Id());
                 }
@@ -157,8 +154,8 @@ namespace vcg {
             if (!resultList.empty()) {
 
                 vcg::Distribution<float> H;
-                for (auto li = std::begin(resultList); li != std::end(resultList); ++li) {
-                    H.Add(li->err);
+                for (auto& li : resultList) {
+                    H.Add(li.err);
                 }
 
                 percentileThr = H.Percentile(1.0f - mtp.recalcThreshold);
@@ -167,7 +164,7 @@ namespace vcg {
             std::size_t totalArcNum = 0;
             int preservedArcNum = 0, recalcArcNum = 0;
 
-            while(totalArcNum<OG.SVA.size() && OG.SVA[totalArcNum].norm_area > mtp.arcThreshold)
+            while(totalArcNum < OG.SVA.size() && OG.SVA[totalArcNum].norm_area > mtp.arcThreshold)
             {
                 AlignPair::Result *curResult = findResult(OG.SVA[totalArcNum].s, OG.SVA[totalArcNum].t);
                 if (curResult) {
@@ -250,10 +247,8 @@ namespace vcg {
             }
 
             vcg::Distribution<float> H; // stat for printing
-            for (auto li = std::begin(resultList); li != std::end(resultList); ++li) {
-                if ((*li).isValid()) {
-                    H.Add(li->err);
-                }
+            for (auto& li : resultList) {
+                if (li.isValid()) H.Add(li.err);
             }
 
             std::memset(buf, '\0', 1024);
@@ -265,26 +260,30 @@ namespace vcg {
 
         void ProcessGlobal(vcg::AlignPair::Param &ap) {
 
+            char buff[1024];
+            std::memset(buff, '\0', 1024);
+
             /************** Preparing Matrices for global alignment *************/
             std::vector<int> GluedIdVec;
             std::vector<vcg::Matrix44d> GluedTrVec;
 
             std::map<int, std::string> names;
 
-            for (auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
-                MeshTree::MeshNode *mn=ni->second;
+            for (auto& ni : nodeMap) {
+
+                MeshTree::MeshNode *mn = ni.second;
                 if (mn->glued) {
                     GluedIdVec.push_back(mn->Id());
                     GluedTrVec.push_back(vcg::Matrix44d::Construct(mn->tr()));
-                    names[mn->Id()]=qUtf8Printable(mn->m->label());
+                    names[mn->Id()] = qUtf8Printable(mn->m->label());
                 }
             }
 
             vcg::AlignGlobal AG;
             std::vector<vcg::AlignPair::Result *> ResVecPtr;
-            for (auto li = std::begin(resultList); li != std::end(resultList); ++li) {
-                if ((*li).isValid()) {
-                    ResVecPtr.push_back(&*li);
+            for (auto& li : resultList) {
+                if (li.isValid()) {
+                    ResVecPtr.push_back(&li);
                 }
             }
 
@@ -304,6 +303,8 @@ namespace vcg {
                 MM(GluedIdVec[ii])->cm.Tr.Import(GluedTrVecOut[ii]);
             }
 
+            std::sprintf(buff, "Completed Global Alignment (error bound %6.4f)\n", StartGlobErr);
+            cb(0, buff);
         }
 
         void ProcessArc(int fixId, int movId, vcg::AlignPair::Result &result, vcg::AlignPair::Param ap) {
@@ -349,9 +350,8 @@ namespace vcg {
             aa.fix=&Fix;
             aa.ap = ap;
 
-            vcg::Matrix44d In = MovM;
             // Perform the ICP algorithm
-            aa.align(In,UG,VG,result);
+            aa.align(MovM,UG,VG,result);
 
             result.FixName=fixId;
             result.MovName=movId;
@@ -360,9 +360,10 @@ namespace vcg {
         inline vcg::Box3<ScalarType> bbox() {
 
             vcg::Box3<ScalarType> FullBBox;
-            for (auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
-                FullBBox.Add(vcg::Matrix44d::Construct(ni->second->tr()),ni->second->bbox());
+            for (auto& ni : nodeMap) {
+                FullBBox.Add(vcg::Matrix44d::Construct(ni.second->tr()), ni.second->bbox());
             }
+
             return FullBBox;
         }
 
@@ -370,11 +371,12 @@ namespace vcg {
 
             vcg::Box3<ScalarType> FullBBox;
 
-            for (auto ni = std::begin(nodeMap); ni != std::end(nodeMap); ++ni) {
-                if (ni->second->glued) {
-                    FullBBox.Add(vcg::Matrix44<ScalarType>::Construct(ni->second->tr()), ni->second->bbox());
+            for (auto& ni : nodeMap) {
+                if (ni.second->glued) {
+                    FullBBox.Add(vcg::Matrix44<ScalarType>::Construct(ni.second->tr()), ni.second->bbox());
                 }
             }
+
             return FullBBox;
         }
 
