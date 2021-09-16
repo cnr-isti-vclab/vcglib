@@ -472,7 +472,7 @@ namespace vcg {
                     AlignGlobal::LOG(elfp,"\nDormant Num: %i\n", DormantNum());
 
                     curr = ChooseDormantWithMostDormantLink();
-                    if (curr == 0) {
+                    if (curr == nullptr) {
                         AlignGlobal::LOG(elfp,"\nFailed ChooseDormantWithMostDormantLink, chosen id:%i\n" ,0);
                         break; // non ci sono piu' componenti connesse composte da piu' di una singola mesh.
                     }
@@ -483,7 +483,7 @@ namespace vcg {
                     curr->Active = true;
                     cursid = curr->sid;
                     curr = ChooseDormantWithMostActiveLink ();
-                    if (curr == 0) {
+                    if (curr == nullptr) {
                         AlignGlobal::LOG(elfp, "\nFailed    ChooseDormantWithMostActiveLink, chosen id:%i\n", 0);
                     }
                     else {
@@ -545,7 +545,7 @@ namespace vcg {
         AlignGlobal::Node* ChooseDormantWithMostDormantLink() {
 
             int MaxAdjNum = 0;
-            AlignGlobal::Node *BestNode = 0;
+            AlignGlobal::Node *BestNode = nullptr;
 
             for (auto li = std::begin(N); li != std::end(N); ++li) {
                 if (!(*li).Active) {
@@ -555,6 +555,11 @@ namespace vcg {
                         BestNode = &(*li);
                     }
                 }
+            }
+
+            if (!BestNode){
+                std::printf("Warning! Unable to find a Node with at least a dormant link!!\n");
+                return nullptr;
             }
 
             assert(BestNode);
@@ -567,7 +572,7 @@ namespace vcg {
         AlignGlobal::Node* ChooseDormantWithMostActiveLink() {
 
             int MaxAdjNum = 0;
-            AlignGlobal::Node* BestNode = 0;
+            AlignGlobal::Node* BestNode = nullptr;
 
             for (auto li = std::begin(N); li != std::end(N); ++li) {
                 if (!(*li).Active) {
@@ -582,7 +587,7 @@ namespace vcg {
             if (!BestNode){
                 // Abbiamo finito di sistemare questa componente connessa.
                 std::printf("Warning! Unable to find a Node with at least an active link!!\n");
-                return 0;
+                return nullptr;
             }
 
             assert(BestNode);

@@ -39,7 +39,7 @@ namespace vcg {
 
         class Param {
         public:
-            int OGSize = 5000;
+            int OGSize = 50000;
             float arcThreshold = 0.3f;
             float recalcThreshold = 0.1f;
         };
@@ -50,11 +50,13 @@ namespace vcg {
         vcg::OccupancyGrid<CMeshO, ScalarType> OG{};
         vcg::CallBackPos* cb = vcg::DummyCallBackPos;
 
+        MeshTree() = default;
+
+        ~MeshTree() { clear(); }
+
         MeshType *MM(unsigned int i) {
             return nodeMap[i]->m;
         }
-
-        MeshTree() = default;
 
         void clear() {
 
@@ -381,6 +383,7 @@ namespace vcg {
         }
 
     };
+
 }
 
 #endif //VCGLIB_MESHTREE_H
