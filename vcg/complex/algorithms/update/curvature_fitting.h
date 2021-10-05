@@ -372,8 +372,8 @@ class Quadric
         {
             assert(VV.size() >= 5);
             Eigen::MatrixXd A(VV.size(),5);
-            Eigen::MatrixXd b(VV.size(),1);
-            Eigen::MatrixXd sol(5,1);
+            Eigen::VectorXd b(VV.size());
+            Eigen::VectorXd sol(5);
 
             for(unsigned int c=0; c < VV.size(); ++c)
             {
@@ -580,12 +580,12 @@ class Quadric
     c_val = -c_val;
 
     CoordType v1, v2;
-    v1[0] = c_vec[0];
-    v1[1] = c_vec[1];
+    v1[0] = c_vec(0);
+    v1[1] = c_vec(1);
     v1[2] = d * v1[0] + e * v1[1];
 
-    v2[0] = c_vec[2];
-    v2[1] = c_vec[3];
+    v2[0] = c_vec(2);
+    v2[1] = c_vec(3);
     v2[2] = d * v2[0] + e * v2[1];
 
     v1 = v1.Normalize();
