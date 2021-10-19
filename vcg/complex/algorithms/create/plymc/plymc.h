@@ -173,7 +173,7 @@ public:
   MeshProvider MP;
   Parameter p;
   Volume<Voxelf> VV;
-  char errorMessage[1024];
+  std::string errorMessage;
 
 /// PLYMC Methods
 
@@ -193,7 +193,7 @@ public:
       {
         if(m.FN()==0)
         {
-          sprintf(errorMessage,"%sError: mesh has not per vertex normals\n",errorMessage);
+          errorMessage = "Error: mesh has not per vertex normals\n";
           return false;
         }
         else
@@ -214,7 +214,7 @@ public:
       tri::Allocator<SMesh>::CompactEveryVector(m);      
        if(badNormalCnt > m.VN()/10)
         {
-          sprintf(errorMessage,"%sError: mesh has null normals\n",errorMessage);
+          errorMessage = "Error: mesh has null normals\n";
           return false;
         }
       
@@ -340,7 +340,7 @@ public:
 
 bool Process(vcg::CallBackPos *cb=0)
 {
-  sprintf(errorMessage,"%s", "");
+  errorMessage = "";
   printf("bbox scanning...\n"); fflush(stdout);
   Matrix44f Id; Id.SetIdentity();
   MP.InitBBox();
@@ -419,7 +419,7 @@ bool Process(vcg::CallBackPos *cb=0)
                 res = InitMesh(*sm,MP.MeshName(i).c_str(),MP.Tr(i));
                 if(!res)
                 {
-                  sprintf(errorMessage,"%sFailed Init of mesh %s\n",errorMessage,MP.MeshName(i).c_str());
+                  errorMessage = "Failed Init of mesh " +MP.MeshName(i);
                   return false ;
                 }
               }
