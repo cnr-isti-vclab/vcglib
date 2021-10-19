@@ -923,7 +923,7 @@ public:
 
 			ply_error_msg[PlyInfo::E_NO_VERTEX	  ]="No vertex field found";
 			ply_error_msg[PlyInfo::E_NO_FACE		]="No face field found";
-			ply_error_msg[PlyInfo::E_SHORTFILE	  ]="Unespected eof";
+			ply_error_msg[PlyInfo::E_SHORTFILE	  ]="Unexpected EOF";
 			ply_error_msg[PlyInfo::E_NO_3VERTINFACE ]="Face with more than 3 vertices";
 			ply_error_msg[PlyInfo::E_BAD_VERT_INDEX ]="Bad vertex index in face";
 			ply_error_msg[PlyInfo::E_NO_6TCOORD	 ]="Face with no 6 texture coordinates";
