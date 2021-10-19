@@ -29,6 +29,7 @@
 #include <vcg/space/point3.h>
 #include <vcg/space/point4.h>
 #include <vector>
+#include <array>
 #include <iostream>
 #include <Eigen/Core>
 #include <Eigen/LU>
