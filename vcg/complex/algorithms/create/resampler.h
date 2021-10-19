@@ -74,19 +74,22 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
     //typedef tri::FaceTmark<OldMeshType> MarkerFace;
     typedef vcg::tri::EmptyTMark<OldMeshType> MarkerFace;
     MarkerFace markerFunctor;
-
-    VertexIndex *_x_cs; // indici dell'intersezioni della superficie lungo gli Xedge della fetta corrente
-    VertexIndex	*_y_cs; // indici dell'intersezioni della superficie lungo gli Yedge della fetta corrente
-    VertexIndex *_z_cs; // indici dell'intersezioni della superficie lungo gli Zedge della fetta corrente
-    VertexIndex *_x_ns; // indici dell'intersezioni della superficie lungo gli Xedge della prossima fetta
-    VertexIndex *_z_ns; // indici dell'intersezioni della superficie lungo gli Zedge della prossima fetta
+    
+    std::vector<VertexIndex> _x_cs; // indici dell'intersezioni della superficie lungo gli Xedge della fetta corrente
+    std::vector<VertexIndex> _y_cs; // indici dell'intersezioni della superficie lungo gli Yedge della fetta corrente
+    std::vector<VertexIndex> _z_cs; // indici dell'intersezioni della superficie lungo gli Zedge della fetta corrente
+    std::vector<VertexIndex> _x_ns; // indici dell'intersezioni della superficie lungo gli Xedge della prossima fetta
+    std::vector<VertexIndex> _z_ns; // indici dell'intersezioni della superficie lungo gli Zedge della prossima fetta
 
     //float *_v_cs;///values of distance fields for each direction in current slice
     //float *_v_ns;///values of distance fields for each direction in next slice
 
     typedef typename  std::pair<bool,float> field_value;
-    field_value* _v_cs;
-    field_value* _v_ns;
+    std::vector<field_value> _v_cs;
+    std::vector<field_value> _v_ns;
+        
+//        field_value* _v_cs;
+//    field_value* _v_ns;
 
     NewMeshType	*_newM;
     OldMeshType	*_oldM;
@@ -110,15 +113,22 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
       DiscretizeFlag=false;
       MultiSampleFlag=false;
       AbsDistFlag=false;
-
-      _x_cs = new VertexIndex[ SliceSize ];
-      _y_cs = new VertexIndex[ SliceSize ];
-      _z_cs = new VertexIndex[ SliceSize ];
-      _x_ns = new VertexIndex[ SliceSize ];
-      _z_ns = new VertexIndex[ SliceSize ];
-
-      _v_cs= new field_value[(this->siz.X()+1)*(this->siz.Z()+1)];
-      _v_ns= new field_value[(this->siz.X()+1)*(this->siz.Z()+1)];
+      
+      _x_cs.resize(SliceSize);
+      _y_cs.resize(SliceSize);
+      _z_cs.resize(SliceSize);
+      _x_ns.resize(SliceSize);
+      _z_ns.resize(SliceSize);
+//      _x_cs = new VertexIndex[ SliceSize ];
+//      _y_cs = new VertexIndex[ SliceSize ];
+//      _z_cs = new VertexIndex[ SliceSize ];
+//      _x_ns = new VertexIndex[ SliceSize ];
+//      _z_ns = new VertexIndex[ SliceSize ];
+      
+      _v_cs.resize((this->siz.X()+1)*(this->siz.Z()+1));
+      _v_ns.resize((this->siz.X()+1)*(this->siz.Z()+1));
+//      _v_cs= new field_value[(this->siz.X()+1)*(this->siz.Z()+1)];
+//      _v_ns= new field_value[(this->siz.X()+1)*(this->siz.Z()+1)];
 
     };
 
@@ -232,7 +242,7 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
 
     /// compute the values if an entire slice (per y) distances>dig of a cell are signed with double of
     /// the distance of the bb
-    void ComputeSliceValues(int slice,field_value *slice_values)
+    void ComputeSliceValues(int slice,std::vector<field_value> &slice_values)
     {
 #pragma omp parallel for schedule(dynamic, 10)
       for (int i=0; i<=this->siz.X(); i++)
@@ -252,7 +262,7 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
             For some reasons it can happens that the sign of the computed distance could not correct.
             this function tries to correct these issues by flipping the isolated voxels with discordant sign
         */
-    void ComputeConsensus(int /*slice*/, field_value *slice_values)
+    void ComputeConsensus(int /*slice*/, std::vector<field_value> &slice_values)
     {
       float max_dist = min(min(this->voxel[0],this->voxel[1]),this->voxel[2]);
       int flippedCnt=0;
@@ -363,10 +373,13 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
     //swap slices , the initial value of distance fields ids set as double of bbox of space
     void NextSlice()
     {
-
-      memset(_x_cs, -1, SliceSize*sizeof(VertexIndex));
-      memset(_y_cs, -1, SliceSize*sizeof(VertexIndex));
-      memset(_z_cs, -1, SliceSize*sizeof(VertexIndex));
+        
+        std::fill(_x_cs.begin(),_x_cs.end(),-1);
+        std::fill(_y_cs.begin(),_y_cs.end(),-1);
+        std::fill(_z_cs.begin(),_z_cs.end(),-1);
+//      memset(_x_cs, -1, SliceSize*sizeof(VertexIndex));
+//      memset(_y_cs, -1, SliceSize*sizeof(VertexIndex));
+//      memset(_z_cs, -1, SliceSize*sizeof(VertexIndex));
 
 
       std::swap(_x_cs, _x_ns);
@@ -384,12 +397,18 @@ class Resampler : public BasicGrid<typename NewMeshType::ScalarType>
     {
 
       CurrentSlice = 0;
-
-      memset(_x_cs, -1, SliceSize*sizeof(VertexIndex));
-      memset(_y_cs, -1, SliceSize*sizeof(VertexIndex));
-      memset(_z_cs, -1, SliceSize*sizeof(VertexIndex));
-      memset(_x_ns, -1, SliceSize*sizeof(VertexIndex));
-      memset(_z_ns, -1, SliceSize*sizeof(VertexIndex));
+      
+      std::fill(_x_cs.begin(),_x_cs.end(),-1);
+      std::fill(_y_cs.begin(),_y_cs.end(),-1);
+      std::fill(_z_cs.begin(),_z_cs.end(),-1);
+      std::fill(_x_ns.begin(),_x_ns.end(),-1);
+      std::fill(_z_ns.begin(),_z_ns.end(),-1);
+      
+//      memset(_x_cs, -1, SliceSize*sizeof(VertexIndex));
+//      memset(_y_cs, -1, SliceSize*sizeof(VertexIndex));
+//      memset(_z_cs, -1, SliceSize*sizeof(VertexIndex));
+//      memset(_x_ns, -1, SliceSize*sizeof(VertexIndex));
+//      memset(_z_ns, -1, SliceSize*sizeof(VertexIndex));
 
       ComputeSliceValues(CurrentSlice,_v_cs);
       ComputeSliceValues(CurrentSlice+1,_v_ns);
