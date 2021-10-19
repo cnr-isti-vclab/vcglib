@@ -674,7 +674,6 @@ namespace vcg
                 {
                     vp = NULL;
 					vertices_idx.fill(-1);
-					//memset(vertices_idx, -1, 3*sizeof(size_t));
                     for (int vert=0; vert<3; vert++, trig++) //ok
                     {
 

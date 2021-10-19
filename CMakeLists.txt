@@ -232,18 +232,13 @@ set(VCG_HEADERS
 		vcg/math/linear.h
 		vcg/math/matrix44.h
 		vcg/math/eigen.h
-		vcg/math/old_lin_algebra.h
 		vcg/math/similarity2.h
 		vcg/math/gen_normal.h
-		vcg/math/old_matrix44.h
-		vcg/math/old_deprecated_matrix.h
-		vcg/math/old_matrix33.h
 		vcg/math/polar_decomposition.h
 		vcg/math/base.h
 		vcg/math/histogram.h
 		vcg/math/legendre.h
 		vcg/math/matrix33.h
-		vcg/math/old_matrix.h
 		vcg/simplex/edge/distance.h
 		vcg/simplex/edge/topology.h
 		vcg/simplex/edge/pos.h

@@ -79,17 +79,18 @@ public:
         datareserve = sz;
     }
 
-    void resize(size_t sz)
-    {
-        int oldDatasize = datasize;
-        if ((int)sz <= oldDatasize)
-            return;
-        if (sz > datareserve)
-            reserve(sz);
-        datasize = sz;
-        memset(&booldata[oldDatasize], 0, datasize - oldDatasize);
-    }
-    void push_back(const bool &v)
+	void resize(size_t sz)
+	{
+		int oldDatasize = datasize;
+		if ((int) sz <= oldDatasize)
+			return;
+		if (sz > datareserve)
+			reserve(sz);
+		datasize = sz;
+		for (unsigned int i = oldDatasize; i < datasize; ++i)
+			booldata[i] = false;
+	}
+	void push_back(const bool &v)
     {
         resize(datasize + 1);
         booldata[datasize] = v;
