@@ -310,7 +310,6 @@ public:
             global_mark				= 1;
 			marks.resize(placeholder_count);
 			std::fill(marks.begin(), marks.end(), 0);
-            //memset(&marks[0], 0, sizeof(unsigned char)*placeholder_count);
 
             std::sort(placeholders.begin(), placeholders.end(), ObjectSorter< NodeType >());
             std::vector< NodePointer > filled_leaves(placeholder_count);
