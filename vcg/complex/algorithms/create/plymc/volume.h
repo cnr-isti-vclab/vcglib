@@ -42,7 +42,7 @@ const char *SFormat( const char * f, ... )
         static char buf[4096];
         va_list marker;
         va_start( marker, f );
-        vsprintf(buf,f,marker);
+        vsnprintf(buf,4096,f,marker);
         va_end( marker );
         return buf;
     }
@@ -301,9 +301,9 @@ public:
     void GetSubVolumeTag(std::string &subtag)
     {
     char buf[32];
-        if     (div[0]<=  10 && div[1]<=  10 && div[2]<=  10 ) sprintf(buf,"_%01d%01d%01d",pos[0],pos[1],pos[2]);
-        else if(div[0]<= 100 && div[1]<= 100 && div[2]<= 100 ) sprintf(buf,"_%02d%02d%02d",pos[0],pos[1],pos[2]);
-                                                         else  sprintf(buf,"_%03d%03d%03d",pos[0],pos[1],pos[2]);
+        if     (div[0]<=  10 && div[1]<=  10 && div[2]<=  10 ) snprintf(buf,32,"_%01d%01d%01d",pos[0],pos[1],pos[2]);
+        else if(div[0]<= 100 && div[1]<= 100 && div[2]<= 100 ) snprintf(buf,32,"_%02d%02d%02d",pos[0],pos[1],pos[2]);
+                                                         else  snprintf(buf,32,"_%03d%03d%03d",pos[0],pos[1],pos[2]);
         subtag=buf;
     }
 

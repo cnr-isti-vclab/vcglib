@@ -597,7 +597,6 @@ int MCSimplify( MeshType &m, float absoluteError, bool preserveBB, vcg::CallBack
 	//qDebug("Simplifying at absoluteError=%f",absoluteError);
 
 	float TargetError = absoluteError;
-	char buf[1024];
 	DeciSession.template Init< MyColl > ();
 
 	pp.areaThr=TargetError*TargetError;
@@ -605,8 +604,9 @@ int MCSimplify( MeshType &m, float absoluteError, bool preserveBB, vcg::CallBack
 	if(TargetError < std::numeric_limits<float>::max() ) DeciSession.SetTargetMetric(TargetError);
 	while(DeciSession.DoOptimization() && DeciSession.currMetric < TargetError)
 	{
-		sprintf(buf,"Simplyfing %7i err %9g \r",m.fn,DeciSession.currMetric);
-		if (cb) cb(int(100.0f*DeciSession.currMetric/TargetError),buf);
+		std::string buf = "Simplyfing " + std::to_string(m.fn) + " err " + std::to_string(DeciSession.currMetric) + " \r";
+		if (cb)
+			cb(int(100.0f*DeciSession.currMetric/TargetError),buf.c_str());
 	}
 
 	return 1; //success
