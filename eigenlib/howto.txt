@@ -9,6 +9,11 @@ To update the lib:
 - download Eigen
 - unzip it somewhere
 - delete (in the filesystem) the content of the folder eigenlib/Eigen - copy the folders 'Eigen' there
+- execute the two following shell commands in the folder Eigen
+
+     grep -RiIl 'http://mozilla.org/MPL/2.0/.' * | xargs sed -i 's/http:\/\/mozilla.org\/MPL\/2.0\/./the mozilla.org home page/g'
+     grep -RiIl 'http' * | xargs sed -i 's/http/xxxp/g'
+
 - check the git status.
 - update this file
 - commit everything
