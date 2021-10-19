@@ -19,7 +19,7 @@ namespace Eigen {
   *
   * \param _Scalar the scalar type, i.e. the type of the coefficients
   *
-  * See http://www.netlib.org/linalg/html_templates/node91.html for details on the storage scheme.
+  * See xxxp://www.netlib.org/linalg/html_templates/node91.html for details on the storage scheme.
   *
   */
 namespace internal {

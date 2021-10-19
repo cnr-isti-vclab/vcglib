@@ -41,7 +41,7 @@
 // 
 //   The colamd/symamd library is available at
 // 
-//       http://www.suitesparse.com
+//       xxxp://www.suitesparse.com
 
   
 #ifndef EIGEN_COLAMD_H

@@ -190,7 +190,7 @@ class IncompleteCholesky : public SparseSolverBase<IncompleteCholesky<Scalar,_Up
 // Based on the following paper:
 //   C-J. Lin and J. J. Moré, Incomplete Cholesky Factorizations with
 //   Limited memory, SIAM J. Sci. Comput.  21(1), pp. 24-45, 1999
-//   http://ftp.mcs.anl.gov/pub/tech_reports/reports/P682.pdf
+//   xxxp://ftp.mcs.anl.gov/pub/tech_reports/reports/P682.pdf
 template<typename Scalar, int _UpLo, typename OrderingType>
 template<typename _MatrixType>
 void IncompleteCholesky<Scalar,_UpLo, OrderingType>::factorize(const _MatrixType& mat)

@@ -283,7 +283,7 @@ typename ComplexSchur<MatrixType>::ComplexScalar ComplexSchur<MatrixType>::compu
   using std::abs;
   if (iter == 10 || iter == 20) 
   {
-    // exceptional shift, taken from http://www.netlib.org/eispack/comqr.f
+    // exceptional shift, taken from xxxp://www.netlib.org/eispack/comqr.f
     return abs(numext::real(m_matT.coeff(iu,iu-1))) + abs(numext::real(m_matT.coeff(iu-1,iu-2)));
   }
 

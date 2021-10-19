@@ -11,7 +11,7 @@
 
 // The SSE code for the 4x4 float and double matrix inverse in this file
 // comes from the following Intel's library:
-// http://software.intel.com/en-us/articles/optimized-matrix-library-for-use-with-the-intel-pentiumr-4-processors-sse2-instructions/
+// xxxp://software.intel.com/en-us/articles/optimized-matrix-library-for-use-with-the-intel-pentiumr-4-processors-sse2-instructions/
 //
 // Here is the respective copyright and license statement:
 //

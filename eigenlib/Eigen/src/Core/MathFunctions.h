@@ -10,7 +10,7 @@
 #ifndef EIGEN_MATHFUNCTIONS_H
 #define EIGEN_MATHFUNCTIONS_H
 
-// source: http://www.geom.uiuc.edu/~huberty/math5337/groupe/digits.html
+// source: xxxp://www.geom.uiuc.edu/~huberty/math5337/groupe/digits.html
 // TODO this should better be moved to NumTraits
 #define EIGEN_PI 3.141592653589793238462643383279502884197169399375105820974944592307816406L
 

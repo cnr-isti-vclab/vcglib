@@ -46,7 +46,7 @@ namespace Eigen {
   * of the typical use of this class.
   *
   * \note The implementation is adapted from
-  * <a href="http://math.nist.gov/javanumerics/jama/">JAMA</a> (public domain).
+  * <a href="xxxp://math.nist.gov/javanumerics/jama/">JAMA</a> (public domain).
   * Their code is based on EISPACK.
   *
   * \sa class ComplexSchur, class EigenSolver, class ComplexEigenSolver

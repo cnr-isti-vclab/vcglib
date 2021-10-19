@@ -566,7 +566,7 @@ void BDCSVD<MatrixType>::divide (Index firstCol, Index lastCol, Index firstRowW,
 //
 // TODO Opportunities for optimization: better root finding algo, better stopping criterion, better
 // handling of round-off errors, be consistent in ordering
-// For instance, to solve the secular equation using FMM, see http://www.stat.uchicago.edu/~lekheng/courses/302/classics/greengard-rokhlin.pdf
+// For instance, to solve the secular equation using FMM, see xxxp://www.stat.uchicago.edu/~lekheng/courses/302/classics/greengard-rokhlin.pdf
 template <typename MatrixType>
 void BDCSVD<MatrixType>::computeSVDofM(Index firstCol, Index n, MatrixXr& U, VectorType& singVals, MatrixXr& V)
 {

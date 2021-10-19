@@ -550,9 +550,9 @@ void ColPivHouseholderQR<MatrixType>::computeInPlace()
     // update our table of norms of the columns
     for (Index j = k + 1; j < cols; ++j) {
       // The following implements the stable norm downgrade step discussed in
-      // http://www.netlib.org/lapack/lawnspdf/lawn176.pdf
+      // xxxp://www.netlib.org/lapack/lawnspdf/lawn176.pdf
       // and used in LAPACK routines xGEQPF and xGEQP3.
-      // See lines 278-297 in http://www.netlib.org/lapack/explore-html/dc/df4/sgeqpf_8f_source.html
+      // See lines 278-297 in xxxp://www.netlib.org/lapack/explore-html/dc/df4/sgeqpf_8f_source.html
       if (m_colNormsUpdated.coeffRef(j) != RealScalar(0)) {
         RealScalar temp = abs(m_qr.coeffRef(k, j)) / m_colNormsUpdated.coeffRef(j);
         temp = (RealScalar(1) + temp) * (RealScalar(1) - temp);
