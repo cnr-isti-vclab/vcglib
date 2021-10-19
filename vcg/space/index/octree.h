@@ -538,7 +538,7 @@ OBJECT_RETRIEVER:
         /*!
         * Markers used to avoid duplication of the same result during a query
         */
-		std::vector<char> marks;
+		std::vector<unsigned char> marks;
         unsigned char  global_mark;
 
         /*!
