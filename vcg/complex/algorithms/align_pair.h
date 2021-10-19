@@ -128,22 +128,21 @@ public:
 		public:
 			IterInfo()
 			{
-				memset ( (void *) this, 0, sizeof(IterInfo));
 			}
 
-			double MinDistAbs;
-			int DistanceDiscarded;
-			int AngleDiscarded;
-			int BorderDiscarded;
-			int SampleTested;  // how many points have been tested 
-			int SampleUsed;    // how many points have been actually used to compute the transformation
-			double pcl50;
-			double pclhi;
-			double AVG;
-			double RMS;
-			double StdDev;
-			int Time;  // Ending time of this iteration
-
+			double MinDistAbs        = 0;
+			int    DistanceDiscarded = 0;
+			int    AngleDiscarded    = 0;
+			int    BorderDiscarded   = 0;
+			int    SampleTested      = 0; // how many points have been tested
+			// how many points have been actually used to compute the transformation
+			int    SampleUsed = 0;
+			double pcl50      = 0;
+			double pclhi      = 0;
+			double AVG        = 0;
+			double RMS        = 0;
+			double StdDev     = 0;
+			int    Time       = 0; // Ending time of this iteration
 		};
 
 		std::vector<IterInfo> I;
