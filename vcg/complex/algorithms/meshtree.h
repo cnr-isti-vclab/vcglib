@@ -125,189 +125,231 @@ namespace vcg {
             return count;
         }
 
-        void Process(vcg::AlignPair::Param &ap, MeshTree::Param &mtp) {
+		void Process(vcg::AlignPair::Param& ap, MeshTree::Param& mtp)
+		{
+			std::array<char, 1024> buf;
+			std::sprintf(
+				buf.data(),
+				"Starting Processing of %i glued meshes out of %zu meshes\n",
+				gluedNum(),
+				nodeMap.size());
+			cb(0, buf.data());
 
-            char buf[1024];
-            std::sprintf(buf, "Starting Processing of %i glued meshes out of %zu meshes\n", gluedNum(), nodeMap.size());
-            cb(0, buf);
+			/******* Occupancy Grid Computation *************/
+			buf.fill('\0');
+			std::sprintf(buf.data(), "Computing Overlaps %i glued meshes...\n", gluedNum());
+			cb(0, buf.data());
 
-            /******* Occupancy Grid Computation *************/
-            std::memset(buf, '\0', 1024);
-            std::sprintf(buf, "Computing Overlaps %i glued meshes...\n", gluedNum());
-            cb(0, buf);
+			OG.Init(
+				static_cast<int>(nodeMap.size()),
+				vcg::Box3<ScalarType>::Construct(gluedBBox()),
+				mtp.OGSize);
 
-            OG.Init(static_cast<int>(nodeMap.size()), vcg::Box3<ScalarType>::Construct(gluedBBox()), mtp.OGSize);
+			for (auto& ni : nodeMap) {
+				MeshTree::MeshNode* mn = ni.second;
+				if (mn->glued) {
+					OG.AddMesh(mn->m->cm, vcg::Matrix44<ScalarType>::Construct(mn->tr()), mn->Id());
+				}
+			}
 
-            for (auto& ni : nodeMap) {
-                MeshTree::MeshNode *mn = ni.second;
-                if (mn->glued) {
-                    OG.AddMesh(mn->m->cm, vcg::Matrix44<ScalarType>::Construct(mn->tr()), mn->Id());
-                }
-            }
+			OG.Compute();
+			OG.Dump(stdout);
+			// Note: the s and t of the OG translate into fix and mov, respectively.
 
-            OG.Compute();
-            OG.Dump(stdout);
-            // Note: the s and t of the OG translate into fix and mov, respectively.
+			/*************** The long loop of arc computing **************/
 
-            /*************** The long loop of arc computing **************/
+			// count existing arcs within current error threshold
+			float percentileThr = 0;
+			if (!resultList.empty()) {
+				vcg::Distribution<float> H;
+				for (auto& li : resultList) {
+					H.Add(li.err);
+				}
 
-            // count existing arcs within current error threshold
-            float percentileThr = 0;
-            if (!resultList.empty()) {
+				percentileThr = H.Percentile(1.0f - mtp.recalcThreshold);
+			}
 
-                vcg::Distribution<float> H;
-                for (auto& li : resultList) {
-                    H.Add(li.err);
-                }
+			std::size_t totalArcNum     = 0;
+			int         preservedArcNum = 0, recalcArcNum = 0;
 
-                percentileThr = H.Percentile(1.0f - mtp.recalcThreshold);
-            }
+			while (totalArcNum < OG.SVA.size() &&
+				   OG.SVA[totalArcNum].norm_area > mtp.arcThreshold) {
+				AlignPair::Result* curResult =
+					findResult(OG.SVA[totalArcNum].s, OG.SVA[totalArcNum].t);
+				if (curResult) {
+					if (curResult->err < percentileThr) {
+						++preservedArcNum;
+					}
+					else {
+						++recalcArcNum;
+					}
+				}
+				else {
+					resultList.push_back(AlignPair::Result());
+					resultList.back().FixName = OG.SVA[totalArcNum].s;
+					resultList.back().MovName = OG.SVA[totalArcNum].t;
+					resultList.back().err     = std::numeric_limits<double>::max();
+				}
+				++totalArcNum;
+			}
 
-            std::size_t totalArcNum = 0;
-            int preservedArcNum = 0, recalcArcNum = 0;
+			// if there are no arcs at all complain and return
+			if (totalArcNum == 0) {
+				buf.fill('\0');
+				std::sprintf(
+					buf.data(),
+					"\n Failure. There are no overlapping meshes?\n No candidate alignment arcs. "
+					"Nothing Done.\n");
+				cb(0, buf.data());
+				return;
+			}
 
-            while(totalArcNum < OG.SVA.size() && OG.SVA[totalArcNum].norm_area > mtp.arcThreshold)
-            {
-                AlignPair::Result *curResult = findResult(OG.SVA[totalArcNum].s, OG.SVA[totalArcNum].t);
-                if (curResult) {
-                    if (curResult->err < percentileThr) {
-                        ++preservedArcNum;
-                    }
-                    else {
-                        ++recalcArcNum;
-                    }
-                }
-                else {
-                    resultList.push_back(AlignPair::Result());
-                    resultList.back().FixName = OG.SVA[totalArcNum].s;
-                    resultList.back().MovName = OG.SVA[totalArcNum].t;
-                    resultList.back().err = std::numeric_limits<double>::max();
-                }
-                ++totalArcNum;
-            }
-
-            //if there are no arcs at all complain and return
-            if (totalArcNum == 0) {
-                std::memset(buf, '\0', 1024);
-                std::sprintf(buf, "\n Failure. There are no overlapping meshes?\n No candidate alignment arcs. Nothing Done.\n");
-                cb(0, buf);
-                return;
-            }
-
-            int num_max_thread = 1;
+			int num_max_thread = 1;
 #ifdef _OPENMP
-            if (totalArcNum > 32) num_max_thread = omp_get_max_threads();
+			if (totalArcNum > 32)
+				num_max_thread = omp_get_max_threads();
 #endif
-            std::memset(buf, '\0', 1024);
-            std::sprintf(buf, "Arc with good overlap %6zu (on  %6zu)\n", totalArcNum, OG.SVA.size());
-            cb(0, buf);
+			buf.fill('\0');
+			std::sprintf(
+				buf.data(), "Arc with good overlap %6zu (on  %6zu)\n", totalArcNum, OG.SVA.size());
+			cb(0, buf.data());
 
-            std::memset(buf, '\0', 1024);
-            std::sprintf(buf, " %6i preserved %i Recalc \n", preservedArcNum, recalcArcNum);
-            cb(0, buf);
+			buf.fill('\0');
+			std::sprintf(buf.data(), " %6i preserved %i Recalc \n", preservedArcNum, recalcArcNum);
+			cb(0, buf.data());
 
-            bool hasValidAlign = false;
+			bool hasValidAlign = false;
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_max_thread)
 
-            // on windows, omp does not support unsigned types for indices on cycles
-            for (int i = 0 ;i < static_cast<int>(totalArcNum); ++i)  {
+			// on windows, omp does not support unsigned types for indices on cycles
+			for (int i = 0; i < static_cast<int>(totalArcNum); ++i) {
+				std::fprintf(
+					stdout,
+					"%4i -> %4i Area:%5i NormArea:%5.3f\n",
+					OG.SVA[i].s,
+					OG.SVA[i].t,
+					OG.SVA[i].area,
+					OG.SVA[i].norm_area);
+				AlignPair::Result* curResult = findResult(OG.SVA[i].s, OG.SVA[i].t);
 
-                std::fprintf(stdout,"%4i -> %4i Area:%5i NormArea:%5.3f\n",OG.SVA[i].s,OG.SVA[i].t,OG.SVA[i].area,OG.SVA[i].norm_area);
-                AlignPair::Result *curResult = findResult(OG.SVA[i].s,OG.SVA[i].t);
+				// // missing arc and arc with great error must be recomputed.
+				if (curResult->err >= percentileThr) {
+					ProcessArc(OG.SVA[i].s, OG.SVA[i].t, *curResult, ap);
+					curResult->area = OG.SVA[i].norm_area;
 
-                // // missing arc and arc with great error must be recomputed.
-                if (curResult->err >= percentileThr) {
-
-                    ProcessArc(OG.SVA[i].s, OG.SVA[i].t, *curResult, ap);
-                    curResult->area = OG.SVA[i].norm_area;
-
-                    if (curResult->isValid()) {
-                        hasValidAlign = true;
-                        std::pair<double, double> dd = curResult->computeAvgErr();
+					if (curResult->isValid()) {
+						hasValidAlign                = true;
+						std::pair<double, double> dd = curResult->computeAvgErr();
 #pragma omp critical
 
-                        std::memset(buf, '\0', 1024);
-                        std::sprintf(buf, "(%3i/%3zu) %2i -> %2i Aligned AvgErr dd=%f -> dd=%f \n", i+1,totalArcNum,OG.SVA[i].s,OG.SVA[i].t,dd.first,dd.second);
-                        cb(0, buf);
-                    }
-                    else {
+						buf.fill('\0');
+						std::sprintf(
+							buf.data(),
+							"(%3i/%3zu) %2i -> %2i Aligned AvgErr dd=%f -> dd=%f \n",
+							i + 1,
+							totalArcNum,
+							OG.SVA[i].s,
+							OG.SVA[i].t,
+							dd.first,
+							dd.second);
+						cb(0, buf.data());
+					}
+					else {
 #pragma omp critical
-                        std::memset(buf, '\0', 1024);
-                        std::sprintf(buf, "(%3i/%3zu) %2i -> %2i Failed Alignment of one arc %s\n",i+1,totalArcNum,OG.SVA[i].s,OG.SVA[i].t,vcg::AlignPair::errorMsg(curResult->status));
-                        cb(0, buf);
-                    }
-                }
-            }
+						buf.fill('\0');
+						std::sprintf(
+							buf.data(),
+							"(%3i/%3zu) %2i -> %2i Failed Alignment of one arc %s\n",
+							i + 1,
+							totalArcNum,
+							OG.SVA[i].s,
+							OG.SVA[i].t,
+							vcg::AlignPair::errorMsg(curResult->status));
+						cb(0, buf.data());
+					}
+				}
+			}
 
-            //if there are no valid arcs complain and return
-            if (!hasValidAlign) {
-                std::memset(buf, '\0', 1024);
-                std::sprintf(buf, "\n Failure. No successful arc among candidate Alignment arcs. Nothing Done.\n");
-                cb(0, buf);
-                return;
-            }
+			// if there are no valid arcs complain and return
+			if (!hasValidAlign) {
+				buf.fill('\0');
+				std::sprintf(
+					buf.data(),
+					"\n Failure. No successful arc among candidate Alignment arcs. Nothing "
+					"Done.\n");
+				cb(0, buf.data());
+				return;
+			}
 
-            vcg::Distribution<float> H; // stat for printing
-            for (auto& li : resultList) {
-                if (li.isValid()) H.Add(li.err);
-            }
+			vcg::Distribution<float> H; // stat for printing
+			for (auto& li : resultList) {
+				if (li.isValid())
+					H.Add(li.err);
+			}
 
-            std::memset(buf, '\0', 1024);
-            std::sprintf(buf, "Completed Mesh-Mesh Alignment: Avg Err %5.3f; Median %5.3f; 90%% %5.3f\n", H.Avg(), H.Percentile(0.5f), H.Percentile(0.9f));
-            cb(0, buf);
+			buf.fill('\0');
+			std::sprintf(
+				buf.data(),
+				"Completed Mesh-Mesh Alignment: Avg Err %5.3f; Median %5.3f; 90%% %5.3f\n",
+				H.Avg(),
+				H.Percentile(0.5f),
+				H.Percentile(0.9f));
+			cb(0, buf.data());
 
-            ProcessGlobal(ap);
-        }
+			ProcessGlobal(ap);
+		}
 
-        void ProcessGlobal(vcg::AlignPair::Param &ap) {
+		void ProcessGlobal(vcg::AlignPair::Param& ap)
+		{
+			/************** Preparing Matrices for global alignment *************/
+			std::vector<int>            GluedIdVec;
+			std::vector<vcg::Matrix44d> GluedTrVec;
 
-            char buff[1024];
-            std::memset(buff, '\0', 1024);
+			std::map<int, std::string> names;
 
-            /************** Preparing Matrices for global alignment *************/
-            std::vector<int> GluedIdVec;
-            std::vector<vcg::Matrix44d> GluedTrVec;
+			for (auto& ni : nodeMap) {
+				MeshTree::MeshNode* mn = ni.second;
+				if (mn->glued) {
+					GluedIdVec.push_back(mn->Id());
+					GluedTrVec.push_back(vcg::Matrix44d::Construct(mn->tr()));
+					names[mn->Id()] = qUtf8Printable(mn->m->label());
+				}
+			}
 
-            std::map<int, std::string> names;
+			vcg::AlignGlobal                     AG;
+			std::vector<vcg::AlignPair::Result*> ResVecPtr;
+			for (auto& li : resultList) {
+				if (li.isValid()) {
+					ResVecPtr.push_back(&li);
+				}
+			}
 
-            for (auto& ni : nodeMap) {
+			AG.BuildGraph(ResVecPtr, GluedTrVec, GluedIdVec);
 
-                MeshTree::MeshNode *mn = ni.second;
-                if (mn->glued) {
-                    GluedIdVec.push_back(mn->Id());
-                    GluedTrVec.push_back(vcg::Matrix44d::Construct(mn->tr()));
-                    names[mn->Id()] = qUtf8Printable(mn->m->label());
-                }
-            }
+			float StartGlobErr = 0.001f;
+			while (!AG.GlobalAlign(
+				names,
+				StartGlobErr,
+				100,
+				ap.MatchMode == vcg::AlignPair::Param::MMRigid,
+				stdout,
+				cb)) {
+				StartGlobErr *= 2;
+				AG.BuildGraph(ResVecPtr, GluedTrVec, GluedIdVec);
+			}
 
-            vcg::AlignGlobal AG;
-            std::vector<vcg::AlignPair::Result *> ResVecPtr;
-            for (auto& li : resultList) {
-                if (li.isValid()) {
-                    ResVecPtr.push_back(&li);
-                }
-            }
+			std::vector<vcg::Matrix44d> GluedTrVecOut(GluedTrVec.size());
+			AG.GetMatrixVector(GluedTrVecOut, GluedIdVec);
 
-            AG.BuildGraph(ResVecPtr, GluedTrVec, GluedIdVec);
-
-            float StartGlobErr = 0.001f;
-            while (!AG.GlobalAlign(names, StartGlobErr, 100, ap.MatchMode == vcg::AlignPair::Param::MMRigid, stdout, cb)) {
-                StartGlobErr *= 2;
-                AG.BuildGraph(ResVecPtr,GluedTrVec, GluedIdVec);
-            }
-
-            std::vector<vcg::Matrix44d> GluedTrVecOut(GluedTrVec.size());
-            AG.GetMatrixVector(GluedTrVecOut,GluedIdVec);
-
-            // Now get back the results!
-            for (std::size_t ii = 0; ii < GluedTrVecOut.size(); ++ii) {
-                MM(GluedIdVec[ii])->cm.Tr.Import(GluedTrVecOut[ii]);
-            }
-
-            std::sprintf(buff, "Completed Global Alignment (error bound %6.4f)\n", StartGlobErr);
-            cb(0, buff);
-        }
+			// Now get back the results!
+			for (std::size_t ii = 0; ii < GluedTrVecOut.size(); ++ii) {
+				MM(GluedIdVec[ii])->cm.Tr.Import(GluedTrVecOut[ii]);
+			}
+			std::string str =
+				"Completed Global Alignment (error bound " + std::to_string(StartGlobErr) + ")\n";
+			cb(0, str.c_str());
+		}
 
         void ProcessArc(int fixId, int movId, vcg::AlignPair::Result &result, vcg::AlignPair::Param ap) {
 
