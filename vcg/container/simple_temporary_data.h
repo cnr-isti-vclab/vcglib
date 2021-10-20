@@ -72,9 +72,8 @@ public:
 			return;
 		bool* newdataLoc = new bool[sz];
 		if (datasize != 0) {
+			std::copy(booldata, booldata+datasize, newdataLoc);
 			// memcpy(newdataLoc, booldata, sizeof(bool) * sizeof(datasize));
-			for (unsigned int i = 0; i < datasize; ++i)
-				newdataLoc[i] = booldata[i];
 		}
 
 		std::swap(booldata, newdataLoc);
