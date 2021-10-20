@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
@@ -24,6 +24,7 @@
 #define __VCG_OUTLINE2_PACKER_H__
 
 #include <limits>
+#include <fstream>
 #include <stdio.h>
 #include <assert.h>
 #include <vcg/space/box2.h>
@@ -212,26 +213,24 @@ static bool WritePolyVec(const std::vector< std::vector<Point2x> > &polyVec, con
 
 static bool ReadPolyVec(std::vector< std::vector<Point2x> > &polyVec, const char *filename)
 {
-  FILE *fp=fopen(filename,"r");
-  if(!fp) return false;
-  int sz;
-  fscanf(fp,"%i\n",&sz);
-  polyVec.clear();
-  polyVec.resize(sz);
-  for(size_t i=0;i<polyVec.size();++i)
-  {
-    fscanf(fp,"%i\n",&sz);
-    polyVec[i].resize(sz);
-    for(size_t j=0;j<polyVec[i].size();++j)
-    {
-      float x,y;
-      fscanf(fp,"%f %f",&x,&y);
-      polyVec[i][j].X()=x;
-      polyVec[i][j].Y()=y;
-    }
-  }
-  fclose(fp);
-  return true;
+	std::ifstream ifs(filename, std::ifstream::in);
+	if (!ifs.is_open()) return false;
+	int sz;
+	ifs >> sz;
+	polyVec.resize(sz);
+	for (std::size_t i = 0; i < sz; ++i){
+		int isz;
+		ifs >> isz;
+		polyVec[i].resize(isz);
+		for (std::size_t j = 0; j < isz; ++j){
+			float x, y;
+			ifs >> x >> y;
+			polyVec[i][j].X() = x;
+			polyVec[i][j].Y() = y;
+		}
+	}
+	ifs.close();
+	return true;
 }
 
 
