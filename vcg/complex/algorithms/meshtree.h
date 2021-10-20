@@ -128,8 +128,9 @@ namespace vcg {
 		void Process(vcg::AlignPair::Param& ap, MeshTree::Param& mtp)
 		{
 			std::array<char, 1024> buf;
-			std::sprintf(
+			std::snprintf(
 				buf.data(),
+				1024,
 				"Starting Processing of %i glued meshes out of %zu meshes\n",
 				gluedNum(),
 				nodeMap.size());
@@ -137,7 +138,7 @@ namespace vcg {
 
 			/******* Occupancy Grid Computation *************/
 			buf.fill('\0');
-			std::sprintf(buf.data(), "Computing Overlaps %i glued meshes...\n", gluedNum());
+			std::snprintf(buf.data(), 1024, "Computing Overlaps %i glued meshes...\n", gluedNum());
 			cb(0, buf.data());
 
 			OG.Init(
@@ -196,8 +197,9 @@ namespace vcg {
 			// if there are no arcs at all complain and return
 			if (totalArcNum == 0) {
 				buf.fill('\0');
-				std::sprintf(
+				std::snprintf(
 					buf.data(),
+					1024,
 					"\n Failure. There are no overlapping meshes?\n No candidate alignment arcs. "
 					"Nothing Done.\n");
 				cb(0, buf.data());
@@ -210,12 +212,12 @@ namespace vcg {
 				num_max_thread = omp_get_max_threads();
 #endif
 			buf.fill('\0');
-			std::sprintf(
-				buf.data(), "Arc with good overlap %6zu (on  %6zu)\n", totalArcNum, OG.SVA.size());
+			std::snprintf(
+				buf.data(), 1024,"Arc with good overlap %6zu (on  %6zu)\n", totalArcNum, OG.SVA.size());
 			cb(0, buf.data());
 
 			buf.fill('\0');
-			std::sprintf(buf.data(), " %6i preserved %i Recalc \n", preservedArcNum, recalcArcNum);
+			std::snprintf(buf.data(), 1024," %6i preserved %i Recalc \n", preservedArcNum, recalcArcNum);
 			cb(0, buf.data());
 
 			bool hasValidAlign = false;
@@ -244,8 +246,9 @@ namespace vcg {
 #pragma omp critical
 
 						buf.fill('\0');
-						std::sprintf(
+						std::snprintf(
 							buf.data(),
+							1024,
 							"(%3i/%3zu) %2i -> %2i Aligned AvgErr dd=%f -> dd=%f \n",
 							i + 1,
 							totalArcNum,
@@ -258,8 +261,9 @@ namespace vcg {
 					else {
 #pragma omp critical
 						buf.fill('\0');
-						std::sprintf(
+						std::snprintf(
 							buf.data(),
+							1024,
 							"(%3i/%3zu) %2i -> %2i Failed Alignment of one arc %s\n",
 							i + 1,
 							totalArcNum,
@@ -274,8 +278,9 @@ namespace vcg {
 			// if there are no valid arcs complain and return
 			if (!hasValidAlign) {
 				buf.fill('\0');
-				std::sprintf(
+				std::snprintf(
 					buf.data(),
+					1024,
 					"\n Failure. No successful arc among candidate Alignment arcs. Nothing "
 					"Done.\n");
 				cb(0, buf.data());
@@ -289,8 +294,9 @@ namespace vcg {
 			}
 
 			buf.fill('\0');
-			std::sprintf(
+			std::snprintf(
 				buf.data(),
+				1024,
 				"Completed Mesh-Mesh Alignment: Avg Err %5.3f; Median %5.3f; 90%% %5.3f\n",
 				H.Avg(),
 				H.Percentile(0.5f),
