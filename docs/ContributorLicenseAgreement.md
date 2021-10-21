@@ -8,7 +8,7 @@ The following terms are used throughout this agreement:
 * **Submitted** - conveyed to a Project via a pull request, commit, issue, or any form of electronic, written, or verbal communication with GitHub, contributors or maintainers.
 
 ## 1. Grant of Copyright License.
-Subject to the terms and conditions of this agreement, You grant to the Projects’ maintainers and to VCLab a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, sublicense, and distribute Your contributions and such derivative works. Except for this license, You reserve all rights, title, and interest in your contributions.
+Subject to the terms and conditions of this agreement, You grant to the Projects’ maintainers and to VCLab a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, sublicense, and distribute Your contributions and such derivative works. Except for this license, You reserve all rights, title, and interest in your contributions. You agree that your perpetual licensing grant will be applied to all Your contributions to VCLab's Projects during the validity (two years) of this agreement.
 
 ## 2. Grant of Patent License.
 Subject to the terms and conditions of this agreement, You grant to the Projects’ maintainers and to VCLab a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer your contributions, where such license applies only to those patent claims licensable by you that are necessarily infringed by your contribution or by combination of your contribution with the project to which this contribution was submitted.
@@ -25,9 +25,7 @@ Your contribution is either your original creation, based upon previous work tha
  &nbsp; |   &nbsp;
 **Email**  | **Physical home/office address**  
 &nbsp;|&nbsp;
-**Date of birth**  | **Place of birth** 
-&nbsp; | &nbsp;
-**github Project Contributed**  |  **Contribution**  (id of the pull request)
+**Date of birth**  | **Place of birth**
 &nbsp; | &nbsp;
 
 
@@ -37,4 +35,3 @@ Signature
 Date
 
 ---
-
