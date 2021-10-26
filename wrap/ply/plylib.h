@@ -116,9 +116,35 @@ typedef FILE * GZFILE;
 class PropDescriptor
 {
 public:
-	std::string elemname = ""; // name of the element (e.g. vertex)
-	std::string propname = ""; // name of the property (e.g. x, y, red...)
-	int	stotype1 = -1; // Type of the property in the file
+	PropDescriptor() {}
+	PropDescriptor
+		(std::string elemname,
+		 std::string propname,
+		 int	stotype1,
+		 int memtype1,
+		 size_t offset1,
+		 bool islist,
+		 bool alloclist,
+		 int stotype2,
+		 int memtype2,
+		 size_t offset2,
+		 int format) :
+			elemname(elemname),
+			propname(propname),
+			stotype1(stotype1),
+			memtype1(memtype1),
+			offset1(offset1),
+			islist(islist),
+			alloclist(alloclist),
+			stotype2(stotype2),
+			memtype2(memtype2),
+			offset2(offset2),
+			format(format)
+	{
+	}
+	std::string elemname; // name of the element (e.g. vertex)
+	std::string propname; // name of the property (e.g. x, y, red...)
+	int stotype1 = -1; // Type of the property in the file
 	int memtype1 = -1; // Type of the property in memory
 	size_t offset1 = 0; // Offset in memory
 	bool islist = false; // true if the property is a list

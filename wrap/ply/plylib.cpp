@@ -3695,6 +3695,6 @@ void interpret_texture_name(const char*a, const char*fn, char*output){
 		output[io++]=a[ia++]; 
 	};
 	output[io]=0;
-};
+}
 } 
 }
