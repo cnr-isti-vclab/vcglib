@@ -116,18 +116,18 @@ typedef FILE * GZFILE;
 class PropDescriptor
 {
 public:
-	std::string elemname; // name of the element (e.g. vertex)
-	std::string propname; // name of the property (e.g. x, y, red...)
-	int	stotype1; // Type of the property in the file
-	int memtype1; // Type of the property in memory
-	size_t offset1; // Offset in memory
-	bool islist; // true if the property is a list
-	bool alloclist; // 1 se alloca lista, 0 se preallocata
-	int stotype2; // Type of the number of elements of the list in the file
-	int memtype2; // Type of the number of elements of the list in memory
-	size_t offset2; // Offset valore memoria
+	std::string elemname = ""; // name of the element (e.g. vertex)
+	std::string propname = ""; // name of the property (e.g. x, y, red...)
+	int	stotype1 = -1; // Type of the property in the file
+	int memtype1 = -1; // Type of the property in memory
+	size_t offset1 = 0; // Offset in memory
+	bool islist = false; // true if the property is a list
+	bool alloclist = false; // 1 se alloca lista, 0 se preallocata
+	int stotype2 = -1; // Type of the number of elements of the list in the file
+	int memtype2 = -1; // Type of the number of elements of the list in memory
+	size_t offset2 = 0; // Offset valore memoria
 
-	int format; // duplicazione del formato
+	int format = -1; // duplicazione del formato
 	
 	size_t stotypesize() const; // per sapere quanto e'grande un dato descrittore sul file
 	size_t memtypesize() const; // per sapere quanto e'grande un dato descrittore in memoria
