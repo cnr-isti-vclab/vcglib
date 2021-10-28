@@ -299,11 +299,14 @@ public:
   static void ComputePerVertexQualityDistribution(const MeshType & m, Distribution<ScalarType> & h, bool selectionOnly = false)    // V1.0
   {
     tri::RequirePerVertexQuality(m);
+    h.Clear();    
     for(ConstVertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
       if(!(*vi).IsD() &&  ((!selectionOnly) || (*vi).IsS()) )
       {
-        assert(!math::IsNAN((*vi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
-        h.Add((*vi).Q());
+          if(!math::IsNAN((*vi).Q()))
+              h.Add((*vi).Q());
+          else
+              assert( "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
       }
   }
 
@@ -311,11 +314,14 @@ public:
                                                  bool selectionOnly = false)    // V1.0
   {
     tri::RequirePerFaceQuality(m);
+    h.Clear();    
     for(ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
       if(!(*fi).IsD() &&  ((!selectionOnly) || (*fi).IsS()) )
       {
-        assert(!math::IsNAN((*fi).Q()) && "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");
-        h.Add((*fi).Q());
+        if(!math::IsNAN((*fi).Q()))
+            h.Add((*fi).Q());
+        else
+            assert( "You should never try to compute Histogram with Invalid Floating points numbers (NaN)");        
       }
   }
 
