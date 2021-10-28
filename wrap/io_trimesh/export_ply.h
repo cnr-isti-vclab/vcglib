@@ -579,7 +579,7 @@ public:
 						fprintf(fpout,"%.*g ",DGTVR,vp->R());
 
 					if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) )
-						fprintf(fpout,"%.*g %.*g",DGTVT,vp->T().u(),vp->T().v());
+						fprintf(fpout,"%.*g %.*g",DGTVT,vp->T().u(),DGTVT,vp->T().v());
 
 					for(size_t i=0;i<pi.VertDescriptorVec.size();i++)
 					{
@@ -784,9 +784,8 @@ public:
 						fprintf(fpout,"%d ",fp->VN()*2);
 						for(int k=0;k<fp->VN();++k)
 							fprintf(fpout,"%.*g %.*g "
-									,DGTFT
-									,fp->V(k)->T().u()
-									,fp->V(k)->T().v()
+									,DGTFT,fp->V(k)->T().u()
+									,DGTFT,fp->V(k)->T().v()
 									);
 					}
 					else if( HasPerWedgeTexCoord(m) && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
