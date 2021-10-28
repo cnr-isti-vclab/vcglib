@@ -115,9 +115,12 @@ public:
 
   virtual const char *Info(TriMeshType &m) {
     mt = &m;
-    static char buf[60];
-      sprintf(buf,"%i -> %i %g\n", int(pos.V(0)-&m.vert[0]), int(pos.V(1)-&m.vert[0]),-_priority);
-   return buf;
+    static std::string msg;
+    msg =
+        std::to_string(int(pos.V(0)-&m.vert[0])) + " -> " +
+        std::to_string(int(pos.V(1)-&m.vert[0])) +
+        " " + std::to_string(-_priority) + "\n";
+    return msg.c_str();
   }
 
   inline void Execute(TriMeshType &m, BaseParameterClass *)

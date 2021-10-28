@@ -58,7 +58,7 @@
     #pragma GCC diagnostic ignored "-Wignored-attributes"
   #endif
   #if __GNUC__==7
-    // See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=89325
+    // See: xxxps://gcc.gnu.org/bugzilla/show_bug.cgi?id=89325
     #pragma GCC diagnostic ignored "-Wattributes"
   #endif
 #endif

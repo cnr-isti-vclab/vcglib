@@ -283,9 +283,12 @@ public:
      */
     const char* Info(TRIMESH_TYPE &m)
     {
-        static char dump[60];
-        sprintf(dump,"%zu -> %zu %g\n", tri::Index(m,_pos.F()->V(0)), tri::Index(m,_pos.F()->V(1)),-_priority);
-        return dump;
+        static std::string msg;
+        msg =
+            std::to_string(tri::Index(m,_pos.F()->V(0))) + " -> " +
+            std::to_string(tri::Index(m,_pos.F()->V(1))) +
+            " " + std::to_string(-_priority) + "\n";
+        return msg.c_str();
     }
 
     /*!

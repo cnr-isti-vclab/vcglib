@@ -278,7 +278,7 @@ public:
         }
         ScalarType maxA=0;
         for(int i=0;i<m.vn;++i)
-            maxA = max(maxA,h[i]);
+            maxA = std::max(maxA,h[i]);
 
         //store the index and the scalar for the sparse matrix
         for (size_t i=0;i<m.vert.size();i++)

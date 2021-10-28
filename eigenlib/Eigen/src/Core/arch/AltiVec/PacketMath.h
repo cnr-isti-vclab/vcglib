@@ -5,7 +5,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_PACKET_MATH_ALTIVEC_H
 #define EIGEN_PACKET_MATH_ALTIVEC_H
@@ -443,7 +443,7 @@ template<> EIGEN_STRONG_INLINE Packet4f ploadu<Packet4f>(const float* from)
 template<> EIGEN_STRONG_INLINE Packet4i ploadu<Packet4i>(const int* from)
 {
   EIGEN_DEBUG_ALIGNED_LOAD
-  // Taken from http://developer.apple.com/hardwaredrivers/ve/alignment.html
+  // Taken from xxxp://developer.apple.com/hardwaredrivers/ve/alignment.html
   Packet16uc MSQ, LSQ;
   Packet16uc mask;
   MSQ = vec_ld(0, (unsigned char *)from);          // most significant quadword
@@ -484,7 +484,7 @@ template<> EIGEN_STRONG_INLINE Packet4i ploaddup<Packet4i>(const int*     from)
 template<> EIGEN_STRONG_INLINE void pstoreu<float>(float*  to, const Packet4f& from)
 {
   EIGEN_DEBUG_UNALIGNED_STORE
-  // Taken from http://developer.apple.com/hardwaredrivers/ve/alignment.html
+  // Taken from xxxp://developer.apple.com/hardwaredrivers/ve/alignment.html
   // Warning: not thread safe!
   Packet16uc MSQ, LSQ, edges;
   Packet16uc edgeAlign, align;
@@ -502,7 +502,7 @@ template<> EIGEN_STRONG_INLINE void pstoreu<float>(float*  to, const Packet4f& f
 template<> EIGEN_STRONG_INLINE void pstoreu<int>(int*      to, const Packet4i& from)
 {
   EIGEN_DEBUG_UNALIGNED_STORE
-  // Taken from http://developer.apple.com/hardwaredrivers/ve/alignment.html
+  // Taken from xxxp://developer.apple.com/hardwaredrivers/ve/alignment.html
   // Warning: not thread safe!
   Packet16uc MSQ, LSQ, edges;
   Packet16uc edgeAlign, align;
@@ -563,7 +563,7 @@ template<> EIGEN_STRONG_INLINE Packet4f preduxp<Packet4f>(const Packet4f* vecs)
   Packet4f v[4], sum[4];
 
   // It's easier and faster to transpose then add as columns
-  // Check: http://www.freevec.org/function/matrix_4x4_transpose_floats for explanation
+  // Check: xxxp://www.freevec.org/function/matrix_4x4_transpose_floats for explanation
   // Do the transpose, first set of moves
   v[0] = vec_mergeh(vecs[0], vecs[2]);
   v[1] = vec_mergel(vecs[0], vecs[2]);
@@ -603,7 +603,7 @@ template<> EIGEN_STRONG_INLINE Packet4i preduxp<Packet4i>(const Packet4i* vecs)
   Packet4i v[4], sum[4];
 
   // It's easier and faster to transpose then add as columns
-  // Check: http://www.freevec.org/function/matrix_4x4_transpose_floats for explanation
+  // Check: xxxp://www.freevec.org/function/matrix_4x4_transpose_floats for explanation
   // Do the transpose, first set of moves
   v[0] = vec_mergeh(vecs[0], vecs[2]);
   v[1] = vec_mergel(vecs[0], vecs[2]);

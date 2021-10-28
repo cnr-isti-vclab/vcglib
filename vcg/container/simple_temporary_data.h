@@ -66,30 +66,34 @@ public:
             delete[] booldata;
     }
 
-    void reserve(size_t sz)
-    {
-        if (sz <= datareserve)
-            return;
-        bool *newdataLoc = new bool[sz];
-        if (datasize != 0)
-            memcpy(newdataLoc, booldata, sizeof(bool) * sizeof(datasize));
-        std::swap(booldata, newdataLoc);
-        if (newdataLoc != 0)
-            delete[] newdataLoc;
-        datareserve = sz;
-    }
+	void reserve(size_t sz)
+	{
+		if (sz <= datareserve)
+			return;
+		bool* newdataLoc = new bool[sz];
+		if (datasize != 0) {
+			std::copy(booldata, booldata+datasize, newdataLoc);
+			// memcpy(newdataLoc, booldata, sizeof(bool) * sizeof(datasize));
+		}
 
-    void resize(size_t sz)
-    {
-        int oldDatasize = datasize;
-        if (sz <= oldDatasize)
-            return;
-        if (sz > datareserve)
-            reserve(sz);
-        datasize = sz;
-        memset(&booldata[oldDatasize], 0, datasize - oldDatasize);
-    }
-    void push_back(const bool &v)
+		std::swap(booldata, newdataLoc);
+		if (newdataLoc != 0)
+			delete[] newdataLoc;
+		datareserve = sz;
+	}
+
+	void resize(size_t sz)
+	{
+		int oldDatasize = datasize;
+		if ((int) sz <= oldDatasize)
+			return;
+		if (sz > datareserve)
+			reserve(sz);
+		datasize = sz;
+		for (unsigned int i = oldDatasize; i < datasize; ++i)
+			booldata[i] = false;
+	}
+	void push_back(const bool &v)
     {
         resize(datasize + 1);
         booldata[datasize] = v;

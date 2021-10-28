@@ -6,7 +6,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_ORTHOMETHODS_H
 #define EIGEN_ORTHOMETHODS_H
@@ -17,7 +17,7 @@ namespace Eigen {
   *
   * \returns the cross product of \c *this and \a other
   *
-  * Here is a very good explanation of cross-product: http://xkcd.com/199/
+  * Here is a very good explanation of cross-product: xxxp://xkcd.com/199/
   * 
   * With complex numbers, the cross product is implemented as
   * \f$ (\mathbf{a}+i\mathbf{b}) \times (\mathbf{c}+i\mathbf{d}) = (\mathbf{a} \times \mathbf{c} - \mathbf{b} \times \mathbf{d}) - i(\mathbf{a} \times \mathbf{d} - \mathbf{b} \times \mathbf{c})\f$

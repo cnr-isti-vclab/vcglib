@@ -75,6 +75,7 @@ public:
 
 		PropDescriptor p;
 		p.propname=propName;
+		p.islist = false;
 		p.stotype1 = propertyType;
 		p.memtype1 = propertyType;
 

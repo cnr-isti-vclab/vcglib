@@ -166,12 +166,11 @@ private:
     {
         _bbox = subbox;
         _slice_dimension = _bbox.DimX()*_bbox.DimZ();
-
-        _x_cs = new VertexIndex[ _slice_dimension ];
-        _y_cs = new VertexIndex[ _slice_dimension ];
-        _z_cs = new VertexIndex[ _slice_dimension ];
-        _x_ns = new VertexIndex[ _slice_dimension ];
-        _z_ns = new VertexIndex[ _slice_dimension ];
+        _x_cs.resize(_slice_dimension);
+        _y_cs.resize(_slice_dimension);
+        _z_cs.resize(_slice_dimension);
+        _x_ns.resize(_slice_dimension);
+        _z_ns.resize(_slice_dimension);
     }
    
     TrivialWalker()
@@ -321,23 +320,22 @@ protected:
 
     int _slice_dimension;
     int	_current_slice;
-
-    VertexIndex *_x_cs; // indici dell'intersezioni della superficie lungo gli Xedge della fetta corrente
-    VertexIndex	*_y_cs; // indici dell'intersezioni della superficie lungo gli Yedge della fetta corrente
-    VertexIndex *_z_cs; // indici dell'intersezioni della superficie lungo gli Zedge della fetta corrente
-    VertexIndex *_x_ns; // indici dell'intersezioni della superficie lungo gli Xedge della prossima fetta
-    VertexIndex *_z_ns; // indici dell'intersezioni della superficie lungo gli Zedge della prossima fetta
+    
+    std::vector<VertexIndex> _x_cs; // indici dell'intersezioni della superficie lungo gli Xedge della fetta corrente
+    std::vector<VertexIndex> _y_cs; // indici dell'intersezioni della superficie lungo gli Yedge della fetta corrente
+    std::vector<VertexIndex> _z_cs; // indici dell'intersezioni della superficie lungo gli Zedge della fetta corrente
+    std::vector<VertexIndex> _x_ns; // indici dell'intersezioni della superficie lungo gli Xedge della prossima fetta
+    std::vector<VertexIndex> _z_ns; // indici dell'intersezioni della superficie lungo gli Zedge della prossima fetta
 
     MeshType		*_mesh;
     VolumeType	*_volume;
-
-  float _thr;
+    
+    float _thr;
     void NextYSlice()
     {
-        memset(_x_cs, -1, _slice_dimension*sizeof(VertexIndex));
-        memset(_y_cs,	-1, _slice_dimension*sizeof(VertexIndex));
-        memset(_z_cs, -1, _slice_dimension*sizeof(VertexIndex));
-
+        std::fill(_x_cs.begin(),_x_cs.end(),-1);
+        std::fill(_y_cs.begin(),_y_cs.end(),-1);
+        std::fill(_z_cs.begin(),_z_cs.end(),-1);
         std::swap(_x_cs, _x_ns);
         std::swap(_z_cs, _z_ns);
 
@@ -347,13 +345,11 @@ protected:
     void Begin()
     {
         _current_slice = _bbox.min.Y();
-
-        memset(_x_cs, -1, _slice_dimension*sizeof(VertexIndex));
-        memset(_y_cs, -1, _slice_dimension*sizeof(VertexIndex));
-        memset(_z_cs, -1, _slice_dimension*sizeof(VertexIndex));
-        memset(_x_ns, -1, _slice_dimension*sizeof(VertexIndex));
-        memset(_z_ns, -1, _slice_dimension*sizeof(VertexIndex));
-
+		std::fill(_x_cs.begin(),_x_cs.end(),-1);
+		std::fill(_y_cs.begin(),_y_cs.end(),-1);
+		std::fill(_z_cs.begin(),_z_cs.end(),-1);
+		std::fill(_x_ns.begin(),_x_ns.end(),-1);
+		std::fill(_z_ns.begin(),_z_ns.end(),-1);
     }
 };
 } // end namespace tri

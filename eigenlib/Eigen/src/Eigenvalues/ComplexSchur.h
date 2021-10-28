@@ -7,7 +7,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_COMPLEX_SCHUR_H
 #define EIGEN_COMPLEX_SCHUR_H
@@ -283,7 +283,7 @@ typename ComplexSchur<MatrixType>::ComplexScalar ComplexSchur<MatrixType>::compu
   using std::abs;
   if (iter == 10 || iter == 20) 
   {
-    // exceptional shift, taken from http://www.netlib.org/eispack/comqr.f
+    // exceptional shift, taken from xxxp://www.netlib.org/eispack/comqr.f
     return abs(numext::real(m_matT.coeff(iu,iu-1))) + abs(numext::real(m_matT.coeff(iu-1,iu-2)));
   }
 

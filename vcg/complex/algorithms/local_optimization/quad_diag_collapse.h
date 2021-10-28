@@ -358,9 +358,12 @@ namespace vcg{
 
             virtual const char *Info(MeshType &m)
             {
-                static char buf[60];
-                sprintf(buf,"(%d - %d) %g\n", hp->HVp()-&m.vert[0], hp->HNp()->HNp()->HVp()-&m.vert[0], -_priority);
-                return buf;
+                static std::string msg;
+                msg =
+                    "(" + std::to_string(hp->HVp()-&m.vert[0]) +
+                    " - " + std::to_string(hp->HNp()->HNp()->HVp()-&m.vert[0]) +
+                    ") " + std::to_string(-_priority) + "\n";
+                return msg.c_str();
             }
 
             /*!

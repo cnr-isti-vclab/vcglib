@@ -6,7 +6,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_MATHFUNCTIONSIMPL_H
 #define EIGEN_MATHFUNCTIONSIMPL_H
@@ -33,7 +33,7 @@ T generic_fast_tanh_float(const T& a_x)
   //      step such that if a_x is nan, x will be either 9 or -9,
   //      and tanh will return 1 or -1 instead of nan.
   //      This is supposed to be fixed in gcc6.3,
-  //      see: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=72867
+  //      see: xxxps://gcc.gnu.org/bugzilla/show_bug.cgi?id=72867
   const T x = pmax(minus_9,pmin(plus_9,a_x));
   // The monomial coefficients of the numerator polynomial (odd).
   const T alpha_1 = pset1<T>(4.89352455891786e-03f);

@@ -7,7 +7,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_MATRIXSTORAGE_H
 #define EIGEN_MATRIXSTORAGE_H
@@ -62,20 +62,20 @@ struct plain_array
   #define EIGEN_MAKE_UNALIGNED_ARRAY_ASSERT(sizemask)
 #elif EIGEN_GNUC_AT_LEAST(4,7) 
   // GCC 4.7 is too aggressive in its optimizations and remove the alignement test based on the fact the array is declared to be aligned.
-  // See this bug report: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=53900
+  // See this bug report: xxxp://gcc.gnu.org/bugzilla/show_bug.cgi?id=53900
   // Hiding the origin of the array pointer behind a function argument seems to do the trick even if the function is inlined:
   template<typename PtrType>
   EIGEN_ALWAYS_INLINE PtrType eigen_unaligned_array_assert_workaround_gcc47(PtrType array) { return array; }
   #define EIGEN_MAKE_UNALIGNED_ARRAY_ASSERT(sizemask) \
     eigen_assert((internal::UIntPtr(eigen_unaligned_array_assert_workaround_gcc47(array)) & (sizemask)) == 0 \
               && "this assertion is explained here: " \
-              "http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html" \
+              "xxxp://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html" \
               " **** READ THIS WEB PAGE !!! ****");
 #else
   #define EIGEN_MAKE_UNALIGNED_ARRAY_ASSERT(sizemask) \
     eigen_assert((internal::UIntPtr(array) & (sizemask)) == 0 \
               && "this assertion is explained here: " \
-              "http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html" \
+              "xxxp://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html" \
               " **** READ THIS WEB PAGE !!! ****");
 #endif
 

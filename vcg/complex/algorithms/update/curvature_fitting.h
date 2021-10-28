@@ -372,8 +372,8 @@ class Quadric
         {
             assert(VV.size() >= 5);
             Eigen::MatrixXd A(VV.size(),5);
-            Eigen::MatrixXd b(VV.size(),1);
-            Eigen::MatrixXd sol(5,1);
+            Eigen::VectorXd b(VV.size());
+            Eigen::VectorXd sol(5);
 
             for(unsigned int c=0; c < VV.size(); ++c)
             {
@@ -580,12 +580,12 @@ class Quadric
     c_val = -c_val;
 
     CoordType v1, v2;
-    v1[0] = c_vec[0];
-    v1[1] = c_vec[1];
+    v1[0] = c_vec(0);
+    v1[1] = c_vec(1);
     v1[2] = d * v1[0] + e * v1[1];
 
-    v2[0] = c_vec[2];
-    v2[1] = c_vec[3];
+    v2[0] = c_vec(2);
+    v2[1] = c_vec(3);
     v2[2] = d * v2[0] + e * v2[1];
 
     v1 = v1.Normalize();
@@ -619,9 +619,8 @@ class Quadric
 
 
 
-    static void updateCurvatureLocal (MeshType & mesh, float radiusSphere)
+    static void updateCurvatureLocal (MeshType & mesh, float radiusSphere, vcg::CallBackPos * cb = NULL)
     {
-    bool verbose = false;
     bool projectionPlaneCheck = true;
     int vertexesPerFit = 0;
 
@@ -631,24 +630,16 @@ class Quadric
     {
         std::vector<VertexType*> vv;
         std::vector<VertexType*> vvtmp;
-
+		if (cb && ((i%1024)==00)) {
+			(*cb)(int(100.0f * (float)i / (float)mesh.vn),"Vertices Analysis");
+		}		
         int count;
-        if (verbose && !((count = (vi - mesh.vert.begin())) % 1000))
-        printf ("vertex %d of %d\n",count,mesh.vert.size());
-
-        // if (kRing != 0)
-        // 	expandRing (&*vi, kRing, 5, &vv);
-        // else
         expandSphereLocal (mesh, &*vi, radiusSphere, 5, &vv);
 
         assert (vv.size() >= 5);
 
         CoordType ppn;
-        // if (averageNormalMode)
-        // 	//ppn = (*vi).N();
         getAverageNormal (&*vi, vv, &ppn);
-        // else
-        // 	getProjPlaneNormal (&*vi, vv, &ppn);
 
         if (projectionPlaneCheck)
         {
@@ -659,33 +650,12 @@ class Quadric
         }
 
         vvtmp.clear();
-
-        // if (montecarloMaxVertexNum)
-        // {
-        // 	//printf ("P: %d\n", vv.size());
-        // 	vvtmp.reserve (vv.size ());
-        // 	//printf ("TP: %d\n", vvtmp.size());
-        // 	applyMontecarlo (montecarloMaxVertexNum, vv, &vvtmp);
-        // 	//printf ("TD: %d\n", vvtmp.size());
-        // 	vv = vvtmp;
-        // 	//printf ("D: %d\n", vv.size());
-        // 	//printf ("\n");
-        // }
-
         assert (vv.size() >= 5);
 
         std::vector<CoordType> ref;
         computeReferenceFramesLocal (&*vi, ppn, &ref);
 
-        /*
-          printf ("%lf %lf %lf - %lf %lf %lf - %lf %lf %lf\n",
-          ref[0][0], ref[0][1], ref[0][2],
-          ref[1][0], ref[1][1], ref[1][2],
-          ref[2][0], ref[2][1], ref[2][2]);
-        */
-
         vertexesPerFit += vv.size();
-        //printf ("size: %d\n", vv.size());
 
         QuadricLocal q;
         fitQuadricLocal (&*vi, ref, vv, &q);
@@ -694,9 +664,7 @@ class Quadric
 
     }
 
-    //if (verbose)
-        //printf ("average vertex num in each fit: %f, total %d, vn %d\n", ((float) vertexesPerFit) / mesh.vn, vertexesPerFit, mesh.vn);
-    if (verbose)
+    if (cb)
         printf ("average vertex num in each fit: %f\n", ((float) vertexesPerFit) / mesh.vn);
     }
 

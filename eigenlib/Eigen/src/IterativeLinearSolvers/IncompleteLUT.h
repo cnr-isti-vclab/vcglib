@@ -6,7 +6,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_INCOMPLETE_LUT_H
 #define EIGEN_INCOMPLETE_LUT_H
@@ -88,12 +88,12 @@ Index QuickSplit(VectorV &row, VectorI &ind, Index ncut)
   * NOTE : The following implementation is derived from the ILUT implementation
   * in the SPARSKIT package, Copyright (C) 2005, the Regents of the University of Minnesota 
   *  released under the terms of the GNU LGPL: 
-  *    http://www-users.cs.umn.edu/~saad/software/SPARSKIT/README
+  *    xxxp://www-users.cs.umn.edu/~saad/software/SPARSKIT/README
   * However, Yousef Saad gave us permission to relicense his ILUT code to MPL2.
   * See the Eigen mailing list archive, thread: ILUT, date: July 8, 2012:
-  *   http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2012/07/msg00064.html
+  *   xxxp://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2012/07/msg00064.html
   * alternatively, on GMANE:
-  *   http://comments.gmane.org/gmane.comp.lib.eigen/3302
+  *   xxxp://comments.gmane.org/gmane.comp.lib.eigen/3302
   */
 template <typename _Scalar, typename _StorageIndex = int>
 class IncompleteLUT : public SparseSolverBase<IncompleteLUT<_Scalar, _StorageIndex> >

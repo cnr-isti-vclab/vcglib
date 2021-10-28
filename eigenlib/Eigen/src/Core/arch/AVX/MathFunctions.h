@@ -5,13 +5,13 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_MATH_FUNCTIONS_AVX_H
 #define EIGEN_MATH_FUNCTIONS_AVX_H
 
 /* The sin, cos, exp, and log functions of this file are loosely derived from
- * Julien Pommier's sse math library: http://gruntthepeon.free.fr/ssemath/
+ * Julien Pommier's sse math library: xxxp://gruntthepeon.free.fr/ssemath/
  */
 
 namespace Eigen {
@@ -359,7 +359,7 @@ pexp<Packet4d>(const Packet4d& _x) {
 // The main advantage of this approach is not just speed, but also the fact that
 // it can be inlined and pipelined with other computations, further reducing its
 // effective latency. This is similar to Quake3's fast inverse square root.
-// For detail see here: http://www.beyond3d.com/content/articles/8/
+// For detail see here: xxxp://www.beyond3d.com/content/articles/8/
 #if EIGEN_FAST_MATH
 template <>
 EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED Packet8f

@@ -8,7 +8,7 @@
 *                                                                    \      *
 * All rights reserved.                                                      *
 *                                                                           *
-* This program is free software; you can redistribute it and/or modify      *   
+* This program is free software; you can redistribute it and/or modify      *
 * it under the terms of the GNU General Public License as published by      *
 * the Free Software Foundation; either version 2 of the License, or         *
 * (at your option) any later version.                                       *
@@ -21,8 +21,8 @@
 *                                                                           *
 ****************************************************************************/
 
-#ifndef VCG_UV_UTILS
-#define VCG_UV_UTILS
+#ifndef VCG_COMPLEX_ALGORITHMS_PARAMETRIZATION_UV_UTILS_H
+#define VCG_COMPLEX_ALGORITHMS_PARAMETRIZATION_UV_UTILS_H
 
 #include <vcg/space/point2.h>
 #include <vcg/space/box2.h>
@@ -30,7 +30,7 @@
 #include <vcg/space/triangle3.h>
 
 namespace vcg {
-namespace tri{
+namespace tri {
 template <class MeshType>
 class UV_Utils
 {
@@ -44,7 +44,7 @@ class UV_Utils
 
 public:
 
-    ///calculate the area in UV space
+    /// calculate the area in UV space
     static ScalarType PerVertUVArea(MeshType &m)
     {
         FaceIterator fi;
@@ -242,6 +242,7 @@ public:
         }
     }
 };
-} //End Namespace Tri
-} // End Namespace vcg
-#endif
+
+} // end Namespace tri
+} // end Namespace vcg
+#endif // VCG_COMPLEX_ALGORITHMS_PARAMETRIZATION_UV_UTILS_H

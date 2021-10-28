@@ -29,6 +29,7 @@
 #include <vcg/space/point3.h>
 #include <vcg/space/point4.h>
 #include <vector>
+#include <array>
 #include <iostream>
 #include <Eigen/Core>
 #include <Eigen/LU>
@@ -73,7 +74,7 @@ for 'column' vectors.
     */
 template <class T> class Matrix44 {
 protected:
-    T _a[16];
+	std::array<T, 16> _a;
 
 public:
     typedef T ScalarType;
@@ -258,7 +259,9 @@ typedef Matrix44<double> Matrix44d;
 //}
 
 template <class T> Matrix44<T>::Matrix44(const T v[]) {
-    memcpy((T *)_a, v, 16 * sizeof(T));
+//    memcpy((T *)_a, v, 16 * sizeof(T));
+	for (unsigned int i = 0; i < 16; ++i)
+		_a[i] = v[i];
 }
 
 template <class T> T &Matrix44<T>::ElementAt(const int row, const int col) {
@@ -284,15 +287,15 @@ template <class T> T Matrix44<T>::ElementAt(const int row, const int col) const 
 //}
 template <class T> T *Matrix44<T>::operator[](const int i) {
     assert(i >= 0 && i < 4);
-    return _a+i*4;
+    return &_a[i*4];
 }
 
 template <class T> const T *Matrix44<T>::operator[](const int i) const {
     assert(i >= 0 && i < 4);
-    return _a+i*4;
+    return &_a[i*4];
 }
-template <class T>  T *Matrix44<T>::V()  { return _a;}
-template <class T> const T *Matrix44<T>::V() const { return _a;}
+template <class T>  T *Matrix44<T>::V()  { return _a.data();}
+template <class T> const T *Matrix44<T>::V() const { return _a.data();}
 
 
 template <class T> Matrix44<T> Matrix44<T>::operator+(const Matrix44 &m) const {
@@ -421,7 +424,7 @@ void Matrix44<T>::FromEulerAngles(T alpha, T beta, T gamma)
 }
 
 template <class T> void Matrix44<T>::SetZero() {
-    memset((T *)_a, 0, 16 * sizeof(T));
+	_a.fill(0);
 }
 
 template <class T> void Matrix44<T>::SetIdentity() {

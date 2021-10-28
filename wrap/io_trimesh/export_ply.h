@@ -104,7 +104,9 @@ public:
 		const int DGTS = vcg::tri::io::Precision<ShotScalarType>::digits();
 		const int DGTVQ = vcg::tri::io::Precision<typename VertexType::QualityType>::digits();
 		const int DGTVR = vcg::tri::io::Precision<typename VertexType::RadiusType>::digits();
+		const int DGTVT = vcg::tri::io::Precision<typename VertexType::TexCoordType::ScalarType>::digits();
 		const int DGTFQ = vcg::tri::io::Precision<typename FaceType::QualityType>::digits();
+		const int DGTFT = vcg::tri::io::Precision<typename FaceType::TexCoordType::ScalarType>::digits();
 		bool saveTexIndexFlag = false;
 
 		if(binary) h=hbin;
@@ -202,9 +204,11 @@ public:
 		}
 		if( ( HasPerVertexTexCoord(m) && pi.mask & Mask::IOM_VERTTEXCOORD ) )
 		{
+			const char* rdtp = vcg::tri::io::Precision<typename VertexType::TexCoordType::ScalarType>::typeName();
 			fprintf(fpout,
-					"property float texture_u\n"
-					"property float texture_v\n");
+					"property %s texture_u\n"
+					"property %s texture_v\n",
+					rdtp, rdtp);
 		}
 		for(size_t i=0;i<pi.VertDescriptorVec.size();i++){
 			if (!pi.VertDescriptorVec[i].islist) {
@@ -238,8 +242,9 @@ public:
 		if( (HasPerWedgeTexCoord(m)  && pi.mask & Mask::IOM_WEDGTEXCOORD ) ||
 				(HasPerVertexTexCoord(m) && (!HasPerWedgeTexCoord(m)) && pi.mask & Mask::IOM_WEDGTEXCOORD ) )  // Note that you can save VT as WT if you really really want it...
 		{
+			const char* rdtp = vcg::tri::io::Precision<typename FaceType::TexCoordType::ScalarType>::typeName();
 			fprintf(fpout,
-					"property list uchar float texcoord\n" );
+					"property list uchar %s texcoord\n", rdtp );
 		}
 		// The texture index information has to be saved for each face (if necessary) both for PerVert and PerWedg
 		if( saveTexIndexFlag &&
@@ -493,10 +498,10 @@ public:
 						fwrite(&r,sizeof(typename VertexType::RadiusType),1,fpout);
 					}
 
-					if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) )
-					{
-						t = ScalarType(vp->T().u()); fwrite(&t,sizeof(ScalarType),1,fpout);
-						t = ScalarType(vp->T().v()); fwrite(&t,sizeof(ScalarType),1,fpout);
+					if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) ){
+						typename VertexType::TexCoordType::ScalarType t;
+						t = ScalarType(vp->T().u()); fwrite(&t,sizeof(typename VertexType::TexCoordType::ScalarType),1,fpout);
+						t = ScalarType(vp->T().v()); fwrite(&t,sizeof(typename VertexType::TexCoordType::ScalarType),1,fpout);
 					}
 
 					for(size_t i=0;i<pi.VertDescriptorVec.size();i++)
@@ -574,7 +579,7 @@ public:
 						fprintf(fpout,"%.*g ",DGTVR,vp->R());
 
 					if( HasPerVertexTexCoord(m) && (pi.mask & Mask::IOM_VERTTEXCOORD) )
-						fprintf(fpout,"%f %f",vp->T().u(),vp->T().v());
+						fprintf(fpout,"%.*g %.*g",DGTVT,vp->T().u(),vp->T().v());
 
 					for(size_t i=0;i<pi.VertDescriptorVec.size();i++)
 					{
@@ -659,24 +664,24 @@ public:
 					if( HasPerVertexTexCoord(m) && (!HasPerWedgeTexCoord(m)) && (pi.mask & Mask::IOM_WEDGTEXCOORD) )  // Note that you can save VT as WT if you really want it...
 					{
 						fwrite(&b6char,sizeof(char),1,fpout);
-						float t[6];
+						typename FaceType::TexCoordType::ScalarType t[6];
 						for(int k=0;k<3;++k)
 						{
 							t[k*2+0] = fp->V(k)->T().u();
 							t[k*2+1] = fp->V(k)->T().v();
 						}
-						fwrite(t,sizeof(float),6,fpout);
+						fwrite(t,sizeof(typename FaceType::TexCoordType::ScalarType),6,fpout);
 					}
 					else if( HasPerWedgeTexCoord(m) && (pi.mask & Mask::IOM_WEDGTEXCOORD)  )
 					{
 						fwrite(&b6char,sizeof(char),1,fpout);
-						float t[6];
+						typename FaceType::TexCoordType::ScalarType t[6];
 						for(int k=0;k<3;++k)
 						{
 							t[k*2+0] = fp->WT(k).u();
 							t[k*2+1] = fp->WT(k).v();
 						}
-						fwrite(t,sizeof(float),6,fpout);
+						fwrite(t,sizeof(typename FaceType::TexCoordType::ScalarType),6,fpout);
 					}
 
 					if(saveTexIndexFlag)
@@ -778,7 +783,8 @@ public:
 					{
 						fprintf(fpout,"%d ",fp->VN()*2);
 						for(int k=0;k<fp->VN();++k)
-							fprintf(fpout,"%f %f "
+							fprintf(fpout,"%.*g %.*g "
+									,DGTFT
 									,fp->V(k)->T().u()
 									,fp->V(k)->T().v()
 									);
@@ -917,7 +923,7 @@ public:
 
 			ply_error_msg[PlyInfo::E_NO_VERTEX	  ]="No vertex field found";
 			ply_error_msg[PlyInfo::E_NO_FACE		]="No face field found";
-			ply_error_msg[PlyInfo::E_SHORTFILE	  ]="Unespected eof";
+			ply_error_msg[PlyInfo::E_SHORTFILE	  ]="Unexpected EOF";
 			ply_error_msg[PlyInfo::E_NO_3VERTINFACE ]="Face with more than 3 vertices";
 			ply_error_msg[PlyInfo::E_BAD_VERT_INDEX ]="Bad vertex index in face";
 			ply_error_msg[PlyInfo::E_NO_6TCOORD	 ]="Face with no 6 texture coordinates";

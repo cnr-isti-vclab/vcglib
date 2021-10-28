@@ -173,7 +173,7 @@ public:
   MeshProvider MP;
   Parameter p;
   Volume<Voxelf> VV;
-  char errorMessage[1024];
+  std::string errorMessage;
 
 /// PLYMC Methods
 
@@ -193,7 +193,7 @@ public:
       {
         if(m.FN()==0)
         {
-          sprintf(errorMessage,"%sError: mesh has not per vertex normals\n",errorMessage);
+          errorMessage = "Error: mesh has not per vertex normals\n";
           return false;
         }
         else
@@ -214,7 +214,7 @@ public:
       tri::Allocator<SMesh>::CompactEveryVector(m);      
        if(badNormalCnt > m.VN()/10)
         {
-          sprintf(errorMessage,"%sError: mesh has null normals\n",errorMessage);
+          errorMessage = "Error: mesh has null normals\n";
           return false;
         }
       
@@ -340,7 +340,7 @@ public:
 
 bool Process(vcg::CallBackPos *cb=0)
 {
-  sprintf(errorMessage,"%s", "");
+  errorMessage = "";
   printf("bbox scanning...\n"); fflush(stdout);
   Matrix44f Id; Id.SetIdentity();
   MP.InitBBox();
@@ -419,7 +419,7 @@ bool Process(vcg::CallBackPos *cb=0)
                 res = InitMesh(*sm,MP.MeshName(i).c_str(),MP.Tr(i));
                 if(!res)
                 {
-                  sprintf(errorMessage,"%sFailed Init of mesh %s\n",errorMessage,MP.MeshName(i).c_str());
+                  errorMessage = "Failed Init of mesh " +MP.MeshName(i);
                   return false ;
                 }
               }
@@ -597,7 +597,6 @@ int MCSimplify( MeshType &m, float absoluteError, bool preserveBB, vcg::CallBack
 	//qDebug("Simplifying at absoluteError=%f",absoluteError);
 
 	float TargetError = absoluteError;
-	char buf[1024];
 	DeciSession.template Init< MyColl > ();
 
 	pp.areaThr=TargetError*TargetError;
@@ -605,8 +604,9 @@ int MCSimplify( MeshType &m, float absoluteError, bool preserveBB, vcg::CallBack
 	if(TargetError < std::numeric_limits<float>::max() ) DeciSession.SetTargetMetric(TargetError);
 	while(DeciSession.DoOptimization() && DeciSession.currMetric < TargetError)
 	{
-		sprintf(buf,"Simplyfing %7i err %9g \r",m.fn,DeciSession.currMetric);
-		if (cb) cb(int(100.0f*DeciSession.currMetric/TargetError),buf);
+		std::string buf = "Simplyfing " + std::to_string(m.fn) + " err " + std::to_string(DeciSession.currMetric) + " \r";
+		if (cb)
+			cb(int(100.0f*DeciSession.currMetric/TargetError),buf.c_str());
 	}
 
 	return 1; //success

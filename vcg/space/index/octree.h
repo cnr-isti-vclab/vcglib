@@ -25,6 +25,7 @@
 #define VCG_SPACE_INDEX_OCTREE_H
 
 #include <stdlib.h>
+#include <vector>
 
 #ifdef __glut_h__
 #include <vcg/space/color4.h>
@@ -212,11 +213,11 @@ namespace vcg
 public:
       Octree()
         {
-        marks=0;
+        //marks=0;
         }
         ~Octree()
         {
-            if(marks) delete []marks;
+            //if(marks) delete []marks;
             int node_count = TemplatedOctree::NodeCount();
             for (int i=0; i<node_count; i++)
                 delete TemplatedOctree::nodes[i];
@@ -307,8 +308,8 @@ public:
 
             // Allocate the mark array
             global_mark				= 1;
-            marks							= new unsigned char[placeholder_count];
-            memset(&marks[0], 0, sizeof(unsigned char)*placeholder_count);
+			marks.resize(placeholder_count);
+			std::fill(marks.begin(), marks.end(), 0);
 
             std::sort(placeholders.begin(), placeholders.end(), ObjectSorter< NodeType >());
             std::vector< NodePointer > filled_leaves(placeholder_count);
@@ -537,7 +538,7 @@ OBJECT_RETRIEVER:
         /*!
         * Markers used to avoid duplication of the same result during a query
         */
-        unsigned char	*marks;
+		std::vector<unsigned char> marks;
         unsigned char  global_mark;
 
         /*!
@@ -561,7 +562,7 @@ OBJECT_RETRIEVER:
             global_mark = (global_mark+1)%255;
             if (global_mark == 0)
             {
-                memset(&marks[0], 0, sizeof(unsigned char)*int(sorted_dataset.size()));
+				std::fill(marks.begin(), marks.begin() + sorted_dataset.size(), 0);
                 global_mark++;
             }
         };//end of IncrementMark

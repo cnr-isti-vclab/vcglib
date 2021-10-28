@@ -7,7 +7,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_PACKET_MATH_NEON_H
 #define EIGEN_PACKET_MATH_NEON_H
@@ -207,7 +207,7 @@ template<> EIGEN_STRONG_INLINE Packet4i pdiv<Packet4i>(const Packet4i& /*a*/, co
 // Clang/ARM wrongly advertises __ARM_FEATURE_FMA even when it's not available,
 // then implements a slow software scalar fallback calling fmaf()!
 // Filed LLVM bug:
-//     https://llvm.org/bugs/show_bug.cgi?id=27216
+//     xxxps://llvm.org/bugs/show_bug.cgi?id=27216
 #if (defined __ARM_FEATURE_FMA) && !(EIGEN_COMP_CLANG && EIGEN_ARCH_ARM)
 // See bug 936.
 // FMA is available on VFPv4 i.e. when compiling with -mfpu=neon-vfpv4.
@@ -223,9 +223,9 @@ template<> EIGEN_STRONG_INLINE Packet4f pmadd(const Packet4f& a, const Packet4f&
   // at least -mcpu=cortex-a8 and -mcpu=cortex-a7. Since the former is the default on
   // -march=armv7-a, that is a very common case.
   // See e.g. this thread:
-  //     http://lists.llvm.org/pipermail/llvm-dev/2013-December/068806.html
+  //     xxxp://lists.llvm.org/pipermail/llvm-dev/2013-December/068806.html
   // Filed LLVM bug:
-  //     https://llvm.org/bugs/show_bug.cgi?id=27219
+  //     xxxps://llvm.org/bugs/show_bug.cgi?id=27219
   Packet4f r = c;
   asm volatile(
     "vmla.f32 %q[r], %q[a], %q[b]"
@@ -508,7 +508,7 @@ template<> EIGEN_STRONG_INLINE int32_t predux_max<Packet4i>(const Packet4i& a)
 }
 
 // this PALIGN_NEON business is to work around a bug in LLVM Clang 3.0 causing incorrect compilation errors,
-// see bug 347 and this LLVM bug: http://llvm.org/bugs/show_bug.cgi?id=11074
+// see bug 347 and this LLVM bug: xxxp://llvm.org/bugs/show_bug.cgi?id=11074
 #define PALIGN_NEON(Offset,Type,Command) \
 template<>\
 struct palign_impl<Offset,Type>\
@@ -558,7 +558,7 @@ ptranspose(PacketBlock<Packet4i,4>& kernel) {
 // Confirmed at least with __apple_build_version__ = 6000054.
 #ifdef __apple_build_version__
 // Let's hope that by the time __apple_build_version__ hits the 601* range, the bug will be fixed.
-// https://gist.github.com/yamaya/2924292 suggests that the 3 first digits are only updated with
+// xxxps://gist.github.com/yamaya/2924292 suggests that the 3 first digits are only updated with
 // major toolchain updates.
 #define EIGEN_APPLE_DOUBLE_NEON_BUG (__apple_build_version__ < 6010000)
 #else
@@ -727,7 +727,7 @@ template<> EIGEN_STRONG_INLINE double predux_min<Packet2d>(const Packet2d& a) { 
 template<> EIGEN_STRONG_INLINE double predux_max<Packet2d>(const Packet2d& a) { return vgetq_lane_f64(vpmaxq_f64(a, a), 0); }
 
 // this PALIGN_NEON business is to work around a bug in LLVM Clang 3.0 causing incorrect compilation errors,
-// see bug 347 and this LLVM bug: http://llvm.org/bugs/show_bug.cgi?id=11074
+// see bug 347 and this LLVM bug: xxxp://llvm.org/bugs/show_bug.cgi?id=11074
 #define PALIGN_NEON(Offset,Type,Command) \
 template<>\
 struct palign_impl<Offset,Type>\

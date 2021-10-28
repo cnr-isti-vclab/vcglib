@@ -7,10 +7,10 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 /* The sin, cos, exp, and log functions of this file come from
- * Julien Pommier's sse math library: http://gruntthepeon.free.fr/ssemath/
+ * Julien Pommier's sse math library: xxxp://gruntthepeon.free.fr/ssemath/
  */
 
 #ifndef EIGEN_MATH_FUNCTIONS_ALTIVEC_H

@@ -3,7 +3,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 //
 // The conversion routines are Copyright (c) Fabian Giesen, 2016.
 // The original license follows:
@@ -165,8 +165,8 @@ struct numeric_limits<Eigen::half> {
   static const bool is_bounded = false;
   static const bool is_modulo = false;
   static const int digits = 11;
-  static const int digits10 = 3;      // according to http://half.sourceforge.net/structstd_1_1numeric__limits_3_01half__float_1_1half_01_4.html
-  static const int max_digits10 = 5;  // according to http://half.sourceforge.net/structstd_1_1numeric__limits_3_01half__float_1_1half_01_4.html
+  static const int digits10 = 3;      // according to xxxp://half.sourceforge.net/structstd_1_1numeric__limits_3_01half__float_1_1half_01_4.html
+  static const int max_digits10 = 5;  // according to xxxp://half.sourceforge.net/structstd_1_1numeric__limits_3_01half__float_1_1half_01_4.html
   static const int radix = 2;
   static const int min_exponent = -13;
   static const int min_exponent10 = -4;
@@ -189,7 +189,7 @@ struct numeric_limits<Eigen::half> {
 // If std::numeric_limits<T> is specialized, should also specialize
 // std::numeric_limits<const T>, std::numeric_limits<volatile T>, and
 // std::numeric_limits<const volatile T>
-// https://stackoverflow.com/a/16519653/
+// xxxps://stackoverflow.com/a/16519653/
 template<>
 struct numeric_limits<const Eigen::half> : numeric_limits<Eigen::half> {};
 template<>

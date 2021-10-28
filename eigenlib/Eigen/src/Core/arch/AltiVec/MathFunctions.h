@@ -7,10 +7,10 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 /* The sin, cos, exp, and log functions of this file come from
- * Julien Pommier's sse math library: http://gruntthepeon.free.fr/ssemath/
+ * Julien Pommier's sse math library: xxxp://gruntthepeon.free.fr/ssemath/
  */
 
 #ifndef EIGEN_MATH_FUNCTIONS_ALTIVEC_H
@@ -230,7 +230,7 @@ Packet2d psqrt<Packet2d>(const Packet2d& x)
 // vec_cts to efficiently convert Packet2d to Packet2l.  Otherwise, use
 // a slow version that works with older compilers. 
 // Update: apparently vec_cts/vec_ctf intrinsics for 64-bit doubles
-// are buggy, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70963
+// are buggy, xxxps://gcc.gnu.org/bugzilla/show_bug.cgi?id=70963
 static inline Packet2l ConvertToPacket2l(const Packet2d& x) {
 #if EIGEN_GNUC_AT_LEAST(5, 4) || \
     (EIGEN_GNUC_AT(6, 1) && __GNUC_PATCHLEVEL__ >= 1)

@@ -6,7 +6,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_INCOMPLETE_CHOlESKY_H
 #define EIGEN_INCOMPLETE_CHOlESKY_H
@@ -190,7 +190,7 @@ class IncompleteCholesky : public SparseSolverBase<IncompleteCholesky<Scalar,_Up
 // Based on the following paper:
 //   C-J. Lin and J. J. Moré, Incomplete Cholesky Factorizations with
 //   Limited memory, SIAM J. Sci. Comput.  21(1), pp. 24-45, 1999
-//   http://ftp.mcs.anl.gov/pub/tech_reports/reports/P682.pdf
+//   xxxp://ftp.mcs.anl.gov/pub/tech_reports/reports/P682.pdf
 template<typename Scalar, int _UpLo, typename OrderingType>
 template<typename _MatrixType>
 void IncompleteCholesky<Scalar,_UpLo, OrderingType>::factorize(const _MatrixType& mat)

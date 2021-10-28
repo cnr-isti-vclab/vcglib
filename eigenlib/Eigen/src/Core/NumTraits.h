@@ -5,7 +5,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_NUMTRAITS_H
 #define EIGEN_NUMTRAITS_H
@@ -75,13 +75,13 @@ struct default_digits10_impl<T,false,true> // Integer
   * \li An enum value \a IsSigned. It is equal to \c 1 if \a T is a signed type and to 0 if \a T is unsigned.
   * \li An enum value \a RequireInitialization. It is equal to \c 1 if the constructor of the numeric type \a T must
   *     be called, and to 0 if it is safe not to call it. Default is 0 if \a T is an arithmetic type, and 1 otherwise.
-  * \li An epsilon() function which, unlike <a href="http://en.cppreference.com/w/cpp/types/numeric_limits/epsilon">std::numeric_limits::epsilon()</a>,
+  * \li An epsilon() function which, unlike <a href="xxxp://en.cppreference.com/w/cpp/types/numeric_limits/epsilon">std::numeric_limits::epsilon()</a>,
   *     it returns a \a Real instead of a \a T.
   * \li A dummy_precision() function returning a weak epsilon value. It is mainly used as a default
   *     value by the fuzzy comparison operators.
   * \li highest() and lowest() functions returning the highest and lowest possible values respectively.
   * \li digits10() function returning the number of decimal digits that can be represented without change. This is
-  *     the analogue of <a href="http://en.cppreference.com/w/cpp/types/numeric_limits/digits10">std::numeric_limits<T>::digits10</a>
+  *     the analogue of <a href="xxxp://en.cppreference.com/w/cpp/types/numeric_limits/digits10">std::numeric_limits<T>::digits10</a>
   *     which is used as the default implementation if specialized.
   */
 

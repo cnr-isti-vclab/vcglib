@@ -6,7 +6,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_REAL_SCHUR_H
 #define EIGEN_REAL_SCHUR_H
@@ -46,7 +46,7 @@ namespace Eigen {
   * of the typical use of this class.
   *
   * \note The implementation is adapted from
-  * <a href="http://math.nist.gov/javanumerics/jama/">JAMA</a> (public domain).
+  * <a href="xxxp://math.nist.gov/javanumerics/jama/">JAMA</a> (public domain).
   * Their code is based on EISPACK.
   *
   * \sa class ComplexSchur, class EigenSolver, class ComplexEigenSolver

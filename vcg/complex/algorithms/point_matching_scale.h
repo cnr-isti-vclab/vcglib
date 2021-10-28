@@ -93,7 +93,8 @@ public:
 		// rtm = rototranslation
 		RotoTranslation<double> rt;
 		vcg::Matrix44d rtm;
-		memcpy(&rt._v[0],&x[1],6*sizeof(double));
+		for (unsigned int i = 0; i < 6; ++i)
+			rt._v[i] = x[i+1];
 		rt.toMatrix(rtm);
 
 		// res= scaling w.r.t. barycenter
@@ -122,7 +123,8 @@ public:
 
 		RotoTranslation<double> rt;
 		vcg::Matrix44d m;
-		memcpy(&rt._v[0],&x[1],6*sizeof(double));
+		for (unsigned int i = 0; i < 6; ++i)
+			rt._v[i] = x[i+1];
 		rt.toMatrix(m);
 
 		for(; i !=  mov->end(); ++i,++ifix) {

@@ -2267,8 +2267,10 @@ public:
     for(size_t i  = 0; i < m.vert.size(); ++i){
       ATTR_TYPE * dest = &(*_handle)[i];
       char * ptr = (char*)( ((SimpleTempDataBase *)pa._handle)->DataBegin());
-      memcpy((void*)dest ,
-             (void*) &(ptr[i *  pa._sizeof ]) ,sizeof(ATTR_TYPE));
+      ATTR_TYPE* attrptr = (ATTR_TYPE*)ptr;
+      *dest = attrptr[i * pa._sizeof ];
+      //memcpy((void*)dest ,
+            //(void*) &(ptr[i *  pa._sizeof ]) ,sizeof(ATTR_TYPE));
     }
 
     // remove the padded container
@@ -2294,8 +2296,10 @@ public:
     for(size_t i  = 0; i < m.edge.size(); ++i){
       ATTR_TYPE * dest = &(*_handle)[i];
       char * ptr = (char*)( ((SimpleTempDataBase *)pa._handle)->DataBegin());
-      memcpy((void*)dest ,
-             (void*) &(ptr[i *  pa._sizeof ]) ,sizeof(ATTR_TYPE));
+      ATTR_TYPE* attrptr = (ATTR_TYPE*)ptr;
+      *dest = attrptr[i * pa._sizeof ];
+      //memcpy((void*)dest ,
+             //(void*) &(ptr[i *  pa._sizeof ]) ,sizeof(ATTR_TYPE));
     }
 
     // remove the padded container
@@ -2322,8 +2326,10 @@ public:
     for(size_t i  = 0; i < m.face.size(); ++i){
       ATTR_TYPE * dest = &(*_handle)[i];
       char * ptr = (char*)( ((SimpleTempDataBase *)pa._handle)->DataBegin());
-      memcpy((void*)dest ,
-             (void*) &(ptr[i * pa._sizeof ]) ,sizeof(ATTR_TYPE));
+      ATTR_TYPE* attrptr = (ATTR_TYPE*)ptr;
+      *dest = attrptr[i * pa._sizeof ];
+      //memcpy((void*)dest ,
+      //       (void*) &(ptr[i * pa._sizeof ]) ,sizeof(ATTR_TYPE));
     }
 
     // remove the padded container
@@ -2352,8 +2358,10 @@ public:
     {
       ATTR_TYPE *dest = &(*_handle)[i];
       char *ptr = (char *)(((SimpleTempDataBase *)pa._handle)->DataBegin());
-      memcpy((void *)dest,
-             (void *)&(ptr[i * pa._sizeof]), sizeof(ATTR_TYPE));
+      ATTR_TYPE* attrptr = (ATTR_TYPE*)ptr;
+      *dest = attrptr[i * pa._sizeof ];
+      //memcpy((void *)dest,
+             //(void *)&(ptr[i * pa._sizeof]), sizeof(ATTR_TYPE));
     }
 
     // remove the padded container
@@ -2376,8 +2384,11 @@ public:
     Attribute<ATTR_TYPE> * _handle =  new Attribute<ATTR_TYPE>();
 
     // copy the padded container in the new one
-    char * ptr = (char*)( ((Attribute<ATTR_TYPE> *)pa._handle)->DataBegin());
-    memcpy((void*)_handle->DataBegin() ,(void*) &(ptr[0]) ,sizeof(ATTR_TYPE));
+    ATTR_TYPE* dest = (ATTR_TYPE*)_handle->DataBegin();
+    char* ptr = (char*)( ((Attribute<ATTR_TYPE> *)pa._handle)->DataBegin());
+    ATTR_TYPE* attrptr = (ATTR_TYPE*)ptr;
+    *dest = *attrptr;
+    //memcpy((void*)dest ,(void*) &(ptr[0]) ,sizeof(ATTR_TYPE));
 
     // remove the padded container
     delete ( (Attribute<ATTR_TYPE> *) pa._handle);

@@ -3,7 +3,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_SPQRSUPPORT_MODULE_H
 #define EIGEN_SPQRSUPPORT_MODULE_H
@@ -17,7 +17,7 @@
 /** \ingroup Support_modules
   * \defgroup SPQRSupport_Module SuiteSparseQR module
   * 
-  * This module provides an interface to the SPQR library, which is part of the <a href="http://www.suitesparse.com">suitesparse</a> package.
+  * This module provides an interface to the SPQR library, which is part of the <a href="xxxp://www.suitesparse.com">suitesparse</a> package.
   *
   * \code
   * #include <Eigen/SPQRSupport>

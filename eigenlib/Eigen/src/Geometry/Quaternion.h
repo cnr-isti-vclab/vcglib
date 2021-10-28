@@ -6,7 +6,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_QUATERNION_H
 #define EIGEN_QUATERNION_H
@@ -635,7 +635,7 @@ EIGEN_DEVICE_FUNC inline Derived& QuaternionBase<Derived>::setFromTwoVectors(con
 
 /** \returns a random unit quaternion following a uniform distribution law on SO(3)
   *
-  * \note The implementation is based on http://planning.cs.uiuc.edu/node198.html
+  * \note The implementation is based on xxxp://planning.cs.uiuc.edu/node198.html
   */
 template<typename Scalar, int Options>
 EIGEN_DEVICE_FUNC Quaternion<Scalar,Options> Quaternion<Scalar,Options>::UnitRandom()
@@ -736,7 +736,7 @@ QuaternionBase<Derived>::angularDistance(const QuaternionBase<OtherDerived>& oth
   * \c *this and \a other at the parameter \a t in [0;1].
   * 
   * This represents an interpolation for a constant motion between \c *this and \a other,
-  * see also http://en.wikipedia.org/wiki/Slerp.
+  * see also xxxp://en.wikipedia.org/wiki/Slerp.
   */
 template <class Derived>
 template <class OtherDerived>

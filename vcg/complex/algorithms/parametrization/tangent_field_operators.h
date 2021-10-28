@@ -624,7 +624,7 @@ public:
         do
         {
             std::vector<int> new_queue;
-            for (int i=0; i<queue.size(); i++)
+            for (size_t i=0; i<queue.size(); i++)
             {
                 FaceType *f0=&(mesh.face[queue[i]]);
                 assert(!f0->IsD());

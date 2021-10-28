@@ -29,6 +29,7 @@
 
 #include <vcg/container/simple_temporary_data.h>
 
+#include "exception.h"
 #include "used_types.h"
 
 namespace vcg {

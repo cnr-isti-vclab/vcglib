@@ -5,7 +5,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_PACKET_MATH_ZVECTOR_H
 #define EIGEN_PACKET_MATH_ZVECTOR_H
@@ -743,7 +743,7 @@ template<> EIGEN_STRONG_INLINE Packet4i preduxp<Packet4i>(const Packet4i* vecs)
   Packet4i v[4], sum[4];
 
   // It's easier and faster to transpose then add as columns
-  // Check: http://www.freevec.org/function/matrix_4x4_transpose_floats for explanation
+  // Check: xxxp://www.freevec.org/function/matrix_4x4_transpose_floats for explanation
   // Do the transpose, first set of moves
   v[0] = vec_mergeh(vecs[0], vecs[2]);
   v[1] = vec_mergel(vecs[0], vecs[2]);

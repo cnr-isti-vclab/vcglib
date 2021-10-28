@@ -10,7 +10,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 
 /*****************************************************************************
@@ -25,10 +25,10 @@
 // Try to determine automatically if malloc is already aligned.
 
 // On 64-bit systems, glibc's malloc returns 16-byte-aligned pointers, see:
-//   http://www.gnu.org/s/libc/manual/html_node/Aligned-Memory-Blocks.html
+//   xxxp://www.gnu.org/s/libc/manual/html_node/Aligned-Memory-Blocks.html
 // This is true at least since glibc 2.8.
 // This leaves the question how to detect 64-bit. According to this document,
-//   http://gcc.fyxm.net/summit/2003/Porting%20to%2064%20bit.pdf
+//   xxxp://gcc.fyxm.net/summit/2003/Porting%20to%2064%20bit.pdf
 // page 114, "[The] LP64 model [...] is used by all 64-bit UNIX ports" so it's indeed
 // quite safe, at least within the context of glibc, to equate 64-bit with LP64.
 #if defined(__GLIBC__) && ((__GLIBC__>=2 && __GLIBC_MINOR__ >= 8) || __GLIBC__>2) \
@@ -39,9 +39,9 @@
 #endif
 
 // FreeBSD 6 seems to have 16-byte aligned malloc
-//   See http://svn.freebsd.org/viewvc/base/stable/6/lib/libc/stdlib/malloc.c?view=markup
+//   See xxxp://svn.freebsd.org/viewvc/base/stable/6/lib/libc/stdlib/malloc.c?view=markup
 // FreeBSD 7 seems to have 16-byte aligned malloc except on ARM and MIPS architectures
-//   See http://svn.freebsd.org/viewvc/base/stable/7/lib/libc/stdlib/malloc.c?view=markup
+//   See xxxp://svn.freebsd.org/viewvc/base/stable/7/lib/libc/stdlib/malloc.c?view=markup
 #if defined(__FreeBSD__) && !(EIGEN_ARCH_ARM || EIGEN_ARCH_MIPS) && (EIGEN_DEFAULT_ALIGN_BYTES == 16)
   #define EIGEN_FREEBSD_MALLOC_ALREADY_ALIGNED 1
 #else
@@ -749,7 +749,7 @@ public:
     internal::check_size_for_overflow<T>(num);
     size_type size = num * sizeof(T);
 #if EIGEN_COMP_GNUC_STRICT && EIGEN_GNUC_AT_LEAST(7,0)
-    // workaround gcc bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=87544
+    // workaround gcc bug xxxps://gcc.gnu.org/bugzilla/show_bug.cgi?id=87544
     // It triggered eigen/Eigen/src/Core/util/Memory.h:189:12: warning: argument 1 value '18446744073709551612' exceeds maximum object size 9223372036854775807
     if(size>=std::size_t((std::numeric_limits<std::ptrdiff_t>::max)()))
       return 0;

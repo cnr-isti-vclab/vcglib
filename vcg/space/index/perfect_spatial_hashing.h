@@ -1462,7 +1462,7 @@ namespace vcg
             m_OffsetTable.GetPreImageSortedPerCardinality(preimage_slots);
 
             char msg[128];
-            sprintf(msg, "Building offset table of resolution %d", m_OffsetTable.GetSize());
+            snprintf(msg, 128, "Building offset table of resolution %d", m_OffsetTable.GetSize());
             int	step = int(preimage_slots.size())/100;
             int number_of_slots = int(preimage_slots.size());
             int perc = 0;

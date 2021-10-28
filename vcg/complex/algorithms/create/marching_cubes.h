@@ -26,6 +26,7 @@
 #define __VCG_MARCHING_CUBES
 
 #include "mc_lookup_table.h"
+#include <array>
 
 namespace vcg
 {
@@ -665,14 +666,14 @@ namespace vcg
                 VertexPointer vp		= NULL;
                 size_t face_idx			= _mesh->face.size();
                 size_t v12_idx			= -1;
-                size_t vertices_idx[3];
+				std::array<size_t, 3> vertices_idx;
                 if (v12 != NULL) v12_idx = v12 - &_mesh->vert[0];
                 AllocatorType::AddFaces(*_mesh, (int) n);
 
                 for (int trig=0; trig<3*n; face_idx++ )
                 {
                     vp = NULL;
-                    memset(vertices_idx, -1, 3*sizeof(size_t));
+					vertices_idx.fill(-1);
                     for (int vert=0; vert<3; vert++, trig++) //ok
                     {
 

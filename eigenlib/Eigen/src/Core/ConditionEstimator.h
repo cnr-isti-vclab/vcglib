@@ -5,7 +5,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_CONDITIONESTIMATOR_H
 #define EIGEN_CONDITIONESTIMATOR_H
@@ -37,7 +37,7 @@ struct rcond_compute_sign<Vector, Vector, false> {
   * \a matrix that implements .solve() and .adjoint().solve() methods.
   *
   * This function implements Algorithms 4.1 and 5.1 from
-  *   http://www.maths.manchester.ac.uk/~higham/narep/narep135.pdf
+  *   xxxp://www.maths.manchester.ac.uk/~higham/narep/narep135.pdf
   * which also forms the basis for the condition number estimators in
   * LAPACK. Since at most 10 calls to the solve method of dec are
   * performed, the total cost is O(dims^2), as opposed to O(dims^3)

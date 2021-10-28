@@ -6,7 +6,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 
 #ifndef EIGEN_SPARSE_LU_H
@@ -25,7 +25,7 @@ template <typename MatrixLType, typename MatrixUType> struct SparseLUMatrixURetu
   * 
   * This class implements the supernodal LU factorization for general matrices.
   * It uses the main techniques from the sequential SuperLU package 
-  * (http://crd-legacy.lbl.gov/~xiaoye/SuperLU/). It handles transparently real 
+  * (xxxp://crd-legacy.lbl.gov/~xiaoye/SuperLU/). It handles transparently real 
   * and complex arithmetics with single and double precision, depending on the 
   * scalar type of your input matrix. 
   * The code has been optimized to provide BLAS-3 operations during supernode-panel updates. 

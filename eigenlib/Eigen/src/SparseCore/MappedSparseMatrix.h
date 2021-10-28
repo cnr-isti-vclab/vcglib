@@ -5,7 +5,7 @@
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
-// with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// with this file, You can obtain one at the mozilla.org home page
 
 #ifndef EIGEN_MAPPED_SPARSEMATRIX_H
 #define EIGEN_MAPPED_SPARSEMATRIX_H
@@ -19,7 +19,7 @@ namespace Eigen {
   *
   * \param _Scalar the scalar type, i.e. the type of the coefficients
   *
-  * See http://www.netlib.org/linalg/html_templates/node91.html for details on the storage scheme.
+  * See xxxp://www.netlib.org/linalg/html_templates/node91.html for details on the storage scheme.
   *
   */
 namespace internal {

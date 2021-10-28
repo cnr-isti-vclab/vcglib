@@ -347,7 +347,9 @@ static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, in
    //read a new line
 
    ii=0;
-   memset( rawline, 0, 512);
+   for (unsigned int i = 0; i < 512; ++i)
+      rawline[i] = 0;
+   //memset( rawline, 0, 512);
    fread(&(rawline[ii++]),sizeof(char),1,fp);
    while( (rawline[ii-1] != '\n') && (ii<512) ) 
    {
