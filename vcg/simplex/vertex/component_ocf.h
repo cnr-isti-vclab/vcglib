@@ -432,50 +432,6 @@ public:
 };
 
 
-///*-------------------------- CURVATURE  ----------------------------------*/
-
-template <class A, class TT> class CurvatureOcf: public TT {
-public:
-  typedef Point2<A> CurvatureType;
-  typedef typename CurvatureType::ScalarType ScalarTypeCur;
-
-  ScalarTypeCur &Kh(){ assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][0]; }
-  ScalarTypeCur &Kg(){ assert((*this).Base().CurvatureEnabled); return (*this).Base().CuV[(*this).Index()][1]; }
-  ScalarTypeCur cKh() const 
-  { 
-	  assert((*this).Base().CurvatureEnabled); 
-	  return (*this).Base().CuV[(*this).Index()][0]; 
-  }
-
-  ScalarTypeCur cKg() const 
-  { 
-	  assert((*this).Base().CurvatureEnabled); 
-	  return (*this).Base().CuV[(*this).Index()][1]; 
-  }
-
-  template <class RightVertexType>
-  void ImportData(const RightVertexType & rightV){
-    if((*this).IsCurvatureEnabled() && rightV.IsCurvatureEnabled())
-    {
-      (*this).Base().CuV[(*this).Index()][0] = rightV.cKh();
-      (*this).Base().CuV[(*this).Index()][1] = rightV.cKg();
-    }
-    TT::ImportData(rightV);
-  }
-
-  inline bool IsCurvatureEnabled( )    const  
-  { 
-	  return this->Base().IsCurvatureEnabled(); 
-  }
-
-  static bool HasCurvature() { return true; }
-  static bool HasCurvatureOcf()   { return true; }
-};
-
-template <class T> class CurvaturefOcf: public CurvatureOcf<float, T> {public: static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvaturefOcf"));T::Name(name);} };
-template <class T> class CurvaturedOcf: public CurvatureOcf<double, T> {public: static void Name(std::vector<std::string> & name){name.push_back(std::string("CurvaturedOcf"));T::Name(name);} };
-
-
 ///*-------------------------- CURVATURE DIR ----------------------------------*/
 
 template <class S>
