@@ -1,3 +1,3 @@
 include(../common.pri)
 TARGET = trimesh_curvature
-SOURCES += trimesh_curvature.cpp
+SOURCES += trimesh_curvature.cpp ../../../wrap/ply/plylib.cpp 
