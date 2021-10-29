@@ -3,7 +3,8 @@ project(trimesh_curvature)
 
 if (VCG_HEADER_ONLY)
 	set(SOURCES
-		trimesh_curvature.cpp)
+		trimesh_curvature.cpp
+		${VCG_INCLUDE_DIRS}/wrap/ply/plylib.cpp)
 endif()
 
 add_executable(trimesh_curvature
