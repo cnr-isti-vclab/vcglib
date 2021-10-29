@@ -666,7 +666,6 @@ template < class VertexType> bool VertexVectorHasPerVertexColor       (const std
 template < class VertexType> bool VertexVectorHasPerVertexMark        (const std::vector<VertexType> &) {  return VertexType::HasMark        (); }
 template < class VertexType> bool VertexVectorHasPerVertexFlags       (const std::vector<VertexType> &) {  return VertexType::HasFlags       (); }
 template < class VertexType> bool VertexVectorHasPerVertexRadius      (const std::vector<VertexType> &) {  return VertexType::HasRadius      (); }
-template < class VertexType> bool VertexVectorHasPerVertexCurvature   (const std::vector<VertexType> &) {  return VertexType::HasCurvature   (); }
 template < class VertexType> bool VertexVectorHasPerVertexCurvatureDir(const std::vector<VertexType> &) {  return VertexType::HasCurvatureDir(); }
 template < class VertexType> bool VertexVectorHasPerVertexTexCoord    (const std::vector<VertexType> &) {  return VertexType::HasTexCoord    (); }
 
@@ -676,7 +675,6 @@ template < class TriMeshType> bool HasPerVertexColor       (const TriMeshType &m
 template < class TriMeshType> bool HasPerVertexMark        (const TriMeshType &m) { return tri::VertexVectorHasPerVertexMark        (m.vert); }
 template < class TriMeshType> bool HasPerVertexFlags       (const TriMeshType &m) { return tri::VertexVectorHasPerVertexFlags       (m.vert); }
 template < class TriMeshType> bool HasPerVertexRadius      (const TriMeshType &m) { return tri::VertexVectorHasPerVertexRadius      (m.vert); }
-template < class TriMeshType> bool HasPerVertexCurvature   (const TriMeshType &m) { return tri::VertexVectorHasPerVertexCurvature   (m.vert); }
 template < class TriMeshType> bool HasPerVertexCurvatureDir(const TriMeshType &m) { return tri::VertexVectorHasPerVertexCurvatureDir(m.vert); }
 template < class TriMeshType> bool HasPerVertexTexCoord    (const TriMeshType &m) { return tri::VertexVectorHasPerVertexTexCoord    (m.vert); }
 
@@ -877,7 +875,6 @@ template <class MeshType> void RequirePerVertexColor       (const MeshType &m) {
 template <class MeshType> void RequirePerVertexMark        (const MeshType &m) { if(!tri::HasPerVertexMark        (m)) throw vcg::MissingComponentException("PerVertexMark        "); }
 template <class MeshType> void RequirePerVertexFlags       (const MeshType &m) { if(!tri::HasPerVertexFlags       (m)) throw vcg::MissingComponentException("PerVertexFlags       "); }
 template <class MeshType> void RequirePerVertexRadius      (const MeshType &m) { if(!tri::HasPerVertexRadius      (m)) throw vcg::MissingComponentException("PerVertexRadius      "); }
-template <class MeshType> void RequirePerVertexCurvature   (const MeshType &m) { if(!tri::HasPerVertexCurvature   (m)) throw vcg::MissingComponentException("PerVertexCurvature   "); }
 template <class MeshType> void RequirePerVertexCurvatureDir(const MeshType &m) { if(!tri::HasPerVertexCurvatureDir(m)) throw vcg::MissingComponentException("PerVertexCurvatureDir"); }
 template <class MeshType> void RequirePerVertexTexCoord    (const MeshType &m) { if(!tri::HasPerVertexTexCoord    (m)) throw vcg::MissingComponentException("PerVertexTexCoord    "); }
 
