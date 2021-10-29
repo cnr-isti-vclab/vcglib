@@ -270,7 +270,7 @@ static void VertexFromPlane(MeshType &m, const Plane3<ScalarType> &pl)
     (*vi).Q() =SignedDistancePlanePoint(pl,(*vi).cP());
 }
 
-static void VertexFromGaussianCurvatureDir(MeshType &m)
+static void VertexGaussianFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
@@ -278,21 +278,21 @@ static void VertexFromGaussianCurvatureDir(MeshType &m)
       (*vi).Q() = (*vi).K1()*(*vi).K2();
 }
 
-static void VertexFromMeanCurvatureDir(MeshType &m)
+static void VertexMeanFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
         (*vi).Q() = ((*vi).K1()+(*vi).K2())/2.0f;
 }
-static void VertexFromMinCurvatureDir(MeshType &m)
+static void VertexMinCurvFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
         (*vi).Q() = (*vi).K1();
 }
-static void VertexFromMaxCurvatureDir(MeshType &m)
+static void VertexMaxCurvFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
@@ -301,7 +301,7 @@ static void VertexFromMaxCurvatureDir(MeshType &m)
 }
 
 /**
- * @brief VertexFromShapeIndexCurvatureDir
+ * @brief VertexShapeIndexFromCurvatureDir
  * Compute from the current Curvature Direction the Shape Index S as defined by [Koenderink 1992]
  * and store it in the per-vertex Quality.
  * S = 2/pi atan(k1+k2/k1-k2)
@@ -311,7 +311,7 @@ static void VertexFromMaxCurvatureDir(MeshType &m)
  * Image and vision computing, 10(8):557–565, 1992.
  */
 
-static void VertexFromShapeIndexCurvatureDir(MeshType &m)
+static void VertexShapeIndexFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
@@ -324,7 +324,7 @@ static void VertexFromShapeIndexCurvatureDir(MeshType &m)
     }
 }
 /**
- * @brief VertexFromCurvednessCurvatureDir
+ * @brief VertexCurvednessFromCurvatureDir
  * Compute from the current Curvature Direction the Curvedness as defined by [Koenderink 1992]
  * and store it in the per-vertex Quality.
  * C =  Sqrt((k1*k1+k2*k2)/2.0)
@@ -333,7 +333,7 @@ static void VertexFromShapeIndexCurvatureDir(MeshType &m)
  * Surface shape and curvature scales. 
  * Image and vision computing, 10(8):557–565, 1992.
  */
-static void VertexFromCurvednessCurvatureDir(MeshType &m)
+static void VertexCurvednessFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
@@ -363,7 +363,7 @@ static void VertexFromCurvednessCurvatureDir(MeshType &m)
  * N Dyn, K Hormann, SJ Kim, D Levin - Mathematical Methods for Curves and Surfaces: Oslo, 2000
  */
 
-static void VertexFromAbsoluteCurvature(MeshType &m)
+static void VertexAbsoluteCurvatureFromHGAttribute(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   auto KH = vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType> (m, std::string("KH"));
@@ -384,7 +384,7 @@ static void VertexFromAbsoluteCurvature(MeshType &m)
  * Improved curvature estimation for watershed segmentation of 3-dimensional meshes
  * S Pulla, A Razdan, G Farin - Arizona State University, Tech. Rep, 2001
  */
-static void VertexFromRMSCurvature(MeshType &m)
+static void VertexRMSCurvatureFromHGAttribute(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   auto KH = vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType> (m, std::string("KH"));
