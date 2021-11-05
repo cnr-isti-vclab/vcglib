@@ -195,6 +195,26 @@ bool IntersectionPlaneMesh(TriMeshType & m,
     }
   tri::Allocator<TriMeshType> :: template DeletePerVertexAttribute < ScalarType >(m,qH);
 
+  //Clean-up: Remove duplicate vertex
+  tri::Clean<EdgeMeshType>::RemoveDuplicateVertex(em);
+     
+  //Clean-up: Sort edges ensuring orientation coherence  
+  for(size_t j=1; j < em.edge.size(); j++)
+  {
+    auto &n=em.edge[j-1].V(1);  
+    for(size_t i=j; i< em.edge.size(); i++)
+    {
+      auto & ei=em.edge[i];
+      if (ei.V(1) == n)
+        std::swap(ei.V(0), ei.V(1));        
+      if (ei.V(0) == n)
+      {
+        std::swap(em.edge[j], em.edge[i]);        
+        break;
+      }      
+    }
+  }
+
   return true;
 }
 
