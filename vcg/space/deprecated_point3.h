@@ -379,7 +379,12 @@ public:
     }
 
     // for compatibility with eigen port
-    inline Point3 & normalized() { return Normalize(); }
+    inline Point3 normalized() const
+    {
+        Point3<P3ScalarType> p = *this;
+        p.Normalize();
+        return p;
+    }
 
     /**
      * Convert to polar coordinates from cartesian coordinates.
