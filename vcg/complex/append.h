@@ -460,7 +460,7 @@ static void MeshAppendConst(
 			}
 			fl.ImportData(f);
 			if(wedgeTexFlag) {
-				for(int i = 0; i < fl.VN(); ++i){
+				for(int i = 0; i < 3; ++i){
 					if (size_t(f.WT(i).n()) < mappingTextures.size()){
 						//standard case: the texture is contained in the mesh
 						fl.WT(i).n() = mappingTextures[f.WT(i).n()];
