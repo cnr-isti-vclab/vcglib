@@ -250,7 +250,7 @@ public:
     return V;
   }
 
-  static ScalarType ComputeMeshVolume(const MeshType & m)
+  static ScalarType ComputeMeshVolume(MeshType & m)
   {
     Inertia<MeshType> I(m);
     return I.Mass();
