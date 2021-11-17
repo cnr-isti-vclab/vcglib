@@ -284,9 +284,9 @@ ScalarType DistanceFromVoronoiSurfaceEdge(const CoordType &p_point, const CoordT
     
     ScalarType surfLineDist;
     vcg::IntersectionPlanePlane(pl01,plSurf,surfLine);
-    vcg::LinePointDistance(surfLine,p_point,closestPt, surfLineDist);    
+    vcg::LinePointDistance(surfLine,p_point,closestPt, surfLineDist);
     
-    return min(voroLineDist,surfLineDist);
+    return std::min(voroLineDist,surfLineDist);
 }
 
 

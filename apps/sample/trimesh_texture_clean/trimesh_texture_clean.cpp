@@ -52,8 +52,8 @@ int main(int ,char ** )
   
   // generate a simple 2D grid 
   Grid(m,20,20,1,1);
-  // assign it a simple planar parametrization 
-  tri:UpdateTexture<MyMesh>::WedgeTexFromPlane(m,Point3f(1.0f,0,0),Point3f(0,1.0f,0),true);
+  // assign it a simple planar parametrization
+  tri::UpdateTexture<MyMesh>::WedgeTexFromPlane(m,Point3f(1.0f,0,0),Point3f(0,1.0f,0),true);
   tri::io::ExporterOBJ<MyMesh>::Save(m,"grid_0.obj",mask);
   
   // randomly perturb a few coord textures introducing fake seams

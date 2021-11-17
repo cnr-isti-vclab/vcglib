@@ -260,7 +260,7 @@ public:
 
         //add the entries for mass matrix
         if (SParam.useMassMatrix)
-            MeshToMatrix<MeshType>::MassMatrixEntry(mesh,IndexM,ValuesM,!SParam.SmoothQ);
+            vcg::tri::MeshToMatrix<MeshType>::MassMatrixEntry(mesh,IndexM,ValuesM,!SParam.SmoothQ);
 
         //then add entries for lagrange mult due to barycentric constraints
         for (size_t i=0;i<SParam.ConstrainedF.size();i++)
@@ -313,7 +313,7 @@ public:
         //get the entries for laplacian matrix
         std::vector<std::pair<int,int> > IndexL;
         std::vector<ScalarType> ValuesL;
-        MeshToMatrix<MeshType>::GetLaplacianMatrix(mesh,IndexL,ValuesL,SParam.useCotWeight,SParam.lapWeight,!SParam.SmoothQ);
+        vcg::tri::MeshToMatrix<MeshType>::GetLaplacianMatrix(mesh,IndexL,ValuesL,SParam.useCotWeight,SParam.lapWeight,!SParam.SmoothQ);
 
         //initialize sparse laplacian matrix
         if (!SParam.SmoothQ)

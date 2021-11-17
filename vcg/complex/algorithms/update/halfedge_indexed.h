@@ -214,9 +214,9 @@ namespace vcg
 
                             for(typename MeshType::EdgeIterator ei1 = m.edge.begin(); ei1 != m.edge.end(); ++ei1 )
                             {
-                                vector<HEdgePointer> hedges = HalfEdgeTopology<MeshType>::get_incident_hedges((*ei1).V(0));
+                                std::vector<HEdgePointer> hedges = HalfEdgeTopology<MeshType>::get_incident_hedges((*ei1).V(0));
 
-                                for(typename vector<HEdgePointer>::iterator hi = hedges.begin(); hi != hedges.end(); ++hi)
+                                for(typename std::vector<HEdgePointer>::iterator hi = hedges.begin(); hi != hedges.end(); ++hi)
                                 {
                                     if((*hi)->HOp()->HVp() == (*ei1).V(1))
                                     {
