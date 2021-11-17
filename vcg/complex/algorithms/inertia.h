@@ -66,8 +66,8 @@ class Inertia
 
 private :
 	enum {X=0,Y=1,Z=2};
-	inline ScalarType SQR(ScalarType &x) const { return x*x;}
-	inline ScalarType CUBE(ScalarType &x) const { return x*x*x;}
+	inline ScalarType SQR(const ScalarType &x) const { return x*x;}
+	inline ScalarType CUBE(const ScalarType &x) const { return x*x*x;}
 
  int A;   /* alpha */
  int B;   /* beta */
@@ -148,15 +148,13 @@ public:
 }
 
 
-void CompFaceIntegrals(const FaceType &f)
+void CompFaceIntegrals(const FaceType &f, const Point3<ScalarType> &n)
 {
-	Point3<ScalarType>  n;
 	ScalarType w;
-  double k1, k2, k3, k4;
+	double k1, k2, k3, k4;
 
   compProjectionIntegrals(f);
 
-  n = f.N();
   w = -f.V(0)->P()*n;
   k1 = 1 / n[C]; k2 = k1 * k1; k3 = k2 * k1; k4 = k3 * k1;
 
@@ -208,7 +206,7 @@ void Compute(const MeshType &m)
 		A = (C + 1) % 3;
 		B = (A + 1) % 3;
 
-		CompFaceIntegrals(f);
+		CompFaceIntegrals(f, fn);
 
 		T0 += fn[X] * ((A == X) ? Fa : ((B == X) ? Fb : Fc));
 
