@@ -239,18 +239,18 @@ public:
     return barycenter/areaSum;
   }
 
-  static ScalarType ComputeTetraMeshVolume(MeshType & m)
+  static ScalarType ComputeTetraMeshVolume(const MeshType & m)
   {
     ScalarType V = 0;
 
-    ForEachTetra(m, [&V] (TetraType & t) {
+    ForEachTetra(m, [&V] (const TetraType & t) {
       V += Tetra::ComputeVolume(t);
     });
 
     return V;
   }
 
-  static ScalarType ComputeMeshVolume(MeshType & m)
+  static ScalarType ComputeMeshVolume(const MeshType & m)
   {
     Inertia<MeshType> I(m);
     return I.Mass();

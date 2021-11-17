@@ -53,16 +53,16 @@ namespace vcg
 template <class MeshType>
 class Inertia
 {
-	typedef typename MeshType::VertexType     VertexType;
-	typedef typename MeshType::VertexPointer  VertexPointer;
-	typedef typename MeshType::VertexIterator VertexIterator;
-	typedef	typename MeshType::ScalarType			ScalarType;
-	typedef typename MeshType::FaceType       FaceType;
-	typedef typename MeshType::FacePointer    FacePointer;
-	typedef typename MeshType::FaceIterator   FaceIterator;
-	typedef typename MeshType::ConstFaceIterator   ConstFaceIterator;
-	typedef typename MeshType::FaceContainer  FaceContainer;
-	typedef typename MeshType::CoordType  CoordType;
+	typedef typename MeshType::VertexType        VertexType;
+	typedef typename MeshType::VertexPointer     VertexPointer;
+	typedef typename MeshType::VertexIterator    VertexIterator;
+	typedef	typename MeshType::ScalarType        ScalarType;
+	typedef typename MeshType::FaceType          FaceType;
+	typedef typename MeshType::FacePointer       FacePointer;
+	typedef typename MeshType::FaceIterator      FaceIterator;
+	typedef typename MeshType::ConstFaceIterator ConstFaceIterator;
+	typedef typename MeshType::FaceContainer     FaceContainer;
+	typedef typename MeshType::CoordType         CoordType;
 
 private :
 	enum {X=0,Y=1,Z=2};
@@ -188,50 +188,51 @@ void CompFaceIntegrals(const FaceType &f)
   It requires a watertight mesh with per face normals.
 
 */
-void Compute(MeshType &m)
+void Compute(const MeshType &m)
 {
-  tri::UpdateNormal<MeshType>::PerFaceNormalized(m);
-  double nx, ny, nz;
+	double nx, ny, nz;
 
-  T0 = T1[X] = T1[Y] = T1[Z]
-     = T2[X] = T2[Y] = T2[Z]
-     = TP[X] = TP[Y] = TP[Z] = 0;
-    for (auto fi=m.face.begin(); fi!=m.face.end();++fi) if(!(*fi).IsD() && vcg::DoubleArea(*fi)>std::numeric_limits<float>::min()) {
-        const FaceType &f=(*fi);
+	T0 = T1[X] = T1[Y] = T1[Z]
+	   = T2[X] = T2[Y] = T2[Z]
+	   = TP[X] = TP[Y] = TP[Z] = 0;
+	for (auto fi=m.face.begin(); fi!=m.face.end();++fi) if(!(*fi).IsD() && vcg::DoubleArea(*fi)>std::numeric_limits<float>::min())
+	{
+		const FaceType &f=(*fi);
+		const auto fn = vcg::NormalizedTriangleNormal(f);
 
-    nx = fabs(f.N()[0]);
-    ny = fabs(f.N()[1]);
-    nz = fabs(f.N()[2]);
-    if (nx > ny && nx > nz) C = X;
-    else C = (ny > nz) ? Y : Z;
-    A = (C + 1) % 3;
-    B = (A + 1) % 3;
+		nx = fabs(fn[0]);
+		ny = fabs(fn[1]);
+		nz = fabs(fn[2]);
+		if (nx > ny && nx > nz) C = X;
+		else C = (ny > nz) ? Y : Z;
+		A = (C + 1) % 3;
+		B = (A + 1) % 3;
 
-    CompFaceIntegrals(f);
+		CompFaceIntegrals(f);
 
-    T0 += f.N()[X] * ((A == X) ? Fa : ((B == X) ? Fb : Fc));
+		T0 += fn[X] * ((A == X) ? Fa : ((B == X) ? Fb : Fc));
 
-    T1[A] += f.N()[A] * Faa;
-    T1[B] += f.N()[B] * Fbb;
-    T1[C] += f.N()[C] * Fcc;
-    T2[A] += f.N()[A] * Faaa;
-    T2[B] += f.N()[B] * Fbbb;
-    T2[C] += f.N()[C] * Fccc;
-    TP[A] += f.N()[A] * Faab;
-    TP[B] += f.N()[B] * Fbbc;
-    TP[C] += f.N()[C] * Fcca;
-  }
+		T1[A] += fn[A] * Faa;
+		T1[B] += fn[B] * Fbb;
+		T1[C] += fn[C] * Fcc;
+		T2[A] += fn[A] * Faaa;
+		T2[B] += fn[B] * Fbbb;
+		T2[C] += fn[C] * Fccc;
+		TP[A] += fn[A] * Faab;
+		TP[B] += fn[B] * Fbbc;
+		TP[C] += fn[C] * Fcca;
+	}
 
-  T1[X] /= 2; T1[Y] /= 2; T1[Z] /= 2;
-  T2[X] /= 3; T2[Y] /= 3; T2[Z] /= 3;
-  TP[X] /= 2; TP[Y] /= 2; TP[Z] /= 2;
+	T1[X] /= 2; T1[Y] /= 2; T1[Z] /= 2;
+	T2[X] /= 3; T2[Y] /= 3; T2[Z] /= 3;
+	TP[X] /= 2; TP[Y] /= 2; TP[Z] /= 2;
 }
 
 /*! \brief Return the Volume (or mass) of the mesh.
 
 Meaningful only if the mesh is watertight.
 */
-ScalarType Mass()
+ScalarType Mass(void) const
 {
     return static_cast<ScalarType>(T0);
 }
@@ -240,15 +241,17 @@ ScalarType Mass()
 
 Meaningful only if the mesh is watertight.
 */
-Point3<ScalarType>  CenterOfMass()
+Point3<ScalarType> CenterOfMass(void) const
 {
-    Point3<ScalarType>  r;
-  r[X] = T1[X] / T0;
-  r[Y] = T1[Y] / T0;
-  r[Z] = T1[Z] / T0;
-    return r;
+	Point3<ScalarType>  r;
+	r[X] = T1[X] / T0;
+	r[Y] = T1[Y] / T0;
+	r[Z] = T1[Z] / T0;
+	return r;
 }
-void InertiaTensor(Matrix33<ScalarType> &J ){
+
+void InertiaTensor(Matrix33<ScalarType> &J) const
+{
     Point3<ScalarType>  r;
   r[X] = T1[X] / T0;
   r[Y] = T1[Y] / T0;
@@ -270,27 +273,27 @@ void InertiaTensor(Matrix33<ScalarType> &J ){
 }
 
 //void InertiaTensor(Matrix44<ScalarType> &J )
-void InertiaTensor(Eigen::Matrix3d &J )
+void InertiaTensor(Eigen::Matrix3d &J) const
 {
-  J=Eigen::Matrix3d::Identity();
-  Point3d  r;
-  r[X] = T1[X] / T0;
-  r[Y] = T1[Y] / T0;
-  r[Z] = T1[Z] / T0;
-  /* compute inertia tensor */
-  J(X,X) = (T2[Y] + T2[Z]);
-  J(Y,Y) = (T2[Z] + T2[X]);
-  J(Z,Z) = (T2[X] + T2[Y]);
-  J(X,Y) = J(Y,X) = - TP[X];
-  J(Y,Z) = J(Z,Y) = - TP[Y];
-  J(Z,X) = J(X,Z) = - TP[Z];
+	J=Eigen::Matrix3d::Identity();
+	Point3d  r;
+	r[X] = T1[X] / T0;
+	r[Y] = T1[Y] / T0;
+	r[Z] = T1[Z] / T0;
+	/* compute inertia tensor */
+	J(X,X) = (T2[Y] + T2[Z]);
+	J(Y,Y) = (T2[Z] + T2[X]);
+	J(Z,Z) = (T2[X] + T2[Y]);
+	J(X,Y) = J(Y,X) = - TP[X];
+	J(Y,Z) = J(Z,Y) = - TP[Y];
+	J(Z,X) = J(X,Z) = - TP[Z];
 
-  J(X,X) -= T0 * (r[Y]*r[Y] + r[Z]*r[Z]);
-  J(Y,Y) -= T0 * (r[Z]*r[Z] + r[X]*r[X]);
-  J(Z,Z) -= T0 * (r[X]*r[X] + r[Y]*r[Y]);
-  J(X,Y) = J(Y,X) += T0 * r[X] * r[Y];
-  J(Y,Z) = J(Z,Y) += T0 * r[Y] * r[Z];
-  J(Z,X) = J(X,Z) += T0 * r[Z] * r[X];
+	J(X,X) -= T0 * (r[Y]*r[Y] + r[Z]*r[Z]);
+	J(Y,Y) -= T0 * (r[Z]*r[Z] + r[X]*r[X]);
+	J(Z,Z) -= T0 * (r[X]*r[X] + r[Y]*r[Y]);
+	J(X,Y) = J(Y,X) += T0 * r[X] * r[Y];
+	J(Y,Z) = J(Z,Y) += T0 * r[Y] * r[Z];
+	J(Z,X) = J(X,Z) += T0 * r[Z] * r[X];
 }
 
 
@@ -299,7 +302,7 @@ void InertiaTensor(Eigen::Matrix3d &J )
 
   The result is factored as eigenvalues and eigenvectors (as ROWS).
 */
-void InertiaTensorEigen(Matrix33<ScalarType> &EV, Point3<ScalarType> &ev )
+void InertiaTensorEigen(Matrix33<ScalarType> &EV, Point3<ScalarType> &ev) const
 {
 	Eigen::Matrix3d it;
 	InertiaTensor(it);
@@ -376,7 +379,7 @@ static void Covariance(const MeshType & m, vcg::Point3<ScalarType> & bary, vcg::
 }
 }; // end class Inertia
 
-  } // end namespace tri
+} // end namespace tri
 } // end namespace vcg
 
 
