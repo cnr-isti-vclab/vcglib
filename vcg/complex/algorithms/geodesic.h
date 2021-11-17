@@ -207,18 +207,12 @@ public:
   typedef SimpleTempData<std::vector<VertexType>, TempData >  TempDataType;
 
 
-  class pred {
-  public:
-	  pred () {};
-	  bool operator()(const VertDist& v0, const VertDist& v1) const
-		{return (v0.d > v1.d);}
-  };
-
-  //struct pred: public std::binary_function<VertDist,VertDist,bool>{
-  //  pred(){}
-  //  bool operator()(const VertDist& v0, const VertDist& v1) const
-  //  {return (v0.d > v1.d);}
-  //};
+	struct pred {
+		pred() {};
+		bool operator()(const VertDist& v0, const VertDist& v1) const {
+			return (v0.d > v1.d);
+		}
+	};
 
   /*
    *
