@@ -572,6 +572,7 @@ public:
     typename T::TetraPointer &VTp()       { return _tp; }
     typename T::TetraPointer cVTp() const { return _tp; }
     int &VTi() {return _zp; }
+    int  VTi() const { return _zp; }
     int cVTi() const { return _zp; }
     static bool HasVTAdjacency() { return true; }
     static void Name( std::vector< std::string > & name ) { name.push_back( std::string("VTAdj") ); T::Name(name); }
