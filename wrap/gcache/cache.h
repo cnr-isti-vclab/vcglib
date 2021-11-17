@@ -26,7 +26,6 @@ typedef unsigned __int64 uint64_t;
 
 #include "provider.h"
 
-//using namespace std;
 /* this cache system enforce the rule that the items in a cache are always in all the cache below */
 /* two mechanism to remove tokens from the cache:
       1) set token count to something low
