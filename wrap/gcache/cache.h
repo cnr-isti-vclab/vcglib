@@ -212,7 +212,7 @@ protected:
                         } else { //last item is locked need to reorder stack
                             remove = this->heap.popMin();
                             this->heap.push(remove);
-                            cout << "Reordering stack something (what?)\n";
+                            std::cout << "Reordering stack something (what?)\n";
                             return true;
                         }
                     }
