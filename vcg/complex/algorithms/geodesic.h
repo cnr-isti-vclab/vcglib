@@ -138,12 +138,6 @@ public:
 
 
 
-
-
-
-
-
-
 /*! \brief class for computing approximate geodesic distances on a mesh
 
   require VF Adjacency relation
@@ -582,26 +576,19 @@ It is just a simple wrapper of the basic Compute()
   template <class DistanceFunctor>
   static void PerVertexDijkstraCompute(MeshType &m, const std::vector<VertexPointer> &seedVec,
                                        DistanceFunctor &distFunc,
-                                     ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
-                                     std::vector<VertexPointer> *InInterval=NULL,
-                                     typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sourceHandle= NULL,
-                                     typename MeshType::template PerVertexAttributeHandle<VertexPointer> * parentHandle=NULL,
-                                     bool avoid_selected=false,
-                                     VertexPointer target=NULL)
+                                       ScalarType maxDistanceThr  = std::numeric_limits<ScalarType>::max(),
+                                       std::vector<VertexPointer> *InInterval=NULL,
+                                       typename MeshType::template PerVertexAttributeHandle<VertexPointer> * sourceHandle= NULL,
+                                       typename MeshType::template PerVertexAttributeHandle<VertexPointer> * parentHandle=NULL,
+                                       bool avoid_selected=false,
+                                       VertexPointer target=NULL)
   {
     tri::RequireVFAdjacency(m);
     tri::RequirePerVertexMark(m);
     tri::RequirePerVertexQuality(m);
 
-//    typename MeshType::template PerVertexAttributeHandle<VertexPointer> sourceHandle
-//        = tri::Allocator<MeshType>::template GetPerVertexAttribute<VertexPointer>(m, sourcesAttributeName());
-
-//    typename MeshType::template PerVertexAttributeHandle<VertexPointer> parentHandle
-//        = tri::Allocator<MeshType>::template GetPerVertexAttribute<VertexPointer> (m, parentsAttributeName());
-
     std::vector<DIJKDist> Heap;
     tri::UnMarkAll(m);
-	tri::UnMarkAll(m);
 
     for(size_t i=0;i<seedVec.size();++i)
     {
