@@ -26,7 +26,7 @@ typedef unsigned __int64 uint64_t;
 
 #include "provider.h"
 
-using namespace std;
+//using namespace std;
 /* this cache system enforce the rule that the items in a cache are always in all the cache below */
 /* two mechanism to remove tokens from the cache:
       1) set token count to something low
@@ -169,7 +169,7 @@ protected:
             if(unload() || load()) {
                 new_data.testAndSetOrdered(0, 1);  //if not changed, set as changed
                 input->check_queue.open();        //we signal ourselves to check again
-                cout << "loaded or unloaded\n";
+                std::cout << "loaded or unloaded\n";
             }
             input->check_queue.leave();
         }

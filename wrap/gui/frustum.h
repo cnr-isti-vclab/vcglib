@@ -59,7 +59,7 @@ Adding copyright.
 #include <vcg/space/line3.h>
 
 #include <iostream>
-using namespace std;
+//using namespace std;
 
 namespace vcg {
 
