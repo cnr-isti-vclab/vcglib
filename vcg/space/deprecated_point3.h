@@ -202,7 +202,8 @@ public:
     template <class EigenVector>
     inline EigenVector ToEigenVector(void) const
     {
-        assert(EigenVector::RowsAtCompileTime == 3 || EigenVector::RowsAtCompileTime == 4);
+		static_assert(EigenVector::RowsAtCompileTime == 3 || EigenVector::RowsAtCompileTime == 4,
+		              "EigenVector type has not 3 or 4 components");
         EigenVector b = EigenVector::Zero();
         b[0]=_v[0];
         b[1]=_v[1];
