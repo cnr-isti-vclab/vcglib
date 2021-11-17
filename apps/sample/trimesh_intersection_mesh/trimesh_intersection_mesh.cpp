@@ -70,7 +70,7 @@ int main(int ,char **)
     tri::UpdateSelection<MyMesh>::FaceDilate(m1);
     tri::Clean<MyMesh>::SelectIntersectingFaces(m2,m1);
     tri::UpdateSelection<MyMesh>::FaceDilate(m2);
-    IsotropicRemeshing<MyMesh>::Params params;
+    vcg::tri::IsotropicRemeshing<MyMesh>::Params params;
     
     float len = (tri::Stat<MyMesh>::ComputeFaceEdgeLengthAverage(m1,true) + tri::Stat<MyMesh>::ComputeFaceEdgeLengthAverage(m1,true));
     params.SetTargetLen(len*0.8f);
@@ -78,8 +78,8 @@ int main(int ,char **)
     params.iter=1; // just one iteration to avoid overtessellating.
     params.selectedOnly=true;
     printf(" Input mesh %8i v %8i f\n",m1.VN(),m1.FN());
-    IsotropicRemeshing<MyMesh>::Do(m1, params);
-    IsotropicRemeshing<MyMesh>::Do(m2, params);
+    vcg::tri::IsotropicRemeshing<MyMesh>::Do(m1, params);
+    vcg::tri::IsotropicRemeshing<MyMesh>::Do(m2, params);
     printf(" Input mesh %8i v %8i f\n",m1.VN(),m1.FN());
   }
   tri::Clean<MyMesh>::SelectIntersectingFaces(m1,m2);

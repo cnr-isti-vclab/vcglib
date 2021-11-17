@@ -474,9 +474,9 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
        {
         CoordType p0=f->P0(i);
         CoordType p1=f->P1(i);
-        if (p0>p1) std::swap(p0,p1);  
-        if(edgeToPolyVertMap[make_pair(p0,p1)]) printf("Found an already used Edge %lu - %lu %lu!!!\n", tri::Index(base,f->V0(i)),tri::Index(base,f->V1(i)),tri::Index(poly,&*vi));
-        edgeToPolyVertMap[make_pair(p0,p1)]=&*vi;
+        if (p0>p1) std::swap(p0,p1);
+        if(edgeToPolyVertMap[std::make_pair(p0,p1)]) printf("Found an already used Edge %lu - %lu %lu!!!\n", tri::Index(base,f->V0(i)),tri::Index(base,f->V1(i)),tri::Index(poly,&*vi));
+        edgeToPolyVertMap[std::make_pair(p0,p1)]=&*vi;
        }         
       }
     }
@@ -1136,7 +1136,7 @@ public:
       CoordType p0 = ep.V()->P();
       CoordType p1 = ep.VFlip()->P();
       if (p0>p1) std::swap(p0,p1);        
-      VertexPointer vp=edgeToPolyVertMap[make_pair(p0,p1)];
+      VertexPointer vp=edgeToPolyVertMap[std::make_pair(p0,p1)];
       return vp!=0;
     }
 };
@@ -1152,7 +1152,7 @@ public:
       CoordType p0 = ep.V()->P();
       CoordType p1 = ep.VFlip()->P();
       if (p0>p1) std::swap(p0,p1);        
-      VertexPointer vp=edgeToPolyVertMap[make_pair(p0,p1)];
+      VertexPointer vp=edgeToPolyVertMap[std::make_pair(p0,p1)];
       assert(vp);
       nv.P()=vp->P();
       return;

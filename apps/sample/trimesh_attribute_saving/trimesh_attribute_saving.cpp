@@ -45,7 +45,7 @@ class MyMesh : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFa
 int main()
 {
   MyMesh m;
-  Torus<MyMesh>(m, 3.0f, 1.0f);
+  vcg::tri::Torus<MyMesh>(m, 3.0f, 1.0f);
   //! [Adding a few attributes]
   // add a per-vertex attribute with type float named "GaussianCurvature"
   MyMesh::PerVertexAttributeHandle<float> 

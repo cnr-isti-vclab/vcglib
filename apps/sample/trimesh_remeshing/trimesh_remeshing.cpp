@@ -75,7 +75,7 @@ int main( int argc, char **argv )
 
 	// Mesh cleaning
 	tri::Clean<MyMesh>::RemoveUnreferencedVertex(original);
-	Allocator<MyMesh>::CompactEveryVector(original);
+	vcg::tri::Allocator<MyMesh>::CompactEveryVector(original);
 
 
 	tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFaceNormalized(original);
@@ -90,7 +90,7 @@ int main( int argc, char **argv )
 	float maxSurfDist = maxSurfDistPerc*(original.bbox.Diag()/100.f);
 	printf("Length Thr: %8.3f ~ %4.2f %% on %5.3f\n",lengthThr,targetLenPerc,original.bbox.Diag());
 
-	IsotropicRemeshing<MyMesh>::Params params;
+	vcg::tri::IsotropicRemeshing<MyMesh>::Params params;
 	params.SetTargetLen(lengthThr);
 	params.SetFeatureAngleDeg(creaseAngle);
 	params.iter=iterNum;
@@ -111,7 +111,7 @@ int main( int argc, char **argv )
 
 
 	printf(" Input mesh %8i v %8i f\n",toremesh.VN(),toremesh.FN());
-	IsotropicRemeshing<MyMesh>::Do(toremesh, original, params);
+	vcg::tri::IsotropicRemeshing<MyMesh>::Do(toremesh, original, params);
 	vcg::tri::io::ExporterPLY<MyMesh>::Save(toremesh, "remesh.ply");
 	printf("Output mesh %8i v %8i f\n",toremesh.VN(),toremesh.FN());
 
