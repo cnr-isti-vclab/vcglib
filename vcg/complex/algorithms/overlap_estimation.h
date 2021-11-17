@@ -32,9 +32,6 @@
 
 #include <qdatetime.h>
 
-using namespace std;
-using namespace vcg;
-
 /** \brief This class provides a strategy to estimate the overlap percentage of two range maps/point clouds.
  *
  * This class can be used, for exemple, into an automatic alignment process to check the quality of the
@@ -56,9 +53,9 @@ template<class MESH_TYPE> class OverlapEstimation
     typedef typename MeshType::FaceType FaceType;
     typedef typename MeshType::VertexPointer VertexPointer;
     typedef typename MeshType::VertexIterator VertexIterator;
-    typedef typename vector<VertexPointer>::iterator VertexPointerIterator;
-    typedef GridStaticPtr<VertexType, ScalarType > MeshGrid;
-    typedef tri::EmptyTMark<MeshType> MarkerVertex;
+    typedef typename std::vector<VertexPointer>::iterator VertexPointerIterator;
+    typedef vcg::GridStaticPtr<VertexType, ScalarType > MeshGrid;
+    typedef vcg::tri::EmptyTMark<MeshType> MarkerVertex;
 
     private:
     /** Private simple class needed to perform sampling of pointers to vertexes. */
@@ -70,7 +67,7 @@ template<class MESH_TYPE> class OverlapEstimation
 
         VertexPointerSampler(){ m = new MeshType(); m->Tr.SetIdentity(); m->sfn=0; }
         ~VertexPointerSampler(){ if(m) delete m; }
-        vector<VertexType*> sampleVec;
+        std::vector<VertexType*> sampleVec;
 
         void AddVert(VertexType &p){ sampleVec.push_back(&p); } //this function is the only we really need
         void AddFace(const FaceType &f, const CoordType &p){}
@@ -110,7 +107,7 @@ template<class MESH_TYPE> class OverlapEstimation
     private:
     MeshType* mFix;                             /** Pointer to mesh \c mFix. */
     MeshType* mMov;                             /** Pointer to mesh \c mMov. */
-    vector<vector<int> >* normBuckets;          //structure to hold normals bucketing. Needed for normal equalized sampling during consensus
+    std::vector<std::vector<int> >* normBuckets;          //structure to hold normals bucketing. Needed for normal equalized sampling during consensus
     MeshGrid* gridFix;                          //variable to manage uniform grid
     MarkerVertex markerFunctorFix;              //variable to manage uniform grid
 
@@ -182,7 +179,7 @@ template<class MESH_TYPE> class OverlapEstimation
 
         //if no buckets are provided get a vector of vertex pointers sampled uniformly
         //else, get a vector of vertex pointers sampled in a normal equalized manner; used as query points
-        vector<VertexPointer> queryVert;
+        std::vector<VertexPointer> queryVert;
         if(param.normalEqualization){
             assert(normBuckets);
             for(unsigned int i=0; i<mMov->vert.size(); i++) queryVert.push_back(&(mMov->vert[i]));//do a copy of pointers to vertexes
@@ -249,7 +246,7 @@ template<class MESH_TYPE> class OverlapEstimation
       * @param vert Destination vector.
       * @param sampleNum Requested number of vertexes.
       */
-    void SampleVertUniform(MESH_TYPE& m, vector<typename MESH_TYPE::VertexPointer>& vert, int sampleNum)
+    void SampleVertUniform(MESH_TYPE& m, std::vector<typename MESH_TYPE::VertexPointer>& vert, int sampleNum)
     {
         VertexPointerSampler sampler;
         tri::SurfaceSampling<MeshType, VertexPointerSampler>::VertexUniform(m, sampler, sampleNum);
@@ -258,12 +255,12 @@ template<class MESH_TYPE> class OverlapEstimation
     /** Buckets normals of the vertexes contained in \c vert .
       * \return A vector of vectors containing indexes to \c vert .
       */
-    vector<vector<int> >* BucketVertexNormal(typename MESH_TYPE::VertContainer& vert, int bucketDim = 30)
+    std::vector<std::vector<int> >* BucketVertexNormal(typename MESH_TYPE::VertContainer& vert, int bucketDim = 30)
     {
         static vector<Point3f> NV;
         if(NV.size()==0) GenNormal<float>::Uniform(bucketDim,NV);
 
-        vector<vector<int> >* BKT = new vector<vector<int> >(NV.size()); //NV size is greater then bucketDim, so don't change this!
+        std::vector<std::vector<int> >* BKT = new std::vector<std::vector<int> >(NV.size()); //NV size is greater then bucketDim, so don't change this!
 
         int ind;
         for(int i=0;i<vert.size();++i){
@@ -281,7 +278,7 @@ template<class MESH_TYPE> class OverlapEstimation
     {
         assert(normBuckets);
         // vettore di contatori per sapere quanti punti ho gia' preso per ogni bucket
-        vector<int> BKTpos(normBuckets->size(),0);
+        std::vector<int> BKTpos(normBuckets->size(),0);
 
         if(SampleNum >= int(vert.size())) SampleNum= int(vert.size()-1);
 
@@ -289,7 +286,7 @@ template<class MESH_TYPE> class OverlapEstimation
         for(int i=0;i<SampleNum;){
             ind=LocRnd(normBuckets->size()); // Scelgo un Bucket
             int &CURpos = BKTpos[ind];
-            vector<int> &CUR = (*normBuckets)[ind];
+            std::vector<int> &CUR = (*normBuckets)[ind];
 
             if(CURpos<int(CUR.size())){
                 swap(CUR[CURpos], CUR[ CURpos + LocRnd((*normBuckets)[ind].size()-CURpos)]);

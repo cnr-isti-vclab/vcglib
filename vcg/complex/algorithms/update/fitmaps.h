@@ -42,9 +42,6 @@
 
 #include <vcg/complex/algorithms/smooth.h>
 
-
-using namespace Eigen;
-
 namespace vcg { namespace tri {
 
 template<class MeshType>

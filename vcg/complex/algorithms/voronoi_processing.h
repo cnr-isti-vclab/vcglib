@@ -432,7 +432,7 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   for(size_t i=0;i<seedVec.size();++i)
   {
     VertexPointer curSeed=seedVec[i];
-    vector<CoordType> pt;
+    std::vector<CoordType> pt;
     for(size_t j=0;j<innerCornerVec.size();++j)
       for(int qq=0;qq<3;qq++)
         if(sources[innerCornerVec[j]->V(qq)] == curSeed)
@@ -457,12 +457,12 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
     CoordType nZ = pl.Direction();
     CoordType nX = (pt[0]-curSeed->P()).Normalize();
     CoordType nY = (nX^nZ).Normalize();
-    vector<std::pair<float,int> > angleVec(pt.size());
+    std::vector<std::pair<float,int> > angleVec(pt.size());
     for(size_t j=0;j<pt.size();++j)
     {
       CoordType p = (pt[j]-curSeed->P()).Normalize();
       float angle = 180.0f+math::ToDeg(atan2(p*nY,p*nX));
-      angleVec[j] = make_pair(angle,j);
+      angleVec[j] = std::make_pair(angle,j);
     }
     std::sort(angleVec.begin(),angleVec.end());
     // Now build another piece of mesh.
@@ -1230,8 +1230,8 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<CoordType> &seedPo
       sumVec[seedInd].second+=vi->cP()*area[vi];
     }
 
-    vector<CoordType> newseedVec;
-    vector<bool> newfixedVec;
+    std::vector<CoordType> newseedVec;
+    std::vector<bool> newfixedVec;
 
     for(size_t i=0;i<seedPosVec.size();++i)
     {
@@ -1406,7 +1406,7 @@ static std::pair<genericType, genericType> ordered_pair(const genericType &a, co
 ///
 ///
 static void GenerateMidPointMap(MeshType &m,
-                                map<std::pair<VertexPointer,VertexPointer>, VertexPointer > &midMap)
+                                std::map<std::pair<VertexPointer,VertexPointer>, VertexPointer > &midMap)
 {
   PerVertexPointerHandle sources = tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
 
@@ -1601,10 +1601,10 @@ static void ConvertDelaunayTriangulationToMesh(MeshType &m,
   for(size_t i=0;i<seedVec.size();++i)
     tri::Allocator<MeshType>::AddVertex(outMesh, seedVec[i]->P(),Color4b::White);
 
-  map<std::pair<VertexPointer,VertexPointer>, int > midMapInd;
+  std::map<std::pair<VertexPointer,VertexPointer>, int > midMapInd;
 
   // Given a pair of sources gives the index of the mid vertex
-  map<std::pair<VertexPointer,VertexPointer>, VertexPointer > midMapPt;
+  std::map<std::pair<VertexPointer,VertexPointer>, VertexPointer > midMapPt;
   if(refineFlag)
   {
     GenerateMidPointMap(m, midMapPt);
@@ -1658,7 +1658,7 @@ static void PreprocessForVoronoi(MeshType &m, ScalarType radius,
   for(int i=0;i<maxSubDiv;++i)
   {
     vpp.lcb(0,StrFormat("Subdividing %i vn %i",i,m.vn));
-    bool ret = tri::Refine<MeshType, MidPointType >(m,mid,min(edgeLen*2.0f,radius/vpp.refinementRatio));
+    bool ret = tri::Refine<MeshType, MidPointType >(m,mid,std::min(edgeLen*2.0f,radius/vpp.refinementRatio));
     if(!ret) break;
   }
   tri::Allocator<MeshType>::CompactEveryVector(m);
@@ -1715,7 +1715,7 @@ static void RelaxRefineTriangulationSpring(MeshType &m, MeshType &delaMesh, int 
       std::vector<float> avgLenVec(delaMesh.vn,0);
       for(int i=0;i<delaMesh.vn;++i)
       {
-        vector<VertexPointer> starVec;
+        std::vector<VertexPointer> starVec;
         face::VVStarVF<FaceType>(&delaMesh.vert[i],starVec);
 
         for(size_t j=0;j<starVec.size();++j)

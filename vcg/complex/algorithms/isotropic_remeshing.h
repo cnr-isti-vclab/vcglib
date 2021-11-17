@@ -429,7 +429,7 @@ private:
         for(auto vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
             if(!(*vi).IsD())
             {
-                vector<FaceType*> ff;
+                std::vector<FaceType*> ff;
                 face::VFExtendedStarVF(&*vi, 2, ff);
 
                 ScalarType tot = 0.f;
@@ -906,8 +906,8 @@ private:
 
         p1.FlipV();
 
-        vector<int> vi0, vi1;
-        vector<FaceType*> ff0, ff1;
+        std::vector<int> vi0, vi1;
+        std::vector<FaceType*> ff0, ff1;
 
         face::VFStarVF<FaceType>(p0.V(), ff0, vi0);
         face::VFStarVF<FaceType>(p1.V(), ff1, vi1);
@@ -956,7 +956,7 @@ private:
         Point3<ScalarType> collapseNV, collapsedNV0, collapsedNV1;
         collapseNV = (p.V()->P() - p.VFlip()->P()).normalized();
 
-        vector<VertexType*> vv;
+        std::vector<VertexType*> vv;
         face::VVStarVF<FaceType>(p.V(), vv);
 
         for(VertexType *v: vv)
@@ -1052,9 +1052,9 @@ private:
          *           \ | /                   \|/ +0               \ / -1
          *             v3                     v3                   v3
          */
-    static bool chooseBestCrossCollapse(PosType &p, VertexPair& bp, vector<FaceType*> &ff)
+    static bool chooseBestCrossCollapse(PosType &p, VertexPair& bp, std::vector<FaceType*> &ff)
     {
-        vector<VertexType*> vv0, vv1, vv2, vv3;
+        std::vector<VertexType*> vv0, vv1, vv2, vv3;
         VertexType *v0, *v1, *v2, *v3;
 
         v0 = p.F()->V1(p.VInd());
@@ -1175,8 +1175,8 @@ private:
                         PosType pi(&*fi, i);
                         if(!pi.V()->IsB())
                         {
-                            vector<FaceType*> ff;
-                            vector<int> vi;
+                            std::vector<FaceType*> ff;
+                            std::vector<int> vi;
                             face::VFStarVF<FaceType>(pi.V(), ff, vi);
 
                             //if cross need to check what creases you have and decide where to collapse accordingly
