@@ -51,7 +51,7 @@ template <class ShotType>
       shot.Extrinsics.SetTra(-tra);
 
       vcg::Matrix44<ScalarType> rot;
-      QStringList values = attr.namedItem("RotationMatrix").nodeValue().split(" ", QString::SkipEmptyParts);
+      QStringList values = attr.namedItem("RotationMatrix").nodeValue().split(" ", Qt::SkipEmptyParts);
       for (int y = 0; y < 4; y++)
         for (int x = 0; x < 4; x++)
           rot[y][x] = values[x + 4 * y].toDouble();
