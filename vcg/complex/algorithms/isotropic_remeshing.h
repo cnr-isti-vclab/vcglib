@@ -437,10 +437,10 @@ private:
 
                 assert(ff.size() > 0);
 
-                const Point3<ScalarType> & fNormal = NormalizedTriangleNormal(**it);
+                const Point3<ScalarType> fNormal = NormalizedTriangleNormal(**(ff.begin()));
 
-                const auto tot = std::accumulate(++ff.begin(), ff.end(), 0.d, [&](const ScalarType acc, const FaceType * f) {
-                    return acc + (1 - math::Abs(fastAngle(n, NormalizedTriangleNormal(*f))));
+                const auto tot = std::accumulate(++ff.begin(), ff.end(), 0., [&](const ScalarType acc, const FaceType * f) {
+                    return acc + (1 - math::Abs(fastAngle(fNormal, NormalizedTriangleNormal(*f))));
                 });
 
                 vi->Q() = tot / (std::max(1, ((int)ff.size()-1)));
