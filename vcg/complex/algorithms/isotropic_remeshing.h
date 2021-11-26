@@ -439,7 +439,7 @@ private:
 
                 const Point3<ScalarType> & fNormal = NormalizedTriangleNormal(**it);
 
-                const auto tot = std::accumulate(++ff.begin(), ff.end(), 0.d, [&](const Scalartype acc, const FaceType * f) {
+                const auto tot = std::accumulate(++ff.begin(), ff.end(), 0.d, [&](const ScalarType acc, const FaceType * f) {
                     return acc + (1 - math::Abs(fastAngle(n, NormalizedTriangleNormal(*f))));
                 });
 
