@@ -34,7 +34,7 @@ namespace tri {
 
 /// \headerfile texture.h vcg/complex/algorithms/update/texture.h
 
-/// \brief This class is used to update/generate texcoord position according to various critera. .
+/// \brief This class is used to update/generate texcoord position according to various critera.
 template <class ComputeMeshType>
 class UpdateTexture
 {

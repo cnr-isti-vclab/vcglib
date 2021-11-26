@@ -446,7 +446,7 @@ public:
             }
             
             
-            if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) // assigning face color
+            if(((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && HasPerFaceColor(m)) // assigning face color
               ff.c = currentColor;
             
             ++numTriangles;
@@ -569,7 +569,10 @@ public:
               }
               
               // assigning face color
-              if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) ff.c = currentColor;
+              if( ((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && HasPerFaceColor(m))
+			  {
+				  ff.c = currentColor;
+			  }
               
               ff.mInd = currentMaterialIdx;
               
@@ -672,25 +675,26 @@ public:
         assert(vertInd >=0 && vertInd < m.vn); (void)vertInd;
         m.face[i].V(j) = &(m.vert[indexedFaces[i].v[j]]);
         
-        if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) != 0) && (HasPerWedgeTexCoord(m)))
+        if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) != 0) && HasPerWedgeTexCoord(m))
         {
           ObjTexCoord t = texCoords[indexedFaces[i].t[j]];
           m.face[i].WT(j).u() = t.u;
           m.face[i].WT(j).v() = t.v;
           m.face[i].WT(j).n() = indexedFaces[i].tInd;
         }
-        if ( oi.mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD ) {
+        if (((oi.mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD) != 0 ) && HasPerVertexTexCoord(m))
+		{
           ObjTexCoord t = texCoords[indexedFaces[i].t[j]];
           m.face[i].V(j)->T().u() = t.u;
           m.face[i].V(j)->T().v() = t.v;
           m.face[i].V(j)->T().n() = indexedFaces[i].tInd;
         }
-        if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+        if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) != 0) && HasPerWedgeNormal(m))
         {
           m.face[i].WN(j).Import(normals[indexedFaces[i].n[j]]);
         }
         
-        if ( oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL )
+        if (((oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL) != 0) && HasPerVertexNormal(m))
         {
           m.face[i].V(j)->N().Import(normals[indexedFaces[i].n[j]]);
         }
