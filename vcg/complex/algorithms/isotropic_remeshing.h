@@ -685,7 +685,7 @@ private:
                             testSwap(pi, params.creaseAngleCosThr) &&
 //                            face::CheckFlipEdge(f, i) &&
                             face::CheckFlipEdgeNormal(f, i, float(vcg::math::ToRad(5.))) && 
-                            (!params.surfDistCheck || testHausdorff(*params.mProject, params.grid, { swapEdgeMidPoint }, params.maxSurfDist)))
+                            (!params.surfDistCheck || testHausdorff(*params.mProject, params.grid, {{ swapEdgeMidPoint }}, params.maxSurfDist)))
                     {
                         //When doing the swap we need to preserve and update the crease info accordingly
                         FaceType* g = f.cFFp(i);
@@ -872,7 +872,7 @@ private:
                     };
 
                     if (!testHausdorff(*(params.mProject), params.grid, points, params.maxSurfDist) ||
-                            !testHausdorff(*(params.mProject), params.grid, { (v1->cP() + v2->cP() + mp) / 3. }, params.maxSurfDist, newN))
+                            !testHausdorff(*(params.mProject), params.grid, {{ (v1->cP() + v2->cP() + mp) / 3. }}, params.maxSurfDist, newN))
                         return false;
                 }
             }
