@@ -865,7 +865,7 @@ private:
                 //check on new face distance from original mesh
                 if (params.surfDistCheck)
                 {
-                    const auto points = {
+                    const std::vector<CoordType> points {
                         (v1->cP() + mp) / 2.,
                         (v2->cP() + mp) / 2.,
                         mp,
