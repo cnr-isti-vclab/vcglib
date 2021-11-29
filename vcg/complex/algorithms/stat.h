@@ -73,7 +73,6 @@ public:
 		explicit function that does it. This function should take a const Mesh. **/
 
 		tri::RequirePerVertexQuality(m);
-
 		std::pair<ScalarType, ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(),
 		                                                          std::numeric_limits<ScalarType>::lowest());
 
@@ -102,7 +101,7 @@ public:
 		std::pair<ScalarType,ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(),
 		                                                         std::numeric_limits<ScalarType>::lowest());
 
-		ForEachTetra(m, [&minmax] (const FaceType & f) {
+		ForEachFace(m, [&minmax] (const FaceType & f) {
 			if (f.cQ() < minmax.first)
 				minmax.first  = f.cQ();
 			if (f.cQ() > minmax.second)
