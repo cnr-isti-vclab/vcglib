@@ -1005,7 +1005,7 @@ public:
 					}
 					else
 						first = false;
-					//strcpy(currentMaterial.name, tokens[1].c_str());
+
 					if(tokens.size() < 2)
 						return false;
 					else if (tokens.size() == 2)
@@ -1014,17 +1014,17 @@ public:
 						currentMaterial.materialName = line.substr(7); //space in the name, get everything after "newmtl "
 				}
 				else if (header.compare("Ka")==0) {
-					if (tokens.size() < 4) {
+					if (tokens.size() >= 4) {
 						currentMaterial.Ka = Point3fFrom3Tokens(tokens,1);
 					}
 				}
 				else if (header.compare("Kd")==0) {
-					if (tokens.size() < 4) {
+					if (tokens.size() >= 4) {
 						currentMaterial.Kd = Point3fFrom3Tokens(tokens,1);
 					}
 				}
 				else if (header.compare("Ks")==0) {
-					if (tokens.size() < 4) {
+					if (tokens.size() >= 4) {
 						currentMaterial.Ks = Point3fFrom3Tokens(tokens,1);
 					}
 				}
