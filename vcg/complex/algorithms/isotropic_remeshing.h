@@ -619,26 +619,30 @@ private:
 
         std::vector<VertexType*> incident;
 
-        // vcg::face::VVStarVF<FaceType>(tp.V(), incident);
-        idealV  = idealValence(tp); actualV = tp.NumberOfIncidentVertices();//int(incident.size());
+        vcg::face::VVStarVF<FaceType>(tp.V(), incident);
+        idealV  = idealValence(tp); 
+        actualV = int(incident.size()); //tp.NumberOfIncidentVertices();
         oldDist += abs(idealV - actualV); newDist += abs(idealV - (actualV - 1));
 
         tp.NextF();tp.FlipE();tp.FlipV();
         const VertexType *v1=tp.V();
-        // vcg::face::VVStarVF<FaceType>(tp.V(), incident);
-        idealV  = idealValence(tp); actualV = tp.NumberOfIncidentVertices();//int(incident.size());
+        vcg::face::VVStarVF<FaceType>(tp.V(), incident);
+        idealV  = idealValence(tp);
+        actualV = int(incident.size()); //tp.NumberOfIncidentVertices();
         oldDist += abs(idealV - actualV); newDist += abs(idealV - (actualV + 1));
 
         tp.FlipE();tp.FlipV();tp.FlipE();
         const VertexType *v2=tp.V();
-        // vcg::face::VVStarVF<FaceType>(tp.V(), incident);
-        idealV  = idealValence(tp); actualV = tp.NumberOfIncidentVertices();//int(incident.size());
+        vcg::face::VVStarVF<FaceType>(tp.V(), incident);
+        idealV  = idealValence(tp);
+        actualV = int(incident.size()); //tp.NumberOfIncidentVertices();
         oldDist += abs(idealV - actualV); newDist += abs(idealV - (actualV - 1));
 
         tp.NextF();tp.FlipE();tp.FlipV();
         const VertexType *v3=tp.V();
-        // vcg::face::VVStarVF<FaceType>(tp.V(), incident);
-        idealV  = idealValence(tp); actualV = tp.NumberOfIncidentVertices();//int(incident.size());
+        vcg::face::VVStarVF<FaceType>(tp.V(), incident);
+        idealV  = idealValence(tp); 
+        actualV = int(incident.size());//tp.NumberOfIncidentVertices();
         oldDist += abs(idealV - actualV); newDist += abs(idealV - (actualV + 1));
 
         const ScalarType qOld = std::min(Quality(v0->P(),v2->P(),v3->P()),Quality(v0->P(),v1->P(),v2->P()));
