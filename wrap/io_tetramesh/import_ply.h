@@ -363,7 +363,7 @@ public:
             {
                 int j;
                 int k;
-                TetraIterator ti = Allocator<OpenMeshType>::AddTetras(m, n);
+                TetraIterator ti = vcg::tri::Allocator<OpenMeshType>::AddTetras(m, n);
                 pf.SetCurElement(i);
 
                 for(j=0;j<n;++j)
