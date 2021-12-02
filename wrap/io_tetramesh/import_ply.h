@@ -204,7 +204,7 @@ public:
     static int Open( OpenMeshType &m, const char * filename, PlyInfo & pi )
     {
         assert(filename!=0);
-        vector<VertexPointer> index;
+        std::vector<VertexPointer> index;
 
         LoadPly_TetraAux fa;
         LoadPly_VertAux<ScalarType> va;
@@ -273,8 +273,8 @@ public:
             }
         }
         // Descrittori definiti dall'utente,
-        vector<PropDescriptor> VPV(pi.vdn); // property descriptor relative al tipo LoadPly_VertexAux
-        vector<PropDescriptor> FPV(pi.fdn); // property descriptor relative al tipo LoadPly_FaceAux
+        std::vector<PropDescriptor> VPV(pi.vdn); // property descriptor relative al tipo LoadPly_VertexAux
+        std::vector<PropDescriptor> FPV(pi.fdn); // property descriptor relative al tipo LoadPly_FaceAux
 
         if(pi.vdn>0){
             // Compute the total size needed to load additional per vertex data.
@@ -318,7 +318,7 @@ public:
                 int j;
 
                 pf.SetCurElement(i);
-                VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,n);
+                VertexIterator vi=vcg::tri::Allocator<OpenMeshType>::AddVertices(m,n);
 
                 for(j=0;j<n;++j)
                 {
