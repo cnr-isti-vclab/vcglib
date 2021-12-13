@@ -88,7 +88,7 @@ public:
    When you create a Inertia object, you have to specify the mesh that it refers to.
    The properties are computed at that moment. Subsequent modification of the mesh does not affect these values.
    */
- Inertia(MeshType &m) {Compute(m);}
+ Inertia(const MeshType &m) { Compute(m); }
 
 /* compute various integrations over projection of face */
  void compProjectionIntegrals(const FaceType &f)
