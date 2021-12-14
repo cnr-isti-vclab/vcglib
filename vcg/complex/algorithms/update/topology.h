@@ -82,9 +82,9 @@ public:
     assert (tp != 0);
     assert (nz >= 0 && nz < 4);
     
-    v[0] = tp->cV(Tetra::VofF(nz, 0));
-    v[1] = tp->cV(Tetra::VofF(nz, 1));
-    v[2] = tp->cV(Tetra::VofF(nz, 2));
+    v[0] = tp->V(Tetra::VofF(nz, 0));
+    v[1] = tp->V(Tetra::VofF(nz, 1));
+    v[2] = tp->V(Tetra::VofF(nz, 2));
     
     assert(v[0] != v[1] && v[1] != v[2]); //no degenerate faces
 
