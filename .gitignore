@@ -17,6 +17,9 @@ release/
 # Intermediate Files
 *.bc
 
+# osx rubbish
+.DS_Store
+
 # Visual Studio Project files
 *.vcxproj
 *.vcxproj.filters
