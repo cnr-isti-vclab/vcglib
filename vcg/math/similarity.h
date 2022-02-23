@@ -212,13 +212,13 @@ template <class S,class RotationType> void Similarity<S,RotationType>::FromMatri
   tra[2] = t.ElementAt(2, 3);t[2][3] = 0.0;
   rot.FromMatrix(t);
 
-	Invert(t);	
+    t=Inverse(t);
 	tra = t * tra;
 	tra/= sca;
 }
 
 
-template <class S,class RotationType> Similarity<S,RotationType> &Invert(Similarity<S,RotationType> &a) {  
+template <class S,class RotationType> Similarity<S,RotationType> &Invert(Similarity<S,RotationType> &a) {
   a.rot.Invert();
   a.sca = 1/a.sca;
   a.tra = a.rot.Rotate(-a.tra)*a.sca;

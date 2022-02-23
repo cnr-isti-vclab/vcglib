@@ -46,7 +46,7 @@
 namespace vcg {
 namespace tri {
 
-enum SmoothMethod{SMMiq,SMNPoly};
+enum SmoothMethod{SMMiq,SMNPoly,SMIterative};
 
 template <class MeshType>
 class FieldSmoother
@@ -59,6 +59,7 @@ class FieldSmoother
 
     static void InitQualityByAnisotropyDir(MeshType &mesh)
     {
+        ScalarType minV=0.00001;
         std::vector<ScalarType> QVal;
         for (size_t i=0;i<mesh.vert.size();i++)
         {
@@ -77,17 +78,18 @@ class FieldSmoother
             ScalarType N1=(mesh.vert[i].K1());
             ScalarType N2=(mesh.vert[i].K2());
 
-           ScalarType NMax=std::max(N1,N2)/trimUp;
-           ScalarType NMin=std::min(N1,N2)/trimUp;
+            ScalarType NMax=std::max(N1,N2)/trimUp;
+            ScalarType NMin=std::min(N1,N2)/trimUp;
 
-           if (NMax>1)NMax=1;
-           if (NMax<-1)NMax=-1;
+            if (NMax>1)NMax=1;
+            if (NMax<-1)NMax=-1;
 
-           if (NMin>1)NMin=1;
-           if (NMin<-1)NMin=-1;
+            if (NMin>1)NMin=1;
+            if (NMin<-1)NMin=-1;
 
-           ScalarType CurvAni=(NMax-NMin)/2;
-           mesh.vert[i].Q()=CurvAni;
+            ScalarType CurvAni=(NMax-NMin)/2;
+            CurvAni=std::max(CurvAni,minV);
+            mesh.vert[i].Q()=CurvAni;
         }
         vcg::tri::UpdateQuality<MeshType>::FaceFromVertex(mesh);
     }
@@ -148,10 +150,10 @@ class FieldSmoother
 
     //hard constraints have selected face
     static void CollectHardConstraints( MeshType & mesh,
-                                    Eigen::VectorXi &HardI,
-                                    Eigen::MatrixXd &HardD,
-                                    SmoothMethod SMethod,
-                                    int Ndir)
+                                        Eigen::VectorXi &HardI,
+                                        Eigen::MatrixXd &HardD,
+                                        SmoothMethod SMethod,
+                                        int Ndir)
     {
         //count number of hard constraints
         int numS=vcg::tri::UpdateSelection<MeshType>::FaceCount(mesh);
@@ -217,7 +219,6 @@ class FieldSmoother
             SoftD(curr_index,2)=dir.Z();
 
             SoftW(curr_index,0)=mesh.face[i].Q();
-
             curr_index++;
 
         }
@@ -333,6 +334,14 @@ class FieldSmoother
         Dir.Normalize();
     }
 
+
+    static void GloballyOrient(MeshType &mesh)
+    {
+        vcg::tri::CrossField<MeshType>::MakeDirectionFaceCoherent(mesh,true);
+    }
+
+
+
 public:
 
     struct SmoothParam
@@ -353,6 +362,8 @@ public:
         int curvRing;
         //this are additional hard constraints
         std::vector<std::pair<int,CoordType> > AddConstr;
+        //the number of iteration in case of iterative method
+        size_t IteN;
 
         SmoothParam()
         {
@@ -363,47 +374,10 @@ public:
             SmoothM=SMMiq;
             sharp_thr=0.0;
             curv_thr=0.4;
+            IteN=20;
         }
 
     };
-
-    static void SelectConstraints(MeshType &mesh,SmoothParam &SParam)
-    {
-        //clear all selected faces
-        vcg::tri::UpdateFlags<MeshType>::FaceClear(mesh);
-
-        //add curvature hard constraints
-        //ScalarType Ratio=mesh.bbox.Diag()*0.01;
-
-        if (SParam.curv_thr>0)
-            AddCurvatureConstraints(mesh,SParam.curv_thr);///Ratio);
-
-         //add alignment to sharp features
-        if (SParam.sharp_thr>0)
-            AddSharpEdgesConstraints(mesh,SParam.sharp_thr);
-
-        //add border constraints
-        if (SParam.align_borders)
-            AddBorderConstraints(mesh);
-
-        //aff final constraints
-        for (size_t i=0;i<SParam.AddConstr.size();i++)
-        {
-            int indexF=SParam.AddConstr[i].first;
-            CoordType dir=SParam.AddConstr[i].second;
-            mesh.face[indexF].PD1()=dir;
-            mesh.face[indexF].PD2()=mesh.face[indexF].N()^dir;
-            mesh.face[indexF].PD1().Normalize();
-            mesh.face[indexF].PD2().Normalize();
-            mesh.face[indexF].SetS();
-        }
-    }
-
-    static void GloballyOrient(MeshType &mesh)
-    {
-        vcg::tri::CrossField<MeshType>::MakeDirectionFaceCoherent(mesh,true);
-    }
-
 
     static void InitByCurvature(MeshType & mesh,
                                 unsigned Nring,
@@ -434,12 +408,48 @@ public:
         InitQualityByAnisotropyDir(mesh);
     }
 
-    static void SmoothDirections(MeshType &mesh,
-                                 int Ndir,
-                                 SmoothMethod SMethod=SMNPoly,
-                                 bool HardAsS=true,
-                                 ScalarType alphaSoft=0)
+private:
+
+    static void SelectConstraints(MeshType &mesh,SmoothParam &SParam)
     {
+        //clear all selected faces
+        vcg::tri::UpdateFlags<MeshType>::FaceClear(mesh);
+
+        //add curvature hard constraints
+        //ScalarType Ratio=mesh.bbox.Diag()*0.01;
+
+        if (SParam.curv_thr>0)
+            AddCurvatureConstraints(mesh,SParam.curv_thr);///Ratio);
+
+        //add alignment to sharp features
+        if (SParam.sharp_thr>0)
+            AddSharpEdgesConstraints(mesh,SParam.sharp_thr);
+
+        //add border constraints
+        if (SParam.align_borders)
+            AddBorderConstraints(mesh);
+
+        //aff final constraints
+        for (size_t i=0;i<SParam.AddConstr.size();i++)
+        {
+            int indexF=SParam.AddConstr[i].first;
+            CoordType dir=SParam.AddConstr[i].second;
+            mesh.face[indexF].PD1()=dir;
+            mesh.face[indexF].PD2()=mesh.face[indexF].N()^dir;
+            mesh.face[indexF].PD1().Normalize();
+            mesh.face[indexF].PD2().Normalize();
+            mesh.face[indexF].SetS();
+        }
+    }
+
+    static void SmoothDirectionsIGL(MeshType &mesh,
+                                    int Ndir,
+                                    SmoothMethod SMethod=SMNPoly,
+                                    bool HardAsS=true,
+                                    ScalarType alphaSoft=0)
+    {
+
+        assert((SMethod==SMNPoly)||(SMethod==SMMiq));
 
         Eigen::VectorXi HardI;   //hard constraints
         Eigen::MatrixXd HardD;   //hard directions
@@ -452,7 +462,7 @@ public:
 
         //collect soft constraints , miw only one that allows for soft constraints
         if ((alphaSoft>0)&&(SMethod==SMMiq))
-          CollectSoftConstraints(mesh,SoftI,SoftD,SoftW);
+            CollectSoftConstraints(mesh,SoftI,SoftD,SoftW);
 
         //add some hard constraints if are not present
         int numC=3;
@@ -489,9 +499,9 @@ public:
             }
         }
 
-         //finally smooth
+        //finally smooth
         if (SMethod==SMMiq)
-         SmoothMIQ(mesh,HardI,HardD,SoftI,SoftD,SoftW,alphaSoft,Ndir);
+            SmoothMIQ(mesh,HardI,HardD,SoftI,SoftD,SoftW,alphaSoft,Ndir);
         else
         {
             assert(SMethod==SMNPoly);
@@ -499,28 +509,40 @@ public:
         }
     }
 
+public:
 
     static void SmoothDirections(MeshType &mesh,SmoothParam SParam)
     {
-        //for the moment only cross and line field
 
-//        //initialize direction by curvature if needed
-        if ((SParam.alpha_curv>0)||
-             (SParam.sharp_thr>0)||
-             (SParam.curv_thr>0))
+        if ((SParam.SmoothM==SMMiq)||(SParam.SmoothM==SMNPoly))
         {
-            InitByCurvature(mesh,SParam.curvRing);
-            SelectConstraints(mesh,SParam);
+            //        //initialize direction by curvature if needed
+            if ((SParam.alpha_curv>0)||
+                    (SParam.sharp_thr>0)||
+                    (SParam.curv_thr>0))
+            {
+                InitByCurvature(mesh,SParam.curvRing);
+                SelectConstraints(mesh,SParam);
+            }
+            else
+            {
+                SelectConstraints(mesh,SParam);
+                vcg::tri::CrossField<MeshType>::PropagateFromSelF(mesh);
+            }
+            SmoothDirectionsIGL(mesh,SParam.Ndir,SParam.SmoothM,true,SParam.alpha_curv);
         }
         else
         {
-            SelectConstraints(mesh,SParam);
-            vcg::tri::CrossField<MeshType>::PropagateFromSelF(mesh);
+            std::cout<<"ITERATIVE"<<std::endl;
+            assert(SParam.SmoothM==SMIterative);
+            InitByCurvature(mesh,SParam.curvRing);
+
+            if ((SParam.sharp_thr>0)||(SParam.curv_thr>0))
+                SelectConstraints(mesh,SParam);
+
+            bool weightByAni=(SParam.alpha_curv>0);
+            vcg::tri::CrossField<MeshType>::SmoothIterative(mesh,SParam.Ndir,(int)SParam.IteN,true,false,weightByAni);
         }
-
-
-        //then do the actual smooth
-        SmoothDirections(mesh,SParam.Ndir,SParam.SmoothM,true,SParam.alpha_curv);
     }
 
 };

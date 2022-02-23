@@ -229,7 +229,7 @@ int main(int argc,char ** argv){
         {
             f1=f2;
             f2++;
-            TriSplit<MyMesh,CenterPointBarycenter<MyMesh> >::Apply(vf[i],&(*f1),&(*f2),&(*vertp),CenterPointBarycenter<MyMesh>() );
+            vcg::tri::TriSplit<MyMesh,vcg::tri::CenterPointBarycenter<MyMesh> >::Apply(vf[i],&(*f1),&(*f2),&(*vertp),vcg::tri::CenterPointBarycenter<MyMesh>() );
             f1->SetS();
             f2->SetS();
             for(int itr=0;itr<3;itr++)

@@ -274,21 +274,44 @@ public:
         return _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3];
     }
     /// Euclidian normalization
-  inline Point4 & Normalize()
+    inline Point4 & Normalize()
     {
         T n = sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] + _v[3]*_v[3] );
         if(n>0.0) {	_v[0] /= n;	_v[1] /= n;	_v[2] /= n; _v[3] /= n; }
         return *this;
     }
-    /// Homogeneous normalization (division by W)
-    inline Point4 & HomoNormalize(){
-        if (_v[3]!=0.0) {	_v[0] /= _v[3];	_v[1] /= _v[3];	_v[2] /= _v[3]; _v[3]=1.0; }
-        return *this;
-    };
 
-//@}
+	inline void normalize(void)
+	{
+		this->Normalize();
+	}
 
-//@{
+	inline Point4 normalized(void) const
+	{
+		Point4<ScalarType> p = *this;
+		p.normalize();
+		return p;
+	}
+
+	/// Homogeneous normalization (division by W)
+	inline Point4 & HomoNormalize()
+	{
+		if (_v[3]!=0.0) {	_v[0] /= _v[3];	_v[1] /= _v[3];	_v[2] /= _v[3]; _v[3]=1.0; }
+		return *this;
+	};
+
+	inline void homoNormalize(void)
+	{
+		this->HomoNormalize();
+	};
+
+	inline Point4 homoNormalized(void) const
+	{
+		Point4<ScalarType> p = *this;
+		p.homoNormalize();
+		return p;
+	}
+
   /** @name Comparison operators (lexicographical order)
   **/
     inline bool operator == (  const Point4& p ) const
@@ -407,6 +430,12 @@ template<class T>
 double StableDot ( Point4<T> const & p0, Point4<T> const & p1 )
 {
 	return p0.StableDot(p1);
+}
+
+template <typename Scalar>
+inline Point4<Scalar> operator*(const Scalar s, const Point4<Scalar> & p)
+{
+	return (p * s);
 }
 
 typedef Point4<short>  Point4s;

@@ -158,15 +158,8 @@ public:
   static bool HasVHAdjacency()   {   return false; }
 
   typedef float   CurScalarType;
-  typedef float   ScalarTypeCur;
   typedef Point3f CurVecType;
   typedef Point2f CurvatureType;
-  float &Kh()       { static float dummy = 0.f; assert(0);return dummy;}
-  float &Kg()       { static float dummy = 0.f; assert(0);return dummy;}
-  float  Kh() const { static float dummy = 0.f; assert(0); return dummy;}
-  float  Kg() const { static float dummy = 0.f; assert(0); return dummy;}
-  float cKh() const { static float dummy = 0.f; assert(0); return dummy;}
-  float cKg() const { static float dummy = 0.f; assert(0); return dummy;}
 
   typedef CurvatureDirBaseType<float> CurvatureDirType;
   CurVecType &PD1()       {static CurVecType v(0,0,0); assert(0);return v;}
@@ -183,9 +176,7 @@ public:
   CurScalarType cK1() const {static ScalarType v = 0.0;assert(0);return v;}
   CurScalarType cK2() const  {static ScalarType v = 0.0;assert(0);return v;}
 
-  static bool HasCurvature()			{ return false; }
   static bool HasCurvatureDir()			{ return false; }
-  inline bool IsCurvatureEnabled() const { return TT::VertexType::HasCurvature();}
   inline bool IsCurvatureDirEnabled() const { return TT::VertexType::HasCurvatureDir();}
 
   template < class RightValueType>
@@ -428,46 +419,6 @@ template <class TT> class Qualityd: public Quality<double, TT> {
 public: static void Name(std::vector<std::string> & name){name.push_back(std::string("Qualityd"));TT::Name(name);}
 };
 
-  /*-------------------------- Curvature   ----------------------------------*/
-
-  /*! \brief \em Component: Per vertex basic \b curvature
-    This component keeps the mean an gaussian curvature for a vertex. Used by some of the algorithms of vcg::tri::UpdateCurvature to store the computed curvatures.
-      */
-  template <class A, class TT> class Curvature: public TT {
-  public:
-    typedef Point2<A> CurvatureType;
-    typedef typename CurvatureType::ScalarType ScalarTypeCur;
-    const ScalarTypeCur &Kh() const { return _hk[0]; }
-    const ScalarTypeCur &Kg() const { return _hk[1]; }
-          ScalarTypeCur &Kh()       { return _hk[0]; }
-          ScalarTypeCur &Kg()       { return _hk[1]; }
-          ScalarTypeCur cKh() const { return _hk[0]; }
-          ScalarTypeCur cKg() const { return _hk[1]; }
-
-          template < class RightValueType>
-          void ImportData(const RightValueType  & rVert ) {
-            if(rVert.IsCurvatureEnabled()) {
-              Kh() = rVert.cKh();
-              Kg() = rVert.cKg();
-            }
-            TT::ImportData( rVert);
-          }
-
-    static bool HasCurvature()   { return true; }
-    static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvature"));TT::Name(name);}
-
-  private:
-    Point2<A> _hk;
-  };
-
-
-  template <class T> class Curvaturef: public Curvature< float, T> {
-  public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvaturef"));T::Name(name);}
-  };
-  template <class T> class Curvatured: public Curvature<double , T> {
-  public:	static void Name(std::vector<std::string> & name){name.push_back(std::string("Curvatured"));T::Name(name);}
-  };
-
 /*-------------------------- Curvature Direction ----------------------------------*/
 
   /*! \brief \em Component: Per vertex \b curvature \b directions
@@ -621,6 +572,7 @@ public:
     typename T::TetraPointer &VTp()       { return _tp; }
     typename T::TetraPointer cVTp() const { return _tp; }
     int &VTi() {return _zp; }
+    int  VTi() const { return _zp; }
     int cVTi() const { return _zp; }
     static bool HasVTAdjacency() { return true; }
     static void Name( std::vector< std::string > & name ) { name.push_back( std::string("VTAdj") ); T::Name(name); }

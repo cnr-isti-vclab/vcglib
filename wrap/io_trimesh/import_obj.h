@@ -446,7 +446,7 @@ public:
             }
             
             
-            if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) // assigning face color
+            if(((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && HasPerFaceColor(m)) // assigning face color
               ff.c = currentColor;
             
             ++numTriangles;
@@ -569,7 +569,10 @@ public:
               }
               
               // assigning face color
-              if( oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) ff.c = currentColor;
+              if( ((oi.mask & vcg::tri::io::Mask::IOM_FACECOLOR) != 0) && HasPerFaceColor(m))
+			  {
+				  ff.c = currentColor;
+			  }
               
               ff.mInd = currentMaterialIdx;
               
@@ -672,25 +675,26 @@ public:
         assert(vertInd >=0 && vertInd < m.vn); (void)vertInd;
         m.face[i].V(j) = &(m.vert[indexedFaces[i].v[j]]);
         
-        if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) != 0) && (HasPerWedgeTexCoord(m)))
+        if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD) != 0) && HasPerWedgeTexCoord(m))
         {
           ObjTexCoord t = texCoords[indexedFaces[i].t[j]];
           m.face[i].WT(j).u() = t.u;
           m.face[i].WT(j).v() = t.v;
           m.face[i].WT(j).n() = indexedFaces[i].tInd;
         }
-        if ( oi.mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD ) {
+        if (((oi.mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD) != 0 ) && HasPerVertexTexCoord(m))
+		{
           ObjTexCoord t = texCoords[indexedFaces[i].t[j]];
           m.face[i].V(j)->T().u() = t.u;
           m.face[i].V(j)->T().v() = t.v;
           m.face[i].V(j)->T().n() = indexedFaces[i].tInd;
         }
-        if ( oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL )
+        if (((oi.mask & vcg::tri::io::Mask::IOM_WEDGNORMAL) != 0) && HasPerWedgeNormal(m))
         {
           m.face[i].WN(j).Import(normals[indexedFaces[i].n[j]]);
         }
         
-        if ( oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL )
+        if (((oi.mask & vcg::tri::io::Mask::IOM_VERTNORMAL) != 0) && HasPerVertexNormal(m))
         {
           m.face[i].V(j)->N().Import(normals[indexedFaces[i].n[j]]);
         }
@@ -985,27 +989,23 @@ public:
 		currentMaterial.illum = 2;
 
 		bool first = true;
-		while (!stream.eof())
-		{
+		while (!stream.eof()) {
 			tokens.clear();
 			TokenizeNextLine(stream, tokens, line, 0);
 
-			if (tokens.size() > 0)
-			{
+			if (tokens.size() > 0) {
 				header.clear();
 				header = tokens[0];
 
-				if (header.compare("newmtl")==0)
-				{
-					if (!first)
-					{
+				if (header.compare("newmtl")==0) {
+					if (!first) {
 						materials.push_back(currentMaterial);
 						currentMaterial = Material();
 						currentMaterial.index = (unsigned int)(-1);
 					}
 					else
 						first = false;
-					//strcpy(currentMaterial.name, tokens[1].c_str());
+
 					if(tokens.size() < 2)
 						return false;
 					else if (tokens.size() == 2)
@@ -1013,43 +1013,39 @@ public:
 					else
 						currentMaterial.materialName = line.substr(7); //space in the name, get everything after "newmtl "
 				}
-				else if (header.compare("Ka")==0)
-				{
-					if (tokens.size() < 4)  return false;
-					currentMaterial.Ka = Point3fFrom3Tokens(tokens,1);
+				else if (header.compare("Ka")==0) {
+					if (tokens.size() >= 4) {
+						currentMaterial.Ka = Point3fFrom3Tokens(tokens,1);
+					}
 				}
-				else if (header.compare("Kd")==0)
-				{
-					if (tokens.size() < 4) return false;
-					currentMaterial.Kd = Point3fFrom3Tokens(tokens,1);
+				else if (header.compare("Kd")==0) {
+					if (tokens.size() >= 4) {
+						currentMaterial.Kd = Point3fFrom3Tokens(tokens,1);
+					}
 				}
-				else if (header.compare("Ks")==0)
-				{
-					if (tokens.size() < 4) return false;
-					currentMaterial.Ks = Point3fFrom3Tokens(tokens,1);
+				else if (header.compare("Ks")==0) {
+					if (tokens.size() >= 4) {
+						currentMaterial.Ks = Point3fFrom3Tokens(tokens,1);
+					}
 				}
-				else if (	(header.compare("d")==0) ||
-						(header.compare("Tr")==0)	)	// alpha
-				{
-					if (tokens.size() < 2) return false;
-					currentMaterial.Tr = (float) atof(tokens[1].c_str());
+				else if ((header.compare("d")==0) || (header.compare("Tr")==0)) { // alpha
+					if (tokens.size() < 2) {
+						currentMaterial.Tr = (float) atof(tokens[1].c_str());
+					}
 				}
-				else if (header.compare("Ns")==0)  // shininess
-				{
-					if (tokens.size() < 2) return false;
-					currentMaterial.Ns = float(atoi(tokens[1].c_str()));
+				else if (header.compare("Ns")==0) { // shininess
+					if (tokens.size() < 2) {
+						currentMaterial.Ns = float(atoi(tokens[1].c_str()));
+					}
 				}
-				else if (header.compare("illum")==0)	// specular illumination on/off
-				{
-					if (tokens.size() < 2)   return false;
-					currentMaterial.illum = atoi(tokens[1].c_str());;
+				else if (header.compare("illum")==0) { // specular illumination on/off
+					if (tokens.size() < 2) {
+						currentMaterial.illum = atoi(tokens[1].c_str());
+					}
 				}
-				else if(header.compare("map_Kd")==0) // texture name
-				{
+				else if(header.compare("map_Kd")==0) { // texture name
 					std::string textureName;
-					if (tokens.size() < 2)
-						return false;
-					else {
+					if (tokens.size() == 2) {
 						//the tex name is the last one (after any option)
 						textureName = tokens[tokens.size()-1];
 					}
@@ -1074,18 +1070,14 @@ public:
 		stream.close();
 		// Sometimes some materials have texture and no texture
 		// in this case for sake of uniformity we just use the first texture.
-		if(!textures.empty())
-		{
-			for(size_t i=0;i<materials.size();++i)
-			{
-				if(materials[i].map_Kd.empty())
-				{
+		if(!textures.empty()) {
+			for(size_t i=0;i<materials.size();++i) {
+				if(materials[i].map_Kd.empty()) {
 					materials[i].map_Kd=textures[0];
 					materials[i].index=0;
 				}
 			}
 		}
-
 
 		return true;
 	}

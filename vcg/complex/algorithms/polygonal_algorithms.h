@@ -609,7 +609,7 @@ public:
                 //safety checks
                 if (weightSum[i]>0)
                     newP=avgPos[i]/weightSum[i];
-                if (isnan(newP.X())||isnan(newP.Y())||isnan(newP.Z()))
+                if (std::isnan(newP.X())|| std::isnan(newP.Y())|| std::isnan(newP.Z()))
                      newP=poly_m.vert[i].P();
                 if ((newP-poly_m.vert[i].P()).Norm()>poly_m.bbox.Diag())
                     newP=poly_m.vert[i].P();

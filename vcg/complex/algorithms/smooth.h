@@ -1417,7 +1417,7 @@ A(...) (2-2nm)   =
         // move vertex
         vp->P() = ct;
 
-        vector<FacePointer> faces2 = HalfEdgeTopology<MeshType>::get_incident_faces(vp);
+        std::vector<FacePointer> faces2 = HalfEdgeTopology<MeshType>::get_incident_faces(vp);
 
         // estimate normal
         typename MeshType::CoordType avgn(0, 0, 0);
@@ -1425,7 +1425,7 @@ A(...) (2-2nm)   =
         for (unsigned int i = 0; i < faces2.size(); i++)
             if (faces2[i])
             {
-                vector<VertexPointer> vertices = HalfEdgeTopology<MeshType>::getVertices(faces2[i]);
+                std::vector<VertexPointer> vertices = HalfEdgeTopology<MeshType>::getVertices(faces2[i]);
 
                 assert(vertices.size() == 4);
 
@@ -1444,9 +1444,9 @@ A(...) (2-2nm)   =
         typename MeshTypeTri::FaceType *f = 0;
         typename MeshTypeTri::FaceType *fr = 0;
 
-        vector<typename MeshTypeTri::CoordType> closests;
-        vector<typename MeshTypeTri::ScalarType> minDists;
-        vector<typename MeshTypeTri::FaceType *> faces;
+        std::vector<typename MeshTypeTri::CoordType> closests;
+        std::vector<typename MeshTypeTri::ScalarType> minDists;
+        std::vector<typename MeshTypeTri::FaceType *> faces;
         ray.SetDirection(-raydir);
         f = vcg::tri::DoRay<MeshTypeTri, GRID>(gridmesh, grid, ray, diag / 4.0, t);
 

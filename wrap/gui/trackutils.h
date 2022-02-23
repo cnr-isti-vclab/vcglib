@@ -35,7 +35,6 @@
 #include <wrap/gl/space.h>
 #include <vector>
 #include <iostream>
-using namespace std;
 
 namespace vcg {
 

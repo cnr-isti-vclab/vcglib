@@ -1,6 +1,8 @@
-# Please do not add here all kind of intermediate files just by extension. 
-# Try whenever possible to match folder and to try to use 
-# building rules that put all the generated files into separate folders
+# Rules to ignore all files without extension (binaries on unix)
+# these rules must be above all the other rules
+*
+!/**/
+!*.*
 
 # QTCreator user prefs
 *.user
@@ -15,6 +17,9 @@ release/
 # Intermediate Files
 *.bc
 
+# osx rubbish
+.DS_Store
+
 # Visual Studio Project files
 *.vcxproj
 *.vcxproj.filters
@@ -25,3 +30,76 @@ wrap/nanoply/nanoply_vcg/nanoply_vcg.sln
 wrap/nanoply/nanoply_vcg/nanoply_vcg.VC.VC.opendb
 wrap/nanoply/nanoply_vcg/.vs/nanoply_vcg/v15/ipch/AutoPCH/NANOPLY_VCG-1b6b1a83/MAIN-5f62d91f/MAIN.ipch
 *.sln
+
+##Standard cmake gitignore##
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
+##standard Qt and C++ gitignore##
+# C++ objects and libs
+*.slo
+*.lo
+*.o
+*.a
+*.la
+*.lai
+*.so
+*.so.*
+*.dll
+*.dylib
+*.lib
+*.exe
+*.obj
+*.res
+
+# Qt-es
+object_script.*.Release
+object_script.*.Debug
+*_plugin_import.cpp
+/.qmake.cache
+/.qmake.stash
+.qmake.stash
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+moc_*.cpp
+mocs_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.qmlc
+*.jsc
+Makefile*
+*build-*
+*.qm
+*.prl
+
+# Qt unit tests
+target_wrapper.*
+
+# QtCreator
+*.autosave
+
+# QtCreator Qml
+*.qmlproject.user
+*.qmlproject.user.*
+
+# QtCreator CMake
+CMakeLists.txt.user*
+
+# QtCreator 4.8< compilation database
+compile_commands.json
+
+# QtCreator local machine specific files for imported projects
+*creator.user*

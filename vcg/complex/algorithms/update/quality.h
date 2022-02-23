@@ -224,12 +224,30 @@ static void VertexFromAttributeHandle(MeshType &m, typename MeshType::template P
       (*vi).Q()=VertexQualityType(h[vi]);
 }
 
+static void VertexFromAttributeName(MeshType &m, const std::string &AttrName)
+{
+    tri::RequirePerVertexQuality(m);
+    auto KH = tri::Allocator<MeshType>:: template FindPerVertexAttribute<ScalarType> (m, AttrName);
+    if(!tri::Allocator<MeshType>::template IsValidHandle<ScalarType>(m, KH)) throw vcg::MissingPreconditionException("Required Attribute is non existent");
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+            (*vi).Q() = KH[vi];
+}
+
 template <class HandleScalar>
 static void FaceFromAttributeHandle(MeshType &m, typename MeshType::template PerFaceAttributeHandle<HandleScalar> &h)
 {
   tri::RequirePerFaceQuality(m);
   for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
     (*fi).Q() =FaceQualityType(h[fi]);
+}
+
+static void FaceFromAttributeName(MeshType &m, const std::string &AttrName)
+{
+    tri::RequirePerFaceQuality(m);
+    auto KH = tri::Allocator<MeshType>:: template FindPerFaceAttribute<ScalarType> (m, AttrName);
+    if(!tri::Allocator<MeshType>::template IsValidHandle<ScalarType>(m, KH)) throw vcg::MissingPreconditionException("Required Attribute is non existent");
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
+            (*fi).Q() =FaceQualityType(KH[fi]);
 }
 
 static void FaceFromVertex( MeshType &m)
@@ -252,23 +270,7 @@ static void VertexFromPlane(MeshType &m, const Plane3<ScalarType> &pl)
     (*vi).Q() =SignedDistancePlanePoint(pl,(*vi).cP());
 }
 
-static void VertexFromGaussianCurvatureHG(MeshType &m)
-{
-  tri::RequirePerVertexQuality(m);
-  tri::RequirePerVertexCurvature(m);
-    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-        (*vi).Q() = (*vi).Kg();
-}
-
-static void VertexFromMeanCurvatureHG(MeshType &m)
-{
-  tri::RequirePerVertexQuality(m);
-  tri::RequirePerVertexCurvature(m);
-    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-        (*vi).Q() = (*vi).Kh();
-}
-
-static void VertexFromGaussianCurvatureDir(MeshType &m)
+static void VertexGaussianFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
@@ -276,21 +278,21 @@ static void VertexFromGaussianCurvatureDir(MeshType &m)
       (*vi).Q() = (*vi).K1()*(*vi).K2();
 }
 
-static void VertexFromMeanCurvatureDir(MeshType &m)
+static void VertexMeanFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
         (*vi).Q() = ((*vi).K1()+(*vi).K2())/2.0f;
 }
-static void VertexFromMinCurvatureDir(MeshType &m)
+static void VertexMinCurvFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
         (*vi).Q() = (*vi).K1();
 }
-static void VertexFromMaxCurvatureDir(MeshType &m)
+static void VertexMaxCurvFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
@@ -299,7 +301,7 @@ static void VertexFromMaxCurvatureDir(MeshType &m)
 }
 
 /**
- * @brief VertexFromShapeIndexCurvatureDir
+ * @brief VertexShapeIndexFromCurvatureDir
  * Compute from the current Curvature Direction the Shape Index S as defined by [Koenderink 1992]
  * and store it in the per-vertex Quality.
  * S = 2/pi atan(k1+k2/k1-k2)
@@ -309,7 +311,7 @@ static void VertexFromMaxCurvatureDir(MeshType &m)
  * Image and vision computing, 10(8):557–565, 1992.
  */
 
-static void VertexFromShapeIndexCurvatureDir(MeshType &m)
+static void VertexShapeIndexFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
@@ -322,7 +324,7 @@ static void VertexFromShapeIndexCurvatureDir(MeshType &m)
     }
 }
 /**
- * @brief VertexFromCurvednessCurvatureDir
+ * @brief VertexCurvednessFromCurvatureDir
  * Compute from the current Curvature Direction the Curvedness as defined by [Koenderink 1992]
  * and store it in the per-vertex Quality.
  * C =  Sqrt((k1*k1+k2*k2)/2.0)
@@ -331,7 +333,7 @@ static void VertexFromShapeIndexCurvatureDir(MeshType &m)
  * Surface shape and curvature scales. 
  * Image and vision computing, 10(8):557–565, 1992.
  */
-static void VertexFromCurvednessCurvatureDir(MeshType &m)
+static void VertexCurvednessFromCurvatureDir(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
   tri::RequirePerVertexCurvatureDir(m);
@@ -361,17 +363,17 @@ static void VertexFromCurvednessCurvatureDir(MeshType &m)
  * N Dyn, K Hormann, SJ Kim, D Levin - Mathematical Methods for Curves and Surfaces: Oslo, 2000
  */
 
-static void VertexFromAbsoluteCurvature(MeshType &m)
+static void VertexAbsoluteCurvatureFromHGAttribute(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
-  tri::RequirePerVertexCurvature(m);
-  VertexIterator vi;
-  for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+  auto KH = vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType> (m, std::string("KH"));
+  auto KG = vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType> (m, std::string("KG"));
+  for(auto vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
   {
-    if((*vi).Kg() >= 0)
-      (*vi).Q() = math::Abs( 2*(*vi).Kh() );
+    if(KG[vi] >= 0)
+      (*vi).Q() = math::Abs( 2.0*KH[vi] );
     else
-      (*vi).Q() = 2*math::Sqrt(math::Abs( (*vi).Kh()*(*vi).Kh() - (*vi).Kg()));
+      (*vi).Q() = 2*math::Sqrt(math::Abs( KH[vi]*KH[vi] - KG[vi]));
   }
 }
 
@@ -382,13 +384,13 @@ static void VertexFromAbsoluteCurvature(MeshType &m)
  * Improved curvature estimation for watershed segmentation of 3-dimensional meshes
  * S Pulla, A Razdan, G Farin - Arizona State University, Tech. Rep, 2001
  */
-static void VertexFromRMSCurvature(MeshType &m)
+static void VertexRMSCurvatureFromHGAttribute(MeshType &m)
 {
   tri::RequirePerVertexQuality(m);
-  tri::RequirePerVertexCurvature(m);
-    VertexIterator vi;
-    for(vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
-        (*vi).Q() = math::Sqrt(math::Abs( 4*(*vi).Kh()*(*vi).Kh() - 2*(*vi).Kg()));
+  auto KH = vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType> (m, std::string("KH"));
+  auto KG = vcg::tri::Allocator<MeshType>:: template GetPerVertexAttribute<ScalarType> (m, std::string("KG"));
+     for(auto vi=m.vert.begin();vi!=m.vert.end();++vi) if(!(*vi).IsD())
+        (*vi).Q() = math::Sqrt(math::Abs( 4*KH[vi]*KH[vi] - 2*KG[vi]));
 }
 
 /*

@@ -104,8 +104,8 @@ namespace nanoply
     NNP_BITFLAG = 0x00040000,	/**< Bit flags. */
     NNP_K1 = 0x00080000,	/**< Main curvaure value k1. */
     NNP_K2 = 0x00100000,	/**< Main curvaure value k2. */
-    NNP_KG = 0x00200000,	/**< Gaussian curvature value. */
-    NNP_KH = 0x00400000, /**< Mean curvature value. */
+//    NNP_KG = 0x00200000,	/**< Gaussian curvature value. */
+//    NNP_KH = 0x00400000, /**< Mean curvature value. */
     NNP_K1DIR = 0x00800000, /**< Curvature direction k1. */
     NNP_K2DIR = 0x01000000, /**< Curvature direction k2. */
     NNP_EDGE_V1 = 0x02000000,	/**< Index of the first vertex of the edge. */
@@ -242,8 +242,8 @@ namespace nanoply
       { PlyEntity::NNP_BITFLAG, NameVector({ "flags" }) },
       { PlyEntity::NNP_K1, NameVector({ "k1" }) },
       { PlyEntity::NNP_K2, NameVector({ "k2" }) },
-      { PlyEntity::NNP_KG, NameVector({ "k" }) },
-      { PlyEntity::NNP_KH, NameVector({ "h" }) },
+//      { PlyEntity::NNP_KG, NameVector({ "k" }) },
+//      { PlyEntity::NNP_KH, NameVector({ "h" }) },
       { PlyEntity::NNP_K1DIR, NameVector({ "k1dir" }) },
       { PlyEntity::NNP_K2DIR, NameVector({ "k2dir" }) },
       { PlyEntity::NNP_EDGE_V1, NameVector({ "vertex1", "v1" }) },
@@ -738,8 +738,8 @@ namespace nanoply
     case NNP_BITFLAG:    return "NNP_BITFLAG          ";
     case NNP_K1:    return "NNP_K1               ";
     case NNP_K2:    return "NNP_K2               ";
-    case NNP_KG:    return "NNP_K                ";
-    case NNP_KH:    return "NNP_H                ";
+//    case NNP_KG:    return "NNP_K                ";
+//    case NNP_KH:    return "NNP_H                ";
     case NNP_K1DIR:    return "NNP_K1DIR            ";
     case NNP_K2DIR:    return "NNP_K2DIR            ";
     case NNP_EDGE_V1:    return "NNP_EDGE_V1          ";

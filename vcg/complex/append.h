@@ -299,9 +299,10 @@ static void MeshAppendConst(
 	// vertex
 	remap.vert.resize(mr.vert.size(), Remap::InvalidIndex());
 	VertexIteratorLeft vp;
-	size_t svn = UpdateSelection<ConstMeshRight>::VertexCount(mr);
-	if(selected)
+	if(selected){
+        size_t svn = UpdateSelection<ConstMeshRight>::VertexCount(mr);        
 		vp=Allocator<MeshLeft>::AddVertices(ml,int(svn));
+    }
 	else
 		vp=Allocator<MeshLeft>::AddVertices(ml,mr.vn);
 
@@ -317,8 +318,10 @@ static void MeshAppendConst(
 	// edge
 	remap.edge.resize(mr.edge.size(), Remap::InvalidIndex());
 	EdgeIteratorLeft ep;
-	size_t sen = UpdateSelection<ConstMeshRight>::EdgeCount(mr);
-	if(selected) ep=Allocator<MeshLeft>::AddEdges(ml,sen);
+	if(selected) {
+        size_t sen = UpdateSelection<ConstMeshRight>::EdgeCount(mr);
+        ep=Allocator<MeshLeft>::AddEdges(ml,sen);
+    }
 	else ep=Allocator<MeshLeft>::AddEdges(ml,mr.en);
 
 	ForEachEdge(mr, [&](const EdgeRight& e)
@@ -333,8 +336,10 @@ static void MeshAppendConst(
 	// face
 	remap.face.resize(mr.face.size(), Remap::InvalidIndex());
 	FaceIteratorLeft fp;
-	size_t sfn = UpdateSelection<ConstMeshRight>::FaceCount(mr);
-	if(selected) fp=Allocator<MeshLeft>::AddFaces(ml,sfn);
+	if(selected) {
+        size_t sfn = UpdateSelection<ConstMeshRight>::FaceCount(mr);
+        fp=Allocator<MeshLeft>::AddFaces(ml,sfn);
+    }
 	else fp=Allocator<MeshLeft>::AddFaces(ml,mr.fn);
 
 	ForEachFace(mr, [&](const FaceRight& f)
@@ -455,7 +460,7 @@ static void MeshAppendConst(
 			}
 			fl.ImportData(f);
 			if(wedgeTexFlag) {
-				for(int i = 0; i < fl.VN(); ++i){
+				for(int i = 0; i < 3; ++i){
 					if (size_t(f.WT(i).n()) < mappingTextures.size()){
 						//standard case: the texture is contained in the mesh
 						fl.WT(i).n() = mappingTextures[f.WT(i).n()];

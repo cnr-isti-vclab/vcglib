@@ -633,7 +633,6 @@ class Quadric
 		if (cb && ((i%1024)==00)) {
 			(*cb)(int(100.0f * (float)i / (float)mesh.vn),"Vertices Analysis");
 		}		
-        int count;
         expandSphereLocal (mesh, &*vi, radiusSphere, 5, &vv);
 
         assert (vv.size() >= 5);

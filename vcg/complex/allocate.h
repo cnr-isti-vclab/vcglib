@@ -2049,7 +2049,7 @@ public:
   }
 
   template <class ATTR_TYPE>
-  static typename MeshType::template ConstPerTetraAttributeHandle<ATTR_TYPE> FindPerTetraAttribute(MeshType &m, const std::string &name)
+  static typename MeshType::template ConstPerTetraAttributeHandle<ATTR_TYPE> FindPerTetraAttribute(const MeshType &m, const std::string &name)
   {
     if(!name.empty()){
       PointerToAttribute h1;

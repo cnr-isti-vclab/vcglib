@@ -202,7 +202,8 @@ public:
     template <class EigenVector>
     inline EigenVector ToEigenVector(void) const
     {
-        assert(EigenVector::RowsAtCompileTime == 3 || EigenVector::RowsAtCompileTime == 4);
+		static_assert(EigenVector::RowsAtCompileTime == 3 || EigenVector::RowsAtCompileTime == 4,
+		              "EigenVector type has not 3 or 4 components");
         EigenVector b = EigenVector::Zero();
         b[0]=_v[0];
         b[1]=_v[1];
@@ -277,12 +278,9 @@ public:
         assert(i>=0 && i<3);
         return _v[i];
     }
-//@}
-//@{
 
-  /** @name Classical overloading of operators
-  Note
-  **/
+	/** @name Classical overloading of operators
+	**/
 
     inline Point3 operator + ( Point3 const & p) const
     {
@@ -306,7 +304,7 @@ public:
         return ( _v[0]*p._v[0] + _v[1]*p._v[1] + _v[2]*p._v[2] );
     }
     inline P3ScalarType dot( const Point3 & p ) const { return (*this) * p; }
-        /// Cross product
+    /// Cross product
     inline Point3 operator ^ ( Point3 const & p ) const
     {
         return Point3 <P3ScalarType>
@@ -345,7 +343,8 @@ public:
         _v[2] /= s;
         return *this;
     }
-        // Norme
+
+	// Norms
     inline P3ScalarType Norm() const
     {
     return math::Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] );
@@ -370,62 +369,69 @@ public:
         return *this;
     }
 
-    // Normalizzazione
-    inline Point3 & Normalize()
-    {
-        P3ScalarType n = P3ScalarType(math::Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2]));
-        if (n > P3ScalarType(0)) { _v[0] /= n; _v[1] /= n; _v[2] /= n; }
-        return *this;
-    }
+	// Normalization
+	inline Point3 & Normalize()
+	{
+		P3ScalarType n = P3ScalarType(math::Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2]));
+		if (n > P3ScalarType(0)) { _v[0] /= n; _v[1] /= n; _v[2] /= n; }
+		return *this;
+	}
 
-    // for compatibility with eigen port
-    inline Point3 & normalized() { return Normalize(); }
+	inline void normalize(void)
+	{
+		this->Normalize();
+	}
 
-    /**
-     * Convert to polar coordinates from cartesian coordinates.
-     *
-     * Theta is the azimuth angle and ranges between [0, 2PI) degrees.
-     * Phi is the elevation angle (not the polar angle) and ranges between [-PI/2, PI/2] degrees.
-     *
-     * /note Note that instead of the classical polar angle, which ranges between
-     *       0 and PI degrees we opt for the elevation angle to obtain a more
-     *       intuitive spherical coordinate system.
-     */
-    void ToPolarRad(P3ScalarType &ro, P3ScalarType &theta, P3ScalarType &phi) const
-    {
-        ro = Norm();
-        theta = (P3ScalarType)atan2(_v[2], _v[0]);
-        phi   = (P3ScalarType)asin(_v[1]/ro);
-    }
+	inline Point3 normalized(void) const
+	{
+		Point3<P3ScalarType> p = *this;
+		p.normalize();
+		return p;
+	}
 
-    /**
-     * Convert from polar coordinates to cartesian coordinates.
-     *
-     * Theta is the azimuth angle and ranges between [0, 2PI) radians.
-     * Phi is the elevation angle (not the polar angle) and ranges between [-PI/2, PI/2] radians.
-     *
-     * \note Note that instead of the classical polar angle, which ranges between
-     *       0 and PI degrees, we opt for the elevation angle to obtain a more
-     *       intuitive spherical coordinate system.
-     */
-  void FromPolarRad(const P3ScalarType &ro, const P3ScalarType &theta, const P3ScalarType &phi)
-    {
-    _v[0]= ro*cos(theta)*cos(phi);
-    _v[1]= ro*sin(phi);
-    _v[2]= ro*sin(theta)*cos(phi);
-    }
+	/**
+	 * Convert to polar coordinates from cartesian coordinates.
+	 *
+	 * Theta is the azimuth angle and ranges between [0, 2PI) degrees.
+	 * Phi is the elevation angle (not the polar angle) and ranges between [-PI/2, PI/2] degrees.
+	 *
+	 * /note Note that instead of the classical polar angle, which ranges between
+	 *       0 and PI degrees we opt for the elevation angle to obtain a more
+	 *       intuitive spherical coordinate system.
+	 */
+	void ToPolarRad(P3ScalarType &ro, P3ScalarType &theta, P3ScalarType &phi) const
+	{
+		ro = Norm();
+		theta = (P3ScalarType)atan2(_v[2], _v[0]);
+		phi   = (P3ScalarType)asin(_v[1]/ro);
+	}
 
-  Box3<P3ScalarType> GetBBox(Box3<P3ScalarType> &bb) const;
-//@}
-//@{
+	/**
+	 * Convert from polar coordinates to cartesian coordinates.
+	 *
+	 * Theta is the azimuth angle and ranges between [0, 2PI) radians.
+	 * Phi is the elevation angle (not the polar angle) and ranges between [-PI/2, PI/2] radians.
+	 *
+	 * \note Note that instead of the classical polar angle, which ranges between
+	 *       0 and PI degrees, we opt for the elevation angle to obtain a more
+	 *       intuitive spherical coordinate system.
+	 */
+	void FromPolarRad(const P3ScalarType &ro, const P3ScalarType &theta, const P3ScalarType &phi)
+	{
+		_v[0]= ro*cos(theta)*cos(phi);
+		_v[1]= ro*sin(phi);
+		_v[2]= ro*sin(theta)*cos(phi);
+	}
 
-  size_t MaxCoeffId() const
- {
-     if (_v[0]>_v[1])
-         return _v[0]>_v[2] ? 0 : 2;
-     else
-         return _v[1]>_v[2] ? 1 : 2;
- }
+	Box3<P3ScalarType> GetBBox(Box3<P3ScalarType> &bb) const;
+
+	size_t MaxCoeffId() const
+	{
+		if (_v[0]>_v[1])
+			return _v[0]>_v[2] ? 0 : 2;
+		else
+			return _v[1]>_v[2] ? 1 : 2;
+	}
   /** @name Comparison Operators.
    Note that the reverse z prioritized ordering, useful in many situations.
    **/
@@ -463,8 +469,7 @@ inline bool operator == ( Point3 const & p ) const
                                (_v[0]>=p._v[0]);
     }
 
-
-    inline Point3 operator - () const
+    inline Point3 operator - (void) const
     {
         return Point3<P3ScalarType> ( -_v[0], -_v[1], -_v[2] );
     }
@@ -500,32 +505,37 @@ inline P3ScalarType AngleN( Point3<P3ScalarType> const & p1, Point3<P3ScalarType
 template <class P3ScalarType>
 inline P3ScalarType Norm( Point3<P3ScalarType> const & p )
 {
-    return p.Norm();
+	return p.Norm();
 }
 
 template <class P3ScalarType>
 inline P3ScalarType SquaredNorm( Point3<P3ScalarType> const & p )
 {
-    return p.SquaredNorm();
+	return p.SquaredNorm();
 }
 
 template <class P3ScalarType>
 inline Point3<P3ScalarType> & Normalize( Point3<P3ScalarType> & p )
 {
-    p.Normalize();
-    return p;
+	return p.Normalize();
+}
+
+template <typename Scalar>
+inline Point3<Scalar> Normalized(const Point3<Scalar> & p)
+{
+	return p.normalized();
 }
 
 template <class P3ScalarType>
 inline P3ScalarType Distance( Point3<P3ScalarType> const & p1,Point3<P3ScalarType> const & p2 )
 {
-    return (p1-p2).Norm();
+	return (p1-p2).Norm();
 }
 
 template <class P3ScalarType>
 inline P3ScalarType SquaredDistance( Point3<P3ScalarType> const & p1,Point3<P3ScalarType> const & p2 )
 {
-    return (p1-p2).SquaredNorm();
+	return (p1-p2).SquaredNorm();
 }
 
 template <class P3ScalarType>
@@ -625,6 +635,12 @@ inline Point3<SCALARTYPE> Abs(const Point3<SCALARTYPE> & p) {
 template <class SCALARTYPE>
 inline Point3<SCALARTYPE> LowClampToZero(const Point3<SCALARTYPE> & p) {
   return (Point3<SCALARTYPE>(std::max(p[0], (SCALARTYPE)0), std::max(p[1], (SCALARTYPE)0), std::max(p[2], (SCALARTYPE)0)));
+}
+
+template <typename Scalar>
+inline Point3<Scalar> operator*(const Scalar s, const Point3<Scalar> & p)
+{
+	return (p * s);
 }
 
 typedef Point3<short>  Point3s;

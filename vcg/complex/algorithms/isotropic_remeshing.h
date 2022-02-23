@@ -149,13 +149,13 @@ private:
 
     static void removeColinearFaces(MeshType & m, Params & params)
     {
-        vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
+        vcg::tri::UpdateTopology<MeshType>::FaceFace(m); 
 
         int count = 0;
         int iter = 0;
         do
         {
-            vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
+            // vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
             vcg::tri::UnMarkAll(m);
 
             count = 0;
@@ -163,44 +163,49 @@ private:
             {
                 FaceType & f = m.face[i];
 
-                ScalarType quality = vcg::QualityRadii(f.cP(0), f.cP(1), f.cP(2));
+                const ScalarType quality = vcg::QualityRadii(f.cP(0), f.cP(1), f.cP(2));
 
                 if (quality <= 0.001)
                 {
                     //find longest edge
-                    double edges[3];
-                    edges[0] = vcg::Distance(f.cP(0), f.cP(1));
-                    edges[1] = vcg::Distance(f.cP(1), f.cP(2));
-                    edges[2] = vcg::Distance(f.cP(2), f.cP(0));
+                    const double edges[3] = { 
+                        vcg::Distance(f.cP(0), f.cP(1)), 
+                        vcg::Distance(f.cP(1), f.cP(2)), 
+                        vcg::Distance(f.cP(2), f.cP(0)) 
+                    }; 
 
-                    ScalarType smallestEdge = std::min(edges[0], std::min(edges[1], edges[2]));
-                    int longestIdx = std::find(edges, edges+3, std::max(std::max(edges[0], edges[1]), edges[2])) - (edges);
+                    const double smallestEdge = std::min(edges[0], std::min(edges[1], edges[2]));
+                    const int longestIdx = int(std::find(edges, edges+3, std::max(std::max(edges[0], edges[1]), edges[2])) - (edges));
 
                     if (vcg::tri::IsMarked(m, f.V2(longestIdx)))
                         continue;
 
 
                     auto f1 = f.cFFp(longestIdx);
-                    vcg::tri::Mark(m,f.V2(longestIdx));
+                    vcg::tri::Mark(m, f.V2(longestIdx));
                     if (!vcg::face::IsBorder(f, longestIdx) && vcg::face::IsManifold(f, longestIdx) && vcg::face::checkFlipEdgeNotManifold<FaceType>(f, longestIdx))  {
 
                         // Check if EdgeFlipping improves quality
-                        FacePointer g = f.FFp(longestIdx); int k = f.FFi(longestIdx);
-                        vcg::Triangle3<ScalarType> t1(f.P(longestIdx), f.P1(longestIdx), f.P2(longestIdx)), t2(g->P(k), g->P1(k), g->P2(k)),
-                                t3(f.P(longestIdx), g->P2(k), f.P2(longestIdx)), t4(g->P(k), f.P2(longestIdx), g->P2(k));
+                        const FacePointer g = f.FFp(longestIdx);
+                        const int k = f.FFi(longestIdx);
 
-                        auto n1 = vcg::TriangleNormal(t1);
-                        auto n2 = vcg::TriangleNormal(t2);
-                        auto n3 = vcg::TriangleNormal(t3);
-                        auto n4 = vcg::TriangleNormal(t4);
+                        const vcg::Triangle3<ScalarType> t1(f.P(longestIdx), f.P1(longestIdx), f.P2(longestIdx));
+                        const vcg::Triangle3<ScalarType> t2(g->P(k), g->P1(k), g->P2(k));
+                        const vcg::Triangle3<ScalarType> t3(f.P(longestIdx), g->P2(k), f.P2(longestIdx));
+                        const vcg::Triangle3<ScalarType> t4(g->P(k), f.P2(longestIdx), g->P2(k));
 
-                        auto biggestSmallest = vcg::DoubleArea(t1) > vcg::DoubleArea(t2) ? std::make_pair(t1, t2) : std::make_pair(t2, t1);
-                        auto areaRatio = vcg::DoubleArea(biggestSmallest.first) / vcg::DoubleArea(biggestSmallest.second);
+                        const auto n1 = vcg::TriangleNormal(t1);
+                        const auto n2 = vcg::TriangleNormal(t2);
+                        const auto n3 = vcg::TriangleNormal(t3);
+                        const auto n4 = vcg::TriangleNormal(t4);
+
+                        const auto biggestSmallest = vcg::DoubleArea(t1) > vcg::DoubleArea(t2) ? std::make_pair(t1, t2) : std::make_pair(t2, t1);
+                        const auto areaRatio = vcg::DoubleArea(biggestSmallest.first) / vcg::DoubleArea(biggestSmallest.second);
 
                         bool normalCheck = true;
                         //                        if (n1.Norm() > 0.001 && n2.Norm() > 0.001)
                         {
-                            auto referenceNormal = vcg::NormalizedTriangleNormal(biggestSmallest.first);
+                            const auto referenceNormal = vcg::NormalizedTriangleNormal(biggestSmallest.first);
 
                             normalCheck &= vcg::NormalizedTriangleNormal(t3) * referenceNormal >= 0.95;
                             normalCheck &= vcg::NormalizedTriangleNormal(t4) * referenceNormal >= 0.95;
@@ -240,9 +245,9 @@ private:
         vcg::tri::Clean<MeshType>::RemoveUnreferencedVertex(m);
         vcg::tri::Allocator<MeshType>::CompactEveryVector(m);
 
-        vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
+        // vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
         removeColinearFaces(m, params);
-        vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
+        // vcg::tri::UpdateTopology<MeshType>::FaceFace(m);
     }
 
 public:
@@ -261,7 +266,6 @@ public:
     {
         assert(&toRemesh != &toProject);
         params.stat.Reset();
-
 
         tri::UpdateBounding<MeshType>::Box(toRemesh);
 
@@ -287,15 +291,15 @@ public:
         {
             if(cb) cb(100*i/params.iter, "Remeshing");
 
-
             if (params.adapt)
             {
                 computeQualityDistFromRadii(toRemesh);
-                tri::Smooth<MeshType>::VertexQualityLaplacian(toRemesh, 2);
+                vcg::tri::Smooth<MeshType>::VertexQualityLaplacian(toRemesh, 2);
             }
 
             if(params.splitFlag)
                 SplitLongEdges(toRemesh, params);
+
 #ifdef DEBUG_CREASE
             debug_crease(toRemesh, std::string("after_ref"), i);
 #endif
@@ -334,47 +338,46 @@ public:
             if (p.IsBorder())
                 p.F()->SetFaceEdgeS(p.E());
 
-            //			if((p.F1Flip() > p.F()))
+            const FaceType *ff = p.F();
+            const FaceType *ffAdj = p.FFlip();
+
+            const double quality = vcg::QualityRadii(ff->cP(0), ff->cP(1), ff->cP(2));
+            const double qualityAdj = vcg::QualityRadii(ffAdj->cP(0), ffAdj->cP(1), ffAdj->cP(2));
+
+            const bool qualityCheck = quality > 0.00000001 && qualityAdj > 0.00000001;
+            //				bool areaCheck    = vcg::DoubleArea(*ff) > 0.000001 && vcg::DoubleArea(*ffAdj) > 0.000001;
+
+            if ((forceTag || !params.userSelectedCreases) && (testCreaseEdge(p, params.creaseAngleCosThr) /*&& areaCheck*/ /* && qualityCheck*/) || p.IsBorder())
             {
-                FaceType *ff    = p.F();
-                FaceType *ffAdj = p.FFlip();
+                PosType pp = p;
+                std::vector<FacePointer> faces;
+                std::vector<int> edges;
+                bool allOk = true;
 
-                double quality    = vcg::QualityRadii(ff->cP(0), ff->cP(1), ff->cP(2));
-                double qualityAdj = vcg::QualityRadii(ffAdj->cP(0), ffAdj->cP(1), ffAdj->cP(2));
-
-                bool qualityCheck = quality > 0.00000001 && qualityAdj > 0.00000001;
-                //				bool areaCheck    = vcg::DoubleArea(*ff) > 0.000001 && vcg::DoubleArea(*ffAdj) > 0.000001;
-
-                if ((forceTag || !params.userSelectedCreases) && (testCreaseEdge(p, params.creaseAngleCosThr) /*&& areaCheck*//* && qualityCheck*/) || p.IsBorder())
+                do
                 {
-                    PosType pp = p;
-                    std::vector<FacePointer> faces;
-                    std::vector<int> edges;
-                    bool allOk = true;
-
-                    do {
-                        faces.push_back(pp.F());
-                        edges.push_back(pp.E());
-                        //                        pp.F()->SetFaceEdgeS(pp.E());
-                        if (vcg::QualityRadii(pp.F()->cP(0), pp.F()->cP(1), pp.F()->cP(2)) <= 0.0001)
-                        {
-                            allOk = false;
-                            break;
-                        }
-                        pp.NextF();
-                    } while (pp != p);
-
-                    if (allOk)
+                    faces.push_back(pp.F());
+                    edges.push_back(pp.E());
+                    //                        pp.F()->SetFaceEdgeS(pp.E());
+                    if (vcg::QualityRadii(pp.F()->cP(0), pp.F()->cP(1), pp.F()->cP(2)) <= 0.0001)
                     {
-                        for (int i = 0; i < faces.size(); ++i)
-                        {
-                            faces[i]->SetFaceEdgeS(edges[i]);
-                        }
+                        allOk = false;
+                        break;
                     }
+                    pp.NextF();
+                } while (pp != p);
 
-                    creaseQueue.push(p);
+                if (allOk)
+                {
+                    for (int i = 0; i < faces.size(); ++i)
+                    {
+                        faces[i]->SetFaceEdgeS(edges[i]);
+                    }
                 }
+
+                creaseQueue.push(p);
             }
+            
         });
         return count;
     }
@@ -392,14 +395,14 @@ private:
         */
     IsotropicRemeshing() {}
     // this returns the value of cos(a) where a is the angle between n0 and n1. (scalar prod is cos(a))
-    static inline ScalarType fastAngle(Point3<ScalarType> n0, Point3<ScalarType> n1)
+    static inline ScalarType fastAngle(const Point3<ScalarType> & n0, const Point3<ScalarType> & n1)
     {
         return math::Clamp(n0*n1,(ScalarType)-1.0,(ScalarType)1.0);
     }
     // compare the value of the scalar prod with the cos of the crease threshold
-    static inline bool testCreaseEdge(PosType &p, ScalarType creaseCosineThr)
+    static inline bool testCreaseEdge(PosType &p, const ScalarType creaseCosineThr)
     {
-        ScalarType angle = fastAngle(NormalizedTriangleNormal(*(p.F())), NormalizedTriangleNormal(*(p.FFlip())));
+        const ScalarType angle = fastAngle(NormalizedTriangleNormal(*(p.F())), NormalizedTriangleNormal(*(p.FFlip())));
         return angle <= creaseCosineThr && angle >= -0.98;
         //        return (angle <= creaseCosineThr && angle >= -creaseCosineThr);
     }
@@ -429,19 +432,18 @@ private:
         for(auto vi=m.vert.begin(); vi!=m.vert.end(); ++vi)
             if(!(*vi).IsD())
             {
-                vector<FaceType*> ff;
+                std::vector<FaceType*> ff;
                 face::VFExtendedStarVF(&*vi, 2, ff);
 
-                ScalarType tot = 0.f;
-                auto it = ff.begin();
-                Point3<ScalarType> fNormal = NormalizedTriangleNormal(**it);
-                ++it;
-                while(it != ff.end())
-                {
-                    tot+= 1-math::Abs(fastAngle(fNormal, NormalizedTriangleNormal(**it)));
-                    ++it;
-                }
-                vi->Q() = tot / (ScalarType)(std::max(1, ((int)ff.size()-1)));
+                assert(ff.size() > 0);
+
+                const Point3<ScalarType> fNormal = NormalizedTriangleNormal(**(ff.begin()));
+
+                const auto tot = std::accumulate(++ff.begin(), ff.end(), 0., [&](const ScalarType acc, const FaceType * f) {
+                    return acc + (1 - math::Abs(fastAngle(fNormal, NormalizedTriangleNormal(*f))));
+                });
+
+                vi->Q() = tot / (std::max(1, ((int)ff.size()-1)));
                 vi->SetV();
             }
         tri::Smooth<MeshType>::VertexQualityLaplacian(m, 3);
@@ -452,8 +454,10 @@ private:
         tri::RequirePerVertexQuality(m);
         tri::UpdateTopology<MeshType>::FaceFace(m);
 //        tri::UpdateFlags<MeshType>::VertexClearV(m);
-        for (size_t i=0;i<m.vert.size();i++)
-            m.vert[i].IMark()=0;
+
+        ForEachVertex(m, [&] (VertexType & v) {
+            v.IMark() = 0;
+        });
 
         std::vector<VertexPointer> seeds;
         ForEachFace(m, [&] (FaceType & f) {
@@ -485,8 +489,8 @@ private:
         tri::RequirePerVertexQuality(m);
         tri::RequirePerFaceQuality(m);
 
-        ScalarType maxV = 0;
-        ScalarType minV = 10;
+        ScalarType maxV = std::numeric_limits<ScalarType>::lowest();
+        ScalarType minV = std::numeric_limits<ScalarType>::max();
 
         ForEachFace(m, [&] (FaceType & f) {
             f.Q() = 1. - vcg::QualityRadii(f.cP(0), f.cP(1), f.cP(2));
@@ -494,39 +498,28 @@ private:
             minV = std::min(minV, f.Q());
         });
 
-        //normalize
-        ForEachFace(m, [&] (FaceType & f) {
-            f.Q() = std::pow((f.Q() - minV) / (maxV - minV), 2.);
+        vcg::tri::UpdateQuality<MeshType>::VertexFromFace(m);
+
+        maxV = std::numeric_limits<ScalarType>::lowest();
+        minV = std::numeric_limits<ScalarType>::max();
+
+        //normalize in [0,1] with square reshape
+        ForEachVertex(m, [&] (const VertexType & v) {
+            maxV = std::max(maxV, v.Q());
+            minV = std::min(minV, v.Q());
         });
 
-        std::vector<ScalarType> vertMax(m.VN(), 0);
-        std::vector<ScalarType> vertMin(m.VN(), 10);
+        const ScalarType vRange = maxV - minV + 0.000001;
 
-        ForEachFace(m, [&] (FaceType & f) {
-            for (int i = 0; i < 3; ++i)
-            {
-                auto vidx = vcg::tri::Index(m, f.V(i));
-                vertMax[vidx] = std::max(vertMax[vidx], f.Q());
-                vertMin[vidx] = std::min(vertMin[vidx], f.Q());
-            }
+        ForEachVertex(m, [&] (VertexType & v) {
+            v.Q() = std::pow((v.Q() - minV) / vRange, 2.);
         });
-
-        for (size_t v = 0; v < m.VN(); ++v)
-        {
-            m.vert[v].Q() = vertMax[v] - vertMin[v];
-        }
-       
-//        tri::UpdateQuality<MeshType>::VertexFromFace(m);
     }
 
     static void computeQualityDistFromHeight(MeshType & m, const ScalarType lowerBound, const ScalarType higherBound)
     {
         tri::RequirePerVertexQuality(m);
         tri::RequirePerFaceQuality(m);
-
-        ScalarType maxV = 0;
-        ScalarType minV = 10;
-
 
         ForEachFace(m, [&] (FaceType & f) {
             ScalarType minH = std::numeric_limits<ScalarType>::max();
@@ -549,36 +542,35 @@ private:
          4 for border vertices
          6 for internal vertices
         */
-    static inline int idealValence(PosType &p)
+    static inline int idealValence(const PosType &p)
     {
         if(p.IsBorder()) return 4;
         return 6;
     }
-    static inline int idealValence(VertexType &v)
+    static inline int idealValence(const VertexType &v)
     {
         if(v.IsB()) return 4;
         return 6;
     }
-    static inline int idealValenceSlow(PosType &p)
+    static inline int idealValenceSlow(const PosType &p)
     {
         std::vector<PosType> posVec;
         VFOrderedStarFF(p,posVec);
-        float angleSumRad =0;
-        for(PosType &ip : posVec)
-        {
-            angleSumRad += ip.AngleRad();
-        }
+
+        const auto angleSumRad = std::accumulate(posVec.begin, posVec.end(), 0, [](const ScalarType acc, const PosType & p) {
+            return acc + p.AngleRad();
+        });
 
         return (int)(std::ceil(angleSumRad / (M_PI/3.0f)));
     }
 
-    static bool testHausdorff (MeshType & m, StaticGrid & grid, const std::vector<CoordType> & verts, const ScalarType maxD, const CoordType checkOrientation = CoordType(0,0,0))
+    static bool testHausdorff (MeshType & m, StaticGrid & grid, const std::vector<CoordType> & verts, const ScalarType maxD, const CoordType & checkOrientation = CoordType(0,0,0))
     {
         for (CoordType v : verts)
         {
             CoordType closest, normal, ip;
             ScalarType dist = 0;
-            FaceType* fp = GetClosestFaceBase(m, grid, v, maxD, dist, closest);
+            const FaceType* fp = GetClosestFaceBase(m, grid, v, maxD, dist, closest);
 
             //you can't use this kind of orientation check, since when you stand on edges it fails
             if (fp == NULL || (checkOrientation != CoordType(0,0,0) && checkOrientation * fp->N() < 0.7))
@@ -612,52 +604,58 @@ private:
                            v3                     v3
                         Before Swap             After Swap
         */
-    static bool testSwap(PosType p, ScalarType creaseAngleCosThr)
+
+    //TODO: check if you can optimize using posType valence counting functions
+    static bool testSwap(const PosType & p, const ScalarType creaseAngleCosThr)
     {
         //if border or feature, do not swap
         if (/*p.IsBorder() || */p.IsEdgeS()) return false;
 
-        int oldDist = 0, newDist = 0, idealV, actualV;
+        int oldDist = 0, newDist = 0, idealV = 0, actualV = 0;
 
         PosType tp=p;
 
-        VertexType *v0=tp.V();
+        const VertexType *v0=tp.V();
 
         std::vector<VertexType*> incident;
 
         vcg::face::VVStarVF<FaceType>(tp.V(), incident);
-        idealV  = idealValence(tp); actualV = incident.size();
+        idealV  = idealValence(tp); 
+        actualV = int(incident.size()); //tp.NumberOfIncidentVertices();
         oldDist += abs(idealV - actualV); newDist += abs(idealV - (actualV - 1));
 
         tp.NextF();tp.FlipE();tp.FlipV();
-        VertexType *v1=tp.V();
+        const VertexType *v1=tp.V();
         vcg::face::VVStarVF<FaceType>(tp.V(), incident);
-        idealV  = idealValence(tp); actualV = incident.size();
+        idealV  = idealValence(tp);
+        actualV = int(incident.size()); //tp.NumberOfIncidentVertices();
         oldDist += abs(idealV - actualV); newDist += abs(idealV - (actualV + 1));
 
         tp.FlipE();tp.FlipV();tp.FlipE();
-        VertexType *v2=tp.V();
+        const VertexType *v2=tp.V();
         vcg::face::VVStarVF<FaceType>(tp.V(), incident);
-        idealV  = idealValence(tp); actualV = incident.size();
+        idealV  = idealValence(tp);
+        actualV = int(incident.size()); //tp.NumberOfIncidentVertices();
         oldDist += abs(idealV - actualV); newDist += abs(idealV - (actualV - 1));
 
         tp.NextF();tp.FlipE();tp.FlipV();
-        VertexType *v3=tp.V();
+        const VertexType *v3=tp.V();
         vcg::face::VVStarVF<FaceType>(tp.V(), incident);
-        idealV  = idealValence(tp); actualV = incident.size();
+        idealV  = idealValence(tp); 
+        actualV = int(incident.size());//tp.NumberOfIncidentVertices();
         oldDist += abs(idealV - actualV); newDist += abs(idealV - (actualV + 1));
 
-        ScalarType qOld = std::min(Quality(v0->P(),v2->P(),v3->P()),Quality(v0->P(),v1->P(),v2->P()));
-        ScalarType qNew = std::min(Quality(v0->P(),v1->P(),v3->P()),Quality(v2->P(),v3->P(),v1->P()));
+        const ScalarType qOld = std::min(Quality(v0->P(),v2->P(),v3->P()),Quality(v0->P(),v1->P(),v2->P()));
+        const ScalarType qNew = std::min(Quality(v0->P(),v1->P(),v3->P()),Quality(v2->P(),v3->P(),v1->P()));
 
         return (newDist < oldDist && qNew >= qOld * 0.50f) ||
                 (newDist == oldDist && qNew > qOld * 1.f) || qNew > 1.5f * qOld;
     }
 
-    static bool checkManifoldness(FaceType & f, int z)
+    static bool checkManifoldness(const FaceType & f, const int z)
     {
         PosType pos(&f, (z+2)%3, f.V2(z));
-        PosType start = pos;
+        const PosType start = pos;
 
         do {
             pos.FlipE();
@@ -672,7 +670,7 @@ private:
     // Edge swap step: edges are flipped in order to optimize valence and triangle quality across the mesh
     static void ImproveValence(MeshType &m, Params &params)
     {
-        static ScalarType foldCheckRad = math::ToRad(5.);
+        const static ScalarType foldCheckRad = math::ToRad(5.);
         tri::UpdateTopology<MeshType>::FaceFace(m);
         tri::UpdateTopology<MeshType>::VertexFace(m);
         ForEachFace(m, [&] (FaceType & f) {
@@ -681,10 +679,8 @@ private:
             {
                 if (&f > f.cFFp(i))
                 {
-                    PosType pi(&f, i);
-                    CoordType swapEdgeMidPoint = (f.cP2(i) + f.cFFp(i)->cP2(f.cFFi(i))) / 2.;
-                    std::vector<CoordType> toCheck(1, swapEdgeMidPoint);
-
+                    const PosType pi(&f, i);
+                    const CoordType swapEdgeMidPoint = (f.cP2(i) + f.cFFp(i)->cP2(f.cFFi(i))) / 2.;
 
                     if(((!params.selectedOnly) || (f.IsS() && f.cFFp(i)->IsS())) &&
                             !face::IsBorder(f, i) &&
@@ -692,15 +688,15 @@ private:
                             face::checkFlipEdgeNotManifold(f, i) &&
                             testSwap(pi, params.creaseAngleCosThr) &&
 //                            face::CheckFlipEdge(f, i) &&
-                            face::CheckFlipEdgeNormal(f, i, params.creaseAngleRadThr) && //vcg::math::ToRad(5.)) &&
-                            (!params.surfDistCheck || testHausdorff(*params.mProject, params.grid, toCheck, params.maxSurfDist)))
+                            face::CheckFlipEdgeNormal(f, i, float(vcg::math::ToRad(5.))) && 
+                            (!params.surfDistCheck || testHausdorff(*params.mProject, params.grid, {{ swapEdgeMidPoint }}, params.maxSurfDist)))
                     {
                         //When doing the swap we need to preserve and update the crease info accordingly
                         FaceType* g = f.cFFp(i);
-                        int w = f.FFi(i);
+                        const int w = f.FFi(i);
 
-                        bool creaseF = g->IsFaceEdgeS((w + 1) % 3);
-                        bool creaseG = f.IsFaceEdgeS((i + 1) % 3);
+                        const bool creaseF = g->IsFaceEdgeS((w + 1) % 3);
+                        const bool creaseG = f.IsFaceEdgeS((i + 1) % 3);
 
                         face::FlipEdgeNotManifold(f, i);
 
@@ -732,9 +728,9 @@ private:
 
         bool operator()(PosType &ep)
         {
-            ScalarType quality = (((math::Abs(ep.V()->Q())+math::Abs(ep.VFlip()->Q()))/(ScalarType)2.0)-minQ)/(maxQ-minQ);
-            ScalarType mult = computeLengthThrMult(params, quality);
-            ScalarType dist = Distance(ep.V()->P(), ep.VFlip()->P());
+            const ScalarType quality = ((ep.V()->Q()+ ep.VFlip()->Q())/(ScalarType)2.0);
+            const ScalarType mult = computeLengthThrMult(params, quality);
+            const ScalarType dist = Distance(ep.V()->P(), ep.VFlip()->P());
             if(dist > mult * length)
             {
                 ++count;
@@ -769,7 +765,7 @@ private:
         tri::UpdateTopology<MeshType>::FaceFace(m);
         tri::MidPoint<MeshType> midFunctor(&m);
 
-        ScalarType minQ,maxQ;
+        ScalarType minQ = 0, maxQ = 0;
         if(params.adapt){
             computeVQualityDistrMinMax(m, minQ, maxQ);
             EdgeSplitAdaptPred ep(params);
@@ -790,20 +786,20 @@ private:
 
     static int VtoE(const int v0, const int v1)
     {
-        static /*constexpr*/ int Vmat[3][3] = { -1,  0,  2,
-                                                0, -1,  1,
-                                                2,  1, -1};
+        static constexpr int Vmat[3][3] = { -1,  0,  2,
+                                             0, -1,  1,
+                                             2,  1, -1};
         return Vmat[v0][v1];
     }
 
 
-    static bool checkCanMoveOnCollapse(PosType p, std::vector<FaceType*> & faces, std::vector<int> & vIdxes, Params &params)
+    static bool checkCanMoveOnCollapse(const PosType & p, const std::vector<FaceType*> & faces, const std::vector<int> & vIdxes, const Params &params)
     {
         bool allIncidentFaceSelected = true;
 
         PosType pi = p;
 
-        CoordType dEdgeVector = (p.V()->cP() - p.VFlip()->cP()).Normalize();
+        const CoordType dEdgeVector = (p.V()->cP() - p.VFlip()->cP()).Normalize();
 
         int incidentFeatures = 0;
 
@@ -815,7 +811,7 @@ private:
             {
 				vcg::tri::Mark(*params.m,faces[i]->V1(vIdxes[i]));
                 incidentFeatures++;
-                CoordType movingEdgeVector0 = (faces[i]->cP1(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
+                const CoordType movingEdgeVector0 = (faces[i]->cP1(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
                 if (std::fabs(movingEdgeVector0 * dEdgeVector) < .9f || !p.IsEdgeS())
                     return false;
             }
@@ -823,7 +819,7 @@ private:
             {
 				vcg::tri::Mark(*params.m,faces[i]->V2(vIdxes[i]));
                 incidentFeatures++;
-                CoordType movingEdgeVector1 = (faces[i]->cP2(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
+                const CoordType movingEdgeVector1 = (faces[i]->cP2(vIdxes[i]) - faces[i]->cP(vIdxes[i])).Normalize();
                 if (std::fabs(movingEdgeVector1 * dEdgeVector) < .9f || !p.IsEdgeS())
                     return false;
             }
@@ -836,61 +832,51 @@ private:
         return params.selectedOnly ? allIncidentFaceSelected : true;
     }
 
-    static bool checkFacesAfterCollapse (std::vector<FaceType*> & faces, PosType p, const Point3<ScalarType> &mp, Params &params, bool relaxed)
+    static bool checkFacesAfterCollapse (const std::vector<FaceType*> & faces, const PosType & p, const Point3<ScalarType> &mp, Params &params, bool relaxed)
     {
         for (FaceType* f : faces)
         {
             if(!(*f).IsD() && f != p.F()) //i'm not a deleted face
             {
-                PosType pi(f, p.V()); //same vertex
+                const PosType pi(f, p.V()); //same vertex
 
-                VertexType *v0 = pi.V();
-                VertexType *v1 = pi.F()->V1(pi.VInd());
-                VertexType *v2 = pi.F()->V2(pi.VInd());
+                const auto v0 = pi.V();
+                const auto v1 = pi.F()->V1(pi.VInd());
+                const auto v2 = pi.F()->V2(pi.VInd());
 
                 if( v1 == p.VFlip() || v2 == p.VFlip()) //i'm the other deleted face
                     continue;
 
                 //check on new face quality
                 {
-                    ScalarType newQ = Quality(mp,      v1->P(), v2->P());
-                    ScalarType oldQ = Quality(v0->P(), v1->P(), v2->P());
+                    const auto newQ = Quality(mp,      v1->P(), v2->P());
+                    const auto oldQ = Quality(v0->P(), v1->P(), v2->P());
 
                     if(newQ <= 0.5*oldQ)
                         return false;
                 }
 
                 // we prevent collapse that makes edges too long (except for cross)
-                if(!relaxed)
-                    if((Distance(mp, v1->P()) > params.maxLength || Distance(mp, v2->P()) > params.maxLength))
-                        return false;
-
-                Point3<ScalarType> oldN = NormalizedTriangleNormal(*(pi.F()));
-                Point3<ScalarType> newN = Normal(mp, v1->P(), v2->P()).Normalize();
-
-//                if (oldN * newN < 0.5f)
-//                    return false;
-
-                std::vector<CoordType> baryP(1);
-                baryP[0] = (v1->cP() + v2->cP() + mp) / 3.;
-
-                if (!testHausdorff(*(params.mProject), params.grid, baryP, params.maxSurfDist, newN))
+                if(!relaxed && (Distance(mp, v1->P()) > params.maxLength || Distance(mp, v2->P()) > params.maxLength))
                     return false;
+
+                const auto oldN = NormalizedTriangleNormal(*(pi.F()));
+                const auto newN = Normal(mp, v1->P(), v2->P()).Normalize();
+
+                if (oldN * newN < 0.7f)
+                 	return false;
 
                 //check on new face distance from original mesh
                 if (params.surfDistCheck)
                 {
-                    std::vector<CoordType> points(3);
-                    std::vector<CoordType> baryP(1);
+                    const std::vector<CoordType> points {
+                        (v1->cP() + mp) / 2.,
+                        (v2->cP() + mp) / 2.,
+                        mp,
+                    };
 
-                    baryP[0] = (v1->cP() + v2->cP() + mp) / 3.;
-
-                    points[0] = (v1->cP() + mp) / 2.;
-                    points[1] = (v2->cP() + mp) / 2.;
-                    points[2] = mp;
-
-                    if (!testHausdorff(*(params.mProject), params.grid, points, params.maxSurfDist))// ||
-//                            !testHausdorff(*(params.mProject), params.grid, baryP, params.maxSurfDist, newN))
+                    if (!testHausdorff(*(params.mProject), params.grid, points, params.maxSurfDist) ||
+                            !testHausdorff(*(params.mProject), params.grid, {{ (v1->cP() + v2->cP() + mp) / 3. }}, params.maxSurfDist, newN))
                         return false;
                 }
             }
@@ -900,21 +886,20 @@ private:
 
 
     //TODO: Refactor code and implement the correct set up of crease info when collapsing towards a crease edge
-    static bool checkCollapseFacesAroundVert1(PosType &p, VertexPair & pair, Point3<ScalarType> &mp, Params &params, bool relaxed)
+    static bool checkCollapseFacesAroundVert1(const PosType &p, VertexPair & pair, Point3<ScalarType> &mp, Params &params, bool relaxed)
     {
         PosType p0 = p, p1 = p;
-
         p1.FlipV();
 
-        vector<int> vi0, vi1;
-        vector<FaceType*> ff0, ff1;
+        std::vector<int> vi0, vi1;
+        std::vector<FaceType*> ff0, ff1;
 
         face::VFStarVF<FaceType>(p0.V(), ff0, vi0);
         face::VFStarVF<FaceType>(p1.V(), ff1, vi1);
 
         //check crease-moveability
-        bool moveable0 = checkCanMoveOnCollapse(p0, ff0, vi0, params) && !p0.V()->IsS();
-        bool moveable1 = checkCanMoveOnCollapse(p1, ff1, vi1, params) && !p1.V()->IsS();
+        const bool moveable0 = checkCanMoveOnCollapse(p0, ff0, vi0, params) && !p0.V()->IsS();
+        const bool moveable1 = checkCanMoveOnCollapse(p1, ff1, vi1, params) && !p1.V()->IsS();
 
         //if both moveable => go to midpoint
         // else collapse on movable one
@@ -923,9 +908,6 @@ private:
 
         pair = moveable0 ? VertexPair(p0.V(), p1.V()) : VertexPair(p1.V(), p0.V());
 
-        //casting int(true) is always 1 and int(false) = =0
-        assert(int(true) == 1);
-        assert(int(false) == 0);
         mp = (p0.V()->cP() * int(moveable1) + p1.V()->cP() * int(moveable0)) / (int(moveable0) + int(moveable1));
 
         if (checkFacesAfterCollapse(ff0, p0, mp, params, relaxed))
@@ -934,14 +916,15 @@ private:
         return false;
     }
 
-    static bool testCollapse1(PosType &p, VertexPair & pair, Point3<ScalarType> &mp, ScalarType minQ, ScalarType maxQ, Params &params, bool relaxed = false)
+    static bool testCollapse1(const PosType &p, VertexPair & pair, Point3<ScalarType> &mp, ScalarType minQ, ScalarType maxQ, Params &params, bool relaxed = false)
     {
-        ScalarType quality = (((math::Abs(p.V()->Q())+math::Abs(p.VFlip()->Q()))/(ScalarType)2.0)-minQ)/(maxQ-minQ);
-        ScalarType mult = computeLengthThrMult(params, quality);
-        ScalarType thr = mult*params.minLength;
+        const ScalarType quality = params.adapt ? ((p.V()->Q()+ p.VFlip()->Q())/(ScalarType)2.0) : 0;
 
-        ScalarType dist = Distance(p.V()->P(), p.VFlip()->P());
-        ScalarType area = DoubleArea(*(p.F()))/2.f;
+        const ScalarType mult = computeLengthThrMult(params, quality);
+        const ScalarType thr = mult*params.minLength;
+
+        const ScalarType dist = Distance(p.V()->P(), p.VFlip()->P());
+        const ScalarType area = DoubleArea(*(p.F()))/2.f;
         if(relaxed || (dist < thr || area < params.minLength*params.minLength/100.f))//if to collapse
         {
             return checkCollapseFacesAroundVert1(p, pair, mp, params, relaxed);
@@ -956,7 +939,7 @@ private:
         Point3<ScalarType> collapseNV, collapsedNV0, collapsedNV1;
         collapseNV = (p.V()->P() - p.VFlip()->P()).normalized();
 
-        vector<VertexType*> vv;
+        std::vector<VertexType*> vv;
         face::VVStarVF<FaceType>(p.V(), vv);
 
         for(VertexType *v: vv)
@@ -969,9 +952,9 @@ private:
             if(!(*v).IsD() && (*v).IsB() && v != p.V()) //ignore non border
                 collapsedNV1 = ((*v).P() - p.V()->P()).normalized(); //edge vector after collapse
 
-        float cosine = cos(math::ToRad(1.5f));
-        float angle0 = fabs(fastAngle(collapseNV, collapsedNV0));
-        float angle1 = fabs(fastAngle(collapseNV, collapsedNV1));
+        const float cosine = cos(math::ToRad(1.5f));
+        const float angle0 = fabs(fastAngle(collapseNV, collapsedNV0));
+        const float angle1 = fabs(fastAngle(collapseNV, collapsedNV1));
         //if on both sides we deviate too much after collapse => don't collapse
         if(angle0 <= cosine && angle1 <= cosine)
             return false;
@@ -984,7 +967,7 @@ private:
     // the linkConditions are preserved
     static void CollapseShortEdges(MeshType &m, Params &params)
     {
-        ScalarType minQ, maxQ;
+        ScalarType minQ = 0, maxQ = 0;
         int candidates = 0;
 
         if(params.adapt)
@@ -998,19 +981,18 @@ private:
         ss.push();
 
         {
-            tri::UpdateTopology<MeshType>::FaceFace(m);
+            // tri::UpdateTopology<MeshType>::FaceFace(m);
             Clean<MeshType>::CountNonManifoldVertexFF(m,true);
 
             //FROM NOW ON VSelection is NotManifold
-
-            for(auto fi=m.face.begin(); fi!=m.face.end(); ++fi)
-                if(!(*fi).IsD() && (params.selectedOnly == false || fi->IsS()))
+            ForEachFace(m, [&](FaceType &f) {
+                if(!f.IsD() && (params.selectedOnly == false || f.IsS()))
                 {
                     for(auto i=0; i<3; ++i)
                     {
-                        PosType pi(&*fi, i);
+                        PosType pi(&f, i);
                         ++candidates;
-                        VertexPair  bp = VertexPair(pi.V(), pi.VFlip());
+                        VertexPair bp = VertexPair(pi.V(), pi.VFlip());
                         Point3<ScalarType> mp = (pi.V()->P()+pi.VFlip()->P())/2.f;
 
                         if(testCollapse1(pi, bp, mp, minQ, maxQ, params) && Collapser::LinkConditions(bp))
@@ -1022,6 +1004,7 @@ private:
 
                     }
                 }
+            });                
         }
         ss.pop();
     }
@@ -1052,9 +1035,9 @@ private:
          *           \ | /                   \|/ +0               \ / -1
          *             v3                     v3                   v3
          */
-    static bool chooseBestCrossCollapse(PosType &p, VertexPair& bp, vector<FaceType*> &ff)
+    static bool chooseBestCrossCollapse(PosType &p, VertexPair& bp, std::vector<FaceType*> &ff)
     {
-        vector<VertexType*> vv0, vv1, vv2, vv3;
+        std::vector<VertexType*> vv0, vv1, vv2, vv3;
         VertexType *v0, *v1, *v2, *v3;
 
         v0 = p.F()->V1(p.VInd());
@@ -1103,52 +1086,8 @@ private:
                     //					v2 = (fv1 == v1) ? fv2 : fv1;
                 }
             }
-
-        face::VVStarVF<FaceType>(v0, vv0);
-        face::VVStarVF<FaceType>(v1, vv1);
-        face::VVStarVF<FaceType>(v2, vv2);
-        face::VVStarVF<FaceType>(v3, vv3);
-
-        int nv0 = vv0.size(), nv1 = vv1.size();
-        int nv2 = vv2.size(), nv3 = vv3.size();
-
-        int delta1 = (idealValence(*v0) - nv0) + (idealValence(*v2) - nv2);
-        int delta2 = (idealValence(*v1) - nv1) + (idealValence(*v3) - nv3);
-
-        ScalarType Q1 = std::min(Quality(v0->P(), v1->P(), v3->P()), Quality(v1->P(), v2->P(), v3->P()));
-        ScalarType Q2 = std::min(Quality(v0->P(), v1->P(), v2->P()), Quality(v2->P(), v3->P(), v0->P()));
-
-        if (crease[0] || crease[1] || crease[2] || crease[3])
-            return false;
-        //		if (crease[0] && crease[1] && crease[2] && crease[3])
-        //		{
-        //			return false;
-        //		}
-
-        //		if (crease[0] || crease[2])
-        //		{
-        //			bp = VertexPair(p.V(), v0);
-        //			return true;
-        //		}
-
-        //		if (crease[1] || crease[3])
-        //		{
-        //			bp = VertexPair(p.V(), v1);
-        //			return true;
-        //		}
-
-        //no crease
-        if(delta1 < delta2 && Q1 >= 0.6f*Q2)
-        {
-            bp = VertexPair(p.V(), v1);
-            return true;
-        }
-        else
-        {
-            bp = VertexPair(p.V(), v0);
-            return true;
-        }
     }
+
     //Cross Collapse pass: This pass cleans the mesh from cross vertices, keeping in mind the link conditions
     //and feature preservations tests.
     static void CollapseCrosses(MeshType &m , Params &params)
@@ -1160,23 +1099,21 @@ private:
         SelectionStack<MeshType> ss(m);
         ss.push();
 
-
         {
             tri::UpdateTopology<MeshType>::FaceFace(m);
             Clean<MeshType>::CountNonManifoldVertexFF(m,true);
 
             //From now on Selection on vertices is not manifoldness
-
-            for(auto fi=m.face.begin(); fi!=m.face.end(); ++fi)
-                if(!(*fi).IsD() && (!params.selectedOnly || fi->IsS()))
+            ForEachFace(m, [&](FaceType &f) {
+               if(!f.IsD() && (params.selectedOnly == false || f.IsS()))
                 {
                     for(auto i=0; i<3; ++i)
                     {
-                        PosType pi(&*fi, i);
+                        PosType pi(&f, i);
                         if(!pi.V()->IsB())
                         {
-                            vector<FaceType*> ff;
-                            vector<int> vi;
+                            std::vector<FaceType*> ff;
+                            std::vector<int> vi;
                             face::VFStarVF<FaceType>(pi.V(), ff, vi);
 
                             //if cross need to check what creases you have and decide where to collapse accordingly
@@ -1198,6 +1135,7 @@ private:
                         }
                     }
                 }
+            });
         }
 
         ss.pop();
