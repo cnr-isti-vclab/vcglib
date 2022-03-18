@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004-2016                                           \/)\/    *
+* Copyright(C) 2004-2022                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -41,115 +41,38 @@
 
 namespace vcg
 {
-	struct RenderingModalityGLOptions
-	{
-		bool _perbbox_enabled;
 
-		bool _perbbox_fixed_color_enabled;
-		bool _perpoint_fixed_color_enabled;
-		bool _perwire_fixed_color_enabled;
-		bool _persolid_fixed_color_enabled;
+struct RenderingModalityGLOptions
+{
+	bool _perbbox_enabled = false;
 
-		Color4b _perbbox_fixed_color;
-		Color4b _perpoint_fixed_color;
-		Color4b _perwire_fixed_color;
-		Color4b _persolid_fixed_color;
+	bool _perbbox_fixed_color_enabled = true;
+	bool _perpoint_fixed_color_enabled = false;
+	bool _perwire_fixed_color_enabled = true;
+	bool _persolid_fixed_color_enabled = true;
 
-		bool _perbbox_mesh_color_enabled;
-		bool _perpoint_mesh_color_enabled;
-		bool _perwire_mesh_color_enabled;
-		bool _persolid_mesh_color_enabled;
+	Color4b _perbbox_fixed_color = vcg::Color4b(Color4b::White);
+	Color4b _perpoint_fixed_color = vcg::Color4b(Color4b::White);
+	Color4b _perwire_fixed_color = Color4b(Color4b::DarkGray);
+	Color4b _persolid_fixed_color = vcg::Color4b(Color4b::White);
 
-		bool _perpoint_noshading;
-		bool _perwire_noshading;
-		bool _persolid_noshading;
+	bool _perbbox_mesh_color_enabled = false;
+	bool _perpoint_mesh_color_enabled = false;
+	bool _perwire_mesh_color_enabled = false;
+	bool _persolid_mesh_color_enabled = false;
 
-		bool _perpoint_dot_enabled;
+	bool _perpoint_noshading = false;
+	bool _perwire_noshading = true;
+	bool _persolid_noshading = false;
 
-		float _perpoint_pointsize;
-		bool _perpoint_pointsmooth_enabled;
-		bool _perpoint_pointattenuation_enabled;
+	bool _perpoint_dot_enabled = false;
 
-		float _perwire_wirewidth;
+	float _perpoint_pointsize = 3.f;
+	bool _perpoint_pointsmooth_enabled = false;
+	bool _perpoint_pointattenuation_enabled = true;
 
-		RenderingModalityGLOptions()
-		{
-			_perbbox_enabled = false;
-
-			_perbbox_fixed_color_enabled = true;
-			_perpoint_fixed_color_enabled = false;
-			_perwire_fixed_color_enabled = true;
-			_persolid_fixed_color_enabled = true;
-
-			_perbbox_fixed_color = vcg::Color4b(Color4b::White);
-			_perpoint_fixed_color = vcg::Color4b(Color4b::White);
-			_perwire_fixed_color = Color4b(Color4b::DarkGray);
-			_persolid_fixed_color = vcg::Color4b(Color4b::White);
-
-			_perbbox_mesh_color_enabled = false;
-			_perpoint_mesh_color_enabled = false;
-			_perwire_mesh_color_enabled = false;
-			_persolid_mesh_color_enabled = false;
-
-			_perpoint_dot_enabled = false;
-
-			_perpoint_noshading = false;
-			_perwire_noshading = true;
-			_persolid_noshading = false;
-
-			_perpoint_pointsize = 3.0f;
-			_perpoint_pointsmooth_enabled = false;
-			_perpoint_pointattenuation_enabled = true;
-			_perwire_wirewidth = 1.0f;
-		}
-
-		RenderingModalityGLOptions(const RenderingModalityGLOptions& opts)
-		{
-			copyData(opts);
-		}
-
-		virtual ~RenderingModalityGLOptions()
-		{
-		}
-
-		RenderingModalityGLOptions& operator=(const RenderingModalityGLOptions& opts)
-		{
-			copyData(opts);
-			return (*this);
-		}
-
-	private:
-		void copyData(const RenderingModalityGLOptions& opts)
-		{
-			_perbbox_enabled = opts._perbbox_enabled;
-
-			_perpoint_dot_enabled = opts._perpoint_dot_enabled;
-			_perpoint_pointsize = opts._perpoint_pointsize;
-			_perpoint_pointsmooth_enabled = opts._perpoint_pointsmooth_enabled;
-			_perpoint_pointattenuation_enabled = opts._perpoint_pointattenuation_enabled;
-
-			_perbbox_fixed_color_enabled = opts._perbbox_fixed_color_enabled;
-			_perpoint_fixed_color_enabled = opts._perpoint_fixed_color_enabled;
-			_perwire_fixed_color_enabled = opts._perwire_fixed_color_enabled;
-			_persolid_fixed_color_enabled = opts._persolid_fixed_color_enabled;
-
-			_perbbox_mesh_color_enabled = opts._perbbox_mesh_color_enabled;
-			_perpoint_mesh_color_enabled = opts._perpoint_mesh_color_enabled;
-			_perwire_mesh_color_enabled = opts._perwire_mesh_color_enabled;
-			_persolid_mesh_color_enabled = opts._persolid_mesh_color_enabled;
-
-			_perbbox_fixed_color = opts._perbbox_fixed_color;
-			_perpoint_fixed_color = opts._perpoint_fixed_color;
-			_perwire_fixed_color = opts._perwire_fixed_color;
-			_persolid_fixed_color = opts._persolid_fixed_color;
-
-			_perpoint_noshading = opts._perpoint_noshading;
-			_perwire_noshading = opts._perwire_noshading;
-			_persolid_noshading = opts._persolid_noshading;
-
-			_perwire_wirewidth = opts._perwire_wirewidth;
-		}
-	};
+	float _perwire_wirewidth = 1.f;
+};
 
 	template<typename GL_OPTIONS_DERIVED_TYPE = RenderingModalityGLOptions>
 	class PerViewData : public GLMeshAttributesInfo
@@ -2374,6 +2297,8 @@ namespace vcg
 
 		std::vector<InternalRendAtts> _meaningfulattsperprimitive;
 	};
-}
+} // namespace vcg
 
-#endif
+#include "gl_mesh_attributes_multi_viewer_bo_manager.ipp"
+
+#endif // __VCG_GL_MESH_ATTRIBUTES_FEEDER
