@@ -25,4 +25,168 @@
 
 namespace vcg {
 
+template<typename GL_OPTIONS_DERIVED_TYPE>
+PerViewData<GL_OPTIONS_DERIVED_TYPE>::PerViewData() :
+		_pmmask(), _intatts(PR_ARITY), _glopts(NULL)
+{
+	reset();
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+PerViewData<GL_OPTIONS_DERIVED_TYPE>::PerViewData(const PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt) :
+		_pmmask(dt._pmmask), _intatts(dt._intatts), _glopts(NULL)
+{
+	if (dt._glopts != NULL)
+		_glopts = new GL_OPTIONS_DERIVED_TYPE(*(dt._glopts));
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+PerViewData<GL_OPTIONS_DERIVED_TYPE>::~PerViewData()
+{
+	delete _glopts;
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+PerViewData<GL_OPTIONS_DERIVED_TYPE>& PerViewData<GL_OPTIONS_DERIVED_TYPE>::operator=(const PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt)
+{
+	_pmmask = dt._pmmask;
+	_intatts = dt._intatts;
+	if (dt._glopts != NULL)
+		_glopts = new GL_OPTIONS_DERIVED_TYPE(*(dt._glopts));
+	return (*this);
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::set(PRIMITIVE_MODALITY pm, const RendAtts& atts)
+{
+	size_t pmind(pm);
+	if (pm >= _intatts.size())
+		return false;
+	//_pmmask.set(pm);
+	_intatts[pmind] = InternalRendAtts(atts, pm);
+	_pmmask.set(size_t(pm), _intatts[pmind][INT_ATT_NAMES::ATT_VERTPOSITION]);
+	return true;
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::set(PRIMITIVE_MODALITY pm, ATT_NAMES att, bool onoff)
+{
+	size_t pmind(pm);
+	if (pm >= _intatts.size())
+		return false;
+	_intatts[pmind][att] = onoff;
+	_pmmask.set(size_t(pm), _intatts[pmind][INT_ATT_NAMES::ATT_VERTPOSITION]);
+	if (_pmmask.test(size_t(pm)))
+		_intatts[pmind].setIndexingIfNeeded(pm);
+	return true;
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::set(PRIMITIVE_MODALITY pm, bool onoff)
+{
+	return set(pm, INT_ATT_NAMES::ATT_VERTPOSITION, onoff);
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+void PerViewData<GL_OPTIONS_DERIVED_TYPE>::set(const GL_OPTIONS_DERIVED_TYPE& opts)
+{
+	delete _glopts;
+	_glopts = new GL_OPTIONS_DERIVED_TYPE(opts);
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::isPrimitiveActive(PRIMITIVE_MODALITY pm) const
+{
+	if (pm == PR_ARITY)
+		return false;
+	return (_pmmask.test(pm) && _intatts[size_t(pm)][INT_ATT_NAMES::ATT_VERTPOSITION]);
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+GLMeshAttributesInfo::PRIMITIVE_MODALITY_MASK PerViewData<GL_OPTIONS_DERIVED_TYPE>::getPrimitiveModalityMask() const
+{
+	return _pmmask;
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::get(PRIMITIVE_MODALITY pm, RendAtts& atts) const
+{
+	size_t pmind(pm);
+	if (pm >= _intatts.size())
+		return false;
+	atts = _intatts[pmind];
+	return true;
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::get(GL_OPTIONS_DERIVED_TYPE& opts) const
+{
+	if (_glopts == NULL)
+		return false;
+	opts = (*_glopts);
+	return true;
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+void PerViewData<GL_OPTIONS_DERIVED_TYPE>::reset(bool deleteglopts)
+{
+	_pmmask.reset();
+	for (typename PerRendModData::iterator it = _intatts.begin(); it != _intatts.end(); ++it)
+		it->reset();
+	if (deleteglopts)
+	{
+		delete _glopts;
+		_glopts = 0;
+	}
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+void PerViewData<GL_OPTIONS_DERIVED_TYPE>::serialize(std::string& str) const
+{
+	str.append(_pmmask.to_string());
+	for (typename PerRendModData::const_iterator it = _intatts.begin(); it != _intatts.end(); ++it)
+	{
+		std::string s;
+		it->serialize(s);
+		str.append(s);
+	}
+	std::string s;
+	_glopts->serialize(s);
+	str.append(s);
+}
+
+template<typename GL_OPTIONS_DERIVED_TYPE>
+bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::deserialize(const std::string& str)
+{
+	std::string::size_type pos = 0;
+	std::string token[6];
+	token[0] = str.substr(pos, _pmmask.size());
+	if (token[0].length() < _pmmask.size())
+		return false;
+	int i = 1;
+	pos = _pmmask.size();
+	for (typename PerRendModData::iterator it = _intatts.begin(); it != _intatts.end(); ++it, i++)
+	{
+		token[i] = str.substr(pos, InternalRendAtts::AttName::enumArity());
+		if (token[i].length() < InternalRendAtts::AttName::enumArity())
+			return false;
+		pos = pos + InternalRendAtts::AttName::enumArity();
+	}
+	if (_glopts != NULL)
+	{
+		std::string tmp;
+		size_t size = _glopts->serialize(tmp);
+		token[i] = str.substr(pos, size);
+		if (token[i].length() < size)
+			return false;
+	}
+	_pmmask = PRIMITIVE_MODALITY_MASK(token[0]);
+	i = 1;
+	for (typename PerRendModData::iterator it = _intatts.begin(); it != _intatts.end(); ++it, i++)
+		it->deserialize(token[i]);
+	if (_glopts != NULL)
+		_glopts->deserialize(token[i]);
+	return true;
+}
+
 } // namespace vcg

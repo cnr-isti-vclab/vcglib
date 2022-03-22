@@ -106,7 +106,6 @@ set(VCG_HEADERS
 		vcg/complex/algorithms/create/extrude.h
 		vcg/complex/algorithms/create/resampler.h
 		vcg/complex/algorithms/create/ball_pivoting.h
-		vcg/complex/algorithms/create/readme.txt
 		vcg/complex/algorithms/create/zonohedron.h
 		vcg/complex/algorithms/create/platonic.h
 		vcg/complex/algorithms/create/marching_cubes.h
@@ -271,6 +270,9 @@ set(VCG_HEADERS
 
 		#wrap
 		wrap/callback.h
+		wrap/gl/gl_mesh_attributes_info.h
+		wrap/gl/gl_mesh_attributes_multi_viewer_bo_manager.h
+		wrap/gl/gl_mesh_attributes_multi_viewer_bo_manager.ipp
 		)
 
 set(SOURCES
