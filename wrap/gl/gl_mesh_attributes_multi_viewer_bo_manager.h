@@ -82,11 +82,8 @@ public:
 	typedef GL_OPTIONS_DERIVED_TYPE GLOptionsType;
 
 	PerViewData();
-	PerViewData(const PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt);
 
-	~PerViewData();
-
-	PerViewData& operator=(const PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt);
+	virtual ~PerViewData() {};
 
 	bool set(PRIMITIVE_MODALITY pm, const RendAtts& atts);
 
@@ -119,7 +116,7 @@ protected:
 	PRIMITIVE_MODALITY_MASK _pmmask;
 	PerRendModData _intatts;
 
-	GL_OPTIONS_DERIVED_TYPE* _glopts;
+	GL_OPTIONS_DERIVED_TYPE _glopts;
 };
 
 	/****************************************************WARNING!!!!!!!!!!!!!!!!!*********************************************************************************************/
@@ -1117,8 +1114,8 @@ protected:
 			glPushMatrix();
 			glMultMatrix(_tr);
 
-			if ((dt._glopts != NULL) && (dt._glopts->_perbbox_enabled))
-				drawBBox(dt._glopts);
+			if ((dt._glopts._perbbox_enabled))
+				drawBBox(&dt._glopts);
 
 			if (dt.isPrimitiveActive(PR_SOLID))
 			{
@@ -1128,7 +1125,7 @@ protected:
 					glEnable(GL_POLYGON_OFFSET_FILL);
 					glPolygonOffset(1.0, 1);
 				}
-				drawFilledTriangles(dt._intatts[size_t(PR_SOLID)], dt._glopts, textid);
+				drawFilledTriangles(dt._intatts[size_t(PR_SOLID)], &dt._glopts, textid);
 				if (somethingmore)
 					glDisable(GL_POLYGON_OFFSET_FILL);
 			}
@@ -1153,12 +1150,12 @@ protected:
 				  FALSE        FALSE        NOTHING */
 
 				if (dt.isPrimitiveActive(PR_WIREFRAME_EDGES))
-					drawEdges(dt._intatts[size_t(PR_WIREFRAME_EDGES)], dt._glopts);
+					drawEdges(dt._intatts[size_t(PR_WIREFRAME_EDGES)], &dt._glopts);
 				else
 				{
 					if (dt.isPrimitiveActive(PR_WIREFRAME_TRIANGLES))
 					{
-						drawWiredTriangles(dt._intatts[size_t(PR_WIREFRAME_TRIANGLES)], dt._glopts, textid);
+						drawWiredTriangles(dt._intatts[size_t(PR_WIREFRAME_TRIANGLES)], &dt._glopts, textid);
 					}
 				}
 
@@ -1166,7 +1163,7 @@ protected:
 					glDisable(GL_POLYGON_OFFSET_FILL);
 			}
 			if (dt.isPrimitiveActive(PR_POINTS))
-				drawPoints(dt._intatts[size_t(PR_POINTS)], dt._glopts, textid);
+				drawPoints(dt._intatts[size_t(PR_POINTS)], &dt._glopts, textid);
 
 			glPopMatrix();
 			glPopAttrib();
@@ -1432,7 +1429,7 @@ protected:
 			glEnd();
 		}
 
-		void drawPoints(const InternalRendAtts& req, GL_OPTIONS_DERIVED_TYPE* glopts, const std::vector<GLuint>& textureindex = std::vector<GLuint>()) const
+		void drawPoints(const InternalRendAtts& req, const GL_OPTIONS_DERIVED_TYPE* glopts, const std::vector<GLuint>& textureindex = std::vector<GLuint>()) const
 		{
 			if (_mesh.VN() == 0)
 				return;
@@ -1563,7 +1560,7 @@ protected:
 			glEnd();
 		}
 
-		void drawEdges(const InternalRendAtts& req, GL_OPTIONS_DERIVED_TYPE* glopts) const
+		void drawEdges(const InternalRendAtts& req, const GL_OPTIONS_DERIVED_TYPE* glopts) const
 		{
 			if (_mesh.VN() == 0)
 				return;
@@ -1685,7 +1682,7 @@ protected:
 			glEnd();
 		}
 
-		void drawBBox(GL_OPTIONS_DERIVED_TYPE* glopts) const
+		void drawBBox(const GL_OPTIONS_DERIVED_TYPE* glopts) const
 		{
 			glPushAttrib(GL_ALL_ATTRIB_BITS);
 			bool isgloptsvalid = (glopts != NULL);

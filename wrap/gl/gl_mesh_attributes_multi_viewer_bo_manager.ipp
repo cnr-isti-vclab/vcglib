@@ -27,33 +27,9 @@ namespace vcg {
 
 template<typename GL_OPTIONS_DERIVED_TYPE>
 PerViewData<GL_OPTIONS_DERIVED_TYPE>::PerViewData() :
-		_pmmask(), _intatts(PR_ARITY), _glopts(NULL)
+		_pmmask(), _intatts(PR_ARITY)
 {
 	reset();
-}
-
-template<typename GL_OPTIONS_DERIVED_TYPE>
-PerViewData<GL_OPTIONS_DERIVED_TYPE>::PerViewData(const PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt) :
-		_pmmask(dt._pmmask), _intatts(dt._intatts), _glopts(NULL)
-{
-	if (dt._glopts != NULL)
-		_glopts = new GL_OPTIONS_DERIVED_TYPE(*(dt._glopts));
-}
-
-template<typename GL_OPTIONS_DERIVED_TYPE>
-PerViewData<GL_OPTIONS_DERIVED_TYPE>::~PerViewData()
-{
-	delete _glopts;
-}
-
-template<typename GL_OPTIONS_DERIVED_TYPE>
-PerViewData<GL_OPTIONS_DERIVED_TYPE>& PerViewData<GL_OPTIONS_DERIVED_TYPE>::operator=(const PerViewData<GL_OPTIONS_DERIVED_TYPE>& dt)
-{
-	_pmmask = dt._pmmask;
-	_intatts = dt._intatts;
-	if (dt._glopts != NULL)
-		_glopts = new GL_OPTIONS_DERIVED_TYPE(*(dt._glopts));
-	return (*this);
 }
 
 template<typename GL_OPTIONS_DERIVED_TYPE>
@@ -90,8 +66,7 @@ bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::set(PRIMITIVE_MODALITY pm, bool onoff
 template<typename GL_OPTIONS_DERIVED_TYPE>
 void PerViewData<GL_OPTIONS_DERIVED_TYPE>::set(const GL_OPTIONS_DERIVED_TYPE& opts)
 {
-	delete _glopts;
-	_glopts = new GL_OPTIONS_DERIVED_TYPE(opts);
+	_glopts = opts;
 }
 
 template<typename GL_OPTIONS_DERIVED_TYPE>
@@ -121,9 +96,7 @@ bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::get(PRIMITIVE_MODALITY pm, RendAtts& 
 template<typename GL_OPTIONS_DERIVED_TYPE>
 bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::get(GL_OPTIONS_DERIVED_TYPE& opts) const
 {
-	if (_glopts == NULL)
-		return false;
-	opts = (*_glopts);
+	opts = _glopts;
 	return true;
 }
 
@@ -135,8 +108,7 @@ void PerViewData<GL_OPTIONS_DERIVED_TYPE>::reset(bool deleteglopts)
 		it->reset();
 	if (deleteglopts)
 	{
-		delete _glopts;
-		_glopts = 0;
+		_glopts = GL_OPTIONS_DERIVED_TYPE();
 	}
 }
 
@@ -151,7 +123,7 @@ void PerViewData<GL_OPTIONS_DERIVED_TYPE>::serialize(std::string& str) const
 		str.append(s);
 	}
 	std::string s;
-	_glopts->serialize(s);
+	_glopts.serialize(s);
 	str.append(s);
 }
 
@@ -172,20 +144,17 @@ bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::deserialize(const std::string& str)
 			return false;
 		pos = pos + InternalRendAtts::AttName::enumArity();
 	}
-	if (_glopts != NULL)
-	{
-		std::string tmp;
-		size_t size = _glopts->serialize(tmp);
-		token[i] = str.substr(pos, size);
-		if (token[i].length() < size)
-			return false;
-	}
+
+	std::string tmp;
+	size_t size = _glopts.serialize(tmp);
+	token[i] = str.substr(pos, size);
+	if (token[i].length() < size)
+		return false;
 	_pmmask = PRIMITIVE_MODALITY_MASK(token[0]);
 	i = 1;
 	for (typename PerRendModData::iterator it = _intatts.begin(); it != _intatts.end(); ++it, i++)
 		it->deserialize(token[i]);
-	if (_glopts != NULL)
-		_glopts->deserialize(token[i]);
+	_glopts.deserialize(token[i]);
 	return true;
 }
 
