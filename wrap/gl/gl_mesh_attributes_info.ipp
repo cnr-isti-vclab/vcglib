@@ -25,6 +25,8 @@
 
 namespace vcg {
 
+/* GLMeshAttributesInfo Class */
+
 inline GLMeshAttributesInfo::PRIMITIVE_MODALITY GLMeshAttributesInfo::next(PRIMITIVE_MODALITY pm)
 {
 	int tmp = static_cast<int>(pm);
@@ -32,6 +34,47 @@ inline GLMeshAttributesInfo::PRIMITIVE_MODALITY GLMeshAttributesInfo::next(PRIMI
 		throw Exception("PRIMITIVE_MODALITY iterator: PR_ARITY passed as parameter!");
 	++tmp;
 	return static_cast<PRIMITIVE_MODALITY>(tmp);
+}
+
+/* GLMeshAttributesInfo::Exception */
+
+inline GLMeshAttributesInfo::Exception::Exception(const char* text) :
+		std::exception(), _text(text)
+{
+}
+
+inline const char* GLMeshAttributesInfo::Exception::what() const noexcept
+{
+	return _text.c_str();
+}
+
+/* GLMeshAttributesInfo::ATT_NAMES */
+
+inline GLMeshAttributesInfo::ATT_NAMES::ATT_NAMES() : _val(ATT_VERTPOSITION)
+{
+}
+
+inline GLMeshAttributesInfo::ATT_NAMES::ATT_NAMES(unsigned int att)
+{
+	if (att >= enumArity())
+		throw Exception("Out of range value\n");
+	else
+		_val = att;
+}
+
+inline constexpr unsigned int GLMeshAttributesInfo::ATT_NAMES::enumArity()
+{
+	return ATT_NAMES::ATT_ARITY;
+}
+
+inline GLMeshAttributesInfo::ATT_NAMES::operator unsigned int() const
+{
+	return _val;
+}
+
+inline unsigned int GLMeshAttributesInfo::ATT_NAMES::value() const
+{
+	return _val;
 }
 
 } // namespace vcg

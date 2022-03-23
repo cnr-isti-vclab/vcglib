@@ -32,16 +32,6 @@ namespace vcg {
 
 struct GLMeshAttributesInfo
 {
-	struct Exception;
-
-	/* WARNING!!!! why not a plain and simple enum? because i need to add further values to this
-	 * enumeration, but the user of the class should not be interested and/or directly manage those
-	 * other additional values
-	 * the struct is extended in GLMeshAttributesFeeder class, introducing the ATT_VERTINDICES and
-	 * ATT_EDGEINDICES values for the class internal use
-	 */
-	struct ATT_NAMES;
-
 	enum PRIMITIVE_MODALITY {
 		PR_POINTS              = 0,
 		PR_WIREFRAME_EDGES     = 1,
@@ -50,36 +40,41 @@ struct GLMeshAttributesInfo
 		PR_ARITY               = 4
 	};
 
-	static PRIMITIVE_MODALITY next(PRIMITIVE_MODALITY pm);
+	class Exception;
 
-	typedef std::bitset<PR_ARITY> PRIMITIVE_MODALITY_MASK;
+	class ATT_NAMES;
 
 	template<typename ATT_NAMES_DERIVED_CLASS>
 	class RenderingAtts;
 
+	typedef std::bitset<PR_ARITY> PRIMITIVE_MODALITY_MASK;
 	typedef RenderingAtts<ATT_NAMES> RendAtts;
 
-	struct DebugInfo;
+	class DebugInfo;
+
+	static PRIMITIVE_MODALITY next(PRIMITIVE_MODALITY pm);
 
 protected:
-	struct INT_ATT_NAMES;
+	class INT_ATT_NAMES;
 
 	class InternalRendAtts;
 };
 
-struct GLMeshAttributesInfo::Exception : public std::exception
+class GLMeshAttributesInfo::Exception : public std::exception
 {
-	Exception(const char* text) : std::exception(), _text(text) {}
+public:
+	Exception(const char* text);
 
-	~Exception() throw() {}
-	inline const char* what() const throw() { return _text.c_str(); }
+	~Exception() {}
+	const char* what() const noexcept;
 
 private:
 	std::string _text;
 };
 
-struct GLMeshAttributesInfo::ATT_NAMES
+class GLMeshAttributesInfo::ATT_NAMES
 {
+public:
 	enum Attribute {
 		ATT_VERTPOSITION = 0,
 		ATT_VERTNORMAL   = 1,
@@ -91,21 +86,15 @@ struct GLMeshAttributesInfo::ATT_NAMES
 		ATT_ARITY        = 7
 	};
 
-	ATT_NAMES() : _val(ATT_VERTPOSITION) {}
+	ATT_NAMES();
 
-	ATT_NAMES(unsigned int att)
-	{
-		if (att >= enumArity())
-			throw Exception("Out of range value\n");
-		else
-			_val = att;
-	}
+	ATT_NAMES(unsigned int att);
 
-	static constexpr unsigned int enumArity() { return ATT_NAMES::ATT_ARITY; }
+	static constexpr unsigned int enumArity();
 
-	operator unsigned int() const { return _val; }
+	operator unsigned int() const;
 
-	unsigned int value() const { return _val; }
+	unsigned int value() const;
 
 protected:
 	unsigned int _val;
@@ -214,8 +203,9 @@ protected:
 	bool _atts[ATT_NAMES_DERIVED_CLASS::ATT_ARITY]; // an array of enumArity() bool values
 };
 
-struct GLMeshAttributesInfo::DebugInfo
+class GLMeshAttributesInfo::DebugInfo
 {
+public:
 	std::string _tobeallocated;
 	std::string _tobedeallocated;
 	std::string _tobeupdated;
@@ -262,8 +252,9 @@ struct GLMeshAttributesInfo::DebugInfo
 	}
 };
 
-struct GLMeshAttributesInfo::INT_ATT_NAMES : public ATT_NAMES
+class GLMeshAttributesInfo::INT_ATT_NAMES : public ATT_NAMES
 {
+public:
 	/* WARNING!!!!!! the edges index bo it's just used only by the edges and quads meshes, NOT
 	 * by the triangle meshes. Triangles meshes use just the vertex index array WHY? cause quads
 	 * meshes need both index arrays. One to render the "usual" mesh, the other one to render
