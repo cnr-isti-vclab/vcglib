@@ -25,4 +25,13 @@
 
 namespace vcg {
 
+inline GLMeshAttributesInfo::PRIMITIVE_MODALITY GLMeshAttributesInfo::next(PRIMITIVE_MODALITY pm)
+{
+	int tmp = static_cast<int>(pm);
+	if (tmp == PR_ARITY)
+		throw Exception("PRIMITIVE_MODALITY iterator: PR_ARITY passed as parameter!");
+	++tmp;
+	return static_cast<PRIMITIVE_MODALITY>(tmp);
 }
+
+} // namespace vcg
