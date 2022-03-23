@@ -271,6 +271,7 @@ set(VCG_HEADERS
 		#wrap
 		wrap/callback.h
 		wrap/gl/gl_mesh_attributes_info.h
+		wrap/gl/gl_mesh_attributes_info.ipp
 		wrap/gl/gl_mesh_attributes_multi_viewer_bo_manager.h
 		wrap/gl/gl_mesh_attributes_multi_viewer_bo_manager.ipp
 		)
