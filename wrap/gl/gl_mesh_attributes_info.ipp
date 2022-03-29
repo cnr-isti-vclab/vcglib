@@ -77,6 +77,8 @@ inline unsigned int GLMeshAttributesInfo::ATT_NAMES::value() const
 	return _val;
 }
 
+/* GLMeshAttributesInfo::RenderingAtts */
+
 template<typename ATT_NAMES_DERIVED_CLASS>
 GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>::RenderingAtts(bool defaultvalue)
 {
@@ -170,6 +172,157 @@ void GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>::deserialize(
 		_atts[ATT_NAMES_DERIVED_CLASS::enumArity() - ii - 1] = bset[ii];
 }
 
-/* GLMeshAttributesInfo::RenderingAtts */
+/* GLMeshAttributesInfo::DebugInfo */
+
+inline GLMeshAttributesInfo::DebugInfo::DebugInfo() :
+		_tobeallocated(),
+		_tobedeallocated(),
+		_tobeupdated(),
+		_currentlyallocated(),
+		_perviewdata()
+{
+}
+
+inline void GLMeshAttributesInfo::DebugInfo::reset()
+{
+	_tobeallocated.clear();
+	_tobedeallocated.clear();
+	_tobeupdated.clear();
+	_currentlyallocated.clear();
+	_perviewdata.clear();
+}
+
+inline const char* GLMeshAttributesInfo::DebugInfo::primitiveName(size_t ind)
+{
+	static std::string res;
+	switch (ind) {
+	case PR_POINTS:
+		res = std::string("PR_POINTS");
+		break;
+	case PR_WIREFRAME_EDGES:
+		res = std::string("PR_WIREFRAME_EDGES");
+		break;
+	case PR_WIREFRAME_TRIANGLES:
+		res = std::string("PR_WIREFRAME_TRIANGLES");
+		break;
+	case PR_SOLID:
+		res = std::string("PR_SOLID");
+		break;
+	default:
+		res = std::string("UNKNOWN_PRIMITIVE");
+		assert(0);
+	}
+	return res.c_str();
+}
+
+/* GLMeshAttributesInfo::INT_ATT_NAMES */
+
+inline GLMeshAttributesInfo::INT_ATT_NAMES::INT_ATT_NAMES() :
+		ATT_NAMES()
+{
+}
+
+inline GLMeshAttributesInfo::INT_ATT_NAMES::INT_ATT_NAMES(unsigned int att) :
+		ATT_NAMES()
+{
+	if (att >= INT_ATT_NAMES::enumArity())
+		throw Exception("Out of range value\n");
+	else
+		_val = att;
+}
+
+inline constexpr unsigned int GLMeshAttributesInfo::INT_ATT_NAMES::enumArity()
+{
+	return INT_ATT_NAMES::ATT_ARITY;
+}
+
+inline GLMeshAttributesInfo::INT_ATT_NAMES::operator unsigned int() const
+{
+	return _val;
+}
+
+inline unsigned int GLMeshAttributesInfo::INT_ATT_NAMES::value() const
+{
+	return _val;
+}
+
+/* GLMeshAttributesInfo::InternalRendAtts */
+
+inline GLMeshAttributesInfo::InternalRendAtts::InternalRendAtts() :
+		RenderingAtts<INT_ATT_NAMES>()
+{
+}
+
+inline GLMeshAttributesInfo::InternalRendAtts::InternalRendAtts(const RendAtts& reqatt) :
+		RenderingAtts<INT_ATT_NAMES>()
+{
+	for (unsigned int ii = 0; ii < ATT_NAMES::enumArity(); ++ii) {
+		(*this)[ii] = reqatt[ii];
+	}
+
+	(*this)[INT_ATT_NAMES::ATT_VERTINDICES] = false;
+	(*this)[INT_ATT_NAMES::ATT_EDGEINDICES] = false;
+}
+
+inline GLMeshAttributesInfo::InternalRendAtts::InternalRendAtts(
+	const RendAtts&    reqatt,
+	PRIMITIVE_MODALITY pm) :
+		RenderingAtts<INT_ATT_NAMES>()
+{
+	for (unsigned int ii = 0; ii < ATT_NAMES::enumArity(); ++ii)
+		(*this)[ii] = reqatt[ii];
+
+	(*this)[INT_ATT_NAMES::ATT_VERTINDICES] = isVertexIndexingRequired(reqatt, pm);
+	(*this)[INT_ATT_NAMES::ATT_EDGEINDICES] = isEdgeIndexingRequired(pm);
+}
+
+inline GLMeshAttributesInfo::InternalRendAtts::InternalRendAtts(const RenderingAtts<INT_ATT_NAMES>& r) :
+		RenderingAtts<INT_ATT_NAMES>(r)
+{
+}
+
+inline GLMeshAttributesInfo::InternalRendAtts::operator RendAtts() const
+{
+	RendAtts rendatt;
+	for (unsigned int ii = 0; ii < ATT_NAMES::enumArity(); ++ii)
+		rendatt[ii] = _atts[ii];
+	return rendatt;
+}
+
+inline void GLMeshAttributesInfo::InternalRendAtts::setIndexingIfNeeded(PRIMITIVE_MODALITY pm)
+{
+	(*this)[INT_ATT_NAMES::ATT_VERTINDICES] = isVertexIndexingRequired((*this), pm);
+	(*this)[INT_ATT_NAMES::ATT_EDGEINDICES] = isEdgeIndexingRequired(pm);
+}
+
+inline bool GLMeshAttributesInfo::InternalRendAtts::isPerVertexAttribute(INT_ATT_NAMES name)
+{
+	return (
+		(name.value() == INT_ATT_NAMES::ATT_VERTPOSITION) ||
+		(name.value() == INT_ATT_NAMES::ATT_VERTNORMAL) ||
+		(name.value() == INT_ATT_NAMES::ATT_VERTCOLOR) ||
+		(name.value() == INT_ATT_NAMES::ATT_VERTTEXTURE));
+}
+
+inline bool GLMeshAttributesInfo::InternalRendAtts::replicatedPipelineNeeded(const RendAtts& rqatt)
+{
+	return (
+		rqatt[INT_ATT_NAMES::ATT_FACENORMAL] || rqatt[INT_ATT_NAMES::ATT_FACECOLOR] ||
+		rqatt[INT_ATT_NAMES::ATT_WEDGETEXTURE]);
+}
+
+inline bool GLMeshAttributesInfo::InternalRendAtts::isVertexIndexingRequired(
+	const RendAtts&    rqatt,
+	PRIMITIVE_MODALITY pm)
+{
+	return (
+		!replicatedPipelineNeeded(rqatt) &&
+		((pm == PR_SOLID) || (pm == PR_WIREFRAME_TRIANGLES)));
+}
+
+inline bool GLMeshAttributesInfo::InternalRendAtts::isEdgeIndexingRequired(PRIMITIVE_MODALITY pm)
+{
+	return (pm == PR_WIREFRAME_EDGES);
+}
 
 } // namespace vcg

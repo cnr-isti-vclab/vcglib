@@ -28,6 +28,8 @@
 #include <string>
 #include <vector>
 
+#include <assert.h>
+
 namespace vcg {
 
 struct GLMeshAttributesInfo
@@ -75,7 +77,7 @@ private:
 class GLMeshAttributesInfo::ATT_NAMES
 {
 public:
-	enum Attribute {
+	enum {
 		ATT_VERTPOSITION = 0,
 		ATT_VERTNORMAL   = 1,
 		ATT_FACENORMAL   = 2,
@@ -143,72 +145,39 @@ public:
 
 	std::vector<std::string> _perviewdata;
 
-	DebugInfo() :
-			_tobeallocated(),
-			_tobedeallocated(),
-			_tobeupdated(),
-			_currentlyallocated(),
-			_perviewdata()
-	{
-	}
+	DebugInfo();
 
-	void reset()
-	{
-		_tobeallocated.clear();
-		_tobedeallocated.clear();
-		_tobeupdated.clear();
-		_currentlyallocated.clear();
-		_perviewdata.clear();
-	}
+	void reset();
 
-	static const char* primitiveName(size_t ind)
-	{
-		static std::string res;
-
-		if (ind == size_t(PR_POINTS))
-			res = std::string("PR_POINTS");
-
-		if (ind == size_t(PR_WIREFRAME_EDGES))
-			res = std::string("PR_WIREFRAME_EDGES");
-
-		if (ind == size_t(PR_WIREFRAME_TRIANGLES))
-			res = std::string("PR_WIREFRAME_TRIANGLES");
-
-		if (ind == size_t(PR_SOLID))
-			res = std::string("PR_SOLID");
-
-		return res.c_str();
-	}
+	static const char* primitiveName(size_t ind);
 };
 
 class GLMeshAttributesInfo::INT_ATT_NAMES : public ATT_NAMES
 {
 public:
 	/* WARNING!!!!!! the edges index bo it's just used only by the edges and quads meshes, NOT
-	 * by the triangle meshes. Triangles meshes use just the vertex index array WHY? cause quads
-	 * meshes need both index arrays. One to render the "usual" mesh, the other one to render
-	 * the wireframe quadrangulation on top of it A triangles meshes rendered in wireframe or in
-	 * solid wireframe, in order to save GPU memory, use the glPolygonMode approach Edges meshes
-	 * uses the edges index array just for a matter of coherence
+	 * by the triangle meshes. Triangles meshes use just the vertex index array
+	 * WHY? because quads meshes need both index arrays. One to render the "usual" mesh, the other
+	 * one to render the wireframe quadrangulation on top of it A triangles meshes rendered in
+	 * wireframe or in solid wireframe, in order to save GPU memory, use the glPolygonMode approach
+	 * Edges meshes uses the edges index array just for a matter of coherence
 	 */
 
-	/*WARNING!!!! to be changed whit ATT_NAMES::enumArity() (and so on...) as soon as constexpr
-	 * will be supported by most of the old c++ compilers*/
-	enum { ATT_VERTINDICES = 7, ATT_EDGEINDICES = 8, ATT_ARITY = 9 };
+	enum {
+		ATT_VERTINDICES = 7,
+		ATT_EDGEINDICES = 8,
+		ATT_ARITY = 9
+	};
 
-	INT_ATT_NAMES() : ATT_NAMES() {}
+	INT_ATT_NAMES();
 
-	INT_ATT_NAMES(unsigned int att) : ATT_NAMES()
-	{
-		if (att >= INT_ATT_NAMES::enumArity())
-			throw Exception("Out of range value\n");
-		else
-			_val = att;
-	}
+	INT_ATT_NAMES(unsigned int att);
 
-	static unsigned int enumArity() { return INT_ATT_NAMES::ATT_ARITY; }
+	static constexpr unsigned int enumArity();
 
-	operator unsigned int() const { return _val; }
+	operator unsigned int() const;
+
+	unsigned int value() const;
 };
 
 class GLMeshAttributesInfo::InternalRendAtts : public GLMeshAttributesInfo::RenderingAtts<INT_ATT_NAMES>
@@ -216,73 +185,26 @@ class GLMeshAttributesInfo::InternalRendAtts : public GLMeshAttributesInfo::Rend
 public:
 	typedef INT_ATT_NAMES AttName;
 
-	InternalRendAtts() : RenderingAtts<INT_ATT_NAMES>() {}
+	InternalRendAtts();
 
-	InternalRendAtts(const RendAtts& reqatt) : RenderingAtts<INT_ATT_NAMES>()
-	{
-		for (unsigned int ii = 0; ii < ATT_NAMES::enumArity(); ++ii) {
-			(*this)[ii] = reqatt[ii];
-		}
+	InternalRendAtts(const RendAtts& reqatt);
 
-		(*this)[INT_ATT_NAMES::ATT_VERTINDICES] = false;
-		(*this)[INT_ATT_NAMES::ATT_EDGEINDICES] = false;
-	}
+	InternalRendAtts(const RendAtts& reqatt, PRIMITIVE_MODALITY pm);
 
-	InternalRendAtts(const RendAtts& reqatt, PRIMITIVE_MODALITY pm) :
-			RenderingAtts<INT_ATT_NAMES>()
-	{
-		for (unsigned int ii = 0; ii < ATT_NAMES::enumArity(); ++ii)
-			(*this)[ii] = reqatt[ii];
+	InternalRendAtts(const RenderingAtts<INT_ATT_NAMES>& r);
 
-		(*this)[INT_ATT_NAMES::ATT_VERTINDICES] = isVertexIndexingRequired(reqatt, pm);
-		(*this)[INT_ATT_NAMES::ATT_EDGEINDICES] = isEdgeIndexingRequired(pm);
-	}
+	// upcast from InternalRendAtts to RendAtts
+	operator RendAtts() const;
 
-	InternalRendAtts(const RenderingAtts<INT_ATT_NAMES>& r) : RenderingAtts<INT_ATT_NAMES>(r) {}
+	void setIndexingIfNeeded(PRIMITIVE_MODALITY pm);
 
-	   // upcast from InternalRendAtts to RendAtts
-	operator RendAtts() const
-	{
-		RendAtts rendatt;
-		for (unsigned int ii = 0; ii < ATT_NAMES::enumArity(); ++ii)
-			rendatt[ii] = _atts[ii];
-		return rendatt;
-	}
+	static bool isPerVertexAttribute(INT_ATT_NAMES name);
 
-	InternalRendAtts& setIndexingIfNeeded(PRIMITIVE_MODALITY pm)
-	{
-		(*this)[INT_ATT_NAMES::ATT_VERTINDICES] = isVertexIndexingRequired((*this), pm);
-		(*this)[INT_ATT_NAMES::ATT_EDGEINDICES] = isEdgeIndexingRequired(pm);
-		return (*this);
-	}
+	static bool replicatedPipelineNeeded(const RendAtts& rqatt);
 
-	static bool isPerVertexAttribute(INT_ATT_NAMES name)
-	{
-		return (
-			(name.value() == INT_ATT_NAMES::ATT_VERTPOSITION) ||
-			(name.value() == INT_ATT_NAMES::ATT_VERTNORMAL) ||
-			(name.value() == INT_ATT_NAMES::ATT_VERTCOLOR) ||
-			(name.value() == INT_ATT_NAMES::ATT_VERTTEXTURE));
-	}
+	static bool isVertexIndexingRequired(const RendAtts& rqatt, PRIMITIVE_MODALITY pm);
 
-	static bool replicatedPipelineNeeded(const RendAtts& rqatt)
-	{
-		return (
-			rqatt[INT_ATT_NAMES::ATT_FACENORMAL] || rqatt[INT_ATT_NAMES::ATT_FACECOLOR] ||
-			rqatt[INT_ATT_NAMES::ATT_WEDGETEXTURE]);
-	}
-
-	static bool isVertexIndexingRequired(const RendAtts& rqatt, PRIMITIVE_MODALITY pm)
-	{
-		return (
-			!replicatedPipelineNeeded(rqatt) &&
-			((pm == PR_SOLID) || (pm == PR_WIREFRAME_TRIANGLES)));
-	}
-
-	static bool isEdgeIndexingRequired(PRIMITIVE_MODALITY pm)
-	{
-		return (pm == PR_WIREFRAME_EDGES);
-	}
+	static bool isEdgeIndexingRequired(PRIMITIVE_MODALITY pm);
 };
 
 } // namespace vcg
