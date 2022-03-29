@@ -25,6 +25,8 @@
 
 namespace vcg {
 
+/* PerViewData */
+
 template<typename GL_OPTIONS_DERIVED_TYPE>
 PerViewData<GL_OPTIONS_DERIVED_TYPE>::PerViewData() :
 		_pmmask(), _intatts(PR_ARITY)
@@ -155,6 +157,193 @@ bool PerViewData<GL_OPTIONS_DERIVED_TYPE>::deserialize(const std::string& str)
 		it->deserialize(token[i]);
 	_glopts.deserialize(token[i]);
 	return true;
+}
+
+/* NotThreadSafeGLMeshAttributesMultiViewerBOManager */
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::
+	NotThreadSafeGLMeshAttributesMultiViewerBOManager(
+		MESH_TYPE&  mesh,
+		MemoryInfo& meminfo,
+		size_t      perbatchprimitives) :
+		_mesh(mesh),
+		_gpumeminfo(meminfo),
+		_bo(INT_ATT_NAMES::enumArity(), NULL),
+		_currallocatedboatt(),
+		_borendering(false),
+		_perbatchprim(perbatchprimitives),
+		_chunkmap(),
+		_edge(),
+		_meshverticeswhenedgeindiceswerecomputed(0),
+		_meshtriangleswhenedgeindiceswerecomputed(0),
+		_tr(),
+		_debugmode(false),
+		_loginfo(),
+		_meaningfulattsperprimitive(PR_ARITY, InternalRendAtts())
+{
+	_tr.SetIdentity();
+	_bo[INT_ATT_NAMES::ATT_VERTPOSITION] = new GLBufferObject(3, GL_FLOAT, GL_VERTEX_ARRAY, GL_ARRAY_BUFFER);
+	_bo[INT_ATT_NAMES::ATT_VERTNORMAL] = new GLBufferObject(3, GL_FLOAT, GL_NORMAL_ARRAY, GL_ARRAY_BUFFER);
+	_bo[INT_ATT_NAMES::ATT_FACENORMAL] = new GLBufferObject(3, GL_FLOAT, GL_NORMAL_ARRAY, GL_ARRAY_BUFFER);
+	_bo[INT_ATT_NAMES::ATT_VERTCOLOR] = new GLBufferObject(4, GL_UNSIGNED_BYTE, GL_COLOR_ARRAY, GL_ARRAY_BUFFER);
+	_bo[INT_ATT_NAMES::ATT_FACECOLOR] = new GLBufferObject(4, GL_UNSIGNED_BYTE, GL_COLOR_ARRAY, GL_ARRAY_BUFFER);
+	/*MESHCOLOR has not a buffer object associated with it. It's just a call to glColor3f. it's anyway added to the _bo arrays for sake of coherence*/
+	//_bo[INT_ATT_NAMES::ATT_FIXEDCOLOR] = NULL;
+	_bo[INT_ATT_NAMES::ATT_VERTTEXTURE] = new GLBufferObject(2, GL_FLOAT, GL_TEXTURE_COORD_ARRAY, GL_ARRAY_BUFFER);
+	_bo[INT_ATT_NAMES::ATT_WEDGETEXTURE] = new GLBufferObject(2, GL_FLOAT, GL_TEXTURE_COORD_ARRAY, GL_ARRAY_BUFFER);
+	_bo[INT_ATT_NAMES::ATT_VERTINDICES] = new GLBufferObject(3, GL_UNSIGNED_INT, GL_ELEMENT_ARRAY_BUFFER);
+	_bo[INT_ATT_NAMES::ATT_EDGEINDICES] = new GLBufferObject(2, GL_UNSIGNED_INT, GL_ELEMENT_ARRAY_BUFFER);
+
+	initMeaningfulAttsMask();
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::~NotThreadSafeGLMeshAttributesMultiViewerBOManager()
+{
+	for (size_t ii = 0; ii < _bo.size(); ++ii)
+		delete _bo[ii];
+}
+
+/**
+ * meshAttributesUpdate will force the buffer allocation only of the bo rendered at least by one
+ * viewer.
+ * If a filter add to a mesh, for instance, a per vertex color attribute that was not previously
+ * rendered, the meshAttributesUpdate() will ignore the attribute until a viewer require explicitly
+ * to render the per-vertex-color, too.
+ * In order to do it, please, call the setPerViewRendAtts() setting up for at least one the existing
+ * viewer (or adding a new viewer) in the RendAtts reqatts parameter the reqatts[ATT_VERTCOLOR] to
+ * true value.
+ */
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+void NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::
+	meshAttributesUpdated(bool hasmeshconnectivitychanged, const RendAtts& changedrendatts)
+{
+	InternalRendAtts tobeupdated(changedrendatts);
+	tobeupdated[INT_ATT_NAMES::ATT_VERTINDICES] = hasmeshconnectivitychanged;
+	tobeupdated[INT_ATT_NAMES::ATT_EDGEINDICES] = hasmeshconnectivitychanged;
+	for (unsigned int ii = 0; ii < INT_ATT_NAMES::enumArity(); ++ii) {
+		INT_ATT_NAMES boname(ii);
+		if (_bo[boname] != NULL)
+			_bo[boname]->_isvalid = (_bo[boname]->_isvalid) && !(tobeupdated[boname]);
+	}
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+bool NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::getPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid, PVData& data) const
+{
+	typename ViewsMap::const_iterator it = _perviewreqatts.find(viewid);
+	if (it == _perviewreqatts.end())
+		return false;
+	data = it->second;
+	return true;
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+void NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::setPerViewInfo(UNIQUE_VIEW_ID_TYPE viewid, const PVData& data)
+{
+	/// cleanup stage...if an attribute impossible for a primitive modality is still here (it should
+	/// not be...) we change the required atts into the view
+	PVData copydt(data);
+	for (PRIMITIVE_MODALITY pm = PRIMITIVE_MODALITY(0); pm < PR_ARITY; pm = next(pm))
+		copydt._intatts[pm] = InternalRendAtts::intersectionSet(copydt._intatts[size_t(pm)], _meaningfulattsperprimitive[size_t(pm)]);
+	_perviewreqatts[viewid] = copydt;
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+void NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::setPerAllViewsInfo(const PVData& data)
+{
+	/// cleanup stage...if an attribute impossible for a primitive modality is still here (it should
+	/// not be...) we change the required atts into the view
+	PVData copydt(data);
+	for (PRIMITIVE_MODALITY pm = PRIMITIVE_MODALITY(0); pm < PR_ARITY; pm = next(pm))
+		copydt._intatts[pm] = InternalRendAtts::intersectionSet(copydt._intatts[size_t(pm)], _meaningfulattsperprimitive[size_t(pm)]);
+	for (typename ViewsMap::iterator it = _perviewreqatts.begin(); it != _perviewreqatts.end(); ++it)
+		it->second = copydt;
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+bool NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::removeView(UNIQUE_VIEW_ID_TYPE viewid)
+{
+	typename ViewsMap::iterator it = _perviewreqatts.find(viewid);
+	if (it == _perviewreqatts.end())
+		return false;
+	_perviewreqatts.erase(viewid);
+	return true;
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+void NotThreadSafeGLMeshAttributesMultiViewerBOManager<MESH_TYPE, UNIQUE_VIEW_ID_TYPE, GL_OPTIONS_DERIVED_TYPE>::removeAllViews()
+{
+	_perviewreqatts.clear();
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+void NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::draw(UNIQUE_VIEW_ID_TYPE viewid, const std::vector<GLuint>& textid)
+	const
+{
+	typename ViewsMap::const_iterator it = _perviewreqatts.find(viewid);
+	if (it == _perviewreqatts.end())
+		return;
+
+	const PVData& dt = it->second;
+	//const InternalRendAtts& atts = it->second._intatts;
+	drawFun(dt, textid);
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+void NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::
+	drawAllocatedAttributesSubset(
+		UNIQUE_VIEW_ID_TYPE        viewid,
+		const PVData&              dt,
+		const std::vector<GLuint>& textid) const
+{
+	typename ViewsMap::const_iterator it = _perviewreqatts.find(viewid);
+	if (it == _perviewreqatts.end())
+		return;
+
+	PVData tmp = dt;
+
+	if (!(_currallocatedboatt[INT_ATT_NAMES::ATT_VERTPOSITION])) {
+		for (PRIMITIVE_MODALITY pm = PRIMITIVE_MODALITY(0); pm < PR_ARITY; pm = next(pm)) {
+			tmp._pmmask[size_t(pm)] = 0;
+			tmp._intatts[size_t(pm)] = InternalRendAtts();
+		}
+	}
+	else {
+		for (PRIMITIVE_MODALITY pm = PRIMITIVE_MODALITY(0); pm < PR_ARITY; pm = next(pm)) {
+			tmp._intatts[size_t(pm)] = InternalRendAtts::intersectionSet(tmp._intatts[size_t(pm)], _meaningfulattsperprimitive[size_t(pm)]);
+			tmp._intatts[size_t(pm)] = InternalRendAtts::intersectionSet(tmp._intatts[size_t(pm)], _currallocatedboatt);
+		}
+	}
+	drawFun(dt, textid);
 }
 
 } // namespace vcg
