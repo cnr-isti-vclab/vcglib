@@ -77,4 +77,99 @@ inline unsigned int GLMeshAttributesInfo::ATT_NAMES::value() const
 	return _val;
 }
 
+template<typename ATT_NAMES_DERIVED_CLASS>
+GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>::RenderingAtts(bool defaultvalue)
+{
+	reset(defaultvalue);
+}
+
+template<typename ATT_NAMES_DERIVED_CLASS>
+bool &GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>::operator[](unsigned int ind)
+{
+	if (ind >= ATT_NAMES_DERIVED_CLASS::enumArity())
+		throw Exception("Out of range value\n");
+	return _atts[ind];
+}
+
+template<typename ATT_NAMES_DERIVED_CLASS>
+bool GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>::operator[](unsigned int ind) const
+{
+	if (ind >= ATT_NAMES_DERIVED_CLASS::enumArity())
+		throw Exception("Out of range value\n");
+	return _atts[ind];
+}
+
+template<typename ATT_NAMES_DERIVED_CLASS>
+void GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>::reset(bool defaultvalue)
+{
+	for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
+		_atts[ii] = defaultvalue;
+}
+
+template<typename ATT_NAMES_DERIVED_CLASS>
+GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>
+GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>::unionSet(
+	const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& a,
+	const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b)
+{
+	RenderingAtts<ATT_NAMES_DERIVED_CLASS> res;
+	for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
+		res[ii] = a[ii] || b[ii];
+	return res;
+}
+
+template<typename ATT_NAMES_DERIVED_CLASS>
+GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>
+GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>::complementSet(
+	const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& a,
+	const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b)
+{
+	/* TRUTH TABLE */
+	// this[ATT_NAMES] | rq[ATT_NAMES] | res
+	//     true        |     true      | false
+	//     true        |     false     | true
+	//     false       |     true      | false
+	//     false       |     false     | false
+
+	RenderingAtts<ATT_NAMES_DERIVED_CLASS> res = a;
+	for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii) {
+		if (res[ii])
+			res[ii] = !(b[ii]);
+	}
+
+	return res;
+}
+
+template<typename ATT_NAMES_DERIVED_CLASS>
+GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>
+GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>::intersectionSet(
+	const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& a,
+	const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b)
+{
+	RenderingAtts<ATT_NAMES_DERIVED_CLASS> res;
+	for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
+		res[ii] = a[ii] && b[ii];
+	return res;
+}
+
+template<typename ATT_NAMES_DERIVED_CLASS>
+std::string GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>::serialize() const
+{
+	std::string str;
+	for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
+		str.append(((_atts[ii]) ? "1" : "0"));
+	return str;
+}
+
+template<typename ATT_NAMES_DERIVED_CLASS>
+void GLMeshAttributesInfo::RenderingAtts<ATT_NAMES_DERIVED_CLASS>::deserialize(
+	const std::string& str)
+{
+	std::bitset<ATT_NAMES_DERIVED_CLASS::ATT_ARITY> bset(str);
+	for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
+		_atts[ATT_NAMES_DERIVED_CLASS::enumArity() - ii - 1] = bset[ii];
+}
+
+/* GLMeshAttributesInfo::RenderingAtts */
+
 } // namespace vcg

@@ -104,100 +104,29 @@ template<typename ATT_NAMES_DERIVED_CLASS>
 class GLMeshAttributesInfo::RenderingAtts
 {
 public:
-	RenderingAtts(bool defaultvalue = false) { reset(defaultvalue); }
+	RenderingAtts(bool defaultvalue = false);
 
-	RenderingAtts(const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& att)
-	{
-		reset();
-		//_atts = new bool[ATT_NAMES_DERIVED_CLASS::enumArity()];
-		for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
-			(*this)[ii] = att[ii];
-	}
+	bool operator[](unsigned int ind) const;
 
-	~RenderingAtts() {}
+	bool& operator[](unsigned int ind);
 
-	RenderingAtts<ATT_NAMES_DERIVED_CLASS>&
-	operator=(const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& att)
-	{
-		reset();
-		for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
-			(*this)[ii] = att[ii];
-		return (*this);
-	}
-
-	bool operator[](unsigned int ind) const
-	{
-		if (ind >= ATT_NAMES_DERIVED_CLASS::enumArity())
-			throw Exception("Out of range value\n");
-		return _atts[ind];
-	}
-
-	bool& operator[](unsigned int ind)
-	{
-		if (ind >= ATT_NAMES_DERIVED_CLASS::enumArity())
-			throw Exception("Out of range value\n");
-		return _atts[ind];
-	}
-
-	void reset(bool defaultvalue = false)
-	{
-		for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
-			_atts[ii] = defaultvalue;
-	}
+	void reset(bool defaultvalue = false);
 
 	static RenderingAtts<ATT_NAMES_DERIVED_CLASS> unionSet(
 		const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& a,
-		const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b)
-	{
-		RenderingAtts<ATT_NAMES_DERIVED_CLASS> res;
-		for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
-			res[ii] = a[ii] || b[ii];
-		return res;
-	}
+		const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b);
 
 	static RenderingAtts<ATT_NAMES_DERIVED_CLASS> complementSet(
 		const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& a,
-		const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b)
-	{
-		/* TRUTH TABLE */
-		// this[ATT_NAMES] | rq[ATT_NAMES] | res
-		//     true        |     true      | false
-		//     true        |     false     | true
-		//     false       |     true      | false
-		//     false       |     false     | false
-
-		RenderingAtts<ATT_NAMES_DERIVED_CLASS> res = a;
-		for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii) {
-			if (res[ii])
-				res[ii] = !(b[ii]);
-		}
-
-		return res;
-	}
+		const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b);
 
 	static RenderingAtts<ATT_NAMES_DERIVED_CLASS> intersectionSet(
 		const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& a,
-		const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b)
-	{
-		RenderingAtts<ATT_NAMES_DERIVED_CLASS> res;
-		for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
-			res[ii] = a[ii] && b[ii];
-		return res;
-	}
+		const RenderingAtts<ATT_NAMES_DERIVED_CLASS>& b);
 
-	size_t serialize(std::string& str) const
-	{
-		for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
-			str.append(((_atts[ii]) ? "1" : "0"));
-		return ATT_NAMES_DERIVED_CLASS::enumArity();
-	}
+	std::string serialize() const;
 
-	void deserialize(const std::string& str)
-	{
-		std::bitset<ATT_NAMES_DERIVED_CLASS::ATT_ARITY> bset(str);
-		for (unsigned int ii = 0; ii < ATT_NAMES_DERIVED_CLASS::enumArity(); ++ii)
-			_atts[ATT_NAMES_DERIVED_CLASS::enumArity() - ii - 1] = bset[ii];
-	}
+	void deserialize(const std::string& str);
 
 protected:
 	bool _atts[ATT_NAMES_DERIVED_CLASS::ATT_ARITY]; // an array of enumArity() bool values
@@ -360,4 +289,4 @@ public:
 
 #include "gl_mesh_attributes_info.ipp"
 
-#endif
+#endif // __VCG_GL_MESH_ATTRIBUTES_INFO

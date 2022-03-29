@@ -118,8 +118,7 @@ void PerViewData<GL_OPTIONS_DERIVED_TYPE>::serialize(std::string& str) const
 	str.append(_pmmask.to_string());
 	for (typename PerRendModData::const_iterator it = _intatts.begin(); it != _intatts.end(); ++it)
 	{
-		std::string s;
-		it->serialize(s);
+		std::string s = it->serialize();
 		str.append(s);
 	}
 	std::string s;
