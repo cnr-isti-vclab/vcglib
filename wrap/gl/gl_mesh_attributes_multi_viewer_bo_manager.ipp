@@ -346,4 +346,78 @@ void NotThreadSafeGLMeshAttributesMultiViewerBOManager<
 	drawFun(dt, textid);
 }
 
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+bool NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::isBORenderingAvailable() const
+{
+	return _borendering;
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+bool NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::manageBuffers()
+{
+	InternalRendAtts tobeallocated;
+	InternalRendAtts tobedeallocated;
+	InternalRendAtts tobeupdated;
+	bool correctlyallocated = false;
+	bool arebuffersok = checkBuffersAllocationStatus(tobeallocated, tobedeallocated, tobeupdated);
+	if (!arebuffersok)
+		correctlyallocated = manageAndFeedBuffersIfNeeded(tobeallocated, tobedeallocated, tobeupdated);
+	if (_debugmode)
+		debug(tobeallocated, tobedeallocated, tobeupdated);
+	return (arebuffersok || correctlyallocated);
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+void NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::
+	setGLOptions(UNIQUE_VIEW_ID_TYPE viewid, const GL_OPTIONS_DERIVED_TYPE& opts)
+{
+	typename ViewsMap::iterator it = _perviewreqatts.find(viewid);
+	if (it == _perviewreqatts.end())
+		return;
+	it->second.set(opts);
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+void NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::setTrMatrix(const vcg::Matrix44<typename MESH_TYPE::ScalarType>& tr)
+{
+	_tr = tr;
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+void NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::setDebugMode(bool isdebug)
+{
+	_debugmode = isdebug;
+}
+
+template<typename MESH_TYPE, typename UNIQUE_VIEW_ID_TYPE, typename GL_OPTIONS_DERIVED_TYPE>
+void NotThreadSafeGLMeshAttributesMultiViewerBOManager<
+	MESH_TYPE,
+	UNIQUE_VIEW_ID_TYPE,
+	GL_OPTIONS_DERIVED_TYPE>::getLog(DebugInfo& info)
+{
+	info.reset();
+	info._tobedeallocated = _loginfo._tobedeallocated;
+	info._tobeallocated = _loginfo._tobeallocated;
+	info._tobeupdated = _loginfo._tobeupdated;
+
+	info._currentlyallocated = _loginfo._currentlyallocated;
+	info._perviewdata = _loginfo._perviewdata;
+	_loginfo.reset();
+}
+
 } // namespace vcg

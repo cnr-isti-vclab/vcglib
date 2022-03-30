@@ -150,58 +150,19 @@ protected:
 
 	void draw(UNIQUE_VIEW_ID_TYPE viewid, const std::vector<GLuint>& textid = std::vector<GLuint>()) const;
 
-
 	void drawAllocatedAttributesSubset(UNIQUE_VIEW_ID_TYPE viewid, const PVData& dt, const std::vector<GLuint>& textid = std::vector<GLuint>()) const;
 
-	bool isBORenderingAvailable() const
-	{
-		return _borendering;
-	}
+	bool isBORenderingAvailable() const;
 
-	bool manageBuffers()
-	{
-		InternalRendAtts tobeallocated;
-		InternalRendAtts tobedeallocated;
-		InternalRendAtts tobeupdated;
-		bool correctlyallocated = false;
-		bool arebuffersok = checkBuffersAllocationStatus(tobeallocated, tobedeallocated, tobeupdated);
-		if (!arebuffersok)
-			correctlyallocated = manageAndFeedBuffersIfNeeded(tobeallocated, tobedeallocated, tobeupdated);
-		if (_debugmode)
-			debug(tobeallocated, tobedeallocated, tobeupdated);
-		return (arebuffersok || correctlyallocated);
-	}
+	bool manageBuffers();
 
+	void setGLOptions(UNIQUE_VIEW_ID_TYPE viewid, const GL_OPTIONS_DERIVED_TYPE& opts);
 
-	void setGLOptions(UNIQUE_VIEW_ID_TYPE viewid, const GL_OPTIONS_DERIVED_TYPE& opts)
-	{
-		typename ViewsMap::iterator it = _perviewreqatts.find(viewid);
-		if (it == _perviewreqatts.end())
-			return;
-		it->second.set(opts);
-	}
+	void setTrMatrix(const vcg::Matrix44<typename MESH_TYPE::ScalarType>& tr);
 
-	void setTrMatrix(const vcg::Matrix44<typename MESH_TYPE::ScalarType>& tr)
-	{
-		_tr = tr;
-	}
+	void setDebugMode(bool isdebug);
 
-	void setDebugMode(bool isdebug)
-	{
-		_debugmode = isdebug;
-	}
-
-	void getLog(DebugInfo& info)
-	{
-		info.reset();
-		info._tobedeallocated = _loginfo._tobedeallocated;
-		info._tobeallocated = _loginfo._tobeallocated;
-		info._tobeupdated = _loginfo._tobeupdated;
-
-		info._currentlyallocated = _loginfo._currentlyallocated;
-		info._perviewdata = _loginfo._perviewdata;
-		_loginfo.reset();
-	}
+	void getLog(DebugInfo& info);
 
 private:
 	void initMeaningfulAttsMask()
@@ -723,16 +684,16 @@ private:
 					}
 					if (attributestobeupdated[INT_ATT_NAMES::ATT_VERTNORMAL])
 					{
-						rnv[chunkindex * 3 + 0].Import(_mesh.face[indf].V(0)->N().Normalize());
-						rnv[chunkindex * 3 + 1].Import(_mesh.face[indf].V(1)->N().Normalize());
-						rnv[chunkindex * 3 + 2].Import(_mesh.face[indf].V(2)->N().Normalize());
+						rnv[chunkindex * 3 + 0].Import(_mesh.face[indf].V(0)->N().normalized());
+						rnv[chunkindex * 3 + 1].Import(_mesh.face[indf].V(1)->N().normalized());
+						rnv[chunkindex * 3 + 2].Import(_mesh.face[indf].V(2)->N().normalized());
 					}
 
 					if (attributestobeupdated[INT_ATT_NAMES::ATT_FACENORMAL])
 					{
-						rfnv[chunkindex * 3 + 0].Import(_mesh.face[indf].N().Normalize());
-						rfnv[chunkindex * 3 + 1].Import(_mesh.face[indf].N().Normalize());
-						rfnv[chunkindex * 3 + 2].Import(_mesh.face[indf].N().Normalize());
+						rfnv[chunkindex * 3 + 0].Import(_mesh.face[indf].N().normalized());
+						rfnv[chunkindex * 3 + 1].Import(_mesh.face[indf].N().normalized());
+						rfnv[chunkindex * 3 + 2].Import(_mesh.face[indf].N().normalized());
 					}
 
 					if ((attributestobeupdated[INT_ATT_NAMES::ATT_VERTCOLOR]))
@@ -1230,7 +1191,7 @@ private:
 
 
 		//typename MESHTYPE::FaceContainer::iterator fp;
-		typename MESH_TYPE::FaceIterator fi = _mesh.face.begin();
+		typename MESH_TYPE::ConstFaceIterator fi = _mesh.face.begin();
 
 		short curtexname = -1;
 		if (wt)
@@ -1258,7 +1219,7 @@ private:
 
 		while (fi != _mesh.face.end())
 		{
-			typename MESH_TYPE::FaceType & f = *fi;
+			const typename MESH_TYPE::FaceType & f = *fi;
 			if (!f.IsD())
 			{
 				if (wt)
@@ -1440,7 +1401,7 @@ private:
 
 
 		glBegin(GL_POINTS);
-		for (typename MESH_TYPE::VertexIterator vi = _mesh.vert.begin(); vi != _mesh.vert.end(); ++vi)
+		for (typename MESH_TYPE::ConstVertexIterator vi = _mesh.vert.begin(); vi != _mesh.vert.end(); ++vi)
 		{
 			if (!(*vi).IsD())
 			{
@@ -1521,7 +1482,7 @@ private:
 
 	void drawEdgesIM(const InternalRendAtts& req) const
 	{
-		typename MESH_TYPE::FaceIterator fi = _mesh.face.begin();
+		typename MESH_TYPE::ConstFaceIterator fi = _mesh.face.begin();
 
 		bool vn = req[INT_ATT_NAMES::ATT_VERTNORMAL] && vcg::tri::HasPerVertexNormal(_mesh);
 		bool vc = req[INT_ATT_NAMES::ATT_VERTCOLOR] && vcg::tri::HasPerVertexColor(_mesh);
@@ -1530,7 +1491,7 @@ private:
 
 		while (fi != _mesh.face.end())
 		{
-			typename MESH_TYPE::FaceType & f = *fi;
+			const typename MESH_TYPE::FaceType & f = *fi;
 
 			if (!f.IsD())
 			{
@@ -1602,7 +1563,7 @@ private:
 
 	void drawBBoxBO() const
 	{
-		vcg::Box3<typename MESH_TYPE::ScalarType>& b = _mesh.bbox;
+		const vcg::Box3<typename MESH_TYPE::ScalarType>& b = _mesh.bbox;
 
 		GLuint bbhandle;
 		glGenBuffers(1, &bbhandle);
@@ -1668,7 +1629,7 @@ private:
 
 	void drawBBoxIM() const
 	{
-		vcg::Box3<typename MESH_TYPE::ScalarType>& b = _mesh.bbox;
+		const vcg::Box3<typename MESH_TYPE::ScalarType>& b = _mesh.bbox;
 
 		glBegin(GL_LINE_STRIP);
 		glVertex3f((float)b.min[0], (float)b.min[1], (float)b.min[2]);
@@ -1810,9 +1771,9 @@ private:
 		_chunkmap.clear();
 		if (!vcg::tri::HasPerWedgeTexCoord(_mesh) || _mesh.face.size() == 0)
 			return;
-		typename MESH_TYPE::FaceIterator infrange = _mesh.face.begin();
+		typename MESH_TYPE::ConstFaceIterator infrange = _mesh.face.begin();
 		short texind = _mesh.face[0].WT(0).N();
-		for (typename MESH_TYPE::FaceIterator fit = _mesh.face.begin(); fit != _mesh.face.end(); ++fit)
+		for (typename MESH_TYPE::ConstFaceIterator fit = _mesh.face.begin(); fit != _mesh.face.end(); ++fit)
 		{
 			bool last = (fit == (_mesh.face.end() - 1));
 			if (fit->WT(0).N() != texind || last)
@@ -1902,10 +1863,10 @@ private:
 		GLuint  _v[2];  // the two Vertex indices are ordered!
 
 		EdgeVertInd() {}
-		EdgeVertInd(const MESH_TYPE& m, typename MESH_TYPE::FacePointer  pf, const int nz) { this->set(m, pf, nz); }
-		EdgeVertInd(const MESH_TYPE& m, typename MESH_TYPE::EdgePointer  pe, const int nz) { this->set(m, pe, nz); }
+		EdgeVertInd(const MESH_TYPE& m, const typename MESH_TYPE::FaceType* pf, const int nz) { this->set(m, pf, nz); }
+		EdgeVertInd(const MESH_TYPE& m, const typename MESH_TYPE::EdgeType* pe, const int nz) { this->set(m, pe, nz); }
 
-		void set(const MESH_TYPE& m, typename MESH_TYPE::FacePointer  pf, const int nz)
+		void set(const MESH_TYPE& m, const typename MESH_TYPE::FaceType* pf, const int nz)
 		{
 			assert(pf != 0);
 			assert(nz >= 0);
@@ -1919,7 +1880,7 @@ private:
 				std::swap(_v[0], _v[1]);
 		}
 
-		void set(const MESH_TYPE& m, typename MESH_TYPE::EdgePointer pe, const int nz)
+		void set(const MESH_TYPE& m, const typename MESH_TYPE::EdgeType* pe, const int nz)
 		{
 			assert(pe != 0);
 			assert(nz >= 0);
@@ -1949,12 +1910,12 @@ private:
 		}
 	};
 
-	static void fillEdgeVector(MESH_TYPE &m, std::vector<EdgeVertInd> &edgeVec, bool includeFauxEdge = true)
+	static void fillEdgeVector(const MESH_TYPE &m, std::vector<EdgeVertInd> &edgeVec, bool includeFauxEdge = true)
 	{
 		if (m.FN() > 0)
 		{
 			edgeVec.reserve(m.FN() * 3);
-			for (typename MESH_TYPE::FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+			for (typename MESH_TYPE::ConstFaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
 				if (!(*fi).IsD())
 					for (int j = 0; j < (*fi).VN(); ++j)
 						if (includeFauxEdge || !(*fi).IsF(j))
@@ -1964,7 +1925,7 @@ private:
 			if ((m.VN() > 0) && (m.EN() > 0))
 			{
 				edgeVec.reserve(m.EN() * 2);
-				for (typename MESH_TYPE::EdgeIterator ei = m.edge.begin(); ei != m.edge.end(); ++ei)
+				for (typename MESH_TYPE::ConstEdgeIterator ei = m.edge.begin(); ei != m.edge.end(); ++ei)
 					if (!(*ei).IsD())
 						for (int j = 0; j < 2; ++j)
 							edgeVec.push_back(EdgeVertInd(m, &*ei, j));
@@ -1972,7 +1933,7 @@ private:
 
 	}
 
-	static void fillUniqueEdgeVector(MESH_TYPE &m, std::vector<EdgeVertInd> &edgeVec)
+	static void fillUniqueEdgeVector(const MESH_TYPE &m, std::vector<EdgeVertInd> &edgeVec)
 	{
 		fillEdgeVector(m, edgeVec, false);
 		std::sort(edgeVec.begin(), edgeVec.end());
@@ -2024,8 +1985,7 @@ private:
 		GLuint _bohandle;
 	};
 
-	//ideally this should be const. I'm not yet sure if VCGLib will allow me to declare it as constant
-	MESH_TYPE& _mesh;
+	const MESH_TYPE& _mesh;
 
 	MemoryInfo& _gpumeminfo;
 
