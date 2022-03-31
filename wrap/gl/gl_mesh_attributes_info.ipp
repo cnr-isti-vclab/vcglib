@@ -281,9 +281,9 @@ inline GLMeshAttributesInfo::InternalRendAtts::InternalRendAtts(const RenderingA
 {
 }
 
-inline GLMeshAttributesInfo::InternalRendAtts::operator RendAtts() const
+inline GLMeshAttributesInfo::InternalRendAtts::operator GLMeshAttributesInfo::RendAtts() const
 {
-	RendAtts rendatt;
+	GLMeshAttributesInfo::RendAtts rendatt;
 	for (unsigned int ii = 0; ii < ATT_NAMES::enumArity(); ++ii)
 		rendatt[ii] = _atts[ii];
 	return rendatt;

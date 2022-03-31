@@ -49,8 +49,8 @@ struct GLMeshAttributesInfo
 	template<typename ATT_NAMES_DERIVED_CLASS>
 	class RenderingAtts;
 
-	typedef std::bitset<PR_ARITY> PRIMITIVE_MODALITY_MASK;
-	typedef RenderingAtts<ATT_NAMES> RendAtts;
+	using PRIMITIVE_MODALITY_MASK = std::bitset<PR_ARITY>;
+	using RendAtts = RenderingAtts<ATT_NAMES> ;
 
 	class DebugInfo;
 
