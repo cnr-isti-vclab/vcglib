@@ -177,7 +177,7 @@ private:
                     const double smallestEdge = std::min(edges[0], std::min(edges[1], edges[2]));
                     const int longestIdx = int(std::find(edges, edges+3, std::max(std::max(edges[0], edges[1]), edges[2])) - (edges));
 
-                    if (vcg::tri::IsMarked(m, f.V2(longestIdx)))
+                    if (vcg::tri::IsMarked(m, f.V2(longestIdx)) || (params.userSelectedCreases && f.IsFaceEdgeS(longestIdx)))
                         continue;
 
 
@@ -229,7 +229,16 @@ private:
                             if (fp1 == NULL)
                                 continue;
 
+                            bool gE1IsCrease = g->IsFaceEdgeS((k+1)%3);
+                            bool fE1IsCrease = f.IsFaceEdgeS((longestIdx+1)%3);
+
                             vcg::face::FlipEdgeNotManifold<FaceType>(f, longestIdx);
+
+                            if (params.userSelectedCreases && gE1IsCrease)
+                                f.SetFaceEdgeS(longestIdx);
+                            if (params.userSelectedCreases && fE1IsCrease)
+                                g->SetFaceEdgeS(k);
+
                             ++count;
                         }
                     }
