@@ -17,4 +17,5 @@ jobs:
       with:
         type: now
         target_branch: devel
+        message: "Automatic merge branch 'main' into 'devel'"
         github_token: ${{ github.token }}
