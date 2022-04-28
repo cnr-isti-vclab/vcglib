@@ -104,8 +104,6 @@ public:
 						  minmaxPD2.first = std::min(pd2, minmaxPD2.first);
 						  minmaxPD2.second =std::max(pd2, minmaxPD2.second);
 					  });
-		fprintf(stderr,"minmax %f %f ",minmaxPD1.first,minmaxPD1.second);
-		fprintf(stderr,"minmax %f %f \n",minmaxPD2.first,minmaxPD2.second);
 		return std::make_pair(minmaxPD1,minmaxPD2);
 	}
 	
