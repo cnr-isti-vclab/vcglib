@@ -86,7 +86,29 @@ public:
 
 		return minmax;
 	}
-
+	
+	static std::pair<std::pair<ScalarType, ScalarType>, std::pair<ScalarType, ScalarType> > ComputePerVertexCurvatureDirMinMax(const MeshType & m)
+	{
+		tri::RequirePerVertexCurvatureDir(m);
+		std::pair<ScalarType, ScalarType> minmaxPD1 = std::make_pair(std::numeric_limits<ScalarType>::max(),
+																  std::numeric_limits<ScalarType>::lowest());
+		std::pair<ScalarType, ScalarType> minmaxPD2 = std::make_pair(std::numeric_limits<ScalarType>::max(),
+																  std::numeric_limits<ScalarType>::lowest());
+		
+		ForEachVertex(m, [&minmaxPD1,&minmaxPD2](const VertexType & v)
+					  {
+						  const ScalarType pd1 =v.K1();
+						  const ScalarType pd2 =v.K2();
+						  minmaxPD1.first = std::min(pd1, minmaxPD1.first);
+						  minmaxPD1.second =std::max(pd1, minmaxPD1.second);
+						  minmaxPD2.first = std::min(pd2, minmaxPD2.first);
+						  minmaxPD2.second =std::max(pd2, minmaxPD2.second);
+					  });
+		fprintf(stderr,"minmax %f %f ",minmaxPD1.first,minmaxPD1.second);
+		fprintf(stderr,"minmax %f %f \n",minmaxPD2.first,minmaxPD2.second);
+		return std::make_pair(minmaxPD1,minmaxPD2);
+	}
+	
 	static void ComputePerFaceQualityMinMax(const MeshType & m, ScalarType &minV, ScalarType &maxV)
 	{
 		const auto minmax = ComputePerFaceQualityMinMax(m);
