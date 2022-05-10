@@ -217,6 +217,40 @@ void VEEdgeCollapse(MeshType &poly, typename MeshType::VertexType *v)
 {
   VEEdgeCollapse(poly,v->VEp(),v->VEi());
 }
+
+/*! Perform an edge collapse using adjacency.
+ *
+ * It collapses the given edge to the position of the passed vertex.
+ * All the edges connected to the other vertex will be attached to the given vertex.
+ * The passed edge and the other vertex will be deleted.
+ *
+ * The edge will be collapsed even if the passed vertex is boundary or non manifold.
+ */
+template<class MeshType>
+void VEEdgeCollapseNonManifold(MeshType& poly, typename MeshType::EdgeType* e0, const int z)
+{
+	typedef typename MeshType::EdgeType EdgeType;
+
+	std::vector<EdgeType*> edges;
+
+	auto* root_vertex  = e0->V(z);
+	auto* child_vertex = e0->V(1 - z);
+	vcg::edge::VEStarVE(child_vertex, edges);
+	edges.erase( std::find(edges.begin(), edges.end(), e0) );
+
+	for (auto* edge : edges)
+    {
+		auto detach_index = (edge->V(0) == child_vertex) ? 0 : 1;
+		vcg::edge::VEDetach(*edge, detach_index);
+		edge->V(detach_index) = root_vertex;
+		vcg::edge::VEAppend(edge, detach_index);
+	}
+
+	vcg::edge::VEDetach(*e0);
+	tri::Allocator<MeshType>::DeleteEdge(poly, *e0);
+	tri::Allocator<MeshType>::DeleteVertex(poly, *child_vertex);
+}
+
 /*! Perform a simple edge split using VE adjacency
  *  
  */
