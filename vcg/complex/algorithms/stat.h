@@ -490,6 +490,75 @@ public:
     return sum/(m.fn*3.0);
   }
 
+  /* !Calculate the Strahler Numbers for the given tree mesh.
+   * The calculated numbers are added to a custon (Scalarm type) attribute by
+   * the name of 'strahler_number'. The tree mesh must have no loops, have only
+   * border or non manifold vertices and have Vertex Edge adjacency,
+   * index and mark components.
+   * 
+   * The root_index parameter specifies the index of the vertex that will
+   * be considered as a root for the Strahler Tree.
+   */
+  static void CalculateStrahlerNumbers(MeshType& tree, int root_index)
+  {
+    constexpr const char* StrahlerNumberAttributeName = "strahler_number";
+
+    struct StrahlerNode
+    {
+      VertexPointer node;
+      VertexPointer parent;
+    };
+
+    //check mesh has the required components
+    vcg::tri::RequirePerVertexMark(tree);
+	vcg::tri::RequireVEAdjacency(tree);
+
+	if (root_index < 0 || root_index >= tree.VN())
+	  throw vcg::MissingPreconditionException("Given index does not represent any valid vertex on the selected mesh.");
+
+    //walk the tree from root to leafs
+    std::stack<StrahlerNode> tree_reverse;
+    std::queue<VertexPointer> frontier;
+    vcg::tri::UnMarkAll(tree);
+    frontier.push( &tree.vert[root_index] );
+    do
+    {
+      auto* vertex = frontier.front();
+      vcg::tri::Mark(tree, vertex);
+      frontier.pop();
+
+      std::vector<VertexPointer> verts;
+      vcg::edge::VVStarVE(vertex, verts);
+
+      for (auto* adj : verts)
+      {
+        if (!vcg::tri::IsMarked(tree, adj))
+        {
+          tree_reverse.push({adj, vertex});
+          frontier.push(adj);
+        }
+      }
+    }
+    while (!frontier.empty());
+
+    //create output attribute
+    auto attribute = vcg::tri::Allocator<MeshType>::GetPerVertexAttribute<Scalarm>(tree, StrahlerNumberAttributeName);
+    for (int i = 0; i < tree.VN(); i++)
+      attribute[i] = 1;
+
+    //strahler number assignment from leafs to the root
+    while (!tree_reverse.empty())
+    {
+      auto top = tree_reverse.top();
+      tree_reverse.pop();
+
+      auto  curr_num   = attribute[top.node];
+      auto& parent_num = attribute[top.parent];
+      if (parent_num < curr_num + 1)
+        parent_num = curr_num + 1;
+    }
+  }
+
 }; // end class
 
 } //End Namespace tri
