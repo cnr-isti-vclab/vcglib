@@ -492,6 +492,20 @@ public:
 		attrn = 0;
 		imark = 0;
 		C()=Color4b::Gray;
+
+		typename std::set< PointerToAttribute>::iterator i;
+		for (i = vert_attr.begin(); i != vert_attr.end(); ++i)
+			((SimpleTempDataBase*)(*i)._handle)->Resize(0);
+
+		for (i = edge_attr.begin(); i != edge_attr.end(); ++i)
+			((SimpleTempDataBase*)(*i)._handle)->Resize(0);
+
+		for (i = face_attr.begin(); i != face_attr.end(); ++i)
+			((SimpleTempDataBase*)(*i)._handle)->Resize(0);
+
+		for (i = tetra_attr.begin(); i != tetra_attr.end(); ++i)
+			((SimpleTempDataBase*)(*i)._handle)->Resize(0);
+
 	}
 
 
