@@ -85,8 +85,11 @@ public:
 	void resize(size_t sz)
 	{
 		int oldDatasize = datasize;
-		if ((int) sz <= oldDatasize)
-			return;
+    if ((int)sz <= oldDatasize)
+    {
+      datasize = sz;
+      return;
+    }
 		if (sz > datareserve)
 			reserve(sz);
 		datasize = sz;
