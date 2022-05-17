@@ -3,7 +3,7 @@ name: AutoMergeMainOnDevel
 on:
   push:
     branches:
-      - 'main'
+      - 'cnr-isti-vclab/main'
 
 jobs:
   auto_merge:
