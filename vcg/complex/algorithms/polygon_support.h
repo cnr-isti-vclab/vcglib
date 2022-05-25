@@ -83,6 +83,7 @@ namespace tri {
 	 */
 	static void ImportFromPolyMesh(TriMeshType& tm, PolyMeshType& pm, std::vector<unsigned int>& birthFaces)
 	{
+		tm.Clear();
 		birthFaces.clear();
 		birthFaces.reserve(pm.FN()); //at least the same face number of the polymesh
 		tri::RequirePolygonalMesh(pm);
@@ -93,8 +94,10 @@ namespace tri {
 		TriVertexIterator tvi = Allocator<TriMeshType>::AddVertices(tm,pm.vert.size());
 		int cnt = 0;
 		for(tvi = tm.vert.begin(),vi = pm.vert.begin(); tvi != tm.vert.end(); ++tvi,++vi,++cnt)
-			if(!(*vi).IsD()) (*tvi).ImportData(*vi); else tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
-
+		{
+			if(!(*vi).IsD()) (*tvi).ImportData(*vi);
+			else tri::Allocator<TriMeshType>::DeleteVertex(tm,(*tvi));
+		}
 		for(PolyFaceIterator fi = pm.face.begin(); fi != pm.face.end(); ++fi)
 		{
 			if(!((*fi).IsD())){
@@ -103,9 +106,14 @@ namespace tri {
 					typename	PolyMeshType::VertexType * v = (*fi).V(i);
 					points.push_back(v->P());
 				}
+				// triples of integers describing the triangulation of the current polygon
 				std::vector<int> faces;
+				
 				TessellatePlanarPolygon3(points,faces);
-
+				
+				// the number of expected tri is 2 for a quad, 3 for a pentagon, vn-2 for a generic polygon
+				assert(faces.size()==(size_t)(fi->VN()-2)*3); 				
+				
 				//all the faces we add in tm have as a birth face fi
 				birthFaces.insert(birthFaces.end(), faces.size()/3, tri::Index(pm, *fi));
 
