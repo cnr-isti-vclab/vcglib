@@ -222,6 +222,7 @@ set(VCG_HEADERS
 		vcg/math/quadric.h
 		vcg/math/perlin_noise.h
 		vcg/math/shot.h
+		vcg/math/shot.ipp
 		vcg/math/spherical_harmonics.h
 		vcg/math/eigen_matrixbase_addons.h
 		vcg/math/quaternion.h
@@ -229,6 +230,7 @@ set(VCG_HEADERS
 		vcg/math/disjoint_set.h
 		vcg/math/random_generator.h
 		vcg/math/camera.h
+		vcg/math/camera.ipp
 		vcg/math/linear.h
 		vcg/math/matrix44.h
 		vcg/math/eigen.h
