@@ -91,4 +91,5 @@ int main( int argc, char **argv )
   tri::io::ExporterOFF<MyMesh>::Save(m4,"testSDF.off",tri::io::Mask::IOM_VERTCOLOR);
 
   return 0;
+  
 }
