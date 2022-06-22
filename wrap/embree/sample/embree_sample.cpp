@@ -7,7 +7,7 @@
   export LD_LIBRARY_PATH
   g++ ./wrap/embree/vcgForEmbree.cpp -o prova.o -lembree3 -I ./vcg -I ./ -I ./eigenlib -I ./wrap/embree/embree-3.13.3.x86_64.linux/include -L ./wrap/embree/embree-3.13.3.x86_64.linux/lib -std=c++11
   
-  g++ ./wrap/embree/sample/embree_sample.cpp -o prova.o  -lembree3 -I ./vcg -I ./ -I ./eigenlib -I ./wrap/embree/embree-3.13.3.x86_64.linux/include -L ./wrap/embree/embree-3.13.3.x86_64.linux/lib -std=c++11
+  g++ ./wrap/embree/sample/embree_sample.cpp -o prova.o  -lembree3 -I ./vcg -I ./ -I ./eigenlib -I ./wrap/embree/embree-3.13.3.x86_64.linux/include -L ./wrap/embree/embree-3.13.3.x86_64.linux/lib -std=c++11 -fopenmp -O3
   ./prova.o ./wrap/embree/sample/ExampleMeshes/bunny10k.off 32 false
 */
 #include <iostream>
@@ -23,11 +23,11 @@
 #include <math/gen_normal.h>
 
 //vcgLibForEmbree
-#include<wrap/embree/vcgForEmbree.h>
+#include<wrap/embree/EmbreeAdaptor.h>
 
 using namespace vcg;
 using namespace std;
-using namespace vcgEmb;
+
 
 int main( int argc, char **argv )
 {
@@ -43,53 +43,40 @@ int main( int argc, char **argv )
   char *endptr;
   int nOfRays = strtof(argv[2], &endptr);
   
-  MyMesh m2,m3,m4;
+  MyMesh m2,m3,m4,m5;
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m2,m);
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m3,m);
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m4,m);
 
-  clock_t t;
-  t = clock();
-  vcgForEmbree::embreeAmbientOcclusion(m,nOfRays,1);
-  cout<<"AO 01t "<< (float) (clock()-t)/CLOCKS_PER_SEC<<endl;
+  EmbreeAdaptor<MyMesh> adaptor = EmbreeAdaptor<MyMesh>(m,1);
+  adaptor.computeAmbientOcclusion(m,nOfRays);
   tri::UpdateQuality<MyMesh>::VertexFromFace(m);
   tri::UpdateColor<MyMesh>::PerVertexQualityGray(m);
   tri::io::ExporterOFF<MyMesh>::Save(m,"testAO.off",tri::io::Mask::IOM_VERTCOLOR);
 
-  vector<Point3f> BentNormal = vcgEmb::vcgForEmbree::AOBentNormal(m2,nOfRays,1);
-  
-  t = clock();
-  vcgEmb::vcgForEmbree::embreeAmbientOcclusion(m2,nOfRays,8);
-  cout<<"AO 08t "<< (float) (clock()-t)/CLOCKS_PER_SEC<<endl;
+  std::vector<Point3f> unifDirVec;
+  std::vector<Point3f> ndir;
+	GenNormal<float>::Fibonacci(nOfRays,unifDirVec);
+
+  adaptor = EmbreeAdaptor<MyMesh>(m2,1);
+  adaptor.computeAmbientOcclusion(m2,nOfRays,unifDirVec);
   tri::UpdateQuality<MyMesh>::VertexFromFace(m2);
   tri::UpdateColor<MyMesh>::PerVertexQualityGray(m2);
   tri::io::ExporterOFF<MyMesh>::Save(m2,"testAOM.off",tri::io::Mask::IOM_VERTCOLOR);
 
-  t = clock();
-  vcgEmb::vcgForEmbree::embreeAmbientOcclusion(m2,nOfRays,16);
-  cout<<"AO 16t "<< (float) (clock()-t)/CLOCKS_PER_SEC<<endl;
-
-  std::vector<Point3f> unifDirVec;
-  std::vector<Point3f> ndir;
-	GenNormal<float>::Fibonacci(nOfRays,unifDirVec);
-  Point3f dir(0,1,0);
-  
-  for(int g = 0; g<nOfRays; g++){   
-     if(unifDirVec.at(g)>=dir) {
-      ndir.push_back(unifDirVec.at(g));       
-     }
-  }
-  vcgEmb::vcgForEmbree::embreeAmbientOcclusion(m3,ndir.size(),ndir,1);
+  adaptor = EmbreeAdaptor<MyMesh>(m3,4);
+  adaptor.computeObscurance(m3,nOfRays,0.01);
   tri::UpdateQuality<MyMesh>::VertexFromFace(m3);
   tri::UpdateColor<MyMesh>::PerVertexQualityGray(m3);
   tri::io::ExporterOFF<MyMesh>::Save(m3,"testAODir.off",tri::io::Mask::IOM_VERTCOLOR);
 
-
-  vcgEmb::vcgForEmbree::embreeSDF(m4,nOfRays);
+  adaptor = EmbreeAdaptor<MyMesh>(m4,4);
+  adaptor.computeSDF(m4,nOfRays);
   tri::UpdateQuality<MyMesh>::VertexFromFace(m4);
   tri::UpdateColor<MyMesh>::PerVertexQualityRamp(m4);
   tri::io::ExporterOFF<MyMesh>::Save(m4,"testSDF.off",tri::io::Mask::IOM_VERTCOLOR);
 
+  adaptor = EmbreeAdaptor<MyMesh>(m5,4);
+  vector<Point3f> BentNormal = adaptor.AOBentNormal(m5,nOfRays);
   return 0;
-  
 }
