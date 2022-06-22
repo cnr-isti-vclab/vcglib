@@ -20,7 +20,7 @@
 #include <wrap/io_trimesh/export_off.h>
 #include <wrap/io_trimesh/import_off.h>
 #include <time.h>
-#include <math/gen_normal.h>
+#include <vcg/math/gen_normal.h>
 
 //vcgLibForEmbree
 #include<wrap/embree/EmbreeAdaptor.h>
@@ -32,8 +32,8 @@ using namespace std;
 int main( int argc, char **argv )
 {
   MyMesh m;
-  tri::io::ImporterOFF<MyMesh>::Open(m,argv[1]);//metti il rferimento ad una mesh
-  int ret = tri::io::ImporterOFF<MyMesh>::Open(m,argv[1]);
+  tri::io::ImporterOFF<MyMesh>::Open(m, "../ExampleMeshes/DragonHead.off");//argv[1]);//metti il rferimento ad una mesh
+  int ret = tri::io::ImporterOFF<MyMesh>::Open(m,"../ExampleMeshes/DragonHead.off");
   if(ret!=tri::io::ImporterOFF<MyMesh>::NoError)
   {
     cout<<"Error reading file \n"<<endl;
@@ -41,7 +41,7 @@ int main( int argc, char **argv )
   }
 
   char *endptr;
-  int nOfRays = strtof(argv[2], &endptr);
+  int nOfRays = 128; //strtof(argv[2], &endptr);
   
   MyMesh m2,m3,m4,m5;
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m2,m);
@@ -78,5 +78,8 @@ int main( int argc, char **argv )
 
   adaptor = EmbreeAdaptor<MyMesh>(m5,4);
   vector<Point3f> BentNormal = adaptor.AOBentNormal(m5,nOfRays);
+
+  
+  cout << "done" << endl;
   return 0;
 }
