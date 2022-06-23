@@ -271,7 +271,25 @@ public:
       pu.Update(**vi);
     return v_ret;
   }
-
+  
+  /** \brief Wrapper to AddVertices() to add an eigen matrix of (vn,3)
+   *  it returns the iterator to the first vertex added
+            */
+  static VertexIterator AddVertices(MeshType &m, const Eigen::MatrixXf &vm)
+  {
+      VertexIterator v_ret =  AddVertices(m, vm.rows());
+      VertexIterator v_start = v_ret;
+      for(int i=0;i<vm.rows();++i)
+      {
+          v_ret->P()[0]=vm(i,0);
+          v_ret->P()[1]=vm(i,1);
+          v_ret->P()[2]=vm(i,2);
+          ++v_ret;
+      }
+      return v_start;
+  }
+  
+   
   /** \brief Wrapper to AddVertices() to add a single vertex with given coords
             */
   static VertexIterator AddVertex(MeshType &m, const CoordType &p)
@@ -612,6 +630,24 @@ public:
     for(fi=local_vec.begin();fi!=local_vec.end();++fi)
       pu.Update(**fi);
     return f_ret;
+  }
+  
+  /** \brief Function to add n faces to the mesh getting indexes
+   *  from a (fn, 3) eigen matrix of int  .
+            */
+  static FaceIterator AddFaces(MeshType &m, const Eigen::MatrixXi &fm)
+  {
+      PointerUpdater<FacePointer> pu;
+      FaceIterator f_start = AddFaces(m,fm.rows(),pu);
+      FaceIterator f_ret=f_start;
+      for(int i=0;i<fm.rows();++i)
+      {
+          f_start->V(0)= &m.vert[fm(i,0)];
+          f_start->V(1)= &m.vert[fm(i,1)];
+          f_start->V(2)= &m.vert[fm(i,2)];
+          ++f_start;
+      }
+      return f_ret;
   }
 
   /** \brief Function to add n faces to the mesh.
