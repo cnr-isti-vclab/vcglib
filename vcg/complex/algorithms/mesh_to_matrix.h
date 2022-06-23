@@ -131,11 +131,10 @@ private:
     }
 
 public:
-
-    // return mesh as vector of vertices and faces
+     // return mesh as vector of vertices and faces
     static void GetTriMeshData(const MeshType &mesh,
-                               Eigen::MatrixXi &faces,
-                               MatrixXm &vert)
+                               MatrixXm &vert,
+                               Eigen::MatrixXi &faces)
     {
         tri::RequireCompactness(mesh);
         // create eigen matrix of vertices
@@ -154,6 +153,15 @@ public:
             for (int j = 0; j < 3; j++)
                 faces(i,j) = (int)tri::Index(mesh,mesh.face[i].cV(j));
     }
+    
+    // return mesh as vector of vertices and faces
+    static void GetTriMeshData(const MeshType &mesh,
+                               Eigen::MatrixXi &faces,
+                               MatrixXm &verts)
+    {
+        GetTriMeshData(mesh,verts,faces);
+    }
+    
 
     // return normals of the mesh
     static void GetNormalData(const MeshType &mesh,
