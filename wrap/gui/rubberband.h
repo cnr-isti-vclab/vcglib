@@ -32,7 +32,7 @@ first version, adapted from meshlab's editmeasure plugin
 #define RUBBERBAND_H
 
 #include <vcg/space/color4.h>
-#include <QGLWidget>
+#include <QOpenGLWidget>
 
 namespace vcg {
 
@@ -72,7 +72,7 @@ public:
 
     @param glw the GL widget.
   */
-  void Render(QGLWidget* glw);
+  void Render(QOpenGLWidget *glw);
 
 
   /*!
@@ -82,7 +82,7 @@ public:
 	@param AA the start point.
 	@param BB the end point.
   */
-  void RenderLine(QGLWidget* gla, Point3f AA, Point3f BB);
+  void RenderLine(QOpenGLWidget* gla, Point3f AA, Point3f BB);
 
   /*!
     @brief Set the current rubberband endpoint.
