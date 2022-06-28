@@ -8,7 +8,7 @@
 #include <vcg/complex/algorithms/update/quality.h>
 #include <wrap/callback.h>
 #include <embree3/rtcore.h>
-#include <math/gen_normal.h>
+#include <vcg/math/gen_normal.h>
 #include <limits>
 #include <math.h>
 #include <time.h>
@@ -131,46 +131,8 @@ namespace vcg{
         public:
          void computeAmbientOcclusion(MeshType &inputM, int nRay){
             std::vector<Point3f> unifDirVec;
-            GenNormal<float>::Fibonacci(nRay,unifDirVec);
-            
-            tri::UpdateQuality<MeshType>::FaceConstant(inputM,0);
-                       
-            double initime = omp_get_wtime();
-            #pragma omp parallel num_threads(threads) 
-            {            
-                #pragma omp for 
-                for(int i = 0;i<inputM.FN(); i++)
-                {                                             
-                    RTCRayHit rayhit;  
-                    Point3f b = vcg::Barycenter(inputM.face[i]);
-                    rayhit.ray.org_x  = b[0]; rayhit.ray.org_y = b[1]; rayhit.ray.org_z = b[2];  
-                    rayhit.ray.tnear  = 0.00001f;
-                            
-                    for(int r = 0; r<nRay; r++){
-                        Point3f dir = unifDirVec.at(r);     
-                        float scalarP = inputM.face[i].N()*dir;
-
-                        if(scalarP>0){
-                            rayhit.ray.dir_x  = dir[0]; rayhit.ray.dir_y = dir[1]; rayhit.ray.dir_z = dir[2];
-
-                            rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
-                            rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;   
-                            RTCIntersectContext context;
-                            rtcInitIntersectContext(&context);
-                            rtcIntersect1(scene, &context, &rayhit);
-
-                            if (rayhit.hit.geomID == RTC_INVALID_GEOMETRY_ID) 
-                                inputM.face[i].Q()+=scalarP;
-                                 
-                        }
-                    }
-                }
-            }
-            cout<<"time to process the ray intersect with "<<threads<<" threads, is: "<< omp_get_wtime() - initime<<endl;;
-
-            tri::UpdateColor<MeshType>::PerFaceQualityGray(inputM);
-            rtcReleaseScene(scene);
-            rtcReleaseDevice(device);
+            GenNormal<float>::Fibonacci(nRay,unifDirVec);           
+            computeAmbientOcclusion(inputM, nRay, unifDirVec);
         }
 
         public:
@@ -213,47 +175,11 @@ namespace vcg{
         }
 
         public:
-         void computeObscurance(MeshType &inputM, int nRay, float tau){
-            tri::UpdateQuality<MeshType>::FaceConstant(inputM,0);
-            
+         void computeObscurance(MeshType &inputM, int nRay, float tau){          
             std::vector<Point3f> unifDirVec;
                 GenNormal<float>::Fibonacci(nRay,unifDirVec);
 
-            #pragma omp parallel 
-            {
-                #pragma omp for
-                for(int i = 0;i<inputM.FN(); i++)
-                {            
-                    RTCRayHit rayhit;
-                    Point3f b = vcg::Barycenter(inputM.face[i]);
-                    rayhit.ray.org_x  = b[0]; rayhit.ray.org_y = b[1]; rayhit.ray.org_z = b[2];  
-                    rayhit.ray.tnear  = 0.00001f;
-                    
-                    for(int r = 0; r<nRay; r++){
-                        Point3f dir = unifDirVec.at(r);                        
-                        float scalarP = inputM.face[i].N()*dir;
-
-                        if(scalarP>0){
-                            rayhit.ray.dir_x  = dir[0]; rayhit.ray.dir_y = dir[1]; rayhit.ray.dir_z = dir[2];
-                            rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
-                            rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;  
-
-                            RTCIntersectContext context;
-                            rtcInitIntersectContext(&context);
-
-                            rtcIntersect1(scene, &context, &rayhit);
-
-                            if (rayhit.hit.geomID == RTC_INVALID_GEOMETRY_ID)                            
-                                inputM.face[i].Q()+=scalarP;                             
-                            else         
-                                inputM.face[i].Q()+=(1-powf(rayhit.ray.tfar,tau));                               
-                        }
-                    }
-                }
-            }
-            tri::UpdateColor<MeshType>::PerFaceQualityGray(inputM);
-            rtcReleaseScene(scene);
-            rtcReleaseDevice(device);
+           computeObscurance(inputM, nRay, unifDirVec, tau);
         }
 
         public:
