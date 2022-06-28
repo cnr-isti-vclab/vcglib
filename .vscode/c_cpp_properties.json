@@ -7,7 +7,9 @@
                 "${workspaceFolder}",
                 "${workspaceFolder}/vcg",
                 "C:/Program Files/Intel/Embree3 x64/include/",
-                "E:/UniversitàMagistrale/secondoSemestre/3DgeometricModelingProcessing/vcglib/"
+                "E:/UniversitàMagistrale/secondoSemestre/3DgeometricModelingProcessing/vcglib/",
+                "${workspaceFolder}",
+                "C:/Users/super/Desktop/vcpkg-master/vcpkg-master/packages/vcglib_x86-windows/include"
             ],
             "defines": [
                 "_DEBUG",

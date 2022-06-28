@@ -42,6 +42,13 @@
             ],
             "group": "build",
             "detail": "Attività generata dal debugger."
+        },
+        {
+            "type": "cmake",
+            "label": "CMake: configure",
+            "command": "configure",
+            "problemMatcher": [],
+            "detail": "CMake template configure task"
         }
     ],
     "version": "2.0.0"
