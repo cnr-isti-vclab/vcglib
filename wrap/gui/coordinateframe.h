@@ -47,7 +47,7 @@ first version
 #include <vcg/math/similarity.h>
 #include <vcg/space/color4.h>
 
-#include <QGLWidget>
+#include <QOpenGLWidget>
 
 namespace vcg {
 
@@ -80,7 +80,7 @@ public:
 
     @param glw the GL widget.
   */
-  virtual void Render(QGLWidget* glw,QPainter* p = NULL);
+  virtual void Render(QOpenGLWidget* glw,QPainter* p = NULL);
   // data
 
   /// The color used for the ticks, the ticks values and the head of the arrows.
@@ -148,7 +148,7 @@ public:
 
     @param glw the GL widget.
   */
-  virtual void Render(QGLWidget* glw,QPainter* p = NULL);
+  virtual void Render(QOpenGLWidget* glw,QPainter* p = NULL);
 
   /*!
     @brief Reset the position and/or the rotation of the coordinate frame.

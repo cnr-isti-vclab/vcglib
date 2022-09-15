@@ -62,7 +62,7 @@ CoordinateFrame::CoordinateFrame(float s)
   font.setFamily("Helvetica");
 }
 
-void CoordinateFrame::Render(QGLWidget* glw,QPainter* p)
+void CoordinateFrame::Render(QOpenGLWidget* glw, QPainter* p)
 {
   assert( glw!= NULL);
   glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -205,7 +205,7 @@ MovableCoordinateFrame::MovableCoordinateFrame(float size)
   // nothing here
 }
 
-void MovableCoordinateFrame::Render(QGLWidget* gla, QPainter *p)
+void MovableCoordinateFrame::Render(QOpenGLWidget* gla, QPainter *p)
 {
   glPushMatrix();
 
