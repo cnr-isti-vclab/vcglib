@@ -23,6 +23,9 @@
 
 #ifndef QT_TRACKBALL_H
 #define QT_TRACKBALL_H
+
+#include <QMouseEvent>
+
 #include <wrap/qt/device_to_logical.h>
 
 /// Transforms the event coordintates (that are device independent)
