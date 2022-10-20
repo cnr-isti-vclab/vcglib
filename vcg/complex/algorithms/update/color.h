@@ -27,6 +27,7 @@
 #include <math.h>
 #include <time.h>
 #include <vcg/space/color4.h>
+#include <vcg/space/colormap.h>
 #include <vcg/math/histogram.h>
 #include <vcg/math/perlin_noise.h>
 #include <vcg/math/random_generator.h>
@@ -220,7 +221,7 @@ public:
 
   If no range of quality is passed it is automatically computed.
   */
-	static void PerVertexQualityRamp(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0.)
+	static void PerVertexQualityRamp(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0., vcg::ColorMap cmap = vcg::ColorMap::RGB)
 	{
 		RequirePerVertexQuality(m);
 		RequirePerVertexColor(m);
@@ -232,8 +233,9 @@ public:
 			maxq=minmax.second;
 		}
 		for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-			if(!(*vi).IsD())
-				(*vi).C().SetColorRamp(minq,maxq,(*vi).Q());
+			if(!(*vi).IsD()) {
+				(*vi).C() = vcg::GetColorMapping((*vi).Q(), minq, maxq, cmap);
+			}
 	}
 
 
@@ -261,7 +263,7 @@ public:
 
   If no range of quality is passed it is automatically computed.
   */
-	static void PerTetraQualityRamp(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0., bool selected = false)
+	static void PerTetraQualityRamp(MeshType &m, ScalarType minq = 0., ScalarType maxq = 0., bool selected = false, vcg::ColorMap cmap = vcg::ColorMap::RGB)
 	{
 		RequirePerTetraColor(m);
 		RequirePerTetraQuality(m);
@@ -275,14 +277,14 @@ public:
 
 		ForEachTetra(m, [&] (TetraType & t){
 			if (!selected || t.IsS())
-				t.C().SetColorRamp(minq, maxq, t.Q());
+				t.C() = vcg::GetColorMapping(t.Q(), minq, maxq, cmap);
 		});
 	}
 	/*! \brief This function colores all the faces of a mesh with a hue color shade dependent on the quality.
 
   If no range of quality is passed it is automatically computed.
   */
-	static void PerFaceQualityRamp(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0, bool selected = false)
+	static void PerFaceQualityRamp(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0, bool selected = false, vcg::ColorMap cmap = vcg::ColorMap::RGB)
 	{
 		RequirePerFaceColor(m);
 		RequirePerFaceQuality(m);
@@ -296,14 +298,14 @@ public:
 		for(FaceIterator fi = m.face.begin();fi != m.face.end(); ++fi)
 			if(!(*fi).IsD())
 				if(!selected || (*fi).IsS())
-					(*fi).C().SetColorRamp(minq, maxq, (*fi).Q());
+					(*fi).C() = vcg::GetColorMapping((*fi).Q(), minq, maxq, cmap);
 	}
 
 	/*! \brief This function colores all the edges of a mesh with a hue color shade dependent on the quality.
 
   If no range of quality is passed it is automatically computed.
   */
-	static void PerEdgeQualityRamp(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0, bool selected = false)
+	static void PerEdgeQualityRamp(MeshType &m, ScalarType minq = 0, ScalarType maxq = 0, bool selected = false, vcg::ColorMap cmap = vcg::ColorMap::RGB)
 	{
 		RequirePerEdgeColor(m);
 		RequirePerEdgeQuality(m);
@@ -316,7 +318,7 @@ public:
 		}
 		for(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei) if(!(*ei).IsD())
 			if(!selected || (*ei).IsS())
-				(*ei).C().SetColorRamp(minq,maxq,(*ei).Q());
+				(*ei).C() = vcg::GetColorMapping((*ei).Q(), minq, maxq, cmap);
 	}
 
 	/*! \brief This function colores all the vertices of a mesh with a gray shade dependent on the quality.
