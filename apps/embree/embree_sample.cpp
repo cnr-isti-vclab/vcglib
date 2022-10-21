@@ -46,8 +46,7 @@ int main( int argc, char **argv )
 {
     cout << "start" << endl;
   MyMesh m;
-  tri::io::ImporterOFF<MyMesh>::Open(m, "../ExampleMeshes/abominevole.off");//argv[1]);//metti il rferimento ad una mesh
-  int ret = tri::io::ImporterOFF<MyMesh>::Open(m,"../ExampleMeshes/abominevole.off");
+  int ret = tri::io::ImporterOFF<MyMesh>::Open(m, argv[1]);
   if(ret!=tri::io::ImporterOFF<MyMesh>::NoError)
   {
     cout<<"Error reading file \n"<<endl;
@@ -56,6 +55,10 @@ int main( int argc, char **argv )
 
   char *endptr;
   int nOfRays = 150; //strtof(argv[2], &endptr);
+  if (argc > 2) {
+      nOfRays = std::stoi(argv[2]);
+  }
+
   
   MyMesh m2,m3,m4,m5,m6;
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m2,m);
