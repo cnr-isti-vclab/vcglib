@@ -26,7 +26,7 @@
 #include<wrap/io_trimesh/import_ply.h>
 #include<wrap/io_trimesh/export_ply.h>
 #include<vcg/complex/algorithms/create/platonic.h>
-#include<vcg/complex/algorithms/smooth_field.h>
+#include<wrap/igl/smooth_field.h>
 
 using namespace vcg;
 using namespace std;
@@ -55,7 +55,7 @@ int main( int argc, char **argv )
 
   tri::UpdateNormal<MyMesh>::PerVertexNormalized(m);
   tri::Smooth<MyMesh>::VertexCoordLaplacian(m,3);
-  tri::FieldSmoother<MyMesh>::InitByCurvature(m);
+  tri::FieldSmoother<MyMesh>::InitByCurvature(m,2);
   tri::FieldSmoother<MyMesh>::SmoothParam par;
 
   tri::FieldSmoother<MyMesh>::SmoothDirections(m,par);
