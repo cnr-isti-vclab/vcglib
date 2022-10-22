@@ -5,6 +5,9 @@
 #include <map>
 #include <vector>
 
+// Colormaps sampled from Matplotlib
+// https://matplotlib.org
+
 namespace vcg {
 
 enum ColorMap {
