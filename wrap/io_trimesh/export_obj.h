@@ -114,9 +114,9 @@ public:
     return capability;
   }
   
-  static int Save(SaveMeshType &m, const char * filename, int mask, CallBackPos *cb=0, int precision = 0)
+  static int Save(SaveMeshType &m, const char * filename, int mask, CallBackPos *cb=0)
   {
-    return Save(m,filename,mask,false,cb, precision);
+    return Save(m,filename,mask,false,cb);
   }
   
   /** 
@@ -124,16 +124,10 @@ public:
    * 
    * if you enable the useMaterialAttribute flag, the exporter will assume that the mesh has a consistent per mesh attribute and a per face attribute containing the index of the material
    */
-  static int Save(SaveMeshType &m, const char * filename, int mask, bool useMaterialAttribute ,CallBackPos *cb=0, int precision = 6)
+  static int Save(SaveMeshType &m, const char * filename, int mask, bool useMaterialAttribute ,CallBackPos *cb=0)
   {
-    if (precision < 1) precision = 1;
-    if (precision > 16) precision = 16;
-    std::string floatfmt = "%." + std::to_string(precision) + "f";
-    std::string vfmt = "v " + floatfmt + " " + floatfmt + " " + floatfmt;
-    std::string vnfmt = "vn " + floatfmt + " " + floatfmt + " " + floatfmt + "\n";
-    std::string vtfmt = "vt " + floatfmt + " " + floatfmt + "\n";
-
-    // texture coord and color: in obj we cannot save BOTH per vertex and per wedge information. We default on wedge
+	const int DGT = vcg::tri::io::Precision<ScalarType>::digits();
+	// texture coord and color: in obj we cannot save BOTH per vertex and per wedge information. We default on wedge
     if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD &&
         mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD ) {
       mask &= ~vcg::tri::io::Mask::IOM_VERTTEXCOORD;
@@ -183,22 +177,22 @@ public:
       {
         if(AddNewNormalVertex(NormalVertex,(*vi).N(),curNormalIndex))
         {
-          fprintf(fp,vnfmt.c_str(),(*vi).N()[0],(*vi).N()[1],(*vi).N()[2]);
+		  fprintf(fp,"vn %.*f %.*f %.*f\n", DGT, (*vi).N()[0], DGT, (*vi).N()[1], DGT, (*vi).N()[2]);
           curNormalIndex++;
         }
       }
       if (mask & Mask::IOM_VERTNORMAL ) {
-        fprintf(fp,vnfmt.c_str(),(*vi).N()[0],(*vi).N()[1],(*vi).N()[2]);
+		fprintf(fp,"vn %.*f %.*f %.*f\n", DGT, (*vi).N()[0], DGT, (*vi).N()[1], DGT, (*vi).N()[2]);
       }
       
       if (mask & Mask::IOM_VERTTEXCOORD ) {
-        fprintf(fp,vtfmt.c_str(),(*vi).T().P()[0],(*vi).T().P()[1]);
+		fprintf(fp,"vt %.*f %.*f\n", DGT, (*vi).T().P()[0], DGT, (*vi).T().P()[1]);
       }
 
-      fprintf(fp,vfmt.c_str(),(*vi).P()[0],(*vi).P()[1],(*vi).P()[2]);
+	  fprintf(fp,"v %.*f %.*f %.*f", DGT, (*vi).P()[0], DGT, (*vi).P()[1], DGT, (*vi).P()[2]);
       
       if(mask & Mask::IOM_VERTCOLOR) // the socially accepted extension to the obj format. 
-        fprintf(fp," %f %f %f",double((*vi).C()[0])/255.,double((*vi).C()[1])/255.,double((*vi).C()[2])/255.);
+		fprintf(fp," %f %f %f",DGT, double((*vi).C()[0])/255.,double((*vi).C()[1])/255.,double((*vi).C()[2])/255.);
       fprintf(fp,"\n");
 
       if (cb !=NULL)
@@ -241,7 +235,7 @@ public:
         {
             if(AddNewTextureCoord(CoordIndexTexture,(*fi).WT(k),curTexCoordIndex))
             {
-              fprintf(fp,vtfmt.c_str(),(*fi).WT(k).u(),(*fi).WT(k).v());
+			  fprintf(fp,"vt %.*f %.*f\n", DGT, (*fi).WT(k).u(), DGT, (*fi).WT(k).v());
               curTexCoordIndex++; //ncreases the value number to be associated to the Texture
             }
         }
@@ -400,12 +394,12 @@ public:
         { /* fclose(fp); return E_ABORTED; */ }
 
         fprintf(fp,"newmtl material_%d\n",i);
-        fprintf(fp,"Ka %f %f %f\n",materialVec[i].Ka[0],materialVec[i].Ka[1],materialVec[i].Ka[2]);
-        fprintf(fp,"Kd %f %f %f\n",materialVec[i].Kd[0],materialVec[i].Kd[1],materialVec[i].Kd[2]);
-        fprintf(fp,"Ks %f %f %f\n",materialVec[i].Ks[0],materialVec[i].Ks[1],materialVec[i].Ks[2]);
-        fprintf(fp,"Tr %f\n",materialVec[i].Tr);
+		fprintf(fp,"Ka %f %f %f\n",materialVec[i].Ka[0],materialVec[i].Ka[1],materialVec[i].Ka[2]);
+		fprintf(fp,"Kd %f %f %f\n",materialVec[i].Kd[0],materialVec[i].Kd[1],materialVec[i].Kd[2]);
+		fprintf(fp,"Ks %f %f %f\n",materialVec[i].Ks[0],materialVec[i].Ks[1],materialVec[i].Ks[2]);
+		fprintf(fp,"Tr %f\n",materialVec[i].Tr);
         fprintf(fp,"illum %d\n",materialVec[i].illum);
-        fprintf(fp,"Ns %f\n",materialVec[i].Ns);
+		fprintf(fp,"Ns %f\n",materialVec[i].Ns);
 
         if(materialVec[i].map_Kd.size()>0)
           fprintf(fp,"map_Kd %s\n",materialVec[i].map_Kd.c_str());
