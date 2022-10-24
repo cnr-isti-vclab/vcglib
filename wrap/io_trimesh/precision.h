@@ -24,17 +24,17 @@ namespace vcg
 
 			// Precision<float> specializations
 			template<>
-			static int Precision<float>::digits() { return decimalPrecision <= 0 ? 7 : decimalPrecision; }
+			int Precision<float>::digits() { return decimalPrecision <= 0 ? 7 : decimalPrecision; }
 
 			template<>
-			static const char* Precision<float>::typeName() { return "float"; }
+			const char* Precision<float>::typeName() { return "float"; }
 
 			// Precision<double> specializations
 			template<>
-			static int Precision<double>::digits() { return decimalPrecision <= 0 ? 16 : decimalPrecision; }
+			int Precision<double>::digits() { return decimalPrecision <= 0 ? 16 : decimalPrecision; }
 
 			template<>
-			static const char* Precision<double>::typeName() { return "double"; }
+			const char* Precision<double>::typeName() { return "double"; }
 
 		}
 	}
