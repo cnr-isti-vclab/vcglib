@@ -8,26 +8,34 @@ namespace vcg
 		namespace io
 		{
 			template<typename SCALAR>
-			struct Precision
+			class Precision
 			{
+				static int decimalPrecision; // the desired decimal precision
+			public:
 				static int digits() {return 0;}
-                static const char* typeName() {return "";}
+				static void setDigits(int digits) { decimalPrecision = digits; }
+				static const char* typeName() {return "";}
 			};
-			
-			template<>
-			struct Precision<float>
-			{
-				static int digits() {return 7;}
-                static const char* typeName() {return "float";}
 
-			};
-			
+			template <typename SCALAR>
+			int Precision<SCALAR>::decimalPrecision = 0;
+
+			// Precision specializations with reasonable defaults
+
+			// Precision<float> specializations
 			template<>
-			struct Precision<double>
-			{
-				static int digits() {return 16;}
-                static const char* typeName() {return "double";}
-			};
+			int Precision<float>::digits() { return decimalPrecision <= 0 ? 7 : decimalPrecision; }
+
+			template<>
+			const char* Precision<float>::typeName() { return "float"; }
+
+			// Precision<double> specializations
+			template<>
+			int Precision<double>::digits() { return decimalPrecision <= 0 ? 16 : decimalPrecision; }
+
+			template<>
+			const char* Precision<double>::typeName() { return "double"; }
+
 		}
 	}
 }
