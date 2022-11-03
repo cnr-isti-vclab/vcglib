@@ -947,6 +947,7 @@ public:
       FFi0 = f->FFi(0);
       FFi1 = f->FFi(1);
       FFi2 = f->FFi(2);
+      (void)FFi0;
 
       //initial face
       (*f).FFp(1) = &(*f1);
