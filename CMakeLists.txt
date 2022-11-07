@@ -6,12 +6,13 @@ cmake_minimum_required(VERSION 3.10)
 project(VCGLib)
 
 # Eigen options
-option(ALLOW_BUNDLED_EIGEN "Allow use of bundled Eigen source" ON)
-option(ALLOW_SYSTEM_EIGEN "Allow use of system-provided Eigen" ON)
+option(VCG_ALLOW_BUNDLED_EIGEN "Allow use of bundled Eigen source" ON)
+option(VCG_ALLOW_SYSTEM_EIGEN "Allow use of system-provided Eigen" ON)
 
 # VCG options
 option(VCG_HEADER_ONLY "Use VCG library in header only mode" ON)
 option(VCG_BUILD_EXAMPLES "Build a set of examples of the library" OFF)
+option(VCG_USE_OPENMP "Allow VCG to find and link OpenMP if detected" ON)
 
 set (VCG_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR})
 set (VCG_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR} PARENT_SCOPE)
@@ -19,19 +20,28 @@ set (VCG_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR} PARENT_SCOPE)
 ### Build settings
 set(CMAKE_CXX_STANDARD 11)
 
+### OpenMP
+if (VCG_USE_OPENMP)
+	find_package(OpenMP)
+	if (APPLE AND OPENMP_FOUND)
+		set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+	endif()
+endif()
+
 ### Eigen
 set(VCG_EIGEN_DIR ${CMAKE_CURRENT_LIST_DIR}/eigenlib)
 
-if(ALLOW_SYSTEM_EIGEN AND EIGEN3_INCLUDE_DIR)
+if(VCG_ALLOW_SYSTEM_EIGEN AND EIGEN3_INCLUDE_DIR)
 	message(STATUS "- Eigen - using system-provided library")
 	set(EIGEN_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
-elseif(ALLOW_BUNDLED_EIGEN AND EXISTS "${VCG_EIGEN_DIR}/Eigen/Eigen")
+elseif(VCG_ALLOW_BUNDLED_EIGEN AND EXISTS "${VCG_EIGEN_DIR}/Eigen/Eigen")
 	message(STATUS "- Eigen - using bundled source")
 	set(EIGEN_INCLUDE_DIRS ${VCG_EIGEN_DIR})
 else()
 	message(
 			FATAL_ERROR
-			"Eigen is required - at least one of ALLOW_SYSTEM_EIGEN or ALLOW_BUNDLED_EIGEN must be enabled and found.")
+			"Eigen is required - at least one of VCG_ALLOW_SYSTEM_EIGEN or VCG_ALLOW_BUNDLED_EIGEN must be enabled and found.")
 endif()
 
 ### VCGLib headers and sources
@@ -285,6 +295,9 @@ if (VCG_HEADER_ONLY)
 				vcglib INTERFACE
 				${CMAKE_CURRENT_LIST_DIR}
 				${EIGEN_INCLUDE_DIRS})
+		if(OPENMP_FOUND)
+			target_link_libraries(vcglib INTERFACE OpenMP::OpenMP_CXX)
+		endif()
 
 		#just to show headers in ide
 		add_custom_target(vcglib_ide SOURCES ${VCG_HEADERS})
