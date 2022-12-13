@@ -76,8 +76,8 @@ int main( int argc, char **argv )
   printf("Sampled %i vertices in %5.2f\n",subM.VN(), float(pp.pds.pruneTime+pp.pds.gridTime)/float(CLOCKS_PER_SEC));
 
   int t0=clock();
-  tri::Clustering<MyMesh, vcg::tri::AverageColorCell<MyMesh> > ClusteringGrid;
-  ClusteringGrid.Init(m.bbox,100000,radius*sqrt(2.0f));
+  tri::Clustering<MyMesh, vcg::tri::AverageColorCell<MyMesh> > ClusteringGrid(
+    m.bbox,100000,radius*sqrt(2.0f));
   ClusteringGrid.AddPointSet(m);
   ClusteringGrid.ExtractMesh(cluM);
   int t1=clock();

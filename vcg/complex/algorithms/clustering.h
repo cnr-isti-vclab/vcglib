@@ -178,6 +178,16 @@ public:
 		Init(_mbb, _size, _cellsize);
 	};
 
+	Point3i gridSize() const
+	{
+		return Grid.siz;
+	}
+
+	Point3<ScalarType> gridVoxel() const
+	{
+		return Grid.voxel;
+	}
+
 	void AddPointSet(MeshType& m, bool UseOnlySelected = false)
 	{
 		for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
