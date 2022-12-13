@@ -162,7 +162,7 @@ class Clustering
   // DuplicateFace=true a model with looks ok if you enable backface culling
   // DuplicateFace=false a model with looks ok if you enable doublesided lighting and disable backfaceculling
 
-  bool DuplicateFaceParam;
+  bool DuplicateFaceParam = true; //default true
 
   // This class keeps the references to the three cells where a face has its vertexes.
     class SimpleTri
