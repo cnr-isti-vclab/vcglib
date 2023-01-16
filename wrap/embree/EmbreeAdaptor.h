@@ -421,16 +421,26 @@ namespace vcg{
 
             rtcIntersect1(scene, &context, &rayhit);
 
-            if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID){
-                Point3f p = b+dir*rayhit.ray.tfar;
-                totInterception+=1+findInterceptNumber(p);
-            }                          
-            else{
-                return totInterception;
-            }                      
-                                   
+            while (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID){
+                totInterception+=1;
+                b = b+dir*rayhit.ray.tfar;
+                dir = b*2;
 
-         }
+                rayhit.ray.dir_x  = dir[0]; rayhit.ray.dir_y = dir[1]; rayhit.ray.dir_z = dir[2];
+                rayhit.ray.org_x  = b[0]; rayhit.ray.org_y = b[1]; rayhit.ray.org_z = b[2];
+
+                rayhit.ray.tnear  = 0.5f;
+                rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
+                rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+                
+                RTCIntersectContext context;
+                rtcInitIntersectContext(&context);
+
+                rtcIntersect1(scene, &context, &rayhit);
+            }     
+
+            return totInterception;                                     
+        }
 
     };
 }
