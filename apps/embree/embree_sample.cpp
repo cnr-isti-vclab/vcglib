@@ -55,14 +55,15 @@ int main( int argc, char **argv )
   }
 
   
-  MyMesh m2,m3,m4,m5,m6;
+  MyMesh m2,m3,m4,m5,m6,m7;
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m2,m);
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m3,m);
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m4, m);
   vcg::tri::Append<MyMesh, MyMesh>::MeshCopy(m5, m);
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m6,m);
+  vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m7,m);
 
-  EmbreeAdaptor<MyMesh> adaptor = EmbreeAdaptor<MyMesh>(m,8);
+  EmbreeAdaptor<MyMesh> adaptor = EmbreeAdaptor<MyMesh>(m);
   adaptor.computeAmbientOcclusion(m,nOfRays);
   tri::UpdateQuality<MyMesh>::VertexFromFace(m);
   tri::UpdateColor<MyMesh>::PerVertexQualityGray(m);
@@ -82,7 +83,7 @@ int main( int argc, char **argv )
             ndir.push_back(unifDirVec.at(g));
         }
     }
-  adaptor = EmbreeAdaptor<MyMesh>(m2,8);
+  adaptor = EmbreeAdaptor<MyMesh>(m2);
   adaptor.computeAmbientOcclusion(m2,ndir);
   tri::UpdateQuality<MyMesh>::VertexFromFace(m2);
   tri::UpdateColor<MyMesh>::PerVertexQualityGray(m2);
@@ -90,7 +91,7 @@ int main( int argc, char **argv )
 
   cout << "Done AO Directioned" << endl;
   
-  EmbreeAdaptor<MyMesh> adaptor2 = EmbreeAdaptor<MyMesh>(m4,8);
+  EmbreeAdaptor<MyMesh> adaptor2 = EmbreeAdaptor<MyMesh>(m4);
   adaptor2.computeSDF(m4,nOfRays,90);
   tri::UpdateQuality<MyMesh>::VertexFromFace(m4);
   tri::UpdateColor<MyMesh>::PerVertexQualityRamp(m4);
@@ -98,19 +99,28 @@ int main( int argc, char **argv )
   
   cout << "Done SDF" << endl;
   
-  adaptor = EmbreeAdaptor<MyMesh>(m5,8);
+  adaptor = EmbreeAdaptor<MyMesh>(m5);
   adaptor.computeNormalAnalysis(m5, nOfRays);
   tri::io::ExporterOFF<MyMesh>::Save(m5, "testNormal.off", tri::io::Mask::IOM_FACENORMAL);
   //vector<Point3f> BentNormal = adaptor.AOBentNormal(m5,nOfRays);
 
   cout << "Done NormalAnlysis" << endl;
 
-  adaptor = EmbreeAdaptor<MyMesh>(m6, 4);
+  adaptor = EmbreeAdaptor<MyMesh>(m6);
   Point3f p(1, 0, 0);
   adaptor.selectVisibleFaces(m6, p);
   tri::io::ExporterOFF<MyMesh>::Save(m6, "testSelectS.off", tri::io::Mask::IOM_FACECOLOR);
   
   cout << "done face selection" << endl; 
+
+
+  adaptor = EmbreeAdaptor<MyMesh>(m7);
+  adaptor.computeObscurance(m7,nOfRays,0.01f);
+  tri::UpdateQuality<MyMesh>::VertexFromFace(m7);
+  tri::UpdateColor<MyMesh>::PerVertexQualityGray(m7);
+  tri::io::ExporterOFF<MyMesh>::Save(m7,"testAObs.off",tri::io::Mask::IOM_VERTCOLOR);
+ 
+  cout << "Done AObs" << endl;
   
   cout << "Done All" << endl;
   return 0;

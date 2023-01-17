@@ -32,8 +32,7 @@ namespace vcg{
         int threads;  
 
         public: 
-         EmbreeAdaptor(MeshType &m, int nOfthreads){
-                threads = nOfthreads;
+         EmbreeAdaptor(MeshType &m){                
                 loadVCGMeshInScene(m);  
             }
 
