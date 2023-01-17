@@ -1192,7 +1192,7 @@ namespace nanoply
 					std::string name((*iter).first);
 					meshDescr.push_back(new ElementDescriptor(name));
 					count = info.GetElementCount(name);
-					if (count > 1)
+					if (count > 0)
 					{
 						meshDescr.back()->dataDescriptor = (*iter).second;
 					}

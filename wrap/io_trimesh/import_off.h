@@ -210,6 +210,7 @@ namespace vcg {
 					nVertices = atoi(tokens[0].c_str());
 					nFaces = atoi(tokens[1].c_str());
 					nEdges = atoi(tokens[2].c_str());
+					(void)nEdges; // unused
 
 					// dimension is the space dimension of vertices => it must be three(!)
 					if (dimension != 3)

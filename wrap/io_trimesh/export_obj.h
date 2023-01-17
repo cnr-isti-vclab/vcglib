@@ -29,6 +29,7 @@
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <wrap/io_trimesh/io_material.h>
+#include <wrap/io_trimesh/precision.h>
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -65,7 +66,7 @@ public:
     E_NO_VERTICES,        // 6
     E_NOTFACESVALID,      // 7
     E_NO_VALID_MATERIAL,  // 8
-	E_STREAMERROR         // 9
+    E_STREAMERROR         // 9
   };
 
   /*
@@ -84,7 +85,7 @@ public:
       "Vertices not valid",  // 6
       "Faces not valid",  // 7
       "The mesh has not a attribute containing the vector of materials",  // 8
-	  "Output Stream Error" //9
+      "Output Stream Error" //9
     };
 
     if(error>9 || error<0) return "Unknown error";
@@ -126,6 +127,7 @@ public:
    */
   static int Save(SaveMeshType &m, const char * filename, int mask, bool useMaterialAttribute ,CallBackPos *cb=0)
   {
+    const int DGT = vcg::tri::io::Precision<ScalarType>::digits();
     // texture coord and color: in obj we cannot save BOTH per vertex and per wedge information. We default on wedge
     if (mask & vcg::tri::io::Mask::IOM_WEDGTEXCOORD &&
         mask & vcg::tri::io::Mask::IOM_VERTTEXCOORD ) {
@@ -176,22 +178,22 @@ public:
       {
         if(AddNewNormalVertex(NormalVertex,(*vi).N(),curNormalIndex))
         {
-          fprintf(fp,"vn %f %f %f\n",(*vi).N()[0],(*vi).N()[1],(*vi).N()[2]);
+          fprintf(fp,"vn %.*f %.*f %.*f\n", DGT, (*vi).N()[0], DGT, (*vi).N()[1], DGT, (*vi).N()[2]);
           curNormalIndex++;
         }
       }
       if (mask & Mask::IOM_VERTNORMAL ) {
-        fprintf(fp,"vn %f %f %f\n",(*vi).N()[0],(*vi).N()[1],(*vi).N()[2]);
+        fprintf(fp,"vn %.*f %.*f %.*f\n", DGT, (*vi).N()[0], DGT, (*vi).N()[1], DGT, (*vi).N()[2]);
       }
       
       if (mask & Mask::IOM_VERTTEXCOORD ) {
-        fprintf(fp,"vt %f %f\n",(*vi).T().P()[0],(*vi).T().P()[1]);
+        fprintf(fp,"vt %.*f %.*f\n", DGT, (*vi).T().P()[0], DGT, (*vi).T().P()[1]);
       }
 
-      fprintf(fp,"v %f %f %f",(*vi).P()[0],(*vi).P()[1],(*vi).P()[2]);
+      fprintf(fp,"v %.*f %.*f %.*f", DGT, (*vi).P()[0], DGT, (*vi).P()[1], DGT, (*vi).P()[2]);
       
       if(mask & Mask::IOM_VERTCOLOR) // the socially accepted extension to the obj format. 
-        fprintf(fp," %f %f %f",double((*vi).C()[0])/255.,double((*vi).C()[1])/255.,double((*vi).C()[2])/255.);
+        fprintf(fp," %f %f %f", double((*vi).C()[0])/255., double((*vi).C()[1])/255., double((*vi).C()[2])/255.);
       fprintf(fp,"\n");
 
       if (cb !=NULL)
@@ -234,7 +236,7 @@ public:
         {
             if(AddNewTextureCoord(CoordIndexTexture,(*fi).WT(k),curTexCoordIndex))
             {
-              fprintf(fp,"vt %f %f\n",(*fi).WT(k).u(),(*fi).WT(k).v());
+              fprintf(fp,"vt %.*f %.*f\n", DGT, (*fi).WT(k).u(), DGT, (*fi).WT(k).v());
               curTexCoordIndex++; //ncreases the value number to be associated to the Texture
             }
         }
@@ -289,13 +291,13 @@ public:
       else                     errCode = WriteMaterials(materialVec, filename,cb);
     }
 
-	int result = E_NOERROR;
-	if (errCode != E_NOERROR)
-		result = errCode;
-	else if (ferror(fp))
-		result = E_STREAMERROR;
-	fclose(fp);
-	return result;
+    int result = E_NOERROR;
+    if (errCode != E_NOERROR)
+        result = errCode;
+    else if (ferror(fp))
+        result = E_STREAMERROR;
+    fclose(fp);
+    return result;
   }
 
    /*
