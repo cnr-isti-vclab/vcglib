@@ -388,7 +388,6 @@ namespace vcg{
             }
 
             tri::Clean<MeshType>::FlipMesh(inputM,true);
-
             rtcReleaseScene(scene);
             rtcReleaseDevice(device);
          }
