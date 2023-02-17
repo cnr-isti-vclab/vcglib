@@ -1199,9 +1199,20 @@ private:
                     }
                 }
             }
-        });
-
-        return 0;
+		});
+		// at the end of the above process some vertices of the mesh
+		// could be wrongly marked as selected even if they belong to some unselected face.
+		// so we make an additional quick pass to deselect them. 
+		if(params.selectedOnly) 
+		{
+			ForEachFace(m, [&] (FaceType & f) {
+				if(!f.IsS()) {
+					for (int i = 0; i < 3; ++i)
+						f.V(i)->ClearS();
+				}            
+			});
+		}
+		return 0;
     }
 
 
