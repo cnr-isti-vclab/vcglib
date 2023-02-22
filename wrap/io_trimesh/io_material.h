@@ -100,7 +100,7 @@ public:
 
     if(HasPerFaceColor(m)){
       mtl.Kd = Point3f((float)(f.C()[0])/255.0f,(float)(f.C()[1])/255.0f,(float)(f.C()[2])/255.0f);//diffuse
-      mtl.Tr = (float)(f.C()[3])/255.0f;//alpha
+      mtl.Tr = (float)(255-f.C()[3])/255.0f;//alpha
     }
 
     if(m.textures.size() && HasPerWedgeTexCoord(m) && f.WT(0).n() >=0 )
