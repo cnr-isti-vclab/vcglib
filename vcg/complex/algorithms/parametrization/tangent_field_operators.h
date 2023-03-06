@@ -561,7 +561,8 @@ public:
     static void SmoothIterative(MeshType &mesh,int NDir=4,
                                 int NSteps=3,
                                 bool FixSelected=false,
-                                bool UseOnlyUnSelected=false)
+                                bool UseOnlyUnSelected=false,
+                                ScalarType weightByQ=false)
     {
 
         typedef typename MeshType::FaceType FaceType;
@@ -580,6 +581,7 @@ public:
                 std::vector<CoordType> TangVect;
                 std::vector<CoordType> Norms;
                 FaceType *f0=&mesh.face[i];
+                std::vector<ScalarType> Weights;
                 for (int j=0;j<f0->VN();j++)
                 {
                     FaceType *f1=f0->FFp(j);
@@ -588,9 +590,20 @@ public:
                     if (f0==f1)continue;
                     TangVect.push_back(f1->PD1());
                     Norms.push_back(f1->N());
+                    if (weightByQ)
+                        Weights.push_back(f1->Q());
+                    else
+                        Weights.push_back(1);
                 }
+
+                //add its own value
+                if (weightByQ)
+                    Weights.push_back(f0->Q());
+                else
+                    Weights.push_back(1);
+
                 assert(Norms.size()>0);
-                std::vector<ScalarType> Weights;
+
                 Weights.resize(Norms.size(),1/(ScalarType)Norms.size());
                 NewPD1[i]=InterpolateCrossField(TangVect,Weights,Norms,f0->N(),NDir);
             }

@@ -737,6 +737,7 @@ namespace io {
                 Read((void*)& m.face[0],sizeof(FaceType),faceSize );
                 LoadFaceOcf<OpenMeshType,FaceContainer>(m.face);
             }
+			(void)read; // unused
 
 
             /* load the per vertex attributes */

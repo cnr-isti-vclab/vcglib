@@ -86,13 +86,11 @@ int  main(int argc, char **argv)
   vcg::tri::UpdateBounding<MyMesh>::Box(m);
   vcg::tri::UpdateNormal<MyMesh>::PerFace(m);
   printf("Input mesh  vn:%i fn:%i\n",m.VN(),m.FN());
-  vcg::tri::Clustering<MyMesh, vcg::tri::AverageColorCell<MyMesh> > Grid;
-  Grid.DuplicateFaceParam=DupFace;
-  Grid.Init(m.bbox,CellNum,CellSize);
+  vcg::tri::Clustering<MyMesh, vcg::tri::AverageColorCell<MyMesh> > Grid(m.bbox,CellNum,CellSize, DupFace);
   
-  printf("Clustering to %i cells\n",Grid.Grid.siz[0]*Grid.Grid.siz[1]*Grid.Grid.siz[2] );
-  printf("Grid of %i x %i x %i cells\n",Grid.Grid.siz[0],Grid.Grid.siz[1],Grid.Grid.siz[2]);
-  printf("with cells size of %.2f x %.2f x %.2f units\n",Grid.Grid.voxel[0],Grid.Grid.voxel[1],Grid.Grid.voxel[2]);
+  printf("Clustering to %i cells\n",Grid.gridSize()[0]*Grid.gridSize()[1]*Grid.gridSize()[2] );
+  printf("Grid of %i x %i x %i cells\n",Grid.gridSize()[0],Grid.gridSize()[1],Grid.gridSize()[2]);
+  printf("with cells size of %.2f x %.2f x %.2f units\n",Grid.gridVoxel()[0],Grid.gridVoxel()[1],Grid.gridVoxel()[2]);
   
   Grid.AddMesh(m);
   Grid.ExtractMesh(m);

@@ -142,20 +142,20 @@ public:
     static const  PropDescriptor &VertDesc(int i)
     {
         const static PropDescriptor pv[13]={
-            /*00*/ {"vertex", "x",         ply::T_FLOAT, PlyType<ScalarType>(),          offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0},
-            /*01*/ {"vertex", "y",         ply::T_FLOAT, PlyType<ScalarType>(),          offsetof(LoadPly_VertAux<ScalarType>,p) +     sizeof(ScalarType),0,0,0,0,0},
-            /*02*/ {"vertex", "z",         ply::T_FLOAT, PlyType<ScalarType>(),          offsetof(LoadPly_VertAux<ScalarType>,p) + 2 * sizeof(ScalarType),0,0,0,0,0},
-            /*03*/ {"vertex", "flags",     ply::T_INT,   ply::T_INT,            offsetof(LoadPly_VertAux<ScalarType>,flags),0,0,0,0,0},
-            /*04*/ {"vertex", "quality",   ply::T_FLOAT, ply::T_FLOAT,          offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0},
-            /*05*/ {"vertex", "red"  ,     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,r),0,0,0,0,0},
-            /*06*/ {"vertex", "green",     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,g),0,0,0,0,0},
-            /*07*/ {"vertex", "blue" ,     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,b),0,0,0,0,0},
-            /*08*/ {"vertex", "alpha" ,    ply::T_UCHAR, ply::T_UCHAR,         offsetof(LoadPly_VertAux<ScalarType>,a),0,0,0,0,0},
+            /*00*/ {"vertex", "x",         ply::T_FLOAT, PlyType<ScalarType>(), offsetof(LoadPly_VertAux<ScalarType>,p), 0, 0, 0, 0, 0, 0},
+            /*01*/ {"vertex", "y",         ply::T_FLOAT, PlyType<ScalarType>(), offsetof(LoadPly_VertAux<ScalarType>,p) + sizeof(ScalarType), 0, 0, 0, 0, 0, 0},
+            /*02*/ {"vertex", "z",         ply::T_FLOAT, PlyType<ScalarType>(), offsetof(LoadPly_VertAux<ScalarType>,p) + 2*sizeof(ScalarType), 0, 0, 0, 0, 0, 0},
+            /*03*/ {"vertex", "flags",     ply::T_INT,   ply::T_INT,            offsetof(LoadPly_VertAux<ScalarType>,flags), 0, 0, 0, 0, 0, 0},
+            /*04*/ {"vertex", "quality",   ply::T_FLOAT, PlyType<ScalarType>(), offsetof(LoadPly_VertAux<ScalarType>,q), 0, 0, 0, 0, 0, 0},
+            /*05*/ {"vertex", "red"  ,     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,r), 0, 0, 0, 0, 0, 0},
+            /*06*/ {"vertex", "green",     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,g), 0, 0, 0, 0, 0, 0},
+            /*07*/ {"vertex", "blue" ,     ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,b), 0, 0, 0, 0, 0, 0},
+            /*08*/ {"vertex", "alpha" ,    ply::T_UCHAR, ply::T_UCHAR,          offsetof(LoadPly_VertAux<ScalarType>,a), 0, 0, 0, 0, 0, 0},
             // DOUBLE
-            /*09*/ {"vertex", "x",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p),0,0,0,0,0  ,0},
-            /*10*/ {"vertex", "y",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + sizeof(ScalarType)  ,0,0,0,0,0  ,0},
-            /*11*/ {"vertex", "z",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + 2*sizeof(ScalarType),0,0,0,0,0  ,0},
-            /*12*/ {"vertex", "quality",   ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0}
+            /*09*/ {"vertex", "x",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p), 0, 0, 0, 0, 0, 0},
+            /*10*/ {"vertex", "y",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + sizeof(ScalarType), 0, 0, 0, 0, 0, 0},
+            /*11*/ {"vertex", "z",         ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,p) + 2*sizeof(ScalarType), 0, 0, 0, 0, 0, 0},
+            /*12*/ {"vertex", "quality",   ply::T_DOUBLE, PlyType<ScalarType>(),offsetof(LoadPly_VertAux<ScalarType>,q), 0, 0, 0, 0, 0, 0}
         };
         return pv[i];
     }
@@ -165,16 +165,16 @@ public:
     {
         const static 	PropDescriptor qf[10]=
         {
-            {"tetra", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_TetraAux,v),		     1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_TetraAux,size) },
-            {"tetra", "flags",          ply::T_INT,   ply::T_INT,   offsetof(LoadPly_TetraAux,flags),     0,0,0,0,0},
-            {"tetra", "quality",        ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_TetraAux,q),         0,0,0,0,0},
-            {"tetra", "texcoord",       ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_TetraAux,texcoord),    1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_TetraAux,ntexcoord) },
-            {"tetra", "color",          ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_TetraAux,colors),     1,0,ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_TetraAux,ncolors) },
-            {"tetra", "texnumber",      ply::T_INT,   ply::T_INT,   offsetof(LoadPly_TetraAux,texcoordind), 0,0,0,0,0},
-            {"tetra", "red"  ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_TetraAux,r),         0,0,0,0,0},
-            {"tetra", "green",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_TetraAux,g),         0,0,0,0,0},
-            {"tetra", "blue" ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_TetraAux,b),         0,0,0,0,0},
-            {"tetra", "alpha" ,         ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_TetraAux,a),         0,0,0,0,0},
+            {"tetra", "vertex_indices", ply::T_INT,   ply::T_INT,   offsetof(LoadPly_TetraAux,v),		    1, 0, ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_TetraAux,size), 0},
+            {"tetra", "flags",          ply::T_INT,   ply::T_INT,   offsetof(LoadPly_TetraAux,flags),       0, 0, 0, 0, 0, 0},
+            {"tetra", "quality",        ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_TetraAux,q),           0, 0, 0, 0, 0, 0},
+            {"tetra", "texcoord",       ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_TetraAux,texcoord),    1, 0, ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_TetraAux,ntexcoord), 0},
+            {"tetra", "color",          ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_TetraAux,colors),      1, 0, ply::T_UCHAR,ply::T_UCHAR,offsetof(LoadPly_TetraAux,ncolors), 0},
+            {"tetra", "texnumber",      ply::T_INT,   ply::T_INT,   offsetof(LoadPly_TetraAux,texcoordind), 0, 0, 0, 0, 0, 0},
+            {"tetra", "red"  ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_TetraAux,r),           0, 0, 0, 0, 0, 0},
+            {"tetra", "green",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_TetraAux,g),           0, 0, 0, 0, 0, 0},
+            {"tetra", "blue" ,          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_TetraAux,b),           0, 0, 0, 0, 0, 0},
+            {"tetra", "alpha" ,         ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_TetraAux,a),           0, 0, 0, 0, 0, 0},
 
         };
         return qf[i];
@@ -204,7 +204,7 @@ public:
     static int Open( OpenMeshType &m, const char * filename, PlyInfo & pi )
     {
         assert(filename!=0);
-        vector<VertexPointer> index;
+        std::vector<VertexPointer> index;
 
         LoadPly_TetraAux fa;
         LoadPly_VertAux<ScalarType> va;
@@ -273,8 +273,8 @@ public:
             }
         }
         // Descrittori definiti dall'utente,
-        vector<PropDescriptor> VPV(pi.vdn); // property descriptor relative al tipo LoadPly_VertexAux
-        vector<PropDescriptor> FPV(pi.fdn); // property descriptor relative al tipo LoadPly_FaceAux
+        std::vector<PropDescriptor> VPV(pi.vdn); // property descriptor relative al tipo LoadPly_VertexAux
+        std::vector<PropDescriptor> FPV(pi.fdn); // property descriptor relative al tipo LoadPly_FaceAux
 
         if(pi.vdn>0){
             // Compute the total size needed to load additional per vertex data.
@@ -318,7 +318,7 @@ public:
                 int j;
 
                 pf.SetCurElement(i);
-                VertexIterator vi=Allocator<OpenMeshType>::AddVertices(m,n);
+                VertexIterator vi=vcg::tri::Allocator<OpenMeshType>::AddVertices(m,n);
 
                 for(j=0;j<n;++j)
                 {
@@ -363,7 +363,7 @@ public:
             {
                 int j;
                 int k;
-                TetraIterator ti = Allocator<OpenMeshType>::AddTetras(m, n);
+                TetraIterator ti = vcg::tri::Allocator<OpenMeshType>::AddTetras(m, n);
                 pf.SetCurElement(i);
 
                 for(j=0;j<n;++j)

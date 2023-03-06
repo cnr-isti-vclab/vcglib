@@ -147,7 +147,7 @@ public:
   
   bool openALN (const char* alnName)
   {
-    vector<RangeMap> rmaps;
+    std::vector<RangeMap> rmaps;
     ALNParser::ParseALN(rmaps, alnName);
     
     for(size_t i=0; i<rmaps.size(); i++)

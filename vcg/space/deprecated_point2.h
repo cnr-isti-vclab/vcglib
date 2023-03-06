@@ -193,12 +193,19 @@ public:
 		_v[1] *= s;
 		return *this;
 	}
+
 	inline Point2 & operator /= ( const ScalarType s )
 	{
 		_v[0] /= s;
 		_v[1] /= s;
 		return *this;
 	}
+
+	inline Point2 operator - (void) const
+	{
+		return Point2(-_v[0], -_v[1]);
+	}
+
  //@}
 	/// returns the norm (Euclidian)
 	inline ScalarType Norm( void ) const
@@ -216,7 +223,8 @@ public:
 		_v[1] *= sy;
 		return * this;
 	}
-	/// normalizes, and returns itself as result
+
+	/// normalizes, and returns itself as result (nonsense)
 	inline Point2 & Normalize( void )
 	{
 		ScalarType n = math::Sqrt(_v[0]*_v[0] + _v[1]*_v[1]);
@@ -225,6 +233,19 @@ public:
 		}
 		return *this;
 	}
+
+	inline void normalize(void)
+	{
+		this->Normalize();
+	}
+
+	inline Point2 normalized(void) const
+	{
+		Point2<ScalarType> p = *this;
+		p.normalize();
+		return p;
+	}
+
 	/// points equality
 	inline bool operator == ( const Point2 & p ) const
 	{
@@ -374,42 +395,50 @@ inline T Angle( Point2<T> const & p0, Point2<T> const & p1 )
 }
 
 template <class T>
-inline Point2<T> operator - ( Point2<T> const & p ){
-	return Point2<T>( -p[0], -p[1] );
-}
-
-template <class T>
-inline Point2<T> operator * ( const T s, Point2<T> const & p ){
+inline Point2<T> operator * ( const T s, Point2<T> const & p )
+{
 	return Point2<T>( p[0] * s, p[1] * s );
 }
 
 template <class T>
-inline T Norm( Point2<T> const & p ){
+inline T Norm( Point2<T> const & p )
+{
 	return p.Norm();
 }
 
 template <class T>
-inline T SquaredNorm( Point2<T> const & p ){
+inline T SquaredNorm( Point2<T> const & p )
+{
 	return p.SquaredNorm();
 }
 
 template <class T>
-inline Point2<T> & Normalize( Point2<T> & p ){
+inline Point2<T> & Normalize( Point2<T> & p )
+{
 	return p.Normalize();
 }
 
+template <typename Scalar>
+inline Point2<Scalar> Normalized(const Point2<Scalar> & p )
+{
+	return p.normalized();
+}
+
 template <class T>
-inline T Distance( Point2<T> const & p1,Point2<T> const & p2 ){
+inline T Distance( Point2<T> const & p1,Point2<T> const & p2 )
+{
 	return Norm(p1-p2);
 }
 
 template <class T>
-inline T SquaredDistance( Point2<T> const & p1,Point2<T> const & p2 ){
+inline T SquaredDistance( Point2<T> const & p1,Point2<T> const & p2 )
+{
 	return SquaredNorm(p1-p2);
 }
 
 template <class T>
-inline Point2<T> Abs(const Point2<T> & p) {
+inline Point2<T> Abs(const Point2<T> & p)
+{
 	return (Point2<T>(math::Abs(p[0]), math::Abs(p[1])));
 }
 

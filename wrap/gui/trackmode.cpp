@@ -82,7 +82,7 @@ void SphereMode::Apply (Trackball * tb, Point3f new_point)
   //  Figure out how much to rotate around that axis.
 //  float phi = Distance (hitNew, hitOld) / tb->radius;
 //  float phi = vcg::Angle(hitNew - center,hitOld - center)*(Distance(hitNew,center)/tb->radius);
-  float phi = max(vcg::Angle(hitNew - center,hitOld - center),(Distance(hitNew,hitOld)/tb->radius)) ;
+  float phi = std::max(vcg::Angle(hitNew - center,hitOld - center),(Distance(hitNew,hitOld)/tb->radius)) ;
 
   tb->track.rot = Quaternionf (-phi, axis) * tb->last_track.rot;
 }
@@ -128,12 +128,12 @@ void ZMode::Draw(Trackball * tb){
 // Scale mode implementation.
 void ScaleMode::Apply (Trackball * tb, float WheelNotch)
 {
-  tb->track.sca *= pow (1.2f, -WheelNotch);
+	tb->track.sca *= std::pow (1.2f, -WheelNotch);
 }
 
 void ScaleMode::Apply (Trackball * tb, Point3f new_point)
 {
-  tb->track.sca = tb->last_track.sca * pow (3.0f, -(getDeltaY(tb,new_point)));
+	tb->track.sca = tb->last_track.sca * std::pow (3.0f, -(getDeltaY(tb,new_point)));
 }
 
 void ScaleMode::Draw(Trackball * tb){
@@ -787,7 +787,7 @@ void NavigatorWasdMode::Animate(unsigned int msec, Trackball * tb){
     float vel = current_speed_h.Norm();
     if (vel<topSpeedH*0.05) {
     // stopped: decrease step heigth to zero
-        step_current*=pow(dumping,sec);
+    step_current*=std::pow(dumping,sec);
     if (step_current<step_height*0.06) { step_current=0; step_x=0.0f;}
   } else {
     // running: rise step heigth
@@ -797,7 +797,7 @@ void NavigatorWasdMode::Animate(unsigned int msec, Trackball * tb){
         if (step_current<step_current_min) step_current=step_current_min;
     }
 
-    current_speed*=pow(dumping,sec);
+  current_speed*=std::pow(dumping,sec);
     if (current_speed.Norm()<topSpeedH*0.005) current_speed.SetZero(); // full stop
 
   tb->track.tra[1]+=step_last;

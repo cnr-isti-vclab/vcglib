@@ -35,7 +35,7 @@
 
 
 namespace vcg {
-namespace tri{
+namespace tri {
 template <class StatMeshType>
 class Stat
 {
@@ -59,86 +59,133 @@ public:
   typedef typename MeshType::TetraContainer      TetraContainer;
   typedef typename vcg::Box3<ScalarType>         Box3Type;
 
-  static void ComputePerVertexQualityMinMax(const MeshType & m, ScalarType &minV, ScalarType &maxV)
-  {
-    std::pair<ScalarType, ScalarType> pp = ComputePerVertexQualityMinMax(m);
-    
-    minV=pp.first;
-    maxV=pp.second;
-  }
-  static std::pair<ScalarType, ScalarType> ComputePerVertexQualityMinMax(const MeshType & m)
-  {
-//    assert(0);
-    tri::RequirePerVertexQuality(m);
-    /** Please if you need to create an attribute called minmaxQ, implement an
-        explicit function that does it. This function should take a const Mesh. **/
-    //typename MeshType::template PerMeshAttributeHandle  < std::pair<ScalarType, ScalarType> > mmqH;
-    //mmqH = tri::Allocator<MeshType>::template GetPerMeshAttribute <std::pair<ScalarType, ScalarType> >(m,"minmaxQ");
+	static void ComputePerVertexQualityMinMax(const MeshType & m, ScalarType &minV, ScalarType &maxV)
+	{
+		const auto minmax = ComputePerVertexQualityMinMax(m);
 
-    std::pair<ScalarType, ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(), -std::numeric_limits<ScalarType>::max());
+		minV = minmax.first;
+		maxV = minmax.second;
+	}
 
-    for(ConstVertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
-      if(!(*vi).IsD())
-      {
-        if( (*vi).Q() < minmax.first)  minmax.first  = (*vi).Q();
-        if( (*vi).Q() > minmax.second) minmax.second = (*vi).Q();
-      }
+	static std::pair<ScalarType, ScalarType> ComputePerVertexQualityMinMax(const MeshType & m)
+	{
+		/** Please if you need to create an attribute called minmaxQ, implement an
+		explicit function that does it. This function should take a const Mesh. **/
 
-    //mmqH() = minmax;
-    return minmax;
-  }
+		tri::RequirePerVertexQuality(m);
+		std::pair<ScalarType, ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(),
+		                                                          std::numeric_limits<ScalarType>::lowest());
 
+		ForEachVertex(m, [&minmax] (const VertexType & v)
+		{
+			if( v.Q() < minmax.first)
+				minmax.first  = v.Q();
+			if( v.Q() > minmax.second)
+				minmax.second = v.Q();
+		});
 
-  static void ComputePerFaceQualityMinMax(const MeshType & m, ScalarType &minV, ScalarType &maxV)
-  {
-    std::pair<ScalarType, ScalarType> pp = ComputePerFaceQualityMinMax(m);
-    minV=pp.first; 
-    maxV=pp.second;
-  }
+		return minmax;
+	}
+	
+	static std::pair<std::pair<ScalarType, ScalarType>, std::pair<ScalarType, ScalarType> > ComputePerVertexCurvatureDirMinMax(const MeshType & m)
+	{
+		tri::RequirePerVertexCurvatureDir(m);
+		std::pair<ScalarType, ScalarType> minmaxPD1 = std::make_pair(std::numeric_limits<ScalarType>::max(),
+																  std::numeric_limits<ScalarType>::lowest());
+		std::pair<ScalarType, ScalarType> minmaxPD2 = std::make_pair(std::numeric_limits<ScalarType>::max(),
+																  std::numeric_limits<ScalarType>::lowest());
+		
+		ForEachVertex(m, [&minmaxPD1,&minmaxPD2](const VertexType & v)
+					  {
+						  const ScalarType pd1 =v.K1();
+						  const ScalarType pd2 =v.K2();
+						  minmaxPD1.first = std::min(pd1, minmaxPD1.first);
+						  minmaxPD1.second =std::max(pd1, minmaxPD1.second);
+						  minmaxPD2.first = std::min(pd2, minmaxPD2.first);
+						  minmaxPD2.second =std::max(pd2, minmaxPD2.second);
+					  });
+		return std::make_pair(minmaxPD1,minmaxPD2);
+	}
+	
+	static void ComputePerFaceQualityMinMax(const MeshType & m, ScalarType &minV, ScalarType &maxV)
+	{
+		const auto minmax = ComputePerFaceQualityMinMax(m);
 
-  static std::pair<ScalarType,ScalarType> ComputePerFaceQualityMinMax( const MeshType & m)
-  {
-    tri::RequirePerFaceQuality(m);
-    std::pair<ScalarType,ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(),-std::numeric_limits<ScalarType>::max());
+		minV = minmax.first;
+		maxV = minmax.second;
+	}
 
-    ConstFaceIterator fi;
-    for(fi = m.face.begin(); fi != m.face.end(); ++fi)
-      if(!(*fi).IsD())
-      {
-        if( (*fi).Q() < minmax.first)  minmax.first  = (*fi).Q();
-        if( (*fi).Q() > minmax.second) minmax.second = (*fi).Q();
-      }
-    return minmax;
-  }
+	static std::pair<ScalarType,ScalarType> ComputePerFaceQualityMinMax(const MeshType & m)
+	{
+		tri::RequirePerFaceQuality(m);
+		std::pair<ScalarType,ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(),
+		                                                         std::numeric_limits<ScalarType>::lowest());
 
-  static void ComputePerTetraQualityMinMax(MeshType & m, ScalarType & minQ, ScalarType & maxQ)
-  {
-    std::pair<ScalarType, ScalarType> minmax = ComputerPerTetraQualityMinMax(m);
+		ForEachFace(m, [&minmax] (const FaceType & f) {
+			if (f.cQ() < minmax.first)
+				minmax.first  = f.cQ();
+			if (f.cQ() > minmax.second)
+				minmax.second = f.cQ();
+		});
 
-    minQ = minmax.first;
-    maxQ = minmax.second;
-  }
+		return minmax;
+	}
 
-  static std::pair<ScalarType, ScalarType> ComputePerTetraQualityMinMax(MeshType & m)
-  {
-    tri::RequirePerTetraQuality(m);
-	std::pair<ScalarType, ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(), std::numeric_limits<ScalarType>::min());
+	static void ComputePerTetraQualityMinMax(const MeshType & m, ScalarType & minQ, ScalarType & maxQ)
+	{
+		const auto minmax = ComputePerTetraQualityMinMax(m);
 
-    ForEachTetra(m, [&minmax] (TetraType & t) {
-      if (t.Q() < minmax.first)  minmax.first  = t.Q();
-      if (t.Q() > minmax.second) minmax.second = t.Q();
-    });
+		minQ = minmax.first;
+		maxQ = minmax.second;
+	}
 
-    return minmax;
-  }
+	static std::pair<ScalarType, ScalarType> ComputePerTetraQualityMinMax(const MeshType & m)
+	{
+		tri::RequirePerTetraQuality(m);
+		std::pair<ScalarType, ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(),
+		                                                          std::numeric_limits<ScalarType>::lowest());
 
-  static ScalarType ComputePerTetraQualityAvg(MeshType & m)
+		ForEachTetra(m, [&minmax] (const TetraType & t) {
+			if (t.cQ() < minmax.first)
+				minmax.first  = t.cQ();
+			if (t.cQ() > minmax.second)
+				minmax.second = t.cQ();
+		});
+
+		return minmax;
+	}
+
+	static std::pair<ScalarType,ScalarType> ComputePerEdgeQualityMinMax(const MeshType & m, ScalarType & minQ, ScalarType & maxQ)
+	{
+		const auto minmax = ComputePerEdgeQualityMinMax(m);
+
+		minQ = minmax.first;
+		maxQ = minmax.second;
+	}
+
+	static std::pair<ScalarType,ScalarType> ComputePerEdgeQualityMinMax(const MeshType & m)
+	{
+		tri::RequirePerEdgeQuality(m);
+		std::pair<ScalarType,ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(),
+		                                                         std::numeric_limits<ScalarType>::lowest());
+
+		ForEachEdge(m, [&minmax] (const EdgeType & e) {
+		if (e.cQ() < minmax.first)
+			minmax.first = e.cQ();
+		if (e.cQ() > minmax.second)
+			minmax.second = e.cQ();
+		});
+
+		return minmax;
+	}
+
+  static ScalarType ComputePerTetraQualityAvg(const MeshType & m)
   {
     tri::RequirePerTetraQuality(m);
     ScalarType avgQ = 0;
 
-    ForEachTetra(m, [&avgQ] (TetraType & t) {
-      avgQ += t.Q();
+    ForEachTetra(m, [&avgQ] (const TetraType & t) {
+      avgQ += t.cQ();
     });
 
     return avgQ /= (ScalarType) m.TN();
@@ -174,21 +221,6 @@ public:
         num++;
     }
     return (AvgQ/(ScalarType)num);
-  }
-
-  static std::pair<ScalarType,ScalarType> ComputePerEdgeQualityMinMax( MeshType & m)
-  {
-    tri::RequirePerEdgeQuality(m);
-    std::pair<ScalarType,ScalarType> minmax = std::make_pair(std::numeric_limits<ScalarType>::max(),-std::numeric_limits<ScalarType>::max());
-
-    EdgeIterator ei;
-    for(ei = m.edge.begin(); ei != m.edge.end(); ++ei)
-      if(!(*ei).IsD())
-      {
-        if( (*ei).Q() < minmax.first)  minmax.first =(*ei).Q();
-        if( (*ei).Q() > minmax.second) minmax.second=(*ei).Q();
-      }
-    return minmax;
   }
 
   /**
@@ -239,11 +271,11 @@ public:
     return barycenter/areaSum;
   }
 
-  static ScalarType ComputeTetraMeshVolume(MeshType & m)
+  static ScalarType ComputeTetraMeshVolume(const MeshType & m)
   {
     ScalarType V = 0;
 
-    ForEachTetra(m, [&V] (TetraType & t) {
+    ForEachTetra(m, [&V] (const TetraType & t) {
       V += Tetra::ComputeVolume(t);
     });
 

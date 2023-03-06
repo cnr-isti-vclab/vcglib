@@ -347,8 +347,8 @@ static void PerBitPolygonFaceNormalized(ComputeMeshType &m)
 /// \brief Multiply the vertex normals by the matrix passed. By default, the scale component is removed.
 static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true)
 {
-  tri::RequirePerVertexNormal(m);
-    float scale;
+    tri::RequirePerVertexNormal(m);
+    ScalarType scale;
 
     Matrix33<ScalarType> mat33(mat,3);
 
@@ -361,16 +361,16 @@ static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat,
         mat33*=S;
     }
 
-  for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-   if( !(*vi).IsD() && (*vi).IsRW() )
-     (*vi).N()  = mat33*(*vi).N();
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+        if( !(*vi).IsD() && (*vi).IsRW() )
+            (*vi).N()  = mat33*(*vi).N();
 }
 
 /// \brief Multiply the face normals by the matrix passed. By default, the scale component is removed.
 static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, bool remove_scaling= true)
 {
-  tri::RequirePerFaceNormal(m);
-  float scale;
+    tri::RequirePerFaceNormal(m);
+    ScalarType scale;
 
     Matrix33<ScalarType> mat33(mat,3);
 
@@ -383,9 +383,9 @@ static void PerFaceMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat, b
         mat33[2][2]/=scale;
     }
 
-  for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
-   if( !(*fi).IsD() && (*fi).IsRW() )
-     (*fi).N() = mat33* (*fi).N();
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+        if( !(*fi).IsD() && (*fi).IsRW() )
+            (*fi).N() = mat33* (*fi).N();
 }
 
 /// \brief Compute per wedge normals taking into account the angle between adjacent faces.

@@ -103,7 +103,7 @@ public:
       mtl.Tr = (float)(f.C()[3])/255.0f;//alpha
     }
 
-    if(m.textures.size() && f.WT(0).n() >=0 )
+    if(m.textures.size() && HasPerWedgeTexCoord(m) && f.WT(0).n() >=0 )
       mtl.map_Kd = m.textures[f.WT(0).n()];
     else
       mtl.map_Kd = "";

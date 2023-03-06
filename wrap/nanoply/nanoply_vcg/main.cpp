@@ -149,5 +149,7 @@ int main()
   MyMesh mesh2, mesh3;
   Load("example_ascii.ply", mesh2);
   Load("example_binary.ply", mesh3);
+  Save("example_ascii_1.ply", mesh2, false);
+  Save("example_binary_1.ply", mesh3, true);
   return 0;
 }

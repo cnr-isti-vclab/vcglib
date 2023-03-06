@@ -244,7 +244,7 @@ inline void ForEachEdge(MeshType &m, Callable action)
   {
     for(auto ei=m.edge.begin();ei!=m.edge.end();++ei) {
       action(*ei);
-    }       
+    }
   }
   else
   {
@@ -252,7 +252,7 @@ inline void ForEachEdge(MeshType &m, Callable action)
       if(!(*ei).IsD())
       {
         action(*ei);
-      }    
+      }
   }
 }
 
@@ -273,7 +273,7 @@ inline void ForEachTetra(const MeshType &m, Callable action)
   {
     for(auto ti = m.tetra.begin(); ti != m.tetra.end(); ++ti) {
       action(*ti);
-    }       
+    }
   }
   else
   {
@@ -281,7 +281,7 @@ inline void ForEachTetra(const MeshType &m, Callable action)
       if(!(*ti).IsD())
       {
         action(*ti);
-      }    
+      }
   }
 }
 
@@ -292,7 +292,7 @@ inline void ForEachTetra(MeshType &m, Callable action)
   {
     for(auto ti = m.tetra.begin(); ti != m.tetra.end(); ++ti) {
       action(*ti);
-    }       
+    }
   }
   else
   {
