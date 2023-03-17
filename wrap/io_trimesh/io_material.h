@@ -72,8 +72,8 @@ struct Material
   Point3f Kd=Point3f(1.0f, 1.0f, 1.0f);//diffuse
   Point3f Ks=Point3f(1.0f, 1.0f, 1.0f);//specular
   
-  float d;//alpha
-  float Tr=1.0f;//alpha
+  //float d;//alpha - not used
+  float Tr=0.0f;//alpha (for Tr, 0 means fully opaque)
   
   int illum=2;//specular illumination
   float Ns=0.f;
@@ -100,7 +100,7 @@ public:
 
     if(HasPerFaceColor(m)){
       mtl.Kd = Point3f((float)(f.C()[0])/255.0f,(float)(f.C()[1])/255.0f,(float)(f.C()[2])/255.0f);//diffuse
-      mtl.Tr = (float)(f.C()[3])/255.0f;//alpha
+      mtl.Tr = (float)(255-f.C()[3])/255.0f;//alpha
     }
 
     if(m.textures.size() && HasPerWedgeTexCoord(m) && f.WT(0).n() >=0 )

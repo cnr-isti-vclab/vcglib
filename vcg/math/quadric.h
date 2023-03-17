@@ -207,8 +207,9 @@ public:
   //  Eigen::Vector3d xe = A.colPivHouseholderQr().solve(bv);
   //  Eigen::Vector3d xe = A.partialPivLu().solve(bv);
     Eigen::Vector3d xe = A.fullPivLu().solve(be);
-    double relative_error = (A*xe - be).norm() / be.norm();
-    if(relative_error> Quadric<ScalarType>::RelativeErrorThr() ) 
+    // Check relative error of solution xe
+    double error = (A*xe - be).norm();
+    if(error > be.norm() * Quadric<ScalarType>::RelativeErrorThr() ) 
       return false;
     
     x.FromEigenVector(xe);
