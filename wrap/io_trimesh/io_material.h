@@ -72,8 +72,8 @@ struct Material
   Point3f Kd=Point3f(1.0f, 1.0f, 1.0f);//diffuse
   Point3f Ks=Point3f(1.0f, 1.0f, 1.0f);//specular
   
-  float d;//alpha
-  float Tr=1.0f;//alpha
+  //float d;//alpha - not used
+  float Tr=0.0f;//alpha (for Tr, 0 means fully opaque)
   
   int illum=2;//specular illumination
   float Ns=0.f;
