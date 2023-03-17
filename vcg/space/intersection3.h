@@ -283,8 +283,11 @@ namespace vcg {
       typedef typename TRIANGLETYPE::ScalarType T;
       if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(0),tr.cP(1)),sg.P0()))
       {
-        if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(0),tr.cP(2)),sg.P1()))
+        if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(2),tr.cP(0)),sg.P1()))
+        {
+          std::swap(sg.P0(),sg.P1());
           return true;
+        }          
         else
         {
           if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(1),tr.cP(2)),sg.P1()))
@@ -297,7 +300,8 @@ namespace vcg {
       {
         if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(1),tr.cP(2)),sg.P0()))
         {
-          if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(0),tr.cP(2)),sg.P1()))return true;
+          if(IntersectionPlaneSegment(pl,Segment3<T>(tr.cP(2),tr.cP(0)),sg.P1()))
+            return true;
           assert(0);
           return true;
         }
