@@ -70,6 +70,9 @@ for 'column' vectors.
 
 */
 
+template<class T> class Matrix44;
+template<class T> Matrix44<T> &Transpose(Matrix44<T> &m);
+
 /** This class represent a 4x4 matrix. T is the kind of element in the matrix.
     */
 template <class T> class Matrix44 {
@@ -242,8 +245,6 @@ public:
 
 ///Premultiply
 template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p);
-
-template <class T> Matrix44<T> &Transpose(Matrix44<T> &m);
 //return NULL matrix if not invertible
 template <class T> Matrix44<T> Inverse(const Matrix44<T> &m);
 
@@ -661,7 +662,9 @@ template <class T> Point3<T> operator*(const Matrix44<T> &m, const Point3<T> &p)
     return s;
 }
 
-template <class T> Matrix44<T> &Transpose(Matrix44<T> &m) {
+template<class T>
+Matrix44<T> &Transpose(Matrix44<T> &m)
+{
     for(int i = 1; i < 4; i++)
         for(int j = 0; j < i; j++) {
             std::swap(m.ElementAt(i, j), m.ElementAt(j, i));
