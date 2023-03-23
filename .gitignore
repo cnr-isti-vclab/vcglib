@@ -8,6 +8,7 @@
 *.user
 
 # Directories to ignore
+build/
 debug/
 release/
 *-debug/
