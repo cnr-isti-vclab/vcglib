@@ -737,29 +737,29 @@ template<class EAR>
     {
       px = pj;
       px.FlipE(); px.FlipV();
-      angleRad = std::max(angleRad, ComputeDihedralAngle(pi.v->P(), pj.v->P(), pk.v->P(), px.v->P())	);
+      angleRad = std::max(angleRad, ComputeDihedralAngleRad(pi.v->P(), pj.v->P(), pk.v->P(), px.v->P())	);
     }
     else
     {
-      angleRad = std::max(angleRad, ComputeDihedralAngle(pi.v->P(),pj.v->P(), pk.v->P(), pv[ v[i][j] ].v->P()));
+      angleRad = std::max(angleRad, ComputeDihedralAngleRad(pi.v->P(),pj.v->P(), pk.v->P(), pv[ v[i][j] ].v->P()));
     }
     
     if(j + 1 == k)
     {
       px = pk;
       px.FlipE(); px.FlipV();
-      angleRad = std::max(angleRad, ComputeDihedralAngle(pj.v->P(), pk.v->P(), pi.v->P(), px.v->P())	);
+      angleRad = std::max(angleRad, ComputeDihedralAngleRad(pj.v->P(), pk.v->P(), pi.v->P(), px.v->P())	);
     }
     else
     {
-      angleRad = std::max(angleRad, ComputeDihedralAngle(pj.v->P(),pk.v->P(), pi.v->P(), pv[ v[j][k] ].v->P()));
+      angleRad = std::max(angleRad, ComputeDihedralAngleRad(pj.v->P(),pk.v->P(), pi.v->P(), pv[ v[j][k] ].v->P()));
     }
     
     if( i == 0 && k == (int)v.size() - 1)
     {
       px = pi;
       px.FlipE(); px.FlipV();
-      angleRad = std::max(angleRad , ComputeDihedralAngle(pk.v->P(), pi.v->P(),  pj.v->P(),px.v->P() )	);
+      angleRad = std::max(angleRad , ComputeDihedralAngleRad(pk.v->P(), pi.v->P(),  pj.v->P(),px.v->P() )	);
     }
     
     ScalarType area = ( (pj.v->P() - pi.v->P()) ^ (pk.v->P() - pi.v->P()) ).Norm() * 0.5;
