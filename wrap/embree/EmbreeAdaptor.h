@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <vcg/complex/complex.h>
+#include <vcg/simplex/face/pos.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/complex/algorithms/closest.h>
 
 #include <vcg/complex/algorithms/update/color.h>
 #include <vcg/complex/algorithms/update/quality.h>
@@ -14,8 +17,11 @@
 #include <time.h>
 #include <omp.h>
 
+
 using namespace vcg;
 using namespace std;
+
+
 
 
 /*
@@ -53,12 +59,7 @@ namespace vcg{
                 std::vector<Point3f> unifDirVec;
                 Point3f dir = rayDirection;
 
-                rayhit.ray.dir_x  = dir[0]; rayhit.ray.dir_y = dir[1]; rayhit.ray.dir_z = dir[2];
-                rayhit.ray.org_x  = b[0]; rayhit.ray.org_y = b[1]; rayhit.ray.org_z = b[2];
-
-                rayhit.ray.tnear  = 0.5f;
-                rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
-                rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+                rayhit = setRayValues(b, dir, 0.5);
                 
                 RTCIntersectContext context;
                 rtcInitIntersectContext(&context);
@@ -66,9 +67,7 @@ namespace vcg{
                 rtcIntersect1(scene, &context, &rayhit);
 
                 if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID)            
-                    m.face[i].C() = Color4b::Black;
-                else                      
-                    m.face[i].C() = Color4b::White;       
+                    m.face[i].SetS();      
                            
             }
             rtcReleaseScene(scene);
@@ -149,7 +148,7 @@ namespace vcg{
                 {       
                     RTCRayHit rayhit;     
                     Point3f b = vcg::Barycenter(inputM.face[i]);
-                    rayhit.ray.org_x  = b[0]; rayhit.ray.org_y = b[1]; rayhit.ray.org_z = b[2];  
+                    rayhit = updateRayOrigin(rayhit, b);
                     rayhit.ray.tnear  = 0.00001f;
                     
                     Point3f bN;
@@ -159,7 +158,8 @@ namespace vcg{
                         float scalarP = inputM.face[i].N()*dir;
 
                         if(scalarP>0){
-                            rayhit.ray.dir_x  = dir[0]; rayhit.ray.dir_y = dir[1]; rayhit.ray.dir_z = dir[2];
+                            
+                            rayhit = updateRayDirection(rayhit, dir);
                             rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
                             rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;  
 
@@ -223,7 +223,7 @@ namespace vcg{
                 {           
                     RTCRayHit rayhit; 
                     Point3f b = vcg::Barycenter(inputM.face[i]);
-                    rayhit.ray.org_x  = b[0]; rayhit.ray.org_y = b[1]; rayhit.ray.org_z = b[2];  
+                    rayhit = updateRayOrigin(rayhit, b);
                     rayhit.ray.tnear  = 0.00001f;
                     
                     for(int r = 0; r<unifDirVec.size(); r++){
@@ -231,7 +231,7 @@ namespace vcg{
                         float scalarP = inputM.face[i].N()*dir;
 
                         if(scalarP>0){
-                            rayhit.ray.dir_x  = dir[0]; rayhit.ray.dir_y = dir[1]; rayhit.ray.dir_z = dir[2];
+                            rayhit = updateRayDirection(rayhit, dir);
                             rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
                             rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 
@@ -259,67 +259,95 @@ namespace vcg{
         @Parameter: MeshType &m, reference to a mesh.
         @Parameter: int nRay, number of rays that must be generated and shoot. 
         @Parameter: float degree, this variable represents the angle of the cone for which we consider a point as a valid direction
-        @Description: for each face from the barycenter this method shoots n rays towards a generated direction(to infinity).
-            If the ray direction is not pointing inside and the angle is no more than degree, than the ray is actually shoot. 
-            If the ray intersect something than the face quality of the mesh is updated with the distance between the barycenter and the hit.
-            The face quality value is than updated dividing it by the number of hits.       
+        @Description: 
+            - Use a cone centered around the inward-normal direction of a point on a surface mesh.
+            - Send rays inside the cone to the other side of the mesh.
+            - Calculate the SDF at a point as the weighted average of all ray lengths within one 
+                standard deviation from the median of all lengths.
+            - Use inverse angle between the ray and the center of the cone as the weight.
+            - The SDF is invariant to rigid body transformations of the whole mesh and oblivious to local deformations.
+            - Small cone angles are too sensitive to local features, while large opening angles close to 180◦ 
+                expose the SDF measure to noise and errors.
+
         */
         public:
          void computeSDF(MeshType &inputM, int nRay, float degree){           
-            float omega = (2 * M_PI * (1-cos(degree)))/ (4.0*M_PI );
-            //cout<<nRay/omega<<endl;
-            std::vector<Point3f> unifDirVec;
-            GenNormal<float>::Fibonacci(nRay/omega,unifDirVec);
+            
+            if (degree >= 180)
+                degree = 120;
+
             tri::UpdateQuality<MeshType>::FaceConstant(inputM,0);
 
-            #pragma omp parallel 
+            //first step is to generate the cone of rays, i will generate a sphear and for each face take only the 
+            //the ones that fall in the desired degree (in respect to the opposite of face norm) 
+            std::vector<Point3f> unifDirVec;
+            GenNormal<float>::Fibonacci(nRay,unifDirVec);
+
+            for (int i = 0; i < inputM.FN(); i++)
             {
-                #pragma omp for
-                for(int i = 0;i<inputM.FN(); i++)
-                {   
-                    RTCRayHit rayhit;         
-                    Point3f b = vcg::Barycenter(inputM.face[i]);
-                    rayhit.ray.org_x  = b[0]; rayhit.ray.org_y = b[1]; rayhit.ray.org_z = b[2];  
-                    rayhit.ray.tnear  = 1e-4;   
-                    
-                    int control = 0;
-                    int nHits=0;
-                    for(int r = 0; r<unifDirVec.size(); r++){
-                        Point3f dir = unifDirVec.at(r);                        
-                        float scalarP = inputM.face[i].N()*dir;
+                RTCRayHit rayhit;         
+                Point3f b = vcg::Barycenter(inputM.face[i]);
+                rayhit = updateRayOrigin(rayhit, b);  
+                rayhit.ray.tnear  = 1e-4;
 
-                        if(scalarP<0 && (b.dot(unifDirVec.at(r)) >= cos(degree) )){
-                            rayhit.ray.dir_x  = dir[0]; rayhit.ray.dir_y = dir[1]; rayhit.ray.dir_z = dir[2];
-                            rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
-                            rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID; 
+                float weight = 0;
+                float weight_sum = 0;
+                float weighted_sum = 0;
 
-                            RTCIntersectContext context;
-                            rtcInitIntersectContext(&context);
+                for(int r = 0; r<unifDirVec.size(); r++){
+                    Point3f dir = unifDirVec.at(r);                        
+                    float scalarP = inputM.face[i].N()*dir;
 
-                            rtcIntersect1(scene, &context, &rayhit);
+                    float angle_dir_b = Angle(b, dir);
 
-                            if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID) 
-                            {
-                                nHits++;
-                                inputM.face[i].Q()+=rayhit.ray.tfar;
-                            } 
+                    if (scalarP < 0 && vcg::math::ToRad(angle_dir_b) <= degree){
+                        rayhit = updateRayDirection(rayhit, dir);
+                        rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
+                        rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID; 
 
-                            control++;
-                                
-                        }
+                        RTCIntersectContext context;
+                        rtcInitIntersectContext(&context);
 
-                        if(control==nRay)
-                            r = unifDirVec.size();
+                        rtcIntersect1(scene, &context, &rayhit);
+
+                        if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID) 
+                        {  
+                            weight = 1/angle_dir_b;
+                            //nominator and denominator for weigthed avarage
+                            weighted_sum += weight * rayhit.ray.tfar;
+                            weight_sum += weight; 
+                            
+                        } 
                     }
-
-                    inputM.face[i].Q()/=nHits;
                 }
+                //we assign the result of the weighted average to the quality of the face
+                inputM.face[i].Q() = (weighted_sum / weight_sum);
             }
+
             tri::UpdateColor<MeshType>::PerFaceQualityRamp(inputM);
             rtcReleaseScene(scene);
             rtcReleaseDevice(device);
         }
 
+        public:
+            auto getClosestFaceToPoint(MeshType &inputM, Point3f point){
+
+                float min_distance = 99999999.f;
+                int face_index = 0;
+
+                for (int i = 0; i < inputM.FN(); i++)
+                {
+                    // Calculate distance between the points
+                    float distance = vcg::Distance(point, vcg::Barycenter(inputM.face[i]));
+                    if (distance < min_distance){
+                        min_distance = distance;
+                        face_index = i;
+                    }
+                        
+                }
+
+                return inputM.face[face_index];
+            }
 
         /*
         @Author: Paolo Fasano
@@ -340,51 +368,52 @@ namespace vcg{
             std::vector<Point3f> unifDirVec;
             GenNormal<float>::Fibonacci(nRay,unifDirVec);
 
+            std::vector<Point3f> unifDirVec_EXPAND;
+            for (Point3f p : unifDirVec)
+            {
+                unifDirVec_EXPAND.push_back(p);
+                unifDirVec_EXPAND.push_back(p*-1);
+            }
+
             tri::UpdateSelection<MeshType>::FaceClear(inputM);
             #pragma omp parallel 
             {
-                //double start; 
-                //start = omp_get_wtime(); 
                 #pragma omp for
                 for(int i = 0;i<inputM.FN(); i++)
                 {           
                     RTCRayHit rayhit; 
                     Point3f b = vcg::Barycenter(inputM.face[i]);
-                    rayhit.ray.org_x  = b[0]; rayhit.ray.org_y = b[1]; rayhit.ray.org_z = b[2];         
+                    Point3f dir(0.0f, 0.0f, 0.0f);
+                    rayhit = setRayValues(b, dir, 1e-4f);
                     
                     int frontHit = 0;
                     int backHit = 0;
 
-                    for(int r = 0; r<unifDirVec.size(); r++){
-                        Point3f dir = unifDirVec.at(r);                       
+                    for(int r = 0; r<unifDirVec_EXPAND.size(); r++){
+                        dir = unifDirVec_EXPAND.at(r);                       
                         float scalarP = inputM.face[i].N()*dir;
                        
-                            rayhit.ray.tnear  = 1e-4f;
-                            rayhit.ray.dir_x  = dir[0]; rayhit.ray.dir_y = dir[1]; rayhit.ray.dir_z = dir[2];
-                            rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
-                            rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+                        rayhit = updateRayDirection(rayhit, dir);
 
-                            RTCIntersectContext context;
-                            rtcInitIntersectContext(&context);
+                        RTCIntersectContext context;
+                        rtcInitIntersectContext(&context);
 
-                            rtcIntersect1(scene, &context, &rayhit);
-
-                            if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID) {
-                                if (scalarP > 0)
-                                    frontHit++;
-                                else
-                                    backHit++;
-                                Point3f p = b+dir*rayhit.ray.tfar;
-                                frontHit += findInterceptNumber(p*2);
-                            }                            
+                        rtcIntersect1(scene, &context, &rayhit);
+                        
+                        if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID) {
+                            if (scalarP > 0)
+                                frontHit += (findInterceptNumber(b, dir));
+                            else
+                                backHit += (findInterceptNumber(b, dir));
+                        }                            
                  
                     }
+                    std::cout<<"front "<<frontHit<<" back "<<backHit<<endl;
 
-                    if(frontHit>backHit)
+                    if(frontHit %  2 < backHit %  2 )
                         inputM.face[i].SetS();
           
                 }
-                //cout<<"time "<< (omp_get_wtime() - start)/60 <<endl;
             }
 
             tri::Clean<MeshType>::FlipMesh(inputM,true);
@@ -400,46 +429,70 @@ namespace vcg{
             (only the number not the positions coordinates)     
         */
         public: 
-         int findInterceptNumber(Point3f origin){         
-            RTCRayHit rayhit;
+         int findInterceptNumber(Point3f origin, Point3f direction){
+            
             int totInterception = 0;
 
-            Point3f b = origin;
-            Point3f dir = origin*2;
-
-            rayhit.ray.dir_x  = dir[0]; rayhit.ray.dir_y = dir[1]; rayhit.ray.dir_z = dir[2];
-            rayhit.ray.org_x  = b[0]; rayhit.ray.org_y = b[1]; rayhit.ray.org_z = b[2];
-
-            rayhit.ray.tnear  = 0.5f;
-            rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
-            rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
-            
+            RTCRayHit rayhit;
+            rayhit = setRayValues(origin, direction, 0.5);
             RTCIntersectContext context;
             rtcInitIntersectContext(&context);
 
-            rtcIntersect1(scene, &context, &rayhit);
-
-            while (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID){
-                totInterception+=1;
-                b = b+dir*rayhit.ray.tfar;
-                dir = b*2;
-
-                rayhit.ray.dir_x  = dir[0]; rayhit.ray.dir_y = dir[1]; rayhit.ray.dir_z = dir[2];
-                rayhit.ray.org_x  = b[0]; rayhit.ray.org_y = b[1]; rayhit.ray.org_z = b[2];
-
-                rayhit.ray.tnear  = 0.5f;
-                rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
-                rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
-                
-                RTCIntersectContext context;
-                rtcInitIntersectContext(&context);
+            while(true){
 
                 rtcIntersect1(scene, &context, &rayhit);
-            }     
-
-            return totInterception;                                     
+                if (rayhit.ray.tfar != std::numeric_limits<float>::infinity()){
+                    totInterception++;
+                    // we keep the same origin point and direction but update how far from the face the ray starts shooting 
+                    rayhit.ray.tnear += rayhit.ray.tfar ;//+ rayhit.ray.tfar * 0.05f;
+                    rayhit.ray.tfar = std::numeric_limits<float>::infinity(); 
+                }
+                else
+                    return totInterception;
+                //std::cout<<"end of ray"<<endl;
+            }
+            
+            return totInterception;                                    
         }
 
+        //given a ray and a direction expressed as point3f, this method modifies the ray direction of the ray tp the given direction
+        public: 
+            inline RTCRayHit updateRayDirection(RTCRayHit rayhit, Point3f direction){
+                
+                //setting the ray direction    
+                rayhit.ray.dir_x = direction[0]; 
+                rayhit.ray.dir_y = direction[1]; 
+                rayhit.ray.dir_z = direction[2];
+
+                return rayhit;
+            }
+
+
+        //given a ray and a point of origin expressed as point3f, this method modifies the origin point of the ray tp the origin point given
+        public: 
+            inline RTCRayHit updateRayOrigin(RTCRayHit rayhit, Point3f origin){
+                
+                //setting the ray point of origin
+                rayhit.ray.org_x = origin[0]; 
+                rayhit.ray.org_y = origin[1]; 
+                rayhit.ray.org_z = origin[2];
+
+                return rayhit;
+            }
+
+        public:
+            inline RTCRayHit setRayValues(Point3f origin, Point3f direction, float tnear, float tfar = std::numeric_limits<float>::infinity()){
+                
+                RTCRayHit rayhit;
+
+                rayhit = updateRayOrigin(rayhit, origin);
+                rayhit = updateRayDirection(rayhit, direction);
+                rayhit.ray.tnear  = tnear;
+                rayhit.ray.tfar   = tfar;
+                rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+
+                return rayhit;
+            }
     };
 }
 #endif
