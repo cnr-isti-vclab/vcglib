@@ -346,12 +346,25 @@ namespace vcg{
          void computeNormalAnalysis(MeshType &inputM, int nRay){
             
             bool fast_computation = true;
+            
+            std::vector<Point3f> unifDirVec;
+            GenNormal<float>::Fibonacci(nRay,unifDirVec);
+
+            std::vector<Point3f> unifDirVec_EXPAND;
+            for (Point3f p : unifDirVec)
+            {
+                unifDirVec_EXPAND.push_back(p);
+                unifDirVec_EXPAND.push_back(p*-1);
+            }
+
+            tri::UpdateSelection<MeshType>::FaceClear(inputM);
+
 
             if (fast_computation){
-                visibilitySamplig(inputM, nRay);   
+                visibilitySamplig(inputM, unifDirVec_EXPAND);   
             }
             else{
-
+                paritySampling(inputM,unifDirVec_EXPAND);
             }
 
          }
@@ -364,11 +377,11 @@ namespace vcg{
             (only the number not the positions coordinates)     
         */
         public: 
-         std::tuple<int,float> findInterceptNumber(Point3f origin, Point3f direction){
+         int findInterceptNumber(Point3f origin, Point3f direction){
             
             int totInterception = 0;
-            float totDistance = 0;
-            float previous_distance = 0;
+            //float totDistance = 0;
+            //float previous_distance = 0;
 
             RTCRayHit rayhit;
             rayhit = setRayValues(origin, direction, 0.5);
@@ -380,35 +393,23 @@ namespace vcg{
                 rtcIntersect1(scene, &context, &rayhit);
                 if (rayhit.ray.tfar != std::numeric_limits<float>::infinity()){
                     totInterception++;
-                    totDistance += rayhit.ray.tfar - previous_distance;
-                    previous_distance = rayhit.ray.tfar;
+                    //totDistance += rayhit.ray.tfar - previous_distance;
+                    //previous_distance = rayhit.ray.tfar;
 
                     // we keep the same origin point and direction but update how far from the face the ray starts shooting 
                     rayhit.ray.tnear += rayhit.ray.tfar ;//+ rayhit.ray.tfar * 0.05f;
                     rayhit.ray.tfar = std::numeric_limits<float>::infinity(); 
                 }
                 else
-                    return std::make_tuple(totInterception, totDistance);
+                    return totInterception;
             }
             
-             return  std::make_tuple(totInterception, totDistance);                                   
+             return totInterception;                                   
         }
 
 
         public:
-            void visibilitySamplig(MeshType &inputM, int nRay){
-
-                std::vector<Point3f> unifDirVec;
-                GenNormal<float>::Fibonacci(nRay,unifDirVec);
-
-                std::vector<Point3f> unifDirVec_EXPAND;
-                for (Point3f p : unifDirVec)
-                {
-                    unifDirVec_EXPAND.push_back(p);
-                    unifDirVec_EXPAND.push_back(p*-1);
-                }
-
-                tri::UpdateSelection<MeshType>::FaceClear(inputM);
+            void visibilitySamplig(MeshType &inputM, std::vector<Point3f> unifDirVec_EXPAND){
 
             #pragma omp parallel 
             {
@@ -461,6 +462,57 @@ namespace vcg{
             rtcReleaseDevice(device);
 
         }
+
+        public:
+        void paritySampling(MeshType &inputM, std::vector<Point3f> unifDirVec_EXPAND){
+            
+            #pragma omp parallel 
+            {
+                #pragma omp for
+                for(int i = 0;i<inputM.FN(); i++)
+                {           
+                    RTCRayHit rayhit; 
+                    Point3f b = vcg::Barycenter(inputM.face[i]);
+                    Point3f dir(0.0f, 0.0f, 0.0f);
+                    rayhit = setRayValues(b, dir, 1e-4f);
+                    
+                    int frontHit = 0;
+                    int backHit = 0;
+
+                    for(int r = 0; r<unifDirVec_EXPAND.size(); r++){
+                        dir = unifDirVec_EXPAND.at(r);                       
+                        float scalarP = inputM.face[i].N()*dir;
+                       
+                        rayhit = setRayValues(b, dir, 1e-4f);
+                        RTCIntersectContext context;
+                        rtcInitIntersectContext(&context);
+
+                        rtcIntersect1(scene, &context, &rayhit);
+                        
+                        if (rayhit.ray.tfar  != std::numeric_limits<float>::infinity()) {
+                            
+                            int n_hits = findInterceptNumber(b,dir);
+
+                            if (scalarP > 0){
+                                frontHit += (n_hits % 2);  
+                            }     
+                            else{
+                                backHit += (n_hits % 2);
+                            }
+                        }                         
+                    }
+                    
+                    if(frontHit > backHit )
+                        inputM.face[i].SetS();
+          
+                }
+            }
+
+            tri::Clean<MeshType>::FlipMesh(inputM,true);
+            rtcReleaseScene(scene);
+            rtcReleaseDevice(device);
+        }
+        
 
         //given a ray and a direction expressed as point3f, this method modifies the ray direction of the ray tp the given direction
         public: 
