@@ -343,9 +343,9 @@ namespace vcg{
             Available online http://jcgt.org/published/0003/04/02/      
         */
         public:
-         void computeNormalAnalysis(MeshType &inputM, int nRay){
+         void computeNormalAnalysis(MeshType &inputM, int nRay,bool fast_computation){
             
-            bool fast_computation = true;
+            //bool fast_computation = false;
             
             std::vector<Point3f> unifDirVec;
             GenNormal<float>::Fibonacci(nRay,unifDirVec);
