@@ -242,6 +242,7 @@ private:
     static void cleanMesh(MeshType & m, Params & params)
     {
         vcg::tri::Clean<MeshType>::RemoveDuplicateFace(m);
+        vcg::tri::Clean<MeshType>::RemoveDuplicateVertex(m);
         vcg::tri::Clean<MeshType>::RemoveUnreferencedVertex(m);
         vcg::tri::Allocator<MeshType>::CompactEveryVector(m);
 
