@@ -824,12 +824,17 @@ void FlipEdgeNotManifold(FaceType &f, const int z)
 	FaceType* ftmp = &f;
 
 	if (gp1 != g)
-		FFAttach(ftmp, z, gp1, gi1);
+		FFAttach(f, z, *gp1, gi1);
 	if (fp1 != &f)
-		FFAttach(g, w, fp1, fi1);
+		FFAttach(*g, w, *fp1, fi1);
 
 	FFAttachManifold(ftmp, (z+1)%3, g, (w+1)%3);
 }
+
+/*!
+* Given a face it splits into three face with a mid vertex
+* No allocation is done here, a new vertex and two new faces are needed
+*/
 
 template <class FaceType>
 void TriSplit(FaceType *fToSplit, FaceType *newf0, FaceType *newf1, typename FaceType::VertexType *newVert)
