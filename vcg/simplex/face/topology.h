@@ -302,10 +302,9 @@ void FFDetach(FaceType & f, const int e)
 template <class FaceType>
 void FFAttach(FaceType &f, int z1, FaceType &f2, int z2)
 {
-	vcg::face::Pos< FaceType > EPB(f2,z2);
-	vcg::face::Pos< FaceType > TEPB;
+	vcg::face::Pos< FaceType > EPB(&f2,z2);
+	vcg::face::Pos< FaceType > TEPB = EPB;;
 	// search the last face in the non manifold loop before the one to be attached
-  TEPB = EPB;
 	EPB.NextF();
 	while( EPB.f != &f2)  
 	{
