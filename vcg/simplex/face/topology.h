@@ -33,14 +33,14 @@ namespace face {
 /** \addtogroup face */
 /*@{*/
 
-/** Return a boolean that indicate if the face is complex.
+/** Return a boolean indicating if the face f is non manifold along edge j.
     @param j Index of the edge
-    @return true se la faccia e' manifold, false altrimenti
+    @return true if the face manifold, false otherwise
 */
 template <class FaceType>
 inline bool IsManifold( FaceType const & f, const int j )
 {
-  assert(f.cFFp(j) != 0); // never try to use this on uncomputed topology
+  assert(f.cFFp(j) != 0); // never try to use this on uninitialized topology
   if(FaceType::HasFFAdjacency())
       return ( f.cFFp(j) == &f || &f == f.cFFp(j)->cFFp(f.cFFi(j)) );
   else
@@ -66,9 +66,9 @@ inline bool IsBorder(FaceType const & f,  const int j )
  *
  * The angle between the normal is signed according to the concavity/convexity of the
  * dihedral angle: negative if the edge shared between the two faces is concave, positive otherwise.
- * The surface it is assumend to be oriented.
- * It simply use the projection of  the opposite vertex onto the plane of the other one.
- * It does not assume anything on face normals.
+ * The surface must be oriented and faces must be oriented coherently.
+ * It simply use the projection of the opposite vertex onto the plane of the other one.
+ * It does not use stored face normals but it recomputes according the vertex ordering.
 *
 *     v0 ___________ vf1
 *       |\          |
@@ -240,7 +240,7 @@ void FFDetachManifold(FaceType & f, const int e)
 
 /** This function detach the face from the adjacent face via the edge e.
     It's possible to use it also in non-two manifold situation.
-        The function cannot be applicated if the adjacencies among faces aren't defined.
+        The function cannot be applied if the adjacencies among faces aren't defined.
         @param f the face to be detached
         @param e Index of the edge to be detached
 */
@@ -1109,7 +1109,7 @@ void VFExtendedStarVF(typename FaceType::VertexType* vp,
     }
 
 /*!
- * \brief Compute the ordered set of vertices adjacent to a given vertex using FF adiacency
+ * \brief Compute the ordered set of vertices adjacent to a given vertex using FF adjacency
  *
  * \param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
  * \param vertexVec a std::vector of VertexPtr filled vertices around the given vertex.
@@ -1128,11 +1128,11 @@ void VVOrderedStarFF(const Pos<FaceType> &startPos,
 }
 
 /*!
- * \brief Compute the ordered set of vertices adjacent to a given vertex using FF adiacency
+ * \brief Compute the ordered set of vertices adjacent to a given vertex using FF adjacency
  *
  * \param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
  * \param vertexVec a std::vector of VertexPtr filled vertices around the given vertex.
- * \param ccw if true returns the vertexVec in countercounterclockwise order; if false in clockwise order.
+ * \param ccw if true returns the vertexVec in counterclockwise order; if false in clockwise order.
  *
 */
 template <class FaceType>
@@ -1149,7 +1149,7 @@ void VVOrderedStarFF(const Pos<FaceType> &startPos,
 }
 
 /*!
- * \brief Compute the ordered set of faces adjacent to a given vertex using FF adiacency
+ * \brief Compute the ordered set of faces adjacent to a given vertex using FF adjacency
  *
  * \param startPos a Pos<FaceType> indicating the vertex whose star has to be computed.
  * \param posVec a std::vector of Pos filled with Pos arranged around the passed vertex.
