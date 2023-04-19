@@ -14,6 +14,7 @@ release/
 *-debug/
 *-release/
 /docs/Doxygen/html/
+.vscode/
 
 # Intermediate Files
 *.bc
@@ -26,10 +27,7 @@ release/
 *.vcxproj.filters
 *.suo
 *.ply
-wrap/nanoply/nanoply_vcg/nanoply_vcg.sln
 *.db
-wrap/nanoply/nanoply_vcg/nanoply_vcg.VC.VC.opendb
-wrap/nanoply/nanoply_vcg/.vs/nanoply_vcg/v15/ipch/AutoPCH/NANOPLY_VCG-1b6b1a83/MAIN-5f62d91f/MAIN.ipch
 *.sln
 
 ##Standard cmake gitignore##
@@ -100,7 +98,7 @@ target_wrapper.*
 CMakeLists.txt.user*
 
 # QtCreator 4.8< compilation database
-compile_commands.json
 
 # QtCreator local machine specific files for imported projects
 *creator.user*
+
