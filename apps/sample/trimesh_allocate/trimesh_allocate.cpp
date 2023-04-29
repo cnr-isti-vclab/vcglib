@@ -31,15 +31,18 @@ Attributes are a simple mechanism to associate user-defined 'attributes' to the 
 
 #include<vcg/complex/complex.h>
 #include<vcg/complex/algorithms/create/platonic.h>
+#include<vcg/complex/algorithms/mesh_to_matrix.h>
+#include<wrap/io_trimesh/export_off.h>
+
 
 class MyEdge;
 class MyFace;
 class MyVertex;
-struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<MyVertex>		::AsVertexType,
-                                            vcg::Use<MyFace>			::AsFaceType>{};
+struct MyUsedTypes : public vcg::UsedTypes<	vcg::Use<MyVertex>  ::AsVertexType,
+                                            vcg::Use<MyFace>	::AsFaceType>{};
 
-class MyVertex  : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f,vcg::vertex::Normal3f>{};
-class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::VertexRef, vcg::face::Normal3f> {};
+class MyVertex  : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f,vcg::vertex::Normal3f,vcg::vertex::BitFlags>{};
+class MyFace    : public vcg::Face< MyUsedTypes, vcg::face::VertexRef, vcg::face::Normal3f,vcg::face::BitFlags> {};
 
 class MyMesh : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace> > {};
 
@@ -57,13 +60,13 @@ int main()
   fi->V(0)=ivp[0];
   fi->V(1)=ivp[1];
   fi->V(2)=ivp[2];
-
-  // Alternative, more compact, method for adding a single vertex
-  ivp[3]= &*vcg::tri::Allocator<MyMesh>::AddVertex(m,MyMesh::CoordType ( 1.0, 1.0, 0.0));
-
+  
   // Alternative, more compact, method for adding a single face (once you have the vertex pointers)
-  vcg::tri::Allocator<MyMesh>::AddFace(m, ivp[1],ivp[0],ivp[3]);
-
+  vcg::tri::Allocator<MyMesh>::AddFace(m, ivp[1],ivp[0],ivp[2]);
+  
+  // Alternative, more compact, method for adding a single vertex
+  ivp[3]= &*vcg::tri::Allocator<MyMesh>::AddVertex(m, MyMesh::CoordType ( 1.0, 1.0, 0.0));
+ 
   // a potentially dangerous pointer to a mesh element
   MyMesh::FacePointer fp = &m.face[0];
   vcg::tri::Allocator<MyMesh>::PointerUpdater<MyMesh::FacePointer> pu;
@@ -90,14 +93,17 @@ int main()
        }
   }
 
-  // WRONG WAY of iterating: FN() != m.face.size() if there are deleted elements
+  // WRONG WAY of iterating: if there are deleted elements FN() != m.face.size()
+  // so in that case you will not scan the whole vector.
   for(int i=0;i<m.FN();++i)
   {
-     if(!fi->IsD())
+     if(!m.face[i].IsD())
        {
-       b += vcg::Barycenter(*fi);
+          b += vcg::Barycenter(m.face[i]);
        }
   }
+  
+  
 
   // To remove the elements marked as deleted use
   vcg::tri::Allocator<MyMesh>::CompactFaceVector(m);
@@ -109,5 +115,27 @@ int main()
   // finally lets copy this mesh onto another one.
   MyMesh m2;
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m2,m);
+  
+  m.Clear();
+  vcg::tri::Torus(m,3,1);
+  
+  // In many optimization algorithms is often useful to have a flat matrix
+  // representation of the mesh data
+  // (vn, 3) floats for coords and  (fn, 3) of ints for face indexes.
+  // use MeshToMatrix<MyMesh>::GetTriMeshData and
+  // Allocator<MyMesh>::AddVertices and Allocator<MyMesh>::AddFaces
+  // to jump between the two representations
+  
+  Eigen::MatrixXf vertMatrix;
+  Eigen::MatrixXi faceMatrix;
+  vcg::tri::MeshToMatrix<MyMesh>::GetTriMeshData(m,faceMatrix,vertMatrix);
+  
+  // swapping two columns  to invert all the faces orientation
+  faceMatrix.col(0).swap(faceMatrix.col(1));
+  
+  MyMesh m3;
+  vcg::tri::Allocator<MyMesh>::AddVertices(m3,vertMatrix);
+  vcg::tri::Allocator<MyMesh>::AddFaces(m3,faceMatrix);
+  vcg::tri::io::ExporterOFF<MyMesh>::Save(m3,"test.off");
 
 }

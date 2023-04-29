@@ -407,8 +407,6 @@ public:
         InitQualityByAnisotropyDir(mesh);
     }
 
-private:
-
     static void SelectConstraints(MeshType &mesh,SmoothParam &SParam)
     {
         //clear all selected faces

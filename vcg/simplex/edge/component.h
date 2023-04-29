@@ -61,11 +61,14 @@ public:
 	ColorType &C() { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
 	ColorType cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
 	static bool HasColor()   { return false; }
+	inline bool IsColorEnabled() const { return T::EdgeType::HasColor(); }
+	
 
 	typedef float QualityType;
 	QualityType &Q() { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
 	QualityType cQ() const { static QualityType dummyQuality(0);  assert(0); return dummyQuality; }
 	static bool HasQuality()   { return false; }
+	inline bool IsQualityEnabled() const { return T::EdgeType::HasQuality(); }
 
 	typedef int  MarkType;
 	inline void InitIMark()    {  }
@@ -228,7 +231,7 @@ public:
 	const ColorType &C() const { return _color; }
 	const ColorType &cC() const { return _color; }
 	template < class LeftV>
-	void ImportData(const LeftV  & left ) { C() = left.cC(); T::ImportData( left); }
+	void ImportData(const LeftV  & left ) { if (left.IsColorEnabled()) C() = left.cC(); T::ImportData( left); }
 	static bool HasColor()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Color"));T::Name(name);}
 
@@ -253,7 +256,7 @@ public:
 	QualityType &Q() { return _quality; }
 	const QualityType & cQ() const {return _quality; }
 	template < class LeftV>
-	void ImportData(const LeftV  & left ) { Q() = left.cQ(); TT::ImportData( left); }
+	void ImportData(const LeftV  & left ) { if (left.IsQualityEnabled()) Q() = left.cQ(); TT::ImportData( left); }
 	static bool HasQuality()   { return true; }
 	static void Name(std::vector<std::string> & name){name.push_back(std::string("Quality"));TT::Name(name);}
 

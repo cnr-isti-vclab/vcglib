@@ -402,13 +402,13 @@ template <class MESH>
 class Hole
 {
 public:
-  typedef typename MESH::VertexType				VertexType;
-  typedef typename MESH::VertexPointer		VertexPointer;
-  typedef	typename MESH::ScalarType				ScalarType;
-  typedef typename MESH::FaceType					FaceType;
-  typedef typename MESH::FacePointer			FacePointer;
-  typedef typename MESH::FaceIterator			FaceIterator;
-  typedef typename MESH::CoordType				CoordType;
+  typedef typename MESH::VertexType       VertexType;
+  typedef typename MESH::VertexPointer    VertexPointer;
+  typedef typename MESH::ScalarType       ScalarType;
+  typedef typename MESH::FaceType         FaceType;
+  typedef typename MESH::FacePointer      FacePointer;
+  typedef typename MESH::FaceIterator     FaceIterator;
+  typedef typename MESH::CoordType        CoordType;
   typedef typename vcg::Box3<ScalarType>  Box3Type;
   typedef typename face::Pos<FaceType>    PosType;
   
@@ -683,11 +683,11 @@ template<class EAR>
 | v3      v2\
 */
 
-    static float ComputeDihedralAngle(CoordType  p1,CoordType  p2,CoordType  p3,CoordType  p4)
+    static float ComputeDihedralAngleRad(CoordType  p1,CoordType  p2,CoordType  p3,CoordType  p4)
         {
             CoordType  n1 = Normal(p1,p3,p2);
             CoordType  n2 = Normal(p1,p2,p4);
-            return  math::ToDeg(AngleN(n1,n2));
+            return  Angle(n1,n2);
         }
 
   static bool existEdge(PosType pi,PosType pf)
@@ -731,45 +731,45 @@ template<class EAR>
     if(v[j][k] == -1){return Weight();}
     
     //calcolo il massimo angolo diedrale, se esiste.
-    float angle = 0.0f;
+    ScalarType angleRad = 0;
     PosType px;
     if(i + 1 == j)
     {
       px = pj;
       px.FlipE(); px.FlipV();
-      angle = std::max<float>(angle , ComputeDihedralAngle(pi.v->P(), pj.v->P(), pk.v->P(), px.v->P())	);
+      angleRad = std::max(angleRad, ComputeDihedralAngleRad(pi.v->P(), pj.v->P(), pk.v->P(), px.v->P())	);
     }
     else
     {
-      angle = std::max<float>( angle, ComputeDihedralAngle(pi.v->P(),pj.v->P(), pk.v->P(), pv[ v[i][j] ].v->P()));
+      angleRad = std::max(angleRad, ComputeDihedralAngleRad(pi.v->P(),pj.v->P(), pk.v->P(), pv[ v[i][j] ].v->P()));
     }
     
     if(j + 1 == k)
     {
       px = pk;
       px.FlipE(); px.FlipV();
-      angle = std::max<float>(angle , ComputeDihedralAngle(pj.v->P(), pk.v->P(), pi.v->P(), px.v->P())	);
+      angleRad = std::max(angleRad, ComputeDihedralAngleRad(pj.v->P(), pk.v->P(), pi.v->P(), px.v->P())	);
     }
     else
     {
-      angle = std::max<float>( angle, ComputeDihedralAngle(pj.v->P(),pk.v->P(), pi.v->P(), pv[ v[j][k] ].v->P()));
+      angleRad = std::max(angleRad, ComputeDihedralAngleRad(pj.v->P(),pk.v->P(), pi.v->P(), pv[ v[j][k] ].v->P()));
     }
     
     if( i == 0 && k == (int)v.size() - 1)
     {
       px = pi;
       px.FlipE(); px.FlipV();
-      angle = std::max<float>(angle , ComputeDihedralAngle(pk.v->P(), pi.v->P(),  pj.v->P(),px.v->P() )	);
+      angleRad = std::max(angleRad , ComputeDihedralAngleRad(pk.v->P(), pi.v->P(),  pj.v->P(),px.v->P() )	);
     }
     
     ScalarType area = ( (pj.v->P() - pi.v->P()) ^ (pk.v->P() - pi.v->P()) ).Norm() * 0.5;
     
-    return Weight(angle, area);
+    return Weight(angleRad, area);
   }
   
   static void calculateMinimumWeightTriangulation(MESH &m, FaceIterator f,std::vector<PosType > vv )
   {
-    std::vector< std::vector< Weight > > w; //matrice dei pesi minimali di ogni orecchio preso in conzideraione
+    std::vector< std::vector< Weight > > w; //matrice dei pesi minimali di ogni orecchio preso in consideraione
     std::vector< std::vector< int    > > vi;//memorizza l'indice del terzo vertice del triangolo
     
     //hole size

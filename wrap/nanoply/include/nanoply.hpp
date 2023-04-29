@@ -2710,6 +2710,7 @@ namespace nanoply
       if (!info.bigEndian)
         fixEndian = true;
     }
+	(void)fixEndian;
 
     if (info.binary)
     {

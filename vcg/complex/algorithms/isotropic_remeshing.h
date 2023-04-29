@@ -177,7 +177,7 @@ private:
                     const double smallestEdge = std::min(edges[0], std::min(edges[1], edges[2]));
                     const int longestIdx = int(std::find(edges, edges+3, std::max(std::max(edges[0], edges[1]), edges[2])) - (edges));
 
-                    if (vcg::tri::IsMarked(m, f.V2(longestIdx)))
+                    if (vcg::tri::IsMarked(m, f.V2(longestIdx)) || (params.userSelectedCreases && f.IsFaceEdgeS(longestIdx)))
                         continue;
 
 
@@ -216,8 +216,8 @@ private:
                         {
                             areaCheck |= vcg::DoubleArea(t3) / vcg::DoubleArea(biggestSmallest.second) > 1000 && vcg::DoubleArea(t4) / vcg::DoubleArea(biggestSmallest.second) > 1000;
                         }
-
-                        if ((normalCheck) && (areaCheck || std::min( QualityFace(t1), QualityFace(t2) ) <= std::min( QualityFace(t3), QualityFace(t4))))
+						
+						if ((params.surfDistCheck) &&(normalCheck) && (areaCheck || std::min( QualityFace(t1), QualityFace(t2) ) <= std::min( QualityFace(t3), QualityFace(t4))))
                         {
                             ScalarType dist;
                             CoordType closest;
@@ -229,7 +229,16 @@ private:
                             if (fp1 == NULL)
                                 continue;
 
+                            bool gE1IsCrease = g->IsFaceEdgeS((k+1)%3);
+                            bool fE1IsCrease = f.IsFaceEdgeS((longestIdx+1)%3);
+
                             vcg::face::FlipEdgeNotManifold<FaceType>(f, longestIdx);
+
+                            if (params.userSelectedCreases && gE1IsCrease)
+                                f.SetFaceEdgeS(longestIdx);
+                            if (params.userSelectedCreases && fE1IsCrease)
+                                g->SetFaceEdgeS(k);
+
                             ++count;
                         }
                     }
@@ -1190,15 +1199,26 @@ private:
                     }
                 }
             }
-        });
-
-        return 0;
+		});
+		// at the end of the above process some vertices of the mesh
+		// could be wrongly marked as selected even if they belong to some unselected face.
+		// so we make an additional quick pass to deselect them. 
+		if(params.selectedOnly) 
+		{
+			ForEachFace(m, [&] (FaceType & f) {
+				if(!f.IsS()) {
+					for (int i = 0; i < 3; ++i)
+						f.V(i)->ClearS();
+				}            
+			});
+		}
+		return 0;
     }
 
 
 
 
-    static void FoldRelax(MeshType &m, Params params, const int step, const bool strict = true)
+    static void FoldRelax(MeshType &m, Params &params, const int step, const bool strict = true)
     {
         typename vcg::tri::Smooth<MeshType>::LaplacianInfo lpz(CoordType(0, 0, 0), 0);
         SimpleTempData<typename MeshType::VertContainer, typename vcg::tri::Smooth<MeshType>::LaplacianInfo> TD(m.vert, lpz);
@@ -1290,7 +1310,7 @@ private:
                 if (!(*vi).IsD() && TD[*vi].cnt > 0)
                 {
                     std::vector<CoordType> newPos(1, TD[*vi].sum);
-                    if ((*vi).IsS() && testHausdorff(*params.mProject, params.grid, newPos, params.maxSurfDist))
+					if ((*vi).IsS() && (!params.surfDistCheck || testHausdorff(*params.mProject, params.grid, newPos, params.maxSurfDist)))
                         (*vi).P() = (*vi).P() * (1-delta) + TD[*vi].sum * (delta);
                 }
         } // end step
@@ -1304,7 +1324,7 @@ private:
           * the set of internal vertices to the selection and we combine it in and with
           * the vertexes not on border or creases
         */
-    static void ImproveByLaplacian(MeshType &m, Params params)
+    static void ImproveByLaplacian(MeshType &m, Params &params)
     {
         SelectionStack<MeshType> ss(m);
 

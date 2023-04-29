@@ -429,6 +429,14 @@ void Sphere(MeshType &in, const int subdiv = 3 )
     }
 }
 
+template <class MeshType>
+void Sphere(MeshType & m, const typename MeshType::CoordType & position,  typename MeshType::ScalarType radius = 0, const int subdiv = 3)
+{
+	m.Clear();
+	tri::Sphere(m, subdiv);
+	tri::UpdatePosition<MeshType>::Scale(m,radius);
+	tri::UpdatePosition<MeshType>::Translate(m, position);
+}
 
     /// r1 = raggio 1, r2 = raggio2, h = altezza (asse y)
 template <class MeshType>
