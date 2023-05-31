@@ -2,7 +2,7 @@
 * VCGLib                                                            o o     *
 * Visual and Computer Graphics Library                            o     o   *
 *                                                                _   O  _   *
-* Copyright(C) 2004-2016                                           \/)\/    *
+* Copyright(C) 2004-2019                                           \/)\/    *
 * Visual Computing Lab                                            /\/|      *
 * ISTI - Italian National Research Council                           |      *
 *                                                                    \      *
@@ -21,125 +21,399 @@
 *                                                                           *
 ****************************************************************************/
 
-#ifndef VCG_USE_EIGEN
-#include "deprecated_point2.h"
-#else
 
 #ifndef __VCGLIB_POINT2
 #define __VCGLIB_POINT2
 
-#include "../math/eigen.h"
-// #include "point.h"
-
-namespace vcg{
-template<typename Scalar> class Point2;
-}
-
-namespace Eigen {
-template<typename Scalar> struct ei_traits<vcg::Point2<Scalar> > : ei_traits<Eigen::Matrix<Scalar,2,1> > {};
-template<typename XprType> struct ei_to_vcgtype<XprType,2,1,0,2,1>
-{ typedef vcg::Point2<typename XprType::Scalar> type; };
-}
+#include <assert.h>
+#include <vcg/math/base.h>
 
 namespace vcg {
 
 /** \addtogroup space */
 /*@{*/
 /**
-		The templated class for representing a point in 2D space.
-		The class is templated over the Scalar class that is used to represent coordinates.
-		All the usual operator overloading (* + - ...) is present.
-	*/
-template <class _Scalar> class Point2 : public Eigen::Matrix<_Scalar,2,1>
+   The templated class for representing a point in 2D space.
+   The class is templated over the ScalarType class that is used to represent coordinates.
+   All the usual operator overloading (* + - ...) is present.
+ */
+template <class P2ScalarType>
+class Point2
 {
-//----------------------------------------
-// template typedef part
-// use it as follow: typename Point2<S>::Type instead of simply Point2<S>
-//----------------------------------------
+protected:
+/// The only data member. Hidden to user.
+	P2ScalarType _v[2];
 public:
-	typedef Eigen::Matrix<_Scalar,2,1> Type;
-//----------------------------------------
-// inheritence part
-//----------------------------------------
-private:
-	typedef Eigen::Matrix<_Scalar,2,1> _Base;
-public:
-	using _Base::coeff;
-	using _Base::coeffRef;
-	using _Base::setZero;
-	using _Base::data;
-	using _Base::V;
+	/// the scalar type
+	typedef P2ScalarType ScalarType;
+	enum {Dimension = 2};
 
-	_EIGEN_GENERIC_PUBLIC_INTERFACE(Point2,_Base);
-	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Point2)
+//@{
 
+	/** @name Access to Coords.
+	 access to coords is done by overloading of [] or explicit naming of coords (X,Y,)
+	 ("p[0]" or "p.X()" are equivalent) **/
+	inline const ScalarType &X() const {return _v[0];}
+	inline const ScalarType &Y() const {return _v[1];}
+	inline ScalarType &X() {return _v[0];}
+	inline ScalarType &Y() {return _v[1];}
+	inline const ScalarType * V() const
+	{
+		return _v;
+	}
+	inline ScalarType * V()
+	{
+		return _v;
+	}
+	inline ScalarType & V( const int i )
+	{
+		assert(i>=0 && i<2);
+		return _v[i];
+	}
+	inline const ScalarType & V( const int i ) const
+	{
+		assert(i>=0 && i<2);
+		return _v[i];
+	}
+	inline const ScalarType & operator [] ( const int i ) const
+	{
+		assert(i>=0 && i<2);
+		return _v[i];
+	}
+	inline ScalarType & operator [] ( const int i )
+	{
+		assert(i>=0 && i<2);
+		return _v[i];
+	}
+//@}
 	/// empty constructor (does nothing)
 	inline Point2 () { }
 	/// x,y constructor
-	inline Point2 ( const Scalar nx, const Scalar ny ) : Base(nx,ny) {}
-	/// copy constructor
-	inline Point2(Point2 const & p) : Base(p) {}
-	template<typename OtherDerived>
-	inline Point2(const Eigen::MatrixBase<OtherDerived>& other) : Base(other) {}
-
-	/// cross product
-	// hm.. this is not really a cross product
-	inline Scalar operator ^ ( Point2 const & p ) const
+	inline Point2 ( const ScalarType nx, const ScalarType ny )
 	{
-		return data()[0]*p.data()[1] - data()[1]*p.data()[0];
+		_v[0] = nx; _v[1] = ny;
+	}
+	/// copy constructor
+	inline Point2 ( const Point2 & p) = default;
+	/// copy constructor
+	template<class Q>
+	inline Point2 ( const Point2<Q> & p)
+	{
+		_v[0]= p[0];    _v[1]= p[1];
+	}
+	/// copy
+	inline Point2 & operator =( const Point2 & p) = default;
+	/// copy
+	template<class Q>
+	inline Point2 & operator =( const Point2<Q> & p)
+	{
+		_v[0]= p[0]; _v[1]= p[1];
+		return *this;
+	}
+	/// sets the point to (0,0)
+	inline void SetZero()
+	{ _v[0] = 0;_v[1] = 0;}
+	/// dot product
+	inline ScalarType operator * ( const Point2 & p ) const
+	{
+		return ( _v[0]*p._v[0] + _v[1]*p._v[1] );
+	}
+	inline ScalarType dot( const Point2 & p ) const { return (*this) * p; }
+	/// cross product
+	inline ScalarType operator ^ ( const Point2 & p ) const
+	{
+		return _v[0]*p._v[1] - _v[1]*p._v[0];
+	}
+//@{
+	 /** @name Linearity for 2d points (operators +, -, *, /, *= ...) **/
+	inline Point2 operator + ( const Point2 & p) const
+	{
+		return Point2<ScalarType>( _v[0]+p._v[0], _v[1]+p._v[1] );
+	}
+	inline Point2 operator - ( const Point2 & p) const
+	{
+		return Point2<ScalarType>( _v[0]-p._v[0], _v[1]-p._v[1] );
+	}
+	inline Point2 operator * ( const ScalarType s ) const
+	{
+		return Point2<ScalarType>( _v[0] * s, _v[1] * s );
+	}
+	inline Point2 operator / ( const ScalarType s ) const
+	{
+		return Point2<ScalarType>( _v[0] / s, _v[1] / s );
+	}
+	inline Point2 & operator += ( const Point2 & p)
+	{
+		_v[0] += p._v[0];
+		_v[1] += p._v[1];
+		return *this;
+	}
+	inline Point2 & operator -= ( const Point2 & p)
+	{
+		_v[0] -= p._v[0];
+		_v[1] -= p._v[1];
+		return *this;
+	}
+	inline Point2 & operator *= ( const ScalarType s )
+	{
+		_v[0] *= s;
+		_v[1] *= s;
+		return *this;
 	}
 
-	/// returns the angle with X axis (radiants, in [-PI, +PI] )
-	inline Scalar Angle() const
+	inline Point2 & operator /= ( const ScalarType s )
 	{
-		return math::Atan2(data()[1],data()[0]);
+		_v[0] /= s;
+		_v[1] /= s;
+		return *this;
+	}
+
+	inline Point2 operator - (void) const
+	{
+		return Point2(-_v[0], -_v[1]);
+	}
+
+ //@}
+	/// returns the norm (Euclidian)
+	inline ScalarType Norm( void ) const
+	{
+		return math::Sqrt( _v[0]*_v[0] + _v[1]*_v[1] );
+	}
+	/// returns the squared norm (Euclidian)
+	inline ScalarType SquaredNorm( void ) const
+	{
+		return ( _v[0]*_v[0] + _v[1]*_v[1] );
+	}
+	inline Point2 & Scale( const ScalarType sx, const ScalarType sy )
+	{
+		_v[0] *= sx;
+		_v[1] *= sy;
+		return * this;
+	}
+
+	/// normalizes, and returns itself as result (nonsense)
+	inline Point2 & Normalize( void )
+	{
+		ScalarType n = math::Sqrt(_v[0]*_v[0] + _v[1]*_v[1]);
+		if(n>0.0) {
+			_v[0] /= n; _v[1] /= n;
+		}
+		return *this;
+	}
+
+	inline void normalize(void)
+	{
+		this->Normalize();
+	}
+
+	inline Point2 normalized(void) const
+	{
+		Point2<ScalarType> p = *this;
+		p.normalize();
+		return p;
+	}
+
+	/// points equality
+	inline bool operator == ( const Point2 & p ) const
+	{
+		return (_v[0]==p._v[0] && _v[1]==p._v[1]);
+	}
+	/// disparity between points
+	inline bool operator != ( const Point2 & p ) const
+	{
+		return ( (_v[0]!=p._v[0]) || (_v[1]!=p._v[1]) );
+	}
+	/// lexical ordering
+	inline bool operator <  ( const Point2 & p ) const
+	{
+		return (_v[1]!=p._v[1])?(_v[1]<p._v[1]):
+		       (_v[0]<p._v[0]);
+	}
+	/// lexical ordering
+	inline bool operator >  ( const Point2 & p ) const
+	{
+		return (_v[1]!=p._v[1])?(_v[1]>p._v[1]):
+		       (_v[0]>p._v[0]);
+	}
+	/// lexical ordering
+	inline bool operator <= ( const Point2 & p ) const
+	{
+		return (_v[1]!=p._v[1])?(_v[1]< p._v[1]):
+		       (_v[0]<=p._v[0]);
+	}
+	/// lexical ordering
+	inline bool operator >= ( const Point2 & p ) const
+	{
+		return (_v[1]!=p._v[1])?(_v[1]> p._v[1]):
+		       (_v[0]>=p._v[0]);
+	}
+	/// returns the distance to another point p
+	inline ScalarType Distance( const Point2 & p ) const
+	{
+		return Norm(*this-p);
+	}
+	/// returns the suqared distance to another point p
+	inline ScalarType SquaredDistance( const Point2 & p ) const
+	{
+		return (*this-p).SquaredNorm();
+	}
+	/// returns the angle with X axis (radiants, in [-PI, +PI] )
+	inline ScalarType Angle() const
+	{
+		return math::Atan2(_v[1],_v[0]);
 	}
 	/// transform the point in cartesian coords into polar coords
 	inline Point2 & Cartesian2Polar()
 	{
-		Scalar t = Angle();
-		data()[0] = this->norm();
-		data()[1] = t;
+		ScalarType t = Angle();
+		_v[0] = Norm();
+		_v[1] = t;
 		return *this;
 	}
 	/// transform the point in polar coords into cartesian coords
 	inline Point2 & Polar2Cartesian()
 	{
-		Scalar l = data()[0];
-		data()[0] = (Scalar)(l*math::Cos(data()[1]));
-		data()[1] = (Scalar)(l*math::Sin(data()[1]));
+		ScalarType l = _v[0];
+		_v[0] = (ScalarType)(l*math::Cos(_v[1]));
+		_v[1] = (ScalarType)(l*math::Sin(_v[1]));
 		return *this;
 	}
 	/// rotates the point of an angle (radiants, counterclockwise)
-	inline Point2 & Rotate( const Scalar rad )
+	inline Point2 & Rotate( const ScalarType rad )
 	{
-		Scalar t = data()[0];
-		Scalar s = math::Sin(rad);
-		Scalar c = math::Cos(rad);
+		ScalarType t = _v[0];
+		ScalarType s = math::Sin(rad);
+		ScalarType c = math::Cos(rad);
 
-		data()[0] = data()[0]*c - data()[1]*s;
-		data()[1] =   t *s + data()[1]*c;
+		_v[0] = _v[0]*c - _v[1]*s;
+		_v[1] =     t*s + _v[1]*c;
 
 		return *this;
 	}
+
+	/// This function extends the vector to any arbitrary domension
+	/// virtually padding missing elements with zeros
+	inline ScalarType Ext( const int i ) const
+	{
+		if(i>=0 && i<2)
+			return _v[i];
+		else
+			return 0;
+	}
+	/// imports from 2D points of different types
+	template <class T>
+	inline void Import( const Point2<T> & b )
+	{
+		_v[0] = ScalarType(b.X());
+		_v[1] = ScalarType(b.Y());
+	}
+	template <class EigenVector>
+	inline void FromEigenVector(const EigenVector & b)
+	{
+		_v[0] = ScalarType(b[0]);
+		_v[1] = ScalarType(b[1]);
+	}
+	template <class EigenVector>
+	inline void ToEigenVector(EigenVector & b) const
+	{
+		b[0]=_v[0];
+		b[1]=_v[1];
+	}
+	template <class EigenVector>
+	inline EigenVector ToEigenVector(void) const
+	{
+		assert(EigenVector::RowsAtCompileTime == 2);
+		EigenVector b;
+		b << _v[0], _v[1];
+		return b;
+	}
+	/// constructs a 2D points from an existing one of different type
+	template <class T>
+	static Point2 Construct( const Point2<T> & b )
+	{
+		return Point2(ScalarType(b.X()), ScalarType(b.Y()));
+	}
+	static Point2 Construct( const Point2<ScalarType> & b )
+	{
+		return b;
+	}
+	template <class T>
+	static Point2 Construct( const T & x, const T & y)
+	{
+		return Point2(ScalarType(x), ScalarType(y));
+	}
+
+	static inline Point2 Zero(void)
+	{
+		return Point2(0,0);
+	}
+
+	static inline Point2 One(void)
+	{
+		return Point2(1,1);
+	}
 }; // end class definition
+
+
+template <class T>
+inline T Angle( Point2<T> const & p0, Point2<T> const & p1 )
+{
+	return p1.Angle() - p0.Angle();
+}
+
+template <class T>
+inline Point2<T> operator * ( const T s, Point2<T> const & p )
+{
+	return Point2<T>( p[0] * s, p[1] * s );
+}
+
+template <class T>
+inline T Norm( Point2<T> const & p )
+{
+	return p.Norm();
+}
+
+template <class T>
+inline T SquaredNorm( Point2<T> const & p )
+{
+	return p.SquaredNorm();
+}
+
+template <class T>
+inline Point2<T> & Normalize( Point2<T> & p )
+{
+	return p.Normalize();
+}
+
+template <typename Scalar>
+inline Point2<Scalar> Normalized(const Point2<Scalar> & p )
+{
+	return p.normalized();
+}
+
+template <class T>
+inline T Distance( Point2<T> const & p1,Point2<T> const & p2 )
+{
+	return Norm(p1-p2);
+}
+
+template <class T>
+inline T SquaredDistance( Point2<T> const & p1,Point2<T> const & p2 )
+{
+	return SquaredNorm(p1-p2);
+}
+
+template <class T>
+inline Point2<T> Abs(const Point2<T> & p)
+{
+	return (Point2<T>(math::Abs(p[0]), math::Abs(p[1])));
+}
 
 typedef Point2<short>  Point2s;
 typedef Point2<int>	   Point2i;
 typedef Point2<float>  Point2f;
 typedef Point2<double> Point2d;
 
-// typedef Eigen::Matrix<short ,2,1> Point2s;
-// typedef Eigen::Matrix<int   ,2,1> Point2i;
-// typedef Eigen::Matrix<float ,2,1> Point2f;
-// typedef Eigen::Matrix<double,2,1> Point2d;
-// typedef Eigen::Matrix<short ,2,1> Vector2s;
-// typedef Eigen::Matrix<int   ,2,1> Vector2i;
-// typedef Eigen::Matrix<float ,2,1> Vector2f;
-// typedef Eigen::Matrix<double,2,1> Vector2d;
-
 /*@}*/
 } // end namespace
-#endif
-
 #endif

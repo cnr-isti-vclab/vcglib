@@ -1025,8 +1025,11 @@ void TrivialMidPointRefine(MeshType & m)
   {
     FacePointer f0= &m.face[i];
     FacePointer f1= &*lastf; ++lastf;
+    f1->ImportData(*f0);
     FacePointer f2= &*lastf; ++lastf;
-    FacePointer f3= &*lastf; ++lastf;    
+    f2->ImportData(*f0);
+    FacePointer f3= &*lastf; ++lastf;
+    f3->ImportData(*f0);
     VertexPointer v0 =m.face[i].V(0); 
     VertexPointer v1 =m.face[i].V(1); 
     VertexPointer v2 =m.face[i].V(2); 

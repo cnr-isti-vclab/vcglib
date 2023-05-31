@@ -164,17 +164,17 @@ set(VCG_HEADERS
 		vcg/space/tetra3.h
 		vcg/space/triangle2.h
 		vcg/space/ray2.h
-		vcg/space/deprecated_point2.h
+		vcg/space/point2.h
 		vcg/space/point4.h
 		vcg/space/box2.h
 		vcg/space/ray3.h
 		vcg/space/planar_polygon_tessellation.h
 		vcg/space/texcoord2.h
-		vcg/space/deprecated_point3.h
+		vcg/space/point3.h
 		vcg/space/intersection/triangle_triangle3.h
 		vcg/space/distance2.h
 		vcg/space/point3.h
-		vcg/space/deprecated_point.h
+		vcg/space/point.h
 		vcg/space/space.h
 		vcg/space/point.h
 		vcg/space/colorspace.h
@@ -216,7 +216,7 @@ set(VCG_HEADERS
 		vcg/space/line2.h
 		vcg/space/point_matching.h
 		vcg/space/intersection3.h
-		vcg/space/deprecated_point4.h
+		vcg/space/point4.h
 		vcg/space/rasterized_outline2_packer.h
 		vcg/space/box.h
 		vcg/space/plane3.h
