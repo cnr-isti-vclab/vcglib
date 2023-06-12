@@ -7,6 +7,10 @@
 #include <Eigen/Sparse>
 #include <Eigen/SparseCholesky>
 
+#include <vector>
+#include <cmath>
+#include <unordered_map>
+
 class MyEdge;
 class MyFace;
 class MyVertex;
@@ -27,11 +31,12 @@ class MyVertex : public vcg::Vertex<
 >{};
 class MyEdge : public vcg::Edge<
     MyUsedTypes,
-    vcg::edge::VertexRef, //
+    vcg::edge::VertexRef //
 >{};
 class MyFace : public vcg::Face<
     MyUsedTypes,
     vcg::face::VFAdj,
+    vcg::face::FFAdj,
     vcg::face::VertexRef,
     vcg::face::Qualityd
 >{};
@@ -70,7 +75,7 @@ inline void buildMassMatrix(MyMesh &mesh, Eigen::SparseMatrix<double> &mass){
         // this will also be useful for the gradient computation
         fi->Q() = area;
     }
-    // compute area incident on all vertices
+    // compute area of the dual cell for each vertex
     for (int i = 0; i < mesh.VN(); ++i){
         MyVertex *vp = &mesh.vert[i];
 
@@ -89,24 +94,55 @@ inline void buildMassMatrix(MyMesh &mesh, Eigen::SparseMatrix<double> &mass){
 }
 
 
-inline void buildCotanMatrix(MyMesh &mesh, Eigen::SparseMatrix<double> &cotanLaplace){
-    // compute cotan weight incident on all vertices
+inline void buildCotanMatrix(MyMesh &mesh, Eigen::SparseMatrix<double> &cotanOperator){
+    // initialize a hashtable from vertex pointers to ids
+    std::unordered_map<MyVertex*, int> vertex_ids;
+    for (int i = 0; i < mesh.VN(); ++i){
+        vertex_ids[&mesh.vert[i]] = i;
+    }
+
+    // iterate over all vertices to fill cotan matrix
     for (int i = 0; i < mesh.VN(); ++i){
         MyVertex *vp = &mesh.vert[i];
+        MyFace *fp = vp->VFp();
+        vcg::face::Pos<MyFace> pos(fp, vp);
+        vcg::face::Pos<MyFace> start(fp, vp);
+        // iterate over all incident edges of vp
+        do {
+            // get the vertex opposite to vp
+            pos.FlipV();
+            MyVertex *vo = pos.V();
+            // move to left vertex
+            pos.FlipE();pos.FlipV();
+            MyVertex *vl = pos.V();
+            // move back then to right vertex
+            pos.FlipV();pos.FlipE(); // back to vo
+            pos.FlipF();pos.FlipE();pos.FlipV();
+            MyVertex *vr = pos.V();
+            pos.FlipV();pos.FlipE();pos.FlipF();pos.FlipV(); // back to vp
 
-        std::vector<MyFace*> faces;
-        std::vector<int> indices;
-        vcg::face::VFStarVF<MyFace>(vp, faces, indices);
-        
-        for (int j = 0; j < faces.size(); ++j)
-        {
-            MyFace *fp = faces[j];
-            int index = indices[j];
-            vcg::Point3f p0 = fp->V(0)->P();
-            vcg::Point3f p1 = fp->V(1)->P();
-            vcg::Point3f p2 = fp->V(2)->P();
-        }
+            // compute cotan of left edges and right edges
+            Eigen::Vector3d elf = toEigen(vo->P() - vl->P()); // far left edge
+            Eigen::Vector3d eln = toEigen(vp->P() - vl->P()); // near left edge
+            Eigen::Vector3d erf = toEigen(vp->P() - vr->P()); // far right edge
+            Eigen::Vector3d ern = toEigen(vo->P() - vr->P()); // near right edge
+
+            double cotan_l = cotan(elf, eln);
+            double cotan_r = cotan(ern, erf);
+
+            // add to the matrix
+            cotanOperator.coeffRef(vertex_ids[vp], vertex_ids[vo]) = (cotan_l + cotan_r)/2;
+
+            // move to the next edge
+            pos.FlipF();pos.FlipE();
+        } while (pos != start);
     }
+
+    // compute diagonal entries
+    for (int i = 0; i < mesh.VN(); ++i){
+        cotanOperator.coeffRef(i, i) = -cotanOperator.row(i).sum();
+    }
+    
 }
 
 
