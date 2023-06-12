@@ -12,12 +12,13 @@ int main(int argc, char const *argv[])
     // VCG
     // load mesh
     MyMesh m;
-    if (vcg::tri::io::ImporterPLY<MyMesh>::Open(m, "ico_sd3.ply") != 0)
+    if (vcg::tri::io::ImporterOFF<MyMesh>::Open(m, "icosahedron.off") != 0)
     {
         printf("Error reading file  %s\n", argv[1]);
         exit(0);
     }
     
+    std::cout << "Initial conditions..." << std::endl;
     Eigen::VectorXd initialConditions(m.VN());
     int random_source = rand() % m.VN();
     for (int i = 0; i < m.VN(); ++i){
@@ -26,7 +27,8 @@ int main(int argc, char const *argv[])
         else
             initialConditions(i) = 0;
     }
-    Eigen::VectorXd distance = computeHeatMethodGeodesic(m, initialConditions);
+    printVectorXd(initialConditions);
+    Eigen::VectorXd distance = computeHeatMethodGeodesicVerbose(m, initialConditions);
 
     for (int i = 0; i < m.VN(); ++i){
         m.vert[i].Q() = distance(i);
@@ -34,6 +36,6 @@ int main(int argc, char const *argv[])
     m.vert[random_source].C() = vcg::Color4b::Red;
 
     // NOTE: storing quality as double will make the PLY file unreadable
-    vcg::tri::io::ExporterPLY<MyMesh>::Save(m, "distance_mesh.ply", vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY); 
+    vcg::tri::io::ExporterPLY<MyMesh>::Save(m, "distance_mesh.ply", vcg::tri::io::Mask::IOM_VERTQUALITY); // vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY
     return 0;
 }
