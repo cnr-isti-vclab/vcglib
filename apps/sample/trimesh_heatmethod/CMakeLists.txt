@@ -13,9 +13,11 @@ find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 link_libraries(${EIGEN3_LIBRARIES})
 
-# add_executable(trimesh_heatmethod trimesh_heatmethod.cpp)
-add_executable(testing_vcg testing_vcg.cpp ${VCGLIB_DIR}/wrap/ply/plylib.cpp)
-add_executable(testing_eigen testing_eigen.cpp)
+# executables
+add_executable(test_cotan test_cotan.cpp)
+add_executable(test_heatmethod test_heatmethod.cpp ${VCGLIB_DIR}/wrap/ply/plylib.cpp)
+add_executable(compute_geodesic compute_geodesic.cpp ${VCGLIB_DIR}/wrap/ply/plylib.cpp)
+# add_executable(testing_eigen testing_eigen.cpp)
 
 
 

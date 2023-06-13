@@ -56,7 +56,7 @@ inline void buildCotanMatrix(MyMesh &mesh, Eigen::SparseMatrix<double> &cotanOpe
 inline double computeAverageEdgeLength(MyMesh &mesh);
 inline Eigen::MatrixX3d computeVertexGradient(MyMesh &mesh, const Eigen::VectorXd &heat);
 inline Eigen::VectorXd computeVertexDivergence(MyMesh &mesh, const Eigen::MatrixX3d &field);
-inline Eigen::MatrixX3d normalizeVectorField(MyMesh &mesh, const Eigen::MatrixX3d &field);
+inline Eigen::MatrixX3d normalizeVectorField(const Eigen::MatrixX3d &field);
 inline Eigen::VectorXd computeHeatMethodGeodesic(MyMesh &mesh, Eigen::VectorXd &initialConditions, double m);
 // debugging functions
 inline Eigen::VectorXd computeHeatMethodGeodesicVerbose(MyMesh &mesh, const Eigen::VectorXd &init_cond, double m);
@@ -74,6 +74,7 @@ inline Eigen::Vector3d toEigen(const vcg::Point3f& p)
 
 inline double cotan(const Eigen::Vector3d& v0, const Eigen::Vector3d& v1)
 {
+    // cos(theta) / sin(theta)
     return v0.dot(v1) / v0.cross(v1).norm();
 };
 
@@ -184,55 +185,56 @@ inline double computeAverageEdgeLength(MyMesh &mesh){
 
 
 inline Eigen::MatrixX3d computeVertexGradient(MyMesh &mesh, const Eigen::VectorXd &heat){
-    // TODO: fix this function
-    // gradients are computed at face level not at vertex level
-    // as such the formulas used here are not correct
-    // output vector should be a matrix of size (mesh.FN(), 3)
-    Eigen::MatrixX3d heatGradientField(mesh.VN(), 3);
-    heatGradientField.setZero();
-    // compute gradient of heat function at each vertex
+    Eigen::MatrixX3d heatGradientField(mesh.FN(), 3);
+    // initialize a hashtable from vertex pointers to ids
+    std::unordered_map<MyVertex*, int> vertex_ids;
     for (int i = 0; i < mesh.VN(); ++i){
-        MyVertex *vp = &mesh.vert[i];
+        vertex_ids[&mesh.vert[i]] = i;
+    }
+    // compute gradient of heat function at each vertex
+    for (int i = 0; i < mesh.FN(); ++i){
+        MyFace *fp = &mesh.face[i];
 
-        std::vector<MyFace*> faces;
-        std::vector<int> indices;
-        vcg::face::VFStarVF<MyFace>(vp, faces, indices);
-        for (int j = 0; j < faces.size(); ++j)
-        {
-            MyFace *fp = faces[j];
-            int index = indices[j];
-            vcg::Point3f p0 = fp->V(0)->P();
-            vcg::Point3f p1 = fp->V(1)->P();
-            vcg::Point3f p2 = fp->V(2)->P();
-            // edge unit vector
-            Eigen::Vector3d e;
-            // assuming counter-clockwise ordering
-            if (index == 0){
-                e = toEigen(p2 - p1); //e0
-            } else if (index == 1){
-                e = toEigen(p0 - p2); //e1
-            } else if (index == 2){ 
-                e = toEigen(p1 - p0); //e2
-            }
-            e /= e.norm();
-            // normal unit vector
-            Eigen::Vector3d n = toEigen(fp->N());
-            n /= n.norm();
-            // gradient unit vector
-            Eigen::Vector3d g = n.cross(e);
-            // add gradient contribution of given face
-            double faceArea = fp->Q();
-            heatGradientField.row(i) += g * (heat[i] / (2 * faceArea));
-        }
+        vcg::Point3f p0 = fp->V(0)->P();
+        vcg::Point3f p1 = fp->V(1)->P();
+        vcg::Point3f p2 = fp->V(2)->P();
+
+        // normal unit vector
+        Eigen::Vector3d n = toEigen(fp->N());
+        n /= n.norm();
+        // face area
+        double faceArea = fp->Q();
+        // edge unit vectors (assuming counter-clockwise ordering)
+        // note if the ordering is clockwise, the gradient will point in the opposite direction
+        Eigen::Vector3d e0 = toEigen(p2 - p1);
+        e0 /= e0.norm();
+        Eigen::Vector3d e1 = toEigen(p0 - p2);
+        e1 /= e1.norm();
+        Eigen::Vector3d e2 = toEigen(p1 - p0);
+        e2 /= e2.norm();
+        // gradient unit vectors
+        Eigen::Vector3d g0 = n.cross(e0); //v0 grad
+        Eigen::Vector3d g1 = n.cross(e1); //v1 grad
+        Eigen::Vector3d g2 = n.cross(e2); //v2 grad
+
+        // add vertex gradient contributions
+        Eigen::Vector3d total_grad = (
+            g0 * heat(vertex_ids[fp->V(0)]) + 
+            g1 * heat(vertex_ids[fp->V(1)]) + 
+            g2 * heat(vertex_ids[fp->V(2)])
+        ) / (2 * faceArea);
+
+        heatGradientField.row(i) = total_grad;
     }
     return heatGradientField;
 }
 
-inline Eigen::MatrixX3d normalizeVectorField(MyMesh &mesh, const Eigen::MatrixX3d &field){
-    Eigen::MatrixX3d normalizedField(mesh.VN(), 3);
+
+inline Eigen::MatrixX3d normalizeVectorField(const Eigen::MatrixX3d &field){
+    Eigen::MatrixX3d normalizedField(field.rows(), 3);
     normalizedField.setZero();
     // normalize vector field at each vertex
-    for (int i = 0; i < mesh.VN(); ++i){
+    for (int i = 0; i < field.rows(); ++i){
         Eigen::Vector3d v = field.row(i);
         normalizedField.row(i) = v / v.norm();
     }
@@ -243,6 +245,12 @@ inline Eigen::MatrixX3d normalizeVectorField(MyMesh &mesh, const Eigen::MatrixX3
 inline Eigen::VectorXd computeVertexDivergence(MyMesh &mesh, const Eigen::MatrixX3d &field){
     Eigen::VectorXd divergence(mesh.VN());
     divergence.setZero();
+    // initialize a hashtable from face pointers to ids
+    std::unordered_map<MyFace*, int> face_ids;
+    for (int i = 0; i < mesh.FN(); ++i){
+        face_ids[&mesh.face[i]] = i;
+    }
+
     // compute divergence of vector field at each vertex
     for (int i = 0; i < mesh.VN(); ++i){
         MyVertex *vp = &mesh.vert[i];
@@ -258,7 +266,7 @@ inline Eigen::VectorXd computeVertexDivergence(MyMesh &mesh, const Eigen::Matrix
             vcg::Point3f p1 = fp->V(1)->P();
             vcg::Point3f p2 = fp->V(2)->P();
             // edge vectors
-            Eigen::Vector3d el, er, eo; //left, right, opposite
+            Eigen::Vector3d el, er, eo; //left, right, opposite to vp
             if (index == 0){
                 el = toEigen(p2 - p0); //e1
                 er = toEigen(p1 - p0); //e2
@@ -279,13 +287,9 @@ inline Eigen::VectorXd computeVertexDivergence(MyMesh &mesh, const Eigen::Matrix
             el /= el.norm();
             er /= er.norm();
             // add divergence contribution of given face
-            divergence(i) += (cotl * er.dot(field.row(i)) + cotr * el.dot(field.row(i))) / 2;
-        }
-    }
-    // sanitize nan, inf and -inf values
-    for (int i = 0; i < divergence.size(); ++i){
-        if (std::isnan(divergence(i)) || std::isinf(divergence(i))){
-            divergence(i) = 0;
+            int face_id = face_ids[fp];
+            Eigen::Vector3d x = field.row(face_id);
+            divergence(i) += (cotl * er.dot(x) + cotr * el.dot(x)) / 2;
         }
     }
     return divergence;
@@ -330,17 +334,16 @@ inline Eigen::VectorXd computeHeatMethodGeodesic(MyMesh &mesh, const Eigen::Vect
     system1 = mass - timestep * cotanOperator;
 
     Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> cholesky1(system1);
-    Eigen::VectorXd heatflow = cholesky1.solve(init_cond);
+    Eigen::VectorXd heatflow = cholesky1.solve(init_cond); // (VN)
 
-    Eigen::MatrixX3d heatGradient = computeVertexGradient(mesh, heatflow);
+    Eigen::MatrixX3d heatGradient = computeVertexGradient(mesh, heatflow); // (FN, 3)
 
-    Eigen::MatrixX3d normalizedVectorField = normalizeVectorField(mesh, -heatGradient);
+    Eigen::MatrixX3d normalizedVectorField = normalizeVectorField(-heatGradient); // (FN, 3)
     
-    Eigen::VectorXd divergence = computeVertexDivergence(mesh, normalizedVectorField);
+    Eigen::VectorXd divergence = computeVertexDivergence(mesh, normalizedVectorField); // (VN)
 
-    // maybe precondition the matrix by adding a small multiple of the identity matrix
     Eigen::SparseMatrix<double> system2(mesh.VN(), mesh.VN());
-    system2 = cotanOperator + 1e-6 * Eigen::Matrix<double,-1,-1>::Identity(mesh.VN(), mesh.VN());
+    system2 = cotanOperator; //+ 1e-6 * Eigen::Matrix<double,-1,-1>::Identity(mesh.VN(), mesh.VN());
     Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> cholesky2(system2);
     
     Eigen::VectorXd geodesicDistance = cholesky2.solve(divergence);
@@ -383,15 +386,16 @@ inline Eigen::VectorXd computeHeatMethodGeodesicVerbose(MyMesh &mesh, const Eige
     printVectorX3d(heatGradient);
 
     std::cout << "Normalizing Gradient..." << std::endl;
-    Eigen::MatrixX3d normalizedVectorField = normalizeVectorField(mesh, -heatGradient);
+    Eigen::MatrixX3d normalizedVectorField = normalizeVectorField(-heatGradient);
     printVectorX3d(normalizedVectorField);
     
     std::cout << "Computing Divergence..." << std::endl;
     Eigen::VectorXd divergence = computeVertexDivergence(mesh, normalizedVectorField);
     printVectorXd(divergence);
 
-    // maybe precondition the matrix by adding a small multiple of the identity matrix
     std::cout << "Cholesky Factorization 2..." << std::endl;
+    Eigen::SparseMatrix<double> system2(mesh.VN(), mesh.VN());
+    system2 = cotanOperator; //+ 1e-6 * Eigen::Matrix<double,-1,-1>::Identity(mesh.VN(), mesh.VN());
     Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> cholesky2(cotanOperator);
     std::cout << "Solving System 2..." << std::endl;
     Eigen::VectorXd geodesicDistance = cholesky2.solve(divergence);

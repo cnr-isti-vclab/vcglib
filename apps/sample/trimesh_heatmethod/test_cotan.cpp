@@ -74,7 +74,5 @@ int main(int argc, char const *argv[])
     std::cout << "# Edges: " << m.VN() + m.FN() - 2 << std::endl;
     std::cout << "Total triplets: " << total_triplets << std::endl;
 
-    // NOTE: storing quality as double will make the PLY file unreadable
-    vcg::tri::io::ExporterPLY<MyMesh>::Save(m, "distance_mesh.ply"); // vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY
     return 0;
 }
