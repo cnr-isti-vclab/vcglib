@@ -14,10 +14,8 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 link_libraries(${EIGEN3_LIBRARIES})
 
 # executables
-add_executable(test_cotan test_cotan.cpp)
 add_executable(test_heatmethod test_heatmethod.cpp ${VCGLIB_DIR}/wrap/ply/plylib.cpp)
 add_executable(compute_geodesic compute_geodesic.cpp ${VCGLIB_DIR}/wrap/ply/plylib.cpp)
-# add_executable(testing_eigen testing_eigen.cpp)
 
 
 
