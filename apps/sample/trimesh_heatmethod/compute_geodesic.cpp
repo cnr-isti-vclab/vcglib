@@ -1,12 +1,5 @@
 #include "trimesh_heatmethod.h"
 
-#include <wrap/io_trimesh/import.h>
-#include <wrap/io_trimesh/export.h>
-
-#include <iostream>
-#include <vector>
-#include <cmath>
-
 int main(int argc, char const *argv[])
 {
     if (argc != 2) {
@@ -22,6 +15,7 @@ int main(int argc, char const *argv[])
     }
     // set initial conditions of the system
     Eigen::VectorXd initialConditions(m.VN());
+    // srand(time(NULL));
     int random_source = rand() % m.VN();
     for (int i = 0; i < m.VN(); ++i){
         if (i == random_source)
