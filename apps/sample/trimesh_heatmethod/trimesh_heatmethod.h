@@ -8,7 +8,6 @@
 
 #include <Eigen/Sparse>
 #include <Eigen/SparseCholesky>
-#include <Eigen/SparseLU>
 
 #include <vector>
 #include <cmath>
@@ -63,12 +62,11 @@ inline Eigen::VectorXd computeVertexDivergence(MyMesh &mesh, const Eigen::Matrix
 inline Eigen::MatrixX3d normalizeVectorField(const Eigen::MatrixX3d &field);
 inline Eigen::VectorXd computeHeatMethodGeodesic(MyMesh &mesh, Eigen::VectorXd &initialConditions, double m);
 // debugging functions
-inline Eigen::VectorXd computeHeatMethodGeodesicVerbose(MyMesh &mesh, const Eigen::VectorXd &init_cond, double m);
-inline void printSparseMatrix(Eigen::SparseMatrix<double> &mat);
-inline void printVectorXd(Eigen::VectorXd &vec);
-inline void printVectorX3d(Eigen::MatrixX3d &vec);
+enum SaveMeshMask;
 inline void saveMeshWithVertexScalarField(MyMesh &mesh, const Eigen::VectorXd scalarField, const char *fname);
 inline void saveMeshWithFaceVectorField(MyMesh &mesh, const Eigen::MatrixX3d vectorField, const char *fname);
+inline void saveVertexScalarFieldCSV(MyMesh &mesh, const Eigen::VectorXd scalarField, const char *fname);
+inline void saveFaceVectorFieldCSV(MyMesh &mesh, const Eigen::MatrixX3d vectorField, const char *fname);
 
 
 
@@ -273,23 +271,23 @@ inline Eigen::VectorXd computeVertexDivergence(MyMesh &mesh, const Eigen::Matrix
             // (ORDERING) edge vectors
             Eigen::Vector3d el, er, eo; //left, right, opposite to vp
             if (index == 0){
-                el = toEigen(p2 - p0); //e1
+                el = toEigen(p2 - p0); //-e1
                 er = toEigen(p1 - p0); //e2
-                eo = toEigen(p1 - p2); //[+-] e0
+                eo = toEigen(p2 - p1); //e0
             } else if (index == 1){
-                el = toEigen(p0 - p1); //e2
+                el = toEigen(p0 - p1); //-e2
                 er = toEigen(p2 - p1); //e0
-                eo = toEigen(p0 - p2); //[+-] e1
+                eo = toEigen(p0 - p2); //e1
             } else if (index == 2){ 
-                el = toEigen(p1 - p2); //e0
+                el = toEigen(p1 - p2); //-e0
                 er = toEigen(p0 - p2); //e1
-                eo = toEigen(p0 - p1); //[+-] e2
+                eo = toEigen(p1 - p0); //e2
             }
             // compute left and right cotangents
-            double cotl = cotan(el, eo);
+            double cotl = cotan(-el, eo); // -el -> angle between el and eo
             double cotr = cotan(er, eo);
             // normalize edge vectors after cotangent computation
-            el /= -el.norm(); // invert orientation of left edge
+            el /= el.norm();
             er /= er.norm();
             // add divergence contribution of given face
             Eigen::Vector3d x = field.row(face_ids[fp]);
@@ -300,7 +298,48 @@ inline Eigen::VectorXd computeVertexDivergence(MyMesh &mesh, const Eigen::Matrix
 }
 
 
-inline Eigen::VectorXd computeHeatMethodGeodesic(MyMesh &mesh, const Eigen::VectorXd &init_cond, double m = 1){
+enum SaveMeshMask : unsigned int
+{
+	NONE                 = 0x00,
+
+    MESH_HEAT_FLOW         = 0x01,
+    MESH_HEAT_GRADIENT     = 0x02,
+    MESH_UNIT_VECTOR_FIELD = 0x04,
+    MESH_DIVERGENCE        = 0x08,
+    MESH_DISTANCE          = 0x10,
+
+    MESH_ALL             = 0x1F,
+
+    CSV_HEAT_FLOW         = 0x100,
+    CSV_HEAT_GRADIENT     = 0x200,
+    CSV_UNIT_VECTOR_FIELD = 0x400,
+    CSV_DIVERGENCE        = 0x800,
+    CSV_DISTANCE          = 0x1000,
+
+    CSV_ALL             = 0x1F00,
+
+	ALL                 = 0x1F1F
+};
+inline SaveMeshMask operator|(SaveMeshMask lhs, SaveMeshMask rhs) {
+    return static_cast<SaveMeshMask>(
+        static_cast<std::underlying_type<SaveMeshMask>::type>(lhs) |
+        static_cast<std::underlying_type<SaveMeshMask>::type>(rhs)
+    );
+}
+inline SaveMeshMask operator&(SaveMeshMask lhs, SaveMeshMask rhs) {
+    return static_cast<SaveMeshMask>(
+        static_cast<std::underlying_type<SaveMeshMask>::type>(lhs) &
+        static_cast<std::underlying_type<SaveMeshMask>::type>(rhs)
+    );
+}
+
+
+inline Eigen::VectorXd computeHeatMethodGeodesic(
+    MyMesh &mesh, 
+    const Eigen::VectorXd &init_cond, 
+    double m = 1, 
+    SaveMeshMask save = SaveMeshMask::NONE
+){
     vcg::tri::UpdateTopology<MyMesh>::VertexFace(mesh);
     vcg::tri::UpdateTopology<MyMesh>::FaceFace(mesh);
     vcg::tri::UpdateNormal<MyMesh>::PerFaceNormalized(mesh);
@@ -316,46 +355,64 @@ inline Eigen::VectorXd computeHeatMethodGeodesic(MyMesh &mesh, const Eigen::Vect
     Eigen::SparseMatrix<double> system1(mesh.VN(), mesh.VN());
     system1 = mass - timestep * cotanOperator;
 
-    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> cholesky1(system1);
-    Eigen::VectorXd heatflow = cholesky1.solve(init_cond); // (VN)
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
+
+    solver.compute(system1);
+    if(solver.info() != Eigen::Success) {
+        std::cerr << "ERROR: Cholesky Factorization 1 failed" << std::endl; 
+    }
+    Eigen::VectorXd heatflow = solver.solve(init_cond); // (VN)
+    if(solver.info() != Eigen::Success) {
+        std::cerr << "ERROR: Solving System 1 failed" << std::endl; 
+    }
+    if(save & SaveMeshMask::MESH_HEAT_FLOW) 
+        saveMeshWithVertexScalarField(mesh, heatflow, "output_mesh/1_heatflow.ply");
+    if(save & SaveMeshMask::CSV_HEAT_FLOW) 
+        saveVertexScalarFieldCSV(mesh, heatflow, "output_csv/1_heatflow.csv");
 
     Eigen::MatrixX3d heatGradient = computeVertexGradient(mesh, heatflow); // (FN, 3)
+    if(save & SaveMeshMask::MESH_HEAT_GRADIENT) 
+        saveMeshWithFaceVectorField(mesh, heatGradient, "output_mesh/2_heatGradient.ply");
+    if(save & SaveMeshMask::CSV_HEAT_GRADIENT) 
+        saveFaceVectorFieldCSV(mesh, heatGradient, "output_csv/2_heatGradient.csv");
 
     Eigen::MatrixX3d normalizedVectorField = normalizeVectorField(-heatGradient); // (FN, 3)
+    if(save & SaveMeshMask::MESH_UNIT_VECTOR_FIELD) 
+        saveMeshWithFaceVectorField(mesh, normalizedVectorField, "output_mesh/3_normalizedVectorField.ply");
+    if(save & SaveMeshMask::CSV_UNIT_VECTOR_FIELD)
+        saveFaceVectorFieldCSV(mesh, normalizedVectorField, "output_csv/3_normalizedVectorField.csv");
     
     Eigen::VectorXd divergence = computeVertexDivergence(mesh, normalizedVectorField); // (VN)
+    if(save & SaveMeshMask::MESH_DIVERGENCE) 
+        saveMeshWithVertexScalarField(mesh, divergence, "output_mesh/4_divergence.ply");
+    if(save & SaveMeshMask::CSV_DIVERGENCE) 
+        saveVertexScalarFieldCSV(mesh, divergence, "output_csv/4_divergence.csv");
 
     Eigen::SparseMatrix<double> system2(mesh.VN(), mesh.VN());
     system2 = cotanOperator; //+ 1e-6 * Eigen::Matrix<double,-1,-1>::Identity(mesh.VN(), mesh.VN());
-    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> cholesky2(system2);
     
-    Eigen::VectorXd geodesicDistance = cholesky2.solve(divergence);
+    solver.compute(system2);
+    if(solver.info() != Eigen::Success) {
+        std::cerr << "ERROR: Cholesky Factorization 2 failed" << std::endl; 
+    }
+    Eigen::VectorXd geodesicDistance = solver.solve(divergence);
+    if(solver.info() != Eigen::Success) {
+        std::cerr << "ERROR: Solving System 2 failed" << std::endl; 
+    }
+    // invert and shift
+    geodesicDistance.array() *= -1; // no clue as to why this needs to be here
+    geodesicDistance.array() -= geodesicDistance.minCoeff();
+
+    if(save & SaveMeshMask::MESH_DISTANCE) 
+        saveMeshWithVertexScalarField(mesh, geodesicDistance, "output_mesh/5_distance.ply");
+    if(save & SaveMeshMask::CSV_DISTANCE) 
+        saveVertexScalarFieldCSV(mesh, geodesicDistance, "output_csv/5_distance.csv");
 
     return geodesicDistance;
 }
 
 
 // DEBUGGING FUNCTIONS
-
-inline void printSparseMatrix(Eigen::SparseMatrix<double> &mat){
-    for (int k=0; k < mat.outerSize(); ++k){
-        for (Eigen::SparseMatrix<double>::InnerIterator it(mat,k); it; ++it){
-            std::cout << "(" << it.row() << "," << it.col() << ") = " << it.value() << std::endl;
-        }
-    }
-}
-
-inline void printVectorXd(Eigen::VectorXd &vec){
-    for (int i = 0; i < vec.size(); ++i){
-        std::cout << vec[i] << std::endl;
-    }
-}
-
-inline void printVectorX3d(Eigen::MatrixX3d &vec){
-    for (int i = 0; i < vec.rows(); ++i){
-        std::cout << vec.row(i) << std::endl;
-    }
-}
 
 inline void saveMeshWithVertexScalarField(MyMesh &mesh, const Eigen::VectorXd scalarField, const char *fname){
     // save scalar field into vertex color
@@ -383,77 +440,26 @@ inline void saveMeshWithFaceVectorField(MyMesh &mesh, const Eigen::MatrixX3d vec
     vcg::tri::io::ExporterPLY<MyMesh>::Save(mesh, fname, vcg::tri::io::Mask::IOM_FACECOLOR); 
 }
 
-
-
-inline Eigen::VectorXd computeHeatMethodGeodesicVerbose(MyMesh &mesh, const Eigen::VectorXd &init_cond, double m = 1){
-    vcg::tri::UpdateTopology<MyMesh>::VertexFace(mesh);
-    vcg::tri::UpdateTopology<MyMesh>::FaceFace(mesh);
-    vcg::tri::UpdateNormal<MyMesh>::PerFaceNormalized(mesh);
-
-    std::cout << "Computing Mass..." << std::endl;
-    Eigen::SparseMatrix<double> mass(mesh.VN(), mesh.VN());
-    buildMassMatrix(mesh, mass);
-    printSparseMatrix(mass);
-    std::cout << "Computing Cotan..." << std::endl;
-    Eigen::SparseMatrix<double> cotanOperator(mesh.VN(), mesh.VN());
-    buildCotanMatrix(mesh, cotanOperator);
-    printSparseMatrix(cotanOperator);
-
-    std::cout << "Computing Edge Length..." << std::endl;
-    double avg_edge_len = computeAverageEdgeLength(mesh);
-    std::cout << "Average Edge: " << avg_edge_len << std::endl;
-    double timestep = m * avg_edge_len * avg_edge_len;
-    std::cout << "Timestep: " << timestep << std::endl;
-    Eigen::SparseMatrix<double> system1(mesh.VN(), mesh.VN());
-    system1 = mass - timestep * cotanOperator;
-    printSparseMatrix(system1);
-
-    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
-
-    std::cout << "Cholesky Factorization 1..." << std::endl;
-    solver.compute(system1);
-    if(solver.info() != Eigen::Success) {
-        std::cout << "ERROR: Cholesky Factorization 1 failed" << std::endl; 
+inline void saveVertexScalarFieldCSV(MyMesh &mesh, const Eigen::VectorXd scalarField, const char *fname){
+    // save vertex positions with scalar field values into CSV file
+    std::ofstream file(fname);
+    file << "x,y,z,s" << std::endl;
+    for (int i = 0; i < mesh.VN(); ++i){
+        Eigen::Vector3d point = toEigen(mesh.vert[i].P());
+        file << point(0) << "," << point(1) << "," << point(2) << "," << scalarField(i) << std::endl;
     }
-    Eigen::VectorXd heatflow = solver.solve(init_cond);
-    if(solver.info() != Eigen::Success) {
-        std::cout << "ERROR: Solving System 1 failed" << std::endl; 
+}
+
+inline void saveFaceVectorFieldCSV(MyMesh &mesh, const Eigen::MatrixX3d vectorField, const char *fname){
+    // save face barycenter positions with vector field values into CSV file
+    std::ofstream file(fname);
+    file << "px,py,pz,vx,vy,vz" << std::endl;
+    for (int i = 0; i < mesh.FN(); ++i){
+        auto face = mesh.face[i];
+        Eigen::Vector3d bar = toEigen(face.P(0) + face.P(1) + face.P(2)) / 3;
+        Eigen::Vector3d vec = vectorField.row(i);
+        file << bar(0) << "," << bar(1) << "," << bar(2) << "," << vec(0) << "," << vec(1) << "," << vec(2) << std::endl;
     }
-    
-    printVectorXd(heatflow);
-    saveMeshWithVertexScalarField(mesh, heatflow, "1_heatflow.ply");
-
-    std::cout << "Computing Gradient..." << std::endl;
-    Eigen::MatrixX3d heatGradient = computeVertexGradient(mesh, heatflow);
-    printVectorX3d(heatGradient);
-    saveMeshWithFaceVectorField(mesh, heatGradient, "2_heatGradient.ply");
-
-    std::cout << "Normalizing Gradient..." << std::endl;
-    Eigen::MatrixX3d normalizedVectorField = normalizeVectorField(-heatGradient);
-    printVectorX3d(normalizedVectorField);
-    saveMeshWithFaceVectorField(mesh, normalizedVectorField, "3_normalizedVectorField.ply");
-    
-    std::cout << "Computing Divergence..." << std::endl;
-    Eigen::VectorXd divergence = computeVertexDivergence(mesh, normalizedVectorField);
-    printVectorXd(divergence);
-    saveMeshWithVertexScalarField(mesh, divergence, "4_divergence.ply");
-
-    Eigen::SparseMatrix<double> system2(mesh.VN(), mesh.VN());
-    system2 = cotanOperator; //+ 1e-6 * Eigen::Matrix<double,-1,-1>::Identity(mesh.VN(), mesh.VN());
-    printSparseMatrix(system2);
-
-    std::cout << "Cholesky Factorization 2..." << std::endl;
-    solver.compute(system2);
-    if(solver.info() != Eigen::Success) {
-        std::cout << "ERROR: Cholesky Factorization 2 failed" << std::endl; 
-    }
-    Eigen::VectorXd geodesicDistance = solver.solve(divergence);
-    if(solver.info() != Eigen::Success) {
-        std::cout << "ERROR: Solving System 2 failed" << std::endl; 
-    }
-    printVectorXd(geodesicDistance);
-
-    return geodesicDistance;
 }
 
 
