@@ -58,12 +58,8 @@ namespace vcg{
                 }
             }
 
-            //normalize the direction
-            float x = int(normalizeFloat(rayDirection[0]) * -1);
-            float y = int(normalizeFloat(rayDirection[1]) * -1);
-            float z = int(normalizeFloat(rayDirection[2]) * -1);
+            Point3f normalizedDir = -rayDirection;
 
-            Point3f normalizedDir(x,y,z);
             RTCRayHit rayhit;
 
             for(int i = 0;i<m.FN(); i++)
@@ -86,27 +82,6 @@ namespace vcg{
             rtcReleaseScene(scene);
             rtcReleaseDevice(device);
 
-        }
-
-        float normalizeFloat(float value){
-            int i = 0;
-
-            if(value <= 10 && value >= -10)
-                    return value;
-
-            while (i<10){
-                value /= 10;
-
-                if(value <= 10 && value >= -10)
-                    return value;
-
-                if(value <= 0.5 && value >= -0.5)
-                    return 0;
-
-                i++;
-            }
-
-            return value;
         }
 
         /*
@@ -409,6 +384,7 @@ namespace vcg{
                     std::swap(face.V(1), face.V(2));  // Swap the second and third vertices
                 }
             }
+
         }
 
 
