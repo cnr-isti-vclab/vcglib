@@ -77,6 +77,7 @@ inline void saveFaceVectorFieldCSV(CMeshO &mesh, const Eigen::MatrixX3d vectorFi
 
 
 inline void buildMassMatrix(CMeshO &mesh, Eigen::SparseMatrix<double> &mass){
+    mass.resize(mesh.VN(), mesh.VN());
     // compute area of all faces
     for (CMeshO::FaceIterator fi = mesh.face.begin(); fi != mesh.face.end(); ++fi)
     {
@@ -112,6 +113,7 @@ inline void buildMassMatrix(CMeshO &mesh, Eigen::SparseMatrix<double> &mass){
 
 
 inline void buildCotanLowerTriMatrix(CMeshO &mesh, Eigen::SparseMatrix<double> &cotanOperator){
+    cotanOperator.resize(mesh.VN(), mesh.VN());
     // initialize a hashtable from vertex pointers to ids
     std::unordered_map<CMeshO::VertexType*, int> vertex_ids;
     for (int i = 0; i < mesh.VN(); ++i){
@@ -346,10 +348,10 @@ inline Eigen::VectorXd computeHeatMethodGeodesic(
     vcg::tri::UpdateTopology<CMeshO>::FaceFace(mesh);
     vcg::tri::UpdateNormal<CMeshO>::PerFaceNormalized(mesh);
 
-    Eigen::SparseMatrix<double> mass(mesh.VN(), mesh.VN());
+    Eigen::SparseMatrix<double> mass;
     buildMassMatrix(mesh, mass);
 
-    Eigen::SparseMatrix<double> cotanOperator(mesh.VN(), mesh.VN());
+    Eigen::SparseMatrix<double> cotanOperator;
     buildCotanLowerTriMatrix(mesh, cotanOperator);
 
     double avg_edge_len = computeAverageEdgeLength(mesh);

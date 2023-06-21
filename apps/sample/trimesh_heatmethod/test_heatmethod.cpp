@@ -40,12 +40,12 @@ inline Eigen::VectorXd computeHeatMethodGeodesicVerbose(CMeshO &mesh, const Eige
     vcg::tri::UpdateNormal<CMeshO>::PerFaceNormalized(mesh);
 
     std::cout << "Computing Mass..." << std::endl;
-    Eigen::SparseMatrix<double> mass(mesh.VN(), mesh.VN());
+    Eigen::SparseMatrix<double> mass;
     buildMassMatrix(mesh, mass);
     // printSparseMatrix(mass);
 
     std::cout << "Computing Cotan..." << std::endl;
-    Eigen::SparseMatrix<double> cotanOperator(mesh.VN(), mesh.VN());
+    Eigen::SparseMatrix<double> cotanOperator;
     buildCotanLowerTriMatrix(mesh, cotanOperator);
     // printSparseMatrix(cotanOperator);
 
@@ -117,12 +117,11 @@ int main(int argc, char const *argv[])
     std::cout << "Initial conditions..." << std::endl;
     Eigen::VectorXd initialConditions(m.VN());
     int random_source = rand() % m.VN();
+    int c = 0;
     for (int i = 0; i < m.VN(); ++i){
-        if (i == random_source)
-            initialConditions(i) = 1;
-        else
-            initialConditions(i) = 0;
+        initialConditions(i) = (i == random_source) ? (++c, 1) : 0;
     }
+    std::cout << "Selected Points: " << c << std::endl;
     std::cout << "Source point id: " << random_source << std::endl;
     std::cout << toEigen(m.vert[random_source].P()) << std::endl;
 
