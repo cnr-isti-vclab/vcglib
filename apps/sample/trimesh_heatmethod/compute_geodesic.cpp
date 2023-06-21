@@ -1,5 +1,8 @@
 #include "trimesh_heatmethod.h"
 
+#include <wrap/io_trimesh/import.h>
+#include <wrap/io_trimesh/export.h>
+
 inline void printUsage(char const * prog){
     printf("Usage: %s [--save-csv] <input_mesh>\n", prog);
     printf("Options:\n");
@@ -36,8 +39,8 @@ int main(int argc, char const *argv[])
     std::tie (path, save_csv) = options;
 
     // load mesh
-    MyMesh m;
-    if (vcg::tri::io::Importer<MyMesh>::Open(m, path) != 0)
+    CMeshO m;
+    if (vcg::tri::io::Importer<CMeshO>::Open(m, path) != 0)
     {
         printf("Error reading file  %s\n", path);
         exit(0);
@@ -58,16 +61,17 @@ int main(int argc, char const *argv[])
     // compute geodesic
     SaveMeshMask saveMask = SaveMeshMask::NONE;
     if (save_csv)
-        saveMask = SaveMeshMask::CSV_ALL;
-    Eigen::VectorXd distance = computeHeatMethodGeodesic(m, initialConditions, 1, saveMask);
+        saveMask = SaveMeshMask::ALL;
+    Eigen::VectorXd distance = computeHeatMethodGeodesic(m, initialConditions, 1.0, saveMask);
 
     // save geodesic and print to stdout
     for (int i = 0; i < m.VN(); ++i){
         m.vert[i].Q() = distance(i);
+        std::cout << i << " : " << distance(i) << std::endl;
     }
     m.vert[random_source].C() = vcg::Color4b::Red;
 
     // save mesh (NOTE: storing quality as double will make the PLY file unreadable)
-    vcg::tri::io::ExporterPLY<MyMesh>::Save(m, "distance_mesh.ply", vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY); 
+    vcg::tri::io::ExporterPLY<CMeshO>::Save(m, "distance_mesh.ply", vcg::tri::io::Mask::IOM_VERTCOLOR | vcg::tri::io::Mask::IOM_VERTQUALITY); 
     return 0;
 }
