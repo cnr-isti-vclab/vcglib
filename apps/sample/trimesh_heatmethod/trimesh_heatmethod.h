@@ -129,10 +129,10 @@ inline void buildCotanLowerTriMatrix(CMeshO &mesh, Eigen::SparseMatrix<double> &
         Eigen::Vector3d e1 = toEigen(p0 - p2);
         Eigen::Vector3d e2 = toEigen(p1 - p0);
 
-        // note: the minus sign here is wrong
-        double alpha0 = -cotan(e1, e2) / 2;
-        double alpha1 = -cotan(e2, e0) / 2;
-        double alpha2 = -cotan(e0, e1) / 2;
+        // first edge is inverted to get correct orientation
+        double alpha0 = cotan(-e1, e2) / 2;
+        double alpha1 = cotan(-e2, e0) / 2;
+        double alpha2 = cotan(-e0, e1) / 2;
 
         int i0 = vertex_ids[fi->V(0)];
         int i1 = vertex_ids[fi->V(1)];
@@ -196,8 +196,7 @@ inline Eigen::MatrixX3d computeVertexGradient(CMeshO &mesh, const Eigen::VectorX
         n /= n.norm();
         // face area
         double faceArea = fp->Q();
-        // (ORDERING): edge unit vectors (assuming counter-clockwise ordering)
-        // note if the ordering is clockwise, the gradient will point in the opposite direction
+        // edge unit vectors (counter-clockwise)
         Eigen::Vector3d e0 = toEigen(p2 - p1);
         e0 /= e0.norm();
         Eigen::Vector3d e1 = toEigen(p0 - p2);
@@ -210,13 +209,13 @@ inline Eigen::MatrixX3d computeVertexGradient(CMeshO &mesh, const Eigen::VectorX
         Eigen::Vector3d g2 = n.cross(e2); //v2 grad
 
         // add vertex gradient contributions
-        Eigen::Vector3d total_grad = (
+        Eigen::Vector3d tri_grad = (
             g0 * heat(vertex_ids[fp->V(0)]) + 
             g1 * heat(vertex_ids[fp->V(1)]) + 
             g2 * heat(vertex_ids[fp->V(2)])
         ) / (2 * faceArea);
 
-        heatGradientField.row(i) = total_grad;
+        heatGradientField.row(i) = tri_grad;
     }
     return heatGradientField;
 }
@@ -273,8 +272,8 @@ inline Eigen::VectorXd computeVertexDivergence(CMeshO &mesh, const Eigen::Matrix
                 eo = toEigen(p1 - p0); //e2
             }
             // compute left and right cotangents
-            double cotl = cotan(-el, eo); // -el -> angle between el and eo
-            double cotr = cotan(er, eo);
+            double cotl = cotan(-el, -eo);
+            double cotr = cotan(-er, eo);
             // normalize edge vectors after cotangent computation
             el /= el.norm();
             er /= er.norm();
@@ -385,7 +384,7 @@ inline Eigen::VectorXd computeHeatMethodGeodesic(
         saveVertexScalarFieldCSV(mesh, divergence, "output_csv/4_divergence.csv");
 
     Eigen::SparseMatrix<double> system2(mesh.VN(), mesh.VN());
-    system2 = cotanOperator; //+ 1e-6 * Eigen::Matrix<double,-1,-1>::Identity(mesh.VN(), mesh.VN());
+    system2 = cotanOperator;
     
     solver.compute(system2);
     if(solver.info() != Eigen::Success) {
@@ -395,8 +394,7 @@ inline Eigen::VectorXd computeHeatMethodGeodesic(
     if(solver.info() != Eigen::Success) {
         std::cerr << "ERROR: Solving System 2 failed" << std::endl; 
     }
-    // invert and shift
-    geodesicDistance.array() *= -1; // no clue as to why this needs to be here
+    // shift to impose boundary conditions (dist(d) = 0 \forall d \in init_cond)
     geodesicDistance.array() -= geodesicDistance.minCoeff();
 
     if(save & SaveMeshMask::CSV_DISTANCE) 

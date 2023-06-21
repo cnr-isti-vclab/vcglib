@@ -95,14 +95,12 @@ inline Eigen::VectorXd computeHeatMethodGeodesicVerbose(CMeshO &mesh, const Eige
     if(solver.info() != Eigen::Success) {
         std::cout << "ERROR: Solving System 2 failed" << std::endl; 
     }
-    // invert and shift
-    geodesicDistance.array() *= -1; // no clue as to why this needs to be here
+    // shift to impose boundary conditions (dist(d) = 0 \forall d \in init_cond)
     geodesicDistance.array() -= geodesicDistance.minCoeff();
     printVectorXd(geodesicDistance);
 
     return geodesicDistance;
 }
-
 
 
 int main(int argc, char const *argv[])

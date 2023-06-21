@@ -67,7 +67,6 @@ int main(int argc, char const *argv[])
     // save geodesic and print to stdout
     for (int i = 0; i < m.VN(); ++i){
         m.vert[i].Q() = distance(i);
-        std::cout << i << " : " << distance(i) << std::endl;
     }
     m.vert[random_source].C() = vcg::Color4b::Red;
 
