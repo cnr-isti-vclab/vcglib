@@ -59,9 +59,9 @@ int main(int argc, char const *argv[])
     std::cout << toEigen(m.vert[random_source].P()) << std::endl;
 
     // compute geodesic
-    SaveMeshMask saveMask = SaveMeshMask::NONE;
+    SaveMask saveMask = SaveMask::NONE;
     if (save_csv)
-        saveMask = SaveMeshMask::ALL;
+        saveMask = SaveMask::ALL;
     Eigen::VectorXd distance = computeHeatMethodGeodesic(m, initialConditions, 1.0, saveMask);
 
     // save geodesic and print to stdout

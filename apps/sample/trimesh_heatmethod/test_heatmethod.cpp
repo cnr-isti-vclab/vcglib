@@ -34,6 +34,7 @@ inline void printCompareSparseMatrices(Eigen::SparseMatrix<double> &mat1, Eigen:
 
 
 inline Eigen::VectorXd computeHeatMethodGeodesicVerbose(CMeshO &mesh, const Eigen::VectorXd &init_cond, double m = 1){
+
     vcg::tri::UpdateTopology<CMeshO>::VertexFace(mesh);
     vcg::tri::UpdateTopology<CMeshO>::FaceFace(mesh);
     vcg::tri::UpdateNormal<CMeshO>::PerFaceNormalized(mesh);

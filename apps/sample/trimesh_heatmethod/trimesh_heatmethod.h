@@ -12,37 +12,51 @@
 #include <iostream>
 #include <fstream>
 
+namespace {
+    class MyEdge;
+    class MyFace;
+    class MyVertex;
 
-class MyEdge;
-class MyFace;
-class MyVertex;
+    struct MyUsedTypes : public vcg::UsedTypes<
+        vcg::Use<MyVertex>::AsVertexType, 
+        vcg::Use<MyEdge>::AsEdgeType, 
+        vcg::Use<MyFace>::AsFaceType
+    >{};
 
-struct MyUsedTypes : public vcg::UsedTypes<
-    vcg::Use<MyVertex>::AsVertexType, 
-    vcg::Use<MyEdge>::AsEdgeType, 
-    vcg::Use<MyFace>::AsFaceType
->{};
+    class MyVertex : public vcg::Vertex<
+        MyUsedTypes,
+        vcg::vertex::Coord3f,
+        vcg::vertex::VFAdj,
+        vcg::vertex::Color4b, //
+        vcg::vertex::Qualityf,
+        vcg::vertex::BitFlags // needed for PLY export
+    >{};
+    class MyEdge : public vcg::Edge<
+        MyUsedTypes
+    >{};
+    class MyFace : public vcg::Face<
+        MyUsedTypes,
+        vcg::face::VFAdj,
+        vcg::face::FFAdj,
+        vcg::face::VertexRef,
+        vcg::face::Normal3f,
+        vcg::face::Qualityf,
+        vcg::face::Color4b //
+    >{};
 
-class MyVertex : public vcg::Vertex<
-    MyUsedTypes,
-    vcg::vertex::Coord3f,
-    vcg::vertex::VFAdj,
-    vcg::vertex::Color4b, //
-    vcg::vertex::Qualityf,
-    vcg::vertex::BitFlags // needed for PLY export
->{};
-class MyEdge : public vcg::Edge<
-    MyUsedTypes
->{};
-class MyFace : public vcg::Face<
-    MyUsedTypes,
-    vcg::face::VFAdj,
-    vcg::face::FFAdj,
-    vcg::face::VertexRef,
-    vcg::face::Normal3f,
-    vcg::face::Qualityf,
-    vcg::face::Color4b //
->{};
+    inline Eigen::Vector3d toEigen(const vcg::Point3f& p)
+    {
+        return Eigen::Vector3d(p.X(), p.Y(), p.Z());
+    };
+
+
+    inline double cotan(const Eigen::Vector3d& v0, const Eigen::Vector3d& v1)
+    {
+        // cos(theta) / sin(theta)
+        return v0.dot(v1) / v0.cross(v1).norm();
+    };
+}
+
 class CMeshO : public vcg::tri::TriMesh<
     std::vector<MyVertex>, 
     std::vector<MyFace>,
@@ -51,8 +65,6 @@ class CMeshO : public vcg::tri::TriMesh<
 
 
 // foward declarations
-inline Eigen::Vector3d toEigen(const vcg::Point3f& p);
-inline double cotan(const Eigen::Vector3d& v0, const Eigen::Vector3d& v1);
 inline void buildMassMatrix(CMeshO &mesh, Eigen::SparseMatrix<double> &mass);
 inline void buildCotanLowerTriMatrix(CMeshO &mesh, Eigen::SparseMatrix<double> &cotanOperator);
 inline double computeAverageEdgeLength(CMeshO &mesh);
@@ -62,19 +74,6 @@ inline Eigen::MatrixX3d normalizeVectorField(const Eigen::MatrixX3d &field);
 enum SaveMeshMask;
 inline void saveVertexScalarFieldCSV(CMeshO &mesh, const Eigen::VectorXd scalarField, const char *fname);
 inline void saveFaceVectorFieldCSV(CMeshO &mesh, const Eigen::MatrixX3d vectorField, const char *fname);
-
-
-inline Eigen::Vector3d toEigen(const vcg::Point3f& p)
-{
-    return Eigen::Vector3d(p.X(), p.Y(), p.Z());
-};
-
-
-inline double cotan(const Eigen::Vector3d& v0, const Eigen::Vector3d& v1)
-{
-    // cos(theta) / sin(theta)
-    return v0.dot(v1) / v0.cross(v1).norm();
-};
 
 
 inline void buildMassMatrix(CMeshO &mesh, Eigen::SparseMatrix<double> &mass){
@@ -286,7 +285,7 @@ inline Eigen::VectorXd computeVertexDivergence(CMeshO &mesh, const Eigen::Matrix
 }
 
 
-enum SaveMeshMask : unsigned int
+enum SaveMask : unsigned char
 {
 	NONE                 = 0x00,
 
@@ -299,16 +298,16 @@ enum SaveMeshMask : unsigned int
     ALL                  = 0x1F,
 };
 
-inline SaveMeshMask operator|(SaveMeshMask lhs, SaveMeshMask rhs) {
-    return static_cast<SaveMeshMask>(
-        static_cast<std::underlying_type<SaveMeshMask>::type>(lhs) |
-        static_cast<std::underlying_type<SaveMeshMask>::type>(rhs)
+inline SaveMask operator|(SaveMask lhs, SaveMask rhs) {
+    return static_cast<SaveMask>(
+        static_cast<std::underlying_type<SaveMask>::type>(lhs) |
+        static_cast<std::underlying_type<SaveMask>::type>(rhs)
     );
 }
-inline SaveMeshMask operator&(SaveMeshMask lhs, SaveMeshMask rhs) {
-    return static_cast<SaveMeshMask>(
-        static_cast<std::underlying_type<SaveMeshMask>::type>(lhs) &
-        static_cast<std::underlying_type<SaveMeshMask>::type>(rhs)
+inline SaveMask operator&(SaveMask lhs, SaveMask rhs) {
+    return static_cast<SaveMask>(
+        static_cast<std::underlying_type<SaveMask>::type>(lhs) &
+        static_cast<std::underlying_type<SaveMask>::type>(rhs)
     );
 }
 
@@ -341,7 +340,7 @@ inline Eigen::VectorXd computeHeatMethodGeodesic(
     CMeshO &mesh, 
     const Eigen::VectorXd &init_cond, 
     double m = 1.0, 
-    SaveMeshMask save = SaveMeshMask::NONE
+    SaveMask save = SaveMask::NONE
 ){
     vcg::tri::UpdateTopology<CMeshO>::VertexFace(mesh);
     vcg::tri::UpdateTopology<CMeshO>::FaceFace(mesh);
@@ -368,19 +367,19 @@ inline Eigen::VectorXd computeHeatMethodGeodesic(
     if(solver.info() != Eigen::Success) {
         std::cerr << "ERROR: Solving System 1 failed" << std::endl; 
     }
-    if(save & SaveMeshMask::CSV_HEAT_FLOW) 
+    if(save & SaveMask::CSV_HEAT_FLOW) 
         saveVertexScalarFieldCSV(mesh, heatflow, "output_csv/1_heatflow.csv");
 
     Eigen::MatrixX3d heatGradient = computeVertexGradient(mesh, heatflow); // (FN, 3)
-    if(save & SaveMeshMask::CSV_HEAT_GRADIENT) 
+    if(save & SaveMask::CSV_HEAT_GRADIENT) 
         saveFaceVectorFieldCSV(mesh, heatGradient, "output_csv/2_heatGradient.csv");
 
     Eigen::MatrixX3d normalizedVectorField = normalizeVectorField(-heatGradient); // (FN, 3)
-    if(save & SaveMeshMask::CSV_UNIT_VECTOR_FIELD)
+    if(save & SaveMask::CSV_UNIT_VECTOR_FIELD)
         saveFaceVectorFieldCSV(mesh, normalizedVectorField, "output_csv/3_normalizedVectorField.csv");
     
     Eigen::VectorXd divergence = computeVertexDivergence(mesh, normalizedVectorField); // (VN)
-    if(save & SaveMeshMask::CSV_DIVERGENCE) 
+    if(save & SaveMask::CSV_DIVERGENCE) 
         saveVertexScalarFieldCSV(mesh, divergence, "output_csv/4_divergence.csv");
 
     Eigen::SparseMatrix<double> system2(mesh.VN(), mesh.VN());
@@ -397,7 +396,7 @@ inline Eigen::VectorXd computeHeatMethodGeodesic(
     // shift to impose boundary conditions (dist(d) = 0 \forall d \in init_cond)
     geodesicDistance.array() -= geodesicDistance.minCoeff();
 
-    if(save & SaveMeshMask::CSV_DISTANCE) 
+    if(save & SaveMask::CSV_DISTANCE) 
         saveVertexScalarFieldCSV(mesh, geodesicDistance, "output_csv/5_distance.csv");
 
     return geodesicDistance;
