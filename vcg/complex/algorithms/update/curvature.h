@@ -475,7 +475,7 @@ static void MeanAndGaussian(MeshType & m)
     angle2 = M_PI-(angle0+angle1);
 
     // Skip degenerate triangles.
-    if(angle0==0 || angle1==0 || angle1==0) continue;
+    if(angle0==0 || angle1==0 || angle2==0) continue;
 
     e01v = ( (*fi).V(1)->cP() - (*fi).V(0)->cP() ) ;
     e12v = ( (*fi).V(2)->cP() - (*fi).V(1)->cP() ) ;
