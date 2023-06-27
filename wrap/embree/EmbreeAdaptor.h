@@ -384,6 +384,7 @@ namespace vcg{
                     std::swap(face.V(1), face.V(2));  // Swap the second and third vertices
                 }
             }
+            tri::UpdateSelection<MeshType>::FaceClear(inputM);
 
         }
 
