@@ -49,16 +49,18 @@ namespace vcg{
             something the face color is set to black else is set to white.
         */
         public:
-         void selectVisibleFaces(MeshType &m, Point3f rayDirection){
-
-            //deselect all previously selected faces
-            for(int i = 0;i<m.FN(); i++){
-                if(m.face[i].IsS()){
-                    m.face[i].ClearS();
+         void selectVisibleFaces(MeshType &m, Point3f rayDirection, bool incrementalSelect){
+            
+            if (incrementalSelect == false){
+                //deselect all previously selected faces
+                for(int i = 0;i<m.FN(); i++){
+                    if(m.face[i].IsS()){
+                        m.face[i].ClearS();
+                    }
                 }
             }
 
-            Point3f normalizedDir = -rayDirection;
+            Point3f normalizedDir = rayDirection;
 
             RTCRayHit rayhit;
 
@@ -68,14 +70,15 @@ namespace vcg{
                 std::vector<Point3f> unifDirVec;
                 Point3f dir = normalizedDir;
 
-                rayhit = setRayValues(b, dir, 0.5);
+                rayhit = setRayValues(b, dir, 4);
 
                 RTCIntersectContext context;
                 rtcInitIntersectContext(&context);
 
                 rtcIntersect1(scene, &context, &rayhit);
 
-                if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID)
+                //if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID)
+                if (rayhit.ray.tfar == std::numeric_limits<float>::infinity())
                     m.face[i].SetS();
 
             }
@@ -83,6 +86,8 @@ namespace vcg{
             rtcReleaseDevice(device);
 
         }
+
+        
 
         /*
         @Author: Paolo Fasano
