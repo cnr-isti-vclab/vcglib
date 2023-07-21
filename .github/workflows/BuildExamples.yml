@@ -1,4 +1,4 @@
-name: BuildExamplesLinux
+name: BuildExamples
 
 on:
   [push, pull_request]
@@ -21,6 +21,14 @@ jobs:
         version: '5.15.2'
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
+    - name: Setup env Linux
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get install -y ninja-build
+    - name: Setup env macOS
+      if: runner.os == 'macOS'
+      run: |
+        brew install ninja
     - name: Build Samples
       shell: bash
       run: |
