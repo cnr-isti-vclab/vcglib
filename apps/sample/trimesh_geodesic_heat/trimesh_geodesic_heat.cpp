@@ -68,7 +68,7 @@ int main( int argc, char **argv )
     tri::io::ExporterPLY<MyMesh>::Save(m,"base.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_VERTQUALITY);
 
     int t0=clock();
-    tri::GeodesicHeatCache cache = tri::GeodesicHeat<MyMesh>::BuildCache(m, 1.0);
+    tri::GeodesicHeat<MyMesh>::GeodesicHeatCache cache = tri::GeodesicHeat<MyMesh>::BuildCache(m, 1.0);
     tri::GeodesicHeat<MyMesh>::ComputeFromCache(m, seedVec, cache);
     int t1=clock();
     tri::GeodesicHeat<MyMesh>::ComputeFromCache(m, seedVec, cache);
