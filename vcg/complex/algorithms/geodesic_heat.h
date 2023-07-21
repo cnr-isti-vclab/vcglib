@@ -5,7 +5,6 @@
 
 #include <vcg/complex/algorithms/update/quality.h>
 #include <vcg/complex/algorithms/stat.h>
-#include <vcg/complex/algorithms/mesh_to_matrix.h>
 
 #include <vector>
 #include <memory>
@@ -55,11 +54,21 @@ public:
         mass.reserve(Eigen::VectorXi::Constant(mesh.VN(),1));
         vcg::tri::UpdateQuality<MeshType>::FaceArea(mesh);
 
-        std::vector<std::pair<int,int>> index;
-        std::vector<ScalarType> entry;
-        vcg::tri::MeshToMatrix<MeshType>::MassMatrixEntry(mesh, index, entry, false);
-        for(int i = 0; i < index.size(); ++i){
-            mass.insert(index[i].first, index[i].second) = entry[i];
+        // compute area of the dual cell for each vertex
+        for (int i = 0; i < mesh.VN(); ++i){
+            VertexType *vp = &mesh.vert[i];
+
+            std::vector<FacePointer> faces;
+            std::vector<int> indices;
+            vcg::face::VFStarVF<FaceType>(vp, faces, indices);
+
+            double area = 0;
+            for (int j = 0; j < faces.size(); ++j)
+            {
+                area += faces[j]->Q();
+            }
+            area /= 3;
+            mass.insert(i, i) = area;
         }
 
         mass.makeCompressed();
@@ -268,7 +277,7 @@ public:
      * this will avoid recomputing the underlying factorizations for each set of source points.
      *
      */
-    static int Compute(MeshType &mesh, const std::vector<VertexPointer> sources, float m = 1){
+    static bool Compute(MeshType &mesh, const std::vector<VertexPointer> sources, float m = 1){
         vcg::tri::RequireVFAdjacency<MeshType>(mesh);
         vcg::tri::RequireFFAdjacency<MeshType>(mesh);
         vcg::tri::RequirePerFaceNormal<MeshType>(mesh);
@@ -303,17 +312,17 @@ public:
         // core of the heat method
         double timestep = m * averageEdgeLength * averageEdgeLength;
         solver1.compute(massMatrix - timestep * cotanMatrix);
-        if (solver1.info() != Eigen::Success) return 0;
+        if (solver1.info() != Eigen::Success) return false;
         solver2.compute(cotanMatrix);
-        if (solver2.info() != Eigen::Success) return 1;
+        if (solver2.info() != Eigen::Success) return false;
 
         Eigen::VectorXd heatflow = solver1.solve(sourcePoints); // (VN)
-        if (solver1.info() != Eigen::Success) return 2;
+        if (solver1.info() != Eigen::Success) return false;
         Eigen::MatrixX3d heatGradient = computeFaceGradient(mesh, heatflow); // (FN, 3)
         Eigen::MatrixX3d unitVectorField = normalizeVectorField(-heatGradient); // (FN, 3)
         Eigen::VectorXd divergence = computeVertexDivergence(mesh, unitVectorField); // (VN)
         Eigen::VectorXd geodesicDistance = solver2.solve(divergence); // (VN)
-        if (solver2.info() != Eigen::Success) return 3;
+        if (solver2.info() != Eigen::Success) return false;
 
         // shift to impose dist(source) = 0
         geodesicDistance.array() -= geodesicDistance.minCoeff();
@@ -322,7 +331,7 @@ public:
         for(int i=0; i < mesh.VN(); i++){
             mesh.vert[i].Q() = geodesicDistance(i);
         }
-        return 4;
+        return true;
     }
 
     /**
