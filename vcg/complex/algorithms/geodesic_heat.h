@@ -174,11 +174,8 @@ public:
             double faceArea = fp->Q();
             // edge unit vectors (counter-clockwise)
             Eigen::Vector3d e0 = toEigen(p2 - p1);
-            e0 /= e0.norm();
             Eigen::Vector3d e1 = toEigen(p0 - p2);
-            e1 /= e1.norm();
             Eigen::Vector3d e2 = toEigen(p1 - p0);
-            e2 /= e2.norm();
             // gradient unit vectors
             Eigen::Vector3d g0 = n.cross(e0); //v0 grad
             Eigen::Vector3d g1 = n.cross(e1); //v1 grad
@@ -249,9 +246,6 @@ public:
                 // compute left and right cotangents
                 double cotl = cotan(-el, -eo);
                 double cotr = cotan(-er, eo);
-                // normalize edge vectors after cotangent computation
-                el /= el.norm();
-                er /= er.norm();
                 // add divergence contribution of given face
                 Eigen::Vector3d x = field.row(vcg::tri::Index(mesh,fp));
                 divergence(i) += (cotl * er.dot(x) + cotr * el.dot(x)) / 2;

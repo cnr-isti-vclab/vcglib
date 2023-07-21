@@ -56,26 +56,26 @@ int main( int argc, char **argv )
     seedVec.push_back(closest);
     tri::Clean<MyMesh>::RemoveUnreferencedVertex(m);
 
-    int status;
-    status = tri::GeodesicHeat<MyMesh>::Compute(m, seedVec, param_m);
-    if (status != 4){
-        printf("computation of HeatGeodesic has failed! %d", status);
+    bool success;
+    success = tri::GeodesicHeat<MyMesh>::Compute(m, seedVec, param_m);
+    if (!success){
+        printf("computation of HeatGeodesic has failed! %d", success);
         exit(0);
     }
     pair<float,float> minmax = tri::Stat<MyMesh>::ComputePerVertexQualityMinMax(m);
     tri::UpdateColor<MyMesh>::PerVertexQualityRamp(m);
     printf("min %f max %f\n",minmax.first, minmax.second);
-    tri::io::ExporterPLY<MyMesh>::Save(m,"base_m1.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_VERTQUALITY);
+    tri::io::ExporterPLY<MyMesh>::Save(m,"base.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_VERTQUALITY);
 
     int t0=clock();
-    tri::GeodesicHeatCache cache = tri::GeodesicHeat<MyMesh>::BuildCache(m, 5.0);
+    tri::GeodesicHeatCache cache = tri::GeodesicHeat<MyMesh>::BuildCache(m, 1.0);
     tri::GeodesicHeat<MyMesh>::ComputeFromCache(m, seedVec, cache);
     int t1=clock();
     tri::GeodesicHeat<MyMesh>::ComputeFromCache(m, seedVec, cache);
     int t2=clock();
     printf("Non-Cached Time: %6.3f\n",float(t1-t0)/CLOCKS_PER_SEC);
     printf("Cached Time    : %6.3f\n",float(t2-t1)/CLOCKS_PER_SEC);
-    tri::io::ExporterPLY<MyMesh>::Save(m,"base_m2.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_VERTQUALITY);
+    tri::io::ExporterPLY<MyMesh>::Save(m,"base_m1.ply",tri::io::Mask::IOM_VERTCOLOR | tri::io::Mask::IOM_VERTQUALITY);
 
     return 0;
 }
