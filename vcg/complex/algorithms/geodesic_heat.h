@@ -1,5 +1,5 @@
-#ifndef __VCG_GEODESICHEAT
-#define __VCG_GEODESICHEAT
+#ifndef __VCG_GEODESIC_HEAT
+#define __VCG_GEODESIC_HEAT
 #include <Eigen/Sparse>
 #include <Eigen/SparseCholesky>
 
