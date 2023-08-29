@@ -1,0 +1,38 @@
+name: BuildExamples
+
+on:
+  [push, pull_request]
+
+jobs:
+  ubuntu_build_tests:
+    name: Build Examples
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        cache: true
+        version: '5.15.2'
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+    - name: Setup env Linux
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get install -y ninja-build
+    - name: Setup env macOS
+      if: runner.os == 'macOS'
+      run: |
+        brew install ninja
+    - name: Build Samples
+      shell: bash
+      run: |
+        mkdir build
+        cd build
+        cmake -GNinja -DVCG_BUILD_EXAMPLES=ON ..
+        ninja
