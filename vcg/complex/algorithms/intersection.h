@@ -263,7 +263,7 @@ bool IntersectionRayMesh(
 	)
 {
 	ScalarType bar1, bar2, bar3;
-	typename TriMeshType::ConstFacePointer& fp;
+	typename TriMeshType::ConstFacePointer fp;
 	return IntersectionRayMesh(mesh, ray, hitPoint, bar1, bar2, bar3, fp);
 }
 

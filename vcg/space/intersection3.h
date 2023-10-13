@@ -437,7 +437,7 @@ bool IntersectionRayTriangle(
     Line3<ScalarType> line(ray.Origin(), ray.Direction());
     ScalarType new_hitDistance = hitDistance, new_bar1 = bar1, new_bar2 = bar2;
     if ( IntersectionLineTriangle(line, vert0, vert1, vert2, new_hitDistance, new_bar1, new_bar2) ) {
-        if (t < 0) return false;
+        if (new_hitDistance < 0) return false;
         else {
             hitDistance = new_hitDistance; bar1 = new_bar1; bar2 = new_bar2;
             return true;
