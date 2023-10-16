@@ -1,14 +1,9 @@
 /*
- echo $LD_LIBRARY_PATH
-  LD_LIBRARY_PATH=/mnt/c/Users/super/Dropbox/3DProcessing/project3D/embree-3.13.3.x86_64.linux/lib:$LD_LIBRARY_PATH
-
-  LD_LIBRARY_PATH=/mnt/e/UniversitàMagistrale/secondoSemestre/3DgeometricModelingProcessing/vcglib/wrap/embree/embree-3.13.3.x86_64.linux/lib:$LD_LIBRARY_PATH
-
+  echo $LD_LIBRARY_PATH
+  LD_LIBRARY_PATH=/mnt/e/UniversitàMagistrale/secondoSemestre/3DgeometricModelingProcessing/clean/vcglib/wrap/embree/embree-3.13.4.x86_64.linux/lib
   export LD_LIBRARY_PATH
-  g++ ./wrap/embree/vcgForEmbree.cpp -o prova.o -lembree3 -I ./vcg -I ./ -I ./eigenlib -I ./wrap/embree/embree-3.13.3.x86_64.linux/include -L ./wrap/embree/embree-3.13.3.x86_64.linux/lib -std=c++11
-  
-  g++ ./wrap/embree/sample/embree_sample.cpp -o prova.o  -lembree3 -I ./vcg -I ./ -I ./eigenlib -I ./wrap/embree/embree-3.13.3.x86_64.linux/include -L ./wrap/embree/embree-3.13.3.x86_64.linux/lib -std=c++11 -fopenmp -O3
-  ./prova.o ./wrap/embree/sample/ExampleMeshes/bunny10k.off 32 false
+  g++ ./apps/embree/embree_sample.cpp -o  ./apps/embree/prova.o -lembree3  -I ./vcg -I ./ -I ./eigenlib -I ./wrap/embree/embree-3.13.4.x86_64.linux/include -L ./wrap/embree/embree-3.13.4.x86_64.linux/lib -std=c++11 -fopenmp -O3
+  ./apps/embree/prova.o ./apps/meshes/torus.off 64
 */
 #include <iostream>
 
@@ -44,7 +39,7 @@ using namespace std;
 
 int main( int argc, char **argv )
 {
-    cout << "start" << endl;
+  cout << "start" << endl;
   MyMesh m;
   int ret = tri::io::ImporterOFF<MyMesh>::Open(m, argv[1]);
   if(ret!=tri::io::ImporterOFF<MyMesh>::NoError)
@@ -60,14 +55,15 @@ int main( int argc, char **argv )
   }
 
   
-  MyMesh m2,m3,m4,m5,m6;
+  MyMesh m2,m3,m4,m5,m6,m7;
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m2,m);
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m3,m);
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m4, m);
   vcg::tri::Append<MyMesh, MyMesh>::MeshCopy(m5, m);
   vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m6,m);
+  vcg::tri::Append<MyMesh,MyMesh>::MeshCopy(m7,m);
 
-  EmbreeAdaptor<MyMesh> adaptor = EmbreeAdaptor<MyMesh>(m,8);
+  EmbreeAdaptor<MyMesh> adaptor = EmbreeAdaptor<MyMesh>(m);
   adaptor.computeAmbientOcclusion(m,nOfRays);
   tri::UpdateQuality<MyMesh>::VertexFromFace(m);
   tri::UpdateColor<MyMesh>::PerVertexQualityGray(m);
@@ -76,6 +72,7 @@ int main( int argc, char **argv )
  
   cout << "Done AO" << endl;
 
+   
   std::vector<Point3f> unifDirVec;
   std::vector<Point3f> ndir;
 	GenNormal<float>::Fibonacci(nOfRays,unifDirVec);
@@ -86,7 +83,7 @@ int main( int argc, char **argv )
             ndir.push_back(unifDirVec.at(g));
         }
     }
-  adaptor = EmbreeAdaptor<MyMesh>(m2,8);
+  adaptor = EmbreeAdaptor<MyMesh>(m2);
   adaptor.computeAmbientOcclusion(m2,ndir);
   tri::UpdateQuality<MyMesh>::VertexFromFace(m2);
   tri::UpdateColor<MyMesh>::PerVertexQualityGray(m2);
@@ -94,27 +91,37 @@ int main( int argc, char **argv )
 
   cout << "Done AO Directioned" << endl;
   
-  EmbreeAdaptor<MyMesh> adaptor2 = EmbreeAdaptor<MyMesh>(m4,8);
+  EmbreeAdaptor<MyMesh> adaptor2 = EmbreeAdaptor<MyMesh>(m4);
   adaptor2.computeSDF(m4,nOfRays,90);
   tri::UpdateQuality<MyMesh>::VertexFromFace(m4);
   tri::UpdateColor<MyMesh>::PerVertexQualityRamp(m4);
   tri::io::ExporterOFF<MyMesh>::Save(m4,"testSDF.off",tri::io::Mask::IOM_VERTCOLOR);
   
   cout << "Done SDF" << endl;
-
-  adaptor = EmbreeAdaptor<MyMesh>(m5,8);
+  
+  adaptor = EmbreeAdaptor<MyMesh>(m5);
   adaptor.computeNormalAnalysis(m5, nOfRays);
   tri::io::ExporterOFF<MyMesh>::Save(m5, "testNormal.off", tri::io::Mask::IOM_FACENORMAL);
   //vector<Point3f> BentNormal = adaptor.AOBentNormal(m5,nOfRays);
 
   cout << "Done NormalAnlysis" << endl;
 
-  adaptor = EmbreeAdaptor<MyMesh>(m6, 4);
+  adaptor = EmbreeAdaptor<MyMesh>(m6);
   Point3f p(1, 0, 0);
   adaptor.selectVisibleFaces(m6, p);
   tri::io::ExporterOFF<MyMesh>::Save(m6, "testSelectS.off", tri::io::Mask::IOM_FACECOLOR);
   
-  cout << "done face selection" << endl;
+  cout << "done face selection" << endl; 
+
+
+  adaptor = EmbreeAdaptor<MyMesh>(m7);
+  adaptor.computeObscurance(m7,nOfRays,0.01f);
+  tri::UpdateQuality<MyMesh>::VertexFromFace(m7);
+  tri::UpdateColor<MyMesh>::PerVertexQualityGray(m7);
+  tri::io::ExporterOFF<MyMesh>::Save(m7,"testAObs.off",tri::io::Mask::IOM_VERTCOLOR);
+ 
+  cout << "Done AObs" << endl;
+  
   cout << "Done All" << endl;
   return 0;
 }
