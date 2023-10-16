@@ -28,6 +28,7 @@ set(VCG_EXAMPLE_PROJECTS
 	trimesh_disk_parametrization
 	trimesh_fitting
 	trimesh_geodesic
+ 	trimesh_geodesic_heat
 	trimesh_harmonic
 	trimesh_hole
 	trimesh_implicit_smooth
