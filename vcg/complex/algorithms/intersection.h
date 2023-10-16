@@ -256,78 +256,49 @@ bool Intersection(Plane3<ScalarType>  pl,
 	 Computes the intersection between a Ray and a Mesh. Returns a 3D Pointset.  
 */
 template < typename  TriMeshType, class ScalarType>
-bool IntersectionRayMesh(	
-	/* Input Mesh */		TriMeshType * m, 
-	/* Ray */				const Line3<ScalarType> & ray,
-	/* Intersect Point */	Point3<ScalarType> & hitPoint)
+bool IntersectionRayMesh(
+	/* Input Mesh */		 const TriMeshType& mesh,
+	/* Ray */				 const Ray3<ScalarType>& ray,
+	/* Intersect Point */	 Point3<ScalarType>& hitPoint
+	)
 {
-	//typedef typename TriMeshType::FaceContainer FaceContainer;
-	typename TriMeshType::FaceIterator fi;
-	bool hit=false;
-
-	if(m==0) return false;
-
-	//TriMeshType::FaceIterator fi;
-	//std::vector<TriMeshType::FaceType*>::iterator fi;
-
-	ScalarType bar1,bar2,dist;
-	Point3<ScalarType> p1;
-	Point3<ScalarType> p2;
-	Point3<ScalarType> p3;
-	for(fi = m->face.begin(); fi != m->face.end(); ++fi)
-	{
-		p1=vcg::Point3<ScalarType>( (*fi).P(0).X() ,(*fi).P(0).Y(),(*fi).P(0).Z() );
-		p2=vcg::Point3<ScalarType>( (*fi).P(1).X() ,(*fi).P(1).Y(),(*fi).P(1).Z() );
-		p3=vcg::Point3<ScalarType>( (*fi).P(2).X() ,(*fi).P(2).Y(),(*fi).P(2).Z() );
-		if(IntersectionLineTriangle<ScalarType>(ray,p1,p2,p3,dist,bar1,bar2))
-		{
-			hitPoint= p1*(1-bar1-bar2) + p2*bar1 + p3*bar2;
-			hit=true;
-		}
-	}
-
-	return hit;
+	ScalarType bar1, bar2, bar3;
+	typename TriMeshType::ConstFacePointer fp;
+	return IntersectionRayMesh(mesh, ray, hitPoint, bar1, bar2, bar3, fp);
 }
 
 /** 
-	 Computes the intersection between a Ray and a Mesh. Returns a 3D Pointset, baricentric's coordinates 
-	 and a pointer of intersected face.
+	 Computes the intersection between a Ray and a Mesh. Returns the ray hit point,
+	 baricentric's coordinates and a pointer to the intersected face.
 */
-template < typename  TriMeshType, class ScalarType>
-bool IntersectionRayMesh(	
-	/* Input Mesh */		TriMeshType * m, 
-	/* Ray */				const Line3<ScalarType> & ray,
-	/* Intersect Point */	Point3<ScalarType> & hitPoint,
-	/* Baricentric coord 1*/ ScalarType &bar1,
-	/* Baricentric coord 2*/ ScalarType &bar2,
-	/* Baricentric coord 3*/ ScalarType &bar3,
-	/* FacePointer */ typename TriMeshType::FacePointer & fp
+template <typename TriMeshType, class ScalarType>
+bool IntersectionRayMesh(
+	/* Input Mesh */		 const TriMeshType& mesh,
+	/* Ray */				 const Ray3<ScalarType>& ray,
+	/* Intersect Point */	 Point3<ScalarType>& hitPoint,
+	/* Baricentric coord 1*/ ScalarType& bar1,
+	/* Baricentric coord 2*/ ScalarType& bar2,
+	/* Baricentric coord 3*/ ScalarType& bar3,
+	/* FacePointer */        typename TriMeshType::ConstFacePointer& fp
 	)
 {
-	//typedef typename TriMeshType::FaceContainer FaceContainer;
-	typename TriMeshType::FaceIterator fi;
-	bool hit=false;
-
-	if(m==0) return false;
-
-	//TriMeshType::FaceIterator fi;
-	//std::vector<TriMeshType::FaceType*>::iterator fi;
+	bool hit = false;
 
 	ScalarType dist;
 	Point3<ScalarType> p1;
 	Point3<ScalarType> p2;
 	Point3<ScalarType> p3;
-	for(fi = m->face.begin(); fi != m->face.end(); ++fi)
+	for(auto fi = mesh.face.cbegin(); fi != mesh.face.cend(); ++fi)
 	{
-		p1=vcg::Point3<ScalarType>( (*fi).P(0).X() ,(*fi).P(0).Y(),(*fi).P(0).Z() );
-		p2=vcg::Point3<ScalarType>( (*fi).P(1).X() ,(*fi).P(1).Y(),(*fi).P(1).Z() );
-		p3=vcg::Point3<ScalarType>( (*fi).P(2).X() ,(*fi).P(2).Y(),(*fi).P(2).Z() );
-		if(IntersectionLineTriangle<ScalarType>(ray,p1,p2,p3,dist,bar1,bar2))
+		p1 = Point3<ScalarType>( (*fi).P(0).X() ,(*fi).P(0).Y(),(*fi).P(0).Z() );
+		p2 = Point3<ScalarType>( (*fi).P(1).X() ,(*fi).P(1).Y(),(*fi).P(1).Z() );
+		p3 = Point3<ScalarType>( (*fi).P(2).X() ,(*fi).P(2).Y(),(*fi).P(2).Z() );
+		if( IntersectionRayTriangle<ScalarType>(ray, p1, p2, p3, dist, bar1, bar2) )
 		{
-			bar3 = (1-bar1-bar2);
-			hitPoint= p1*bar3 + p2*bar1 + p3*bar2;
+			bar3 = (1 - bar1 - bar2);
+			hitPoint = p1*bar3 + p2*bar1 + p3*bar2;
 			fp = &(*fi);
-			hit=true;
+			hit = true;
 		}
 	}
 
