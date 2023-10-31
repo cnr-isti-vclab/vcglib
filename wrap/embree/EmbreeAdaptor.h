@@ -10,7 +10,7 @@
 #include <vcg/complex/algorithms/update/color.h>
 #include <vcg/complex/algorithms/update/quality.h>
 #include <wrap/callback.h>
-#include <embree3/rtcore.h>
+#include <embree4/rtcore.h>
 #include <vcg/math/gen_normal.h>
 #include <limits>
 #include <math.h>
@@ -72,10 +72,14 @@ namespace vcg{
 
                 rayhit = setRayValues(b, dir, 4);
 
-                RTCIntersectContext context;
-                rtcInitIntersectContext(&context);
+                RTCRayQueryContext context;
+                rtcInitRayQueryContext(&context);
 
-                rtcIntersect1(scene, &context, &rayhit);
+                RTCIntersectArguments intersectArgs;
+                rtcInitIntersectArguments(&intersectArgs);
+                intersectArgs.context = &context;
+
+                rtcIntersect1(scene, &rayhit, &intersectArgs);
 
                 //if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID)
                 if (rayhit.ray.tfar == std::numeric_limits<float>::infinity())
@@ -177,10 +181,14 @@ namespace vcg{
                             rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
                             rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 
-                            RTCIntersectContext context;
-                            rtcInitIntersectContext(&context);
+                            RTCRayQueryContext context;
+                            rtcInitRayQueryContext(&context);
 
-                            rtcIntersect1(scene, &context, &rayhit);
+                            RTCIntersectArguments intersectArgs;
+                            rtcInitIntersectArguments(&intersectArgs);
+                            intersectArgs.context = &context;
+
+                            rtcIntersect1(scene, &rayhit, &intersectArgs);
 
                             if (rayhit.hit.geomID == RTC_INVALID_GEOMETRY_ID){
                                 bN+=dir;
@@ -249,10 +257,14 @@ namespace vcg{
                             rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
                             rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 
-                            RTCIntersectContext context;
-                            rtcInitIntersectContext(&context);
+                            RTCRayQueryContext context;
+                            rtcInitRayQueryContext(&context);
 
-                            rtcIntersect1(scene, &context, &rayhit);
+                            RTCIntersectArguments intersectArgs;
+                            rtcInitIntersectArguments(&intersectArgs);
+                            intersectArgs.context = &context;
+
+                            rtcIntersect1(scene, &rayhit, &intersectArgs);
 
                             if (rayhit.hit.geomID == RTC_INVALID_GEOMETRY_ID)
                                 inputM.face[i].Q()+=scalarP;
@@ -319,10 +331,14 @@ namespace vcg{
                         rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
                         rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 
-                        RTCIntersectContext context;
-                        rtcInitIntersectContext(&context);
+                        RTCRayQueryContext context;
+                        rtcInitRayQueryContext(&context);
 
-                        rtcIntersect1(scene, &context, &rayhit);
+                        RTCIntersectArguments intersectArgs;
+                        rtcInitIntersectArguments(&intersectArgs);
+                        intersectArgs.context = &context;
+
+                        rtcIntersect1(scene, &rayhit, &intersectArgs);
 
                         if (rayhit.ray.tfar != std::numeric_limits<float>::infinity())
                         {
@@ -409,12 +425,15 @@ namespace vcg{
 
             RTCRayHit rayhit;
             rayhit = setRayValues(origin, direction, 0.5);
-            RTCIntersectContext context;
-            rtcInitIntersectContext(&context);
+            RTCRayQueryContext context;
+            rtcInitRayQueryContext(&context);
+
+            RTCIntersectArguments intersectArgs;
+            rtcInitIntersectArguments(&intersectArgs);
+            intersectArgs.context = &context;
 
             while(true){
-
-                rtcIntersect1(scene, &context, &rayhit);
+                rtcIntersect1(scene, &rayhit, &intersectArgs);
                 if (rayhit.ray.tfar != std::numeric_limits<float>::infinity()){
                     totInterception++;
                     //totDistance += rayhit.ray.tfar - previous_distance;
@@ -456,10 +475,14 @@ namespace vcg{
                         float scalarP = inputM.face[i].N()*dir;
 
                         rayhit = setRayValues(b, dir, 1e-4f);
-                        RTCIntersectContext context;
-                        rtcInitIntersectContext(&context);
+                        RTCRayQueryContext context;
+                        rtcInitRayQueryContext(&context);
 
-                        rtcIntersect1(scene, &context, &rayhit);
+                        RTCIntersectArguments intersectArgs;
+                        rtcInitIntersectArguments(&intersectArgs);
+                        intersectArgs.context = &context;
+
+                        rtcIntersect1(scene, &rayhit, &intersectArgs);
 
                         if (rayhit.ray.tfar  == std::numeric_limits<float>::infinity()) {
 
@@ -508,10 +531,14 @@ namespace vcg{
                         float scalarP = inputM.face[i].N()*dir;
 
                         rayhit = setRayValues(b, dir, 1e-4f);
-                        RTCIntersectContext context;
-                        rtcInitIntersectContext(&context);
+                        RTCRayQueryContext context;
+                        rtcInitRayQueryContext(&context);
 
-                        rtcIntersect1(scene, &context, &rayhit);
+                        RTCIntersectArguments intersectArgs;
+                        rtcInitIntersectArguments(&intersectArgs);
+                        intersectArgs.context = &context;
+
+                        rtcIntersect1(scene, &rayhit, &intersectArgs);
 
                         if (rayhit.ray.tfar  != std::numeric_limits<float>::infinity()) {
 
