@@ -62,7 +62,7 @@ namespace vcg{
 
             Point3f normalizedDir = rayDirection;
 
-            RTCRayHit rayhit;
+            RTCRayHit rayhit = initRayValues();
 
             for(int i = 0;i<m.FN(); i++)
             {
@@ -164,9 +164,9 @@ namespace vcg{
                 #pragma omp for
                 for(int i = 0;i<inputM.FN(); i++)
                 {
-                    RTCRayHit rayhit;
+                    RTCRayHit rayhit = initRayValues();
                     Point3f b = vcg::Barycenter(inputM.face[i]);
-                    rayhit = updateRayOrigin(rayhit, b);
+                    updateRayOrigin(rayhit, b);
                     rayhit.ray.tnear  = 0.00001f;
 
                     Point3f bN;
@@ -177,7 +177,7 @@ namespace vcg{
 
                         if(scalarP>0){
 
-                            rayhit = updateRayDirection(rayhit, dir);
+                            updateRayDirection(rayhit, dir);
                             rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
                             rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 
@@ -243,9 +243,9 @@ namespace vcg{
                 #pragma omp for
                 for(int i = 0;i<inputM.FN(); i++)
                 {
-                    RTCRayHit rayhit;
+                    RTCRayHit rayhit = initRayValues();
                     Point3f b = vcg::Barycenter(inputM.face[i]);
-                    rayhit = updateRayOrigin(rayhit, b);
+                    updateRayOrigin(rayhit, b);
                     rayhit.ray.tnear  = 0.00001f;
 
                     for(int r = 0; r<unifDirVec.size(); r++){
@@ -253,7 +253,7 @@ namespace vcg{
                         float scalarP = inputM.face[i].N()*dir;
 
                         if(scalarP>0){
-                            rayhit = updateRayDirection(rayhit, dir);
+                            updateRayDirection(rayhit, dir);
                             rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
                             rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 
@@ -311,9 +311,9 @@ namespace vcg{
 
             for (int i = 0; i < inputM.FN(); i++)
             {
-                RTCRayHit rayhit;
+                RTCRayHit rayhit = initRayValues();
                 Point3f b = vcg::Barycenter(inputM.face[i]);
-                rayhit = updateRayOrigin(rayhit, b);
+                updateRayOrigin(rayhit, b);
                 rayhit.ray.tnear  = 1e-4;
 
                 float weight = 0;
@@ -327,7 +327,7 @@ namespace vcg{
                     float angle_dir_b = Angle(b, dir);
 
                     if (scalarP < 0 && vcg::math::ToRad(angle_dir_b) <= degree){
-                        rayhit = updateRayDirection(rayhit, dir);
+                        updateRayDirection(rayhit, dir);
                         rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
                         rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 
@@ -565,42 +565,46 @@ namespace vcg{
             return;
         }
 
+        public:
+            inline RTCRayHit initRayValues(){
+                RTCRayHit rayhit;
+                rayhit.ray.mask   = -1;
+                rayhit.ray.flags = 0;
+                rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+                rayhit.hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
+                return rayhit;
+            }
 
         //given a ray and a direction expressed as point3f, this method modifies the ray direction of the ray tp the given direction
         public:
-            inline RTCRayHit updateRayDirection(RTCRayHit rayhit, Point3f direction){
+            inline void updateRayDirection(RTCRayHit& rayhit, Point3f direction){
 
                 //setting the ray direction
                 rayhit.ray.dir_x = direction[0];
                 rayhit.ray.dir_y = direction[1];
                 rayhit.ray.dir_z = direction[2];
-
-                return rayhit;
             }
 
 
         //given a ray and a point of origin expressed as point3f, this method modifies the origin point of the ray tp the origin point given
         public:
-            inline RTCRayHit updateRayOrigin(RTCRayHit rayhit, Point3f origin){
+            inline void updateRayOrigin(RTCRayHit& rayhit, Point3f origin){
 
                 //setting the ray point of origin
                 rayhit.ray.org_x = origin[0];
                 rayhit.ray.org_y = origin[1];
                 rayhit.ray.org_z = origin[2];
-
-                return rayhit;
             }
 
         public:
             inline RTCRayHit setRayValues(Point3f origin, Point3f direction, float tnear, float tfar = std::numeric_limits<float>::infinity()){
 
-                RTCRayHit rayhit;
+                RTCRayHit rayhit = initRayValues();
 
-                rayhit = updateRayOrigin(rayhit, origin);
-                rayhit = updateRayDirection(rayhit, direction);
+                updateRayOrigin(rayhit, origin);
+                updateRayDirection(rayhit, direction);
                 rayhit.ray.tnear  = tnear;
                 rayhit.ray.tfar   = tfar;
-                rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 
                 return rayhit;
             }
