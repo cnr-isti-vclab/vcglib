@@ -254,8 +254,10 @@ static ScalarType EdgeLenghtVariationIfVertexRotated(const FaceType &f, int w0)
     pf = t;
     guard++;
     assert(guard<100);
+    (void)guard;
   } while (pf != &f);
   assert (na == n);
+  (void)n; (void)na;
   return (after-before);
 }
 
@@ -295,6 +297,7 @@ static ScalarType QuadQualityVariationIfVertexRotated(const FaceType &f, int w0)
     pf = t;
     guard++;
     assert(guard<100);
+    (void)guard;
   } while (pf != &f);
 
   assert(s.size()%2==0);
@@ -618,6 +621,7 @@ static bool IsDoubletFF(const FaceType& f, int wedge){
     pf = t;
     guard++;
     assert(guard<100);
+    (void)guard;
   } while (pf != &f);
   return (res == 2);
 }
@@ -655,6 +659,7 @@ static bool IsSingletFF(const FaceType& f, int wedge){
     pf = t;
     guard++;
     assert(guard<100);
+    (void)guard;
   } while (pf != &f);
   return (res == 1);
 }

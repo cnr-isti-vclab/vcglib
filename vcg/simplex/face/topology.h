@@ -201,7 +201,8 @@ bool FFCorrectness(FaceType & f, const int e)
         if(curFace.IsBorder()) return false;
         curFace.NextF();
         cnt++;
-    assert(cnt<100);
+        assert(cnt<100);
+        (void)cnt;
     }
   while ( curFace.f != &f);
   return true;
@@ -270,6 +271,7 @@ void FFDetach(FaceType & f, const int e)
 		LastFace.NextF();
 		cnt++;
 		assert(cnt<100);
+		(void)cnt;
 	}
 
 	assert(LastFace.f->FFp(LastFace.z)==&f);

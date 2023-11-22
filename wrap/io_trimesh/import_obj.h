@@ -641,6 +641,8 @@ public:
       } // end for each line...
     } // end while stream not eof
     assert((numTriangles +numVertices) == numVerticesPlusFaces+extraTriangles);
+    (void)extraTriangles;
+    (void)numTexCoords;
     vcg::tri::Allocator<OpenMeshType>::AddFaces(m,numTriangles);
     
     // Add found edges

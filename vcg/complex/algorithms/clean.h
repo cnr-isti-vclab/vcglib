@@ -462,6 +462,7 @@ public:
 					count_fd++;
 					Allocator<MeshType>::DeleteFace(m,*fi);
 				}
+		(void)count_fd;
 		return count_vd;
 	}
 

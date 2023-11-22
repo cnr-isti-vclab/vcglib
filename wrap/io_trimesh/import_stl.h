@@ -320,6 +320,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, int &loadMask, Ca
       }
     }
     fclose(fp);
+    (void)lineCnt;
     return E_NOERROR;
   }
 }; // end class

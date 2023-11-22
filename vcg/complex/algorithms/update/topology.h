@@ -345,7 +345,6 @@ static void TetraTetra (MeshType & m)
   FillFaceVector(m, fvec);
   std::sort(fvec.begin(), fvec.end());
 
-  int nf = 0;
   typename std::vector<PFace>::iterator pback, pfront;
   pback  = fvec.begin();
   pfront = fvec.begin();
@@ -369,7 +368,6 @@ static void TetraTetra (MeshType & m)
       (*q).t->TTp(q->z) = pback->t;
       (*q).t->TTi(q->z) = pback->z;
       pback = pfront;
-      ++nf;
     }
     if (pfront == fvec.end()) break;
     ++pfront;
@@ -610,7 +608,8 @@ static void TestVertexEdge(MeshType &m)
         for(edge::VEIterator<EdgeType> vei(&*vi);!vei.End();++vei)
           cnt++;
         assert((numVertex[tri::Index(m,*vi)] == 0) == (vi->VEp()==0) );
-        assert(cnt==numVertex[tri::Index(m,*vi)]);        
+        assert(cnt==numVertex[tri::Index(m,*vi)]);
+        (void)cnt;
       }
   }  
 }
@@ -652,6 +651,7 @@ static void TestVertexFace(MeshType &m)
                 ++VFi;
             }
             assert(num==numVertex[&(*vi)]);
+            (void)num;
         }
     }
 }
