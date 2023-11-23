@@ -60,7 +60,6 @@ public:
 	{
 		_v[0] = p[0]; _v[1]= p[1]; _v[2] = p[2]; _v[3]= p[3];
 	}
-	inline Point4 ( const Point4 & p ) = default;
 
 	inline void SetZero()
 	{
@@ -70,7 +69,8 @@ public:
 	/// importer from different Point4 types
 	inline void Import( const Point4<Q> & b )
 	{
-		_v[0] = T(b[0]);		_v[1] = T(b[1]);
+		_v[0] = T(b[0]);
+		_v[1] = T(b[1]);
 		_v[2] = T(b[2]);
 		_v[3] = T(b[3]);
 	}
