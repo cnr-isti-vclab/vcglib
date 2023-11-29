@@ -71,11 +71,11 @@ public:
 	class ColorAvgInfo
 	{
 	public:
-		unsigned int r;
-		unsigned int g;
-		unsigned int b;
-		unsigned int a;
-		int cnt;
+		unsigned int r = 0;
+		unsigned int g = 0;
+		unsigned int b = 0;
+		unsigned int a = 0;
+		int cnt = 0;
 	};
 
 	/*! \brief This function colors all (or the selected) the vertices of a mesh.
@@ -140,7 +140,6 @@ public:
 		RequirePerVertexColor(m);
 
 		ColorAvgInfo csi;
-		csi.r = csi.g = csi.b = csi.cnt = 0;
 		SimpleTempData<typename MeshType::VertContainer, ColorAvgInfo> TD(m.vert, csi);
 
 		ForEachTetra(m, [&] (TetraType & t) {
@@ -173,7 +172,6 @@ public:
 		RequirePerVertexColor(m);
 
 		ColorAvgInfo csi;
-		csi.r=0; csi.g=0; csi.b=0; csi.cnt=0;
 		SimpleTempData<typename MeshType::VertContainer, ColorAvgInfo> TD(m.vert,csi);
 
 		FaceIterator fi;
