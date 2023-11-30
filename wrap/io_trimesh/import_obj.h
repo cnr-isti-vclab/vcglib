@@ -419,8 +419,8 @@ public:
             // verifying validity of vertex indices
             std::vector<int> tmp = ff.v;
             std::sort(tmp.begin(),tmp.end());
-            std::unique(tmp.begin(),tmp.end());
-            if(tmp.size() != ff.v.size()) {
+            auto it = std::unique(tmp.begin(), tmp.end()); // returns the new end of the vector with unique indices
+            if(it != tmp.end()) { // if the end is changed, there were duplicated indices...
               result = E_VERTICES_WITH_SAME_IDX_IN_FACE;
               extraTriangles--;
               continue;
