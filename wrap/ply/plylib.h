@@ -350,7 +350,7 @@ protected:
 	PlyElement * FindElement( const char * name );
 };
 
-void interpret_texture_name(const char*a, const char*fn, char*output);
+void interpret_texture_name(const char*a, const char*fn, char*output, size_t linesize);
 
   } // end namespace ply
 } // end namespace vcg
