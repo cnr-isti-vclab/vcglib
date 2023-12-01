@@ -60,7 +60,7 @@ public:
     if(fpout==NULL)	return 1; // 1 is the error code for cant'open, see the ErrorMsg function
 
 
-    if( tri::HasPerVertexColor(m)  && (mask & io::Mask::IOM_VERTNORMAL))
+    if( tri::HasPerVertexNormal(m)  && (mask & io::Mask::IOM_VERTNORMAL))
       fprintf(fpout,"N");
     if( tri::HasPerVertexColor(m)   && (mask & io::Mask::IOM_VERTCOLOR))
       fprintf(fpout,"C");
@@ -161,6 +161,7 @@ public:
   {
     int capability = 0;
     capability |= vcg::tri::io::Mask::IOM_VERTCOORD;
+    capability |= vcg::tri::io::Mask::IOM_VERTNORMAL;
     capability |= vcg::tri::io::Mask::IOM_VERTCOLOR;
     capability |= vcg::tri::io::Mask::IOM_VERTTEXCOORD;
     capability |= vcg::tri::io::Mask::IOM_FACEINDEX;
