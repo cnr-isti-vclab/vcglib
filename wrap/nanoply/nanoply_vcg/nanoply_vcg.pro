@@ -1,5 +1,5 @@
 INCLUDEPATH += ../../../ ../../../eigenlib
-CONFIG += console stl c++11
+CONFIG += console stl c++17
 CONFIG += qt
 TEMPLATE = app
 SOURCES += main.cpp

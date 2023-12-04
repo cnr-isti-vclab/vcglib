@@ -12,7 +12,6 @@
 *                                                                           *
 ****************************************************************************/
 
-#include <iostream>
 #include <wrap/nanoply/include/nanoplyWrapper.hpp>
 
 #include <vcg/complex/complex.h>

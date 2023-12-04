@@ -21,6 +21,7 @@
 #include <map>
 
 #include  <typeinfo>
+#include <type_traits>
 
 namespace nanoply
 {
@@ -75,25 +76,33 @@ namespace nanoply
 
     typedef typename MeshType::FaceIterator                               FaceIterator;
 
-		template<class T> static PlyType getEntity() { return NNP_UNKNOWN_TYPE; };
-		template<> static PlyType getEntity<unsigned char>(){ return NNP_UINT8; };
-		template<> static PlyType getEntity<char>(){ return NNP_INT8; };
-		template<> static PlyType getEntity<unsigned short>(){ return NNP_UINT16; };
-		template<> static PlyType getEntity<short>(){ return NNP_INT16; };
-		template<> static PlyType getEntity<unsigned int>(){ return NNP_UINT32; };
-		template<> static PlyType getEntity<int>(){ return NNP_INT32; };
-		template<> static PlyType getEntity<float>(){ return NNP_FLOAT32; };
-		template<> static PlyType getEntity<double>(){ return NNP_FLOAT64; };
+	template<class T>
+	static PlyType getEntity()
+	{
+		if constexpr (std::is_same<T, unsigned char>::value) { return NNP_UINT8; }
+		if constexpr (std::is_same<T, char>::value) { return NNP_INT8; }
+		if constexpr (std::is_same<T, unsigned short>::value) { return NNP_UINT16; }
+		if constexpr (std::is_same<T, short>::value) { return NNP_INT16; }
+		if constexpr (std::is_same<T, unsigned int>::value) { return NNP_UINT32; }
+		if constexpr (std::is_same<T, int>::value) { return NNP_INT32; }
+		if constexpr (std::is_same<T, float>::value) { return NNP_FLOAT32; }
+		if constexpr (std::is_same<T, double>::value) { return NNP_FLOAT64; }
+		return NNP_UNKNOWN_TYPE;
+	};
 
-    template<class T> static PlyType getEntityList() { return NNP_UNKNOWN_TYPE; };
-		template<> static PlyType getEntityList<unsigned char>(){ return NNP_LIST_UINT8_UINT8; };
-		template<> static PlyType getEntityList<char>(){ return NNP_LIST_UINT8_INT8; };
-		template<> static PlyType getEntityList<unsigned short>(){ return NNP_LIST_UINT8_UINT16; };
-		template<> static PlyType getEntityList<short>(){ return NNP_LIST_UINT8_INT16; };
-		template<> static PlyType getEntityList<unsigned int>(){ return NNP_LIST_UINT8_UINT32; };
-		template<> static PlyType getEntityList<int>(){ return NNP_LIST_UINT8_INT32; };
-		template<> static PlyType getEntityList<float>(){ return NNP_LIST_UINT8_FLOAT32; };
-		template<> static PlyType getEntityList<double>(){ return NNP_LIST_UINT8_FLOAT64; };
+	template<class T>
+	static PlyType getEntityList()
+	{
+		if constexpr (std::is_same<T, unsigned char>::value) { return NNP_LIST_UINT8_UINT8; };
+		if constexpr (std::is_same<T, char>::value) { return NNP_LIST_UINT8_INT8; };
+		if constexpr (std::is_same<T, unsigned short>::value) { return NNP_LIST_UINT8_UINT16; };
+		if constexpr (std::is_same<T, short>::value) { return NNP_LIST_UINT8_INT16; };
+		if constexpr (std::is_same<T, unsigned int>::value) { return NNP_LIST_UINT8_UINT32; };
+		if constexpr (std::is_same<T, int>::value) { return NNP_LIST_UINT8_INT32; };
+		if constexpr (std::is_same<T, float>::value) { return NNP_LIST_UINT8_FLOAT32; };
+		if constexpr (std::is_same<T, double>::value) { return NNP_LIST_UINT8_FLOAT64; };
+		return NNP_UNKNOWN_TYPE;
+	}
 
 
 		template<class Container, class Type, int n>
@@ -666,175 +675,158 @@ namespace nanoply
       typedef typename T::VertexType VType;
       typedef typename T::FaceType FType;
       typedef typename T::EdgeType EType;
-      
-
-      template <bool f = std::is_same<typename T::VertContainer, vcg::vertex::vector_ocf<VType>>::value>
-      static unsigned int EnableVertexOcf(typename T::VertContainer& cont, unsigned int mask) {
-        (void)cont; (void)mask;
-        return 0;
-      }
-
-      template <>
-      static unsigned int EnableVertexOcf<true>(typename T::VertContainer& cont, unsigned int mask )
-      { 
-        unsigned int enabledMask = 0;
-        if ((mask & BitMask::IO_VERTNORMAL) && VType::HasNormalOcf() && !cont.IsNormalEnabled())
-        {
-          cont.EnableNormal();
-          enabledMask |= BitMask::IO_VERTNORMAL;
-        }
-        if ((mask & BitMask::IO_VERTCOLOR) && VType::HasColorOcf() && !cont.IsColorEnabled())
-        {
-          cont.EnableColor();
-          enabledMask |= BitMask::IO_VERTCOLOR;
-        }
-        if ((mask & BitMask::IO_VERTQUALITY) && VType::HasQualityOcf() && !cont.IsQualityEnabled())
-        {
-          cont.EnableQuality();
-          enabledMask |= BitMask::IO_VERTQUALITY;
-        }
-        if ((mask & BitMask::IO_VERTCURV) && VType::HasCurvatureOcf() && !cont.IsCurvatureEnabled())
-        {
-          cont.EnableCurvature();
-          enabledMask |= BitMask::IO_VERTCURV;
-        }
-        if ((mask & BitMask::IO_VERTCURVDIR) && VType::HasCurvatureDirOcf() && !cont.IsCurvatureDirEnabled())
-        {
-          cont.EnableCurvatureDir();
-          enabledMask |= BitMask::IO_VERTCURVDIR;
-        }
-        if ((mask & BitMask::IO_VERTRADIUS) && VType::HasRadiusOcf() && !cont.IsRadiusEnabled())
-        {
-          cont.EnableRadius();
-          enabledMask |= BitMask::IO_VERTRADIUS;
-        }
-        if ((mask & BitMask::IO_VERTTEXCOORD) && VType::HasTexCoordOcf() && !cont.IsTexCoordEnabled())
-        {
-          cont.EnableTexCoord();
-          enabledMask |= BitMask::IO_VERTTEXCOORD;
-        }
-        return enabledMask; 
-      };
 
 
-      template <bool f = std::is_same<typename T::FaceContainer, vcg::face::vector_ocf<FType>>::value>
-      static unsigned int EnableFaceOcf(typename T::FaceContainer& cont, unsigned int mask) {
-        (void)cont; (void)mask;
-        return 0;
-      }
+	template <bool f = std::is_same<typename T::VertContainer, vcg::vertex::vector_ocf<VType>>::value>
+	static unsigned int EnableVertexOcf(typename T::VertContainer& cont, unsigned int mask)
+	{
+		unsigned int enabledMask = 0;
+		if constexpr (f)
+		{
+			if ((mask & BitMask::IO_VERTNORMAL) && VType::HasNormalOcf() && !cont.IsNormalEnabled())
+			{
+				cont.EnableNormal();
+				enabledMask |= BitMask::IO_VERTNORMAL;
+			}
+			if ((mask & BitMask::IO_VERTCOLOR) && VType::HasColorOcf() && !cont.IsColorEnabled())
+			{
+				cont.EnableColor();
+				enabledMask |= BitMask::IO_VERTCOLOR;
+			}
+			if ((mask & BitMask::IO_VERTQUALITY) && VType::HasQualityOcf() && !cont.IsQualityEnabled())
+			{
+				cont.EnableQuality();
+				enabledMask |= BitMask::IO_VERTQUALITY;
+			}
+			if ((mask & BitMask::IO_VERTCURV) && VType::HasCurvatureOcf() && !cont.IsCurvatureEnabled())
+			{
+				cont.EnableCurvature();
+				enabledMask |= BitMask::IO_VERTCURV;
+			}
+			if ((mask & BitMask::IO_VERTCURVDIR) && VType::HasCurvatureDirOcf() && !cont.IsCurvatureDirEnabled())
+			{
+				cont.EnableCurvatureDir();
+				enabledMask |= BitMask::IO_VERTCURVDIR;
+			}
+			if ((mask & BitMask::IO_VERTRADIUS) && VType::HasRadiusOcf() && !cont.IsRadiusEnabled())
+			{
+				cont.EnableRadius();
+				enabledMask |= BitMask::IO_VERTRADIUS;
+			}
+			if ((mask & BitMask::IO_VERTTEXCOORD) && VType::HasTexCoordOcf() && !cont.IsTexCoordEnabled())
+			{
+				cont.EnableTexCoord();
+				enabledMask |= BitMask::IO_VERTTEXCOORD;
+			}
+		}
+		return enabledMask;
+	}
 
-      template <>
-      static unsigned int EnableFaceOcf<true>(typename T::FaceContainer& cont, unsigned int mask)
-      {
-        unsigned int enabledMask = 0;
-        if ((mask & BitMask::IO_FACENORMAL) && FType::HasNormalOcf() && !cont.IsNormalEnabled())
-        {
-          cont.EnableNormal();
-          enabledMask |= BitMask::IO_FACENORMAL;
-        }
-        if ((mask & BitMask::IO_FACECOLOR) && FType::HasColorOcf() && !cont.IsColorEnabled())
-        {
-          cont.EnableColor();
-          enabledMask |= BitMask::IO_FACECOLOR;
-        }
-        if ((mask & BitMask::IO_FACEQUALITY) && FType::HasQualityOcf() && !cont.IsQualityEnabled())
-        {
-          cont.EnableQuality();
-          enabledMask |= BitMask::IO_FACEQUALITY;
-        }
-        if ((mask & BitMask::IO_FACECURVDIR) && FType::HasCurvatureDirOcf() && !cont.IsCurvatureDirEnabled())
-        {
-          cont.EnableCurvatureDir();
-          enabledMask |= BitMask::IO_FACECURVDIR;
-        }
-        if ((mask & BitMask::IO_WEDGCOLOR) && FType::HasWedgeColorOcf() && !cont.IsWedgeColorEnabled())
-        {
-          cont.EnableWedgeColor();
-          enabledMask |= BitMask::IO_WEDGCOLOR;
-        }
-        if ((mask & BitMask::IO_WEDGNORMAL) && FType::HasWedgeNormalOcf() && !cont.IsWedgeNormalEnabled())
-        {
-          cont.EnableWedgeNormal();
-          enabledMask |= BitMask::IO_WEDGNORMAL;
-        }
-        if ((mask & BitMask::IO_WEDGTEXCOORD) && FType::HasWedgeTexCoordOcf() && !cont.IsWedgeTexCoordEnabled())
-        {
-          cont.EnableWedgeTexCoord();
-          enabledMask |= BitMask::IO_WEDGTEXCOORD;
-        }
-        if ((mask & BitMask::IO_WEDGTEXMULTI) && FType::HasWedgeTexCoordOcf())
-        {
-          if (!cont.IsWedgeTexCoordEnabled())
-            cont.EnableWedgeTexCoord();
-          enabledMask |= BitMask::IO_WEDGTEXMULTI;
-        }
-        return enabledMask;
-      };
+	template <bool f = std::is_same<typename T::FaceContainer, vcg::face::vector_ocf<FType>>::value>
+	static unsigned int EnableFaceOcf(typename T::FaceContainer& cont, unsigned int mask)
+	{
+		unsigned int enabledMask = 0;
+		if constexpr (f)
+		{
+			if ((mask & BitMask::IO_FACENORMAL) && FType::HasNormalOcf() && !cont.IsNormalEnabled())
+			{
+				cont.EnableNormal();
+				enabledMask |= BitMask::IO_FACENORMAL;
+			}
+			if ((mask & BitMask::IO_FACECOLOR) && FType::HasColorOcf() && !cont.IsColorEnabled())
+			{
+				cont.EnableColor();
+				enabledMask |= BitMask::IO_FACECOLOR;
+			}
+			if ((mask & BitMask::IO_FACEQUALITY) && FType::HasQualityOcf() && !cont.IsQualityEnabled())
+			{
+				cont.EnableQuality();
+				enabledMask |= BitMask::IO_FACEQUALITY;
+			}
+			if ((mask & BitMask::IO_FACECURVDIR) && FType::HasCurvatureDirOcf() && !cont.IsCurvatureDirEnabled())
+			{
+				cont.EnableCurvatureDir();
+				enabledMask |= BitMask::IO_FACECURVDIR;
+			}
+			if ((mask & BitMask::IO_WEDGCOLOR) && FType::HasWedgeColorOcf() && !cont.IsWedgeColorEnabled())
+			{
+				cont.EnableWedgeColor();
+				enabledMask |= BitMask::IO_WEDGCOLOR;
+			}
+			if ((mask & BitMask::IO_WEDGNORMAL) && FType::HasWedgeNormalOcf() && !cont.IsWedgeNormalEnabled())
+			{
+				cont.EnableWedgeNormal();
+				enabledMask |= BitMask::IO_WEDGNORMAL;
+			}
+			if ((mask & BitMask::IO_WEDGTEXCOORD) && FType::HasWedgeTexCoordOcf() && !cont.IsWedgeTexCoordEnabled())
+			{
+				cont.EnableWedgeTexCoord();
+				enabledMask |= BitMask::IO_WEDGTEXCOORD;
+			}
+			if ((mask & BitMask::IO_WEDGTEXMULTI) && FType::HasWedgeTexCoordOcf())
+			{
+				if (!cont.IsWedgeTexCoordEnabled())
+					cont.EnableWedgeTexCoord();
+				enabledMask |= BitMask::IO_WEDGTEXMULTI;
+			}
+		}
+		return enabledMask;
+	}
 
 
+	template <bool f = std::is_same<typename T::VertContainer, vcg::vertex::vector_ocf<VType>>::value>
+	static unsigned int VertexOcfMask(typename T::VertContainer& cont)
+	{
+		unsigned int enabledMask = 0;
+		if constexpr(f)
+		{
+			if (VType::HasNormalOcf() && cont.IsNormalEnabled())
+				enabledMask |= BitMask::IO_VERTNORMAL;
+			if (VType::HasColorOcf() && cont.IsColorEnabled())
+				enabledMask |= BitMask::IO_VERTCOLOR;
+			if (VType::HasQualityOcf() && cont.IsQualityEnabled())
+				enabledMask |= BitMask::IO_VERTQUALITY;
+			if (VType::HasCurvatureOcf() && cont.IsCurvatureEnabled())
+				enabledMask |= BitMask::IO_VERTCURV;
+			if (VType::HasCurvatureDirOcf() && cont.IsCurvatureDirEnabled())
+				enabledMask |= BitMask::IO_VERTCURVDIR;
+			if (VType::HasRadiusOcf() && cont.IsRadiusEnabled())
+				enabledMask |= BitMask::IO_VERTRADIUS;
+			if (VType::HasTexCoordOcf() && cont.IsTexCoordEnabled())
+				enabledMask |= BitMask::IO_VERTTEXCOORD;
+		}
+		return enabledMask;
+	}
 
-      template <bool f = std::is_same<typename T::VertContainer, vcg::vertex::vector_ocf<VType>>::value>
-      static unsigned int VertexOcfMask(typename T::VertContainer& cont) {
-        (void)cont;
-        return 0;
-      }
+	template <bool f = std::is_same<typename T::FaceContainer, vcg::face::vector_ocf<FType>>::value>
+	static unsigned int FaceOcfMask(typename T::FaceContainer& cont)
+	{
+		unsigned int enabledMask = 0;
+		if constexpr (f)
+		{
+			if (FType::HasNormalOcf() && cont.IsNormalEnabled())
+				enabledMask |= BitMask::IO_FACENORMAL;
+			if (FType::HasColorOcf() && cont.IsColorEnabled())
+				enabledMask |= BitMask::IO_FACECOLOR;
+			if (FType::HasQualityOcf() && cont.IsQualityEnabled())
+				enabledMask |= BitMask::IO_FACEQUALITY;
+			if (FType::HasCurvatureDirOcf() && cont.IsCurvatureDirEnabled())
+				enabledMask |= BitMask::IO_FACECURVDIR;
+			if (FType::HasWedgeColorOcf() && cont.IsWedgeColorEnabled())
+				enabledMask |= BitMask::IO_WEDGCOLOR;
+			if (FType::HasWedgeNormalOcf() && cont.IsWedgeNormalEnabled())
+				enabledMask |= BitMask::IO_WEDGNORMAL;
+			if (FType::HasWedgeTexCoordOcf() && cont.IsWedgeTexCoordEnabled())
+			{
+				enabledMask |= BitMask::IO_WEDGTEXCOORD;
+				enabledMask |= BitMask::IO_WEDGTEXMULTI;
+			}
+		}
+		return enabledMask;
+	}
+	};
 
-      template <>
-      static unsigned int VertexOcfMask<true>(typename T::VertContainer& cont)
-      {
-        unsigned int enabledMask = 0;
-        if (VType::HasNormalOcf() && cont.IsNormalEnabled())
-          enabledMask |= BitMask::IO_VERTNORMAL;
-        if (VType::HasColorOcf() && cont.IsColorEnabled())
-          enabledMask |= BitMask::IO_VERTCOLOR;
-        if (VType::HasQualityOcf() && cont.IsQualityEnabled())
-          enabledMask |= BitMask::IO_VERTQUALITY;
-        if (VType::HasCurvatureOcf() && cont.IsCurvatureEnabled())
-          enabledMask |= BitMask::IO_VERTCURV;
-        if (VType::HasCurvatureDirOcf() && cont.IsCurvatureDirEnabled())
-          enabledMask |= BitMask::IO_VERTCURVDIR;
-        if (VType::HasRadiusOcf() && cont.IsRadiusEnabled())
-          enabledMask |= BitMask::IO_VERTRADIUS;
-        if (VType::HasTexCoordOcf() && cont.IsTexCoordEnabled())
-          enabledMask |= BitMask::IO_VERTTEXCOORD;
-        return enabledMask;
-      };
 
-
-      template <bool f = std::is_same<typename T::FaceContainer, vcg::face::vector_ocf<FType>>::value>
-      static unsigned int FaceOcfMask(typename T::FaceContainer& cont) {
-        (void)cont;
-        return 0;
-      }
-
-      template <>
-      static unsigned int FaceOcfMask<true>(typename T::FaceContainer& cont)
-      {
-        unsigned int enabledMask = 0;
-        if (FType::HasNormalOcf() && cont.IsNormalEnabled())
-          enabledMask |= BitMask::IO_FACENORMAL;
-        if (FType::HasColorOcf() && cont.IsColorEnabled())
-          enabledMask |= BitMask::IO_FACECOLOR;
-        if (FType::HasQualityOcf() && cont.IsQualityEnabled())
-          enabledMask |= BitMask::IO_FACEQUALITY;
-        if (FType::HasCurvatureDirOcf() && cont.IsCurvatureDirEnabled())
-          enabledMask |= BitMask::IO_FACECURVDIR;
-        if (FType::HasWedgeColorOcf() && cont.IsWedgeColorEnabled())
-          enabledMask |= BitMask::IO_WEDGCOLOR;
-        if (FType::HasWedgeNormalOcf() && cont.IsWedgeNormalEnabled())
-          enabledMask |= BitMask::IO_WEDGNORMAL;
-        if (FType::HasWedgeTexCoordOcf() && cont.IsWedgeTexCoordEnabled())
-        {
-          enabledMask |= BitMask::IO_WEDGTEXCOORD;
-          enabledMask |= BitMask::IO_WEDGTEXMULTI;
-        }
-        return enabledMask;
-      };
-            
-    };
-
-    
-   
     static unsigned int GetFileBitMask(nanoply::Info& info)
     {
       unsigned int mask = 0;
@@ -918,7 +910,7 @@ namespace nanoply
         }
       }
       return mask;
-    };
+	}
 
 
 

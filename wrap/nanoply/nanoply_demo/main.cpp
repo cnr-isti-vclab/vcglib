@@ -13,7 +13,7 @@
 ****************************************************************************/
 
 #include <iostream>
-#include <nanoply.hpp>
+#include <wrap/nanoply/include/nanoply.hpp>
 
 template<typename T, int N>
 struct Container
@@ -280,5 +280,5 @@ int main()
     std::cout << "Write and read binary ply file:  SUCCESS\n";
   else
     std::cout << "Write and read binary ply file:  FAIL\n";
-  return true;
+  return 0;
 }
