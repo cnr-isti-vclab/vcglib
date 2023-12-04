@@ -312,4 +312,5 @@ endif()
 if(VCG_BUILD_EXAMPLES)
 	#TODO make the list of samples to build
 	add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/apps)
+	add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/wrap)
 endif()
