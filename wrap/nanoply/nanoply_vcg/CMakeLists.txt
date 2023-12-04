@@ -13,6 +13,10 @@ add_executable(nanoply_vcg
 	${SOURCES})
 target_compile_features(nanoply_vcg PRIVATE cxx_std_17)
 
+if (MSVC)
+	add_compile_options(/bigobj)
+endif()
+
 target_link_libraries(
 	nanoply_vcg
 	PUBLIC
