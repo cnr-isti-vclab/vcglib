@@ -404,7 +404,7 @@ public:
 
 		const Attribute<ATTR_TYPE> * _handle;
 		int n_attr;
-		const ATTR_TYPE & operator ()(){ return *((const ATTR_TYPE*)(_handle->DataBegin()));}
+		const ATTR_TYPE & operator ()() const { return *((const ATTR_TYPE*)(_handle->DataBegin()));}
 	};
 
 	// Some common Handle typedefs to simplify use
