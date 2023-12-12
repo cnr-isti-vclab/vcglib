@@ -443,7 +443,6 @@ bool RefineE(MESH_TYPE &m, MIDPOINT &mid, EDGEPRED &ep,bool RefineSelected=false
     TexCoordType wtt[6];  // per ogni faccia sono al piu' tre i nuovi valori
     // di texture per wedge (uno per ogni edge)
 
-    int fca=0;
     for(fi=m.face.begin();fi!=oldendf;++fi) if(!(*fi).IsD())
     {
       if(cb && (++step%PercStep)==0)
@@ -460,7 +459,7 @@ bool RefineE(MESH_TYPE &m, MIDPOINT &mid, EDGEPRED &ep,bool RefineSelected=false
       nf[0]=&*fi;
       int i;
       for(i=1;i<SplitTab[ind].TriNum;++i){
-        nf[i]=&*lastf; ++lastf; fca++;
+        nf[i]=&*lastf; ++lastf;
         if(RefineSelected || (*fi).IsS()) (*nf[i]).SetS();
         nf[i]->ImportData(*fi);
 //		if(tri::HasPerFaceColor(m))
@@ -947,6 +946,7 @@ public:
       FFi0 = f->FFi(0);
       FFi1 = f->FFi(1);
       FFi2 = f->FFi(2);
+      (void)FFi0;
 
       //initial face
       (*f).FFp(1) = &(*f1);
@@ -1024,8 +1024,11 @@ void TrivialMidPointRefine(MeshType & m)
   {
     FacePointer f0= &m.face[i];
     FacePointer f1= &*lastf; ++lastf;
+    f1->ImportData(*f0);
     FacePointer f2= &*lastf; ++lastf;
-    FacePointer f3= &*lastf; ++lastf;    
+    f2->ImportData(*f0);
+    FacePointer f3= &*lastf; ++lastf;
+    f3->ImportData(*f0);
     VertexPointer v0 =m.face[i].V(0); 
     VertexPointer v1 =m.face[i].V(1); 
     VertexPointer v2 =m.face[i].V(2); 
@@ -1180,7 +1183,6 @@ bool RefineMidpoint(MESH_TYPE &m, EDGEPRED &ep, bool RefineSelected=false, CallB
 	TexCoordType wtt[6];  // per ogni faccia sono al piu' tre i nuovi valori
 	// di texture per wedge (uno per ogni edge)
 
-	int fca=0;
 	for(fi=m.face.begin();fi!=oldendf;++fi) if(!(*fi).IsD())
 	{
 		if(cb && (++step%PercStep)==0)
@@ -1197,7 +1199,7 @@ bool RefineMidpoint(MESH_TYPE &m, EDGEPRED &ep, bool RefineSelected=false, CallB
 	  nf[0]=&*fi;
 	  int i;
 	  for(i=1;i<SplitTab[ind].TriNum;++i){
-		nf[i]=&*lastf; ++lastf; fca++;
+		nf[i]=&*lastf; ++lastf;
 		if(RefineSelected || (*fi).IsS()) (*nf[i]).SetS();
 		nf[i]->ImportData(*fi);
 

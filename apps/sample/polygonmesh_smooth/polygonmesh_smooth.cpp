@@ -119,14 +119,14 @@ int	main(int, char **)
     if(v.P()[2] < pm.bbox.Center()[2]) 
       v.SetS();  
   });
-  printf("Input quad mesh has %i %i (sel %i)\n",pm.VN(), pm.FN(), tri::UpdateSelection<PMesh>::VertexCount(pm) );
+  printf("Input quad mesh has %i %i (sel %zu)\n", pm.VN(), pm.FN(), tri::UpdateSelection<PMesh>::VertexCount(pm));
   
   tri::io::ImporterPLY<TMesh>::Open(tm,"../../meshes/fertility_tri.ply");
   tri::UpdateNormal<TMesh>::PerVertexNormalizedPerFaceNormalized(tm);
-  printf("Input tri mesh has %i %i\n",tm.VN(), tm.FN());
+  printf("Input tri mesh has %i %i\n", tm.VN(), tm.FN());
   tri::io::ExporterOFF<PMesh>::Save(pm,"./smooth.off");
   PolygonalAlgorithm<PMesh>::LaplacianReproject(pm,tm,100,0.6,0.3,true);
-  tri::io::ExporterOFF<PMesh>::Save(pm,"./smooth2.off");  
+  tri::io::ExporterOFF<PMesh>::Save(pm,"./smooth2.off"); 
 }
 
 

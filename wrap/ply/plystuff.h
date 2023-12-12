@@ -27,29 +27,6 @@ of Greg Turk and on the work of Claudio Rocchini
 
 ****************************************************************************/
 
-/****************************************************************************
-  History
-
-$Log: not supported by cvs2svn $
-Revision 1.6  2007/06/25 15:24:00  cignoni
-removed a possibly useless static kw
-
-Revision 1.5  2006/04/11 09:48:04  zifnab1974
-changes needed for compilation on linux 64b with gcc 3.4.5
-
-Revision 1.4  2005/12/02 00:00:53  cignoni
-Moved and corrected interpret_texture_name from plystuff.h to plylib.cpp
-
-Revision 1.3  2005/03/18 00:14:40  cignoni
-removed small gcc compiling issues
-
-Revision 1.2  2005/03/15 11:46:52  cignoni
-Cleaning of the automatic bbox caching support for ply files. First working version.
-
-
-*/
-
-//****************** Gestione cache *****************
 
 #ifndef __VCG_PLYLIB_STUFF
 #define __VCG_PLYLIB_STUFF 

@@ -871,6 +871,7 @@ public:
 			}
 		}
 		assert(fcnt==m.fn);
+		(void)fcnt;
 		int eauxvv[2];
 		if( pi.mask & Mask::IOM_EDGEINDEX )
 		{
@@ -891,6 +892,7 @@ public:
 				}
 			}
 			assert(ecnt==m.en);
+			(void)ecnt;
 		}
 		int result = 0;
 		if (ferror(fpout)) result = ply::E_STREAMERROR;

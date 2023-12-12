@@ -21,179 +21,566 @@
 *                                                                           *
 ****************************************************************************/
 
-#ifndef VCG_USE_EIGEN
-#include "deprecated_point3.h"
-#else
-
 #ifndef __VCGLIB_POINT3
 #define __VCGLIB_POINT3
 
-#include "../math/eigen.h"
-
-namespace vcg{
-template<typename Scalar> class Point3;
-}
-
-namespace Eigen{
-
-template<typename Scalar> struct ei_traits<vcg::Point3<Scalar> > : ei_traits<Eigen::Matrix<Scalar,3,1> > {};
-
-template<typename XprType> struct ei_to_vcgtype<XprType,3,1,0,3,1>
-{ typedef vcg::Point3<typename XprType::Scalar> type; };
-
-template<typename Scalar>
-struct NumTraits<vcg::Point3<Scalar> > : NumTraits<Scalar>
-{
-  enum {
-    ReadCost = 3,
-    AddCost = 3,
-    MulCost = 3
-  };
-};
-
-}
+#include <assert.h>
+#include <algorithm>
+#include <vcg/math/base.h>
 
 namespace vcg {
 
-template<typename Scalar> class Box3;
-
 /** \addtogroup space */
 /*@{*/
-/**
-	The templated class for representing a point in 3D space.
-	The class is templated over the ScalarType class that is used to represent coordinates. All the usual
-	operator overloading (* + - ...) is present.
-*/
-template <class _Scalar> class Point3 : public Eigen::Matrix<_Scalar,3,1>
-{
-//----------------------------------------
-// template typedef part
-// use it as follow: typename Point3<S>::Type instead of simply Point3<S>
-//----------------------------------------
-public:
-	typedef Eigen::Matrix<_Scalar,3,1> Type;
-//----------------------------------------
-// inheritence part
-//----------------------------------------
-private:
-	typedef Eigen::Matrix<_Scalar,3,1> _Base;
-public:
+    /**
+        The templated class for representing a point in 3D space.
+        The class is templated over the ScalarType class that is used to represent coordinates. All the usual
+        operator overloading (* + - ...) is present.
+     */
+template <class T> class Box3;
 
-	using _Base::Construct;
-	_EIGEN_GENERIC_PUBLIC_INTERFACE(Point3,_Base);
-	VCG_EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Point3)
+template <class P3ScalarType> class Point3
+{
+protected:
+  /// The only data member. Hidden to user.
+    P3ScalarType _v[3];
+
+public:
+    typedef P3ScalarType ScalarType;
+    enum {Dimension = 3};
+
+
+//@{
 
   /** @name Standard Constructors and Initializers
    No casting operators have been introduced to avoid automatic unattended (and costly) conversion between different point types
    **/
 
-  inline Point3 () {}
-	inline Point3 ( const Scalar nx, const Scalar ny, const Scalar nz ) : Base(nx,ny,nz) {}
-	inline Point3 ( Point3 const & p ) : Base(p) {}
-	inline Point3 ( const Scalar nv[3] ) : Base(nv) {}
-	template<typename OtherDerived>
-	inline Point3(const Eigen::MatrixBase<OtherDerived>& other) : Base(other) {}
+  inline Point3 () { }
+    inline Point3 ( const P3ScalarType nx, const P3ScalarType ny, const P3ScalarType nz )
+    {
+        _v[0] = nx;
+        _v[1] = ny;
+        _v[2] = nz;
+    }
+	
+	/** Default copy constructor */
+	inline Point3 ( Point3 const & p ) = default;
+	
+	/** Copy from Point with different template */
+	template<class Q>
+	inline Point3 ( Point3<Q> const & p )
+    {
+        _v[0]= p[0];
+        _v[1]= p[1];
+        _v[2]= p[2];
+    }
+    
+    inline Point3 ( const P3ScalarType nv[3] )
+    {
+        _v[0] = nv[0];
+        _v[1] = nv[1];
+        _v[2] = nv[2];
+    }
+	
+	/** Default copy assignment */
+    inline Point3 & operator =(Point3 const & p) = default;
+	
+	/** Copy assignment from Point with different template */
+	template<class Q>
+	inline Point3 & operator =(Point3<Q> const & p)
+    {
+      _v[0] = p[0]; _v[1] = p[1]; _v[2] = p[2];
+      return *this;
+    }
+    inline void SetZero()
+    {
+        _v[0] = 0;
+        _v[1] = 0;
+        _v[2] = 0;
+    }
 
+  /// Padding function: give a default 0 value to all the elements that are not in the [0..2] range.
+  /// Useful for managing in a consistent way object that could have point2 / point3 / point4
+    inline P3ScalarType Ext( const int i ) const
+    {
+        if(i>=0 && i<=2) return _v[i];
+        else             return 0;
+    }
 
-	// this one is very useless
+    template <class Q>
+    inline void Import( const Point3<Q> & b )
+    {
+        _v[0] = P3ScalarType(b[0]);
+        _v[1] = P3ScalarType(b[1]);
+        _v[2] = P3ScalarType(b[2]);
+    }
+    template <class EigenVector>
+    inline void FromEigenVector( const EigenVector & b )
+    {
+        _v[0] = P3ScalarType(b[0]);
+        _v[1] = P3ScalarType(b[1]);
+        _v[2] = P3ScalarType(b[2]);
+    }
+    template <class EigenVector>
+    inline void ToEigenVector( EigenVector & b ) const
+    {
+        b[0]=_v[0] ;
+        b[1]=_v[1] ;
+        b[2]=_v[2] ;
+    }
+    template <class EigenVector>
+    inline EigenVector ToEigenVector(void) const
+    {
+		static_assert(EigenVector::RowsAtCompileTime == 3 || EigenVector::RowsAtCompileTime == 4,
+		              "EigenVector type has not 3 or 4 components");
+        EigenVector b = EigenVector::Zero();
+        b[0]=_v[0];
+        b[1]=_v[1];
+        b[2]=_v[2];
+        return b;
+    }
+  template <class Q>
+  static inline Point3 Construct( const Point3<Q> & b )
+  {
+    return Point3(P3ScalarType(b[0]),P3ScalarType(b[1]),P3ScalarType(b[2]));
+  }
+
   template <class Q>
   static inline Point3 Construct( const Q & P0, const Q & P1, const Q & P2)
   {
-    return Point3(Scalar(P0),Scalar(P1),Scalar(P2));
+    return Point3(P3ScalarType(P0),P3ScalarType(P1),P3ScalarType(P2));
   }
-  vcg::Box3<_Scalar> GetBBox(vcg::Box3<_Scalar> &bb) const;
 
-}; // end class definition (Point3)
+  static inline Point3 Construct( const Point3<ScalarType> & b )
+  {
+    return b;
+  }
 
-	// Dot product preciso numericamente (solo double!!)
-	// Implementazione: si sommano i prodotti per ordine di esponente
-	// (prima le piu' grandi)
-template<class Scalar>
-double stable_dot ( Point3<Scalar> const & p0, Point3<Scalar> const & p1 )
+  static inline Point3 Zero(void)
+  {
+    return Point3(0,0,0);
+  }
+
+  static inline Point3 One(void)
+  {
+    return Point3(1,1,1);
+  }
+
+//@}
+
+//@{
+
+  /** @name Data Access.
+   access to data is done by overloading of [] or explicit naming of coords (x,y,z)**/
+
+    inline P3ScalarType & operator [] ( const int i )
+    {
+        assert(i>=0 && i<3);
+        return _v[i];
+    }
+    inline const P3ScalarType & operator [] ( const int i ) const
+    {
+        assert(i>=0 && i<3);
+        return _v[i];
+    }
+    inline const P3ScalarType &X() const { return _v[0]; }
+    inline const P3ScalarType &Y() const { return _v[1]; }
+    inline const P3ScalarType &Z() const { return _v[2]; }
+    inline P3ScalarType &X() { return _v[0]; }
+    inline P3ScalarType &Y() { return _v[1]; }
+    inline P3ScalarType &Z() { return _v[2]; }
+    inline const P3ScalarType * V() const
+    {
+        return _v;
+    }
+    inline P3ScalarType * V()
+    {
+        return _v;
+    }
+    inline P3ScalarType & V( const int i )
+    {
+        assert(i>=0 && i<3);
+        return _v[i];
+    }
+    inline const P3ScalarType & V( const int i ) const
+    {
+        assert(i>=0 && i<3);
+        return _v[i];
+    }
+
+	/** @name Classical overloading of operators
+	**/
+
+    inline Point3 operator + ( Point3 const & p) const
+    {
+        return Point3<P3ScalarType>( _v[0]+p._v[0], _v[1]+p._v[1], _v[2]+p._v[2] );
+    }
+    inline Point3 operator - ( Point3 const & p) const
+    {
+        return Point3<P3ScalarType>( _v[0]-p._v[0], _v[1]-p._v[1], _v[2]-p._v[2] );
+    }
+    inline Point3 operator * ( const P3ScalarType s ) const
+    {
+        return Point3<P3ScalarType>( _v[0]*s, _v[1]*s, _v[2]*s );
+    }
+    inline Point3 operator / ( const P3ScalarType s ) const
+    {
+        return Point3<P3ScalarType>( _v[0]/s, _v[1]/s, _v[2]/s );
+    }
+        /// Dot product
+    inline P3ScalarType operator * ( Point3 const & p ) const
+    {
+        return ( _v[0]*p._v[0] + _v[1]*p._v[1] + _v[2]*p._v[2] );
+    }
+    inline P3ScalarType dot( const Point3 & p ) const { return (*this) * p; }
+    /// Cross product
+    inline Point3 operator ^ ( Point3 const & p ) const
+    {
+        return Point3 <P3ScalarType>
+        (
+            _v[1]*p._v[2] - _v[2]*p._v[1],
+            _v[2]*p._v[0] - _v[0]*p._v[2],
+            _v[0]*p._v[1] - _v[1]*p._v[0]
+        );
+    }
+
+    inline Point3 & operator += ( Point3 const & p)
+    {
+        _v[0] += p._v[0];
+        _v[1] += p._v[1];
+        _v[2] += p._v[2];
+        return *this;
+    }
+    inline Point3 & operator -= ( Point3 const & p)
+    {
+        _v[0] -= p._v[0];
+        _v[1] -= p._v[1];
+        _v[2] -= p._v[2];
+        return *this;
+    }
+    inline Point3 & operator *= ( const P3ScalarType s )
+    {
+        _v[0] *= s;
+        _v[1] *= s;
+        _v[2] *= s;
+        return *this;
+    }
+    inline Point3 & operator /= ( const P3ScalarType s )
+    {
+        _v[0] /= s;
+        _v[1] /= s;
+        _v[2] /= s;
+        return *this;
+    }
+
+	// Norms
+    inline P3ScalarType Norm() const
+    {
+    return math::Sqrt( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] );
+    }
+    inline P3ScalarType SquaredNorm() const
+    {
+        return ( _v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2] );
+    }
+        // Scalatura differenziata
+    inline Point3 & Scale( const P3ScalarType sx, const P3ScalarType sy, const P3ScalarType sz )
+    {
+        _v[0] *= sx;
+        _v[1] *= sy;
+        _v[2] *= sz;
+        return *this;
+    }
+    inline Point3 & Scale( const Point3 & p )
+    {
+        _v[0] *= p._v[0];
+        _v[1] *= p._v[1];
+        _v[2] *= p._v[2];
+        return *this;
+    }
+
+	// Normalization
+	inline Point3 & Normalize()
+	{
+		P3ScalarType n = P3ScalarType(math::Sqrt(_v[0]*_v[0] + _v[1]*_v[1] + _v[2]*_v[2]));
+		if (n > P3ScalarType(0)) { _v[0] /= n; _v[1] /= n; _v[2] /= n; }
+		return *this;
+	}
+
+	inline void normalize(void)
+	{
+		this->Normalize();
+	}
+
+	inline Point3 normalized(void) const
+	{
+		Point3<P3ScalarType> p = *this;
+		p.normalize();
+		return p;
+	}
+
+	/**
+	 * Convert to polar coordinates from cartesian coordinates.
+	 *
+	 * Theta is the azimuth angle and ranges between [0, 2PI) degrees.
+	 * Phi is the elevation angle (not the polar angle) and ranges between [-PI/2, PI/2] degrees.
+	 *
+	 * /note Note that instead of the classical polar angle, which ranges between
+	 *       0 and PI degrees we opt for the elevation angle to obtain a more
+	 *       intuitive spherical coordinate system.
+	 */
+	void ToPolarRad(P3ScalarType &ro, P3ScalarType &theta, P3ScalarType &phi) const
+	{
+		ro = Norm();
+		theta = (P3ScalarType)atan2(_v[2], _v[0]);
+		phi   = (P3ScalarType)asin(_v[1]/ro);
+	}
+
+	/**
+	 * Convert from polar coordinates to cartesian coordinates.
+	 *
+	 * Theta is the azimuth angle and ranges between [0, 2PI) radians.
+	 * Phi is the elevation angle (not the polar angle) and ranges between [-PI/2, PI/2] radians.
+	 *
+	 * \note Note that instead of the classical polar angle, which ranges between
+	 *       0 and PI degrees, we opt for the elevation angle to obtain a more
+	 *       intuitive spherical coordinate system.
+	 */
+	void FromPolarRad(const P3ScalarType &ro, const P3ScalarType &theta, const P3ScalarType &phi)
+	{
+		_v[0]= ro*cos(theta)*cos(phi);
+		_v[1]= ro*sin(phi);
+		_v[2]= ro*sin(theta)*cos(phi);
+	}
+
+	Box3<P3ScalarType> GetBBox(Box3<P3ScalarType> &bb) const;
+
+	size_t MaxCoeffId() const
+	{
+		if (_v[0]>_v[1])
+			return _v[0]>_v[2] ? 0 : 2;
+		else
+			return _v[1]>_v[2] ? 1 : 2;
+	}
+  /** @name Comparison Operators.
+   Note that the reverse z prioritized ordering, useful in many situations.
+   **/
+
+inline bool operator == ( Point3 const & p ) const
+    {
+        return _v[0]==p._v[0] && _v[1]==p._v[1] && _v[2]==p._v[2];
+    }
+    inline bool operator != ( Point3 const & p ) const
+    {
+        return _v[0]!=p._v[0] || _v[1]!=p._v[1] || _v[2]!=p._v[2];
+    }
+    inline bool operator <  ( Point3 const & p ) const
+    {
+        return	(_v[2]!=p._v[2])?(_v[2]<p._v[2]):
+                (_v[1]!=p._v[1])?(_v[1]<p._v[1]):
+                               (_v[0]<p._v[0]);
+    }
+    inline bool operator >  ( Point3 const & p ) const
+    {
+        return	(_v[2]!=p._v[2])?(_v[2]>p._v[2]):
+                (_v[1]!=p._v[1])?(_v[1]>p._v[1]):
+                               (_v[0]>p._v[0]);
+    }
+    inline bool operator <= ( Point3 const & p ) const
+    {
+        return	(_v[2]!=p._v[2])?(_v[2]< p._v[2]):
+                (_v[1]!=p._v[1])?(_v[1]< p._v[1]):
+                               (_v[0]<=p._v[0]);
+    }
+    inline bool operator >= ( Point3 const & p ) const
+    {
+        return	(_v[2]!=p._v[2])?(_v[2]> p._v[2]):
+                (_v[1]!=p._v[1])?(_v[1]> p._v[1]):
+                               (_v[0]>=p._v[0]);
+    }
+
+    inline Point3 operator - (void) const
+    {
+        return Point3<P3ScalarType> ( -_v[0], -_v[1], -_v[2] );
+    }
+ //@}
+
+}; // end class definition
+
+
+template <class P3ScalarType>
+inline P3ScalarType Angle( Point3<P3ScalarType> const & p1, Point3<P3ScalarType> const & p2 )
 {
-	Scalar k0 = p0.data()[0]*p1.data()[0];
-	Scalar k1 = p0.data()[1]*p1.data()[1];
-	Scalar k2 = p0.data()[2]*p1.data()[2];
-
-	int exp0,exp1,exp2;
-
-	frexp( double(k0), &exp0 );
-	frexp( double(k1), &exp1 );
-	frexp( double(k2), &exp2 );
-
-	if( exp0<exp1 )
-	{
-		if(exp0<exp2)
-			return (k1+k2)+k0;
-		else
-			return (k0+k1)+k2;
-	}
-	else
-	{
-		if(exp1<exp2)
-			return(k0+k2)+k1;
-		else
-			return (k0+k1)+k2;
-	}
+    P3ScalarType w = p1.Norm()*p2.Norm();
+    if(w==0) return -1;
+    P3ScalarType t = (p1*p2)/w;
+    if(t>1) t = 1;
+    else if(t<-1) t = -1;
+    return (P3ScalarType) acos(t);
 }
 
-/// Point(p) Edge(v1-v2) dist, q is the point in v1-v2 with min dist
-template<class Scalar>
-Scalar PSDist( const Point3<Scalar> & p,
-			         const Point3<Scalar> & v1,
-					 const Point3<Scalar> & v2,
-			         Point3<Scalar> & q )
+// versione uguale alla precedente ma che assume che i due vettori sono unitari
+template <class P3ScalarType>
+inline P3ScalarType AngleN( Point3<P3ScalarType> const & p1, Point3<P3ScalarType> const & p2 )
 {
-    Point3<Scalar> e = v2-v1;
-    Scalar  t = ((p-v1).dot(e))/e.SquaredNorm();
+    P3ScalarType w = p1*p2;
+    if(w>1)
+        w = 1;
+    else if(w<-1)
+        w=-1;
+  return (P3ScalarType) acos(w);
+}
+
+
+template <class P3ScalarType>
+inline P3ScalarType Norm( Point3<P3ScalarType> const & p )
+{
+	return p.Norm();
+}
+
+template <class P3ScalarType>
+inline P3ScalarType SquaredNorm( Point3<P3ScalarType> const & p )
+{
+	return p.SquaredNorm();
+}
+
+template <class P3ScalarType>
+inline Point3<P3ScalarType> & Normalize( Point3<P3ScalarType> & p )
+{
+	return p.Normalize();
+}
+
+template <typename Scalar>
+inline Point3<Scalar> Normalized(const Point3<Scalar> & p)
+{
+	return p.normalized();
+}
+
+template <class P3ScalarType>
+inline P3ScalarType Distance( Point3<P3ScalarType> const & p1,Point3<P3ScalarType> const & p2 )
+{
+	return (p1-p2).Norm();
+}
+
+template <class P3ScalarType>
+inline P3ScalarType SquaredDistance( Point3<P3ScalarType> const & p1,Point3<P3ScalarType> const & p2 )
+{
+	return (p1-p2).SquaredNorm();
+}
+
+template <class P3ScalarType>
+P3ScalarType ApproximateGeodesicDistance(const Point3<P3ScalarType>& p0, const Point3<P3ScalarType>& n0,
+                                       const Point3<P3ScalarType>& p1, const Point3<P3ScalarType>& n1)
+{
+    Point3<P3ScalarType> V(p0-p1);
+    V.Normalize();
+    const P3ScalarType C0 = V*n0;
+    const P3ScalarType C1 = V*n1;
+    const P3ScalarType De = Distance(p0,p1);
+    if(fabs(C0-C1)<0.0001) return De/sqrt(1-C0*C1);
+    const P3ScalarType Dg = ((asin(C0) - asin(C1))/(C0-C1));
+    return Dg*De;
+}
+
+
+    // Dot product preciso numericamente (solo double!!)
+    // Implementazione: si sommano i prodotti per ordine di esponente
+    // (prima le piu' grandi)
+template<class P3ScalarType>
+double stable_dot ( Point3<P3ScalarType> const & p0, Point3<P3ScalarType> const & p1 )
+{
+    P3ScalarType k0 = p0._v[0]*p1._v[0];
+    P3ScalarType k1 = p0._v[1]*p1._v[1];
+    P3ScalarType k2 = p0._v[2]*p1._v[2];
+
+    int exp0,exp1,exp2;
+
+    frexp( double(k0), &exp0 );
+    frexp( double(k1), &exp1 );
+    frexp( double(k2), &exp2 );
+
+    if( exp0<exp1 )
+    {
+        if(exp0<exp2)
+            return (k1+k2)+k0;
+        else
+            return (k0+k1)+k2;
+    }
+    else
+    {
+        if(exp1<exp2)
+            return(k0+k2)+k1;
+        else
+            return (k0+k1)+k2;
+    }
+}
+
+
+
+/// Point(p) Edge(v1-v2) dist, q is the point in v1-v2 with min dist
+template<class P3ScalarType>
+P3ScalarType PSDist( const Point3<P3ScalarType> & p,
+                     const Point3<P3ScalarType> & v1,
+                     const Point3<P3ScalarType> & v2,
+                     Point3<P3ScalarType> & q )
+{
+    Point3<P3ScalarType> e = v2-v1;
+    P3ScalarType  t = ((p-v1)*e)/e.SquaredNorm();
     if(t<0)      t = 0;
-	else if(t>1) t = 1;
-	q = v1+e*t;
+    else if(t>1) t = 1;
+    q = v1+e*t;
     return Distance(p,q);
 }
 
-template <class Scalar>
-void GetUV( Point3<Scalar> &n,Point3<Scalar> &u, Point3<Scalar> &v, Point3<Scalar> up=(Point3<Scalar>(0,1,0)) )
+
+template <class P3ScalarType>
+void GetUV( Point3<P3ScalarType> &n,Point3<P3ScalarType> &u, Point3<P3ScalarType> &v, Point3<P3ScalarType> up=(Point3<P3ScalarType>(0,1,0)) )
 {
-	n.Normalize();
-	const double LocEps=double(1e-7);
-	u=n^up;
+    n.Normalize();
+    const double LocEps=double(1e-7);
+    u=n^up;
   double len = u.Norm();
- 	if(len < LocEps)
-	{
-		if(fabs(n[0])<fabs(n[1])){
-			if(fabs(n[0])<fabs(n[2])) up=Point3<Scalar>(1,0,0); // x is the min
-			                         else up=Point3<Scalar>(0,0,1); // z is the min
-		}else {
-			if(fabs(n[1])<fabs(n[2])) up=Point3<Scalar>(0,1,0); // y is the min
-			                         else up=Point3<Scalar>(0,0,1); // z is the min
-		}
-		u=n^up;
-	}
-	u.Normalize();
-	v=n^u;
-	v.Normalize();
-	Point3<Scalar> uv=u^v;
+    if(len < LocEps)
+    {
+        if(fabs(n[0])<fabs(n[1])){
+            if(fabs(n[0])<fabs(n[2])) up=Point3<P3ScalarType>(1,0,0); // x is the min
+                                     else up=Point3<P3ScalarType>(0,0,1); // z is the min
+        }else {
+            if(fabs(n[1])<fabs(n[2])) up=Point3<P3ScalarType>(0,1,0); // y is the min
+                                     else up=Point3<P3ScalarType>(0,0,1); // z is the min
+        }
+        u=n^up;
+    }
+    u.Normalize();
+    v=n^u;
+    v.Normalize();
 }
 
-/*@}*/
+
+template <class SCALARTYPE>
+inline Point3<SCALARTYPE> Abs(const Point3<SCALARTYPE> & p) {
+    return (Point3<SCALARTYPE>(math::Abs(p[0]), math::Abs(p[1]), math::Abs(p[2])));
+}
+// probably a more uniform naming should be defined...
+template <class SCALARTYPE>
+inline Point3<SCALARTYPE> LowClampToZero(const Point3<SCALARTYPE> & p) {
+  return (Point3<SCALARTYPE>(std::max(p[0], (SCALARTYPE)0), std::max(p[1], (SCALARTYPE)0), std::max(p[2], (SCALARTYPE)0)));
+}
+
+template <typename Scalar>
+inline Point3<Scalar> operator*(const Scalar s, const Point3<Scalar> & p)
+{
+	return (p * s);
+}
 
 typedef Point3<short>  Point3s;
 typedef Point3<int>	   Point3i;
 typedef Point3<float>  Point3f;
 typedef Point3<double> Point3d;
 
-// typedef Eigen::Matrix<short ,3,1> Point3s;
-// typedef Eigen::Matrix<int   ,3,1> Point3i;
-// typedef Eigen::Matrix<float ,3,1> Point3f;
-// typedef Eigen::Matrix<double,3,1> Point3d;
-// typedef Eigen::Matrix<short ,3,1> Vector3s;
-// typedef Eigen::Matrix<int   ,3,1> Vector3i;
-// typedef Eigen::Matrix<float ,3,1> Vector3f;
-// typedef Eigen::Matrix<double,3,1> Vector3d;
+/*@}*/
 
 } // end namespace
 
 #endif
 
-#endif

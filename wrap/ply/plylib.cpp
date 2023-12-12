@@ -3652,8 +3652,9 @@ int PlyFile::Read( void * mem )
 
 	return 0;
 }
-
-void interpret_texture_name(const char*a, const char*fn, char*output){
+// this function is used to interpret the texture name in the ply header substituting "<this>" with the filename
+// of the ply file itself. This is used to allow to rename the ply file without having to change the texture name inside the ply file
+void interpret_texture_name(const char*a, const char*fn, char*output, size_t linesize){
 	int ia=0,io=0;
 	output[0]=0;
 	while (a[ia]!=0){
@@ -3685,7 +3686,8 @@ void interpret_texture_name(const char*a, const char*fn, char*output){
 
 					// 3) append
 					output[io]=0;
-					sprintf(output,"%s%s",output,fn2);
+					// replace sprintf(output,"%s%s",output,fn2);
+					snprintf(output, linesize, "%s%s",output,fn2);
 					io=strlen(output);
 					ia+=6; //skip the "<this>"
 					continue;

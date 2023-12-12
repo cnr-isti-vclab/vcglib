@@ -340,8 +340,6 @@ class FieldSmoother
         vcg::tri::CrossField<MeshType>::MakeDirectionFaceCoherent(mesh,true);
     }
 
-
-
 public:
 
     struct SmoothParam
@@ -365,6 +363,7 @@ public:
         //the number of iteration in case of iterative method
         size_t IteN;
 
+        //initialize with curvature or not
         SmoothParam()
         {
             Ndir=4;
@@ -408,8 +407,6 @@ public:
         InitQualityByAnisotropyDir(mesh);
     }
 
-private:
-
     static void SelectConstraints(MeshType &mesh,SmoothParam &SParam)
     {
         //clear all selected faces
@@ -441,6 +438,8 @@ private:
             mesh.face[indexF].SetS();
         }
     }
+
+public:
 
     static void SmoothDirectionsIGL(MeshType &mesh,
                                     int Ndir,
@@ -509,7 +508,6 @@ private:
         }
     }
 
-public:
 
     static void SmoothDirections(MeshType &mesh,SmoothParam SParam)
     {

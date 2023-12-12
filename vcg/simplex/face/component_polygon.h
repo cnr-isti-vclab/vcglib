@@ -43,9 +43,9 @@ public:
   PolyInfo(){ _ns = -1; }
   static bool HasPolyInfo()   { return true; }
   inline const int &  VN() const { return _ns;}
-  inline int Prev(const int & i){ return (i+(VN()-1))%VN();}
-  inline int Next(const int & i){ return (i+1)%VN();}
-  inline void Alloc(const int & ns){
+  inline int Prev(const int i){ return (i+(VN()-1))%VN();}
+  inline int Next(const int i){ return (i+1)%VN();}
+  inline void Alloc(const int ns){
     T::Alloc(ns);
     __SetVN(ns);
   }
@@ -79,29 +79,29 @@ public:
   /** Return the pointer to the ((j+1)%3)-th vertex of the face.
         @param j Index of the face vertex.
      */
-  inline        VertexType * &  V0( const int j )       { return V(j);}
-  inline        VertexType * &  V1( const int j )       { return V((j+1)%this->VN());}
-  inline        VertexType * &  V2( const int j )       { return V((j+2)%this->VN());}
-  inline const  VertexType *    V0( const int j ) const { return V(j);}
-  inline const  VertexType *    V1( const int j ) const { return V((j+1)%this->VN());}
-  inline const  VertexType *    V2( const int j ) const { return V((j+2)%this->VN());}
-  inline const  VertexType *   cV0( const int j ) const { return cV(j);}
-  inline const  VertexType *   cV1( const int j ) const { return cV((j+1)%this->VN());}
-  inline const  VertexType *   cV2( const int j ) const { return cV((j+2)%this->VN());}
+  inline       VertexType * &  V0( const int j )       { return V(j);}
+  inline       VertexType * &  V1( const int j )       { return V((j+1)%this->VN());}
+  inline       VertexType * &  V2( const int j )       { return V((j+2)%this->VN());}
+  inline const VertexType *    V0( const int j ) const { return V(j);}
+  inline const VertexType *    V1( const int j ) const { return V((j+1)%this->VN());}
+  inline const VertexType *    V2( const int j ) const { return V((j+2)%this->VN());}
+  inline const VertexType *   cV0( const int j ) const { return cV(j);}
+  inline const VertexType *   cV1( const int j ) const { return cV((j+1)%this->VN());}
+  inline const VertexType *   cV2( const int j ) const { return cV((j+2)%this->VN());}
 
-  inline        CoordType &P( const int j )       {	assert(j>=0 && j<this->VN());		return _vpoly[j]->P();	}
-  inline        CoordType  P( const int j ) const {	assert(j>=0 && j<this->VN());		return _vpoly[j]->cP(); }
-  inline        CoordType cP( const int j ) const {	assert(j>=0 && j<this->VN());		return _vpoly[j]->cP(); }
+  inline       CoordType  &P( const int j )       { assert(j>=0 && j<this->VN()); return _vpoly[j]->P(); }
+  inline       CoordType   P( const int j ) const { assert(j>=0 && j<this->VN()); return _vpoly[j]->cP(); }
+  inline const CoordType &cP( const int j ) const { assert(j>=0 && j<this->VN()); return _vpoly[j]->cP(); }
 
-  inline        CoordType & P0( const int j )       { return V(j)->P();}
-  inline        CoordType & P1( const int j )       { return V((j+1)%this->VN())->P();}
-  inline        CoordType & P2( const int j )       { return V((j+2)%this->VN())->P();}
-  inline        CoordType   P0( const int j ) const { return cV(j)->P();}
-  inline        CoordType   P1( const int j ) const { return cV((j+1)%this->VN())->P();}
-  inline        CoordType   P2( const int j ) const { return cV((j+2)%this->VN())->P();}
-  inline        CoordType  cP0( const int j ) const { return cV(j)->P();}
-  inline        CoordType  cP1( const int j ) const { return cV((j+1)%this->VN())->P();}
-  inline        CoordType  cP2( const int j ) const { return cV((j+2)%this->VN())->P();}
+  inline       CoordType  &P0( const int j )       { return V(j)->P();}
+  inline       CoordType  &P1( const int j )       { return V((j+1)%this->VN())->P();}
+  inline       CoordType  &P2( const int j )       { return V((j+2)%this->VN())->P();}
+  inline       CoordType   P0( const int j ) const { return cV(j)->P();}
+  inline       CoordType   P1( const int j ) const { return cV((j+1)%this->VN())->P();}
+  inline       CoordType   P2( const int j ) const { return cV((j+2)%this->VN())->P();}
+  inline const CoordType &cP0( const int j ) const { return cV(j)->P();}
+  inline const CoordType &cP1( const int j ) const { return cV((j+1)%this->VN())->P();}
+  inline const CoordType &cP2( const int j ) const { return cV((j+2)%this->VN())->P();}
 
   template <class LeftF>
   void ImportData(const LeftF & leftF){  T::ImportData(leftF);}
@@ -184,9 +184,9 @@ public:
    * This destructor is only done for those who istance a face alone (outside a mesh)
    */
 //  ~PFFAdj(){ __Dealloc(); }
-  typename T::FacePointer  &FFp(const int j)        { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
-  typename T::FacePointer   FFp(const int j) const  { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
-  typename T::FacePointer  cFFp(const int j) const  { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
+  typename T::FacePointer        &FFp(const int j)       { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
+  typename T::FacePointer         FFp(const int j) const { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
+  const typename T::FacePointer  cFFp(const int j) const { assert(j>=0 && j<this->VN());  return _ffpP[j]; }
   char  &FFi(const int j)       { return _ffiP[j]; }
   char  cFFi(const int j) const { return _ffiP[j]; }
 
@@ -227,9 +227,9 @@ public:
    * This destructor is only done for those who istance a face alone (outside a mesh)
    */
 //  ~PFEAdj(){ __Dealloc(); }
-  typename T::EdgePointer       &FEp(const int j)        { assert(j>=0 && j<this->VN());  return _fepP[j]; }
-  typename T::EdgePointer const  FEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
-  typename T::EdgePointer const cFEp(const int j) const  { assert(j>=0 && j<this->VN());  return _fepP[j]; }
+  typename T::EdgePointer        &FEp(const int j)       { assert(j>=0 && j<this->VN());  return _fepP[j]; }
+  typename T::EdgePointer const   FEp(const int j) const { assert(j>=0 && j<this->VN());  return _fepP[j]; }
+  const typename T::EdgePointer  cFEp(const int j) const { assert(j>=0 && j<this->VN());  return _fepP[j]; }
 
   template <class LeftF>
   void ImportData(const LeftF & leftF){T::ImportData(leftF);}
@@ -263,7 +263,7 @@ public:
 
   PFHAdj(){ _fhP = NULL;  }
   typename T::HEdgePointer       &FHp()        {  return _fhP; }
-  typename T::HEdgePointer const cFHp() const  {  return _fhP; }
+  const typename T::HEdgePointer cFHp() const  {  return _fhP; }
 
   template <class LeftF>
   void ImportData(const LeftF & leftF){T::ImportData(leftF);}

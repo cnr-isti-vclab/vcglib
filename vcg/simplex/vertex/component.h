@@ -59,30 +59,30 @@ public:
 
   typedef vcg::Point3f CoordType;
   typedef CoordType::ScalarType      ScalarType;
-  CoordType &P()       { assert(0); static CoordType coord(0, 0, 0); return coord; }
-  CoordType  P() const { assert(0); static CoordType coord(0, 0, 0);  assert(0); return coord; }
-  CoordType cP() const { assert(0); static CoordType coord(0, 0, 0);  assert(0); return coord; }
+  CoordType         &P()       { assert(0); static CoordType coord(0, 0, 0); return coord; }
+  CoordType          P() const { assert(0); static CoordType coord(0, 0, 0);  assert(0); return coord; }
+  const CoordType  &cP() const { assert(0); static CoordType coord(0, 0, 0);  assert(0); return coord; }
   static bool HasCoord()   { return false; }
   inline bool IsCoordEnabled() const { return TT::VertexType::HasCoord();}
 
   typedef vcg::Point3s NormalType;
-  NormalType &N()       { assert(0); static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
-  NormalType  N() const { assert(0); static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
-  NormalType cN() const { assert(0); static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  NormalType        &N()       { assert(0); static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  NormalType         N() const { assert(0); static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
+  const NormalType &cN() const { assert(0); static NormalType dummy_normal(0, 0, 0); return dummy_normal; }
   static bool HasNormal()    { return false; }
   inline bool IsNormalEnabled() const { return TT::VertexType::HasNormal();}
 
   typedef float QualityType;
-  QualityType &Q()       { assert(0); static QualityType dummyQuality(0); return dummyQuality; }
-  QualityType  Q() const { assert(0); static QualityType dummyQuality(0); return dummyQuality; }
-  QualityType cQ() const { assert(0); static QualityType dummyQuality(0); return dummyQuality; }
+  QualityType        &Q()       { assert(0); static QualityType dummyQuality(0); return dummyQuality; }
+  QualityType         Q() const { assert(0); static QualityType dummyQuality(0); return dummyQuality; }
+  const QualityType &cQ() const { assert(0); static QualityType dummyQuality(0); return dummyQuality; }
   static bool HasQuality()   { return false; }
   inline bool IsQualityEnabled() const { return TT::VertexType::HasQuality();}
 
   typedef vcg::Color4b ColorType;
-  ColorType &C()       { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
-  ColorType  C() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
-  ColorType cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  ColorType        &C()       { static ColorType dumcolor(vcg::Color4b::White); assert(0); return dumcolor; }
+  ColorType         C() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
+  const ColorType &cC() const { static ColorType dumcolor(vcg::Color4b::White);  assert(0); return dumcolor; }
   static bool HasColor()   { return false; }
   inline bool IsColorEnabled() const { return TT::VertexType::HasColor();}
 
@@ -95,21 +95,21 @@ public:
   inline bool IsMarkEnabled() const { return TT::VertexType::HasMark();}
 
   typedef ScalarType RadiusType;
-  RadiusType &R()       { static ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
-  RadiusType  R() const { static const ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
-  RadiusType cR() const { static const ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
+  RadiusType        &R()       { static ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
+  RadiusType         R() const { static const ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
+  const RadiusType &cR() const { static const ScalarType v = 0.0; assert(0 && "the radius component is not available"); return v; }
   static bool HasRadius()     { return false; }
   inline bool IsRadiusEnabled() const { return TT::VertexType::HasRadius();}
 
   typedef vcg::TexCoord2<float,1> TexCoordType;
-  TexCoordType &T()       { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
-  TexCoordType  T() const { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
-  TexCoordType cT() const { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
+  TexCoordType        &T()       { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
+  TexCoordType         T() const { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
+  const TexCoordType &cT() const { static TexCoordType dummy_texcoord;  assert(0); return dummy_texcoord; }
   static bool HasTexCoord()   { return false; }
   inline bool IsTexCoordEnabled() const { return TT::VertexType::HasTexCoord();}
 
-  typename TT::TetraPointer &VTp()        { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
-  typename TT::TetraPointer cVTp() const  { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
+  typename TT::TetraPointer        &VTp()        { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
+  const typename TT::TetraPointer &cVTp() const  { static typename TT::TetraPointer tp = 0;  assert(0); return tp; }
   int &VTi()       { static int z = 0; assert(0); return z; }
   int  VTi() const { static int z = 0; assert(0); return z; }
   int cVTi() const { static int z = 0; assert(0); return z; }
@@ -122,8 +122,8 @@ public:
     }
   }
 
-  typename TT::FacePointer &VFp()       { static typename TT::FacePointer fp=0;  assert(0); return fp; }
-  typename TT::FacePointer cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
+  typename TT::FacePointer        &VFp()       { static typename TT::FacePointer fp=0;  assert(0); return fp; }
+  const typename TT::FacePointer &cVFp() const { static typename TT::FacePointer fp=0;  assert(0); return fp; }
   int &VFi()       { static int z=-1; assert(0); return z;}
   int  VFi() const { static int z=-1; assert(0); return z;}
   int cVFi() const { static int z=-1; assert(0); return z;}
@@ -162,19 +162,19 @@ public:
   typedef Point2f CurvatureType;
 
   typedef CurvatureDirBaseType<float> CurvatureDirType;
-  CurVecType &PD1()       {static CurVecType v(0,0,0); assert(0);return v;}
-  CurVecType &PD2()       {static CurVecType v(0,0,0); assert(0);return v;}
-  CurVecType  PD1() const {static CurVecType v(0,0,0); assert(0);return v;}
-  CurVecType  PD2() const {static CurVecType v(0,0,0); assert(0);return v;}
-  CurVecType cPD1() const {static CurVecType v(0,0,0); assert(0);return v;}
-  CurVecType cPD2() const {static CurVecType v(0,0,0); assert(0);return v;}
+  CurVecType        &PD1()       {static CurVecType v(0,0,0); assert(0);return v;}
+  CurVecType        &PD2()       {static CurVecType v(0,0,0); assert(0);return v;}
+  CurVecType         PD1() const {static CurVecType v(0,0,0); assert(0);return v;}
+  CurVecType         PD2() const {static CurVecType v(0,0,0); assert(0);return v;}
+  const CurVecType &cPD1() const {static CurVecType v(0,0,0); assert(0);return v;}
+  const CurVecType &cPD2() const {static CurVecType v(0,0,0); assert(0);return v;}
 
-  CurScalarType &K1()       { static ScalarType v = 0.0;assert(0);return v;}
-  CurScalarType &K2()       { static ScalarType v = 0.0;assert(0);return v;}
-  CurScalarType  K1() const {static ScalarType v = 0.0;assert(0);return v;}
-  CurScalarType  K2() const  {static ScalarType v = 0.0;assert(0);return v;}
-  CurScalarType cK1() const {static ScalarType v = 0.0;assert(0);return v;}
-  CurScalarType cK2() const  {static ScalarType v = 0.0;assert(0);return v;}
+  CurScalarType        &K1()       {static ScalarType v = 0.0;assert(0);return v;}
+  CurScalarType        &K2()       {static ScalarType v = 0.0;assert(0);return v;}
+  CurScalarType         K1() const {static ScalarType v = 0.0;assert(0);return v;}
+  CurScalarType         K2() const {static ScalarType v = 0.0;assert(0);return v;}
+  const CurScalarType &cK1() const {static ScalarType v = 0.0;assert(0);return v;}
+  const CurScalarType &cK2() const {static ScalarType v = 0.0;assert(0);return v;}
 
   static bool HasCurvatureDir()			{ return false; }
   inline bool IsCurvatureDirEnabled() const { return TT::VertexType::HasCurvatureDir();}
@@ -196,11 +196,11 @@ public:
   typedef A CoordType;
   typedef typename A::ScalarType      ScalarType;
   /// Return a const reference to the coordinate of the vertex
-  inline const CoordType &P() const { return _coord; }
+  inline const CoordType  &P() const { return _coord; }
   /// Return a reference to the coordinate of the vertex
-  inline       CoordType &P()       { return _coord; }
+  inline       CoordType  &P()       { return _coord; }
   /// Return a const reference to the coordinate of the vertex
-  inline       CoordType cP() const { return _coord; }
+  inline const CoordType &cP() const { return _coord; }
 
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ) { if(rVert.IsCoordEnabled()) P().Import(rVert.cP()); T::ImportData( rVert); }
@@ -235,11 +235,11 @@ template <class A, class T> class Normal: public T {
 public:
   typedef A NormalType;
   /// Return a const reference to the normal of the vertex
-  inline const NormalType &N() const { return _norm; }
+  inline const NormalType  &N() const { return _norm; }
   /// Return a  reference to the normal of the vertex
-  inline       NormalType &N()       { return _norm; }
+  inline       NormalType  &N()       { return _norm; }
   /// Return a const reference to the normal of the vertex
-  inline       NormalType cN() const { return _norm; }
+  inline const NormalType &cN() const { return _norm; }
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ){
     if(rVert.IsNormalEnabled())  N().Import(rVert.cN());
@@ -275,11 +275,11 @@ template <class T> class Mark: public T {
 public:
   Mark():_imark(0){}
   /// Return a const reference to the incremental mark value
-  inline const int &IMark() const { return _imark;}
+  inline const int &IMark() const { return _imark; }
   /// Return a reference to the incremental mark value
-  inline       int &IMark()       { return _imark;}
+  inline       int &IMark()       { return _imark; }
   /// Return a const reference to the incremental mark value
-  inline       int cIMark() const { return _imark;}
+  inline       int cIMark() const { return _imark; }
   static bool HasMark()      { return true; }
   inline void InitIMark()    { _imark = 0; }
   template < class RightValueType>
@@ -309,9 +309,9 @@ public:
   typedef A TexCoordType;
 
   /// Return a const reference to the Texture Coordinate
-  const TexCoordType &T() const { return _t; }
-        TexCoordType &T()       { return _t; }
-        TexCoordType cT() const { return _t; }
+  const TexCoordType  &T() const { return _t; }
+        TexCoordType  &T()       { return _t; }
+  const TexCoordType &cT() const { return _t; }
     template < class RightValueType>
     void ImportData(const RightValueType  & rVert ) { if(rVert.IsTexCoordEnabled()) T().Import(rVert.cT()); TT::ImportData(rVert); }
   static bool HasTexCoord()   { return true; }
@@ -345,9 +345,9 @@ template <class T> class BitFlags:  public T {
 public:
   BitFlags(){_flags=0;}
   typedef int FlagType;
-  inline const int &Flags() const {return _flags; }
-  inline       int &Flags()       {return _flags; }
-  inline       int cFlags() const {return _flags; }
+  inline const int &Flags() const {return _flags;}
+  inline       int &Flags()       {return _flags;}
+  inline       int cFlags() const {return _flags;}
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ) { if(RightValueType::HasFlags()) Flags() = rVert.cFlags(); T::ImportData( rVert); }
   static bool HasFlags()   { return true; }
@@ -368,9 +368,9 @@ template <class A, class T> class Color: public T {
 public:
   Color():_color(vcg::Color4b::White) {}
   typedef A ColorType;
-  inline const ColorType &C() const { return _color; }
-  inline       ColorType &C()       { return _color; }
-  inline       ColorType cC() const { return _color; }
+  inline const ColorType  &C() const { return _color; }
+  inline       ColorType  &C()       { return _color; }
+  inline const ColorType &cC() const { return _color; }
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ) { if(rVert.IsColorEnabled()) C() = rVert.cC();  T::ImportData( rVert); }
   static bool HasColor()   { return true; }
@@ -397,9 +397,9 @@ public:
   typedef A QualityType;
   Quality():_quality(0) {}
 
-  inline const QualityType &Q() const { return _quality; }
-  inline       QualityType &Q()       { return _quality; }
-  inline       QualityType cQ() const {return _quality; }
+  inline const QualityType  &Q() const { return _quality; }
+  inline       QualityType  &Q()       { return _quality; }
+  inline const QualityType &cQ() const { return _quality; }
   template < class RightValueType>
   void ImportData(const RightValueType  & rVert ) { if(rVert.IsQualityEnabled()) Q() = rVert.cQ(); TT::ImportData( rVert); }
   static bool HasQuality()   { return true; }
@@ -431,13 +431,13 @@ public:
     typedef typename CurvatureDirType::VecType CurVecType;
     typedef typename CurvatureDirType::ScalarType CurScalarType;
 
-    CurVecType &PD1(){ return _curv.max_dir; }
-    CurVecType &PD2(){ return _curv.min_dir; }
+    CurVecType        &PD1()       { return _curv.max_dir; }
+    CurVecType        &PD2()       { return _curv.min_dir; }
     const CurVecType &cPD1() const { return _curv.max_dir; }
     const CurVecType &cPD2() const { return _curv.min_dir; }
 
-    CurScalarType &K1(){ return _curv.k1; }
-    CurScalarType &K2(){ return _curv.k2; }
+    CurScalarType        &K1()       { return _curv.k1; }
+    CurScalarType        &K2()       { return _curv.k2; }
     const CurScalarType &cK1() const { return _curv.k1; }
     const CurScalarType &cK2() const { return _curv.k2; }
     template < class RightValueType>
@@ -473,9 +473,9 @@ public:	static void Name(std::vector<std::string> & name){name.push_back(std::st
   template <class A, class TT> class Radius: public TT {
   public:
     typedef A RadiusType;
-    const RadiusType &R() const { return _radius; }
-          RadiusType &R()       { return _radius; }
-          RadiusType cR() const {return _radius; }
+    const RadiusType  &R() const { return _radius; }
+          RadiusType  &R()       { return _radius; }
+    const RadiusType &cR() const { return _radius; }
     template < class RightValueType>
     void ImportData(const RightValueType  & rVert ) { if(rVert.IsRadiusEnabled()) R() = rVert.cR(); TT::ImportData( rVert); }
     static bool HasRadius()   { return true; }
@@ -501,8 +501,8 @@ public: static void Name(std::vector<std::string> & name){name.push_back(std::st
 template <class T> class VEAdj: public T {
 public:
   VEAdj(){_ep=0;_zp=-1;}
-  typename T::EdgePointer &VEp()       {return _ep; }
-  typename T::EdgePointer cVEp() const {return _ep; }
+  typename T::EdgePointer        &VEp()       {return _ep; }
+  const typename T::EdgePointer &cVEp() const {return _ep; }
   int &VEi()       {return _zp; }
   int  VEi() const {return _zp; }
   int cVEi() const {return _zp; }
@@ -530,8 +530,8 @@ Note that if you use this component it is expected that on the Face you use also
   template <class T> class VFAdj: public T {
   public:
     VFAdj(){_fp=0;_zp=-1;}
-    typename T::FacePointer &VFp()        { return _fp; }
-    typename T::FacePointer cVFp() const  { return _fp; }
+    typename T::FacePointer        &VFp()        { return _fp; }
+    const typename T::FacePointer &cVFp() const  { return _fp; }
     int &VFi()       { return _zp; }
     int  VFi() const { return _zp; }
     int cVFi() const { return _zp; }
@@ -551,8 +551,8 @@ Note that if you use this component it is expected that on the Face you use also
 template <class T> class VHAdj: public T {
 public:
     VHAdj(){_hp=0;_zp=-1;}
-    typename T::HEdgePointer &VHp()       {return _hp; }
-    typename T::HEdgePointer cVHp() const {return _hp; }
+    typename T::HEdgePointer        &VHp()       {return _hp; }
+    const typename T::HEdgePointer &cVHp() const {return _hp; }
     int &VHi() {return _zp; }
     template < class RightValueType>
     void ImportData(const RightValueType  & rVert ) {  T::ImportData( rVert); }
@@ -569,8 +569,8 @@ private:
 template <class T> class VTAdj: public T {
 public:
     VTAdj() { _tp = 0; _zp=-1;}
-    typename T::TetraPointer &VTp()       { return _tp; }
-    typename T::TetraPointer cVTp() const { return _tp; }
+    typename T::TetraPointer        &VTp()       { return _tp; }
+    const typename T::TetraPointer &cVTp() const { return _tp; }
     int &VTi() {return _zp; }
     int  VTi() const { return _zp; }
     int cVTi() const { return _zp; }

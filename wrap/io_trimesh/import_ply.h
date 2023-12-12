@@ -1031,6 +1031,7 @@ public:
 		// Parsing texture names
 		m.textures.clear();
 		m.normalmaps.clear();
+		const size_t linesize=1024;
 
 		for(size_t co=0;co<pf.comments.size();++co)
 		{
@@ -1048,8 +1049,8 @@ public:
 				for(int i=0;i<n;i++)
 					if( bufstr[i]!=' ' && bufstr[i]!='\t' && bufstr[i]>32 && bufstr[i]<125 )	bufclean.push_back(bufstr[i]);
 
-				char buf2[255];
-				ply::interpret_texture_name( bufclean.c_str(),filename,buf2 );
+				char buf2[linesize];
+				ply::interpret_texture_name( bufclean.c_str(),filename,buf2,linesize );
 				m.textures.push_back( std::string(buf2) );
 			}
 			/*if( !strncmp(c,NFILE,strlen(NFILE)) )
