@@ -1215,14 +1215,26 @@ template <class MeshType>
 void BuildCylinderEdgeShell(MeshType &mIn, MeshType &mOut, float radius=0, int slices=16, int stacks=1 )
 {
   if(radius==0) radius = mIn.bbox.Diag()/100.0f;
-  typedef typename tri::UpdateTopology<MeshType>::PEdge PEdge;
-  std::vector<PEdge> edgeVec;
-  tri::UpdateTopology<MeshType>::FillUniqueEdgeVector(mIn,edgeVec,false);
-  for(size_t i=0;i<edgeVec.size();++i)
+  if (mIn.edge.size() > 0)
   {
-    MeshType mCyl;
-    tri::OrientedCylinder(mCyl,edgeVec[i].v[0]->P(),edgeVec[i].v[1]->P(),radius,true,slices,stacks);
-    tri::Append<MeshType,MeshType>::Mesh(mOut,mCyl);
+	  for (size_t i = 0; i < mIn.edge.size(); ++i) {
+		  MeshType mCyl;
+		  tri::OrientedCylinder(
+			  mCyl, mIn.edge[i].V(0)->P(), mIn.edge[i].V(1)->P(), radius, true, slices, stacks);
+		  tri::Append<MeshType, MeshType>::Mesh(mOut, mCyl);
+	  }
+  }
+  else
+  {
+	  typedef typename tri::UpdateTopology<MeshType>::PEdge PEdge;
+	  std::vector<PEdge>                                    edgeVec;
+	  tri::UpdateTopology<MeshType>::FillUniqueEdgeVector(mIn, edgeVec, false);
+	  for (size_t i = 0; i < edgeVec.size(); ++i) {
+		  MeshType mCyl;
+		  tri::OrientedCylinder(
+			  mCyl, edgeVec[i].v[0]->P(), edgeVec[i].v[1]->P(), radius, true, slices, stacks);
+		  tri::Append<MeshType, MeshType>::Mesh(mOut, mCyl);
+	  }
   }
 }
 
