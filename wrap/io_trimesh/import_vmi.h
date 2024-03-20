@@ -725,19 +725,16 @@ namespace io {
             /* resize the vector of vertices */
             m.vert.resize(vertSize);
 
-
-            size_t read = 0;
             /* load the vertices */
             if(vertSize>0){
-                read=Read((void*)& m.vert[0],sizeof(VertexType),vertSize );
+                Read((void*)& m.vert[0],sizeof(VertexType),vertSize );
                  LoadVertexOcf<OpenMeshType,VertContainer>(F(),m.vert);
             }
 
-            read = 0;
             m.face.resize(faceSize);
             if(faceSize>0){
                 /* load the faces */
-                read = Read((void*)& m.face[0],sizeof(FaceType),faceSize );
+                Read((void*)& m.face[0],sizeof(FaceType),faceSize );
                 LoadFaceOcf<OpenMeshType,FaceContainer>(m.face);
             }
 			(void)read; // unused
