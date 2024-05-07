@@ -164,8 +164,19 @@ public:
         if(!face::IsManifold(*fi,i))
           throw vcg::MissingPreconditionException("According to FF adjacency, the mesh is not two manifold (e.g. there are more than two faces on an edge)");
       }
-    }    
-}
+    }
+  }
+	/// \brief Throw vcg::MissingPreconditionException if the FaceEdgeSelection bit is not consistent 
+	static void ConsistentFaceEdgeSelection(MeshType &m)
+	{
+		for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
+			{
+				for(int i=0;i<fi->VN();++i){
+					if(fi->IsFaceEdgeS(i) != fi->FFp(i)->IsFaceEdgeS(fi->FFi(i)))
+						throw vcg::MissingPreconditionException("FaceEdgeSelection bit is not consistent");
+				}
+			}
+	}
   
 };
 
