@@ -585,8 +585,40 @@ public:
 		for(size_t i=0;i<m.vert.size();++i)
 			if(cnt[i]>2) m.vert[i].SetS();
 	}
-
-	static void SelectCreaseVertexOnEdgeMesh(MeshType &m, ScalarType AngleRadThr)
+	
+	/// \brief Given an edge mesh it selects the vertexes where the edge make an angle greater than AngleRadThr.
+	/// it uses the EE Adjacency
+	static void SelectCreaseVertexOnEdgeMeshEE(MeshType &m, ScalarType AngleRadThr)
+	{
+		tri::RequireCompactness(m);
+		tri::RequireEEAdjacency(m);
+		tri::UpdateTopology<MeshType>::EdgeEdge(m);
+		tri::UpdateSelection<MeshType>::VertexClear(m);
+		tri::UpdateFlags<MeshType>::VertexClearV(m);
+		for(size_t i=0;i<m.edge.size();++i)
+		{
+			for(int j=0;j<2;++j)
+			{
+				if(! m.edge[i].V(j)->IsV())
+				{
+					const CoordType &centerV = m.edge[i].V(j)->cP();
+					m.edge[i].V(j)->SetV();
+					std::vector<VertexPointer> VVStarVec;
+					edge::VVStarEE(&(m.edge[i]),j,VVStarVec);
+					if(VVStarVec.size()==2)
+					{
+						CoordType v0 = centerV - VVStarVec[0]->P();
+						CoordType v1 =  VVStarVec[1]->P() - centerV;
+						if(vcg::Angle(v0,v1) > AngleRadThr)
+							m.edge[i].V(j)->SetS();
+					}
+				}
+			}
+		}
+	}
+	/// \brief Given an edge mesh it selects the vertexes where the edge make an angle greater than AngleRadThr.
+	/// it uses the VE Adjacency
+	static void SelectCreaseVertexOnEdgeMeshVE(MeshType &m, ScalarType AngleRadThr)
 	{
 		tri::RequireCompactness(m);
 		tri::RequireVEAdjacency(m);
@@ -605,7 +637,6 @@ public:
 			}
 		}
 	}
-
 
 	/// Removal of faces that were incident on a non manifold edge.
 
