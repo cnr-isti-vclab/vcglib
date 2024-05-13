@@ -2149,7 +2149,7 @@ static void HierarchicalPoissonDisk(MeshType &origMesh, VertexSampler &ps, MeshT
 static void Texture(MeshType & m, VertexSampler &ps, int textureWidth, int textureHeight, bool correctSafePointsBaryCoords=true)
 {
 typedef Point2<ScalarType> Point2x;
-        printf("Similar Triangles face sampling\n");
+        //printf("Similar Triangles face sampling\n");
         for(FaceIterator fi=m.face.begin(); fi != m.face.end(); fi++)
             if (!fi->IsD())
             {
