@@ -178,7 +178,9 @@ class MeshSampler
 public:
   typedef typename MeshType::VertexType  VertexType;
   typedef typename MeshType::FaceType    FaceType;
+  typedef typename MeshType::EdgeType    EdgeType;
   typedef typename MeshType::CoordType   CoordType;
+  typedef typename MeshType::ScalarType  ScalarType;
 
   MeshSampler(MeshType &_m):m(_m){
     perFaceNormal = false;
@@ -197,7 +199,14 @@ public:
     tri::Allocator<MeshType>::AddVertices(m,1);
     m.vert.back().ImportData(p);
   }
-
+  
+  void AddEdge(const EdgeType& e, ScalarType u ) // u==0 -> v(0) u==1 -> v(1);
+  {
+	  tri::Allocator<MeshType>::AddVertices(m,1);
+	  m.vert.back().P() = e.cV(0)->cP()*(1.0-u)+e.cV(1)->cP()*u;
+	  m.vert.back().N() = e.cV(0)->cN()*(1.0-u)+e.cV(1)->cN()*u;
+  }
+  
   void AddFace(const FaceType &f, CoordType p)
   {
     tri::Allocator<MeshType>::AddVertices(m,1);
