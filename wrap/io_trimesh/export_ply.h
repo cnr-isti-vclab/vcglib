@@ -480,8 +480,10 @@ public:
 						t = ScalarType(vp->N()[1]); fwrite(&t,sizeof(ScalarType),1,fpout);
 						t = ScalarType(vp->N()[2]); fwrite(&t,sizeof(ScalarType),1,fpout);
 					}
-					if( HasPerVertexFlags(m) && (pi.mask & Mask::IOM_VERTFLAGS) )
-						fwrite(&(vp->Flags()),sizeof(int),1,fpout);
+					if( HasPerVertexFlags(m) && (pi.mask & Mask::IOM_VERTFLAGS) ) {
+						auto flags = vp->Flags();
+						fwrite(&flags,sizeof(int),1,fpout);
+					}
 
 					if( HasPerVertexColor(m) && (pi.mask & Mask::IOM_VERTCOLOR) ){
 						auto c = vp->C();
