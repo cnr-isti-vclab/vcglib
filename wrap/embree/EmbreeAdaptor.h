@@ -576,12 +576,36 @@ namespace vcg{
         }
 
         /*
-            
-            the return tuple is composed by 
-                - bool represents if the ray hit something
-                - point3f the coordinates at which the ray hit something
-                - float distance between point hit and the origin point
-                - int the id of the face hit by the ray
+            @Author: Paolo Fasano
+            @Description:  
+                This method shoots a single ray from origin toward direction.
+                The return tuple is composed by 
+                    - bool represents if the ray hit something
+                    - point3f the coordinates at which the ray hit something
+                    - float distance between point hit and the origin point
+                    - int the id of the face hit by the ray
+                If release_resources = true than the scene is deleted from memory after the ray is shoot, if you want to shoot multiple rays 
+                    from the same scene (without the need to load the mesh again) set it to false
+
+                    NOTE: 
+                        The following is the RIGHT WAY  
+                            EmbreeAdaptor<MyMesh> adaptor = EmbreeAdaptor<MyMesh>(mesh);
+                            auto [hit_something, hit_face_coords, hit_distance, id] = adaptor.shoot_ray(origin, direction, false);
+                            auto [hit_something, hit_face_coords, hit_distance, id] = adaptor.shoot_ray(origin2, direction2);
+                        
+                        In a loop
+                            EmbreeAdaptor<MyMesh> adaptor = EmbreeAdaptor<MyMesh>(mesh);
+                            for (int i = 0; i < origins.size(); i++){
+                                auto [hit_something, hit_face_coords, hit_distance, id] = adaptor.shoot_ray(origins[i], direction[i], false);
+                            }
+                            adaptor.release_global_resources()
+                            
+                        The following code will create an ERROR
+                            EmbreeAdaptor<MyMesh> adaptor = EmbreeAdaptor<MyMesh>(mesh);
+                            auto [hit_something, hit_face_coords, hit_distance, id] = adaptor.shoot_ray(origin, direction);
+                            auto [hit_something, hit_face_coords, hit_distance, id] = adaptor.shoot_ray(origin2, direction2);
+                        
+                        
         */
         public:
             inline std::tuple<bool, Point3f, float, int> shoot_ray(Point3f origin, Point3f direction, bool release_resources = true){
