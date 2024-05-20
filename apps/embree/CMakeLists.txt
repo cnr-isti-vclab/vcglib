@@ -1,13 +1,7 @@
 cmake_minimum_required (VERSION 3.13)
 project (embree_sample)
 
-set(VCG_INCLUDE_DIRS ../../../vcglib)
-add_subdirectory(${VCG_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/vcglib)
-
-set(SOURCES 
-			./embree_sample.cpp
-			${VCG_INCLUDE_DIRS}/wrap/ply/plylib.cpp
-			)
+set(SOURCES embree_sample.cpp)
 
 FIND_PACKAGE(embree 4.3)
 

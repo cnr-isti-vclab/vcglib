@@ -135,12 +135,16 @@ int main( int argc, char **argv )
   direction.push_back(Point3f(.0f,1.0f,6.0f));
   direction.push_back(Point3f(.0f,1.0f,9.0f));
   
+  /*
+  If you want to test the visualize_ray_shoot add the ply to makefile 
+
   MyMesh m8;
   
   adaptor.visualize_ray_shoot(m8, origine[0], direction, true);
   int mask = vcg::tri::io::Mask::IOM_VERTCOORD;
   mask |= vcg::tri::io::Mask::IOM_EDGEINDEX;
   tri::io::ExporterPLY<MyMesh>::Save(m8, "EdgeTest.ply", mask);
+  */
   cout << "Done All" << endl;
 
   return 0;
