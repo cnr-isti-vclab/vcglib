@@ -566,13 +566,17 @@ public:
         if((*fi).V(0)->IsR() &&(*fi).V(1)->IsR() &&(*fi).V(2)->IsR())
         {
           Plane3<ScalarType,false> facePlane;
-          facePlane.SetDirection( ( (*fi).V(1)->cP() - (*fi).V(0)->cP() ) ^  ( (*fi).V(2)->cP() - (*fi).V(0)->cP() ));
-          if(!pp->UseArea)
-            facePlane.Normalize();
+          const Point3<ScalarType> dirArea = ( (*fi).V(1)->cP() - (*fi).V(0)->cP() ) ^ ( (*fi).V(2)->cP() - (*fi).V(0)->cP() );
+          facePlane.SetDirection(dirArea);
+          facePlane.Normalize();
+          const ScalarType area = dirArea.Norm();
           facePlane.SetOffset( facePlane.Direction().dot((*fi).V(0)->cP()));                   
 
           QuadricType q;
-          q.ByPlane(facePlane);          
+          q.ByPlane(facePlane);    
+          if (pp->UseArea) {
+            q *= area;
+          }      
           
           // The basic < add face quadric to each vertex > loop
           for(int j=0;j<3;++j)
