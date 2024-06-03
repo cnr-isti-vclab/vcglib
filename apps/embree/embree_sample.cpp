@@ -1,15 +1,26 @@
 /*
-  echo $LD_LIBRARY_PATH
-  LD_LIBRARY_PATH=/mnt/e/UniversitàMagistrale/secondoSemestre/3DgeometricModelingProcessing/clean/vcglib/wrap/embree/embree-3.13.4.x86_64.linux/lib
-  export LD_LIBRARY_PATH
-  g++ ./apps/embree/embree_sample.cpp -o  ./apps/embree/prova.o -lembree3  -I ./vcg -I ./ -I ./eigenlib -I ./wrap/embree/embree-3.13.4.x86_64.linux/include -L ./wrap/embree/embree-3.13.4.x86_64.linux/lib -std=c++11 -fopenmp -O3
-  ./apps/embree/prova.o ./apps/meshes/torus.off 64
+
+  g++ ./apps/embree/embree_sample.cpp -o  ./apps/embree/prova.o -I ./vcg -I ./ -I ./eigenlib -I /usr/local/include/embree4/ -I ./vcglib/ -I ./vcglib/eigenlib/ -I ./vcglib/wrap/ply/ -L /usr/local/lib/ -lembree4 -std=c++17 -fopenmp -O3
+  ./apps/embree/prova.o ./apps/meshes/cube.off 64
+
+  or with cmake from embree folder
+  mkdir build
+  cd build
+  cmake ..
+  make 
+  ./embree_sample ../../meshes/bunny.off 64
+
+
 */
 #include <iostream>
 
 #include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/create/platonic.h>
+
 
 //import export
+#include<wrap/io_trimesh/import.h>
+#include<wrap/io_trimesh/export.h>
 #include<wrap/io_trimesh/import_ply.h>
 #include<wrap/io_trimesh/export_ply.h>
 #include <wrap/io_trimesh/export_off.h>
@@ -29,8 +40,7 @@ struct MyUsedTypes : public vcg::UsedTypes<vcg::Use<MyVertex>   ::AsVertexType,
 
 class MyVertex : public vcg::Vertex< MyUsedTypes, vcg::vertex::Coord3f, vcg::vertex::Normal3f, vcg::vertex::BitFlags, vcg::vertex::VFAdj, vcg::vertex::Qualityf, vcg::vertex::Color4b> {};
 class MyFace : public vcg::Face<   MyUsedTypes, vcg::face::FFAdj, vcg::face::VFAdj, vcg::face::Normal3f, vcg::face::VertexRef, vcg::face::BitFlags, vcg::face::Color4b, vcg::face::Qualityf> {};
-class MyEdge : public vcg::Edge<   MyUsedTypes> {};
-
+class MyEdge : public vcg::Edge<MyUsedTypes, vcg::edge::VertexRef, vcg::edge::BitFlags> {};
 class MyMesh : public vcg::tri::TriMesh< std::vector<MyVertex>, std::vector<MyFace>, std::vector<MyEdge>  > {};
 
 using namespace vcg;
@@ -100,7 +110,7 @@ int main( int argc, char **argv )
   cout << "Done SDF" << endl;
   
   adaptor = EmbreeAdaptor<MyMesh>(m5);
-  adaptor.computeNormalAnalysis(m5, nOfRays);
+  adaptor.computeNormalAnalysis(m5, nOfRays, true);
   tri::io::ExporterOFF<MyMesh>::Save(m5, "testNormal.off", tri::io::Mask::IOM_FACENORMAL);
   //vector<Point3f> BentNormal = adaptor.AOBentNormal(m5,nOfRays);
 
@@ -108,20 +118,34 @@ int main( int argc, char **argv )
 
   adaptor = EmbreeAdaptor<MyMesh>(m6);
   Point3f p(1, 0, 0);
-  adaptor.selectVisibleFaces(m6, p);
+  adaptor.selectVisibleFaces(m6, p, true);
   tri::io::ExporterOFF<MyMesh>::Save(m6, "testSelectS.off", tri::io::Mask::IOM_FACECOLOR);
   
   cout << "done face selection" << endl; 
+     
 
-
-  adaptor = EmbreeAdaptor<MyMesh>(m7);
-  adaptor.computeObscurance(m7,nOfRays,0.01f);
-  tri::UpdateQuality<MyMesh>::VertexFromFace(m7);
-  tri::UpdateColor<MyMesh>::PerVertexQualityGray(m7);
-  tri::io::ExporterOFF<MyMesh>::Save(m7,"testAObs.off",tri::io::Mask::IOM_VERTCOLOR);
- 
-  cout << "Done AObs" << endl;
+  std::vector<Point3f> origine;
+  origine.push_back(Point3f(.0f,10.0f,.0f));
+  origine.push_back(Point3f(.0f,10.0f,.0f));
+  origine.push_back(Point3f(.0f,10.0f,.0f));
+  origine.push_back(Point3f(.0f,10.0f,.0f));
+  std::vector<Point3f> direction;
+  direction.push_back(Point3f(.0f,1.0f,.0f));
+  direction.push_back(Point3f(.0f,1.0f,3.0f));
+  direction.push_back(Point3f(.0f,1.0f,6.0f));
+  direction.push_back(Point3f(.0f,1.0f,9.0f));
   
+  /*
+  If you want to test the visualize_ray_shoot add the ply to makefile 
+
+  MyMesh m8;
+  
+  adaptor.visualize_ray_shoot(m8, origine[0], direction, true);
+  int mask = vcg::tri::io::Mask::IOM_VERTCOORD;
+  mask |= vcg::tri::io::Mask::IOM_EDGEINDEX;
+  tri::io::ExporterPLY<MyMesh>::Save(m8, "EdgeTest.ply", mask);
+  */
   cout << "Done All" << endl;
+
   return 0;
 }

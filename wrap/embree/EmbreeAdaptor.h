@@ -34,13 +34,17 @@ namespace vcg{
 
         RTCDevice device = rtcNewDevice(NULL);
         RTCScene scene = rtcNewScene(device);
-        RTCGeometry geometry = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
+        //RTCGeometry geometry = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
         int threads;
+
+        public: EmbreeAdaptor(){}
 
         public:
          EmbreeAdaptor(MeshType &m){
-                loadVCGMeshInScene(m);
+                scene = loadVCGMeshInScene(m);
             }
+
+
 
         /*
         @Author: Paolo Fasano
@@ -101,7 +105,11 @@ namespace vcg{
             are global to the class in order to be used with the other methods.
         */
         public:
-         void loadVCGMeshInScene(MeshType &m){
+            RTCScene loadVCGMeshInScene(MeshType &m){
+
+            RTCScene loaded_scene = rtcNewScene(device);
+            RTCGeometry geometry = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
+
             //a little mesh preprocessing before adding it to a RTCScene
             tri::RequirePerVertexNormal(m);
             tri::UpdateNormal<MeshType>::PerVertexNormalized(m);
@@ -124,9 +132,11 @@ namespace vcg{
             }
 
             rtcCommitGeometry(geometry);
-            rtcAttachGeometry(scene, geometry);
+            rtcAttachGeometry(loaded_scene, geometry);
             rtcReleaseGeometry(geometry);
-            rtcCommitScene(scene);
+            rtcCommitScene(loaded_scene);
+
+            return loaded_scene;
         }
 
         /*
@@ -564,6 +574,170 @@ namespace vcg{
             rtcReleaseDevice(device);
             return;
         }
+
+        /*
+            @Author: Paolo Fasano
+            @Description:  
+                This method shoots a single ray from origin toward direction.
+                The return tuple is composed by 
+                    - bool represents if the ray hit something
+                    - point3f the coordinates at which the ray hit something
+                    - float distance between point hit and the origin point
+                    - int the id of the face hit by the ray
+                If release_resources = true than the scene is deleted from memory after the ray is shoot, if you want to shoot multiple rays 
+                    from the same scene (without the need to load the mesh again) set it to false
+
+                    NOTE: 
+                        The following is the RIGHT WAY  
+                            EmbreeAdaptor<MyMesh> adaptor = EmbreeAdaptor<MyMesh>(mesh);
+                            auto [hit_something, hit_face_coords, hit_distance, id] = adaptor.shoot_ray(origin, direction, false);
+                            auto [hit_something, hit_face_coords, hit_distance, id] = adaptor.shoot_ray(origin2, direction2);
+                        
+                        In a loop
+                            EmbreeAdaptor<MyMesh> adaptor = EmbreeAdaptor<MyMesh>(mesh);
+                            for (int i = 0; i < origins.size(); i++){
+                                auto [hit_something, hit_face_coords, hit_distance, id] = adaptor.shoot_ray(origins[i], direction[i], false);
+                            }
+                            adaptor.release_global_resources()
+                            
+                        The following code will create an ERROR
+                            EmbreeAdaptor<MyMesh> adaptor = EmbreeAdaptor<MyMesh>(mesh);
+                            auto [hit_something, hit_face_coords, hit_distance, id] = adaptor.shoot_ray(origin, direction);
+                            auto [hit_something, hit_face_coords, hit_distance, id] = adaptor.shoot_ray(origin2, direction2);
+                        
+                        
+        */
+        public:
+            inline std::tuple<bool, Point3f, float, int> shoot_ray(Point3f origin, Point3f direction, bool release_resources = true){
+                return shoot_ray(origin, direction, 1e-4, release_resources);
+            }
+
+        public:
+            inline std::tuple<bool, Point3f, float, int> shoot_ray(Point3f origin, Point3f direction, float tnear, bool release_resources = true){
+                
+                bool hit_something = false;
+                Point3f hit_face_coords(0.0f, 0.0f, 0.0f);
+                float hit_distance = 0;
+                int hit_face_id = 0;
+
+                RTCRayHit rayhit = initRayValues();
+                rayhit = setRayValues(origin, direction, tnear);
+
+                RTCRayQueryContext context;
+                rtcInitRayQueryContext(&context);
+
+                RTCIntersectArguments intersectArgs;
+                rtcInitIntersectArguments(&intersectArgs);
+                intersectArgs.context = &context;
+
+                rtcIntersect1(scene, &rayhit, &intersectArgs);
+
+
+                if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID){
+                    hit_something = true;
+                    hit_face_id = rayhit.hit.primID;
+                    hit_distance = rayhit.ray.tfar;
+
+                    // Calculate the displacement vector along the direction
+                    float magnitude = sqrt(direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2]);
+                    float scaleFactor = hit_distance / magnitude;
+                    Point3f displacement(direction[0] * scaleFactor, direction[1] * scaleFactor, direction[2] * scaleFactor);
+
+                    // Calculate the coordinates at the given distance
+                    hit_face_coords[0] = origin[0] + displacement[0];
+                    hit_face_coords[1] = origin[1] + displacement[1];
+                    hit_face_coords[2] = origin[2] + displacement[2];
+
+                }
+                else{
+                    hit_something = false;
+                    hit_face_id = rayhit.hit.primID;
+                    hit_distance = rayhit.ray.tfar;
+                }
+                
+                if(release_resources){
+                    release_global_resources();
+                }
+
+                return std::make_tuple(hit_something, hit_face_coords, hit_distance, hit_face_id);
+            }
+
+
+        public:
+            void release_global_resources(){
+                rtcReleaseScene(scene);
+                rtcReleaseDevice(device);
+            }
+
+
+        /*
+            @Author: Paolo Fasano
+            @Parameter: MeshType &inputM, the the input mesh
+            @Parameter: std::vector<Point3f> origins, the vector of Point3f (coordinates) where the vertex are created (if use_edge is true it represent the origin of the edge as well)
+            @Parameter: std::vector<Point3f> directions, the vector of Point3f (coordinates) where the vertex are created (if use_edge is true it represent the direction of the edge as well)
+            @Parameter: bool add_edge, if true Edges are generated between origins[i] and directions[i] 
+            @Description: given a vector of origins and directions, creates a vertex for each origin and each direction;
+                            if add_edges is true than it creates a edge between the i-th origin and the i-th direction.
+                            note: to save and visualize a edge you must save as follows
+
+                                    //your edge declaration must contain the following 
+                                    class MyEdge : public vcg::Edge<MyUsedTypes, vcg::edge::VertexRef, vcg::edge::BitFlags> {};
+
+                                    //your code here
+                                    
+                                    int mask = vcg::tri::io::Mask::IOM_VERTCOORD;
+                                    mask |= vcg::tri::io::Mask::IOM_EDGEINDEX;
+                                    tri::io::ExporterPLY<MyMesh>::Save(YOUR_MESH, "EdgeTest.ply", mask);
+                
+                I SUGGEST TO USE ANY OF THE visualize_ray_shoot ON A EMPTY MESH 
+        */
+        public:
+            inline void visualize_ray_shoot(MeshType &inputM, std::vector<Point3f> origins , std::vector<Point3f> directions, bool add_edge = false){                
+                if (origins.size() == directions.size()){
+                    for (int i = 0; i < origins.size(); i++){
+                        visualize_ray_shoot(inputM, origins[i], directions[i], add_edge);
+                    }
+                }
+                else
+                    std::cout<<"Error executing visualize_ray_shoot: std::vector<Point3f> origins and std::vector<Point3f> directions must have same size"<<endl;
+                
+            }
+        public:
+            inline void visualize_ray_shoot(MeshType &inputM, Point3f origin , Point3f direction, bool add_edge = false){                
+                    
+                if (add_edge){
+                    tri::Allocator<MeshType>::AddEdge(inputM, origin, direction);                
+                } 
+                else{
+                    tri::Allocator<MeshType>::AddVertex(inputM, origin);                
+                    tri::Allocator<MeshType>::AddVertex(inputM, direction);      
+                }         
+            }
+        public:
+            inline void visualize_ray_shoot(MeshType &inputM, Point3f origin , std::vector<Point3f> directions, bool add_edge = false){                
+
+                tri::Allocator<MeshType>::AddVertex(inputM, origin);                
+
+                for (int i = 0; i < directions.size(); i++){
+                    
+                    tri::Allocator<MeshType>::AddVertex(inputM, directions[i]);      
+
+                    if (add_edge){
+                        tri::Allocator<MeshType>::AddEdge(inputM, &inputM.vert[inputM.vert.size()-i-2], &inputM.vert[inputM.vert.size()-1]);                
+                    } 
+                }
+            }
+
+
+        public:
+            void print_ray_informations(RTCRayHit rayhit){
+
+                std::cout<< "origin of ray " << rayhit.ray.org_x<< " " << rayhit.ray.org_y<< " " << rayhit.ray.org_z<< " " <<endl;
+                std::cout<< "direction of ray " << rayhit.ray.dir_x<< " " << rayhit.ray.dir_y<< " " << rayhit.ray.dir_z<< " " <<endl;
+                std::cout<< "tnear " << rayhit.ray.tnear <<endl;
+                std::cout<< "tfar " << rayhit.ray.tfar <<endl;
+            }
+
 
         public:
             inline RTCRayHit initRayValues(){
