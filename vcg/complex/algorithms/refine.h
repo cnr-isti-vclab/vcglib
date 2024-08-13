@@ -994,18 +994,30 @@ public:
   }
 }; // end class TriSplit
 
+/// \brief Trivial function for 1->4 triangle split
+/// 
+/// It does not require any topology information,
+/// Face Attributes are copied to the new faces. Vertex Attributes are not interpolated
+/// Warning if the mesh has FFAdjacency it will be corrupted, 
+/// and if only a subset of the faces are selected T-vertices will be created.
+/// 
 template <class MeshType>
-void TrivialMidPointRefine(MeshType & m)
+void TrivialMidPointRefine(MeshType & m, bool onlySelected=false)
 {
   typedef typename MeshType::VertexIterator VertexIterator;
   typedef typename MeshType::FaceIterator FaceIterator;
   typedef typename MeshType::VertexPointer VertexPointer;
   typedef typename MeshType::FacePointer FacePointer;
   
+  
   Allocator<MeshType>::CompactEveryVector(m);
   int startFn = m.fn;
-  FaceIterator lastf = tri::Allocator<MeshType>::AddFaces(m,m.fn*3);
-  VertexIterator lastv = tri::Allocator<MeshType>::AddVertices(m,m.fn*3);
+  int selNum = m.fn;
+  if(onlySelected)
+	  selNum= tri::UpdateSelection<MeshType>::FaceCount(m);
+  
+  FaceIterator lastf = tri::Allocator<MeshType>::AddFaces(m,selNum*3);
+  VertexIterator lastv = tri::Allocator<MeshType>::AddVertices(m,selNum*3);
   
   /*
    *               v0
@@ -1022,29 +1034,37 @@ void TrivialMidPointRefine(MeshType & m)
   
   for(int i=0;i<startFn;++i)
   {
-    FacePointer f0= &m.face[i];
-    FacePointer f1= &*lastf; ++lastf;
-    f1->ImportData(*f0);
-    FacePointer f2= &*lastf; ++lastf;
-    f2->ImportData(*f0);
-    FacePointer f3= &*lastf; ++lastf;
-    f3->ImportData(*f0);
-    VertexPointer v0 =m.face[i].V(0); 
-    VertexPointer v1 =m.face[i].V(1); 
-    VertexPointer v2 =m.face[i].V(2); 
-    VertexPointer mp01 = &*lastv; ++lastv; 
-    VertexPointer mp12 = &*lastv; ++lastv; 
-    VertexPointer mp02 = &*lastv; ++lastv; 
-    
-    f0->V(0) = v0;   f0->V(1) = mp01; f0->V(2) = mp02;
-    f1->V(0) = v1;   f1->V(1) = mp12; f1->V(2) = mp01;
-    f2->V(0) = v2;   f2->V(1) = mp02; f2->V(2) = mp12;
-    f3->V(0) = mp12; f3->V(1) = mp02; f3->V(2) = mp01;
-    mp01->P() = (v0>v1) ? (v0->P()+v1->P())/2.0 : (v1->P()+v0->P())/2.0;
-    mp12->P() = (v1>v2) ? (v1->P()+v2->P())/2.0 : (v2->P()+v1->P())/2.0;
-    mp02->P() = (v0>v2) ? (v0->P()+v2->P())/2.0 : (v2->P()+v0->P())/2.0;
+	  if(!onlySelected || m.face[i].IsS())
+	  {
+		  FacePointer f0= &m.face[i];
+		  FacePointer f1= &*lastf; ++lastf;
+		  f1->ImportData(*f0);
+		  FacePointer f2= &*lastf; ++lastf;
+		  f2->ImportData(*f0);
+		  FacePointer f3= &*lastf; ++lastf;
+		  f3->ImportData(*f0);
+		  VertexPointer v0 =m.face[i].V(0); 
+		  VertexPointer v1 =m.face[i].V(1); 
+		  VertexPointer v2 =m.face[i].V(2); 
+		  VertexPointer mp01 = &*lastv; ++lastv; 
+		  VertexPointer mp12 = &*lastv; ++lastv; 
+		  VertexPointer mp02 = &*lastv; ++lastv; 
+		  
+		  f0->V(0) = v0;   f0->V(1) = mp01; f0->V(2) = mp02;
+		  f1->V(0) = v1;   f1->V(1) = mp12; f1->V(2) = mp01;
+		  f2->V(0) = v2;   f2->V(1) = mp02; f2->V(2) = mp12;
+		  f3->V(0) = mp12; f3->V(1) = mp02; f3->V(2) = mp01;
+		  mp01->P() = (v0>v1) ? (v0->P()+v1->P())/2.0 : (v1->P()+v0->P())/2.0;
+		  mp12->P() = (v1>v2) ? (v1->P()+v2->P())/2.0 : (v2->P()+v1->P())/2.0;
+		  mp02->P() = (v0>v2) ? (v0->P()+v2->P())/2.0 : (v2->P()+v0->P())/2.0;
+		  if(tri::HasPerVertexNormal(m))
+		  {
+			  mp01->N() = (v0>v1) ? (v0->N()+v1->N()).Normalize() : (v1->N()+v0->N()).Normalize();
+			  mp12->N() = (v1>v2) ? (v1->N()+v2->N()).Normalize() : (v2->N()+v1->N()).Normalize();
+			  mp02->N() = (v0>v2) ? (v0->N()+v2->N()).Normalize() : (v2->N()+v0->N()).Normalize();
+		  }
+	  }
   }
-  
   int vd = tri::Clean<MeshType>::RemoveDuplicateVertex(m);
   printf("Vertex unification %i\n",vd);
   int vu = tri::Clean<MeshType>::RemoveUnreferencedVertex(m);
