@@ -82,23 +82,23 @@ static void Fibonacci(int n, std::vector<Point3x > &NN)
 
 static void UniformCone(int vn, std::vector<Point3<ScalarType > > &NN, ScalarType AngleRad, Point3x dir=Point3x(0,1,0))
 {
+  assert(AngleRad>0 && AngleRad<M_PI);
   std::vector<Point3<ScalarType > > NNT;
   NN.clear();
-  // per prima cosa si calcola il volume della spherical cap di angolo AngleRad
+  // To compute the number of points we need to know the area of 
+  // the spherical cap and then use the ratio with the total surface of the sphere 
   ScalarType Height= 1.0 - cos(AngleRad); // height is measured from top...
-  // Surface is the one of the tangent cylinder
-  ScalarType CapArea = 2.0*M_PI*Height;
-  ScalarType Ratio = CapArea / (4.0*M_PI );
+  ScalarType CapArea = 2.0*M_PI*Height;   // Surface is the one of the tangent cylinder
+  ScalarType Ratio = CapArea / (4.0*M_PI);
 
-  printf("----------AngleRad %f Angledeg %f ratio %f vn %i vn2 %i \n",AngleRad,math::ToDeg(AngleRad),Ratio,vn,int(vn/Ratio));
+ // printf("----------AngleRad %f Angledeg %f ratio %f vn %i vn2 %i \n",AngleRad,math::ToDeg(AngleRad),Ratio,vn,int(vn/Ratio));
   Fibonacci(vn/Ratio,NNT);
-  printf("asked %i got %i (expecting %i instead of %i)\n", int(vn/Ratio), int(NNT.size()), int(NNT.size()*Ratio), vn);
-  typename std::vector<Point3<ScalarType> >::iterator vi;
+ // printf("asked %i got %i (expecting %i instead of %i)\n", int(vn/Ratio), int(NNT.size()), int(NNT.size()*Ratio), vn);
 
   ScalarType cosAngle = cos(AngleRad);
-  for(vi=NNT.begin();vi!=NNT.end();++vi)
+  for(auto ni : NNT)
   {
-    if(dir.dot(*vi) >= cosAngle) NN.push_back(*vi);
+    if(dir.dot(ni) >= cosAngle) NN.push_back(ni);
   }
  }
 
