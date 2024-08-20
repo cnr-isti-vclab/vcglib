@@ -108,7 +108,16 @@ public:
           throw vcg::MissingPreconditionException("Vertex Normal are not normalized");
       }
   }
-
+  
+  /// \brief Throw vcg::MissingPreconditionException if Face Normals are not unit lenght
+  static void FaceNormalNormalized(MeshType &m)
+  {
+      for(auto fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
+          {
+              if(fabs(fi->cN().Norm()-1.0)>0.000001)
+                  throw vcg::MissingPreconditionException("Face Normal are not normalized");
+          }
+  }
   
   
   /// \brief Throw vcg::MissingPreconditionException if There are unreferenced vertices
