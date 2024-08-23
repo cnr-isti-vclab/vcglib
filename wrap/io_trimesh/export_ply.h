@@ -48,18 +48,18 @@ namespace io {
 template <class SaveMeshType>
 class ExporterPLY
 {
-	// Si occupa di convertire da un tipo all'altro.
-	// usata nella saveply per matchare i tipi tra stotype e memtype.
-	// Ad es se in memoria c'e' un int e voglio salvare un float
-	// src sara in effetti un puntatore a int il cui valore deve
-	// essere convertito al tipo di ritorno desiderato (stotype)
+	// It takes care of converting from one type to another.
+	// It is used in saveply to match types between stotype and memtype (e.g. the type in the file and the type in memory).
+	// For example if there is an int in memory and I want to save a float
+	// src will actually be a pointer to int whose value must
+	// be converted to the desired return type (stotype)
 
 	template <class StoType>
 	static void PlyConv(int mem_type, void *src, StoType &dest)
 	{
 		switch (mem_type){
 		case ply::T_FLOAT	:		dest = (StoType) (*  ((float  *) src)); break;
-		case ply::T_DOUBLE:		dest = (StoType) (*  ((double *) src)); break;
+		case ply::T_DOUBLE	:		dest = (StoType) (*  ((double *) src)); break;
 		case ply::T_INT		:		dest = (StoType) (*  ((int    *) src)); break;
 		case ply::T_SHORT	:		dest = (StoType) (*  ((short  *) src)); break;
 		case ply::T_CHAR	:		dest = (StoType) (*  ((char   *) src)); break;

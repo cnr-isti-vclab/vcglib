@@ -177,7 +177,7 @@ public:
 	}
 
   /* Note that saving a per vertex point3 attribute is a mess.
-   * Actually require to allocate 3 float attribute and save them. And they are never deallocated... */
+   * Actually it requires to allocate 3 float attribute and save them. And they are never deallocated... */
   template<class MeshType>
   void AddPerVertexPoint3fAttribute(MeshType &m, const std::string& attrName, std::string propName="")
   {
