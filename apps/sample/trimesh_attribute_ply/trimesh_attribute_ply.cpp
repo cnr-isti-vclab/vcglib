@@ -23,7 +23,7 @@
 /*! \file trimesh_attribute.cpp
 \ingroup code_sample
 
-\brief the minimal example of using the attributes
+\brief the minimal example of saving and loading attributes into PLY
 
 Attributes are a simple mechanism to associate user-defined 'attributes' to the simplicies and to the mesh.
 See the page '\ref attributes' for more details.
@@ -104,6 +104,7 @@ int main()
   vcg::tri::io::PlyInfo piOpen;
   piOpen.AddPerFaceFloatAttribute("MyFaceArea", "FaceArea");
   piOpen.AddPerVertexFloatAttribute("GaussianCurvature");
+  piOpen.AddPerVertexPoint3fAttribute(mi,"InvertedNormal");
   
   
   int ret = vcg::tri::io::ImporterPLY<MyMesh>::Open(mi,"MeshWithCurvature.ply",piOpen);

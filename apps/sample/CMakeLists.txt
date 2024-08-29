@@ -15,7 +15,7 @@ set(VCG_EXAMPLE_PROJECTS
 	trimesh_align_pair
 	trimesh_allocate
 	trimesh_attribute
-	trimesh_attribute_saving
+	trimesh_attribute_ply
 	trimesh_ball_pivoting
 	trimesh_base
 	trimesh_closest
