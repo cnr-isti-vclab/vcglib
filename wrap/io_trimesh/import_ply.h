@@ -611,6 +611,8 @@ public:
 		/* Main Reading Loop */
 		/**************************************************************/
 		m.Clear();
+        PlyAttributeHelper<OpenMeshType> PAH(pi,m);
+        
 		for(size_t i=0;i<pf.elements.size();i++)
 		{
 			int n = pf.ElemNumber(i);
@@ -721,20 +723,46 @@ public:
 					}
 					if( pi.mask & Mask::IOM_VERTRADIUS )
 						(*vi).R() = va.radius;
-
+                    
+                    // Now try to read additional data as described in the PlyInfo VertDescriptorVec; two cases:
+                    // 1) you are using attributes (so the corresponding entry of VecAttrNameVec is not empty)
+                    // 2) your vertex type has some space and you just use memcopy
 
 					for(size_t k=0;k<pi.VertDescriptorVec.size();k++)
-						memcpy((char *)(&*vi) + pi.VertDescriptorVec[k].offset1,
+                    {
+                        if(pi.VertDescriptorVec.size() && !pi.VertAttrNameVec[k].empty())
+                        {
+                            double td(0); float tf(0);int ti;short ts; char tc; unsigned char tu;
+                            char *vad = (char *)(&va) + VPV[k].offset1;
+                            
+                            switch (pi.VertDescriptorVec[k].stotype1)
+                            {
+                            case ply::T_FLOAT  : tf = *((float*)vad);           PAH.thfv[k][&*vi] = tf; break;
+                            case ply::T_DOUBLE : td = *((double*)vad);          PAH.thdv[k][&*vi] = td; break;
+                            case ply::T_INT    : ti = *((int*)vad);             PAH.thiv[k][&*vi] = ti; break;
+                            case ply::T_SHORT  : ts = *((short*)vad);           PAH.thsv[k][&*vi] = ts; break;
+                            case ply::T_CHAR   : tc = *((char*)vad);            PAH.thcv[k][&*vi] = tc; break;
+                            case ply::T_UCHAR  : tu = *((unsigned char*)vad);   PAH.thuv[k][&*vi] = tu; break;
+                            default : assert(0);
+                            }                            
+                        }
+                        else                     
+                        {
+                            memcpy((char *)(&*vi) + pi.VertDescriptorVec[k].offset1,
 						       (char *)(&va) + VPV[k].offset1,
 						       VPV[k].memtypesize());
+                        }
+                    }
+                    
 					++vi;
-				}
+				} // end of vertex element reading
 
 				index.resize(n);
 				for(j=0,vi=m.vert.begin();j<n;++j,++vi)
 					index[j] = &*vi;
 			}
-			else if( !strcmp( pf.ElemName(i),"edge") && (n>0) )/******************** EDGE READING *******************************/
+            /******************** EDGE ELEMENTS READING LOOP *******************************/
+			else if( !strcmp( pf.ElemName(i),"edge") && (n>0) )
 			{
 				assert( pi.mask & Mask::IOM_EDGEINDEX );
 				EdgeIterator ei=Allocator<OpenMeshType>::AddEdges(m,n);
@@ -757,15 +785,13 @@ public:
 					++ei;
 				}
 			}
-            /******************** FACE READING LOOP ****************************************/
+            /******************** FACE ELEMENT READING ****************************************/
 			else if( !strcmp( pf.ElemName(i),"face") && (n>0) )
 			{
-				int j;
-
 				FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,n);
 				pf.SetCurElement(i);
 
-				for(j=0;j<n;++j) // main reading loop
+				for(int j=0;j<n;++j) // main reading loop
 				{
 					if(pi.cb && (j%1000)==0) pi.cb(50+j*50/n,"Face Loading");
 					fa.a = 255;
@@ -869,12 +895,37 @@ public:
 
 					// tag faux vertices of first face
 					if (fa.size>3) fi->SetF(2);
-
+                    
+                    // Now try to read additional data as described in the PlyInfo FaceDescriptorVe; two cases:
+                    // 1) you are using attributes (so the corresponding entry of FaceAttrNameVec is not empty)
+                    // 2) your face type has some space and you just use memcopy
+                    
 					for(size_t k=0;k<pi.FaceDescriptorVec.size();k++)
+                    {
+                        if(pi.FaceAttrNameVec.size() && !pi.FaceAttrNameVec[k].empty())
+                        {
+                            double td(0); float tf(0);int ti;short ts; char tc; unsigned char tu;
+                            char *vad = (char *)(&fa) + FPV[k].offset1;
+                            
+                            switch (pi.FaceDescriptorVec[k].stotype1)
+                            {
+                            case ply::T_FLOAT  : tf = *((float*)vad);           PAH.thff[k][&*fi] = tf; break;
+                            case ply::T_DOUBLE : td = *((double*)vad);          PAH.thdf[k][&*fi] = td; break;
+                            case ply::T_INT    : ti = *((int*)vad);             PAH.thif[k][&*fi] = ti; break;
+                            case ply::T_SHORT  : ts = *((short*)vad);           PAH.thsf[k][&*fi] = ts; break;
+                            case ply::T_CHAR   : tc = *((char*)vad);            PAH.thcf[k][&*fi] = tc; break;
+                            case ply::T_UCHAR  : tu = *((unsigned char*)vad);   PAH.thuf[k][&*fi] = tu; break;
+                            default : assert(0);
+                            }
+                         
+                        }
+                        else
+                        {                            
 						memcpy((char *)(&(*fi)) + pi.FaceDescriptorVec[k].offset1,
 						       (char *)(&fa) + FPV[k].offset1,
 						       FPV[k].memtypesize());
-
+                        }
+                    }   
 
 					++fi;
 
@@ -918,7 +969,8 @@ public:
 					}
 
 				}
-			}else if( !strcmp( pf.ElemName(i),"tristrips") )//////////////////// Reading TRISTRIP (rarely used, found in old STANFORD PLY)
+			}
+            else if( !strcmp( pf.ElemName(i),"tristrips") )//////////////////// Reading TRISTRIP (rarely used, found in old STANFORD PLY)
             {
                 if(! PlyParseStanfordTriStrips(pf, i, n, m, index, pi) ) return pi.status;
             }
