@@ -245,6 +245,9 @@ enum Error
 // it is intialized with a PlyInfo object and a mesh and try to retrieve and initialize
 // a set of handles for all the attributes that we want to load/save into ply elements
 // It is used internally by the importer and exporter ply classes
+// Note: we have two sets of handles, const and not const ones to handle the fact
+// that for loading we need non const handles while for saving we need const handles
+// (saved meshes are const) 
 
 template <class MeshType> class PlyAttributeHelper
 {    

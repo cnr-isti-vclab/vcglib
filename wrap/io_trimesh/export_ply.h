@@ -443,12 +443,12 @@ public:
 							if (!pi.VertDescriptorVec[i].islist){
 								switch (pi.VertDescriptorVec[i].stotype1)
 								{
-								case ply::T_FLOAT  : tf=PAH.thfv[i][vp]; fwrite(&tf, sizeof(float),1,fpout); break;
-								case ply::T_DOUBLE : td=PAH.thdv[i][vp]; fwrite(&td, sizeof(double),1,fpout); break;
-								case ply::T_INT    : ti=PAH.thiv[i][vp]; fwrite(&ti, sizeof(int),1,fpout); break;
-								case ply::T_SHORT  : ts=PAH.thsv[i][vp]; fwrite(&ts, sizeof(short),1,fpout); break;
-								case ply::T_CHAR   : tc=PAH.thcv[i][vp]; fwrite(&tc, sizeof(char),1,fpout); break;
-								case ply::T_UCHAR  : tu=PAH.thuv[i][vp]; fwrite(&tu,sizeof(unsigned char),1,fpout); break;
+								case ply::T_FLOAT  : tf=PAH.tchfv[i][vp]; fwrite(&tf, sizeof(float),1,fpout); break;
+								case ply::T_DOUBLE : td=PAH.tchdv[i][vp]; fwrite(&td, sizeof(double),1,fpout); break;
+								case ply::T_INT    : ti=PAH.tchiv[i][vp]; fwrite(&ti, sizeof(int),1,fpout); break;
+								case ply::T_SHORT  : ts=PAH.tchsv[i][vp]; fwrite(&ts, sizeof(short),1,fpout); break;
+								case ply::T_CHAR   : tc=PAH.tchcv[i][vp]; fwrite(&tc, sizeof(char),1,fpout); break;
+								case ply::T_UCHAR  : tu=PAH.tchuv[i][vp]; fwrite(&tu,sizeof(unsigned char),1,fpout); break;
 								default : assert(0);
 								}
 							}
@@ -458,16 +458,16 @@ public:
 								{
 								case ply::T_FLOAT  :
 									fwrite(&psize, sizeof(unsigned char), 1,fpout);
-									fwrite(&PAH.thp3fv[i][vp][0], sizeof(float), 1,fpout);
-									fwrite(&PAH.thp3fv[i][vp][1], sizeof(float), 1,fpout);
-									fwrite(&PAH.thp3fv[i][vp][2], sizeof(float), 1,fpout);
+									fwrite(&PAH.tchp3fv[i][vp][0], sizeof(float), 1,fpout);
+									fwrite(&PAH.tchp3fv[i][vp][1], sizeof(float), 1,fpout);
+									fwrite(&PAH.tchp3fv[i][vp][2], sizeof(float), 1,fpout);
 									break;
 									//fprintf(fpout,"%d %f %f %f", 3, thp3fv[i][vp][0], thp3fv[i][vp][1], thp3fv[i][vp][2]); break;
 								case ply::T_DOUBLE :
 									fwrite(&psize, sizeof(unsigned char), 1,fpout);
-									fwrite(&PAH.thp3dv[i][vp][0], sizeof(double), 1,fpout);
-									fwrite(&PAH.thp3dv[i][vp][1], sizeof(double), 1,fpout);
-									fwrite(&PAH.thp3dv[i][vp][2], sizeof(double), 1,fpout);
+									fwrite(&PAH.tchp3dv[i][vp][0], sizeof(double), 1,fpout);
+									fwrite(&PAH.tchp3dv[i][vp][1], sizeof(double), 1,fpout);
+									fwrite(&PAH.tchp3dv[i][vp][2], sizeof(double), 1,fpout);
 									break;
 									//fprintf(fpout,"%d %lf %lf %lf", 3, thp3dv[i][vp][0], thp3dv[i][vp][1], thp3dv[i][vp][2]); break;
 								default : assert(0);
@@ -658,12 +658,12 @@ public:
 							if (!pi.FaceDescriptorVec[i].islist){
 								switch (pi.FaceDescriptorVec[i].stotype1)
 								{
-								case ply::T_FLOAT  : tf=PAH.thff[i][fp]; fwrite(&tf, sizeof(float),1,fpout); break;
-								case ply::T_DOUBLE : td=PAH.thdf[i][fp]; fwrite(&td, sizeof(double),1,fpout); break;
-								case ply::T_INT    : ti=PAH.thif[i][fp]; fwrite(&ti, sizeof(int),1,fpout); break;
-								case ply::T_SHORT  : ts=PAH.thsf[i][fp]; fwrite(&ts, sizeof(short),1,fpout); break;
-								case ply::T_CHAR   : tc=PAH.thcf[i][fp]; fwrite(&tc, sizeof(char),1,fpout); break;
-								case ply::T_UCHAR  : tu=PAH.thuf[i][fp]; fwrite(&tu,sizeof(unsigned char),1,fpout); break;
+								case ply::T_FLOAT  : tf=PAH.tchff[i][fp]; fwrite(&tf, sizeof(float),1,fpout); break;
+								case ply::T_DOUBLE : td=PAH.tchdf[i][fp]; fwrite(&td, sizeof(double),1,fpout); break;
+								case ply::T_INT    : ti=PAH.tchif[i][fp]; fwrite(&ti, sizeof(int),1,fpout); break;
+								case ply::T_SHORT  : ts=PAH.tchsf[i][fp]; fwrite(&ts, sizeof(short),1,fpout); break;
+								case ply::T_CHAR   : tc=PAH.tchcf[i][fp]; fwrite(&tc, sizeof(char),1,fpout); break;
+								case ply::T_UCHAR  : tu=PAH.tchuf[i][fp]; fwrite(&tu,sizeof(unsigned char),1,fpout); break;
 								default : assert(0);
 								}
 							}
@@ -673,15 +673,15 @@ public:
 								{
 								case ply::T_FLOAT  :
 									fwrite(&psize, sizeof(unsigned char), 1,fpout);
-									fwrite(&PAH.thp3ff[i][fp][0], sizeof(float), 1,fpout);
-									fwrite(&PAH.thp3ff[i][fp][1], sizeof(float), 1,fpout);
-									fwrite(&PAH.thp3ff[i][fp][2], sizeof(float), 1,fpout);
+									fwrite(&PAH.tchp3ff[i][fp][0], sizeof(float), 1,fpout);
+									fwrite(&PAH.tchp3ff[i][fp][1], sizeof(float), 1,fpout);
+									fwrite(&PAH.tchp3ff[i][fp][2], sizeof(float), 1,fpout);
 									break;
 								case ply::T_DOUBLE :
 									fwrite(&psize, sizeof(unsigned char), 1,fpout);
-									fwrite(&PAH.thp3df[i][fp][0], sizeof(double), 1,fpout);
-									fwrite(&PAH.thp3df[i][fp][1], sizeof(double), 1,fpout);
-									fwrite(&PAH.thp3df[i][fp][2], sizeof(double), 1,fpout);
+									fwrite(&PAH.tchp3df[i][fp][0], sizeof(double), 1,fpout);
+									fwrite(&PAH.tchp3df[i][fp][1], sizeof(double), 1,fpout);
+									fwrite(&PAH.tchp3df[i][fp][2], sizeof(double), 1,fpout);
 									break;
 								default : assert(0);
 								}
