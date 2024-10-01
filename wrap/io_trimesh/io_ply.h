@@ -31,6 +31,7 @@ It is directly included by the importer and exporter ply classes
 //@{
 
 #include "vcg/complex/allocate.h"
+#include "vcg/complex/base.h"
 #include "vcg/space/point3.h"
 #include "wrap/callback.h"
 #include "wrap/ply/plylib.h"
