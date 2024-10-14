@@ -25,7 +25,9 @@
 #define __VCGLIB_PLANAR_POLYGON_TESSELLATOR
 
 #include <assert.h>
+#include <vector>
 #include <vcg/space/segment2.h>
+#include <vcg/space/point3.h>
 #include <vcg/math/random_generator.h>
 
 namespace vcg {
@@ -33,9 +35,7 @@ namespace vcg {
 /** \addtogroup space */
 /*@{*/
     /**
-	A very simple earcut tessellation of planar 2D polygon.
-	Input: a vector or Point2<>
-	Output: a vector of faces as a triple of indices to the input vector
+     * Given four 2D points p00,p01,p10,p11, it returns true if the segments p00-p01 and p10-p11 intersect.
 	*/
 	template <class ScalarType> 
 	bool Cross(	 const Point2<ScalarType> & p00,
@@ -114,13 +114,50 @@ namespace vcg {
 		typedef typename POINT_CONTAINER::value_type Point3x;
 		typedef typename Point3x::ScalarType S;
 		Point3x n;
-
+		if(points.size()==3)
+		{
+			output.push_back(0);
+			output.push_back(1);
+			output.push_back(2);
+			return;
+		}
+		
+		// if the polygon is a quad we can optimize the tessellation just checking to the shortest diagonal
+		if(points.size()==4)
+		{
+			if(Distance(points[0],points[2])<Distance(points[1],points[3])){
+				output.push_back(0);
+				output.push_back(1);
+				output.push_back(2);
+				output.push_back(0);
+				output.push_back(2);
+				output.push_back(3);
+			}else{
+				output.push_back(0);
+				output.push_back(1);
+				output.push_back(3);
+				output.push_back(1);
+				output.push_back(2);
+				output.push_back(3);
+			}
+			return;
+		}
+		
 		math::SubtractiveRingRNG rg;
-		size_t i12[2];
+		size_t i12[2]={0,0};
 		S bestsn = -1.0;
 		Point3x bestn,u,v;
+		
+		// find the best normal for projection on the plane
 		for(size_t i  =0; i < points.size();++i){
-			for(size_t j = 0; j < 2; ++j){ i12[j] = i; while(i12[j]==i) i12[j] = rg.generate(points.size()-1);}
+			do{
+				i12[0] = rg.generate(points.size());
+			} while(i12[0]==i);
+			do{
+				i12[1] = rg.generate(points.size());
+			} while((i12[1]==i || i12[1]==i12[0]));
+			if(!(i12[0]!=i12[1] && i12[0]!=i))
+				assert(0);
 			n = (points[i12[0]]-points[i])^(points[i12[1]]-points[i]);
 			S sn = n.SquaredNorm();
 			if(sn > bestsn){ bestsn = sn; bestn = n;} 
