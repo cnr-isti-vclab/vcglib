@@ -31,6 +31,15 @@
 namespace vcg{
 namespace tri{
 
+// Distance Functors
+// Geodesic distance can be compute according different distances functors on the mesh in order 
+// to bias the distance computation for the edges of the mesh.
+// 
+// EuclideanDistance: the distance is just the euclidean distance between the two vertexes
+// IsotropicDistance: the distance is the euclidean distance scaled by the quality of the vertexes
+// AnisotropicDistance: the distance is the euclidean distance scaled by a given tangential cross field
+
+
 template <class MeshType>
 struct EuclideanDistance{
   typedef typename MeshType::VertexType VertexType;
@@ -194,19 +203,51 @@ public:
       }
     };
 
-  /* Temporary data to associate to all the vertices: estimated distance and boolean flag */
-  struct TempData{
-    TempData(){}
-    TempData(const ScalarType & _d):d(_d),source(0),parent(0){}
-
-    ScalarType d;
-    VertexPointer source;//closest source
-    VertexPointer parent;
+  /* Temporary Geodesic Data to associate to all the vertices
+   * it uses a mailbox marking strategy (constant unmarking time)  
+   * to allow quick restart of multiple geodesic visits over a mesh
+  */
+  class GeodData{
+  private:
+    ScalarType _d;
+    int _local_mark=0;
+    
+    static int &_global_mark()
+    {
+      static int _global=1;
+      return _global;
+    }
+  
+    public:
+    GeodData(){}
+    GeodData(const ScalarType & __d):_d(__d),source(0),parent(0){}
+	
+    const ScalarType d() const {
+      if(isMarked()) 
+        return _d;
+      else 
+        return std::numeric_limits<ScalarType>::max();
+      }
+    
+     void set_d(const ScalarType &d){
+      mark();
+       _d=d;
+      }
+    
+    VertexPointer source; // Pointer to the vertex that is the closest source
+    VertexPointer parent; // Pointer to the next one in the chain going to the closest.
+    
+    // Constant time unmarking;
+	static void reset() { _global_mark()++;}
+	
+	// A vertex is marked only if its local copy of the mark value is equal to the global one
+    bool isMarked() const  {return _local_mark==_global_mark();}
+	
+	// A vertex is marked only if its local copy of the mark value is equal to the global one
+    void mark() { _local_mark=_global_mark();} 
   };
 
-  typedef SimpleTempData<std::vector<VertexType>, TempData >  TempDataType;
-
-
+  
 	struct pred {
 		pred() {};
 		bool operator()(const VertDist& v0, const VertDist& v1) const {
@@ -223,7 +264,7 @@ public:
 The function estimates the distance of pw from the source
 in the assumption the mesh is developable (and without holes)
 along the path, so that (source,pw1,curr) from a triangle.
-All the math is to comput the angles at pw1 and curr with the Erone formula.
+All the math is to compute the angles at pw1 and curr with the Erone formula.
 
 The if cases take care of the cases where the angles are obtuse.
 
@@ -236,7 +277,7 @@ source+        |
 
    */
   template <class DistanceFunctor>
-  static ScalarType Distance(DistanceFunctor &distFunc,
+  static ScalarType GeoDistance(DistanceFunctor &distFunc,
                              const VertexPointer &pw,
                              const VertexPointer &pw1,
                              const VertexPointer &curr,
@@ -283,12 +324,11 @@ source+        |
 
 
 
-/*
-This is the low level version of the geodesic computation framework.
-Starting from the seeds, it assign a distance value to each vertex. The distance of a vertex is its
+/**
+This is the low level function of the geodesic computation framework.
+Starting from a set of seeds, it assign a distance value to each vertex. The distance of a vertex is its
 approximated geodesic distance to the closest seeds.
-This is function is not meant to be called (although is not prevented). Instead, it is invoked by
-wrapping function.
+For a simple interface look at the \ref Compute wrapper.
 */
 
   template <class DistanceFunctor>
@@ -302,20 +342,20 @@ wrapping function.
       std::vector<VertexPointer> *InInterval=NULL)
   {
     VertexPointer farthest=0;
-//    int t0=clock();
     //Requirements
     tri::RequireVFAdjacency(m);
     tri::RequirePerVertexQuality(m);
 
     assert(!seedVec.empty());
 
-    TempDataType TD(m.vert, std::numeric_limits<ScalarType>::max());
-
-    // initialize Heap
+    auto TD = tri::Allocator<MeshType>::template GetPerVertexAttribute<GeodData>(m,"geod");
+    GeodData::reset();
+	
+	// initialize Heap
     std::vector<VertDist> frontierHeap;
     typename std::vector <VertDist >::iterator ifr;
     for(ifr = seedVec.begin(); ifr != seedVec.end(); ++ifr){
-      TD[(*ifr).v].d = (*ifr).d;
+      TD[(*ifr).v].set_d( (*ifr).d );
       TD[(*ifr).v].source  = (*ifr).v;
       TD[(*ifr).v].parent  = (*ifr).v;
       frontierHeap.push_back(*ifr);
@@ -324,8 +364,8 @@ wrapping function.
 
     ScalarType curr_d,d_curr = 0.0,d_heap;
     ScalarType max_distance=0.0;
-//    int t1=clock();
-    while(!frontierHeap.empty() && max_distance < distance_threshold)
+	
+	while(!frontierHeap.empty() && max_distance < distance_threshold)
     {
       pop_heap(frontierHeap.begin(),frontierHeap.end(),pred());
       VertexPointer curr = (frontierHeap.back()).v;
@@ -337,12 +377,12 @@ wrapping function.
       d_heap = (frontierHeap.back()).d;
       frontierHeap.pop_back();
 
-      assert(TD[curr].d <= d_heap);
-      if(TD[curr].d < d_heap ) // a vertex whose distance has been improved after it was inserted in the queue
+      assert(TD[curr].d() <= d_heap);
+      if(TD[curr].d() < d_heap ) // a vertex whose distance has been improved after it was inserted in the queue
         continue;
-      assert(TD[curr].d == d_heap);
+      assert(TD[curr].d() == d_heap);
 
-      d_curr =  TD[curr].d;
+      d_curr =  TD[curr].d();
 
       for(face::VFIterator<FaceType>  vfi(curr) ; vfi.f!=0; ++vfi )
       {
@@ -358,7 +398,7 @@ wrapping function.
             pw1= vfi.f->V1(vfi.z);
           }
 
-          const ScalarType & d_pw1  =  TD[pw1].d;
+          const ScalarType & d_pw1  =  TD[pw1].d();
           {
             const ScalarType inter  = distFunc(curr,pw1);//(curr->P() - pw1->P()).Norm();
             const ScalarType tol = (inter + d_curr + d_pw1)*.0001f;
@@ -370,11 +410,11 @@ wrapping function.
                     )
               curr_d = d_curr + distFunc(pw,curr);//(pw->P()-curr->P()).Norm();
             else
-              curr_d = Distance(distFunc,pw,pw1,curr,d_pw1,d_curr);
+              curr_d = GeoDistance(distFunc,pw,pw1,curr,d_pw1,d_curr);
           }
 
-          if(TD[pw].d > curr_d){
-            TD[pw].d = curr_d;
+          if(TD[pw].d() > curr_d){
+            TD[pw].set_d( curr_d );
             TD[pw].source = TD[curr].source;
             TD[pw].parent = curr;
             frontierHeap.push_back(VertDist(pw,curr_d));
@@ -389,23 +429,21 @@ wrapping function.
         }
       } // end for VFIterator
     }// end while
-//    int t2=clock();
 
     // Copy found distance onto the Quality (\todo parametric!)
     if (InInterval==NULL)
     {
       for(VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi) if(!(*vi).IsD())
-        (*vi).Q() =  TD[&(*vi)].d;
+        (*vi).Q() =  TD[&(*vi)].d();
     }
     else
     {
       assert(InInterval->size()>0);
       for(size_t i=0;i<InInterval->size();i++)
-        (*InInterval)[i]->Q() =  TD[(*InInterval)[i]].d;
+        (*InInterval)[i]->Q() =  TD[(*InInterval)[i]].d();
     }
-//    int t3=clock();
-//    printf("Init  %6.3f\nVisit %6.3f\nFinal %6.3f\n",float(t1-t0)/CLOCKS_PER_SEC,float(t2-t1)/CLOCKS_PER_SEC,float(t3-t2)/CLOCKS_PER_SEC);
-    return farthest;
+	
+	return farthest;
   }
 
 public:
