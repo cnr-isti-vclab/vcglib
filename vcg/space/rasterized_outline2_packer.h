@@ -26,6 +26,7 @@
 
 #include <vcg/space/rect_packer.h>
 #include <vcg/complex/algorithms/outline_support.h>
+#include <random>
 
 namespace vcg
 {
@@ -737,7 +738,9 @@ public:
                                  const Parameters& packingPar)
     {
         std::vector<std::vector<int>> trials;
-
+        std::random_device rd;
+        static std::mt19937 g(rd());
+        
         // Build a permutation that holds the indexes of the polys ordered by their area
         std::vector<int> perm(polyPointsVec.size());
         for(size_t i = 0; i < polyPointsVec.size(); i++)
@@ -761,7 +764,7 @@ public:
             int permutationCount = numPermutedObjects * 5;
             //printf("PACKING: trying %d random permutations of the largest %d elements\n", permutationCount, numPermutedObjects);
             for (int k = 0; k < permutationCount; ++k) {
-                std::random_shuffle(perm.begin(), perm.begin() + numPermutedObjects);
+                std::shuffle(perm.begin(), perm.begin() + numPermutedObjects,rd);
                 trials.push_back(perm);
             }
         }
