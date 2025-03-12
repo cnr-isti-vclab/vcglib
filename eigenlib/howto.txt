@@ -4,6 +4,7 @@ Current Eigen Version 3.2.2 (04.08.2014) updated on 21/10/2014
 Current Eigen Version 3.2.5 (16.06.2015) updated on 24/09/2015
 Current Eigen Version 3.3.2 (18.01.2017) updated on 24/01/2017
 Current Eigen Version 3.3.9 (04.12.2020) updated on 15/06/2021
+Current Eigen Version 3.4.0 (18.08.2021) updated on 12/03/2025
 
 To update the lib:
 - download Eigen
