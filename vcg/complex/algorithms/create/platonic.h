@@ -71,6 +71,11 @@ void Tetrahedron(TetraMeshType &in)
  (*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[1];
 }
 
+/// Builds a Dodecahedron triangular mesh 
+/// Each pentagonal face is triangulated into three triangles.
+/// Faux edges are correctly marked.
+/// Note that symmetry is not preserved
+
 template <class DodMeshType>
 void DodecahedronTri(DodMeshType & in)
 {
@@ -116,8 +121,8 @@ void DodecahedronTri(DodMeshType & in)
 	}
 }
 
-/// builds a Dodecahedron,
-/// (each pentagonal face is composed by 5 triangles)
+/// Builds a Dodecahedron triangular mesh 
+/// Each pentagonal face is star triangulated with an additional central vertex and it is composed by 5 triangles
 template <class DodMeshType>
 void Dodecahedron(DodMeshType & in)
 {
