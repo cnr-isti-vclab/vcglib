@@ -106,7 +106,7 @@ public:
     fsHandle fsH = fsV.back();
     tsHandle tsH = tsV.back();
 
-    if(! (Allocator<ComputeMeshType>::template IsValidHandle(*_m, vsH))) return false;
+    if(! (Allocator<ComputeMeshType>::IsValidHandle(*_m, vsH))) return false;
 
     for(auto vi = _m->vert.begin(); vi != _m->vert.end(); ++vi)
       if( !(*vi).IsD() )
