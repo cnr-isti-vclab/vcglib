@@ -45,7 +45,10 @@ namespace tri {
 /// \ingroup trimesh
 /// \brief A class for managing curves on a 2manifold.
 /**
-  This class is used to project/simplify/smooth polylines over a triangulated surface. 
+This class is used to project/simplify/smooth polylines over a triangulated surface.
+It assumes that the mesh is reasonably nice (2manifold, good triangles etc.)
+The idea is that the class is initaizlied on a mesh and than you pass polylines to be managed by the class.
+
   
 */
 
@@ -73,8 +76,7 @@ public:
   {
   public:
     
-    ScalarType surfDistThr; // Distance between surface and curve; used in simplify and refine
-    ScalarType polyDistThr; // Distance between the 
+    ScalarType surfDistThr;    // Distance between surface and curve; used in simplify and refine
     ScalarType minRefEdgeLen;  // Minimal admitted Edge Lenght (used in refine: never make edge shorther than this value) 
     ScalarType maxSimpEdgeLen; // Maximal admitted Edge Lenght (used in simplify: never make edges longer than this value) 
     ScalarType maxSmoothDelta; // The maximum movement that is admitted during smoothing.
@@ -82,23 +84,21 @@ public:
     ScalarType gridBailout;    // The maximum distance bailout used in grid sampling
     ScalarType barycentricSnapThr;    // The maximum distance bailout used in grid sampling
     
-    Param(MeshType &m) { Default(m);}
+    Param(MeshType &m) { SetDefault(m);}
     
-    void Default(MeshType &m)
+    void SetDefault(MeshType &m)
     {
-      surfDistThr   = m.bbox.Diag()/1000.0;
-      polyDistThr   = m.bbox.Diag()/5000.0;
-      minRefEdgeLen    = m.bbox.Diag()/16000.0;
-      maxSimpEdgeLen    = m.bbox.Diag()/100.0;
-      maxSmoothDelta =   m.bbox.Diag()/100.0;
-      maxSnapThr =       m.bbox.Diag()/1000.0;
-      gridBailout =      m.bbox.Diag()/20.0;
+      surfDistThr        = m.bbox.Diag()/1000.0;
+      minRefEdgeLen      = m.bbox.Diag()/16000.0;
+      maxSimpEdgeLen     = m.bbox.Diag()/100.0;
+      maxSmoothDelta     = m.bbox.Diag()/100.0;
+      maxSnapThr         = m.bbox.Diag()/1000.0;
+      gridBailout        = m.bbox.Diag()/20.0;
       barycentricSnapThr = 0.05;
     }
     void Dump() const
     {
       printf("surfDistThr    = %6.4f\n",surfDistThr   );
-      printf("polyDistThr    = %6.4f\n",polyDistThr   );
       printf("minRefEdgeLen  = %6.4f\n",minRefEdgeLen    );
       printf("maxSimpEdgeLen = %6.4f\n",maxSimpEdgeLen    );
       printf("maxSmoothDelta = %6.4f\n",maxSmoothDelta);
@@ -140,6 +140,23 @@ public:
   {
     ScalarType closestDist;
     return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, this->par.gridBailout, closestDist, closestP);
+  }
+  /** * @brief test if a barycentric coordinate is Well Snapped 
+   * @param ip the barycentric coordinate to be tested
+   * @return true if the barycentric coordinate is well snapped 
+   * 
+   * It test if there is no need of snapping something. 
+   * 
+   *
+   */
+  bool IsWellSnapped(const CoordType &ip)
+  {
+      for(int i=0;i<3;++i)
+          if( (ip[i]< par.barycentricSnapThr         && ip[i]!= 0.0) ||
+              (ip[i]> (1.0 - par.barycentricSnapThr) && ip[i]!= 1.0))
+              return false;
+      assert(ip[0]+ip[1]+ip[2] == 1.0);
+      return true;
   }
   
   bool IsSnappedEdge(CoordType &ip, int &ei)
@@ -302,13 +319,15 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
    * @brief SnapPolyline snaps the vertexes of a polyline onto the base mesh
    * @param poly
    * @param newVertVec the vector of the indexes of the snapped vertices
+   * @return true if it has modified the polyline
    * 
    * Polyline vertices can be snapped either on vertexes or on edges. 
    * Usually the only points that we should allow to not be snapped are the endpoints and non manifold points.
    * Vertexes are colored according to their snapping state 
+   * 
    */  
     
-  void SnapPolyline(MeshType &poly)
+  bool SnapPolyline(MeshType &poly)
   {
     tri::Allocator<MeshType>::CompactEveryVector(poly);     
     tri::UpdateTopology<MeshType>::VertexEdge(poly);
@@ -342,6 +361,8 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
     int dupCnt=tri::Clean<MeshType>::RemoveDuplicateVertex(poly);
     tri::Allocator<MeshType>::CompactEveryVector(poly);     
     if(dupCnt) printf("SnapPolyline: Removed %i Duplicated vertices\n",dupCnt);
+    
+    return vertSnapCnt==0 && edgeSnapCnt==0 && dupCnt==0;
   }
   
    void SelectBoundaryVertex(MeshType &poly)
@@ -430,9 +451,12 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
    * @brief SplitMeshWithPolyline
    * @param poly
    * 
-   * First it splits the base mesh with all the non snapped points doing a standard 1 to 3 split;
-   * 
+   * First it splits the base mesh with all the non-snapped points
+   * doing a standard 1 to 3 split;
+   * Then split all the edges of the base mesh that are crossed by the polyline.
+   * At the end of the process there should there be coincident edges between the polyline and the base mesh.
    */
+  
   void SplitMeshWithPolyline(MeshType &poly)
   {        
     std::vector< std::pair<int,VertexPointer> > toSplitVec;  // the index of the face to be split and the poly vertex to be used
@@ -444,8 +468,8 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
       if(!BarycentricSnap(ip))
         toSplitVec.push_back(std::make_pair(tri::Index(base,f),&*vi));
     }
-    
-    printf("SplitMeshWithPolyline found %lu non snapped points\n",toSplitVec.size());fflush(stdout);
+    SimplifyNullEdges(poly);
+    printf("SplitMeshWithPolyline found %lu non snapped points\n",toSplitVec.size()); fflush(stdout);
 
     FaceIterator newFi = tri::Allocator<MeshType>::AddFaces(base,toSplitVec.size()*2);
     VertexIterator newVi = tri::Allocator<MeshType>::AddVertices(base,toSplitVec.size());    
@@ -461,31 +485,39 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
     SnapPolyline(poly);
     
     // Second loop to perform the face-face Edge split **********************
-
-    std::map<std::pair<CoordType,CoordType>, VertexPointer> edgeToPolyVertMap;
-    for(VertexIterator vi=poly.vert.begin(); vi!=poly.vert.end();++vi)
+    // This loop must be iterated multiple times becouse it can happen that more than one polyline vertices falls on the same edge.
+    // So multiple splits must be done.
+    std::map<std::pair<CoordType,CoordType>, VertexPointer> edgeToSplitMap;
+    do
     {
-      CoordType ip;
-      FaceType *f = GetClosestFaceIP(vi->cP(),ip);
-      if(!BarycentricSnap(ip)) { assert(0); }            
-      for(int i=0;i<3;++i)
-      {
-       if(ip[i]>0 && ip[(i+1)%3]>0 && ip[(i+2)%3]==0 )
-       {
-        CoordType p0=f->P0(i);
-        CoordType p1=f->P1(i);
-        if (p0>p1) std::swap(p0,p1);
-        if(edgeToPolyVertMap[std::make_pair(p0,p1)]) printf("Found an already used Edge %lu - %lu %lu!!!\n", tri::Index(base,f->V0(i)),tri::Index(base,f->V1(i)),tri::Index(poly,&*vi));
-        edgeToPolyVertMap[std::make_pair(p0,p1)]=&*vi;
-       }         
-      }
-    }
-    printf("SplitMeshWithPolyline: Created a map of %lu edges to be split\n",edgeToPolyVertMap.size());
-    EdgePointPred ePred(edgeToPolyVertMap);
-    EdgePointSplit eSplit(edgeToPolyVertMap);
-    tri::UpdateTopology<MeshType>::FaceFace(base);
-    tri::RefineE(base,eSplit,ePred);     
-    Init(); //  need to reset everthing    
+        edgeToSplitMap.clear();
+        for(VertexIterator vi=poly.vert.begin(); vi!=poly.vert.end();++vi)
+        {
+            CoordType ip;
+            FaceType *f = GetClosestFaceIP(vi->cP(),ip);
+            if(!BarycentricSnap(ip)) { assert(0); }            
+            for(int i=0;i<3;++i)
+            {
+                if((ip[i      ]>0 && ip[i      ]<1.0) &&
+                    (ip[(i+1)%3]>0 && ip[(i+1)%3]<1.0) &&
+                    ip[(i+2)%3]==0 )
+                {
+                    CoordType p0=f->P0(i);
+                    CoordType p1=f->P1(i);
+                    if (p0>p1) std::swap(p0,p1);
+                    if(edgeToSplitMap[std::make_pair(p0,p1)])
+                        printf("Found an already used Edge %lu - %lu vert %lu!!!\n", tri::Index(base,f->V0(i)),tri::Index(base,f->V1(i)),tri::Index(poly,&*vi));
+                    edgeToSplitMap[std::make_pair(p0,p1)]=&*vi;
+                }         
+            }
+        }
+        printf("SplitMeshWithPolyline: Created a map of %lu edges to be split\n",edgeToSplitMap.size());
+        EdgePointPred ePred(edgeToSplitMap);
+        EdgePointSplit eSplit(edgeToSplitMap);
+        tri::UpdateTopology<MeshType>::FaceFace(base);
+        tri::RefineE(base,eSplit,ePred);     
+        Init(); //  need to reset everthing
+    } while(edgeToSplitMap.size()>0); // while there are edges to be split
  }
     
         
@@ -498,6 +530,12 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
     uniformGrid.Set(base.face.begin(), base.face.end());    
   }
   
+  void SimplifyNullEdges(MeshType &poly)
+  {
+      int cnt=tri::Clean<MeshType>::RemoveDuplicateVertex(poly);
+      if(cnt)
+          printf("SimplifyNullEdges: Removed %i Duplicated vertices\n",cnt);
+  }
   
   void SimplifyMidEdge(MeshType &poly)
   {
@@ -670,10 +708,11 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
   /**
    * @brief BarycentricSnap
    * @param ip the baricentric coords to be snapped
-   * @return true if they have been snapped.
+   * @return true if it have been snapped 
    * 
    * This is the VERY important function that is used everywhere. 
-   * Given a barycentric coord of a point inside a triangle it decides if it should be "snapped" either onto an edge or on a vertex. 
+   * Given a barycentric coord of a point inside a triangle it decides 
+   * if it should be "snapped" either onto an edge or on a vertex. 
    * It relies on the  barycentricSnapThr parameter
    * 
    */
@@ -687,8 +726,19 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
     ScalarType sum = ip[0]+ip[1]+ip[2];
     
     for(int i=0;i<3;++i) 
-      if(ip[i]!=1) ip[i]/=sum;
+      if(ip[i]!=1.0) ip[i]/=sum;
     
+    sum = ip[0]+ip[1]+ip[2];
+    
+    if(sum!=1.0){
+        for(int i=0;i<3;++i)
+            if(ip[i]>0.0 && ip[i]<1.0) // if it is non snapped
+                ip[i]=1.0-(ip[(i+1)%3]+ip[(i+2)%3]);
+    }
+    
+    sum = ip[0]+ip[1]+ip[2];     
+    assert(sum ==1.0);
+    assert(IsWellSnapped(ip));
     if(ip[0]==0 || ip[1]==0 || ip[2]==0) return true;
     return false;
   }
@@ -1041,7 +1091,8 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
       swap(edgeToRefineVecNext,edgeToRefineVec);
        printf("RefineCurveByBaseMesh %i en -> %i en\n",startEn,poly.en); fflush(stdout);    
     }
-//    
+//
+    SimplifyNullEdges(poly);
     SimplifyMidFace(poly);
     SimplifyMidEdge(poly);
     SnapPolyline(poly);    
@@ -1135,9 +1186,8 @@ public:
     {
       CoordType p0 = ep.V()->P();
       CoordType p1 = ep.VFlip()->P();
-      if (p0>p1) std::swap(p0,p1);        
-      VertexPointer vp=edgeToPolyVertMap[std::make_pair(p0,p1)];
-      return vp!=0;
+      if (p0>p1) std::swap(p0,p1);
+      return edgeToPolyVertMap.find(std::make_pair(p0,p1)) != edgeToPolyVertMap.end();           
     }
 };
 
