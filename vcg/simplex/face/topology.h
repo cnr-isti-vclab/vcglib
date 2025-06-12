@@ -1317,10 +1317,11 @@ bool FindSharedEdge(FaceType *f0,FaceType *f1, int &i, int &j)
 }
 
 /*!
-* find the faces that shares the two vertices
+* Find the two faces that shares the two vertices
 * \param v0,v1 the two vertices
 * \param f0,f1 the two faces in counterclockwise order
 *
+*  Assume that the mesh is manifold and the edge connecting the two vertices is internal. 
 */
 template <class FaceType>
 bool FindSharedFaces(typename FaceType::VertexType *v0,
