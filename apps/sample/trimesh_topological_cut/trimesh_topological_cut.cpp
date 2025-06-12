@@ -54,19 +54,26 @@ int main(int argc,char ** argv )
 {
   MyMesh base, basecopy, poly;
   int ret0=0, ret1=0;
-  if(argc>1) ret0 = tri::io::Importer<MyMesh>::Open(base,argv[1]);
+  char *baseName = "(created torus)";
+  if(argc>1) {
+      ret0 = tri::io::Importer<MyMesh>::Open(base,argv[1]);
+      baseName = argv[1];
+  }
   
   if(base.FN() == 0)   Torus(base,10,4,48,24);
 
   if(argc>2) ret1 = tri::io::Importer<MyMesh>::Open(poly,argv[2]); 
   tri::UpdateBounding<MyMesh>::Box(base);
   printf( "Mesh %s has %i vert and %i faces\n", argv[1], base.VN(), base.FN() );
-  printf( "Poly %s has %i vert and %i edges\n", argv[2], poly.VN(), poly.EN() );
+  srand(time(nullptr));
+  tri::CutTree<MyMesh> ct(base);
+  ct.Build(poly,rand()%base.fn);
   if(poly.EN() == 0) {
-    srand(time(nullptr));
-    tri::CutTree<MyMesh> ct(base);
-    ct.Build(poly,rand()%base.fn);
+      printf( "Mesh was already homeomorfic to a disk no need of cut. Exiting.\n");
+      return 0;
   }
+  printf( "Poly %s has %i vert and %i edges\n", baseName, poly.VN(), poly.EN() );
+  
   tri::io::ExporterPLY<MyMesh>::Save(poly,"0_cut_tree.ply",tri::io::Mask::IOM_EDGEINDEX);  
 
   tri::CoM<MyMesh> cc(base);
@@ -108,7 +115,11 @@ int main(int argc,char ** argv )
   cc.SplitMeshWithPolyline(poly);
   tri::io::ExporterPLY<MyMesh>::Save(base,"3_mesh_refined.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
   // Now the two meshes should have coincident edges
-  cc.TagFaceEdgeSelWithPolyLine(poly);
+  ret = cc.TagFaceEdgeSelWithPolyLine(poly);
+  if(!ret) printf("Warning Not all the edges of the polyline have found a corresponding edge in the mesh");
+  int SelCount = tri::UpdateSelection<MyMesh>::FaceEdgeCount(base);
+  printf("Found %i selected edges in the mesh vs %i edges of the polyline\n",SelCount,poly.en);
+  
   CutMeshAlongSelectedFaceEdges(base);
   tri::io::ExporterPLY<MyMesh>::Save(base,"4_mesh_cut.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
   
