@@ -115,6 +115,9 @@ static bool IsSTLColored(const char * filename, bool &coloredFlag, bool &magicsM
    FILE *fp = fopen(filename, "rb");
    char buf[STL_LABEL_SIZE+1];
    fread(buf,sizeof(char),STL_LABEL_SIZE,fp);
+   for(int i=0;i<STL_LABEL_SIZE;++i)
+     if(buf[i]=='\0')
+        buf[i] = ' ';
    std::string strInput(buf);
    size_t cInd = strInput.rfind("COLOR=");
    size_t mInd = strInput.rfind("MATERIAL=");
