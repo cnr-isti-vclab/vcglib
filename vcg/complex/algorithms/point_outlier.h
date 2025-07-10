@@ -89,12 +89,34 @@ class OutlierRemoval
       for (int i = 0; i < (int)mesh.vert.size(); i++)
       {
         ScalarType value = plof[i] / (mean * sqrt(2.0f));
+#if 0
+	// version 2023.12, https://github.com/cnr-isti-vclab/vcglib/issues/221
         double dem = 1.0 + 0.278393 * value;
         dem += 0.230389 * value * value;
         dem += 0.000972 * value * value * value;
         dem += 0.078108 * value * value * value * value;
         ScalarType op = std::max(0.0, 1.0 - 1.0 / dem);
-        outlierScore[i] = op;
+#else
+        if ( value >=0.)
+        {
+            double dem = 1.0 + value*( 0.278393
+                         +value*(0.230389
+                         +value*(0.000972
+                         +value*0.078108))) ;
+            ScalarType op = std::max(0.0, 1.0 - 1.0 / pow(dem,4.0) );
+            outlierScore[i] = op;
+        }
+        else
+        {
+            double dem = 1.0 - value*( 0.278393
+                         -value*(0.230389
+                         -value*(0.000972
+                         -value*0.078108))) ;
+            ScalarType op = std::min(0.0, 1.0 / pow(dem,4.0) -1.0 );
+            outlierScore[i] = op;
+        }
+
+#endif
       }
 
       tri::Allocator<MeshType>::DeletePerVertexAttribute(mesh, std::string("sigma"));

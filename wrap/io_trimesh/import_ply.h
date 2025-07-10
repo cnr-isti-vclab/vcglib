@@ -1083,6 +1083,12 @@ public:
 	}
 
 
+#if 0
+	/* @todo: this tries to access members of the this pointer
+	* that do not exist in this class . Needs to be rewritten,
+	* but is apparently not needed at all.
+	* https://github.com/cnr-isti-vclab/vcglib/issues/242
+	*/
 	// Caricamento camera da un ply
 	int LoadCamera(const char * filename)
 	{
@@ -1155,6 +1161,7 @@ public:
 
 		return 0;
 	}
+#endif /* 0 */
 
 
 	static bool LoadMask(const char * filename, int &mask)
