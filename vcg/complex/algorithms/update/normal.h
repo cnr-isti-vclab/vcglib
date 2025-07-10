@@ -358,7 +358,7 @@ static void PerVertexMatrix(ComputeMeshType &m, const Matrix44<ScalarType> &mat,
         Point3<ScalarType> scaleV(scale,scale,scale);
         Matrix33<ScalarType> S;
         S.SetDiagonal(scaleV.V());
-        mat33*=S;
+        mat33 *= Inverse(S);
     }
 
     for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
