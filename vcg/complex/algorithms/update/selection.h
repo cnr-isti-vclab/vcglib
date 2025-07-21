@@ -106,7 +106,7 @@ public:
     fsHandle fsH = fsV.back();
     tsHandle tsH = tsV.back();
 
-    if(! (Allocator<ComputeMeshType>::template IsValidHandle(*_m, vsH))) return false;
+    if(! (Allocator<ComputeMeshType>::IsValidHandle(*_m, vsH))) return false;
 
     for(auto vi = _m->vert.begin(); vi != _m->vert.end(); ++vi)
       if( !(*vi).IsD() )
@@ -294,6 +294,21 @@ static size_t EdgeCount(const MeshType &m)
     if(e.IsS()) ++selCnt;
   });
   return selCnt;
+}
+
+/// \brief This function returns the number of selected edges according to the FaceEdge Selection bit (the 3 bits stored inside each face).
+static size_t FaceEdgeCount(const MeshType &m)
+{
+	RequireFFAdjacency(m);
+	size_t selCnt=0;
+	ForEachFace(m, [&](const FaceType& f){
+		for(int i=0;i<f.VN();++i)
+		{
+			if(f.IsFaceEdgeS(i)) ++selCnt;
+			if(f.IsFaceEdgeS(i) && face::IsBorder(f,i)) ++selCnt; // all FaceEdges are counted twice with the exception of the ones on borders
+		}		
+	});
+	return selCnt/2;
 }
 
 /// \brief This function returns the number of selected vertices.

@@ -377,17 +377,10 @@ public:
 	static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	{
 		assert(filename!=0);
-		std::vector<VertexPointer> index;
+		std::vector<VertexPointer> index; // vector of vertex pointers filled at the end of the vertex loading. 
 		LoadPly_FaceAux<ScalarType> fa;
 		LoadPly_EdgeAux ea;
-		LoadPly_TristripAux tsa;
 		LoadPly_VertAux<ScalarType> va;
-
-		LoadPly_RangeGridAux rga;
-		std::vector<int> RangeGridAuxVec;
-		int RangeGridCols=0;
-		int RangeGridRows=0;
-
 
 		pi.mask = 0;
 		bool hasIntensity = false; // the intensity is a strange way to code single channel color used sometimes in rangemap. it is a kind of color. so it do not need another entry in the IOM mask.
@@ -618,6 +611,8 @@ public:
 		/* Main Reading Loop */
 		/**************************************************************/
 		m.Clear();
+        PlyAttributeHelper<OpenMeshType> PAH(pi,m);
+        
 		for(size_t i=0;i<pf.elements.size();i++)
 		{
 			int n = pf.ElemNumber(i);
@@ -728,20 +723,46 @@ public:
 					}
 					if( pi.mask & Mask::IOM_VERTRADIUS )
 						(*vi).R() = va.radius;
-
+                    
+                    // Now try to read additional data as described in the PlyInfo VertDescriptorVec; two cases:
+                    // 1) you are using attributes (so the corresponding entry of VecAttrNameVec is not empty)
+                    // 2) your vertex type has some space and you just use memcopy
 
 					for(size_t k=0;k<pi.VertDescriptorVec.size();k++)
-						memcpy((char *)(&*vi) + pi.VertDescriptorVec[k].offset1,
+                    {
+                        if(pi.VertDescriptorVec.size() && !pi.VertAttrNameVec[k].empty())
+                        {
+                            double td(0); float tf(0);int ti;short ts; char tc; unsigned char tu;
+                            char *vad = (char *)(&va) + VPV[k].offset1;
+                            
+                            switch (pi.VertDescriptorVec[k].stotype1)
+                            {
+                            case ply::T_FLOAT  : tf = *((float*)vad);           PAH.thfv[k][&*vi] = tf; break;
+                            case ply::T_DOUBLE : td = *((double*)vad);          PAH.thdv[k][&*vi] = td; break;
+                            case ply::T_INT    : ti = *((int*)vad);             PAH.thiv[k][&*vi] = ti; break;
+                            case ply::T_SHORT  : ts = *((short*)vad);           PAH.thsv[k][&*vi] = ts; break;
+                            case ply::T_CHAR   : tc = *((char*)vad);            PAH.thcv[k][&*vi] = tc; break;
+                            case ply::T_UCHAR  : tu = *((unsigned char*)vad);   PAH.thuv[k][&*vi] = tu; break;
+                            default : assert(0);
+                            }                            
+                        }
+                        else                     
+                        {
+                            memcpy((char *)(&*vi) + pi.VertDescriptorVec[k].offset1,
 						       (char *)(&va) + VPV[k].offset1,
 						       VPV[k].memtypesize());
+                        }
+                    }
+                    
 					++vi;
-				}
+				} // end of vertex element reading
 
 				index.resize(n);
 				for(j=0,vi=m.vert.begin();j<n;++j,++vi)
 					index[j] = &*vi;
 			}
-			else if( !strcmp( pf.ElemName(i),"edge") && (n>0) )/******************** EDGE READING *******************************/
+            /******************** EDGE ELEMENTS READING LOOP *******************************/
+			else if( !strcmp( pf.ElemName(i),"edge") && (n>0) )
 			{
 				assert( pi.mask & Mask::IOM_EDGEINDEX );
 				EdgeIterator ei=Allocator<OpenMeshType>::AddEdges(m,n);
@@ -764,17 +785,14 @@ public:
 					++ei;
 				}
 			}
-			else if( !strcmp( pf.ElemName(i),"face") && (n>0) )/******************** FACE READING ****************************************/
+            /******************** FACE ELEMENT READING ****************************************/
+			else if( !strcmp( pf.ElemName(i),"face") && (n>0) )
 			{
-				int j;
-
 				FaceIterator fi=Allocator<OpenMeshType>::AddFaces(m,n);
 				pf.SetCurElement(i);
 
-				for(j=0;j<n;++j)
+				for(int j=0;j<n;++j) // main reading loop
 				{
-					int k;
-
 					if(pi.cb && (j%1000)==0) pi.cb(50+j*50/n,"Face Loading");
 					fa.a = 255;
 					if( pf.Read(&fa)==-1 )
@@ -850,7 +868,7 @@ public:
 
 					if (HasPolyInfo(m))
 					{
-						for(k=0; k<fa.size; ++k)
+						for(int k=0; k<fa.size; ++k)
 						{
 							if( fa.v[k]<0 || fa.v[k]>=m.vn )
 							{
@@ -865,7 +883,7 @@ public:
 
 					/// Now the temporary struct 'fa' is ready to be copied into the real face '*fi'
 					/// This loop
-					for(k=0;k<3;++k)
+					for(int k=0;k<3;++k)
 					{
 						if( fa.v[k]<0 || fa.v[k]>=m.vn )
 						{
@@ -877,12 +895,37 @@ public:
 
 					// tag faux vertices of first face
 					if (fa.size>3) fi->SetF(2);
-
+                    
+                    // Now try to read additional data as described in the PlyInfo FaceDescriptorVe; two cases:
+                    // 1) you are using attributes (so the corresponding entry of FaceAttrNameVec is not empty)
+                    // 2) your face type has some space and you just use memcopy
+                    
 					for(size_t k=0;k<pi.FaceDescriptorVec.size();k++)
+                    {
+                        if(pi.FaceAttrNameVec.size() && !pi.FaceAttrNameVec[k].empty())
+                        {
+                            double td(0); float tf(0);int ti;short ts; char tc; unsigned char tu;
+                            char *vad = (char *)(&fa) + FPV[k].offset1;
+                            
+                            switch (pi.FaceDescriptorVec[k].stotype1)
+                            {
+                            case ply::T_FLOAT  : tf = *((float*)vad);           PAH.thff[k][&*fi] = tf; break;
+                            case ply::T_DOUBLE : td = *((double*)vad);          PAH.thdf[k][&*fi] = td; break;
+                            case ply::T_INT    : ti = *((int*)vad);             PAH.thif[k][&*fi] = ti; break;
+                            case ply::T_SHORT  : ts = *((short*)vad);           PAH.thsf[k][&*fi] = ts; break;
+                            case ply::T_CHAR   : tc = *((char*)vad);            PAH.thcf[k][&*fi] = tc; break;
+                            case ply::T_UCHAR  : tu = *((unsigned char*)vad);   PAH.thuf[k][&*fi] = tu; break;
+                            default : assert(0);
+                            }
+                         
+                        }
+                        else
+                        {                            
 						memcpy((char *)(&(*fi)) + pi.FaceDescriptorVec[k].offset1,
 						       (char *)(&fa) + FPV[k].offset1,
 						       FPV[k].memtypesize());
-
+                        }
+                    }   
 
 					++fi;
 
@@ -900,7 +943,7 @@ public:
 						if(HasPolyInfo(m)) (*fi).Alloc(3);
 
 						(*fi).V(0) = index[ fa.v[0] ];
-						for(k=1;k<3;++k)
+						for(int k=1;k<3;++k)
 						{
 							if( fa.v[2+qq]<0 || fa.v[2+qq]>=m.vn )
 							{
@@ -926,94 +969,17 @@ public:
 					}
 
 				}
-			}else if( !strcmp( pf.ElemName(i),"tristrips") )//////////////////// LETTURA TRISTRIP DI STANFORD
-			{
-				int j;
-				pf.SetCurElement(i);
-				int numvert_tmp = (int)m.vert.size();
-				for(j=0;j<n;++j)
-				{
-					int k;
-					if(pi.cb && (j%1000)==0) pi.cb(50+j*50/n,"Tristrip Face Loading");
-					if( pf.Read(&tsa)==-1 )
-					{
-						pi.status = PlyInfo::E_SHORTFILE;
-						return pi.status;
-					}
-					int remainder=0;
-					for(k=0;k<tsa.size-2;++k)
-					{
-						if(pi.cb && (k%1000)==0) pi.cb(50+k*50/tsa.size,"Tristrip Face Loading");
-						if(tsa.v[k]<0 || tsa.v[k]>=numvert_tmp )	{
-							pi.status = PlyInfo::E_BAD_VERT_INDEX;
-							return pi.status;
-						}
-						if(tsa.v[k+2]==-1)
-						{
-							k+=2;
-							if(k%2) remainder=0;
-							else remainder=1;
-							continue;
-						}
-						Allocator<OpenMeshType>::AddFaces(m,1);
-						FaceType &tf =m.face.back();
-						tf.V(0) = index[ tsa.v[k+0] ];
-						tf.V(1) = index[ tsa.v[k+1] ];
-						tf.V(2) = index[ tsa.v[k+2] ];
-						if((k+remainder)%2) std::swap (tf.V(0), tf.V(1) );
-					}
-				}
 			}
-			else if( !strcmp( pf.ElemName(i),"range_grid") )//////////////////// LETTURA RANGEMAP DI STANFORD
-			{
-				//qDebug("Starting Reading of Range Grid");
-				if(RangeGridCols==0) // not initialized.
-				{
-					for(size_t co=0;co< pf.comments.size();++co)
-					{
-						std::string num_cols = "num_cols";
-						std::string num_rows = "num_rows";
-						std::string &c = pf.comments[co];
-						std::string bufstr,bufclean;
-						if( num_cols == c.substr(0,num_cols.length()) )
-						{
-							bufstr = c.substr(num_cols.length()+1);
-							RangeGridCols = atoi(bufstr.c_str());
-						}
-						if( num_rows == c.substr(0,num_rows.length()) )
-						{
-							bufstr = c.substr(num_rows.length()+1);
-							RangeGridRows = atoi(bufstr.c_str());
-						}
-					}
-					//qDebug("Rows %i Cols %i",RangeGridRows,RangeGridCols);
-				}
-				int totPnt = RangeGridCols*RangeGridRows;
-				// standard reading;
-				pf.SetCurElement(i);
-				for(int j=0;j<totPnt;++j)
-				{
-					if(pi.cb && (j%1000)==0) pi.cb(50+j*50/totPnt,"RangeMap Face Loading");
-					if( pf.Read(&rga)==-1 )
-					{
-						//qDebug("Error after loading %i elements",j);
-						pi.status = PlyInfo::E_SHORTFILE;
-						return pi.status;
-					}
-					else
-					{
-						if(rga.num_pts == 0)
-							RangeGridAuxVec.push_back(-1);
-						else
-							RangeGridAuxVec.push_back(rga.pts[0]);
-					}
-				}
-				//qDebug("Completed the reading of %i indexes",RangeGridAuxVec.size());
-				tri::SparseFaceGrid(m, RangeGridAuxVec, RangeGridCols,RangeGridRows);
-			}
+            else if( !strcmp( pf.ElemName(i),"tristrips") )//////////////////// Reading TRISTRIP (rarely used, found in old STANFORD PLY)
+            {
+                if(! PlyParseStanfordTriStrips(pf, i, n, m, index, pi) ) return pi.status;
+            }
+			else if( !strcmp( pf.ElemName(i),"range_grid") )//////////////////// Reading RANGEMAP (rarely used, found in old STANFORD PLY)
+            {
+                if(! PlyParseStanfordRangeMaps(pf, i,  m, pi) ) return pi.status;
+            }
 			else
 			{
-				// Skippaggio elementi non gestiti
 				int n = pf.ElemNumber(i);
 				pf.SetCurElement(i);
 
@@ -1083,14 +1049,14 @@ public:
 	}
 
 
-	// Caricamento camera da un ply
-	int LoadCamera(const char * filename)
+	// Loading only a Camera from PLY
+	int LoadCamera(const char * filename, vcg::Camera<ScalarType> camera, PlyInfo &pi)
 	{
 		vcg::ply::PlyFile pf;
 		if( pf.Open(filename,vcg::ply::PlyFile::MODE_READ)==-1 )
 		{
-			this->pi.status = pf.GetError();
-			return this->pi.status;
+			pi.status = pf.GetError();
+			return pi.status;
 		}
 
 
@@ -1105,7 +1071,7 @@ public:
 		}
 
 		if(!found)
-			return this->pi.status;
+			return pi.status;
 
 		for(size_t i=0;i<pf.elements.size();i++)
 		{
@@ -1121,33 +1087,33 @@ public:
 				{
 					if( pf.Read( (void *)&(ca) )==-1 )
 					{
-						this->pi.status = PlyInfo::E_SHORTFILE;
-						return this->pi.status;
+						pi.status = PlyInfo::E_SHORTFILE;
+						return pi.status;
 					}
-					this->camera.valid     = true;
-					this->camera.view_p[0] = ca.view_px;
-					this->camera.view_p[1] = ca.view_py;
-					this->camera.view_p[2] = ca.view_pz;
-					this->camera.x_axis[0] = ca.x_axisx;
-					this->camera.x_axis[1] = ca.x_axisy;
-					this->camera.x_axis[2] = ca.x_axisz;
-					this->camera.y_axis[0] = ca.y_axisx;
-					this->camera.y_axis[1] = ca.y_axisy;
-					this->camera.y_axis[2] = ca.y_axisz;
-					this->camera.z_axis[0] = ca.z_axisx;
-					this->camera.z_axis[1] = ca.z_axisy;
-					this->camera.z_axis[2] = ca.z_axisz;
-					this->camera.f         = ca.focal;
-					this->camera.s[0]      = ca.scalex;
-					this->camera.s[1]      = ca.scaley;
-					this->camera.c[0]      = ca.centerx;
-					this->camera.c[1]      = ca.centery;
-					this->camera.viewport[0] = ca.viewportx;
-					this->camera.viewport[1] = ca.viewporty;
-					this->camera.k[0]      = ca.k1;
-					this->camera.k[1]      = ca.k2;
-					this->camera.k[2]      = ca.k3;
-					this->camera.k[3]      = ca.k4;
+					camera.valid     = true;
+					camera.view_p[0] = ca.view_px;
+					camera.view_p[1] = ca.view_py;
+					camera.view_p[2] = ca.view_pz;
+					camera.x_axis[0] = ca.x_axisx;
+					camera.x_axis[1] = ca.x_axisy;
+					camera.x_axis[2] = ca.x_axisz;
+					camera.y_axis[0] = ca.y_axisx;
+					camera.y_axis[1] = ca.y_axisy;
+					camera.y_axis[2] = ca.y_axisz;
+					camera.z_axis[0] = ca.z_axisx;
+					camera.z_axis[1] = ca.z_axisy;
+					camera.z_axis[2] = ca.z_axisz;
+					camera.f         = ca.focal;
+					camera.s[0]      = ca.scalex;
+					camera.s[1]      = ca.scaley;
+					camera.c[0]      = ca.centerx;
+					camera.c[1]      = ca.centery;
+					camera.viewport[0] = ca.viewportx;
+					camera.viewport[1] = ca.viewporty;
+					camera.k[0]      = ca.k1;
+					camera.k[1]      = ca.k2;
+					camera.k[2]      = ca.k3;
+					camera.k[3]      = ca.k4;
 				}
 				break;
 			}
@@ -1228,7 +1194,101 @@ public:
 
 		return true;
 	}
-
+    static bool PlyParseStanfordTriStrips(   vcg::ply::PlyFile &pf, const int i, const int n, OpenMeshType &m, const std::vector<VertexPointer> &index, PlyInfo &pi)
+    {
+        LoadPly_TristripAux tsa;
+        pf.SetCurElement(i);
+        int numvert_tmp = (int)m.vert.size();
+        for(int j=0;j<n;++j)
+        {
+            int k;
+            if(pi.cb && (j%1000)==0) pi.cb(50+j*50/n,"Tristrip Face Loading");
+            if( pf.Read(&tsa)==-1 )
+            {
+                pi.status = PlyInfo::E_SHORTFILE;
+                return false;
+            }
+            int remainder=0;
+            for(k=0;k<tsa.size-2;++k)
+            {
+                if(pi.cb && (k%1000)==0) pi.cb(50+k*50/tsa.size,"Tristrip Face Loading");
+                if(tsa.v[k]<0 || tsa.v[k]>=numvert_tmp )	{
+                    pi.status = PlyInfo::E_BAD_VERT_INDEX;
+                    return false;
+                }
+                if(tsa.v[k+2]==-1)
+                {
+                    k+=2;
+                    if(k%2) remainder=0;
+                    else remainder=1;
+                    continue;
+                }
+                Allocator<OpenMeshType>::AddFaces(m,1);
+                FaceType &tf =m.face.back();
+                tf.V(0) = index[ tsa.v[k+0] ];
+                tf.V(1) = index[ tsa.v[k+1] ];
+                tf.V(2) = index[ tsa.v[k+2] ];
+                if((k+remainder)%2) std::swap (tf.V(0), tf.V(1) );
+            }
+        }
+        return true;
+    }
+    
+    static bool PlyParseStanfordRangeMaps(   vcg::ply::PlyFile &pf, int i, OpenMeshType &m, PlyInfo &pi)
+    {
+        LoadPly_RangeGridAux rga;
+        std::vector<int> RangeGridAuxVec;
+        int RangeGridCols=0;
+        int RangeGridRows=0;                
+        
+        //qDebug("Starting Reading of Range Grid");
+        if(RangeGridCols==0) // not initialized.
+        {
+            for(size_t co=0;co< pf.comments.size();++co)
+            {
+                std::string num_cols = "num_cols";
+                std::string num_rows = "num_rows";
+                std::string &c = pf.comments[co];
+                std::string bufstr,bufclean;
+                if( num_cols == c.substr(0,num_cols.length()) )
+                {
+                    bufstr = c.substr(num_cols.length()+1);
+                    RangeGridCols = atoi(bufstr.c_str());
+                }
+                if( num_rows == c.substr(0,num_rows.length()) )
+                {
+                    bufstr = c.substr(num_rows.length()+1);
+                    RangeGridRows = atoi(bufstr.c_str());
+                }
+            }
+            //qDebug("Rows %i Cols %i",RangeGridRows,RangeGridCols);
+        }
+        int totPnt = RangeGridCols*RangeGridRows;
+        // standard reading;
+        pf.SetCurElement(i);
+        for(int j=0;j<totPnt;++j)
+        {
+            if(pi.cb && (j%1000)==0) pi.cb(50+j*50/totPnt,"RangeMap Face Loading");
+            if( pf.Read(&rga)==-1 )
+            {
+                //qDebug("Error after loading %i elements",j);
+                pi.status = PlyInfo::E_SHORTFILE;
+                return false;
+            }
+            else
+            {
+                if(rga.num_pts == 0)
+                    RangeGridAuxVec.push_back(-1);
+                else
+                    RangeGridAuxVec.push_back(rga.pts[0]);
+            }
+        }
+        //qDebug("Completed the reading of %i indexes",RangeGridAuxVec.size());
+        tri::SparseFaceGrid(m, RangeGridAuxVec, RangeGridCols,RangeGridRows);
+        
+        return true;
+    }
+    
 
 }; // end class
 

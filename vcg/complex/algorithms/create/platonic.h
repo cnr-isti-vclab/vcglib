@@ -71,11 +71,60 @@ void Tetrahedron(TetraMeshType &in)
  (*fi).V(0)=ivp[3];  (*fi).V(1)=ivp[2]; (*fi).V(2)=ivp[1];
 }
 
+/// Builds a Dodecahedron triangular mesh 
+/// Each pentagonal face is triangulated into three triangles.
+/// Faux edges are correctly marked.
+/// Note that symmetry is not preserved
 
-/// builds a Dodecahedron,
-/// (each pentagonal face is composed by 5 triangles)
 template <class DodMeshType>
 void Dodecahedron(DodMeshType & in)
+{
+	typedef typename DodMeshType::CoordType CoordType;
+	
+	const double phi = (1 + std::sqrt(5)) / 2;  // Golden ratio
+	const double a = 1 / std::sqrt(3);
+	const double b = a / phi;
+	const double c = a * phi;
+	
+	std::vector<std::array<double, 3>> vertices = {
+		{a, a, a}, {a, a, -a}, {a, -a, a}, {a, -a, -a},
+		{-a, a, a}, {-a, a, -a}, {-a, -a, a}, {-a, -a, -a},
+		{0, b, c}, {0, b, -c}, {0, -b, c}, {0, -b, -c},
+		{b, c, 0}, {b, -c, 0}, {-b, c, 0}, {-b, -c, 0},
+		{c, 0, b}, {c, 0, -b}, {-c, 0, b}, {-c, 0, -b}
+	};
+	for(size_t i = 0; i < vertices.size(); i++) {
+		Allocator<DodMeshType>::AddVertex(in, CoordType(vertices[i][0], vertices[i][1], vertices[i][2]));
+	}
+	
+	std::vector<std::array<int, 5>> faces = {
+		{0,  8, 10, 2, 16},
+		{0, 16, 17, 1, 12},
+		{0, 12, 14, 4,  8},
+		{5, 14, 12, 1,  9},
+		{5, 19, 18, 4, 14},
+		{5,  9, 11, 7, 19},
+		{3, 11,  9, 1, 17},
+		{3, 13, 15, 7, 11},
+		{3, 17, 16, 2, 13},
+		{6, 18, 19, 7, 15},
+		{6, 15, 13, 2, 10},
+		{6, 10,  8, 4, 18}
+	};
+	for(size_t i = 0; i < faces.size(); i++) {
+		Allocator<DodMeshType>::AddFace(in, faces[i][0], faces[i][1], faces[i][2]);
+		in.face.back().SetF(2);
+		Allocator<DodMeshType>::AddFace(in, faces[i][0], faces[i][2], faces[i][3]);
+		in.face.back().SetF(0); in.face.back().SetF(2);
+		Allocator<DodMeshType>::AddFace(in, faces[i][0], faces[i][3], faces[i][4]);
+		in.face.back().SetF(0);
+	}
+}
+
+/// Builds a Symmetric Dodecahedron triangular mesh 
+/// Each pentagonal face is star triangulated with an additional central vertex and it is composed by 5 triangles
+template <class DodMeshType>
+void DodecahedronSym(DodMeshType & in)
 {
  typedef DodMeshType MeshType;
  typedef typename MeshType::CoordType CoordType;
@@ -100,9 +149,14 @@ void Dodecahedron(DodMeshType & in)
     45,38, 56, 56, 38, 60, 60, 38, 52,
     50,41, 60, 60, 41, 56, 56, 41, 47 };
    //A B   E                D       C
-  const ScalarType p=(1.0 + math::Sqrt(5.0)) / 2.0;
-  const ScalarType p2=p*p;
-  const ScalarType p3=p*p*p;
+  ScalarType p=(1.0 + math::Sqrt(5.0)) / 2.0;
+  ScalarType p2=p*p;
+  ScalarType p3=p*p*p;
+  const ScalarType scale = std::sqrt(p2*p2*3);
+  p=p/scale;
+  p2=p2/scale;
+  p3=p3/scale;  
+  
     ScalarType vv[N_points*3]=
     {
    0, 0, 2*p2,     p2, 0, p3,      p, p2, p3,
@@ -1124,18 +1178,15 @@ void Cylinder(int slices, int stacks, MeshType & m, bool capped=false)
   }
 }
 
-
-
-class _SphFace;
-class _SphVertex;
-struct _SphUsedTypes : public UsedTypes<	Use<_SphVertex>   ::AsVertexType,
-                                        Use<_SphFace>     ::AsFaceType>{};
-
-class _SphVertex  : public Vertex<_SphUsedTypes,  vertex::Coord3f, vertex::Normal3f, vertex::BitFlags  >{};
-class _SphFace    : public Face< _SphUsedTypes,   face::VertexRef, face::Normal3f, face::BitFlags, face::FFAdj > {};
-class _SphMesh    : public tri::TriMesh< std::vector<_SphVertex>, std::vector<_SphFace>   > {};
-
-
+/** Given a mesh, it builds a new mesh composed by a set of solid prisms, one for each face.
+ *  it supports faux edges polygonal meshes
+ *  @param mIn input mesh
+ *  @param mOut output mesh
+ *  @param height height of the prism
+ *  @param inset  how much is contracted each face. 
+ *  @param smoothFlag if true, the output mesh is smoothed
+ */
+ 
 template <class MeshType>
 void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float inset=0, bool smoothFlag=false  )
 {
@@ -1155,34 +1206,48 @@ void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float in
     std::vector<FacePointer> faceVec;
     tri::PolygonSupport<MeshType,MeshType>::ExtractPolygon(&(mIn.face[i]),vertVec,faceVec);
     size_t vn = vertVec.size();
+	size_t fn = faceVec.size();
 
-    CoordType nf(0,0,0);
+    CoordType extrude_dir(0,0,0); 
     for(size_t j=0;j<faceVec.size();++j)
-      nf+=vcg::NormalizedTriangleNormal(*faceVec[j]) * DoubleArea(*faceVec[j]);
-    nf.Normalize();
-    nf = nf*height/2.0f;
-
+      extrude_dir+=vcg::NormalizedTriangleNormal(*faceVec[j]) * DoubleArea(*faceVec[j]);
+    extrude_dir.Normalize();
+    extrude_dir = extrude_dir*height/2.0f;
+	
     CoordType bary(0,0,0);
     for(size_t j=0;j<faceVec.size();++j)
       bary+= Barycenter(*faceVec[j]);
     bary/=float(faceVec.size());
 
-    // Add vertices (alternated top and bottom)
-    tri::Allocator<MeshType>::AddVertex(faceM, bary+nf);
-    tri::Allocator<MeshType>::AddVertex(faceM, bary-nf);
+    // Add vertices
+	// We keeping maps from old vertex to new vertex
+	std::map<size_t,size_t> topVertMap;
+	std::map<size_t,size_t> botVertMap;
+	
+    tri::Allocator<MeshType>::AddVertex(faceM, bary+extrude_dir);
+    tri::Allocator<MeshType>::AddVertex(faceM, bary-extrude_dir);
     for(size_t j=0;j<vn;++j){
       CoordType delta = (vertVec[j]->P() - bary);
       delta.Normalize();
       delta = delta*inset;
-      tri::Allocator<MeshType>::AddVertex(faceM, vertVec[j]->P()-delta+nf);
-      tri::Allocator<MeshType>::AddVertex(faceM, vertVec[j]->P()-delta-nf);
+      tri::Allocator<MeshType>::AddVertex(faceM, vertVec[j]->P()-delta+extrude_dir);
+	  topVertMap[tri::Index(mIn,vertVec[j])] = tri::Index(faceM,faceM.vert.back());
+      tri::Allocator<MeshType>::AddVertex(faceM, vertVec[j]->P()-delta-extrude_dir);
+	  botVertMap[tri::Index(mIn,vertVec[j])] = tri::Index(faceM,faceM.vert.back());	  
     }
 
-    // Build top and bottom faces
-    for(size_t j=0;j<vn;++j)
-      tri::Allocator<MeshType>::AddFace(faceM, 0, 2+(j+0)*2, 2+((j+1)%vn)*2 );
-    for(size_t j=0;j<vn;++j)
-      tri::Allocator<MeshType>::AddFace(faceM, 1, 3+((j+1)%vn)*2, 3+(j+0)*2 );
+    // Build top and bottom faces using the original faces retrieved by the ExtractPolygon
+    for(size_t j=0;j<fn;++j)
+		tri::Allocator<MeshType>::AddFace(faceM,
+										  topVertMap[tri::Index(mIn, faceVec[j]->V(0))],
+										  topVertMap[tri::Index(mIn, faceVec[j]->V(1))],
+										  topVertMap[tri::Index(mIn, faceVec[j]->V(2))]);
+	
+    for(size_t j=0;j<fn;++j)
+		tri::Allocator<MeshType>::AddFace(faceM,
+										  botVertMap[tri::Index(mIn, faceVec[j]->V(0))],
+										  botVertMap[tri::Index(mIn, faceVec[j]->V(1))],
+										  botVertMap[tri::Index(mIn, faceVec[j]->V(2))]);
 
     // Build side strip
     for(size_t j=0;j<vn;++j){
@@ -1192,12 +1257,12 @@ void BuildPrismFaceShell(MeshType &mIn, MeshType &mOut, float height=0, float in
       tri::Allocator<MeshType>::AddFace(faceM, 2+ j0*2 + 1 , 2+ j1*2+1, 2+j1*2+0);
     }
 
-    for(size_t j=0;j<2*vn;++j)
-      faceM.face[j].SetS();
-
     if(smoothFlag)
     {
-      tri::UpdateTopology<MeshType>::FaceFace(faceM);
+	  for(size_t j=0;j<2*vn;++j)
+			faceM.face[j].SetS();
+		
+	  tri::UpdateTopology<MeshType>::FaceFace(faceM);
       tri::UpdateFlags<MeshType>::FaceBorderFromFF(faceM);
       tri::Refine(faceM, MidPoint<MeshType>(&faceM),0,true);
       tri::Refine(faceM, MidPoint<MeshType>(&faceM),0,true);

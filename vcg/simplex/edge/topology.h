@@ -57,6 +57,10 @@ inline bool IsEdgeBorder(EdgeType const & e,  const int j )
   return true;
 }
 
+/** fill a vector with the star of a given vertex on an edge using the VE adjaency
+  @param vp vertex pointer for which we compute the star 
+  @return starVec the vector of vertex pointers to be filled
+*/
 template <class VertexType>
 void VVStarVE(const VertexType* vp, std::vector<VertexType *> &starVec)
 {
@@ -67,6 +71,24 @@ void VVStarVE(const VertexType* vp, std::vector<VertexType *> &starVec)
         starVec.push_back(vei.V1());
         ++vei;
       }
+}
+
+/** fill a vector with the star of a given vertex on an edge using the EE adjaency
+  @param ep edge pointer for edge containing the vertex for which we compute the star
+  @param ind the index of the vertex on the edge  
+  @return starVec the vector of vertex pointers to be filled
+*/
+template <class VertexType>
+void VVStarEE(typename VertexType::EdgeType* ep, int ind, std::vector<VertexType *> &starVec)
+{
+	starVec.clear();
+	edge::Pos<typename VertexType::EdgeType> ePos(ep,ind);
+	edge::Pos<typename VertexType::EdgeType> eStart=ePos;
+	do
+	{
+		starVec.push_back(ePos.VFlip());
+		ePos.NextE();
+	}while(ePos!=eStart);
 }
 
 template <class EdgeType>

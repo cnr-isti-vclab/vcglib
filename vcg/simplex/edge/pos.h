@@ -90,7 +90,7 @@ public:
 
 	/// Default constructor
 	Pos(){}
-	/// Constructor which associates the half-edge elementet with a face, its edge and its vertex
+	/// Constructor which associates the half-edge elementet with an edge and one of its vertices
   Pos(EDGETYPE  * ep, int zp) {e=ep;v=ep->V(zp);}
   Pos(EDGETYPE  * ep, VertexType  *vp){e=ep;v=vp;}
 

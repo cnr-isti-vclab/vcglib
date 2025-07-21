@@ -259,5 +259,3 @@ namespace internal {
 } // end namespace internal
 
 } // end namespace Eigen
-
-/* vim: set filetype=cpp et sw=2 ts=2 ai: */

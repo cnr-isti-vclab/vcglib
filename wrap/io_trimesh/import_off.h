@@ -415,65 +415,59 @@ namespace vcg {
 					}
 					else // Standard Triangular Mesh Loading
 					{
-						Allocator<MESH_TYPE>::AddFaces(mesh, nFaces);
-						unsigned int f0 = 0;
+						// Allocator<MESH_TYPE>::AddFaces(mesh, nFaces);
+						// unsigned int f0 = 0;
+						
 
 
 						// Initial call to the QuadTriangulate with an empty vector to just reset the static set of existing diagonals
 						std::vector<VertexPointer> qtmp;
 						BitQuad<MESH_TYPE>::QuadTriangulate(qtmp);
 
-						for (unsigned int f = 0; f < nFaces; f++)
+						for (unsigned int ff = 0; ff < nFaces; ff++)
 						{
-							f0 = f;
 							if (stream.fail())
 								return InvalidFile;
 
-							if (cb && (f % 1000) == 0)
-								cb(50 + f * 50 / nFaces, "Face Loading");
+							if (cb && (ff % 1000) == 0)
+								cb(50 + ff * 50 / nFaces, "Face Loading");
 
 							TokenizeNextLine(stream, tokens);
 							int vert_per_face = atoi(tokens[0].c_str());
-							if (vert_per_face < 3)
+							if (vert_per_face < 2)
 								return ErrorDegenerateFace;
 							k = 1;
+							if(tokens.size()==1) {// to handle the case when you have the number of vert is on a different line 
+								TokenizeNextLine(stream, tokens, true);
+								if ((tokens.size() + 1) < vert_per_face ) return InvalidFile; // if EOF								
+							}
+							if (vert_per_face == 2)
+							{
+								int vInd[2];
+								vInd[0] = atoi(tokens[1].c_str());
+								vInd[1] = atoi(tokens[2].c_str());
+								Allocator<MESH_TYPE>::AddEdge(mesh, vInd[0], vInd[1]);
+							}
 							if (vert_per_face == 3)
 							{
-								for (int j = 0; j < 3; j++)
-								{
-									if (k == tokens.size())   // if EOL 		// Go to next line when needed
-									{
-										TokenizeNextLine(stream, tokens);
-										if (tokens.size() == 0) return InvalidFile; // if EOF
-										k = 0;
-									}
-
-									mesh.face[f].V(j) = &(mesh.vert[atoi(tokens[k].c_str())]);
-									k++;
-								}
+								int vInd[3];  
+								vInd[0] = atoi(tokens[1].c_str()); 
+								vInd[1] = atoi(tokens[2].c_str());
+								vInd[2] = atoi(tokens[3].c_str());
+								Allocator<MESH_TYPE>::AddFace(mesh, vInd[0], vInd[1], vInd[2]);								
 							}
-							else
+							if(vert_per_face > 3) // The face must be triangulated
 							{
-								// The face must be triangulated
-								unsigned int trigs = vert_per_face - 3; // number of extra faces to add
-								nFaces += trigs;
-								Allocator<MESH_TYPE>::AddFaces(mesh, trigs);
 								std::vector<int> vertIndices(vert_per_face);
 								std::vector<vcg::Point3f > polygonVect(vert_per_face); // vec of polygon loops used for the triangulation of polygonal face
 								for (int j = 0; j < vert_per_face; j++)
 								{
-									if (k == tokens.size())   // if EOL // Go to next line when needed
-									{
-										TokenizeNextLine(stream, tokens);
-										if (tokens.size() == 0) return InvalidFile; // if EOF
-										k = 0;
-									}
-									vertIndices[j] = atoi(tokens[k].c_str());
-									polygonVect[j].Import<ScalarType>(mesh.vert[vertIndices[j]].P());
-									k++;
+									vertIndices[j] = atoi(tokens[j+1].c_str());
+									polygonVect[j].Import<ScalarType>(mesh.vert[vertIndices[j]].P());									
 								}
 								if (vert_per_face == 4)
 								{   // To well triangulate use the bitquad support function that reorders vertex for a simple fan
+									if (tri::HasPerFaceFlags(mesh)) loadmask |= Mask::IOM_BITPOLYGONAL;
 									std::vector<VertexPointer> q(4);
 									for (int qqi = 0; qqi < 4; ++qqi)
 										q[qqi] = &mesh.vert[vertIndices[qqi]];
@@ -481,18 +475,10 @@ namespace vcg {
 									for (int qqi = 0; qqi < 4; ++qqi)
 										vertIndices[qqi] = q[qqi] - &mesh.vert[0];
 									// build a two face fan
-									for (int j = 0; j < 2; j++)
-									{
-										mesh.face[f + j].V(0) = &(mesh.vert[vertIndices[0]]);
-										mesh.face[f + j].V(1) = &(mesh.vert[vertIndices[1 + j]]);
-										mesh.face[f + j].V(2) = &(mesh.vert[vertIndices[2 + j]]);
-										if (tri::HasPerFaceFlags(mesh)) {
-											// tag internal polygonal edges as "faux"
-											if (j > 0) mesh.face[f + j].SetF(0);
-											if (j < vert_per_face - 3) mesh.face[f + j].SetF(2);
-											loadmask |= Mask::IOM_BITPOLYGONAL;
-										}
-									}
+									Allocator<MESH_TYPE>::AddFace(mesh, vertIndices[0],vertIndices[1],vertIndices[2]);
+									if (tri::HasPerFaceFlags(mesh)) mesh.face.back().SetF(2);
+									Allocator<MESH_TYPE>::AddFace(mesh, vertIndices[0],vertIndices[2],vertIndices[3]);
+									if (tri::HasPerFaceFlags(mesh)) mesh.face.back().SetF(0);
 								}
 								else // standard fan triangulation (we hope the polygon is convex...)
 								{
@@ -509,20 +495,18 @@ namespace vcg {
 #endif
 									for (size_t j = 0; j < indexTriangulatedVect.size(); j += 3)
 									{
-										mesh.face[f + j / 3].V(0) = &(mesh.vert[vertIndices[indexTriangulatedVect[j + 0]]]);
-										mesh.face[f + j / 3].V(1) = &(mesh.vert[vertIndices[indexTriangulatedVect[j + 1]]]);
-										mesh.face[f + j / 3].V(2) = &(mesh.vert[vertIndices[indexTriangulatedVect[j + 2]]]);
+										Allocator<MESH_TYPE>::AddFace(mesh, indexTriangulatedVect[j], indexTriangulatedVect[j+1], indexTriangulatedVect[j+2]);
+										if (tri::HasPerFaceFlags(mesh)) mesh.face.back().SetF(0);
 										// To correctly set Faux edges we have to clear the faux bit for all the edges that do not correspond to consecutive vertices
 										// Consecutivity is in the space of the index of the polygon.
 										for (int qq = 0; qq < 3; ++qq)
 										{
 											if ((indexTriangulatedVect[j + qq] + 1) % vert_per_face == indexTriangulatedVect[j + (qq + 1) % 3])
-												mesh.face[f + j / 3].ClearF(qq);
-											else mesh.face[f + j / 3].SetF(qq);
+												mesh.face.back().ClearF(qq);
+											else mesh.face.back().SetF(qq);
 										}
 									}
 								}
-								f += trigs;
 							}
 
 							// NOTE: It is assumed that colored face takes exactly one text line
@@ -538,18 +522,19 @@ namespace vcg {
 
 								if (tri::HasPerFaceColor(mesh))
 								{
+									int triToColor = vert_per_face-2;
 									switch (color_elements)
 									{
 									case 0:
 									{
-										for (; f0 <= f; f0++)
-											mesh.face[f0].C().Import(vcg::Color4f(.666f, .666f, .666f, .666f));
+										for (int i=0; i< triToColor;++i)
+											mesh.face[mesh.fn - triToColor + i].C().Import(vcg::Color4f(.666f, .666f, .666f, .666f));
 										break;
 									}
 									case 1:
 									{
-										for (; f0 <= f; f0++)
-											mesh.face[f0].C().Import(ColorMap(atoi(tokens[vert_per_face + 1].c_str())));
+										for (int i=0; i<vert_per_face-2;++i)
+											mesh.face[mesh.fn - vert_per_face + i].C().Import(ColorMap(atoi(tokens[vert_per_face + 1].c_str())));
 										break;
 									}
 									case 3:
@@ -560,8 +545,8 @@ namespace vcg {
 											cc[0] = (unsigned char)atoi(tokens[vert_per_face + 1].c_str());
 											cc[1] = (unsigned char)atoi(tokens[vert_per_face + 2].c_str());
 											cc[2] = (unsigned char)atoi(tokens[vert_per_face + 3].c_str());
-											for (; f0 <= f; f0++)
-												mesh.face[f0].C() = cc;
+											for (int i=0; i<triToColor;++i)
+												mesh.face[mesh.fn - triToColor + i].C() = cc;
 										}
 										else
 										{
@@ -569,13 +554,13 @@ namespace vcg {
 											color[0] = (float)atof(tokens[vert_per_face + 1].c_str());
 											color[1] = (float)atof(tokens[vert_per_face + 2].c_str());
 											color[2] = (float)atof(tokens[vert_per_face + 3].c_str());
-											for (; f0 <= f; f0++)
-												mesh.face[f0].C().Import(vcg::Color4f(color[0], color[1], color[2], 1.0f));
+											for (int i=0; i<triToColor;++i)
+												mesh.face[mesh.fn - triToColor + i].C().Import(vcg::Color4f(color[0], color[1], color[2], 1.0f));
 										}
 										break;
 									}
 									case 4:
-									{
+									{	
 										if (tokens[vert_per_face + 1].find('.') == std::string::npos) // if it is a float there is a dot
 										{
 											Color4b cc;
@@ -583,8 +568,8 @@ namespace vcg {
 											cc[1] = (unsigned char)atoi(tokens[vert_per_face + 2].c_str());
 											cc[2] = (unsigned char)atoi(tokens[vert_per_face + 3].c_str());
 											cc[3] = (unsigned char)atoi(tokens[vert_per_face + 4].c_str());
-											for (; f0 <= f; f0++)
-												mesh.face[f0].C() = cc;
+											for (int i=0; i<triToColor;++i)
+												mesh.face[mesh.fn - triToColor + i].C() = cc;
 										}
 										else
 										{
@@ -593,8 +578,8 @@ namespace vcg {
 											color[1] = float(atof(tokens[vert_per_face + 2].c_str()));
 											color[2] = float(atof(tokens[vert_per_face + 3].c_str()));
 											color[3] = float(atof(tokens[vert_per_face + 4].c_str()));
-											for (; f0 <= f; f0++)
-												mesh.face[f0].C().Import(vcg::Color4f(color[0], color[1], color[2], color[3]));
+											for (int i=0; i<triToColor;++i)
+												mesh.face[mesh.fn - triToColor + i].C().Import(vcg::Color4f(color[0], color[1], color[2], color[3]));
 										}
 										break;
 									}
@@ -612,9 +597,10 @@ namespace vcg {
 				/*!
 							  * Read the next valid line and parses it into "tokens", allowing the tokens to be read one at a time.
 							  * \param stream	The object providing the input stream
-							  *	\param tokens	The "tokens" in the next line
+							  *	\param tokens	the vector that will contain the tokens
+							  * \param appendTokens if true the tokens are appended to the token vector. Default the vector is cleared
 							  */
-				inline static void TokenizeNextLine(std::istream &stream, std::vector< std::string > &tokens)
+				inline static void TokenizeNextLine(std::istream &stream, std::vector< std::string > &tokens, bool appendTokens=false)
 				{
 					std::string line;
 					do
@@ -624,7 +610,7 @@ namespace vcg {
 					size_t from = 0;
 					size_t to = 0;
 					size_t length = line.size();
-					tokens.clear();
+					if(!appendTokens) tokens.clear();
 					do
 					{
 						while (from != length && (line[from] == ' ' || line[from] == '\t' || line[from] == '\r'))

@@ -178,7 +178,9 @@ class MeshSampler
 public:
   typedef typename MeshType::VertexType  VertexType;
   typedef typename MeshType::FaceType    FaceType;
+  typedef typename MeshType::EdgeType    EdgeType;
   typedef typename MeshType::CoordType   CoordType;
+  typedef typename MeshType::ScalarType  ScalarType;
 
   MeshSampler(MeshType &_m):m(_m){
     perFaceNormal = false;
@@ -197,7 +199,14 @@ public:
     tri::Allocator<MeshType>::AddVertices(m,1);
     m.vert.back().ImportData(p);
   }
-
+  
+  void AddEdge(const EdgeType& e, ScalarType u ) // u==0 -> v(0) u==1 -> v(1);
+  {
+	  tri::Allocator<MeshType>::AddVertices(m,1);
+	  m.vert.back().P() = e.cV(0)->cP()*(1.0-u)+e.cV(1)->cP()*u;
+	  m.vert.back().N() = e.cV(0)->cN()*(1.0-u)+e.cV(1)->cN()*u;
+  }
+  
   void AddFace(const FaceType &f, CoordType p)
   {
     tri::Allocator<MeshType>::AddVertices(m,1);
@@ -780,21 +789,30 @@ static void VertexUniform(MeshType & m, VertexSampler &ps, int sampleNum)
 /// the number of generated samples is: op(L/r) (+ 1 if the mesh is not a loop)
 /// where op is (floor | round | ceil)
 ///
-enum EdgeSamplingStrategy
+enum EdgeSamplingRoundingStrategy
 {
 	Floor = 0,
 	Round,
 	Ceil,
 };
 
-/// Perform an uniform sampling over an EdgeMesh.
+/// Perform an uniform sampling over an EdgeMesh spacing between samples is approximately <radius>
 ///
-/// It assumes that the mesh is 1-manifold.
-/// each connected component is sampled in a independent way.
-/// For each component of length <L> we place on it floor(L/radius)+1 samples.
-/// (if conservative argument is false we place ceil(L/radius)+1 samples)
+/// It assumes that the mesh is 1-manifold. 
+/// Each connected component is sampled in an independent way. 
+/// Extrema of the each polyline are always sampled (if radius < L)  
+/// For each component of length <L> we place on it R[(L/radius)]+1 samples, where R[] is a rounding strategy.
+/// 
+/// For example if we have a chain of length 10 with radius 3, we will place on the chain:
+/// - 4 samples (actual radius is 3.33) if we use R {Floor, Round}
+/// - 5 samples (actual radius is 2.50) if we use R {Ceil} 
 ///
-static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, EdgeSamplingStrategy strategy = Floor)
+/// instead if we have a chain of length 11 still with a radius 3, we will place on the chain:
+/// - 4 samples (actual radius is 3.66) if we use R {Floor}
+/// - 5 samples (actual radius is 2.75) if we use R {Ceil, Round} 
+/// 
+
+static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, EdgeSamplingRoundingStrategy strategy = Floor)
 {
 	tri::RequireEEAdjacency(m);
 	tri::RequireCompactness(m);
@@ -806,19 +824,19 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, EdgeSa
 
 	for (EdgeIterator ei = m.edge.begin(); ei != m.edge.end(); ++ei)
 	{
-		if (!ei->IsV())
+		if (!ei->IsV()) 
 		{
 			edge::Pos<EdgeType> ep(&*ei,0);
 			edge::Pos<EdgeType> startep = ep;
-			do // first loop to search a boundary component.
+			do // first loop to search a boundary component or check if it is a ring
 			{
 				ep.NextE();
 				if (ep.IsBorder())
 					break;
 			} while (startep != ep);
-			if (!ep.IsBorder())
+			
+			if (!ep.IsBorder()) // ******************** Circular Ring ********************
 			{
-				// it's a loop
 				assert(ep == startep);
 
 				// to keep the uniform resampling order-independent:
@@ -837,15 +855,11 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, EdgeSa
 				const auto dir0 = ep.VFlip()->cP() - ep.V()->cP();
 				ep.FlipE();
 				const auto dir1 = ep.VFlip()->cP() - ep.V()->cP();
-				if (dir0 < dir1)
-				{
-					ep.FlipE();
-				}
+				if (dir0 < dir1) 
+					ep.FlipE();				
 			}
-			else
+			else // ******************** NOT Circular Ring ********************
 			{
-				// not a loop
-
 				// to keep the uniform resampling order-independent
 				// start from the border with 'lowest' point
 				edge::Pos<EdgeType> altEp = ep;
@@ -861,14 +875,14 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, EdgeSa
 
 			ScalarType totalLen = 0;
 			ep.FlipV();
-			// second loop to compute the length of the chain.
+			// second loop to compute the length of the chain marking visited all the edges
 			do
 			{
 				ep.E()->SetV();
 				totalLen += Distance(ep.V()->cP(), ep.VFlip()->cP());
 				ep.NextE();
 			} while (!ep.E()->IsV() && !ep.IsBorder());
-			if (ep.IsBorder())
+			if (ep.IsBorder() && !ep.E()->IsV())
 			{
 				ep.E()->SetV();
 				totalLen += Distance(ep.V()->cP(), ep.VFlip()->cP());
@@ -876,30 +890,25 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, EdgeSa
 
 			VertexPointer startVertex = ep.V();
 
-			// Third loop actually performs the sampling.
+			// Third loop: actually performs the sampling by walking on the edge chain 
 			int sampleNum = -1;
 			{
 				double div = double(totalLen) / radius;
 				switch (strategy) {
-				case Round:
-					sampleNum = int(round(div));
-					break;
-				case Ceil:
-					sampleNum = int(ceil(div));
-					break;
-				default: // Floor
-					sampleNum = int(floor(div));
-					break;
+				case Round: sampleNum = int(round(div)); break;
+				case Ceil:  sampleNum = int( ceil(div)); break;
+				default:    sampleNum = int(floor(div)); break;  
 				};
 			}
 			assert(sampleNum >= 0);
 
-			ScalarType sampleDist = totalLen / sampleNum;
-//			printf("Found a chain of %f with %i samples every %f (%f)\n", totalLen, sampleNum, sampleDist, radius);
+			ScalarType sampleDist = totalLen / sampleNum; // the steplen we use for sampling
+			
+			// printf("Found a chain with len %f: we will place %i samples every %f (original radius : %f)\n", totalLen, sampleNum, sampleDist, radius);
 
 			ScalarType curLen = 0;
 			int sampleCnt     = 1;
-			ps.AddEdge(*(ep.E()), ep.VInd() == 0 ? 0.0 : 1.0);
+			ps.AddEdge(*(ep.E()), ep.VInd() == 0 ? 0.0 : 1.0); // First Sample always at the start of the chain
 
 			do {
 				ep.NextE();
@@ -918,7 +927,7 @@ static void EdgeMeshUniform(MeshType &m, VertexSampler &ps, float radius, EdgeSa
 				curLen += edgeLen;
 			} while(!ep.IsBorder() && ep.V() != startVertex);
 
-			if(ep.V() != startVertex)
+			if(ep.V() != startVertex) // if we are not in a loop we add the last vertex
 			{
 				ps.AddEdge(*(ep.E()), ep.VInd() == 0 ? 0.0 : 1.0);
 			}
@@ -2149,7 +2158,7 @@ static void HierarchicalPoissonDisk(MeshType &origMesh, VertexSampler &ps, MeshT
 static void Texture(MeshType & m, VertexSampler &ps, int textureWidth, int textureHeight, bool correctSafePointsBaryCoords=true)
 {
 typedef Point2<ScalarType> Point2x;
-        printf("Similar Triangles face sampling\n");
+        //printf("Similar Triangles face sampling\n");
         for(FaceIterator fi=m.face.begin(); fi != m.face.end(); fi++)
             if (!fi->IsD())
             {

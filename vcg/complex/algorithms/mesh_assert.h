@@ -108,7 +108,16 @@ public:
           throw vcg::MissingPreconditionException("Vertex Normal are not normalized");
       }
   }
-
+  
+  /// \brief Throw vcg::MissingPreconditionException if Face Normals are not unit lenght
+  static void FaceNormalNormalized(MeshType &m)
+  {
+      for(auto fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
+          {
+              if(fabs(fi->cN().Norm()-1.0)>0.000001)
+                  throw vcg::MissingPreconditionException("Face Normal are not normalized");
+          }
+  }
   
   
   /// \brief Throw vcg::MissingPreconditionException if There are unreferenced vertices
@@ -164,8 +173,19 @@ public:
         if(!face::IsManifold(*fi,i))
           throw vcg::MissingPreconditionException("According to FF adjacency, the mesh is not two manifold (e.g. there are more than two faces on an edge)");
       }
-    }    
-}
+    }
+  }
+	/// \brief Throw vcg::MissingPreconditionException if the FaceEdgeSelection bit is not consistent 
+	static void ConsistentFaceEdgeSelection(MeshType &m)
+	{
+		for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
+			{
+				for(int i=0;i<fi->VN();++i){
+					if(fi->IsFaceEdgeS(i) != fi->FFp(i)->IsFaceEdgeS(fi->FFi(i)))
+						throw vcg::MissingPreconditionException("FaceEdgeSelection bit is not consistent");
+				}
+			}
+	}
   
 };
 

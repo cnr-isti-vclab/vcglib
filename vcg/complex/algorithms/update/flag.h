@@ -473,9 +473,9 @@ public:
     {
         RequirePerFaceFlags(m);
         RequireFFAdjacency(m);
-        //initially Nothing is faux (e.g all crease)
+        //initially Nothing is marked
         FaceClearFaceEdgeS(m);
-        // Then mark faux only if the signed angle is the range.
+        // Then select the edge as crease only if the signed angle is outside the range.
         for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!(*fi).IsD())
         {
             for(int z=0;z<(*fi).VN();++z)

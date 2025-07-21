@@ -299,6 +299,10 @@ if (VCG_HEADER_ONLY)
 			target_link_libraries(vcglib INTERFACE OpenMP::OpenMP_CXX)
 		endif()
 
+		if (MSVC)
+			target_compile_options(vcglib INTERFACE "/bigobj")
+		endif()
+
 		#just to show headers in ide
 		add_custom_target(vcglib_ide SOURCES ${VCG_HEADERS})
 	else()
