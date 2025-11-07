@@ -135,20 +135,17 @@ private:
     static int InvokeConverter(const u3dparametersclasses::IDTFConverterParameters& par)
     {
         QProcess p;
-        QString convstring = par._converter_loc;
-        #if defined(Q_OS_WIN)
-        convstring =  "\""+convstring + "\" -en 1 -rzf 0 -pq "+QString::number(par.positionQuality)+" -input \"" + par._input_file + "\" -output \"" + par._output_file +"\"";
-        #else
-        QString mac_input=par._input_file;
-        QString mac_output=par._output_file;
-        //mac_input.replace(QString(" "),QString("\\ "));
-        //mac_output.replace(QString(" "),QString("\\ "));
-        convstring =       convstring + " -en 1 -rzf 0 -pq "+ QString::number(par.positionQuality)+" -input \"" + mac_input + "\" -output \"" + mac_output +"\"";
-        #endif
+        QString program = par._converter_loc;
+        QStringList arguments;
+
+        arguments << "-en" << "1" << "-rzf" << "0" << "-pq" << QString::number(par.positionQuality);
+        arguments << "-input" << par._input_file << "-output" << par._output_file;
+
+        QString convstring = program + " " + arguments.join(" ");
         //QMessageBox::warning(0, QString("Saving Log"), QString("Started conversion executable '%1'").arg(convstring));
         qDebug("Starting converter %s", qPrintable(convstring));
         p.setProcessChannelMode(QProcess::MergedChannels);
-        p.start(convstring);
+        p.start(program, arguments);
         //wait until the task has been completed
         bool t = p.waitForFinished(-1);
         if(!t) QMessageBox::warning(0, QString("Saving Error"), QString("Failed conversion executable '%1'").arg(convstring));
