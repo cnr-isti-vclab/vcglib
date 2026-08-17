@@ -14,11 +14,11 @@ elseif(UNIX)
 endif()
 
 
-find_package(GLFW3 REQUIRED)
+find_package(glfw3 REQUIRED)
 find_package(GLEW 2.0 REQUIRED)
-find_package(EIGEN3 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED NO_MODULE)
 
-set(IMGUI_DIR "../../../github/imgui" CACHE INTERNAL "Path to imgui")
+set(IMGUI_DIR "path/to/imgui" CACHE INTERNAL "Path to imgui")
 set(VCGLIB_DIR "../.." CACHE INTERNAL "Path to vcglib")
 set(EIGEN_DIR  = "${VCGLIB_DIR}/eigenlib" CACHE INTERNAL "")
 
@@ -47,4 +47,6 @@ target_link_directories(${PROJECT_NAME} PRIVATE ${GLFW3_LIBRARY_DIRS})
 target_link_libraries(${PROJECT_NAME}
     GLEW::GLEW
     glfw
+    GL
+    GLU
 )
