@@ -405,6 +405,10 @@ namespace vcg {
 								vInd[j] = atoi(tokens[k].c_str());
 								k++;
 							}
+							for (int j = 0; j < vert_per_face; j++)
+								if (vInd[j] < 0 || size_t(vInd[j]) >= mesh.vert.size())
+									return InvalidFile;
+
 							if (vert_per_face == 3)
 								Allocator<MESH_TYPE>::AddFace(mesh, &mesh.vert[vInd[0]], &mesh.vert[vInd[1]], &mesh.vert[vInd[2]]);
 
@@ -454,6 +458,9 @@ namespace vcg {
 								vInd[0] = atoi(tokens[1].c_str()); 
 								vInd[1] = atoi(tokens[2].c_str());
 								vInd[2] = atoi(tokens[3].c_str());
+								for (int j = 0; j < 3; j++)
+									if (vInd[j] < 0 || size_t(vInd[j]) >= mesh.vert.size())
+										return InvalidFile;
 								Allocator<MESH_TYPE>::AddFace(mesh, vInd[0], vInd[1], vInd[2]);								
 							}
 							if(vert_per_face > 3) // The face must be triangulated

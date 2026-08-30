@@ -508,6 +508,9 @@ void Cone( MeshType& in,
     int i,b1,b2;
   in.Clear();
   int VN,FN;
+    if(r1==0 && r2==0)
+        return;
+
     if(r1==0 || r2==0) {
         VN=SubDiv+2;
         FN=SubDiv*2;
@@ -518,7 +521,7 @@ void Cone( MeshType& in,
 
   Allocator<MeshType>::AddVertices(in,VN);
   Allocator<MeshType>::AddFaces(in,FN);
-    VertexPointer  *ivp = new VertexPointer[VN];
+    VertexPointer  *ivp = new VertexPointer[VN]();
 
   VertexIterator vi=in.vert.begin();
   ivp[0]=&*vi;(*vi).P()=CoordType ( 0,-h/2.0,0 ); ++vi;
