@@ -29,6 +29,7 @@
 #include <vcg/complex/base.h>
 #include <vcg/complex/algorithms/update/flag.h>
 #include <vcg/simplex/face/jumping_pos.h>
+#include <vcg/simplex/face/topology.h>
 #include <vcg/space/planar_polygon_tessellation.h>
 
 namespace vcg {
@@ -255,6 +256,11 @@ namespace tri {
             std::size_t fanSteps = 0;
             while( p.F()->IsF(p.E()) )
             {
+                // FlipF() asserts two-manifoldness at this edge. ExtractPolygon does
+                // document that it assumes a 2-manifold mesh, but an OBJ face that
+                // repeats a vertex breaks the assumption and the importer accepts it,
+                // so treat it like the budget overrun below instead of aborting.
+                if(!face::IsManifold(*p.F(), p.E())) { malformed = true; break; }
                 p.FlipF();
                 if(!p.F()->IsV()) {
                   fs.push_back(p.F());
