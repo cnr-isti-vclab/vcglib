@@ -24,6 +24,7 @@
 #ifndef __VCGLIB_POLYGON_SUPPORT
 #define __VCGLIB_POLYGON_SUPPORT
 
+#include <cstddef>
 #include <vcg/complex/allocate.h>
 #include <vcg/complex/base.h>
 #include <vcg/complex/algorithms/update/flag.h>
@@ -228,6 +229,21 @@ namespace tri {
         fs.push_back(p.F());
         p.F()->SetV();
 
+        // The walk below only terminates if the faux-edge structure really does close
+        // back on `start`. A mesh whose polygons are malformed -- an OBJ face listing the
+        // same vertex several times will do it -- produces a chain that never closes, and
+        // the loop then appends to `vs` forever: in a release build, with the asserts
+        // compiled out, that is an unbounded allocation rather than a crash.
+        //
+        // A well-formed polygon of n triangles has n+2 corners, so 3*n+8 is a generous
+        // ceiling that still bounds the work: fs never exceeds the face count, because a
+        // face is pushed only when it is first marked visited.
+        const auto exceededBudget = [&fs](std::size_t steps) {
+            return steps > 3 * fs.size() + 8;
+        };
+        std::size_t steps = 0;
+        bool malformed = false;
+
         do
         {
             assert(!p.F()->IsF(p.E()));
@@ -236,6 +252,7 @@ namespace tri {
             // per-wedge attributes along the reconstructed polygon boundary.
             corners.emplace_back(p.F(), p.VInd());
             p.FlipE();
+            std::size_t fanSteps = 0;
             while( p.F()->IsF(p.E()) )
             {
                 p.FlipF();
@@ -244,9 +261,24 @@ namespace tri {
                   p.F()->SetV();
                 }
                 p.FlipE();
+                if(exceededBudget(++fanSteps)) { malformed = true; break; }
             }
+            if(malformed) break;
             p.FlipV();
-        } while(p!=start);
+        } while(p!=start && !(malformed = exceededBudget(++steps)));
+
+        if(malformed)
+        {
+            // Emit the seed triangle instead of a polygon that was never closed. Every
+            // face reached stays marked visited, so the caller does not retry them, and
+            // the polygon count computed ahead of the walk still matches.
+            vs.clear();
+            corners.clear();
+            for (int i = 0; i < 3; ++i) {
+                vs.push_back(tfp->V(i));
+                corners.emplace_back(tfp, i);
+            }
+        }
         //assert(vs.size() == fs.size()+2);
     }
     static void ExtractPolygon(typename TriMeshType::FacePointer tfp,
