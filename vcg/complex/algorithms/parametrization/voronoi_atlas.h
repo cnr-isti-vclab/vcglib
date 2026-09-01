@@ -89,6 +89,7 @@ public:
      sampleNum=10;
      overlap=false;
      randomSeed=0;
+     colorizeRegions=true;
    }
 
    struct Stat
@@ -111,6 +112,11 @@ public:
    // historical behaviour (whatever state the shared sampling generator is in);
    // any other value makes the region layout reproducible.
    unsigned int randomSeed;
+   // Paint the working mesh one color per Voronoi region. Useful when inspecting the
+   // partition, destructive otherwise: the regions are appended to the atlas carrying
+   // those colors, so whatever per-vertex color the input had is overwritten. True keeps
+   // the historical behaviour.
+   bool colorizeRegions;
    CallBackPos *cb=vcg::CErrCallBackPos;
  };
 
@@ -153,7 +159,8 @@ public:
     tri::UpdateTopology<VoroMesh>::VertexFace(m);
     tri::VoronoiProcessing<VoroMesh>::ComputePerVertexSources(m,seedVec,edFunc);
     tri::VoronoiProcessing<VoroMesh>::FaceAssociateRegion(m);
-    tri::VoronoiProcessing<VoroMesh>::VoronoiColoring(m,true);
+    if(pp.colorizeRegions)
+      tri::VoronoiProcessing<VoroMesh>::VoronoiColoring(m,true);
     std::vector<VoroMesh *> badRegionVec;
     int st2=clock();
     pp.vas.voronoiTime+=st2-st1;
