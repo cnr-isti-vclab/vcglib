@@ -895,12 +895,19 @@ public:
             packingFields.push_back(one);
         }
 
+        // The rasterizer derives four slots from every base rasterization, writing
+        // rast_i + (rotationNum/4)*j for j in 0..3, so only multiples of four leave no
+        // slot unwritten -- 6 used to size the arrays to 6, fill 0..3 and then throw
+        // out_of_range on 4. Normalize once, here, so every caller is safe and the
+        // rasterize and search loops cannot disagree about how many slots exist.
+        const int rotationNum = std::max(4, 4 * (packingPar.rotationNum / 4));
+
         // **** First Step: Rasterize all the polygons ****
         for (size_t i = 0; i < polyVec.size(); i++) {
-            polyVec[i].resetState(packingPar.rotationNum);
-            for (int rast_i = 0; rast_i < packingPar.rotationNum/4; rast_i++) {
+            polyVec[i].resetState(rotationNum);
+            for (int rast_i = 0; rast_i < rotationNum/4; rast_i++) {
                 //create the rasterization (i.e. fills bottom/top/grids/internalWastedCells arrays)
-                RASTERIZER_TYPE::rasterize(polyVec[i], scaleFactor, rast_i, packingPar.rotationNum, packingPar.gutterWidth);
+                RASTERIZER_TYPE::rasterize(polyVec[i], scaleFactor, rast_i, rotationNum, packingPar.gutterWidth);
             }
         }
 
@@ -917,7 +924,7 @@ public:
             bool placedUsingSecondaryHorizon = false;
 
             //try all the rasterizations and choose the best fitting one
-            for (int rast_i = 0; rast_i < packingPar.rotationNum; rast_i++) {
+            for (int rast_i = 0; rast_i < rotationNum; rast_i++) {
 
                 //try to fit the poly in all containers, in all valid positions
                 for (int grid_i = 0; grid_i < containerNum; grid_i++) {
@@ -1021,7 +1028,7 @@ public:
                 packingFields[bestContainer].placePoly(polyVec[i], Point2i(bestPolyX, bestPolyY), bestRastIndex);
 
                 //create the rotated bb which we will use to set the similarity translation prop
-                float angleRad = float(bestRastIndex)*(M_PI*2.0)/float(packingPar.rotationNum);
+                float angleRad = float(bestRastIndex)*(M_PI*2.0)/float(rotationNum);
                 Box2f bb;
                 std::vector<Point2f> points = polyVec[i].getPoints();
                 for(size_t i=0;i<points.size();++i) {
