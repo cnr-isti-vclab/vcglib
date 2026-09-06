@@ -53,7 +53,7 @@ int  main(int argc, char **argv)
       "Usage: trimesh_ball_pivoting filein.ply fileout.ply [opt]\n"
       "options: \n"
       "-r <val> radius of the rolling ball\n"
-      "-c <val> clustering radius (as fraction of radius) default: 0.05\n"
+      "-c <val> accepted and ignored (was the clustering radius)\n"
             );
         exit(0);
     }
@@ -91,7 +91,7 @@ int  main(int argc, char **argv)
   int t0=clock();
   // Initialization
   tri::BallPivoting<MyMesh> pivot(m, radius, clustering);
-  printf("Ball radius: %f\nClustering points withing %f radii\n", pivot.radius, clustering);
+  printf("Ball radius: %f\n", pivot.radius);
 
   int t1=clock();
   // the main processing
