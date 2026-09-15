@@ -346,9 +346,17 @@ public:
 
 		// Saving of edges is enabled if requested
 		if( m.en>0 && (pi.mask & Mask::IOM_EDGEINDEX) )
+		{
 			fprintf(
 						fpout,
 						"element edge %d\n" "property int vertex1\n""property int vertex2\n",m.en);
+			if(HasPerEdgeColor(m) && (pi.mask & Mask::IOM_EDGECOLOR))
+				fprintf(fpout,
+						"property uchar red\n"
+						"property uchar green\n"
+						"property uchar blue\n"
+						"property uchar alpha\n");
+		}
 		fprintf(fpout, "end_header\n"	);
 
 		// Salvataggio camera
@@ -911,9 +919,22 @@ public:
 						eauxvv[0]=indices[ei->cV(0)];
 						eauxvv[1]=indices[ei->cV(1)];
 						fwrite(eauxvv,sizeof(int),2,fpout);
+						if(HasPerEdgeColor(m) && (pi.mask & Mask::IOM_EDGECOLOR))
+						{
+							const vcg::Color4b edgeColor = ei->cC();
+							fwrite(&edgeColor,sizeof(char),4,fpout);
+						}
 					}
 					else // ***** ASCII *****
-						fprintf(fpout,"%d %d \n", indices[ei->cV(0)],	indices[ei->cV(1)]);
+					{
+						fprintf(fpout,"%d %d ", indices[ei->cV(0)], indices[ei->cV(1)]);
+						if(HasPerEdgeColor(m) && (pi.mask & Mask::IOM_EDGECOLOR))
+						{
+							const vcg::Color4b edgeColor = ei->cC();
+							fprintf(fpout,"%d %d %d %d ", edgeColor[0], edgeColor[1], edgeColor[2], edgeColor[3]);
+						}
+						fprintf(fpout,"\n");
+					}
 				}
 			}
 			assert(ecnt==m.en);
@@ -971,6 +992,8 @@ public:
 		capability |= vcg::tri::io::Mask::IOM_VERTNORMAL   ;
 		capability |= vcg::tri::io::Mask::IOM_VERTRADIUS   ;
 		capability |= vcg::tri::io::Mask::IOM_VERTTEXCOORD ;
+		capability |= vcg::tri::io::Mask::IOM_EDGEINDEX    ;
+		capability |= vcg::tri::io::Mask::IOM_EDGECOLOR    ;
 		capability |= vcg::tri::io::Mask::IOM_FACEINDEX	;
 		capability |= vcg::tri::io::Mask::IOM_FACEFLAGS	;
 		capability |= vcg::tri::io::Mask::IOM_FACECOLOR	;

@@ -107,6 +107,7 @@ public:
 	struct LoadPly_EdgeAux
 	{
 		int v1,v2;
+		unsigned char r,g,b,a;
 		unsigned char data[MAX_USER_DATA];
 	};
 
@@ -261,12 +262,20 @@ public:
 
 	static const PropDescriptor &EdgeDesc(int i)
 	{
-		static const PropDescriptor qf[4]=
+		static const PropDescriptor qf[12]=
 		{
-			{"edge","vertex1", ply::T_INT,  ply::T_INT,  offsetof(LoadPly_EdgeAux,v1),		  0,0,0,0,0  ,0},
-			{"edge","vertex2", ply::T_INT,  ply::T_INT,  offsetof(LoadPly_EdgeAux,v2),		  0,0,0,0,0  ,0},
-			{"edge","vertex1", ply::T_UINT, ply::T_INT,  offsetof(LoadPly_EdgeAux,v1),		  0,0,0,0,0  ,0},
-			{"edge","vertex2", ply::T_UINT, ply::T_INT,  offsetof(LoadPly_EdgeAux,v2),		  0,0,0,0,0  ,0},
+			{"edge","vertex1",       ply::T_INT,   ply::T_INT,   offsetof(LoadPly_EdgeAux,v1), 0,0,0,0,0,0},
+			{"edge","vertex2",       ply::T_INT,   ply::T_INT,   offsetof(LoadPly_EdgeAux,v2), 0,0,0,0,0,0},
+			{"edge","vertex1",       ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_EdgeAux,v1), 0,0,0,0,0,0},
+			{"edge","vertex2",       ply::T_UINT,  ply::T_INT,   offsetof(LoadPly_EdgeAux,v2), 0,0,0,0,0,0},
+			{"edge","red",           ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_EdgeAux,r),  0,0,0,0,0,0},
+			{"edge","green",         ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_EdgeAux,g),  0,0,0,0,0,0},
+			{"edge","blue",          ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_EdgeAux,b),  0,0,0,0,0,0},
+			{"edge","alpha",         ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_EdgeAux,a),  0,0,0,0,0,0},
+			{"edge","diffuse_red",   ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_EdgeAux,r),  0,0,0,0,0,0},
+			{"edge","diffuse_green", ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_EdgeAux,g),  0,0,0,0,0,0},
+			{"edge","diffuse_blue",  ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_EdgeAux,b),  0,0,0,0,0,0},
+			{"edge","diffuse_alpha", ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_EdgeAux,a),  0,0,0,0,0,0},
 		};
 		return qf[i];
 	}
@@ -458,6 +467,24 @@ public:
 		if((pf.AddToRead(EdgeDesc(0) )!= -1  || pf.AddToRead(EdgeDesc(2) )!= -1) && 
 			(pf.AddToRead(EdgeDesc(1)) != -1 || pf.AddToRead(EdgeDesc(3)) != -1))
 			pi.mask |= Mask::IOM_EDGEINDEX;
+
+		if(vcg::tri::HasPerEdgeColor(m))
+		{
+			const bool hasStandardColor =
+				pf.AddToRead(EdgeDesc(4)) != -1
+				&& pf.AddToRead(EdgeDesc(5)) != -1
+				&& pf.AddToRead(EdgeDesc(6)) != -1;
+			const bool hasDiffuseColor =
+				!hasStandardColor
+				&& pf.AddToRead(EdgeDesc(8)) != -1
+				&& pf.AddToRead(EdgeDesc(9)) != -1
+				&& pf.AddToRead(EdgeDesc(10)) != -1;
+			if(hasStandardColor || hasDiffuseColor)
+			{
+				pf.AddToRead(EdgeDesc(hasStandardColor ? 7 : 11));
+				pi.mask |= Mask::IOM_EDGECOLOR;
+			}
+		}
 
 		if(vcg::tri::HasPerVertexFlags(m) && pf.AddToRead(VertDesc(3))!=-1 )
 			pi.mask |= Mask::IOM_VERTFLAGS;
@@ -775,6 +802,7 @@ public:
 				for(int j=0;j<n;++j)
 				{
 					if(pi.cb && (j%1000)==0) pi.cb(50+j*50/n,"Edge Loading");
+					ea.a = 255;
 					if( pf.Read(&ea)==-1 )
 					{
 						pi.status = PlyInfo::E_SHORTFILE;
@@ -787,6 +815,8 @@ public:
 					}
 					(*ei).V(0) = index[ ea.v1 ];
 					(*ei).V(1) = index[ ea.v2 ];
+					if(pi.mask & Mask::IOM_EDGECOLOR)
+						(*ei).C() = vcg::Color4b(ea.r, ea.g, ea.b, ea.a);
 					++ei;
 				}
 			}
@@ -1137,6 +1167,17 @@ public:
 		    pf.AddToRead(VertDesc(10))!=-1 &&
 		    pf.AddToRead(VertDesc(11))!=-1  )  mask |= Mask::IOM_VERTCOLOR;
 		if( pf.AddToRead(VertDesc(21))!=-1  )  mask |= Mask::IOM_VERTCOLOR;
+
+		if((pf.AddToRead(EdgeDesc(0)) != -1 || pf.AddToRead(EdgeDesc(2)) != -1) &&
+		   (pf.AddToRead(EdgeDesc(1)) != -1 || pf.AddToRead(EdgeDesc(3)) != -1))
+			mask |= Mask::IOM_EDGEINDEX;
+		if((pf.AddToRead(EdgeDesc(4)) != -1 &&
+		    pf.AddToRead(EdgeDesc(5)) != -1 &&
+		    pf.AddToRead(EdgeDesc(6)) != -1) ||
+		   (pf.AddToRead(EdgeDesc(8)) != -1 &&
+		    pf.AddToRead(EdgeDesc(9)) != -1 &&
+		    pf.AddToRead(EdgeDesc(10)) != -1))
+			mask |= Mask::IOM_EDGECOLOR;
 
 		if( pf.AddToRead(VertDesc(22))!=-1  &&
 		    pf.AddToRead(VertDesc(23))!=-1)    mask |= Mask::IOM_VERTTEXCOORD;
