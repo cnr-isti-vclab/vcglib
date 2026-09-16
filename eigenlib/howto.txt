@@ -7,6 +7,9 @@ Current Eigen Version 3.3.9 (04.12.2020) updated on 15/06/2021
 Current Eigen Version 3.4.0 (18.08.2021) updated on 12/03/2025
 Current Eigen Version 3.5.0 (30.09.2025) updated on 03/06/2026 
 				(note that on eigen site this is referred as V5.0.0)
+Current Eigen Version 5.0.1 (11.11.2025) updated on 16/09/2026
+				(patch release; brings the CompressedStorageIterator::operator[]
+				 that libc++ >= 20 requires from std::sort, plus NEON/alignment fixes)
 
 To update the lib:
 - download Eigen
