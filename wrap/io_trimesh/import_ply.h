@@ -108,6 +108,7 @@ public:
 	{
 		int v1,v2;
 		unsigned char r,g,b,a;
+		float q;
 		unsigned char data[MAX_USER_DATA];
 	};
 
@@ -262,7 +263,7 @@ public:
 
 	static const PropDescriptor &EdgeDesc(int i)
 	{
-		static const PropDescriptor qf[12]=
+		static const PropDescriptor qf[14]=
 		{
 			{"edge","vertex1",       ply::T_INT,   ply::T_INT,   offsetof(LoadPly_EdgeAux,v1), 0,0,0,0,0,0},
 			{"edge","vertex2",       ply::T_INT,   ply::T_INT,   offsetof(LoadPly_EdgeAux,v2), 0,0,0,0,0,0},
@@ -276,6 +277,12 @@ public:
 			{"edge","diffuse_green", ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_EdgeAux,g),  0,0,0,0,0,0},
 			{"edge","diffuse_blue",  ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_EdgeAux,b),  0,0,0,0,0,0},
 			{"edge","diffuse_alpha", ply::T_UCHAR, ply::T_UCHAR, offsetof(LoadPly_EdgeAux,a),  0,0,0,0,0,0},
+			// Quality is read into a float whatever the file stores it as, so an edge
+			// type with a double QualityType loses the extra digits on load. Matching
+			// the member to the mesh would mean templating LoadPly_EdgeAux, which the
+			// vertex and face variants do and this one has never needed.
+			{"edge","quality",       ply::T_FLOAT, ply::T_FLOAT, offsetof(LoadPly_EdgeAux,q),  0,0,0,0,0,0},
+			{"edge","quality",       ply::T_DOUBLE,ply::T_FLOAT, offsetof(LoadPly_EdgeAux,q),  0,0,0,0,0,0},
 		};
 		return qf[i];
 	}
@@ -484,6 +491,12 @@ public:
 				pf.AddToRead(EdgeDesc(hasStandardColor ? 7 : 11));
 				pi.mask |= Mask::IOM_EDGECOLOR;
 			}
+		}
+
+		if(vcg::tri::HasPerEdgeQuality(m))
+		{
+			if( pf.AddToRead(EdgeDesc(12))!=-1 || pf.AddToRead(EdgeDesc(13))!=-1 )
+				pi.mask |= Mask::IOM_EDGEQUALITY;
 		}
 
 		if(vcg::tri::HasPerVertexFlags(m) && pf.AddToRead(VertDesc(3))!=-1 )
@@ -817,6 +830,8 @@ public:
 					(*ei).V(1) = index[ ea.v2 ];
 					if(pi.mask & Mask::IOM_EDGECOLOR)
 						(*ei).C() = vcg::Color4b(ea.r, ea.g, ea.b, ea.a);
+					if(pi.mask & Mask::IOM_EDGEQUALITY)
+						(*ei).Q() = typename OpenMeshType::EdgeType::QualityType(ea.q);
 					++ei;
 				}
 			}
@@ -1178,6 +1193,8 @@ public:
 		    pf.AddToRead(EdgeDesc(9)) != -1 &&
 		    pf.AddToRead(EdgeDesc(10)) != -1))
 			mask |= Mask::IOM_EDGECOLOR;
+		if( pf.AddToRead(EdgeDesc(12)) != -1 || pf.AddToRead(EdgeDesc(13)) != -1 )
+			mask |= Mask::IOM_EDGEQUALITY;
 
 		if( pf.AddToRead(VertDesc(22))!=-1  &&
 		    pf.AddToRead(VertDesc(23))!=-1)    mask |= Mask::IOM_VERTTEXCOORD;

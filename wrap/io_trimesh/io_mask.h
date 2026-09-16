@@ -76,6 +76,7 @@ enum {
 
 	IOM_EDGEINDEX    = 0x80000,
 	IOM_EDGECOLOR    = 0x100000,
+	IOM_EDGEQUALITY  = 0x40000,
 
 	IOM_FACEINDEX    = 0x00040,
 	IOM_FACEFLAGS    = 0x00080,
@@ -130,6 +131,7 @@ static void ClampMask(MeshType &m, int &mask)
   if( (mask & IOM_WEDGNORMAL)   && !HasPerWedgeNormal(m) )   mask = mask & (~IOM_WEDGNORMAL);
   if( (mask & IOM_VERTCOLOR)    && !HasPerVertexColor(m) )   mask = mask & (~IOM_VERTCOLOR);
   if( (mask & IOM_EDGECOLOR)    && !HasPerEdgeColor(m) )     mask = mask & (~IOM_EDGECOLOR);
+  if( (mask & IOM_EDGEQUALITY)  && !HasPerEdgeQuality(m) )   mask = mask & (~IOM_EDGEQUALITY);
 }
 
 }; // end class

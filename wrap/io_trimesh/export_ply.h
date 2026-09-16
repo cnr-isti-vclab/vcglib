@@ -82,6 +82,7 @@ public:
 	typedef typename SaveMeshType::ConstVertexIterator VertexIterator;
 	typedef typename SaveMeshType::FaceIterator FaceIterator;
 	typedef typename SaveMeshType::ConstEdgeIterator EdgeIterator;
+	typedef typename SaveMeshType::EdgeType EdgeType;
 	typedef typename vcg::Shot<ScalarType>::ScalarType ShotScalarType;
 
 	// Preserve the historical const API for ordinary triangular export.
@@ -138,6 +139,7 @@ public:
 		const int DGTVR = vcg::tri::io::Precision<typename VertexType::RadiusType>::digits();
 		const int DGTVT = vcg::tri::io::Precision<typename VertexType::TexCoordType::ScalarType>::digits();
 		const int DGTFQ = vcg::tri::io::Precision<typename FaceType::QualityType>::digits();
+		const int DGTEQ = vcg::tri::io::Precision<typename EdgeType::QualityType>::digits();
 		const int DGTFT = vcg::tri::io::Precision<typename FaceType::TexCoordType::ScalarType>::digits();
 		bool saveTexIndexFlag = false;
 
@@ -356,6 +358,11 @@ public:
 						"property uchar green\n"
 						"property uchar blue\n"
 						"property uchar alpha\n");
+			if(HasPerEdgeQuality(m) && (pi.mask & Mask::IOM_EDGEQUALITY))
+			{
+				const char* eqtp = vcg::tri::io::Precision<typename EdgeType::QualityType>::typeName();
+				fprintf(fpout,"property %s quality\n",eqtp);
+			}
 		}
 		fprintf(fpout, "end_header\n"	);
 
@@ -924,6 +931,11 @@ public:
 							const vcg::Color4b edgeColor = ei->cC();
 							fwrite(&edgeColor,sizeof(char),4,fpout);
 						}
+						if(HasPerEdgeQuality(m) && (pi.mask & Mask::IOM_EDGEQUALITY))
+						{
+							auto q = ei->cQ();
+							fwrite(&q,sizeof(typename EdgeType::QualityType),1,fpout);
+						}
 					}
 					else // ***** ASCII *****
 					{
@@ -933,6 +945,8 @@ public:
 							const vcg::Color4b edgeColor = ei->cC();
 							fprintf(fpout,"%d %d %d %d ", edgeColor[0], edgeColor[1], edgeColor[2], edgeColor[3]);
 						}
+						if(HasPerEdgeQuality(m) && (pi.mask & Mask::IOM_EDGEQUALITY))
+							fprintf(fpout,"%.*g ",DGTEQ,ei->cQ());
 						fprintf(fpout,"\n");
 					}
 				}
@@ -994,6 +1008,7 @@ public:
 		capability |= vcg::tri::io::Mask::IOM_VERTTEXCOORD ;
 		capability |= vcg::tri::io::Mask::IOM_EDGEINDEX    ;
 		capability |= vcg::tri::io::Mask::IOM_EDGECOLOR    ;
+		capability |= vcg::tri::io::Mask::IOM_EDGEQUALITY  ;
 		capability |= vcg::tri::io::Mask::IOM_FACEINDEX	;
 		capability |= vcg::tri::io::Mask::IOM_FACEFLAGS	;
 		capability |= vcg::tri::io::Mask::IOM_FACECOLOR	;
