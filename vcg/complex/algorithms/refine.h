@@ -778,6 +778,105 @@ face::Pos<typename MESH_TYPE::FaceType> he(ep.f,ep.z,ep.f->V(ep.z));
   Note that they store in the vertex quality the plane distance.
   */
 
+/* The same pair as QualityMidPointFunctor/QualityEdgePredicate below, but reading the
+   splitting scalar from a per-vertex attribute instead of from the vertex quality. Use
+   these when the mesh carries a quality of its own that the caller must not overwrite:
+   the quality of a new vertex is then interpolated like any other attribute, while the
+   scalar that decides where to split lives out of the way.
+
+   The attribute is written for the new vertex too, as exactly the threshold, so a caller
+   can classify every vertex after refining without recomputing anything.
+
+   ClipMeshWithPlane (clip.h) drives these with the signed distance to a plane. */
+
+template<class MESH_TYPE, class ATTR_TYPE>
+class AttributeMidPointFunctor
+{
+public:
+  typedef Point3<typename MESH_TYPE::ScalarType> Point3x;
+  typedef typename MESH_TYPE::ScalarType ScalarType;
+  typedef typename MESH_TYPE::VertexType VertexType;
+  typedef typename MESH_TYPE::template PerVertexAttributeHandle<ATTR_TYPE> Handle;
+
+  MESH_TYPE *mp;
+  Handle h;
+  ATTR_TYPE thr;
+
+  AttributeMidPointFunctor(MESH_TYPE *_mp, Handle _h, ATTR_TYPE _thr = 0)
+    : mp(_mp), h(_h), thr(_thr) {}
+
+  void operator()(VertexType &nv, const face::Pos<typename MESH_TYPE::FaceType> &ep)
+  {
+    VertexType *v0 = ep.f->V0(ep.z);
+    VertexType *v1 = ep.f->V1(ep.z);
+    const ATTR_TYPE q0 = h[v0] - thr;
+    const ATTR_TYPE q1 = h[v1] - thr;
+    // Where along the edge the attribute reaches the threshold. Unlike MidPoint this is
+    // not the middle, so everything carried across has to use the same weight or the new
+    // vertex ends up with attributes belonging to a point it is not at.
+    const ScalarType t = ScalarType(double(q0) / double(q0 - q1));
+    const ScalarType s = ScalarType(1) - t;
+
+    nv.P() = v0->P() * s + v1->P() * t;
+    h[&nv] = thr;
+
+    if (tri::HasPerVertexNormal(*mp))
+      nv.N() = (v0->N() * s + v1->N() * t).normalized();
+    if (tri::HasPerVertexColor(*mp))
+      nv.C().lerp(v0->C(), v1->C(), t);
+    if (tri::HasPerVertexQuality(*mp))
+      nv.Q() = v0->Q() * s + v1->Q() * t;
+    if (tri::HasPerVertexTexCoord(*mp))
+      nv.T().P() = v0->T().P() * s + v1->T().P() * t;
+  }
+
+  Color4<typename MESH_TYPE::ScalarType> WedgeInterp(Color4<typename MESH_TYPE::ScalarType> &c0, Color4<typename MESH_TYPE::ScalarType> &c1)
+  {
+    Color4<typename MESH_TYPE::ScalarType> cc;
+    return cc.lerp(c0, c1, 0.5f);
+  }
+
+  template<class FL_TYPE>
+  TexCoord2<FL_TYPE,1> WedgeInterp(TexCoord2<FL_TYPE,1> &t0, TexCoord2<FL_TYPE,1> &t1)
+  {
+    TexCoord2<FL_TYPE,1> tmp;
+    assert(t0.n() == t1.n());
+    tmp.n() = t0.n();
+    tmp.t() = (t0.t() + t1.t()) / 2.0;
+    return tmp;
+  }
+};
+
+template <class MESH_TYPE, class ATTR_TYPE>
+class AttributeEdgePredicate
+{
+public:
+  typedef typename MESH_TYPE::ScalarType ScalarType;
+  typedef typename MESH_TYPE::template PerVertexAttributeHandle<ATTR_TYPE> Handle;
+
+  Handle h;
+  ATTR_TYPE thr;
+  ScalarType tolerance;
+
+  AttributeEdgePredicate(Handle _h, ScalarType _tolerance = 0.02, ATTR_TYPE _thr = 0)
+    : h(_h), thr(_thr), tolerance(_tolerance) {}
+
+  bool operator()(face::Pos<typename MESH_TYPE::FaceType> ep)
+  {
+    ATTR_TYPE q0 = h[ep.f->V0(ep.z)] - thr;
+    ATTR_TYPE q1 = h[ep.f->V1(ep.z)] - thr;
+    if (q0 > q1) std::swap(q0, q1);
+    // An endpoint sitting exactly on the threshold is already where a split would go.
+    if (q0 * q1 >= 0) return false;
+    // And one sitting nearly there would give a new vertex a hair from an existing one,
+    // which is worse than not splitting at all: it leaves a boundary that is not a simple
+    // loop and a sliver face spanning the two.
+    const double pp = double(q0) / double(q0 - q1);
+    if ((fabs(pp) < tolerance) || (fabs(pp) > (1 - tolerance))) return false;
+    return true;
+  }
+};
+
 template<class MESH_TYPE>
 class QualityMidPointFunctor
 {

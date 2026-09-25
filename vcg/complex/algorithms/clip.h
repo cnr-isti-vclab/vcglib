@@ -24,12 +24,270 @@
 #ifndef __VCGLIB_TRI_CLIP
 #define __VCGLIB_TRI_CLIP
 #include <unordered_map>
+#include <vector>
 #include <vcg/complex/complex.h>
+#include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/refine.h>
+#include <vcg/complex/algorithms/update/bounding.h>
+#include <vcg/complex/algorithms/update/normal.h>
+#include <vcg/complex/algorithms/update/topology.h>
+#include <vcg/space/planar_polygon_tessellation.h>
 
 namespace vcg
 {
 namespace tri
 {
+
+
+template <class TriMeshType>
+int CapPlanarBoundary(TriMeshType &m, const Plane3<typename TriMeshType::ScalarType> &plane);
+
+/** \brief Split a mesh along a plane and discard one halfspace.
+
+  Faces crossing the plane are split along it, so what is left ends on a clean planar
+  boundary instead of on the nearest pre-existing face borders. The halfspace the plane's
+  normal points into is the one kept.
+
+  The split is the refine framework driven by the distance to the plane, which is what
+  makes it safe when the plane meets vertices the mesh already has: the edge predicate
+  declines to split an edge whose crossing falls on, or within `tolerance` of, an endpoint,
+  so no vertex is ever duplicated a hair away from one already there. Splitting every
+  crossing edge unconditionally instead leaves pairs of near-coincident vertices along the
+  cut, and a boundary that runs through both of them is not a simple loop -- it cannot be
+  capped, and it confuses anything that walks it.
+
+  The distance rides in a temporary per-vertex attribute rather than in the vertex quality,
+  so a mesh carrying a scalar of its own keeps it; the refine framework interpolates
+  quality, colour and texture coordinates onto the new vertices in the usual way.
+
+  With \a capCut the boundary the cut opened is filled. All the loops it produced are
+  tessellated together under the even-odd rule, so a cut that leaves concentric outlines --
+  a torus sliced through the plane of its central circle -- is capped as a ring rather than
+  as overlapping discs, and one that leaves disjoint outlines gets one cap each. Holes the
+  mesh already had are left alone. Capping needs an edge-manifold mesh and a cut whose
+  outline is a set of simple loops; when it is not, the geometry is still clipped and the
+  cut is left open.
+
+  \param m        the mesh, modified in place.
+  \param plane    the cutting plane; its normal need not be unit length.
+  \param capCut   fill the boundary the cut opened.
+  \param tolerance how close to an endpoint a crossing may fall before the edge is left
+                  unsplit, as a fraction of the edge. The refine framework's own default.
+  \return true when the mesh was clipped; false when the plane leaves it untouched, either
+          because nothing was on the discarded side or because the plane misses it entirely.
+          A \a capCut that could not be performed does not make this false.
+ */
+template <class TriMeshType>
+bool ClipMeshWithPlane(
+    TriMeshType &m,
+    const Plane3<typename TriMeshType::ScalarType> &plane,
+    bool capCut = false,
+    typename TriMeshType::ScalarType tolerance = 0.02)
+{
+  typedef typename TriMeshType::ScalarType ScalarType;
+  typedef typename TriMeshType::CoordType CoordType;
+  typedef typename TriMeshType::VertexType VertexType;
+  typedef typename TriMeshType::FaceType FaceType;
+  typedef typename TriMeshType::VertexPointer VertexPointer;
+
+  if (m.FN() == 0) return false;
+
+  Plane3<ScalarType> pl = plane;
+  pl.Normalize();
+  const CoordType n = pl.Direction();
+  const ScalarType d = -pl.Offset();   // a point p survives when n*p + d >= 0
+
+  typename TriMeshType::template PerVertexAttributeHandle<ScalarType> dist =
+      Allocator<TriMeshType>::template GetPerVertexAttribute<ScalarType>(m, "vcg::ClipMeshWithPlane::dist");
+
+  bool anyBelow = false, anyAbove = false;
+  for (typename TriMeshType::VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi) {
+    if ((*vi).IsD()) continue;
+    const ScalarType s = n * (*vi).cP() + d;
+    dist[&*vi] = s;
+    if (s < 0) anyBelow = true; else anyAbove = true;
+  }
+  if (!anyBelow) {                     // nothing to remove
+    Allocator<TriMeshType>::template DeletePerVertexAttribute<ScalarType>(m, dist);
+    return false;
+  }
+
+  if (anyAbove) {
+    RequireFFAdjacency(m);
+    UpdateTopology<TriMeshType>::FaceFace(m);
+    AttributeMidPointFunctor<TriMeshType, ScalarType> midPoint(&m, dist);
+    AttributeEdgePredicate<TriMeshType, ScalarType> crossesPlane(dist, tolerance);
+    RefineE<TriMeshType, AttributeMidPointFunctor<TriMeshType, ScalarType>,
+            AttributeEdgePredicate<TriMeshType, ScalarType> >(m, midPoint, crossesPlane, false);
+  }
+
+  // After refining, no face straddles the plane, so each one goes or stays whole.
+  for (typename TriMeshType::FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi) {
+    if ((*fi).IsD()) continue;
+    const ScalarType mean =
+        (dist[(*fi).V(0)] + dist[(*fi).V(1)] + dist[(*fi).V(2)]) / ScalarType(3);
+    if (mean < 0) Allocator<TriMeshType>::DeleteFace(m, *fi);
+  }
+  Clean<TriMeshType>::RemoveUnreferencedVertex(m);
+  Allocator<TriMeshType>::CompactEveryVector(m);
+  Allocator<TriMeshType>::template DeletePerVertexAttribute<ScalarType>(m, dist);
+
+  // The predicate above declines to split an edge whose crossing lands within `tolerance`
+  // of an endpoint, on the grounds that the endpoint is close enough to serve as the cut
+  // vertex. Completing that decision means putting it on the plane. Without this the cut is
+  // planar only to within a fraction of an edge, which is invisible on an axis-aligned cut
+  // through a regular mesh -- the crossings land on vertices exactly -- and routine on an
+  // oblique one, where anything needing a planar outline, the cap below included, then has
+  // nothing it can use.
+  //
+  // Only border vertices move, and only by less than the deviation the predicate already
+  // accepted. A vertex on a boundary the mesh already had is left alone unless it happens
+  // to lie that close to the plane, where the move is below the tolerance either way.
+  if (anyAbove) {
+    RequireFFAdjacency(m);
+    UpdateTopology<TriMeshType>::FaceFace(m);
+    // Only vertices on a boundary are candidates: an interior one was never a crossing.
+    std::vector<bool> onBorder(m.vert.size(), false);
+    // The tolerance is a fraction of an edge, so an edge is the scale to judge it against --
+    // and it has to be any incident edge, not just a border one. The edge whose split was
+    // declined ran to the discarded side, so by now it is gone; judging the deviation
+    // against the short edges that happen to remain at that vertex underestimates the
+    // scale, leaves the vertex unsnapped, and is why oblique cuts still would not close.
+    std::vector<ScalarType> reach(m.vert.size(), ScalarType(0));
+    for (size_t fi = 0; fi < m.face.size(); ++fi) {
+      if (m.face[fi].IsD()) continue;
+      for (int e = 0; e < 3; ++e) {
+        VertexPointer a = m.face[fi].V0(e);
+        VertexPointer b = m.face[fi].V1(e);
+        const ScalarType len = (a->cP() - b->cP()).Norm();
+        const size_t ia = size_t(Index(m, a)), ib = size_t(Index(m, b));
+        if (len > reach[ia]) reach[ia] = len;
+        if (len > reach[ib]) reach[ib] = len;
+        if (face::IsBorder(m.face[fi], e)) {
+          onBorder[ia] = true;
+          onBorder[ib] = true;
+        }
+      }
+    }
+    for (size_t vi = 0; vi < m.vert.size(); ++vi) {
+      if (m.vert[vi].IsD() || !onBorder[vi]) continue;
+      const ScalarType s = n * m.vert[vi].cP() + d;
+      if (math::Abs(s) <= tolerance * reach[vi])
+        m.vert[vi].P() -= n * s;
+    }
+  }
+
+  if (capCut && m.FN() > 0)
+    CapPlanarBoundary(m, pl);
+  return true;
+}
+
+/** \brief Fill the boundary loops of \a m that lie on \a plane, and only those.
+
+  Used by ClipMeshWithPlane; separate because filling the planar boundary of a mesh that was
+  cut some other way is the same job. All the qualifying loops are tessellated together
+  under the even-odd rule, so concentric outlines cap as a ring and disjoint ones cap
+  separately. Returns the number of loops filled; zero when there were none, when the mesh
+  is not edge-manifold, or when the outline is not a set of simple loops.
+ */
+template <class TriMeshType>
+int CapPlanarBoundary(
+    TriMeshType &m,
+    const Plane3<typename TriMeshType::ScalarType> &plane)
+{
+  typedef typename TriMeshType::ScalarType ScalarType;
+  typedef typename TriMeshType::CoordType CoordType;
+  typedef typename TriMeshType::FaceType FaceType;
+  typedef typename TriMeshType::VertexPointer VertexPointer;
+
+  if (m.FN() == 0) return 0;
+
+  Plane3<ScalarType> pl = plane;
+  pl.Normalize();
+  const CoordType n = pl.Direction();
+  const ScalarType d = -pl.Offset();
+
+  RequireFFAdjacency(m);
+  UpdateTopology<TriMeshType>::FaceFace(m);
+  if (Clean<TriMeshType>::CountNonManifoldEdgeFF(m) > 0) return 0;
+
+  UpdateBounding<TriMeshType>::Box(m);
+  const ScalarType tol = ScalarType(1e-5) * std::max(ScalarType(1e-6), m.bbox.Diag());
+  const auto onPlane = [&](const VertexPointer v) {
+    return math::Abs(n * v->cP() + d) <= tol;
+  };
+
+  // Walk each border loop once. Termination is on the visited marks and not on returning to
+  // the starting Pos: a Pos carries a vertex as well as a face and an edge, so one circuit
+  // comes back to the same edge with the other endpoint and the loop would be walked twice.
+  std::vector<bool> walked(m.face.size() * 3, false);
+  std::vector< std::vector<VertexPointer> > loops;
+  for (size_t fi = 0; fi < m.face.size(); ++fi) {
+    if (m.face[fi].IsD()) continue;
+    for (int e = 0; e < 3; ++e) {
+      if (!face::IsBorder(m.face[fi], e) || walked[fi * 3 + size_t(e)]) continue;
+      std::vector<VertexPointer> loop;
+      bool allOnPlane = true;
+      face::Pos<FaceType> pos(&m.face[fi], e, m.face[fi].V(e));
+      for (;;) {
+        const size_t at = size_t(Index(m, pos.F())) * 3 + size_t(pos.E());
+        if (walked[at]) break;
+        walked[at] = true;
+        loop.push_back(pos.V());
+        allOnPlane = allOnPlane && onPlane(pos.V());
+        pos.NextB();
+      }
+      if (!allOnPlane || loop.size() < 3) continue;
+      // A loop that visits a vertex twice is pinched; splitting it into simple cycles is
+      // guesswork, so say nothing was capped rather than cap it wrongly.
+      std::vector<VertexPointer> sorted = loop;
+      std::sort(sorted.begin(), sorted.end());
+      if (std::unique(sorted.begin(), sorted.end()) != sorted.end()) return 0;
+      loops.push_back(loop);
+    }
+  }
+  if (loops.empty()) return 0;
+
+  // Projected into the plane's own frame: the 3D entry point re-derives the plane and then
+  // requires the points to sit on it far more tightly than float coordinates can express.
+  CoordType u = (math::Abs(n[0]) < ScalarType(0.9)) ? CoordType(1, 0, 0) : CoordType(0, 1, 0);
+  u = (u - n * (n * u)).Normalize();
+  const CoordType v = (n ^ u).Normalize();
+
+  std::vector< std::vector<Point2<ScalarType> > > contours;
+  std::vector<VertexPointer> flat;
+  for (size_t i = 0; i < loops.size(); ++i) {
+    std::vector<Point2<ScalarType> > contour;
+    for (size_t k = 0; k < loops[i].size(); ++k) {
+      const CoordType p = loops[i][k]->cP();
+      contour.push_back(Point2<ScalarType>(u * p, v * p));
+      flat.push_back(loops[i][k]);
+    }
+    contours.push_back(contour);
+  }
+
+  std::vector<int> tri;
+  if (!TessellatePlanarContours2(contours, tri) || tri.size() < 3) return 0;
+
+  const size_t firstNew = m.face.size();
+  for (size_t t = 0; t + 2 < tri.size(); t += 3) {
+    const int a = tri[t], b = tri[t + 1], c = tri[t + 2];
+    if (a == b || b == c || a == c) continue;
+    if (a < 0 || b < 0 || c < 0) continue;
+    if (size_t(a) >= flat.size() || size_t(b) >= flat.size() || size_t(c) >= flat.size()) continue;
+    Allocator<TriMeshType>::AddFace(m, flat[size_t(a)], flat[size_t(b)], flat[size_t(c)]);
+  }
+  if (m.face.size() == firstNew) return 0;
+
+  // The tessellator winds by the basis, which need not face the way the cut does: the cap
+  // closes the side that was discarded, so it points against the plane normal.
+  UpdateNormal<TriMeshType>::PerFaceNormalized(m);
+  if (m.face[firstNew].cN() * n > 0) {
+    for (size_t fi = firstNew; fi < m.face.size(); ++fi)
+      if (!m.face[fi].IsD()) std::swap(m.face[fi].V(1), m.face[fi].V(2));
+  }
+  return int(loops.size());
+}
 
   template <typename MESH_TYPE>
   class GenericVertexInterpolator
