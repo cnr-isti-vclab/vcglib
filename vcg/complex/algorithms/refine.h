@@ -863,6 +863,11 @@ public:
 
   bool operator()(face::Pos<typename MESH_TYPE::FaceType> ep)
   {
+    // RefineE can only split an edge shared by at most two faces, and asserts as much a
+    // few lines after asking this predicate; with the assert compiled out it goes on and
+    // splits the edge as if it were manifold. Declining here leaves such an edge whole,
+    // so the faces around it are kept or discarded entire instead of being corrupted.
+    if (!ep.IsManifold()) return false;
     ATTR_TYPE q0 = h[ep.f->V0(ep.z)] - thr;
     ATTR_TYPE q1 = h[ep.f->V1(ep.z)] - thr;
     if (q0 > q1) std::swap(q0, q1);
