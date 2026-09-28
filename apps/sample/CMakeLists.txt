@@ -4,6 +4,7 @@ project(VCGExamples)
 set(VCG_EXAMPLE_PROJECTS
 	aabb_binary_tree
 	colorspace
+	edgemesh_stream_order
 	polygonmesh_base
 	polygonmesh_dual
 	polygonmesh_optimize

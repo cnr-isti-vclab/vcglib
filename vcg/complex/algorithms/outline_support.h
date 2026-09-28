@@ -287,7 +287,7 @@ public:
   {
     std::vector< std::vector< Point3<ScalarType>> > outlineVec;
     outlineVec.push_back(outline);
-    return Convert3DOutlinesToEdgeMesh(outlineVec,m);
+    return ConvertOutline3VecToEdgeMesh(outlineVec,m);
   }
 
 };

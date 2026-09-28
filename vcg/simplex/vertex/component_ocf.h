@@ -59,6 +59,7 @@ public:
     RadiusEnabled = false;
     TexCoordEnabled = false;
     VFAdjacencyEnabled = false;
+    VEAdjacencyEnabled = false;
   }
 
 ////////////////////////////////////////
@@ -74,6 +75,7 @@ public:
         if (NormalEnabled)        NV.push_back(typename VALUE_TYPE::NormalType());
         if (TexCoordEnabled)      TV.push_back(typename VALUE_TYPE::TexCoordType());
         if (VFAdjacencyEnabled)   AV.push_back(VFAdjType());
+        if (VEAdjacencyEnabled)   VEV.push_back(VEAdjType());
         if (CurvatureEnabled)     CuV.push_back(typename VALUE_TYPE::CurvatureType());
         if (CurvatureDirEnabled)  CuDV.push_back(typename VALUE_TYPE::CurvatureDirType());
         if (RadiusEnabled)        RadiusV.push_back(typename VALUE_TYPE::RadiusType());
@@ -96,6 +98,7 @@ public:
         if (NormalEnabled)        NV.resize(_size);
         if (TexCoordEnabled)      TV.resize(_size);
         if (VFAdjacencyEnabled)   AV.resize(_size,VFAdjType::Zero());
+        if (VEAdjacencyEnabled)   VEV.resize(_size,VEAdjType::Zero());
         if (CurvatureEnabled)     CuV.resize(_size);
         if (CurvatureDirEnabled)  CuDV.resize(_size);
         if (RadiusEnabled)        RadiusV.resize(_size);
@@ -110,6 +113,7 @@ public:
         if (NormalEnabled)       NV.reserve(_size);
         if (TexCoordEnabled)     TV.reserve(_size);
         if (VFAdjacencyEnabled)  AV.reserve(_size);
+        if (VEAdjacencyEnabled)  VEV.reserve(_size);
         if (CurvatureEnabled)    CuV.reserve(_size);
         if (CurvatureDirEnabled) CuDV.reserve(_size);
         if (RadiusEnabled)       RadiusV.reserve(_size);
@@ -185,6 +189,23 @@ void DisableVFAdjacency() {
     AV.clear();
 }
 
+// Optional vertex-edge adjacency, the edge-mesh counterpart of VF adjacency. It lets a
+// vertex type shared by triangle meshes and edge meshes (polylines, curve skeletons) pay
+// for the VE pointer only while an algorithm walking the edge graph needs it, instead of
+// on every vertex of every mesh. The edge side (edge::VEAdj) is usually cheap enough to
+// keep as a fixed component, since edge meshes are small.
+bool IsVEAdjacencyEnabled() const {return VEAdjacencyEnabled;}
+void EnableVEAdjacency() {
+    assert(VALUE_TYPE::HasVEAdjacencyOcf());
+    VEAdjacencyEnabled=true;
+    VEV.resize((*this).size(),VEAdjType::Zero());
+}
+void DisableVEAdjacency() {
+    assert(VALUE_TYPE::HasVEAdjacencyOcf());
+    VEAdjacencyEnabled=false;
+    VEV.clear();
+}
+
 bool IsCurvatureEnabled() const {return CurvatureEnabled;}
 void EnableCurvature() {
     assert(VALUE_TYPE::HasCurvatureOcf());
@@ -243,6 +264,15 @@ struct VFAdjType {
     bool IsNull() const { return (_zp ==-1); }
     };
 
+struct VEAdjType {
+  VEAdjType():_ep(0),_zp(-1) {}
+  VEAdjType(typename VALUE_TYPE::EdgePointer ep, int zp):_ep(ep),_zp(zp){}
+  typename VALUE_TYPE::EdgePointer _ep ;
+  int _zp ;
+  static VEAdjType Zero() { return VEAdjType(0,-1); }
+  bool IsNull() const { return (_zp ==-1); }
+  };
+
 public:
   std::vector<typename VALUE_TYPE::ColorType> CV;
   std::vector<typename VALUE_TYPE::CurvatureType> CuV;
@@ -253,6 +283,7 @@ public:
   std::vector<typename VALUE_TYPE::RadiusType> RadiusV;
   std::vector<typename VALUE_TYPE::TexCoordType> TV;
   std::vector<struct VFAdjType> AV;
+  std::vector<struct VEAdjType> VEV;
 
   bool ColorEnabled;
   bool CurvatureEnabled;
@@ -263,6 +294,7 @@ public:
   bool RadiusEnabled;
   bool TexCoordEnabled;
   bool VFAdjacencyEnabled;
+  bool VEAdjacencyEnabled;
 };
 
 
@@ -306,6 +338,45 @@ public:
   bool IsVFAdjacencyEnabled(const typename T::VertexType *vp)   {return vp->Base().VFAdjacencyEnabled;}
 
    static void Name(std::vector<std::string> & name){name.push_back(std::string("VFAdjOcf"));T::Name(name);}
+private:
+};
+
+/*----------------------------- VEADJ ------------------------------*/
+
+template <class T> class VEAdjOcf: public T {
+public:
+    typename T::EdgePointer &VEp()       {
+        assert((*this).Base().VEAdjacencyEnabled);
+        return (*this).Base().VEV[(*this).Index()]._ep;
+    }
+    typename T::EdgePointer cVEp() const {
+        if(! (*this).Base().VEAdjacencyEnabled ) return 0;
+        else return (*this).Base().VEV[(*this).Index()]._ep;
+    }
+
+    int &VEi()       {
+        assert((*this).Base().VEAdjacencyEnabled);
+        return (*this).Base().VEV[(*this).Index()]._zp;
+    }
+    int  VEi() const {
+        assert((*this).Base().VEAdjacencyEnabled);
+        return (*this).Base().VEV[(*this).Index()]._zp;
+    }
+    int cVEi() const {
+        if(! (*this).Base().VEAdjacencyEnabled ) return -1;
+        return (*this).Base().VEV[(*this).Index()]._zp;
+    }
+    template <class RightVertexType>
+    void ImportData(const RightVertexType & rightV)
+    {
+        T::ImportData(rightV);
+    }
+
+  static bool HasVEAdjacency()   {   return true; }
+  static bool HasVEAdjacencyOcf()   {   return true; }
+  bool IsVEAdjacencyEnabled(const typename T::VertexType *vp)   {return vp->Base().VEAdjacencyEnabled;}
+
+   static void Name(std::vector<std::string> & name){name.push_back(std::string("VEAdjOcf"));T::Name(name);}
 private:
 };
 
@@ -547,6 +618,7 @@ public:
     static bool HasRadiusOcf()   { return false; }
     static bool HasTexCoordOcf()   { return false; }
     static bool HasVFAdjacencyOcf()   { return false; }
+    static bool HasVEAdjacencyOcf()   { return false; }
 };
 
 
@@ -560,6 +632,12 @@ bool VertexVectorHasVFAdjacency(const vertex::vector_ocf<VertexType> &fv)
 {
   if(VertexType::HasVFAdjacencyOcf()) return fv.IsVFAdjacencyEnabled();
   else return VertexType::HasVFAdjacency();
+}
+template < class VertexType >
+bool VertexVectorHasVEAdjacency(const vertex::vector_ocf<VertexType> &fv)
+{
+  if(VertexType::HasVEAdjacencyOcf()) return fv.IsVEAdjacencyEnabled();
+  else return VertexType::HasVEAdjacency();
 }
 template < class VertexType >
 bool VertexVectorHasPerVertexRadius(const vertex::vector_ocf<VertexType> &fv)

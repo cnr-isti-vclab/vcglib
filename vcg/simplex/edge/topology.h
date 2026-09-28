@@ -239,6 +239,58 @@ void VEEdgeCollapse(MeshType &poly, typename MeshType::VertexType *v)
 {
   VEEdgeCollapse(poly,v->VEp(),v->VEi());
 }
+
+/*! Collapse an edge onto one of its endpoints, whatever the degree of the other one.
+ *
+ * VEEdgeCollapse removes a vertex of degree two and does nothing anywhere else, which is
+ * right for thinning a polyline but useless on a branching graph (a curve skeleton, a
+ * river network, a vessel tree), where the edges worth collapsing -- short spurs, tiny
+ * segments between two close junctions -- usually touch a junction.
+ *
+ * Here the endpoint e0->V(1-z) is merged into e0->V(z): every other edge incident on it
+ * is re-attached to V(z), then e0 and V(1-z) are deleted. V(z) keeps its position.
+ * An edge that also joined the two endpoints would turn into a loop on V(z), so it is
+ * deleted as well; this cannot happen on a tree, but can on a general graph.
+ * Requires VE adjacency on both vertices and edges.
+ *
+ *        a       b                 a   b
+ *        |       |                  \ /
+ *   -----O=======O-----    ->   -----O-----
+ *      V(z)  e0  V(1-z)            V(z)
+ */
+template <class MeshType>
+void VEEdgeCollapseToVertex(MeshType &poly, typename MeshType::EdgeType *e0, const int z)
+{
+  typedef typename MeshType::EdgeType EdgeType;
+  typedef typename MeshType::VertexType VertexType;
+
+  assert(!e0->IsD());
+  VertexType *keep = e0->V(z);
+  VertexType *gone = e0->V(1-z);
+  assert(keep != gone);
+
+  std::vector<EdgeType *> star;
+  edge::VEStarVE(gone, star);
+  for (EdgeType *e : star)
+  {
+    if (e == e0) continue;
+    const int zi = (e->V(0) == gone) ? 0 : 1;
+    assert(e->V(1-zi) != gone); // a loop on the removed vertex is not supported
+    if (e->V(1-zi) == keep)     // a parallel edge would become a loop: drop it
+    {
+      edge::VEDetach(*e);
+      tri::Allocator<MeshType>::DeleteEdge(poly,*e);
+      continue;
+    }
+    edge::VEDetach(*e, zi);
+    e->V(zi) = keep;
+    edge::VEAppend(e, zi);
+  }
+
+  edge::VEDetach(*e0);
+  tri::Allocator<MeshType>::DeleteEdge(poly,*e0);
+  tri::Allocator<MeshType>::DeleteVertex(poly,*gone);
+}
 /*! Perform a simple edge split using VE adjacency
  *  
  */
