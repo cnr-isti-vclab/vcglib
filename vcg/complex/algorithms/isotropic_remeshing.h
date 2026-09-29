@@ -1363,8 +1363,18 @@ private:
     //		crease verts should reproject only on creases.
     static void ProjectToSurface(MeshType &m, Params & params)
     {
+        // With selectedOnly every other pass leaves the unselected faces as they were, so
+        // projection may move only the vertices inside the selected region -- the same strict
+        // set ImproveByLaplacian smooths. A vertex on the border of the region is shared with
+        // unselected faces, which projecting it would deform; with the reference surface on
+        // another layer, projecting everything would move the whole mesh.
+        SelectionStack<MeshType> ss(m);
+        if (params.selectedOnly) {
+            ss.push();
+            tri::UpdateSelection<MeshType>::VertexFromFaceStrict(m);
+        }
         for(auto vi=m.vert.begin();vi!=m.vert.end();++vi)
-            if(!(*vi).IsD())
+            if(!(*vi).IsD() && (!params.selectedOnly || (*vi).IsS()))
             {
                 Point3<ScalarType> newP, normP, barP;
                 ScalarType maxDist = params.maxSurfDist * 2.5f, minDist = 0.f;
@@ -1375,6 +1385,8 @@ private:
                     vi->P() = newP;
                 }
             }
+        if (params.selectedOnly)
+            ss.pop();
     }
 };
 } // end namespace tri

@@ -367,6 +367,13 @@ struct OddPointLoopGeneric
         if( tri::HasPerVertexColor(m))
             nv.C().lerp(ep.f->V(ep.z)->C(),ep.f->V1(ep.z)->C(),.5f);
 
+        // The new vertex lies on the edge, so its other attributes are interpolated along it,
+        // as MidPoint does; left unset they held whatever the allocation contained.
+        if( tri::HasPerVertexQuality(m))
+            nv.Q() = (ep.f->V(ep.z)->Q() + ep.f->V1(ep.z)->Q()) / 2.0;
+        if( tri::HasPerVertexTexCoord(m))
+            nv.T().P() = (ep.f->V(ep.z)->T().P() + ep.f->V1(ep.z)->T().P()) / 2.0;
+
         if (he.IsBorder()) {
             proj.addVertex(*l, 0.5);
             proj.addVertex(*r, 0.5);
@@ -576,11 +583,25 @@ bool RefineOddEvenE(MESH_TYPE &m, ODD_VERT odd, EVEN_VERT even, PREDICATE edgePr
     //std::vector<typename MESH_TYPE::VertexType> newEven(m.vn);
     std::vector<std::pair<typename MESH_TYPE::CoordType, typename MESH_TYPE::CoordType> > newEven(m.vn);
 
+    // With RefineSelected the odd pass (RefineE) splits only edges whose faces are all
+    // selected, so every unselected face keeps its triangle. The even pass must not undo
+    // that by moving the vertices on the border of the selection: they are shared with
+    // unselected faces, which would be deformed. Those vertices keep their position, normal
+    // and color; only vertices whose incident faces are all selected get the even rule.
+    std::vector<bool> pinned(m.vert.size(), false);
+    if (RefineSelected) {
+        for (auto &f : m.face)
+            if (!f.IsD() && !f.IsS())
+                for (int i = 0; i < 3; ++i)
+                    pinned[tri::Index(m, f.V(i))] = true;
+    }
+
     typename MESH_TYPE::VertexIterator vi;
     typename MESH_TYPE::FaceIterator fi;
     for (fi = m.face.begin(); fi != m.face.end(); fi++) if(!(*fi).IsD() && (!RefineSelected || (*fi).IsS())){ //itero facce
         for (int i = 0; i < 3; i++) { //itero vert
-            if ( !(*fi).V(i)->IsUserBit(evenFlag) && ! (*fi).V(i)->IsD() ) {
+            if ( !(*fi).V(i)->IsUserBit(evenFlag) && ! (*fi).V(i)->IsD()
+                 && !pinned[tri::Index(m, (*fi).V(i))] ) {
                 (*fi).V(i)->SetUserBit(evenFlag);
                 //	use face selection, not vertex selection, to be coherent with RefineE
                 //if (RefineSelected && !(*fi).V(i)->IsS() )

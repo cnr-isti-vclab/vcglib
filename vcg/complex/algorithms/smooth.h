@@ -361,12 +361,18 @@ class Smooth
                 cb(100 * i / step, "Planar Laplacian Smoothing");
             TD.Init(lpz);
             AccumulateLaplacianInfo(m, TD);
-            // First normalize the AccumulateLaplacianInfo
+            // First normalize the AccumulateLaplacianInfo. TD[v].sum then holds where v would
+            // move, and both orientation tests below read it for every corner of a face -- so a
+            // vertex that is not going to move must hold its current position there, not the
+            // raw accumulated sum, or moves next to the border of the selection are accepted or
+            // rejected on a meaningless point.
             for (auto vi = m.vert.begin(); vi != m.vert.end(); ++vi)
                 if (!(*vi).IsD() && TD[*vi].cnt > 0)
                 {
                     if (!SmoothSelected || (*vi).IsS())
                         TD[*vi].sum = ((*vi).P() + TD[*vi].sum) / (TD[*vi].cnt + 1);
+                    else
+                        TD[*vi].sum = (*vi).P();
                 }
 
             for (auto fi = m.face.begin(); fi != m.face.end(); ++fi)
