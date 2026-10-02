@@ -937,6 +937,8 @@ INPUT                  = . \
                          vcg/complex/algorithms/geodesic.h \
                          vcg/complex/algorithms/measure.h \
                          vcg/complex/algorithms/curve_on_manifold.h \
+                         vcg/complex/algorithms/reeb_graph.h \
+                         vcg/complex/algorithms/handle_tunnel_loops.h \
                          apps/sample \
                          vcg/space/box3.h \
                          docs/Doxygen/adjacency.dox \

@@ -28,34 +28,59 @@
 #include <vcg/complex/algorithms/update/topology.h>
 #include <algorithm>
 
+/** \file reeb_graph.h
+ * \brief Reeb graph of a scalar function on a triangle mesh: tri::ReebGraph.
+ */
+
 namespace vcg {
 namespace tri {
 
-/**
- * @brief Reeb graph of the vertex quality of a triangle mesh.
+/** \ingroup trimesh
+ * \brief Reeb graph of the vertex quality of a triangle mesh.
  *
- * The Reeb graph collapses every connected component of every level set of a field to
- * a point. Its nodes are the critical vertices (minima, maxima, saddles), its arcs the
- * families of contours swept between them. For a closed orientable surface of genus g it
- * has exactly g independent cycles.
+ * The Reeb graph of a function on a surface collapses every connected component of every
+ * level set to a point. Its nodes are the critical points: minima, maxima, and saddles
+ * where a contour splits or two contours merge. Its arcs are the families of contours
+ * swept between them. Whatever the function, the Reeb graph of a closed orientable surface
+ * of genus g has exactly g independent cycles. It is a compact description of the shape
+ * along the function, used for shape matching, skeletons and topology repair (see
+ * tri::HandleTunnelLoops).
  *
- * The graph is built with the on-line algorithm of Pascucci, Scorzelli, Bremer and
- * Mascarenhas ("Robust on-line computation of Reeb graphs: simplicity and speed", ACM TOG
- * 2007): every edge starts as an arc, every triangle glues the paths of its edges by a
- * merge sort along the field, and a vertex is dropped from the graph as soon as all its
- * triangles are in and it has one arc below and one above.
+ * \par Usage
+ * \code
+ * tri::UpdateTopology<MyMesh>::FaceFace(m);
+ * tri::UpdateQuality<MyMesh>::VertexFromPlane(m, Plane3f(0, dir));  // a height function
+ * MyEdgeMesh graph;
+ * tri::ReebGraph<MyMesh> rg;
+ * rg.Compute(m, graph);
+ * // graph.vert[n] is node n, at mesh vertex rg.nodeVert[n];
+ * // graph.edge[a] is arc a, from its lower node V(0) to its upper node V(1).
+ * \endcode
+ * See also the sample trimesh_handle_tunnel.cpp.
  *
- * The field is the vertex quality, e.g. a height from UpdateQuality::VertexFromPlane.
- * Vertices are ordered by quality with ties broken by index, so the field does not need to
- * be Morse; it must be finite.
+ * \par Requirements
+ * - The function is the vertex quality, and must be finite. Ties are broken by vertex
+ *   index, so it need not be Morse.
+ * - The mesh needs per-vertex quality and up-to-date FF adjacency, and must be
+ *   edge-manifold. Boundaries are allowed, but then the cycles of the graph no longer
+ *   count the genus.
+ * - The edge mesh needs vertex coordinates and edge vertex references. Its VE adjacency is
+ *   filled when it has one.
  *
- * The graph is written to an edge mesh: a vertex per node, placed at its mesh vertex, and
- * an edge per arc, from its lower node V(0) to its upper node V(1); VE adjacency is filled
- * when the edge mesh has it. This class keeps the map from the mesh to the graph: the node
- * or the arc of every vertex and the arcs crossed by every edge, as indices of the edge
- * mesh's vertices and edges.
+ * \par Output
+ * Compute() replaces the content of the edge mesh with the graph: a vertex per node, placed
+ * at its mesh vertex, and an edge per arc, going up. This object keeps the map from the
+ * mesh to the graph, as indices of the edge mesh's vertices and edges: the node (#vertNode)
+ * or arc (#vertArc) of every vertex, the mesh vertex of every node (#nodeVert), and the
+ * arcs crossed by every mesh edge (#edgePath), with the edge numbering it uses (#faceEdge,
+ * #edgeVert).
  *
- * Requires per-vertex quality and FF adjacency on an edge-manifold mesh.
+ * \par Algorithm
+ * The on-line algorithm of V. Pascucci, G. Scorzelli, P.-T. Bremer and A. Mascarenhas,
+ * "Robust on-line computation of Reeb graphs: simplicity and speed", ACM TOG 26(3), 2007:
+ * every edge starts as an arc, every triangle glues the paths of its edges by a merge sort
+ * along the function, and a vertex is dropped from the graph as soon as all its triangles
+ * are in and it has one arc below and one above. It takes about 1.2 s for 640K triangles.
  */
 template <class MeshType>
 class ReebGraph
@@ -63,21 +88,33 @@ class ReebGraph
 public:
   typedef typename MeshType::FaceType     FaceType;
 
-  std::vector<int> nodeVert;                     ///< mesh vertex of each node
-  std::vector<int> vertNode;                     ///< node of each vertex, -1 for regular vertices
-  std::vector<int> vertArc;                      ///< arc of each regular vertex, -1 for nodes
-  std::vector<int> rank;                         ///< position of each vertex in the total order
-  std::vector<int> faceEdge;                     ///< edge of side z of face fi, at 3*fi+z
-  std::vector<std::pair<int,int> > edgeVert;     ///< lower and upper vertex of each edge
-  std::vector<std::vector<int> > edgePath;       ///< arcs crossed by each edge, going up
+  std::vector<int> nodeVert;   ///< mesh vertex of each node
+  std::vector<int> vertNode;   ///< node of each mesh vertex, -1 for vertices inside an arc
+  std::vector<int> vertArc;    ///< arc of each mesh vertex inside an arc, -1 for nodes
+  std::vector<int> rank;       ///< position of each mesh vertex in the order by quality
+  std::vector<int> faceEdge;   ///< edge number of side z of face fi, at 3*fi+z
+  std::vector<std::pair<int,int> > edgeVert; ///< lower and upper mesh vertex of each edge
+  std::vector<std::vector<int> > edgePath;   ///< arcs crossed by each mesh edge, going up
 
+  /// True if mesh vertex \a v comes before \a w in the order by quality.
   bool Below(int v, int w) const { return rank[v] < rank[w]; }
 
+  /**
+   * \brief Compute the Reeb graph of the vertex quality of \a m into \a graph.
+   *
+   * \param m      the mesh; only read
+   * \param graph  the edge mesh that receives the graph; its previous content is cleared
+   * \throws vcg::MissingComponentException if \a m has no per-vertex quality or no FF
+   *         adjacency.
+   * \throws vcg::MissingPreconditionException if the FF adjacency is not computed, if \a m
+   *         has non-manifold edges, or if a quality is NaN or infinite.
+   */
   template <class EdgeMeshType>
   void Compute(MeshType &m, EdgeMeshType &graph)
   {
     RequirePerVertexQuality(m);
     RequireFFAdjacency(m);
+    MeshAssert<MeshType>::FFAdjacencyIsInitialized(m);
     MeshAssert<MeshType>::FFTwoManifoldEdge(m);
     MeshAssert<MeshType>::VertexQualityFinite(m);
 

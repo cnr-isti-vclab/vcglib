@@ -39,9 +39,14 @@
 #include <queue>
 #include <set>
 
+/** \file handle_tunnel_loops.h
+ * \brief Handle and tunnel loops of a surface: tri::HandleTunnelLoops.
+ */
+
 namespace vcg {
 namespace tri {
 
+/// \cond
 namespace handle_tunnel_detail {
 class Vertex; class Face;
 struct Types : public UsedTypes<Use<Vertex>::AsVertexType, Use<Face>::AsFaceType> {};
@@ -54,20 +59,50 @@ class GVertex : public vcg::Vertex<GTypes, vertex::Coord3d, vertex::BitFlags> {}
 class GEdge : public vcg::Edge<GTypes, edge::VertexRef, edge::BitFlags> {};
 class Graph : public TriMesh<std::vector<GVertex>, std::vector<GEdge> > {};
 }
+/// \endcond
 
-/**
- * @brief Handle and tunnel loops of an orientable surface.
+/** \ingroup trimesh
+ * \brief Handle and tunnel loops of an orientable surface.
  *
- * A closed surface of genus g bounds an inside I and an outside O. A handle loop bounds a
- * surface in I but not in O (it circles a handle, like the meridian of a torus), a tunnel
- * loop the opposite (it circles a tunnel, like the longitude). Handle loops and tunnel
- * loops each span a g-dimensional half of the homology of the surface; this class returns
- * g short handle loops and g short tunnel loops spanning them, as vertex-edge paths.
+ * A closed surface of genus g bounds an inside I and an outside O. A \b handle loop bounds
+ * a surface in I but not in O: it circles a handle, like the meridian of a torus, which
+ * goes around the tube. A \b tunnel loop bounds in O but not in I: it circles a tunnel,
+ * like the longitude of a torus, which goes around the hole. The handle loops span a
+ * g-dimensional half of the homology of the surface and the tunnel loops the other half.
+ * Compute() finds g short handle loops and g short tunnel loops spanning them, as closed
+ * vertex-edge paths on the mesh. They are what to cut to remove a handle or to fill a
+ * tunnel, e.g. to repair the topology of a scanned or reconstructed surface.
  *
- * It follows Dey, Fan and Wang, "An efficient computation of handle and tunnel loops via
- * Reeb graphs" (ACM TOG 2013), without any volume mesh:
- * 1. the Reeb graph of a random height function gives g loops on the surface, each with
- *    a dual loop in the level set just above its lowest point;
+ * \par Usage
+ * \code
+ * tri::HandleTunnelLoops<MyMesh> ht;
+ * ht.Compute(m);
+ * for (const auto &loop : ht.handles)      // ht.genus loops
+ *   for (int vi : loop) { ... m.vert[vi] ... }
+ * MyEdgeMesh em;                           // to save or draw them
+ * tri::HandleTunnelLoops<MyMesh>::LoopsToEdgeMesh(m, ht.handles, em);
+ * \endcode
+ * See also the sample trimesh_handle_tunnel.cpp.
+ *
+ * \par Requirements
+ * - Components: vertex coordinates and face vertex references only. The algorithm works on
+ *   an internal copy with its own adjacency, so no adjacency has to be up to date and the
+ *   mesh is not modified.
+ * - The surface must be connected, orientable and edge-manifold. Small holes are allowed:
+ *   each is closed with a fan around its centroid, and the loops are routed along the
+ *   hole boundary instead of across it. Larger or knotted holes make the handle/tunnel
+ *   classification depend on how they would be closed.
+ * - A violated requirement throws vcg::MissingPreconditionException.
+ *
+ * \par Output
+ * #genus, and the loops in #handles and #tunnels, as indices of mesh vertices. A sphere
+ * gives no loops.
+ *
+ * \par Algorithm
+ * It follows T. K. Dey, F. Fan and Y. Wang, "An efficient computation of handle and tunnel
+ * loops via Reeb graphs", ACM TOG 32(4), 2013, without any volume mesh:
+ * 1. the Reeb graph (tri::ReebGraph) of a random height function gives g loops on the
+ *    surface, each with a dual loop in the level set just above its lowest point;
  * 2. the local shape at that lowest point tells whether each loop is non-trivial inside or
  *    outside; pushing each loop off the surface on that side gives bases of the homology
  *    of I and of O;
@@ -78,10 +113,10 @@ class Graph : public TriMesh<std::vector<GVertex>, std::vector<GEdge> > {};
  *    base points are moved onto them, until the total length stops decreasing for
  *    Param::patience rounds.
  *
- * The loops are built on the mesh itself; the pushed-off copies are only used to count
- * crossings. Small holes are closed with a fan around their centroid before starting, and
- * the loops are routed along the hole boundary instead of across it. The mesh must be
- * edge-manifold, orientable and connected; it is not modified.
+ * Tightening is a heuristic: the loops are short, not the shortest. It dominates the
+ * running time, which grows with the size and the genus of the mesh: about 20 s for genus
+ * 4 and 640K triangles, 10 s for genus 27 and 92K triangles, 5 minutes for genus 100 and
+ * 287K triangles.
  *
  * Before tightening (Param::maxIter = 0) a basis element is a sum of several of the 2g
  * loops and often has more than one component: each becomes its own Loop, so there can be
@@ -91,9 +126,11 @@ template <class MeshType>
 class HandleTunnelLoops
 {
 public:
-  /// A closed vertex-edge path: indices of mesh vertices, the last joined to the first.
+  /// A closed vertex-edge path: indices of mesh vertices, consecutive ones joined by an
+  /// edge, the last joined to the first.
   typedef std::vector<int> Loop;
 
+  /// Options of Compute(); the defaults suit most meshes.
   struct Param
   {
     unsigned int seed = 0;  ///< seeds the height direction and the projection directions
@@ -102,9 +139,19 @@ public:
     int attempts = 10;      ///< height directions tried before giving up on degenerate ones
   };
 
-  std::vector<Loop> handles, tunnels;
-  int genus = 0;
+  std::vector<Loop> handles;  ///< the handle loops, around the handles
+  std::vector<Loop> tunnels;  ///< the tunnel loops, around the tunnels
+  int genus = 0;              ///< genus of the surface, with its holes closed
 
+  /**
+   * \brief Compute #genus, #handles and #tunnels of \a m.
+   *
+   * \param m    the surface; only read
+   * \param par  options
+   * \throws vcg::MissingPreconditionException if the mesh has non-manifold edges, a hole
+   *         whose boundary touches itself, more than one connected component, or no
+   *         consistent orientation, or if every height direction tried was degenerate.
+   */
   void Compute(MeshType &m, const Param &par = Param())
   {
     handles.clear(); tunnels.clear(); genus = 0;
@@ -145,7 +192,13 @@ public:
       }
   }
 
-  /// Append the loops to an edge mesh, one closed polyline each.
+  /**
+   * \brief Append \a loops to the edge mesh \a em, one closed polyline each.
+   *
+   * \param m     the mesh the loops are on
+   * \param loops loops of \a m, e.g. #handles or #tunnels
+   * \param em    an edge mesh with vertex coordinates and edge vertex references
+   */
   template <class EdgeMeshType>
   static void LoopsToEdgeMesh(const MeshType &m, const std::vector<Loop> &loops, EdgeMeshType &em)
   {
