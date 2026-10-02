@@ -31,5 +31,6 @@ var searchData=
   ['trisplit_28',['TriSplit',['../namespacevcg_1_1face.html#a0ba88094523aac1235a83b5bc33ea845',1,'vcg::face::TriSplit()'],['../classvcg_1_1tri_1_1TriSplit.html',1,'vcg::tri::TriSplit&lt; TRIMESH_TYPE, CenterPoint &gt;']]],
   ['trivialmidpointrefine_29',['TrivialMidPointRefine',['../namespacevcg_1_1tri.html#a0412bb3c694f537339a2fa718409a1fc',1,'vcg::tri']]],
   ['trivialpointersampler_30',['TrivialPointerSampler',['../classvcg_1_1tri_1_1TrivialPointerSampler.html',1,'vcg::tri']]],
-  ['trivialsampler_31',['TrivialSampler',['../classvcg_1_1tri_1_1TrivialSampler.html',1,'vcg::tri']]]
+  ['trivialsampler_31',['TrivialSampler',['../classvcg_1_1tri_1_1TrivialSampler.html',1,'vcg::tri']]],
+  ['tunnels_32',['tunnels',['../classvcg_1_1tri_1_1HandleTunnelLoops.html#ae228465c0ed78f1a970759ad69846bfc',1,'vcg::tri::HandleTunnelLoops']]]
 ];

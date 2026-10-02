@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['cb_0',['cb',['../classvcg_1_1tri_1_1RedetailSampler.html#ac022758bcc7f35d1af4dfc07fc32e09d',1,'vcg::tri::RedetailSampler']]],
-  ['closestptmesh_1',['closestPtMesh',['../classvcg_1_1tri_1_1HausdorffSampler.html#ab7c1ff53ff16d74c269ed55f04a54170',1,'vcg::tri::HausdorffSampler']]]
+  ['barycentricsnapthr_0',['barycentricSnapThr',['../classvcg_1_1tri_1_1CoM_1_1Param.html#a2a7c2be0f9614376c8e7df0409f71ce9',1,'vcg::tri::CoM::Param']]],
+  ['base_1',['base',['../classvcg_1_1tri_1_1CoM.html#a2b9602837351181f5e24d6aa8238e586',1,'vcg::tri::CoM']]]
 ];
