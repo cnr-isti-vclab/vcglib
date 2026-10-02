@@ -30,6 +30,7 @@
 #define __VCGLIB_TETRAEXPORT_VTK
 
 #include <wrap/io_trimesh/precision.h>
+#include <wrap/system/utf8_file.h>
 
 #include <stdio.h>
 
@@ -80,7 +81,7 @@ public:
 
         std::string vtkName(filename);
 
-        vtkFile = fopen(vtkName.c_str(), "wb");
+        vtkFile = vcg::utf8::FOpen(vtkName.c_str(), "wb");
         if (vtkFile == NULL)
             return 1;
 

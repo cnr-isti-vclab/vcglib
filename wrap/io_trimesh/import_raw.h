@@ -38,6 +38,7 @@ First working version (callieri)
 #define __VCGLIB_IMPORT_RAW
 
 #include <stdio.h>
+#include <wrap/system/utf8_file.h>
 #include <fstream>
 #include <iostream>
 
@@ -313,7 +314,7 @@ static int Open( MESH_TYPE &m, const char * filename, bool triangulate=false, in
   linebuffer[9] = 1.0;
 
 
-  fp = fopen(filename, "r");
+  fp = vcg::utf8::FOpen(filename, "r");
  
   if(fp == NULL)
   {

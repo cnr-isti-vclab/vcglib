@@ -2,6 +2,7 @@
 #define GLW_UTILITY_H
 
 #include <stdio.h>
+#include <wrap/system/utf8_file.h>
 #include <stddef.h>
 
 #include <string>
@@ -150,7 +151,7 @@ inline std::string readTextFile(const char * fileName)
 	std::string r;
 	if (fileName == 0) return r;
 
-	FILE * f = fopen(fileName, "rb");
+	FILE * f = vcg::utf8::FOpen(fileName, "rb");
 	if (f == 0) return r;
 
 	fseek(f, 0, SEEK_END);

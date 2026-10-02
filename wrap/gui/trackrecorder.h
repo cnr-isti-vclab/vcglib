@@ -35,6 +35,7 @@ Revision 1.1  2005/04/14 21:23:39  ganovelli
 
 
 #include <wrap/gui/trackball.h>
+#include <wrap/system/utf8_file.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -52,7 +53,7 @@ struct TrackRecorder{
 	void StartPlaying(char * namefile){
 		if(trackfile != NULL) return;
 
-		trackfile = fopen(namefile,"rb");
+		trackfile = vcg::utf8::FOpen(namefile,"rb");
 		startTime = clock();
 		mode = PLAY;
 		fread(&nextTime,4,1,trackfile);
@@ -70,7 +71,7 @@ struct TrackRecorder{
 
 	void  StartRecording(char * namefile){
 		if(trackfile != NULL) return;
-		trackfile = fopen(namefile,"wb");	
+		trackfile = vcg::utf8::FOpen(namefile,"wb");	
 		startTime = clock();
 		mode = REC;
 	} 

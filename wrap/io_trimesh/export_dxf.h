@@ -28,6 +28,8 @@ $Log: not supported by cvs2svn $
 #ifndef __VCGLIB_EXPORT_DXF
 #define __VCGLIB_EXPORT_DXF
 
+#include <wrap/system/utf8_file.h>
+
 namespace vcg {
 namespace tri {
 namespace io {
@@ -45,7 +47,7 @@ public:
   {
     if(m.fn==0 && m.en != 0) return SaveEdge(m,filename);
 
-    FILE * o = fopen(filename,"w");
+    FILE * o = vcg::utf8::FOpen(filename,"w");
     if(o==NULL)	return 1;
 
 	writeHeader(o, m);
@@ -111,7 +113,7 @@ public:
 
   static bool SaveEdge(const SaveMeshType  &m, const char * filename)
   {
-    FILE * o = fopen(filename,"w");
+    FILE * o = vcg::utf8::FOpen(filename,"w");
     if(o==NULL)	return 1;
 
 	writeHeader(o, m);

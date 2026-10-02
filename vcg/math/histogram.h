@@ -24,6 +24,7 @@
 #define __VCG_HISTOGRAM
 
 #include <assert.h>
+#include <wrap/system/utf8_file.h>
 #include <string>
 #include <limits>
 #include <vector>
@@ -351,7 +352,7 @@ template <class ScalarType>
 void Histogram<ScalarType>::FileWrite(const std::string &filename)
 {
   FILE *fp;
-  fp=fopen(filename.c_str(),"w");
+  fp=vcg::utf8::FOpen(filename.c_str(),"w");
 
   for(unsigned int i=0; i<H.size(); i++)
     fprintf (fp,"%12.8lf , %12.8lf \n",R[i],double(H[i])/cnt);

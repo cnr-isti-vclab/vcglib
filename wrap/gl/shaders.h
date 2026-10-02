@@ -25,6 +25,7 @@
 #define __SHADERS_H__
 
 #include <GL/glew.h>
+#include <wrap/system/utf8_file.h>
 #include <stdio.h>
 #include <set>
 
@@ -95,7 +96,7 @@ public:
 
 		this->flags |= SOURCE_DIRTY;
 		this->compiled = false;
-		FILE * f = fopen(fileName, "rb");
+		FILE * f = vcg::utf8::FOpen(fileName, "rb");
 		if (f == 0)
 		{
 			this->source = "";

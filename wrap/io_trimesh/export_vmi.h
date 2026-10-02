@@ -38,6 +38,7 @@
     */
 
 #include <vcg/complex/complex.h>
+#include <wrap/system/utf8_file.h>
 
 namespace vcg {
 namespace tri {
@@ -243,7 +244,7 @@ namespace io {
 
         static int Save(const SaveMeshType &m,const char * filename){
             Out_mode() = 2;
-            F() = fopen(filename,"wb");
+            F() = vcg::utf8::FOpen(filename,"wb");
             if(F()==NULL)	return 1; // 1 is the error code for cant'open, see the ErrorMsg function
             int res = Serialize(m);
             fclose(F());

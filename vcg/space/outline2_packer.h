@@ -24,6 +24,7 @@
 #define __VCG_OUTLINE2_PACKER_H__
 
 #include <limits>
+#include <wrap/system/utf8_file.h>
 #include <fstream>
 #include <stdio.h>
 #include <assert.h>
@@ -197,7 +198,7 @@ static bool PackMultiAsObjectOrientedRect(const std::vector< std::vector<Point2x
 
 static bool WritePolyVec(const std::vector< std::vector<Point2x> > &polyVec, const char *filename)
 {
-  FILE *fp=fopen(filename,"w");
+  FILE *fp=vcg::utf8::FOpen(filename,"w");
   if(!fp) return false;
   fprintf(fp,"%lu\n",polyVec.size());
   for(size_t i=0;i<polyVec.size();++i)
@@ -213,7 +214,7 @@ static bool WritePolyVec(const std::vector< std::vector<Point2x> > &polyVec, con
 
 static bool ReadPolyVec(std::vector< std::vector<Point2x> > &polyVec, const char *filename)
 {
-	std::ifstream ifs(filename, std::ifstream::in);
+	std::ifstream ifs(vcg::utf8::ToStreamPath(filename), std::ifstream::in);
 	if (!ifs.is_open()) return false;
 	int sz;
 	ifs >> sz;
