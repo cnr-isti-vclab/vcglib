@@ -204,9 +204,8 @@ public:
 	 */
 	bool Collide( const Box2 &b ) const
 	{
-		Box2 bb=*this;
-		bb.Intersect(b);
-		return bb.IsValid();
+		return b.min.X()<max.X() && b.max.X()>min.X() &&
+		       b.min.Y()<max.Y() && b.max.Y()>min.Y();
 	}
 	/**
 	 * Check if empty.
