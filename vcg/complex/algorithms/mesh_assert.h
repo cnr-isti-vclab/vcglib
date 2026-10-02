@@ -26,6 +26,7 @@
 #include <vcg/complex/exception.h>
 #include <vcg/simplex/edge/pos.h>
 #include <vcg/complex/algorithms/update/flag.h>
+#include <cmath>
 
 namespace vcg {
 namespace tri {
@@ -120,6 +121,14 @@ public:
   }
   
   
+  /// \brief Throw vcg::MissingPreconditionException if a Vertex Quality is NaN or infinite
+  static void VertexQualityFinite(MeshType &m)
+  {
+    for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi) if(!vi->IsD())
+      if(!std::isfinite(vi->cQ()))
+        throw vcg::MissingPreconditionException("Vertex Quality has NaN or infinite values");
+  }
+
   /// \brief Throw vcg::MissingPreconditionException if There are unreferenced vertices
   static void NoUnreferencedVertex(MeshType &m)
   {
