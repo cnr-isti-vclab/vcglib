@@ -1245,6 +1245,10 @@ public:
 
 	static int CountHoles( MeshType & m)
 	{
+		RequireFFAdjacency(m);
+		MeshAssert<MeshType>::FFAdjacencyIsInitialized(m);
+		// Walking a boundary across a non-manifold edge would loop or assert in Pos::FlipF.
+		MeshAssert<MeshType>::FFTwoManifoldEdge(m);
 		UpdateFlags<MeshType>::FaceClearV(m);
 		int loopNum=0;
 		for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi) if(!fi->IsD())
