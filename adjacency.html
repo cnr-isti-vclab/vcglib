@@ -78,11 +78,11 @@ $(function() {
   <div class="headertitle"><div class="title">adjacency </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md2"></a>
+<div class="textblock"><h1><a class="anchor" id="autotoc_md8"></a>
 Adjacency</h1>
 <p>VCG Lib does not have a unique, hard-coded, way to encode the adjacencies among triangles and edges. It all depends on which attributes are stored with the simplices and how they are used. In the previous examples the definition of face has always included the attribute <a class="el" href="classvcg_1_1face_1_1VertexRef.html" title="The references to the vertexes of a triangular face.">vcg::face::VertexRef</a>, which stores 3 pointers to MyVertex accessible with the member function V() (implementing a plain Indexed Data Structure). Almost all of the algorithms currently implemented in vcglib assume that <a class="el" href="classvcg_1_1face_1_1VertexRef.html" title="The references to the vertexes of a triangular face.">vcg::face::VertexRef</a> is present. So, if your type MyFace does not include the attribute <a class="el" href="classvcg_1_1face_1_1VertexRef.html" title="The references to the vertexes of a triangular face.">vcg::face::VertexRef</a>, the definition will be correct, but almost no algorithm will work.</p>
 <p>There are other adjacency relations that can be useful to navigate a mesh, for example to collect the one-ring neighborhood of a vertex. vcgib has two main adjacency relations face-face and vertex-face which are explained in the following, along with the attributes they use.</p>
-<h1><a class="anchor" id="autotoc_md3"></a>
+<h1><a class="anchor" id="autotoc_md9"></a>
 FF Adjacency</h1>
 <p>The face-to-face adjacency, stored in the attribute for the faces <a class="el" href="classvcg_1_1face_1_1FFAdj.html" title="Component: Per Face Face-Face adjacency relation">vcg::face::FFAdj</a> , encodes the adjacency between faces through edges. The image below shows two triangle faces with the convention adopted for indexing vertexes and edges.</p>
 <p>The vertexes are numbered from 0 to 2 in CCW direction and the edge i = 0..2 is the edge whose extremes are i and (i+1) mod 3. Therefor, in the below example, the common edge between faces f0 and f1 is the edge 1 of the face f1 and the edge 0 of the face f0.</p>
@@ -105,8 +105,8 @@ f0-&gt;FFi(0) == 1
 <img src="FF_nonmanifold.png" alt=""/>
 <div class="caption">
 Non manifold edge</div></div>
-<p>In this case the FF adjacencies are arranged to form a circular list (not necessarily sorted with the angle around the edge). This is done by the VCG Lib function that update these values ( <a class="el" href="classvcg_1_1tri_1_1UpdateTopology.html#a506e3895fa279551d02296ed53a2f814" title="Update the Face-Face topological relation by allowing to retrieve for each face what other faces shar...">vcg::tri::UpdateTopology::FaceFace</a> (MeshType &amp; m)). In this way VCG Lib provides a way to check if a mesh is manifold on a specific edge because the FF adjacency relation is mutual, i.e. the face f0 points to the face f1 which points to the face f0, if and only if the mesh is manifold over the corresponding edge. </p><pre class="fragment">bool IsManifold(MyFace *f,int e) { return (f0 == f0-&gt;FFp(0)-&gt;FFp(f0-&gt;FFi(0)))}
-</pre><h2><a class="anchor" id="autotoc_md4"></a>
+<p>In this case the FF adjacencies are arranged to form a circular list (not necessarily sorted with the angle around the edge). This is done by the VCG Lib function that update these values ( <a class="el" href="classvcg_1_1tri_1_1UpdateTopology.html#a506e3895fa279551d02296ed53a2f814" title="Update the Face-Face topological relation by allowing to retrieve for each face what other faces shar...">vcg::tri::UpdateTopology::FaceFace</a> (MeshType &amp; m)). In this way VCG Lib provides a way to check if a mesh is manifold on a specific edge because the FF adjacency relation is mutual, i.e. the face f0 points to the face f1 which points to the face f0, if and only if the mesh is manifold over the corresponding edge. </p><pre class="fragment">bool IsManifold(MyFace *f,int e) { return (f == f-&gt;FFp(e)-&gt;FFp(f-&gt;FFi(e))); }
+</pre><h2><a class="anchor" id="autotoc_md10"></a>
 Pos</h2>
 <p>The Pos is the VCG Lib implementation of the Cell-Tuple{ref}. Here we give a as short as possible definition, trading formalisms for space. A Pos in a triangle mesh is a triple made of a vertex: pos = (v,e,f) , such that v is an extreme of e and e belong to the face f . The figure shows few pos in a triangle mesh as small triangles "pointing" to a vertex, "leaning" against an edge and inside a face. For example c0=(v,e0,f).</p>
 <p>A very nice property is that given a pos c, there is only another neighbor pos c' that can be obtained from c changing only one of the elements of the triple.</p>
@@ -132,14 +132,12 @@ c1 = FlipE(FlipF(c3))
 Bounce
 c0 = FlipE(FlipF(c1))
 </pre><p> Note that concatenating two flips: FlipF and FlipE we obtain a transition from a pos to the next in counterclockwise or in clockwise sense, depending if the starting pos is on the CCW edge of the face with respect to the vertex or not. Also note that, thanks to how FF adjacency is defined, when a pos is on the border, it bounces back. This pair of flip are widely used in the VCG Lib to run over the one ring neighborhood of manifold vertices.</p>
-<p>The following code snippet shows how to use the pos to iterate around a vertex: </p><pre class="fragment">sf/apps/sample/trimesh_pos_demo/trimesh_pos_demo.cpp
-
-#include &lt;vcg/simplex/face/pos.h&gt; // include the definition of pos
+<p>The following code snippet shows how to use the pos to iterate around a vertex: </p><pre class="fragment">#include &lt;vcg/simplex/face/pos.h&gt; // include the definition of pos
 
 ...includes to define your mesh type
 
 class MyVertex: ...
-class MyFace: public vcg::FaceSimp2&lt;MyVertex,MyEdge,MyFace, vcg::face::VertexRef, vcg::face::FFAdj&gt;{};
+class MyFace: public vcg::Face&lt;MyUsedTypes, vcg::face::VertexRef, vcg::face::FFAdj&gt;{};
 
 void OneRingNeighborhood( MyFace * f)
 {
@@ -154,28 +152,26 @@ void OneRingNeighborhood( MyFace * f)
 }
 </pre><p> Two important notes:</p>
 <p>We arbitrarily picked f-&gt;V(0) as pivot vertex. In general one may want to start knowing the vertex. This is done by including the attribute <a class="el" href="classvcg_1_1vertex_1_1VFAdj.html" title="Component: Per vertex Vertex-Face adjacency relation">vcg::vertex::VFAdj</a> which basically associates to each vertex pointer to one of the faces incident on it. See the VF Adjacency for details. This implementation does not work if the vertex is on the border. Just try with the example: from the pos c4 it would find c5,c6,c3 which is in the same face as c4. Of course this does not happen if you use the pos itself as a guard and not just the face. However, even in this case, you would obtain the sequence of pos: c5,c6,c3,c1,c0,c4 corresponding to the faces f2,f2,f1,f0,f0,f1 which probably is not what you want. VCG Lib provides a variation of pos that solves this problem</p>
-<h2><a class="anchor" id="autotoc_md5"></a>
+<h2><a class="anchor" id="autotoc_md11"></a>
 Jumping Pos</h2>
-<p>The Jumping Pos works exactly like the Pos, only it does not bounce when it encounters the border. Instead, it jump around the vertex as if the to border faces sharing the vertex (faces f0 and f2 in the image) were adjacent. </p><div class="fragment"><div class="line">sf/apps/sample/trimesh_pos_demo/trimesh_pos_demo.cpp</div>
+<p>The Jumping Pos works exactly like the Pos, only it does not bounce when it encounters the border. Instead, it jump around the vertex as if the to border faces sharing the vertex (faces f0 and f2 in the image) were adjacent. </p><div class="fragment"><div class="line"><span class="preprocessor">#include &lt;vcg/simplex/face/jumping_pos.h&gt;</span> <span class="comment">// include the definition of jumping pos</span></div>
 <div class="line"> </div>
-<div class="line"><span class="preprocessor">    #include &lt;vcg/simplex/face/jumping_pos.h&gt;</span> <span class="comment">// include the definition of jumping pos</span></div>
+<div class="line"><span class="comment">//...includes to define your mesh type</span></div>
 <div class="line"> </div>
-<div class="line">    <span class="comment">//...includes to define your mesh type</span></div>
+<div class="line"><span class="comment">//class MyVertex: ...</span></div>
+<div class="line"><span class="keyword">class </span>MyFace: <span class="keyword">public</span> vcg::Face&lt;MyUsedTypes, vcg::face::VertexRef, vcg::face::FFAdj&gt;{};</div>
 <div class="line"> </div>
-<div class="line">    <span class="comment">//class MyVertex: ...</span></div>
-<div class="line">    <span class="keyword">class </span>MyFace: <span class="keyword">public</span> vcg::FaceSimp2&lt;MyVertex,MyEdge,MyFace, vcg::face::VertexRef,vcg::face::FFAdj&gt;{};</div>
-<div class="line"> </div>
-<div class="line">    <span class="keywordtype">void</span> OneRingNeighborhoodJP( MyFace * f)</div>
-<div class="line">    {</div>
-<div class="line">      MyVertex * v = f-&gt;V(0);</div>
-<div class="line">      MyFace* start = f;</div>
-<div class="line">      vcg::face::JumpingPos&lt;MyFace&gt; p(f,0,v);<span class="comment">// constructor that takes face, edge and vertex</span></div>
-<div class="line">      <span class="keywordflow">do</span></div>
-<div class="line">      {</div>
-<div class="line">        p.NextFE();</div>
-<div class="line">      }<span class="keywordflow">while</span>(p.f!=start);</div>
-<div class="line">    }</div>
-</div><!-- fragment --> <h2><a class="anchor" id="autotoc_md6"></a>
+<div class="line"><span class="keywordtype">void</span> OneRingNeighborhoodJP( MyFace * f)</div>
+<div class="line">{</div>
+<div class="line">  MyVertex * v = f-&gt;V(0);</div>
+<div class="line">  MyFace* start = f;</div>
+<div class="line">  vcg::face::JumpingPos&lt;MyFace&gt; p(f,0,v);<span class="comment">// constructor that takes face, edge and vertex</span></div>
+<div class="line">  <span class="keywordflow">do</span></div>
+<div class="line">  {</div>
+<div class="line">    p.NextFE();</div>
+<div class="line">  }<span class="keywordflow">while</span>(p.f!=start);</div>
+<div class="line">}</div>
+</div><!-- fragment --> <h2><a class="anchor" id="autotoc_md12"></a>
 VF Adjacency</h2>
 <p>VCG Lib implements vertex-to-face adjacency, i.e. given a vertex v we can retrieve all the faces incident to v. Let v_star =(f0,f1,f2,...,fk) be the set faces incident to v arranged in a sequence (with no preferred criteria). VCG Lib allows to retrieve v_star in optimal time ( O( star_v) ) by using the following attributes:</p>
 <ul>
@@ -197,16 +193,14 @@ f1-&gt;VFp(2) == f0
 f1-&gt;VFi(2) == 2
 f0-&gt;VFp(2) == NULL
 f0-&gt;VFi(2) == -1
-</pre> <h2><a class="anchor" id="autotoc_md7"></a>
+</pre> <h2><a class="anchor" id="autotoc_md13"></a>
 VFIterator</h2>
-<p>VFIterator is a simple iterator to run over the faces in the one-ring neighborhood of a vertex using the VF Adjacency (it is just like Pos for the FF Adjacency) The following code snippet shows how to use the VFIterator: </p><div class="fragment"><div class="line">sf/apps/sample/trimesh_pos_demo/trimesh_vfiter_demo.cpp</div>
-<div class="line"> </div>
-<div class="line"><span class="preprocessor">#include &lt;vcg/simplex/face/pos.h&gt;</span> <span class="comment">// include the definition of  VFIterator</span></div>
+<p>VFIterator is a simple iterator to run over the faces in the one-ring neighborhood of a vertex using the VF Adjacency (it is just like Pos for the FF Adjacency) The following code snippet shows how to use the VFIterator: </p><div class="fragment"><div class="line"><span class="preprocessor">#include &lt;vcg/simplex/face/pos.h&gt;</span> <span class="comment">// include the definition of  VFIterator</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">//...includes to define your mesh type</span></div>
 <div class="line"> </div>
-<div class="line"><span class="keyword">class </span>MyVertex: <span class="keyword">public</span> vcg::VertexSimp2&lt;MyVertex,MyEdge,MyFace, vcg::vertex::VFAdj <span class="comment">/*,... other attributes*/</span> &gt;{};</div>
-<div class="line"><span class="keyword">class </span>MyFace: <span class="keyword">public</span> vcg::FaceSimp2&lt;MyVertex,MyEdge,MyFace, vcg::face::VertexRef,vcg::face::VFAd&gt;{};</div>
+<div class="line"><span class="keyword">class </span>MyVertex: <span class="keyword">public</span> vcg::Vertex&lt;MyUsedTypes, vcg::vertex::VFAdj <span class="comment">/*,... other attributes*/</span> &gt;{};</div>
+<div class="line"><span class="keyword">class </span>MyFace: <span class="keyword">public</span> vcg::Face&lt;MyUsedTypes, vcg::face::VertexRef, vcg::face::VFAdj&gt;{};</div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">void</span> OneRingNeighborhoodVF( MyVertex * v)</div>
 <div class="line">{</div>
@@ -217,7 +211,7 @@ VFIterator</h2>
 <div class="line">    <span class="comment">// ...do something with face f</span></div>
 <div class="line">  }</div>
 <div class="line">}</div>
-</div><!-- fragment --> <h2><a class="anchor" id="autotoc_md8"></a>
+</div><!-- fragment --> <h2><a class="anchor" id="autotoc_md14"></a>
 Stars and Rings</h2>
 <p>We have a few handy functions to recover the set of faces/vertices incident on vertex:</p>
 <ul>
@@ -227,11 +221,11 @@ Stars and Rings</h2>
 <li><a class="el" href="namespacevcg_1_1face.html#a25ae50670ef17e6e3d26d1ce2bde8c44">vcg::face::VFExtendedStarVF</a></li>
 <li><a class="el" href="namespacevcg_1_1face.html#a25d788feeec110a8a1d13c31cd656acf">vcg::face::EFStarFF</a></li>
 </ul>
-<h2><a class="anchor" id="autotoc_md9"></a>
+<h2><a class="anchor" id="autotoc_md15"></a>
 Few facts on FF adjacency and VF adjacency</h2>
 <p>Here we make a series of simple statements just to avoid confusion and try to help up choosing the adjacencies the best fit your needs.</p>
 <p>If the mesh is manifold, the one-ring neighborhood of a vertex computed by using Pos ( needs FF adjacency) is the same as the one computed by using VFIterator (needs VF adjacency). The order in which the faces are visited can be CW or CCW if using Pos, unspecified by using VIterator If the mesh is non-manifold, Pos may not find all the faces of the one-ring neighborhood of he vertex, VFIterator always does</p>
-<h2><a class="anchor" id="autotoc_md10"></a>
+<h2><a class="anchor" id="autotoc_md16"></a>
 Boundary relations and adjacency</h2>
 <p>In many algorithms you need to simply the boundary/border condition of a face, e.g. to know if a given face f has one or more adjacent faces on a specified edge e. Using FF adjacency this can be done simply by using the face::IsBorder(f,e) static function that simply checks if the pointer stored in face f on the edge e points to f itself. If you are navigating the mesh using a Pos, you have a Pos member function IsBorder() that reports the boundary condition of the current pos. Similarly, for testing manifoldness of specific places over a mesh, there is a face::IsManifold(f,e) static function and a IsManifold(e) function member of the pos class.</p>
 <p>If you are not using FF adjacency evaluating the boundary conditions could be not very efficient, so vcg library provides a technique to cook the current boundary conditions of the mesh into vertex and face flags. Use the members of the UpdateFlags static class to compute flags that reflects the current mesh status and the access these flags using the IsB(e) member function of the face class. Remember that flags based boundary information can become invalid if you change the mesh topology. On the other hand consider that many non-mesh-modifying algorithms do not require explicit FF adjacency but just boundary information (typical examples: most mesh smoothing and curvature computation algorithms).</p>
@@ -241,7 +235,7 @@ Boundary relations and adjacency</h2>
 <!-- HTML footer for doxygen 1.9.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Tue Sep 29 2026 04:56:31
+Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Fri Oct 2 2026 12:05:59
 </small></address>
 </body>
 </html>

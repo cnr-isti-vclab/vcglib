@@ -78,7 +78,7 @@ $(function() {
   <div class="headertitle"><div class="title">Basic Concepts </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md16"></a>
+<div class="textblock"><h1><a class="anchor" id="autotoc_md22"></a>
 How to define the type of a mesh</h1>
 <p>The VCG Lib may encode a mesh in several ways, the most common of which is a vector of vertices and vector of triangles (i.e. triangles for triangle meshes, tetrahedra for tetrahedral meshes). The following line is an example of the definition of a VCG type of mesh:</p>
  <div class="fragment"><div class="line"><span class="keyword">class </span>MyMesh    : <span class="keyword">public</span> vcg::tri::TriMesh&lt; std::vector&lt;MyVertex&gt;, std::vector&lt;MyFace&gt; , std::vector&lt;MyEdge&gt;  &gt; {};</div>
@@ -150,13 +150,13 @@ How to define the type of a mesh</h1>
 <div class="line">}</div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateNormal_html_a6b82e0304e02149191fe9195f19d4f6b"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateNormal.html#a6b82e0304e02149191fe9195f19d4f6b">vcg::tri::UpdateNormal::PerVertexNormalized</a></div><div class="ttdeci">static void PerVertexNormalized(ComputeMeshType &amp;m)</div><div class="ttdoc">Equivalent to PerVertex() and NormalizePerVertex()</div><div class="ttdef"><b>Definition:</b> normal.h:269</div></div>
 </div><!-- fragment --><p>One more comment: <code><a class="el" href="classvcg_1_1face_1_1VertexRef.html" title="The references to the vertexes of a triangular face.">vcg::face::VertexRef</a></code> is an attribute that stores 3 pointers to the type of vertex, so implementing the Indexed Data structure. This is an example of why the type MyFace needs to know the type MyVertex</p>
-<h2><a class="anchor" id="autotoc_md17"></a>
+<h2><a class="anchor" id="autotoc_md23"></a>
 How to create a mesh</h2>
 <p>Once you declared your mesh type, you may want to instance an object and to fill it with vertices and triangles. The typical approach is just to open some file like in the above example. It may cross your mind that you could just make some push_back on the vertexes and faces container (data member vert and face of class vcg::tri::Trimesh). In fact this is the wrong way since there can be side effects by adding an element to a container. We describe this issue and the correct way of adding mesh element in the <a class="el" href="allocation.html">Allocating and Deleting mesh elements</a> page.</p>
-<h2><a class="anchor" id="autotoc_md18"></a>
+<h2><a class="anchor" id="autotoc_md24"></a>
 The flags of the mesh elements</h2>
 <p>Usually to each element of the mesh we associate a small bit vector containing useful single-bit information about vertices and faces. For example the deletion of vertex simply mark a the Deletion bit in this vector (more details on the various deletion/allocation issues in the <a class="el" href="allocation.html">Allocating and Deleting mesh elements</a> page. More details on the various kind of flags that can be associated are in the <a class="el" href="flags.html">Bit Flags</a> page.</p>
-<h2><a class="anchor" id="autotoc_md19"></a>
+<h2><a class="anchor" id="autotoc_md25"></a>
 How to process a mesh</h2>
 <p>The algorithms that do something on a mesh are generally written as a static member functions of a templated class on the mesh type. For example the code snipped below is part of the class UpdateNormals, which contains the several algorithms to compute the value of the normal</p>
 <div class="fragment"><div class="line">...</div>
@@ -175,7 +175,7 @@ How to process a mesh</h2>
 <div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> PerVertexPerFace(ComputeMeshType &amp;m)</div>
 <div class="line">...</div>
 <div class="line">};</div>
-</div><!-- fragment --><p> This class is part of a kernel of classes with name UpdateValue that compute the value of the vertex or face attributes and that can be found altogether in the folder vcg/complex/trimesh/update. For example, the following example shows how to compute the value of the normal and the mean and gaussian curvature per vertex: </p><div class="fragment"><div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
+</div><!-- fragment --><p> This class is part of a kernel of classes with name UpdateValue that compute the value of the vertex or face attributes and that can be found altogether in the folder vcg/complex/algorithms/update. For example, the following example shows how to compute the value of the normal and the mean and gaussian curvature per vertex: </p><div class="fragment"><div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &lt;vcg/simplex/vertex/base.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;vcg/simplex/vertex/component.h&gt;</span></div>
@@ -188,10 +188,10 @@ How to process a mesh</h2>
 <div class="line"> </div>
 <div class="line"><span class="keyword">class </span>MyVertex;</div>
 <div class="line"><span class="keyword">class </span>MyFace;</div>
-<div class="line"><span class="keyword">class </span>MyUsedTypes: <span class="keyword">public</span> vcg::UsedTypes&lt; vcg::Use&lt;MyVertex&gt;::AsVertexType&gt;,</div>
-<div class="line">                                          vcg::Use&lt;MyFace&gt;::AsFaceType&gt;</div>
+<div class="line"><span class="keyword">class </span>MyUsedTypes: <span class="keyword">public</span> vcg::UsedTypes&lt; vcg::Use&lt;MyVertex&gt;::AsVertexType,</div>
+<div class="line">                                          vcg::Use&lt;MyFace&gt;::AsFaceType&gt;{};</div>
 <div class="line"> </div>
-<div class="line">class MyVertex: <span class="keyword">public</span> vcg::Vertex&lt;MyUsedTypes, vcg::vertex::BitFlags,vcg::vertex::Coord3d, vcg::vertex::Normal3f,vcg::vertex::Curvaturef&gt;{};</div>
+<div class="line"><span class="keyword">class </span>MyVertex: <span class="keyword">public</span> vcg::Vertex&lt;MyUsedTypes, vcg::vertex::BitFlags,vcg::vertex::Coord3d, vcg::vertex::Normal3f,vcg::vertex::Curvaturef&gt;{};</div>
 <div class="line"><span class="keyword">class </span>MyFace: <span class="keyword">public</span> vcg::Face&lt;MyUsedTypes, vcg::face::BitFlags,vcg::face::VertexRef&gt;{};</div>
 <div class="line"><span class="keyword">class </span>MyMesh: <span class="keyword">public</span> vcg::tri::TriMesh&lt; std::vector&lt;MyVertex&gt;, std::vector&lt;MyFace&gt; &gt; {};</div>
 <div class="line"> </div>
@@ -209,13 +209,13 @@ How to process a mesh</h2>
 <div class="line">  <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateCurvature_html_ad6a11c9cd017c8db0e6f626548207b03"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateCurvature.html#ad6a11c9cd017c8db0e6f626548207b03">vcg::tri::UpdateCurvature::MeanAndGaussian</a></div><div class="ttdeci">static void MeanAndGaussian(MeshType &amp;m)</div><div class="ttdoc">Computes the discrete mean gaussian curvature.</div><div class="ttdef"><b>Definition:</b> curvature.h:400</div></div>
-</div><!-- fragment --><p>Other than algorithms that update values of the mesh attributes, VCG Lib provides algorithms to create a mesh from another source, for example from point sets (by means of the Ball Pivoting approach) or as isosurfaces from a volumetric dataset (by means of Marching Cubes algorithm). Those algorithms can be found in vcg/complex/trimesh/create/. Finally, you can find algorithms for refinement (midpoint, Loop, Butterfly...), for smoothing, for closing holes and other that are not currently classified under any specific heading and that you can find under /vcg/complex/trimesh. </p>
+</div><!-- fragment --><p>Other than algorithms that update values of the mesh attributes, VCG Lib provides algorithms to create a mesh from another source, for example from point sets (by means of the Ball Pivoting approach) or as isosurfaces from a volumetric dataset (by means of Marching Cubes algorithm). Those algorithms can be found in vcg/complex/algorithms/create/. Finally, you can find algorithms for refinement (midpoint, Loop, Butterfly...), for smoothing, for closing holes and other that are not currently classified under any specific heading and that you can find under vcg/complex/algorithms. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 <!-- HTML footer for doxygen 1.9.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Tue Sep 29 2026 04:56:31
+Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Fri Oct 2 2026 12:05:59
 </small></address>
 </body>
 </html>
