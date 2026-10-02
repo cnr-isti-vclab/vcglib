@@ -12,6 +12,9 @@
 # still apply, being later matches.
 !eigenlib/**
 
+# Reference material for possible implementation (we put here papers for future reference).
+.reference
+
 # QTCreator user prefs
 *.user
 
