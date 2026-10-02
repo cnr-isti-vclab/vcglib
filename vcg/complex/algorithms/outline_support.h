@@ -225,31 +225,9 @@ public:
   template<class MeshType>
   static void ConvertMeshBoundaryToEdgeMesh(MeshType &m, MeshType &em)
   {
-    typedef typename MeshType::VertexIterator VertexIterator;
-    typedef typename MeshType::EdgeIterator EdgeIterator;
-    typedef typename MeshType::VertexPointer VertexPointer;
-    em.Clear();
     std::vector< std::vector<Point3<ScalarType>> > outlines;
-    int nv = ConvertMeshBoundaryToOutlines(m,outlines);
-    if (nv<2) return;
-    VertexIterator vi=vcg::tri::Allocator<MeshType>::AddVertices(em,nv);
-    EdgeIterator ei=vcg::tri::Allocator<MeshType>::AddEdges(em,nv);
-
-    //  printf("Building an edge mesh of %i v and %i e and %lu outlines\n",em.vn,em.en,outlines.size());
-
-    for (size_t i=0;i<outlines.size();i++)
-    {
-      VertexPointer firstVp = &*vi;
-      for(size_t j=0;j<outlines[i].size();++j,++vi,++ei)
-      {
-        (&*vi)->P()=outlines[i][j];
-        //      printf("(%5.2f %5.2f %5.2f)",vi->cP()[0],vi->cP()[1],vi->cP()[2]);
-        ei->V(0)=&*vi;
-        if((j+1)<outlines[i].size()) ei->V(1)=&*(vi+1);
-        else ei->V(1)=firstVp;
-      }
-      //    printf("\n");
-    }
+    ConvertMeshBoundaryToOutline3Vec(m,outlines);
+    ConvertOutline3VecToEdgeMesh(outlines,em);
   }
 
   template<class MeshType>
