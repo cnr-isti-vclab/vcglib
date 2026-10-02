@@ -18,6 +18,7 @@ mkdir -p build && cd build && cmake -GNinja -DVCG_BUILD_EXAMPLES=ON .. && ninja
 - Deleted elements stay in the vectors: skip `IsD()`, never loop up to `VN()`/`FN()`, or compact first (`Allocator::CompactEveryVector`). Prefer `ForEachVertex`/`ForEachFace` (`vcg/complex/foreach.h`).
 - Copy meshes with `tri::Append`, never by assignment.
 - Check components with `tri::RequireXXX(m)` / `tri::HasXXX(m)` (they handle optional Ocf components).
+- Check runtime properties (initialized adjacency, manifoldness, only triangles, ...) with `tri::MeshAssert<MeshType>` (`vcg/complex/algorithms/mesh_assert.h`): it throws `MissingPreconditionException`. Throw on bad input, never `assert`; add a check there rather than writing your own.
 - The `V` (visited) bit is scratch: clear it with `UpdateFlags` before use; use `NewBitFlag()` for private bits.
 - Algorithms are static members of a class templated on the mesh type.
 
@@ -27,7 +28,9 @@ mkdir -p build && cd build && cmake -GNinja -DVCG_BUILD_EXAMPLES=ON .. && ninja
 - **Warn before large changes.** If a request needs a lot of new code, say so before starting and propose smaller alternatives.
 - **Look for leftovers.** After each change, check for files, functions, includes, or typedefs that are no longer used, and ask before removing them.
 - Match the style of the surrounding code (naming, indentation, comment density).
-- Keep C++11 compatibility (see `CMakeLists.txt`).
+- C++17 is the standard (see `CMakeLists.txt`).
+- Samples in `apps/sample` are documentation, not tests (CI only builds them): short, readable top to bottom, showing only the algorithm they are about. Leave edge cases, regression checks and unrelated library features out.
+- No preprocessor macros for code, including test helpers like `CHECK(cond)`: write a function (or a lambda) instead.
 
 ## Working agreements
 
