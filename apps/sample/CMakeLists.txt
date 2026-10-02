@@ -31,6 +31,7 @@ set(VCG_EXAMPLE_PROJECTS
 	trimesh_fitting
 	trimesh_geodesic
  	trimesh_geodesic_heat
+	trimesh_handle_tunnel
 	trimesh_harmonic
 	trimesh_hole
 	trimesh_implicit_smooth
