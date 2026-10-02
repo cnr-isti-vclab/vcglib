@@ -63,11 +63,7 @@ Example:
     #include<vcg/space/point3.h>;
 
 Each include file must begin with the standard legal
-disclamier/license intestation and report in the first line of history
-the $LOG$ cvs string.
-
-The following automatically generated history can be, from time to
-time, compressed and shortened to save space.
+disclaimer/license header.
 
 Each file of the library has to include all the files that it
 requires. A include file should rely on the files included by its own

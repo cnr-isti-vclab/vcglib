@@ -82,7 +82,7 @@ static void PerVertexPerFace(ComputeMeshType &m)
 ...
 };
 \endcode
-This class is part of a kernel of classes with name UpdateValue that compute the value of the vertex or face attributes and that can be found altogether in the folder vcg/complex/trimesh/update. For example, the following example shows how to compute the value of the normal and the mean and gaussian curvature per vertex:
+This class is part of a kernel of classes with name UpdateValue that compute the value of the vertex or face attributes and that can be found altogether in the folder vcg/complex/algorithms/update. For example, the following example shows how to compute the value of the normal and the mean and gaussian curvature per vertex:
 \code
 
 #include <vector>
@@ -98,8 +98,8 @@ This class is part of a kernel of classes with name UpdateValue that compute the
 
 class MyVertex;
 class MyFace;
-class MyUsedTypes: public vcg::UsedTypes< vcg::Use<MyVertex>::AsVertexType>,
-                                          vcg::Use<MyFace>::AsFaceType>
+class MyUsedTypes: public vcg::UsedTypes< vcg::Use<MyVertex>::AsVertexType,
+                                          vcg::Use<MyFace>::AsFaceType>{};
 
 class MyVertex: public vcg::Vertex<MyUsedTypes, vcg::vertex::BitFlags,vcg::vertex::Coord3d, vcg::vertex::Normal3f,vcg::vertex::Curvaturef>{};
 class MyFace: public vcg::Face<MyUsedTypes, vcg::face::BitFlags,vcg::face::VertexRef>{};
@@ -120,5 +120,5 @@ int main()
 }
 \endcode
 
-Other than algorithms that update values of the mesh attributes, VCG Lib provides algorithms to create a mesh from another source, for example from point sets (by means of the Ball Pivoting approach) or as isosurfaces from a volumetric dataset (by means of Marching Cubes algorithm). Those algorithms can be found in vcg/complex/trimesh/create/.
-Finally, you can find algorithms for refinement (midpoint, Loop, Butterfly...), for smoothing, for closing holes and other that are not currently classified under any specific heading and that you can find under /vcg/complex/trimesh.*/
+Other than algorithms that update values of the mesh attributes, VCG Lib provides algorithms to create a mesh from another source, for example from point sets (by means of the Ball Pivoting approach) or as isosurfaces from a volumetric dataset (by means of Marching Cubes algorithm). Those algorithms can be found in vcg/complex/algorithms/create/.
+Finally, you can find algorithms for refinement (midpoint, Loop, Butterfly...), for smoothing, for closing holes and other that are not currently classified under any specific heading and that you can find under vcg/complex/algorithms.*/

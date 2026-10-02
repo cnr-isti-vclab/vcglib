@@ -50,7 +50,7 @@ In this case the FF adjacencies are arranged to form a circular list (not necess
 This is done by the VCG Lib function that update these values ( vcg::tri::UpdateTopology::FaceFace (MeshType & m)).
 In this way VCG Lib provides a way to check if a mesh is manifold on a specific edge because the FF adjacency relation is mutual, i.e. the face f0 points to the face f1 which points to the face f0, if and only if the mesh is manifold over the corresponding edge.
 
-    bool IsManifold(MyFace *f,int e) { return (f0 == f0->FFp(0)->FFp(f0->FFi(0)))}
+    bool IsManifold(MyFace *f,int e) { return (f == f->FFp(e)->FFp(f->FFi(e))); }
 
 
 Pos
@@ -89,14 +89,12 @@ Note that concatenating two flips: FlipF and FlipE we obtain a transition from a
 
 The following code snippet shows how to use the pos to iterate around a vertex:
 
-    sf/apps/sample/trimesh_pos_demo/trimesh_pos_demo.cpp
-
     #include <vcg/simplex/face/pos.h> // include the definition of pos
 
     ...includes to define your mesh type
 
     class MyVertex: ...
-    class MyFace: public vcg::FaceSimp2<MyVertex,MyEdge,MyFace, vcg::face::VertexRef, vcg::face::FFAdj>{};
+    class MyFace: public vcg::Face<MyUsedTypes, vcg::face::VertexRef, vcg::face::FFAdj>{};
 
     void OneRingNeighborhood( MyFace * f)
     {
@@ -119,14 +117,12 @@ Jumping Pos
 -----------
 The Jumping Pos works exactly like the Pos, only it does not bounce when it encounters the border. Instead, it jump around the vertex as if the to border faces sharing the vertex (faces f0 and f2 in the image) were adjacent.
 \code
-sf/apps/sample/trimesh_pos_demo/trimesh_pos_demo.cpp
-
     #include <vcg/simplex/face/jumping_pos.h> // include the definition of jumping pos
 
     //...includes to define your mesh type
 
     //class MyVertex: ...
-    class MyFace: public vcg::FaceSimp2<MyVertex,MyEdge,MyFace, vcg::face::VertexRef,vcg::face::FFAdj>{};
+    class MyFace: public vcg::Face<MyUsedTypes, vcg::face::VertexRef, vcg::face::FFAdj>{};
 
     void OneRingNeighborhoodJP( MyFace * f)
     {
@@ -171,14 +167,12 @@ VFIterator
 
 VFIterator is a simple iterator to run over the faces in the one-ring neighborhood of a vertex using the VF Adjacency (it is just like Pos for the FF Adjacency) The following code snippet shows how to use the VFIterator:
 \code
-sf/apps/sample/trimesh_pos_demo/trimesh_vfiter_demo.cpp
-
 #include <vcg/simplex/face/pos.h> // include the definition of  VFIterator
 
 //...includes to define your mesh type
 
-class MyVertex: public vcg::VertexSimp2<MyVertex,MyEdge,MyFace, vcg::vertex::VFAdj /*,... other attributes*/ >{};
-class MyFace: public vcg::FaceSimp2<MyVertex,MyEdge,MyFace, vcg::face::VertexRef,vcg::face::VFAd>{};
+class MyVertex: public vcg::Vertex<MyUsedTypes, vcg::vertex::VFAdj /*,... other attributes*/ >{};
+class MyFace: public vcg::Face<MyUsedTypes, vcg::face::VertexRef, vcg::face::VFAdj>{};
 
 void OneRingNeighborhoodVF( MyVertex * v)
 {
