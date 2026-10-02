@@ -27,6 +27,7 @@
 #define __VCGLIB_EXPORT_OBJ
 
 #include <vcg/complex/algorithms/polygon_support.h>
+#include <wrap/system/utf8_file.h>
 #include <vcg/complex/algorithms/update/topology.h>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
@@ -165,7 +166,7 @@ public:
        (!Allocator<SaveMeshType>::IsValidHandle(m,materialIndexHandle)) ) 
         return E_NO_VALID_MATERIAL;
 
-    FILE *fp = fopen(filename,"w");
+    FILE *fp = vcg::utf8::FOpen(filename,"w");
     if(fp == NULL) return E_CANTOPENFILE;
     std::string shortFilename(filename);
     int LastSlash=shortFilename.size()-1;
@@ -459,7 +460,7 @@ public:
     if(materialVec.size() > 0)
     {
       FILE *fp;
-      fp = fopen(fileName.c_str(),"w");
+      fp = vcg::utf8::FOpen(fileName.c_str(),"w");
       if(fp==NULL)return E_ABORTED;
 
       fprintf(fp,"#\n# Wavefront material file\n# Converted by Meshlab Group\n#\n\n");

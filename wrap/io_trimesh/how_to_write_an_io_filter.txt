@@ -49,6 +49,19 @@ static int GetExportMaskCapability()
 function return 0 in case of success and a code in any other case...
 
 
+---- Filenames ----
+
+Filenames are UTF-8 encoded on every OS. Never pass them directly to fopen,
+std::ifstream or std::ofstream: on Windows those interpret narrow paths in the
+ANSI code page. Use the helpers in wrap/system/utf8_file.h instead:
+
+FILE *fp = vcg::utf8::FOpen(filename, "rb");
+std::ifstream stream(vcg::utf8::ToStreamPath(filename));
+
+If a third party library opens the file by name, open it with FOpen and hand
+the FILE* to the library's stream/callback API (see import_ctm.h, export_3ds.h).
+
+
 
 
 

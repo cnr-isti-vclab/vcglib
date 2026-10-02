@@ -26,6 +26,7 @@
 #include <openctm.h>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/system/utf8_file.h>
 
 // lib3ds headers
 
@@ -87,14 +88,26 @@ static const char* ErrorMsg(int error)
 };
 
 
+static CTMuint CTMCALL ReadFromFile(void *buf, CTMuint count, void *userData)
+{
+    return (CTMuint) fread(buf, 1, (size_t) count, (FILE *) userData);
+}
+
 static int Open( OpenMeshType &m, const char * filename, int &loadmask, CallBackPos * /*cb*/=0)
 {
     CTMcontext context;
 
+    // Open the file ourselves: ctmLoad() uses a narrow fopen, which does not
+    // accept UTF-8 filenames on Windows.
+    FILE *fp = vcg::utf8::FOpen(filename, "rb");
+    if(fp == 0)
+        return E_CANTOPEN;
+
     // Create a new importer context
     context = ctmNewContext(CTM_IMPORT);
     // Load the OpenCTM file
-    ctmLoad(context, filename);
+    ctmLoadCustom(context, ReadFromFile, fp);
+    fclose(fp);
     if(ctmGetError(context) == CTM_NONE)
     {
     // Access the mesh data

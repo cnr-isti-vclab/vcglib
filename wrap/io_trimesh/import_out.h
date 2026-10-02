@@ -24,6 +24,7 @@
 #define __VCGLIB_IMPORTERBUNDLER
 
 #include <stddef.h>
+#include <wrap/system/utf8_file.h>
 #include <stdio.h>
 #include <vcg/complex/complex.h>
 //#include <vcg/complex/allocate.h>
@@ -91,7 +92,7 @@ public:
 		unsigned int   num_cams,num_points;
 		typedef typename vcg::Matrix44<ScalarType> Matrix44x;
 		typedef typename vcg::Matrix33<ScalarType> Matrix33x;
-		FILE *fp = fopen(filename,"r");
+		FILE *fp = vcg::utf8::FOpen(filename,"r");
 		if(!fp) return false;
 		ReadHeader(fp, num_cams,  num_points);
 		char line[100];
@@ -171,7 +172,7 @@ public:
 	
 	static bool ReadImagesFilenames(const char *  filename,std::vector<std::string> &image_filenames)
 	{
-		FILE * fp = fopen(filename,"r");
+		FILE * fp = vcg::utf8::FOpen(filename,"r");
 		if (!fp) return false;
 		else
 		{
@@ -191,7 +192,7 @@ public:
 	static bool  AddIntrinsics(vcg::Shotf &shot, const char * image_file)
 	{
 		// Read the JPEG file into a buffer
-		FILE *fp = fopen(qUtf8Printable(image_file), "rb");
+		FILE *fp = vcg::utf8::FOpen(qUtf8Printable(image_file), "rb");
 		if (!fp) {
 			std::cerr << "Exif Parsing: Unable to open file:\n\"%1\"\n\nError details: file %1 is not readable.";
 			return false;

@@ -24,6 +24,7 @@
 #define __VCGLIB_IMPORT_OFF
 
 #include <fstream>
+#include <wrap/system/utf8_file.h>
 #include<vcg/complex/algorithms/bitquad_support.h>
 #include <vcg/space/planar_polygon_tessellation.h>
 #include <wrap/io_trimesh/io_mask.h>
@@ -119,7 +120,7 @@ namespace vcg {
 				static int Open(MESH_TYPE &mesh, const char *filename, int &loadmask,
 					CallBackPos *cb = 0)
 				{
-					std::ifstream stream(filename);
+					std::ifstream stream(vcg::utf8::ToStreamPath(filename));
 					if (stream.fail())
 						return CantOpen;
 					return OpenStream(mesh, stream, loadmask, cb);

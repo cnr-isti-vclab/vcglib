@@ -32,6 +32,7 @@ of Greg Turk and on the work of Claudio Rocchini
 #define __VCG_PLYLIB_STUFF 
 
 #include <sys/types.h>
+#include <wrap/system/utf8_file.h>
 #include <sys/stat.h>
 #include <fcntl.h> 
 #ifdef WIN32
@@ -100,9 +101,9 @@ bool GetDirFromPath( const char * path, char * dir, char * name )
 
 static bool CheckCacheDirectory( const char * dir )
 {
-	if( pb_access(dir,0)!=0 )
+	if( utf8::Access(dir,0)!=0 )
 	{
-		if( pb_mkdir(dir)==-1 )
+		if( utf8::MkDir(dir)==-1 )
 			return false;
 	}
 	return true;
@@ -112,27 +113,12 @@ static bool CheckCacheDirectory( const char * dir )
 bool CheckCacheTime( const char * fname, const char * cname )
 {
 
-	if( pb_access(fname,4)==-1 ) return false;
-	if( pb_access(cname,4)==-1 ) return false;
+	if( utf8::Access(fname,4)==-1 ) return false;
+	if( utf8::Access(cname,4)==-1 ) return false;
 
-	int h,r;
-	struct pb_stat st;
 	time_t ft,bt;
-
-	h = pb_open(fname,_O_BINARY|_O_RDONLY);
-	if(h==0) return false;
-	r = pb_fstat(h,&st);
-	pb_close(h);
-	if(r==-1) return false;
-	ft = st.st_mtime;
-
-	h = pb_open(cname,_O_BINARY|_O_RDONLY);
-	if(h==0) return false;
-	r = pb_fstat(h,&st);
-	//_read(h,&box,sizeof(box));
-	pb_close(h);
-	if(r==-1) return false;
-	bt = st.st_mtime;
+	if( !utf8::ModificationTime(fname,ft) ) return false;
+	if( !utf8::ModificationTime(cname,bt) ) return false;
 
 	if( difftime(bt,ft)>=0 ) return true;
 	else			         return false;
@@ -165,7 +151,7 @@ template<class ScalarType>
 	{
 			// Lettura bbox e controllo
         Box3d readBB;
-		FILE * fp = fopen(d,"rb");
+		FILE * fp = vcg::utf8::FOpen(d,"rb");
 		if(fp==0) return false;
 		if( fread(h,1,8,fp)!=8 )
 		{
@@ -220,7 +206,7 @@ static bool SaveBBoxCache( const char * fname, const Box3<ScalarType> & boxOut )
 		return false;
 
 		// Lettura bbox e controllo
-	FILE * fp = fopen(d,"wb");
+	FILE * fp = vcg::utf8::FOpen(d,"wb");
 	if(fp==0) return false;
 	if( fwrite(bboxheader,1,8,fp)!=8 )
 	{

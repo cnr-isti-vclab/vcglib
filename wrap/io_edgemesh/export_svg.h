@@ -24,6 +24,8 @@
 #ifndef __VCG_LIB_EXPORTER_SVG
 #define __VCG_LIB_EXPORTER_SVG
 
+#include <wrap/system/utf8_file.h>
+
 namespace vcg 
 {
   namespace tri
@@ -132,7 +134,7 @@ public:
 	// save a Multiple Set of Edge Meshes on a single SVG files
 	static bool Save(std::vector<EdgeMeshType*> &meshVec, const char *filename, SVGProperties & pro)
 	{ 
-		FILE * fpo = fopen(filename,"w");  
+		FILE * fpo = vcg::utf8::FOpen(filename,"w");  
 		if (fpo==NULL)			return false;
 		
 		WriteXmlHead(fpo, pro);

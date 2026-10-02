@@ -36,6 +36,7 @@ $Log: not supported by cvs2svn $
 #define __VCGLIB_TETRAEXPORT_PLY
 
 #include<wrap/io_tetramesh/io_mask.h>
+#include <wrap/system/utf8_file.h>
 #include<wrap/io_tetramesh/io_ply.h>
 #include<wrap/io_trimesh/precision.h>
 
@@ -113,7 +114,7 @@ public:
         if(binary) h=hbin;
         else       h=hasc;
 
-        fpout = fopen(filename,"wb");
+        fpout = vcg::utf8::FOpen(filename,"wb");
         if(fpout==NULL) {
             pi.status=::vcg::ply::E_CANTOPEN;
             return ::vcg::ply::E_CANTOPEN;

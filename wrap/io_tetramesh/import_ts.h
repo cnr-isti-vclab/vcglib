@@ -25,6 +25,7 @@
 #define __VCGLIB_IMPORTERTS
 #define NULL 0
 #include <vcg/space/point3.h>
+#include <wrap/system/utf8_file.h>
 #include <vcg/space/point4.h>
 
 namespace vcg {
@@ -63,7 +64,7 @@ static int Open( Tetramesh & m, const char * filename )
 	int tp2;
 	int tp3;
 	typename Tetramesh::VertexType p1;
-	F() = fopen(filename,"r");
+	F() = vcg::utf8::FOpen(filename,"r");
 	if(F() == NULL ) 
 		{
 			printf( "The file was not opened\n" );

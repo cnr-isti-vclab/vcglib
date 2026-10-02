@@ -23,6 +23,7 @@
 
 
 #include <wrap/bmt/bmt.h>
+#include <wrap/system/utf8_file.h>
 
 using namespace std;
 using namespace vcg;
@@ -31,7 +32,7 @@ Bmt::Bmt(): fp(NULL) {}
 Bmt::~Bmt() {}
 
 bool Bmt::Load(const std::string &filename) {
-  fp = fopen(filename.c_str(), "rb");
+  fp = vcg::utf8::FOpen(filename.c_str(), "rb");
   if(!fp) return false;
   unsigned int magic;
   fread(&magic, sizeof(unsigned int), 1, fp);
@@ -99,7 +100,7 @@ BmtBuilder::~BmtBuilder() {}
   
 bool BmtBuilder::Create(unsigned int sign) {
   signature = sign;
-  ftmp = fopen("tmp.bmt", "wb+");
+  ftmp = vcg::utf8::FOpen("tmp.bmt", "wb+");
   if(!ftmp)
     return false;
   return true;
@@ -125,7 +126,7 @@ bool BmtBuilder::Save(const std::string &filename) {
   
   //TODO: reorganize data to be spatially coherent (both index and related data.
 
-  fout = fopen(filename.c_str(), "wb+");
+  fout = vcg::utf8::FOpen(filename.c_str(), "wb+");
   if(!fout) {
     fclose(ftmp);
     return false;

@@ -26,6 +26,7 @@
 #define __VCGLIB_IMPORT_ASC
 
 #include <stdio.h>
+#include <wrap/system/utf8_file.h>
 #include <fstream>
 #include <iostream>
 #include <vcg/complex/algorithms/create/platonic.h>
@@ -85,7 +86,7 @@ static const char *ErrorMsg(int error)
 static int Open( MESH_TYPE &m, const char * filename, CallBackPos *cb=0, bool triangulate=false, int lineskip=0)
 {
 	FILE *fp;
-	fp = fopen(filename, "r");
+	fp = vcg::utf8::FOpen(filename, "r");
 	if(fp == NULL)
 	{
 		qDebug("Failed opening of %s",filename);

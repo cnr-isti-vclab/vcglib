@@ -40,6 +40,8 @@ export_dxf created
 #ifndef __VCG_LIB_EXPORTER_DXF
 #define __VCG_LIB_EXPORTER_DXF
 
+#include <wrap/system/utf8_file.h>
+
 
 namespace vcg {
 	namespace edg {
@@ -57,7 +59,7 @@ public:
 
 	static bool Save(EdgeMeshType  *mp, const char * filename)
 	{
-		FILE * o = fopen(filename,"w");
+		FILE * o = vcg::utf8::FOpen(filename,"w");
 		if(o==NULL)	return false;
 		fprintf(o,"0\n");
 		fprintf(o,"SECTION\n");
