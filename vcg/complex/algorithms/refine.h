@@ -31,6 +31,7 @@
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/space/texcoord2.h>
 #include <vcg/space/triangle3.h>
+#include <vcg/complex/algorithms/vertex_interpolation.h>
 
 namespace vcg{
 namespace tri{
@@ -143,18 +144,7 @@ struct MidPoint
         if(V0 > V1) std::swap(V1,V0);
 
         nv.P()=   (V0->P()+V1->P())/2.0;
-
-        if( tri::HasPerVertexNormal(*mp))
-            nv.N()= (V0->N()+V1->N()).normalized();
-
-        if( tri::HasPerVertexColor(*mp))
-            nv.C().lerp(V0->C(),V1->C(),.5f);
-
-        if( tri::HasPerVertexQuality(*mp))
-            nv.Q() = (V0->Q()+V1->Q()) / 2.0;
-
-        if( tri::HasPerVertexTexCoord(*mp))
-            nv.T().P() = (V0->T().P()+V1->T().P()) / 2.0;
+        VertexInterpolator<MESH_TYPE>::Lerp(*mp, nv, *V0, *V1, 0.5);
         if(intFunc)
           (*intFunc)(nv,ep);
     }
@@ -589,15 +579,9 @@ struct MidPointButterfly
         he.FlipV();
         vr=&he.v->P();
 
-        if( tri::HasPerVertexColor(m))
-            nv.C().lerp(ep.f->V(ep.z)->C(),ep.f->V1(ep.z)->C(),.5f);
-
-        // The new vertex lies on the edge, so its other attributes are interpolated along it,
-        // as MidPoint does; left unset they held whatever the allocation contained.
-        if( tri::HasPerVertexQuality(m))
-            nv.Q() = (ep.f->V(ep.z)->Q() + ep.f->V1(ep.z)->Q()) / 2.0;
-        if( tri::HasPerVertexTexCoord(m))
-            nv.T().P() = (ep.f->V(ep.z)->T().P() + ep.f->V1(ep.z)->T().P()) / 2.0;
+        // The new vertex lies on the edge, so its attributes are interpolated along it, as
+        // MidPoint does; left unset they held whatever the allocation contained.
+        VertexInterpolator<MESH_TYPE>::Lerp(m, nv, *ep.f->V(ep.z), *ep.f->V1(ep.z), 0.5);
 
         if(he.IsBorder())
         {
@@ -826,15 +810,7 @@ public:
 
     nv.P() = v0->P() * s + v1->P() * t;
     h[&nv] = thr;
-
-    if (tri::HasPerVertexNormal(*mp))
-      nv.N() = (v0->N() * s + v1->N() * t).normalized();
-    if (tri::HasPerVertexColor(*mp))
-      nv.C().lerp(v0->C(), v1->C(), t);
-    if (tri::HasPerVertexQuality(*mp))
-      nv.Q() = v0->Q() * s + v1->Q() * t;
-    if (tri::HasPerVertexTexCoord(*mp))
-      nv.T().P() = v0->T().P() * s + v1->T().P() * t;
+    VertexInterpolator<MESH_TYPE>::Lerp(*mp, nv, *v0, *v1, t);
   }
 
   Color4<typename MESH_TYPE::ScalarType> WedgeInterp(Color4<typename MESH_TYPE::ScalarType> &c0, Color4<typename MESH_TYPE::ScalarType> &c1)

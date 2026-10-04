@@ -499,38 +499,8 @@ int CapPlanarBoundary(
   public:
     inline void operator () (const VertexType & v0, const VertexType & v1, const VertexType & v2, const ScalarType & a, const ScalarType & b, VertexType & r) const
     {
-      // position
       r.P() = v0.cP() + (v1.cP() - v0.cP()) * a + (v2.cP() - v0.cP()) * b;
-
-      // normal
-      if (tri::HasPerVertexNormal(m))
-      {
-        r.N() = v0.cN() + (v1.cN() - v0.cN()) * a + (v2.cN() - v0.cN()) * b;
-      }
-
-      // color
-      if (tri::HasPerVertexColor(m))
-      {
-        vcg::Point4<ScalarType> vc[3];
-        vc[0].Import(v0.cC());
-        vc[1].Import(v1.cC());
-        vc[2].Import(v2.cC());
-        const vcg::Point4<ScalarType> rc = (vc[0] + (vc[1] - vc[0]) * a + (vc[2] - vc[0]) * b);
-        r.C()[0] = (typename vcg::Color4b::ScalarType)(rc[0]);
-        r.C()[1] = (typename vcg::Color4b::ScalarType)(rc[1]);
-        r.C()[2] = (typename vcg::Color4b::ScalarType)(rc[2]);
-        r.C()[3] = (typename vcg::Color4b::ScalarType)(rc[3]);
-      }
-
-      // texcoord
-      if (tri::HasPerVertexTexCoord(m))
-      {
-        const short nt = 1; //typename VertexType::TextureType::N();
-        for (short i=0; i<nt; ++i)
-        {
-          r.T().t(i) = v0.cT().t(i) + (v1.cT().t(i) - v0.cT().t(i)) * a + (v2.cT().t(i) - v0.cT().t(i)) * b;
-        }
-      }
+      VertexInterpolator<MESH_TYPE>::Barycentric(m, r, v0, v1, v2, Point3<ScalarType>(1 - a - b, a, b));
     }
   };
 template <typename TRIMESHTYPE>

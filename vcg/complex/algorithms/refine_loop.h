@@ -364,15 +364,9 @@ struct OddPointLoopGeneric
         he.FlipV();
         r = he.v;
 
-        if( tri::HasPerVertexColor(m))
-            nv.C().lerp(ep.f->V(ep.z)->C(),ep.f->V1(ep.z)->C(),.5f);
-
-        // The new vertex lies on the edge, so its other attributes are interpolated along it,
-        // as MidPoint does; left unset they held whatever the allocation contained.
-        if( tri::HasPerVertexQuality(m))
-            nv.Q() = (ep.f->V(ep.z)->Q() + ep.f->V1(ep.z)->Q()) / 2.0;
-        if( tri::HasPerVertexTexCoord(m))
-            nv.T().P() = (ep.f->V(ep.z)->T().P() + ep.f->V1(ep.z)->T().P()) / 2.0;
+        // The new vertex lies on the edge, so its attributes are interpolated along it, as
+        // MidPoint does; left unset they held whatever the allocation contained.
+        VertexInterpolator<MESH_TYPE>::Lerp(m, nv, *ep.f->V(ep.z), *ep.f->V1(ep.z), 0.5);
 
         if (he.IsBorder()) {
             proj.addVertex(*l, 0.5);
