@@ -19,6 +19,7 @@ mkdir -p build && cd build && cmake -GNinja -DVCG_BUILD_EXAMPLES=ON .. && ninja
 - Copy meshes with `tri::Append`, never by assignment.
 - Check components with `tri::RequireXXX(m)` / `tri::HasXXX(m)` (they handle optional Ocf components).
 - Check runtime properties (initialized adjacency, manifoldness, only triangles, ...) with `tri::MeshAssert<MeshType>` (`vcg/complex/algorithms/mesh_assert.h`): it throws `MissingPreconditionException`. Throw on bad input, never `assert`; add a check there rather than writing your own.
+- Report progress and diagnostics through a `vcg::CallBackPos *cb` (`wrap/callback.h`), defaulting to null, never with `printf`: callers such as MeshLab route it to a progress bar and a log, while stdout is invisible to them. Long-running algorithms should take one.
 - The `V` (visited) bit is scratch: clear it with `UpdateFlags` before use; use `NewBitFlag()` for private bits.
 - Algorithms are static members of a class templated on the mesh type.
 
