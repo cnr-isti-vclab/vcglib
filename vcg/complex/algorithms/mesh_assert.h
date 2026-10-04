@@ -156,6 +156,16 @@ public:
     }
   }
 
+  /// \brief Throw vcg::MissingPreconditionException if There are triangles with zero (or NaN) area
+  /// A zero-area triangle has no barycentric coordinates, so point-to-face queries on it
+  /// return nothing usable.
+  static void NoZeroAreaFace(MeshType &m)
+  {
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
+      if(!(DoubleArea(*fi) > 0))
+        throw vcg::MissingPreconditionException("There are faces with zero area");
+  }
+
   /// \brief Throw vcg::MissingPreconditionException if There are non quadrilateral faces
   static void OnlyQuadFace(MeshType &m)
   {
