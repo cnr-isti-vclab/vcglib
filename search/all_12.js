@@ -1,7 +1,7 @@
 var searchData=
 [
   ['t_0',['T',['../classvcg_1_1vertex_1_1TexCoord.html#ac4abe7f4536777c59370717342d69104',1,'vcg::vertex::TexCoord']]],
-  ['tagfaceedgeselwithpolyline_1',['TagFaceEdgeSelWithPolyLine',['../classvcg_1_1tri_1_1CoM.html#a5b39276d6bda23ed4294a7477da2298e',1,'vcg::tri::CoM']]],
+  ['tagfaceedgeselwithpolyline_1',['TagFaceEdgeSelWithPolyLine',['../classvcg_1_1tri_1_1CoMEmbed.html#a31ac21cb93d2ae5c5dc7b9bf449cb62b',1,'vcg::tri::CoMEmbed']]],
   ['testfaceface_2',['TestFaceFace',['../classvcg_1_1tri_1_1UpdateTopology.html#a806668064343fc7c5b63947c580fa376',1,'vcg::tri::UpdateTopology']]],
   ['testfacefaceintersection_3',['TestFaceFaceIntersection',['../classvcg_1_1tri_1_1Clean.html#a8ea700d7187c15ea11c460ae03fc2c0e',1,'vcg::tri::Clean']]],
   ['testsplitsegwithmesh_4',['TestSplitSegWithMesh',['../classvcg_1_1tri_1_1CoM.html#add658ee8c7fe4f47b98e236feff5d630',1,'vcg::tri::CoM']]],

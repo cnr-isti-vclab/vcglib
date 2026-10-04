@@ -29,7 +29,7 @@ var searchData=
   ['sphericalcap_26',['SphericalCap',['../namespacevcg_1_1tri.html#ae8a4469c428132322474d105fa3e0d55',1,'vcg::tri']]],
   ['split_27',['Split',['../classvcg_1_1tri_1_1Split.html',1,'vcg::tri']]],
   ['splitmanifoldcomponents_28',['SplitManifoldComponents',['../classvcg_1_1tri_1_1Clean.html#a458949d58e3926811dd22f0b6dc50785',1,'vcg::tri::Clean']]],
-  ['splitmeshwithpolyline_29',['SplitMeshWithPolyline',['../classvcg_1_1tri_1_1CoM.html#af644aed4c77e4bb1f52bc4afeff6978d',1,'vcg::tri::CoM']]],
+  ['splitmeshwithpolyline_29',['SplitMeshWithPolyline',['../classvcg_1_1tri_1_1CoMEmbed.html#ada0e579c8c238cc25cc948f71fde747e',1,'vcg::tri::CoMEmbed']]],
   ['splitnonmanifoldvertex_30',['SplitNonManifoldVertex',['../classvcg_1_1tri_1_1Clean.html#a5839cea95b531daace7acb86651af35e',1,'vcg::tri::Clean']]],
   ['square_31',['Square',['../namespacevcg_1_1tri.html#a90570cbcacbd44ba04f3ee9024849a7c',1,'vcg::tri']]],
   ['squareddiag_32',['SquaredDiag',['../classvcg_1_1Box3.html#a48aeba05611b43b7f3748eba4b430f6d',1,'vcg::Box3']]],
