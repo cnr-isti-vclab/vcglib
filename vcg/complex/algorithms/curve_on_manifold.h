@@ -30,7 +30,10 @@
 #include<vcg/complex/algorithms/update/normal.h>
 #include<vcg/complex/algorithms/update/quality.h>
 #include<vcg/complex/algorithms/clean.h>
+#include<vcg/complex/algorithms/mesh_assert.h>
+#include<vcg/complex/algorithms/update/bounding.h>
 #include<vcg/complex/algorithms/refine.h>
+#include<vcg/complex/algorithms/vertex_interpolation.h>
 #include<vcg/complex/algorithms/create/platonic.h>
 #include<vcg/complex/algorithms/point_sampling.h>
 #include <vcg/space/index/grid_static_ptr.h>
@@ -38,7 +41,12 @@
 #include <vcg/math/histogram.h>
 #include<vcg/space/distance3.h>
 #include <vcg/complex/algorithms/attribute_seam.h>
-#include <wrap/io_trimesh/export_ply.h>
+#include <wrap/callback.h>
+#include <vcg/space/planar_polygon_tessellation.h>
+#include <array>
+#include <deque>
+#include <map>
+#include <set>
 
 namespace vcg {
 namespace tri {
@@ -54,7 +62,7 @@ namespace tri {
  * - Snap polyline vertices to mesh vertices or edges
  * - Refine polylines to follow surface features
  * - Simplify polylines while maintaining surface fidelity
- * - Split the base mesh along polylines for mesh cutting operations
+ * - Split the base mesh along polylines for mesh cutting operations (in CoMEmbed)
  * 
  * \par Terminology
  * - **Base mesh**: The triangulated surface mesh (stored in `base`)
@@ -79,10 +87,26 @@ namespace tri {
  * - All spatial queries use a uniform grid for acceleration
  * - Many operations are iterative and may require multiple passes
  * 
+ * \par Errors
+ * Violated preconditions throw vcg::MissingPreconditionException instead of asserting:
+ * a base mesh with no faces, non-manifold edges or zero-area faces (Init()), an empty
+ * curve (MoveAndProject()), a curve point farther than Param::gridBailout from the
+ * surface (every closest-face query), and a curve that CoMEmbed::SplitMeshWithPolyline() cannot
+ * embed. After an exception the base mesh and the curve may be partially modified, so
+ * a caller that needs them intact should work on copies.
+ *
+ * \par Attributes
+ * The methods that change the base mesh keep its per-vertex color, quality, normal and
+ * texture coordinates and its per-face attributes: the vertices and faces created by
+ * splitting interpolate or inherit them. Progress and diagnostic messages go to
+ * Param::cb, when set. The methods that change the base mesh are in CoMEmbed.
+ *
  * \note There is some naming inconsistency: methods use both "Curve" and "Polyline" 
  *       interchangeably to refer to the edge mesh being processed.
  * 
  */
+
+template <class MeshType> class CoMEmbed;
 
 template <class MeshType>
 class CoM
@@ -123,6 +147,7 @@ public:
     ScalarType maxSnapThr;         ///< The maximum distance allowed when snapping a polyline vertex onto a mesh vertex (currently unused)
     ScalarType gridBailout;        ///< The maximum distance bailout used in grid-based spatial queries
     ScalarType barycentricSnapThr; ///< Threshold for snapping barycentric coords to 0 or 1 (controls vertex/edge snapping)
+    vcg::CallBackPos *cb = nullptr; ///< Receives progress and diagnostic messages (see wrap/callback.h)
     
     /// Constructor with default parameter initialization based on mesh size
     Param(MeshType &m) { SetDefault(m);}
@@ -159,8 +184,53 @@ public:
   MeshGrid uniformGrid; ///< Spatial acceleration structure for closest point queries
   Param par;            ///< Parameters controlling algorithm behavior
   
-  /// Constructor: initializes the CoM with a base mesh
-  CoM(MeshType &_m) :base(_m),par(_m){}
+  /// Constructor: initializes the CoM with a base mesh. It updates the bounding box of
+  /// the base mesh first, because every default in Param is a fraction of its diagonal:
+  /// a stale box would silently give tolerances of the wrong scale.
+  CoM(MeshType &_m) :base(_m),par(BoxUpdated(_m)){}
+
+private:
+  static MeshType &BoxUpdated(MeshType &m) { tri::UpdateBounding<MeshType>::Box(m); return m; }
+
+  template <class> friend class CoMEmbed;
+
+  int progress = 0; ///< last progress reported through Param::cb, in [0,100]
+
+  /// Report progress \a pos with a message through Param::cb.
+  template <class... Args>
+  void Progress(int pos, const char *fmt, Args... args)
+  {
+    progress = pos;
+    Log(fmt, args...);
+  }
+
+  /// Send a diagnostic message through Param::cb, at the progress last reported: a fixed
+  /// position would move a caller's progress bar back.
+  template <class... Args>
+  void Log(const char *fmt, Args... args)
+  {
+    if (!par.cb) return;
+    char msg[256];
+    snprintf(msg, sizeof(msg), fmt, args...);
+    par.cb(progress, msg);
+  }
+
+  /// Every closest-face query goes through here. The grid returns no face beyond
+  /// Param::gridBailout, and all callers need one, so a null result is an error to
+  /// report, not a pointer to dereference.
+  FaceType *Closest(const CoordType &p, CoordType &closestP, ScalarType &closestDist)
+  {
+    FaceType *f = vcg::tri::GetClosestFaceBase(base, uniformGrid, p, par.gridBailout, closestDist, closestP);
+    if (f == nullptr) {
+      char msg[256];
+      snprintf(msg, sizeof(msg), "CoM: no face of the base mesh within %g (Param::gridBailout) of the point (%g, %g, %g); the curve is too far from the surface.",
+               double(par.gridBailout), double(p[0]), double(p[1]), double(p[2]));
+      throw vcg::MissingPreconditionException(msg);
+    }
+    return f;
+  }
+
+public:
  
   // ============================================================================
   // Spatial Query Methods
@@ -169,13 +239,15 @@ public:
   /**
    * \brief Get the closest face to a query point
    * \param p The query point
-   * \return Pointer to the closest face, or nullptr if none found within gridBailout distance
+   * \return Pointer to the closest face
+   * \throws vcg::MissingPreconditionException if no face is within Param::gridBailout,
+   *         as all the closest-face queries below
    */
   FaceType *GetClosestFace(const CoordType &p)
   {
     ScalarType closestDist;
     CoordType closestP;
-    return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, this->par.gridBailout, closestDist, closestP);
+    return Closest(p, closestP, closestDist);
   }
   
   /**
@@ -187,8 +259,10 @@ public:
   FaceType *GetClosestFaceIP(const CoordType &p, CoordType &ip)
     {
       ScalarType closestDist;
-      CoordType closestP,closestN;
-      return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, this->par.gridBailout, closestDist, closestP,closestN,ip);
+      CoordType closestP;
+      FaceType *f = Closest(p, closestP, closestDist);
+      InterpolationParameters(*f, f->N(), closestP, ip);
+      return f;
     }
 
   /**
@@ -200,9 +274,9 @@ public:
    */
   FaceType *GetClosestFaceIP(const CoordType &p, CoordType &ip, CoordType &in)
     {
-      ScalarType closestDist;
-      CoordType closestP;
-      return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, this->par.gridBailout, closestDist, closestP,in,ip);
+      FaceType *f = GetClosestFaceIP(p, ip);
+      in = f->V(0)->cN()*ip[0] + f->V(1)->cN()*ip[1] + f->V(2)->cN()*ip[2];
+      return f;
     }
 
   /**
@@ -214,7 +288,7 @@ public:
   FaceType *GetClosestFacePoint(const CoordType &p, CoordType &closestP)
   {
     ScalarType closestDist;
-    return vcg::tri::GetClosestFaceBase(base,uniformGrid,p, this->par.gridBailout, closestDist, closestP);
+    return Closest(p, closestP, closestDist);
   }
   
   // ============================================================================
@@ -292,74 +366,6 @@ public:
     return 0;
   }
   
-  // ============================================================================
-  // Polyline Tagging and Mesh Cutting Methods
-  // ============================================================================
-  
-  /**
-   * \brief Tag face edges of the base mesh that coincide with polyline edges
-   * \param poly The polyline (as edge mesh) to use for tagging
-   * \param markFlag If true, clears all FaceEdgeS flags before tagging (default: true)
-   * \return true if ALL edges of the polyline are fully snapped onto mesh edges
-   * 
-   * This function marks edges in the base mesh (using FaceEdgeS flag) where they 
-   * coincide with edges from the polyline. The polyline edges must be snapped to 
-   * mesh vertices at both endpoints for this to work.
-   * This function requires VertexFace and FaceFace adjacency.
-   * 
-   * \note This is typically used as a preparation step before cutting the mesh
-   *       along the polyline using CutMeshAlongCrease or similar functions.
-   *      
-   * 
-   * \warning Returns false if any polyline edge is not properly snapped, or if
-   *          the snapped vertices don't form an edge in the base mesh.
-   * 
-   * \sa SplitMeshWithPolyline, CutMeshAlongCrease
-   */
-    
-bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
-{
-	if (markFlag)
-		tri::UpdateFlags<MeshType>::FaceClearFaceEdgeS(base);
-
-	tri::UpdateTopology<MeshType>::VertexFace(base);
-	tri::UpdateTopology<MeshType>::FaceFace(base);
-
-	for(EdgeIterator ei=poly.edge.begin(); ei!=poly.edge.end();++ei)
-	{
-		CoordType ip0,ip1;
-		FaceType *f0 = GetClosestFaceIP(ei->cP(0),ip0);
-		FaceType *f1 = GetClosestFaceIP(ei->cP(1),ip1);
-
-		if(BarycentricSnap(ip0) && BarycentricSnap(ip1))
-		{
-			VertexPointer v0 = FindVertexSnap(f0,ip0);
-			VertexPointer v1 = FindVertexSnap(f1,ip1);
-
-			if(v0==0 || v1==0)
-				return false;
-			if(v0==v1)
-				return false;
-
-			FacePointer ff0,ff1;
-			int e0,e1;
-			bool ret=face::FindSharedFaces<FaceType>(v0,v1,ff0,ff1,e0,e1);
-			if(ret)
-			{
-				assert(ret);
-				assert(ff0->V(e0)==v0 || ff0->V(e0)==v1);
-				ff0->SetFaceEdgeS(e0);
-				ff1->SetFaceEdgeS(e1);
-			} else {
-				return false;
-			}
-		}
-		else {
-			return false;
-		}
-	}
-	return true;
-}
 
   /**
    * \brief Find the minimum distance from a sample point to the polyline
@@ -507,27 +513,27 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
       FaceType *f = GetClosestFaceIP(vi->cP(),ip);
       if(BarycentricSnap(ip))
       {
-        if(ip[0]>0 && ip[1]>0) { vi->P() = f->P(0)*ip[0]+f->P(1)*ip[1]; edgeSnapCnt++; assert(ip[2]==0); vi->C()=Color4b::White;}
-        if(ip[0]>0 && ip[2]>0) { vi->P() = f->P(0)*ip[0]+f->P(2)*ip[2]; edgeSnapCnt++; assert(ip[1]==0); vi->C()=Color4b::White;}
-        if(ip[1]>0 && ip[2]>0) { vi->P() = f->P(1)*ip[1]+f->P(2)*ip[2]; edgeSnapCnt++; assert(ip[0]==0); vi->C()=Color4b::White;}
+        if(ip[0]>0 && ip[1]>0) { vi->P() = f->P(0)*ip[0]+f->P(1)*ip[1]; edgeSnapCnt++; assert(ip[2]==0); }
+        if(ip[0]>0 && ip[2]>0) { vi->P() = f->P(0)*ip[0]+f->P(2)*ip[2]; edgeSnapCnt++; assert(ip[1]==0); }
+        if(ip[1]>0 && ip[2]>0) { vi->P() = f->P(1)*ip[1]+f->P(2)*ip[2]; edgeSnapCnt++; assert(ip[0]==0); }
         
-        if(ip[0]==1.0) { vi->P() = f->P(0); vertSnapCnt++; assert(ip[1]==0 && ip[2]==0); vi->C()=Color4b::Black;  }
-        if(ip[1]==1.0) { vi->P() = f->P(1); vertSnapCnt++; assert(ip[0]==0 && ip[2]==0); vi->C()=Color4b::Black;}
-        if(ip[2]==1.0) { vi->P() = f->P(2); vertSnapCnt++; assert(ip[0]==0 && ip[1]==0); vi->C()=Color4b::Black;}
+        if(ip[0]==1.0) { vi->P() = f->P(0); vertSnapCnt++; assert(ip[1]==0 && ip[2]==0); }
+        if(ip[1]==1.0) { vi->P() = f->P(1); vertSnapCnt++; assert(ip[0]==0 && ip[2]==0); }
+        if(ip[2]==1.0) { vi->P() = f->P(2); vertSnapCnt++; assert(ip[0]==0 && ip[1]==0); }
       }
       else
       {
         int deg = edge::VEDegree<EdgeType>(&*vi);
-        if (deg > 2) { nonmanifCnt++; vi->C()=Color4b::Magenta; }
-        if (deg < 2) { borderCnt++;   vi->C()=Color4b::Green;} 
-        if (deg== 2) { midCnt++;      vi->C()=Color4b::Blue;} 
+        if (deg > 2) nonmanifCnt++;
+        if (deg < 2) borderCnt++;
+        if (deg== 2) midCnt++;
       }
     }
-    printf("SnapPolyline %i vertices:  snapped %i onto vert and %i onto edges %i nonmanif, %i border, %i mid\n",
-           poly.vn, vertSnapCnt, edgeSnapCnt, nonmanifCnt,borderCnt,midCnt); fflush(stdout);
+    Log("SnapPolyline %i vertices:  snapped %i onto vert and %i onto edges %i nonmanif, %i border, %i mid",
+        poly.vn, vertSnapCnt, edgeSnapCnt, nonmanifCnt,borderCnt,midCnt);
     int dupCnt=tri::Clean<MeshType>::RemoveDuplicateVertex(poly);
     tri::Allocator<MeshType>::CompactEveryVector(poly);     
-    if(dupCnt) printf("SnapPolyline: Removed %i Duplicated vertices\n",dupCnt);
+    if(dupCnt) Log("SnapPolyline: Removed %i Duplicated vertices",dupCnt);
     
     return vertSnapCnt==0 && edgeSnapCnt==0 && dupCnt==0;
   }
@@ -584,7 +590,7 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
       if(starVec.size()>2)
         neededVert += starVec.size()-delta;
     }
-    printf("DecomposeNonManifold Adding %i vert to a polyline of %i vert\n",neededVert,poly.vn);
+    Log("DecomposeNonManifold Adding %i vert to a polyline of %i vert",neededVert,poly.vn);
     VertexIterator firstVi = tri::Allocator<MeshType>::AddVertices(poly,neededVert);
     
     for(size_t i=0;i<degreeVec.size();++i)
@@ -612,104 +618,6 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
   }
   
   // ============================================================================
-  // Mesh Splitting and Refinement for Polyline Integration
-  // ============================================================================
-  
-  /**
-   * \brief Split the base mesh to make it conforming with the polyline
-   * \param poly The polyline to integrate into the base mesh
-   * 
-   * Note that you have to call 
-   * RefineCurveByBaseMesh before this function to ensure that the polyline 
-   * is sufficiently sampled and follows the surface features.
-   * This is a complex two-phase algorithm:
-   * 
-   * **Phase 1: Vertex Insertion**
-   * - Finds all polyline vertices that are NOT snapped to mesh vertices/edges
-   * - Inserts them into the base mesh using 1-to-3 face splits
-   * - This creates new vertices in the mesh at polyline vertex positions
-   * 
-   * **Phase 2: Edge Splitting** (iterative)
-   * - Identifies mesh edges that are crossed by polyline edges
-   * - Splits those edges at the intersection points
-   * - Repeats until no more edges need splitting
-   * 
-   * After completion, the polyline edges should coincide with base mesh edges,
-   * allowing subsequent operations like mesh cutting or constrained triangulation.
-   * 
-   * \note This modifies the base mesh topology! 
-   * \note Calls Init() internally to rebuild spatial structures
-   * \note Calls SnapPolyline() to update polyline after mesh modifications
-   * 
-   * \warning This can significantly increase mesh complexity
-   * 
-   * \sa TagFaceEdgeSelWithPolyLine, SnapPolyline, RefineCurveByBaseMesh
-   */
-  
-  void SplitMeshWithPolyline(MeshType &poly)
-  {        
-    std::vector< std::pair<int,VertexPointer> > toSplitVec;  // the index of the face to be split and the poly vertex to be used
-    
-    for(VertexIterator vi=poly.vert.begin(); vi!=poly.vert.end();++vi)
-    {
-      CoordType ip;
-      FaceType *f = GetClosestFaceIP(vi->cP(),ip);
-      if(!BarycentricSnap(ip))
-        toSplitVec.push_back(std::make_pair(tri::Index(base,f),&*vi));
-    }
-    SimplifyNullEdges(poly);
-    printf("SplitMeshWithPolyline found %lu non snapped points\n",toSplitVec.size()); fflush(stdout);
-
-    FaceIterator newFi = tri::Allocator<MeshType>::AddFaces(base,toSplitVec.size()*2);
-    VertexIterator newVi = tri::Allocator<MeshType>::AddVertices(base,toSplitVec.size());    
-    tri::UpdateColor<MeshType>::PerVertexConstant(base,Color4b::White);
-    
-    for(size_t i =0; i<toSplitVec.size();++i)
-    {
-        newVi->P() = toSplitVec[i].second->P(); 
-        newVi->C()=Color4b::Green;      
-        face::TriSplit(&base.face[toSplitVec[i].first],&*(newFi++),&*(newFi++),&*(newVi++));
-    }
-    Init(); //  need to reset everthing
-    SnapPolyline(poly);
-    
-    // Second loop to perform the face-face Edge split **********************
-    // This loop must be iterated multiple times becouse it can happen that more than one polyline vertices falls on the same edge.
-    // So multiple splits must be done.
-    std::map<std::pair<CoordType,CoordType>, VertexPointer> edgeToSplitMap;
-    do
-    {
-        edgeToSplitMap.clear();
-        for(VertexIterator vi=poly.vert.begin(); vi!=poly.vert.end();++vi)
-        {
-            CoordType ip;
-            FaceType *f = GetClosestFaceIP(vi->cP(),ip);
-            if(!BarycentricSnap(ip)) { assert(0); }            
-            for(int i=0;i<3;++i)
-            {
-                if((ip[i      ]>0 && ip[i      ]<1.0) &&
-                    (ip[(i+1)%3]>0 && ip[(i+1)%3]<1.0) &&
-                    ip[(i+2)%3]==0 )
-                {
-                    CoordType p0=f->P0(i);
-                    CoordType p1=f->P1(i);
-                    if (p0>p1) std::swap(p0,p1);
-                    if(edgeToSplitMap[std::make_pair(p0,p1)])
-                        printf("Found an already used Edge %lu - %lu vert %lu!!!\n", tri::Index(base,f->V0(i)),tri::Index(base,f->V1(i)),tri::Index(poly,&*vi));
-                    edgeToSplitMap[std::make_pair(p0,p1)]=&*vi;
-                }         
-            }
-        }
-        printf("SplitMeshWithPolyline: Created a map of %lu edges to be split\n",edgeToSplitMap.size());
-        EdgePointPred ePred(edgeToSplitMap);
-        EdgePointSplit eSplit(edgeToSplitMap);
-        tri::UpdateTopology<MeshType>::FaceFace(base);
-        tri::RefineE(base,eSplit,ePred);     
-        Init(); //  need to reset everthing
-    } while(edgeToSplitMap.size()>0); // while there are edges to be split
- }
-    
-  // ============================================================================
   // Initialization
   // ============================================================================
   
@@ -727,9 +635,15 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
    */
   void Init()
   {
-    // Construction of the uniform grid
+    if (base.fn == 0)
+      throw vcg::MissingPreconditionException("CoM: the base mesh has no faces.");
     UpdateNormal<MeshType>::PerFaceNormalized(base);
     UpdateTopology<MeshType>::FaceFace(base);    
+    MeshAssert<MeshType>::FFTwoManifoldEdge(base);
+    // A zero-area face has no barycentric coordinates: the closest-point query either
+    // misses it or returns uninitialized ones, which the snapping then trusts.
+    MeshAssert<MeshType>::NoZeroAreaFace(base);
+    // Construction of the uniform grid
     uniformGrid.Set(base.face.begin(), base.face.end());    
   }
   
@@ -747,7 +661,7 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
   {
       int cnt=tri::Clean<MeshType>::RemoveDuplicateVertex(poly);
       if(cnt)
-          printf("SimplifyNullEdges: Removed %i Duplicated vertices\n",cnt);
+          Log("SimplifyNullEdges: Removed %i Duplicated vertices",cnt);
   }
   
   void SimplifyMidEdge(MeshType &poly)
@@ -858,7 +772,7 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
       }
     }  
    } while(curVn>poly.vn);
-   printf("SimplifyMidFace %5i -> %5i %i mid %i ve \n",startVn,poly.vn,midFaceCollapseCnt,vertexEdgeCollapseCnt);
+   Log("SimplifyMidFace %5i -> %5i %i mid %i ve",startVn,poly.vn,midFaceCollapseCnt,vertexEdgeCollapseCnt);
   } 
   
   void Simplify(MeshType &poly)
@@ -1246,10 +1160,9 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
       ScalarType surfDist;
       CoordType closestPSurf;
       CoordType samplePnt = (v0->P()*k +v1->P()*(sampleNum-k))/sampleNum;          
-      FaceType *f = vcg::tri::GetClosestFaceBase(base,uniformGrid,samplePnt,par.gridBailout, surfDist, closestPSurf);        
+      FaceType *f = Closest(samplePnt, closestPSurf, surfDist);
       if(distanceDistribution)
         distanceDistribution->Add(surfDist);
-      assert(f);
       if(surfDist > maxSurfDist)
       {
         maxSurfDist = surfDist;
@@ -1301,6 +1214,7 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
   void RefineCurveByBaseMesh(MeshType &poly)
   {
     tri::Allocator<MeshType>::CompactEveryVector(poly);    
+    tri::UpdateTopology<MeshType>::VertexEdge(poly); // the edge splits below walk VE adjacency
     std::vector<int> edgeToRefineVec;
     for(int i=0; i<poly.en;++i) 
       edgeToRefineVec.push_back(i);
@@ -1322,14 +1236,14 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
       }
       tri::Allocator<MeshType>::CompactEveryVector(poly);
       swap(edgeToRefineVecNext,edgeToRefineVec);
-       printf("RefineCurveByBaseMesh %i en -> %i en\n",startEn,poly.en); fflush(stdout);    
+      Progress(iterCnt, "RefineCurveByBaseMesh %i en -> %i en",startEn,poly.en); // at most 100 iterations
     }
 //
     SimplifyNullEdges(poly);
     SimplifyMidFace(poly);
     SimplifyMidEdge(poly);
     SnapPolyline(poly);    
-    printf("RefineCurveByBaseMesh %i en -> %i en\n",startEn,poly.en); fflush(stdout);    
+    Log("RefineCurveByBaseMesh %i en -> %i en",startEn,poly.en);
   }
   
   
@@ -1401,16 +1315,11 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
       for (const VertexType &v : poly.vert)
       {
         CoordType ip; 
-        FacePointer f = com.GetClosestFaceIP(v.P(),ip);
-        if(!f) {
-          printf("Fail to get closest face for vertex at position (%f, %f, %f)\n", v.P().X(), v.P().Y(), v.P().Z()); fflush(stdout);
-        }
-        else {
-          ScalarType q = f->V(0)->Q() * ip[0] + f->V(1)->Q() * ip[1] + f->V(2)->Q() * ip[2];        
-          CoordType fieldDir = GradientScalarField(*f, f->V(0)->Q(),f->V(1)->Q(),f->V(2)->Q());
-          
-          fieldPosVec[tri::Index(poly, v)] = v.P() + fieldDir * scale * q; // Move towards higher quality (lower distance)
-        }
+        FacePointer f = com.GetClosestFaceIP(v.P(),ip); // throws rather than return null
+        ScalarType q = f->V(0)->Q() * ip[0] + f->V(1)->Q() * ip[1] + f->V(2)->Q() * ip[2];        
+        CoordType fieldDir = GradientScalarField(*f, f->V(0)->Q(),f->V(1)->Q(),f->V(2)->Q());
+        
+        fieldPosVec[tri::Index(poly, v)] = v.P() + fieldDir * scale * q; // Move towards higher quality (lower distance)
       }
       std::vector<CoordType> PosVec(poly.vn, CoordType(0, 0, 0));
       for (int i = 0; i < poly.vn; ++i)
@@ -1437,9 +1346,11 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
   {
     tri::RequireCompactness(poly);
     tri::UpdateTopology<MeshType>::VertexEdge(poly);
-    assert(poly.en>0 && base.fn>0);
+    if (poly.en == 0 || base.fn == 0)
+      throw vcg::MissingPreconditionException("CoM: the curve and the base mesh must both be non-empty.");
     for(int k=0;k<iterNum;++k)
     {
+      Progress(100*k/iterNum, "MoveAndProject iteration %i of %i, %i vertices", k+1, iterNum, poly.vn);
       if(k==iterNum-1) projectWeight=1;
       std::vector<CoordType> desired = desiredPos(poly);
 
@@ -1458,7 +1369,6 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
           
           CoordType closestP;
           FaceType *f = GetClosestFacePoint(newP, closestP);
-          assert(f);
           poly.vert[i].P() = newP*(1.0-projectWeight) +closestP*projectWeight;
           poly.vert[i].N() = f->N();
         }
@@ -1483,53 +1393,436 @@ bool TagFaceEdgeSelWithPolyLine(MeshType &poly,bool markFlag=true)
   }
 
 
-class EdgePointPred
-{
-public:
-  std::map<std::pair<CoordType,CoordType>, VertexPointer> &edgeToPolyVertMap;
-    
-    EdgePointPred(std::map<std::pair<CoordType,CoordType>, VertexPointer> &_edgeToPolyVertMap):edgeToPolyVertMap(_edgeToPolyVertMap){};
-    bool operator()(face::Pos<FaceType> ep) const
-    {
-      CoordType p0 = ep.V()->P();
-      CoordType p1 = ep.VFlip()->P();
-      if (p0>p1) std::swap(p0,p1);
-      return edgeToPolyVertMap.find(std::make_pair(p0,p1)) != edgeToPolyVertMap.end();           
-    }
 };
 
-struct EdgePointSplit
+/** \ingroup trimesh
+ * \brief Embed a curve in the surface it lies on: the operations on a CoM that change the surface.
+ *
+ * CoM is a query structure over a fixed surface; what only reads the surface, or changes
+ * the curve, lives there. These two change the base mesh itself, its connectivity and its
+ * face-edge selection, so they are kept apart. Both take the CoM already built over the
+ * surface, typically the one just used to smooth and refine the curve, so its spatial grid
+ * is not built twice. SplitMeshWithPolyline() re-initializes it on the split surface, so it
+ * stays valid afterwards.
+ *
+ * \code
+ * tri::CoM<MyMesh> com(base);
+ * com.Init();
+ * com.SmoothProject(poly, 10, 0.5, 0.5);
+ * com.RefineCurveByBaseMesh(poly);
+ * tri::CoMEmbed<MyMesh>::SplitMeshWithPolyline(com, poly);
+ * tri::CoMEmbed<MyMesh>::TagFaceEdgeSelWithPolyLine(com, poly);
+ * tri::CutMeshAlongSelectedFaceEdges(base);
+ * \endcode
+ * See the sample trimesh_topological_cut.cpp.
+ */
+template <class MeshType>
+class CoMEmbed
 {
 public:
-  std::map<std::pair<CoordType,CoordType>, VertexPointer> &edgeToPolyVertMap;
+  typedef CoM<MeshType>                     CoMType;
+  typedef typename MeshType::ScalarType     ScalarType;
+  typedef typename MeshType::CoordType      CoordType;
+  typedef typename MeshType::VertexType     VertexType;
+  typedef typename MeshType::VertexPointer  VertexPointer;
+  typedef typename MeshType::VertexIterator VertexIterator;
+  typedef typename MeshType::EdgeIterator   EdgeIterator;
+  typedef typename MeshType::FaceType       FaceType;
+  typedef typename MeshType::FacePointer    FacePointer;
+  typedef typename MeshType::FaceIterator   FaceIterator;
+
   
-  EdgePointSplit(std::map<std::pair<CoordType,CoordType>, VertexPointer> &_edgeToPolyVertMap):edgeToPolyVertMap(_edgeToPolyVertMap){};
-    void operator()(VertexType &nv, face::Pos<FaceType> ep)
-    {
-      CoordType p0 = ep.V()->P();
-      CoordType p1 = ep.VFlip()->P();
-      if (p0>p1) std::swap(p0,p1);        
-      VertexPointer vp=edgeToPolyVertMap[std::make_pair(p0,p1)];
-      assert(vp);
-      nv.P()=vp->P();
-      return;
-    }
-    Color4b WedgeInterp(Color4b &c0, Color4b &c1)
-    {
-        Color4b cc;
-        cc.lerp(c0,c1,0.5f);
-        return Color4b::Red;
-    }
-    TexCoord2f WedgeInterp(TexCoord2f &t0, TexCoord2f &t1)
-    {
-        TexCoord2f tmp;
-        assert(t0.n()== t1.n());
-        tmp.n()=t0.n();
-        tmp.t()=(t0.t()+t1.t())/2.0;
-        return tmp;
-    }
-};
+  /**
+   * \brief Tag face edges of the base mesh that coincide with polyline edges
+   * \param com The CoM built over the base mesh
+   * \param poly The polyline (as edge mesh) to use for tagging
+   * \param markFlag If true, clears all FaceEdgeS flags before tagging (default: true)
+   * \return true if ALL edges of the polyline are fully snapped onto mesh edges
+   * 
+   * This function marks edges in the base mesh (using FaceEdgeS flag) where they 
+   * coincide with edges from the polyline. The polyline edges must be snapped to 
+   * mesh vertices at both endpoints for this to work.
+   * This function requires VertexFace and FaceFace adjacency.
+   * 
+   * \note This is typically used as a preparation step before cutting the mesh
+   *       along the polyline using CutMeshAlongCrease or similar functions.
+   *      
+   * 
+   * \warning Returns false if any polyline edge is not properly snapped, or if
+   *          the snapped vertices don't form an edge in the base mesh.
+   * 
+   * \sa SplitMeshWithPolyline, CutMeshAlongCrease
+   */
+    
+static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFlag=true)
+{
+	if (markFlag)
+		tri::UpdateFlags<MeshType>::FaceClearFaceEdgeS(com.base);
 
+	tri::UpdateTopology<MeshType>::VertexFace(com.base);
+	tri::UpdateTopology<MeshType>::FaceFace(com.base);
+
+	for(EdgeIterator ei=poly.edge.begin(); ei!=poly.edge.end();++ei)
+	{
+		CoordType ip0,ip1;
+		FaceType *f0 = com.GetClosestFaceIP(ei->cP(0),ip0);
+		FaceType *f1 = com.GetClosestFaceIP(ei->cP(1),ip1);
+
+		if(com.BarycentricSnap(ip0) && com.BarycentricSnap(ip1))
+		{
+			VertexPointer v0 = com.FindVertexSnap(f0,ip0);
+			VertexPointer v1 = com.FindVertexSnap(f1,ip1);
+
+			if(v0==0 || v1==0)
+				return false;
+			if(v0==v1)
+				return false;
+
+			FacePointer ff0,ff1;
+			int e0,e1;
+			bool ret=face::FindSharedFaces<FaceType>(v0,v1,ff0,ff1,e0,e1);
+			if(ret)
+			{
+				assert(ret);
+				assert(ff0->V(e0)==v0 || ff0->V(e0)==v1);
+				ff0->SetFaceEdgeS(e0);
+				ff1->SetFaceEdgeS(e1);
+			} else {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+	}
+	return true;
+}
+
+  
+  /**
+   * \brief Make the base mesh conform to the polyline: afterwards every polyline edge is an
+   *        edge of the base mesh, with its face-edge selection bit set on both sides.
+   * \param com The CoM built over the base mesh, typically the one just used to refine the
+   *            polyline; it is re-initialized on the split mesh, so it stays valid
+   * \param poly The polyline; its vertices are moved onto the vertices created for them
+   *
+   * Preconditions: RefineCurveByBaseMesh() has been called, so every polyline segment lies
+   * inside one face or along one edge of the base mesh; and the polyline has no contacts:
+   * its vertices are distinct and its segments do not cross each other.
+   *
+   * Any number of segments may cross the same triangle, from different curves or from the
+   * same one passing several times, as a spiral on a cylinder does. Each crossed triangle is
+   * rebuilt on its own, in its barycentric frame: the polyline points on its edges are
+   * inserted by splitting the sub-triangle that owns that piece of the edge, points inside
+   * it by splitting the sub-triangle that contains them, and every segment is then recovered
+   * as an edge by flipping the edges that cross it (S. W. Sloan, "A fast algorithm for
+   * generating constrained Delaunay triangulations", Computers & Structures 47(3), 1993; the
+   * Delaunay part is not needed here). Sub-triangles keep the attributes of their triangle,
+   * and their wedge texture coordinates are the triangle's at each vertex; new vertices
+   * interpolate the attributes of the surface where they are (VertexInterpolator).
+   *
+   * \throws vcg::MissingPreconditionException if a segment does not lie in one face or
+   *         along one edge, or if a segment cannot be recovered (curves touching or crossing)
+   * \sa CoM::RefineCurveByBaseMesh, TagFaceEdgeSelWithPolyLine
+   */
+  static void SplitMeshWithPolyline(CoMType &com, MeshType &poly)
+  {
+    MeshType &m = com.base;
+    tri::Allocator<MeshType>::CompactEveryVector(poly);
+    if (poly.vn == 0) return;
+    typedef std::pair<size_t, size_t> EdgeKey;  // mesh vertex indices, smaller first
+    auto key = [](size_t a, size_t b) { return a < b ? EdgeKey(a, b) : EdgeKey(b, a); };
+
+    // 1. Where each polyline vertex is on the mesh: on a vertex, on an edge, or in a face.
+    enum { OnVertex, OnEdge, InFace };
+    struct Loc { int kind; size_t vert; EdgeKey edge; ScalarType t; size_t face[2]; int faceNum; CoordType ip; };
+    std::vector<Loc> loc(poly.vert.size());
+    for (size_t ci = 0; ci < poly.vert.size(); ++ci)
+    {
+      Loc &l = loc[ci];
+      FaceType *f = com.GetClosestFaceIP(poly.vert[ci].cP(), l.ip);
+      com.BarycentricSnap(l.ip);
+      int z = -1, one = -1;
+      for (int i = 0; i < 3; ++i) { if (l.ip[i] == 0) z = i; if (l.ip[i] == 1) one = i; }
+      l.face[0] = tri::Index(m, f); l.faceNum = 1;
+      if (one >= 0) { l.kind = OnVertex; l.vert = tri::Index(m, f->V(one)); }
+      else if (z >= 0) {
+        // On the edge opposite to corner z: from V(z+1), at parameter ip[z+2].
+        l.kind = OnEdge;
+        const size_t a = tri::Index(m, f->V((z + 1) % 3)), b = tri::Index(m, f->V((z + 2) % 3));
+        l.edge = key(a, b);
+        l.t = (a < b) ? l.ip[(z + 2) % 3] : l.ip[(z + 1) % 3];
+        const int e = (z + 1) % 3;  // index of that edge in f
+        if (f->FFp(e) != f) { l.face[1] = tri::Index(m, f->FFp(e)); l.faceNum = 2; }
+      }
+      else l.kind = InFace;
+    }
+
+    // 2. A mesh vertex for each of them: the existing one, or a new one shared by every
+    //    polyline vertex at exactly the same place.
+    std::vector<size_t> meshV(poly.vert.size());
+    std::map<std::pair<EdgeKey, ScalarType>, size_t> edgePointVert;
+    size_t newVertNum = 0;
+    const size_t firstNewVert = m.vert.size();
+    for (size_t ci = 0; ci < poly.vert.size(); ++ci)
+    {
+      const Loc &l = loc[ci];
+      if (l.kind == OnVertex) meshV[ci] = l.vert;
+      else if (l.kind == OnEdge) {
+        auto ins = edgePointVert.insert({{l.edge, l.t}, firstNewVert + newVertNum});
+        if (ins.second) ++newVertNum;
+        meshV[ci] = ins.first->second;
+      }
+      else meshV[ci] = firstNewVert + newVertNum++;
+    }
+    tri::Allocator<MeshType>::AddVertices(m, newVertNum);
+    for (size_t ci = 0; ci < poly.vert.size(); ++ci)
+    {
+      const Loc &l = loc[ci];
+      VertexType &nv = m.vert[meshV[ci]];
+      if (l.kind == OnEdge) {
+        const VertexType &va = m.vert[l.edge.first], &vb = m.vert[l.edge.second];
+        nv.P() = va.cP() * (1 - l.t) + vb.cP() * l.t;
+        VertexInterpolator<MeshType>::Lerp(m, nv, va, vb, l.t);
+      } else if (l.kind == InFace) {
+        const FaceType &f = m.face[l.face[0]];
+        nv.P() = f.cP(0) * l.ip[0] + f.cP(1) * l.ip[1] + f.cP(2) * l.ip[2];
+        VertexInterpolator<MeshType>::Barycentric(m, nv, *f.cV(0), *f.cV(1), *f.cV(2), l.ip);
+      }
+      poly.vert[ci].P() = m.vert[meshV[ci]].cP();
+    }
+
+    // 3. What each face has to take in: points on its edges, points inside it, segments.
+    std::map<EdgeKey, std::vector<std::pair<ScalarType, size_t>>> edgePoints;  // (t from first, vertex)
+    for (const auto &ep : edgePointVert) edgePoints[ep.first.first].push_back({ep.first.second, ep.second});
+    std::map<size_t, std::vector<std::pair<size_t, CoordType>>> facePoints;   // (vertex, barycentric)
+    std::map<size_t, std::vector<EdgeKey>> faceSegments;
+    std::set<EdgeKey> curveEdges;
+    std::map<size_t, std::vector<size_t>> vertFaces;  // faces around the polyline vertices on mesh vertices
+    for (size_t ci = 0; ci < poly.vert.size(); ++ci)
+    {
+      if (loc[ci].kind == InFace) facePoints[loc[ci].face[0]].push_back({meshV[ci], loc[ci].ip});
+      if (loc[ci].kind == OnVertex) vertFaces[loc[ci].vert];
+    }
+    if (!vertFaces.empty())
+      for (size_t fi = 0; fi < m.face.size(); ++fi) if (!m.face[fi].IsD())
+        for (int i = 0; i < 3; ++i) {
+          auto it = vertFaces.find(tri::Index(m, m.face[fi].V(i)));
+          if (it != vertFaces.end()) it->second.push_back(fi);
+        }
+    auto candidateFaces = [&](size_t ci) {
+      if (loc[ci].kind == OnVertex) return vertFaces[loc[ci].vert];
+      return std::vector<size_t>(loc[ci].face, loc[ci].face + loc[ci].faceNum);
+    };
+    for (const auto &e : poly.edge) if (!e.IsD())
+    {
+      const size_t c0 = tri::Index(poly, e.cV(0)), c1 = tri::Index(poly, e.cV(1));
+      if (meshV[c0] == meshV[c1]) continue;  // a zero-length segment
+      curveEdges.insert(key(meshV[c0], meshV[c1]));
+      // The segment lies in the faces both its ends belong to: one face for a segment
+      // across it, the two faces of an edge for a segment along it.
+      std::vector<size_t> f0 = candidateFaces(c0), f1 = candidateFaces(c1), common;
+      std::sort(f0.begin(), f0.end()); std::sort(f1.begin(), f1.end());
+      std::set_intersection(f0.begin(), f0.end(), f1.begin(), f1.end(), std::back_inserter(common));
+      if (common.empty())
+        throw vcg::MissingPreconditionException("CoMEmbed: a curve segment does not lie in one face; call RefineCurveByBaseMesh first.");
+      if (common.size() == 1) faceSegments[common[0]].push_back(key(meshV[c0], meshV[c1]));
+    }
+
+    std::set<size_t> touched;
+    for (const auto &fp : facePoints) touched.insert(fp.first);
+    for (const auto &fs : faceSegments) touched.insert(fs.first);
+    for (size_t fi = 0; fi < m.face.size(); ++fi) if (!m.face[fi].IsD())
+      for (int i = 0; i < 3; ++i)
+        if (edgePoints.count(key(tri::Index(m, m.face[fi].V(i)), tri::Index(m, m.face[fi].V1(i))))) touched.insert(fi);
+
+    // 4. Rebuild every touched face on its own.
+    std::vector<std::pair<size_t, LocalTriangulation>> rebuilt;
+    size_t newFaceNum = 0, done = 0;
+    for (size_t fi : touched)
+    {
+      com.Progress(int(100 * done++ / touched.size()), "SplitMeshWithPolyline: rebuilding face %lu of %lu", (unsigned long)done, (unsigned long)touched.size());
+      LocalTriangulation lt;
+      const FaceType &f = m.face[fi];
+      size_t corner[3];
+      for (int k = 0; k < 3; ++k) { corner[k] = tri::Index(m, f.cV(k)); lt.AddPoint(corner[k], k == 1, k == 2, (1 << k) | (1 << ((k + 2) % 3))); }
+      lt.tris.push_back({{0, 1, 2}});
+      for (int k = 0; k < 3; ++k)
+      {
+        auto it = edgePoints.find(key(corner[k], corner[(k + 1) % 3]));
+        if (it == edgePoints.end()) continue;
+        std::vector<std::pair<ScalarType, size_t>> pts;  // parameter from corner k
+        for (const auto &p : it->second) pts.push_back({corner[k] < corner[(k + 1) % 3] ? p.first : 1 - p.first, p.second});
+        std::sort(pts.begin(), pts.end());
+        int prev = k;
+        for (const auto &p : pts)
+        {
+          const ScalarType s = p.first;
+          const ScalarType u = lt.pts[k].u * (1 - s) + lt.pts[(k + 1) % 3].u * s;
+          const ScalarType v = lt.pts[k].v * (1 - s) + lt.pts[(k + 1) % 3].v * s;
+          const int pi = lt.AddPoint(p.second, u, v, 1 << k);
+          lt.SplitEdge(prev, (k + 1) % 3, pi);
+          prev = pi;
+        }
+      }
+      for (const auto &p : facePoints[fi]) lt.InsertInterior(lt.AddPoint(p.first, p.second[1], p.second[2], 0));
+      for (const EdgeKey &s : faceSegments[fi]) lt.Recover(lt.Local(s.first), lt.Local(s.second));
+      newFaceNum += lt.tris.size() - 1;
+      rebuilt.push_back({fi, std::move(lt)});
+    }
+
+    // 5. Write the sub-triangles back: the first in place of the face, the others new.
+    const bool wedgeTex = tri::HasPerWedgeTexCoord(m);
+    size_t nextFace = m.face.size();
+    tri::Allocator<MeshType>::AddFaces(m, newFaceNum);
+    for (auto &r : rebuilt)
+    {
+      FaceType &f = m.face[r.first];
+      typename FaceType::TexCoordType wt[3];
+      bool faux[3], border[3], edgeSel[3];
+      for (int k = 0; k < 3; ++k) {
+        if (wedgeTex) wt[k] = f.WT(k);
+        faux[k] = f.IsF(k); border[k] = f.IsB(k); edgeSel[k] = f.IsFaceEdgeS(k);
+      }
+      const LocalTriangulation &lt = r.second;
+      for (size_t ti = 0; ti < lt.tris.size(); ++ti)
+      {
+        FaceType &g = (ti == 0) ? f : m.face[nextFace++];
+        if (ti > 0) g.ImportData(f);
+        for (int i = 0; i < 3; ++i)
+        {
+          const auto &a = lt.pts[lt.tris[ti][i]], &b = lt.pts[lt.tris[ti][(i + 1) % 3]];
+          g.V(i) = &m.vert[a.vert];
+          if (wedgeTex) {
+            g.WT(i) = wt[0];
+            g.WT(i).P() = wt[0].P() * (1 - a.u - a.v) + wt[1].P() * a.u + wt[2].P() * a.v;
+          }
+          // An edge along an edge of the original face keeps that edge's bits; the
+          // others are inside it.
+          const int shared = a.edges & b.edges;
+          const int k = shared ? (shared & 1 ? 0 : (shared & 2 ? 1 : 2)) : -1;
+          if (k >= 0 && faux[k]) g.SetF(i); else g.ClearF(i);
+          if (k >= 0 && border[k]) g.SetB(i); else g.ClearB(i);
+          if (k >= 0 && edgeSel[k]) g.SetFaceEdgeS(i); else g.ClearFaceEdgeS(i);
+        }
+      }
+    }
+    com.Init();
+
+    // 6. Every polyline edge is now a mesh edge: select it on both sides.
+    for (FaceType &f : m.face) if (!f.IsD())
+      for (int i = 0; i < 3; ++i)
+        if (curveEdges.count(key(tri::Index(m, f.V0(i)), tri::Index(m, f.V1(i))))) f.SetFaceEdgeS(i);
+  }
+
+private:
+  /// The triangulation of one face of the base mesh being rebuilt, in its barycentric frame:
+  /// a point at (u, v) is V0 + u (V1 - V0) + v (V2 - V0). Triangles are counterclockwise in
+  /// that frame, as the face is.
+  struct LocalTriangulation
+  {
+    struct Point { size_t vert; ScalarType u, v; int edges; };  // edges: bit k if on face edge k
+    std::vector<Point> pts;
+    std::vector<std::array<int, 3>> tris;
+    static constexpr long double eps = 1e-13;  // orientation tolerance, in the unit frame
+
+    int AddPoint(size_t vert, ScalarType u, ScalarType v, int edges)
+    {
+      pts.push_back({vert, u, v, edges});
+      return int(pts.size()) - 1;
+    }
+    int Local(size_t vert) const
+    {
+      for (size_t i = 0; i < pts.size(); ++i) if (pts[i].vert == vert) return int(i);
+      throw vcg::MissingPreconditionException("CoMEmbed: a curve segment ends outside the face it was assigned to.");
+    }
+    long double Orient(int a, int b, int c) const
+    {
+      return planar_polygon_detail::Orient2D(Point2d(pts[a].u, pts[a].v), Point2d(pts[b].u, pts[b].v), Point2d(pts[c].u, pts[c].v));
+    }
+    /// The triangle with the directed edge (a,b), and the position of a in it.
+    bool FindEdge(int a, int b, size_t &ti, int &i) const
+    {
+      for (ti = 0; ti < tris.size(); ++ti)
+        for (i = 0; i < 3; ++i)
+          if (tris[ti][i] == a && tris[ti][(i + 1) % 3] == b) return true;
+      return false;
+    }
+    /// Split the edge (a,b) at p, which lies on it, in the triangles on both its sides.
+    void SplitEdge(int a, int b, int p)
+    {
+      for (int side = 0; side < 2; ++side)
+      {
+        size_t ti; int i;
+        if (!FindEdge(side ? b : a, side ? a : b, ti, i)) continue;
+        const std::array<int, 3> t = tris[ti];
+        tris[ti] = {{t[i], p, t[(i + 2) % 3]}};
+        tris.push_back({{p, t[(i + 1) % 3], t[(i + 2) % 3]}});
+      }
+    }
+    /// Insert a point strictly inside the face.
+    void InsertInterior(int p)
+    {
+      for (size_t ti = 0; ti < tris.size(); ++ti)
+      {
+        const std::array<int, 3> t = tris[ti];
+        long double o[3];
+        for (int i = 0; i < 3; ++i) o[i] = Orient(t[i], t[(i + 1) % 3], p);
+        if (o[0] < -eps || o[1] < -eps || o[2] < -eps) continue;
+        int onEdge = -1, onCount = 0;
+        for (int i = 0; i < 3; ++i) if (o[i] <= eps) { onEdge = i; ++onCount; }
+        if (onCount > 1)
+          throw vcg::MissingPreconditionException("CoMEmbed: two curve points coincide inside a face.");
+        if (onEdge >= 0) { SplitEdge(t[onEdge], t[(onEdge + 1) % 3], p); return; }
+        tris[ti] = {{t[0], t[1], p}};
+        tris.push_back({{t[1], t[2], p}});
+        tris.push_back({{t[2], t[0], p}});
+        return;
+      }
+      throw vcg::MissingPreconditionException("CoMEmbed: a curve point is outside the face it was assigned to.");
+    }
+    static int Sign(long double o) { return o > eps ? 1 : (o < -eps ? -1 : 0); }
+    /// True if the segments (p,q) and (a,b) cross at a point inside both.
+    bool Crosses(int p, int q, int a, int b) const
+    {
+      return Sign(Orient(p, q, a)) * Sign(Orient(p, q, b)) < 0 && Sign(Orient(a, b, p)) * Sign(Orient(a, b, q)) < 0;
+    }
+    /// Make (p,q) an edge by Sloan's flips: an edge crossing it is flipped when its two
+    /// triangles form a strictly convex quad, and requeued otherwise; a new edge that still
+    /// crosses is queued again. Recovered segments never cross, so none of them is flipped.
+    void Recover(int p, int q)
+    {
+      std::deque<std::pair<int, int>> queue;
+      for (const auto &t : tris)
+        for (int i = 0; i < 3; ++i)
+        {
+          const int a = t[i], b = t[(i + 1) % 3];
+          if (a < b && Crosses(p, q, a, b)) queue.push_back({a, b});
+        }
+      size_t guard = 0;
+      while (!queue.empty())
+      {
+        if (++guard > 100 * (tris.size() + 10) * (tris.size() + 10))
+          throw vcg::MissingPreconditionException("CoMEmbed: could not recover a curve segment; curves may touch or cross.");
+        const int a = queue.front().first, b = queue.front().second;
+        queue.pop_front();
+        size_t t1, t2; int i1, i2;
+        if (!FindEdge(a, b, t1, i1) || !FindEdge(b, a, t2, i2))
+          throw vcg::MissingPreconditionException("CoMEmbed: a curve segment crosses the boundary of its face.");
+        const int c = tris[t1][(i1 + 2) % 3], d = tris[t2][(i2 + 2) % 3];
+        if (Orient(c, a, d) > eps && Orient(d, b, c) > eps)
+        {
+          tris[t1] = {{c, a, d}};
+          tris[t2] = {{d, b, c}};
+          if (Crosses(p, q, c, d)) queue.push_back({c, d});
+        }
+        else queue.push_back({a, b});
+      }
+      size_t ti; int i;
+      if (!FindEdge(p, q, ti, i) && !FindEdge(q, p, ti, i))
+        throw vcg::MissingPreconditionException("CoMEmbed: could not recover a curve segment; it passes through another curve point.");
+    }
+  };
 };
 
 } // end namespace tri

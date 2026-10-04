@@ -78,7 +78,7 @@ int main(int argc,char ** argv )
 
   tri::CoM<MyMesh> cc(base);
   cc.Init();
-  bool ret = cc.TagFaceEdgeSelWithPolyLine(poly);
+  bool ret = tri::CoMEmbed<MyMesh>::TagFaceEdgeSelWithPolyLine(cc, poly);
   if(ret)
   {
     tri::Append<MyMesh,MyMesh>::MeshCopy(basecopy,base);  
@@ -112,10 +112,10 @@ int main(int argc,char ** argv )
   cc.RefineCurveByBaseMesh(poly);
   tri::io::ExporterPLY<MyMesh>::Save(poly,"3_poly_refined.ply",tri::io::Mask::IOM_EDGEINDEX+tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);   
   // Safely split the mesh with this refined polyline
-  cc.SplitMeshWithPolyline(poly);
+  tri::CoMEmbed<MyMesh>::SplitMeshWithPolyline(cc, poly);
   tri::io::ExporterPLY<MyMesh>::Save(base,"3_mesh_refined.ply",tri::io::Mask::IOM_VERTCOLOR+tri::io::Mask::IOM_VERTQUALITY);
   // Now the two meshes should have coincident edges
-  ret = cc.TagFaceEdgeSelWithPolyLine(poly);
+  ret = tri::CoMEmbed<MyMesh>::TagFaceEdgeSelWithPolyLine(cc, poly);
   if(!ret) printf("Warning Not all the edges of the polyline have found a corresponding edge in the mesh");
   int SelCount = tri::UpdateSelection<MyMesh>::FaceEdgeCount(base);
   printf("Found %i selected edges in the mesh vs %i edges of the polyline\n",SelCount,poly.en);
