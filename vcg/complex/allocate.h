@@ -158,7 +158,13 @@ public:
       assert(vp<oldEnd);
       vp=newBase+(vp-oldBase);
       if(!remap.empty())
-        vp  = newBase + remap[vp-newBase];
+      {
+        // A compaction leaves no slot for a deleted element (its remap entry is the max
+        // value), so a pointer still aiming at one -- stale adjacency -- becomes null
+        // instead of overflowing into garbage.
+        const size_t r = remap[vp-newBase];
+        vp = (r == std::numeric_limits<size_t>::max()) ? nullptr : newBase + r;
+      }
     }
     /*!
   \brief return true if the allocation operation that initialized this PointerUpdater has caused a reallocation
