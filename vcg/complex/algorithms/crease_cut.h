@@ -91,21 +91,27 @@ void CutMeshAlongSelectedFaceEdges(MESH_TYPE &m)
           } while(curPos!=startPos);
           startPos=curPos;
         }        
-        int locCreaseCounter=0;
         int curVertexCounter= Index(m, curPos.V());        
         
         // The real Loop; we assume that if there is border we are starting from a border pos;
-        // the idea is that just before jumping on the next face, if we cross a crease, we increase the vertex counter.
+        // the idea is that each crease crossed starts a new copy of the vertex for the faces
+        // that follow. The copy is allocated only when a face actually follows: around an
+        // internal vertex the loop ends by crossing the crease it started from, and around
+        // the tip of an open cut that crease is the only one, so allocating on every
+        // crossing left an unreferenced vertex at every internal vertex of the cut.
+        bool newCopyPending=false;
         do {          
+          if(newCopyPending)
+          {
+            curVertexCounter=newVertexCounter;
+            newVertexCounter++;
+            newCopyPending=false;
+          }
           size_t faceInd = Index(m,curPos.F());
           indVec[faceInd*3+ curPos.VInd()] = curVertexCounter;
           curPos.FlipE();
           if(curPos.IsEdgeS()) 
-          { //qDebug("  Crease FOUND");
-            ++locCreaseCounter;
-            curVertexCounter=newVertexCounter;
-            newVertexCounter++;
-          }
+            newCopyPending=true;
           curPos.FlipF();
         } while (startPos!=curPos && !curPos.IsBorder());
       }
