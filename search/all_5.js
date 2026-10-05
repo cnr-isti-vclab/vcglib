@@ -23,8 +23,8 @@ var searchData=
   ['efstarff_20',['EFStarFF',['../namespacevcg_1_1face.html#a25d788feeec110a8a1d13c31cd656acf',1,'vcg::face']]],
   ['ehadj_21',['EHAdj',['../classvcg_1_1edge_1_1EHAdj.html',1,'vcg::edge']]],
   ['emptycore_22',['EmptyCore',['../classvcg_1_1edge_1_1EmptyCore.html',1,'vcg::edge::EmptyCore&lt; T &gt;'],['../classvcg_1_1face_1_1EmptyCore.html',1,'vcg::face::EmptyCore&lt; T &gt;'],['../classvcg_1_1vertex_1_1EmptyCore.html',1,'vcg::vertex::EmptyCore&lt; TT &gt;']]],
-  ['euclideandistance_23',['EuclideanDistance',['../structvcg_1_1tri_1_1EuclideanDistance.html',1,'vcg::tri']]],
-  ['evadj_24',['EVAdj',['../classvcg_1_1edge_1_1EVAdj.html',1,'vcg::edge']]],
-  ['ext_25',['Ext',['../classvcg_1_1Point3.html#a8faf9902092590dc30fc486cd3408b13',1,'vcg::Point3']]],
-  ['extractvertex_26',['ExtractVertex',['../classvcg_1_1tri_1_1CoM.html#ae75be8fe3210f77f2baa0a76cddd2161',1,'vcg::tri::CoM']]]
+  ['endsandnodes_23',['EndsAndNodes',['../classvcg_1_1tri_1_1CoM.html#a1cfd45f207bf9674f190d783c9f26a59a0c4cc76aa3049be87a93e5f935f50612',1,'vcg::tri::CoM']]],
+  ['euclideandistance_24',['EuclideanDistance',['../structvcg_1_1tri_1_1EuclideanDistance.html',1,'vcg::tri']]],
+  ['evadj_25',['EVAdj',['../classvcg_1_1edge_1_1EVAdj.html',1,'vcg::edge']]],
+  ['ext_26',['Ext',['../classvcg_1_1Point3.html#a8faf9902092590dc30fc486cd3408b13',1,'vcg::Point3']]]
 ];

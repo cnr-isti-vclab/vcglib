@@ -28,5 +28,6 @@ var searchData=
   ['removenonmanifoldface_25',['RemoveNonManifoldFace',['../classvcg_1_1tri_1_1Clean.html#ae30a7c2d3e76fbd3a4a0a15b5f778517',1,'vcg::tri::Clean']]],
   ['removesmallconnectedcomponentsdiameter_26',['RemoveSmallConnectedComponentsDiameter',['../classvcg_1_1tri_1_1Clean.html#a3e031c0f99e3bb2ec1ad0ae221eb3262',1,'vcg::tri::Clean']]],
   ['removeunreferencedvertex_27',['RemoveUnreferencedVertex',['../classvcg_1_1tri_1_1Clean.html#a57758cbd28403a39c00821a813e4b14a',1,'vcg::tri::Clean']]],
-  ['rrparam_28',['RRParam',['../classvcg_1_1tri_1_1SurfaceSampling_1_1RRParam.html',1,'vcg::tri::SurfaceSampling']]]
+  ['roundingsnap_28',['RoundingSnap',['../classvcg_1_1tri_1_1CoM.html#a6a59605b81c95df6a6f9814f2fa93e54',1,'vcg::tri::CoM']]],
+  ['rrparam_29',['RRParam',['../classvcg_1_1tri_1_1SurfaceSampling_1_1RRParam.html',1,'vcg::tri::SurfaceSampling']]]
 ];

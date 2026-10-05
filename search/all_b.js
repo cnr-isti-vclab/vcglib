@@ -28,9 +28,8 @@ var searchData=
   ['midpointsphere_25',['MidPointSphere',['../structvcg_1_1tri_1_1MidPointSphere.html',1,'vcg::tri']]],
   ['min_26',['min',['../classvcg_1_1Box3.html#af38f37de0f6a5c4357b1a4bd40cf9de0',1,'vcg::Box3']]],
   ['mindim_27',['MinDim',['../classvcg_1_1Box3.html#afff707dfe00bd5cbc252e88af77942e1',1,'vcg::Box3']]],
-  ['mindistonedge_28',['MinDistOnEdge',['../classvcg_1_1tri_1_1CoM.html#a19e99457f2851e303b9c5ffa09197217',1,'vcg::tri::CoM::MinDistOnEdge(CoordType samplePnt, EdgeGrid &amp;edgeGrid, MeshType &amp;poly, CoordType &amp;closestPoint)'],['../classvcg_1_1tri_1_1CoM.html#af32d23867a898c7e530fbec16c4ce88c',1,'vcg::tri::CoM::MinDistOnEdge(VertexType *v0, VertexType *v1, EdgeGrid &amp;edgeGrid, MeshType &amp;poly, CoordType &amp;closestPoint)']]],
-  ['minrefedgelen_29',['minRefEdgeLen',['../classvcg_1_1tri_1_1CoM_1_1Param.html#a6b60b33001d39c816d8856d64f98b10e',1,'vcg::tri::CoM::Param']]],
-  ['montecarlo_30',['Montecarlo',['../classvcg_1_1tri_1_1SurfaceSampling.html#a127d15e8a19b2670dcbb2238ff28eded',1,'vcg::tri::SurfaceSampling']]],
-  ['montecarlopoisson_31',['MontecarloPoisson',['../classvcg_1_1tri_1_1SurfaceSampling.html#acbc37a380eca136de902d92f74aec1d1',1,'vcg::tri::SurfaceSampling']]],
-  ['moveandproject_32',['MoveAndProject',['../classvcg_1_1tri_1_1CoM.html#aa8611bc0164c7af891e2b9242e35d253',1,'vcg::tri::CoM']]]
+  ['minrefedgelen_28',['minRefEdgeLen',['../classvcg_1_1tri_1_1CoM_1_1Param.html#a6b60b33001d39c816d8856d64f98b10e',1,'vcg::tri::CoM::Param']]],
+  ['montecarlo_29',['Montecarlo',['../classvcg_1_1tri_1_1SurfaceSampling.html#a127d15e8a19b2670dcbb2238ff28eded',1,'vcg::tri::SurfaceSampling']]],
+  ['montecarlopoisson_30',['MontecarloPoisson',['../classvcg_1_1tri_1_1SurfaceSampling.html#acbc37a380eca136de902d92f74aec1d1',1,'vcg::tri::SurfaceSampling']]],
+  ['moveandproject_31',['MoveAndProject',['../classvcg_1_1tri_1_1CoM.html#aa8611bc0164c7af891e2b9242e35d253',1,'vcg::tri::CoM']]]
 ];

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['barycentricsnap_0',['BarycentricSnap',['../classvcg_1_1tri_1_1CoM.html#ac5e6277b34d20bb15e232d01cbd2865f',1,'vcg::tri::CoM']]],
+  ['barycentricsnap_0',['BarycentricSnap',['../classvcg_1_1tri_1_1CoM.html#a466435eda3710bf4ea6e3c25db9fb357',1,'vcg::tri::CoM::BarycentricSnap(CoordType &amp;ip, const FaceType &amp;f)'],['../classvcg_1_1tri_1_1CoM.html#a9b5312c8e5222598e8a5c6a22b8a7259',1,'vcg::tri::CoM::BarycentricSnap(CoordType &amp;ip, const FaceType &amp;f, ScalarType barThr, ScalarType distThr)']]],
   ['below_1',['Below',['../classvcg_1_1tri_1_1ReebGraph.html#a6467558f91abf3e1483de299445a5159',1,'vcg::tri::ReebGraph']]],
   ['bordercount_2',['BorderCount',['../namespacevcg_1_1face.html#ad6463f1c4c51ef02fedad569e92a0a65',1,'vcg::face']]],
   ['box_3',['Box',['../classvcg_1_1tri_1_1UpdateBounding.html#a5263f5e7f4213cb6db28dd8e38a628fe',1,'vcg::tri::UpdateBounding::Box()'],['../namespacevcg_1_1tri.html#adc3037a5a7d28bb85ab0102fe1735b59',1,'vcg::tri::Box()']]],

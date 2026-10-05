@@ -101,6 +101,12 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
 Public Types</h2></td></tr>
+<tr class="memitem:a1cfd45f207bf9674f190d783c9f26a59"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a1cfd45f207bf9674f190d783c9f26a59">ControlPoints</a> { <a class="el" href="classvcg_1_1tri_1_1CoM.html#a1cfd45f207bf9674f190d783c9f26a59ad28b5b032f9d0412952e9d223c094917">AllVertices</a>
+, <a class="el" href="classvcg_1_1tri_1_1CoM.html#a1cfd45f207bf9674f190d783c9f26a59a0c4cc76aa3049be87a93e5f935f50612">EndsAndNodes</a>
+, <a class="el" href="classvcg_1_1tri_1_1CoM.html#a1cfd45f207bf9674f190d783c9f26a59a9a75f8ee7fc7942af3cda42e297a68da">Selected</a>
+ }</td></tr>
+<tr class="memdesc:a1cfd45f207bf9674f190d783c9f26a59"><td class="mdescLeft">&#160;</td><td class="mdescRight">Which polyline vertices <a class="el" href="classvcg_1_1tri_1_1CoM.html#a4cb65c7f5607b8754e30d6cb58b6c68b" title="Choose the control points of a polyline (stored as its vertex selection).">SetControlPoints()</a> makes control points.  <a href="classvcg_1_1tri_1_1CoM.html#a1cfd45f207bf9674f190d783c9f26a59">More...</a><br /></td></tr>
+<tr class="separator:a1cfd45f207bf9674f190d783c9f26a59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0bc0403f611d398234e677abafc43a5b"><td class="memItemLeft" align="right" valign="top"><a id="a0bc0403f611d398234e677abafc43a5b" name="a0bc0403f611d398234e677abafc43a5b"></a>
 typedef MeshType::ScalarType&#160;</td><td class="memItemRight" valign="bottom"><b>ScalarType</b></td></tr>
 <tr class="separator:a0bc0403f611d398234e677abafc43a5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -149,6 +155,8 @@ typedef face::Pos&lt; FaceType &gt;&#160;</td><td class="memItemRight" valign="b
 <tr class="memitem:a8f04d2dd6b97f31b367361ac61cdb720"><td class="memItemLeft" align="right" valign="top"><a id="a8f04d2dd6b97f31b367361ac61cdb720" name="a8f04d2dd6b97f31b367361ac61cdb720"></a>
 typedef <a class="el" href="classvcg_1_1tri_1_1UpdateTopology.html">tri::UpdateTopology</a>&lt; MeshType &gt;::PEdge&#160;</td><td class="memItemRight" valign="bottom"><b>PEdge</b></td></tr>
 <tr class="separator:a8f04d2dd6b97f31b367361ac61cdb720"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ca749757083fefb419736220b304aa5"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; std::pair&lt; FaceType *, CoordType &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a1ca749757083fefb419736220b304aa5">Location</a></td></tr>
+<tr class="separator:a1ca749757083fefb419736220b304aa5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -166,9 +174,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a654edf8b32fba2d97f23228f5a96a4eb"><td class="memItemLeft" align="right" valign="top">FaceType *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a654edf8b32fba2d97f23228f5a96a4eb">GetClosestFacePoint</a> (const CoordType &amp;p, CoordType &amp;closestP)</td></tr>
 <tr class="memdesc:a654edf8b32fba2d97f23228f5a96a4eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the closest face and the closest point on it.  <br /></td></tr>
 <tr class="separator:a654edf8b32fba2d97f23228f5a96a4eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a883842b0528418747efb8362e1df9768"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a883842b0528418747efb8362e1df9768">IsWellSnapped</a> (const CoordType &amp;ip)</td></tr>
-<tr class="memdesc:a883842b0528418747efb8362e1df9768"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test if a barycentric coordinate is well snapped.  <br /></td></tr>
-<tr class="separator:a883842b0528418747efb8362e1df9768"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af39f510d46044696d231629e9e544de2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#af39f510d46044696d231629e9e544de2">IsSnappedEdge</a> (CoordType &amp;ip, int &amp;ei)</td></tr>
 <tr class="memdesc:af39f510d46044696d231629e9e544de2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if a barycentric coordinate is snapped to an edge.  <br /></td></tr>
 <tr class="separator:af39f510d46044696d231629e9e544de2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -178,15 +183,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a30692707c38508ed0e4b7ff7e9a01af1"><td class="memItemLeft" align="right" valign="top">VertexPointer&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a30692707c38508ed0e4b7ff7e9a01af1">FindVertexSnap</a> (FacePointer fp, CoordType &amp;ip)</td></tr>
 <tr class="memdesc:a30692707c38508ed0e4b7ff7e9a01af1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the vertex pointer for a vertex-snapped barycentric coordinate.  <br /></td></tr>
 <tr class="separator:a30692707c38508ed0e4b7ff7e9a01af1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19e99457f2851e303b9c5ffa09197217"><td class="memItemLeft" align="right" valign="top">ScalarType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a19e99457f2851e303b9c5ffa09197217">MinDistOnEdge</a> (CoordType samplePnt, EdgeGrid &amp;edgeGrid, MeshType &amp;poly, CoordType &amp;closestPoint)</td></tr>
-<tr class="memdesc:a19e99457f2851e303b9c5ffa09197217"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the minimum distance from a sample point to the polyline.  <br /></td></tr>
-<tr class="separator:a19e99457f2851e303b9c5ffa09197217"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70723c2c17aa37373598b7bb6877d87c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a70723c2c17aa37373598b7bb6877d87c">SnapPolyline</a> (MeshType &amp;poly)</td></tr>
 <tr class="memdesc:a70723c2c17aa37373598b7bb6877d87c"><td class="mdescLeft">&#160;</td><td class="mdescRight">SnapPolyline snaps the vertexes of a polyline onto the base mesh.  <br /></td></tr>
 <tr class="separator:a70723c2c17aa37373598b7bb6877d87c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29b683540ddf540758cacd42944e2b5e"><td class="memItemLeft" align="right" valign="top"><a id="a29b683540ddf540758cacd42944e2b5e" name="a29b683540ddf540758cacd42944e2b5e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>SelectBoundaryVertex</b> (MeshType &amp;poly)</td></tr>
-<tr class="separator:a29b683540ddf540758cacd42944e2b5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4cb65c7f5607b8754e30d6cb58b6c68b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a4cb65c7f5607b8754e30d6cb58b6c68b">SetControlPoints</a> (MeshType &amp;poly, <a class="el" href="classvcg_1_1tri_1_1CoM.html#a1cfd45f207bf9674f190d783c9f26a59">ControlPoints</a> mode=<a class="el" href="classvcg_1_1tri_1_1CoM.html#a1cfd45f207bf9674f190d783c9f26a59a0c4cc76aa3049be87a93e5f935f50612">EndsAndNodes</a>)</td></tr>
+<tr class="memdesc:a4cb65c7f5607b8754e30d6cb58b6c68b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Choose the control points of a polyline (stored as its vertex selection).  <br /></td></tr>
+<tr class="separator:a4cb65c7f5607b8754e30d6cb58b6c68b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adaad1b68f68a35e2c6bbe9d53f7d04c9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#adaad1b68f68a35e2c6bbe9d53f7d04c9">ConnectCrossings</a> (MeshType &amp;poly)</td></tr>
+<tr class="memdesc:adaad1b68f68a35e2c6bbe9d53f7d04c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make the points where strands meet into junctions (opt-in).  <br /></td></tr>
+<tr class="separator:adaad1b68f68a35e2c6bbe9d53f7d04c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35c812e55d8ca15d784c6732d67a5b7c"><td class="memItemLeft" align="right" valign="top"><a id="a35c812e55d8ca15d784c6732d67a5b7c" name="a35c812e55d8ca15d784c6732d67a5b7c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>SelectUniformlyDistributed</b> (MeshType &amp;poly, int k)</td></tr>
 <tr class="separator:a35c812e55d8ca15d784c6732d67a5b7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -199,33 +204,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>DecomposeNonManifoldP
 <tr class="memitem:a2bb3e26757aafcacae5128625497375e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a2bb3e26757aafcacae5128625497375e">SimplifyNullEdges</a> (MeshType &amp;poly)</td></tr>
 <tr class="memdesc:a2bb3e26757aafcacae5128625497375e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove duplicate/zero-length edges from a polyline.  <br /></td></tr>
 <tr class="separator:a2bb3e26757aafcacae5128625497375e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc7036ba1cc5b885a86a94b5467e1d5a"><td class="memItemLeft" align="right" valign="top"><a id="abc7036ba1cc5b885a86a94b5467e1d5a" name="abc7036ba1cc5b885a86a94b5467e1d5a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>SimplifyMidEdge</b> (MeshType &amp;poly)</td></tr>
-<tr class="separator:abc7036ba1cc5b885a86a94b5467e1d5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a60a5d38a759f9a2a718751902bcd1bf9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a60a5d38a759f9a2a718751902bcd1bf9">SimplifyMidFace</a> (MeshType &amp;poly)</td></tr>
-<tr class="memdesc:a60a5d38a759f9a2a718751902bcd1bf9"><td class="mdescLeft">&#160;</td><td class="mdescRight">SimplifyMidFace remove all the vertices that in the mid of a face and between two of the points snapped onto the edges of the same face.  <br /></td></tr>
-<tr class="separator:a60a5d38a759f9a2a718751902bcd1bf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97b91ffe4cd6a52c910183b8694f990b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a97b91ffe4cd6a52c910183b8694f990b">CollapseNullEdges</a> (MeshType &amp;poly)</td></tr>
+<tr class="memdesc:a97b91ffe4cd6a52c910183b8694f990b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge the two ends of every zero-length polyline edge.  <br /></td></tr>
+<tr class="separator:a97b91ffe4cd6a52c910183b8694f990b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9639a14ebdb2566e40e6e5e16f4f252"><td class="memItemLeft" align="right" valign="top"><a id="ad9639a14ebdb2566e40e6e5e16f4f252" name="ad9639a14ebdb2566e40e6e5e16f4f252"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Simplify</b> (MeshType &amp;poly)</td></tr>
 <tr class="separator:ad9639a14ebdb2566e40e6e5e16f4f252"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0fc5d0704466c805921a7b3ff103fc62"><td class="memItemLeft" align="right" valign="top"><a id="a0fc5d0704466c805921a7b3ff103fc62" name="a0fc5d0704466c805921a7b3ff103fc62"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>EvaluateHausdorffDistance</b> (MeshType &amp;poly, Distribution&lt; ScalarType &gt; &amp;dist)</td></tr>
 <tr class="separator:a0fc5d0704466c805921a7b3ff103fc62"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5e6277b34d20bb15e232d01cbd2865f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#ac5e6277b34d20bb15e232d01cbd2865f">BarycentricSnap</a> (CoordType &amp;ip)</td></tr>
-<tr class="memdesc:ac5e6277b34d20bb15e232d01cbd2865f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Snap barycentric coordinates to 0 or 1 if within threshold.  <br /></td></tr>
-<tr class="separator:ac5e6277b34d20bb15e232d01cbd2865f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add658ee8c7fe4f47b98e236feff5d630"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#add658ee8c7fe4f47b98e236feff5d630">TestSplitSegWithMesh</a> (VertexType *v0, VertexType *v1, CoordType &amp;splitPt)</td></tr>
-<tr class="memdesc:add658ee8c7fe4f47b98e236feff5d630"><td class="mdescLeft">&#160;</td><td class="mdescRight">TestSplitSegWithMesh Given a poly segment decide if it should be split along elements of base mesh.  <br /></td></tr>
-<tr class="separator:add658ee8c7fe4f47b98e236feff5d630"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9619229df69270e8573f1a128b37767a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a9619229df69270e8573f1a128b37767a">SnappedOnSameFace</a> (FacePointer f0, CoordType i0, FacePointer f1, CoordType i1)</td></tr>
-<tr class="memdesc:a9619229df69270e8573f1a128b37767a"><td class="mdescLeft">&#160;</td><td class="mdescRight">SnappedOnSameFace Return true if the two points are snapped to a common face;.  <br /></td></tr>
-<tr class="separator:a9619229df69270e8573f1a128b37767a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac1dc491df2abeb81bc71719e163da6a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#aac1dc491df2abeb81bc71719e163da6a">TestSplitSegWithMeshAdapt</a> (VertexType *v0, VertexType *v1, CoordType &amp;splitPt)</td></tr>
-<tr class="memdesc:aac1dc491df2abeb81bc71719e163da6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">TestSplitSegWithMesh Given a poly segment decide if it should be split along elements of base mesh.  <br /></td></tr>
-<tr class="separator:aac1dc491df2abeb81bc71719e163da6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acbe6ae26321b317ca4e9fbaae566ac60"><td class="memItemLeft" align="right" valign="top"><a id="acbe6ae26321b317ca4e9fbaae566ac60" name="acbe6ae26321b317ca4e9fbaae566ac60"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>TestSplitSegWithMeshAdaptOld</b> (VertexType *v0, VertexType *v1, CoordType &amp;splitPt)</td></tr>
-<tr class="separator:acbe6ae26321b317ca4e9fbaae566ac60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a466435eda3710bf4ea6e3c25db9fb357"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a466435eda3710bf4ea6e3c25db9fb357">BarycentricSnap</a> (CoordType &amp;ip, const FaceType &amp;f)</td></tr>
+<tr class="memdesc:a466435eda3710bf4ea6e3c25db9fb357"><td class="mdescLeft">&#160;</td><td class="mdescRight">Snap the barycentric coordinates of a point of face <em>f</em> onto a vertex or an edge.  <br /></td></tr>
+<tr class="separator:a466435eda3710bf4ea6e3c25db9fb357"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd6c3912a762cd47f6991eac83c38d69"><td class="memItemLeft" align="right" valign="top"><a id="afd6c3912a762cd47f6991eac83c38d69" name="afd6c3912a762cd47f6991eac83c38d69"></a>
 ScalarType&#160;</td><td class="memItemRight" valign="bottom"><b>MaxSegDist</b> (VertexType *v0, VertexType *v1, CoordType &amp;farthestPointOnSurf, CoordType &amp;farthestN, Distribution&lt; ScalarType &gt; *distanceDistribution=0)</td></tr>
 <tr class="separator:afd6c3912a762cd47f6991eac83c38d69"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -233,8 +223,20 @@ ScalarType&#160;</td><td class="memItemRight" valign="bottom"><b>MaxSegDist</b> 
 <tr class="memdesc:abb176fb9cb9433730d2bb4f0dc07e572"><td class="mdescLeft">&#160;</td><td class="mdescRight">RefineCurve.  <br /></td></tr>
 <tr class="separator:abb176fb9cb9433730d2bb4f0dc07e572"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e22ca4117ec158c34b29629f92623f4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a4e22ca4117ec158c34b29629f92623f4">RefineCurveByBaseMesh</a> (MeshType &amp;poly)</td></tr>
-<tr class="memdesc:a4e22ca4117ec158c34b29629f92623f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">RefineCurveByBaseMesh.  <br /></td></tr>
+<tr class="memdesc:a4e22ca4117ec158c34b29629f92623f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make every polyline segment lie inside one face or along one edge of the base mesh, by inserting the exact points where it crosses the mesh edges.  <br /></td></tr>
 <tr class="separator:a4e22ca4117ec158c34b29629f92623f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a59605b81c95df6a6f9814f2fa93e54"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a6a59605b81c95df6a6f9814f2fa93e54">RoundingSnap</a> (CoordType &amp;ip, const FaceType &amp;f) const</td></tr>
+<tr class="separator:a6a59605b81c95df6a6f9814f2fa93e54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0edc2f65ee00fd312cab9ff4efebd50d"><td class="memItemLeft" align="right" valign="top"><a id="a0edc2f65ee00fd312cab9ff4efebd50d" name="a0edc2f65ee00fd312cab9ff4efebd50d"></a>
+<a class="el" href="classvcg_1_1tri_1_1CoM.html#a1ca749757083fefb419736220b304aa5">Location</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Locate</b> (const CoordType &amp;p)</td></tr>
+<tr class="separator:a0edc2f65ee00fd312cab9ff4efebd50d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a149f46b9f5129ff62bb2058699c9839f"><td class="memItemLeft" align="right" valign="top"><a id="a149f46b9f5129ff62bb2058699c9839f" name="a149f46b9f5129ff62bb2058699c9839f"></a>
+<a class="el" href="classvcg_1_1tri_1_1CoM.html#a1ca749757083fefb419736220b304aa5">Location</a>&#160;</td><td class="memItemRight" valign="bottom"><b>LocationFrom</b> (FaceType *f, const CoordType &amp;ip) const</td></tr>
+<tr class="separator:a149f46b9f5129ff62bb2058699c9839f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acedebd03932108c71b65ffab8ca3a757"><td class="memItemLeft" align="right" valign="top"><a id="acedebd03932108c71b65ffab8ca3a757" name="acedebd03932108c71b65ffab8ca3a757"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>TraceSegment</b> (const CoordType &amp;p, const CoordType &amp;q, std::vector&lt; CoordType &gt; &amp;crossings)</td></tr>
+<tr class="memdesc:acedebd03932108c71b65ffab8ca3a757"><td class="mdescLeft">&#160;</td><td class="mdescRight">The points where the segment from <em>p</em> to <em>q</em> crosses mesh edges, in order. <br /></td></tr>
+<tr class="separator:acedebd03932108c71b65ffab8ca3a757"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8611bc0164c7af891e2b9242e35d253"><td class="memTemplParams" colspan="2">template&lt;typename PositionFunctor &gt; </td></tr>
 <tr class="memitem:aa8611bc0164c7af891e2b9242e35d253"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#aa8611bc0164c7af891e2b9242e35d253">MoveAndProject</a> (MeshType &amp;poly, int iterNum, ScalarType moveWeight, ScalarType projectWeight, PositionFunctor &amp;desiredPos)</td></tr>
 <tr class="memdesc:aa8611bc0164c7af891e2b9242e35d253"><td class="mdescLeft">&#160;</td><td class="mdescRight">MoveAndProject.  <br /></td></tr>
@@ -245,18 +247,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>SmoothProject</b> (Me
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:af32d23867a898c7e530fbec16c4ce88c"><td class="memItemLeft" align="right" valign="top">static ScalarType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#af32d23867a898c7e530fbec16c4ce88c">MinDistOnEdge</a> (VertexType *v0, VertexType *v1, EdgeGrid &amp;edgeGrid, MeshType &amp;poly, CoordType &amp;closestPoint)</td></tr>
-<tr class="memdesc:af32d23867a898c7e530fbec16c4ce88c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the closest point on a mesh edge to the polyline (static version)  <br /></td></tr>
-<tr class="separator:af32d23867a898c7e530fbec16c4ce88c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae75be8fe3210f77f2baa0a76cddd2161"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#ae75be8fe3210f77f2baa0a76cddd2161">ExtractVertex</a> (const MeshType &amp;srcMesh, const FaceType &amp;f, int whichWedge, const MeshType &amp;dstMesh, VertexType &amp;v)</td></tr>
-<tr class="memdesc:ae75be8fe3210f77f2baa0a76cddd2161"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract vertex attributes for seam processing.  <br /></td></tr>
-<tr class="separator:ae75be8fe3210f77f2baa0a76cddd2161"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2576a2eedbf644aeb78821035c6ac72"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#ae2576a2eedbf644aeb78821035c6ac72">CompareVertex</a> (const MeshType &amp;m, const VertexType &amp;vA, const VertexType &amp;vB)</td></tr>
-<tr class="memdesc:ae2576a2eedbf644aeb78821035c6ac72"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compare two vertices for seam compatibility.  <br /></td></tr>
-<tr class="separator:ae2576a2eedbf644aeb78821035c6ac72"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a817e2ac050b09a1eb3a77566d82e8751"><td class="memItemLeft" align="right" valign="top">static CoordType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a817e2ac050b09a1eb3a77566d82e8751">QLerp</a> (VertexType *v0, VertexType *v1)</td></tr>
-<tr class="memdesc:a817e2ac050b09a1eb3a77566d82e8751"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute quality-weighted linear interpolation between two vertices.  <br /></td></tr>
-<tr class="separator:a817e2ac050b09a1eb3a77566d82e8751"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b5312c8e5222598e8a5c6a22b8a7259"><td class="memItemLeft" align="right" valign="top"><a id="a9b5312c8e5222598e8a5c6a22b8a7259" name="a9b5312c8e5222598e8a5c6a22b8a7259"></a>
+static bool&#160;</td><td class="memItemRight" valign="bottom"><b>BarycentricSnap</b> (CoordType &amp;ip, const FaceType &amp;f, ScalarType barThr, ScalarType distThr)</td></tr>
+<tr class="memdesc:a9b5312c8e5222598e8a5c6a22b8a7259"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a466435eda3710bf4ea6e3c25db9fb357" title="Snap the barycentric coordinates of a point of face f onto a vertex or an edge.">BarycentricSnap()</a> with explicit thresholds, e.g. rounding-level ones. <br /></td></tr>
+<tr class="separator:a9b5312c8e5222598e8a5c6a22b8a7259"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -280,6 +274,51 @@ template&lt;class &gt; </td></tr>
 <tr class="memitem:abc7186d2e2889cb4e5c8344b103586b7"><td class="memTemplItemLeft" align="right" valign="top">class&#160;</td><td class="memTemplItemRight" valign="bottom"><b>CoMEmbed</b></td></tr>
 <tr class="separator:abc7186d2e2889cb4e5c8344b103586b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Typedef Documentation</h2>
+<a id="a1ca749757083fefb419736220b304aa5" name="a1ca749757083fefb419736220b304aa5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ca749757083fefb419736220b304aa5">&#9670;&#160;</a></span>Location</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class MeshType &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef std::vector&lt;std::pair&lt;FaceType *, CoordType&gt; &gt; <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::Location</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Where a point is on the mesh: every face it belongs to, with its barycentric coordinates there. One face for a point inside a face, the two faces of an edge, or the faces around a vertex. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Member Enumeration Documentation</h2>
+<a id="a1cfd45f207bf9674f190d783c9f26a59" name="a1cfd45f207bf9674f190d783c9f26a59"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1cfd45f207bf9674f190d783c9f26a59">&#9670;&#160;</a></span>ControlPoints</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class MeshType &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="classvcg_1_1tri_1_1CoM.html#a1cfd45f207bf9674f190d783c9f26a59">vcg::tri::CoM::ControlPoints</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Which polyline vertices <a class="el" href="classvcg_1_1tri_1_1CoM.html#a4cb65c7f5607b8754e30d6cb58b6c68b" title="Choose the control points of a polyline (stored as its vertex selection).">SetControlPoints()</a> makes control points. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a1cfd45f207bf9674f190d783c9f26a59ad28b5b032f9d0412952e9d223c094917" name="a1cfd45f207bf9674f190d783c9f26a59ad28b5b032f9d0412952e9d223c094917"></a>AllVertices&#160;</td><td class="fielddoc"><p>every vertex: the polyline is taken as it is, only projected and refined </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a1cfd45f207bf9674f190d783c9f26a59a0c4cc76aa3049be87a93e5f935f50612" name="a1cfd45f207bf9674f190d783c9f26a59a0c4cc76aa3049be87a93e5f935f50612"></a>EndsAndNodes&#160;</td><td class="fielddoc"><p>the ends (degree 1) and the junctions (degree &gt; 2): each strand is free </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a1cfd45f207bf9674f190d783c9f26a59a9a75f8ee7fc7942af3cda42e297a68da" name="a1cfd45f207bf9674f190d783c9f26a59a9a75f8ee7fc7942af3cda42e297a68da"></a>Selected&#160;</td><td class="fielddoc"><p>the vertices already selected, left as they are </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a63351e5be52085e733738853e659f757" name="a63351e5be52085e733738853e659f757"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a63351e5be52085e733738853e659f757">&#9670;&#160;</a></span>CoM()</h2>
@@ -311,8 +350,8 @@ template&lt;class MeshType &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ac5e6277b34d20bb15e232d01cbd2865f" name="ac5e6277b34d20bb15e232d01cbd2865f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac5e6277b34d20bb15e232d01cbd2865f">&#9670;&#160;</a></span>BarycentricSnap()</h2>
+<a id="a466435eda3710bf4ea6e3c25db9fb357" name="a466435eda3710bf4ea6e3c25db9fb357"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a466435eda3710bf4ea6e3c25db9fb357">&#9670;&#160;</a></span>BarycentricSnap()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -326,7 +365,57 @@ template&lt;class MeshType &gt; </div>
           <td class="memname">bool <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::BarycentricSnap </td>
           <td>(</td>
           <td class="paramtype">CoordType &amp;&#160;</td>
-          <td class="paramname"><em>ip</em></td><td>)</td>
+          <td class="paramname"><em>ip</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const FaceType &amp;&#160;</td>
+          <td class="paramname"><em>f</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Snap the barycentric coordinates of a point of face <em>f</em> onto a vertex or an edge. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ip</td><td>Input/Output: barycentric coordinates in <em>f</em> (summing to 1) </td></tr>
+    <tr><td class="paramname">f</td><td>The face they refer to </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if the point is now on a vertex or an edge (at least one coordinate is 0)</dd></dl>
+<p>A coordinate is set to 0 only if it is within <a class="el" href="classvcg_1_1tri_1_1CoM_1_1Param.html#a2a7c2be0f9614376c8e7df0409f71ce9" title="Threshold for snapping barycentric coords to 0 or 1 (controls vertex/edge snapping)">Param::barycentricSnapThr</a> of 0 <b>and</b> the snap moves the point by at most <a class="el" href="classvcg_1_1tri_1_1CoM_1_1Param.html#a7b464c7f382700562a2cd5a59c9c1d62" title="The maximum distance a snap may move a polyline vertex (onto a mesh vertex or edge)">Param::maxSnapThr</a>. The barycentric bound alone is only meaningful on well-shaped, uniformly sized triangles: on a large or skinny one it can move a point far, which the distance bound prevents; on tiny triangles the barycentric bound keeps a point from being snapped across them. Two coordinates at 0 put the point on a vertex. The remaining coordinates are renormalized so they sum to exactly 1. Setting either threshold to 0 disables snapping.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="classvcg_1_1tri_1_1CoM.html#af1012d27630e3cc881a23ef5cd89623f" title="Check if a barycentric coordinate is snapped to a vertex.">IsSnappedVertex</a>, <a class="el" href="classvcg_1_1tri_1_1CoM.html#af39f510d46044696d231629e9e544de2" title="Check if a barycentric coordinate is snapped to an edge.">IsSnappedEdge</a> </dd></dl>
+
+</div>
+</div>
+<a id="a97b91ffe4cd6a52c910183b8694f990b" name="a97b91ffe4cd6a52c910183b8694f990b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a97b91ffe4cd6a52c910183b8694f990b">&#9670;&#160;</a></span>CollapseNullEdges()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class MeshType &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::CollapseNullEdges </td>
+          <td>(</td>
+          <td class="paramtype">MeshType &amp;&#160;</td>
+          <td class="paramname"><em>poly</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -337,41 +426,14 @@ template&lt;class MeshType &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Snap barycentric coordinates to 0 or 1 if within threshold. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">ip</td><td>Input/Output: barycentric coordinates (must sum to 1.0) </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>true if the point was snapped to a vertex or edge (at least one coord became 0)</dd></dl>
-<p><b>This is one of the MOST IMPORTANT functions in the class</b> - it's used throughout!</p>
-<p>Given barycentric coordinates of a point in a triangle, this function decides whether it should be "snapped" to a vertex or edge based on the <code>par.barycentricSnapThr</code> threshold.</p>
-<p><b>Algorithm:</b></p><ol type="1">
-<li>If any coordinate is within <code>barycentricSnapThr</code> of 0, snap it to 0</li>
-<li>If any coordinate is within <code>barycentricSnapThr</code> of 1, snap it to 1</li>
-<li>Renormalize to ensure sum = 1.0</li>
-<li>If sum is still not exactly 1.0 (due to floating point), adjust the non-snapped coordinate</li>
-</ol>
-<p><b>Snapping Cases:</b></p><ul>
-<li>One coord = 1.0, others = 0 → Snapped to a vertex</li>
-<li>One coord = 0, others &gt; 0 → Snapped to an edge</li>
-<li>All coords &gt; 0 and &lt; 1 → Interior point, NOT snapped</li>
-</ul>
-<p><b>Return Value:</b></p><ul>
-<li><code>true</code>: Point is on a vertex or edge (at least one coordinate is 0)</li>
-<li><code>false</code>: Point is in the interior of the triangle</li>
-</ul>
-<dl class="section note"><dt>Note</dt><dd>This function MODIFIES the input coordinates in-place! </dd>
-<dd>
-The threshold <code>par.barycentricSnapThr</code> (default 0.05) controls snapping sensitivity</dd></dl>
-<dl class="section warning"><dt>Warning</dt><dd>Side effect: modifies ip parameter! Consider renaming to BarycentricSnapInPlace()</dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="classvcg_1_1tri_1_1CoM.html#a883842b0528418747efb8362e1df9768" title="Test if a barycentric coordinate is well snapped.">IsWellSnapped</a>, <a class="el" href="classvcg_1_1tri_1_1CoM.html#af1012d27630e3cc881a23ef5cd89623f" title="Check if a barycentric coordinate is snapped to a vertex.">IsSnappedVertex</a>, <a class="el" href="classvcg_1_1tri_1_1CoM.html#af39f510d46044696d231629e9e544de2" title="Check if a barycentric coordinate is snapped to an edge.">IsSnappedEdge</a> </dd></dl>
+<p>Merge the two ends of every zero-length polyline edge. </p>
+<dl class="section return"><dt>Returns</dt><dd>the number of edges collapsed</dd></dl>
+<p>Vertices are merged only along the polyline, never because they happen to coincide: two strands passing through the same point stay two strands, and are not joined into a junction that smoothing would then treat as one. (<a class="el" href="classvcg_1_1tri_1_1Clean.html#a247f421da724cbbf49b96a55ddb9d69c">Clean::RemoveDuplicateVertex</a>, used here before, merged them.) Compacts <em>poly</em> and updates its VE adjacency. </p>
 
 </div>
 </div>
-<a id="ae2576a2eedbf644aeb78821035c6ac72" name="ae2576a2eedbf644aeb78821035c6ac72"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae2576a2eedbf644aeb78821035c6ac72">&#9670;&#160;</a></span>CompareVertex()</h2>
+<a id="adaad1b68f68a35e2c6bbe9d53f7d04c9" name="adaad1b68f68a35e2c6bbe9d53f7d04c9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adaad1b68f68a35e2c6bbe9d53f7d04c9">&#9670;&#160;</a></span>ConnectCrossings()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -382,118 +444,23 @@ template&lt;class MeshType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static bool <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::CompareVertex </td>
+          <td class="memname">int <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::ConnectCrossings </td>
           <td>(</td>
-          <td class="paramtype">const MeshType &amp;&#160;</td>
-          <td class="paramname"><em>m</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">MeshType &amp;&#160;</td>
+          <td class="paramname"><em>poly</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">const VertexType &amp;&#160;</td>
-          <td class="paramname"><em>vA</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const VertexType &amp;&#160;</td>
-          <td class="paramname"><em>vB</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Compare two vertices for seam compatibility. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">m</td><td>The mesh (unused but required by interface) </td></tr>
-    <tr><td class="paramname">vA</td><td>First vertex </td></tr>
-    <tr><td class="paramname">vB</td><td>Second vertex </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>true if vertices are compatible across a seam</dd></dl>
-<p>This callback is used by the attribute_seam system to determine if two vertices can be considered the same across a seam boundary. Current implementation: Red and Blue colored vertices are considered incompatible.</p>
-<dl class="section note"><dt>Note</dt><dd>This is part of the mesh cutting/seam processing infrastructure. </dd></dl>
-
-</div>
-</div>
-<a id="ae75be8fe3210f77f2baa0a76cddd2161" name="ae75be8fe3210f77f2baa0a76cddd2161"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae75be8fe3210f77f2baa0a76cddd2161">&#9670;&#160;</a></span>ExtractVertex()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class MeshType &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::ExtractVertex </td>
-          <td>(</td>
-          <td class="paramtype">const MeshType &amp;&#160;</td>
-          <td class="paramname"><em>srcMesh</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const FaceType &amp;&#160;</td>
-          <td class="paramname"><em>f</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>whichWedge</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const MeshType &amp;&#160;</td>
-          <td class="paramname"><em>dstMesh</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">VertexType &amp;&#160;</td>
-          <td class="paramname"><em>v</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Extract vertex attributes for seam processing. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">srcMesh</td><td>Source mesh (unused but required by interface) </td></tr>
-    <tr><td class="paramname">f</td><td>The face containing the vertex </td></tr>
-    <tr><td class="paramname">whichWedge</td><td>Which vertex (0,1,2) of the face to extract </td></tr>
-    <tr><td class="paramname">dstMesh</td><td>Destination mesh (unused but required by interface) </td></tr>
-    <tr><td class="paramname">v</td><td>Output: vertex with copied attributes</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>This is a callback function used by the attribute_seam system. It copies all per-vertex properties and uses the face color.</p>
-<dl class="section note"><dt>Note</dt><dd>This is used when splitting the mesh along seams/polylines. </dd></dl>
+<p>Make the points where strands meet into junctions (opt-in). </p>
+<dl class="section return"><dt>Returns</dt><dd>the number of junctions made</dd></dl>
+<p>After <a class="el" href="classvcg_1_1tri_1_1CoMEmbed.html#ada0e579c8c238cc25cc948f71fde747e" title="Make the base mesh conform to the polyline: afterwards every polyline edge is an edge of the base mes...">CoMEmbed::SplitMeshWithPolyline()</a> two strands that cross or touch each have a vertex at the same position. By default they stay separate strands; this merges every set of coinciding vertices into one and merges the edges two strands share, so the meeting points become part of the curve's topology; where the merged curve branches the vertex is a junction, and a control point. </p>
 
 </div>
 </div>
@@ -872,180 +839,6 @@ template&lt;class MeshType &gt; </div>
 
 </div>
 </div>
-<a id="a883842b0528418747efb8362e1df9768" name="a883842b0528418747efb8362e1df9768"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a883842b0528418747efb8362e1df9768">&#9670;&#160;</a></span>IsWellSnapped()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class MeshType &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::IsWellSnapped </td>
-          <td>(</td>
-          <td class="paramtype">const CoordType &amp;&#160;</td>
-          <td class="paramname"><em>ip</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Test if a barycentric coordinate is well snapped. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">ip</td><td>The barycentric coordinate to test (must sum to 1.0) </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>true if no snapping is needed (all coords are either 0, 1, or far from boundaries)</dd></dl>
-<p>A barycentric coordinate is "well snapped" if each component is either:</p><ul>
-<li>Exactly 0.0 or 1.0, OR</li>
-<li>Far enough from 0 and 1 (outside the barycentricSnapThr threshold)</li>
-</ul>
-<p>This indicates the point doesn't need further snapping adjustment. </p>
-
-</div>
-</div>
-<a id="a19e99457f2851e303b9c5ffa09197217" name="a19e99457f2851e303b9c5ffa09197217"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a19e99457f2851e303b9c5ffa09197217">&#9670;&#160;</a></span>MinDistOnEdge() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class MeshType &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">ScalarType <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::MinDistOnEdge </td>
-          <td>(</td>
-          <td class="paramtype">CoordType&#160;</td>
-          <td class="paramname"><em>samplePnt</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">EdgeGrid &amp;&#160;</td>
-          <td class="paramname"><em>edgeGrid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">MeshType &amp;&#160;</td>
-          <td class="paramname"><em>poly</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">CoordType &amp;&#160;</td>
-          <td class="paramname"><em>closestPoint</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Find the minimum distance from a sample point to the polyline. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">samplePnt</td><td>The point to measure distance from </td></tr>
-    <tr><td class="paramname">edgeGrid</td><td>Spatial acceleration grid for the polyline edges </td></tr>
-    <tr><td class="paramname">poly</td><td>The polyline (as edge mesh) </td></tr>
-    <tr><td class="paramname">closestPoint</td><td>Output: the closest point on the polyline </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The minimum distance from samplePnt to the polyline </dd></dl>
-
-</div>
-</div>
-<a id="af32d23867a898c7e530fbec16c4ce88c" name="af32d23867a898c7e530fbec16c4ce88c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af32d23867a898c7e530fbec16c4ce88c">&#9670;&#160;</a></span>MinDistOnEdge() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class MeshType &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static ScalarType <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::MinDistOnEdge </td>
-          <td>(</td>
-          <td class="paramtype">VertexType *&#160;</td>
-          <td class="paramname"><em>v0</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">VertexType *&#160;</td>
-          <td class="paramname"><em>v1</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">EdgeGrid &amp;&#160;</td>
-          <td class="paramname"><em>edgeGrid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">MeshType &amp;&#160;</td>
-          <td class="paramname"><em>poly</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">CoordType &amp;&#160;</td>
-          <td class="paramname"><em>closestPoint</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Find the closest point on a mesh edge to the polyline (static version) </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">v0</td><td>First vertex of the mesh edge </td></tr>
-    <tr><td class="paramname">v1</td><td>Second vertex of the mesh edge </td></tr>
-    <tr><td class="paramname">edgeGrid</td><td>Spatial acceleration grid for the polyline edges </td></tr>
-    <tr><td class="paramname">poly</td><td>The polyline (as edge mesh) </td></tr>
-    <tr><td class="paramname">closestPoint</td><td>Output: the point on the edge [v0,v1] closest to the polyline </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The minimum distance from the edge to the polyline</dd></dl>
-<p>This samples the edge [v0,v1] uniformly and finds which sample is closest to the polyline. </p>
-
-</div>
-</div>
 <a id="aa8611bc0164c7af891e2b9242e35d253" name="aa8611bc0164c7af891e2b9242e35d253"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa8611bc0164c7af891e2b9242e35d253">&#9670;&#160;</a></span>MoveAndProject()</h2>
 
@@ -1117,55 +910,6 @@ template&lt;typename PositionFunctor &gt; </div>
 
 </div>
 </div>
-<a id="a817e2ac050b09a1eb3a77566d82e8751" name="a817e2ac050b09a1eb3a77566d82e8751"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a817e2ac050b09a1eb3a77566d82e8751">&#9670;&#160;</a></span>QLerp()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class MeshType &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static CoordType <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::QLerp </td>
-          <td>(</td>
-          <td class="paramtype">VertexType *&#160;</td>
-          <td class="paramname"><em>v0</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">VertexType *&#160;</td>
-          <td class="paramname"><em>v1</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Compute quality-weighted linear interpolation between two vertices. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">v0</td><td>First vertex </td></tr>
-    <tr><td class="paramname">v1</td><td>Second vertex </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Interpolated position weighted by inverse quality values</dd></dl>
-<p>Points with higher quality (larger absolute value) contribute less to the result. This is useful for adaptive refinement based on error metrics stored in quality. </p>
-
-</div>
-</div>
 <a id="a4e22ca4117ec158c34b29629f92623f4" name="a4e22ca4117ec158c34b29629f92623f4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4e22ca4117ec158c34b29629f92623f4">&#9670;&#160;</a></span>RefineCurveByBaseMesh()</h2>
 
@@ -1192,10 +936,17 @@ template&lt;class MeshType &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>RefineCurveByBaseMesh. </p>
+<p>Make every polyline segment lie inside one face or along one edge of the base mesh, by inserting the exact points where it crosses the mesh edges. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">poly</td><td></td></tr>
+    <tr><td class="paramname">poly</td><td>The polyline; its own vertices are snapped first (SnapPolyline), then kept</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Each segment is traced across the mesh: in the current face it heads for its far end, projected onto the face plane; the edge where it leaves is the first barycentric coordinate to reach zero, and the crossing point is made with that coordinate exactly zero, so it lies exactly on the edge. The trace then continues in the faces on the other side, through a vertex if it leaves through one, until it reaches a face that also holds the far end. Two strands traced through the same faces therefore keep their order along every edge they cross: close parallel curves stay parallel, which approximate crossing points (the bisection used here before) did not guarantee.</p>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">vcg::MissingPreconditionException</td><td>if a segment cannot be traced, e.g. one that leaves the surface across a border </td></tr>
   </table>
   </dd>
 </dl>
@@ -1243,8 +994,8 @@ template&lt;class MeshType &gt; </div>
 
 </div>
 </div>
-<a id="a60a5d38a759f9a2a718751902bcd1bf9" name="a60a5d38a759f9a2a718751902bcd1bf9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a60a5d38a759f9a2a718751902bcd1bf9">&#9670;&#160;</a></span>SimplifyMidFace()</h2>
+<a id="a6a59605b81c95df6a6f9814f2fa93e54" name="a6a59605b81c95df6a6f9814f2fa93e54"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a59605b81c95df6a6f9814f2fa93e54">&#9670;&#160;</a></span>RoundingSnap()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1255,11 +1006,60 @@ template&lt;class MeshType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::SimplifyMidFace </td>
+          <td class="memname">bool <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::RoundingSnap </td>
+          <td>(</td>
+          <td class="paramtype">CoordType &amp;&#160;</td>
+          <td class="paramname"><em>ip</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const FaceType &amp;&#160;</td>
+          <td class="paramname"><em>f</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Snap at rounding level only: a point this close to a vertex or an edge is on it. Shared by the trace and by <a class="el" href="classvcg_1_1tri_1_1CoMEmbed.html" title="A class for managing curves on a 2-manifold (Curve on Manifold - CoM).">CoMEmbed</a>, so both agree on where a curve point is. </p>
+
+</div>
+</div>
+<a id="a4cb65c7f5607b8754e30d6cb58b6c68b" name="a4cb65c7f5607b8754e30d6cb58b6c68b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4cb65c7f5607b8754e30d6cb58b6c68b">&#9670;&#160;</a></span>SetControlPoints()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class MeshType &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::SetControlPoints </td>
           <td>(</td>
           <td class="paramtype">MeshType &amp;&#160;</td>
-          <td class="paramname"><em>poly</em></td><td>)</td>
+          <td class="paramname"><em>poly</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a1cfd45f207bf9674f190d783c9f26a59">ControlPoints</a>&#160;</td>
+          <td class="paramname"><em>mode</em> = <code><a class="el" href="classvcg_1_1tri_1_1CoM.html#a1cfd45f207bf9674f190d783c9f26a59a0c4cc76aa3049be87a93e5f935f50612">EndsAndNodes</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -1269,14 +1069,8 @@ template&lt;class MeshType &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>SimplifyMidFace remove all the vertices that in the mid of a face and between two of the points snapped onto the edges of the same face. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">poly</td><td></td></tr>
-  </table>
-  </dd>
-</dl>
-<p>It assumes that the mesh has been snapped and refined by the BaseMesh </p>
+<p>Choose the control points of a polyline (stored as its vertex selection). </p>
+<p>Call it once on the input curve, before smoothing or refining it. With EndsAndNodes the curve keeps its topology and its ends, and every strand between them is free to become a geodesic; a helix on a cylinder with fixed ends stays a helix, since the strand cannot unwind around the cylinder. </p>
 
 </div>
 </div>
@@ -1314,74 +1108,6 @@ template&lt;class MeshType &gt; </div>
   </dd>
 </dl>
 <p>Removes vertices that have collapsed to the same position. </p>
-
-</div>
-</div>
-<a id="a9619229df69270e8573f1a128b37767a" name="a9619229df69270e8573f1a128b37767a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9619229df69270e8573f1a128b37767a">&#9670;&#160;</a></span>SnappedOnSameFace()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class MeshType &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::SnappedOnSameFace </td>
-          <td>(</td>
-          <td class="paramtype">FacePointer&#160;</td>
-          <td class="paramname"><em>f0</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">CoordType&#160;</td>
-          <td class="paramname"><em>i0</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">FacePointer&#160;</td>
-          <td class="paramname"><em>f1</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">CoordType&#160;</td>
-          <td class="paramname"><em>i1</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>SnappedOnSameFace Return true if the two points are snapped to a common face;. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">f0</td><td></td></tr>
-    <tr><td class="paramname">i0</td><td></td></tr>
-    <tr><td class="paramname">f1</td><td></td></tr>
-    <tr><td class="paramname">i0</td><td></td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd></dd></dl>
-<p>Require FFAdj. se assume that both SNAPPED. Three cases:</p><ul>
-<li>Edge Edge - true iff the two edges belongs to a common face.</li>
-<li>Vert Edge - true iff there is one of the two snapped edge faces has the vert as non-edge face; <br  />
-</li>
-<li>Vert Vert </li>
-</ul>
 
 </div>
 </div>
@@ -1424,128 +1150,6 @@ template&lt;class MeshType &gt; </div>
 
 </div>
 </div>
-<a id="add658ee8c7fe4f47b98e236feff5d630" name="add658ee8c7fe4f47b98e236feff5d630"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add658ee8c7fe4f47b98e236feff5d630">&#9670;&#160;</a></span>TestSplitSegWithMesh()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class MeshType &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::TestSplitSegWithMesh </td>
-          <td>(</td>
-          <td class="paramtype">VertexType *&#160;</td>
-          <td class="paramname"><em>v0</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">VertexType *&#160;</td>
-          <td class="paramname"><em>v1</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">CoordType &amp;&#160;</td>
-          <td class="paramname"><em>splitPt</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>TestSplitSegWithMesh Given a poly segment decide if it should be split along elements of base mesh. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">v0</td><td></td></tr>
-    <tr><td class="paramname">v1</td><td></td></tr>
-    <tr><td class="paramname">splitPt</td><td></td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>true if it should be split</dd></dl>
-<p>We make a few samples onto the edge and if some of them snaps onto a an edge we use it. In case there are more than one candidate we choose the sample closeset to its snapping point. We explicitly avoid snapping twice on the same edge by checking the starting and ending edges.</p>
-<p>Two cases:</p><ul>
-<li>poly edge pass near a vertex of the mesh</li>
-<li>poly edge cross one or more edges</li>
-</ul>
-<p>Note that we have to check the case where </p>
-
-</div>
-</div>
-<a id="aac1dc491df2abeb81bc71719e163da6a" name="aac1dc491df2abeb81bc71719e163da6a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aac1dc491df2abeb81bc71719e163da6a">&#9670;&#160;</a></span>TestSplitSegWithMeshAdapt()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class MeshType &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::TestSplitSegWithMeshAdapt </td>
-          <td>(</td>
-          <td class="paramtype">VertexType *&#160;</td>
-          <td class="paramname"><em>v0</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">VertexType *&#160;</td>
-          <td class="paramname"><em>v1</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">CoordType &amp;&#160;</td>
-          <td class="paramname"><em>splitPt</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>TestSplitSegWithMesh Given a poly segment decide if it should be split along elements of base mesh. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">v0</td><td></td></tr>
-    <tr><td class="paramname">v1</td><td></td></tr>
-    <tr><td class="paramname">splitPt</td><td></td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>true if it should be split</dd></dl>
-<p>We make a few samples onto the edge and if some of them snaps onto a an edge we use it. In case there are more than one candidate we choose the sample closeset to its snapping point. We explicitly avoid snapping twice on the same edge by checking the starting and ending edges.</p>
-<p>Two cases:</p><ul>
-<li>poly edge pass near a vertex of the mesh</li>
-<li>poly edge cross one or more edges</li>
-</ul>
-<p>Note that we have to check the case where </p>
-
-</div>
-</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>vcg/complex/algorithms/<a class="el" href="curve__on__manifold_8h_source.html">curve_on_manifold.h</a></li>
 </ul>
@@ -1553,7 +1157,7 @@ template&lt;class MeshType &gt; </div>
 <!-- HTML footer for doxygen 1.9.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Sun Oct 4 2026 18:09:45
+Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Mon Oct 5 2026 11:52:43
 </small></address>
 </body>
 </html>

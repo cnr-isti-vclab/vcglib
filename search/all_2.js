@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['barycentricsnap_0',['BarycentricSnap',['../classvcg_1_1tri_1_1CoM.html#ac5e6277b34d20bb15e232d01cbd2865f',1,'vcg::tri::CoM']]],
+  ['barycentricsnap_0',['BarycentricSnap',['../classvcg_1_1tri_1_1CoM.html#a466435eda3710bf4ea6e3c25db9fb357',1,'vcg::tri::CoM::BarycentricSnap(CoordType &amp;ip, const FaceType &amp;f)'],['../classvcg_1_1tri_1_1CoM.html#a9b5312c8e5222598e8a5c6a22b8a7259',1,'vcg::tri::CoM::BarycentricSnap(CoordType &amp;ip, const FaceType &amp;f, ScalarType barThr, ScalarType distThr)']]],
   ['barycentricsnapthr_1',['barycentricSnapThr',['../classvcg_1_1tri_1_1CoM_1_1Param.html#a2a7c2be0f9614376c8e7df0409f71ce9',1,'vcg::tri::CoM::Param']]],
   ['base_2',['base',['../classvcg_1_1tri_1_1CoM.html#a2b9602837351181f5e24d6aa8238e586',1,'vcg::tri::CoM']]],
   ['baseinterpolator_3',['BaseInterpolator',['../structvcg_1_1tri_1_1BaseInterpolator.html',1,'vcg::tri']]],
