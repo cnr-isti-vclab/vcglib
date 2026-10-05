@@ -130,12 +130,8 @@ public:
   typedef typename MeshType::FaceType       FaceType;
   typedef typename MeshType::FacePointer    FacePointer;
   typedef typename MeshType::FaceIterator   FaceIterator;
-  typedef Box3<ScalarType>                  Box3Type;
   typedef Segment3<ScalarType>              Segment3Type;  
   typedef typename vcg::GridStaticPtr<FaceType, ScalarType> MeshGrid;  
-  typedef typename vcg::GridStaticPtr<EdgeType, ScalarType> EdgeGrid;
-  typedef typename face::Pos<FaceType> PosType;
-  typedef typename tri::UpdateTopology<MeshType>::PEdge PEdge;
   
   /**
    * \brief Parameter class controlling the behavior of CoM algorithms

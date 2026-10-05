@@ -54,7 +54,7 @@ int main(int argc,char ** argv )
 {
   MyMesh base, basecopy, poly;
   int ret0=0, ret1=0;
-  char *baseName = "(created torus)";
+  const char *baseName = "(created torus)";
   if(argc>1) {
       ret0 = tri::io::Importer<MyMesh>::Open(base,argv[1]);
       baseName = argv[1];
