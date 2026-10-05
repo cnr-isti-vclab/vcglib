@@ -24,96 +24,46 @@
 #define __VCG_EXCEPTION_H
 
 #include <stdexcept>
-#include <iostream>
 
 namespace vcg
 {
+// Every exception keeps its detail in what(), prefixed by its category ("Mesh does not
+// satisfy precondition: There are faces with zero area"), so that a caller can show it.
+// They used to print the detail to stdout and return only the fixed category from what().
 class MissingComponentException : public std::runtime_error
 {
 public:
-  MissingComponentException(const std::string &err):std::runtime_error(err)
-  {
-    std::cout << "Missing Component Exception -" << err << "- \n";
-  }
-    virtual const char *what() const throw ()
-    {
-      static char buf[128]="Missing Component";
-      return buf;
-    }
+  MissingComponentException(const std::string &err):std::runtime_error("Missing component: " + err) {}
 };
 
 class MissingCompactnessException : public std::runtime_error
 {
 public:
-  MissingCompactnessException(const std::string &err):std::runtime_error(err)
-  {
-    std::cout << "Lack of Compactness Exception -" << err << "- \n";
-  }
-    virtual const char *what() const throw ()
-    {
-      static char buf[128]="Lack of Compactness";
-      return buf;
-    }
+  MissingCompactnessException(const std::string &err):std::runtime_error("Lack of compactness: " + err) {}
 };
 
 class MissingTriangularRequirementException : public std::runtime_error
 {
 public:
-  MissingTriangularRequirementException(const std::string &err):std::runtime_error(err)
-  {
-    std::cout << "Mesh has to be composed by triangle and not polygons -" << err << "- \n";
-  }
-
-    virtual const char *what() const throw ()
-    {
-      static char buf[128]="Mesh has to be composed by triangle and not polygons";
-      return buf;
-    }
+  MissingTriangularRequirementException(const std::string &err):std::runtime_error("Mesh has to be composed by triangle and not polygons: " + err) {}
 };
 
 class MissingPolygonalRequirementException : public std::runtime_error
 {
 public:
-  MissingPolygonalRequirementException(const std::string &err):std::runtime_error(err)
-  {
-    std::cout << "Mesh has to be composed by polygonal faces (not plain triangles) -" << err << "- \n";
-  }
-
-    virtual const char *what() const throw ()
-    {
-      static char buf[128]="Mesh has to be composed by polygonal faces (not plain triangles) ";
-      return buf;
-    }
+  MissingPolygonalRequirementException(const std::string &err):std::runtime_error("Mesh has to be composed by polygonal faces (not plain triangles): " + err) {}
 };
 
 class MissingTetrahedralRequirementException : public std::runtime_error
 {
 public:
-  MissingTetrahedralRequirementException(const std::string &err):std::runtime_error(err)
-  {
-    std::cout << "Mesh has to be composed by tetrahedras -" << err << "- \n";
-  }
-
-    virtual const char *what() const throw ()
-    {
-      static char buf[128]="Mesh has to be composed by tetrahedras";
-      return buf;
-    }
+  MissingTetrahedralRequirementException(const std::string &err):std::runtime_error("Mesh has to be composed by tetrahedras: " + err) {}
 };
 
 class MissingPreconditionException : public std::runtime_error
 {
 public:
-  MissingPreconditionException(const std::string &err):std::runtime_error(err)
-  {
-    std::cout << "Mesh does not satisfy the following precondition:" << err << "- \n";
-  }
-
-    virtual const char *what() const throw ()
-    {
-      static char buf[128]="Mesh does not satisfy precondition";
-      return buf;
-    }
+  MissingPreconditionException(const std::string &err):std::runtime_error("Mesh does not satisfy precondition: " + err) {}
 };
 
 } // end namespace vcg
