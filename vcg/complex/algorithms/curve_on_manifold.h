@@ -30,17 +30,14 @@
 #include<vcg/complex/algorithms/update/normal.h>
 #include<vcg/complex/algorithms/update/quality.h>
 #include<vcg/complex/algorithms/clean.h>
+#include<vcg/complex/append.h>
 #include<vcg/complex/algorithms/mesh_assert.h>
 #include<vcg/complex/algorithms/update/bounding.h>
-#include<vcg/complex/algorithms/refine.h>
 #include<vcg/complex/algorithms/vertex_interpolation.h>
-#include<vcg/complex/algorithms/create/platonic.h>
 #include<vcg/complex/algorithms/point_sampling.h>
 #include <vcg/space/index/grid_static_ptr.h>
-#include <vcg/space/index/kdtree/kdtree.h>
 #include <vcg/math/histogram.h>
 #include<vcg/space/distance3.h>
-#include <vcg/complex/algorithms/attribute_seam.h>
 #include <wrap/callback.h>
 #include <vcg/space/planar_polygon_tessellation.h>
 #include <array>
@@ -68,6 +65,17 @@ namespace tri {
  * - **Base mesh**: The triangulated surface mesh (stored in `base`)
  * - **Polyline/Curve**: An edge mesh passed to the various methods (typically named `poly` in parameters)
  * - **Snapping**: The process of aligning polyline vertices to mesh vertices or edges using barycentric thresholds
+ *
+ * \par Curves, strands and control points
+ * A curve on the surface is a graph of **control points**, joined by **strands**. A strand
+ * stands for a geodesic between its two control points: its other vertices are only a
+ * discretization of it, which smoothing moves towards the geodesic and refinement and
+ * simplification add or remove. Control points are fixed: they are projected onto the
+ * surface and never smoothed, snapped, simplified or merged away. They are the selected
+ * vertices of the polyline; SetControlPoints() chooses them: every vertex, the ends and
+ * junctions (the default), or the selection as given. Since a geodesic on a triangle mesh
+ * is straight inside each face, RefineCurveByBaseMesh() leaves a strand with only its
+ * control points and its exact edge crossings.
  * 
  * \par Requirements
  * The base mesh should be:
@@ -144,7 +152,7 @@ public:
     ScalarType minRefEdgeLen;      ///< Minimal admitted edge length (used in refine: never make edges shorter than this) 
     ScalarType maxSimpEdgeLen;     ///< Maximal admitted edge length (used in simplify: never make edges longer than this) 
     ScalarType maxMoveDelta;       ///< The maximum movement admitted during MoveAndProject (before projection) 
-    ScalarType maxSnapThr;         ///< The maximum distance allowed when snapping a polyline vertex onto a mesh vertex (currently unused)
+    ScalarType maxSnapThr;         ///< The maximum distance a snap may move a polyline vertex (onto a mesh vertex or edge)
     ScalarType gridBailout;        ///< The maximum distance bailout used in grid-based spatial queries
     ScalarType barycentricSnapThr; ///< Threshold for snapping barycentric coords to 0 or 1 (controls vertex/edge snapping)
     vcg::CallBackPos *cb = nullptr; ///< Receives progress and diagnostic messages (see wrap/callback.h)
@@ -159,7 +167,7 @@ public:
       minRefEdgeLen      = m.bbox.Diag()/16000.0;
       maxSimpEdgeLen     = m.bbox.Diag()/100.0;
       maxMoveDelta       = m.bbox.Diag()/100.0;
-      maxSnapThr         = m.bbox.Diag()/1000.0;
+      maxSnapThr         = m.bbox.Diag()/10000.0;
       gridBailout        = m.bbox.Diag()/20.0;
       barycentricSnapThr = 0.05;
     }
@@ -295,27 +303,6 @@ public:
   // Barycentric Coordinate and Snapping Methods
   // ============================================================================
   
-  /** 
-   * \brief Test if a barycentric coordinate is well snapped 
-   * \param ip The barycentric coordinate to test (must sum to 1.0)
-   * \return true if no snapping is needed (all coords are either 0, 1, or far from boundaries)
-   * 
-   * A barycentric coordinate is "well snapped" if each component is either:
-   * - Exactly 0.0 or 1.0, OR
-   * - Far enough from 0 and 1 (outside the barycentricSnapThr threshold)
-   * 
-   * This indicates the point doesn't need further snapping adjustment.
-   */
-  bool IsWellSnapped(const CoordType &ip)
-  {
-      for(int i=0;i<3;++i)
-          if( (ip[i]< par.barycentricSnapThr         && ip[i]!= 0.0) ||
-              (ip[i]> (1.0 - par.barycentricSnapThr) && ip[i]!= 1.0))
-              return false;
-      assert(ip[0]+ip[1]+ip[2] == 1.0);
-      return true;
-  }
-  
   /**
    * \brief Check if a barycentric coordinate is snapped to an edge
    * \param ip The barycentric coordinate (must be snapped)
@@ -367,126 +354,10 @@ public:
   }
   
 
-  /**
-   * \brief Find the minimum distance from a sample point to the polyline
-   * \param samplePnt The point to measure distance from
-   * \param edgeGrid Spatial acceleration grid for the polyline edges
-   * \param poly The polyline (as edge mesh)
-   * \param closestPoint Output: the closest point on the polyline
-   * \return The minimum distance from samplePnt to the polyline
-   */
-  ScalarType MinDistOnEdge(CoordType samplePnt, EdgeGrid &edgeGrid, MeshType &poly, CoordType &closestPoint)
-  {
-      ScalarType polyDist;
-      EdgeType *cep = vcg::tri::GetClosestEdgeBase(poly,edgeGrid,samplePnt,par.gridBailout,polyDist,closestPoint);        
-      return polyDist;    
-  }
-  
-  /**
-   * \brief Find the closest point on a mesh edge to the polyline (static version)
-   * \param v0 First vertex of the mesh edge
-   * \param v1 Second vertex of the mesh edge
-   * \param edgeGrid Spatial acceleration grid for the polyline edges
-   * \param poly The polyline (as edge mesh)
-   * \param closestPoint Output: the point on the edge [v0,v1] closest to the polyline
-   * \return The minimum distance from the edge to the polyline
-   * 
-   * This samples the edge [v0,v1] uniformly and finds which sample is closest to the polyline.
-   */
-  static ScalarType MinDistOnEdge(VertexType *v0,VertexType *v1, EdgeGrid &edgeGrid, MeshType &poly, CoordType &closestPoint)
-  {
-    ScalarType minPolyDist = std::numeric_limits<ScalarType>::max();
-    const ScalarType sampleNum = 50;
-    const ScalarType maxDist = poly.bbox.Diag()/10.0;
-    for(ScalarType k = 0;k<sampleNum+1;++k)
-    {
-      ScalarType polyDist;
-      CoordType closestPPoly;
-      CoordType samplePnt = (v0->P()*k +v1->P()*(sampleNum-k))/sampleNum;          
-      
-      EdgeType *cep = vcg::tri::GetClosestEdgeBase(poly,edgeGrid,samplePnt,maxDist,polyDist,closestPPoly);        
-      
-      if(polyDist < minPolyDist)
-      {
-        minPolyDist = polyDist;
-        closestPoint = samplePnt;
-//        closestPoint = closestPPoly;
-      }
-    }
-    return minPolyDist;    
-  }
-  
-  // ============================================================================
-  // Attribute Extraction and Comparison (for Seam Processing)
-  // ============================================================================
-  
-  /**
-   * \brief Extract vertex attributes for seam processing
-   * \param srcMesh Source mesh (unused but required by interface)
-   * \param f The face containing the vertex
-   * \param whichWedge Which vertex (0,1,2) of the face to extract
-   * \param dstMesh Destination mesh (unused but required by interface)
-   * \param v Output: vertex with copied attributes
-   * 
-   * This is a callback function used by the attribute_seam system.
-   * It copies all per-vertex properties and uses the face color.
-   * 
-   * \note This is used when splitting the mesh along seams/polylines.
-   */
-  static inline void ExtractVertex(const MeshType & srcMesh, const FaceType & f, int whichWedge, const MeshType & dstMesh, VertexType & v)
-  {
-      (void)srcMesh;
-      (void)dstMesh;
-      // This is done to preserve every single perVertex property
-      // perVextex Texture Coordinate is instead obtained from perWedge one.
-      v.ImportData(*f.cV(whichWedge));
-      v.C() = f.cC();
-  }
-  
-  /**
-   * \brief Compare two vertices for seam compatibility
-   * \param m The mesh (unused but required by interface)
-   * \param vA First vertex
-   * \param vB Second vertex
-   * \return true if vertices are compatible across a seam
-   * 
-   * This callback is used by the attribute_seam system to determine if two
-   * vertices can be considered the same across a seam boundary.
-   * Current implementation: Red and Blue colored vertices are considered incompatible.
-   * 
-   * \note This is part of the mesh cutting/seam processing infrastructure.
-   */
-  static inline bool CompareVertex(const MeshType & m, const VertexType & vA, const VertexType & vB)
-  {
-      (void)m;
-      
-      if(vA.C() == Color4b(Color4b::Red) && vB.C() == Color4b(Color4b::Blue) ) return false;
-      if(vA.C() == Color4b(Color4b::Blue) && vB.C() == Color4b(Color4b::Red) ) return false;
-      return true;      
-  }
   
   // ============================================================================
   // Utility Functions
   // ============================================================================
-  
-  /**
-   * \brief Compute quality-weighted linear interpolation between two vertices
-   * \param v0 First vertex
-   * \param v1 Second vertex
-   * \return Interpolated position weighted by inverse quality values
-   * 
-   * Points with higher quality (larger absolute value) contribute less to the result.
-   * This is useful for adaptive refinement based on error metrics stored in quality.
-   */
-  static CoordType QLerp(VertexType *v0, VertexType *v1)
-  {
-    
-    ScalarType qSum = fabs(v0->Q())+fabs(v1->Q());      
-    ScalarType w0 = (qSum - fabs(v0->Q()))/qSum;
-    ScalarType w1 = (qSum - fabs(v1->Q()))/qSum;      
-    return v0->P()*w0 + v1->P()*w1;      
-  }
-  
   
   /**
    * @brief SnapPolyline snaps the vertexes of a polyline onto the base mesh
@@ -504,48 +375,129 @@ public:
   {
     tri::Allocator<MeshType>::CompactEveryVector(poly);     
     tri::UpdateTopology<MeshType>::VertexEdge(poly);
-    int vertSnapCnt=0;
-    int edgeSnapCnt=0;
-    int borderCnt=0,midCnt=0,nonmanifCnt=0;
-    for(VertexIterator vi=poly.vert.begin(); vi!=poly.vert.end();++vi)
+    // Where each vertex would snap.
+    std::vector<FaceType *> face(poly.vert.size());
+    std::vector<CoordType> ip(poly.vert.size()), raw(poly.vert.size());
+    std::map<VertexType *, std::vector<size_t>> onVertex;  // mesh vertex -> polyline vertices
+    for (size_t i = 0; i < poly.vert.size(); ++i)
     {
-      CoordType ip;
-      FaceType *f = GetClosestFaceIP(vi->cP(),ip);
-      if(BarycentricSnap(ip))
+      face[i] = GetClosestFaceIP(poly.vert[i].cP(), raw[i]);
+      ip[i] = raw[i];
+      // A control point is not snapped; one already on a mesh vertex occupies it.
+      if (poly.vert[i].IsS()) RoundingSnap(ip[i], *face[i]);
+      else BarycentricSnap(ip[i], *face[i]);
+      if (VertexPointer v = FindVertexSnap(face[i], ip[i])) onVertex[v].push_back(i);
+    }
+    // A mesh vertex takes one polyline vertex: the nearest, with the ones joined to it by
+    // polyline edges (they will collapse onto it). The others stay off it, on an edge if
+    // they may snap there, so two strands passing by the same vertex are not merged.
+    int deniedCnt = 0;
+    for (auto &ov : onVertex)
+    {
+      if (ov.second.size() < 2) continue;
+      std::sort(ov.second.begin(), ov.second.end(), [&](size_t a, size_t b) {
+        if (poly.vert[a].IsS() != poly.vert[b].IsS()) return poly.vert[a].IsS();  // a control point first
+        return Distance(poly.vert[a].cP(), ov.first->cP()) < Distance(poly.vert[b].cP(), ov.first->cP()); });
+      std::set<size_t> kept{ov.second[0]};
+      for (bool grew = true; grew; )  // the nearest and what is joined to it along the polyline
       {
-        if(ip[0]>0 && ip[1]>0) { vi->P() = f->P(0)*ip[0]+f->P(1)*ip[1]; edgeSnapCnt++; assert(ip[2]==0); }
-        if(ip[0]>0 && ip[2]>0) { vi->P() = f->P(0)*ip[0]+f->P(2)*ip[2]; edgeSnapCnt++; assert(ip[1]==0); }
-        if(ip[1]>0 && ip[2]>0) { vi->P() = f->P(1)*ip[1]+f->P(2)*ip[2]; edgeSnapCnt++; assert(ip[0]==0); }
-        
-        if(ip[0]==1.0) { vi->P() = f->P(0); vertSnapCnt++; assert(ip[1]==0 && ip[2]==0); }
-        if(ip[1]==1.0) { vi->P() = f->P(1); vertSnapCnt++; assert(ip[0]==0 && ip[2]==0); }
-        if(ip[2]==1.0) { vi->P() = f->P(2); vertSnapCnt++; assert(ip[0]==0 && ip[1]==0); }
+        grew = false;
+        for (size_t c : ov.second)
+        {
+          if (kept.count(c)) continue;
+          std::vector<VertexPointer> star;
+          edge::VVStarVE(&poly.vert[c], star);
+          for (VertexPointer w : star)
+            if (kept.count(tri::Index(poly, w))) { kept.insert(c); grew = true; break; }
+        }
       }
-      else
+      for (size_t c : ov.second)
       {
-        int deg = edge::VEDegree<EdgeType>(&*vi);
-        if (deg > 2) nonmanifCnt++;
-        if (deg < 2) borderCnt++;
-        if (deg== 2) midCnt++;
+        if (kept.count(c) || poly.vert[c].IsS()) continue;
+        // Only onto the nearest edge, if that snap alone is allowed.
+        ++deniedCnt;
+        CoordType &q = ip[c];
+        q = raw[c];
+        const int k = (q[0] <= q[1] && q[0] <= q[2]) ? 0 : (q[1] <= q[2] ? 1 : 2);
+        const FaceType &f = *face[c];
+        const ScalarType len = Distance(f.cP((k + 1) % 3), f.cP((k + 2) % 3));
+        if (q[k] <= par.barycentricSnapThr && len > 0 && q[k] * (DoubleArea(f) / len) <= par.maxSnapThr)
+        {
+          q[k] = 0;
+          q[(k + 1) % 3] /= q[(k + 1) % 3] + q[(k + 2) % 3];
+          q[(k + 2) % 3] = 1 - q[(k + 1) % 3];
+        }
       }
     }
-    Log("SnapPolyline %i vertices:  snapped %i onto vert and %i onto edges %i nonmanif, %i border, %i mid",
-        poly.vn, vertSnapCnt, edgeSnapCnt, nonmanifCnt,borderCnt,midCnt);
-    int dupCnt=tri::Clean<MeshType>::RemoveDuplicateVertex(poly);
-    tri::Allocator<MeshType>::CompactEveryVector(poly);     
-    if(dupCnt) Log("SnapPolyline: Removed %i Duplicated vertices",dupCnt);
-    
+    int vertSnapCnt=0, edgeSnapCnt=0;
+    for (size_t i = 0; i < poly.vert.size(); ++i)
+    {
+      if (poly.vert[i].IsS()) continue;  // control points stay where they are
+      int zeros = 0;
+      for (int k = 0; k < 3; ++k) zeros += ip[i][k] == 0;
+      if (zeros == 0) continue;
+      const FaceType &f = *face[i];
+      poly.vert[i].P() = f.cP(0)*ip[i][0] + f.cP(1)*ip[i][1] + f.cP(2)*ip[i][2];
+      if (zeros == 2) vertSnapCnt++; else edgeSnapCnt++;
+    }
+    const int dupCnt = CollapseNullEdges(poly);
+    Log("SnapPolyline %i vertices: snapped %i onto vertices and %i onto edges, %i kept off an occupied vertex, %i null edges collapsed",
+        poly.vn, vertSnapCnt, edgeSnapCnt, deniedCnt, dupCnt);
     return vertSnapCnt==0 && edgeSnapCnt==0 && dupCnt==0;
   }
   
-   void SelectBoundaryVertex(MeshType &poly)
-   {
-     tri::UpdateSelection<MeshType>::VertexClear(poly);
-     tri::UpdateTopology<MeshType>::VertexEdge(poly);
-     ForEachVertex(poly, [&](VertexType &v){
-       if(edge::VEDegree<EdgeType>(&v)==1) v.SetS();
-     });
-   }
+  /// Which polyline vertices SetControlPoints() makes control points.
+  enum ControlPoints
+  {
+    AllVertices,   ///< every vertex: the polyline is taken as it is, only projected and refined
+    EndsAndNodes,  ///< the ends (degree 1) and the junctions (degree > 2): each strand is free
+    Selected       ///< the vertices already selected, left as they are
+  };
+
+  /**
+   * \brief Choose the control points of a polyline (stored as its vertex selection).
+   *
+   * Call it once on the input curve, before smoothing or refining it. With EndsAndNodes
+   * the curve keeps its topology and its ends, and every strand between them is free to
+   * become a geodesic; a helix on a cylinder with fixed ends stays a helix, since the
+   * strand cannot unwind around the cylinder.
+   */
+  void SetControlPoints(MeshType &poly, ControlPoints mode = EndsAndNodes)
+  {
+    if (mode == Selected) return;
+    tri::UpdateTopology<MeshType>::VertexEdge(poly);
+    ForEachVertex(poly, [&](VertexType &v) {
+      const int deg = edge::VEDegree<EdgeType>(&v);
+      if (mode == AllVertices || deg != 2) v.SetS(); else v.ClearS();
+    });
+  }
+
+  /**
+   * \brief Make the points where strands meet into junctions (opt-in).
+   * \return the number of junctions made
+   *
+   * After CoMEmbed::SplitMeshWithPolyline() two strands that cross or touch each have a
+   * vertex at the same position. By default they stay separate strands; this merges every
+   * set of coinciding vertices into one and merges the edges two strands share, so the
+   * meeting points become part of the curve's topology; where the merged curve branches
+   * the vertex is a junction, and a control point.
+   */
+  int ConnectCrossings(MeshType &poly)
+  {
+    std::map<CoordType, int> count;
+    for (const VertexType &v : poly.vert) if (!v.IsD()) ++count[v.cP()];
+    tri::Clean<MeshType>::RemoveDuplicateVertex(poly);
+    tri::Clean<MeshType>::RemoveDuplicateEdge(poly);
+    tri::Allocator<MeshType>::CompactEveryVector(poly);
+    // Where the merged strands now branch it is a junction; where they only ran together
+    // (an overlapping stretch) the vertex is an ordinary one.
+    tri::UpdateTopology<MeshType>::VertexEdge(poly);
+    int junctions = 0;
+    for (VertexType &v : poly.vert)
+      if (count[v.cP()] > 1 && edge::VEDegree<EdgeType>(&v) > 2) { v.SetS(); ++junctions; }
+    return junctions;
+  }
+
   
    void SelectUniformlyDistributed(MeshType &poly, int k)
    {
@@ -659,122 +611,41 @@ public:
    */
   void SimplifyNullEdges(MeshType &poly)
   {
-      int cnt=tri::Clean<MeshType>::RemoveDuplicateVertex(poly);
+      int cnt=CollapseNullEdges(poly);
       if(cnt)
-          Log("SimplifyNullEdges: Removed %i Duplicated vertices",cnt);
+          Log("SimplifyNullEdges: Collapsed %i zero-length edges",cnt);
   }
-  
-  void SimplifyMidEdge(MeshType &poly)
-  {
-   int startVn;
-   int midEdgeCollapseCnt=0;
-   tri::Allocator<MeshType>::CompactEveryVector(poly); 
-   do
-   {
-    startVn = poly.vn;
-    for(int ei =0; ei<poly.en; ++ei)
-    {
-      VertexType *v0=poly.edge[ei].V(0);
-      VertexType *v1=poly.edge[ei].V(1);
-      CoordType ip0,ip1;    
-      FaceType *f0=GetClosestFaceIP(v0->P(),ip0);
-      FaceType *f1=GetClosestFaceIP(v1->P(),ip1);
-      
-      bool snap0=BarycentricSnap(ip0);
-      bool snap1=BarycentricSnap(ip1);
-      int e0i,e1i;
-      bool e0 = IsSnappedEdge(ip0,e0i);
-      bool e1 = IsSnappedEdge(ip1,e1i);
-      if(e0 && e1)
-        if( (          f0 == f1           &&          e0i == e1i) || 
-            (          f0 == f1->FFp(e1i) &&          e0i == f1->FFi(e1i)) || 
-            (f0->FFp(e0i) == f1           && f0->FFi(e0i) == e1i) || 
-            (f0->FFp(e0i) == f1->FFp(e1i) && f0->FFi(e0i) == f1->FFi(e1i)) ) 
-        {
-          CoordType newp = (v0->P()+v1->P())/2.0;
-          v0->P()=newp;
-          v1->P()=newp;
-          midEdgeCollapseCnt++;
-        }
-    }
-    tri::Clean<MeshType>::RemoveDuplicateVertex(poly);
-    tri::Allocator<MeshType>::CompactEveryVector(poly);     
-//    printf("SimplifyMidEdge %5i -> %5i %i mid %i ve \n",startVn,poly.vn,midEdgeCollapseCnt);
-   } while(startVn>poly.vn);
-  } 
-  
+
   /**
-   * @brief SimplifyMidFace remove all the vertices that in the mid of a face 
-   * and between two of the points snapped onto the edges of the same face
-   * @param poly
-   * 
-   * It assumes that the mesh has been snapped and refined by the BaseMesh
-   * 
+   * \brief Merge the two ends of every zero-length polyline edge.
+   * \return the number of edges collapsed
+   *
+   * Vertices are merged only along the polyline, never because they happen to coincide:
+   * two strands passing through the same point stay two strands, and are not joined into a
+   * junction that smoothing would then treat as one. (Clean::RemoveDuplicateVertex, used
+   * here before, merged them.) Compacts \a poly and updates its VE adjacency.
    */
-  void SimplifyMidFace(MeshType &poly)
+  int CollapseNullEdges(MeshType &poly)
   {
-   int startVn= poly.vn;;
-   int midFaceCollapseCnt=0;
-   int vertexEdgeCollapseCnt=0;
-   int curVn;
-   do
-   {
-    tri::Allocator<MeshType>::CompactEveryVector(poly); 
-    curVn = poly.vn;
-    UpdateTopology<MeshType>::VertexEdge(poly);
-    for(int i =0; i<poly.vn;++i)
+    tri::UpdateTopology<MeshType>::VertexEdge(poly);
+    int cnt = 0;
+    for (bool changed = true; changed; )
     {
-      std::vector<VertexPointer> starVecVp;
-      edge::VVStarVE(&(poly.vert[i]),starVecVp);      
-      if( (starVecVp.size()==2) )
+      changed = false;
+      for (size_t i = 0; i < poly.edge.size(); ++i)
       {
-        CoordType ipP, ipN, ipI; 
-        FacePointer fpP = GetClosestFaceIP(starVecVp[0]->P(),ipP);
-        FacePointer fpN = GetClosestFaceIP(starVecVp[1]->P(),ipN);
-        FacePointer fpI = GetClosestFaceIP(poly.vert[i].P(), ipI);
-        
-        bool snapP = (BarycentricSnap(ipP));
-        bool snapN = (BarycentricSnap(ipN));
-        bool snapI = (BarycentricSnap(ipI));
-        VertexPointer vertexSnapP = 0;
-        VertexPointer vertexSnapN = 0;
-        VertexPointer vertexSnapI = 0;
-        for(int j=0;j<3;++j)
-        {
-          if(ipP[j]==1.0) vertexSnapP=fpP->V(j);
-          if(ipN[j]==1.0) vertexSnapN=fpN->V(j);
-          if(ipI[j]==1.0) vertexSnapI=fpI->V(j);
-        }
-        
-        bool collapseFlag=false;
-        
-        if((!snapI && snapP && snapN) ||              // First case a vertex that is not snapped between two snapped vertexes 
-           (!snapI && !snapP && fpI==fpP) || // Or a two vertex not snapped but on the same face
-           (!snapI && !snapN && fpI==fpN) )
-        {
-          collapseFlag=true;
-          midFaceCollapseCnt++;
-        } 
-        
-        else  // case 2) a vertex snap and edge snap we have to check that the edge do not share the same vertex of the vertex snap
-          if(snapI && snapP && snapN && vertexSnapI==0 && (vertexSnapP!=0 || vertexSnapN!=0) )
-          {
-            for(int j=0;j<3;++j) {
-              if(ipI[j]!=0 && (fpI->V(j)==vertexSnapP || fpI->V(j)==vertexSnapN)) {
-                collapseFlag=true;                                          
-                vertexEdgeCollapseCnt++;
-              }
-            }
-          }            
-        
-        if(collapseFlag)  
-          edge::VEEdgeCollapse(poly,&(poly.vert[i]));
+        EdgeType &e = poly.edge[i];
+        if (e.IsD() || e.V(0)->cP() != e.V(1)->cP()) continue;
+        if (e.V(0) == e.V(1)) { edge::VEDetach(e); tri::Allocator<MeshType>::DeleteEdge(poly, e); }
+        else edge::VEEdgeCollapseToVertex(poly, &e, e.V(1)->IsS() && !e.V(0)->IsS() ? 1 : 0); // keep a control point
+        ++cnt;
+        changed = true;
       }
-    }  
-   } while(curVn>poly.vn);
-   Log("SimplifyMidFace %5i -> %5i %i mid %i ve",startVn,poly.vn,midFaceCollapseCnt,vertexEdgeCollapseCnt);
-  } 
-  
+    }
+    tri::Allocator<MeshType>::CompactEveryVector(poly);
+    tri::UpdateTopology<MeshType>::VertexEdge(poly);
+    return cnt;
+  }
   void Simplify(MeshType &poly)
   {
     int startEn = poly.en;
@@ -832,322 +703,50 @@ public:
   
 
   /**
-   * \brief Snap barycentric coordinates to 0 or 1 if within threshold
-   * \param ip Input/Output: barycentric coordinates (must sum to 1.0)
-   * \return true if the point was snapped to a vertex or edge (at least one coord became 0)
-   * 
-   * **This is one of the MOST IMPORTANT functions in the class** - it's used throughout!
-   * 
-   * Given barycentric coordinates of a point in a triangle, this function decides 
-   * whether it should be "snapped" to a vertex or edge based on the 
-   * `par.barycentricSnapThr` threshold.
-   * 
-   * **Algorithm:**
-   * 1. If any coordinate is within `barycentricSnapThr` of 0, snap it to 0
-   * 2. If any coordinate is within `barycentricSnapThr` of 1, snap it to 1
-   * 3. Renormalize to ensure sum = 1.0
-   * 4. If sum is still not exactly 1.0 (due to floating point), adjust the non-snapped coordinate
-   * 
-   * **Snapping Cases:**
-   * - One coord = 1.0, others = 0 → Snapped to a vertex
-   * - One coord = 0, others > 0 → Snapped to an edge
-   * - All coords > 0 and < 1 → Interior point, NOT snapped
-   * 
-   * **Return Value:**
-   * - `true`: Point is on a vertex or edge (at least one coordinate is 0)
-   * - `false`: Point is in the interior of the triangle
-   * 
-   * \note This function MODIFIES the input coordinates in-place!
-   * \note The threshold `par.barycentricSnapThr` (default 0.05) controls snapping sensitivity
-   * 
-   * \warning Side effect: modifies ip parameter! Consider renaming to BarycentricSnapInPlace()
-   * 
-   * \sa IsWellSnapped, IsSnappedVertex, IsSnappedEdge
+   * \brief Snap the barycentric coordinates of a point of face \a f onto a vertex or an edge.
+   * \param ip Input/Output: barycentric coordinates in \a f (summing to 1)
+   * \param f  The face they refer to
+   * \return true if the point is now on a vertex or an edge (at least one coordinate is 0)
+   *
+   * A coordinate is set to 0 only if it is within Param::barycentricSnapThr of 0 **and**
+   * the snap moves the point by at most Param::maxSnapThr. The barycentric bound alone is
+   * only meaningful on well-shaped, uniformly sized triangles: on a large or skinny one it
+   * can move a point far, which the distance bound prevents; on tiny triangles the
+   * barycentric bound keeps a point from being snapped across them. Two coordinates at 0
+   * put the point on a vertex. The remaining coordinates are renormalized so they sum to
+   * exactly 1. Setting either threshold to 0 disables snapping.
+   *
+   * \sa IsSnappedVertex, IsSnappedEdge
    */
-  bool BarycentricSnap(CoordType &ip)
+  bool BarycentricSnap(CoordType &ip, const FaceType &f)
   {
-    for(int i=0;i<3;++i)
+    return BarycentricSnap(ip, f, par.barycentricSnapThr, par.maxSnapThr);
+  }
+
+  /// BarycentricSnap() with explicit thresholds, e.g. rounding-level ones.
+  static bool BarycentricSnap(CoordType &ip, const FaceType &f, ScalarType barThr, ScalarType distThr)
+  {
+    // Setting coordinate i to 0 moves the point onto the opposite edge, by ip[i] times the
+    // height of the triangle over that edge.
+    const ScalarType area2 = DoubleArea(f);
+    bool zero[3];
+    for (int i = 0; i < 3; ++i)
     {
-      if(ip[i] <= par.barycentricSnapThr) ip[i]=0;
-      if(ip[i] >= 1.0-par.barycentricSnapThr) ip[i]=1;
+      const ScalarType len = Distance(f.cP((i + 1) % 3), f.cP((i + 2) % 3));
+      zero[i] = ip[i] <= barThr && len > 0 && ip[i] * (area2 / len) <= distThr;
     }
-    ScalarType sum = ip[0]+ip[1]+ip[2];
-    
-    for(int i=0;i<3;++i) 
-      if(ip[i]!=1.0) ip[i]/=sum;
-    
-    sum = ip[0]+ip[1]+ip[2];
-    
-    if(sum!=1.0){
-        for(int i=0;i<3;++i)
-            if(ip[i]>0.0 && ip[i]<1.0) // if it is non snapped
-                ip[i]=1.0-(ip[(i+1)%3]+ip[(i+2)%3]);
-    }
-    
-    sum = ip[0]+ip[1]+ip[2];     
-    assert(sum ==1.0);
-    assert(IsWellSnapped(ip));
-    if(ip[0]==0 || ip[1]==0 || ip[2]==0) return true;
-    return false;
+    if (zero[0] && zero[1] && zero[2])  // cannot leave the triangle: keep the largest
+      zero[ip[0] >= ip[1] && ip[0] >= ip[2] ? 0 : (ip[1] >= ip[2] ? 1 : 2)] = false;
+    ScalarType sum = 0;
+    for (int i = 0; i < 3; ++i) { if (zero[i]) ip[i] = 0; sum += ip[i]; }
+    int last = -1;
+    for (int i = 0; i < 3; ++i) if (!zero[i]) { ip[i] /= sum; last = i; }
+    // Make the sum exactly 1: the last kept coordinate takes what the others leave.
+    ip[last] = 1;
+    for (int i = 0; i < 3; ++i) if (i != last) ip[last] -= ip[i];
+    return zero[0] || zero[1] || zero[2];
   }
   
-  
-  /**
-   * @brief TestSplitSegWithMesh  Given a poly segment decide if it should be split along elements of base mesh. 
-   * @param v0
-   * @param v1
-   * @param splitPt
-   * @return true if it should be split
-   * 
-   * We make a few samples onto the edge and if some of them snaps onto a an edge we use it.
-   * In case there are more than one candidate we choose the sample closeset to its snapping point.
-   * We explicitly avoid snapping twice on the same edge by checking the starting and ending edges.
-   * 
-   * Two cases:
-   * - poly edge pass near a vertex of the mesh
-   * - poly edge cross one or more edges
-   * 
-   * Note that we have to check the case where 
-   */
-  bool TestSplitSegWithMesh(VertexType *v0, VertexType *v1, CoordType &splitPt)
-  {
-    Segment3Type segPoly(v0->P(),v1->P());
-    const ScalarType sampleNum = 40;    
-    CoordType ip0,ip1;
-    
-    FaceType *f0=GetClosestFaceIP(v0->P(),ip0);
-    FaceType *f1=GetClosestFaceIP(v1->P(),ip1);
-    if(f0==f1) return false;
-    
-    bool snap0=false,snap1=false; // true if the segment start/end on a edge/vert
-    
-    Segment3Type seg0; // The two segments to be avoided 
-    Segment3Type seg1; // from which the current poly segment can start
-    VertexPointer vertexSnap0 = 0;
-    VertexPointer vertexSnap1 = 0;
-    if(BarycentricSnap(ip0)) { 
-      snap0=true; 
-      for(int i=0;i<3;++i) {
-        if(ip0[i]==1.0) vertexSnap0=f0->V(i);
-        if(ip0[i]==0.0) seg0=Segment3Type(f0->P1(i),f0->P2(i)); 
-      }        
-    } 
-    if(BarycentricSnap(ip1)) { 
-      snap1=true; 
-      for(int i=0;i<3;++i){
-        if(ip1[i]==1.0) vertexSnap1=f1->V(i);
-        if(ip1[i]==0.0) seg1=Segment3Type(f1->P1(i),f1->P2(i)); 
-      }        
-    } 
-    
-    CoordType bestSplitPt(0,0,0);
-    ScalarType bestDist = std::numeric_limits<ScalarType>::max();
-    for(ScalarType k = 1;k<sampleNum;++k)
-    {
-      CoordType samplePnt = segPoly.Lerp(k/sampleNum);    
-      CoordType ip;
-      FaceType *f=GetClosestFaceIP(samplePnt,ip);
-//      BarycentricEdgeSnap(ip);
-      if(BarycentricSnap(ip))
-      {
-        VertexPointer vertexSnapI = 0;        
-        for(int i=0;i<3;++i)
-          if(ip[i]==1.0) vertexSnapI=f->V(i);
-        CoordType closestPt = f->P(0)*ip[0]+f->P(1)*ip[1]+f->P(2)*ip[2];
-        if(Distance(samplePnt,closestPt) < bestDist )  
-        {
-          ScalarType dist0=std::numeric_limits<ScalarType>::max();
-          ScalarType dist1=std::numeric_limits<ScalarType>::max();
-          CoordType closestSegPt;
-          if(snap0) SegmentPointDistance(seg0,closestPt,closestSegPt,dist0);
-          if(snap1) SegmentPointDistance(seg1,closestPt,closestSegPt,dist1);
-          if( (!vertexSnapI && (dist0 > par.surfDistThr/1000 && dist1>par.surfDistThr/1000) ) ||
-              ( vertexSnapI!=vertexSnap0 && vertexSnapI!=vertexSnap1)  )
-          {
-            bestDist = Distance(samplePnt,closestPt);
-            bestSplitPt = closestPt;            
-          }
-        }      
-      }
-    }
-    if(bestDist < par.surfDistThr*100)
-    {
-      splitPt = bestSplitPt;
-      return true;
-    }
-    
-    return false;
-  }
-  /**
-   * @brief SnappedOnSameFace Return true if the two points are snapped to a common face;
-   * @param f0
-   * @param i0
-   * @param f1
-   * @param i0
-   * @return 
-   * 
-   * Require FFAdj. se assume that both SNAPPED. Three cases:
-   * - Edge Edge - true iff the two edges belongs to a common face. 
-   * - Vert Edge - true iff there is one of the two snapped edge faces has the vert as non-edge face;  
-   * - Vert Vert 
-   * 
-   */
-  bool SnappedOnSameFace(FacePointer f0, CoordType i0, FacePointer f1, CoordType i1)
-  {
-   if(f0==f1) return true;
-   int e0,e1;
-   int v0,v1;
-   bool e0Snap = IsSnappedEdge(i0,e0);
-   bool e1Snap = IsSnappedEdge(i1,e1);
-   bool v0Snap = IsSnappedVertex(i0,v0);
-   bool v1Snap = IsSnappedVertex(i1,v1);
-   FacePointer f0p=0; int e0p=-1;  // When Edge snap the other face and the index of the snapped edge on the other face
-   FacePointer f1p=0; int e1p=-1;
-   assert((e0Snap != v0Snap) && (e1Snap != v1Snap));
-   // For EdgeSnap compute the 'other' face stuff 
-   if(e0Snap){
-     f0p = f0->FFp(e0); e0p=f0->FFi(e0); assert(f0p->FFp(e0p)==f0);
-   }
-   if(e1Snap){
-     f1p = f1->FFp(e1); e1p=f1->FFi(e1); assert(f1p->FFp(e1p)==f1);
-   }
-   
-   if(e0Snap && e1Snap) {
-    if(f0==f1p || f0p==f1p || f0p==f1 || f0==f1) return true;
-   }
-   
-   if(e0Snap && v1Snap)  {
-     assert(v1>=0 && v1<3 && v0==-1 && e1==-1);
-     if(f0->V2(e0)  ==f1->V(v1)) return true;
-     if(f0p->V2(e0p)==f1->V(v1)) return true;
-   }
-     
-   if(e1Snap && v0Snap)  {
-     assert(v0>=0 && v0<3 && v1==-1 && e0==-1);
-     if(f1->V2(e1)  ==f0->V(v0)) return true;
-     if(f1p->V2(e1p)==f0->V(v0)) return true;
-   }
-     
-   if(v1Snap && v0Snap)  {
-     PosType startPos(f0,f0->V(v0));
-     PosType curPos=startPos;
-     do
-     {
-       assert(curPos.V()==f0->V(v0));
-       if(curPos.VFlip()==f1->V(v1)) return true;
-       curPos.FlipE();
-       curPos.FlipF();       
-     }
-     while(curPos!=startPos);   
-   }   
-   return false;    
-  }
-  
-  /**
-   * @brief TestSplitSegWithMesh  Given a poly segment decide if it should be split along elements of base mesh. 
-   * @param v0
-   * @param v1
-   * @param splitPt
-   * @return true if it should be split
-   * 
-   * We make a few samples onto the edge and if some of them snaps onto a an edge we use it.
-   * In case there are more than one candidate we choose the sample closeset to its snapping point.
-   * We explicitly avoid snapping twice on the same edge by checking the starting and ending edges.
-   * 
-   * Two cases:
-   * - poly edge pass near a vertex of the mesh
-   * - poly edge cross one or more edges
-   * 
-   * Note that we have to check the case where 
-   */
-  bool TestSplitSegWithMeshAdapt(VertexType *v0, VertexType *v1, CoordType &splitPt)
-  {
-    splitPt=(v0->P()+v1->P())/2.0;
-      
-    CoordType ip0,ip1,ipm;    
-    FaceType *f0=GetClosestFaceIP(v0->P(),ip0);
-    FaceType *f1=GetClosestFaceIP(v1->P(),ip1);
-    FaceType *fm=GetClosestFaceIP(splitPt,ipm);
-    
-    if(f0==f1) return false;
-    
-    bool snap0=BarycentricSnap(ip0);
-    bool snap1=BarycentricSnap(ip1);
-    bool snapm=BarycentricSnap(ipm);
-    
-    splitPt = fm->P(0)*ipm[0]+fm->P(1)*ipm[1]+fm->P(2)*ipm[2];
-    
-    if(!snap0 && !snap1) {
-      assert(f0!=f1);
-      return true;
-    }
-    if(snap0 && snap1) 
-    {
-      if(SnappedOnSameFace(f0,ip0,f1,ip1)) 
-        return false;            
-    }
-    
-    if(snap0) {
-      int e0,v0;
-      if (IsSnappedEdge(ip0,e0)) {
-        if(f0->FFp(e0) == f1) return false;
-      }
-      if(IsSnappedVertex(ip0,v0)) {
-        for(int i=0;i<3;++i) 
-          if(f1->V(i)==f0->V(v0)) return false;
-      }
-    }
-    if(snap1) {
-      int e1,v1;
-      if (IsSnappedEdge(ip1,e1)) {
-        if(f1->FFp(e1) == f0) return false;
-      }
-      if(IsSnappedVertex(ip1,v1)) {
-        for(int i=0;i<3;++i) 
-          if(f0->V(i)==f1->V(v1)) return false;
-      }
-    }
-    
-    return true;
-  }
-  
-  
-  bool TestSplitSegWithMeshAdaptOld(VertexType *v0, VertexType *v1, CoordType &splitPt)
-  {
-    Segment3Type segPoly(v0->P(),v1->P());
-    const ScalarType sampleNum = 40;    
-    CoordType ip0,ip1;    
-    FaceType *f0=GetClosestFaceIP(v0->P(),ip0);
-    FaceType *f1=GetClosestFaceIP(v1->P(),ip1);
-    if(f0==f1) return false;
-    
-    bool snap0=BarycentricSnap(ip0);
-    bool snap1=BarycentricSnap(ip1);
-    
-    if(!snap0 && !snap1) {
-      assert(f0!=f1);
-      splitPt=(v0->P()+v1->P())/2.0;
-      return true;
-    }
-    if(snap0 && snap1) 
-    {
-      if(SnappedOnSameFace(f0,ip0,f1,ip1)) 
-        return false;      
-    }
-    
-    if(snap0) {
-      int e0,v0;
-      if (IsSnappedEdge(ip0,e0)) {
-        if(f0->FFp(e0) == f1) return false;
-      }
-      if(IsSnappedVertex(ip0,v0)) {
-        for(int i=0;i<3;++i) 
-          if(f1->V(i)==f0->V(v0)) return false;
-      }
-    }
-    splitPt=(v0->P()+v1->P())/2.0;
-    return true;
-  }
   
   // Given a segment find the maximum distance from it to the original surface. 
   // It is used to evaluate the Haustdorff distance of a Segment from the mesh.
@@ -1207,43 +806,180 @@ public:
   }
   
   /**
-   * @brief RefineCurveByBaseMesh
-   * @param poly
+   * \brief Make every polyline segment lie inside one face or along one edge of the base
+   *        mesh, by inserting the exact points where it crosses the mesh edges.
+   * \param poly The polyline; its own vertices are snapped first (SnapPolyline), then kept
+   *
+   * Each segment is traced across the mesh: in the current face it heads for its far end,
+   * projected onto the face plane; the edge where it leaves is the first barycentric
+   * coordinate to reach zero, and the crossing point is made with that coordinate exactly
+   * zero, so it lies exactly on the edge. The trace then continues in the faces on the
+   * other side, through a vertex if it leaves through one, until it reaches a face that
+   * also holds the far end. Two strands traced through the same faces therefore keep their
+   * order along every edge they cross: close parallel curves stay parallel, which
+   * approximate crossing points (the bisection used here before) did not guarantee.
+   *
+   * \throws vcg::MissingPreconditionException if a segment cannot be traced, e.g. one that
+   *         leaves the surface across a border
    */
-  
   void RefineCurveByBaseMesh(MeshType &poly)
   {
-    tri::Allocator<MeshType>::CompactEveryVector(poly);    
-    tri::UpdateTopology<MeshType>::VertexEdge(poly); // the edge splits below walk VE adjacency
-    std::vector<int> edgeToRefineVec;
-    for(int i=0; i<poly.en;++i) 
-      edgeToRefineVec.push_back(i);
-    int startEn=poly.en;  
-    int iterCnt=0;
-    while (!edgeToRefineVec.empty() && iterCnt<100) {
-      iterCnt++;
-      std::vector<int> edgeToRefineVecNext;
-      for(int i=0; i<edgeToRefineVec.size();++i)
+    SnapPolyline(poly);  // compacts poly
+    const int startEn = poly.en;
+    MeshType out;
+    tri::Allocator<MeshType>::AddVertices(out, poly.vert.size());
+    for (size_t i = 0; i < poly.vert.size(); ++i) out.vert[i].ImportData(poly.vert[i]);
+    for (size_t ei = 0; ei < poly.edge.size(); ++ei)
+    {
+      Progress(int(100 * ei / poly.edge.size()), "RefineCurveByBaseMesh: tracing segment %lu of %lu", (unsigned long)ei + 1, (unsigned long)poly.edge.size());
+      const size_t i0 = tri::Index(poly, poly.edge[ei].cV(0)), i1 = tri::Index(poly, poly.edge[ei].cV(1));
+      std::vector<CoordType> crossings;
+      TraceSegment(poly.vert[i0].cP(), poly.vert[i1].cP(), crossings);
+      size_t prev = i0;
+      for (const CoordType &c : crossings)
       {
-        EdgeType &e = poly.edge[edgeToRefineVec[i]];
-        CoordType splitPt;
-        if(TestSplitSegWithMeshAdapt(e.V(0),e.V(1),splitPt))  
-        {
-          edge::VEEdgeSplit(poly, &e, splitPt); 
-          edgeToRefineVecNext.push_back(edgeToRefineVec[i]);
-          edgeToRefineVecNext.push_back(poly.en-1);
-        } 
+        const size_t vi = tri::Allocator<MeshType>::AddVertices(out, 1) - out.vert.begin();
+        out.vert[vi].ImportData(poly.vert[i0]);
+        out.vert[vi].P() = c;
+        out.vert[vi].ClearS();  // a crossing point is not one of the locked vertices
+        auto e = tri::Allocator<MeshType>::AddEdges(out, 1);
+        e->V(0) = &out.vert[prev]; e->V(1) = &out.vert[vi];
+        prev = vi;
       }
-      tri::Allocator<MeshType>::CompactEveryVector(poly);
-      swap(edgeToRefineVecNext,edgeToRefineVec);
-      Progress(iterCnt, "RefineCurveByBaseMesh %i en -> %i en",startEn,poly.en); // at most 100 iterations
+      auto e = tri::Allocator<MeshType>::AddEdges(out, 1);
+      e->V(0) = &out.vert[prev]; e->V(1) = &out.vert[i1];
     }
-//
+    poly.Clear();
+    tri::Append<MeshType, MeshType>::MeshCopy(poly, out);
+    // A geodesic is straight inside a face and along an edge: drop the free vertices that
+    // only bend a strand there, so it runs straight between its control points and edge
+    // crossings. A vertex is dropped when every face it belongs to also holds both its
+    // neighbours (inside a face: the neighbours are in it; on an edge: on the same edge),
+    // so the shortcut stays where the strand was; strands meeting the same edges in the
+    // same order cannot cross once straight.
+    tri::UpdateTopology<MeshType>::VertexEdge(poly);
+    int droppedCnt = 0;
+    auto faces = [&](const CoordType &p) {
+      std::vector<FaceType *> fs;
+      for (const auto &l : Locate(p)) fs.push_back(l.first);
+      std::sort(fs.begin(), fs.end());
+      return fs;
+    };
+    for (VertexType &v : poly.vert)
+    {
+      if (v.IsD() || v.IsS() || edge::VEDegree<EdgeType>(&v) != 2) continue;
+      std::vector<VertexPointer> nb;
+      edge::VVStarVE(&v, nb);
+      const std::vector<FaceType *> fv = faces(v.cP()), fa = faces(nb[0]->cP()), fb = faces(nb[1]->cP());
+      if (!std::includes(fa.begin(), fa.end(), fv.begin(), fv.end()) ||
+          !std::includes(fb.begin(), fb.end(), fv.begin(), fv.end())) continue;
+      edge::VEEdgeCollapse(poly, &v);
+      ++droppedCnt;
+    }
+    tri::Allocator<MeshType>::CompactEveryVector(poly);
     SimplifyNullEdges(poly);
-    SimplifyMidFace(poly);
-    SimplifyMidEdge(poly);
-    SnapPolyline(poly);    
-    Log("RefineCurveByBaseMesh %i en -> %i en",startEn,poly.en);
+    Log("RefineCurveByBaseMesh %i en -> %i en, %i vertices inside faces dropped", startEn, poly.en, droppedCnt);
+  }
+
+  /// Snap at rounding level only: a point this close to a vertex or an edge is on it.
+  /// Shared by the trace and by CoMEmbed, so both agree on where a curve point is.
+  bool RoundingSnap(CoordType &ip, const FaceType &f) const
+  {
+    return BarycentricSnap(ip, f, ScalarType(1e-4), base.bbox.Diag() * ScalarType(1e-6));
+  }
+
+  /// Where a point is on the mesh: every face it belongs to, with its barycentric
+  /// coordinates there. One face for a point inside a face, the two faces of an edge, or
+  /// the faces around a vertex.
+  typedef std::vector<std::pair<FaceType *, CoordType>> Location;
+
+  Location Locate(const CoordType &p)
+  {
+    CoordType ip;
+    FaceType *f = GetClosestFaceIP(p, ip);
+    RoundingSnap(ip, *f);
+    return LocationFrom(f, ip);
+  }
+
+  Location LocationFrom(FaceType *f, const CoordType &ip) const
+  {
+    Location loc{{f, ip}};
+    int zeros = 0, one = -1, zero = -1;
+    for (int i = 0; i < 3; ++i) { if (ip[i] == 0) { ++zeros; zero = i; } else one = i; }
+    if (zeros == 1)  // on the edge opposite to corner `zero`: add the face across it
+    {
+      const int e = (zero + 1) % 3;
+      FaceType *g = f->FFp(e);
+      if (g != f) {
+        CoordType ig(0, 0, 0);
+        for (int j = 0; j < 3; ++j) {
+          if (g->V(j) == f->V(e)) ig[j] = ip[e];
+          if (g->V(j) == f->V((e + 1) % 3)) ig[j] = ip[(e + 1) % 3];
+        }
+        loc.push_back({g, ig});
+      }
+    }
+    else if (zeros == 2)  // on vertex V(one): every face around it, across edges incident to it
+    {
+      VertexPointer v = f->V(one);
+      for (size_t k = 0; k < loc.size(); ++k)
+        for (int i = 0; i < 3; ++i) {
+          FaceType *h = loc[k].first;
+          if (h->V(i) != v && h->V((i + 1) % 3) != v) continue;
+          FaceType *g = h->FFp(i);
+          bool seen = false;
+          for (const auto &l : loc) seen |= l.first == g;
+          if (seen) continue;
+          CoordType ig(0, 0, 0);
+          for (int j = 0; j < 3; ++j) if (g->V(j) == v) ig[j] = 1;
+          loc.push_back({g, ig});
+        }
+    }
+    return loc;
+  }
+
+  /// The points where the segment from \a p to \a q crosses mesh edges, in order.
+  void TraceSegment(const CoordType &p, const CoordType &q, std::vector<CoordType> &crossings)
+  {
+    const Location target = Locate(q);
+    Location cur = Locate(p);
+    for (int step = 0; ; ++step)
+    {
+      for (const auto &c : cur) for (const auto &t : target)
+        if (c.first == t.first) return;  // both ends in one face: the rest lies in it
+      if (step > 4 * int(base.fn) + 16)
+        throw vcg::MissingPreconditionException("CoM: could not trace a curve segment across the mesh.");
+      // Among the faces of the current point, the one the segment heads into.
+      FaceType *g = nullptr;
+      CoordType bx, d;
+      ScalarType bestInward = -1;
+      for (const auto &c : cur)
+      {
+        CoordType bq;
+        InterpolationParameters(*c.first, c.first->N(), q, bq);
+        const CoordType dir = bq - c.second;
+        ScalarType inward = std::numeric_limits<ScalarType>::max();
+        for (int k = 0; k < 3; ++k) if (c.second[k] == 0) inward = std::min(inward, dir[k]);
+        if (inward > 0 && inward > bestInward) { bestInward = inward; g = c.first; bx = c.second; d = dir; }
+      }
+      if (g == nullptr)
+        throw vcg::MissingPreconditionException("CoM: a curve segment leaves the surface across a border.");
+      // Leave g where the first coordinate reaches zero.
+      int exitK = -1;
+      ScalarType sExit = std::numeric_limits<ScalarType>::max();
+      for (int k = 0; k < 3; ++k)
+        if (d[k] < 0 && bx[k] > 0 && bx[k] / -d[k] < sExit) { sExit = bx[k] / -d[k]; exitK = k; }
+      if (exitK < 0)
+        throw vcg::MissingPreconditionException("CoM: could not trace a curve segment across the mesh.");
+      CoordType b = bx + d * sExit;
+      b[exitK] = 0;
+      const ScalarType rest = b[(exitK + 1) % 3] + b[(exitK + 2) % 3];
+      b[(exitK + 1) % 3] /= rest;
+      b[(exitK + 2) % 3] = 1 - b[(exitK + 1) % 3];
+      RoundingSnap(b, *g);  // through a vertex, if it passes that close to one
+      crossings.push_back(g->cP(0) * b[0] + g->cP(1) * b[1] + g->cP(2) * b[2]);
+      cur = LocationFrom(g, b);
+    }
   }
   
   
@@ -1372,17 +1108,20 @@ public:
           poly.vert[i].P() = newP*(1.0-projectWeight) +closestP*projectWeight;
           poly.vert[i].N() = f->N();
         }
+        else  // a control point is only projected
+        {
+          CoordType closestP;
+          FaceType *f = GetClosestFacePoint(poly.vert[i].P(), closestP);
+          poly.vert[i].P() = closestP;
+          poly.vert[i].N() = f->N();
+        }
       
       tri::UpdateTopology<MeshType>::TestVertexEdge(poly);
       RefineCurveByDistance(poly);      
       tri::UpdateTopology<MeshType>::TestVertexEdge(poly);
       Simplify(poly);
       tri::UpdateTopology<MeshType>::TestVertexEdge(poly);
-      int dupVertNum = Clean<MeshType>::RemoveDuplicateVertex(poly);
-      if(dupVertNum) {
-        tri::Allocator<MeshType>::CompactEveryVector(poly);
-        tri::UpdateTopology<MeshType>::VertexEdge(poly);
-      }
+      CollapseNullEdges(poly);
     }
   }
 
@@ -1468,7 +1207,7 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
 		FaceType *f0 = com.GetClosestFaceIP(ei->cP(0),ip0);
 		FaceType *f1 = com.GetClosestFaceIP(ei->cP(1),ip1);
 
-		if(com.BarycentricSnap(ip0) && com.BarycentricSnap(ip1))
+		if(com.BarycentricSnap(ip0, *f0) && com.BarycentricSnap(ip1, *f1))
 		{
 			VertexPointer v0 = com.FindVertexSnap(f0,ip0);
 			VertexPointer v1 = com.FindVertexSnap(f1,ip1);
@@ -1506,9 +1245,15 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
    *            polyline; it is re-initialized on the split mesh, so it stays valid
    * \param poly The polyline; its vertices are moved onto the vertices created for them
    *
-   * Preconditions: RefineCurveByBaseMesh() has been called, so every polyline segment lies
-   * inside one face or along one edge of the base mesh; and the polyline has no contacts:
-   * its vertices are distinct and its segments do not cross each other.
+   * Precondition: RefineCurveByBaseMesh() has been called, so every polyline segment lies
+   * inside one face or along one edge of the base mesh.
+   *
+   * Curves may cross and touch. The mesh realizes the union of the curves: it gets a vertex
+   * at every crossing, and curve points or segments that coincide within rounding distance
+   * share mesh vertices and edges. The polyline keeps its own topology: a segment cut at a
+   * crossing or a touching point gets a vertex of its own there, so two strands stay two
+   * strands, each passing through the shared mesh vertex. CoM::ConnectCrossings() turns
+   * those meeting points into junctions, when the caller wants them.
    *
    * Any number of segments may cross the same triangle, from different curves or from the
    * same one passing several times, as a spiral on a cylinder does. Each crossed triangle is
@@ -1522,7 +1267,7 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
    * interpolate the attributes of the surface where they are (VertexInterpolator).
    *
    * \throws vcg::MissingPreconditionException if a segment does not lie in one face or
-   *         along one edge, or if a segment cannot be recovered (curves touching or crossing)
+   *         along one edge, or if a segment cannot be recovered
    * \sa CoM::RefineCurveByBaseMesh, TagFaceEdgeSelWithPolyLine
    */
   static void SplitMeshWithPolyline(CoMType &com, MeshType &poly)
@@ -1541,7 +1286,9 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
     {
       Loc &l = loc[ci];
       FaceType *f = com.GetClosestFaceIP(poly.vert[ci].cP(), l.ip);
-      com.BarycentricSnap(l.ip);
+      // Only rounding-level snapping here: SnapPolyline already put the vertices that may
+      // be snapped exactly on their vertex or edge, and kept the others off on purpose.
+      com.RoundingSnap(l.ip, *f);
       int z = -1, one = -1;
       for (int i = 0; i < 3; ++i) { if (l.ip[i] == 0) z = i; if (l.ip[i] == 1) one = i; }
       l.face[0] = tri::Index(m, f); l.faceNum = 1;
@@ -1559,51 +1306,60 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
     }
 
     // 2. A mesh vertex for each of them: the existing one, or a new one shared by every
-    //    polyline vertex at exactly the same place.
+    //    polyline vertex within rounding distance (the mesh realizes the union of the
+    //    curves: two strands meeting at a point meet at one mesh vertex).
+    const ScalarType tol = m.bbox.Diag() * ScalarType(1e-6);
     std::vector<size_t> meshV(poly.vert.size());
-    std::map<std::pair<EdgeKey, ScalarType>, size_t> edgePointVert;
+    std::map<EdgeKey, std::vector<std::pair<ScalarType, size_t>>> edgePoints;  // (t from first, vertex)
+    std::map<size_t, std::vector<std::pair<size_t, CoordType>>> facePoints;   // (vertex, barycentric)
     size_t newVertNum = 0;
     const size_t firstNewVert = m.vert.size();
     for (size_t ci = 0; ci < poly.vert.size(); ++ci)
     {
       const Loc &l = loc[ci];
-      if (l.kind == OnVertex) meshV[ci] = l.vert;
-      else if (l.kind == OnEdge) {
-        auto ins = edgePointVert.insert({{l.edge, l.t}, firstNewVert + newVertNum});
-        if (ins.second) ++newVertNum;
-        meshV[ci] = ins.first->second;
+      if (l.kind == OnVertex) { meshV[ci] = l.vert; continue; }
+      if (l.kind == OnEdge) {
+        auto &pts = edgePoints[l.edge];
+        const ScalarType len = Distance(m.vert[l.edge.first].cP(), m.vert[l.edge.second].cP());
+        auto it = std::find_if(pts.begin(), pts.end(), [&](const std::pair<ScalarType, size_t> &p) { return std::abs(p.first - l.t) * len <= tol; });
+        if (it != pts.end()) { meshV[ci] = it->second; continue; }
+        meshV[ci] = firstNewVert + newVertNum++;
+        pts.push_back({l.t, meshV[ci]});
+      } else {
+        auto &pts = facePoints[l.face[0]];
+        const FaceType &f = m.face[l.face[0]];
+        const CoordType p = f.cP(0) * l.ip[0] + f.cP(1) * l.ip[1] + f.cP(2) * l.ip[2];
+        auto it = std::find_if(pts.begin(), pts.end(), [&](const std::pair<size_t, CoordType> &q) {
+          return Distance(p, f.cP(0) * q.second[0] + f.cP(1) * q.second[1] + f.cP(2) * q.second[2]) <= tol; });
+        if (it != pts.end()) { meshV[ci] = it->first; continue; }
+        meshV[ci] = firstNewVert + newVertNum++;
+        pts.push_back({meshV[ci], l.ip});
       }
-      else meshV[ci] = firstNewVert + newVertNum++;
     }
     tri::Allocator<MeshType>::AddVertices(m, newVertNum);
     for (size_t ci = 0; ci < poly.vert.size(); ++ci)
     {
       const Loc &l = loc[ci];
       VertexType &nv = m.vert[meshV[ci]];
-      if (l.kind == OnEdge) {
+      if (l.kind == OnEdge && meshV[ci] >= firstNewVert) {
         const VertexType &va = m.vert[l.edge.first], &vb = m.vert[l.edge.second];
         nv.P() = va.cP() * (1 - l.t) + vb.cP() * l.t;
         VertexInterpolator<MeshType>::Lerp(m, nv, va, vb, l.t);
-      } else if (l.kind == InFace) {
+      } else if (l.kind == InFace && meshV[ci] >= firstNewVert) {
         const FaceType &f = m.face[l.face[0]];
         nv.P() = f.cP(0) * l.ip[0] + f.cP(1) * l.ip[1] + f.cP(2) * l.ip[2];
         VertexInterpolator<MeshType>::Barycentric(m, nv, *f.cV(0), *f.cV(1), *f.cV(2), l.ip);
       }
-      poly.vert[ci].P() = m.vert[meshV[ci]].cP();
     }
+    for (size_t ci = 0; ci < poly.vert.size(); ++ci) poly.vert[ci].P() = m.vert[meshV[ci]].cP();
 
-    // 3. What each face has to take in: points on its edges, points inside it, segments.
-    std::map<EdgeKey, std::vector<std::pair<ScalarType, size_t>>> edgePoints;  // (t from first, vertex)
-    for (const auto &ep : edgePointVert) edgePoints[ep.first.first].push_back({ep.first.second, ep.second});
-    std::map<size_t, std::vector<std::pair<size_t, CoordType>>> facePoints;   // (vertex, barycentric)
-    std::map<size_t, std::vector<EdgeKey>> faceSegments;
-    std::set<EdgeKey> curveEdges;
+    // 3. The segments: across one face, or along one edge.
+    struct Segment { size_t polyEdge, a, b; };  // mesh vertices, in the polyline edge's direction
+    std::map<size_t, std::vector<Segment>> faceSegments;
+    std::vector<std::pair<Segment, EdgeKey>> edgeSegments;
     std::map<size_t, std::vector<size_t>> vertFaces;  // faces around the polyline vertices on mesh vertices
     for (size_t ci = 0; ci < poly.vert.size(); ++ci)
-    {
-      if (loc[ci].kind == InFace) facePoints[loc[ci].face[0]].push_back({meshV[ci], loc[ci].ip});
       if (loc[ci].kind == OnVertex) vertFaces[loc[ci].vert];
-    }
     if (!vertFaces.empty())
       for (size_t fi = 0; fi < m.face.size(); ++fi) if (!m.face[fi].IsD())
         for (int i = 0; i < 3; ++i) {
@@ -1614,11 +1370,11 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
       if (loc[ci].kind == OnVertex) return vertFaces[loc[ci].vert];
       return std::vector<size_t>(loc[ci].face, loc[ci].face + loc[ci].faceNum);
     };
-    for (const auto &e : poly.edge) if (!e.IsD())
+    for (size_t ei = 0; ei < poly.edge.size(); ++ei)
     {
+      const auto &e = poly.edge[ei];
       const size_t c0 = tri::Index(poly, e.cV(0)), c1 = tri::Index(poly, e.cV(1));
       if (meshV[c0] == meshV[c1]) continue;  // a zero-length segment
-      curveEdges.insert(key(meshV[c0], meshV[c1]));
       // The segment lies in the faces both its ends belong to: one face for a segment
       // across it, the two faces of an edge for a segment along it.
       std::vector<size_t> f0 = candidateFaces(c0), f1 = candidateFaces(c1), common;
@@ -1626,7 +1382,15 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
       std::set_intersection(f0.begin(), f0.end(), f1.begin(), f1.end(), std::back_inserter(common));
       if (common.empty())
         throw vcg::MissingPreconditionException("CoMEmbed: a curve segment does not lie in one face; call RefineCurveByBaseMesh first.");
-      if (common.size() == 1) faceSegments[common[0]].push_back(key(meshV[c0], meshV[c1]));
+      const Segment s{ei, meshV[c0], meshV[c1]};
+      if (common.size() == 1) faceSegments[common[0]].push_back(s);
+      else {
+        const FaceType &f = m.face[common[0]];  // the edge both faces share
+        EdgeKey ek(0, 0);
+        for (int i = 0; i < 3; ++i)
+          if (f.cFFp(i) == &m.face[common[1]]) ek = key(tri::Index(m, f.cV(i)), tri::Index(m, f.cV1(i)));
+        edgeSegments.push_back({s, ek});
+      }
     }
 
     std::set<size_t> touched;
@@ -1636,12 +1400,18 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
       for (int i = 0; i < 3; ++i)
         if (edgePoints.count(key(tri::Index(m, m.face[fi].V(i)), tri::Index(m, m.face[fi].V1(i))))) touched.insert(fi);
 
-    // 4. Rebuild every touched face on its own.
+    // 4. Rebuild every touched face on its own. Where segments cross, the crossing point
+    //    becomes a mesh vertex; every segment is cut at the curve points lying on it
+    //    (crossings, other curves touching or overlapping it), and the pieces recovered.
+    std::map<size_t, std::vector<size_t>> chains;  // polyline edge -> mesh vertices inside it, in order
+    std::vector<std::pair<size_t, CoordType>> crossingVerts;  // (face, barycentric) of the new vertices
+    const size_t firstCrossingVert = m.vert.size();
     std::vector<std::pair<size_t, LocalTriangulation>> rebuilt;
     size_t newFaceNum = 0, done = 0;
     for (size_t fi : touched)
     {
-      com.Progress(int(100 * done++ / touched.size()), "SplitMeshWithPolyline: rebuilding face %lu of %lu", (unsigned long)done, (unsigned long)touched.size());
+      com.Progress(int(100 * done / touched.size()), "SplitMeshWithPolyline: rebuilding face %lu of %lu", (unsigned long)done + 1, (unsigned long)touched.size());
+      ++done;
       LocalTriangulation lt;
       const FaceType &f = m.face[fi];
       size_t corner[3];
@@ -1666,9 +1436,76 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
         }
       }
       for (const auto &p : facePoints[fi]) lt.InsertInterior(lt.AddPoint(p.first, p.second[1], p.second[2], 0));
-      for (const EdgeKey &s : faceSegments[fi]) lt.Recover(lt.Local(s.first), lt.Local(s.second));
+
+      const std::vector<Segment> &segs = faceSegments[fi];
+      auto pos3 = [&](int i) { return f.cP(0) * (1 - lt.pts[i].u - lt.pts[i].v) + f.cP(1) * lt.pts[i].u + f.cP(2) * lt.pts[i].v; };
+      auto nearPoint = [&](const CoordType &p) {
+        for (size_t i = 0; i < lt.pts.size(); ++i) if (Distance(pos3(int(i)), p) <= tol) return int(i);
+        return -1;
+      };
+      // Crossings: a new mesh vertex where two segments cross, unless a point is already there.
+      for (size_t i = 0; i < segs.size(); ++i)
+        for (size_t j = i + 1; j < segs.size(); ++j)
+        {
+          const int p = lt.Local(segs[i].a), q = lt.Local(segs[i].b), a = lt.Local(segs[j].a), b = lt.Local(segs[j].b);
+          if (!lt.Crosses(p, q, a, b)) continue;
+          const long double op = lt.Orient(a, b, p), oq = lt.Orient(a, b, q);
+          const ScalarType s = ScalarType(op / (op - oq));
+          const ScalarType u = lt.pts[p].u + (lt.pts[q].u - lt.pts[p].u) * s, v = lt.pts[p].v + (lt.pts[q].v - lt.pts[p].v) * s;
+          const CoordType x = f.cP(0) * (1 - u - v) + f.cP(1) * u + f.cP(2) * v;
+          if (nearPoint(x) >= 0) continue;
+          crossingVerts.push_back({fi, CoordType(1 - u - v, u, v)});
+          lt.InsertInterior(lt.AddPoint(firstCrossingVert + crossingVerts.size() - 1, u, v, 0));
+        }
+      // Each segment cut at the curve points on it, then its pieces made edges.
+      for (const Segment &sg : segs)
+      {
+        const int p = lt.Local(sg.a), q = lt.Local(sg.b);
+        const Segment3<ScalarType> seg(pos3(p), pos3(q));
+        std::vector<std::pair<ScalarType, int>> on;  // (parameter along the segment, point)
+        for (size_t r = 0; r < lt.pts.size(); ++r)
+        {
+          if (int(r) == p || int(r) == q) continue;
+          CoordType closest; ScalarType dist;
+          SegmentPointDistance(seg, pos3(int(r)), closest, dist);
+          const ScalarType t = (pos3(int(r)) - seg.P0()) * (seg.P1() - seg.P0()) / seg.SquaredLength();
+          if (dist <= tol && t > 0 && t < 1 && Distance(pos3(int(r)), seg.P0()) > tol && Distance(pos3(int(r)), seg.P1()) > tol)
+            on.push_back({t, int(r)});
+        }
+        std::sort(on.begin(), on.end());
+        int prev = p;
+        for (const auto &o : on) { lt.Recover(prev, o.second); prev = o.second; chains[sg.polyEdge].push_back(lt.pts[o.second].vert); }
+        lt.Recover(prev, q);
+      }
       newFaceNum += lt.tris.size() - 1;
       rebuilt.push_back({fi, std::move(lt)});
+    }
+    // A segment along an edge is cut at the curve points on that edge between its ends.
+    for (const auto &es : edgeSegments)
+    {
+      const Segment &sg = es.first;
+      auto tOf = [&](size_t v) -> ScalarType {
+        if (v == es.second.first) return 0;
+        if (v == es.second.second) return 1;
+        for (const auto &p : edgePoints[es.second]) if (p.second == v) return p.first;
+        return -1;
+      };
+      const ScalarType ta = tOf(sg.a), tb = tOf(sg.b);
+      std::vector<std::pair<ScalarType, size_t>> between;
+      for (const auto &p : edgePoints[es.second])
+        if (p.second != sg.a && p.second != sg.b && (p.first - ta) * (p.first - tb) < 0)
+          between.push_back({std::abs(p.first - ta), p.second});
+      std::sort(between.begin(), between.end());
+      for (const auto &b : between) chains[sg.polyEdge].push_back(b.second);
+    }
+    tri::Allocator<MeshType>::AddVertices(m, crossingVerts.size());
+    for (size_t k = 0; k < crossingVerts.size(); ++k)
+    {
+      const FaceType &f = m.face[crossingVerts[k].first];
+      const CoordType &b = crossingVerts[k].second;
+      VertexType &nv = m.vert[firstCrossingVert + k];
+      nv.P() = f.cP(0) * b[0] + f.cP(1) * b[1] + f.cP(2) * b[2];
+      VertexInterpolator<MeshType>::Barycentric(m, nv, *f.cV(0), *f.cV(1), *f.cV(2), b);
     }
 
     // 5. Write the sub-triangles back: the first in place of the face, the others new.
@@ -1709,7 +1546,33 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
     }
     com.Init();
 
-    // 6. Every polyline edge is now a mesh edge: select it on both sides.
+    // 6. The polyline follows: a segment cut at some points gets its own vertices there, so
+    //    two strands crossing or touching stay two strands, each with a vertex at the
+    //    shared mesh vertex (CoM::ConnectCrossings merges them, if junctions are wanted).
+    //    Every polyline edge is now a mesh edge: select it on both sides.
+    std::set<EdgeKey> curveEdges;
+    const size_t oldEdgeNum = poly.edge.size();
+    for (size_t ei = 0; ei < oldEdgeNum; ++ei)
+    {
+      if (poly.edge[ei].IsD()) continue;
+      const size_t c0 = tri::Index(poly, poly.edge[ei].cV(0)), c1 = tri::Index(poly, poly.edge[ei].cV(1));
+      size_t prev = c0, prevMV = meshV[c0];
+      auto ch = chains.find(ei);
+      if (ch != chains.end())
+        for (size_t mv : ch->second)
+        {
+          const size_t vi = tri::Allocator<MeshType>::AddVertices(poly, 1) - poly.vert.begin();
+          poly.vert[vi].ImportData(poly.vert[c0]);
+          poly.vert[vi].ClearS();  // a cut point is not a control point
+          poly.vert[vi].P() = m.vert[mv].cP();
+          auto ne = tri::Allocator<MeshType>::AddEdges(poly, 1);
+          ne->V(0) = &poly.vert[prev]; ne->V(1) = &poly.vert[vi];
+          curveEdges.insert(key(prevMV, mv));
+          prev = vi; prevMV = mv;
+        }
+      poly.edge[ei].V(0) = &poly.vert[prev];  // the original edge is the last piece
+      if (prevMV != meshV[c1]) curveEdges.insert(key(prevMV, meshV[c1]));
+    }
     for (FaceType &f : m.face) if (!f.IsD())
       for (int i = 0; i < 3; ++i)
         if (curveEdges.count(key(tri::Index(m, f.V0(i)), tri::Index(m, f.V1(i))))) f.SetFaceEdgeS(i);
@@ -1724,6 +1587,7 @@ private:
     struct Point { size_t vert; ScalarType u, v; int edges; };  // edges: bit k if on face edge k
     std::vector<Point> pts;
     std::vector<std::array<int, 3>> tris;
+    std::set<std::pair<int, int>> recovered;  // segments already made edges, smaller index first
     static constexpr long double eps = 1e-13;  // orientation tolerance, in the unit frame
 
     int AddPoint(size_t vert, ScalarType u, ScalarType v, int edges)
@@ -1789,7 +1653,8 @@ private:
     }
     /// Make (p,q) an edge by Sloan's flips: an edge crossing it is flipped when its two
     /// triangles form a strictly convex quad, and requeued otherwise; a new edge that still
-    /// crosses is queued again. Recovered segments never cross, so none of them is flipped.
+    /// crosses is queued again. Curves that do not cross never queue a recovered segment;
+    /// one that does is reported rather than flipped away.
     void Recover(int p, int q)
     {
       std::deque<std::pair<int, int>> queue;
@@ -1797,7 +1662,11 @@ private:
         for (int i = 0; i < 3; ++i)
         {
           const int a = t[i], b = t[(i + 1) % 3];
-          if (a < b && Crosses(p, q, a, b)) queue.push_back({a, b});
+          if (a < b && Crosses(p, q, a, b)) {
+            if (recovered.count({a, b}))
+              throw vcg::MissingPreconditionException("CoMEmbed: two curve segments cross inside a face.");
+            queue.push_back({a, b});
+          }
         }
       size_t guard = 0;
       while (!queue.empty())
@@ -1821,6 +1690,7 @@ private:
       size_t ti; int i;
       if (!FindEdge(p, q, ti, i) && !FindEdge(q, p, ti, i))
         throw vcg::MissingPreconditionException("CoMEmbed: could not recover a curve segment; it passes through another curve point.");
+      recovered.insert({std::min(p, q), std::max(p, q)});
     }
   };
 };

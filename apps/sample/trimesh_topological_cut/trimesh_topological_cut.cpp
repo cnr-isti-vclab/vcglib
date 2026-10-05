@@ -86,8 +86,9 @@ int main(int argc,char ** argv )
     tri::CutMeshAlongSelectedFaceEdges<MyMesh>(basecopy);
     tri::io::ExporterPLY<MyMesh>::Save(basecopy,"base_cut_with_tree.ply");  
   }
-  // Selected vertices are 'locked' during the smoothing. 
-  cc.SelectBoundaryVertex(poly);
+  // The ends and the junctions of the cut tree are its control points: they are only
+  // projected, while the strands between them are smoothed towards geodesics.
+  cc.SetControlPoints(poly);
 //  cc.SelectUniformlyDistributed(poly,10); // lock some vertices uniformly just for fun
   
   // Two smoothing runs,
