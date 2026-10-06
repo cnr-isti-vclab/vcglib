@@ -221,9 +221,7 @@ ScalarType&#160;</td><td class="memItemRight" valign="bottom"><b>MaxSegDist</b> 
 <tr class="memitem:a149f46b9f5129ff62bb2058699c9839f"><td class="memItemLeft" align="right" valign="top"><a id="a149f46b9f5129ff62bb2058699c9839f" name="a149f46b9f5129ff62bb2058699c9839f"></a>
 <a class="el" href="classvcg_1_1tri_1_1CoM.html#a1ca749757083fefb419736220b304aa5">Location</a>&#160;</td><td class="memItemRight" valign="bottom"><b>LocationFrom</b> (FaceType *f, const CoordType &amp;ip) const</td></tr>
 <tr class="separator:a149f46b9f5129ff62bb2058699c9839f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acedebd03932108c71b65ffab8ca3a757"><td class="memItemLeft" align="right" valign="top"><a id="acedebd03932108c71b65ffab8ca3a757" name="acedebd03932108c71b65ffab8ca3a757"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>TraceSegment</b> (const CoordType &amp;p, const CoordType &amp;q, std::vector&lt; CoordType &gt; &amp;crossings)</td></tr>
-<tr class="memdesc:acedebd03932108c71b65ffab8ca3a757"><td class="mdescLeft">&#160;</td><td class="mdescRight">The points where the segment from <em>p</em> to <em>q</em> crosses mesh edges, in order. <br /></td></tr>
+<tr class="memitem:acedebd03932108c71b65ffab8ca3a757"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#acedebd03932108c71b65ffab8ca3a757">TraceSegment</a> (const CoordType &amp;p, const CoordType &amp;q, std::vector&lt; CoordType &gt; &amp;crossings)</td></tr>
 <tr class="separator:acedebd03932108c71b65ffab8ca3a757"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8611bc0164c7af891e2b9242e35d253"><td class="memTemplParams" colspan="2">template&lt;typename PositionFunctor &gt; </td></tr>
 <tr class="memitem:aa8611bc0164c7af891e2b9242e35d253"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#aa8611bc0164c7af891e2b9242e35d253">MoveAndProject</a> (MeshType &amp;poly, int iterNum, ScalarType moveWeight, ScalarType projectWeight, PositionFunctor &amp;desiredPos)</td></tr>
@@ -931,7 +929,7 @@ template&lt;class MeshType &gt; </div>
   </table>
   </dd>
 </dl>
-<p>Each segment is traced across the mesh: in the current face it heads for its far end, projected onto the face plane; the edge where it leaves is the first barycentric coordinate to reach zero, and the crossing point is made with that coordinate exactly zero, so it lies exactly on the edge. The trace then continues in the faces on the other side, through a vertex if it leaves through one, until it reaches a face that also holds the far end. Two strands traced through the same faces therefore keep their order along every edge they cross: close parallel curves stay parallel, which approximate crossing points (the bisection used here before) did not guarantee.</p>
+<p>Each segment is traced across the mesh along its section by one plane (TraceSegment): in the current face the edge where it leaves is the first barycentric coordinate to reach zero, and the crossing point is made with that coordinate exactly zero, so it lies exactly on the edge. The trace then continues in the faces on the other side, through a vertex if it leaves through one, until it reaches a face that also holds the far end. Two strands traced through the same faces therefore keep their order along every edge they cross: close parallel curves stay parallel, which approximate crossing points (the bisection used here before) did not guarantee.</p>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">vcg::MissingPreconditionException</td><td>if a segment cannot be traced, e.g. one that leaves the surface across a border </td></tr>
@@ -1138,6 +1136,52 @@ template&lt;class MeshType &gt; </div>
 
 </div>
 </div>
+<a id="acedebd03932108c71b65ffab8ca3a757" name="acedebd03932108c71b65ffab8ca3a757"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acedebd03932108c71b65ffab8ca3a757">&#9670;&#160;</a></span>TraceSegment()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class MeshType &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::TraceSegment </td>
+          <td>(</td>
+          <td class="paramtype">const CoordType &amp;&#160;</td>
+          <td class="paramname"><em>p</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const CoordType &amp;&#160;</td>
+          <td class="paramname"><em>q</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; CoordType &gt; &amp;&#160;</td>
+          <td class="paramname"><em>crossings</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>The points where the segment from <em>p</em> to <em>q</em> crosses mesh edges, in order.</p>
+<p>The segment is traced as the section of the surface by one plane: through p and q, containing the mean surface normal at the two ends. Every face then agrees on where the trace goes, since the plane is the same for all of them. (Projecting q onto each face plane in turn does not: on a curved surface two neighbouring faces can each say q lies across the other, and the trace bounces between them.) </p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>vcg/complex/algorithms/<a class="el" href="curve__on__manifold_8h_source.html">curve_on_manifold.h</a></li>
 </ul>
@@ -1145,7 +1189,7 @@ template&lt;class MeshType &gt; </div>
 <!-- HTML footer for doxygen 1.9.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Mon Oct 5 2026 20:54:43
+Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Tue Oct 6 2026 07:23:21
 </small></address>
 </body>
 </html>
