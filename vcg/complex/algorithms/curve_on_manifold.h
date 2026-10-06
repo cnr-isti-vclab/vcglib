@@ -23,6 +23,7 @@
 #ifndef __VCGLIB_CURVE_ON_SURF_H
 #define __VCGLIB_CURVE_ON_SURF_H
 
+#include<cstdio>
 #include<vcg/complex/complex.h>
 #include<vcg/simplex/face/topology.h>
 #include<vcg/complex/algorithms/update/topology.h>
@@ -806,8 +807,8 @@ public:
    *        mesh, by inserting the exact points where it crosses the mesh edges.
    * \param poly The polyline; its own vertices are snapped first (SnapPolyline), then kept
    *
-   * Each segment is traced across the mesh: in the current face it heads for its far end,
-   * projected onto the face plane; the edge where it leaves is the first barycentric
+   * Each segment is traced across the mesh along its section by one plane (TraceSegment):
+   * in the current face the edge where it leaves is the first barycentric
    * coordinate to reach zero, and the crossing point is made with that coordinate exactly
    * zero, so it lies exactly on the edge. The trace then continues in the faces on the
    * other side, through a vertex if it leaves through one, until it reaches a face that
@@ -935,31 +936,66 @@ public:
   }
 
   /// The points where the segment from \a p to \a q crosses mesh edges, in order.
+  ///
+  /// The segment is traced as the section of the surface by one plane: through p and q,
+  /// containing the mean surface normal at the two ends. Every face then agrees on where
+  /// the trace goes, since the plane is the same for all of them. (Projecting q onto each
+  /// face plane in turn does not: on a curved surface two neighbouring faces can each say
+  /// q lies across the other, and the trace bounces between them.)
   void TraceSegment(const CoordType &p, const CoordType &q, std::vector<CoordType> &crossings)
   {
     const Location target = Locate(q);
     Location cur = Locate(p);
+    CoordType cutN = (q - p) ^ (cur[0].first->cN() + target[0].first->cN());
+    if (!(cutN.Norm() > 0))
+      throw vcg::MissingPreconditionException("CoM: could not trace a curve segment across the mesh.");
+    cutN.Normalize();
     for (int step = 0; ; ++step)
     {
       for (const auto &c : cur) for (const auto &t : target)
         if (c.first == t.first) return;  // both ends in one face: the rest lies in it
       if (step > 4 * int(base.fn) + 16)
         throw vcg::MissingPreconditionException("CoM: could not trace a curve segment across the mesh.");
-      // Among the faces of the current point, the one the segment heads into.
+      // In each face around the current point, the cut runs along the barycentric direction
+      // keeping the signed distance from the plane at zero, towards q; take the face it
+      // heads into most. Along an edge lying in the plane it heads into both faces with
+      // zero inward component, up to rounding: accept that, flattened to exactly zero, so
+      // the trace follows the edge to its next vertex. On the border, heading out of every
+      // face means leaving the surface; elsewhere it means the cut turns back (a segment
+      // too long for the curvature it spans) and the trace follows the best face's edge.
+      const CoordType pc = cur[0].first->cP(0) * cur[0].second[0] + cur[0].first->cP(1) * cur[0].second[1] + cur[0].first->cP(2) * cur[0].second[2];
       FaceType *g = nullptr;
       CoordType bx, d;
-      ScalarType bestInward = -1;
+      ScalarType bestInward = std::numeric_limits<ScalarType>::lowest();
+      bool onBorder = false;
       for (const auto &c : cur)
       {
-        CoordType bq;
-        InterpolationParameters(*c.first, c.first->N(), q, bq);
-        const CoordType dir = bq - c.second;
+        const FaceType &f = *c.first;
+        for (int i = 0; i < 3; ++i)
+          onBorder |= face::IsBorder(f, i) && c.second[(i + 2) % 3] == 0;
+        ScalarType sd[3];
+        for (int i = 0; i < 3; ++i) sd[i] = cutN.dot(f.cP(i) - p);
+        CoordType dir(sd[1] - sd[2], sd[2] - sd[0], sd[0] - sd[1]);
+        const CoordType disp = f.cP(0) * dir[0] + f.cP(1) * dir[1] + f.cP(2) * dir[2];
+        if (!(disp.Norm() > 0)) continue;
+        dir /= (disp.dot(q - pc) < 0 ? -disp.Norm() : disp.Norm());  // per unit length, towards q
+        const ScalarType tol = ScalarType(1e-6) * (std::abs(dir[0]) + std::abs(dir[1]) + std::abs(dir[2]));
         ScalarType inward = std::numeric_limits<ScalarType>::max();
         for (int k = 0; k < 3; ++k) if (c.second[k] == 0) inward = std::min(inward, dir[k]);
-        if (inward > 0 && inward > bestInward) { bestInward = inward; g = c.first; bx = c.second; d = dir; }
+        if (inward > -tol) inward = std::max(inward, ScalarType(0));
+        if (inward <= bestInward) continue;
+        for (int k = 0; k < 3; ++k) if (c.second[k] == 0 && dir[k] < 0) dir[k] = 0;
+        bestInward = inward; g = c.first; bx = c.second; d = dir;
       }
       if (g == nullptr)
-        throw vcg::MissingPreconditionException("CoM: a curve segment leaves the surface across a border.");
+        throw vcg::MissingPreconditionException("CoM: could not trace a curve segment across the mesh.");
+      if (bestInward < 0 && onBorder)
+      {
+        char buf[160];
+        std::snprintf(buf, sizeof(buf), "CoM: a curve segment leaves the surface across a border at (%g, %g, %g).",
+                      double(pc[0]), double(pc[1]), double(pc[2]));
+        throw vcg::MissingPreconditionException(buf);
+      }
       // Leave g where the first coordinate reaches zero.
       int exitK = -1;
       ScalarType sExit = std::numeric_limits<ScalarType>::max();
