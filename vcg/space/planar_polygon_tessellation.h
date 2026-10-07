@@ -25,8 +25,14 @@
 #define __VCGLIB_PLANAR_POLYGON_TESSELLATOR
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdint>
+#include <deque>
 #include <limits>
+#include <set>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 #include <vcg/space/point2.h>
 #include <vcg/space/point3.h>
@@ -37,12 +43,66 @@ namespace vcg {
 /*@{*/
 namespace planar_polygon_detail {
 
+/// The exact part of Orient2D, apart so that the filtered test stays small enough to be
+/// inlined in the tessellators' inner loops; nearly collinear points are rare.
+inline long double Orient2DExact(const Point2d &a, const Point2d &b, const Point2d &c)
+{
+	// Exact: each difference is hi + lo, each product of two parts is p + e, and the
+	// sixteen terms are summed into a nonoverlapping expansion (increasing magnitude),
+	// whose largest nonzero component carries the sign of the whole.
+	auto twoDiff = [](double x, double y, double &lo) {
+		const double s = x - y, bv = x - s;
+		lo = (x - (s + bv)) + (bv - y);
+		return s;
+	};
+	double dxb[2], dyc[2], dyb[2], dxc[2];
+	dxb[0] = twoDiff(b.X(), a.X(), dxb[1]);
+	dyc[0] = twoDiff(c.Y(), a.Y(), dyc[1]);
+	dyb[0] = twoDiff(b.Y(), a.Y(), dyb[1]);
+	dxc[0] = twoDiff(c.X(), a.X(), dxc[1]);
+	double expansion[16];   // sixteen terms never need more components than that
+	int size = 0;
+	auto add = [&expansion, &size](double q) {   // Shewchuk's Grow-Expansion
+		int n = 0;
+		for (int i = 0; i < size; ++i) {
+			const double h = expansion[i], s = q + h, bv = s - q;
+			const double err = (q - (s - bv)) + (h - bv);
+			if (err != 0) expansion[n++] = err;
+			q = s;
+		}
+		size = n;
+		if (q != 0) expansion[size++] = q;
+	};
+	for (int i = 0; i < 2; ++i)
+		for (int j = 0; j < 2; ++j) {
+			const double p = dxb[i] * dyc[j], m = dyb[i] * dxc[j];
+			add(p); add(std::fma(dxb[i], dyc[j], -p));
+			add(-m); add(-std::fma(dyb[i], dxc[j], -m));
+		}
+	return size == 0 ? 0.0L : static_cast<long double>(expansion[size - 1]);
+}
+
+/// Twice the signed area of the triangle (a, b, c): positive when it turns
+/// counterclockwise, negative when clockwise, zero when the points are collinear.
+///
+/// The sign is exact (Shewchuk's adaptive orientation test): the determinant is
+/// computed in double together with a bound on its rounding error, and when it does
+/// not clear that bound -- nearly collinear points -- it is recomputed exactly, from
+/// error-free differences and products (std::fma) summed as a floating-point expansion.
+/// So callers comparing with 0 get decisions that agree with each other, which an
+/// epsilon cannot promise; the value is only approximate. Exactness assumes IEEE
+/// double arithmetic (no -ffast-math) and coordinates far from overflow and underflow.
+/// (Before this, the plain determinant was computed in long double, which on many
+/// platforms, Apple Silicon among them, is just double.)
 inline long double Orient2D(const Point2d &a, const Point2d &b, const Point2d &c)
 {
-	return (static_cast<long double>(b.X()) - static_cast<long double>(a.X())) *
-	           (static_cast<long double>(c.Y()) - static_cast<long double>(a.Y())) -
-	       (static_cast<long double>(b.Y()) - static_cast<long double>(a.Y())) *
-	           (static_cast<long double>(c.X()) - static_cast<long double>(a.X()));
+	const double l = (b.X() - a.X()) * (c.Y() - a.Y());
+	const double r = (b.Y() - a.Y()) * (c.X() - a.X());
+	const double det = l - r;
+	const double eps = std::numeric_limits<double>::epsilon() / 2;   // unit roundoff
+	if (std::abs(det) >= (3 + 16 * eps) * eps * (std::abs(l) + std::abs(r)))
+		return det;
+	return Orient2DExact(a, b, c);
 }
 
 inline bool PointInTriangle(
@@ -461,6 +521,69 @@ bool TessellatePlanarPolygon2(const POINT_CONTAINER &points, std::vector<int> &o
 }
 
 /**
+ * Flip a triangulation to the constrained Delaunay one (Lawson's flips).
+ *
+ * \a tris holds counterclockwise triangles as index triples. An interior edge that is
+ * not in \a fixed (pairs, smaller index first) is flipped when its two triangles form a
+ * strictly convex quad and the flip increases the smaller of their smallest angles, which
+ * for a convex quad is the Delaunay choice; each flip strictly improves the sorted angles,
+ * so the flips stop. Boundary edges, having one triangle, never flip. \a orient(a, b, c)
+ * decides convexity and should have an exact sign (Orient2D); \a len2(a, b) is the squared
+ * length the angles are measured with, which may differ from the frame \a orient works in:
+ * a projection or a barycentric frame keeps orientations but not angles.
+ *
+ * Used where triangle quality matters: the faces rebuilt around an embedded curve
+ * (CoMEmbed) and, on request, the planar contour tessellators.
+ */
+template <class ORIENT, class LEN2>
+void FlipToConstrainedDelaunay(std::vector<int> &tris, const std::set<std::pair<int, int>> &fixed,
+                               ORIENT orient, LEN2 len2)
+{
+	const auto maxCos = [&len2](int a, int b, int c) {   // larger as the smallest angle shrinks
+		const double ab = len2(a, b), bc = len2(b, c), ca = len2(c, a);
+		return std::max({ (ab + ca - bc) / (2 * std::sqrt(ab * ca)),
+		                  (ab + bc - ca) / (2 * std::sqrt(ab * bc)),
+		                  (bc + ca - ab) / (2 * std::sqrt(bc * ca)) });
+	};
+	const auto key = [](int a, int b) { return (std::uint64_t(std::uint32_t(a)) << 32) | std::uint32_t(b); };
+	std::unordered_map<std::uint64_t, size_t> corner;   // directed edge (a, b) -> position of a in tris
+	for (size_t i = 0; i < tris.size(); ++i)
+		corner[key(tris[i], tris[i - i % 3 + (i + 1) % 3])] = i;
+	std::deque<std::pair<int, int>> queue;
+	for (size_t i = 0; i < tris.size(); ++i) {
+		const int a = tris[i], b = tris[i - i % 3 + (i + 1) % 3];
+		if (a < b) queue.push_back({a, b});
+	}
+	while (!queue.empty()) {
+		const int a = queue.front().first, b = queue.front().second;
+		queue.pop_front();
+		if (fixed.count({std::min(a, b), std::max(a, b)}))
+			continue;
+		const auto e1 = corner.find(key(a, b)), e2 = corner.find(key(b, a));
+		if (e1 == corner.end() || e2 == corner.end())
+			continue;
+		const size_t t1 = e1->second - e1->second % 3, t2 = e2->second - e2->second % 3;
+		const int c = tris[t1 + (e1->second - t1 + 2) % 3], d = tris[t2 + (e2->second - t2 + 2) % 3];
+		if (!(orient(c, a, d) > 0 && orient(d, b, c) > 0))
+			continue;
+		const double before = std::max(maxCos(a, b, c), maxCos(b, a, d));
+		const double after = std::max(maxCos(c, a, d), maxCos(d, b, c));
+		if (!(after < before - 1e-12))
+			continue;
+		for (size_t t : { t1, t2 })
+			for (int k = 0; k < 3; ++k)
+				corner.erase(key(tris[t + k], tris[t + (k + 1) % 3]));
+		const int nt[2][3] = { { c, a, d }, { d, b, c } };
+		for (int k = 0; k < 3; ++k) { tris[t1 + k] = nt[0][k]; tris[t2 + k] = nt[1][k]; }
+		for (size_t t : { t1, t2 })
+			for (int k = 0; k < 3; ++k)
+				corner[key(tris[t + k], tris[t + (k + 1) % 3])] = t + k;
+		for (auto e : { std::make_pair(a, d), std::make_pair(d, b), std::make_pair(b, c), std::make_pair(c, a) })
+			queue.push_back({std::min(e.first, e.second), std::max(e.first, e.second)});
+	}
+}
+
+/**
  * Triangulate finite, simple 2D contours using the even-odd fill rule.
  *
  * Contours may have arbitrary winding and order and may describe disconnected
@@ -477,7 +600,8 @@ bool TessellatePlanarPolygon2(const POINT_CONTAINER &points, std::vector<int> &o
 template <class CONTOUR_CONTAINER>
 bool TessellatePlanarContours2(
 	const CONTOUR_CONTAINER &inputContours,
-	std::vector<int> &output)
+	std::vector<int> &output,
+	bool delaunay = false)
 {
 	using namespace planar_polygon_detail;
 	if (inputContours.empty())
@@ -628,6 +752,10 @@ bool TessellatePlanarContours2(
 		|| std::abs(triangleDoubleArea - expectedDoubleArea) > areaTolerance)
 		return false;
 
+	if (delaunay)   // ear clipping guarantees validity, not quality: long contours give fans of slivers
+		FlipToConstrainedDelaunay(triangles, {},
+			[&](int a, int b, int c) { return Orient2D(flatPoints[size_t(a)], flatPoints[size_t(b)], flatPoints[size_t(c)]); },
+			[&](int a, int b) { return (flatPoints[size_t(a)] - flatPoints[size_t(b)]).SquaredNorm(); });
 	output.insert(output.end(), triangles.begin(), triangles.end());
 	return true;
 }
@@ -640,7 +768,8 @@ bool TessellatePlanarContours2(
 template <class CONTOUR_CONTAINER>
 bool TessellatePlanarContours3(
 	const CONTOUR_CONTAINER &contours,
-	std::vector<int> &output)
+	std::vector<int> &output,
+	bool delaunay = false)
 {
 	if (contours.empty())
 		return false;
@@ -711,6 +840,19 @@ bool TessellatePlanarContours3(
 	std::vector<int> triangles;
 	if (!TessellatePlanarContours2(projected, triangles))
 		return false;
+	if (delaunay) {
+		// The projection along an axis keeps orientations, so convexity is decided on it
+		// exactly, but not angles: those are measured on the contours themselves.
+		std::vector<Point2d> flatProjected;
+		std::vector<Point3d> flatRelative;
+		for (size_t i = 0; i < relative.size(); ++i) {
+			flatProjected.insert(flatProjected.end(), projected[i].begin(), projected[i].end());
+			flatRelative.insert(flatRelative.end(), relative[i].begin(), relative[i].end());
+		}
+		FlipToConstrainedDelaunay(triangles, {},
+			[&](int a, int b, int c) { return planar_polygon_detail::Orient2D(flatProjected[size_t(a)], flatProjected[size_t(b)], flatProjected[size_t(c)]); },
+			[&](int a, int b) { return (flatRelative[size_t(a)] - flatRelative[size_t(b)]).SquaredNorm(); });
+	}
 	const double projectedNormalComponent = droppedAxis == 0
 		? normal.X() : (droppedAxis == 1 ? -normal.Y() : normal.Z());
 	if (projectedNormalComponent < 0)

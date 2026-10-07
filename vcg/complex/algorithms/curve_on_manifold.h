@@ -1331,9 +1331,13 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
    * rebuilt on its own, in its barycentric frame: the polyline points on its edges are
    * inserted by splitting the sub-triangle that owns that piece of the edge, points inside
    * it by splitting the sub-triangle that contains them, and every segment is then recovered
-   * as an edge by flipping the edges that cross it (S. W. Sloan, "A fast algorithm for
-   * generating constrained Delaunay triangulations", Computers & Structures 47(3), 1993; the
-   * Delaunay part is not needed here). Sub-triangles keep the attributes of their triangle,
+   * as an edge by flipping the edges that cross it, after which the other edges are flipped
+   * to the constrained Delaunay triangulation (S. W. Sloan, "A fast algorithm for
+   * generating constrained Delaunay triangulations", Computers & Structures 47(3), 1993).
+   * The Delaunay step is not cosmetic: a curve point kept inside a triangle (a control
+   * point) between the two points where its straight strand crosses the triangle's edges
+   * otherwise leaves a sliver of near-zero area, which turns over once its vertices are
+   * stored in floating point. Sub-triangles keep the attributes of their triangle,
    * and their wedge texture coordinates are the triangle's at each vertex; new vertices
    * interpolate the attributes of the surface where they are (VertexInterpolator).
    *
@@ -1485,6 +1489,7 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
       ++done;
       LocalTriangulation lt;
       const FaceType &f = m.face[fi];
+      lt.SetMetric(f.cP(1) - f.cP(0), f.cP(2) - f.cP(0));
       size_t corner[3];
       for (int k = 0; k < 3; ++k) { corner[k] = tri::Index(m, f.cV(k)); lt.AddPoint(corner[k], k == 1, k == 2, (1 << k) | (1 << ((k + 2) % 3))); }
       lt.tris.push_back({{0, 1, 2}});
@@ -1548,6 +1553,7 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
         for (const auto &o : on) { lt.Recover(prev, o.second); prev = o.second; chains[sg.polyEdge].push_back(lt.pts[o.second].vert); }
         lt.Recover(prev, q);
       }
+      lt.MakeDelaunay();
       newFaceNum += lt.tris.size() - 1;
       rebuilt.push_back({fi, std::move(lt)});
     }
@@ -1659,7 +1665,18 @@ private:
     std::vector<Point> pts;
     std::vector<std::array<int, 3>> tris;
     std::set<std::pair<int, int>> recovered;  // segments already made edges, smaller index first
-    static constexpr long double eps = 1e-13;  // orientation tolerance, in the unit frame
+    double g11 = 1, g12 = 0, g22 = 1;  // the face's metric in the frame: |(du, dv)|^2 = du^2 g11 + 2 du dv g12 + dv^2 g22
+
+    /// Lengths and angles are those of the face, not of the frame, which distorts them.
+    void SetMetric(const CoordType &e1, const CoordType &e2)
+    {
+      g11 = e1.dot(e1); g12 = e1.dot(e2); g22 = e2.dot(e2);
+    }
+    double Len2(int a, int b) const
+    {
+      const double du = double(pts[b].u) - pts[a].u, dv = double(pts[b].v) - pts[a].v;
+      return du * du * g11 + 2 * du * dv * g12 + dv * dv * g22;
+    }
 
     int AddPoint(size_t vert, ScalarType u, ScalarType v, int edges)
     {
@@ -1671,8 +1688,14 @@ private:
       for (size_t i = 0; i < pts.size(); ++i) if (pts[i].vert == vert) return int(i);
       throw vcg::MissingPreconditionException("CoMEmbed: a curve segment ends outside the face it was assigned to.");
     }
+    /// Orientation of (a, b, c), with an exact sign. Three points on one edge of the face
+    /// are collinear by construction, whatever their rounded coordinates say: on the edge
+    /// opposite V0, u + v = 1 is rarely exact in floating point. Every other point is
+    /// either a corner, on another edge, or inside the face at least a rounding snap away
+    /// from its edges, so the exact sign on its coordinates is the intended one.
     long double Orient(int a, int b, int c) const
     {
+      if (pts[a].edges & pts[b].edges & pts[c].edges) return 0;
       return planar_polygon_detail::Orient2D(Point2d(pts[a].u, pts[a].v), Point2d(pts[b].u, pts[b].v), Point2d(pts[c].u, pts[c].v));
     }
     /// The triangle with the directed edge (a,b), and the position of a in it.
@@ -1703,9 +1726,9 @@ private:
         const std::array<int, 3> t = tris[ti];
         long double o[3];
         for (int i = 0; i < 3; ++i) o[i] = Orient(t[i], t[(i + 1) % 3], p);
-        if (o[0] < -eps || o[1] < -eps || o[2] < -eps) continue;
+        if (o[0] < 0 || o[1] < 0 || o[2] < 0) continue;
         int onEdge = -1, onCount = 0;
-        for (int i = 0; i < 3; ++i) if (o[i] <= eps) { onEdge = i; ++onCount; }
+        for (int i = 0; i < 3; ++i) if (o[i] == 0) { onEdge = i; ++onCount; }
         if (onCount > 1)
           throw vcg::MissingPreconditionException("CoMEmbed: two curve points coincide inside a face.");
         if (onEdge >= 0) { SplitEdge(t[onEdge], t[(onEdge + 1) % 3], p); return; }
@@ -1716,7 +1739,7 @@ private:
       }
       throw vcg::MissingPreconditionException("CoMEmbed: a curve point is outside the face it was assigned to.");
     }
-    static int Sign(long double o) { return o > eps ? 1 : (o < -eps ? -1 : 0); }
+    static int Sign(long double o) { return o > 0 ? 1 : (o < 0 ? -1 : 0); }
     /// True if the segments (p,q) and (a,b) cross at a point inside both.
     bool Crosses(int p, int q, int a, int b) const
     {
@@ -1750,7 +1773,7 @@ private:
         if (!FindEdge(a, b, t1, i1) || !FindEdge(b, a, t2, i2))
           throw vcg::MissingPreconditionException("CoMEmbed: a curve segment crosses the boundary of its face.");
         const int c = tris[t1][(i1 + 2) % 3], d = tris[t2][(i2 + 2) % 3];
-        if (Orient(c, a, d) > eps && Orient(d, b, c) > eps)
+        if (Orient(c, a, d) > 0 && Orient(d, b, c) > 0)
         {
           tris[t1] = {{c, a, d}};
           tris[t2] = {{d, b, c}};
@@ -1762,6 +1785,17 @@ private:
       if (!FindEdge(p, q, ti, i) && !FindEdge(q, p, ti, i))
         throw vcg::MissingPreconditionException("CoMEmbed: could not recover a curve segment; it passes through another curve point.");
       recovered.insert({std::min(p, q), std::max(p, q)});
+    }
+    /// The constrained Delaunay triangulation, the recovered segments kept: the angles in
+    /// the face's metric, convexity by the exact Orient.
+    void MakeDelaunay()
+    {
+      std::vector<int> flat;
+      for (const auto &t : tris) flat.insert(flat.end(), t.begin(), t.end());
+      FlipToConstrainedDelaunay(flat, recovered,
+                                [this](int a, int b, int c) { return Orient(a, b, c); },
+                                [this](int a, int b) { return Len2(a, b); });
+      for (size_t i = 0; i < tris.size(); ++i) tris[i] = {{flat[3 * i], flat[3 * i + 1], flat[3 * i + 2]}};
     }
   };
 };

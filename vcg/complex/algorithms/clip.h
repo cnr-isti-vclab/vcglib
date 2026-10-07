@@ -344,7 +344,7 @@ int CapPlanarBoundary(
     std::vector< std::vector<Point2<ScalarType> > > part;
     for (size_t i : group) part.push_back(contours[i]);
     std::vector<int> tri;
-    if (!TessellatePlanarContours2(part, tri) || tri.size() < 3) return false;
+    if (!TessellatePlanarContours2(part, tri, true) || tri.size() < 3) return false;  // Delaunay: a cap is seen, slivers show
     const int base = int(planarPoints.size());
     for (size_t i : group) planarPoints.insert(planarPoints.end(), loops[i].begin(), loops[i].end());
     for (int t : tri) planar.push_back(base + t);
