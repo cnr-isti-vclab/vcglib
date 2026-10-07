@@ -935,6 +935,40 @@ public:
     return loc;
   }
 
+  /// Whether a border the point at \a loc lies on has a coincident twin border edge: the
+  /// two sides of a cut, or of a seam where a file split its vertices. The surface is
+  /// disconnected there but has no gap, and since CoM locates curve points by position it
+  /// cannot tell the two sides apart; the trace stops as at a real border, and this only
+  /// lets the error say which of the two it met (ThrowCutSeam). A linear scan: it runs
+  /// once, on failure.
+  bool OnCutSeam(const Location &loc) const
+  {
+    const ScalarType tol2 = math::Sqr(base.bbox.Diag() * ScalarType(1e-6));
+    auto same = [tol2](const CoordType &a, const CoordType &b) { return SquaredDistance(a, b) <= tol2; };
+    for (const auto &c : loc)
+      for (int i = 0; i < 3; ++i)
+      {
+        if (!face::IsBorder(*c.first, i) || c.second[(i + 2) % 3] != 0) continue;
+        const CoordType &a = c.first->cP(i), &b = c.first->cP((i + 1) % 3);
+        for (const FaceType &g : base.face)
+          if (!g.IsD() && &g != c.first)
+            for (int j = 0; j < 3; ++j)
+              if (face::IsBorder(g, j) && ((same(g.cP(j), b) && same(g.cP((j + 1) % 3), a)) ||   // the usual,
+                                           (same(g.cP(j), a) && same(g.cP((j + 1) % 3), b))))    // or misoriented
+                return true;
+      }
+    return false;
+  }
+
+  [[noreturn]] static void ThrowCutSeam(const CoordType &p)
+  {
+    char buf[256];
+    std::snprintf(buf, sizeof(buf), "CoM: a curve crosses or touches a cut seam at (%g, %g, %g): the border there "
+                  "has a coincident twin, so the surface is cut but not open. Embed all curves before cutting, "
+                  "or weld the seam first.", double(p[0]), double(p[1]), double(p[2]));
+    throw vcg::MissingPreconditionException(buf);
+  }
+
   /// The points where the segment from \a p to \a q crosses mesh edges, in order.
   ///
   /// The segment is traced as the section of the surface by one plane: through p and q,
@@ -954,6 +988,11 @@ public:
     {
       for (const auto &c : cur) for (const auto &t : target)
         if (c.first == t.first) return;  // both ends in one face: the rest lies in it
+      // At q's position but in none of its faces: q has a coincident copy and was located
+      // on the other one, the other side of a seam. Going on would only turn back.
+      const CoordType pc = cur[0].first->cP(0) * cur[0].second[0] + cur[0].first->cP(1) * cur[0].second[1] + cur[0].first->cP(2) * cur[0].second[2];
+      if (SquaredDistance(pc, q) <= math::Sqr(base.bbox.Diag() * ScalarType(1e-6)))
+        ThrowCutSeam(pc);
       if (step > 4 * int(base.fn) + 16)
         throw vcg::MissingPreconditionException("CoM: could not trace a curve segment across the mesh.");
       // In each face around the current point, the cut runs along the barycentric direction
@@ -963,7 +1002,6 @@ public:
       // the trace follows the edge to its next vertex. On the border, heading out of every
       // face means leaving the surface; elsewhere it means the cut turns back (a segment
       // too long for the curvature it spans) and the trace follows the best face's edge.
-      const CoordType pc = cur[0].first->cP(0) * cur[0].second[0] + cur[0].first->cP(1) * cur[0].second[1] + cur[0].first->cP(2) * cur[0].second[2];
       FaceType *g = nullptr;
       CoordType bx, d;
       ScalarType bestInward = std::numeric_limits<ScalarType>::lowest();
@@ -991,6 +1029,7 @@ public:
         throw vcg::MissingPreconditionException("CoM: could not trace a curve segment across the mesh.");
       if (bestInward < 0 && onBorder)
       {
+        if (OnCutSeam(cur)) ThrowCutSeam(pc);
         char buf[160];
         std::snprintf(buf, sizeof(buf), "CoM: a curve segment leaves the surface across a border at (%g, %g, %g).",
                       double(pc[0]), double(pc[1]), double(pc[2]));
