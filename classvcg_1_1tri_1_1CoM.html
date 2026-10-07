@@ -221,6 +221,8 @@ ScalarType&#160;</td><td class="memItemRight" valign="bottom"><b>MaxSegDist</b> 
 <tr class="memitem:a149f46b9f5129ff62bb2058699c9839f"><td class="memItemLeft" align="right" valign="top"><a id="a149f46b9f5129ff62bb2058699c9839f" name="a149f46b9f5129ff62bb2058699c9839f"></a>
 <a class="el" href="classvcg_1_1tri_1_1CoM.html#a1ca749757083fefb419736220b304aa5">Location</a>&#160;</td><td class="memItemRight" valign="bottom"><b>LocationFrom</b> (FaceType *f, const CoordType &amp;ip) const</td></tr>
 <tr class="separator:a149f46b9f5129ff62bb2058699c9839f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8616d07393f14657e3ddf05f6460d61d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a8616d07393f14657e3ddf05f6460d61d">OnCutSeam</a> (const <a class="el" href="classvcg_1_1tri_1_1CoM.html#a1ca749757083fefb419736220b304aa5">Location</a> &amp;loc) const</td></tr>
+<tr class="separator:a8616d07393f14657e3ddf05f6460d61d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acedebd03932108c71b65ffab8ca3a757"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1CoM.html#acedebd03932108c71b65ffab8ca3a757">TraceSegment</a> (const CoordType &amp;p, const CoordType &amp;q, std::vector&lt; CoordType &gt; &amp;crossings)</td></tr>
 <tr class="separator:acedebd03932108c71b65ffab8ca3a757"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8611bc0164c7af891e2b9242e35d253"><td class="memTemplParams" colspan="2">template&lt;typename PositionFunctor &gt; </td></tr>
@@ -237,6 +239,9 @@ Static Public Member Functions</h2></td></tr>
 static bool&#160;</td><td class="memItemRight" valign="bottom"><b>BarycentricSnap</b> (CoordType &amp;ip, const FaceType &amp;f, ScalarType barThr, ScalarType distThr)</td></tr>
 <tr class="memdesc:a9b5312c8e5222598e8a5c6a22b8a7259"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classvcg_1_1tri_1_1CoM.html#a466435eda3710bf4ea6e3c25db9fb357" title="Snap the barycentric coordinates of a point of face f onto a vertex or an edge.">BarycentricSnap()</a> with explicit thresholds, e.g. rounding-level ones. <br /></td></tr>
 <tr class="separator:a9b5312c8e5222598e8a5c6a22b8a7259"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe67efbce8610f70cc23cea1c643e749"><td class="memItemLeft" align="right" valign="top"><a id="abe67efbce8610f70cc23cea1c643e749" name="abe67efbce8610f70cc23cea1c643e749"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>ThrowCutSeam</b> (const CoordType &amp;p)</td></tr>
+<tr class="separator:abe67efbce8610f70cc23cea1c643e749"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -896,6 +901,35 @@ template&lt;typename PositionFunctor &gt; </div>
 
 </div>
 </div>
+<a id="a8616d07393f14657e3ddf05f6460d61d" name="a8616d07393f14657e3ddf05f6460d61d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8616d07393f14657e3ddf05f6460d61d">&#9670;&#160;</a></span>OnCutSeam()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class MeshType &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool <a class="el" href="classvcg_1_1tri_1_1CoM.html">vcg::tri::CoM</a>&lt; MeshType &gt;::OnCutSeam </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classvcg_1_1tri_1_1CoM.html#a1ca749757083fefb419736220b304aa5">Location</a> &amp;&#160;</td>
+          <td class="paramname"><em>loc</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Whether a border the point at <em>loc</em> lies on has a coincident twin border edge: the two sides of a cut, or of a seam where a file split its vertices. The surface is disconnected there but has no gap, and since <a class="el" href="classvcg_1_1tri_1_1CoM.html">CoM</a> locates curve points by position it cannot tell the two sides apart; the trace stops as at a real border, and this only lets the error say which of the two it met (ThrowCutSeam). A linear scan: it runs once, on failure. </p>
+
+</div>
+</div>
 <a id="a4e22ca4117ec158c34b29629f92623f4" name="a4e22ca4117ec158c34b29629f92623f4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4e22ca4117ec158c34b29629f92623f4">&#9670;&#160;</a></span>RefineCurveByBaseMesh()</h2>
 
@@ -1189,7 +1223,7 @@ template&lt;class MeshType &gt; </div>
 <!-- HTML footer for doxygen 1.9.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Tue Oct 6 2026 07:23:21
+Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Wed Oct 7 2026 06:52:04
 </small></address>
 </body>
 </html>
