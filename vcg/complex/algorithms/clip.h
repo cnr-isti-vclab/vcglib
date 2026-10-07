@@ -24,6 +24,7 @@
 #ifndef __VCGLIB_TRI_CLIP
 #define __VCGLIB_TRI_CLIP
 #include <algorithm>
+#include <map>
 #include <unordered_map>
 #include <vector>
 #include <vcg/complex/complex.h>
@@ -105,6 +106,8 @@ ScalarType PlaneDistance(const Plane3<ScalarType> &plane, const Point3<ScalarTyp
                   value leaves fewer thin triangles along the cut, but moves vertices by up
                   to that fraction of an edge, and on long edges -- the cap of an earlier
                   cut, a CAD model -- that is a distance that shows.
+  \param capRefinement how the cap is refined with added points (see CapPlanarBoundary);
+                  a minimum angle of 0 leaves it a plain constrained Delaunay triangulation.
   \return true when the mesh was clipped; false when the plane leaves it untouched, either
           because nothing was on the discarded side or because the plane misses it entirely.
           A \a capCut that could not be performed does not make this false.
@@ -114,7 +117,8 @@ bool ClipMeshWithPlane(
     TriMeshType &m,
     const Plane3<typename TriMeshType::ScalarType> &plane,
     bool capCut = false,
-    typename TriMeshType::ScalarType tolerance = 0)
+    typename TriMeshType::ScalarType tolerance = 0,
+    const PlanarRefinement &capRefinement = PlanarRefinement())
 {
   typedef typename TriMeshType::ScalarType ScalarType;
   typedef typename TriMeshType::CoordType CoordType;
@@ -207,7 +211,7 @@ bool ClipMeshWithPlane(
   Allocator<TriMeshType>::template DeletePerVertexAttribute<ScalarType>(m, dist);
 
   if (capCut && m.FN() > 0)
-    CapPlanarBoundary(m, pl);
+    CapPlanarBoundary(m, pl, capRefinement);
   return true;
 }
 
@@ -234,17 +238,29 @@ bool ClipMeshWithPlane(
   cutting that has a vertex on a non-manifold edge, which the walk around the hole cannot
   cross.
 
+  The planar caps are constrained Delaunay triangulations refined with added points until
+  no triangle has an angle below \a refinement.minAngle (RefinePlanarTriangulation2): a
+  cap's outline is as fine as the mesh, its inside empty, and without them it is all long
+  thin triangles reaching across. The added points take the attributes interpolated from
+  the outline, and a normal facing out of the cap. With \a refinement.splitBoundary points
+  may also be added on the outline, which reaches the angle near it too; the mesh face
+  along each outline edge so split is split at the same points, so the mesh stays
+  watertight. Without it the outline, and the mesh around, are left exactly as they were.
+
   Returns the number of holes filled.
  */
 template <class TriMeshType>
 int CapPlanarBoundary(
     TriMeshType &m,
-    const Plane3<typename TriMeshType::ScalarType> &plane)
+    const Plane3<typename TriMeshType::ScalarType> &plane,
+    const PlanarRefinement &refinement = PlanarRefinement())
 {
   typedef typename TriMeshType::ScalarType ScalarType;
   typedef typename TriMeshType::CoordType CoordType;
   typedef typename TriMeshType::FaceType FaceType;
+  typedef typename TriMeshType::VertexType VertexType;
   typedef typename TriMeshType::VertexPointer VertexPointer;
+  typedef typename TriMeshType::VertexIterator VertexIterator;
 
   if (m.FN() == 0) return 0;
 
@@ -338,15 +354,28 @@ int CapPlanarBoundary(
       contours[i].push_back(Point2<ScalarType>(u * p->cP(), v * p->cP()));
 
   std::vector<int> planar;              // triangle corners, indices into planarPoints
-  std::vector<VertexPointer> planarPoints;
+  std::vector<VertexPointer> planarPoints;   // null for points the refinement adds, until made
+  struct Added { size_t at; SteinerPoint how; Point2d p; };   // indices in 'how' into planarPoints
+  std::vector<Added> added;
   int planarLoops = 0;
   const auto tessellate = [&](const std::vector<size_t> &group) {
     std::vector< std::vector<Point2<ScalarType> > > part;
     for (size_t i : group) part.push_back(contours[i]);
     std::vector<int> tri;
-    if (!TessellatePlanarContours2(part, tri, true) || tri.size() < 3) return false;  // Delaunay: a cap is seen, slivers show
+    if (!TessellatePlanarContours2(part, tri, true) || tri.size() < 3) return false;
+    std::vector<Point2d> points;
+    for (const auto &c : part) for (const auto &q : c) points.push_back(Point2d(q[0], q[1]));
+    const size_t inputCount = points.size();
+    std::vector<SteinerPoint> steiner;
+    if (refinement.minAngle > 0) RefinePlanarTriangulation2(points, tri, refinement, steiner);
     const int base = int(planarPoints.size());
     for (size_t i : group) planarPoints.insert(planarPoints.end(), loops[i].begin(), loops[i].end());
+    for (size_t k = 0; k < steiner.size(); ++k) {
+      SteinerPoint how = steiner[k];
+      for (int *i : { &how.a, &how.b, &how.c }) if (*i >= 0) *i += base;
+      added.push_back(Added{ planarPoints.size(), how, points[inputCount + k] });
+      planarPoints.push_back(nullptr);
+    }
     for (int t : tri) planar.push_back(base + t);
     planarLoops += int(group.size());
     return true;
@@ -465,6 +494,70 @@ int CapPlanarBoundary(
     for (const auto &kv : saved) kv.first->N() = kv.second;
     // Around a pinch the filler needs fewer faces than it allocated, and deletes the rest.
     Allocator<TriMeshType>::CompactFaceVector(m);
+  }
+
+  if (!added.empty()) {
+    // The added points become vertices, each from where it lies: interpolated along the
+    // outline edge, or inside the cap triangle it was put in, whose corners are made before
+    // it. Inside the cap they face out of it, against the plane normal, as the cap does.
+    typename Allocator<TriMeshType>::template PointerUpdater<VertexPointer> pu;
+    VertexIterator vi = Allocator<TriMeshType>::AddVertices(m, added.size(), pu);
+    for (VertexPointer &p : planarPoints) if (p) pu.Update(p);
+    for (const Added &a : added) planarPoints[a.at] = &*vi++;
+    std::map<std::pair<VertexPointer, VertexPointer>, std::vector<std::pair<ScalarType, VertexPointer> > > onEdge;
+    for (const Added &a : added) {
+      VertexType &nv = *planarPoints[a.at];
+      const SteinerPoint &h = a.how;
+      if (h.c < 0) {
+        const VertexPointer p0 = planarPoints[size_t(h.a)], p1 = planarPoints[size_t(h.b)];
+        const ScalarType t = ScalarType(h.t);
+        nv.P() = p0->cP() + (p1->cP() - p0->cP()) * t;
+        VertexInterpolator<TriMeshType>::Lerp(m, nv, *p0, *p1, t);
+        onEdge[std::make_pair(p0, p1)].push_back(std::make_pair(t, &nv));
+      } else {
+        nv.P() = u * ScalarType(a.p[0]) + v * ScalarType(a.p[1]) + n * pl.Offset();
+        VertexInterpolator<TriMeshType>::Barycentric(m, nv, *planarPoints[size_t(h.a)], *planarPoints[size_t(h.b)],
+            *planarPoints[size_t(h.c)], CoordType(ScalarType(h.w[0]), ScalarType(h.w[1]), ScalarType(h.w[2])));
+        if (HasPerVertexNormal(m)) nv.N() = -n;
+      }
+    }
+    if (!onEdge.empty()) {
+      // The mesh face along each outline edge that got points is split at them, as a fan
+      // from its third corner, so no vertex is left hanging on its edge.
+      std::map<std::pair<VertexPointer, VertexPointer>, std::pair<size_t, int> > faceOf;   // directed edge -> face, edge
+      for (size_t fi = 0; fi < m.face.size(); ++fi)
+        if (!m.face[fi].IsD())
+          for (int e = 0; e < 3; ++e) faceOf[std::make_pair(m.face[fi].V0(e), m.face[fi].V1(e))] = std::make_pair(fi, e);
+      const bool wedgeTex = HasPerWedgeTexCoord(m);
+      for (auto &kv : onEdge) {
+        auto it = faceOf.find(kv.first);
+        bool reversed = false;
+        if (it == faceOf.end()) { it = faceOf.find(std::make_pair(kv.first.second, kv.first.first)); reversed = true; }
+        if (it == faceOf.end()) continue;
+        std::vector<std::pair<ScalarType, VertexPointer> > &pts = kv.second;   // parameter from the face's V0(e)
+        if (reversed) for (auto &q : pts) q.first = 1 - q.first;
+        std::sort(pts.begin(), pts.end());
+        const size_t fi = it->second.first;
+        const int e = it->second.second;
+        FaceType original = m.face[fi];
+        Allocator<TriMeshType>::AddFaces(m, pts.size());
+        const size_t firstAdded = m.face.size() - pts.size();
+        for (size_t j = 0; j <= pts.size(); ++j) {
+          FaceType &f = (j == 0) ? m.face[fi] : m.face[firstAdded + j - 1];
+          if (j > 0) f.ImportData(original);
+          const ScalarType t0 = (j == 0) ? 0 : pts[j - 1].first, t1 = (j == pts.size()) ? 1 : pts[j].first;
+          f.V(e) = (j == 0) ? original.V(e) : pts[j - 1].second;
+          f.V((e + 1) % 3) = (j == pts.size()) ? original.V((e + 1) % 3) : pts[j].second;
+          f.V((e + 2) % 3) = original.V((e + 2) % 3);
+          if (wedgeTex) {
+            const auto w0 = original.cWT(e), w1 = original.cWT((e + 1) % 3);
+            f.WT(e) = w0; f.WT(e).P() = w0.P() * (1 - t0) + w1.P() * t0;
+            f.WT((e + 1) % 3) = w0; f.WT((e + 1) % 3).P() = w0.P() * (1 - t1) + w1.P() * t1;
+            f.WT((e + 2) % 3) = original.cWT((e + 2) % 3);
+          }
+        }
+      }
+    }
   }
 
   if (planar.size() >= 3) {

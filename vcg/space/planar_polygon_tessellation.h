@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <deque>
 #include <limits>
+#include <queue>
 #include <set>
 #include <unordered_map>
 #include <utility>
@@ -520,6 +521,126 @@ bool TessellatePlanarPolygon2(const POINT_CONTAINER &points, std::vector<int> &o
 	return true;
 }
 
+namespace planar_polygon_detail {
+
+/// A triangulation as counterclockwise index triples, with the map from each directed
+/// edge to its triangle that flips and insertions need. Shared by the constrained Delaunay
+/// flips and the quality refinement. \a orient decides convexity and should have an exact
+/// sign; \a len2 is the squared length angles are measured with, which may differ from the
+/// frame \a orient works in (a projection or a barycentric frame keeps orientations, not
+/// angles); \a fixed(a, b) says whether an edge must stay.
+///
+/// Optionally journaled: between BeginJournal() and Undo() every triangle written is
+/// remembered, so an insertion that turns out to be unwanted can be taken back.
+template <class ORIENT, class LEN2, class FIXED>
+struct FlipTriangulation
+{
+	std::vector<int> &tris;
+	ORIENT orient;
+	LEN2 len2;
+	FIXED fixed;
+	std::unordered_map<std::uint64_t, size_t> corner;   // directed edge (a, b) -> position of a in tris
+
+	FlipTriangulation(std::vector<int> &t, ORIENT o, LEN2 l, FIXED f) : tris(t), orient(o), len2(l), fixed(f)
+	{
+		for (size_t i = 0; i < tris.size(); i += 3) Index(i);
+	}
+	static std::uint64_t Key(int a, int b) { return (std::uint64_t(std::uint32_t(a)) << 32) | std::uint32_t(b); }
+	void Index(size_t t) { for (int k = 0; k < 3; ++k) corner[Key(tris[t + k], tris[t + (k + 1) % 3])] = t + k; }
+	/// Forget the edges of the triangle at t -- those still mapped to it: rewriting two
+	/// triangles in turn, as a flip does, hands an edge from one to the other in between.
+	void Unindex(size_t t)
+	{
+		for (int k = 0; k < 3; ++k) {
+			const auto it = corner.find(Key(tris[t + k], tris[t + (k + 1) % 3]));
+			if (it != corner.end() && it->second - it->second % 3 == t) corner.erase(it);
+		}
+	}
+	/// The position in tris of a, in the triangle that has the directed edge (a, b).
+	bool Find(int a, int b, size_t &pos) const
+	{
+		const auto it = corner.find(Key(a, b));
+		if (it == corner.end()) return false;
+		pos = it->second;
+		return true;
+	}
+	int Next(size_t pos) const { return tris[pos - pos % 3 + (pos + 1) % 3]; }
+	int Apex(size_t pos) const { return tris[pos - pos % 3 + (pos + 2) % 3]; }
+
+	// The journal: the triangles there were before, and how many.
+	bool journaling = false;
+	size_t journalSize = 0;
+	std::vector<std::pair<size_t, std::array<int, 3>>> journal;
+	void BeginJournal() { journaling = true; journalSize = tris.size(); journal.clear(); }
+	void EndJournal() { journaling = false; }
+	void Set(size_t t, int a, int b, int c)
+	{
+		if (journaling && t < journalSize
+		    && std::find_if(journal.begin(), journal.end(), [t](const auto &j) { return j.first == t; }) == journal.end())
+			journal.push_back({t, {{tris[t], tris[t + 1], tris[t + 2]}}});
+		Unindex(t);
+		tris[t] = a; tris[t + 1] = b; tris[t + 2] = c;
+		Index(t);
+	}
+	size_t Add(int a, int b, int c)
+	{
+		tris.insert(tris.end(), { a, b, c });
+		Index(tris.size() - 3);
+		return tris.size() - 3;
+	}
+	void Undo()
+	{
+		for (size_t t = journalSize; t < tris.size(); t += 3) Unindex(t);
+		tris.resize(journalSize);
+		for (const auto &j : journal) { Unindex(j.first); for (int k = 0; k < 3; ++k) tris[j.first + k] = j.second[k]; }
+		for (const auto &j : journal) Index(j.first);
+		journaling = false;
+	}
+
+	/// The largest cosine among the angles of (a, b, c): larger as its smallest angle shrinks.
+	double MaxCos(int a, int b, int c) const
+	{
+		const double ab = len2(a, b), bc = len2(b, c), ca = len2(c, a);
+		return std::max({ (ab + ca - bc) / (2 * std::sqrt(ab * ca)),
+		                  (ab + bc - ca) / (2 * std::sqrt(ab * bc)),
+		                  (bc + ca - ab) / (2 * std::sqrt(bc * ca)) });
+	}
+	/// Lawson's flips over the queued edges: an edge that is not fixed is flipped when its two
+	/// triangles form a strictly convex quad and the flip increases the smaller of their
+	/// smallest angles, which for a convex quad is the Delaunay choice. Each flip strictly
+	/// improves the sorted angles, so the flips stop. Boundary edges, with one triangle, stay.
+	void Legalize(std::deque<std::pair<int, int>> &queue)
+	{
+		while (!queue.empty()) {
+			const int a = queue.front().first, b = queue.front().second;
+			queue.pop_front();
+			size_t p1, p2;
+			if (fixed(a, b) || !Find(a, b, p1) || !Find(b, a, p2)) continue;
+			const int c = Apex(p1), d = Apex(p2);
+			if (!(orient(c, a, d) > 0 && orient(d, b, c) > 0)) continue;
+			if (!(std::max(MaxCos(c, a, d), MaxCos(d, b, c)) < std::max(MaxCos(a, b, c), MaxCos(b, a, d)) - 1e-12)) continue;
+			Set(p1 - p1 % 3, c, a, d);
+			Set(p2 - p2 % 3, d, b, c);
+			queue.insert(queue.end(), { {a, d}, {d, b}, {b, c}, {c, a} });
+		}
+	}
+	void LegalizeAll()
+	{
+		std::deque<std::pair<int, int>> queue;
+		for (size_t i = 0; i < tris.size(); ++i)
+			if (tris[i] < Next(i)) queue.push_back({tris[i], Next(i)});
+		Legalize(queue);
+	}
+};
+
+template <class ORIENT, class LEN2, class FIXED>
+FlipTriangulation<ORIENT, LEN2, FIXED> MakeFlipTriangulation(std::vector<int> &t, ORIENT o, LEN2 l, FIXED f)
+{
+	return FlipTriangulation<ORIENT, LEN2, FIXED>(t, o, l, f);
+}
+
+} // namespace planar_polygon_detail
+
 /**
  * Flip a triangulation to the constrained Delaunay one (Lawson's flips).
  *
@@ -539,48 +660,331 @@ template <class ORIENT, class LEN2>
 void FlipToConstrainedDelaunay(std::vector<int> &tris, const std::set<std::pair<int, int>> &fixed,
                                ORIENT orient, LEN2 len2)
 {
-	const auto maxCos = [&len2](int a, int b, int c) {   // larger as the smallest angle shrinks
-		const double ab = len2(a, b), bc = len2(b, c), ca = len2(c, a);
-		return std::max({ (ab + ca - bc) / (2 * std::sqrt(ab * ca)),
-		                  (ab + bc - ca) / (2 * std::sqrt(ab * bc)),
-		                  (bc + ca - ab) / (2 * std::sqrt(bc * ca)) });
+	auto ft = planar_polygon_detail::MakeFlipTriangulation(tris, orient, len2,
+		[&fixed](int a, int b) { return fixed.count({std::min(a, b), std::max(a, b)}) > 0; });
+	ft.LegalizeAll();
+}
+
+/// How RefinePlanarTriangulation2 refines.
+struct PlanarRefinement
+{
+	double minAngle = 20;        ///< degrees; no triangle should have a smaller angle, unless the input forces it
+	bool splitBoundary = false;  ///< may points be added on the boundary edges? Needed for the guarantee near the boundary
+	int maxSteiner = -1;         ///< at most this many points; negative: twenty times the input points, plus a hundred
+};
+
+/// A point RefinePlanarTriangulation2 added, and how: on the boundary edge from input point
+/// \a a to input point \a b at parameter \a t (\a c < 0), or inside the triangle (\a a, \a b,
+/// \a c) -- input or earlier added points -- with barycentric weights \a w. Enough for a
+/// caller to give it the attributes of where it lies, in the order the points were added.
+struct SteinerPoint
+{
+	int a = -1, b = -1, c = -1;
+	double t = 0;
+	double w[3] = { 0, 0, 0 };
+};
+
+/**
+ * Refine a constrained Delaunay triangulation of a planar region by adding points, until
+ * no triangle has an angle below \a opt.minAngle (Delaunay refinement: Ruppert 1995, with
+ * the improvements described by Shewchuk 2002).
+ *
+ * \a points are the vertices, \a tris counterclockwise triples, Delaunay with respect to
+ * their boundary edges (FlipToConstrainedDelaunay, or TessellatePlanarContours2 with
+ * delaunay set). The boundary is the edges that have one triangle; it is the only
+ * constraint. Added points are appended to \a points, the triangulation is rewritten in
+ * \a tris, and each added point is described in \a added.
+ *
+ * A bad triangle is split at its circumcenter, or at Ungor's off-center, closer in, when
+ * that is enough: the apex of the isosceles triangle on its shortest edge whose apex angle
+ * is the target, which reaches the same quality with fewer points. A point that would
+ * encroach on a boundary edge (lie inside the circle having that edge as diameter) is not
+ * inserted; the edge is split instead, at its midpoint or, next to an input vertex, at a
+ * power-of-two distance from it ("concentric shells"), so two edges meeting at a small
+ * angle do not split each other forever. A thin triangle whose small angle comes from the
+ * input itself -- its shortest edge joins two points on two boundary edges, equidistant
+ * from the input vertex where those meet -- is left alone (Miller, Pav and Walkington).
+ *
+ * Without \a opt.splitBoundary the boundary is kept as it is: a point that would land
+ * beyond a boundary edge, or encroach on one, is not inserted, and the triangles along the
+ * boundary are improved only as far as that allows. Points on a boundary edge are on it exactly by construction: tests
+ * involving them and that edge treat them as collinear.
+ *
+ * Returns the number of points added. Below about 20.7 degrees the refinement provably
+ * stops; up to about 33 it does in practice; the budget \a opt.maxSteiner stops it in any
+ * case, and \a opt.minAngle is clamped to 34.
+ */
+inline int RefinePlanarTriangulation2(std::vector<Point2d> &points, std::vector<int> &tris,
+                                      const PlanarRefinement &opt, std::vector<SteinerPoint> &added)
+{
+	using namespace planar_polygon_detail;
+	const int inputCount = int(points.size());
+	const double pi = std::acos(-1.0);
+	const double minAngle = std::min(opt.minAngle, 34.0) * pi / 180;
+	if (!(minAngle > 0) || tris.empty()) return 0;
+	const double cosMax = std::cos(minAngle);
+	const double offDistance = 0.475 / std::tan(minAngle / 2);   // from the shortest edge, times its length
+	const int budget = opt.maxSteiner >= 0 ? opt.maxSteiner : 20 * inputCount + 100;
+	typedef std::uint64_t Key;
+	const auto ukey = [](int a, int b) { return (Key(std::uint32_t(std::min(a, b))) << 32) | std::uint32_t(std::max(a, b)); };
+
+	// The boundary edges, each remembered as a piece of the input edge it came from.
+	std::vector<std::array<int, 2>> segments;            // the input boundary edges
+	std::unordered_map<Key, int> segmentOf;               // current boundary edge -> input edge
+	std::vector<int> pointSegment(points.size(), -1);     // the input edge a point was added on
+	{
+		std::unordered_map<Key, int> count;
+		for (size_t i = 0; i < tris.size(); ++i) ++count[ukey(tris[i], tris[i - i % 3 + (i + 1) % 3])];
+		for (size_t i = 0; i < tris.size(); ++i) {
+			const int a = tris[i], b = tris[i - i % 3 + (i + 1) % 3];
+			if (count[ukey(a, b)] == 1) { segmentOf[ukey(a, b)] = int(segments.size()); segments.push_back({{a, b}}); }
+		}
+	}
+	const auto onSegment = [&](int p, int s) {
+		return p == segments[size_t(s)][0] || p == segments[size_t(s)][1] || pointSegment[size_t(p)] == s;
 	};
-	const auto key = [](int a, int b) { return (std::uint64_t(std::uint32_t(a)) << 32) | std::uint32_t(b); };
-	std::unordered_map<std::uint64_t, size_t> corner;   // directed edge (a, b) -> position of a in tris
-	for (size_t i = 0; i < tris.size(); ++i)
-		corner[key(tris[i], tris[i - i % 3 + (i + 1) % 3])] = i;
-	std::deque<std::pair<int, int>> queue;
-	for (size_t i = 0; i < tris.size(); ++i) {
-		const int a = tris[i], b = tris[i - i % 3 + (i + 1) % 3];
-		if (a < b) queue.push_back({a, b});
+	// Points added on an input edge are on it exactly: three points of one edge are collinear.
+	const auto orient = [&](int a, int b, int c) -> long double {
+		for (int s : { pointSegment[size_t(a)], pointSegment[size_t(b)], pointSegment[size_t(c)] })
+			if (s >= 0 && onSegment(a, s) && onSegment(b, s) && onSegment(c, s)) return 0;
+		return Orient2D(points[size_t(a)], points[size_t(b)], points[size_t(c)]);
+	};
+	const auto len2 = [&](int a, int b) { return (points[size_t(a)] - points[size_t(b)]).SquaredNorm(); };
+	const auto isBoundary = [&](int a, int b) { return segmentOf.count(ukey(a, b)) > 0; };
+	auto ft = MakeFlipTriangulation(tris, orient, len2, isBoundary);
+	// p inside the circle that has ab as diameter.
+	const auto encroaches = [&](int p, int a, int b) {
+		return (points[size_t(a)] - points[size_t(p)]).dot(points[size_t(b)] - points[size_t(p)]) < 0;
+	};
+
+	// The bad triangles, worst first: keyed by the cosine of the smallest angle.
+	std::priority_queue<std::pair<double, std::array<int, 3>>> bad;
+	const auto test = [&](int a, int b, int c) {
+		if (!(len2(a, b) > 0 && len2(b, c) > 0 && len2(c, a) > 0)) return;
+		const double cs = ft.MaxCos(a, b, c);
+		if (!(cs > cosMax)) return;
+		int p = a, q = b;   // the shortest edge
+		if (len2(b, c) < len2(p, q)) { p = b; q = c; }
+		if (len2(c, a) < len2(p, q)) { p = c; q = a; }
+		// The small angle is the input's: the shortest edge joins points added on two input
+		// edges, equidistant from the input vertex where these meet. Splitting would not end.
+		const int sp = pointSegment[size_t(p)], sq = pointSegment[size_t(q)];
+		if (sp >= 0 && sq >= 0 && sp != sq)
+			for (int j : segments[size_t(sp)])
+				if (j == segments[size_t(sq)][0] || j == segments[size_t(sq)][1]) {
+					const double d1 = len2(j, p), d2 = len2(j, q);
+					if (d1 < 1.001 * d2 && d1 > 0.999 * d2) return;
+				}
+		bad.push({cs, {{a, b, c}}});
+	};
+	for (size_t t = 0; t < tris.size(); t += 3) test(tris[t], tris[t + 1], tris[t + 2]);
+
+	// The corners of v in the triangles around it, starting from the triangle at slot t.
+	const auto star = [&](int v, size_t t) {
+		size_t start = t;
+		while (tris[start] != v) ++start;
+		std::vector<size_t> around;
+		size_t cur = start, next;
+		for (;;) {   // counterclockwise: the next triangle has the directed edge (v, apex)
+			around.push_back(cur);
+			if (!ft.Find(v, ft.Apex(cur), next)) break;   // the boundary
+			if (next == start) return around;            // all the way round
+			cur = next;
+		}
+		for (cur = start;;) {   // stopped by the boundary: clockwise from the start as well
+			size_t back;
+			if (!ft.Find(ft.Next(cur), v, back)) break;
+			cur = back - back % 3 + (back % 3 + 1) % 3;   // v's corner in that triangle
+			around.push_back(cur);
+		}
+		return around;
+	};
+	std::deque<std::pair<int, int>> encroached;   // boundary edges to split
+	// After v went in: test the triangles around it, and list the boundary edges it encroaches.
+	const auto afterInsert = [&](int v, size_t t, std::vector<std::pair<int, int>> *enc) {
+		for (size_t c : star(v, t)) {
+			const int n = ft.Next(c), o = ft.Apex(c);
+			if (isBoundary(n, o) && encroaches(v, n, o)) {
+				if (enc) enc->push_back({n, o});
+			}
+			test(v, n, o);
+		}
+	};
+	if (opt.splitBoundary)
+		for (size_t i = 0; i < tris.size(); ++i)
+			if (isBoundary(tris[i], ft.Next(i)) && encroaches(ft.Apex(i), tris[i], ft.Next(i)))
+				encroached.push_back({tris[i], ft.Next(i)});
+
+	int steiner = 0;
+	// Split the boundary edge (a, b), triangle (a, b, c), at the point x on it.
+	const auto splitBoundaryEdge = [&](int a, int b) {
+		size_t pos;
+		if (!ft.Find(a, b, pos)) return;
+		const int s = segmentOf[ukey(a, b)];
+		const int c = ft.Apex(pos);
+		// Midway, or next to an input vertex at a power-of-two distance from it: edges that
+		// meet at a small angle are then split at the same radii and stop encroaching.
+		const double l = std::sqrt(len2(a, b));
+		double f = 0.5;
+		if ((a < inputCount) != (b < inputCount)) {
+			double p2 = 1;
+			while (l > 3 * p2) p2 *= 2;
+			while (l < 1.5 * p2) p2 /= 2;
+			f = (a < inputCount) ? p2 / l : 1 - p2 / l;
+		}
+		const int x = int(points.size());
+		points.push_back(points[size_t(a)] + (points[size_t(b)] - points[size_t(a)]) * f);
+		pointSegment.push_back(s);
+		segmentOf.erase(ukey(a, b));
+		segmentOf[ukey(a, x)] = s;
+		segmentOf[ukey(x, b)] = s;
+		const size_t t = pos - pos % 3;
+		ft.Set(t, a, x, c);
+		ft.Add(x, b, c);
+		std::deque<std::pair<int, int>> q{ {b, c}, {c, a} };
+		ft.Legalize(q);
+		SteinerPoint sp;
+		const int o0 = segments[size_t(s)][0], o1 = segments[size_t(s)][1];
+		sp.a = o0; sp.b = o1;
+		sp.t = std::sqrt(len2(o0, x) / len2(o0, o1));
+		added.push_back(sp);
+		++steiner;
+		std::vector<std::pair<int, int>> enc;
+		afterInsert(x, t, &enc);
+		encroached.insert(encroached.end(), enc.begin(), enc.end());
+	};
+
+	while (steiner < budget) {
+		if (!encroached.empty()) {
+			// Split whatever is still a boundary edge: it was encroached on by a vertex, by a
+			// point that was taken back, or lay between a bad triangle and its circumcenter.
+			const auto e = encroached.front();
+			encroached.pop_front();
+			if (isBoundary(e.first, e.second)) splitBoundaryEdge(e.first, e.second);
+			continue;
+		}
+		if (bad.empty()) break;
+		const std::array<int, 3> tri = bad.top().second;
+		bad.pop();
+		size_t pos;
+		if (!ft.Find(tri[0], tri[1], pos) || ft.Apex(pos) != tri[2]) continue;   // gone meanwhile
+		// The circumcenter, or the off-center when it is closer to the shortest edge.
+		const Point2d &A = points[size_t(tri[0])], &B = points[size_t(tri[1])], &C = points[size_t(tri[2])];
+		const Point2d ab = B - A, ac = C - A;
+		const double d = 2 * (ab[0] * ac[1] - ab[1] * ac[0]);
+		if (!(std::abs(d) > 0)) continue;
+		const Point2d cc = A + Point2d((ac[1] * ab.SquaredNorm() - ab[1] * ac.SquaredNorm()) / d,
+		                               (ab[0] * ac.SquaredNorm() - ac[0] * ab.SquaredNorm()) / d);
+		int p = tri[0], q = tri[1];
+		if (len2(tri[1], tri[2]) < len2(p, q)) { p = tri[1]; q = tri[2]; }
+		if (len2(tri[2], tri[0]) < len2(p, q)) { p = tri[2]; q = tri[0]; }
+		const Point2d mid = (points[size_t(p)] + points[size_t(q)]) * 0.5;
+		const double h = offDistance * std::sqrt(len2(p, q)), toCc = (cc - mid).Norm();
+		const Point2d x = (h < toCc) ? mid + (cc - mid) * (h / toCc) : cc;
+		if (!std::isfinite(x[0]) || !std::isfinite(x[1])) continue;
+
+		// Locate it, walking from the bad triangle.
+		const int xi = int(points.size());
+		points.push_back(x);
+		pointSegment.push_back(-1);
+		enum { Inside, OnEdge, OnBoundary, Beyond, Nowhere } where = Nowhere;
+		size_t t = pos - pos % 3;
+		int ea = -1, eb = -1;
+		for (size_t step = 0; step < tris.size(); ++step) {
+			int neg = -1, zeros = 0, zeroEdge = -1;
+			for (int k = 0; k < 3; ++k) {
+				const int k1 = int((k + step) % 3);
+				const long double o = orient(tris[t + k1], tris[t + (k1 + 1) % 3], xi);
+				if (o < 0 && neg < 0) neg = k1;
+				if (o == 0) { ++zeros; zeroEdge = k1; }
+			}
+			if (neg >= 0) {
+				ea = tris[t + neg]; eb = tris[t + (neg + 1) % 3];
+				if (isBoundary(ea, eb)) { where = Beyond; break; }
+				size_t back;
+				if (!ft.Find(eb, ea, back)) break;
+				t = back - back % 3;
+				continue;
+			}
+			if (zeros == 0) where = Inside;
+			else if (zeros == 1) {
+				ea = tris[t + zeroEdge]; eb = tris[t + (zeroEdge + 1) % 3];
+				where = isBoundary(ea, eb) ? OnBoundary : OnEdge;
+			}
+			break;
+		}
+		if (where != Inside && where != OnEdge) {
+			points.pop_back();
+			pointSegment.pop_back();
+			// Beyond a boundary edge, or on one: that edge is in the way. Split it, if allowed,
+			// and come back to this triangle.
+			if (opt.splitBoundary && (where == Beyond || where == OnBoundary)) {
+				encroached.push_back({ea, eb});
+				bad.push({ft.MaxCos(tri[0], tri[1], tri[2]), tri});
+			}
+			continue;
+		}
+		// Where it goes, for the caller: the triangle it falls in and its weights there.
+		SteinerPoint sp;
+		sp.a = tris[t]; sp.b = tris[t + 1]; sp.c = tris[t + 2];
+		{
+			const long double area = Orient2D(points[size_t(sp.a)], points[size_t(sp.b)], points[size_t(sp.c)]);
+			sp.w[0] = double(Orient2D(points[size_t(sp.b)], points[size_t(sp.c)], x) / area);
+			sp.w[1] = double(Orient2D(points[size_t(sp.c)], points[size_t(sp.a)], x) / area);
+			sp.w[2] = 1 - sp.w[0] - sp.w[1];
+		}
+		ft.BeginJournal();
+		std::deque<std::pair<int, int>> legal;
+		if (where == Inside) {
+			const int a = tris[t], b = tris[t + 1], c = tris[t + 2];
+			ft.Set(t, a, b, xi);
+			ft.Add(b, c, xi);
+			ft.Add(c, a, xi);
+			legal = { {a, b}, {b, c}, {c, a} };
+		} else {
+			size_t p1, p2;
+			ft.Find(ea, eb, p1);
+			const bool twin = ft.Find(eb, ea, p2);
+			const int c = ft.Apex(p1);
+			const size_t t1 = p1 - p1 % 3;
+			ft.Set(t1, ea, xi, c);
+			ft.Add(xi, eb, c);
+			legal = { {eb, c}, {c, ea} };
+			if (twin) {
+				const int dd = ft.Apex(p2);
+				const size_t t2 = p2 - p2 % 3;
+				ft.Set(t2, eb, xi, dd);
+				ft.Add(xi, ea, dd);
+				legal.insert(legal.end(), { {ea, dd}, {dd, eb} });
+			}
+			t = t1;
+		}
+		ft.Legalize(legal);
+		std::vector<std::pair<int, int>> enc;
+		for (size_t c : star(xi, t)) {
+			const int n = ft.Next(c), o = ft.Apex(c);
+			if (isBoundary(n, o) && encroaches(xi, n, o)) enc.push_back({n, o});
+		}
+		if (!enc.empty()) {
+			// It would encroach on the boundary: take it back. The edges it encroaches on are
+			// split instead, when that is allowed, and the triangle tried again; otherwise the
+			// triangle stays as it is, since a point that close to a fixed edge would only
+			// make thinner triangles against it.
+			ft.Undo();
+			points.pop_back();
+			pointSegment.pop_back();
+			if (opt.splitBoundary) {
+				encroached.insert(encroached.end(), enc.begin(), enc.end());
+				bad.push({ft.MaxCos(tri[0], tri[1], tri[2]), tri});
+			}
+			continue;
+		}
+		ft.EndJournal();
+		added.push_back(sp);
+		++steiner;
+		afterInsert(xi, t, nullptr);
 	}
-	while (!queue.empty()) {
-		const int a = queue.front().first, b = queue.front().second;
-		queue.pop_front();
-		if (fixed.count({std::min(a, b), std::max(a, b)}))
-			continue;
-		const auto e1 = corner.find(key(a, b)), e2 = corner.find(key(b, a));
-		if (e1 == corner.end() || e2 == corner.end())
-			continue;
-		const size_t t1 = e1->second - e1->second % 3, t2 = e2->second - e2->second % 3;
-		const int c = tris[t1 + (e1->second - t1 + 2) % 3], d = tris[t2 + (e2->second - t2 + 2) % 3];
-		if (!(orient(c, a, d) > 0 && orient(d, b, c) > 0))
-			continue;
-		const double before = std::max(maxCos(a, b, c), maxCos(b, a, d));
-		const double after = std::max(maxCos(c, a, d), maxCos(d, b, c));
-		if (!(after < before - 1e-12))
-			continue;
-		for (size_t t : { t1, t2 })
-			for (int k = 0; k < 3; ++k)
-				corner.erase(key(tris[t + k], tris[t + (k + 1) % 3]));
-		const int nt[2][3] = { { c, a, d }, { d, b, c } };
-		for (int k = 0; k < 3; ++k) { tris[t1 + k] = nt[0][k]; tris[t2 + k] = nt[1][k]; }
-		for (size_t t : { t1, t2 })
-			for (int k = 0; k < 3; ++k)
-				corner[key(tris[t + k], tris[t + (k + 1) % 3])] = t + k;
-		for (auto e : { std::make_pair(a, d), std::make_pair(d, b), std::make_pair(b, c), std::make_pair(c, a) })
-			queue.push_back({std::min(e.first, e.second), std::max(e.first, e.second)});
-	}
+	return steiner;
 }
 
 /**
