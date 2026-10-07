@@ -121,6 +121,21 @@ class Graph : public TriMesh<std::vector<GVertex>, std::vector<GEdge> > {};
  * Before tightening (Param::maxIter = 0) a basis element is a sum of several of the 2g
  * loops and often has more than one component: each becomes its own Loop, so there can be
  * more than g of them. Tightened elements are single loops.
+ *
+ * \par Local minima
+ * A basis keeps one loop per independent direction, the shortest found. Where to cut a
+ * complex object is better answered by every place where a loop is locally short: the
+ * several necks of one long handle, which are all the same class and of which a basis keeps
+ * one, and the loops around a few handles at once. With Param::localMinima, Compute() starts
+ * from Param::samples root vertices spread over the surface (farthest point sampling); from
+ * each, the shortest loop of each handle and tunnel class through it is a candidate.
+ * Candidates of one class sharing more than Param::overlap of their vertices (of the smaller)
+ * are one, the shorter kept; each is then tightened on its own, re-rooted at its vertices
+ * while that finds a shorter loop of its class, and the duplicates merged again. Of these,
+ * the local minima of length are kept: those that no nearby loop of their class undercuts,
+ * and that are separated from any shorter one by loops at least Param::persistence longer,
+ * so that a tube of constant section gives one loop and two necks give two. #handles and
+ * #tunnels are then these loops, shortest first, as many as Param::maxLoops allows.
  */
 template <class MeshType>
 class HandleTunnelLoops
@@ -137,6 +152,11 @@ public:
     int maxIter = 100;      ///< tightening rounds; 0 keeps the loops found on the Reeb graph
     int patience = 10;      ///< stop tightening after this many rounds without a shorter basis
     int attempts = 10;      ///< height directions tried before giving up on degenerate ones
+    bool localMinima = false; ///< instead of a basis, many locally shortest loops (see Compute())
+    int samples = 100;      ///< local minima: root vertices spread over the surface to start from
+    double overlap = 0.5;   ///< local minima: two loops of one class sharing more of their vertices are one
+    double persistence = 0.05; ///< local minima: a loop is kept only if the loops joining it to a shorter one of its class are longer by this fraction
+    int maxLoops = 0;       ///< local minima: at most this many loops per family, the shortest; 0 keeps all
   };
 
   std::vector<Loop> handles;  ///< the handle loops, around the handles
@@ -179,7 +199,8 @@ public:
     Annotate();
 
     std::vector<Loop> out[2];
-    if (par.maxIter > 0) Tighten(par.maxIter, par.patience, rnd, out);
+    if (par.localMinima) LocalMinima(par, rnd, out);
+    else if (par.maxIter > 0) Tighten(par.maxIter, par.patience, rnd, out);
     else
       for (int t = 0; t < 2; ++t)
         for (const std::vector<int> &c : chain[t])
@@ -850,24 +871,37 @@ private:
     assert(k == 2 * genus);
   }
 
-  // Shortest path tree from r: distances and the edge to the parent.
-  void Dijkstra(int r, std::vector<double> &dist, std::vector<int> &parentEdge, std::vector<int> &settled) const
+  // Shortest path tree from r: distances and the edge to the parent, of the vertices within
+  // \a bound of r; the others are left at the maximum distance.
+  void Dijkstra(int r, std::vector<double> &dist, std::vector<int> &parentEdge, std::vector<int> &settled,
+                double bound = std::numeric_limits<double>::max()) const
+  {
+    Dijkstra(std::vector<int>(1, r), dist, parentEdge, settled, bound);
+  }
+  void Dijkstra(const std::vector<int> &sources, std::vector<double> &dist, std::vector<int> &parentEdge,
+                std::vector<int> &settled, double bound = std::numeric_limits<double>::max()) const
   {
     dist.assign(w.vert.size(), std::numeric_limits<double>::max());
     parentEdge.assign(w.vert.size(), -1);
     settled.clear();
     typedef std::pair<double,int> QE;
     std::priority_queue<QE, std::vector<QE>, std::greater<QE> > q;
-    dist[r] = 0; q.push(QE(0, r));
+    std::vector<int> reached;
+    for (int r : sources) { dist[r] = 0; q.push(QE(0, r)); }
     while (!q.empty())
     {
       const QE t = q.top(); q.pop();
       if (t.first > dist[t.second]) continue;
+      if (t.first > bound)
+      {
+        for (int v : reached) if (dist[v] > bound) { dist[v] = std::numeric_limits<double>::max(); parentEdge[v] = -1; }
+        return;
+      }
       settled.push_back(t.second);
       for (int e : vertEdges[t.second])
       {
         const int u = Other(e, t.second);
-        if (t.first + edgeLen[e] < dist[u]) { dist[u] = t.first + edgeLen[e]; parentEdge[u] = e; q.push(QE(dist[u], u)); }
+        if (t.first + edgeLen[e] < dist[u]) { dist[u] = t.first + edgeLen[e]; parentEdge[u] = e; q.push(QE(dist[u], u)); reached.push_back(u); }
       }
     }
   }
@@ -882,12 +916,16 @@ private:
     return true;
   }
 
-  // Shortest canonical loop of every class of each family, over the tree from r.
-  void Canonical(int r, const std::vector<Bits> masks[2], std::map<Bits, Elem> best[2]) const
+  // Shortest canonical loop of every class of each family, over the tree from r. Optionally
+  // only the loops shorter than \a bound (the tree then stops at half of it), only those of
+  // class \a only, with their paths built, and the distances from r returned.
+  void Canonical(int r, const std::vector<Bits> masks[2], std::map<Bits, Elem> best[2],
+                 double bound = std::numeric_limits<double>::max(), const Bits *only = nullptr,
+                 bool build = false, std::vector<double> *distances = nullptr) const
   {
     std::vector<double> dist;
     std::vector<int> par, settled;
-    Dijkstra(r, dist, par, settled);
+    Dijkstra(r, dist, par, settled, bound == std::numeric_limits<double>::max() ? bound : bound / 2);
     std::vector<uint64_t> A(w.vert.size() * words, 0);
     for (int v : settled)
       if (v != r)
@@ -897,9 +935,10 @@ private:
     for (size_t e = 0; e < rg.edgeVert.size(); ++e)
     {
       const int u = rg.edgeVert[e].first, v = rg.edgeVert[e].second;
-      if (par[u] == int(e) || par[v] == int(e) || dist[u] == std::numeric_limits<double>::max()) continue;
+      if (par[u] == int(e) || par[v] == int(e) || dist[u] == std::numeric_limits<double>::max()
+          || dist[v] == std::numeric_limits<double>::max() || dist[u] + dist[v] + edgeLen[e] >= bound) continue;
       for (int k = 0; k < words; ++k) x[k] = A[size_t(u) * words + k] ^ A[size_t(v) * words + k] ^ ann[e * words + k];
-      if (Zero(x)) continue;
+      if (Zero(x) || (only && x != *only)) continue;
       for (int t = 0; t < 2; ++t)
         if (InFamily(x, masks[t]))
         {
@@ -909,34 +948,57 @@ private:
           else if (c.len < it->second.len) it->second = c;
         }
     }
+    if (build)
+      for (int t = 0; t < 2; ++t)
+        for (auto &kv : best[t])
+          if (kv.second.root == r && kv.second.loops.empty()) kv.second.loops.push_back(TreeLoop(r, kv.second.edge, par));
+    if (distances) distances->swap(dist);
   }
 
-  // Both families grow from the same base points: tunnel loops run through the handles
-  // and handle loops around the tunnels, so each family seeds the other.
-  void Tighten(int maxIter, int patience, math::MarsenneTwisterRNG &rnd, std::vector<Loop> out[2])
+  // The loop made of edge e and the paths of its ends to r in the tree given by par.
+  Loop TreeLoop(int r, int e, const std::vector<int> &par) const
+  {
+    Loop up, down;
+    for (int x = rg.edgeVert[e].first; ; x = Other(par[x], x)) { up.push_back(x); if (x == r) break; }
+    for (int x = rg.edgeVert[e].second; x != r; x = Other(par[x], x)) down.push_back(x);
+    Loop l(up.rbegin(), up.rend());
+    l.insert(l.end(), down.begin(), down.end());
+    CancelBacktracks(l);
+    return l;
+  }
+
+  // The classes of the handle family (t = 0) and of the tunnel family (t = 1) are those
+  // whose coordinates on the other family's initial loops vanish: a mask per such coordinate.
+  void FamilyMasks(std::vector<Bits> masks[2]) const
   {
     std::vector<Bits> M;
     for (int t = 0; t < 2; ++t) for (const std::vector<int> &c : chain[t]) M.push_back(Class(c));
-    const std::vector<Bits> classes = M;
     if (!Invert(M)) throw std::logic_error("HandleTunnelLoops: the initial loops are not a homology basis.");
-    std::vector<Bits> masks[2];
-    std::vector<Elem> cur[2];
-    std::map<Bits, Elem> best[2];
-    double total[2];
     for (int t = 0; t < 2; ++t)
-    {
-      // A class is in the family when its coordinates on the other family vanish.
       for (int j = (1 - t) * genus; j < (2 - t) * genus; ++j)
       {
         Bits col(words, 0);
         for (int i = 0; i < 2 * genus; ++i) if (Bit(M[i], j)) Flip(col, i);
         masks[t].push_back(col);
       }
+  }
+
+  // Both families grow from the same base points: tunnel loops run through the handles
+  // and handle loops around the tunnels, so each family seeds the other.
+  void Tighten(int maxIter, int patience, math::MarsenneTwisterRNG &rnd, std::vector<Loop> out[2])
+  {
+    std::vector<Bits> masks[2];
+    FamilyMasks(masks);
+    std::vector<Elem> cur[2];
+    std::map<Bits, Elem> best[2];
+    double total[2];
+    for (int t = 0; t < 2; ++t)
+    {
       for (int i = 0; i < genus; ++i)
       {
         double len = 0;
         for (int e : chain[t][i]) len += edgeLen[e];
-        cur[t].push_back(Elem{len, classes[t * genus + i], -1, -1, ChainLoops(chain[t][i])});
+        cur[t].push_back(Elem{len, Class(chain[t][i]), -1, -1, ChainLoops(chain[t][i])});
       }
       total[t] = std::numeric_limits<double>::max();
     }
@@ -974,6 +1036,130 @@ private:
       for (const Elem &e : cur[t]) out[t].insert(out[t].end(), e.loops.begin(), e.loops.end());
   }
 
+  // Loops of one class sharing more than \a overlap of the vertices of the smaller are one:
+  // keep the shortest of each such group, shortest first.
+  static void MergeDuplicates(std::vector<Elem> &el, double overlap)
+  {
+    std::stable_sort(el.begin(), el.end(), [](const Elem &a, const Elem &b) { return a.len < b.len; });
+    std::vector<Elem> kept;
+    std::vector<std::vector<int> > keptVerts;
+    for (Elem &e : el)
+    {
+      std::vector<int> vs(e.loops[0].begin(), e.loops[0].end());
+      std::sort(vs.begin(), vs.end());
+      bool duplicate = false;
+      for (size_t k = 0; k < kept.size() && !duplicate; ++k)
+      {
+        if (kept[k].a != e.a) continue;
+        std::vector<int> common;
+        std::set_intersection(vs.begin(), vs.end(), keptVerts[k].begin(), keptVerts[k].end(), std::back_inserter(common));
+        duplicate = common.size() > overlap * double(std::min(vs.size(), keptVerts[k].size()));
+      }
+      if (duplicate) continue;
+      keptVerts.push_back(vs);
+      kept.push_back(e);
+    }
+    el.swap(kept);
+  }
+
+  // Keep the loops (sorted shortest first) that are local minima of length among their
+  // neighbours -- loops of their class coming within \a radius of them, about twice the root
+  // spacing, so that candidates from neighbouring roots meet -- and significant ones: the
+  // merge tree of the candidates, added shortest first, joins the basins of two minima at
+  // the shortest loop connecting them, and the higher minimum is kept only if that loop is
+  // longer by at least \a persistence of it. Two necks of one handle are kept, with the wider
+  // stretch between them; a tube of constant section, or a torus, gives one loop, not one per
+  // cross-section. (Re-rooting a loop at its own vertices cannot slide it along a tube, so the
+  // candidates alone do not tell a neck from any other cross-section.)
+  void KeepMinima(std::vector<Elem> &el, double radius, double persistence) const
+  {
+    const size_t n = el.size();
+    std::vector<std::vector<size_t> > near(n);
+    std::vector<double> dist;
+    std::vector<int> par, settled;
+    for (size_t i = 0; i < n; ++i)
+    {
+      Dijkstra(el[i].loops[0], dist, par, settled, radius);
+      for (size_t j = i + 1; j < n; ++j)
+        if (el[j].a == el[i].a)
+          for (int v : el[j].loops[0])
+            if (dist[v] != std::numeric_limits<double>::max()) { near[i].push_back(j); near[j].push_back(i); break; }
+    }
+    std::vector<int> id(n), lowest(n);     // a basin's minimum, stored at its representative
+    std::vector<char> active(n, 0), kept(n, 0);
+    DisjointSet<int> basin;
+    for (size_t i = 0; i < n; ++i)
+    {
+      id[i] = int(i);
+      basin.MakeSet(&id[i]);
+      active[i] = 1;
+      std::set<int *> roots;
+      for (size_t j : near[i]) if (active[j] && j != i) roots.insert(basin.FindSet(&id[j]));
+      if (roots.empty()) { lowest[i] = int(i); kept[i] = 1; continue; }   // a new minimum
+      // The deepest basin goes on; the others end here, kept only if this loop rises
+      // clearly above their minimum.
+      int *deepest = *std::min_element(roots.begin(), roots.end(), [&](int *x, int *y) { return lowest[*x] < lowest[*y]; });
+      const int keep = lowest[*deepest];
+      for (int *r : roots)
+        if (r != deepest && el[i].len < el[size_t(lowest[*r])].len * (1 + persistence)) kept[size_t(lowest[*r])] = 0;
+      for (int *r : roots) basin.Union(r, &id[i]);
+      lowest[*basin.FindSet(&id[i])] = keep;
+    }
+    std::vector<Elem> out;
+    for (size_t i = 0; i < n; ++i) if (kept[i]) out.push_back(el[i]);
+    el.swap(out);
+  }
+
+  // Locally shortest loops of both families, from roots spread over the surface.
+  void LocalMinima(const Param &par, math::MarsenneTwisterRNG &rnd, std::vector<Loop> out[2])
+  {
+    std::vector<Bits> masks[2];
+    FamilyMasks(masks);
+    std::vector<Elem> cand[2];
+    // Farthest point sampling: each root's tree gives both its candidates and the distances
+    // that choose the next root, away from the fans that close the holes.
+    std::vector<double> nearest(w.vert.size(), std::numeric_limits<double>::max()), dist;
+    double spacing = 0;   // no vertex is farther than this from a root
+    int r = int(rnd.generate(unsigned(firstFan)));
+    for (int k = 0; k < par.samples; ++k)
+    {
+      std::map<Bits, Elem> local[2];
+      Canonical(r, masks, local, std::numeric_limits<double>::max(), nullptr, true, &dist);
+      for (int t = 0; t < 2; ++t) for (auto &kv : local[t]) cand[t].push_back(kv.second);
+      int far = -1;
+      for (int v = 0; v < firstFan; ++v)
+      {
+        nearest[v] = std::min(nearest[v], dist[v]);
+        if (far < 0 || nearest[v] > nearest[far]) far = v;
+      }
+      if (far < 0 || !(nearest[far] > 0)) break;
+      spacing = nearest[far];
+      r = far;
+    }
+    for (int t = 0; t < 2; ++t)
+    {
+      MergeDuplicates(cand[t], par.overlap);
+      // Each tightened on its own, keeping its class: re-rooted at a vertex of the loop, a
+      // shorter loop of the class through it, if there is one, lies within half its length.
+      for (Elem &e : cand[t])
+        for (int it = 0, failed = 0; it < par.maxIter && failed < std::max(1, par.patience); ++it)
+        {
+          const Loop &l = e.loops[0];
+          const int root = (failed == 0) ? l[l.size() / 2] : l[rnd.generate(unsigned(l.size()))];
+          std::map<Bits, Elem> local[2];
+          Canonical(root, masks, local, e.len * (1 - 1e-9), &e.a, true);
+          const typename std::map<Bits, Elem>::iterator f = local[t].find(e.a);
+          if (f == local[t].end()) { ++failed; continue; }
+          e = f->second;
+          failed = 0;
+        }
+      MergeDuplicates(cand[t], par.overlap);
+      KeepMinima(cand[t], 2 * spacing, par.persistence);
+      if (par.maxLoops > 0 && int(cand[t].size()) > par.maxLoops) cand[t].resize(size_t(par.maxLoops));
+      for (const Elem &e : cand[t]) out[t].push_back(e.loops[0]);
+    }
+  }
+
   // Build the paths of the canonical loops, one shortest path tree per root.
   void Materialize(std::vector<Elem> &el) const
   {
@@ -984,16 +1170,7 @@ private:
     for (typename std::map<int, std::vector<Elem*> >::iterator i = byRoot.begin(); i != byRoot.end(); ++i)
     {
       Dijkstra(i->first, dist, par, settled);
-      for (Elem *e : i->second)
-      {
-        Loop up, down;
-        for (int x = rg.edgeVert[e->edge].first; ; x = Other(par[x], x)) { up.push_back(x); if (x == i->first) break; }
-        for (int x = rg.edgeVert[e->edge].second; x != i->first; x = Other(par[x], x)) down.push_back(x);
-        Loop l(up.rbegin(), up.rend());
-        l.insert(l.end(), down.begin(), down.end());
-        CancelBacktracks(l);
-        e->loops.push_back(l);
-      }
+      for (Elem *e : i->second) e->loops.push_back(TreeLoop(i->first, e->edge, par));
     }
   }
 };
