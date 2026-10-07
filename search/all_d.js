@@ -17,5 +17,6 @@ var searchData=
   ['orienteddisk_14',['OrientedDisk',['../namespacevcg_1_1tri.html#a025490b2dc521127ca9ec01c2fb4b05f',1,'vcg::tri']]],
   ['orientedellipticprism_15',['OrientedEllipticPrism',['../namespacevcg_1_1tri.html#a38b42459ef33b06d4303e12c4f493042',1,'vcg::tri']]],
   ['orientedrect_16',['OrientedRect',['../namespacevcg_1_1tri.html#a0906c17cd1ed843b1f70fd9c03d38461',1,'vcg::tri']]],
-  ['orientedsquare_17',['OrientedSquare',['../namespacevcg_1_1tri.html#a8be6720ca5a8b247fa39fd5cc08ceeb9',1,'vcg::tri']]]
+  ['orientedsquare_17',['OrientedSquare',['../namespacevcg_1_1tri.html#a8be6720ca5a8b247fa39fd5cc08ceeb9',1,'vcg::tri']]],
+  ['overlap_18',['overlap',['../structvcg_1_1tri_1_1HandleTunnelLoops_1_1Param.html#a3ea1e4b11cf3ef6343975a69ab9ffb4d',1,'vcg::tri::HandleTunnelLoops::Param']]]
 ];

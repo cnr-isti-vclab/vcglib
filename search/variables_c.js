@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['sampleptmesh_0',['samplePtMesh',['../classvcg_1_1tri_1_1HausdorffSampler.html#ad51f5b21b1e263fe73804a683802f49f',1,'vcg::tri::HausdorffSampler']]],
-  ['seed_1',['seed',['../structvcg_1_1tri_1_1HandleTunnelLoops_1_1Param.html#a57cf568f347a9f270be11587d04a8ce3',1,'vcg::tri::HandleTunnelLoops::Param']]],
-  ['surfdistthr_2',['surfDistThr',['../classvcg_1_1tri_1_1CoM_1_1Param.html#a10aa38dd2883caaa0d9cfe4de5873109',1,'vcg::tri::CoM::Param']]]
+  ['par_0',['par',['../classvcg_1_1tri_1_1CoM.html#a4f0e64a43ae6759b2221980d80bbc149',1,'vcg::tri::CoM']]],
+  ['patience_1',['patience',['../structvcg_1_1tri_1_1HandleTunnelLoops_1_1Param.html#af133f59a81d8bcfb97f701ad712b79d5',1,'vcg::tri::HandleTunnelLoops::Param']]],
+  ['persistence_2',['persistence',['../structvcg_1_1tri_1_1HandleTunnelLoops_1_1Param.html#a02032b51366ec487afee77a7e5f1393d',1,'vcg::tri::HandleTunnelLoops::Param']]]
 ];
