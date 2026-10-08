@@ -880,9 +880,16 @@ public:
 
   /// Snap at rounding level only: a point this close to a vertex or an edge is on it.
   /// Shared by the trace and by CoMEmbed, so both agree on where a curve point is.
+  ///
+  /// By distance alone, with no barycentric bound: at rounding level a point within the
+  /// distance of an edge is on it however small the triangle, and that distance is the same
+  /// seen from either face of the edge, so a point found on an edge in one face is found on
+  /// it again in the other. A barycentric bound depends on the face's shape: on a tiny
+  /// triangle next to a vertex, one face put a point on an edge where its neighbour put it on
+  /// another, and the curve embedding then found a segment in no face.
   bool RoundingSnap(CoordType &ip, const FaceType &f) const
   {
-    return BarycentricSnap(ip, f, ScalarType(1e-4), base.bbox.Diag() * ScalarType(1e-6));
+    return BarycentricSnap(ip, f, ScalarType(1), base.bbox.Diag() * ScalarType(1e-6));
   }
 
   /// Where a point is on the mesh: every face it belongs to, with its barycentric
