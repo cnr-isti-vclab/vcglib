@@ -28,6 +28,7 @@
 #include <map>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/system/utf8_file.h>
 
 #include "io_material.h"
 
@@ -149,6 +150,53 @@ namespace io {
 		/*
 			function which saves in 3DS file format
 		*/
+		// FILE callbacks for lib3ds_file_write(), same as the ones lib3ds_file_save() uses.
+		static Lib3dsBool FileIoError(void *self)
+		{
+			return ferror((FILE *)self) != 0;
+		}
+
+		static long FileIoSeek(void *self, long offset, Lib3dsIoSeek origin)
+		{
+			int o = SEEK_SET;
+			if (origin == LIB3DS_SEEK_CUR) o = SEEK_CUR;
+			else if (origin == LIB3DS_SEEK_END) o = SEEK_END;
+			return fseek((FILE *)self, offset, o);
+		}
+
+		static long FileIoTell(void *self)
+		{
+			return ftell((FILE *)self);
+		}
+
+		static size_t FileIoRead(void *self, void *buffer, size_t size)
+		{
+			return fread(buffer, 1, size, (FILE *)self);
+		}
+
+		static size_t FileIoWrite(void *self, const void *buffer, size_t size)
+		{
+			return fwrite(buffer, 1, size, (FILE *)self);
+		}
+
+		// lib3ds_file_save() with a UTF-8 filename: lib3ds opens files with a
+		// narrow fopen, which does not accept UTF-8 filenames on Windows.
+		static bool SaveLib3dsFile(Lib3dsFile *file, const char *filename)
+		{
+			FILE *f = vcg::utf8::FOpen(filename, "wb");
+			if (!f)
+				return false;
+			Lib3dsIo *io = lib3ds_io_new(f, FileIoError, FileIoSeek, FileIoTell, FileIoRead, FileIoWrite);
+			if (!io) {
+				fclose(f);
+				return false;
+			}
+			bool result = lib3ds_file_write(file, io) != 0;
+			fclose(f);
+			lib3ds_io_free(io);
+			return result;
+		}
+
 		static int SaveBinary(const SaveMeshType &m, const char * filename, const int &mask, CallBackPos *cb=0)
 		{
 			if(m.vn > MAX_POLYGONS)//check max polygons
@@ -430,7 +478,7 @@ namespace io {
 			node->parent_id = LIB3DS_NO_PARENT;	
 			lib3ds_file_insert_node(file,node);//inserts the node into file
 
-			bool result = lib3ds_file_save(file, filename); //saves the file
+			bool result = SaveLib3dsFile(file, filename); //saves the file
 			if(result)
 				return E_NOERROR; 
 			else 

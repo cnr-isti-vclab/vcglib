@@ -29,6 +29,7 @@
 #ifndef VCGLIB_IMPORT_FBX
 #define VCGLIB_IMPORT_FBX
 #include <wrap/openfbx/src/ofbx.h>
+#include <wrap/system/utf8_file.h>
 
 #include <fstream>
 #include <vcg/complex/complex.h>
@@ -127,7 +128,7 @@ public:
   static int Open( OpenMeshType &m, const char * filename, CallBackPos *cb = nullptr)
   {
     
-    FILE* fp = fopen(filename, "rb");
+    FILE* fp = vcg::utf8::FOpen(filename, "rb");
     if (!fp) return false;
     
     fseek(fp, 0, SEEK_END);

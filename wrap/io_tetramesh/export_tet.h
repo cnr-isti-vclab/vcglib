@@ -30,6 +30,7 @@
 #define __VCGLIB_TETRAEXPORT_TET
 
 #include<wrap/io_trimesh/precision.h>
+#include <wrap/system/utf8_file.h>
 
 #include <stdio.h>
 
@@ -64,11 +65,11 @@ public:
         eleName.append(".ele");
         nodeName.append(".node");
 
-        eleFile = fopen(eleName.c_str() , "wb");
+        eleFile = vcg::utf8::FOpen(eleName.c_str() , "wb");
         if (eleFile == NULL)
             return 1;
         
-        nodeFile = fopen(nodeName.c_str() , "wb");
+        nodeFile = vcg::utf8::FOpen(nodeName.c_str() , "wb");
         if (nodeFile == NULL)
             return 1;
         

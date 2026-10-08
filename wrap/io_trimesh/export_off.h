@@ -30,6 +30,7 @@
 #define __VCGLIB_EXPORT_OFF
 
 #include <stdio.h>
+#include <wrap/system/utf8_file.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include<wrap/io_trimesh/precision.h>
 #include <vcg/complex/algorithms/clean.h>
@@ -58,7 +59,7 @@ public:
       tri::UpdateTopology<SaveMeshType>::FaceFace(m);
     }
 
-    FILE * fpout = fopen(filename,"w");
+    FILE * fpout = vcg::utf8::FOpen(filename,"w");
     if(fpout==NULL)	return 1; // 1 is the error code for cant'open, see the ErrorMsg function
 
 

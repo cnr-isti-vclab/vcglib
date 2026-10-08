@@ -29,6 +29,7 @@ $Log: not supported by cvs2svn $
 #define __VCGLIB_IMPORTER_SMF
 
 #include <stdio.h>
+#include <wrap/system/utf8_file.h>
 #include <vcg/space/point3.h>
 
 namespace vcg {
@@ -86,7 +87,7 @@ namespace io {
 			float x,y,z;	
 			bool one = true;			
 			std::map<int,VertexPointer> mv;
-			fp = fopen(filename,"r");
+			fp = vcg::utf8::FOpen(filename,"r");
 			if(!fp) return -1;
 			char buf[1024];
 			while( fgets(buf,1024,fp) )	

@@ -25,6 +25,7 @@
 #define __OM_ALNPARSER_
 
 #include <vector>
+#include <wrap/system/utf8_file.h>
 #include <string>
 #include <vcg/math/matrix44.h>
 
@@ -73,7 +74,7 @@ public:
 	{
 		rangemaps.clear();
 
-		FILE *stream=fopen(ALNname, "rt");
+		FILE *stream=vcg::utf8::FOpen(ALNname, "rt");
 		if(stream==NULL)
 			return CantOpen;
 
@@ -125,7 +126,7 @@ public:
 	static bool SaveALN(const char *alnfile, std::vector<std::string> &names, std::vector<vcg::Matrix44<matrixfloat> > &Tr)
 	{
 		// printf("Saving aln file %s\n",alnfile);
-		FILE *fp=fopen(alnfile,"w");
+		FILE *fp=vcg::utf8::FOpen(alnfile,"w");
 		if(!fp)
 		{
 			printf("unable to open file %s\n",alnfile);

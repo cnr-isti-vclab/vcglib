@@ -44,6 +44,7 @@ Added Comments for documentation
 #define __VCGLIB_EXPORT_WRL
 
 #include <stdio.h>
+#include <wrap/system/utf8_file.h>
 #include <wrap/io_trimesh/io_mask.h>
 
 namespace vcg {
@@ -68,7 +69,7 @@ namespace vcg {
 				static int Save(const SaveMeshType &m, const char * filename, const int &mask, CallBackPos * /*cb=0*/)
 				{					
 					FILE *fp;
-					fp = fopen(filename,"wb");
+					fp = vcg::utf8::FOpen(filename,"wb");
 					if(fp==NULL)
 						return 1;
 

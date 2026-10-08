@@ -39,6 +39,7 @@ converted to library style (namespaces etc..)
 #define __VCGLIB_EXPORTERSMF
 
 #include <vcg/space/point3.h>
+#include <wrap/system/utf8_file.h>
 
 namespace vcg {
 namespace tetra {
@@ -69,7 +70,7 @@ struct ExporterTS{
 static int Save( MESHTYPE & m, const char * filename )
 {	
 	
-	F() = fopen(filename,"w");
+	F() = vcg::utf8::FOpen(filename,"w");
 	if(F() == NULL ) 
 		{
 			printf( "The file could not be opened\n" );

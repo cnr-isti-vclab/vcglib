@@ -33,6 +33,7 @@ Revision 1.2  2006/11/16 11:24:44
 #define __VCGLIB_EXPORT_SMF
 
 #include <stdio.h>
+#include <wrap/system/utf8_file.h>
 
 namespace vcg {
 namespace tri {
@@ -58,7 +59,7 @@ namespace io {
 			VertexIterator vi;
 			FaceIterator fi;
 			FILE *fp;
-			fp = fopen(filename,"wb");
+			fp = vcg::utf8::FOpen(filename,"wb");
 			fprintf(fp,"#SMF \n" );
 			
 			std::map<VertexPointer,int> index;

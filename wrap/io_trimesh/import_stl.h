@@ -24,6 +24,7 @@
 #ifndef __VCGLIB_IMPORT_STL
 #define __VCGLIB_IMPORT_STL
 #include <stdio.h>
+#include <wrap/system/utf8_file.h>
 #include <algorithm>
 #include <wrap/io_trimesh/io_mask.h>
 
@@ -112,7 +113,7 @@ static bool IsSTLColored(const char * filename, bool &coloredFlag, bool &magicsM
   if(binaryFlag==false)
      return true; 
    
-   FILE *fp = fopen(filename, "rb");
+   FILE *fp = vcg::utf8::FOpen(filename, "rb");
    char buf[STL_LABEL_SIZE+1];
    fread(buf,sizeof(char),STL_LABEL_SIZE,fp);
    std::string strInput(buf);
@@ -152,7 +153,7 @@ static bool IsSTLColored(const char * filename, bool &coloredFlag, bool &magicsM
 static bool IsSTLMalformed(const char * filename, bool &binaryFlag)
 {
   binaryFlag=false;
-  FILE *fp = fopen(filename, "rb");
+  FILE *fp = vcg::utf8::FOpen(filename, "rb");
   /* Find size of file */
   fseek(fp, 0, SEEK_END);
   std::size_t file_size = ftell(fp);
@@ -195,7 +196,7 @@ static bool IsSTLMalformed(const char * filename, bool &binaryFlag)
 
 static int Open( OpenMeshType &m, const char * filename, int &loadMask, CallBackPos *cb=0)
 {
-  FILE *fp = fopen(filename, "r");
+  FILE *fp = vcg::utf8::FOpen(filename, "r");
   if(fp == NULL)
       return E_CANTOPEN;
   fclose(fp);
@@ -211,7 +212,7 @@ static int Open( OpenMeshType &m, const char * filename, int &loadMask, CallBack
 static int OpenBinary( OpenMeshType &m, const char * filename, int &loadMask, CallBackPos *cb=0)
 {
   FILE *fp;
-  fp = fopen(filename, "rb");
+  fp = vcg::utf8::FOpen(filename, "rb");
   if(fp == NULL)
   {
     return E_CANTOPEN;
@@ -261,7 +262,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, int &loadMask, Ca
   static int OpenAscii( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
   {
     FILE *fp;
-    fp = fopen(filename, "r");
+    fp = vcg::utf8::FOpen(filename, "r");
     if(fp == NULL)
     {
       return E_CANTOPEN;

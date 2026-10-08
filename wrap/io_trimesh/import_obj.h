@@ -29,6 +29,7 @@
 #include <vcg/space/planar_polygon_tessellation.h>
 
 #include <wrap/callback.h>
+#include <wrap/system/utf8_file.h>
 #include <wrap/io_trimesh/io_mask.h>
 #include <wrap/io_trimesh/io_material.h>
 #include <vcg/space/color4.h>
@@ -228,7 +229,7 @@ public:
     if (oi.numVertices == 0)
       return E_NO_VERTEX;
           
-    std::ifstream stream(filename);
+    std::ifstream stream(vcg::utf8::ToStreamPath(filename));
     if (stream.fail())
     {
       stream.close();
@@ -859,7 +860,7 @@ public:
   static bool LoadMask(const char * filename, Info &oi)
   {
     
-    std::ifstream stream(filename);
+    std::ifstream stream(vcg::utf8::ToStreamPath(filename));
     if (stream.fail())
     {
       stream.close();
@@ -964,7 +965,7 @@ public:
 	{
 		// assumes we are in the right directory
 
-		std::ifstream stream(filename);
+		std::ifstream stream(vcg::utf8::ToStreamPath(filename));
 		if (stream.fail())
 			return false;
 
