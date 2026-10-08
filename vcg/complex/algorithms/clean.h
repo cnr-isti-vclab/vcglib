@@ -1243,12 +1243,37 @@ public:
 
 
 
+	/// \brief Counts the boundary loops of the mesh. Needs FF adjacency.
+	///
+	/// Returns -1 when the loops are not well defined, which is when a non-manifold edge (one
+	/// with more than two faces) touches the boundary. A non-manifold edge anywhere else does
+	/// not matter, and the loops are counted as usual.
 	static int CountHoles( MeshType & m)
 	{
 		RequireFFAdjacency(m);
 		MeshAssert<MeshType>::FFAdjacencyIsInitialized(m);
-		// Walking a boundary across a non-manifold edge would loop or assert in Pos::FlipF.
-		MeshAssert<MeshType>::FFTwoManifoldEdge(m);
+		// The walk below turns around each boundary vertex through the faces on it
+		// (Pos::NextB) until it reaches the next border edge. That only comes round when the
+		// faces around the vertex form a fan: a non-manifold edge on the vertex closes the
+		// rotation on itself without ever reaching a border, and the walk would not end.
+		// Only the vertices of border edges are turned around, so mark those on a
+		// non-manifold edge and give up if a border edge has one.
+		UpdateFlags<MeshType>::VertexClearV(m);
+		for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi) if(!fi->IsD())
+			for(int j=0;j<3;++j)
+				if(!face::IsManifold(*fi,j))
+				{
+					fi->V(j)->SetV();
+					fi->V1(j)->SetV();
+				}
+		bool wellDefined=true;
+		for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi) if(!fi->IsD())
+			for(int j=0;j<3;++j)
+				if(face::IsBorder(*fi,j) && (fi->V(j)->IsV() || fi->V1(j)->IsV()))
+					wellDefined=false;
+		UpdateFlags<MeshType>::VertexClearV(m);
+		if(!wellDefined)
+			return -1;
 		UpdateFlags<MeshType>::FaceClearV(m);
 		int loopNum=0;
 		for(FaceIterator fi=m.face.begin(); fi!=m.face.end();++fi) if(!fi->IsD())
