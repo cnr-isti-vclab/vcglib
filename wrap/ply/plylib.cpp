@@ -71,6 +71,40 @@ typedef unsigned long ulong;
 typedef unsigned char uchar;
 typedef unsigned int uint;
 
+// The binary readers below make one read per scalar (a face is a count byte and three ints),
+// about twenty million calls for a mesh of 650k faces, and fread takes and releases the
+// stream's lock on every one of them: it was over three quarters of the time spent loading
+// a binary PLY. Small reads take bytes from the stream's own buffer with the unlocked getc
+// instead. Nothing else changes: it is the same FILE and the same buffer, so it mixes freely
+// with the fgets and fscanf the header and the ASCII format use, and each PlyFile owns its
+// FILE, so nothing else reads it concurrently. The result is fread's: the number of whole
+// items read, which is what the callers compare against zero.
+static inline int pb_getc(FILE *fp)
+{
+#if defined(_MSC_VER)
+	return _getc_nolock(fp);
+#elif defined(_WIN32)
+	return getc(fp); // MinGW: not every runtime declares the unlocked variant
+#else
+	return getc_unlocked(fp);
+#endif
+}
+
+static inline size_t pb_read(void *buf, size_t size, size_t count, FILE *fp)
+{
+	const size_t total = size * count;
+	if (total == 0 || total > 16)
+		return fread(buf, size, count, fp);
+	unsigned char *dst = static_cast<unsigned char *>(buf);
+	for (size_t i = 0; i < total; ++i) {
+		const int c = pb_getc(fp);
+		if (c == EOF)
+			return i / size;
+		dst[i] = static_cast<unsigned char>(c);
+	}
+	return count;
+}
+
 //#ifdef USE_ZLIB
 //#include <zlib.h>
 //#define XFILE void
@@ -83,7 +117,7 @@ typedef unsigned int uint;
 #define pb_fclose fclose
 #define pb_fopen  fopen
 #define pb_fgets(s,n,f)  fgets(s,n,f)
-#define pb_fread(b,s,n,f) fread(b,s,n,f)
+#define pb_fread(b,s,n,f) pb_read(b,s,n,f)
 //#endif
 
 //#ifdef WIN32
