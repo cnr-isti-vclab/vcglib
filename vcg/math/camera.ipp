@@ -135,9 +135,24 @@ void Camera<S>::SetFrustum(S sx, S dx, S bt, S tp, S Focal, vcg::Point2<int> Vie
 }
 
 /**
- * @brief returns the projection matrix
- * @param nearVal
- * @param farVal
+ * @brief returns the projection matrix, in the OpenGL convention: it maps camera space (the
+ * space of Shot::GetWorldToExtrinsicsMatrix(), where the camera looks down -Z) to clip space,
+ * with depth in [-1, 1] between the near and far planes.
+ *
+ * The x and y extents come from GetFrustum(), so the principal point (CenterPx) is honoured.
+ * - PERSPECTIVE: the extents are on the image plane at distance FocalMm, and are scaled to
+ *   the near plane; the last row is (0, 0, -1, 0), which divides by the distance.
+ * - ORTHO: the extents are the view volume itself, in world units (PixelSizeMm is world units
+ *   per pixel) and FocalMm plays no part; the last row is (0, 0, 0, 1), rays are parallel.
+ * ISOMETRIC and CAVALIERI are not handled: they still get a matrix of the perspective form,
+ * which is not meaningful for them.
+ *
+ * For any point, the matrix times the view matrix puts it where Shot::Project() does, up
+ * to the change of units from pixels to [-1, 1].
+ *
+ * @param nearVal distance of the near plane from the eye (an ORTHO camera accepts a
+ *                negative one: the volume may start behind the eye)
+ * @param farVal distance of the far plane from the eye
  * @return
  */
 template<class S>
@@ -145,6 +160,23 @@ vcg::Matrix44<S> Camera<S>::GetMatrix(S nearVal, S farVal)
 {
 	S left, right, bottom, top, nr;
 	GetFrustum(left, right, bottom, top, nr);
+
+	if (cameraType == ORTHO) {
+		// The matrix of glOrtho(left, right, bottom, top, nearVal, farVal): scale each axis
+		// of the box to [-1, 1] and translate its centre to the origin. Depth is linear and
+		// there is no division by distance, so the last row stays (0, 0, 0, 1). The z row
+		// is the same as in the perspective matrix below, so swapping the camera type
+		// changes how x and y scale with distance and nothing else.
+		vcg::Matrix44<S> o;
+		o.SetIdentity();
+		o[0][0] = 2 / (right - left);
+		o[0][3] = -(right + left) / (right - left);
+		o[1][1] = 2 / (top - bottom);
+		o[1][3] = -(top + bottom) / (top - bottom);
+		o[2][2] = -2 / (farVal - nearVal);
+		o[2][3] = -(farVal + nearVal) / (farVal - nearVal);
+		return o;
+	}
 
 	if (cameraType == PERSPECTIVE) {
 		S ratio = nearVal / nr;
@@ -178,13 +210,27 @@ vcg::Matrix44<S> Camera<S>::GetMatrix(S nearVal, S farVal)
 }
 
 /**
- * @brief returns the frustum
+ * @brief returns the extents of the camera's view, in the sense of glFrustum / glOrtho
+ *
+ * sx, dx, bt, tp are the left, right, bottom and top edges of the image, in mm on the
+ * image plane (PERSPECTIVE) or in world units (ORTHO), measured from the principal point,
+ * so that the optical axis crosses the image plane at (0, 0): sx and bt are negative for a
+ * principal point inside the image. nr is the distance of the image plane, FocalMm. They
+ * are the same numbers SetFrustum() takes and SetOrtho() derives its pixel size from, and
+ * Project() agrees with them: a point at local x lands on pixel x / PixelSizeMm.X() +
+ * CenterPx.X(), which puts the left image edge (pixel 0) at -CenterPx.X() * PixelSizeMm.X().
  */
 template<class S>
 void Camera<S>::GetFrustum(S& sx, S& dx, S& bt, S& tp, S& nr) const
 {
-	dx = CenterPx.X() * PixelSizeMm.X(); // scaled center
-	sx = -((S) ViewportPx.X() - CenterPx.X()) * PixelSizeMm.X();
+	// The left edge is CenterPx.X() pixels from the principal point and the right edge is the
+	// remaining ViewportPx.X() - CenterPx.X(), as for the vertical pair below. These two
+	// lines used to be the other way round -- right = CenterPx.X() * p, left =
+	// -(ViewportPx.X() - CenterPx.X()) * p -- which is the same only for a principal point
+	// in the middle of the image, and put the optical axis at the mirror image of its pixel
+	// for any other.
+	sx = -CenterPx.X() * PixelSizeMm.X();
+	dx = ((S) ViewportPx.X() - CenterPx.X()) * PixelSizeMm.X();
 
 	bt = -CenterPx.Y() * PixelSizeMm.Y();
 	tp = ((S) ViewportPx.Y() - CenterPx.Y()) * PixelSizeMm.Y();
