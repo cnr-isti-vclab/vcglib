@@ -23,6 +23,10 @@
 #ifndef EXPORT_CTM_H
 #define EXPORT_CTM_H
 
+#include <openctm.h>
+#include <wrap/io_trimesh/io_mask.h>
+#include <wrap/system/utf8_file.h>
+
 namespace vcg {
     namespace tri {
         namespace io {
@@ -33,6 +37,11 @@ namespace vcg {
             public:
                 typedef typename SaveMeshType::VertexPointer VertexPointer;
                 typedef typename SaveMeshType::FaceIterator FaceIterator;
+
+                static CTMuint CTMCALL WriteToFile(const void *buf, CTMuint count, void *userData)
+                {
+                    return (CTMuint) fwrite(buf, 1, (size_t) count, (FILE *) userData);
+                }
 
                 static int Save(SaveMeshType &m, const char * filename, int mask=0, bool lossLessFlag=false, float relativePrecision=0.0001)
                 {
@@ -99,7 +108,16 @@ namespace vcg {
                     }
 
                     // Save the OpenCTM file
-                    ctmSave(context, filename);
+                    // Open the file ourselves: ctmSave() uses a narrow fopen,
+                    // which does not accept UTF-8 filenames on Windows.
+                    FILE *fp = vcg::utf8::FOpen(filename, "wb");
+                    if(fp == 0)
+                    {
+                        ctmFreeContext(context);
+                        return CTM_FILE_ERROR;
+                    }
+                    ctmSaveCustom(context, WriteToFile, fp);
+                    fclose(fp);
                     err=ctmGetError(context);
                     if(err) return err;
                     // Free the context

@@ -24,6 +24,7 @@
 #define __VCGLIB_EXPORTERFIELD
 
 #include <vcg/complex/algorithms/parametrization/tangent_field_operators.h>
+#include <wrap/system/utf8_file.h>
 
 namespace vcg {
 namespace tri {
@@ -48,7 +49,7 @@ public:
                               const char *path)
     {
         
-        FILE *f = fopen(path,"wt");
+        FILE *f = vcg::utf8::FOpen(path,"wt");
         //if (!f)return false;
 //            char word[512]; word[0]=0;
 //            fscanf(f,"%s",word);
@@ -93,7 +94,7 @@ public:
     static void Save4ROSY(MeshType &mesh,
                         const char *path)
     {
-        FILE *f = fopen(path,"wt");
+        FILE *f = vcg::utf8::FOpen(path,"wt");
         fprintf(f,"%d\n",mesh.fn);
         fprintf(f,"4\n");
         for (unsigned int i=0;i<mesh.face.size();i++)
@@ -110,7 +111,7 @@ public:
     static void Save2AngleFace(MeshType &mesh,
                               const char *path)
     {
-        FILE *f = fopen(path,"wt");
+        FILE *f = vcg::utf8::FOpen(path,"wt");
         fprintf(f,"#%d param_field\n",mesh.fn);
         for (unsigned int i=0;i<mesh.face.size();i++)
         {
@@ -129,8 +130,8 @@ public:
     {
         FILE *f1=NULL;
         FILE *f2=NULL;
-        f1=fopen(field_1.c_str(),"wt");
-        f2=fopen(field_2.c_str(),"wt");
+        f1=vcg::utf8::FOpen(field_1.c_str(),"wt");
+        f2=vcg::utf8::FOpen(field_2.c_str(),"wt");
         for (size_t i=0;i<mesh.face.size();i++)
         {
             typename MeshType::CoordType PD1=mesh.face[i].PD1();

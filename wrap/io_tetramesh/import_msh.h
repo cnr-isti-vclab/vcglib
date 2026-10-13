@@ -2,6 +2,7 @@
 #define __VCGLIB_IMPORTTETMSH_H
 
 #include <iostream>
+#include <wrap/system/utf8_file.h>
 
 namespace vcg {
 namespace tetra {
@@ -397,7 +398,7 @@ class ImporterMSH
 
     static int parseMshMesh(MeshType &m, std::string &filename, MshInfo<MeshType> & info)
     {
-        std::ifstream fin(filename.c_str(), std::ios::in | std::ios::binary);
+        std::ifstream fin(vcg::utf8::ToStreamPath(filename.c_str()), std::ios::in | std::ios::binary);
 
         if (!fin.is_open())
             return IO_ERROR;

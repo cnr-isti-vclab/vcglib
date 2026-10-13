@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <string>
 #include <iomanip>
+#include <wrap/system/utf8_file.h>
 
 
 // Avoid conflicting declaration of min/max macros in windows headers
@@ -448,7 +449,7 @@ namespace nanoply
     if (fileStream.is_open())
       fileStream.close();
     mode = 0;
-    fileStream.open(filename, std::fstream::in | std::fstream::binary);
+    fileStream.open(vcg::utf8::ToStreamPath(filename.c_str()), std::fstream::in | std::fstream::binary);
     if (fileStream.fail())
       return false;
     bufferOffset = 0;
@@ -461,7 +462,7 @@ namespace nanoply
     if (fileStream.is_open())
       fileStream.close();
     mode = 1;
-    fileStream.open(filename, std::fstream::out | std::fstream::binary);
+    fileStream.open(vcg::utf8::ToStreamPath(filename.c_str()), std::fstream::out | std::fstream::binary);
     if (fileStream.fail())
       return false;
     bufferOffset = 0;
@@ -1543,7 +1544,7 @@ namespace nanoply
   {
     this->filename = filename;
     this->errInfo = NNP_OK;
-    std::ifstream input(filename);
+    std::ifstream input(vcg::utf8::ToStreamPath(filename.c_str()));
     if (!input.good())
     {
       this->errInfo = NNP_UNABLE_TO_OPEN;

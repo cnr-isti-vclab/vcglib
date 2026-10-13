@@ -63,6 +63,7 @@ of Greg Turk and on the work of Claudio Rocchini
 #include <algorithm>
 
 #include "plylib.h"
+#include <wrap/system/utf8_file.h>
 using namespace std;
 namespace vcg{
   namespace ply{
@@ -115,7 +116,7 @@ static inline size_t pb_read(void *buf, size_t size, size_t count, FILE *fp)
 //#else
 #define XFILE  FILE
 #define pb_fclose fclose
-#define pb_fopen  fopen
+#define pb_fopen  vcg::utf8::FOpen
 #define pb_fgets(s,n,f)  fgets(s,n,f)
 #define pb_fread(b,s,n,f) pb_read(b,s,n,f)
 //#endif

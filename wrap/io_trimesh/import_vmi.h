@@ -36,6 +36,7 @@
 #define __VCGLIB_IMPORT_VMI
 
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/system/utf8_file.h>
 #include <wrap/callback.h>
 #include <limits>
 /*
@@ -649,7 +650,7 @@ namespace io {
 
 
         static bool GetHeader(const char * filename,std::vector<std::string>& nameV, std::vector<std::string>& nameF, unsigned int & vertSize, unsigned int &faceSize,vcg::Box3f & bbox,int & mask){
-                F() = fopen(filename,"rb");
+                F() = vcg::utf8::FOpen(filename,"rb");
                 if(!F()) return false;
                 In_mode() = 1;
                 bool res =  GetHeader(nameV, nameF, vertSize, faceSize,bbox,mask);
@@ -700,7 +701,7 @@ namespace io {
             unsigned int   vertSize, faceSize;
             vcg::Box3f bbox;
             mask = 0;
-            F() = fopen(f,"rb");
+            F() = vcg::utf8::FOpen(f,"rb");
             if(!F()) return false;
             In_mode() = 1;
             bool result = GetHeader(nameV,nameF,vertSize, faceSize, bbox, mask);
@@ -723,7 +724,7 @@ namespace io {
 
         static int Open(OpenMeshType &m, const char * filename, int & mask,CallBackPos  * /*cb*/ = 0 )       {
             In_mode() = 1;
-            F() = fopen(filename,"rb");
+            F() = vcg::utf8::FOpen(filename,"rb");
             if(!F()) return VMI_FAILED_OPEN;
             if(F()==NULL)	return 1; // 1 is the error code for cant'open, see the ErrorMsg function
             int res = Deserialize(m,mask);

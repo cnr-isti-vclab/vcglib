@@ -23,6 +23,7 @@
 #ifndef __VCGLIB_IMPORTERFIELD
 #define __VCGLIB_IMPORTERFIELD
 #include <vcg/complex/algorithms/parametrization/tangent_field_operators.h>
+#include <wrap/system/utf8_file.h>
 
 namespace vcg {
 namespace tri {
@@ -44,7 +45,7 @@ public:
     static bool LoadGrad(MeshType &mesh,
                          const char *path)
     {
-        FILE *f = fopen(path,"rt");
+        FILE *f = vcg::utf8::FOpen(path,"rt");
         if (!f)
         {
             return false;
@@ -84,7 +85,7 @@ public:
     static bool LoadNDF(MeshType &mesh,
                         const char *path)
     {
-        FILE *f = fopen(path,"rt");
+        FILE *f = vcg::utf8::FOpen(path,"rt");
         if (!f)
         {
             fflush(stdout);
@@ -145,7 +146,7 @@ public:
                            bool per_vertex=false)
     {
 
-        FILE *f = fopen(path,"rt");
+        FILE *f = vcg::utf8::FOpen(path,"rt");
         if (!f)
         {
             return false;
@@ -222,7 +223,7 @@ public:
     static bool Load4ROSY(MeshType &mesh,
                           const char *path)
     {
-        FILE *f = fopen(path,"rt");
+        FILE *f = vcg::utf8::FOpen(path,"rt");
         if (!f)
         {
             return false;
@@ -265,7 +266,7 @@ public:
         else
             Handle_Seams=vcg::tri::Allocator<MeshType>::template FindPerFaceAttribute<vcg::Point3<bool> >(mesh,std::string("Seams"));
 
-        FILE *f = fopen(PathOBJ.c_str(),"rt");
+        FILE *f = vcg::utf8::FOpen(PathOBJ.c_str(),"rt");
         if (!f)
             return false;
 
@@ -324,7 +325,7 @@ public:
     static bool Load2AngleFace(MeshType &mesh,
                                const char *path)
     {
-        FILE *f = fopen(path,"rt");
+        FILE *f = vcg::utf8::FOpen(path,"rt");
         if (f==NULL)return false;
         int num;
         fscanf(f,"#%d param_field\n",&num);
@@ -347,9 +348,9 @@ public:
     {
         FILE *f1=NULL;
         FILE *f2=NULL;
-        f1=fopen(field_1.c_str(),"rt");
+        f1=vcg::utf8::FOpen(field_1.c_str(),"rt");
         if(f1==NULL)return false;
-        f2=fopen(field_2.c_str(),"rt");
+        f2=vcg::utf8::FOpen(field_2.c_str(),"rt");
         if(f2==NULL)return false;
         for (size_t i=0;i<mesh.face.size();i++)
         {
