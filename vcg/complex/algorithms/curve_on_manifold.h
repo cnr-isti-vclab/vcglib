@@ -835,7 +835,11 @@ public:
       size_t prev = i0;
       for (const CoordType &c : crossings)
       {
-        const size_t vi = tri::Allocator<MeshType>::AddVertices(out, 1) - out.vert.begin();
+        // The new vertex goes at the end. Its index is read before the append: in
+        // `AddVertices(...) - vert.begin()` the operands are unsequenced, and a compiler that
+        // evaluates begin() first (GCC) subtracts an iterator the append has just invalidated.
+        const size_t vi = out.vert.size();
+        tri::Allocator<MeshType>::AddVertices(out, 1);
         out.vert[vi].ImportData(poly.vert[i0]);
         out.vert[vi].P() = c;
         out.vert[vi].ClearS();  // a crossing point is not one of the locked vertices
@@ -1645,7 +1649,8 @@ static bool TagFaceEdgeSelWithPolyLine(CoMType &com, MeshType &poly,bool markFla
       if (ch != chains.end())
         for (size_t mv : ch->second)
         {
-          const size_t vi = tri::Allocator<MeshType>::AddVertices(poly, 1) - poly.vert.begin();
+          const size_t vi = poly.vert.size();  // read before the append, as in RefineCurveByBaseMesh
+          tri::Allocator<MeshType>::AddVertices(poly, 1);
           poly.vert[vi].ImportData(poly.vert[c0]);
           poly.vert[vi].ClearS();  // a cut point is not a control point
           poly.vert[vi].P() = m.vert[mv].cP();
