@@ -286,6 +286,7 @@ set(VCG_HEADERS
 
 		#wrap
 		wrap/callback.h
+		wrap/system/utf8_file.h
 		)
 
 set(SOURCES
@@ -353,4 +354,5 @@ endif()
 
 install(DIRECTORY vcg DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.ipp")
 install(FILES wrap/callback.h DESTINATION include/vcg/wrap)
+install(FILES wrap/system/utf8_file.h DESTINATION include/vcg/wrap/system)
 install(DIRECTORY wrap/io_edgemesh wrap/io_tetramesh wrap/io_trimesh DESTINATION include/vcg/wrap FILES_MATCHING PATTERN "*.h" PATTERN "*.ipp")

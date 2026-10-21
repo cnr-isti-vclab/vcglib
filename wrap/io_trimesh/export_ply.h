@@ -30,6 +30,7 @@
 #define __VCGLIB_EXPORT_PLY
 
 #include<wrap/callback.h>
+#include <wrap/system/utf8_file.h>
 #include<wrap/ply/plylib.h>
 #include<wrap/io_trimesh/io_mask.h>
 #include<wrap/io_trimesh/io_ply.h>
@@ -146,7 +147,7 @@ public:
 		if(binary) h=hbin;
 		else       h=hasc;
 
-		fpout = fopen(filename,"wb");
+		fpout = vcg::utf8::FOpen(filename,"wb");
 		if(fpout==NULL)	{
 			//pi.status=::vcg::ply::E_CANTOPEN;
 			return ::vcg::ply::E_CANTOPEN;

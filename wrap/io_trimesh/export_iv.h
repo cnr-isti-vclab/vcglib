@@ -21,6 +21,8 @@
 *                                                                           *
 ****************************************************************************/
 
+#include <wrap/system/utf8_file.h>
+
 
 
 /** Function to save in Inventor format file.
@@ -29,7 +31,7 @@
 void Save_Iv(const char * filename) 
 {
   FILE *fp;
-  fp = fopen(filename,"wb");
+  fp = vcg::utf8::FOpen(filename,"wb");
   fprintf(fp,"#Inventor V2.1 ascii \n" );
   fprintf(fp," \n" );
   fprintf(fp,"Separator { \n " );

@@ -25,6 +25,7 @@
 #define __VCGLIB_IMPORT_PTX
 
 #include <stdio.h>
+#include <wrap/system/utf8_file.h>
 #include <wrap/callback.h>
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/update/normal.h>
@@ -145,7 +146,7 @@ public:
   static int Open( OpenMeshType &m, const char * filename, Info importparams, CallBackPos *cb=NULL)
   {
     FILE *fp;
-    fp = fopen(filename, "rb");
+    fp = vcg::utf8::FOpen(filename, "rb");
     if(fp == NULL) return false;
     m.Clear();
     m.vn=0;

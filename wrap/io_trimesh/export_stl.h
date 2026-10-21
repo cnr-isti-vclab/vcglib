@@ -59,6 +59,7 @@ Edited Comments and GPL license
 #define __VCGLIB_EXPORT_STL
 
 #include <stdio.h>
+#include <wrap/system/utf8_file.h>
 
 namespace vcg {
 namespace tri {
@@ -85,7 +86,7 @@ static int Save(const SaveMeshType &m, const char * filename , bool binary =true
   typedef typename SaveMeshType::ConstFaceIterator FaceIterator;
     FILE *fp;
 
-    fp = fopen(filename,"wb");
+    fp = vcg::utf8::FOpen(filename,"wb");
     if(fp==0)
         return 1;
 
