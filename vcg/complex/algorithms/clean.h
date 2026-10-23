@@ -328,8 +328,10 @@ public:
 	  So it should be called after unification of vertices.
 	  Note that it does not update any topology relation that could be affected by this like the VT or TT relation.
 	  the reason this function is usually performed BEFORE building any topology information.
+	  When DeleteFacesFlag is false the faces are only counted, as in RemoveDegenerateFace and
+	  RemoveZeroAreaFace.
 	 */
-	static int RemoveDuplicateFace( MeshType & m)    // V1.0
+	static int RemoveDuplicateFace( MeshType & m, bool DeleteFacesFlag=true)    // V1.0
 	{
 		std::vector<SortedTriple> fvec;
 		for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
@@ -347,7 +349,8 @@ public:
 			if(fvec[i]==fvec[i+1])
 			{
 				total++;
-				tri::Allocator<MeshType>::DeleteFace(m, *(fvec[i].fp) );
+				if(DeleteFacesFlag)
+					tri::Allocator<MeshType>::DeleteFace(m, *(fvec[i].fp) );
 			}
 		}
 		return total;
