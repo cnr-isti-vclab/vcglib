@@ -28,6 +28,11 @@
 #include <vcg/space/box2.h>
 #include <vcg/space/triangle2.h>
 #include <vcg/space/triangle3.h>
+#include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/update/topology.h>
+
+#include <utility>
+#include <vector>
 
 namespace vcg {
 namespace tri {
@@ -37,6 +42,7 @@ class UV_Utils
     typedef typename MeshType::CoordType CoordType;
     typedef typename MeshType::ScalarType ScalarType;
     typedef typename MeshType::FaceType FaceType;
+    typedef typename MeshType::FacePointer FacePointer;
     typedef typename MeshType::VertexType VertexType;
     typedef typename MeshType::VertexIterator VertexIterator;
     typedef typename MeshType::FaceIterator FaceIterator;
@@ -289,6 +295,62 @@ public:
             if ((onlyS)&&(!m.face[i].IsS()))continue;
             for (int j=0;j<3;j++)
                 m.face[i].V(j)->T().P()=m.face[i].WT(j).P();
+        }
+    }
+
+    /// Partition the faces into UV charts (also called UV islands): the maximal sets of faces
+    /// connected across edges that the texture coordinates do not cut, that is the edges on
+    /// whose two sides the faces agree on the UV of both ends. Fills faceChart with the chart
+    /// of each face (-1 for a deleted face) and returns the number of charts.
+    /// The face-face adjacency of m is rebuilt from the per-wedge texture coordinates
+    /// (UpdateTopology::FaceFaceFromTexCoord) and left that way, so an edge cut by a seam
+    /// reads as a border: CountUVEdgeNum needs it so, and a caller that wants the adjacency of
+    /// the surface back must rebuild it with UpdateTopology::FaceFace.
+    /// With per-vertex texture coordinates a seam already splits the vertices, so the plain
+    /// face-face adjacency partitions the mesh as it is and no UV function is needed.
+    static int PerWedgeCharts(MeshType &m, std::vector<int> &faceChart)
+    {
+        tri::RequireFFAdjacency(m);
+        tri::RequirePerFaceWedgeTexCoord(m);
+        UpdateTopology<MeshType>::FaceFaceFromTexCoord(m);
+        std::vector< std::pair<int,FacePointer> > components;
+        return Clean<MeshType>::ConnectedComponents(m, components, &faceChart);
+    }
+
+    /// Count the edges of the UV layout, and the ones on its boundary. An edge that a seam cuts
+    /// is two edges of the layout, one for each side, and both are on its boundary, as are the
+    /// edges on a border of the mesh. An edge shared by more than two faces counts once.
+    /// Needs the face-face adjacency left by PerWedgeCharts.
+    static void CountUVEdgeNum(MeshType &m, int &total_e, int &boundary_e)
+    {
+        tri::RequireFFAdjacency(m);
+        total_e=0;
+        boundary_e=0;
+        for (FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+        {
+            if ((*fi).IsD()) continue;
+            for (int i=0;i<3;i++)
+            {
+                if (face::IsBorder(*fi,i))
+                {
+                    total_e++;
+                    boundary_e++;
+                    continue;
+                }
+                // The faces around an edge form a ring: the edge is counted from the first of them.
+                const FacePointer first=&*fi;
+                FacePointer g=first;
+                int j=i;
+                bool isFirst=true;
+                do
+                {
+                    const FacePointer next=g->FFp(j);
+                    j=g->FFi(j);
+                    g=next;
+                    if (g<first || (g==first && j<i)) isFirst=false;
+                } while (isFirst && (g!=first || j!=i));
+                if (isFirst) total_e++;
+            }
         }
     }
 };
