@@ -265,12 +265,22 @@ public:
     static ScalarType AreaDistortion(const FaceType *f,
                                      ScalarType AreaScaleVal)
     {
-        ScalarType areaUV=AreaUV(f)*AreaScaleVal;
-        ScalarType area3D=Area3D(f);
-        assert(area3D > 0);
-        ScalarType diff=fabs(areaUV-area3D)/area3D;
+        assert(Area3D(f) > 0);
+        ScalarType diff=fabs(UVScaling(f,AreaScaleVal)-1);
         assert(!math::IsNAN(diff));
         return diff;
+    }
+
+    ///return the area of the face in UV space over its area in 3D, once the UV area is
+    ///scaled by AreaScaleVal (see MeshScalingFactor). It tells the texel density of the face
+    ///against the mesh-wide average: 1 where they agree, more than 1 where the mapping
+    ///magnifies the face (more texels per unit of surface), less than 1 where it compresses it,
+    ///and negative for a folded face, as the UV area is signed. AreaDistortion is its
+    ///absolute deviation from 1, which loses the difference between magnifying and compressing.
+    static ScalarType UVScaling(const FaceType *f,
+                                ScalarType AreaScaleVal)
+    {
+        return AreaUV(f)*AreaScaleVal/Area3D(f);
     }
 
     static ScalarType L2StretchEnergySquared(const FaceType *f,
@@ -338,6 +348,18 @@ public:
 		const double a = singular(0) - 1;
 		const double b = singular(1) - 1;
 		return ScalarType(0.5 * (a*a + b*b));
+	}
+
+	///return the quasi-conformal distortion of the face: the ratio between the largest and the
+	///smallest singular value of the Jacobian of its 3D->UV map. It is 1 for a conformal
+	///(angle preserving) map and grows as the map squeezes the face along one direction, up to
+	///+infinity (or NaN, if the face collapses to a point) for a degenerate UV triangle.
+	///It is unaffected by any uniform scaling of the UVs, so it needs no MeshScalingFactor,
+	///and it does not see orientation: a folded face counts as its mirror image (see IsFolded).
+	static ScalarType QuasiConformalDistortion(const FaceType *f)
+	{
+		const Eigen::Vector2d singular = svd2x2(mappingTransform2D(*f));
+		return ScalarType(singular(0) / singular(1));
 	}
 
 	static Eigen::Matrix2d mappingTransform2D(const FaceType & triangle)
