@@ -1303,6 +1303,8 @@ public:
 	/*
   Compute the set of connected components of a given mesh
   it fills a vector of pair < int , faceptr > with, for each connecteed component its size and a represnant
+  If faceComponent is not null it is also filled, for each face, with the index of its component in CCV
+  (-1 for a deleted face): the faces of one component are the ones that share a label.
  */
 	static int CountConnectedComponents(MeshType &m)
 	{
@@ -1310,10 +1312,13 @@ public:
 		return ConnectedComponents(m,CCV);
 	}
 
-	static int ConnectedComponents(MeshType &m, std::vector< std::pair<int,FacePointer> > &CCV)
+	static int ConnectedComponents(MeshType &m, std::vector< std::pair<int,FacePointer> > &CCV,
+	                               std::vector<int> *faceComponent = nullptr)
 	{
 		tri::RequireFFAdjacency(m);
 		CCV.clear();
+		if(faceComponent)
+			faceComponent->assign(m.face.size(), -1);
 		tri::UpdateFlags<MeshType>::FaceClearV(m);
 		std::stack<FacePointer> sf;
 		FacePointer fpt=&*(m.face.begin());
@@ -1328,6 +1333,8 @@ public:
 				{
 					fpt=sf.top();
 					++CCV.back().first;
+					if(faceComponent)
+						(*faceComponent)[tri::Index(m,fpt)] = int(CCV.size())-1;
 					sf.pop();
 					for(int j=0; j<fpt->VN(); ++j)
 					{
