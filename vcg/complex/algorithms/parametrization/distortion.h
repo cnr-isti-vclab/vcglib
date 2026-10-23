@@ -25,7 +25,11 @@
 #define VCG_PARAM_DISTORTION
 #include <vcg/complex/algorithms/parametrization/uv_utils.h>
 #include <vcg/complex/algorithms/parametrization/tangent_field_operators.h>
+#include <vcg/complex/algorithms/update/selection.h>
 #include <Eigen/Dense>
+
+#include <algorithm>
+#include <vector>
 
 namespace vcg {
 namespace tri {
@@ -105,13 +109,18 @@ public:
         return DoubleArea(*f)*(0.5);
     }
 
+    ///return the signed area of the face in UV space (negative if it is folded). The edges
+    ///and their product are taken in double, whatever the scalar type of the UV: for a thin
+    ///triangle the two products of a cross product nearly cancel, and in float they can cancel
+    ///to the wrong side of zero, which would make IsFolded and FoldedNum wrong on slivers.
     static ScalarType AreaUV(const FaceType *f)
     {
 		TexCoordType uv0 = UVCoord(f, 0);
 		TexCoordType uv1 = UVCoord(f, 1);
 		TexCoordType uv2 = UVCoord(f, 2);
-        ScalarType AreaUV=((uv1-uv0)^(uv2-uv0))/2.0;
-        return AreaUV;
+        const double e1x = double(uv1.X())-double(uv0.X()), e1y = double(uv1.Y())-double(uv0.Y());
+        const double e2x = double(uv2.X())-double(uv0.X()), e2y = double(uv2.Y())-double(uv0.Y());
+        return ScalarType((e1x*e2y-e1y*e2x)/2.0);
     }
 
     static ScalarType EdgeLenght3D(const FaceType *f,int e)
@@ -430,6 +439,39 @@ public:
           if(IsFolded(&f)) folded++;
         }));
         
+        return folded;
+    }
+
+    ///return the number of faces that are folded against their own UV chart. A face is
+    ///folded when its UV area has the opposite sign of the net UV area of its chart, so a chart
+    ///laid out mirrored as a whole has no folds, where FoldedNum would count all of its faces.
+    ///A face of zero UV area is not folded. faceChart gives the chart of each face of m (see
+    ///UV_Utils::PerWedgeCharts; faces with a negative label are ignored). If SelectFlag is true
+    ///the face selection is cleared and the folded faces are selected.
+    static int FoldedNum(MeshType &m, const std::vector<int> &faceChart, bool SelectFlag=false)
+    {
+        int chartNum=0;
+        for (const int c : faceChart)
+            chartNum=std::max(chartNum,c+1);
+        std::vector<double> chartArea(chartNum,0.0);
+        for (size_t i=0;i<m.face.size();i++)
+            if (!m.face[i].IsD() && faceChart[i]>=0)
+                chartArea[faceChart[i]]+=AreaUV(&m.face[i]);
+
+        if (SelectFlag)
+            UpdateSelection<MeshType>::FaceClear(m);
+        int folded=0;
+        for (size_t i=0;i<m.face.size();i++)
+        {
+            if (m.face[i].IsD() || faceChart[i]<0) continue;
+            const ScalarType area=AreaUV(&m.face[i]);
+            const bool mirroredChart=chartArea[faceChart[i]]<0;
+            if (mirroredChart ? area>0 : area<0)
+            {
+                folded++;
+                if (SelectFlag) m.face[i].SetS();
+            }
+        }
         return folded;
     }
 
