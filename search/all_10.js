@@ -19,7 +19,7 @@ var searchData=
   ['removedegenerateface_16',['RemoveDegenerateFace',['../classvcg_1_1tri_1_1Clean.html#aa5a172d818f58d40444535dc502f03ca',1,'vcg::tri::Clean']]],
   ['removedegeneratevertex_17',['RemoveDegenerateVertex',['../classvcg_1_1tri_1_1Clean.html#a019128077eaa20de22a915dcfa27da37',1,'vcg::tri::Clean']]],
   ['removeduplicateedge_18',['RemoveDuplicateEdge',['../classvcg_1_1tri_1_1Clean.html#abe64fc2656c2a5589cea6891e6d634a5',1,'vcg::tri::Clean']]],
-  ['removeduplicateface_19',['RemoveDuplicateFace',['../classvcg_1_1tri_1_1Clean.html#a1712f5ff687aebbc9aa7df35fa289a47',1,'vcg::tri::Clean']]],
+  ['removeduplicateface_19',['RemoveDuplicateFace',['../classvcg_1_1tri_1_1Clean.html#adbdc86fb545bd3f1da30a9bc3a42f5a2',1,'vcg::tri::Clean']]],
   ['removeduplicatevert_5fcompare_20',['RemoveDuplicateVert_Compare',['../classvcg_1_1tri_1_1Clean_1_1RemoveDuplicateVert__Compare.html',1,'vcg::tri::Clean']]],
   ['removeduplicatevertex_21',['RemoveDuplicateVertex',['../classvcg_1_1tri_1_1Clean.html#a247f421da724cbbf49b96a55ddb9d69c',1,'vcg::tri::Clean']]],
   ['removefacefoldbyflip_22',['RemoveFaceFoldByFlip',['../classvcg_1_1tri_1_1Clean.html#a0749897a96ae081ae1a28b2794d1d3e0',1,'vcg::tri::Clean']]],
