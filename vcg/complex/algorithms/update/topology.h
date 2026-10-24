@@ -538,6 +538,21 @@ public:
 };
 
 
+/// \brief Tell whether the faces joined by FF along edge i of f disagree on the per-wedge texture
+/// coordinates of the edge's two ends, that is whether a texture seam runs along it.
+/**
+Edge i of f must not be a border. A texture seam is an edge that is shared in 3D (the two faces
+use the same vertices) and cut in UV (they place those vertices at different texture coordinates).
+*/
+static bool IsTexCoordSeam(const FaceType &f, int i)
+{
+  const FaceType &g = *f.cFFp(i);
+  const int j = f.cFFi(i);
+  if (f.cV(i) == g.cV(j))
+    return f.cWT(i) != g.cWT(j) || f.cWT(f.Next(i)) != g.cWT(g.Next(j));
+  return f.cWT(i) != g.cWT(g.Next(j)) || f.cWT(f.Next(i)) != g.cWT(j);
+}
+
 /// \brief Update the Face-Face topological relation so that it reflects the per-wedge texture connectivity
 
 /**
@@ -556,25 +571,8 @@ static void FaceFaceFromTexCoord(MeshType &m)
     {
       for (int i = 0; i < (*fi).VN(); i++)
       {
-        if (!vcg::face::IsBorder((*fi), i))
-        {
-          typename MeshType::FacePointer nextFace = (*fi).FFp(i);
-          int nextEdgeIndex = (*fi).FFi(i);
-          bool border = false;
-          if ((*fi).cV(i) == nextFace->cV(nextEdgeIndex))
-          {
-            if ((*fi).WT(i) != nextFace->WT(nextEdgeIndex) || (*fi).WT((*fi).Next(i)) != nextFace->WT(nextFace->Next(nextEdgeIndex)))
-              border = true;
-          }
-          else
-          {
-            if ((*fi).WT(i) != nextFace->WT(nextFace->Next(nextEdgeIndex)) || (*fi).WT((*fi).Next(i)) != nextFace->WT(nextEdgeIndex))
-              border = true;
-          }
-          if (border)
-            vcg::face::FFDetach((*fi), i);
-
-        }
+        if (!vcg::face::IsBorder((*fi), i) && IsTexCoordSeam(*fi, i))
+          vcg::face::FFDetach((*fi), i);
       }
     }
   }
