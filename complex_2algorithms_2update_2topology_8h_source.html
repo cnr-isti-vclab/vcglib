@@ -578,248 +578,241 @@ $(function() {
 <div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span>};</div>
 <div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span> </div>
 <div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span> </div>
-<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span> </div>
-<div class="line"><a id="l00548" name="l00548"></a><span class="lineno"><a class="line" href="classvcg_1_1tri_1_1UpdateTopology.html#a2ab7546f4ba64781bbbe0d67546b7f80">  548</a></span><span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#a2ab7546f4ba64781bbbe0d67546b7f80">FaceFaceFromTexCoord</a>(MeshType &amp;m)</div>
-<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span>{</div>
-<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span>  RequireFFAdjacency(m);</div>
-<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span>  RequirePerFaceWedgeTexCoord(m);</div>
-<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span>  <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#a506e3895fa279551d02296ed53a2f814">vcg::tri::UpdateTopology&lt;MeshType&gt;::FaceFace</a>(m);</div>
-<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span>  <span class="keywordflow">for</span> (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)</div>
-<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span>  {</div>
-<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span>    <span class="keywordflow">if</span> (!(*fi).IsD())</div>
-<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span>    {</div>
-<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; (*fi).VN(); i++)</div>
-<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span>      {</div>
-<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span>        <span class="keywordflow">if</span> (!<a class="code hl_function" href="namespacevcg_1_1face.html#a2c84b49d422ed67ff3d9853d83175545">vcg::face::IsBorder</a>((*fi), i))</div>
-<div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span>        {</div>
-<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span>          <span class="keyword">typename</span> MeshType::FacePointer nextFace = (*fi).FFp(i);</div>
-<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span>          <span class="keywordtype">int</span> nextEdgeIndex = (*fi).FFi(i);</div>
-<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span>          <span class="keywordtype">bool</span> border = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span>          <span class="keywordflow">if</span> ((*fi).cV(i) == nextFace-&gt;cV(nextEdgeIndex))</div>
-<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span>          {</div>
-<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span>            <span class="keywordflow">if</span> ((*fi).WT(i) != nextFace-&gt;WT(nextEdgeIndex) || (*fi).WT((*fi).Next(i)) != nextFace-&gt;WT(nextFace-&gt;Next(nextEdgeIndex)))</div>
-<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span>              border = <span class="keyword">true</span>;</div>
-<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span>          }</div>
-<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>          <span class="keywordflow">else</span></div>
-<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span>          {</div>
-<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span>            <span class="keywordflow">if</span> ((*fi).WT(i) != nextFace-&gt;WT(nextFace-&gt;Next(nextEdgeIndex)) || (*fi).WT((*fi).Next(i)) != nextFace-&gt;WT(nextEdgeIndex))</div>
-<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span>              border = <span class="keyword">true</span>;</div>
-<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span>          }</div>
-<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span>          <span class="keywordflow">if</span> (border)</div>
-<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span>            <a class="code hl_function" href="namespacevcg_1_1face.html#ac8ebd61c946fd797566ef71842375480">vcg::face::FFDetach</a>((*fi), i);</div>
-<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span> </div>
-<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span>        }</div>
-<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span>      }</div>
-<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span>    }</div>
-<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>  }</div>
-<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span>}</div>
-<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span> </div>
-<div class="line"><a id="l00584" name="l00584"></a><span class="lineno"><a class="line" href="classvcg_1_1tri_1_1UpdateTopology.html#ab47653a7a8aec47c5c7f98a9063dad70">  584</a></span><span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#ab47653a7a8aec47c5c7f98a9063dad70">TestVertexEdge</a>(MeshType &amp;m)</div>
-<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>{</div>
-<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span>  std::vector&lt;int&gt; numVertex(m.vert.size(),0);</div>
+<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span> </div>
+<div class="line"><a id="l00547" name="l00547"></a><span class="lineno"><a class="line" href="classvcg_1_1tri_1_1UpdateTopology.html#a5a9cc6fd81e33e264d96da9c12f23823">  547</a></span><span class="keyword">static</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#a5a9cc6fd81e33e264d96da9c12f23823">IsTexCoordSeam</a>(<span class="keyword">const</span> FaceType &amp;f, <span class="keywordtype">int</span> i)</div>
+<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span>{</div>
+<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span>  <span class="keyword">const</span> FaceType &amp;g = *f.cFFp(i);</div>
+<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span>  <span class="keyword">const</span> <span class="keywordtype">int</span> j = f.cFFi(i);</div>
+<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span>  <span class="keywordflow">if</span> (f.cV(i) == g.cV(j))</div>
+<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span>    <span class="keywordflow">return</span> f.cWT(i) != g.cWT(j) || f.cWT(f.Next(i)) != g.cWT(g.Next(j));</div>
+<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span>  <span class="keywordflow">return</span> f.cWT(i) != g.cWT(g.Next(j)) || f.cWT(f.Next(i)) != g.cWT(j);</div>
+<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span>}</div>
+<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span> </div>
+<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span> </div>
+<div class="line"><a id="l00563" name="l00563"></a><span class="lineno"><a class="line" href="classvcg_1_1tri_1_1UpdateTopology.html#a2ab7546f4ba64781bbbe0d67546b7f80">  563</a></span><span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#a2ab7546f4ba64781bbbe0d67546b7f80">FaceFaceFromTexCoord</a>(MeshType &amp;m)</div>
+<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span>{</div>
+<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span>  RequireFFAdjacency(m);</div>
+<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span>  RequirePerFaceWedgeTexCoord(m);</div>
+<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span>  <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#a506e3895fa279551d02296ed53a2f814">vcg::tri::UpdateTopology&lt;MeshType&gt;::FaceFace</a>(m);</div>
+<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span>  <span class="keywordflow">for</span> (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)</div>
+<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>  {</div>
+<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span>    <span class="keywordflow">if</span> (!(*fi).IsD())</div>
+<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span>    {</div>
+<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; (*fi).VN(); i++)</div>
+<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span>      {</div>
+<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span>        <span class="keywordflow">if</span> (!<a class="code hl_function" href="namespacevcg_1_1face.html#a2c84b49d422ed67ff3d9853d83175545">vcg::face::IsBorder</a>((*fi), i) &amp;&amp; <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#a5a9cc6fd81e33e264d96da9c12f23823">IsTexCoordSeam</a>(*fi, i))</div>
+<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span>          <a class="code hl_function" href="namespacevcg_1_1face.html#ac8ebd61c946fd797566ef71842375480">vcg::face::FFDetach</a>((*fi), i);</div>
+<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span>      }</div>
+<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span>    }</div>
+<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span>  }</div>
+<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span>}</div>
+<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span> </div>
+<div class="line"><a id="l00582" name="l00582"></a><span class="lineno"><a class="line" href="classvcg_1_1tri_1_1UpdateTopology.html#ab47653a7a8aec47c5c7f98a9063dad70">  582</a></span><span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#ab47653a7a8aec47c5c7f98a9063dad70">TestVertexEdge</a>(MeshType &amp;m)</div>
+<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>{</div>
+<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>  std::vector&lt;int&gt; numVertex(m.vert.size(),0);</div>
+<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>  </div>
+<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span>  tri::RequireVEAdjacency(m);</div>
 <div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span>  </div>
-<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>  tri::RequireVEAdjacency(m);</div>
-<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>  </div>
-<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>  <span class="keywordflow">for</span>(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)</div>
-<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>  {</div>
-<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>      <span class="keywordflow">if</span> (!(*ei).IsD())</div>
-<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span>      {</div>
-<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span>        assert(tri::IsValidPointer(m,ei-&gt;V(0)));</div>
-<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span>        assert(tri::IsValidPointer(m,ei-&gt;V(1)));</div>
-<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>        <span class="keywordflow">if</span>(ei-&gt;VEp(0)) assert(tri::IsValidPointer(m,ei-&gt;VEp(0)));</div>
-<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>        <span class="keywordflow">if</span>(ei-&gt;VEp(1)) assert(tri::IsValidPointer(m,ei-&gt;VEp(1)));</div>
-<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>        numVertex[tri::Index(m,(*ei).V(0))]++;</div>
-<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>        numVertex[tri::Index(m,(*ei).V(1))]++;</div>
-<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>      }</div>
-<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>  }</div>
-<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>  </div>
-<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>  <span class="keywordflow">for</span>(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)</div>
-<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span>  {</div>
-<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>      <span class="keywordflow">if</span> (!vi-&gt;IsD())</div>
-<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span>      {</div>
-<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span>        <span class="keywordtype">int</span> cnt =0;</div>
-<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>        <span class="keywordflow">for</span>(edge::VEIterator&lt;EdgeType&gt; vei(&amp;*vi);!vei.End();++vei)</div>
-<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span>          cnt++;</div>
-<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span>        assert((numVertex[tri::Index(m,*vi)] == 0) == (vi-&gt;VEp()==0) );</div>
-<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span>        assert(cnt==numVertex[tri::Index(m,*vi)]);</div>
-<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span>        (void)cnt;</div>
-<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span>      }</div>
-<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span>  }  </div>
-<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span>}</div>
-<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span> </div>
-<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span> </div>
-<div class="line"><a id="l00619" name="l00619"></a><span class="lineno"><a class="line" href="classvcg_1_1tri_1_1UpdateTopology.html#a5a379584fd827b660d78a436c591d389">  619</a></span><span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#a5a379584fd827b660d78a436c591d389">TestVertexFace</a>(MeshType &amp;m)</div>
-<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span>{</div>
-<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span>    SimpleTempData&lt;typename MeshType::VertContainer, int &gt; numVertex(m.vert,0);</div>
+<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>  <span class="keywordflow">for</span>(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)</div>
+<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>  {</div>
+<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>      <span class="keywordflow">if</span> (!(*ei).IsD())</div>
+<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>      {</div>
+<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>        assert(tri::IsValidPointer(m,ei-&gt;V(0)));</div>
+<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span>        assert(tri::IsValidPointer(m,ei-&gt;V(1)));</div>
+<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span>        <span class="keywordflow">if</span>(ei-&gt;VEp(0)) assert(tri::IsValidPointer(m,ei-&gt;VEp(0)));</div>
+<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span>        <span class="keywordflow">if</span>(ei-&gt;VEp(1)) assert(tri::IsValidPointer(m,ei-&gt;VEp(1)));</div>
+<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>        numVertex[tri::Index(m,(*ei).V(0))]++;</div>
+<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>        numVertex[tri::Index(m,(*ei).V(1))]++;</div>
+<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>      }</div>
+<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>  }</div>
+<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>  </div>
+<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>  <span class="keywordflow">for</span>(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)</div>
+<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>  {</div>
+<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>      <span class="keywordflow">if</span> (!vi-&gt;IsD())</div>
+<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span>      {</div>
+<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>        <span class="keywordtype">int</span> cnt =0;</div>
+<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span>        <span class="keywordflow">for</span>(edge::VEIterator&lt;EdgeType&gt; vei(&amp;*vi);!vei.End();++vei)</div>
+<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span>          cnt++;</div>
+<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>        assert((numVertex[tri::Index(m,*vi)] == 0) == (vi-&gt;VEp()==0) );</div>
+<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span>        assert(cnt==numVertex[tri::Index(m,*vi)]);</div>
+<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span>        (void)cnt;</div>
+<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span>      }</div>
+<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span>  }  </div>
+<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span>}</div>
+<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span> </div>
+<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span> </div>
+<div class="line"><a id="l00617" name="l00617"></a><span class="lineno"><a class="line" href="classvcg_1_1tri_1_1UpdateTopology.html#a5a379584fd827b660d78a436c591d389">  617</a></span><span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#a5a379584fd827b660d78a436c591d389">TestVertexFace</a>(MeshType &amp;m)</div>
+<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span>{</div>
+<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span>    SimpleTempData&lt;typename MeshType::VertContainer, int &gt; numVertex(m.vert,0);</div>
+<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span> </div>
+<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span>  assert(tri::HasPerVertexVFAdjacency(m));</div>
 <div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span> </div>
-<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>  assert(tri::HasPerVertexVFAdjacency(m));</div>
-<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span> </div>
-<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>    <span class="keywordflow">for</span>(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)</div>
-<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>    {</div>
-<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>        <span class="keywordflow">if</span> (!(*fi).IsD())</div>
-<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>        {</div>
-<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>            numVertex[(*fi).V0(0)]++;</div>
-<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>            numVertex[(*fi).V1(0)]++;</div>
-<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span>            numVertex[(*fi).V2(0)]++;</div>
-<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span>        }</div>
-<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span>    }</div>
+<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>    <span class="keywordflow">for</span>(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)</div>
+<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>    {</div>
+<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>        <span class="keywordflow">if</span> (!(*fi).IsD())</div>
+<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>        {</div>
+<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>            numVertex[(*fi).V0(0)]++;</div>
+<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>            numVertex[(*fi).V1(0)]++;</div>
+<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>            numVertex[(*fi).V2(0)]++;</div>
+<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>        }</div>
+<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span>    }</div>
+<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span> </div>
+<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span>    vcg::face::VFIterator&lt;FaceType&gt; VFi;</div>
 <div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span> </div>
-<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>    vcg::face::VFIterator&lt;FaceType&gt; VFi;</div>
-<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span> </div>
-<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span>    <span class="keywordflow">for</span>(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)</div>
-<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span>    {</div>
-<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>        <span class="keywordflow">if</span> (!vi-&gt;IsD())</div>
-<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span>        <span class="keywordflow">if</span>(vi-&gt;VFp()!=0) <span class="comment">// unreferenced vertices MUST have VF == 0;</span></div>
-<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span>        {</div>
-<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span>            <span class="keywordtype">int</span> num=0;</div>
-<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span>            assert(tri::IsValidPointer(m, vi-&gt;VFp()));</div>
-<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span>            VFi.f=vi-&gt;VFp();</div>
-<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span>            VFi.z=vi-&gt;VFi();</div>
-<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span>            <span class="keywordflow">while</span> (!VFi.End())</div>
-<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>            {</div>
-<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>                num++;</div>
-<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>                assert(!VFi.F()-&gt;IsD());</div>
-<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span>                assert((VFi.F()-&gt;V(VFi.I()))==&amp;(*vi));</div>
-<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span>                ++VFi;</div>
-<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span>            }</div>
-<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span>            assert(num==numVertex[&amp;(*vi)]);</div>
-<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span>            (void)num;</div>
-<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span>        }</div>
-<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span>    }</div>
-<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span>}</div>
-<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span> </div>
-<div class="line"><a id="l00660" name="l00660"></a><span class="lineno"><a class="line" href="classvcg_1_1tri_1_1UpdateTopology.html#a806668064343fc7c5b63947c580fa376">  660</a></span><span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#a806668064343fc7c5b63947c580fa376">TestFaceFace</a>(MeshType &amp;m)</div>
-<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span>{</div>
-<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span>  assert(HasFFAdjacency(m));</div>
-<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span> </div>
-<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span>  <span class="keywordflow">for</span>(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)</div>
-<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span>    {</div>
-<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span>    <span class="keywordflow">if</span> (!fi-&gt;IsD())</div>
-<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span>        {</div>
-<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i=0;i&lt;(*fi).VN();i++)</div>
-<div class="line"><a id="l00669" name="l00669"></a><span class="lineno">  669</span>            {</div>
-<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span>        FaceType *ffpi=fi-&gt;FFp(i);</div>
-<div class="line"><a id="l00671" name="l00671"></a><span class="lineno">  671</span>        <span class="keywordtype">int</span> e=fi-&gt;FFi(i);</div>
-<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span>        <span class="comment">//invariant property of FF topology for two manifold meshes</span></div>
-<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span>        assert(ffpi-&gt;FFp(e) == &amp;(*fi));</div>
-<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span>        assert(ffpi-&gt;FFi(e) == i);</div>
-<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span> </div>
-<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span>        <span class="comment">// Test that the two faces shares the same edge</span></div>
-<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span>        <span class="comment">// Vertices of the i-th edges of the first face</span></div>
-<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span>        VertexPointer v0i= fi-&gt;V0(i);</div>
-<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span>        VertexPointer v1i= fi-&gt;V1(i);</div>
-<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span>        <span class="comment">// Vertices of the corresponding edge on the other face</span></div>
-<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span>        VertexPointer ffv0i= ffpi-&gt;V0(e);</div>
-<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span>        VertexPointer ffv1i= ffpi-&gt;V1(e);</div>
-<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span> </div>
-<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span>        assert( (ffv0i==v0i) || (ffv0i==v1i) );</div>
-<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span>        assert( (ffv1i==v0i) || (ffv1i==v1i) );</div>
-<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span>            }</div>
-<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span> </div>
-<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>        }</div>
-<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span>    }</div>
-<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>}</div>
-<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span> </div>
-<div class="line"><a id="l00694" name="l00694"></a><span class="lineno"><a class="line" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">  694</a></span><span class="keyword">class </span><a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a></div>
-<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>{</div>
-<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span> </div>
-<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span>  VertexPointer  v;     <span class="comment">// the two Vertex pointer are ordered!</span></div>
-<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>  EdgePointer    e;       <span class="comment">// the edge where this vertex belong</span></div>
-<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>  <span class="keywordtype">int</span>      z;                     <span class="comment">// index in [0..1] of the vertex of the edge</span></div>
-<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span> </div>
-<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>  <a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a>(  ) {}</div>
-<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>  <a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a>( EdgePointer  pe, <span class="keyword">const</span> <span class="keywordtype">int</span> nz )</div>
-<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>{</div>
-<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>  assert(pe!=0);</div>
-<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>  assert(nz&gt;=0);</div>
-<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>  assert(nz&lt;2);</div>
-<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span> </div>
-<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>  v= pe-&gt;V(nz);</div>
-<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>  e    = pe;</div>
-<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span>  z    = nz;</div>
-<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>}</div>
-<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span><span class="keyword">inline</span> <span class="keywordtype">bool</span> operator  &lt;  ( <span class="keyword">const</span> <a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a> &amp; pe )<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ( v&lt;pe.v ); }</div>
-<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span><span class="keyword">inline</span> <span class="keywordtype">bool</span> operator ==  ( <span class="keyword">const</span> <a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a> &amp; pe )<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ( v==pe.v ); }</div>
-<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span><span class="keyword">inline</span> <span class="keywordtype">bool</span> operator !=  ( <span class="keyword">const</span> <a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a> &amp; pe )<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ( v!=pe.v ); }</div>
-<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>};</div>
+<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>    <span class="keywordflow">for</span>(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)</div>
+<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span>    {</div>
+<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span>        <span class="keywordflow">if</span> (!vi-&gt;IsD())</div>
+<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span>        <span class="keywordflow">if</span>(vi-&gt;VFp()!=0) <span class="comment">// unreferenced vertices MUST have VF == 0;</span></div>
+<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>        {</div>
+<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span>            <span class="keywordtype">int</span> num=0;</div>
+<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span>            assert(tri::IsValidPointer(m, vi-&gt;VFp()));</div>
+<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span>            VFi.f=vi-&gt;VFp();</div>
+<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span>            VFi.z=vi-&gt;VFi();</div>
+<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span>            <span class="keywordflow">while</span> (!VFi.End())</div>
+<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span>            {</div>
+<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span>                num++;</div>
+<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>                assert(!VFi.F()-&gt;IsD());</div>
+<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>                assert((VFi.F()-&gt;V(VFi.I()))==&amp;(*vi));</div>
+<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>                ++VFi;</div>
+<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span>            }</div>
+<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span>            assert(num==numVertex[&amp;(*vi)]);</div>
+<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span>            (void)num;</div>
+<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span>        }</div>
+<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span>    }</div>
+<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span>}</div>
+<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span> </div>
+<div class="line"><a id="l00658" name="l00658"></a><span class="lineno"><a class="line" href="classvcg_1_1tri_1_1UpdateTopology.html#a806668064343fc7c5b63947c580fa376">  658</a></span><span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classvcg_1_1tri_1_1UpdateTopology.html#a806668064343fc7c5b63947c580fa376">TestFaceFace</a>(MeshType &amp;m)</div>
+<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span>{</div>
+<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span>  assert(HasFFAdjacency(m));</div>
+<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span> </div>
+<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span>  <span class="keywordflow">for</span>(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)</div>
+<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span>    {</div>
+<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span>    <span class="keywordflow">if</span> (!fi-&gt;IsD())</div>
+<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span>        {</div>
+<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span>      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i=0;i&lt;(*fi).VN();i++)</div>
+<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span>            {</div>
+<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span>        FaceType *ffpi=fi-&gt;FFp(i);</div>
+<div class="line"><a id="l00669" name="l00669"></a><span class="lineno">  669</span>        <span class="keywordtype">int</span> e=fi-&gt;FFi(i);</div>
+<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span>        <span class="comment">//invariant property of FF topology for two manifold meshes</span></div>
+<div class="line"><a id="l00671" name="l00671"></a><span class="lineno">  671</span>        assert(ffpi-&gt;FFp(e) == &amp;(*fi));</div>
+<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span>        assert(ffpi-&gt;FFi(e) == i);</div>
+<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span> </div>
+<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span>        <span class="comment">// Test that the two faces shares the same edge</span></div>
+<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span>        <span class="comment">// Vertices of the i-th edges of the first face</span></div>
+<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span>        VertexPointer v0i= fi-&gt;V0(i);</div>
+<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span>        VertexPointer v1i= fi-&gt;V1(i);</div>
+<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span>        <span class="comment">// Vertices of the corresponding edge on the other face</span></div>
+<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span>        VertexPointer ffv0i= ffpi-&gt;V0(e);</div>
+<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span>        VertexPointer ffv1i= ffpi-&gt;V1(e);</div>
+<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span> </div>
+<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span>        assert( (ffv0i==v0i) || (ffv0i==v1i) );</div>
+<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span>        assert( (ffv1i==v0i) || (ffv1i==v1i) );</div>
+<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span>            }</div>
+<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span> </div>
+<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span>        }</div>
+<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span>    }</div>
+<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>}</div>
+<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span> </div>
+<div class="line"><a id="l00692" name="l00692"></a><span class="lineno"><a class="line" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">  692</a></span><span class="keyword">class </span><a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a></div>
+<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span>{</div>
+<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span> </div>
+<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span>  VertexPointer  v;     <span class="comment">// the two Vertex pointer are ordered!</span></div>
+<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span>  EdgePointer    e;       <span class="comment">// the edge where this vertex belong</span></div>
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span>  <span class="keywordtype">int</span>      z;                     <span class="comment">// index in [0..1] of the vertex of the edge</span></div>
+<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span> </div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>  <a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a>(  ) {}</div>
+<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>  <a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a>( EdgePointer  pe, <span class="keyword">const</span> <span class="keywordtype">int</span> nz )</div>
+<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>{</div>
+<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>  assert(pe!=0);</div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>  assert(nz&gt;=0);</div>
+<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>  assert(nz&lt;2);</div>
+<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span> </div>
+<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>  v= pe-&gt;V(nz);</div>
+<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>  e    = pe;</div>
+<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>  z    = nz;</div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>}</div>
+<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span><span class="keyword">inline</span> <span class="keywordtype">bool</span> operator  &lt;  ( <span class="keyword">const</span> <a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a> &amp; pe )<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ( v&lt;pe.v ); }</div>
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span><span class="keyword">inline</span> <span class="keywordtype">bool</span> operator ==  ( <span class="keyword">const</span> <a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a> &amp; pe )<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ( v==pe.v ); }</div>
+<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span><span class="keyword">inline</span> <span class="keywordtype">bool</span> operator !=  ( <span class="keyword">const</span> <a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a> &amp; pe )<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ( v!=pe.v ); }</div>
+<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span>};</div>
+<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span> </div>
+<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span> </div>
 <div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span> </div>
-<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span> </div>
-<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span> </div>
-<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span><span class="keyword">static</span> <span class="keywordtype">void</span> EdgeEdge(MeshType &amp;m)</div>
-<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>{</div>
-<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span>  RequireEEAdjacency(m);</div>
-<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span>  std::vector&lt;PVertexEdge&gt; v;</div>
-<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span>  <span class="keywordflow">if</span>( m.en == 0 ) <span class="keywordflow">return</span>;</div>
-<div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span> </div>
-<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span>  <span class="keywordflow">for</span>(EdgeIterator pf=m.edge.begin(); pf!=m.edge.end(); ++pf)</div>
-<div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span>    <span class="keywordflow">if</span>( ! (*pf).IsD() )</div>
-<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span>      <span class="keywordflow">for</span>(<span class="keywordtype">int</span> j=0;j&lt;2;++j)</div>
-<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span>      {</div>
-<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span>        v.push_back(<a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a>(&amp;*pf,j));</div>
-<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span>      }</div>
+<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span><span class="keyword">static</span> <span class="keywordtype">void</span> EdgeEdge(MeshType &amp;m)</div>
+<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>{</div>
+<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>  RequireEEAdjacency(m);</div>
+<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>  std::vector&lt;PVertexEdge&gt; v;</div>
+<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span>  <span class="keywordflow">if</span>( m.en == 0 ) <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span> </div>
+<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span>  <span class="keywordflow">for</span>(EdgeIterator pf=m.edge.begin(); pf!=m.edge.end(); ++pf)</div>
+<div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span>    <span class="keywordflow">if</span>( ! (*pf).IsD() )</div>
+<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span>      <span class="keywordflow">for</span>(<span class="keywordtype">int</span> j=0;j&lt;2;++j)</div>
+<div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span>      {</div>
+<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span>        v.push_back(<a class="code hl_class" href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">PVertexEdge</a>(&amp;*pf,j));</div>
+<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span>      }</div>
+<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span> </div>
+<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span>  sort(v.begin(), v.end());                         </div>
 <div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span> </div>
-<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span>  sort(v.begin(), v.end());                         </div>
-<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span> </div>
-<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span>  <span class="keyword">auto</span> ps = v.begin();</div>
-<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>  <span class="keyword">auto</span> pe = v.begin();</div>
-<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span>  <span class="keywordflow">do</span></div>
-<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>  {</div>
-<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span>    <span class="keywordflow">if</span>( pe==v.end() || !(*pe == *ps) )                  <span class="comment">// search for blocs of edges with the same vertex</span></div>
-<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span>    {</div>
-<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span>      <span class="keyword">typename</span> std::vector&lt;PVertexEdge&gt;::iterator q,q_next;</div>
-<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span>      <span class="keywordflow">for</span> (q=ps;q&lt;pe-1;++q)                 </div>
-<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>      {</div>
-<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span>        assert((*q).z&gt;=0);</div>
-<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span>        assert((*q).z&lt; 2);</div>
-<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span>        q_next = q;</div>
-<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span>        ++q_next;</div>
-<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span>        assert((*q_next).z&gt;=0);</div>
-<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span>        assert((*q_next).z&lt; 2);</div>
-<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span>        (*q).e-&gt;EEp(q-&gt;z) = (*q_next).e;    </div>
-<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span>        (*q).e-&gt;EEi(q-&gt;z) = (*q_next).z;</div>
-<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span>      }</div>
-<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span>      assert((*q).z&gt;=0);</div>
-<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span>      assert((*q).z&lt; 2);</div>
-<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span>      (*q).e-&gt;EEp((*q).z) = ps-&gt;e;</div>
-<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span>      (*q).e-&gt;EEi((*q).z) = ps-&gt;z;</div>
-<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>      ps = pe;</div>
-<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span>    }</div>
-<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span>    <span class="keywordflow">if</span>(pe==v.end()) <span class="keywordflow">break</span>;</div>
-<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span>    ++pe;</div>
-<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span>   } <span class="keywordflow">while</span>(<span class="keyword">true</span>);</div>
-<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span>}</div>
-<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span> </div>
-<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span><span class="keyword">static</span> <span class="keywordtype">void</span> VertexEdge(MeshType &amp;m)</div>
-<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span>{</div>
-<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span>  RequireVEAdjacency(m);</div>
-<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span> </div>
-<div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span>  <span class="keywordflow">for</span>(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)</div>
-<div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span>  {</div>
-<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span>    (*vi).VEp() = 0;</div>
-<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span>    (*vi).VEi() = 0;</div>
-<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span>  }</div>
-<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span> </div>
-<div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span>  <span class="keywordflow">for</span>(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)</div>
-<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span>  <span class="keywordflow">if</span>( ! (*ei).IsD() )</div>
-<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span>  {</div>
-<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span>    <span class="keywordflow">for</span>(<span class="keywordtype">int</span> j=0;j&lt;2;++j)</div>
-<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span>    { assert(tri::IsValidPointer(m,ei-&gt;V(j)));</div>
-<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span>      (*ei).VEp(j) = (*ei).V(j)-&gt;VEp();</div>
-<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span>      (*ei).VEi(j) = (*ei).V(j)-&gt;VEi();</div>
-<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span>      (*ei).V(j)-&gt;VEp() = &amp;(*ei);</div>
-<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span>      (*ei).V(j)-&gt;VEi() = j;</div>
-<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span>    }</div>
-<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span>  }</div>
-<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span>}</div>
+<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span>  <span class="keyword">auto</span> ps = v.begin();</div>
+<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span>  <span class="keyword">auto</span> pe = v.begin();</div>
+<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span>  <span class="keywordflow">do</span></div>
+<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>  {</div>
+<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span>    <span class="keywordflow">if</span>( pe==v.end() || !(*pe == *ps) )                  <span class="comment">// search for blocs of edges with the same vertex</span></div>
+<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>    {</div>
+<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span>      <span class="keyword">typename</span> std::vector&lt;PVertexEdge&gt;::iterator q,q_next;</div>
+<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span>      <span class="keywordflow">for</span> (q=ps;q&lt;pe-1;++q)                 </div>
+<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span>      {</div>
+<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span>        assert((*q).z&gt;=0);</div>
+<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>        assert((*q).z&lt; 2);</div>
+<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span>        q_next = q;</div>
+<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span>        ++q_next;</div>
+<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span>        assert((*q_next).z&gt;=0);</div>
+<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span>        assert((*q_next).z&lt; 2);</div>
+<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span>        (*q).e-&gt;EEp(q-&gt;z) = (*q_next).e;    </div>
+<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span>        (*q).e-&gt;EEi(q-&gt;z) = (*q_next).z;</div>
+<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span>      }</div>
+<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span>      assert((*q).z&gt;=0);</div>
+<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span>      assert((*q).z&lt; 2);</div>
+<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span>      (*q).e-&gt;EEp((*q).z) = ps-&gt;e;</div>
+<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span>      (*q).e-&gt;EEi((*q).z) = ps-&gt;z;</div>
+<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span>      ps = pe;</div>
+<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span>    }</div>
+<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>    <span class="keywordflow">if</span>(pe==v.end()) <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span>    ++pe;</div>
+<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span>   } <span class="keywordflow">while</span>(<span class="keyword">true</span>);</div>
+<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span>}</div>
+<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span> </div>
+<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span><span class="keyword">static</span> <span class="keywordtype">void</span> VertexEdge(MeshType &amp;m)</div>
+<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span>{</div>
+<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span>  RequireVEAdjacency(m);</div>
+<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span> </div>
+<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span>  <span class="keywordflow">for</span>(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)</div>
+<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span>  {</div>
+<div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span>    (*vi).VEp() = 0;</div>
+<div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span>    (*vi).VEi() = 0;</div>
+<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span>  }</div>
+<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span> </div>
+<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span>  <span class="keywordflow">for</span>(EdgeIterator ei=m.edge.begin();ei!=m.edge.end();++ei)</div>
+<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span>  <span class="keywordflow">if</span>( ! (*ei).IsD() )</div>
+<div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span>  {</div>
+<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span>    <span class="keywordflow">for</span>(<span class="keywordtype">int</span> j=0;j&lt;2;++j)</div>
+<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span>    { assert(tri::IsValidPointer(m,ei-&gt;V(j)));</div>
+<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span>      (*ei).VEp(j) = (*ei).V(j)-&gt;VEp();</div>
+<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span>      (*ei).VEi(j) = (*ei).V(j)-&gt;VEi();</div>
+<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span>      (*ei).V(j)-&gt;VEp() = &amp;(*ei);</div>
+<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span>      (*ei).V(j)-&gt;VEi() = j;</div>
+<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span>    }</div>
+<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span>  }</div>
+<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span>}</div>
+<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span> </div>
+<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span>}; <span class="comment">// end class</span></div>
 <div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span> </div>
-<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span>}; <span class="comment">// end class</span></div>
-<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span> </div>
-<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>}   <span class="comment">// End namespace </span></div>
-<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span>}   <span class="comment">// End namespace </span></div>
-<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span> </div>
-<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span> </div>
-<div class="line"><a id="l00793" name="l00793"></a><span class="lineno">  793</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span>}   <span class="comment">// End namespace </span></div>
+<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span>}   <span class="comment">// End namespace </span></div>
+<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span> </div>
+<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span> </div>
+<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aclassvcg_1_1Point3_html"><div class="ttname"><a href="classvcg_1_1Point3.html">vcg::Point3</a></div><div class="ttdef"><b>Definition:</b> point3.h:43</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1Allocator_html_a394d792b47ac323277df226ed29ec6b9"><div class="ttname"><a href="classvcg_1_1tri_1_1Allocator.html#a394d792b47ac323277df226ed29ec6b9">vcg::tri::Allocator::AddEdges</a></div><div class="ttdeci">static EdgeIterator AddEdges(MeshType &amp;m, size_t n, PointerUpdater&lt; EdgePointer &gt; &amp;pu)</div><div class="ttdoc">Add n edges to the mesh. Function to add n edges to the mesh. The elements are added always to the en...</div><div class="ttdef"><b>Definition:</b> allocate.h:339</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1Allocator_html_a7b6c037085dbf2a99646cb532d1bcd16"><div class="ttname"><a href="classvcg_1_1tri_1_1Allocator.html#a7b6c037085dbf2a99646cb532d1bcd16">vcg::tri::Allocator::CompactEdgeVector</a></div><div class="ttdeci">static void CompactEdgeVector(MeshType &amp;m, PointerUpdater&lt; EdgePointer &gt; &amp;pu)</div><div class="ttdoc">Compact vector of edges removing deleted elements.</div><div class="ttdef"><b>Definition:</b> allocate.h:1128</div></div>
@@ -828,19 +821,20 @@ $(function() {
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_1_1PEdge_html"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology_1_1PEdge.html">vcg::tri::UpdateTopology::PEdge</a></div><div class="ttdoc">Auxiliary data structure for computing face face adjacency information.</div><div class="ttdef"><b>Definition:</b> topology.h:149</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_1_1PEdge_html_a34796cd425c5454a00fa4a2291e96f45"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology_1_1PEdge.html#a34796cd425c5454a00fa4a2291e96f45">vcg::tri::UpdateTopology::PEdge::EdgeBarycentricToFaceBarycentric</a></div><div class="ttdeci">Point3&lt; ScalarType &gt; EdgeBarycentricToFaceBarycentric(ScalarType u) const</div><div class="ttdef"><b>Definition:</b> topology.h:187</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_1_1PFace_html"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology_1_1PFace.html">vcg::tri::UpdateTopology::PFace</a></div><div class="ttdoc">Auxiliary data structure for computing tetra tetra adjacency information.</div><div class="ttdef"><b>Definition:</b> topology.h:70</div></div>
-<div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge_html"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">vcg::tri::UpdateTopology::PVertexEdge</a></div><div class="ttdef"><b>Definition:</b> topology.h:695</div></div>
+<div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge_html"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology_1_1PVertexEdge.html">vcg::tri::UpdateTopology::PVertexEdge</a></div><div class="ttdef"><b>Definition:</b> topology.h:693</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html">vcg::tri::UpdateTopology</a></div><div class="ttdoc">Generation of per-vertex and per-face topological information.</div><div class="ttdef"><b>Definition:</b> topology.h:43</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_a14520304aa9c6c8e426bdd73ea5d7d07"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#a14520304aa9c6c8e426bdd73ea5d7d07">vcg::tri::UpdateTopology::ClearFaceFace</a></div><div class="ttdeci">static void ClearFaceFace(MeshType &amp;m)</div><div class="ttdoc">Clear the Face-Face topological relation setting each involved pointer to null. useful when you passe...</div><div class="ttdef"><b>Definition:</b> topology.h:378</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_a283f15f2c47896ef91e47db41ebb265a"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#a283f15f2c47896ef91e47db41ebb265a">vcg::tri::UpdateTopology::VertexFace</a></div><div class="ttdeci">static void VertexFace(MeshType &amp;m)</div><div class="ttdoc">Update the Vertex-Face topological relation.</div><div class="ttdef"><b>Definition:</b> topology.h:467</div></div>
-<div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_a2ab7546f4ba64781bbbe0d67546b7f80"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#a2ab7546f4ba64781bbbe0d67546b7f80">vcg::tri::UpdateTopology::FaceFaceFromTexCoord</a></div><div class="ttdeci">static void FaceFaceFromTexCoord(MeshType &amp;m)</div><div class="ttdoc">Update the Face-Face topological relation so that it reflects the per-wedge texture connectivity.</div><div class="ttdef"><b>Definition:</b> topology.h:548</div></div>
+<div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_a2ab7546f4ba64781bbbe0d67546b7f80"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#a2ab7546f4ba64781bbbe0d67546b7f80">vcg::tri::UpdateTopology::FaceFaceFromTexCoord</a></div><div class="ttdeci">static void FaceFaceFromTexCoord(MeshType &amp;m)</div><div class="ttdoc">Update the Face-Face topological relation so that it reflects the per-wedge texture connectivity.</div><div class="ttdef"><b>Definition:</b> topology.h:563</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_a2c8325c8749f27a5aec31a60422bab54"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#a2c8325c8749f27a5aec31a60422bab54">vcg::tri::UpdateTopology::FillEdgeVector</a></div><div class="ttdeci">static void FillEdgeVector(MeshType &amp;m, std::vector&lt; PEdge &gt; &amp;edgeVec, bool includeFauxEdge=true)</div><div class="ttdef"><b>Definition:</b> topology.h:200</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_a506e3895fa279551d02296ed53a2f814"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#a506e3895fa279551d02296ed53a2f814">vcg::tri::UpdateTopology::FaceFace</a></div><div class="ttdeci">static void FaceFace(MeshType &amp;m)</div><div class="ttdoc">Update the Face-Face topological relation by allowing to retrieve for each face what other faces shar...</div><div class="ttdef"><b>Definition:</b> topology.h:395</div></div>
-<div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_a5a379584fd827b660d78a436c591d389"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#a5a379584fd827b660d78a436c591d389">vcg::tri::UpdateTopology::TestVertexFace</a></div><div class="ttdeci">static void TestVertexFace(MeshType &amp;m)</div><div class="ttdoc">Test correctness of VFtopology.</div><div class="ttdef"><b>Definition:</b> topology.h:619</div></div>
-<div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_a806668064343fc7c5b63947c580fa376"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#a806668064343fc7c5b63947c580fa376">vcg::tri::UpdateTopology::TestFaceFace</a></div><div class="ttdeci">static void TestFaceFace(MeshType &amp;m)</div><div class="ttdoc">Test correctness of FFtopology (only for 2Manifold Meshes!)</div><div class="ttdef"><b>Definition:</b> topology.h:660</div></div>
+<div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_a5a379584fd827b660d78a436c591d389"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#a5a379584fd827b660d78a436c591d389">vcg::tri::UpdateTopology::TestVertexFace</a></div><div class="ttdeci">static void TestVertexFace(MeshType &amp;m)</div><div class="ttdoc">Test correctness of VFtopology.</div><div class="ttdef"><b>Definition:</b> topology.h:617</div></div>
+<div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_a5a9cc6fd81e33e264d96da9c12f23823"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#a5a9cc6fd81e33e264d96da9c12f23823">vcg::tri::UpdateTopology::IsTexCoordSeam</a></div><div class="ttdeci">static bool IsTexCoordSeam(const FaceType &amp;f, int i)</div><div class="ttdoc">Tell whether the faces joined by FF along edge i of f disagree on the per-wedge texture coordinates o...</div><div class="ttdef"><b>Definition:</b> topology.h:547</div></div>
+<div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_a806668064343fc7c5b63947c580fa376"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#a806668064343fc7c5b63947c580fa376">vcg::tri::UpdateTopology::TestFaceFace</a></div><div class="ttdeci">static void TestFaceFace(MeshType &amp;m)</div><div class="ttdoc">Test correctness of FFtopology (only for 2Manifold Meshes!)</div><div class="ttdef"><b>Definition:</b> topology.h:658</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_aa94cbacbfe7d1490644522f3e7498f82"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#aa94cbacbfe7d1490644522f3e7498f82">vcg::tri::UpdateTopology::AllocateEdge</a></div><div class="ttdeci">static void AllocateEdge(MeshType &amp;m)</div><div class="ttdoc">Initialize the edge vector all the edges that can be inferred from current face vector,...</div><div class="ttdef"><b>Definition:</b> topology.h:249</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_ab029df90e7f2822b08a1b83e54a8f709"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#ab029df90e7f2822b08a1b83e54a8f709">vcg::tri::UpdateTopology::VertexTetra</a></div><div class="ttdeci">static void VertexTetra(MeshType &amp;m)</div><div class="ttdoc">Update the vertex-tetra topological relation.</div><div class="ttdef"><b>Definition:</b> topology.h:437</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_ab02f7b029ea610b287816484a97d0ad7"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#ab02f7b029ea610b287816484a97d0ad7">vcg::tri::UpdateTopology::TetraTetra</a></div><div class="ttdeci">static void TetraTetra(MeshType &amp;m)</div><div class="ttdoc">Updates the Tetra-Tetra topological relation by allowing to retrieve for each tetra what other tetras...</div><div class="ttdef"><b>Definition:</b> topology.h:339</div></div>
-<div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_ab47653a7a8aec47c5c7f98a9063dad70"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#ab47653a7a8aec47c5c7f98a9063dad70">vcg::tri::UpdateTopology::TestVertexEdge</a></div><div class="ttdeci">static void TestVertexEdge(MeshType &amp;m)</div><div class="ttdoc">Test correctness of VEtopology.</div><div class="ttdef"><b>Definition:</b> topology.h:584</div></div>
+<div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_ab47653a7a8aec47c5c7f98a9063dad70"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#ab47653a7a8aec47c5c7f98a9063dad70">vcg::tri::UpdateTopology::TestVertexEdge</a></div><div class="ttdeci">static void TestVertexEdge(MeshType &amp;m)</div><div class="ttdoc">Test correctness of VEtopology.</div><div class="ttdef"><b>Definition:</b> topology.h:582</div></div>
 <div class="ttc" id="aclassvcg_1_1tri_1_1UpdateTopology_html_ad3acd0580f93a3bda2ebcc49a4f6fec3"><div class="ttname"><a href="classvcg_1_1tri_1_1UpdateTopology.html#ad3acd0580f93a3bda2ebcc49a4f6fec3">vcg::tri::UpdateTopology::ClearTetraTetra</a></div><div class="ttdeci">static void ClearTetraTetra(MeshType &amp;m)</div><div class="ttdoc">Clear the tetra-tetra topological relation, setting each involved pointer to null....</div><div class="ttdef"><b>Definition:</b> topology.h:326</div></div>
 <div class="ttc" id="agroup__trimesh_html_ga189dbfba130073459cdb1c46e7694d65"><div class="ttname"><a href="group__trimesh.html#ga189dbfba130073459cdb1c46e7694d65">vcg::tri::ForEachTetra</a></div><div class="ttdeci">void ForEachTetra(const MeshType &amp;m, Callable action)</div><div class="ttdef"><b>Definition:</b> foreach.h:270</div></div>
 <div class="ttc" id="agroup__trimesh_html_ga41d6e87d2b9988bd38353c64f1cc32fb"><div class="ttname"><a href="group__trimesh.html#ga41d6e87d2b9988bd38353c64f1cc32fb">vcg::tri::ForEachFace</a></div><div class="ttdeci">void ForEachFace(const MeshType &amp;m, Callable action)</div><div class="ttdef"><b>Definition:</b> foreach.h:78</div></div>
@@ -853,7 +847,7 @@ $(function() {
 <!-- HTML footer for doxygen 1.9.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Sat Oct 24 2026 04:58:16
+Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Sat Oct 24 2026 05:16:57
 </small></address>
 </body>
 </html>
