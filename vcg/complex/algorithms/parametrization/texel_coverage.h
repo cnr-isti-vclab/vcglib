@@ -51,7 +51,10 @@ namespace tri {
 /// positions per texel, as a GPU rasterizer does: the guaranteed minimum of OpenGL is 4 bits and
 /// the usual hardware value 8, and the rare counts (overwritten, lost) change by up to about one
 /// percent between them, so the number is part of the measure and is an option.
-template <class MeshType>
+///
+/// The texture coordinates are the per-wedge ones (PerWedgeFlag true, the default) or the
+/// per-vertex ones; a face uses the texture whose index is that of its first corner.
+template <class MeshType, bool PerWedgeFlag = true>
 class TexelCoverage
 {
 public:
@@ -65,7 +68,8 @@ public:
         int subpixelBits = 8;
         ClashRule clashRule = ClashOnDiagonals;
         /// The coverage of a texture is computed in bands of rows that fit in this many bytes
-        /// (eight per texel), so a texture too large to hold at once is still counted exactly.
+        /// (eight per texel, nine when the faces are asked to be flagged), so a texture too
+        /// large to hold at once is still counted exactly.
         std::size_t maxBufferBytes = std::size_t(1) << 30;
     };
 
@@ -88,19 +92,36 @@ public:
         int64_t boundaryTexels = 0;
     };
 
+    /// What a face is on, when Compute is asked to flag the faces.
+    enum FaceFlag
+    {
+        FaceOnOverwrittenTexel = 1, ///< a texel it covers is covered by another face too
+        FaceOnClashTexel = 2        ///< a texel it covers has a neighbour of another chart
+    };
+
     /// Count the texels of a width x height texture covered by the faces that use `texture`
-    /// (the texture index of their first wedge). The UV of a face are scaled by uScale and vScale
+    /// (the texture index of their first corner; a negative `texture` takes every face, whatever
+    /// its index, for a mesh with a single texture). The UV of a face are scaled by uScale and vScale
     /// to texels of this resolution. faceChart gives the chart of each face (see
     /// UV_Utils::PerWedgeCharts): it tells apart a texel overwritten by its own chart from one
     /// shared with another. Faces with a negative chart, with no area, or a UV that is not finite
     /// or lies more than two million texels from the origin cover nothing. Where several faces
     /// cover a texel the last in face order is the one its neighbours are compared with.
     /// cb, if given, is told how far the bands are.
+    /// If faceFlags is given it is sized to the faces of m if it is not already, and a FaceFlag bit
+    /// is set in the entry of each face that is on a texel of that kind; no bit is cleared, so
+    /// one vector can be passed for every texture.
     static Counters Compute(const MeshType &m, const std::vector<int> &faceChart, int texture,
                             int width, int height, double uScale, double vScale,
-                            const Options &opt = Options(), CallBackPos *cb = nullptr)
+                            const Options &opt = Options(), CallBackPos *cb = nullptr,
+                            std::vector<uint8_t> *faceFlags = nullptr)
     {
-        tri::RequirePerFaceWedgeTexCoord(m);
+        if constexpr (PerWedgeFlag)
+            tri::RequirePerFaceWedgeTexCoord(m);
+        else
+            tri::RequirePerVertexTexCoord(m);
+        if (faceFlags && faceFlags->size() != m.face.size())
+            faceFlags->assign(m.face.size(), 0);
         Counters total;
         total.width = width;
         total.height = height;
@@ -108,13 +129,14 @@ public:
             return total;
 
         const int bits = std::min(8, std::max(1, opt.subpixelBits));
-        const std::size_t rowBytes = std::size_t(width) * 2 * sizeof(uint32_t);
+        const std::size_t rowBytes = std::size_t(width) * (2 * sizeof(uint32_t) + (faceFlags ? 1 : 0));
         // A band is a run of rows; the row above and the one below it are kept as well, as the
         // texels of its first and last rows have neighbours there. A band is at least one row.
         const std::size_t fittingRows = opt.maxBufferBytes / rowBytes;
         const int bandRows = int(std::min<std::size_t>(
             std::size_t(height), fittingRows > 3 ? fittingRows - 2 : 1));
         std::vector<uint32_t> count, id;
+        std::vector<uint8_t> texelFlags;
         for (int y0 = 0; y0 < height; y0 += bandRows)
         {
             if (cb)
@@ -124,7 +146,9 @@ public:
             count.assign(std::size_t(r1 - r0) * width, 0);
             id.assign(count.size(), 0);
             Rasterize(m, faceChart, texture, width, uScale, vScale, bits, r0, r1, count, id);
-            Count(count, id, width, height, r0, y0, y1, opt.clashRule, total);
+            Count(count, id, width, height, r0, y0, y1, opt.clashRule, total, faceFlags ? &texelFlags : nullptr);
+            if (faceFlags)
+                Flag(m, faceChart, texture, width, uScale, vScale, bits, r0, y0, y1, texelFlags, *faceFlags);
         }
         return total;
     }
@@ -132,78 +156,130 @@ public:
 private:
     typedef typename MeshType::FaceType FaceType;
 
-    // Fill the rows [r0, r1) of the coverage count and of the last chart to cover each texel.
-    static void Rasterize(const MeshType &m, const std::vector<int> &faceChart, int texture,
-                          int width, double uScale, double vScale, int bits, int r0, int r1,
-                          std::vector<uint32_t> &count, std::vector<uint32_t> &id)
+    static int TextureOf(const FaceType &face)
+    {
+        if constexpr (PerWedgeFlag)
+            return face.cWT(0).N();
+        else
+            return face.cV(0)->cT().N();
+    }
+
+    static Point2d UV(const FaceType &face, int corner)
+    {
+        if constexpr (PerWedgeFlag)
+            return Point2d(face.cWT(corner).U(), face.cWT(corner).V());
+        else
+            return Point2d(face.cV(corner)->cT().U(), face.cV(corner)->cT().V());
+    }
+
+    // Call visit(x, y) for each texel of the rows [from, to) whose centre the face covers. A face
+    // that covers nothing, as the comment of Compute says, is passed over.
+    template <class Visitor>
+    static void ForEachCoveredTexel(const FaceType &face, int width, double uScale, double vScale,
+                                    int bits, int from, int to, Visitor visit)
     {
         // The edge functions multiply two coordinate differences; this bound keeps the product
         // of two of them, in units of 1/256 texel, inside 64 bits.
         const double maxCoord = double(1 << 21);
         const double grid = double(int64_t(1) << bits);
         const int64_t half = int64_t(1) << (bits - 1);
-        for (std::size_t f = 0; f < m.face.size(); ++f)
+        int64_t x[3], y[3];
+        bool usable = true;
+        for (int c = 0; c < 3 && usable; ++c)
         {
-            const FaceType &face = m.face[f];
-            if (face.IsD() || faceChart[f] < 0 || face.cWT(0).N() != texture)
-                continue;
-            int64_t x[3], y[3];
-            bool usable = true;
-            for (int c = 0; c < 3 && usable; ++c)
+            const Point2d uv = UV(face, c);
+            const double px = uv.X() * uScale;
+            const double py = uv.Y() * vScale;
+            usable = std::abs(px) <= maxCoord && std::abs(py) <= maxCoord; // false for NaN
+            if (usable)
             {
-                const double px = double(face.cWT(c).U()) * uScale;
-                const double py = double(face.cWT(c).V()) * vScale;
-                usable = std::abs(px) <= maxCoord && std::abs(py) <= maxCoord; // false for NaN
-                if (usable)
-                {
-                    x[c] = int64_t(std::llround(px * grid));
-                    y[c] = int64_t(std::llround(py * grid));
-                }
+                x[c] = int64_t(std::llround(px * grid));
+                y[c] = int64_t(std::llround(py * grid));
             }
-            if (!usable)
-                continue;
-            const int64_t area = (x[1] - x[0]) * (y[2] - y[0]) - (y[1] - y[0]) * (x[2] - x[0]);
-            if (area == 0)
-                continue;
-            if (area < 0) // both windings are covered
+        }
+        if (!usable)
+            return;
+        const int64_t area = (x[1] - x[0]) * (y[2] - y[0]) - (y[1] - y[0]) * (x[2] - x[0]);
+        if (area == 0)
+            return;
+        if (area < 0) // both windings are covered
+        {
+            std::swap(x[1], x[2]);
+            std::swap(y[1], y[2]);
+        }
+        const int minY = int(std::max<int64_t>(from, std::min({ y[0], y[1], y[2] }) >> bits));
+        const int maxY = int(std::min<int64_t>(to - 1, std::max({ y[0], y[1], y[2] }) >> bits));
+        const int minX = int(std::max<int64_t>(0, std::min({ x[0], x[1], x[2] }) >> bits));
+        const int maxX = int(std::min<int64_t>(width - 1, std::max({ x[0], x[1], x[2] }) >> bits));
+        for (int py = minY; py <= maxY; ++py)
+        {
+            for (int px = minX; px <= maxX; ++px)
             {
-                std::swap(x[1], x[2]);
-                std::swap(y[1], y[2]);
-            }
-            const int minY = int(std::max<int64_t>(r0, std::min({ y[0], y[1], y[2] }) >> bits));
-            const int maxY = int(std::min<int64_t>(r1 - 1, std::max({ y[0], y[1], y[2] }) >> bits));
-            const int minX = int(std::max<int64_t>(0, std::min({ x[0], x[1], x[2] }) >> bits));
-            const int maxX = int(std::min<int64_t>(width - 1, std::max({ x[0], x[1], x[2] }) >> bits));
-            for (int py = minY; py <= maxY; ++py)
-            {
-                for (int px = minX; px <= maxX; ++px)
+                const int64_t cx = int64_t(2 * px + 1) * half, cy = int64_t(2 * py + 1) * half;
+                bool inside = true;
+                for (int e = 0; e < 3 && inside; ++e)
                 {
-                    const int64_t cx = int64_t(2 * px + 1) * half, cy = int64_t(2 * py + 1) * half;
-                    bool inside = true;
-                    for (int e = 0; e < 3 && inside; ++e)
-                    {
-                        const int a = e, b = (e + 1) % 3;
-                        const int64_t dx = x[b] - x[a], dy = y[b] - y[a];
-                        const int64_t side = dx * (cy - y[a]) - dy * (cx - x[a]);
-                        // On the edge itself the texel belongs to the triangle for which it is a
-                        // top or left edge: of the two that share it, exactly one.
-                        const bool topLeft = dy > 0 || (dy == 0 && dx < 0);
-                        inside = side > 0 || (side == 0 && topLeft);
-                    }
-                    if (!inside)
-                        continue;
-                    const std::size_t k = std::size_t(py - r0) * width + px;
-                    ++count[k];
-                    id[k] = uint32_t(faceChart[f]) + 1;
+                    const int a = e, b = (e + 1) % 3;
+                    const int64_t dx = x[b] - x[a], dy = y[b] - y[a];
+                    const int64_t side = dx * (cy - y[a]) - dy * (cx - x[a]);
+                    // On the edge itself the texel belongs to the triangle for which it is a
+                    // top or left edge: of the two that share it, exactly one.
+                    const bool topLeft = dy > 0 || (dy == 0 && dx < 0);
+                    inside = side > 0 || (side == 0 && topLeft);
                 }
+                if (inside)
+                    visit(px, py);
             }
         }
     }
 
-    // Add to total the counters of the rows [y0, y1), which lie in the buffers that start at row r0.
-    static void Count(const std::vector<uint32_t> &count, const std::vector<uint32_t> &id,
-                      int width, int height, int r0, int y0, int y1, ClashRule rule, Counters &total)
+    static bool Counts(const MeshType &m, const std::vector<int> &faceChart, std::size_t f, int texture)
     {
+        const FaceType &face = m.face[f];
+        return !face.IsD() && faceChart[f] >= 0 && (texture < 0 || TextureOf(face) == texture);
+    }
+
+    // Fill the rows [r0, r1) of the coverage count and of the last chart to cover each texel.
+    static void Rasterize(const MeshType &m, const std::vector<int> &faceChart, int texture,
+                          int width, double uScale, double vScale, int bits, int r0, int r1,
+                          std::vector<uint32_t> &count, std::vector<uint32_t> &id)
+    {
+        for (std::size_t f = 0; f < m.face.size(); ++f)
+        {
+            if (!Counts(m, faceChart, f, texture))
+                continue;
+            const uint32_t chart = uint32_t(faceChart[f]) + 1;
+            ForEachCoveredTexel(m.face[f], width, uScale, vScale, bits, r0, r1, [&](int px, int py) {
+                const std::size_t k = std::size_t(py - r0) * width + px;
+                ++count[k];
+                id[k] = chart;
+            });
+        }
+    }
+
+    // Flag the faces that cover a texel of the rows [y0, y1) that texelFlags marks; its first row is r0.
+    static void Flag(const MeshType &m, const std::vector<int> &faceChart, int texture, int width,
+                     double uScale, double vScale, int bits, int r0, int y0, int y1,
+                     const std::vector<uint8_t> &texelFlags, std::vector<uint8_t> &faceFlags)
+    {
+        for (std::size_t f = 0; f < m.face.size(); ++f)
+        {
+            if (!Counts(m, faceChart, f, texture))
+                continue;
+            ForEachCoveredTexel(m.face[f], width, uScale, vScale, bits, y0, y1, [&](int px, int py) {
+                faceFlags[f] |= texelFlags[std::size_t(py - r0) * width + px];
+            });
+        }
+    }
+
+    // Add to total the counters of the rows [y0, y1), which lie in the buffers that start at row r0.
+    // If texelFlags is not null it is filled, for the same rows, with the FaceFlag bits of each texel.
+    static void Count(const std::vector<uint32_t> &count, const std::vector<uint32_t> &id,
+                      int width, int height, int r0, int y0, int y1, ClashRule rule, Counters &total,
+                      std::vector<uint8_t> *texelFlags)
+    {
+        if (texelFlags)
+            texelFlags->assign(count.size(), 0);
         for (int y = y0; y < y1; ++y)
         {
             for (int x = 0; x < width; ++x)
@@ -233,6 +309,8 @@ private:
                 {
                     ++total.overwrittenTexels;
                     total.lostTexels += n - 1;
+                    if (texelFlags)
+                        (*texelFlags)[std::size_t(y - r0) * width + x] |= FaceOnOverwrittenTexel;
                 }
                 if (anyClear)
                     ++total.boundaryTexels;
@@ -251,7 +329,11 @@ private:
                     }
                 }
                 if (clash)
+                {
                     ++total.texelClashes;
+                    if (texelFlags)
+                        (*texelFlags)[std::size_t(y - r0) * width + x] |= FaceOnClashTexel;
+                }
             }
         }
     }
