@@ -133,6 +133,7 @@ public:
 		unsigned char g;
 		unsigned char b;
 		unsigned char a;
+		float fc[4]; // color written as float red/green/blue/alpha, in [0,1]
 		unsigned char data[MAX_USER_DATA];
 		float radius;
 		float u,v,w;
@@ -166,7 +167,7 @@ public:
 		float k4;
 	};
 
-#define _VERTDESC_LAST_  34
+#define _VERTDESC_LAST_  38
 	static const  PropDescriptor &VertDesc(int i)
 	{
 		static const PropDescriptor pv[_VERTDESC_LAST_]={
@@ -206,6 +207,11 @@ public:
 		    /*31*/ {"vertex", "quality",       ply::T_DOUBLE, PlyType<ScalarType>(),    offsetof(LoadPly_VertAux<ScalarType>,q),0,0,0,0,0  ,0},
 		    /*32*/ {"vertex", "texture_u",     ply::T_DOUBLE, PlyType<TexScalarType>(), offsetof(LoadPly_VertAux<ScalarType>,u),0,0,0,0,0  ,0},
 		    /*33*/ {"vertex", "texture_v",     ply::T_DOUBLE, PlyType<TexScalarType>(), offsetof(LoadPly_VertAux<ScalarType>,v),0,0,0,0,0  ,0},
+		    // FLOAT COLOR: some writers (RealityScan, for one) store the channels as float in [0,1]
+		    /*34*/ {"vertex", "red",           ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,fc),0,0,0,0,0  ,0},
+		    /*35*/ {"vertex", "green",         ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,fc) + 1*sizeof(float),0,0,0,0,0  ,0},
+		    /*36*/ {"vertex", "blue",          ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,fc) + 2*sizeof(float),0,0,0,0,0  ,0},
+		    /*37*/ {"vertex", "alpha",         ply::T_FLOAT, ply::T_FLOAT,         offsetof(LoadPly_VertAux<ScalarType>,fc) + 3*sizeof(float),0,0,0,0,0  ,0},
 		};
 		return pv[i];
 	}
@@ -405,6 +411,7 @@ public:
 
 		pi.mask = 0;
 		bool hasIntensity = false; // the intensity is a strange way to code single channel color used sometimes in rangemap. it is a kind of color. so it do not need another entry in the IOM mask.
+		bool hasFloatColor = false; // red/green/blue stored as float in [0,1] rather than uchar
 		bool multit = false; // true if texture has a per face int spec the texture index
 
 		va.flags = 42;
@@ -541,6 +548,14 @@ public:
 			if( pf.AddToRead(VertDesc(21))!=-1 )
 			{
 				hasIntensity = true;
+				pi.mask |= Mask::IOM_VERTCOLOR;
+			}
+			if( pf.AddToRead(VertDesc(34))!=-1 )
+			{
+				pf.AddToRead(VertDesc(35));
+				pf.AddToRead(VertDesc(36));
+				pf.AddToRead(VertDesc(37));
+				hasFloatColor = true;
 				pi.mask |= Mask::IOM_VERTCOLOR;
 			}
 
@@ -725,6 +740,7 @@ public:
 				{
 					if(pi.cb && (j%1000)==0) pi.cb(j*50/n,"Vertex Loading");
 					va.a = 255;
+					va.fc[3] = 1.0f;
 					if( pf.Read( (void *)&(va) )==-1 )
 					{
 						pi.status = PlyInfo::E_SHORTFILE;
@@ -758,6 +774,12 @@ public:
 					{
 						if(hasIntensity)
 							(*vi).C().SetGrayShade(va.intensity);
+						else if(hasFloatColor)
+						{
+							// Rounded, so that a uchar color written as c/255 reads back as c.
+							for(int k=0;k<4;++k)
+								(*vi).C()[k] = (unsigned char)(math::Clamp(va.fc[k], 0.0f, 1.0f)*255.0f + 0.5f);
+						}
 						else
 						{
 							(*vi).C()[0] = va.r;
@@ -1182,6 +1204,9 @@ public:
 		    pf.AddToRead(VertDesc(10))!=-1 &&
 		    pf.AddToRead(VertDesc(11))!=-1  )  mask |= Mask::IOM_VERTCOLOR;
 		if( pf.AddToRead(VertDesc(21))!=-1  )  mask |= Mask::IOM_VERTCOLOR;
+		if( pf.AddToRead(VertDesc(34))!=-1 &&
+		    pf.AddToRead(VertDesc(35))!=-1 &&
+		    pf.AddToRead(VertDesc(36))!=-1  )  mask |= Mask::IOM_VERTCOLOR;
 
 		if((pf.AddToRead(EdgeDesc(0)) != -1 || pf.AddToRead(EdgeDesc(2)) != -1) &&
 		   (pf.AddToRead(EdgeDesc(1)) != -1 || pf.AddToRead(EdgeDesc(3)) != -1))
