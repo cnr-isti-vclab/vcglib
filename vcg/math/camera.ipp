@@ -110,6 +110,32 @@ void Camera<S>::SetIsometric(S sx, S dx, S bt, S tp, S Focal, vcg::Point2<int> V
 }
 
 /**
+ * @brief Adapt the camera to its image at another resolution: the same picture in a different
+ * number of pixels, e.g. the full-resolution photo of a camera calibrated on a reduced copy.
+ *
+ * ViewportPx becomes the new size; CenterPx and DistorCenterPx scale with the pixels and
+ * PixelSizeMm inversely, so that every point projects to the same place in the picture, in the
+ * new pixels. FocalMm and the distortion coefficients are in mm and do not change. Each axis is
+ * scaled on its own: a size with another aspect ratio would change the shape of the pixels,
+ * and whether the new image is really the same picture is for the caller to check.
+ */
+template<class S>
+void Camera<S>::RescaleViewportPx(vcg::Point2<int> viewport)
+{
+	if (viewport[0] <= 0 || viewport[1] <= 0 || ViewportPx[0] <= 0 || ViewportPx[1] <= 0)
+		throw std::invalid_argument("Camera::RescaleViewportPx: both viewports must be non-empty.");
+	const S sx = S(viewport[0]) / S(ViewportPx[0]);
+	const S sy = S(viewport[1]) / S(ViewportPx[1]);
+	ViewportPx = viewport;
+	CenterPx[0] *= sx;
+	CenterPx[1] *= sy;
+	DistorCenterPx[0] *= sx;
+	DistorCenterPx[1] *= sy;
+	PixelSizeMm[0] /= sx;
+	PixelSizeMm[1] /= sy;
+}
+
+/**
  * @brief set the camera specifying the frustum view
  */
 template<class S>

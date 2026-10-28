@@ -133,6 +133,7 @@ creation
 #include <vcg/math/similarity.h>
 #include <vcg/space/point2.h>
 #include <vcg/space/point3.h>
+#include <stdexcept>
 
 namespace vcg {
 
@@ -158,6 +159,7 @@ public:
 	void SetCavalieri(S sx, S dx, S bt, S tp, S Focal, vcg::Point2<int> Viewport);
 	void SetIsometric(S sx, S dx, S bt, S tp, S Focal, vcg::Point2<int> Viewport);
 	void SetFrustum(S dx, S sx, S bt, S tp, S Focal, vcg::Point2<int> Viewport);
+	void RescaleViewportPx(vcg::Point2<int> viewport);
 
 	vcg::Matrix44<S> GetMatrix(S nearVal, S farVal);
 	void             GetFrustum(S& sx, S& dx, S& bt, S& tp, S& nr) const;
