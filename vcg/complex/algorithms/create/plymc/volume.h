@@ -25,6 +25,7 @@
 #define __VOLUME_H__
 
 #include "voxel.h"
+#include <wrap/system/utf8_file.h>
 #include <vcg/space/index/grid_static_ptr.h>
 
 namespace vcg {
@@ -254,7 +255,7 @@ public:
             datname+=".dat";
             rawname+=".raw";
 
-          fp=fopen(datname,"w");
+          fp=vcg::utf8::FOpen(datname,"w");
 
             fprintf(fp,"ObjectFileName: %s\n",rawname.c_str());
             fprintf(fp,"TaggedFileName: ---\n");
@@ -267,7 +268,7 @@ public:
             fprintf(fp,"GridType:       EQUIDISTANT\n");
 
             fclose(fp);
-      fp=fopen(rawname,"wb");
+      fp=vcg::utf8::FOpen(rawname,"wb");
          if(!fp)
          {
              printf("Error: unable ro open output volume file '%s'\n",filename);
@@ -1108,7 +1109,7 @@ void SlicedPPMQ( const char * filename,const char *tag,int SliceNum)
         if(iz>=SubPartSafe.min[2] && iz<SubPartSafe.max[2])
         {
             name=SFormat("%s%03i%s_q.ppm",filename,iz,tag);
-            FILE * fp = fopen(name.c_str(),"wb");
+            FILE * fp = vcg::utf8::FOpen(name.c_str(),"wb");
             fprintf(fp,
                 "P6\n"
                 "%d %d\n"
@@ -1169,7 +1170,7 @@ void SlicedPPM( const char * filename,const char *tag,int SliceNum=1)
         {
             name=SFormat("%s_%03i_%s.ppm",filename,iz,tag);
       printf("Saving slice '%s'",name.c_str());
-            FILE * fp = fopen(name.c_str(),"wb");
+            FILE * fp = vcg::utf8::FOpen(name.c_str(),"wb");
             if(!fp) return;
             fprintf(fp,
                 "P6\n"

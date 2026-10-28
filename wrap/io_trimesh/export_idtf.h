@@ -27,6 +27,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <wrap/system/utf8_file.h>
 #include <ostream>
 #include <string>
 #include <ios>
@@ -58,7 +59,7 @@ public:
 	Output_File(const std::string& file)
 		:_file()
 	{
-		_file.open(file.c_str(),std::ios::out);
+		_file.open(vcg::utf8::ToStreamPath(file.c_str()),std::ios::out);
 	}
 
 	void write(unsigned int tabl,const std::string& st)

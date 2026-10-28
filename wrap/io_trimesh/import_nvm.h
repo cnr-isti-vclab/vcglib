@@ -24,6 +24,7 @@
 #define __VCGLIB_IMPORTERNVM
 
 #include <stddef.h>
+#include <wrap/system/utf8_file.h>
 #include <stdio.h>
 #include <vcg/complex/complex.h>
 //#include <vcg/complex/allocate.h>
@@ -93,7 +94,7 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
 {
   unsigned int   num_cams,num_points;
 
-  FILE *fp = fopen(filename,"r");
+  FILE *fp = vcg::utf8::FOpen(filename,"r");
   if(!fp) return false;
   ReadHeader(fp, num_cams);
   char line[1000], name[1000];
@@ -190,7 +191,7 @@ static int Open( OpenMeshType &m, std::vector<Shot<ScalarType> >  & shots,
 
 static bool ReadImagesFilenames(const char *  filename,std::vector<std::string> &image_filenames)
 {
-    FILE * fp = fopen(filename,"r");
+    FILE * fp = vcg::utf8::FOpen(filename,"r");
     if (!fp) return false;
     else
     {
