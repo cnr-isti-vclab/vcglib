@@ -42,8 +42,34 @@ namespace tri
 {
 
 
+/** \brief What CapPlanarBoundary did with the outlines it found on the plane.
+
+  Counted in outlines -- the closed loops of border edges lying on the plane, or what should
+  have been one -- so that a caller can say why a cut was not closed instead of only that it
+  was not. The reasons are the ones CapPlanarBoundary documents; most of them point at a defect
+  the mesh had before the cut, which a repair can remove first.
+ */
+struct PlanarCapReport
+{
+  int planar = 0;        ///< capped by the planar tessellator
+  int earCut = 0;        ///< closed by ear cutting on the mesh boundary: an outline the
+                         ///< tessellator rejected, typically one crossing itself, where a few
+                         ///< triangles fold over others
+  int notClosed = 0;     ///< left open: not closed on the plane, as it runs into a hole the mesh
+                         ///< already had or breaks where the plane met a non-manifold edge
+  int holesRejected = 0; ///< left open: an outer outline and the holes inside it, which the
+                         ///< tessellator rejected (ear cutting would pave the holes over)
+  int nonManifold = 0;   ///< left open: needed ear cutting, but has a vertex on a non-manifold edge
+  int noNormals = 0;     ///< left open: needed ear cutting, which needs per-vertex and per-face normals
+  int open() const { return notClosed + holesRejected + nonManifold + noNormals; }
+};
+
+// Declared here, with its defaults, for ClipMeshWithPlane. It used to be declared with two
+// parameters, which made it a second template, never defined, that a two-argument call found.
 template <class TriMeshType>
-int CapPlanarBoundary(TriMeshType &m, const Plane3<typename TriMeshType::ScalarType> &plane);
+int CapPlanarBoundary(TriMeshType &m, const Plane3<typename TriMeshType::ScalarType> &plane,
+                      const PlanarRefinement &refinement = PlanarRefinement(),
+                      PlanarCapReport *report = nullptr);
 
 /** \brief How far from a plane a vertex of \a m may lie and still count as lying on it.
 
@@ -108,6 +134,8 @@ ScalarType PlaneDistance(const Plane3<ScalarType> &plane, const Point3<ScalarTyp
                   cut, a CAD model -- that is a distance that shows.
   \param capRefinement how the cap is refined with added points (see CapPlanarBoundary);
                   a minimum angle of 0 leaves it a plain constrained Delaunay triangulation.
+  \param capReport when not null, what the cap did with each outline of the cut, and why it
+                  left any open (see PlanarCapReport); untouched without \a capCut.
   \return true when the mesh was clipped; false when the plane leaves it untouched, either
           because nothing was on the discarded side or because the plane misses it entirely.
           A \a capCut that could not be performed does not make this false.
@@ -118,7 +146,8 @@ bool ClipMeshWithPlane(
     const Plane3<typename TriMeshType::ScalarType> &plane,
     bool capCut = false,
     typename TriMeshType::ScalarType tolerance = 0,
-    const PlanarRefinement &capRefinement = PlanarRefinement())
+    const PlanarRefinement &capRefinement = PlanarRefinement(),
+    PlanarCapReport *capReport = nullptr)
 {
   typedef typename TriMeshType::ScalarType ScalarType;
   typedef typename TriMeshType::CoordType CoordType;
@@ -211,7 +240,7 @@ bool ClipMeshWithPlane(
   Allocator<TriMeshType>::template DeletePerVertexAttribute<ScalarType>(m, dist);
 
   if (capCut && m.FN() > 0)
-    CapPlanarBoundary(m, pl, capRefinement);
+    CapPlanarBoundary(m, pl, capRefinement, capReport);
   return true;
 }
 
@@ -247,13 +276,15 @@ bool ClipMeshWithPlane(
   along each outline edge so split is split at the same points, so the mesh stays
   watertight. Without it the outline, and the mesh around, are left exactly as they were.
 
-  Returns the number of holes filled.
+  Returns the number of holes filled. With \a report, also how each outline was closed or
+  why it was left open (PlanarCapReport), counted from zero.
  */
 template <class TriMeshType>
 int CapPlanarBoundary(
     TriMeshType &m,
     const Plane3<typename TriMeshType::ScalarType> &plane,
-    const PlanarRefinement &refinement = PlanarRefinement())
+    const PlanarRefinement &refinement,
+    PlanarCapReport *report)
 {
   typedef typename TriMeshType::ScalarType ScalarType;
   typedef typename TriMeshType::CoordType CoordType;
@@ -262,6 +293,9 @@ int CapPlanarBoundary(
   typedef typename TriMeshType::VertexPointer VertexPointer;
   typedef typename TriMeshType::VertexIterator VertexIterator;
 
+  PlanarCapReport unused;
+  PlanarCapReport &rep = report ? *report : unused;
+  rep = PlanarCapReport();
   if (m.FN() == 0) return 0;
 
   Plane3<ScalarType> pl = plane;
@@ -294,7 +328,10 @@ int CapPlanarBoundary(
       if (onPlane(a) && onPlane(b)) edges.push_back(BorderEdge{a, b, &f, e});
     }
   }
-  if (edges.size() < 3) return 0;
+  if (edges.size() < 3) {
+    rep.notClosed = edges.empty() ? 0 : 1;   // too few edges on the plane to close anything
+    return 0;
+  }
 
   std::unordered_map<VertexPointer, std::vector<size_t> > incident;
   for (size_t i = 0; i < edges.size(); ++i) {
@@ -327,7 +364,7 @@ int CapPlanarBoundary(
           if (component[other] < 0) { component[other] = int(seed); members.push_back(other); }
       }
     }
-    if (members.size() < 3 || !closed) continue;
+    if (members.size() < 3 || !closed) { ++rep.notClosed; continue; }
     if (!simple) { earCut[seed] = true; continue; }
     // Every vertex has two edges, so following the one we did not arrive by closes the loop.
     std::vector<VertexPointer> loop;
@@ -431,7 +468,10 @@ int CapPlanarBoundary(
     for (size_t o : outer) {
       std::vector<size_t> group(1, o);
       group.insert(group.end(), holesOf[o].begin(), holesOf[o].end());
-      if (!tessellate(group) && group.size() == 1) earCut[loopSeed[o]] = true;
+      if (!tessellate(group)) {
+        if (group.size() == 1) earCut[loopSeed[o]] = true;
+        else rep.holesRejected += int(group.size());
+      }
     }
   }
 
@@ -449,8 +489,11 @@ int CapPlanarBoundary(
         }
     }
     for (size_t e = 0; e < edges.size(); ++e)
-      if (nonManifold[size_t(Index(m, edges[e].a))] || nonManifold[size_t(Index(m, edges[e].b))])
+      if ((nonManifold[size_t(Index(m, edges[e].a))] || nonManifold[size_t(Index(m, edges[e].b))])
+          && earCut[size_t(component[e])]) {
         earCut[size_t(component[e])] = false;
+        ++rep.nonManifold;
+      }
   }
   std::vector<size_t> toEar;                           // the edges of those components
   for (size_t e = 0; e < edges.size(); ++e)
@@ -463,6 +506,8 @@ int CapPlanarBoundary(
   // judged by them close to half of the ears come out folded -- so the outline's vertices
   // are given the cap's normal for the duration, and have theirs back afterwards.
   int earHoles = 0;
+  if (!toEar.empty() && !(HasPerVertexNormal(m) && HasPerFaceNormal(m)))
+    rep.noNormals = int(std::count(earCut.begin(), earCut.end(), true));
   if (!toEar.empty() && HasPerVertexNormal(m) && HasPerFaceNormal(m)) {
     // The ear faces take the mesh's own orientation, so the way they will face is read off
     // the outline as the mesh winds it, not assumed from the plane.
@@ -575,6 +620,8 @@ int CapPlanarBoundary(
     if (facing * n > 0)
       for (size_t fi = firstNew; fi < m.face.size(); ++fi) std::swap(m.face[fi].V(1), m.face[fi].V(2));
   }
+  rep.planar = planarLoops;
+  rep.earCut = earHoles;
   return planarLoops + earHoles;
 }
 
