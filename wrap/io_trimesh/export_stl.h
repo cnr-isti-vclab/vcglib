@@ -122,7 +122,9 @@ static int Save(const SaveMeshType &m, const char * filename , bool binary =true
             }
             if ((mask & Mask::IOM_FACECOLOR) && tri::HasPerFaceColor(m))
             {
-              if(magicsMode) attributes = 32768 | vcg::Color4b::ToUnsignedR5G5B5(fi->C());
+              // Magics clears bit 15 for a face with its own color (set means "use the
+              // object's color"); VisCAM sets it to mark the color valid.
+              if(magicsMode) attributes = vcg::Color4b::ToUnsignedR5G5B5(fi->C());
                         else attributes = 32768 | vcg::Color4b::ToUnsignedB5G5R5(fi->C());
             }
             fwrite(&attributes,1,sizeof(short),fp);

@@ -190,8 +190,7 @@ static bool LoadMask(const char * filename, int &mask)
 	}
 	else if(FileExtension(filename,"stl"))
 	{
-		mask = Mask::IOM_VERTCOORD | Mask::IOM_FACEINDEX;
-		err = true;
+		err = ImporterSTL<OpenMeshType>::LoadMask(filename, mask);
 		LastType()=KT_STL;
 	}
 	else if(FileExtension(filename,"off"))

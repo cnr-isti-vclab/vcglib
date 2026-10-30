@@ -93,6 +93,23 @@ static bool LoadMask(const char * filename, int &mask)
     return true;
 }
 
+/* Materialise Magics marks a colored binary stl with "COLOR=" in the 80-byte label,
+ * followed by four bytes: the RGBA of the whole object. A "MATERIAL=" block may follow
+ * but is optional, so "COLOR=" alone identifies the convention. The label is raw bytes,
+ * not a C string: it may hold NULs, and the color bytes are binary.
+ * Returns whether the label has "COLOR=", and then sets objectColor.
+ */
+static bool MagicsObjectColor(const char *label, Color4b &objectColor)
+{
+  const std::string s(label, STL_LABEL_SIZE);
+  const size_t c = s.find("COLOR=");
+  if(c==std::string::npos) return false;
+  objectColor = Color4b::Gray;
+  if(c+10 <= s.size())
+    objectColor = Color4b((unsigned char)s[c+6],(unsigned char)s[c+7],(unsigned char)s[c+8],(unsigned char)s[c+9]);
+  return true;
+}
+
 /* Try to guess if a stl has color
  *
  * rules:
@@ -113,15 +130,10 @@ static bool IsSTLColored(const char * filename, bool &coloredFlag, bool &magicsM
      return true; 
    
    FILE *fp = fopen(filename, "rb");
-   char buf[STL_LABEL_SIZE+1];
+   char buf[STL_LABEL_SIZE];
    fread(buf,sizeof(char),STL_LABEL_SIZE,fp);
-   std::string strInput(buf);
-   size_t cInd = strInput.rfind("COLOR=");
-   size_t mInd = strInput.rfind("MATERIAL=");
-   if(cInd!=std::string::npos && mInd!=std::string::npos)
-     magicsMode = true;
-   else
-     magicsMode = false;
+   Color4b objectColor;
+   magicsMode = MagicsObjectColor(buf, objectColor);
    int facenum;
    fread(&facenum, sizeof(int), 1, fp);
 
@@ -220,11 +232,18 @@ static int OpenBinary( OpenMeshType &m, const char * filename, int &loadMask, Ca
   bool magicsMode,coloredFlag;
   if(!IsSTLColored(filename,coloredFlag, magicsMode))
     return E_MALFORMED;
-  if(!coloredFlag) 
+  // Like the other importers, report what the file holds rather than what the caller
+  // asked for: with the request as a gate, Open() without LoadMask() dropped the colors.
+  if(coloredFlag)
+    loadMask |= Mask::IOM_FACECOLOR;
+  else
     loadMask = loadMask & (~Mask::IOM_FACECOLOR);
 
+  char label[STL_LABEL_SIZE];
+  fread(label, sizeof(char), STL_LABEL_SIZE, fp);
+  Color4b objectColor;
+  MagicsObjectColor(label, objectColor);
   int facenum;
-  fseek(fp, STL_LABEL_SIZE, SEEK_SET);
   fread(&facenum, sizeof(int), 1, fp);
 
   m.Clear();
@@ -241,7 +260,9 @@ static int OpenBinary( OpenMeshType &m, const char * filename, int &loadMask, Ca
       fread(&attr,sizeof(unsigned short),1,fp);
       if(tri::HasPerFaceColor(m) && (loadMask & Mask::IOM_FACECOLOR) )
       {
-        if(magicsMode) (*fi).C()= Color4b::FromUnsignedR5G5B5(attr);
+        // Bit 15 has opposite meanings: in Magics it is set when the face has no color of
+        // its own and takes the object's; in VisCAM/SolidView it is set when the color is valid.
+        if(magicsMode) (*fi).C()= (attr & 0x8000) ? objectColor : Color4b::FromUnsignedR5G5B5(attr);
                   else (*fi).C()= Color4b::FromUnsignedB5G5R5(attr);
       }
       for(int k=0;k<3;++k)
