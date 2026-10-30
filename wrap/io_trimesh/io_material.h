@@ -103,7 +103,8 @@ public:
       mtl.Tr = (float)(255-f.C()[3])/255.0f;//alpha
     }
 
-    if(m.textures.size() && HasPerWedgeTexCoord(m) && f.WT(0).n() >=0 )
+    // a face with no texture (-1, see TexCoord2), or naming one the mesh does not have, gets no map
+    if(HasPerWedgeTexCoord(m) && f.WT(0).n() >=0 && size_t(f.WT(0).n()) < m.textures.size())
       mtl.map_Kd = m.textures[f.WT(0).n()];
     else
       mtl.map_Kd = "";
