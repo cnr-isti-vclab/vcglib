@@ -84,7 +84,6 @@ static void RefineSingleStep(PolyMeshType &baseIn, PolyMeshType &refinedOut)
   // step 0 copy all the vertexes in the output mesh
   for(auto &v : baseIn.vert)
     tri::Allocator<PolyMeshType>::AddVertex(refinedOut,Point3f(0,0,0));
-    printf( "Mesh has %i vert and %i faces\n", refinedOut.VN(), refinedOut.FN() );
 
   // We keep two maps to store the new vertices created for the edges and the faces 
   // and retrieve them when actually building the connectivity of the new mesh
@@ -162,8 +161,6 @@ static void RefineSingleStep(PolyMeshType &baseIn, PolyMeshType &refinedOut)
     }
   }
   
-  printf( "Mesh has %i vert and %i faces\n", refinedOut.VN(), refinedOut.FN() );
-
   // Final step. Create Connectivity: a new face for each wedge of each face of the original mesh
   for(auto &f : baseIn.face)
   {
