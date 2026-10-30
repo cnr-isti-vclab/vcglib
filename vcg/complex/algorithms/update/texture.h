@@ -62,6 +62,7 @@ static void WedgeTexFromPlane(ComputeMeshType &m, const Point3<ScalarType> &uVec
 			{
 				(*fi).WT(i).U()= (*fi).V(i)->cP() * uVec;
 				(*fi).WT(i).V()= (*fi).V(i)->cP() * vVec;
+				(*fi).WT(i).N()= 0; // the whole mesh is mapped onto one texture (see TexCoord2)
 				bb.Add((*fi).WT(i).P());
 			}
 		}	

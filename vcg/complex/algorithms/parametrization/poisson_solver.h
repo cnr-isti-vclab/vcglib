@@ -484,6 +484,7 @@ class PoissonSolver
                 VertexType* v=f->V(j);
                 Point2<ScalarType> p=v->T().P();
                 f->WT(j).P()=p;
+                f->WT(j).N()=0; // a texture id, or the face reads as unmapped (see TexCoord2)
             }
         }
     }

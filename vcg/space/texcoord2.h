@@ -41,6 +41,12 @@ namespace vcg {
 
   This class is intended to be used when multiple textures id are shared over the same surface.
   so for each coord the id of the texture is stored. If no texture id is needed see the vcg::TexCoord2Simple class.
+
+  A negative texture id, -1, means "no texture": the element is not mapped and its coords mean
+  nothing. It is what a default-constructed TexCoord2 holds, so it is what every face and vertex
+  added to a mesh starts with until something gives it a texture. Code that writes a
+  parametrization must therefore set the id as well as the coords (0 for a single texture), or
+  what it maps still reads as unmapped. For a face, the id is that of its first wedge.
 */
 
 template<class T = float, int NMAX = 1>
@@ -56,7 +62,7 @@ protected:
 public:
 
 	TexCoord2(T u, T v){ _n[0]=0; _t[0][0]=u; _t[0][1]=v; }
-	TexCoord2() { }
+	TexCoord2() { for (int i = 0; i < NMAX; ++i) _n[i] = -1; }
 
 	inline const PointType &P() const { return _t[0]; }
 	inline PointType &P() { return _t[0]; }
@@ -144,6 +150,10 @@ public:
 
 /**
     Templated class for a single 2D texture coord.
+
+    It keeps no texture id: N() reads 0, so every element counts as mapped onto texture 0 and
+    one with no texture (-1, see TexCoord2) cannot be told apart. The id it returns by reference
+    is one static shared by every TexCoord2Simple, so only 0 may be written to it.
 */
 template<class T = float >
 class TexCoord2Simple
