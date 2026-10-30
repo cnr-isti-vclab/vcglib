@@ -845,15 +845,22 @@ private:
 	template<typename MESHMODELTYPE>
 	static void splitMeshInTexturedPatches(const MESHMODELTYPE& m,QVector<QVector<int> >& patches)
 	{
-		patches.resize(m.textures.size());
+		// A face with no texture (a negative id, see TexCoord2), or one naming a texture the
+		// mesh does not have, goes in one more patch after the textured ones, written without
+		// a material and dropped when no face needs it.
+		const int texNum = int(m.textures.size());
+		patches.resize(texNum + 1);
 		int cc = 0;
 		for(typename MESHMODELTYPE::ConstFaceIterator itf = m.face.begin();itf != m.face.end();++itf)
 		{
 			int tmp = itf->cWT(0).N();
-			assert(tmp>=0 && tmp<patches.size());	
+			if (tmp < 0 || tmp >= texNum)
+				tmp = texNum;
 			patches[tmp].push_back(cc);
 			++cc;
 		}
+		if (patches.back().isEmpty())
+			patches.pop_back();
 	}
 
 public:
@@ -1106,6 +1113,9 @@ public:
 				//there isn't any texture file
 				trianglesnode = new XNode(new Tags::TrianglesTag(m.face.size()));
 			}
+			else if (indmat >= int(m.textures.size()))
+				//the faces with no texture
+				trianglesnode = new XNode(new Tags::TrianglesTag(mytripatches[indmat].size()));
 			else
 				trianglesnode = new XNode(new Tags::TrianglesTag(mytripatches[indmat].size(),"material" + QString::number(indmat)));
 
