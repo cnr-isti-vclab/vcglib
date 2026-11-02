@@ -125,8 +125,6 @@ public:
 			shots[i].Extrinsics.SetRot(mat);
 			
 			shots[i].Intrinsics.FocalMm    = f;
-			shots[i].Intrinsics.k[0] = 0.0;//k1; To be uncommented when distortion is taken into account reliably
-			shots[i].Intrinsics.k[1] = 0.0;//k2;
 			shots[i].Intrinsics.PixelSizeMm = vcg::Point2<ScalarType>(1,1);
 			QSize size;
 			QImageReader sizeImg(QString::fromStdString(image_filenames[i]));

@@ -175,9 +175,6 @@ public:
 	vcg::Point2<S> LocalTo_0_1(const vcg::Point2<S>& p) const;
 	vcg::Point2<S> LocalTo_neg1_1(const vcg::Point2<S>& p) const;
 
-	vcg::Point2<S> UndistortedToDistorted(vcg::Point2<S> u) const;
-	vcg::Point2<S> DistortedToUndistorted(vcg::Point2<S> d) const;
-
 	bool operator==(const Camera<S>& oth) const;
 	bool operator!=(const Camera<S>& oth) const;
 
@@ -188,9 +185,6 @@ public:
 	Point2<S>   PixelSizeMm; /// Dimension in mm of a single pixel
 	Point2<S>   CenterPx;    /// Position of the projection of the focal center on the image plane.
 							 /// Expressed in pixels
-	Point2<S>
-		DistorCenterPx; /// Position of the radial distortion center on the image plane in pixels
-	std::array<S, 4> k; /// 1st & 2nd order radial lens distortion coefficient (only the first 2 terms are used)
 
 	CameraType cameraType; /// Type of camera: PERSPECTIVE,ORTHO,ISOMETRIC,CAVALIERI
 };

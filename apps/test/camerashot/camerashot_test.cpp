@@ -432,10 +432,6 @@ int main()
   shot1.Intrinsics.ViewportPx[0] = 1200; shot1.Intrinsics.ViewportPx[1] = 800;
   shot1.Intrinsics.PixelSizeMm[0] = 0.029166; shot1.Intrinsics.PixelSizeMm[1] = 0.029166;
 
-  // no distorion is assumed (!)
-  shot1.Intrinsics.DistorCenterPx[0] = shot1.Intrinsics.DistorCenterPx[1] = 0.0;
-  shot1.Intrinsics.k[0] = 0.0; shot1.Intrinsics.k[1] = 0.0; shot1.Intrinsics.k[2] = 0.0; shot1.Intrinsics.k[3] = 0.0;
-
   vcg::Matrix44d R1; // -10 degree around Y axis
   double deg2rad = 0.01745329251994329576923690768489;
   R1.ElementAt(0,0) = vcg::math::Cos(-10.0*deg2rad);
@@ -465,10 +461,6 @@ int main()
   shot2.Intrinsics.CenterPx[0] = 600.0; shot2.Intrinsics.CenterPx[1] = 400.0;
   shot2.Intrinsics.ViewportPx[0] = 1200; shot2.Intrinsics.ViewportPx[1] = 800;
   shot2.Intrinsics.PixelSizeMm[0] = 0.029166; shot2.Intrinsics.PixelSizeMm[1] = 0.029166;
-
-  // no distortion is assumed (!)
-  shot2.Intrinsics.DistorCenterPx[0] = shot2.Intrinsics.DistorCenterPx[1] = 0.0;
-  shot2.Intrinsics.k[0] = 0.0; shot2.Intrinsics.k[1] = 0.0; shot2.Intrinsics.k[2] = 0.0; shot2.Intrinsics.k[3] = 0.0;
 
 
   vcg::Matrix44d R2; // 18 degree around Y axis (+ 180 degree for the correct orientation of the camera)

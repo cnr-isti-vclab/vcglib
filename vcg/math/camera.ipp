@@ -31,10 +31,8 @@ Camera<S>::Camera() :
 		ViewportPx(vcg::Point2<int>(0, 0)),
 		PixelSizeMm(vcg::Point2<S>(0.0, 0.0)),
 		CenterPx(vcg::Point2<S>(0.0, 0.0)),
-		DistorCenterPx(vcg::Point2<S>(0.0, 0.0)),
 		cameraType(PERSPECTIVE)
 {
-	k[0] = k[1] = k[2] = k[3] = 0;
 }
 
 template<class S>
@@ -46,12 +44,7 @@ Camera<S> Camera<S>::Construct(const Camera<Q>& t)
 	n.ViewportPx.Import(t.ViewportPx);
 	n.PixelSizeMm.Import(t.PixelSizeMm);
 	n.CenterPx.Import(t.CenterPx);
-	n.DistorCenterPx.Import(t.DistorCenterPx);
 	n.cameraType = t.cameraType;
-	n.k[0]       = t.k[0];
-	n.k[1]       = t.k[1];
-	n.k[2]       = t.k[2];
-	n.k[3]       = t.k[3];
 	return n;
 }
 
@@ -113,9 +106,9 @@ void Camera<S>::SetIsometric(S sx, S dx, S bt, S tp, S Focal, vcg::Point2<int> V
  * @brief Adapt the camera to its image at another resolution: the same picture in a different
  * number of pixels, e.g. the full-resolution photo of a camera calibrated on a reduced copy.
  *
- * ViewportPx becomes the new size; CenterPx and DistorCenterPx scale with the pixels and
+ * ViewportPx becomes the new size; CenterPx scales with the pixels and
  * PixelSizeMm inversely, so that every point projects to the same place in the picture, in the
- * new pixels. FocalMm and the distortion coefficients are in mm and do not change. Each axis is
+ * new pixels. FocalMm is in mm and does not change. Each axis is
  * scaled on its own: a size with another aspect ratio would change the shape of the pixels,
  * and whether the new image is really the same picture is for the caller to check.
  */
@@ -129,8 +122,6 @@ void Camera<S>::RescaleViewportPx(vcg::Point2<int> viewport)
 	ViewportPx = viewport;
 	CenterPx[0] *= sx;
 	CenterPx[1] *= sy;
-	DistorCenterPx[0] *= sx;
-	DistorCenterPx[1] *= sy;
 	PixelSizeMm[0] /= sx;
 	PixelSizeMm[1] /= sy;
 }
@@ -275,12 +266,6 @@ vcg::Point2<S> Camera<S>::Project(const vcg::Point3<S>& p) const
 	if (!IsOrtho()) {
 		q[0] *= FocalMm / p.Z();
 		q[1] *= FocalMm / p.Z();
-
-		if (k[0] != 0) {
-			vcg::Point2<S> d;
-			d = UndistortedToDistorted(q);
-			q = d;
-		}
 	}
 
 	return q;
@@ -295,13 +280,6 @@ vcg::Point3<S> Camera<S>::UnProject(const vcg::Point2<S>& p, const S& d) const
 	vcg::Point3<S> np = Point3<S>(p[0], p[1], d);
 
 	if (!IsOrtho()) {
-		if (k[0] != 0) {
-			vcg::Point2<S> d = Point2<S>(p[0], p[1]);
-			vcg::Point2<S> u = DistortedToUndistorted(d);
-			np[0]            = u[0];
-			np[1]            = u[1];
-		}
-
 		np[0] /= FocalMm / d;
 		np[1] /= FocalMm / d;
 	}
@@ -386,86 +364,6 @@ vcg::Point2<S> Camera<S>::LocalTo_neg1_1(const vcg::Point2<S>& p) const
 	return ps;
 }
 
-/**
- * @brief transforms an undistorted 2D camera plane point in a distorted 2D camera plane point
- */
-template<class Scalar>
-vcg::Point2<Scalar> Camera<Scalar>::UndistortedToDistorted(vcg::Point2<Scalar> u) const
-{
-	vcg::Point2<Scalar> dis;
-	vcg::Point2<Scalar> dc    = ViewportPxTo_neg1_1(DistorCenterPx);
-	const Scalar        SQRT3 = Scalar(1.732050807568877293527446341505872366943);
-	const Scalar        CBRT  = Scalar(0.33333333333333333333333);
-	Scalar              Ru, Rd, lambda, c, d, Q, R, D, S, T, sinT, cosT;
-
-	if (((u[0] - dc[0]) == 0 && (u[1] - dc[1]) == 0) || k[0] == 0) {
-		dis[0] = u[0];
-		dis[1] = u[1];
-		return dis;
-	}
-
-	Ru = hypot((u[0] - dc[0]), (u[1] - dc[1])); /* SQRT(Xu*Xu+Yu*Yu) */
-	c  = 1 / k[0];
-	d  = -c * Ru;
-
-	Q = c / 3;
-	R = -d / 2;
-	if (R < 0)
-		D = pow(Q, 3) + sqrt(-R);
-	else
-		D = pow(Q, 3) + sqrt(R);
-
-	if (D >= 0) /* one real root */
-	{
-		D = sqrt(D);
-		S = pow((R + D), CBRT);
-		if (R >= D)
-			T = pow((R - D), CBRT);
-		else
-			T = -pow(abs((int) (R - D)), CBRT); // MODIFICATO DA ME
-		Rd = S + T;
-
-		if (Rd < 0)
-			Rd = sqrt(-1 / (3 * k[0]));
-	}
-	else /* three real roots */
-	{
-		D = sqrt(-D);
-		S = pow((Scalar) (hypot(R, D)), (Scalar) CBRT);
-		T = atan2(D, R) / 3;
-		// SinCos(T, sinT, cosT);
-		sinT = sin(T);
-		cosT = cos(T);
-
-		/* the larger positive root is    2*S*cos(T)                   */
-		/* the smaller positive root is   -S*cos(T) + SQRT(3)*S*sin(T) */
-		/* the negative root is           -S*cos(T) - SQRT(3)*S*sin(T) */
-		Rd = -S * cosT + SQRT3 * S * sinT; /* use the smaller positive root */
-	}
-
-	lambda = Rd / Ru;
-
-	dis[0] = u[0] * lambda;
-	dis[1] = u[1] * lambda;
-
-	return dis;
-}
-
-/**
- * @brief transforms a distorted 2D camera plane point in an undistorted 2D camera plane point
- */
-template<class S>
-vcg::Point2<S> Camera<S>::DistortedToUndistorted(vcg::Point2<S> d) const
-{
-	vcg::Point2<S> u;
-	vcg::Point2<S> dc = ViewportPxTo_neg1_1(DistorCenterPx);
-	S              r  = sqrt(pow((d[0] - dc[0]), 2) + pow((d[1] - dc[1]), 2));
-	u[0]              = d[0] * (1 - k[0] * r * r);
-	u[1]              = d[1] * (1 - k[0] * r * r);
-
-	return u;
-}
-
 template<class S>
 bool Camera<S>::operator==(const Camera<S> &oth) const
 {
@@ -474,8 +372,6 @@ bool Camera<S>::operator==(const Camera<S> &oth) const
 		ViewportPx == oth.ViewportPx &&
 		PixelSizeMm == oth.PixelSizeMm &&
 		CenterPx == oth.CenterPx &&
-		DistorCenterPx == oth.DistorCenterPx &&
-		k == oth.k &&
 		cameraType == oth.cameraType;
 }
 

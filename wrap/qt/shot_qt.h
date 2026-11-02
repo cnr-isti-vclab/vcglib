@@ -43,7 +43,6 @@ template <class ShotType>
       memcpy(&cam.ViewportPx, QByteArray::fromBase64(attr.namedItem("ViewportPx").nodeValue().toLocal8Bit()).data(), sizeof(int) * 2);
       memcpy(&cam.CenterPx, QByteArray::fromBase64(attr.namedItem("CenterPx").nodeValue().toLocal8Bit()).data(), sizeof(ScalarType)*2);
       memcpy(&cam.PixelSizeMm, QByteArray::fromBase64(attr.namedItem("PixelSizeMm").nodeValue().toLocal8Bit()).data(), sizeof(ScalarType) * 2);
-      memcpy(&cam.k[0], QByteArray::fromBase64(attr.namedItem("LensDistortion").nodeValue().toLocal8Bit()).data(), sizeof(ScalarType) * 2);
     }
     else
     {
@@ -72,8 +71,6 @@ template <class ShotType>
       cam.CenterPx[1] = attr.namedItem("CenterPx").nodeValue().section(' ', 1, 1).toDouble();
       cam.PixelSizeMm[0] = attr.namedItem("PixelSizeMm").nodeValue().section(' ', 0, 0).toDouble();
       cam.PixelSizeMm[1] = attr.namedItem("PixelSizeMm").nodeValue().section(' ', 1, 1).toDouble();
-      cam.k[0] = attr.namedItem("LensDistortion").nodeValue().section(' ', 0, 0).toDouble();
-      cam.k[1] = attr.namedItem("LensDistortion").nodeValue().section(' ', 1, 1).toDouble();
     }
     // scale correction should no more exist !!!
     //    float scorr = attr.namedItem("ScaleCorr").nodeValue().toDouble();
@@ -116,8 +113,6 @@ template <class ShotType>
     cam.CenterPx[1] = attr.namedItem("Center").nodeValue().section(' ',1,1).toInt();
     cam.PixelSizeMm[0] = attr.namedItem("ScaleF").nodeValue().section(' ',0,0).toDouble();
     cam.PixelSizeMm[1] = attr.namedItem("ScaleF").nodeValue().section(' ',1,1).toDouble();
-    cam.k[0] = attr.namedItem("LensDist").nodeValue().section(' ',0,0).toDouble();
-    cam.k[1] = attr.namedItem("LensDist").nodeValue().section(' ',1,1).toDouble();
 
     // scale correction
     float scorr = attr.namedItem("ScaleCorr").nodeValue().toDouble();
@@ -158,8 +153,9 @@ template <class ShotType>
 
   shotElem.setAttribute( "FocalMm", cam.FocalMm);
 
-  str = QString("%1 %2").arg(cam.k[0]).arg(cam.k[1]);
-  shotElem.setAttribute( "LensDistortion", str);
+  // vcg::Camera has no lens distortion: the attribute is kept, as zeros, for the readers
+  // that require it.
+  shotElem.setAttribute( "LensDistortion", "0 0");
 
   str = QString("%1 %2").arg(cam.PixelSizeMm[0]).arg(cam.PixelSizeMm[1]);
   shotElem.setAttribute( "PixelSizeMm", str);
@@ -203,7 +199,10 @@ QDomElement WriteShotToQDomNodeBinary(
   value = QByteArray::fromRawData((char *)&cam.FocalMm, sizeof(ScalarType)).toBase64();
   shotElem.setAttribute("FocalMm", QString(value));
 
-  value = QByteArray::fromRawData((char *)&cam.k[0], sizeof(ScalarType) * 2).toBase64();
+  // vcg::Camera has no lens distortion: the attribute is kept, as zeros, for the readers
+  // that require it.
+  const ScalarType noDistortion[2] = {0, 0};
+  value = QByteArray::fromRawData((const char *)noDistortion, sizeof(ScalarType) * 2).toBase64();
   shotElem.setAttribute("LensDistortion", QString(value));
 
   value = QByteArray::fromRawData((char *)&cam.PixelSizeMm, sizeof(ScalarType) * 2).toBase64();

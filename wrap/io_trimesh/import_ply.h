@@ -161,6 +161,8 @@ public:
 		float centery;
 		int   viewportx;
 		int   viewporty;
+		// Read so that files with a camera keep parsing, and discarded: vcg::Camera has no
+		// lens distortion.
 		float k1;
 		float k2;
 		float k3;
@@ -722,10 +724,6 @@ public:
 					m.shot.Intrinsics.CenterPx[1]    = ca.centery;
 					m.shot.Intrinsics.ViewportPx[0]  = ca.viewportx;
 					m.shot.Intrinsics.ViewportPx[1]  = ca.viewporty;
-					m.shot.Intrinsics.k[0]           = ca.k1;
-					m.shot.Intrinsics.k[1]           = ca.k2;
-					m.shot.Intrinsics.k[2]           = ca.k3;
-					m.shot.Intrinsics.k[3]           = ca.k4;
 
 				}
 			}
@@ -1149,10 +1147,6 @@ public:
 					camera.c[1]      = ca.centery;
 					camera.viewport[0] = ca.viewportx;
 					camera.viewport[1] = ca.viewporty;
-					camera.k[0]      = ca.k1;
-					camera.k[1]      = ca.k2;
-					camera.k[2]      = ca.k3;
-					camera.k[3]      = ca.k4;
 				}
 				break;
 			}

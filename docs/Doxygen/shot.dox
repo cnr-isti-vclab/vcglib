@@ -16,7 +16,7 @@ Then, a set of examples of the most important operations (projection and un-proj
 In generale, the camera parameters can be divided in two groups:
 - \b Extrinsic (or external) parameters: these are the parameters associated to the position in the space of the camera.
 
-- \b Intrinsic (or internal) parameters: these values are related to the peculiar characteristics of the camera, like the focal length (the zoom) or the distortion introduced by the lenses.
+- \b Intrinsic (or internal) parameters: these values are related to the peculiar characteristics of the camera, like the focal length (the zoom) or the size of the pixels.
 
 If these group of values are put in a proper camera model, it is possible to transform any point in the space in the corresponding point on the image plane of the camera (and viceversa).
 
@@ -28,17 +28,11 @@ In fact, given a simple perspective camera model like the one shown in figure, e
 In this case the extrinsic parameters are a 3 X 3 rotation matrix R and a translation vector T, which define the orientation and position of the camera. In order to transform the 3D camera coordinate in 2D image plane coordinates (Xu,Yu) it's necessary to know the measure of the distance between the point of view and the image plane (OO1 in figure): this value, indicated with f, is usually known as the focal length. The relation between the camera and image coordinates of the point can be expressed as follows:
 \image html "shot-Focal.jpg"
 
-Another aspect of the structure of a camera that can be characterized is the distortion introduced by the lenses: if we suppose that the distortion is radial (performed along the radial direction respect to the center of distortion) we can calculate the undistorted image coordinates
-
-\image html "shot-Distort1.jpg"
-where
-\image html "shot-Distort2.jpg"
-and
-\image html "shot-Distort3.jpg"
+vcg::Camera is a pinhole camera: it has no model of the distortion introduced by the lenses. Images taken with a real lens must be undistorted before they are used with it.
 
 In conclusion, a quite accurate model of a camera can be described by:
 - A 3x3 rotation matrix and a translation vector for extrinsic parameters
-- The values of focal, center of distortion and one or more distortion coefficients for intrinsic parameters
+- The focal length, the pixel size and the center of projection for intrinsic parameters
 
 While this set of parameters provides everything to transform any 3D point in its corresponding point in the image plane, this could be not enough in peculiar applications. If an accurate estimation of the real position of the camera respect to the object is needed, some more data about the camera model are needed: in particular, the sensor physical size together with the resolution in pixel of the acquired image. If these a-priori data are known, a unique set of camera parameters is associated to any shot.
 
@@ -66,8 +60,6 @@ ScalarType	FocalMm;		/// Focal Distance: the distance between focal center and i
 Point2<int>	ViewportPx;		/// Dimension of the Image Plane (in pixels)
 Point2< S>	PixelSizeMm;		/// Dimension in mm of a single pixel
 Point2< S>	CenterPx;		/// Position of the projection of the focal center on the image plane. Expressed in pixels
-Point2< S>	DistorCenterPx;		/// Position of the radial distortion center on the image plane in pixels
-S			k[4];		/// 1st & 2nd order radial lens distortion coefficient (only the first 2 terms are used)
 //------------------------
 \endcode
 While the extrinsic parameters usually change between the shots, some (sometimes all) of the intrinsics are strongly related to the camera model used. In particular, some values are usually known before camera calibration: viewportPx and CenterPx. Moreover, if an accurate calibration is needed, it is necessary to fill the PixelSizeMm value.

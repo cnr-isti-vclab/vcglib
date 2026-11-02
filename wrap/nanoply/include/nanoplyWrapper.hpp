@@ -929,6 +929,7 @@ namespace nanoply
 			ElementDescriptor cameraDescr(std::string("camera"));
 			vcg::Point3<ScalarType> tra;
 			vcg::Matrix44<ScalarType> rot;
+			ScalarType lens[4] = {0, 0, 0, 0}; // read and discarded: vcg::Camera has no lens distortion
 			size_t count = info.GetElementCount(std::string("camera"));
 			if (count > 0 && (bitMask & BitMask::IO_CAMERA))
 			{
@@ -951,10 +952,10 @@ namespace nanoply
 				cameraDescr.dataDescriptor.push_back(new DataDescriptor<ScalarType, 1, ScalarType>(std::string("centery"), &mesh.shot.Intrinsics.CenterPx[1]));
 				cameraDescr.dataDescriptor.push_back(new DataDescriptor<int, 1, int>(std::string("viewportx"), &mesh.shot.Intrinsics.ViewportPx[0]));
 				cameraDescr.dataDescriptor.push_back(new DataDescriptor<int, 1, int>(std::string("viewporty"), &mesh.shot.Intrinsics.ViewportPx[1]));
-				cameraDescr.dataDescriptor.push_back(new DataDescriptor<ScalarType, 1, ScalarType>(std::string("k1"), &mesh.shot.Intrinsics.k[0]));
-				cameraDescr.dataDescriptor.push_back(new DataDescriptor<ScalarType, 1, ScalarType>(std::string("k2"), &mesh.shot.Intrinsics.k[1]));
-				cameraDescr.dataDescriptor.push_back(new DataDescriptor<ScalarType, 1, ScalarType>(std::string("k3"), &mesh.shot.Intrinsics.k[2]));
-				cameraDescr.dataDescriptor.push_back(new DataDescriptor<ScalarType, 1, ScalarType>(std::string("k4"), &mesh.shot.Intrinsics.k[3]));
+				cameraDescr.dataDescriptor.push_back(new DataDescriptor<ScalarType, 1, ScalarType>(std::string("k1"), &lens[0]));
+				cameraDescr.dataDescriptor.push_back(new DataDescriptor<ScalarType, 1, ScalarType>(std::string("k2"), &lens[1]));
+				cameraDescr.dataDescriptor.push_back(new DataDescriptor<ScalarType, 1, ScalarType>(std::string("k3"), &lens[2]));
+				cameraDescr.dataDescriptor.push_back(new DataDescriptor<ScalarType, 1, ScalarType>(std::string("k4"), &lens[3]));
 			}
 			
 			//Vertex
@@ -1299,6 +1300,7 @@ namespace nanoply
 			ElementDescriptor cameraDescr(std::string("camera"));
 			vcg::Point3<ScalarType> tra = mesh.shot.Extrinsics.Tra();
 			vcg::Matrix44<ScalarType> rot = mesh.shot.Extrinsics.Rot();
+			ScalarType lens[4] = {0, 0, 0, 0}; // written as zeros, so that the element keeps its layout
 			if (bitMask & BitMask::IO_CAMERA)
 			{
 				PushDescriport<ScalarType, ScalarType, 1>(cameraProp, cameraDescr, std::string("view_px"), &tra[0]);
@@ -1320,10 +1322,10 @@ namespace nanoply
         PushDescriport<ScalarType, ScalarType, 1>(cameraProp, cameraDescr, std::string("centery"), &mesh.shot.Intrinsics.CenterPx[1]);
         PushDescriport<int, int, 1>(cameraProp, cameraDescr, std::string("viewportx"), &mesh.shot.Intrinsics.ViewportPx[0]);
         PushDescriport<int, int, 1>(cameraProp, cameraDescr, std::string("viewporty"), &mesh.shot.Intrinsics.ViewportPx[1]);
-        PushDescriport<ScalarType, ScalarType, 1>(cameraProp, cameraDescr, std::string("k1"), &mesh.shot.Intrinsics.k[0]);
-        PushDescriport<ScalarType, ScalarType, 1>(cameraProp, cameraDescr, std::string("k2"), &mesh.shot.Intrinsics.k[1]);
-        PushDescriport<ScalarType, ScalarType, 1>(cameraProp, cameraDescr, std::string("k3"), &mesh.shot.Intrinsics.k[2]);
-        PushDescriport<ScalarType, ScalarType, 1>(cameraProp, cameraDescr, std::string("k4"), &mesh.shot.Intrinsics.k[3]);
+        PushDescriport<ScalarType, ScalarType, 1>(cameraProp, cameraDescr, std::string("k1"), &lens[0]);
+        PushDescriport<ScalarType, ScalarType, 1>(cameraProp, cameraDescr, std::string("k2"), &lens[1]);
+        PushDescriport<ScalarType, ScalarType, 1>(cameraProp, cameraDescr, std::string("k3"), &lens[2]);
+        PushDescriport<ScalarType, ScalarType, 1>(cameraProp, cameraDescr, std::string("k4"), &lens[3]);
       }
 
       //Vertex

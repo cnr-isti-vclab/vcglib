@@ -190,6 +190,8 @@ public:
 			fprintf(fpout,"property %s centery\n",cmtp);
 			fprintf(fpout,"property int viewportx\n");
 			fprintf(fpout,"property int viewporty\n");
+			// Written as zeros, so that the element keeps its layout: vcg::Camera has no lens
+			// distortion.
 			fprintf(fpout,"property %s k1\n",cmtp);
 			fprintf(fpout,"property %s k2\n",cmtp);
 			fprintf(fpout,"property %s k3\n",cmtp);
@@ -394,10 +396,7 @@ public:
 
 				fwrite( &m.shot.Intrinsics.ViewportPx[0],sizeof(int),2,fpout );
 
-				t[ 0] = (ShotScalarType)m.shot.Intrinsics.k[0];
-				t[ 1] = (ShotScalarType)m.shot.Intrinsics.k[1];
-				t[ 2] = (ShotScalarType)m.shot.Intrinsics.k[2];
-				t[ 3] = (ShotScalarType)m.shot.Intrinsics.k[3];
+				t[ 0] = t[ 1] = t[ 2] = t[ 3] = 0;
 				fwrite(t,sizeof(ShotScalarType),4,fpout);
 			}
 			else
@@ -422,10 +421,10 @@ public:
 						,DGTS,m.shot.Intrinsics.CenterPx[1]
 						,m.shot.Intrinsics.ViewportPx[0]
 						,m.shot.Intrinsics.ViewportPx[1]
-						,DGTS,m.shot.Intrinsics.k[0]
-						,DGTS,m.shot.Intrinsics.k[1]
-						,DGTS,m.shot.Intrinsics.k[2]
-						,DGTS,m.shot.Intrinsics.k[3]
+						,DGTS,0.0
+						,DGTS,0.0
+						,DGTS,0.0
+						,DGTS,0.0
 						);
 			}
 		}
