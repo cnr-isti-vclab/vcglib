@@ -137,6 +137,8 @@ creation
 
 namespace vcg {
 
+// A pinhole (or orthographic) camera, with no model of lens distortion: a real lens is kept
+// beside it, as a vcg::LensDistortion (vcg/math/lens_distortion.h), and applied to the images.
 template<class S>
 class Camera
 {

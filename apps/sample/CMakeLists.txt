@@ -11,6 +11,7 @@ set(VCG_EXAMPLE_PROJECTS
 	polygonmesh_polychord_collapse
 	polygonmesh_smooth
 	space_index_2d
+	space_lens_distortion
 	space_packer
 	space_rasterized_packer
 	trimesh_align_pair
