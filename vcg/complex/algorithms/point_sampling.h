@@ -2216,7 +2216,10 @@ static void RegularRecursiveOffset(MeshType & m, std::vector<CoordType> &pvec, S
 
     rrp.markerFunctor.SetMesh(&m);
 
-    rrp.gM.Set(m.face.begin(),m.face.end(),bb);
+    // Let the grid inflate its own box: the explicit-box Set() expects an inflated one,
+    // and bb is flat for a planar mesh at zero offset, which gave a zero voxel side
+    // and a NaN-to-int cell index (no samples at all on x86).
+    rrp.gM.Set(m.face.begin(),m.face.end());
 
 
     rrp.offset=offset;
