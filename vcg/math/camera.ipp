@@ -44,7 +44,9 @@ Camera<S> Camera<S>::Construct(const Camera<Q>& t)
 	n.ViewportPx.Import(t.ViewportPx);
 	n.PixelSizeMm.Import(t.PixelSizeMm);
 	n.CenterPx.Import(t.CenterPx);
-	n.cameraType = t.cameraType;
+	// Camera<S>::CameraType and Camera<Q>::CameraType are distinct types with the same values:
+	// without the cast a camera of one scalar type could not be made from another
+	n.cameraType = CameraType(t.cameraType);
 	return n;
 }
 

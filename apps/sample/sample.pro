@@ -13,6 +13,7 @@ SUBDIRS = \
 	#polygonmesh_zonohedra \
 	space_index_2d \
 	space_lens_distortion \
+	space_shot_resection \
 	#space_minimal \
 	space_packer \
 	space_rasterized_packer \
