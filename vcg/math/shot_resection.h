@@ -49,7 +49,8 @@ namespace vcg
   the centroid of the points, plus a change of FocalMm. Each is scaled so that a unit step
   moves the projected points by about one pixel, which makes a single trust radius, in
   pixels, mean the same for all of them; the scales are measured on the points themselves,
-  so the fit is deterministic. It is minimized by NEWUOA, Powell's derivative-free method,
+  so the fit is deterministic (see Parametrization, which other objectives can share). It is
+  minimized by NEWUOA, Powell's derivative-free method,
   in rounds: each round measures the scales again where the previous one ended, so that a
   start far from the solution, where the first scales no longer hold, still converges.
 
@@ -93,21 +94,16 @@ public:
     for (const Point3<S> &p : points)
       centroid += p;
     centroid /= S(points.size());
-    S spread = 0;
-    for (const Point3<S> &p : points)
-      spread += (p - centroid).SquaredNorm();
-    spread = std::sqrt(spread / S(points.size()));
-    if (spread == 0)
-      throw std::invalid_argument("ShotResection: the points are all in one place");
 
     S rms = RmsError(shot, points, pixels);
     for (int round = 0; round < maxRounds; ++round) {
-      Objective objective(shot, points, pixels, centroid, spread, fitFocal);
+      const Parametrization parameters(shot, points, centroid, fitFocal);
+      ReprojectionError error{parameters, points, pixels};
       S x[7] = {0, 0, 0, 0, 0, 0, 0};
       // The trust region starts as large as the error, in pixels, and ends well below the
       // tolerance asked of the rounds
-      min_newuoa<S, Objective>(objective.Size(), x, objective, std::max(rms, S(1)), tolerance * S(1e-3), 5000);
-      const ShotType fitted = objective.ToShot(x);
+      min_newuoa<S, ReprojectionError>(parameters.Size(), x, error, std::max(rms, S(1)), tolerance * S(1e-3), 5000);
+      const ShotType fitted = parameters.ToShot(x);
       const S fittedRms = RmsError(fitted, points, pixels);
       if (!(fittedRms < rms))
         break;
@@ -120,19 +116,33 @@ public:
     return rms;
   }
 
-private:
-  // The parameters about one shot: a rotation vector and a translation in the camera's frame,
-  // about the centroid as the camera sees it, and a change of FocalMm, each scaled to move
-  // the projected points by about one pixel per unit.
-  class Objective
+  /** \brief The parameters of a change of a perspective shot, for a derivative-free optimizer.
+
+    A rotation vector and a translation of the camera in its own frame, about a pivot as the
+    camera sees it, and a change of FocalMm when fitFocal is set: 6 or 7 numbers, all zero for
+    the reference shot. Each is scaled so that a unit step moves the projections of the sample
+    points by about one pixel, root mean square, so one trust radius in pixels means the same
+    for all of them. The principal point, pixel size and viewport never change.
+
+    Fit uses it with the points it fits; any other objective over a shot, such as one that
+    compares a rendering with an image, can minimize over the same numbers. The sample points
+    should be ones the shot sees. Throws std::invalid_argument when they are all at the pivot.
+   */
+  class Parametrization
   {
   public:
-    Objective(const ShotType &reference, const std::vector<Point3<S>> &points,
-              const std::vector<Point2<S>> &pixels, const Point3<S> &centroid, S spread, bool fitFocal)
-      : reference(reference), points(points), pixels(pixels), fitFocal(fitFocal)
+    Parametrization(const ShotType &reference, const std::vector<Point3<S>> &samples,
+                    const Point3<S> &pivot, bool fitFocal)
+      : reference(reference), samples(samples), fitFocal(fitFocal)
     {
+      S spread = 0;
+      for (const Point3<S> &p : samples)
+        spread += (p - pivot).SquaredNorm();
+      spread = samples.empty() ? S(0) : std::sqrt(spread / S(samples.size()));
+      if (spread == 0)
+        throw std::invalid_argument("ShotResection: the points are all in one place");
       // Not ConvertWorldToCameraCoordinates, which turns z to point forward
-      centroidCam = reference.Extrinsics.Rot() * (centroid - reference.Extrinsics.Tra());
+      pivotCam = reference.Extrinsics.Rot() * (pivot - reference.Extrinsics.Tra());
       // Steps small enough to measure a derivative, in the units of each parameter
       const S steps[7] = {S(1e-4), S(1e-4), S(1e-4), S(1e-4) * spread, S(1e-4) * spread, S(1e-4) * spread,
                           S(1e-4) * reference.Intrinsics.FocalMm};
@@ -147,33 +157,24 @@ private:
 
     int Size() const { return fitFocal ? 7 : 6; }
 
-    S operator()(int n, S *x) const
-    {
-      const ShotType shot = ToShot(x, n);
-      S sum = 0;
-      for (size_t i = 0; i < points.size(); ++i)
-        sum += (shot.Project(points[i]) - pixels[i]).SquaredNorm();
-      return sum / S(points.size());
-    }
-
-    ShotType ToShot(const S *x, int n = -1) const
+    /// The shot for the first Size() parameters in x
+    ShotType ToShot(const S *x) const
     {
       S raw[7] = {0, 0, 0, 0, 0, 0, 0};
-      for (int i = 0; i < (n < 0 ? Size() : n); ++i)
+      for (int i = 0; i < Size(); ++i)
         raw[i] = x[i] * scale[i];
       return Apply(raw);
     }
 
   private:
     const ShotType &reference;
-    const std::vector<Point3<S>> &points;
-    const std::vector<Point2<S>> &pixels;
+    const std::vector<Point3<S>> &samples;
     bool fitFocal;
-    Point3<S> centroidCam;
+    Point3<S> pivotCam;
     S scale[7] = {1, 1, 1, 1, 1, 1, 1};
 
     // The reference shot moved by raw parameters. A camera point q becomes
-    // dR (q - c) + c + dt, with c the centroid in camera coordinates: so the new rotation is
+    // dR (q - c) + c + dt, with c the pivot in camera coordinates: so the new rotation is
     // dR R and the viewpoint moves by R^T (c - dR^T (c + dt)).
     ShotType Apply(const S *raw) const
     {
@@ -190,18 +191,36 @@ private:
       Transpose(Rt);
       const Point3<S> dt(raw[3], raw[4], raw[5]);
       shot.Extrinsics.SetRot(dR * R);
-      shot.Extrinsics.SetTra(reference.Extrinsics.Tra() + Rt * (centroidCam - dRt * (centroidCam + dt)));
+      shot.Extrinsics.SetTra(reference.Extrinsics.Tra() + Rt * (pivotCam - dRt * (pivotCam + dt)));
       shot.Intrinsics.FocalMm = reference.Intrinsics.FocalMm + raw[6];
       return shot;
     }
 
-    // How far, root mean square in pixels, the points move from where the reference shows them
+    // How far, root mean square in pixels, the samples move from where the reference shows them
     S Displacement(const ShotType &shot) const
     {
       S sum = 0;
-      for (const Point3<S> &p : points)
+      for (const Point3<S> &p : samples)
         sum += (shot.Project(p) - reference.Project(p)).SquaredNorm();
-      return std::sqrt(sum / S(points.size()));
+      return std::sqrt(sum / S(samples.size()));
+    }
+  };
+
+private:
+  // What Fit minimizes: the mean squared reprojection error, for NEWUOA
+  struct ReprojectionError
+  {
+    const Parametrization &parameters;
+    const std::vector<Point3<S>> &points;
+    const std::vector<Point2<S>> &pixels;
+
+    S operator()(int /*n*/, S *x) const
+    {
+      const ShotType shot = parameters.ToShot(x);
+      S sum = 0;
+      for (size_t i = 0; i < points.size(); ++i)
+        sum += (shot.Project(points[i]) - pixels[i]).SquaredNorm();
+      return sum / S(points.size());
     }
   };
 };
