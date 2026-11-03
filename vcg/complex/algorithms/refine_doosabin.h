@@ -23,6 +23,7 @@
 
 #ifndef __VCGLIB_REFINE_DOOSABIN_H
 #define __VCGLIB_REFINE_DOOSABIN_H
+#include <vcg/complex/algorithms/mesh_assert.h>
 namespace vcg {
 namespace tri {
 /// \ingroup trimesh
@@ -60,6 +61,15 @@ static void Refine(PolyMeshType &baseIn, PolyMeshType &refinedOut, int iteration
         refined.Clear();
 //		fprintf(stdout,"Refining iteration %i mesh has %i faces\n",step,base.FN() );fflush(stdout);
         UpdateTopology<PolyMeshType>::FaceFace(base);
+        // This scheme has no boundary rules: it needs a closed two-manifold surface.
+        // On a border edge the edge face below degenerates to zero area, and around a
+        // border or non-manifold vertex the star walk visits fewer faces than the vertex
+        // has, leaving the new vertex face with unassigned corners that crash the copy
+        // at the end of the step; an unreferenced vertex has no star to walk at all.
+        // So refuse such input rather than assume it away.
+        MeshAssert<PolyMeshType>::NoUnreferencedVertex(base);
+        MeshAssert<PolyMeshType>::FFTwoManifoldEdge(base);
+        MeshAssert<PolyMeshType>::FFNoBorderEdge(base);
         //    tri::UpdateTopology<PolyMeshType>::VertexFace(base);
         typedef typename PolyMeshType :: template PerVertexAttributeHandle<int> VertexIntHandleType;
         typedef typename PolyMeshType :: template PerFaceAttributeHandle<int> FaceIntHandleType;
@@ -109,14 +119,15 @@ static void Refine(PolyMeshType &baseIn, PolyMeshType &refinedOut, int iteration
         {
             auto newf = tri::Allocator<PolyMeshType>::AddFaces(refined,1);
             newf->Alloc(degreeVH[vi]);
-            FaceVertIndVH[tri::Index(refined, *newf)];
             FacePointer curf = VFpH[&*vi].first;
             int curi = VFpH[&*vi].second;
             face::Pos<FaceType> startPos(curf,curi);
             assert(curf->V(curi) == &*vi);
             std::vector<face::Pos<FaceType> > starPosVec; 
             face::VFOrderedStarFF(startPos,starPosVec,false);
-            assert(starPosVec.size() == (size_t)degreeVH[vi]);
+            // Fewer faces in the star than on the vertex: two fans meet at this vertex.
+            if(starPosVec.size() != (size_t)degreeVH[vi])
+                throw vcg::MissingPreconditionException("The mesh has a non-manifold vertex");
             for(size_t i =0 ; i < starPosVec.size(); ++i)
             {
                 int vind = starPosVec[i].VInd();

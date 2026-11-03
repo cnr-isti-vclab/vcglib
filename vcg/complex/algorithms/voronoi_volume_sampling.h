@@ -26,6 +26,7 @@
 #include <vcg/complex/algorithms/create/marching_cubes.h>
 #include <vcg/complex/algorithms/create/mc_trivial_walker.h>
 #include <vcg/complex/algorithms/point_sampling.h>
+#include <vcg/complex/algorithms/clean.h>
 
 
 namespace vcg
@@ -593,6 +594,16 @@ void RefineMontecarloVolumeSamplingNearSurface(MeshType &surfaceSamplingMesh, Sc
 
  void BuildMontecarloVolumeSampling(int montecarloSampleNum, vcg::CallBackPos* cb=0)
  {
+   // Rejection sampling: the loop below ends only once enough points of the bounding
+   // box have fallen inside the mesh, which takes about montecarloSampleNum times
+   // bbox volume / mesh volume trials. "Inside" is defined by the face normals, so it
+   // needs a closed surface; and a mesh enclosing a negligible volume (a flat or
+   // zero-thickness shell, or one oriented inward, whose volume is negative) would
+   // keep the loop running forever. Refuse both rather than hang.
+   if(!tri::Clean<MeshType>::IsWaterTight(baseMesh))
+     throw vcg::MissingPreconditionException("The mesh is not watertight, so it has no inside to sample");
+   if(!(tri::Stat<MeshType>::ComputeMeshVolume(baseMesh) > baseMesh.bbox.Volume()*1e-6))
+     throw vcg::MissingPreconditionException("The mesh encloses no volume to sample (it is flat, or its faces point inward)");
    montecarloVolumeMesh.Clear();
    
    int trialNum=0;

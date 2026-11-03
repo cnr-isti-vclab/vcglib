@@ -194,6 +194,18 @@ public:
       }
     }
   }
+
+  /// \brief Throw vcg::MissingPreconditionException if According to FF adjacency, the mesh is not closed (e.g. there are border edges)
+  static void FFNoBorderEdge(MeshType & m)
+  {
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
+    {
+      for(int i=0;i<fi->VN();++i){
+        if(face::IsBorder(*fi,i))
+          throw vcg::MissingPreconditionException("According to FF adjacency, the mesh is not closed (e.g. there are border edges)");
+      }
+    }
+  }
 	/// \brief Throw vcg::MissingPreconditionException if the FaceEdgeSelection bit is not consistent 
 	static void ConsistentFaceEdgeSelection(MeshType &m)
 	{
