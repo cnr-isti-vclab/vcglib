@@ -1977,7 +1977,9 @@ static void PoissonDiskPruning(VertexSampler &ps, MeshType &montecarloMesh,
 
     // if we are doing variable density sampling we have to prepare the handle that keeps the the random samples expected radii.
     // At this point we just assume that there is the quality values as sampled from the base mesh
-    PerVertexFloatAttribute rH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (montecarloMesh,"radius");
+    // The radii are temporary: a named attribute would be left on the caller's mesh, and would
+    // overwrite one of the caller's own that happened to be called "radius".
+    PerVertexFloatAttribute rH = tri::Allocator<MeshType>:: template AddPerVertexAttribute<float> (montecarloMesh);
     if(pp.adaptiveRadiusFlag)
         InitRadiusHandleFromQuality(montecarloMesh, rH, diskRadius, pp.radiusVariance, pp.invertQuality);
 
@@ -2040,6 +2042,7 @@ static void PoissonDiskPruning(VertexSampler &ps, MeshType &montecarloMesh,
         }
         montecarloSHT.UpdateAllocatedCells();
     }
+    tri::Allocator<MeshType>::DeletePerVertexAttribute(montecarloMesh,rH);
     int t2 = clock();
     pp.pds.gridTime = t1-t0;
     pp.pds.pruneTime = t2-t1;
@@ -2102,7 +2105,8 @@ static void HierarchicalPoissonDisk(MeshType &origMesh, VertexSampler &ps, MeshT
     montecarloSHTVec[0].UpdateAllocatedCells();
 
   // if we are doing variable density sampling we have to prepare the random samples quality with the correct expected radii.
-    PerVertexFloatAttribute rH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (montecarloMesh,"radius");
+  // Temporary, as in PoissonDiskPruning.
+    PerVertexFloatAttribute rH = tri::Allocator<MeshType>:: template AddPerVertexAttribute<float> (montecarloMesh);
     if(pp.adaptiveRadiusFlag)
             InitRadiusHandleFromQuality(montecarloMesh, rH, diskRadius, pp.radiusVariance, pp.invertQuality);
 
@@ -2165,6 +2169,7 @@ static void HierarchicalPoissonDisk(MeshType &origMesh, VertexSampler &ps, MeshT
         //
         level++;
     } while(level < 5);
+    tri::Allocator<MeshType>::DeletePerVertexAttribute(montecarloMesh,rH);
 }
 
 //template <class MeshType>
