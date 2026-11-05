@@ -326,8 +326,6 @@ class TriEdgeCollapseQuadricTex: public vcg::tri::TriEdgeCollapse< TriMeshType, 
       double QuadErr = qsum.Apply(vv);
 
       //// Rescan faces and compute quality and difference between normals
-      int i;
-
       double qt,   MinQual = 1e100;
       vcg::face::VFIterator<FaceType> x(this->pos.V(0));
 
@@ -335,7 +333,7 @@ class TriEdgeCollapseQuadricTex: public vcg::tri::TriEdgeCollapse< TriMeshType, 
                                   // (e.g. max angle) Mincos varia da 1 (normali coincidenti) a
                                   // -1 (normali opposte);
 
-      for(x.F() = v[0]->VFp(), x.I() = v[0]->VFi(),i=0; x.F()!=0; ++x )	// for all faces in v0
+      for(x.F() = v[0]->VFp(), x.I() = v[0]->VFi(); x.F()!=0; ++x )	// for all faces in v0
         if(x.F()->V(0)!=v[1] && x.F()->V(1)!=v[1] && x.F()->V(2)!=v[1] )		// skip faces with v1
         {
           qt= QualityFace(*x.F());
@@ -347,7 +345,7 @@ class TriEdgeCollapseQuadricTex: public vcg::tri::TriEdgeCollapse< TriMeshType, 
               assert(!math::IsNAN(ndiff));
               }
         }
-      for(x.F() = v[1]->VFp(), x.I() = v[1]->VFi(),i=0; x.F()!=0; ++x )		// for all faces in v1
+      for(x.F() = v[1]->VFp(), x.I() = v[1]->VFi(); x.F()!=0; ++x )		// for all faces in v1
         if(x.F()->V(0)!=v[0] && x.F()->V(1)!=v[0] && x.F()->V(2)!=v[0] )			// skip faces with v0
         {
           qt= QualityFace(*x.F());
@@ -703,7 +701,7 @@ class TriEdgeCollapseQuadricTex: public vcg::tri::TriEdgeCollapse< TriMeshType, 
   v[0] = this->pos.V(0);
   v[1] = this->pos.V(1);
 
-  math::Quadric<double> qsum3 = QH::Qd3(v[0]);
+  vcg::math::Quadric<double> qsum3 = QH::Qd3(v[0]);
   qsum3 += QH::Qd3(v[1]);
 
   ncoords = GetTexCoords(tcoord0_1,tcoord1_1,tcoord0_2,tcoord1_2);
