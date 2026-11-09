@@ -621,23 +621,20 @@ So if
 
     // Laplacian smooth of the quality.
 
+    // Zero-initialized, so that every channel, alpha included, starts its sum from zero.
     class ColorSmoothInfo
     {
       public:
-        unsigned int r;
-        unsigned int g;
-        unsigned int b;
-        unsigned int a;
-        int cnt;
+        unsigned int r = 0;
+        unsigned int g = 0;
+        unsigned int b = 0;
+        unsigned int a = 0;
+        int cnt = 0;
     };
 
     static void VertexColorLaplacian(MeshType &m, int step, bool SmoothSelected = false, vcg::CallBackPos *cb = 0)
     {
         ColorSmoothInfo csi;
-        csi.r = 0;
-        csi.g = 0;
-        csi.b = 0;
-        csi.cnt = 0;
         SimpleTempData<typename MeshType::VertContainer, ColorSmoothInfo> TD(m.vert, csi);
 
         for (int i = 0; i < step; ++i)
@@ -713,10 +710,6 @@ So if
     static void FaceColorLaplacian(MeshType &m, int step, bool SmoothSelected = false, vcg::CallBackPos *cb = 0)
     {
         ColorSmoothInfo csi;
-        csi.r = 0;
-        csi.g = 0;
-        csi.b = 0;
-        csi.cnt = 0;
         SimpleTempData<typename MeshType::FaceContainer, ColorSmoothInfo> TD(m.face, csi);
 
         for (int i = 0; i < step; ++i)
