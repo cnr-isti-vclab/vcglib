@@ -1074,6 +1074,34 @@ public:
         f.PD2()=dir1;
     }
 
+    ///the magnitudes (K1, K2) that go with the cross directions t0 and t1, which lie in the
+    ///plane of normal n, from the elements (vertices or faces) a cross field is interpolated
+    ///from: each element's PD1, rotated into that plane, is matched to the closer of t0 and t1,
+    ///which takes its K1 while the other takes its K2; the matched values are averaged.
+    ///Used when converting principal curvature directions between vertices and faces, so that
+    ///the curvatures travel with their directions.
+    template <class ElementType>
+    static void CrossMagnitudes(const std::vector<ElementType *> &elements,
+                                const CoordType &n,
+                                const CoordType &t0,
+                                const CoordType &t1,
+                                ScalarType &k1,
+                                ScalarType &k2)
+    {
+        k1=0;
+        k2=0;
+        for (size_t i=0;i<elements.size();i++)
+        {
+            vcg::Matrix33<ScalarType> rotN=vcg::RotationMatrix(elements[i]->N(),n);
+            CoordType rotatedDir=rotN*elements[i]->PD1();
+            const bool same=(fabs(rotatedDir*t0)>fabs(rotatedDir*t1));
+            k1+=same?elements[i]->K1():elements[i]->K2();
+            k2+=same?elements[i]->K2():elements[i]->K1();
+        }
+        k1/=(ScalarType)elements.size();
+        k2/=(ScalarType)elements.size();
+    }
+
     ///set the face cross vector from vertex one
     static void SetFaceCrossVectorFromVert(FaceType &f)
     {
@@ -1093,29 +1121,8 @@ public:
         SetCrossVector(f,tF0,tF1);
 
         //then set the magnitudo
-        ScalarType mag1=0;
-        ScalarType mag2=0;
-
-        for (int i=0;i<3;i++)
-        {
-            vcg::Matrix33<ScalarType> rotN=vcg::RotationMatrix(f.V(i)->N(),f.N());
-            CoordType rotatedDir=rotN*f.V(i)->PD1();
-
-            if (fabs(rotatedDir*tF0)>fabs(rotatedDir*tF1))
-            {
-                mag1+=(f.V(i)->K1());
-                mag2+=(f.V(i)->K2());
-            }
-            else
-            {
-                mag1+=(f.V(i)->K2());
-                mag2+=(f.V(i)->K1());
-            }
-        }
-
-        f.K1()=mag1/(ScalarType)3;
-        f.K2()=mag2/(ScalarType)3;
-
+        std::vector<VertexType *> verts={f.V(0),f.V(1),f.V(2)};
+        CrossMagnitudes(verts,f.N(),tF0,tF1,f.K1(),f.K2());
     }
 
     static void SetFaceCrossVectorFromVert(MeshType &mesh)
@@ -1128,12 +1135,16 @@ public:
         }
     }
 
-    ///set the vert cross vector from the faces
+    ///set the vert cross vector from the faces, and its magnitudes (K1, K2) as
+    ///SetFaceCrossVectorFromVert does, so that principal curvature directions
+    ///converted from faces keep their curvatures; needs VF adjacency
     static void SetVertCrossVectorFromFace(VertexType &v)
     {
         std::vector<FaceType *> faceVec;
         std::vector<int> index;
         vcg::face::VFStarVF(&v,faceVec,index);
+        ///a vertex with no face has nothing to take: it is left as it is
+        if (faceVec.empty()) return;
         std::vector<CoordType> TangVect;
         std::vector<CoordType> Norms;
         for (unsigned int i=0;i<faceVec.size();i++)
@@ -1156,6 +1167,7 @@ public:
         tF2.Normalize();
         v.PD1()=tF1;
         v.PD2()=tF2;
+        CrossMagnitudes(faceVec,NRef,tF1,tF2,v.K1(),v.K2());
     }
 
     static void SetVertCrossVectorFromFace(MeshType &mesh)
