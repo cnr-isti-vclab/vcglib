@@ -1154,13 +1154,6 @@ public:
         }
         std::vector<ScalarType> Weights(TangVect.size(),1.0/(ScalarType)TangVect.size());
         CoordType NRef=v.N();
-        CoordType N0=faceVec[0]->N();
-        CoordType DirRef=faceVec[0]->PD1();
-        ///find the rotation matrix that maps between normals
-        vcg::Matrix33<ScalarType> rotation=vcg::RotationMatrix(N0,NRef);
-        DirRef=rotation*DirRef;
-
-
         CoordType tF1=vcg::tri::CrossField<MeshType>::InterpolateCrossField(TangVect,Weights,Norms,NRef);
         tF1.Normalize();
         CoordType tF2=NRef^tF1;
