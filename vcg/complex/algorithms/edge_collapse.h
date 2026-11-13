@@ -273,8 +273,7 @@ public:
       // - we prepend that face to the list of the faces incident on v[1]
       for(auto i=es.AV0().begin();i!=es.AV0().end();++i)
       {
-          FaceType  & f = *((*i).f);
-
+          //FaceType  & f = *((*i).f);
           if (preserveFaceEdgeS)
           {
               for (size_t j = 0; j < v2s.size(); ++j)
@@ -302,7 +301,7 @@ public:
       {
           for (auto i = es1.AV0().begin(); i != es1.AV0().end(); ++i)
           {
-              FaceType  & f = *((*i).f);
+              //FaceType  & f = *((*i).f);
               for (size_t j = 0; j < fan1V2S.size(); ++j)
               {
                   if ((*i).f->V(((*i).z+1)%3) == fan1V2S[j])
