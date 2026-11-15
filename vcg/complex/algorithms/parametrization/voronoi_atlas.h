@@ -183,7 +183,7 @@ public:
       {
         PS.Init();
         PS.FixDefaultVertices();
-        PS.SolvePoisson(false);
+        PS.SolvePoisson();
         tri::UpdateTexture<VoroMesh>::WedgeTexFromVertexTex(*rm);
         tri::UV_Utils<VoroMesh>::PerWedgeRegularizeTexArea(*rm);
 

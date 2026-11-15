@@ -27,11 +27,33 @@
 #include <Eigen/Sparse>
 
 #include <vcg/complex/algorithms/clean.h>
+#include <vcg/complex/algorithms/update/bounding.h>
 #include <vcg/complex/algorithms/parametrization/distortion.h>
 #include <vcg/complex/algorithms/parametrization/uv_utils.h>
+#include <wrap/callback.h>
 
 namespace vcg {
 namespace tri{
+
+/** Parametrizes a disk-like mesh by solving one sparse linear system, in one of two modes.
+
+  - Conformal (the default): least squares conformal maps, the cotangent Dirichlet energy minus
+    the signed UV area. It needs at least two fixed vertices, which fix the similarity the
+    energy is blind to.
+  - Field-aligned (Init(true)): the gradients of U and V are fitted to the faces' normalized
+    PD1 and PD2, so a unit of UV is a unit on the surface. It needs one fixed vertex, and up
+    to date face normals.
+
+  Vertices are fixed with FixVertex, SetBorderAsFixed, SetSelectedAsFixed or
+  FixDefaultVertices; AddPointConstraint adds a soft constraint on one coordinate at a point
+  inside a face. The result goes to the per-vertex and per-wedge texture coordinates.
+
+  Typical use, on a mesh with face-face adjacency:
+  \code
+  tri::PoissonSolver<MyMesh> PS(m);
+  if(PS.IsFeasible()) { PS.Init(); PS.FixDefaultVertices(); PS.SolvePoisson(); }
+  \endcode
+*/
 template <class MeshType>
 class PoissonSolver
 {
@@ -39,644 +61,272 @@ class PoissonSolver
     typedef typename MeshType::FaceType FaceType;
     typedef typename MeshType::VertexType VertexType;
     typedef typename MeshType::CoordType CoordType;
+    typedef Eigen::Triplet<double> Triplet;
 
     MeshType &mesh;
 
-    ///solver data
-    std::map<VertexType*,int> VertexToInd;
-    std::map<int, VertexType*> IndToVertex;
+    /// variable of each vertex (by position in mesh.vert, -1 for deleted ones), and back
+    std::vector<int> VertexToInd;
+    std::vector<VertexType*> IndToVertex;
 
-    ///vertices to fix
     std::vector<VertexType *> to_fix;
-    Eigen::SparseMatrix<double> A; // A
-    Eigen::VectorXd b,x;// x and b
+    struct PointConstraint { FaceType *f; CoordType bary; int coord; ScalarType value, weight; };
+    std::vector<PointConstraint> pointConstraints;
 
-    //number of variables
-    unsigned int n_vert_vars;
-    ///total system size
-    unsigned int total_size;
-    ///number of fixed variables
-    unsigned int n_fixed_vars;
+    /// the system A x = b, in which x interleaves the U and V of each vertex
+    std::vector<Triplet> A;
+    Eigen::VectorXd b,x;
 
-    ///if you intend to follow the cross field
-    bool use_direction_field,fix_selected,correct_fixed;
-    ///size of the scalar field
-    ScalarType fieldScale;
+    bool use_direction_field,correct_fixed;
 
-    int VertexIndex(VertexType* v)
+    int VertexIndex(const VertexType* v) const { return VertexToInd[tri::Index(mesh,v)]; }
+
+    void SetValA(int Xindex,int Yindex,ScalarType val) { A.emplace_back(Xindex,Yindex,val); }
+
+    ///add the area term, the antisymmetric coupling of U and V that turns the
+    ///Dirichlet energy into the conformal one
+    void AddAreaTerm(const int Vindexes[3])
     {
-        typename std::map<VertexType*,int>::iterator iteMap=VertexToInd.find(v);
-        assert(iteMap!=VertexToInd.end());
-        return ((*iteMap).second);
-    }
-
-    VertexType* IndexVertex(int index)
-    {
-        typename std::map<int,VertexType*>::iterator iteMap=IndToVertex.find(index);
-        assert(iteMap!=IndToVertex.end());
-        return ((*iteMap).second);
-    }
-
-    void AddVertexIndex(VertexType* v,int index)
-    {
-        VertexToInd.insert(std::pair<VertexType*,int>(v,index));
-        IndToVertex.insert(std::pair<int,VertexType*>(index,v));
-    }
-    ///set the value of A of the system Ax=b
-    void SetValA(int Xindex,int Yindex,ScalarType val)
-    {
-        assert(0 <= Xindex && Xindex < int(total_size));
-        assert(0 <= Yindex && Yindex < int(total_size));
-        A.coeffRef(Xindex,Yindex) +=val;
-    }
-
-    void FindFarthestVert(VertexType* &v0, VertexType* &v1)
-    {
-      v0=v1=NULL;
-      const int bestAxis = mesh.bbox.MaxDim();
-      for(VertexType &vv : mesh.vert) {
-        if(vv.P()[bestAxis] <= mesh.bbox.min[bestAxis]) v0 = &vv;
-        if(vv.P()[bestAxis] >= mesh.bbox.max[bestAxis]) v1 = &vv;
-      }
-      assert( (v0!=v1) && v0 && v1);
-    }
-    
-    ///set the value of b of the system Ax=b
-    void SetValB(int Xindex,
-                 ScalarType val)
-    {
-        /*S.b()[Xindex] += val;*/
-        b[Xindex] += val;
-    }
-
-    ///add the area term, scalefactor is used to sum up
-    ///and normalize on the overlap zones
-    void AddAreaTerm(int index[3][3][2],ScalarType ScaleFactor)
-    {
-        const ScalarType entry=0.5*ScaleFactor;
-        ScalarType val[3][3]= { {0,  entry, -entry},
-                                {-entry,  0,  entry},
-                                {entry, -entry,  0} };
-
+        const ScalarType entry=0.5;
+        const ScalarType val[3][3]= { {0,  entry, -entry},
+                                      {-entry,  0,  entry},
+                                      {entry, -entry,  0} };
         for (int i=0;i<3;i++)
             for (int j=0;j<3;j++)
             {
-                ///add for both u and v
-                int Xindex=index[i][j][0]*2;
-                int Yindex=index[i][j][1]*2;
-
-                SetValA(Xindex+1,Yindex,-val[i][j]);
-                SetValA(Xindex,Yindex+1,val[i][j]);
-
+                SetValA(Vindexes[i]*2+1,Vindexes[j]*2,-val[i][j]);
+                SetValA(Vindexes[i]*2,Vindexes[j]*2+1,val[i][j]);
             }
     }
 
-    ///set the diagonal of the matrix (which is zero at the beginning)
-    ///as the sum of the other element inverted by sign
-    void SetDiagonal(ScalarType val[3][3])
+    ///add the cotangent stiffness matrix of a face, for both U and V
+    void AddLaplacianTerm(const FaceType *f,const int Vindexes[3])
     {
-        for (int i=0;i<3;i++)
-        {
-            ScalarType sum=0;
-            for (int j=0;j<3;j++)
-                sum+=val[i][j];
-            val[i][i]=-sum;
-        }
-    }
-
-    ///add this values to the right hand side
-    void AddRHS(ScalarType b[6],
-                int index[3])
-    {
-        for (int i=0;i<3;i++)
-        {
-            ScalarType valU=b[i*2];
-            ScalarType valV=b[(i*2)+1];
-            SetValB((index[i]*2),valU);
-            SetValB((index[i]*2)+1,valV);
-        }
-    }
-
-    ///add a 3x3 block matrix to the system matrix...
-    ///indexes are specified in the 3x3 matrix of x,y pairs
-    ///indexes must be multiplied by 2 cause u and v
-    void Add33Block(ScalarType val[3][3],int index[3][3][2])
-    {
-        for (int i=0;i<3;i++)
-            for (int j=0;j<3;j++)
-            {
-                ///add for both u and v
-                int Xindex=index[i][j][0]*2;
-                int Yindex=index[i][j][1]*2;
-                assert(Xindex<int(n_vert_vars*2));
-                assert(Yindex<int(n_vert_vars*2));
-                SetValA(Xindex,Yindex,val[i][j]);
-                SetValA(Xindex+1,Yindex+1,val[i][j]);
-            }
-
-    }
-
-    ///add a 3x3 block matrix to the system matrix...
-    ///indexes are specified in the 3x3 matrix of x,y pairs
-    ///indexes must be multiplied by 2 cause u and v
-    void Add44Block(ScalarType val[4][4],int index[4][4][2])
-    {
-        for (int i=0;i<4;i++)
-            for (int j=0;j<4;j++)
-            {
-                ///add for both u and v
-                int Xindex=index[i][j][0]*2;
-                int Yindex=index[i][j][1]*2;
-                assert(Xindex<(n_vert_vars*2));
-                assert(Yindex<(n_vert_vars*2));
-                SetValA(Xindex,Yindex,val[i][j]);
-                SetValA(Xindex+1,Yindex+1,val[i][j]);
-            }
-
-    }
-
-    ///return the LHS for a given face
-    void perElementLHS(FaceType *f,
-                       ScalarType val[3][3],
-                       int index[3][3][2])
-    {
-        ///initialize to zero
-        for (int x=0;x<3;x++)
-            for (int y=0;y<3;y++)
-                val[x][y]=0;
-
-        ///get the vertices
-        VertexType *v[3];
-        v[0]=f->V(0);
-        v[1]=f->V(1);
-        v[2]=f->V(2);
-
-        ///get the indexes of vertex instance (to consider cuts)
-        ///for the current face
-        int Vindexes[3];
-        Vindexes[0]=VertexIndex(f->V(0));
-        Vindexes[1]=VertexIndex(f->V(1));
-        Vindexes[2]=VertexIndex(f->V(2));
-
-        ///initialize the indexes for the block
-        for (int x=0;x<3;x++)
-            for (int y=0;y<3;y++)
-            {
-                index[x][y][0]=Vindexes[x];
-                index[x][y][1]=Vindexes[y];
-            }
-
-        ///initialize edges
         CoordType e[3];
         for (int k=0;k<3;k++)
-            e[k]=v[(k+2)%3]->P()-v[(k+1)%3]->P();
-
-        ///then consider area but also considering scale factor dur to overlaps
-        ScalarType areaT=((f->P(1)-f->P(0))^(f->P(2)-f->P(0))).Norm()/2.0;
-         for (int x=0;x<3;x++)
-            for (int y=0;y<3;y++)
-                if (x!=y)
-                {
-                    ScalarType num=(e[x]*e[y]);
-                    val[x][y] =num/(4.0*areaT);
-                }
-
-        ///set the matrix as diagonal
-        SetDiagonal(val);
+            e[k]=f->cP((k+2)%3)-f->cP((k+1)%3);
+        const ScalarType areaT=DoubleArea(*f)/2.0;
+        for (int i=0;i<3;i++)
+            for (int j=0;j<3;j++)
+            {
+                ScalarType val=(e[i]*e[j])/(4.0*areaT);
+                SetValA(Vindexes[i]*2,Vindexes[j]*2,val);
+                SetValA(Vindexes[i]*2+1,Vindexes[j]*2+1,val);
+            }
     }
 
-    ///return the RHS for a given face
-    void perElementRHS(FaceType *f,
-                       ScalarType b[6],
-                       ScalarType vector_field_scale=1)
+    ///add the right hand side of a face in the field-aligned mode: the divergence of PD1
+    ///for U and of PD2 for V, area * K . grad(phi_i), with grad(phi_i) = (n ^ e_i) / (2 area)
+    void AddFieldTerm(const FaceType *f,const int Vindexes[3],ScalarType vector_field_scale)
     {
-
-        /// then set the rhs
-        CoordType scaled_Kreal;
-        CoordType scaled_Kimag;
-        CoordType fNorm=f->N();
+        CoordType fNorm=f->cN();
         fNorm.Normalize();
-        CoordType p[3];
-        p[0]=f->P0(0);
-        p[1]=f->P0(1);
-        p[2]=f->P0(2);
-
-        CoordType neg_t[3];
-        neg_t[0] = fNorm ^ (p[2] - p[1]);
-        neg_t[1] = fNorm ^ (p[0] - p[2]);
-        neg_t[2] = fNorm ^ (p[1] - p[0]);
-
-        CoordType K1 = CoordType::Construct(f->PD1());
-        CoordType K2 = CoordType::Construct(f->PD2());
+        CoordType K1 = CoordType::Construct(f->cPD1());
+        CoordType K2 = CoordType::Construct(f->cPD2());
         K1.Normalize();
         K2.Normalize();
-
-        scaled_Kreal = K1*(vector_field_scale);///2);
-        scaled_Kimag = K2*(vector_field_scale);///2);
-
-        b[0] = scaled_Kreal * neg_t[0];
-        b[1] = scaled_Kimag * neg_t[0];
-        b[2] = scaled_Kreal * neg_t[1];
-        b[3] = scaled_Kimag * neg_t[1];
-        b[4] = scaled_Kreal * neg_t[2];
-        b[5] = scaled_Kimag * neg_t[2];
-
-    }
-
-    ///return the LHS and RHS for a given face
-    void PerElementSystemReal(FaceType *f,
-                              ScalarType val[3][3],
-                              int index[3][3][2],
-                              ScalarType b[6],
-                              ScalarType vector_field_scale=1.0)
-    {
-        perElementLHS(f,val,index);
-
-        if (use_direction_field)
-            perElementRHS(f,b,vector_field_scale);
-    }
-
-    void FixPointLSquares()
-    {
-        ScalarType penalization=1000000;
-        int offset_row=n_vert_vars;
-        assert(to_fix.size()>0);
-        for (size_t i=0;i<to_fix.size();i++)
+        vector_field_scale/=2;
+        for (int i=0;i<3;i++)
         {
-            ///take a vertex
-            VertexType *v=to_fix[i];
-            assert(!v->IsD());
-            int index=VertexIndex(v);
-            //v->vertex_index[0];
-            int indexvert=index*2;
-            int indexRow=(offset_row+i)*2;
-
-            SetValA(indexRow,indexRow,penalization);
-            SetValA(indexRow+1,indexRow+1,penalization);
-
-            ///add values to the B vector
-            ScalarType U=v->T().U()*penalization;
-            ScalarType V=v->T().V()*penalization;
-            SetValB(indexRow,U);
-            SetValB(indexRow+1,V);
-
-            /*///set upper right part
-            SetValA(indexvert,indexCol,penalization);
-            SetValA(indexvert+1,indexCol+1,penalization);*/
-
-            SetValA(indexvert,indexvert,penalization);
-            SetValA(indexvert+1,indexvert+1,penalization);
-            SetValA(indexRow,indexRow,penalization);
-            SetValA(indexRow+1,indexRow+1,penalization);
-            SetValA(indexvert,indexRow,-penalization);
-            SetValA(indexvert+1,indexRow+1,-penalization);
-            SetValA(indexRow,indexvert,-penalization);
-            SetValA(indexRow+1,indexvert+1,-penalization);
-            //SetValA(indexCol+1,indexCol+1,-1);
+            const CoordType neg_t = fNorm ^ (f->cP((i+2)%3) - f->cP((i+1)%3));
+            b[Vindexes[i]*2]   += (K1*vector_field_scale) * neg_t;
+            b[Vindexes[i]*2+1] += (K2*vector_field_scale) * neg_t;
         }
     }
 
-    //build the laplacian matrix cyclyng over all rangemaps
-    //and over all faces
-    void BuildLaplacianMatrix(double vfscale=1)
+    ///fixed vertices are a stiff quadratic penalty towards their current T()
+    void AddFixedTerms()
     {
-
-        ///then for each face
-        for (unsigned int j=0;j<mesh.face.size();j++)
-        {
-
-            FaceType *f=&mesh.face[j];
-            if (f->IsD())
-                continue;
-
-            int var_idx[3];//vertex variable indices
-            for(int k = 0; k < 3; ++k)
+        const ScalarType penalization=1000000;
+        for (VertexType *v : to_fix)
+            for (int c=0;c<2;c++)
             {
-                VertexType *v=f->V(k);
-                var_idx[k] = VertexIndex(v);
+                const int index=VertexIndex(v)*2+c;
+                SetValA(index,index,penalization);
+                b[index]+=v->T().P()[c]*penalization;
             }
-            ScalarType val[3][3];
-            int index[3][3][2];
-            ScalarType b[6];
-            PerElementSystemReal(f, val,index, b, vfscale);
+    }
 
-            //Add the element to the matrix
-            Add33Block(val,index);
+    ///each point constraint adds weight*(sum_k bary_k X_k - value)^2, with X the chosen
+    ///coordinate of the face's corners
+    void AddPointTerms()
+    {
+        for (const PointConstraint &pc : pointConstraints)
+            for (int i=0;i<3;i++)
+            {
+                const int row=VertexIndex(pc.f->cV(i))*2+pc.coord;
+                b[row]+=pc.weight*pc.bary[i]*pc.value;
+                for (int j=0;j<3;j++)
+                    SetValA(row,VertexIndex(pc.f->cV(j))*2+pc.coord,pc.weight*pc.bary[i]*pc.bary[j]);
+            }
+    }
 
-            /////add area term.. to test if needed
-            /*if (!use_direction_field)
-                AddAreaTerm(index,1.0);//f->area);*/
-            /*ScalarType area=((f->P(1)-f->P(0))^(f->P(2)-f->P(0))).Norm();
-            if (!use_direction_field)
-                AddAreaTerm(index,area);*/
-
-            //ScalarType area=((f->P(1)-f->P(0))^(f->P(2)-f->P(0))).Norm();
-            if (!use_direction_field)
-                AddAreaTerm(index,1);
-
-            ///add right hand side
+    void BuildSystem(ScalarType vfscale)
+    {
+        VertexToInd.assign(mesh.vert.size(),-1);
+        IndToVertex.clear();
+        ForEachVertex(mesh, [&](VertexType &v){
+            VertexToInd[tri::Index(mesh,&v)]=int(IndToVertex.size());
+            IndToVertex.push_back(&v);
+        });
+        const int total_size=int(IndToVertex.size())*2;
+        A.clear();
+        A.reserve(size_t(mesh.fn)*36+to_fix.size()*2+pointConstraints.size()*9);
+        b=Eigen::VectorXd::Zero(total_size);
+        ForEachFace(mesh, [&](FaceType &f){
+            const int Vindexes[3]={VertexIndex(f.V(0)),VertexIndex(f.V(1)),VertexIndex(f.V(2))};
+            AddLaplacianTerm(&f,Vindexes);
             if (use_direction_field)
-                AddRHS(b,var_idx);
-        }
-    }
-
-
-    void FindSizes()
-    {
-        // tag vertices and compute numbers of equations to determine the number of rows in the matrix
-        //TagVertices_Constrained(n_vert_vars, n_transition_eqs, n_align_sharp_eqs);
-        n_vert_vars=mesh.vn;
-
-        ///initialize matrix size
-        total_size = (n_fixed_vars + n_vert_vars)*2;///must be multiplied by 2 becasue of u and v
-
-    }
-
-    void AllocateSystem()
-    {
-        //--- Allocates the data for Ax=b
-        A=Eigen::SparseMatrix<double>(total_size, total_size); // A
-        A.reserve(Eigen::VectorXi::Constant(total_size,32));  // This prealloaction trick greatly speed up the acc
-        b = Eigen::VectorXd::Zero(total_size);  // x and b
-    }
-
-
-
-    ///intitialize the whole matrix
-    void InitMatrix()
-    {
-        FindSizes();
-        AllocateSystem();
+                AddFieldTerm(&f,Vindexes,vfscale);
+            else
+                AddAreaTerm(Vindexes);
+        });
+        AddFixedTerms();
+        AddPointTerms();
     }
 
     bool Solve()
     {
-        //return true;
-        A.finalize();
-        Eigen::SparseMatrix<double> As=Eigen::SparseMatrix<double>(A);
-        As.finalize();
-
-        Eigen::SimplicialCholesky<Eigen::SparseMatrix<double> > solver(As);
+        Eigen::SparseMatrix<double> As(b.size(),b.size());
+        As.setFromTriplets(A.begin(),A.end());
+        A.clear();
+        A.shrink_to_fit();
+        Eigen::SimplicialLDLT<Eigen::SparseMatrix<double> > solver(As);
+        if (solver.info()!=Eigen::Success) return false;
         x = solver.solve(b);
         return (solver.info()==Eigen::Success);
     }
 
-
-    void InitIndex()
+    ///map the solution back to the vertices and then to the wedges; fixed vertices keep
+    ///their exact value if correct_fixed
+    void MapCoords()
     {
-        for (size_t i=0;i<mesh.vert.size();i++)
-            if (!mesh.vert[i].IsD())
-                AddVertexIndex(&mesh.vert[i],i);
+        for (size_t i=0;i<IndToVertex.size();i++)
+            IndToVertex[i]->T().P()=Point2<ScalarType>(x[i*2],x[i*2+1]);
+        if (correct_fixed)
+            for (size_t i=0;i<to_fix.size();i++)
+                to_fix[i]->T().P()=fixedUV[i];
     }
 
-    ///map back values to vertex
-    ///if normalize==true then set the
-    ///coordinates between 0 and 1
-    void MapCoords(bool normalize=true,
-                   ScalarType /*fieldScale*/=1.0)
+    void CopyToWedges()
     {
-        ///clear Visited Flag
-        if (correct_fixed)
-            tri::UpdateFlags<MeshType>::VertexClearV(mesh);
-        //set fixed to V
-        for (size_t i=0;i<to_fix.size();i++)
-            to_fix[i]->SetV();
-
-        Box2<ScalarType> bbox;
-        if (normalize)
-        {
-            for (size_t i=0;i<n_vert_vars;i++)
-            {
-                ScalarType U=x[i*2];
-                ScalarType V=x[(i*2)+1];
-                bbox.Add(Point2<ScalarType>(U,V));
-            }
-        }
-
-        //for each vertex
-        for (size_t i=0;i<n_vert_vars;i++)
-        {
-            VertexType* v=IndexVertex(i);
-            //take U and V
-            ScalarType U=x[i*2];
-            ScalarType V=x[(i*2)+1];
-            Point2<ScalarType> p;
-            if (!v->IsV())
-                p=Point2<ScalarType>(U,V);
-            else
-                p=v->T().P();
-            //p/=fieldScale;
-            if  (normalize)
-            {
-                p-=bbox.min;
-                p*=1/bbox.Diag();
-            }
-
-            v->T().P()=p;
-        }
-
-        ///then copy to faces
-        for (size_t i=0;i<mesh.face.size();i++)
-        {
-            FaceType *f=&mesh.face[i];
+        ForEachFace(mesh, [](FaceType &f){
             for (int j=0;j<3;j++)
             {
-                VertexType* v=f->V(j);
-                Point2<ScalarType> p=v->T().P();
-                f->WT(j).P()=p;
-                f->WT(j).N()=0; // a texture id, or the face reads as unmapped (see TexCoord2)
+                f.WT(j).P()=f.V(j)->T().P();
+                f.WT(j).N()=0; // a texture id, or the face reads as unmapped (see TexCoord2)
             }
-        }
+        });
     }
+
+    std::vector<Point2<ScalarType>> fixedUV;
 
 public:
 
-    ///return true if is possible to
+    ///return true if the mesh is a disk: manifold, genus 0, with at least one boundary.
+    ///It updates the face-face adjacency.
     bool IsFeasible()
     {
         tri::UpdateTopology<MeshType>::FaceFace(mesh);
-        int NNmanifoldE=tri::Clean<MeshType>::CountNonManifoldEdgeFF(mesh);
-        if (NNmanifoldE!=0)
-        {
-            printf("Non Manifold Edges \n");
-            return false;
-        }
-        int NNmanifoldV=tri::Clean<MeshType>::CountNonManifoldVertexFF(mesh);
-        if (NNmanifoldV!=0)
-        {
-            printf("Non Manifold Vertices \n");
-            return false;
-        }
-        int H=tri::Clean<MeshType>::CountHoles(mesh);
-        if (H==0)return false;
-
-        int G=tri::Clean<MeshType>::MeshGenus(mesh);
-        if (G!=0)
-        {
-            printf("Genus %d\n",G);
-            return false;
-        }
-
-        return (true);
+        if (tri::Clean<MeshType>::CountNonManifoldEdgeFF(mesh)!=0) return false;
+        if (tri::Clean<MeshType>::CountNonManifoldVertexFF(mesh)!=0) return false;
+        if (tri::Clean<MeshType>::CountHoles(mesh)==0) return false;
+        return tri::Clean<MeshType>::MeshGenus(mesh)==0;
     }
 
-    ///set the border as fixed
+    ///fix a vertex at the given texture coordinate
+    void FixVertex(VertexType *v,const Point2<ScalarType> &uv)
+    {
+        v->T().P()=uv;
+        to_fix.push_back(v);
+    }
+
+    ///fix the border vertices at their current T(); needs up to date border flags
     void SetBorderAsFixed()
     {
-        for (size_t i=0;i<mesh.vert.size();i++)
-        {
-            VertexType* v=&mesh.vert[i];
-            if (v->IsD()) continue;
-            if(v->IsB()) to_fix.push_back(v);
-        }
-        std::sort(to_fix.begin(),to_fix.end());
-        auto new_end=std::unique(to_fix.begin(),to_fix.end());
-        to_fix.resize(distance(to_fix.begin(),new_end));
+        ForEachVertex(mesh, [&](VertexType &v){ if(v.IsB()) to_fix.push_back(&v); });
     }
 
-    ///set selected vertices as fixed
+    ///fix the selected vertices at their current T()
     void SetSelectedAsFixed()
     {
-        for (int i=0;i<mesh.vert.size();i++)
-        {
-            VertexType* v=&mesh.vert[i];
-            if (v->IsD())continue;
-            if(v->IsS())to_fix.push_back(v);
-        }
-        std::sort(to_fix.begin(),to_fix.end());
-        typename std::vector<VertexType*>::iterator new_end=std::unique(to_fix.begin(),to_fix.end());
-        int dist=distance(to_fix.begin(),new_end);
-        to_fix.resize(dist);
+        ForEachVertex(mesh, [&](VertexType &v){ if(v.IsS()) to_fix.push_back(&v); });
     }
 
+    ///add a soft constraint pulling coordinate coord (0 for U, 1 for V) of the point of face f
+    ///with barycentric coordinates bary towards value, with the given weight; the weight is
+    ///relative to the Dirichlet energy, which is scale invariant
+    void AddPointConstraint(FaceType *f,const CoordType &bary,int coord,ScalarType value,ScalarType weight)
+    {
+        if (coord<0 || coord>1) throw std::invalid_argument("PoissonSolver: coord must be 0 (U) or 1 (V)");
+        pointConstraints.push_back({f,bary,coord,value,weight});
+    }
 
-    ///fix default vertices no need if already border on other vertices are fixed
-    ///you need at least 2 fixed for solving without field ,
-    ///while only 1 if you conforms to a given cross field
+    ///fix the vertices the solve needs when none are fixed yet: one at the origin in the
+    ///field-aligned mode; otherwise the two extremes of the longest side of the bounding box,
+    ///at (0,0) and (1,1)
     void FixDefaultVertices()
     {
-        ///in this case there are already vertices fixed, so no need to fix by default
-        assert(to_fix.size()==0);
-        ///then fix only one vertex
+        if (!to_fix.empty()) return;
         if (use_direction_field)
         {
-            for (size_t i=0;i<mesh.vert.size();i++)
-                if (!mesh.vert[i].IsD())
-                {
-                    mesh.vert[i].T().P()=Point2<ScalarType>(0,0);
-                    to_fix.push_back(&mesh.vert[i]);
-                    return;
-                }
-        }
-        ///then fix 2 vertices
-        else
-        {
-            VertexType *v0;
-            VertexType *v1;
-            FindFarthestVert(v0,v1);
-            if (v0==v1)
-            {
-                //				tri::io::ExporterPLY<MeshType>::Save(mesh,"./parametrized.ply");
-                assert(0);
-            }
-            v0->T().P()=Point2<ScalarType>(0,0);
-            v1->T().P()=Point2<ScalarType>(1,1);
-            to_fix.push_back(v0);
-            to_fix.push_back(v1);
+            for (VertexType &v : mesh.vert)
+                if (!v.IsD()) { FixVertex(&v,Point2<ScalarType>(0,0)); return; }
             return;
         }
+        tri::UpdateBounding<MeshType>::Box(mesh);
+        const int bestAxis = mesh.bbox.MaxDim();
+        VertexType *v0=nullptr, *v1=nullptr;
+        ForEachVertex(mesh, [&](VertexType &v){
+            if(!v0 || v.P()[bestAxis] < v0->P()[bestAxis]) v0 = &v;
+            if(!v1 || v.P()[bestAxis] > v1->P()[bestAxis]) v1 = &v;
+        });
+        if (v0==v1) throw std::invalid_argument("PoissonSolver: the mesh has no extent");
+        FixVertex(v0,Point2<ScalarType>(0,0));
+        FixVertex(v1,Point2<ScalarType>(1,1));
     }
-    ///intialize parameters and setup fixed vertices vector
+
+    ///choose the mode and clear the fixed vertices and point constraints
     void Init(bool _use_direction_field=false,
-              bool _correct_fixed=true,
-              ScalarType _fieldScale=1.0)
+              bool _correct_fixed=true)
     {
         use_direction_field=_use_direction_field;
         correct_fixed=_correct_fixed;
-        fieldScale=_fieldScale;
         to_fix.clear();
+        pointConstraints.clear();
     }
 
-    ///solve the system, it return false if the matrix is singular
-    bool SolvePoisson(bool _write_messages=false,
+    ///solve the system; it returns false if the matrix is singular. If solve_global_fold, a
+    ///result with most faces folded is mirrored. Throws if too few vertices are fixed.
+    bool SolvePoisson(CallBackPos *cb=nullptr,
                       ScalarType fieldScale=1.0,
                       bool solve_global_fold=true)
     {
-        int t0,t1,t2,t3;
+        RequirePerVertexTexCoord(mesh);
+        RequirePerFaceWedgeTexCoord(mesh);
+        if (use_direction_field) RequirePerFaceCurvatureDir(mesh);
+        std::sort(to_fix.begin(),to_fix.end());
+        to_fix.erase(std::unique(to_fix.begin(),to_fix.end()),to_fix.end());
+        if (to_fix.size() < (use_direction_field ? 1u : 2u))
+            throw std::invalid_argument(use_direction_field ? "PoissonSolver: the field-aligned mode needs a fixed vertex"
+                                                            : "PoissonSolver: the conformal mode needs two fixed vertices");
+        fixedUV.clear();
+        for (VertexType *v : to_fix) fixedUV.push_back(v->T().P());
 
-        ///Initializing Matrix
-        if (_write_messages)
-        {
-            printf("\n INITIALIZING THE MATRIX \n");
-            t0=clock();
-        }
+        if (cb) cb(0,"Building the system");
+        BuildSystem(fieldScale);
+        if (cb) cb(30,"Solving the system");
+        if (!Solve()) return false;
+        if (cb) cb(90,"Assigning texture coordinates");
+        MapCoords();
 
-        ///set vertex indexes
-        InitIndex();
-
-        if (use_direction_field)
-        {
-            assert(to_fix.size()>0);
-        }
-        else
-        {
-            assert(to_fix.size()>1);
-        }
-
-        n_fixed_vars=to_fix.size();
-        ///initialize the matrix ALLOCATING SPACE
-        InitMatrix();
-
-        ///build the laplacian system
-        BuildLaplacianMatrix(fieldScale);
-
-        ////add the lagrange multiplier
-        FixPointLSquares();
-
-        if (_write_messages)
-        {
-            t1=clock();
-            printf("\n time:%d \n",t1-t0);
-            printf("\n SOLVING \n");
-        }
-
-        //int n_vars=(n_vert_vars)*2;
-        //int integer_constr_size=(n_transition_vars+n_fixed_vars+n_bary_transition_vars)*2;
-        //X=std::vector< double >(n_vars+n_fixed_vars*2);
-        bool done=Solve();
-        if (!done)
-            return false;
-        if (_write_messages)
-        {
-            t2=clock();
-            printf("\n time:%d \n",t2-t1);
-            printf("\n ASSIGNING COORDS \n");
-        }
-
-        MapCoords(false,fieldScale);
-        if (_write_messages)
-        {
-            t3=clock();
-            printf("\n time:%d \n",t3-t2);
-        }
-
-        ///then check if majority of faces are folded
-        if (!solve_global_fold) return true;
-        if (tri::Distortion<MeshType,false>::GloballyUnFolded(mesh))
-        {
+        if (solve_global_fold && tri::Distortion<MeshType,false>::GloballyUnFolded(mesh))
             tri::UV_Utils<MeshType>::GloballyMirrorX(mesh);
-            bool isUnfolded = tri::Distortion<MeshType,false>::GloballyUnFolded(mesh);
-            assert( ! isUnfolded);
-        }
+        CopyToWedges();
         return true;
     }
 
-    PoissonSolver(MeshType &_mesh):mesh(_mesh)
-    {
-        assert(mesh.vert.size()>=3);
-        assert(mesh.face.size()>=1);
-    }
-
+    PoissonSolver(MeshType &_mesh):mesh(_mesh),use_direction_field(false),correct_fixed(true) {}
 
 }; // end class
 } // End Namespace tri
