@@ -45,8 +45,8 @@ namespace tri{
     to date face normals.
 
   Vertices are fixed with FixVertex, SetBorderAsFixed, SetSelectedAsFixed or
-  FixDefaultVertices; AddPointConstraint adds a soft constraint on one coordinate at a point
-  inside a face. The result goes to the per-vertex and per-wedge texture coordinates.
+  FixDefaultVertices, and points inside faces with FixPoint; AddPointConstraint adds a soft
+  constraint on one coordinate at a point inside a face. The result goes to the per-vertex and per-wedge texture coordinates.
 
   Typical use, on a mesh with face-face adjacency:
   \code
@@ -72,6 +72,9 @@ class PoissonSolver
     std::vector<VertexType *> to_fix;
     struct PointConstraint { FaceType *f; CoordType bary; int coord; ScalarType value, weight; };
     std::vector<PointConstraint> pointConstraints;
+    int fixedPoints;  // points fixed by FixPoint, which count as fixed vertices
+
+    static ScalarType Penalization() { return 1000000; }
 
     /// the system A x = b, in which x interleaves the U and V of each vertex
     std::vector<Triplet> A;
@@ -99,17 +102,21 @@ class PoissonSolver
             }
     }
 
-    ///add the cotangent stiffness matrix of a face, for both U and V
+    ///add the cotangent stiffness matrix of a face, for both U and V. It is computed in double
+    ///whatever the mesh's scalar: the conformal energy has near-null modes (maps that are almost
+    ///conformal), and float rounding in the weights is enough to excite them, giving a map whose
+    ///scale drifts by percents across a large patch even on a developable surface
     void AddLaplacianTerm(const FaceType *f,const int Vindexes[3])
     {
-        CoordType e[3];
+        Point3d e[3];
         for (int k=0;k<3;k++)
-            e[k]=f->cP((k+2)%3)-f->cP((k+1)%3);
-        const ScalarType areaT=DoubleArea(*f)/2.0;
+            e[k]=Point3d::Construct(f->cP((k+2)%3))-Point3d::Construct(f->cP((k+1)%3));
+        const double areaT=(e[0]^e[1]).Norm()/2.0;
+        if (!(areaT>0)) return;  // a face of zero area has no gradient, only infinite weights
         for (int i=0;i<3;i++)
             for (int j=0;j<3;j++)
             {
-                ScalarType val=(e[i]*e[j])/(4.0*areaT);
+                const double val=(e[i]*e[j])/(4.0*areaT);
                 SetValA(Vindexes[i]*2,Vindexes[j]*2,val);
                 SetValA(Vindexes[i]*2+1,Vindexes[j]*2+1,val);
             }
@@ -137,7 +144,7 @@ class PoissonSolver
     ///fixed vertices are a stiff quadratic penalty towards their current T()
     void AddFixedTerms()
     {
-        const ScalarType penalization=1000000;
+        const ScalarType penalization=Penalization();
         for (VertexType *v : to_fix)
             for (int c=0;c<2;c++)
             {
@@ -241,6 +248,15 @@ public:
         to_fix.push_back(v);
     }
 
+    ///fix the point of face f with barycentric coordinates bary at the given texture coordinate:
+    ///a fixed point that need not be a vertex, held by a stiff point constraint on both coordinates
+    void FixPoint(FaceType *f,const CoordType &bary,const Point2<ScalarType> &uv)
+    {
+        AddPointConstraint(f,bary,0,uv[0],Penalization());
+        AddPointConstraint(f,bary,1,uv[1],Penalization());
+        ++fixedPoints;
+    }
+
     ///fix the border vertices at their current T(); needs up to date border flags
     void SetBorderAsFixed()
     {
@@ -262,12 +278,12 @@ public:
         pointConstraints.push_back({f,bary,coord,value,weight});
     }
 
-    ///fix the vertices the solve needs when none are fixed yet: one at the origin in the
+    ///fix the vertices the solve needs when nothing is fixed yet: one at the origin in the
     ///field-aligned mode; otherwise the two extremes of the longest side of the bounding box,
     ///at (0,0) and (1,1)
     void FixDefaultVertices()
     {
-        if (!to_fix.empty()) return;
+        if (!to_fix.empty() || fixedPoints>0) return;
         if (use_direction_field)
         {
             for (VertexType &v : mesh.vert)
@@ -294,10 +310,13 @@ public:
         correct_fixed=_correct_fixed;
         to_fix.clear();
         pointConstraints.clear();
+        fixedPoints=0;
     }
 
     ///solve the system; it returns false if the matrix is singular. If solve_global_fold, a
-    ///result with most faces folded is mirrored. Throws if too few vertices are fixed.
+    ///result with most faces folded is mirrored. Throws if too few vertices are fixed and there
+    ///are no point constraints, which can fix the map in their place (both coordinates at two
+    ///points or more, or along a curve).
     bool SolvePoisson(CallBackPos *cb=nullptr,
                       ScalarType fieldScale=1.0,
                       bool solve_global_fold=true)
@@ -307,7 +326,7 @@ public:
         if (use_direction_field) RequirePerFaceCurvatureDir(mesh);
         std::sort(to_fix.begin(),to_fix.end());
         to_fix.erase(std::unique(to_fix.begin(),to_fix.end()),to_fix.end());
-        if (to_fix.size() < (use_direction_field ? 1u : 2u))
+        if (to_fix.size()+fixedPoints < (use_direction_field ? 1u : 2u) && pointConstraints.empty())
             throw std::invalid_argument(use_direction_field ? "PoissonSolver: the field-aligned mode needs a fixed vertex"
                                                             : "PoissonSolver: the conformal mode needs two fixed vertices");
         fixedUV.clear();
@@ -326,7 +345,7 @@ public:
         return true;
     }
 
-    PoissonSolver(MeshType &_mesh):mesh(_mesh),use_direction_field(false),correct_fixed(true) {}
+    PoissonSolver(MeshType &_mesh):mesh(_mesh),fixedPoints(0),use_direction_field(false),correct_fixed(true) {}
 
 }; // end class
 } // End Namespace tri
