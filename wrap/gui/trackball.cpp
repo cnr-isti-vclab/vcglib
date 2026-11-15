@@ -22,7 +22,12 @@
 ****************************************************************************/
 
 #ifdef QT_OPENGL_LIB
-#include <QtOpenGL/qgl.h> 
+#  include <QtCore/qglobal.h>
+#  if QT_VERSION >= 0x060000
+#    include <GL/glew.h>  // Qt6: qgl.h removed, use GLEW for OpenGL declarations
+#  else
+#    include <QtOpenGL/qgl.h>
+#  endif
 #else
 #include <GL/glew.h>
 #endif

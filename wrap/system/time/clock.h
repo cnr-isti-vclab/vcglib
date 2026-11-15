@@ -12,11 +12,32 @@
 
 #ifdef QT_CORE_LIB
 
+#include <QtCore/qglobal.h>
+
+#if QT_VERSION >= 0x060000
+#include <QElapsedTimer>
+
+namespace mt {
+  // Qt6 removed QTime::start()/elapsed(); wrap QElapsedTimer to match the same API.
+  class Clock : public QElapsedTimer {
+  public:
+    static Clock currentTime() {
+      Clock c;
+      c.start();
+      return c;
+    }
+  };
+} //namespace
+
+#else  // Qt5
+
 #include <QTime>
 
 namespace mt{
   typedef QTime Clock;
 }//namespace
+
+#endif // QT_VERSION
 
 #else
 

@@ -205,7 +205,11 @@ protected:
 #elif(QT_VERSION < 0x060000)
 				int last_count = last.count.load();
 #else
+<<<<<<< Updated upstream
 				int last_count = last.count.loadRelaxed();
+=======
+                int last_count = QT_ATOMIC_LOAD(last.count);
+>>>>>>> Stashed changes
 #endif
                         if(last_count <= Token::CACHE) { //was not locked and now can't be locked, remove it.
                             remove = this->heap.popMin();
@@ -256,10 +260,15 @@ protected:
                 Token &first = input->heap.max();
 #if(QT_VERSION < 0x050000)
                 int first_count = first.count;
+<<<<<<< Updated upstream
 #elif(QT_VERSION < 0x060000)
                 int first_count = first.count.load();
 #else
 				int first_count = first.count.loadRelaxed();
+=======
+#else
+                int first_count = QT_ATOMIC_LOAD(first.count);
+>>>>>>> Stashed changes
 #endif
                 if(first_count > Token::REMOVE &&
                         (!last || first.priority > last->priority)) { //if !last we already decided we want a transfer., otherwise check for a swap
