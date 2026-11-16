@@ -24,6 +24,7 @@
 #ifndef __VCGLIB_CLEAN
 #define __VCGLIB_CLEAN
 
+#include <map>
 #include <unordered_set>
 
 // VCG headers
@@ -711,85 +712,103 @@ public:
 		return int(ToSplitVec.size());
 	}
 
-	/// \brief This function expand current selection to cover the whole connected component.
+	/// \brief Split the mesh along its non-manifold edges.
+	/// The faces reachable from one another across manifold edges form a component; a vertex
+	/// used by several components keeps the first and gets a copy for each of the others.
+	/// The split happens in place, so the copies carry every enabled component and custom
+	/// attribute of their vertex. (It used to rebuild the mesh through a temporary one, which
+	/// lost the optional components and attributes the temporary did not have and, keeping
+	/// the vertex selection across components, left unreferenced vertices.) With a
+	/// moveThreshold, every vertex involved in a split moves that fraction of the way toward
+	/// the mean barycenter of its faces, pulling the pieces apart.
+	/// Requires FF adjacency. Returns the number of components.
 	static size_t SplitManifoldComponents(MeshType &m, const ScalarType moveThreshold = 0)
 	{
-		typedef typename MeshType::FacePointer FacePointer;
-		typedef typename MeshType::FaceIterator FaceIterator;
-		// it also assumes that the FF adjacency is well computed.
 		RequireFFAdjacency(m);
 
-		UpdateFlags<MeshType>::FaceClearV(m);
-		UpdateFlags<MeshType>::FaceClearS(m);
-
-		MeshType tmpMesh;
-		tmpMesh.vert.EnableVFAdjacency();
-		tmpMesh.face.EnableVFAdjacency();
-
-		if (m.face.IsWedgeTexCoordEnabled())
-			tmpMesh.face.EnableWedgeTexCoord();
-
-		size_t selCnt=0;
-
-		for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
-			if( !(*fi).IsD() && !(*fi).IsV() && !(*fi).IsS())
+		// The component of every face, grown across manifold edges only.
+		std::vector<int> component(m.face.size(), -1);
+		int componentCount = 0;
+		for (size_t seed = 0; seed < m.face.size(); ++seed)
+		{
+			if (m.face[seed].IsD() || component[seed] >= 0) continue;
+			std::vector<size_t> stack(1, seed);
+			component[seed] = componentCount;
+			while (!stack.empty())
 			{
-				UpdateFlags<MeshType>::FaceClearS(m);
-
-				std::deque<FacePointer> visitStack;
-				visitStack.push_back(&*fi);
-
-				(*fi).SetS();
-				(*fi).SetV();
-
-				while(!visitStack.empty())
+				FaceType &f = m.face[stack.back()];
+				stack.pop_back();
+				for (int i = 0; i < f.VN(); ++i)
 				{
-					FacePointer fp = visitStack.front();
-					visitStack.pop_front();
-
-					for(int i=0;i<fp->VN();++i) {
-						FacePointer ff = fp->FFp(i);
-
-						if(face::IsManifold(*fp, i) && !ff->IsS() && !ff->IsV())
-						{
-							ff->SetS();
-							ff->SetV();
-							visitStack.push_back(ff);
-						}
+					const size_t adj = Index(m, f.FFp(i));
+					if (face::IsManifold(f, i) && component[adj] < 0)
+					{
+						component[adj] = componentCount;
+						stack.push_back(adj);
 					}
 				}
-
-				Append<MeshType, MeshType>::Mesh(tmpMesh, m, true);
-				++selCnt;
 			}
+			++componentCount;
+		}
 
-		vcg::tri::UpdateTopology<MeshType>::VertexFace(tmpMesh);
-		vcg::tri::UpdateFlags<MeshType>::VertexBorderFromNone(tmpMesh);
-		for (size_t i = 0; i < size_t(tmpMesh.VN()); ++i)
+		// A copy of a vertex for each component that uses it after the first one.
+		std::vector<int> owner(m.vert.size(), -1);
+		std::map<std::pair<size_t, int>, size_t> copyOf; // (vertex, component) -> its copy
+		std::vector<size_t> source;                      // the vertex each copy duplicates
+		std::vector<bool> split(m.vert.size(), false);
+		for (size_t fi = 0; fi < m.face.size(); ++fi)
 		{
-			VertexType & v = tmpMesh.vert[i];
-
-			if (v.IsB())
+			if (m.face[fi].IsD()) continue;
+			for (int i = 0; i < m.face[fi].VN(); ++i)
 			{
-				std::vector<FacePointer> faceVec;
-				std::vector<int> idxVec;
-
-				vcg::face::VFStarVF(&v, faceVec, idxVec);
-
-				CoordType delta(0, 0, 0);
-				for (auto fp : faceVec)
+				const size_t v = Index(m, m.face[fi].V(i));
+				if (owner[v] < 0) owner[v] = component[fi];
+				else if (owner[v] != component[fi]
+				         && copyOf.emplace(std::make_pair(v, component[fi]), m.vert.size() + source.size()).second)
 				{
-					delta += vcg::Barycenter(*fp) - v.cP();
+					source.push_back(v);
+					split[v] = true;
 				}
-				delta /= faceVec.size();
+			}
+		}
+		if (source.empty()) return size_t(componentCount);
 
-				v.P() += delta * moveThreshold;
+		const size_t firstCopy = m.vert.size();
+		Allocator<MeshType>::AddVertices(m, source.size());
+		split.resize(m.vert.size(), true);
+		for (size_t k = 0; k < source.size(); ++k)
+		{
+			m.vert[firstCopy + k].ImportData(m.vert[source[k]]);
+			for (const auto &attr : m.vert_attr)
+				attr._handle->CopyValue(firstCopy + k, source[k], attr._handle);
+		}
+		for (size_t fi = 0; fi < m.face.size(); ++fi)
+		{
+			if (m.face[fi].IsD()) continue;
+			for (int i = 0; i < m.face[fi].VN(); ++i)
+			{
+				const auto copy = copyOf.find(std::make_pair(size_t(Index(m, m.face[fi].V(i))), component[fi]));
+				if (copy != copyOf.end()) m.face[fi].V(i) = &m.vert[copy->second];
 			}
 		}
 
-		UpdateSelection<MeshType>::Clear(tmpMesh);
-		Append<MeshType, MeshType>::MeshCopy(m, tmpMesh);
-		return selCnt;
+		if (moveThreshold != 0)
+		{
+			std::vector<CoordType> delta(m.vert.size(), CoordType(0, 0, 0));
+			std::vector<int> count(m.vert.size(), 0);
+			for (FaceType &f : m.face)
+				if (!f.IsD())
+					for (int i = 0; i < f.VN(); ++i)
+					{
+						const size_t v = Index(m, f.V(i));
+						delta[v] += Barycenter(f) - f.V(i)->cP();
+						++count[v];
+					}
+			for (size_t v = 0; v < m.vert.size(); ++v)
+				if (split[v] && count[v] > 0)
+					m.vert[v].P() += delta[v] / ScalarType(count[v]) * moveThreshold;
+		}
+		return size_t(componentCount);
 	}
 
 
