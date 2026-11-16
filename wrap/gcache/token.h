@@ -3,6 +3,13 @@
 
 #include <wrap/system/multithreading/atomic_int.h>
 
+// Qt6 compatibility: QAtomicInt::load() was renamed to loadRelaxed()
+#if defined(QT_CORE_LIB) && QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#  define QT_ATOMIC_LOAD(x) (x).loadRelaxed()
+#else
+#  define QT_ATOMIC_LOAD(x) (x).load()
+#endif
+
 /* QAtomic int count keep trak of token status:
    >0: locked (possibly multiple times)
    0: data ready in last cache
@@ -69,7 +76,11 @@ public:
 #elif(QT_VERSION < 0x060000)
 		return count.load() <= REMOVE;                   //might have become OUSIDE in the meanwhile
 #else
+<<<<<<< Updated upstream
 		return count.loadRelaxed() <= REMOVE;
+=======
+        return QT_ATOMIC_LOAD(count) <= REMOVE;           //might have become OUTSIDE in the meanwhile
+>>>>>>> Stashed changes
 #endif
     }
 
@@ -79,7 +90,11 @@ public:
 #elif(QT_VERSION < 0x060000)
 		return count.load() > 0;                   //might have become OUSIDE in the meanwhile
 #else
+<<<<<<< Updated upstream
 		return count.loadRelaxed() > 0;
+=======
+        return QT_ATOMIC_LOAD(count) > 0;
+>>>>>>> Stashed changes
 #endif
     }
     bool isInCache() { return count != OUTSIDE; }  //careful, can be used only when provider thread is locked.
@@ -94,6 +109,7 @@ public:
         if(count == a.count)
             return priority < a.priority;
         return count < a.count;
+<<<<<<< Updated upstream
 #elif(QT_VERSION < 0x060000)
         if(count.load() == a.count.load())
             return priority < a.priority;
@@ -102,6 +118,12 @@ public:
 		if(count.loadRelaxed() == a.count.loadRelaxed())
 			return priority < a.priority;
 		return count.loadRelaxed() < a.count.loadRelaxed();
+=======
+#else
+        if(QT_ATOMIC_LOAD(count) == QT_ATOMIC_LOAD(a.count))
+            return priority < a.priority;
+        return QT_ATOMIC_LOAD(count) < QT_ATOMIC_LOAD(a.count);
+>>>>>>> Stashed changes
 #endif
     }
     bool operator>(const Token &a) const {
@@ -114,9 +136,15 @@ public:
 			return priority > a.priority;
 		return count.load() > a.count.load();
 #else
+<<<<<<< Updated upstream
 		if(count.loadRelaxed() == a.count.loadRelaxed())
             return priority > a.priority;
 		return count.loadRelaxed() > a.count.loadRelaxed();
+=======
+        if(QT_ATOMIC_LOAD(count) == QT_ATOMIC_LOAD(a.count))
+            return priority > a.priority;
+        return QT_ATOMIC_LOAD(count) > QT_ATOMIC_LOAD(a.count);
+>>>>>>> Stashed changes
 #endif
     }
 };

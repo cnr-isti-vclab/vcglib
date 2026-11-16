@@ -11,7 +11,11 @@
 namespace mt {
   typedef QThread thread;
   typedef QMutex mutex;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+  typedef QMutexLocker<QMutex> mutexlocker;
+#else
   typedef QMutexLocker mutexlocker;
+#endif
   typedef QSemaphore semaphore;
 
 //cache.h, token.h
