@@ -270,29 +270,45 @@ bool ClipMeshWithUVLine(TriMeshType &m,
   RequireFFAdjacency(m);
   typename TriMeshType::template PerVertexAttributeHandle<ScalarType> dist =
       Allocator<TriMeshType>::template GetPerVertexAttribute<ScalarType>(m, "vcg::ClipMeshWithUVLine::dist");
-  // As in ClipMeshWithPlane, a vertex within rounding of the line counts as lying on it, and a
-  // crossing within rounding of an endpoint is not split: either would leave a new vertex on top
-  // of an old one, and a face of zero area between them.
+  // As in ClipMeshWithPlane, a vertex within rounding of the line counts as lying on it and is put
+  // exactly on it, and a crossing within rounding of an endpoint is not split but has that
+  // endpoint put on the line: a split there would leave a new vertex on top of an old one, and a
+  // face of zero area between them. Either way the cut ends exactly on the line, in texture space.
+  const Point2<ScalarType> n = dir.normalized();
   Box2<ScalarType> uvBox;
   ForEachVertex(m, [&](typename TriMeshType::VertexType &v) { uvBox.Add(v.cT().P()); });
   const ScalarType noise = uvBox.Diag() * std::numeric_limits<ScalarType>::epsilon() * 16;
   const ScalarType rounding = std::numeric_limits<ScalarType>::epsilon() * 16;
   bool anyBelow = false;
   ForEachVertex(m, [&](typename TriMeshType::VertexType &v) {
-    ScalarType s = dir.normalized() * v.cT().P() - offset / dir.Norm();
+    ScalarType s = n * v.cT().P() - offset / dir.Norm();
     if (math::Abs(s) <= noise) s = 0;
     dist[&v] = s;
     anyBelow = anyBelow || s < 0;
   });
+  auto onLine = [&](typename TriMeshType::VertexType &v) {
+    v.T().P() -= n * (n * v.cT().P() - offset / dir.Norm());
+    dist[&v] = 0;
+  };
   if (anyBelow) {
+    ForEachVertex(m, [&](typename TriMeshType::VertexType &v) { if (dist[&v] == 0) onLine(v); });
     UpdateTopology<TriMeshType>::FaceFace(m);
     AttributeMidPointFunctor<TriMeshType, ScalarType> midPoint(&m, dist);
     AttributeEdgePredicate<TriMeshType, ScalarType> crossesLine(dist, rounding);
     RefineE<TriMeshType, AttributeMidPointFunctor<TriMeshType, ScalarType>,
             AttributeEdgePredicate<TriMeshType, ScalarType> >(m, midPoint, crossesLine, false);
-    // no face straddles the line any more, so each one goes or stays whole
+    // an edge still crossing is one the predicate declined: its nearer end goes onto the line
     ForEachFace(m, [&](typename TriMeshType::FaceType &f) {
-      if (dist[f.V(0)] + dist[f.V(1)] + dist[f.V(2)] < 0) Allocator<TriMeshType>::DeleteFace(m, f);
+      for (int e = 0; e < 3; ++e) {
+        const ScalarType da = dist[f.V0(e)], db = dist[f.V1(e)];
+        if (da * db < 0) onLine(da / (da - db) < ScalarType(0.5) ? *f.V0(e) : *f.V1(e));
+      }
+    });
+    // no face straddles the line any more, so each one goes or stays whole; one lying on the line
+    // bounds nothing on the kept side
+    ForEachFace(m, [&](typename TriMeshType::FaceType &f) {
+      const ScalarType d0 = dist[f.V(0)], d1 = dist[f.V(1)], d2 = dist[f.V(2)];
+      if (d0 + d1 + d2 < 0 || (d0 == 0 && d1 == 0 && d2 == 0)) Allocator<TriMeshType>::DeleteFace(m, f);
     });
     Clean<TriMeshType>::RemoveUnreferencedVertex(m);
     Allocator<TriMeshType>::CompactEveryVector(m);

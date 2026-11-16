@@ -25,6 +25,8 @@
 #define VCG_LOCAL_FLATTENING
 
 #include <vcg/complex/algorithms/clip.h>
+#include <vcg/complex/algorithms/create/platonic.h>
+#include <vcg/complex/algorithms/vertex_interpolation.h>
 #include <vcg/complex/algorithms/closest.h>
 #include <vcg/complex/algorithms/geodesic.h>
 #include <vcg/complex/algorithms/update/texture.h>
@@ -54,6 +56,15 @@ namespace tri {
 
   The surface keeps its scale: lengths read in UV are lengths on the surface, up to the
   distortion that Stats reports.
+
+  Two options change what the patch is made of, both through a geometry image: the cropped
+  surface sampled at the nodes of a regular grid laid exactly on the rectangle.
+  - gridStep > 0 remeshes the patch as that grid, in parametric space, instead of keeping the
+    surface's own connectivity; a node with no surface under it, in a hole, is left out.
+  - smoothSigma > 0 smooths its shape by a Gaussian over the grid, as the paper's section 4.1 does
+    to separate the overall shape from the detail. Without gridStep, each vertex of the cropped
+    surface moves to the smoothed shape at its own UV, on a grid of about its edge length.
+  A smooth patch is what casting along its normals onto the original needs to read the detail.
 */
 template <class MeshType>
 class LocalFlattening
@@ -70,6 +81,8 @@ public:
   {
     ScalarType halfWidth = 0;   ///< half the width of the patch, in the surface's units
     ScalarType stiffness = 10;  ///< weight of each polyline sample's pull to the V axis (k_st)
+    ScalarType gridStep = 0;    ///< > 0: remesh the patch as a regular grid of this step in UV
+    ScalarType smoothSigma = 0; ///< > 0: smooth its shape by a Gaussian of this deviation
     CallBackPos *cb = nullptr;
   };
 
@@ -184,6 +197,9 @@ public:
     ClipMeshWithUVLine(patch, UV(0, 1), ScalarType(0));
     ClipMeshWithUVLine(patch, UV(0, -1), -st.length);
     if (patch.FN() == 0) throw std::runtime_error("LocalFlattening: nothing is left after cropping");
+    if (par.gridStep > 0 || par.smoothSigma > 0)
+      SampleGeometryImage(patch, par.halfWidth, st.length, par.gridStep > 0 ? par.gridStep : AverageEdge(patch),
+               par.gridStep > 0, par.smoothSigma);
     UpdateTexture<MeshType>::WedgeTexFromVertexTex(patch);
     UpdateNormal<MeshType>::PerFaceNormalized(patch);
     UpdateBounding<MeshType>::Box(patch);
@@ -208,6 +224,153 @@ public:
   }
 
 private:
+  /// sample the patch on a grid of about step over |U| <= w, 0 <= V <= L, smooth the samples by
+  /// sigma if positive, then make the patch that grid (remesh) or move its vertices onto it
+  static void SampleGeometryImage(MeshType &patch, ScalarType w, ScalarType L, ScalarType step, bool remesh, ScalarType sigma)
+  {
+    const int nu = std::max(2, int(std::lround(2 * w / step)) + 1), nv = std::max(2, int(std::lround(L / step)) + 1);
+    const double du = 2.0 * w / (nu - 1), dv = double(L) / (nv - 1);
+    const size_t n = size_t(nu) * size_t(nv);
+    std::vector<int> nodeFace(n, -1);
+    std::vector<Point3d> nodeBary(n), pos(n, Point3d(0, 0, 0));
+    std::vector<double> mask(n, 0);
+    std::vector<Point3d> raw;
+    // Each node takes the nearest point of the patch in UV: the triangle that holds it, or, for a
+    // node just outside every triangle, the nearest one within reach, a twentieth of a step. That
+    // covers a node on an edge shared by two faces, which rounding can leave outside both, and the
+    // border, which the crop leaves within rounding of the rectangle, on either side; a hole in
+    // the surface wider than that stays a hole.
+    const double reach = 0.05;
+    std::vector<double> nodeDist(n, reach);
+    for (size_t fi = 0; fi < patch.face.size(); ++fi) {
+      const FaceType &f = patch.face[fi];
+      if (f.IsD()) continue;
+      Point2d t[3];
+      for (int k = 0; k < 3; ++k)
+        t[k] = Point2d((double(f.cV(k)->cT().U()) + w) / du, double(f.cV(k)->cT().V()) / dv);
+      const double area = (t[1] - t[0]) ^ (t[2] - t[0]);
+      if (area == 0) continue;
+      const int i0 = std::max(0, int(std::floor(std::min({t[0][0], t[1][0], t[2][0]}) - reach)));
+      const int i1 = std::min(nu - 1, int(std::ceil(std::max({t[0][0], t[1][0], t[2][0]}) + reach)));
+      const int j0 = std::max(0, int(std::floor(std::min({t[0][1], t[1][1], t[2][1]}) - reach)));
+      const int j1 = std::min(nv - 1, int(std::ceil(std::max({t[0][1], t[1][1], t[2][1]}) + reach)));
+      for (int j = j0; j <= j1; ++j)
+        for (int i = i0; i <= i1; ++i) {
+          const size_t q = size_t(j) * nu + i;
+          if (nodeDist[q] == 0) continue;
+          const Point2d c(i, j);
+          Point3d b;
+          for (int k = 0; k < 3; ++k) b[k] = ((t[(k + 1) % 3] - c) ^ (t[(k + 2) % 3] - c)) / area;
+          double d = 0;
+          if (b[0] < 0 || b[1] < 0 || b[2] < 0) {  // outside: the nearest point of the triangle
+            Point2d best;
+            d = std::numeric_limits<double>::max();
+            for (int k = 0; k < 3; ++k) {
+              const Point2d a0 = t[k], e = t[(k + 1) % 3] - t[k];
+              const double s = std::clamp(((c - a0) * e) / (e * e), 0.0, 1.0);
+              const Point2d p = a0 + e * s;
+              if (Distance(p, c) < d) { d = Distance(p, c); best = p; }
+            }
+            if (!(d < nodeDist[q])) continue;
+            for (int k = 0; k < 3; ++k) b[k] = ((t[(k + 1) % 3] - best) ^ (t[(k + 2) % 3] - best)) / area;
+            for (int k = 0; k < 3; ++k) b[k] = std::max(0.0, b[k]);
+            b /= b[0] + b[1] + b[2];
+          }
+          nodeDist[q] = d;
+          nodeFace[q] = int(fi);
+          nodeBary[q] = b;
+          pos[q] = Point3d(0, 0, 0);
+          for (int k = 0; k < 3; ++k) pos[q] += Point3d::Construct(f.cP(k)) * b[k];
+          mask[q] = 1;
+        }
+    }
+    raw = pos;
+    if (sigma > 0) {
+      std::vector<Point3d> S = pos;
+      std::vector<double> w8 = mask;
+      Blur(nu, nv, sigma / du, sigma / dv, S, w8);
+      for (size_t q = 0; q < n; ++q)
+        if (w8[q] > 0) S[q] /= w8[q];
+      auto at = [&](int i, int j) { return std::clamp(j, 0, nv - 1) * size_t(nu) + std::clamp(i, 0, nu - 1); };
+      for (int j = 0; j < nv; ++j)
+        for (int i = 0; i < nu; ++i) {
+          const size_t q = size_t(j) * nu + i;
+          if (!(mask[q] > 0)) continue;
+          const Point3d nrm = ((S[at(i + 1, j)] - S[at(i - 1, j)]) ^ (S[at(i, j + 1)] - S[at(i, j - 1)])).normalized();
+          pos[q] -= nrm * ((pos[q] - S[q]) * nrm);
+        }
+    }
+
+    if (!remesh) {  // each vertex moved as the grid samples around it were, bilinearly
+      ForEachVertex(patch, [&](VertexType &v) {
+        const double x = std::clamp((double(v.T().U()) + w) / du, 0.0, nu - 1.0);
+        const double y = std::clamp(double(v.T().V()) / dv, 0.0, nv - 1.0);
+        const int i = std::min(int(x), nu - 2), j = std::min(int(y), nv - 2);
+        Point3d sp(0, 0, 0);
+        double sw = 0;
+        for (int dj = 0; dj < 2; ++dj)
+          for (int di = 0; di < 2; ++di) {
+            const size_t q = size_t(j + dj) * nu + i + di;
+            const double k = (di ? x - i : 1 - (x - i)) * (dj ? y - j : 1 - (y - j));
+            sp += (pos[q] - raw[q]) * (k * mask[q]);
+            sw += mask[q] * k;
+          }
+        if (sw > 0) v.P() += CoordType::Construct(sp / sw);
+      });
+      return;
+    }
+
+    // the grid's vertices, with the attributes of the surface where they lie, after the old ones
+    const size_t oldVerts = patch.vert.size();
+    std::vector<int> grid(n, -1);
+    int count = 0;
+    for (size_t q = 0; q < n; ++q)
+      if (nodeFace[q] >= 0) grid[q] = count++;
+    Allocator<MeshType>::AddVertices(patch, size_t(count));
+    for (size_t q = 0; q < n; ++q) {
+      if (grid[q] < 0) continue;
+      VertexType &gv = patch.vert[oldVerts + size_t(grid[q])];
+      const FaceType &f = patch.face[size_t(nodeFace[q])];
+      VertexInterpolator<MeshType>::Barycentric(patch, gv, *f.cV(0), *f.cV(1), *f.cV(2), CoordType::Construct(nodeBary[q]));
+      gv.P() = CoordType::Construct(pos[q]);
+      gv.T().P() = Point2<ScalarType>(ScalarType(-w + (q % nu) * du), ScalarType((q / nu) * dv));
+    }
+    ForEachFace(patch, [&](FaceType &f) { Allocator<MeshType>::DeleteFace(patch, f); });
+    for (size_t k = 0; k < oldVerts; ++k)
+      if (!patch.vert[k].IsD()) Allocator<MeshType>::DeleteVertex(patch, patch.vert[k]);
+    Allocator<MeshType>::CompactEveryVector(patch);
+    SparseFaceGrid(patch, grid, nu, nv);
+    if (patch.FN() == 0) throw std::runtime_error("LocalFlattening: the grid is too coarse for the patch");
+  }
+
+  /// separable Gaussian of positions weighted by a mask, in place (normalized convolution)
+  static void Blur(int w, int h, double sx, double sy, std::vector<Point3d> &a, std::vector<double> &c)
+  {
+    for (int pass = 0; pass < 2; ++pass) {
+      const double sg = pass == 0 ? sx : sy;
+      const int r = std::max(1, int(std::ceil(3 * sg)));
+      std::vector<double> k(2 * r + 1);
+      for (int i = -r; i <= r; ++i) k[i + r] = std::exp(-0.5 * i * i / (sg * sg));
+      const int len = pass == 0 ? w : h, lines = pass == 0 ? h : w;
+      std::vector<Point3d> la(len);
+      std::vector<double> lc(len);
+      for (int l = 0; l < lines; ++l) {
+        auto at = [&](int x) { return pass == 0 ? size_t(l) * w + x : size_t(x) * w + l; };
+        for (int x = 0; x < len; ++x) { la[x] = a[at(x)]; lc[x] = c[at(x)]; }
+        for (int x = 0; x < len; ++x) {
+          Point3d sa(0, 0, 0);
+          double sc = 0;
+          for (int i = std::max(0, x - r); i <= std::min(len - 1, x + r); ++i) {
+            sa += la[i] * k[i - x + r];
+            sc += lc[i] * k[i - x + r];
+          }
+          a[at(x)] = sa;
+          c[at(x)] = sc;
+        }
+      }
+    }
+  }
+
   static ScalarType AverageEdge(const MeshType &m)
   {
     double sum = 0; int n = 0;
