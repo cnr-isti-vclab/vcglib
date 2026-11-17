@@ -60,6 +60,7 @@ set(VCG_HEADERS
 		vcg/complex/algorithms/clip.h
 		vcg/complex/algorithms/geodesic.h
 		vcg/complex/algorithms/fast_winding_number.h
+		vcg/complex/algorithms/parametrization/local_flattening.h
 		vcg/complex/algorithms/parametrization/poisson_solver.h
 		vcg/complex/algorithms/parametrization/uv_utils.h
 		vcg/complex/algorithms/parametrization/distortion.h

@@ -68,9 +68,8 @@ int main( int argc, char **argv )
     printf("OK - mesh is homeomorphic to a disk\n");
 
   PS.Init();
-  PS.SetBorderAsFixed();
   PS.FixDefaultVertices();
-  PS.SolvePoisson(true);
+  PS.SolvePoisson();
 
   tri::UpdateTexture<MyMesh>::WedgeTexFromVertexTex(m);
   tri::io::ExporterPLY<MyMesh>::Save(m,"pippo.ply",tri::io::Mask::IOM_WEDGTEXCOORD);

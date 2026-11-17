@@ -396,6 +396,35 @@ namespace vcg {
             return f;
         }
 
+        /** \brief The face of \a mesh matching the point \a p along the direction \a n, as detail
+          recovery wants it: where the line through p along n meets the mesh, within \a maxDist,
+          the hit along +n first and along -n only if that misses; the closest point where both
+          miss. Casting along the normal of the surface p lies on samples the mesh far more evenly
+          than the closest point, which bunches samples where the mesh bends towards that surface
+          (Tarini, Cignoni and Scopigno, "Visibility based methods and assessment for
+          detail-recovery", IEEE Visualization 2003); the fallback keeps it from leaving holes
+          where the two surfaces part (Sander et al., "Silhouette clipping", SIGGRAPH 2000).
+
+          \a dist is the distance to the point found, \a maxDist when nothing was found, as
+          GetClosestFaceBase gives it; \a closestPt the point. The mesh needs per-face marks. */
+        template <class MESH, class GRID>
+            typename MESH::FaceType * GetClosestFaceAlongNormal( MESH & mesh, GRID & gr, const typename GRID::CoordType & p,
+                                                                 const typename GRID::CoordType & n, const typename GRID::ScalarType maxDist,
+                                                                 typename GRID::ScalarType & dist, typename GRID::CoordType & closestPt)
+        {
+            typedef typename GRID::ScalarType ScalarType;
+            typedef typename GRID::CoordType CoordType;
+            const CoordType dir = n.normalized();
+            if (dir.Norm() > 0)
+                for (const ScalarType side : { ScalarType(1), ScalarType(-1) })
+                {
+                    ScalarType t = 0;
+                    typename MESH::FaceType *f = DoRay(mesh, gr, Ray3<ScalarType>(p, dir * side), maxDist, t);
+                    if (f) { dist = t; closestPt = p + dir * (side * t); return f; }
+                }
+            return GetClosestFaceBase(mesh, gr, p, maxDist, dist, closestPt);
+        }
+
         ///Iteratively Do Ray sampling on spherical coordinates
         ///sampling along the two angles
         template <class MESH, class GRID, class OBJPTRCONTAINER, class COORDCONTAINER>
