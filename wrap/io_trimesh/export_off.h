@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/io_trimesh/c_numeric_locale.h>
 #include<wrap/io_trimesh/precision.h>
 #include <vcg/complex/algorithms/clean.h>
 #include <vcg/complex/algorithms/polygon_support.h>
@@ -51,6 +52,7 @@ public:
 
   static int Save(SaveMeshType &m, const char * filename, int mask=0 )
   {
+    CNumericLocale cLocale; // numbers in files always use a dot, whatever the host's locale
     const bool savePolygons = (mask & io::Mask::IOM_BITPOLYGONAL) != 0;
     if(savePolygons)
     {

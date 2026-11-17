@@ -27,6 +27,7 @@
 #include<vcg/complex/algorithms/bitquad_support.h>
 #include <vcg/space/planar_polygon_tessellation.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/io_trimesh/c_numeric_locale.h>
 
 namespace vcg {
 	namespace tri {
@@ -128,6 +129,7 @@ namespace vcg {
 				static int OpenStream(MESH_TYPE &mesh, std::istream &stream, int &loadmask,
 					CallBackPos *cb = 0)
 				{
+					CNumericLocale cLocale; // numbers in files always use a dot, whatever the host's locale
 					std::vector< std::string > tokens;
 					TokenizeNextLine(stream, tokens);
 					if (tokens.empty()) return InvalidFile_MissingOFF;

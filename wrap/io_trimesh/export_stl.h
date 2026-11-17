@@ -59,6 +59,7 @@ Edited Comments and GPL license
 #define __VCGLIB_EXPORT_STL
 
 #include <stdio.h>
+#include <wrap/io_trimesh/c_numeric_locale.h>
 
 namespace vcg {
 namespace tri {
@@ -82,6 +83,7 @@ static int Save(const SaveMeshType &m, const char * filename, const int &mask, C
 
 static int Save(const SaveMeshType &m, const char * filename , bool binary =true, int mask=0, const char *objectname=0, bool magicsMode=0)
 {
+  CNumericLocale cLocale; // numbers in files always use a dot, whatever the host's locale
   typedef typename SaveMeshType::ConstFaceIterator FaceIterator;
     FILE *fp;
 

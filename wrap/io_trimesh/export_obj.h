@@ -30,6 +30,7 @@
 #include <vcg/complex/algorithms/update/topology.h>
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/io_trimesh/c_numeric_locale.h>
 #include <wrap/io_trimesh/io_material.h>
 #include <wrap/io_trimesh/precision.h>
 #include <iostream>
@@ -134,6 +135,7 @@ public:
    */
   static int Save(SaveMeshType &m, const char * filename, int mask, bool useMaterialAttribute ,CallBackPos *cb=0)
   {
+    CNumericLocale cLocale; // numbers in files always use a dot, whatever the host's locale
     const int DGT = vcg::tri::io::Precision<ScalarType>::digits();
     const bool savePolygons = (mask & Mask::IOM_BITPOLYGONAL) != 0;
     if (savePolygons) {

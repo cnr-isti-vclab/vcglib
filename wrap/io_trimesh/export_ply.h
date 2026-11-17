@@ -32,6 +32,7 @@
 #include<wrap/callback.h>
 #include<wrap/ply/plylib.h>
 #include<wrap/io_trimesh/io_mask.h>
+#include<wrap/io_trimesh/c_numeric_locale.h>
 #include<wrap/io_trimesh/io_ply.h>
 #include<wrap/io_trimesh/precision.h>
 #include<vcg/container/simple_temporary_data.h>
@@ -119,6 +120,7 @@ public:
 
 	static int Save(SaveMeshType &m,  const char * filename, bool binary, const PlyInfo &pi, CallBackPos *cb=0)	// V1.0
 	{
+		CNumericLocale cLocale; // numbers in files always use a dot, whatever the host's locale
 		const bool savePolygons = (pi.mask & Mask::IOM_BITPOLYGONAL) != 0;
 		if(savePolygons)
 		{

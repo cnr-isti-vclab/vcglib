@@ -30,6 +30,7 @@
 
 #include <wrap/callback.h>
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/io_trimesh/c_numeric_locale.h>
 #include <wrap/io_trimesh/io_material.h>
 #include <vcg/space/color4.h>
 
@@ -213,6 +214,7 @@ public:
   */
   static int Open( OpenMeshType &m, const char * filename, Info &oi)
   {
+    CNumericLocale cLocale; // numbers in files always use a dot, whatever the host's locale
     int result = E_NOERROR;
     
     m.Clear();

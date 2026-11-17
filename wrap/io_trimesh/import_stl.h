@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <algorithm>
 #include <wrap/io_trimesh/io_mask.h>
+#include <wrap/io_trimesh/c_numeric_locale.h>
 
 namespace vcg {
 namespace tri {
@@ -281,6 +282,7 @@ static int OpenBinary( OpenMeshType &m, const char * filename, int &loadMask, Ca
 
   static int OpenAscii( OpenMeshType &m, const char * filename, CallBackPos *cb=0)
   {
+    CNumericLocale cLocale; // numbers in files always use a dot, whatever the host's locale
     FILE *fp;
     fp = fopen(filename, "r");
     if(fp == NULL)

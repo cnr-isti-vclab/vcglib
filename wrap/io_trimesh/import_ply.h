@@ -27,6 +27,7 @@
 #include<wrap/callback.h>
 #include<wrap/ply/plylib.h>
 #include<wrap/io_trimesh/io_mask.h>
+#include<wrap/io_trimesh/c_numeric_locale.h>
 #include<wrap/io_trimesh/io_ply.h>
 #include<vcg/complex/algorithms/create/platonic.h>
 #include<vcg/space/planar_polygon_tessellation.h>
@@ -405,6 +406,7 @@ public:
 	/// read a mesh with all the possible option specified in the PlyInfo obj, returns 0 on success.
 	static int Open( OpenMeshType &m, const char * filename, PlyInfo &pi )
 	{
+		CNumericLocale cLocale; // numbers in files always use a dot, whatever the host's locale
 		assert(filename!=0);
 		std::vector<VertexPointer> index; // vector of vertex pointers filled at the end of the vertex loading. 
 		LoadPly_FaceAux<ScalarType> fa;
