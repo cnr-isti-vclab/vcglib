@@ -1170,7 +1170,8 @@ static void EdgeMontecarlo(MeshType & m, VertexSampler &ps, int sampleNum, bool 
 
   assert(!Edges.empty());
 
-  typedef  std::pair<ScalarType, SimpleEdge*> IntervalType;
+  // The running sum is double for the reasons given in Montecarlo below.
+  typedef  std::pair<double, SimpleEdge*> IntervalType;
   std::vector< IntervalType > intervals (Edges.size()+1);
   int i=0;
   intervals[i]=std::make_pair(0,(SimpleEdge*)(0));
@@ -1183,15 +1184,15 @@ static void EdgeMontecarlo(MeshType & m, VertexSampler &ps, int sampleNum, bool 
   }
 
   // Second Loop get a point on the line 0...Sum(edgeLen) to pick a point;
-  ScalarType edgeSum = intervals.back().first;
+  const double edgeSum = intervals.back().first;
   for(i=0;i<sampleNum;++i)
   {
-    ScalarType val = edgeSum * RandomDouble01();
-    // lower_bound returns the furthermost iterator i in [first, last) such that, for every iterator j in [first, i), *j < value.
-    // E.g. An iterator pointing to the first element "not less than" val, or end() if every element is less than val.
-    typename std::vector<IntervalType>::iterator it = lower_bound(intervals.begin(),intervals.end(),std::make_pair(val,(SimpleEdge*)(0)) );
+    const double val = edgeSum * SamplingRandomGenerator().generate01res53();
+    // The first segment whose end lies beyond val: val is in [0,edgeSum), so this is never
+    // the sentinel at begin() nor end(), and a zero-length edge is never picked.
+    auto it = std::upper_bound(intervals.begin(),intervals.end(),val,
+                               [](double v, const IntervalType &e){ return v < e.first; });
     assert(it != intervals.end() && it != intervals.begin());
-    assert( ( (*(it-1)).first < val ) && ((*(it)).first >= val) );
     SimpleEdge * ep=(*it).second;
     ps.AddFace( *(ep->f), ep->EdgeBarycentricToFaceBarycentric(RandomDouble01()) );
   }
@@ -1205,7 +1206,11 @@ static void EdgeMontecarlo(MeshType & m, VertexSampler &ps, int sampleNum, bool 
 
 static void Montecarlo(MeshType & m, VertexSampler &ps,int sampleNum)
 {
-    typedef  std::pair<ScalarType, FacePointer> IntervalType;
+    // The running sum must be double even on a float mesh: a face's chance of being picked is
+    // the width of its interval, and once a float sum reaches tens of units (tens of millions
+    // of faces) its spacing exceeds the area of the small faces, which then add nothing and are
+    // never sampled while slightly larger ones are rounded up and oversampled.
+    typedef  std::pair<double, FacePointer> IntervalType;
     std::vector< IntervalType > intervals (m.fn+1);
     FaceIterator fi;
     int i=0;
@@ -1217,17 +1222,18 @@ static void Montecarlo(MeshType & m, VertexSampler &ps,int sampleNum)
             intervals[i+1]=std::make_pair(intervals[i].first+0.5*DoubleArea(*fi), &*fi);
             ++i;
         }
-    ScalarType meshArea = intervals.back().first;
+    const double meshArea = intervals.back().first;
     for(i=0;i<sampleNum;++i)
         {
-            ScalarType val = meshArea * RandomDouble01();
-            // lower_bound returns the furthermost iterator i in [first, last) such that, for every iterator j in [first, i), *j < value.
-            // E.g. An iterator pointing to the first element "not less than" val, or end() if every element is less than val.
-            typename std::vector<IntervalType>::iterator it = lower_bound(intervals.begin(),intervals.end(),std::make_pair(val,FacePointer(0)) );
+            // 53 bits, not the 32 of RandomDouble01: the lightest of tens of millions of faces
+            // would otherwise be reachable by only a few distinct values.
+            const double val = meshArea * SamplingRandomGenerator().generate01res53();
+            // The first segment whose end lies beyond val: val is in [0,meshArea), so this is
+            // never the sentinel at begin() nor end(), and a zero-area face is never picked.
+            auto it = std::upper_bound(intervals.begin(),intervals.end(),val,
+                                       [](double v, const IntervalType &e){ return v < e.first; });
             assert(it != intervals.end());
             assert(it != intervals.begin());
-            assert( (*(it-1)).first <val );
-            assert( (*(it)).first >= val);
             ps.AddFace( *(*it).second, RandomBarycentric() );
         }
 }
@@ -1253,11 +1259,11 @@ static void WeightedMontecarlo(MeshType & m, VertexSampler &ps,int sampleNum, fl
   PerVertexFloatAttribute rH = tri::Allocator<MeshType>:: template GetPerVertexAttribute<float> (m,"radius");
   InitRadiusHandleFromQuality(m, rH, 1.0, variance, true);
 
-  ScalarType weightedArea = 0;
+  double weightedArea = 0; // double for the reason given in Stat::ComputeMeshArea
   for(FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
       weightedArea += WeightedArea(*fi,rH);
 
-  ScalarType samplePerAreaUnit = sampleNum/weightedArea;
+  ScalarType samplePerAreaUnit = ScalarType(sampleNum/weightedArea);
   // Montecarlo sampling.
   double  floatSampleNum = 0.0;
   for(FaceIterator fi=m.face.begin(); fi != m.face.end(); fi++)

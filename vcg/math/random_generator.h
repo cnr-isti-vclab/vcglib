@@ -438,6 +438,16 @@ public:
         return (((double)generate()) + 0.5)*(1.0/4294967296.0);
     }
 
+    /// Returns a random number in the [0,1) real interval with the full 53-bit resolution of a
+    /// double (genrand_res53 of the reference MT19937), consuming two draws. generate01() takes
+    /// only 2^32 distinct values: picking among tens of millions of weighted items, the lightest
+    /// would each be hit by just a handful of them.
+    double generate01res53()
+    {
+        const unsigned int a = generate() >> 5, b = generate() >> 6;
+        return (a*67108864.0 + b)*(1.0/9007199254740992.0);
+    }
+
 }; // end class MarsenneTwisterRNG
 
 /* Returns a value with normal distribution with mean m, standard deviation s
