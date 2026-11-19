@@ -26,7 +26,6 @@
 #include <vcg/complex/complex.h>
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/quality.h>
-#include <vcg/complex/algorithms/harmonic.h>
 
 namespace vcg {
 namespace tri {
@@ -267,10 +266,15 @@ public:
     }
 
 
+    // The lumped mass matrix: each vertex's share of the area of its faces. With `normalize` (the
+    // default, as it always was) the entries are divided by the largest, so they are unitless and
+    // at most 1; without, they are the areas themselves, a third of the incident faces' area, which
+    // makes (M + lambda L) the implicit Laplacian smoothing of the textbook, lambda an area.
     static void MassMatrixEntry(MeshType &m,
                                 std::vector<std::pair<int,int> > &index,
                                 std::vector<ScalarType> &entry,
-                                bool vertexCoord=true)
+                                bool vertexCoord=true,
+                                bool normalize=true)
     {
         tri::RequireCompactness(m);
 
@@ -287,6 +291,12 @@ public:
         ScalarType maxA=0;
         for(int i=0;i<m.vn;++i)
             maxA = std::max(maxA,h[i]);
+        // A vertex no face uses has no area, and no Laplacian entries: its row of a system such as
+        // (M + lambda L) would be zero, and the system singular. It takes the largest area, so that it
+        // keeps its value (m x = m x0) instead.
+        for(int i=0;i<m.vn;++i)
+            if (h[i]==0) h[i]=(maxA>0 ? maxA : ScalarType(1));
+        if (!normalize) maxA = 6; // h is twice the area of each incident face: six times the vertex's third
 
         //store the index and the scalar for the sparse matrix
         for (size_t i=0;i<m.vert.size();i++)
@@ -324,9 +334,14 @@ public:
         for (int i=0;i<f.VN();i++)
         {
 
+            // The cotangent Laplacian sums, for each edge, half the cotangent of the angle facing it
+            // in each of its faces. This is called once per face, so it adds that face's half only:
+            // Harmonic::CotangentWeight returns the whole edge's weight, both faces' halves, which
+            // counted interior edges twice and border edges once, and needed face-face adjacency.
             if (cotangent)
             {
-                weight=Harmonic<MeshType>::template CotangentWeight<ScalarType>(f,i);
+                const CoordType a = f.cP0(i) - f.cP2(i), b = f.cP1(i) - f.cP2(i);
+                weight = (a * b) / (a ^ b).Norm() / 2;
             }
 
             //get the index of the vertices

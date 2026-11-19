@@ -24,9 +24,12 @@
 #define __VCG_IMPLICIT_SMOOTHER
 
 #include <Eigen/Sparse>
+#include <cmath>
 #include <vcg/complex/algorithms/mesh_to_matrix.h>
 #include <vcg/complex/algorithms/update/quality.h>
 #include <vcg/complex/algorithms/smooth.h>
+#include <vcg/complex/algorithms/mesh_assert.h>
+#include <wrap/callback.h>
 
 #define PENALTY 10000
 
@@ -87,6 +90,10 @@ public:
         int degree;
         //this is to say if we smooth the positions or the quality
         bool SmoothQ;
+        //the mass matrix divided by its largest entry (true, as it always was), so that lambda is
+        //relative to the largest vertex area; with false it holds the vertex areas, and the system is
+        //the textbook (M + lambda L) x = M x0, lambda an area in the mesh's units
+        bool normalizeMass;
 
         Parameter()
         {
@@ -97,6 +104,7 @@ public:
             useCotWeight=false;
             lapWeight=1;
             SmoothQ=false;
+            normalizeMass=true;
         }
     };
 
@@ -260,7 +268,7 @@ public:
 
         //add the entries for mass matrix
         if (SParam.useMassMatrix)
-            vcg::tri::MeshToMatrix<MeshType>::MassMatrixEntry(mesh,IndexM,ValuesM,!SParam.SmoothQ);
+            vcg::tri::MeshToMatrix<MeshType>::MassMatrixEntry(mesh,IndexM,ValuesM,!SParam.SmoothQ,SParam.normalizeMass);
 
         //then add entries for lagrange mult due to barycentric constraints
         for (size_t i=0;i<SParam.ConstrainedF.size();i++)
@@ -328,7 +336,8 @@ public:
 
         //SimplicialLDLT
         Eigen::SimplicialCholesky<Eigen::SparseMatrix<ScalarType > > solver(S);
-        assert(solver.info() == Eigen::Success);
+        if (solver.info() != Eigen::Success)
+            throw vcg::MissingPreconditionException("ImplicitSmoother: the smoothing system could not be factored");
 
         MatrixXm V;
         if (!SParam.SmoothQ)
@@ -385,6 +394,64 @@ public:
                 mesh.vert[i].Q()=V(index,0);
             }
         }
+    }
+
+    // Adaptive unsharp masking of the vertex positions, after Herholz, Koch, Boubekeur and Alexa,
+    // "Unsharp masking geometry improves 3D prints", Computers & Graphics 66 (2017). Three smoothed
+    // copies V1, V2, V3 come from implicit cotangent smoothing (M + d L) Vi = M V0, the textbook one
+    // (normalizeMass false), at d = delta/2, delta, 10 delta: the paper's ratios. Their differences
+    // are three frequency bands, D1 = V0 - V1 (finest), D2 = V1 - V2 and D3 = V2 - V3 (coarsest),
+    // and the result is V2 + exaggeration W D2 + fineWeight D1: the middle band amplified, the finest
+    // kept by `fineWeight` (the paper takes 0, dropping it as noise), and W = exp(-mu |D3|^2 / r^2)
+    // turning the effect down where the coarse band moves a vertex far, which is where smoothing
+    // shrinks the shape (thin parts, tips) and sharpening would swell it. The paper normalizes mu by
+    // the norm of the whole D3 vector, which depends on the vertex count; here r is the
+    // root-mean-square |D3| over the vertices, so the same shape gets the same weights at any
+    // resolution. exaggeration = fineWeight = 1 and mu = 0 return V0. `delta` is an area in the
+    // mesh's units: the smoothing halves a sinusoid of wavelength 2 pi sqrt(delta).
+    static void AdaptiveUnsharpMask(MeshType &mesh, ScalarType delta, ScalarType exaggeration,
+                                    ScalarType fineWeight, ScalarType mu, vcg::CallBackPos *cb = nullptr)
+    {
+        tri::RequireCompactness(mesh);
+        tri::MeshAssert<MeshType>::OnlyTriFace(mesh);
+        if (!(delta > 0))
+            throw vcg::MissingPreconditionException("AdaptiveUnsharpMask needs a positive delta");
+        const size_t n = mesh.vert.size();
+        std::vector<CoordType> v0(n), smooth[3];
+        for (size_t i = 0; i < n; ++i)
+            v0[i] = mesh.vert[i].P();
+        const ScalarType deltas[3] = { delta / 2, delta, 10 * delta };
+        for (int k = 0; k < 3; ++k) {
+            if (cb) cb(30 * k, "Smoothing");
+            for (size_t i = 0; i < n; ++i)
+                mesh.vert[i].P() = v0[i];
+            Parameter par;
+            par.lambda = deltas[k];
+            par.useCotWeight = true;
+            par.normalizeMass = false;
+            Compute(mesh, par);
+            smooth[k].resize(n);
+            for (size_t i = 0; i < n; ++i)
+                smooth[k][i] = mesh.vert[i].P();
+        }
+        // The mean over the vertices the faces use: the others keep their position (see
+        // MeshToMatrix::MassMatrixEntry), and their empty bands would lower it.
+        std::vector<bool> used(n, false);
+        for (const FaceType &f : mesh.face)
+            for (int j = 0; j < 3; ++j)
+                used[tri::Index(mesh, f.cV(j))] = true;
+        ScalarType sum = 0;
+        size_t count = 0;
+        for (size_t i = 0; i < n; ++i)
+            if (used[i])
+                sum += (smooth[1][i] - smooth[2][i]).SquaredNorm(), ++count;
+        const ScalarType r2 = count ? sum / ScalarType(count) : ScalarType(0);
+        for (size_t i = 0; i < n; ++i) {
+            const CoordType d1 = v0[i] - smooth[0][i], d2 = smooth[0][i] - smooth[1][i], d3 = smooth[1][i] - smooth[2][i];
+            const ScalarType w = r2 > 0 ? std::exp(-mu * d3.SquaredNorm() / r2) : ScalarType(1);
+            mesh.vert[i].P() = smooth[1][i] + d2 * (exaggeration * w) + d1 * fineWeight;
+        }
+        if (cb) cb(100, "Done");
     }
 };
 
