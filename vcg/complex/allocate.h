@@ -23,10 +23,12 @@
 #ifndef __VCGLIB_TRIALLOCATOR
 #define __VCGLIB_TRIALLOCATOR
 
+#include <functional>
 #include <vector>
 #include <set>
 
 #include <vcg/container/simple_temporary_data.h>
+#include <vcg/complex/exception.h>
 
 #include "used_types.h"
 
@@ -388,10 +390,29 @@ public:
     return firstNewEdge;// deve restituire l'iteratore alla prima faccia aggiunta;
   }
 
+  /** Throws unless v points into m.vert. The functions that build an element on given vertices
+      check them always, not only by assertion: a vertex index or pointer that is out of range,
+      such as one read from a malformed file, would otherwise make the element point outside the
+      vector, and anything that later follows it read and write memory that is not the mesh's.
+      Pointers are compared through std::less, which orders any two pointers. */
+  static void RequireMeshVertex(const MeshType &m, const VertexType *v)
+  {
+    const std::less<const VertexType *> before;
+    if (m.vert.empty() || before(v, &m.vert.front()) || before(&m.vert.back(), v))
+      throw vcg::MissingPreconditionException("a vertex outside the mesh's vertex vector");
+  }
+  static void RequireMeshVertex(const MeshType &m, size_t v)
+  {
+    if (v >= m.vert.size())
+      throw vcg::MissingPreconditionException("a vertex index outside the mesh's vertex vector");
+  }
+
   /** Function to add a single edge to the mesh. and initializing it with two VertexPointer
             */
   static EdgeIterator AddEdge(MeshType &m, VertexPointer v0, VertexPointer v1)
   {
+    RequireMeshVertex(m, v0);
+    RequireMeshVertex(m, v1);
     EdgeIterator ei= AddEdges(m, 1);
     ei->V(0)=v0;
     ei->V(1)=v1;
@@ -403,8 +424,8 @@ public:
   static EdgeIterator AddEdge(MeshType &m, size_t v0, size_t v1)
   {
     assert(v0!=v1);
-    assert(v0>=0 && v0<m.vert.size());
-    assert(v1>=0 && v1<m.vert.size());
+    RequireMeshVertex(m, v0);
+    RequireMeshVertex(m, v1);
     return AddEdge(m,&(m.vert[v0]),&(m.vert[v1]));
   }
   
@@ -544,11 +565,10 @@ public:
             */
   static FaceIterator AddFace(MeshType &m, VertexPointer v0, VertexPointer v1, VertexPointer v2)
   {
-    assert(m.vert.size()>0);
     assert((v0!=v1) && (v1!=v2) && (v0!=v2));
-    assert(v0>=&m.vert.front() && v0<=&m.vert.back());
-    assert(v1>=&m.vert.front() && v1<=&m.vert.back());
-    assert(v2>=&m.vert.front() && v2<=&m.vert.back());
+    RequireMeshVertex(m, v0);
+    RequireMeshVertex(m, v1);
+    RequireMeshVertex(m, v2);
     PointerUpdater<FacePointer> pu;
     FaceIterator fi = AddFaces(m,1,pu);
     fi->Alloc(3);
@@ -563,9 +583,9 @@ public:
   static FaceIterator AddFace(MeshType &m, size_t v0, size_t v1, size_t v2)
   {
     assert((v0!=v1) && (v1!=v2) && (v0!=v2));
-    assert(v0>=0 && v0<m.vert.size());
-    assert(v1>=0 && v1<m.vert.size());
-    assert(v2>=0 && v2<m.vert.size());
+    RequireMeshVertex(m, v0);
+    RequireMeshVertex(m, v1);
+    RequireMeshVertex(m, v2);
     return AddFace(m,&(m.vert[v0]),&(m.vert[v1]),&(m.vert[v2]));
   }
   /** Function to add a face to the mesh and initializing it with the three given coords
@@ -590,11 +610,10 @@ public:
             */
   static FaceIterator AddQuadFace(MeshType &m, VertexPointer v0, VertexPointer v1, VertexPointer v2, VertexPointer v3)
   {
-    assert(m.vert.size()>0);
-    assert(v0>=&m.vert.front() && v0<=&m.vert.back());
-    assert(v1>=&m.vert.front() && v1<=&m.vert.back());
-    assert(v2>=&m.vert.front() && v2<=&m.vert.back());
-    assert(v3>=&m.vert.front() && v3<=&m.vert.back());
+    RequireMeshVertex(m, v0);
+    RequireMeshVertex(m, v1);
+    RequireMeshVertex(m, v2);
+    RequireMeshVertex(m, v3);
     PointerUpdater<FacePointer> pu;
     if(FaceType::HasPolyInfo())
     {
