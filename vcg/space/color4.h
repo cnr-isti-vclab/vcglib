@@ -292,31 +292,39 @@ inline void Color4<double>::Import(const Color4<unsigned char> &b)
   (*this)[3]=b[3]/255.0;
 }
 
+// A float component outside [0, 1] does not fit a byte, and converting it would be undefined
+// behaviour; such values come from files (an OFF colour of 2.0), so they are clamped first, and a
+// NaN reads as 0. Components within [0, 1] convert as they always did, truncated.
+inline unsigned char ColorComponentToByte(float v)
+{
+  if (!(v > 0.0f)) return 0;
+  if (v >= 1.0f) return 255;
+  return (unsigned char)(v*255.0f);
+}
+
 template <> template <>
 inline void Color4<unsigned char>::Import(const Color4<float> &b)
 {
-  (*this)[0]=(unsigned char)(b[0]*255.0f);
-  (*this)[1]=(unsigned char)(b[1]*255.0f);
-  (*this)[2]=(unsigned char)(b[2]*255.0f);
-  (*this)[3]=(unsigned char)(b[3]*255.0f);
+  (*this)[0]=ColorComponentToByte(b[0]);
+  (*this)[1]=ColorComponentToByte(b[1]);
+  (*this)[2]=ColorComponentToByte(b[2]);
+  (*this)[3]=ColorComponentToByte(b[3]);
 }
 
 template <> template <>
 inline void Color4<unsigned char>::Import(const Point4<float> &b)
 {
-  (*this)[0]=(unsigned char)(b[0]*255.0f);
-  (*this)[1]=(unsigned char)(b[1]*255.0f);
-  (*this)[2]=(unsigned char)(b[2]*255.0f);
-  (*this)[3]=(unsigned char)(b[3]*255.0f);
+  (*this)[0]=ColorComponentToByte(b[0]);
+  (*this)[1]=ColorComponentToByte(b[1]);
+  (*this)[2]=ColorComponentToByte(b[2]);
+  (*this)[3]=ColorComponentToByte(b[3]);
 }
 
 template <> template <>
 inline void Color4<unsigned char>::Import(const Point4<double> &b)
 {
-  (*this)[0]=(unsigned char)(b[0]*255.0);
-  (*this)[1]=(unsigned char)(b[1]*255.0);
-  (*this)[2]=(unsigned char)(b[2]*255.0);
-  (*this)[3]=(unsigned char)(b[3]*255.0);
+  for (int i = 0; i < 4; ++i)
+    (*this)[i] = !(b[i] > 0.0) ? 0 : b[i] >= 1.0 ? 255 : (unsigned char)(b[i]*255.0);
 }
 
 template <> template <>

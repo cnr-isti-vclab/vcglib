@@ -23,7 +23,9 @@
 #ifndef __VCGLIB_IMPORT_OFF
 #define __VCGLIB_IMPORT_OFF
 
+#include <cstdlib>
 #include <fstream>
+#include <limits>
 #include<vcg/complex/algorithms/bitquad_support.h>
 #include <vcg/space/planar_polygon_tessellation.h>
 #include <wrap/io_trimesh/io_mask.h>
@@ -73,7 +75,7 @@ namespace vcg {
 					  "Invalid file: OFF file should have in the first line the OFF keyword as a first token",
 					  "Unsupported format", "Face with more than 3 vertices","File with high dimensional vertexes are not supported", "Error Degenerate Face with less than 3 vertices" };
 
-					if (message_code > 6 || message_code < 0)
+					if (message_code > 7 || message_code < 0)
 						return "Unknown error";
 					else
 						return error_msg[message_code];
@@ -208,11 +210,27 @@ namespace vcg {
 					if (tokens.size() < 3)
 						return InvalidFile;
 
-					unsigned int nVertices, nFaces, nEdges;
-					nVertices = atoi(tokens[0].c_str());
-					nFaces = atoi(tokens[1].c_str());
-					nEdges = atoi(tokens[2].c_str());
-					(void)nEdges; // unused
+					// The counts come from the file and are not trusted: a negative one is refused, and so is
+					// a vertex count the rest of the file is too short to hold (a vertex takes at least 6
+					// characters, "0 0 0" and a separator), since the vertices are allocated before any is read.
+					const long nVerticesRead = strtol(tokens[0].c_str(), nullptr, 10);
+					const long nFacesRead = strtol(tokens[1].c_str(), nullptr, 10);
+					if (nVerticesRead < 0 || nFacesRead < 0 ||
+						nVerticesRead > std::numeric_limits<int>::max() || nFacesRead > std::numeric_limits<int>::max())
+						return InvalidFile;
+					{
+						const std::streampos here = stream.tellg();
+						if (here != std::streampos(-1))
+						{
+							stream.seekg(0, std::ios::end);
+							const std::streamoff left = stream.tellg() - here;
+							stream.seekg(here);
+							if (nVerticesRead > (left + 1) / 6)
+								return InvalidFile;
+						}
+					}
+					const unsigned int nVertices = static_cast<unsigned int>(nVerticesRead);
+					const unsigned int nFaces = static_cast<unsigned int>(nFacesRead);
 
 					// dimension is the space dimension of vertices => it must be three(!)
 					if (dimension != 3)
@@ -387,14 +405,31 @@ namespace vcg {
 
 					// READ FACES
 					//////////////////////////////////////////////////////
+					// Every count and index a face line gives is checked before it is used: a face the
+					// header counts that the file does not hold, a line with fewer indices than it declares,
+					// and an index outside the vertices all refuse the file, as the PLY importer does
+					// (Allocator::AddFace checks the range only by assertion). A triangle naming a vertex
+					// twice is skipped, as the OBJ importer does, since AddFace asserts that its vertices
+					// differ; addTriangle says whether it added one.
+					auto validIndex = [&](int i) { return i >= 0 && static_cast<unsigned int>(i) < nVertices; };
+					auto addTriangle = [&](int i0, int i1, int i2) {
+						if (i0 == i1 || i1 == i2 || i0 == i2)
+							return false;
+						Allocator<MESH_TYPE>::AddFace(mesh, size_t(i0), size_t(i1), size_t(i2));
+						return true;
+					};
 					if (FaceType::HasPolyInfo())
 					{
 						for (unsigned int f = 0; f < nFaces; f++)
 						{
 							if (cb && (f % 1000) == 0) cb(50 + f * 50 / nFaces, "Face Loading");
 							TokenizeNextLine(stream, tokens);
-							int vert_per_face = atoi(tokens[0].c_str());
-							std::vector<int> vInd(vert_per_face);
+							if (tokens.empty())
+								return InvalidFile; // the header counts more faces than the file holds
+							const int vert_per_face = atoi(tokens[0].c_str());
+							if (vert_per_face < 0)
+								return InvalidFile;
+							std::vector<int> vInd;
 							k = 1;
 							for (int j = 0; j < vert_per_face; j++)
 							{
@@ -404,24 +439,25 @@ namespace vcg {
 									if (tokens.size() == 0) return InvalidFile; // if EOF
 									k = 0;
 								}
-								vInd[j] = atoi(tokens[k].c_str());
+								vInd.push_back(atoi(tokens[k].c_str()));
+								if (!validIndex(vInd.back()))
+									return InvalidFile;
 								k++;
 							}
-							if (vert_per_face == 3)
-								Allocator<MESH_TYPE>::AddFace(mesh, &mesh.vert[vInd[0]], &mesh.vert[vInd[1]], &mesh.vert[vInd[2]]);
-
-							if (vert_per_face == 4)
-								Allocator<MESH_TYPE>::AddQuadFace(mesh, &mesh.vert[vInd[0]], &mesh.vert[vInd[1]], &mesh.vert[vInd[2]], &mesh.vert[vInd[3]]);
+							// A polygon of any number of corners, as the file gives it: polygons of more than
+							// four corners used to be dropped.
+							if (vert_per_face >= 3)
+							{
+								FaceIterator fi = Allocator<MESH_TYPE>::AddFaces(mesh, 1);
+								(*fi).Alloc(vert_per_face);
+								for (int j = 0; j < vert_per_face; ++j)
+									(*fi).V(j) = &mesh.vert[vInd[j]];
+							}
 
 						}
 					}
 					else // Standard Triangular Mesh Loading
 					{
-						// Allocator<MESH_TYPE>::AddFaces(mesh, nFaces);
-						// unsigned int f0 = 0;
-						
-
-
 						// Initial call to the QuadTriangulate with an empty vector to just reset the static set of existing diagonals
 						std::vector<VertexPointer> qtmp;
 						BitQuad<MESH_TYPE>::QuadTriangulate(qtmp);
@@ -435,38 +471,37 @@ namespace vcg {
 								cb(50 + ff * 50 / nFaces, "Face Loading");
 
 							TokenizeNextLine(stream, tokens);
-							int vert_per_face = atoi(tokens[0].c_str());
+							if (tokens.empty())
+								return InvalidFile; // the header counts more faces than the file holds
+							const int vert_per_face = atoi(tokens[0].c_str());
 							if (vert_per_face < 2)
 								return ErrorDegenerateFace;
 							k = 1;
-							if(tokens.size()==1) {// to handle the case when you have the number of vert is on a different line 
+							if(tokens.size()==1) // to handle the case when you have the number of vert is on a different line
 								TokenizeNextLine(stream, tokens, true);
-								if ((tokens.size() + 1) < vert_per_face ) return InvalidFile; // if EOF								
-							}
-							if (vert_per_face == 2)
+							if (tokens.size() < static_cast<size_t>(vert_per_face) + 1)
+								return InvalidFile; // fewer indices than the face declares
+							std::vector<int> vertIndices(vert_per_face);
+							for (int j = 0; j < vert_per_face; j++)
 							{
-								int vInd[2];
-								vInd[0] = atoi(tokens[1].c_str());
-								vInd[1] = atoi(tokens[2].c_str());
-								Allocator<MESH_TYPE>::AddEdge(mesh, vInd[0], vInd[1]);
+								vertIndices[j] = atoi(tokens[j + 1].c_str());
+								if (!validIndex(vertIndices[j]))
+									return InvalidFile;
 							}
+							// The faces this line adds, which its colour, if any, goes to.
+							const size_t firstFace = mesh.face.size();
+							// A two-corner face is an edge, kept only by a mesh whose edges have vertices (in any
+							// other, setting them wrote through the empty component's dummy reference), and only
+							// if its ends differ, which AddEdge asserts.
+							if (vert_per_face == 2 && tri::HasEVAdjacency(mesh) && vertIndices[0] != vertIndices[1])
+								Allocator<MESH_TYPE>::AddEdge(mesh, size_t(vertIndices[0]), size_t(vertIndices[1]));
 							if (vert_per_face == 3)
-							{
-								int vInd[3];  
-								vInd[0] = atoi(tokens[1].c_str()); 
-								vInd[1] = atoi(tokens[2].c_str());
-								vInd[2] = atoi(tokens[3].c_str());
-								Allocator<MESH_TYPE>::AddFace(mesh, vInd[0], vInd[1], vInd[2]);								
-							}
+								addTriangle(vertIndices[0], vertIndices[1], vertIndices[2]);
 							if(vert_per_face > 3) // The face must be triangulated
 							{
-								std::vector<int> vertIndices(vert_per_face);
 								std::vector<CoordType> polygonPoints(vert_per_face);
 								for (int j = 0; j < vert_per_face; j++)
-								{
-									vertIndices[j] = atoi(tokens[j+1].c_str());
 									polygonPoints[j] = mesh.vert[vertIndices[j]].P();
-								}
 								// Polygonal faces are represented by triangles whose introduced
 								// diagonals carry the per-face faux-edge bit. This lets algorithms
 								// and exporters recover the original polygon boundary.
@@ -478,12 +513,12 @@ namespace vcg {
 										q[qqi] = &mesh.vert[vertIndices[qqi]];
 									BitQuad<MESH_TYPE>::QuadTriangulate(q);
 									for (int qqi = 0; qqi < 4; ++qqi)
-										vertIndices[qqi] = q[qqi] - &mesh.vert[0];
+										vertIndices[qqi] = static_cast<int>(q[qqi] - &mesh.vert[0]);
 									// build a two face fan
-									Allocator<MESH_TYPE>::AddFace(mesh, vertIndices[0],vertIndices[1],vertIndices[2]);
-									if (tri::HasPerFaceFlags(mesh)) mesh.face.back().SetF(2);
-									Allocator<MESH_TYPE>::AddFace(mesh, vertIndices[0],vertIndices[2],vertIndices[3]);
-									if (tri::HasPerFaceFlags(mesh)) mesh.face.back().SetF(0);
+									if (addTriangle(vertIndices[0],vertIndices[1],vertIndices[2]) && tri::HasPerFaceFlags(mesh))
+										mesh.face.back().SetF(2);
+									if (addTriangle(vertIndices[0],vertIndices[2],vertIndices[3]) && tri::HasPerFaceFlags(mesh))
+										mesh.face.back().SetF(0);
 								}
 								else
 								{
@@ -496,11 +531,10 @@ namespace vcg {
 										return InvalidFile;
 									for (size_t j = 0; j < localTriangles.size(); j += 3)
 									{
-										Allocator<MESH_TYPE>::AddFace(mesh,
+										if (addTriangle(
 											vertIndices[localTriangles[j]],
 											vertIndices[localTriangles[j + 1]],
-											vertIndices[localTriangles[j + 2]]);
-										if (tri::HasPerFaceFlags(mesh))
+											vertIndices[localTriangles[j + 2]]) && tri::HasPerFaceFlags(mesh))
 										{
 											for (int edge = 0; edge < 3; ++edge)
 											{
@@ -519,78 +553,40 @@ namespace vcg {
 							// NOTE: It is assumed that colored face takes exactly one text line
 							//       (otherwise it is impossible to parse color information since
 							//        color components can vary)
-							size_t color_elements = tokens.size() - vert_per_face - 1;
-							//isColorDefined |= (color_elements>0);
-							//if(isColorDefined) loadmask |= Mask::IOM_FACECOLOR;
-
+							const size_t color_elements = tokens.size() - vert_per_face - 1;
 							if (color_elements > 0)
 							{
 								loadmask |= Mask::IOM_FACECOLOR;
 
 								if (tri::HasPerFaceColor(mesh))
 								{
-									int triToColor = vert_per_face-2;
-									switch (color_elements)
+									// The colour goes to the faces this line added: as many as the
+									// tessellation gave, which is not always vert_per_face - 2.
+									auto setColor = [&](const Color4f &c) {
+										for (size_t i = firstFace; i < mesh.face.size(); ++i)
+											mesh.face[i].C().Import(c);
+									};
+									const std::string *colorTokens = &tokens[vert_per_face + 1];
+									if (color_elements == 1)
+										setColor(ColorMap(atoi(colorTokens[0].c_str())));
+									else if (color_elements == 3 || color_elements == 4)
 									{
-									case 0:
-									{
-										for (int i=0; i< triToColor;++i)
-											mesh.face[mesh.fn - triToColor + i].C().Import(vcg::Color4f(.666f, .666f, .666f, .666f));
-										break;
-									}
-									case 1:
-									{
-										for (int i=0; i<triToColor;++i)
-											mesh.face[mesh.fn - triToColor + i].C().Import(ColorMap(atoi(tokens[vert_per_face + 1].c_str())));
-										break;
-									}
-									case 3:
-									{
-										if (tokens[vert_per_face + 1].find('.') == std::string::npos) // if there is a float there is a dot
+										if (colorTokens[0].find('.') == std::string::npos) // if it is a float there is a dot
 										{
 											Color4b cc(Color4b::White);
-											cc[0] = (unsigned char)atoi(tokens[vert_per_face + 1].c_str());
-											cc[1] = (unsigned char)atoi(tokens[vert_per_face + 2].c_str());
-											cc[2] = (unsigned char)atoi(tokens[vert_per_face + 3].c_str());
-											for (int i=0; i<triToColor;++i)
-												mesh.face[mesh.fn - triToColor + i].C() = cc;
+											for (size_t c = 0; c < color_elements; ++c)
+												cc[c] = (unsigned char)atoi(colorTokens[c].c_str());
+											for (size_t i = firstFace; i < mesh.face.size(); ++i)
+												mesh.face[i].C() = cc;
 										}
 										else
 										{
-											float color[3];
-											color[0] = (float)atof(tokens[vert_per_face + 1].c_str());
-											color[1] = (float)atof(tokens[vert_per_face + 2].c_str());
-											color[2] = (float)atof(tokens[vert_per_face + 3].c_str());
-											for (int i=0; i<triToColor;++i)
-												mesh.face[mesh.fn - triToColor + i].C().Import(vcg::Color4f(color[0], color[1], color[2], 1.0f));
+											float cf[4] = { 0, 0, 0, 1.0f };
+											for (size_t c = 0; c < color_elements; ++c)
+												cf[c] = float(atof(colorTokens[c].c_str()));
+											setColor(Color4f(cf[0], cf[1], cf[2], cf[3]));
 										}
-										break;
 									}
-									case 4:
-									{	
-										if (tokens[vert_per_face + 1].find('.') == std::string::npos) // if it is a float there is a dot
-										{
-											Color4b cc;
-											cc[0] = (unsigned char)atoi(tokens[vert_per_face + 1].c_str());
-											cc[1] = (unsigned char)atoi(tokens[vert_per_face + 2].c_str());
-											cc[2] = (unsigned char)atoi(tokens[vert_per_face + 3].c_str());
-											cc[3] = (unsigned char)atoi(tokens[vert_per_face + 4].c_str());
-											for (int i=0; i<triToColor;++i)
-												mesh.face[mesh.fn - triToColor + i].C() = cc;
-										}
-										else
-										{
-											float color[4];
-											color[0] = float(atof(tokens[vert_per_face + 1].c_str()));
-											color[1] = float(atof(tokens[vert_per_face + 2].c_str()));
-											color[2] = float(atof(tokens[vert_per_face + 3].c_str()));
-											color[3] = float(atof(tokens[vert_per_face + 4].c_str()));
-											for (int i=0; i<triToColor;++i)
-												mesh.face[mesh.fn - triToColor + i].C().Import(vcg::Color4f(color[0], color[1], color[2], color[3]));
-										}
-										break;
-									}
-									} //end switch
 								}
 							} // end if (isColorDefined)
 						} // end of for f=...
@@ -791,6 +787,9 @@ namespace vcg {
 					  { 0.4f,	 0.4f,	 0.4f,	 0.4f	 },
 					  { 0.8f,	 0.8f,	 0.8f,	 0.8f	 }
 					};
+					// The index comes from the file: one outside the map reads as its first entry, white.
+					if (i < 0 || i >= 148)
+						i = 0;
 					return Color4f(colorMap[i][0], colorMap[i][1], colorMap[i][2], colorMap[i][3]);
 				}
 			};
