@@ -141,6 +141,7 @@ public:
     if (savePolygons) {
       tri::RequireFFAdjacency(m);
       tri::UpdateTopology<SaveMeshType>::FaceFace(m);
+      tri::PolygonSupport<SaveMeshType,SaveMeshType>::ClearInconsistentFauxEdges(m);
     }
     // OBJ has one index stream for each attribute, so prefer per-wedge data
     // whenever both per-vertex and per-wedge variants were requested.

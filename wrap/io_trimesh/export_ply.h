@@ -128,6 +128,7 @@ public:
 			// traversal never relies on stale topology supplied by the caller.
 			tri::RequireFFAdjacency(m);
 			tri::UpdateTopology<SaveMeshType>::FaceFace(m);
+			tri::PolygonSupport<SaveMeshType,SaveMeshType>::ClearInconsistentFauxEdges(m);
 		}
 
 		FILE * fpout;

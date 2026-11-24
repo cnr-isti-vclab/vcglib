@@ -58,6 +58,7 @@ public:
     {
       tri::RequireFFAdjacency(m);
       tri::UpdateTopology<SaveMeshType>::FaceFace(m);
+      tri::PolygonSupport<SaveMeshType,SaveMeshType>::ClearInconsistentFauxEdges(m);
     }
 
     FILE * fpout = fopen(filename,"w");

@@ -187,6 +187,25 @@ namespace tri {
             if(tri::HasPerFaceQuality(tm) && tri::HasPerFaceQuality(pm)) pfi->Q()=tfi->Q();
         }
     }
+    /// \brief Clear the faux edges that do not mark a diagonal inside a polygon
+    ///
+    /// A faux edge stands for a diagonal between two triangles of the same polygon, so it means
+    /// something only on a manifold edge that both faces mark. One on a border, on a non-manifold
+    /// edge, or marked on one side only (deleting half of a quad leaves one, and so does setting
+    /// the bits by hand) made ExtractPolygon walk back onto the same face and repeat a corner, and
+    /// Clean::CountBitLargePolygons, which counts faux edges in pairs, disagree with it: the
+    /// polygon exporters wrote such a triangle as a quad with a repeated vertex, under a face count
+    /// that did not match the faces written, and OBJ and OFF lost faces when read back. Exporters
+    /// call it before extracting polygons. Requires FF adjacency.
+    static void ClearInconsistentFauxEdges(TriMeshType &tm)
+    {
+        tri::RequireFFAdjacency(tm);
+        for (auto &f : tm.face)
+            if (!f.IsD())
+                for (int i = 0; i < 3; ++i)
+                    if (f.IsF(i) && (face::IsBorder(f, i) || !face::IsManifold(f, i) || !f.FFp(i)->IsF(f.FFi(i))))
+                        f.ClearF(i);
+    }
     /// \brief Collect tris and verts of a polygonal face marked by FauxEdges
     ///
     /// Given a face pointer, it builds a vector with all the face and vertex pointers
