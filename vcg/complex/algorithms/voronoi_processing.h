@@ -38,16 +38,10 @@ namespace tri
 
 struct VoronoiProcessingParameter
 {
-  enum {
-    None=0,
-    DistanceFromSeed=1,
-    DistanceFromBorder=2,
-    RegionArea=3
-  };
-
+  // The relaxation leaves the input mesh's colors alone: it used to paint progress into them
+  // (quality ramps, seeds, frontiers) through a colorStrategy field, destroying the caller's
+  // colors for a picture nobody asked for. VoronoiColoring paints a diagram on request.
   VoronoiProcessingParameter()  {}
-  
-  int colorStrategy=DistanceFromSeed;
 
   float areaThresholdPerc=0;
   bool deleteUnreachedRegionFlag=false;
@@ -208,15 +202,6 @@ static void VoronoiColoring(MeshType &m, bool frontierFlag=true)
 //  tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
 }
 
-static void VoronoiAreaColoring(MeshType &m,std::vector<VertexType *> &seedVec,
-                                std::vector< std::pair<float,VertexPointer> > &regionArea)
-{
-  PerVertexPointerHandle vertexSources =  tri::Allocator<MeshType>:: template GetPerVertexAttribute<VertexPointer> (m,"sources");
-  float meshArea = tri::Stat<MeshType>::ComputeMeshArea(m);
-  float expectedArea = meshArea/float(seedVec.size());
-  for(size_t i=0;i<m.vert.size();++i)
-      m.vert[i].C()=Color4b::ColorRamp(expectedArea *0.75f ,expectedArea*1.25f, regionArea[tri::Index(m,vertexSources[i])].first);
-}
 // It associates the faces with a given vertex according to the vertex associations
 //
 // It READS  the PerVertex attribute 'sources'
@@ -442,72 +427,75 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
   outMesh.Clear();
   outPoly.Clear();
   tri::UpdateTopology<MeshType>::FaceFace(m);
-  tri::UpdateFlags<MeshType>::FaceBorderFromFF(m);
 
-  std::vector<FacePointer> innerCornerVec,   // Faces adjacent to three different regions
-                           borderCornerVec;  // Faces that are on the border and adjacent to at least two regions.
-  GetFaceCornerVec(m, sources, innerCornerVec, borderCornerVec);
+  // The corners of the regions are the barycenters of the faces touched by three regions and the
+  // midpoints of the border edges between two regions. Each region's corners are collected in
+  // order by walking its boundary over m, with the region on the left: unlike sorting them by
+  // angle around the seed in a fitted plane, this stays right where a region wraps around a sharp
+  // edge or corner, and gives every fan the orientation of m. A corner is computed by the same
+  // expression in every region sharing it, so RemoveDuplicateVertex below merges its copies.
+  std::vector<int> seedIndex(m.vert.size(),-1);
+  for(size_t i=0;i<seedVec.size();++i)
+    seedIndex[tri::Index(m,seedVec[i])]=int(i);
+  auto regionOf = [&](VertexPointer v) { return sources[v] ? seedIndex[tri::Index(m,sources[v])] : -1; };
 
-  // For each seed collect all the vertices and build
+  struct CornerLoop { std::vector<CoordType> pt; bool open; }; // open: from border to border
+  std::vector<std::vector<CornerLoop> > loopVec(seedVec.size());
+  std::vector<unsigned char> walked(m.face.size(),0); // per face, a bit for each entry edge walked
+  // Walks from the entry edge (f,e) of a region, i.e. V0(e) inside it and V1(e) outside.
+  auto walk = [&](FacePointer f, int e) {
+    const int r = regionOf(f->V0(e));
+    const FacePointer f0=f; const int e0=e;
+    CornerLoop loop; loop.open=face::IsBorder(*f,e);
+    if(loop.open) loop.pt.push_back((f->P0(e)+f->P1(e))/2.0f);
+    for(size_t step=0;step<m.face.size();++step) // bounded, in case m is not manifold
+    {
+      walked[tri::Index(m,f)] |= 1<<e;
+      const int ex = (regionOf(f->V2(e))==r) ? (e+1)%3 : (e+2)%3; // the edge leaving the region
+      if(sources[f->V(0)]!=sources[f->V(1)] && sources[f->V(1)]!=sources[f->V(2)] && sources[f->V(2)]!=sources[f->V(0)])
+        loop.pt.push_back(Barycenter(*f));
+      if(face::IsBorder(*f,ex)) { loop.pt.push_back((f->P0(ex)+f->P1(ex))/2.0f); break; }
+      const FacePointer nf=f->FFp(ex); e=f->FFi(ex); f=nf;
+      if(f==f0 && e==e0) break;
+    }
+    loopVec[r].push_back(loop);
+  };
+  for(int pass=0;pass<2;++pass) // open loops first, so that each is walked from its start
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi) if(!fi->IsD())
+      for(int e=0;e<3;++e)
+        if(!(walked[tri::Index(m,&*fi)] & (1<<e)) && (pass==1 || face::IsBorder(*fi,e)) &&
+           regionOf(fi->V0(e))>=0 && regionOf(fi->V0(e))!=regionOf(fi->V1(e)))
+          walk(&*fi,e);
+
   for(size_t i=0;i<seedVec.size();++i)
     tri::Allocator<MeshType>::AddVertex(outMesh,seedVec[i]->P(),Color4b::DarkGray);
 
+  // Each region becomes a fan of triangles around its seed: one fan for each open loop of a region
+  // touching the border, else one for its longest loop (the others enclose other regions).
   for(size_t i=0;i<seedVec.size();++i)
   {
-    VertexPointer curSeed=seedVec[i];
-    std::vector<CoordType> pt;
-    for(size_t j=0;j<innerCornerVec.size();++j)
-      for(int qq=0;qq<3;qq++)
-        if(sources[innerCornerVec[j]->V(qq)] == curSeed)
-        {
-          pt.push_back(Barycenter(*innerCornerVec[j]));
-          break;
-        }
-    for(size_t j=0;j<borderCornerVec.size();++j)
-      for(int qq=0;qq<3;qq++)
-        if(sources[borderCornerVec[j]->V(qq)] == curSeed)
-        {
-          CoordType edgeCenter;
-          for(int jj=0;jj<3;++jj) if(face::IsBorder(*(borderCornerVec[j]),jj))
-            edgeCenter=(borderCornerVec[j]->P0(jj)+borderCornerVec[j]->P1(jj))/2.0f;
-          pt.push_back(edgeCenter);
-          break;
-        }
-    Plane3<ScalarType> pl;
-    pt.push_back(curSeed->P());
-    FitPlaneToPointSet(pt,pl);
-    pt.pop_back();
-    CoordType nZ = pl.Direction();
-    CoordType nX = (pt[0]-curSeed->P()).Normalize();
-    CoordType nY = (nX^nZ).Normalize();
-    std::vector<std::pair<float,int> > angleVec(pt.size());
-    for(size_t j=0;j<pt.size();++j)
+    std::vector<CornerLoop> &lv=loopVec[i];
+    const bool anyOpen = std::any_of(lv.begin(),lv.end(),[](const CornerLoop &l){ return l.open; });
+    const CornerLoop *longest=0;
+    for(const CornerLoop &l : lv)
+      if(!l.open && (!longest || l.pt.size()>longest->pt.size())) longest=&l;
+    for(const CornerLoop &l : lv)
     {
-      CoordType p = (pt[j]-curSeed->P()).Normalize();
-      float angle = 180.0f+math::ToDeg(atan2(p*nY,p*nX));
-      angleVec[j] = std::make_pair(angle,j);
+      if(anyOpen ? !l.open : &l!=longest) continue;
+      if(l.pt.size() < (l.open ? 2u : 3u)) continue;
+      const size_t start=outMesh.vert.size();
+      for(const CoordType &p : l.pt)
+        tri::Allocator<MeshType>::AddVertex(outMesh,p,Color4b::LightGray);
+      const size_t fanNum = l.open ? l.pt.size()-1 : l.pt.size();
+      for(size_t j=0;j<fanNum;++j)
+      {
+        tri::Allocator<MeshType>::AddFace(outMesh, &outMesh.vert[i], &outMesh.vert[start+j],
+                                          &outMesh.vert[start+(j+1)%l.pt.size()]);
+        outMesh.face.back().SetF(0); // only the edge between two corners is a Voronoi edge
+        outMesh.face.back().SetF(2);
+      }
     }
-    std::sort(angleVec.begin(),angleVec.end());
-    // Now build another piece of mesh.
-    int curRegionStart=outMesh.vert.size();
-
-
-    for(size_t j=0;j<pt.size();++j)
-      tri::Allocator<MeshType>::AddVertex(outMesh,pt[angleVec[j].second],Color4b::LightGray);
-
-    for(size_t j=0;j<pt.size();++j){
-      float curAngle = angleVec[(j+1)%pt.size()].first - angleVec[j].first;
-//      printf("seed %4i (%i) - face %i angle %5.1f %5.1f %5.1f\n",i,curRegionStart,j,angleVec[j].first,angleVec[(j+1)%pt.size()].first,curAngle);
-      if(curAngle < 0) curAngle += 360.0;
-      if(curAngle < 170.0)
-        tri::Allocator<MeshType>::AddFace(outMesh,
-                                          &outMesh.vert[i   ],
-                                          &outMesh.vert[curRegionStart + j ],
-            &outMesh.vert[curRegionStart + ((j+1)%pt.size())]);
-       outMesh.face.back().SetF(0);
-       outMesh.face.back().SetF(2);
-    }
-  } // end for each seed.
+  }
   tri::Clean<MeshType>::RemoveDuplicateVertex(outMesh);
   tri::UpdateTopology<MeshType>::FaceFace(outMesh);
   bool oriented,orientable;
@@ -548,9 +536,9 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
     }
   }
 
-  // Now a plain conversion of the non faux edges into a polygonal mesh
+  // Now a plain conversion of the non faux edges into a polygonal mesh. outMesh gets no edges of
+  // its own: they would be every triangle edge, faux ones included, duplicating outPoly.
   tri::UpdateTopology<MeshType>::FillUniqueEdgeVector(outMesh,EdgeVec,false);
-  tri::UpdateTopology<MeshType>::AllocateEdge(outMesh);
   for(size_t i=0;i<outMesh.vert.size();++i)
     tri::Allocator<MeshType>::AddVertex(outPoly,outMesh.vert[i].P());
   for(size_t i=0;i<EdgeVec.size();++i)
@@ -1091,9 +1079,6 @@ static bool QuadricRelax(MeshType &m, std::vector<VertexType *> &seedVec,
     }
   }
 
-  if(vpp.colorStrategy==VoronoiProcessingParameter::DistanceFromBorder)
-    tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
-
 //  tri::io::ExporterPLY<MeshType>::Save(m,"last.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
   bool seedChanged=false;
   // update the seedvector with the new maxima (For the vertex not fixed)
@@ -1135,12 +1120,6 @@ static bool GeodesicRelax(MeshType &m, std::vector<VertexType *> &seedVec, std::
   std::vector<typename tri::Geodesic<MeshType>::VertDist> biasedFrontierVec;
   BuildBiasedSeedVec(m,df,seedVec,frontierVec,biasedFrontierVec,vpp);
   tri::Geodesic<MeshType>::Visit(m,biasedFrontierVec,df);
-  if(vpp.colorStrategy == VoronoiProcessingParameter::DistanceFromSeed)
-    tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
-  //    tri::io::ExporterPLY<MeshType>::Save(m,"last.ply",tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
-
-  if(vpp.colorStrategy == VoronoiProcessingParameter::DistanceFromBorder)
-    tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
 
   // Search the local maxima for each region and use them as new seeds
   std::pair<float,VertexPointer> zz(0.0f,nullptr);
@@ -1276,7 +1255,6 @@ static int RestrictedVoronoiRelaxing(MeshType &m, std::vector<CoordType> &seedPo
     }
     std::swap(seedPosVec,newseedVec);
     std::swap(fixedVec,newfixedVec);
-    tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
   }
   return relaxStep;
 }
@@ -1316,9 +1294,6 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
 
     // first run: find for each point what is the closest to one of the seeds.
     tri::Geodesic<MeshType>::Compute(m, seedVec, df,std::numeric_limits<ScalarType>::max(),0,&sources);
-
-    if(vpp.colorStrategy == VoronoiProcessingParameter::DistanceFromSeed)
-      tri::UpdateColor<MeshType>::PerVertexQualityRamp(m);
     // Delete all the (hopefully) small regions that have not been reached by the seeds;
 
     if(vpp.deleteUnreachedRegionFlag)  DeleteUnreachedRegions(m,sources);
@@ -1329,7 +1304,6 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
     GetAreaAndFrontier(m, sources,  regionArea, frontierVec);
     assert(frontierVec.size()>0);
 
-    if(vpp.colorStrategy == VoronoiProcessingParameter::RegionArea) VoronoiAreaColoring(m, seedVec, regionArea);
 
     //    qDebug("We have found %i regions range (%f %f), avg area is %f, Variance is %f 10perc is %f",(int)seedVec.size(),H.Min(),H.Max(),H.Avg(),H.StandardDeviation(),areaThreshold);
 
@@ -1344,13 +1318,6 @@ static int VoronoiRelaxing(MeshType &m, std::vector<VertexType *> &seedVec,
 
     //assert(newSeedVec.size() == seedVec.size());
     PruneSeedByRegionArea(newSeedVec,regionArea,vpp);
-
-    for(size_t i=0;i<frontierVec.size();++i)
-      frontierVec[i]->C() = Color4b::Gray;
-    for(size_t i=0;i<seedVec.size();++i)
-      seedVec[i]->C() = Color4b::Black;
-    for(size_t i=0;i<newSeedVec.size();++i)
-      newSeedVec[i]->C() = Color4b::White;
 
     swap(newSeedVec,seedVec);
     if(!changed) break;
