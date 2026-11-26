@@ -394,6 +394,43 @@ vcg::tri::UpdateColor<Mesh>::PerVertexBorderFlag(m.cm);
 
 	}
 
+	/** \brief Transfer edge color onto vertex color
+
+  Plain average of the color of the edges incident on a given vertex, the edge-mesh
+  twin of PerVertexFromFace: it lets a polyline that was colored per edge be saved or
+  shown in formats and modes that only know vertex colors. Vertices with no incident
+  edge keep their color. No adjacency required.
+  */
+	static void PerVertexFromEdge( MeshType &m)
+	{
+		RequirePerEdgeColor(m);
+		RequirePerVertexColor(m);
+
+		ColorAvgInfo csi;
+		SimpleTempData<typename MeshType::VertContainer, ColorAvgInfo> TD(m.vert,csi);
+
+		ForEachEdge(m, [&] (typename MeshType::EdgeType & e) {
+			for (int j = 0; j < 2; ++j)
+			{
+				TD[e.V(j)].r += e.C()[0];
+				TD[e.V(j)].g += e.C()[1];
+				TD[e.V(j)].b += e.C()[2];
+				TD[e.V(j)].a += e.C()[3];
+				++TD[e.V(j)].cnt;
+			}
+		});
+
+		ForEachVertex(m, [&] (VertexType & v) {
+			if (TD[v].cnt > 0)
+			{
+				v.C()[0] = TD[v].r / TD[v].cnt;
+				v.C()[1] = TD[v].g / TD[v].cnt;
+				v.C()[2] = TD[v].b / TD[v].cnt;
+				v.C()[3] = TD[v].a / TD[v].cnt;
+			}
+		});
+	}
+
 	/*! \brief This function colores the faces of connected components of a mesh randomly.
 
 It require FaceFace Adjacency becouse it relies on the output of the ConnecteComponents();
@@ -413,6 +450,44 @@ It require FaceFace Adjacency becouse it relies on the output of the ConnecteCom
 			std::vector<typename MeshType::FacePointer> FPV;
 			for(ci.start(m,CCV[i].second);!ci.completed();++ci)
 				(*ci)->C()=BaseColor;
+		}
+	}
+
+	/*! \brief Color each connected component of an edge mesh with its own random color.
+
+The edge-mesh twin of PerFaceRandomConnectedComponent: two edges belong to the same
+component when they share a vertex, so every separate polyline gets one color. It
+requires per-vertex VE adjacency, which edgeMeshConnectedComponents computes, and uses
+the edge V flag as scratch.
+*/
+	static void PerEdgeRandomConnectedComponent( MeshType &m)
+	{
+		typedef typename MeshType::EdgePointer EdgePointer;
+		RequirePerEdgeColor(m);
+
+		std::vector< std::pair<int, EdgePointer> > CCV;
+		int ScatterSize= std::min (100,tri::Clean<MeshType>::edgeMeshConnectedComponents(m, CCV)); // number of random color to be used. Never use too many.
+
+		UpdateFlags<MeshType>::EdgeClearV(m);
+		std::stack<EdgePointer> stack;
+		for(unsigned int i=0;i<CCV.size();++i)
+		{
+			Color4b BaseColor = Color4b::Scatter(ScatterSize, i%ScatterSize,.4f,.7f);
+			CCV[i].second->SetV();
+			stack.push(CCV[i].second);
+			while (!stack.empty())
+			{
+				EdgePointer ep = stack.top();
+				stack.pop();
+				ep->C() = BaseColor;
+				for (int j = 0; j < 2; ++j)
+					for (edge::VEIterator<typename MeshType::EdgeType> vei(ep->V(j)); !vei.End(); ++vei)
+						if (!vei.E()->IsV())
+						{
+							vei.E()->SetV();
+							stack.push(vei.E());
+						}
+			}
 		}
 	}
 

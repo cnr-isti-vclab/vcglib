@@ -1377,7 +1377,9 @@ public:
 	{
 		typedef typename MeshType::EdgePointer EdgePointer;
 		tri::UpdateTopology<MeshType>::VertexEdge(poly);
-		tri::UpdateFlags<MeshType>::EdgeClear(poly);
+		// Only the visited bit is scratch here: clearing every flag also wiped the
+		// caller's edge selection (and any other per-edge bit) as a side effect.
+		tri::UpdateFlags<MeshType>::EdgeClearV(poly);
 		eCC.clear();
 		std::stack<EdgePointer> stack;
 
