@@ -196,9 +196,15 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>PerFaceFromVer
 <tr class="memitem:a27ae1586ae70d470ff984f609128a029"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1UpdateColor.html#a27ae1586ae70d470ff984f609128a029">PerVertexBorderFlag</a> (MeshType &amp;m, <a class="el" href="classvcg_1_1Color4.html">Color4b</a> BorderColor=Color4b::Blue, <a class="el" href="classvcg_1_1Color4.html">Color4b</a> InternalColor=Color4b::White, <a class="el" href="classvcg_1_1Color4.html">Color4b</a> MixColor=Color4b::Cyan)</td></tr>
 <tr class="memdesc:a27ae1586ae70d470ff984f609128a029"><td class="mdescLeft">&#160;</td><td class="mdescRight">Color the vertexes of the mesh that are on the border.  <br /></td></tr>
 <tr class="separator:a27ae1586ae70d470ff984f609128a029"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff22d91c5d6e2b283ef44594a42c62c5"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1UpdateColor.html#aff22d91c5d6e2b283ef44594a42c62c5">PerVertexFromEdge</a> (MeshType &amp;m)</td></tr>
+<tr class="memdesc:aff22d91c5d6e2b283ef44594a42c62c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transfer edge color onto vertex color.  <br /></td></tr>
+<tr class="separator:aff22d91c5d6e2b283ef44594a42c62c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56a59514ad8ea772b5626ea222437fd3"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1UpdateColor.html#a56a59514ad8ea772b5626ea222437fd3">PerFaceRandomConnectedComponent</a> (MeshType &amp;m)</td></tr>
 <tr class="memdesc:a56a59514ad8ea772b5626ea222437fd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function colores the faces of connected components of a mesh randomly.  <br /></td></tr>
 <tr class="separator:a56a59514ad8ea772b5626ea222437fd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a59e1619656d403cb154163723d5633"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1UpdateColor.html#a3a59e1619656d403cb154163723d5633">PerEdgeRandomConnectedComponent</a> (MeshType &amp;m)</td></tr>
+<tr class="memdesc:a3a59e1619656d403cb154163723d5633"><td class="mdescLeft">&#160;</td><td class="mdescRight">Color each connected component of an edge mesh with its own random color.  <br /></td></tr>
+<tr class="separator:a3a59e1619656d403cb154163723d5633"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae4803a9b87d43e0de27b376fd057677c"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1UpdateColor.html#ae4803a9b87d43e0de27b376fd057677c">PerFaceRandom</a> (MeshType &amp;m)</td></tr>
 <tr class="memdesc:ae4803a9b87d43e0de27b376fd057677c"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function colores the face of a mesh randomly.  <br /></td></tr>
 <tr class="separator:ae4803a9b87d43e0de27b376fd057677c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -361,6 +367,37 @@ template&lt;class MeshType &gt; </div>
 
 <p>This function colores all the edges of a mesh with a hue color shade dependent on the quality. </p>
 <p>If no range of quality is passed it is automatically computed. </p>
+
+</div>
+</div>
+<a id="a3a59e1619656d403cb154163723d5633" name="a3a59e1619656d403cb154163723d5633"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a59e1619656d403cb154163723d5633">&#9670;&#160;</a></span>PerEdgeRandomConnectedComponent()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class MeshType &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void <a class="el" href="classvcg_1_1tri_1_1UpdateColor.html">vcg::tri::UpdateColor</a>&lt; MeshType &gt;::PerEdgeRandomConnectedComponent </td>
+          <td>(</td>
+          <td class="paramtype">MeshType &amp;&#160;</td>
+          <td class="paramname"><em>m</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Color each connected component of an edge mesh with its own random color. </p>
+<p>The edge-mesh twin of PerFaceRandomConnectedComponent: two edges belong to the same component when they share a vertex, so every separate polyline gets one color. It requires per-vertex VE adjacency, which edgeMeshConnectedComponents computes, and uses the edge V flag as scratch. </p>
 
 </div>
 </div>
@@ -856,6 +893,37 @@ template&lt;class MeshType &gt; </div>
 <p>Histogram Color Equalization. </p>
 <dl class="section return"><dt>Returns</dt><dd>the number of changed vertexes (the selected ones)</dd></dl>
 <p>Equalize the histogram of colors. It can equalize any combination of rgb channels or it can work on lightness. </p>
+
+</div>
+</div>
+<a id="aff22d91c5d6e2b283ef44594a42c62c5" name="aff22d91c5d6e2b283ef44594a42c62c5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff22d91c5d6e2b283ef44594a42c62c5">&#9670;&#160;</a></span>PerVertexFromEdge()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class MeshType &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void <a class="el" href="classvcg_1_1tri_1_1UpdateColor.html">vcg::tri::UpdateColor</a>&lt; MeshType &gt;::PerVertexFromEdge </td>
+          <td>(</td>
+          <td class="paramtype">MeshType &amp;&#160;</td>
+          <td class="paramname"><em>m</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Transfer edge color onto vertex color. </p>
+<p>Plain average of the color of the edges incident on a given vertex, the edge-mesh twin of PerVertexFromFace: it lets a polyline that was colored per edge be saved or shown in formats and modes that only know vertex colors. Vertices with no incident edge keep their color. No adjacency required. </p>
 
 </div>
 </div>
@@ -1407,7 +1475,7 @@ template&lt;class MeshType &gt; </div>
 <!-- HTML footer for doxygen 1.9.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Thu Nov 26 2026 06:50:15
+Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Thu Nov 26 2026 22:40:32
 </small></address>
 </body>
 </html>
