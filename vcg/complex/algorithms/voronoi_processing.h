@@ -1477,45 +1477,47 @@ static bool CheckVoronoiTopology(MeshType& m,std::vector<VertexType *> &seedVec)
       return false;
   }
 
-  std::vector<MeshType *> regionVec(seedVec.size(),0);
-  for(size_t i=0; i< seedVec.size();i++) regionVec[i] = new MeshType;
-
+  // Each region, taken as the faces touching it, must be a disk. A region is connected (the
+  // geodesic visit reaches each vertex through vertices of the same source), and a connected
+  // manifold surface is a disk exactly when its Euler characteristic V-E+F is 1: an annulus
+  // (a region wrapping around a tube and meeting itself) has 0. Counted on m directly, so
+  // that no per-region mesh, and none of the optional adjacency it would need, is built.
+  typedef std::pair<int,VertexPointer> RegionVert;
+  typedef std::pair<int,std::pair<VertexPointer,VertexPointer> > RegionEdge;
+  std::vector<RegionVert> regionVert;
+  std::vector<RegionEdge> regionEdge;
+  std::vector<int> chi(seedVec.size(),0);
   for(int i=0;i<m.fn;++i)
   {
-    int vi0 = seedMap[sources[m.face[i].V(0)]];
-    int vi1 = seedMap[sources[m.face[i].V(1)]];
-    int vi2 = seedMap[sources[m.face[i].V(2)]];
-    assert(vi0>=0 && vi1>=0 && vi2>=0);
-    tri::Allocator<MeshType>::AddFace(*regionVec[vi0], m.face[i].cP(0),m.face[i].cP(1),m.face[i].cP(2));
-
-    if(vi1 != vi0)
-      tri::Allocator<MeshType>::AddFace(*regionVec[vi1], m.face[i].cP(0),m.face[i].cP(1),m.face[i].cP(2));
-
-    if((vi2 != vi0) && (vi2 != vi1) )
-      tri::Allocator<MeshType>::AddFace(*regionVec[vi2], m.face[i].cP(0),m.face[i].cP(1),m.face[i].cP(2));
+    FaceType &f = m.face[i];
+    const int r[3] = { seedMap[sources[f.V(0)]], seedMap[sources[f.V(1)]], seedMap[sources[f.V(2)]] };
+    for(int k=0;k<3;++k)
+    {
+      if((k>0 && r[k]==r[0]) || (k>1 && r[k]==r[1])) continue; // each region once per face
+      ++chi[r[k]];
+      for(int j=0;j<3;++j)
+      {
+        regionVert.push_back(RegionVert(r[k],f.V(j)));
+        VertexPointer a=f.V(j), b=f.V((j+1)%3);
+        if(b<a) std::swap(a,b);
+        regionEdge.push_back(RegionEdge(r[k],std::make_pair(a,b)));
+      }
+    }
   }
-
-  bool AllDiskRegion=true;
-  for(size_t i=0; i< seedVec.size();i++)
+  std::sort(regionVert.begin(),regionVert.end());
+  regionVert.erase(std::unique(regionVert.begin(),regionVert.end()),regionVert.end());
+  for(const RegionVert &rv : regionVert) ++chi[rv.first];
+  std::sort(regionEdge.begin(),regionEdge.end());
+  for(size_t i=0;i<regionEdge.size();)
   {
-    MeshType &rm = *(regionVec[i]);
-    tri::Clean<MeshType>::RemoveDuplicateVertex(rm);
-    tri::Allocator<MeshType>::CompactEveryVector(rm);
-    tri::UpdateTopology<MeshType>::FaceFace(rm);
-    //    char buf[100]; sprintf(buf,"disk%04i.ply",i); tri::io::ExporterPLY<MeshType>::Save(rm,buf,tri::io::Mask::IOM_VERTCOLOR + tri::io::Mask::IOM_VERTQUALITY );
-
-    int NNmanifoldE=tri::Clean<MeshType>::CountNonManifoldEdgeFF(rm);
-    if (NNmanifoldE!=0)
-      AllDiskRegion= false;
-    int G=tri::Clean<MeshType>::MeshGenus(rm);
-    int numholes=tri::Clean<MeshType>::CountHoles(rm);
-    if (numholes!=1)
-      AllDiskRegion= false;
-    if(G!=0) AllDiskRegion= false;
-    delete regionVec[i];
+    size_t j=i;
+    while(j<regionEdge.size() && regionEdge[j]==regionEdge[i]) ++j;
+    if(j-i>2) return false; // an edge with more than two faces: not manifold
+    --chi[regionEdge[i].first];
+    i=j;
   }
-
-  if(!AllDiskRegion) return false;
+  for(int c : chi)
+    if(c!=1) return false;
 
   // **** Final step build a rough delaunay tri and check that it is manifold
   MeshType delaMesh;
@@ -1535,12 +1537,12 @@ static bool CheckVoronoiTopology(MeshType& m,std::vector<VertexType *> &seedVec)
     VertexPointer v2 = & delaMesh.vert[seedMap[sources[innerCornerVec[i]->V(2)]]];
     tri::Allocator<MeshType>::AddFace(delaMesh,v0,v1,v2);
   }
-  Clean<MeshType>::RemoveUnreferencedVertex(delaMesh);
-  tri::Allocator<MeshType>::CompactVertexVector(delaMesh);
-  tri::UpdateTopology<MeshType>::FaceFace(delaMesh);
-
-  int nonManif = tri::Clean<MeshType>::CountNonManifoldEdgeFF(delaMesh);
-  if(nonManif>0) return false;
+  // Manifold: no edge shared by more than two triangles.
+  std::vector<typename tri::UpdateTopology<MeshType>::PEdge> edgeVec;
+  tri::UpdateTopology<MeshType>::FillEdgeVector(delaMesh,edgeVec);
+  std::sort(edgeVec.begin(),edgeVec.end());
+  for(size_t i=2;i<edgeVec.size();++i)
+    if(edgeVec[i]==edgeVec[i-2]) return false;
 
   return true;
 }
