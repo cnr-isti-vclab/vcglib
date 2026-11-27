@@ -1416,6 +1416,67 @@ public:
 		return int(eCC.size());
 	}
 
+	/// \brief Split an edge mesh into chains and order the edges along each
+	///
+	/// A chain is a maximal run of edges joined at vertices with exactly two incident
+	/// edges: it ends at a vertex of any other degree (an endpoint or a branch point) or
+	/// closes on itself. Connected components are coarser: a Y is one component but
+	/// three chains. An open chain starts at the end reached first scanning the edges in
+	/// index order, at V(0) when both ends are free, so a polyline stored in order is
+	/// walked in that order; a closed one starts at its lowest-index edge, from V(0).
+	///
+	/// Every output vector is indexed like poly.edge, with -1 (and 0 arc length) on
+	/// deleted edges: the chain of each edge, its position in the chain, and the arc
+	/// length from the chain start to the edge's first vertex in walk order. chainLength
+	/// gets the total length of each chain. Uses the V bit. Returns the number of chains.
+	static int EdgeMeshChains(MeshType &poly, std::vector<int> &chainOfEdge, std::vector<int> &positionInChain,
+	                          std::vector<ScalarType> &arcLengthAtStart, std::vector<ScalarType> &chainLength)
+	{
+		typedef typename MeshType::EdgeType EdgeType;
+		tri::UpdateTopology<MeshType>::VertexEdge(poly);
+		tri::UpdateFlags<MeshType>::EdgeClearV(poly);
+		chainOfEdge.assign(poly.edge.size(), -1);
+		positionInChain.assign(poly.edge.size(), -1);
+		arcLengthAtStart.assign(poly.edge.size(), 0);
+		chainLength.clear();
+
+		std::vector<int> degree(poly.vert.size(), 0);
+		ForEachEdge(poly, [&](EdgeType &e) { ++degree[tri::Index(poly, e.V(0))]; ++degree[tri::Index(poly, e.V(1))]; });
+		auto isJoint = [&](VertexPointer v) { return degree[tri::Index(poly, v)] == 2; };
+
+		// Walks from edge e entering at vertex `from` until an end, a branch point, or back
+		// at the start of a closed chain.
+		auto walk = [&](EdgePointer e, VertexPointer from) {
+			const int chain = int(chainLength.size());
+			ScalarType arc = 0;
+			for (int pos = 0; e != nullptr && !e->IsV(); ++pos)
+			{
+				e->SetV();
+				const size_t ei = tri::Index(poly, e);
+				chainOfEdge[ei] = chain;
+				positionInChain[ei] = pos;
+				arcLengthAtStart[ei] = arc;
+				arc += Distance(e->V(0)->cP(), e->V(1)->cP());
+				VertexPointer to = (e->V(0) == from) ? e->V(1) : e->V(0);
+				EdgePointer next = nullptr;
+				if (isJoint(to))
+					for (edge::VEIterator<EdgeType> vei(to); !vei.End(); ++vei)
+						if (vei.E() != e) next = vei.E();
+				e = next;
+				from = to;
+			}
+			chainLength.push_back(arc);
+		};
+
+		for (auto &e : poly.edge)
+			if (!e.IsD() && !e.IsV() && !(isJoint(e.V(0)) && isJoint(e.V(1))))
+				walk(&e, isJoint(e.V(0)) ? e.V(1) : e.V(0));
+		for (auto &e : poly.edge)
+			if (!e.IsD() && !e.IsV())
+				walk(&e, e.V(0));
+		return int(chainLength.size());
+	}
+
 	static void ComputeValence( MeshType &m, typename MeshType::PerVertexIntHandle &h)
 	{
 		for(VertexIterator vi=m.vert.begin(); vi!= m.vert.end();++vi)
