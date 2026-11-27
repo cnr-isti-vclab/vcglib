@@ -24,6 +24,7 @@
 #ifndef VORONOI_PROCESSING_H
 #define VORONOI_PROCESSING_H
 
+#include<array>
 #include<vcg/complex/algorithms/geodesic.h>
 #include<vcg/complex/algorithms/update/color.h>
 #include<vcg/complex/algorithms/refine.h>
@@ -486,7 +487,10 @@ static void ConvertVoronoiDiagramToMesh(MeshType &m,
       const size_t start=outMesh.vert.size();
       for(const CoordType &p : l.pt)
         tri::Allocator<MeshType>::AddVertex(outMesh,p,Color4b::LightGray);
-      const size_t fanNum = l.open ? l.pt.size()-1 : l.pt.size();
+      // An open loop is closed too, by the chord between its two border points, so that a cell on
+      // the border is still a disk around its seed; with only those two points there is nothing
+      // to close.
+      const size_t fanNum = (l.open && l.pt.size()==2) ? 1 : l.pt.size();
       for(size_t j=0;j<fanNum;++j)
       {
         tri::Allocator<MeshType>::AddFace(outMesh, &outMesh.vert[i], &outMesh.vert[start+j],
@@ -1567,10 +1571,17 @@ static void BuildSeedMap(MeshType &m, std::vector<VertexType *> &seedVec,  std::
 ///   DistanceFunctor &df,
 ///   tri::Geodesic<MeshType>::Compute(m, seedVec, df, std::numeric_limits<ScalarType>::max(),0,&sources);
 ///
-/// The function can also
+///
+/// On an open mesh the triangulation of the seeds stops at the polygon through the seeds of the
+/// regions touching the border. With borderFlag the strip between that polygon and the border is
+/// filled too: the points where the region boundaries meet the border (the midpoints of the border
+/// edges between two regions, the same corners as ConvertVoronoiDiagramToMesh) are added, and each
+/// region spans its stretch of border with a single chord between two of them. Every region
+/// touching the border is assumed to be a disk (see CheckVoronoiTopology).
 static void ConvertDelaunayTriangulationToMesh(MeshType &m,
                                                MeshType &outMesh,
-                                               std::vector<VertexType *> &seedVec, bool refineFlag=true)
+                                               std::vector<VertexType *> &seedVec, bool refineFlag=true,
+                                               bool borderFlag=false)
 {
   tri::RequirePerVertexAttribute(m,"sources");
   tri::RequireCompactness(m);
@@ -1608,6 +1619,43 @@ static void ConvertDelaunayTriangulationToMesh(MeshType &m,
     }
   }
 
+  // The border strip. Each border edge of m, taken with m's orientation from v0 to v1, has the
+  // interior on its left. Where it passes from region s0 to s1 its midpoint x is a border point,
+  // and the triangle x,s1,s0 spans the edge s0-s1 of the outline (split at its midpoint when the
+  // inner triangles are refined). Walking on along the border to the next border point gives
+  // s1's stretch, spanned by the triangle x,x',s1.
+  std::vector<std::array<int,3> > borderFaceVec;
+  if(borderFlag)
+  {
+    std::map<VertexPointer,std::pair<FacePointer,int> > borderEdge; // by its first vertex
+    for(FaceIterator fi=m.face.begin();fi!=m.face.end();++fi)
+      for(int i=0;i<3;++i)
+        if(face::IsBorder(*fi,i)) borderEdge[fi->V0(i)]=std::make_pair(&*fi,i);
+    auto next = [&](VertexPointer v) { const auto &e=borderEdge.at(v); return e.first->V1(e.second); };
+    std::map<VertexPointer,int> borderInd; // outMesh index of a border point, by its edge's first vertex
+    for(const auto &be : borderEdge)
+      if(sources[be.first]!=sources[next(be.first)])
+      {
+        borderInd[be.first]=outMesh.vert.size();
+        tri::Allocator<MeshType>::AddVertex(outMesh, (be.first->cP()+next(be.first)->cP())/2.0f, Color4b::LightBlue);
+      }
+    for(const auto &bi : borderInd)
+    {
+      const VertexPointer v0=bi.first, s0=sources[v0], s1=sources[next(v0)];
+      const auto mi = midMapInd.find(ordered_pair(s0,s1));
+      if(mi==midMapInd.end()) borderFaceVec.push_back({{bi.second,seedMap[s1],seedMap[s0]}});
+      else {
+        borderFaceVec.push_back({{bi.second,seedMap[s1],mi->second}});
+        borderFaceVec.push_back({{bi.second,mi->second,seedMap[s0]}});
+      }
+      VertexPointer v=next(v0);
+      for(size_t step=0; step<borderEdge.size() && !borderInd.count(v) && borderEdge.count(v); ++step)
+        v=next(v);
+      if(borderInd.count(v) && v!=v0) // else m's border is not a closed manifold loop here
+        borderFaceVec.push_back({{bi.second,borderInd[v],seedMap[s1]}});
+    }
+  }
+
   // Now just add one (or four) face for each inner corner
   for(size_t i=0;i<innerCornerVec.size();++i)
   {
@@ -1632,6 +1680,8 @@ static void ConvertDelaunayTriangulationToMesh(MeshType &m,
      else
       tri::Allocator<MeshType>::AddFace(outMesh,v0,v1,v2);
   }
+  for(const std::array<int,3> &bf : borderFaceVec)
+    tri::Allocator<MeshType>::AddFace(outMesh,&outMesh.vert[bf[0]],&outMesh.vert[bf[1]],&outMesh.vert[bf[2]]);
   Clean<MeshType>::RemoveUnreferencedVertex(outMesh);
   tri::Allocator<MeshType>::CompactVertexVector(outMesh);
 }
