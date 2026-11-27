@@ -1859,6 +1859,10 @@ static void InitRadiusHandleFromQuality(MeshType &sampleMesh, PerVertexFloatAttr
   float maxRad = diskRadius * radiusVariance;
   float deltaQ = minmax.second-minmax.first;
   float deltaRad = maxRad-minRad;
+  // A constant quality (a mesh that never had one computed holds all zeros) carries no density:
+  // the radius is the same everywhere. Dividing by its zero range would make every radius NaN,
+  // and PoissonDiskPruningByNumber then never brackets the sample count and loops forever.
+  if(deltaQ==0) deltaRad=0, deltaQ=1;
   for (VertexIterator vi = sampleMesh.vert.begin(); vi != sampleMesh.vert.end(); vi++)
     {
       rH[*vi] = minRad + deltaRad*((invert ? minmax.second - (*vi).Q() : (*vi).Q() - minmax.first )/deltaQ);
