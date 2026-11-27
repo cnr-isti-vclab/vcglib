@@ -266,6 +266,9 @@ static int&#160;</td><td class="memItemRight" valign="bottom"><b>ConnectedCompon
 <tr class="memitem:af4dae7186400880045d70a55ca6085b3"><td class="memItemLeft" align="right" valign="top"><a id="af4dae7186400880045d70a55ca6085b3" name="af4dae7186400880045d70a55ca6085b3"></a>
 static int&#160;</td><td class="memItemRight" valign="bottom"><b>edgeMeshConnectedComponents</b> (MeshType &amp;poly, std::vector&lt; std::pair&lt; int, typename MeshType::EdgePointer &gt; &gt; &amp;eCC)</td></tr>
 <tr class="separator:af4dae7186400880045d70a55ca6085b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa96ee3d37f51e2d3667bb505ac4ec68a"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classvcg_1_1tri_1_1Clean.html#aa96ee3d37f51e2d3667bb505ac4ec68a">EdgeMeshChains</a> (MeshType &amp;poly, std::vector&lt; int &gt; &amp;chainOfEdge, std::vector&lt; int &gt; &amp;positionInChain, std::vector&lt; ScalarType &gt; &amp;arcLengthAtStart, std::vector&lt; ScalarType &gt; &amp;chainLength)</td></tr>
+<tr class="memdesc:aa96ee3d37f51e2d3667bb505ac4ec68a"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classvcg_1_1tri_1_1Split.html">Split</a> an edge mesh into chains and order the edges along each.  <br /></td></tr>
+<tr class="separator:aa96ee3d37f51e2d3667bb505ac4ec68a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac64b358ba1d226f85bca6882a341ee9d"><td class="memItemLeft" align="right" valign="top"><a id="ac64b358ba1d226f85bca6882a341ee9d" name="ac64b358ba1d226f85bca6882a341ee9d"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeValence</b> (MeshType &amp;m, typename MeshType::PerVertexIntHandle &amp;h)</td></tr>
 <tr class="separator:ac64b358ba1d226f85bca6882a341ee9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -602,6 +605,66 @@ template&lt;class CleanMeshType &gt; </div>
 </table>
 </div><div class="memdoc">
 <p>Count (and eventually select) non 2-Manifold vertexes of a mesh e.g. the vertices with a non 2-manif. neighbourhood but that do not belong to not 2-manif edges. typical situation two cones connected by one vertex. </p>
+
+</div>
+</div>
+<a id="aa96ee3d37f51e2d3667bb505ac4ec68a" name="aa96ee3d37f51e2d3667bb505ac4ec68a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa96ee3d37f51e2d3667bb505ac4ec68a">&#9670;&#160;</a></span>EdgeMeshChains()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class CleanMeshType &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int <a class="el" href="classvcg_1_1tri_1_1Clean.html">vcg::tri::Clean</a>&lt; CleanMeshType &gt;::EdgeMeshChains </td>
+          <td>(</td>
+          <td class="paramtype">MeshType &amp;&#160;</td>
+          <td class="paramname"><em>poly</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>chainOfEdge</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>positionInChain</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; ScalarType &gt; &amp;&#160;</td>
+          <td class="paramname"><em>arcLengthAtStart</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; ScalarType &gt; &amp;&#160;</td>
+          <td class="paramname"><em>chainLength</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classvcg_1_1tri_1_1Split.html">Split</a> an edge mesh into chains and order the edges along each. </p>
+<p>A chain is a maximal run of edges joined at vertices with exactly two incident edges: it ends at a vertex of any other degree (an endpoint or a branch point) or closes on itself. Connected components are coarser: a Y is one component but three chains. An open chain starts at the end reached first scanning the edges in index order, at V(0) when both ends are free, so a polyline stored in order is walked in that order; a closed one starts at its lowest-index edge, from V(0).</p>
+<p>Every output vector is indexed like poly.edge, with -1 (and 0 arc length) on deleted edges: the chain of each edge, its position in the chain, and the arc length from the chain start to the edge's first vertex in walk order. chainLength gets the total length of each chain. Uses the V bit. Returns the number of chains. </p>
 
 </div>
 </div>
@@ -1460,7 +1523,7 @@ template&lt;class CleanMeshType &gt; </div>
 <!-- HTML footer for doxygen 1.9.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Thu Nov 26 2026 22:40:32
+Generated by&#160;<a href="https://www.doxygen.org/index.html">doxygen</a> 1.9.6 on Fri Nov 27 2026 08:03:48
 </small></address>
 </body>
 </html>

@@ -8,8 +8,9 @@ var searchData=
   ['edgeclear_5',['EdgeClear',['../classvcg_1_1tri_1_1UpdateSelection.html#a4ccc78c7690ff5d9171f019b1600af91',1,'vcg::tri::UpdateSelection']]],
   ['edgecount_6',['EdgeCount',['../classvcg_1_1tri_1_1UpdateSelection.html#a72d5d3c3e3607daafd93e99c9cf14c25',1,'vcg::tri::UpdateSelection']]],
   ['edgeinvert_7',['EdgeInvert',['../classvcg_1_1tri_1_1UpdateSelection.html#ae1de0bd3e760c0e95c9a37e2c931ef37',1,'vcg::tri::UpdateSelection']]],
-  ['edgemeshuniform_8',['EdgeMeshUniform',['../classvcg_1_1tri_1_1SurfaceSampling.html#aa7f96dbf424a7f6905c32788e0edc3ff',1,'vcg::tri::SurfaceSampling']]],
-  ['edgemontecarlo_9',['EdgeMontecarlo',['../classvcg_1_1tri_1_1SurfaceSampling.html#af70e80ea8c7d7f0ba298a694179554b3',1,'vcg::tri::SurfaceSampling']]],
-  ['efstarff_10',['EFStarFF',['../namespacevcg_1_1face.html#a25d788feeec110a8a1d13c31cd656acf',1,'vcg::face']]],
-  ['ext_11',['Ext',['../classvcg_1_1Point3.html#a8faf9902092590dc30fc486cd3408b13',1,'vcg::Point3']]]
+  ['edgemeshchains_8',['EdgeMeshChains',['../classvcg_1_1tri_1_1Clean.html#aa96ee3d37f51e2d3667bb505ac4ec68a',1,'vcg::tri::Clean']]],
+  ['edgemeshuniform_9',['EdgeMeshUniform',['../classvcg_1_1tri_1_1SurfaceSampling.html#aa7f96dbf424a7f6905c32788e0edc3ff',1,'vcg::tri::SurfaceSampling']]],
+  ['edgemontecarlo_10',['EdgeMontecarlo',['../classvcg_1_1tri_1_1SurfaceSampling.html#af70e80ea8c7d7f0ba298a694179554b3',1,'vcg::tri::SurfaceSampling']]],
+  ['efstarff_11',['EFStarFF',['../namespacevcg_1_1face.html#a25d788feeec110a8a1d13c31cd656acf',1,'vcg::face']]],
+  ['ext_12',['Ext',['../classvcg_1_1Point3.html#a8faf9902092590dc30fc486cd3408b13',1,'vcg::Point3']]]
 ];
