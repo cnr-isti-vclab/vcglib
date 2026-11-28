@@ -320,6 +320,66 @@ namespace vcg {
 		return(inside_test>2);
 	}
 
+	/// Whether a point is inside a polygon given as its list of corners, closed implicitly,
+	/// by the even-odd rule: a polygon that crosses itself leaves the doubly-wound part out.
+	/// Unlike PointInsidePolygon it takes the corners rather than a list of segments and
+	/// casts one ray, which suits testing many points against one polygon.
+	template <class ScalarType>
+	bool PointInsidePolygonEvenOdd(const vcg::Point2<ScalarType> &p,
+	                               const std::vector<vcg::Point2<ScalarType> > &polygon)
+	{
+		bool inside = false;
+		for (size_t i = 0, j = polygon.size() - 1; i < polygon.size(); j = i++)
+		{
+			const vcg::Point2<ScalarType> &a = polygon[i];
+			const vcg::Point2<ScalarType> &b = polygon[j];
+			if ((a.Y() > p.Y()) != (b.Y() > p.Y())
+			    && p.X() < (b.X() - a.X()) * (p.Y() - a.Y()) / (b.Y() - a.Y()) + a.X())
+				inside = !inside;
+		}
+		return inside;
+	}
+
+	/// Whether two outlines share any point, each a list of corners read by the even-odd
+	/// rule. Three or more corners make a closed polygon, two a segment and one a point,
+	/// which have no inside of their own. They overlap when a corner of one is inside the
+	/// other or two sides cross: if no side crosses, every outline lies wholly inside or
+	/// outside the other region, and one corner of it says which. Sides lying on the same
+	/// line are not counted as crossing (see SegmentSegmentIntersection).
+	/// Used to select what a screen-space lasso touches, not just what it encloses.
+	template <class ScalarType>
+	bool PolygonPolygonIntersect2D(const std::vector<vcg::Point2<ScalarType> > &a,
+	                               const std::vector<vcg::Point2<ScalarType> > &b)
+	{
+		if (a.empty() || b.empty())
+			return false;
+		vcg::Box2<ScalarType> boxA, boxB;
+		for (const auto &p : a) boxA.Add(p);
+		for (const auto &p : b) boxB.Add(p);
+		if (!boxA.Collide(boxB))
+			return false;
+		if (b.size() >= 3)
+			for (const auto &p : a)
+				if (PointInsidePolygonEvenOdd(p, b))
+					return true;
+		if (a.size() >= 3)
+			for (const auto &p : b)
+				if (PointInsidePolygonEvenOdd(p, a))
+					return true;
+		// A segment is one side; a polygon closes back to its first corner.
+		const auto sides = [](const std::vector<vcg::Point2<ScalarType> > &o) {
+			return o.size() < 2 ? size_t(0) : o.size() == 2 ? size_t(1) : o.size();
+		};
+		vcg::Point2<ScalarType> crossing;
+		for (size_t i = 0; i < sides(a); ++i)
+			for (size_t j = 0; j < sides(b); ++j)
+				if (SegmentSegmentIntersection(
+				        vcg::Segment2<ScalarType>(a[i], a[(i + 1) % a.size()]),
+				        vcg::Segment2<ScalarType>(b[j], b[(j + 1) % b.size()]), crossing))
+					return true;
+		return false;
+	}
+
 	//intersection between a circle and a line
 	template<class ScalarType>
 	inline bool CircleLineIntersection(const vcg::Line2<ScalarType> & line,
