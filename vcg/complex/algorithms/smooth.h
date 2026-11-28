@@ -53,6 +53,7 @@ class Smooth
     typedef typename MeshType::FaceType FaceType;
     typedef typename MeshType::FacePointer FacePointer;
     typedef typename MeshType::FaceIterator FaceIterator;
+    typedef typename MeshType::EdgeIterator EdgeIterator;
     typedef typename MeshType::FaceContainer FaceContainer;
     typedef typename MeshType::TetraType TetraType;
     typedef typename vcg::Box3<ScalarType> Box3Type;
@@ -854,6 +855,64 @@ So if
 
         //TD.Stop();
     };
+
+    /// Laplacian smoothing of the per-face quality: at each step every face takes the average of
+    /// its own quality and that of the faces sharing an edge with it. With SmoothSelected only the
+    /// selected faces change, though all of them are read.
+    static void FaceQualityLaplacian(MeshType &m, int step = 1, bool SmoothSelected = false)
+    {
+        tri::RequireFFAdjacency(m);
+        tri::RequirePerFaceQuality(m);
+        SimpleTempData<typename MeshType::FaceContainer, ScalarType> TD(m.face, 0);
+        for (int i = 0; i < step; ++i)
+        {
+            for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+                if (!(*fi).IsD())
+                {
+                    ScalarType sum = (*fi).Q();
+                    int cnt = 1;
+                    for (int j = 0; j < (*fi).VN(); ++j)
+                        if (!face::IsBorder(*fi, j))
+                        {
+                            sum += (*fi).FFp(j)->Q();
+                            ++cnt;
+                        }
+                    TD[*fi] = sum / cnt;
+                }
+            for (FaceIterator fi = m.face.begin(); fi != m.face.end(); ++fi)
+                if (!(*fi).IsD() && (!SmoothSelected || (*fi).IsS()))
+                    (*fi).Q() = TD[*fi];
+        }
+    }
+
+    /// Laplacian smoothing of the per-edge quality: at each step every edge takes the average of
+    /// its own quality and that of the edges sharing a vertex with it. The sums are gathered on the
+    /// vertices, so no edge adjacency is needed. With SmoothSelected only the selected edges change.
+    static void EdgeQualityLaplacian(MeshType &m, int step = 1, bool SmoothSelected = false)
+    {
+        tri::RequirePerEdgeQuality(m);
+        QualitySmoothInfo lpz;
+        lpz.sum = 0;
+        lpz.cnt = 0;
+        SimpleTempData<typename MeshType::VertContainer, QualitySmoothInfo> TD(m.vert, lpz);
+        for (int i = 0; i < step; ++i)
+        {
+            for (VertexIterator vi = m.vert.begin(); vi != m.vert.end(); ++vi)
+                TD[*vi] = lpz;
+            for (EdgeIterator ei = m.edge.begin(); ei != m.edge.end(); ++ei)
+                if (!(*ei).IsD())
+                    for (int k = 0; k < 2; ++k)
+                    {
+                        TD[(*ei).V(k)].sum += (*ei).Q();
+                        ++TD[(*ei).V(k)].cnt;
+                    }
+            // Each vertex sum holds the edge itself once: count it once in all.
+            for (EdgeIterator ei = m.edge.begin(); ei != m.edge.end(); ++ei)
+                if (!(*ei).IsD() && (!SmoothSelected || (*ei).IsS()))
+                    (*ei).Q() = (TD[(*ei).V(0)].sum + TD[(*ei).V(1)].sum - (*ei).Q()) /
+                                (TD[(*ei).V(0)].cnt + TD[(*ei).V(1)].cnt - 1);
+        }
+    }
 
     static void VertexNormalLaplacian(MeshType &m, int step, bool SmoothSelected = false)
     {
